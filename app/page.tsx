@@ -1174,11 +1174,6 @@ export default function Home() {
                 <SelectContent>
                   {regionsConfig
                     .filter((region: any) => {
-                      // State role: only show regions in selected state
-                      if (userRole === 'State') {
-                        return getRegionState(region.id) === userState;
-                      }
-                      // Other roles: existing logic
                       return !shouldShowRegionalAlerts() || getRegionState(region.id) === homeState || getRegionState(region.id) === 'UNKNOWN';
                     })
                     .sort((a: any, b: any) => a.name.localeCompare(b.name))
@@ -1227,7 +1222,7 @@ export default function Home() {
                 </Tabs>
               )}
 
-              {!isPublicView && (userRole === 'Federal' || userRole === 'Researcher' || userRole === 'NGO') && (
+              {!isPublicView && (userRole === 'Researcher' || userRole === 'NGO') && (
                 <Button
                   onClick={() => setShowNationalView(true)}
                   variant="default"
@@ -1235,8 +1230,7 @@ export default function Home() {
                 >
                   <Globe className="h-4 w-4" />
                   <span className="sm:inline">
-                    {userRole === 'Federal' ? 'National Command Center' : 
-                     userRole === 'Researcher' ? 'National Data View' :
+                    {userRole === 'Researcher' ? 'National Data View' :
                      'National Transparency'}
                   </span>
                 </Button>
@@ -2245,7 +2239,7 @@ export default function Home() {
           )}
 
           {/* ── LIVE ESG SCORE ─────────────────────────────────────────── */}
-          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && !isPublicView && userRole === 'Corporate' && (
+          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && !isPublicView && (userRole as string) === 'Corporate' && (
             <CollapsibleSection id="esg-score" title="ESG Score Dashboard" icon="📊" collapsed={isCollapsed('esg-score')} onToggle={toggleSection}>
             {(() => {
             // Calculate ESG scores for Corporate dashboard
@@ -2565,7 +2559,7 @@ export default function Home() {
           )}
 
           {/* ── DATA INTEGRITY & AUDIT TRAIL ───────────────────────────────── */}
-          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && !isPublicView && (userRole === 'MS4' || userRole === 'State' || userRole === 'Researcher') && (
+          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && !isPublicView && (userRole === 'MS4' || (userRole as string) === 'State' || userRole === 'Researcher') && (
             <CollapsibleSection id="data-integrity" title="Data Integrity & Audit Trail" icon="🛡" collapsed={isCollapsed('data-integrity')} onToggle={toggleSection}>
               <DataIntegrityPanel regionName={selectedRegion?.name || 'Middle Branch'} />
             </CollapsibleSection>
@@ -2812,7 +2806,7 @@ export default function Home() {
                 )}
 
                 {shouldShowPeerBenchmarking() && (
-                  <div className={`flex flex-col items-center gap-2 w-full ${userRole === 'State' ? 'lg:col-span-2' : ''}`}>
+                  <div className={`flex flex-col items-center gap-2 w-full ${(userRole as string) === 'State' ? 'lg:col-span-2' : ''}`}>
                     <PeerBenchmarking
                       removalEfficiencies={removalEfficiencies}
                       regionId={selectedRegionId}
