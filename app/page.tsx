@@ -475,11 +475,12 @@ export default function Home() {
     };
     // Overlay the main dashboard params where real data exists
     const overlayKeys = ['DO', 'TN', 'TP', 'turbidity', 'salinity', 'TSS', 'pH', 'temperature', 'conductivity'] as const;
+    const params = merged.parameters as Record<string, any>;
     for (const key of overlayKeys) {
-      const realParam = waterData.parameters[key];
-      if (realParam && realParam.value !== null && merged.parameters[key]) {
-        merged.parameters[key] = {
-          ...merged.parameters[key],
+      const realParam = (waterData.parameters as Record<string, any>)[key];
+      if (realParam && realParam.value !== null && params[key]) {
+        params[key] = {
+          ...params[key],
           value: realParam.value,
         };
       }
