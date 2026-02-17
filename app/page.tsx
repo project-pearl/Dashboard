@@ -1657,7 +1657,6 @@ export default function Home() {
                 <EconomicReplacementPanel 
                   municipalitySize="large"
                   municipalityName={selectedRegion?.name || 'Baltimore City'}
-                  userRole={userRole}
                 />
               </div>
             </CollapsibleSection>
@@ -2036,7 +2035,6 @@ export default function Home() {
                     effluentValue={effluentData.parameters.DO.value}
                     efficiency={removalEfficiencies.DO}
                     unit="mg/L"
-                    effluentParameter={effluentData.parameters.DO}
                   />
                   <RemovalEfficiencyGauge
                     parameterName="Turbidity"
@@ -2044,7 +2042,6 @@ export default function Home() {
                     effluentValue={effluentData.parameters.turbidity.value}
                     efficiency={removalEfficiencies.turbidity}
                     unit="NTU"
-                    effluentParameter={effluentData.parameters.turbidity}
                   />
                   <RemovalEfficiencyGauge
                     parameterName="Total Nitrogen"
@@ -2052,7 +2049,6 @@ export default function Home() {
                     effluentValue={effluentData.parameters.TN.value}
                     efficiency={removalEfficiencies.TN}
                     unit="mg/L"
-                    effluentParameter={effluentData.parameters.TN}
                   />
                   <RemovalEfficiencyGauge
                     parameterName="Total Phosphorus"
@@ -2060,7 +2056,6 @@ export default function Home() {
                     effluentValue={effluentData.parameters.TP.value}
                     efficiency={removalEfficiencies.TP}
                     unit="mg/L"
-                    effluentParameter={effluentData.parameters.TP}
                   />
                   <RemovalEfficiencyGauge
                     parameterName="Total Suspended Solids"
@@ -2068,7 +2063,6 @@ export default function Home() {
                     effluentValue={effluentData.parameters.TSS.value}
                     efficiency={removalEfficiencies.TSS}
                     unit="mg/L"
-                    effluentParameter={effluentData.parameters.TSS}
                   />
                   <RemovalEfficiencyGauge
                     parameterName="Salinity"
@@ -2076,7 +2070,6 @@ export default function Home() {
                     effluentValue={effluentData.parameters.salinity.value}
                     efficiency={removalEfficiencies.salinity}
                     unit="ppt"
-                    effluentParameter={effluentData.parameters.salinity}
                   />
                 </div>
               </CardContent>
@@ -2190,7 +2183,6 @@ export default function Home() {
                       effluentValue={selectedStormEvent.effluent.parameters.DO.value}
                       efficiency={selectedStormEvent.removalEfficiencies.DO}
                       unit="mg/L"
-                      effluentParameter={selectedStormEvent.effluent.parameters.DO}
                     />
                     <RemovalEfficiencyGauge
                       parameterName="Turbidity"
@@ -2198,7 +2190,6 @@ export default function Home() {
                       effluentValue={selectedStormEvent.effluent.parameters.turbidity.value}
                       efficiency={selectedStormEvent.removalEfficiencies.turbidity}
                       unit="NTU"
-                      effluentParameter={selectedStormEvent.effluent.parameters.turbidity}
                     />
                     <RemovalEfficiencyGauge
                       parameterName="Total Nitrogen"
@@ -2206,7 +2197,6 @@ export default function Home() {
                       effluentValue={selectedStormEvent.effluent.parameters.TN.value}
                       efficiency={selectedStormEvent.removalEfficiencies.TN}
                       unit="mg/L"
-                      effluentParameter={selectedStormEvent.effluent.parameters.TN}
                     />
                     <RemovalEfficiencyGauge
                       parameterName="Total Phosphorus"
@@ -2214,7 +2204,6 @@ export default function Home() {
                       effluentValue={selectedStormEvent.effluent.parameters.TP.value}
                       efficiency={selectedStormEvent.removalEfficiencies.TP}
                       unit="mg/L"
-                      effluentParameter={selectedStormEvent.effluent.parameters.TP}
                     />
                     <RemovalEfficiencyGauge
                       parameterName="Total Suspended Solids"
@@ -2222,7 +2211,6 @@ export default function Home() {
                       effluentValue={selectedStormEvent.effluent.parameters.TSS.value}
                       efficiency={selectedStormEvent.removalEfficiencies.TSS}
                       unit="mg/L"
-                      effluentParameter={selectedStormEvent.effluent.parameters.TSS}
                     />
                     <RemovalEfficiencyGauge
                       parameterName="Salinity"
@@ -2230,7 +2218,6 @@ export default function Home() {
                       effluentValue={selectedStormEvent.effluent.parameters.salinity.value}
                       efficiency={selectedStormEvent.removalEfficiencies.salinity}
                       unit="ppt"
-                      effluentParameter={selectedStormEvent.effluent.parameters.salinity}
                     />
                   </div>
                 </CardContent>
