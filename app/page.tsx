@@ -1531,7 +1531,7 @@ export default function Home() {
                   {selectedRegion?.name}
                 </h3>
                 <p className="text-xs text-blue-700">
-                  {selectedRegion?.description}
+                 {(selectedRegion as any)?.description}
                 </p>
                 <p className="text-xs text-blue-600 mt-2 italic">
                   Note: More regions can be added easily later for global deployment

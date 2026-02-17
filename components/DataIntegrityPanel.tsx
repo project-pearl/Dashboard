@@ -191,7 +191,7 @@ export function DataIntegrityPanel({ regionName = 'Middle Branch' }: DataIntegri
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle className="h-3 w-3 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span><strong>Statistical comparison</strong> (R² > 0.85 target)</span>
+                    <span><strong>Statistical comparison</strong> (R² &gt; 0.85 target)</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle className="h-3 w-3 text-green-500 mt-0.5 flex-shrink-0" />

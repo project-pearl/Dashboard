@@ -2865,10 +2865,10 @@ export function NationalCommandCenter(props: Props) {
                             <div className="space-y-1 text-xs text-blue-800 leading-relaxed">
                               <div>Layered approach:</div>
                               <div className="pl-2 space-y-0.5 text-[11px]">
-                                <div>-> Upstream BMPs and source control</div>
-                                <div>-> Nature-based restoration for long-term recovery</div>
-                                <div>-> Community programs for compliance and stewardship</div>
-                                <div>-> <span className="font-semibold">PEARL for immediate treatment and real-time verification</span></div>
+                                <div>→ Upstream BMPs and source control</div>
+                                <div>→ Nature-based restoration for long-term recovery</div>
+                                <div>→ Community programs for compliance and stewardship</div>
+                                <div>→ <span className="font-semibold">PEARL for immediate treatment and real-time verification</span></div>
                               </div>
                             </div>
                           </div>
