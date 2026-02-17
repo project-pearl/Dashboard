@@ -104,6 +104,7 @@ type RegionRow = {
 
 type Props = {
   onClose: () => void;
+  onToggleDevMode?: () => void;
   onSelectRegion: (regionId: string) => void;
   federalMode?: boolean;
 };
