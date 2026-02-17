@@ -4,11 +4,12 @@ import { useMemo } from 'react';
 
 interface RemovalEfficiencyGaugeProps {
   parameterName: string;
-  parameterKey: string;
+  parameterKey?: string;
   influentValue: number;
   effluentValue: number;
   efficiency: number;
   unit: string;
+  effluentParameter?: any;
 }
 
 export function RemovalEfficiencyGauge({

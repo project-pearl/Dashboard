@@ -4,12 +4,13 @@ import { StormEvent } from '@/lib/types';
 import { CloudRain, TrendingDown, TrendingUp } from 'lucide-react';
 
 interface StormEventTableProps {
-  events: StormEvent[];
-  selectedEventId: string;
-  onSelectEvent: (id: string) => void;
+  events?: StormEvent[];
+  selectedEventId?: string;
+  onSelectEvent?: (id: string) => void;
+  event?: any;
 }
 
-export function StormEventTable({ events, selectedEventId, onSelectEvent }: StormEventTableProps) {
+export function StormEventTable({ events, selectedEventId, onSelectEvent, event }: StormEventTableProps) {
   if (!events || events.length === 0) {
     return <div className="text-sm text-slate-500 text-center py-8">No storm events recorded for this region.</div>;
   }

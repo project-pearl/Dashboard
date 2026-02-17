@@ -7,6 +7,14 @@ interface AIInsightsProps {
   data: WaterQualityData;
   dataMode: DataMode;
   regionName?: string;
+  regionId?: string;
+  removalEfficiencies?: Record<string, number>;
+  stormEventName?: string;
+  stormRainfall?: string;
+  detectedStormEvent?: any;
+  alerts?: any[];
+  dataSource?: string;
+  [key: string]: any;
 }
 
 interface Insight {
