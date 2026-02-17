@@ -806,8 +806,8 @@ export default function Home() {
       {
         title: 'DATA PROVENANCE',
         content: [
-          waterData ? `Source: ${waterData.sources?.map((s: any) => s.name).join(', ') || 'PEARL sensors'}` : 'Source: Simulation data',
-          waterData?.lastSampled ? `Last sampled: ${new Date(waterData.lastSampled).toLocaleString()}` : '',
+          waterData ? `Source: ${(waterData as any).sources?.map((s: any) => s.name).join(', ') || 'PEARL sensors'}` : 'Source: Simulation data',
+          (waterData as any)?.lastSampled ? `Last sampled: ${new Date((waterData as any).lastSampled).toLocaleString()}` : '',
           'This report is informational. Not an official regulatory determination.',
         ]
       }
@@ -932,7 +932,7 @@ export default function Home() {
         content: [
           'This snapshot captures current values at the time of export.',
           'For full time-series trend analysis, use the interactive dashboard or request a CSV export.',
-          waterData ? `Data source: ${waterData.sources?.map((s: any) => s.name).join(', ') || 'PEARL sensors'}` : 'Data source: Simulation',
+          waterData ? `Data source: ${(waterData as any).sources?.map((s: any) => s.name).join(', ') || 'PEARL sensors'}` : 'Data source: Simulation',
         ]
       }
     ];
@@ -1861,10 +1861,10 @@ export default function Home() {
                 })()}
 
                 {/* Source Attribution */}
-                {waterData && waterData.sourceDetails.length > 0 && (
+                {waterData && (waterData as any).sourceDetails?.length > 0 && (
                   <div className="flex flex-wrap items-center gap-1.5 mt-3 pt-3 border-t border-slate-200 text-[10px] text-slate-500">
                     <span className="font-medium">Data sources:</span>
-                    {waterData.sourceDetails.map((sd, i) => {
+                    {(waterData as any).sourceDetails.map((sd: any, i: number) => {
                       const c: Record<string, string> = {
                         USGS: 'bg-green-100 text-green-800', ERDDAP: 'bg-cyan-100 text-cyan-800',
                         NOAA: 'bg-blue-100 text-blue-800', BWB: 'bg-purple-100 text-purple-800',
@@ -1876,9 +1876,9 @@ export default function Home() {
                         </span>
                       );
                     })}
-                    {waterData.lastSampled && (
+                    {(waterData as any).lastSampled && (
                       <span className="ml-auto text-slate-400">
-                        Updated: {new Date(waterData.lastSampled).toLocaleString()}
+                        Updated: {new Date((waterData as any).lastSampled).toLocaleString()}
                       </span>
                     )}
                   </div>
