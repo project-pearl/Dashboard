@@ -1,0 +1,244 @@
+{
+  "US:32": [
+    {
+      "siteId": "10336698",
+      "name": "THIRD CK NR CRYSTAL BAY, NV",
+      "waterbodyName": "Third",
+      "lat": 39.24046325,
+      "lng": -119.9465774,
+      "source": "USGS",
+      "siteType": "ST",
+      "huc8": "16050101",
+      "wqParamCount": 4,
+      "wqParams": [
+        "00010",
+        "00095",
+        "00300",
+        "63680"
+      ],
+      "regionId": "nevada_third"
+    },
+    {
+      "siteId": "393940118240101",
+      "name": "STILLWATER NTL WILDLIFE REFUGE AT N NUTGRASS, NV",
+      "waterbodyName": "Stillwater Ntl Wildlife Refuge",
+      "lat": 39.6611,
+      "lng": -118.4003389,
+      "source": "USGS",
+      "siteType": "LK",
+      "huc8": "16050203",
+      "wqParamCount": 4,
+      "wqParams": [
+        "00010",
+        "00095",
+        "00300",
+        "00400"
+      ],
+      "regionId": "nevada_stillwater_ntl_wildlife_refuge"
+    },
+    {
+      "siteId": "10336730",
+      "name": "GLENBROOK CK AT GLENBROOK, NV",
+      "waterbodyName": "Glenbrook",
+      "lat": 39.08740806,
+      "lng": -119.9399057,
+      "source": "USGS",
+      "siteType": "ST",
+      "huc8": "16050101",
+      "wqParamCount": 3,
+      "wqParams": [
+        "00010",
+        "00095",
+        "00300"
+      ],
+      "regionId": "nevada_glenbrook"
+    },
+    {
+      "siteId": "10350500",
+      "name": "TRUCKEE RV AT CLARK, NV",
+      "waterbodyName": "Truckee",
+      "lat": 39.56545278,
+      "lng": -119.486186,
+      "source": "USGS",
+      "siteType": "ST",
+      "huc8": "16050102",
+      "wqParamCount": 3,
+      "wqParams": [
+        "00010",
+        "00095",
+        "00400"
+      ],
+      "regionId": "nevada_truckee"
+    },
+    {
+      "siteId": "10301500",
+      "name": "WALKER RV NR WABUSKA, NV",
+      "waterbodyName": "Walker",
+      "lat": 39.1524611,
+      "lng": -119.0988889,
+      "source": "USGS",
+      "siteType": "ST",
+      "huc8": "16050303",
+      "wqParamCount": 2,
+      "wqParams": [
+        "00010",
+        "00095"
+      ],
+      "regionId": "nevada_walker"
+    },
+    {
+      "siteId": "10302002",
+      "name": "WALKER RV AT LATERAL 2-A SIPHON NR SCHURZ, NV",
+      "waterbodyName": "Walker",
+      "lat": 38.94019785,
+      "lng": -118.8037557,
+      "source": "USGS",
+      "siteType": "ST",
+      "huc8": "16050303",
+      "wqParamCount": 2,
+      "wqParams": [
+        "00010",
+        "00095"
+      ],
+      "regionId": "nevada_walker_lower"
+    },
+    {
+      "siteId": "10302025",
+      "name": "WALKER RV NR MOUTH AT WALKER LAKE, NV",
+      "waterbodyName": "Walker Rv Near Mouth",
+      "lat": 38.79103038,
+      "lng": -118.727085,
+      "source": "USGS",
+      "siteType": "ST",
+      "huc8": "16050304",
+      "wqParamCount": 2,
+      "wqParams": [
+        "00010",
+        "00095"
+      ],
+      "regionId": "nevada_walker_rv_near_mouth"
+    },
+    {
+      "siteId": "10348200",
+      "name": "TRUCKEE RV NR SPARKS, NV",
+      "waterbodyName": "Truckee",
+      "lat": 39.51761667,
+      "lng": -119.7416444,
+      "source": "USGS",
+      "siteType": "ST",
+      "huc8": "16050102",
+      "wqParamCount": 2,
+      "wqParams": [
+        "00010",
+        "00095"
+      ],
+      "regionId": "nevada_truckee_lower"
+    },
+    {
+      "siteId": "10351700",
+      "name": "TRUCKEE RV NR NIXON, NV",
+      "waterbodyName": "Truckee",
+      "lat": 39.7773722,
+      "lng": -119.3375222,
+      "source": "USGS",
+      "siteType": "ST",
+      "huc8": "16050103",
+      "wqParamCount": 2,
+      "wqParams": [
+        "00010",
+        "00095"
+      ],
+      "regionId": "nevada_truckee_lower_1700"
+    },
+    {
+      "siteId": "09415089",
+      "name": "VIRGIN RV ABV BUNKERVILLE DIV NR MESQUITE, NV",
+      "waterbodyName": "Virgin Rv Above Bunkerville Div",
+      "lat": 36.7955312,
+      "lng": -114.069968,
+      "source": "USGS",
+      "siteType": "ST",
+      "huc8": "15010010",
+      "wqParamCount": 1,
+      "wqParams": [
+        "00010"
+      ],
+      "regionId": "nevada_virgin_rv_above_bunkerville_div"
+    },
+    {
+      "siteId": "10246835",
+      "name": "BIG WARM SPGS NR DUCKWATER, NV",
+      "waterbodyName": "Big Warm Spgs",
+      "lat": 38.95019444,
+      "lng": -115.7032778,
+      "source": "USGS",
+      "siteType": "ST",
+      "huc8": "16060012",
+      "wqParamCount": 1,
+      "wqParams": [
+        "00010"
+      ],
+      "regionId": "nevada_big_warm_spgs"
+    },
+    {
+      "siteId": "10249300",
+      "name": "S TWIN RV NR ROUND MOUNTAIN, NV",
+      "waterbodyName": "S Twin",
+      "lat": 38.8874302,
+      "lng": -117.2453673,
+      "source": "USGS",
+      "siteType": "ST",
+      "huc8": "16060004",
+      "wqParamCount": 1,
+      "wqParams": [
+        "00010"
+      ],
+      "regionId": "nevada_s_twin"
+    },
+    {
+      "siteId": "10317480",
+      "name": "BEAVER CK ABV CONF N FK HUMBOLDT RV NR HALLECK, NV",
+      "waterbodyName": "Beaver Ck Above Conf N Fk Humboldt",
+      "lat": 41.3297222,
+      "lng": -115.5719444,
+      "source": "USGS",
+      "siteType": "ST",
+      "huc8": "16040102",
+      "wqParamCount": 1,
+      "wqParams": [
+        "00010"
+      ],
+      "regionId": "nevada_beaver_ck_above_conf_n_fk_humboldt"
+    },
+    {
+      "siteId": "10348000",
+      "name": "TRUCKEE RV AT RENO, NV",
+      "waterbodyName": "Truckee",
+      "lat": 39.53018865,
+      "lng": -119.7954684,
+      "source": "USGS",
+      "siteType": "ST",
+      "huc8": "16050102",
+      "wqParamCount": 1,
+      "wqParams": [
+        "63680"
+      ],
+      "regionId": "nevada_truckee_lower_8000"
+    },
+    {
+      "siteId": "10349700",
+      "name": "WHITES CK NR STEAMBOAT, NV",
+      "waterbodyName": "Whites",
+      "lat": 39.38527778,
+      "lng": -119.83444444,
+      "source": "USGS",
+      "siteType": "ST",
+      "huc8": "16050102",
+      "wqParamCount": 1,
+      "wqParams": [
+        "63680"
+      ],
+      "regionId": "nevada_whites"
+    }
+  ]
+}

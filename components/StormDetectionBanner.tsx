@@ -1,174 +1,75 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { CloudRain, X, AlertTriangle, Info } from 'lucide-react';
 import { DetectedStormEvent } from '@/lib/stormDetection';
+import { CloudRain, X, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
+import { useState } from 'react';
 
 interface StormDetectionBannerProps {
-  detectedEvent: DetectedStormEvent;
+  event: DetectedStormEvent;
   onDismiss: () => void;
 }
 
-export function StormDetectionBanner({ detectedEvent, onDismiss }: StormDetectionBannerProps) {
-  const [isDismissed, setIsDismissed] = useState(false);
-  const [mounted, setMounted] = useState(false);
+export function StormDetectionBanner({ event, onDismiss }: StormDetectionBannerProps) {
+  const [expanded, setExpanded] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (isDismissed) return null;
-
-  if (!mounted) {
-    return (
-      <Alert className="border-2 border-slate-300 bg-slate-50 animate-pulse">
-        <div className="flex items-start gap-3">
-          <div className="h-5 w-5 bg-slate-300 rounded mt-0.5"></div>
-          <div className="flex-1 space-y-2">
-            <div className="h-5 bg-slate-300 rounded w-1/3"></div>
-            <div className="h-4 bg-slate-300 rounded w-3/4"></div>
-          </div>
-        </div>
-      </Alert>
-    );
-  }
-
-  const handleDismiss = () => {
-    setIsDismissed(true);
-    onDismiss();
+  const severityStyles = {
+    high:     { bg: 'bg-red-950',    border: 'border-red-500',    badge: 'bg-red-600',    text: 'text-red-100',    icon: 'text-red-400'    },
+    moderate: { bg: 'bg-amber-950',  border: 'border-amber-500',  badge: 'bg-amber-600',  text: 'text-amber-100',  icon: 'text-amber-400'  },
+    low:      { bg: 'bg-blue-950',   border: 'border-blue-500',   badge: 'bg-blue-600',   text: 'text-blue-100',   icon: 'text-blue-400'   },
   };
-
-  const getSeverityColor = () => {
-    if (detectedEvent.severity === 'high') return 'bg-red-100 border-red-400';
-    if (detectedEvent.severity === 'moderate') return 'bg-orange-100 border-orange-400';
-    return 'bg-yellow-100 border-yellow-400';
-  };
-
-  const getSeverityBadgeColor = () => {
-    if (detectedEvent.severity === 'high') return 'bg-red-600 text-white';
-    if (detectedEvent.severity === 'moderate') return 'bg-orange-600 text-white';
-    return 'bg-yellow-600 text-white';
-  };
-
-  const getSeverityIcon = () => {
-    if (detectedEvent.severity === 'high') return <AlertTriangle className="h-6 w-6 text-red-700" />;
-    if (detectedEvent.severity === 'moderate') return <CloudRain className="h-6 w-6 text-orange-700" />;
-    return <Info className="h-6 w-6 text-yellow-700" />;
-  };
+  const s = severityStyles[event.severity];
 
   return (
-    <Alert className={`${getSeverityColor()} border-2 relative animate-in slide-in-from-top-5 duration-500`}>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute top-2 right-2 h-6 w-6"
-        onClick={handleDismiss}
-      >
-        <X className="h-4 w-4" />
-      </Button>
-
-      <div className="flex items-start gap-4 pr-8">
-        <div className="flex-shrink-0 mt-1">
-          {getSeverityIcon()}
-        </div>
-        <div className="flex-1 space-y-3">
-          <div className="flex items-center gap-3 flex-wrap">
-            <AlertTitle className="text-lg font-bold m-0">
-              Stormwater Event Detected
-            </AlertTitle>
-            <Badge className={`${getSeverityBadgeColor()} text-xs font-bold`}>
-              {detectedEvent.severity.toUpperCase()} SEVERITY
-            </Badge>
-            <Badge variant="outline" className="text-xs">
-              {detectedEvent.triggerType.toUpperCase()} TRIGGER
-            </Badge>
-            <span className="text-sm text-gray-600 ml-auto">
-              {detectedEvent.timestamp.toLocaleString()}
-            </span>
-          </div>
-
-          <AlertDescription className="space-y-3">
-            <p className="font-semibold text-base">
-              {detectedEvent.description}
+    <div className={`rounded-xl border-2 ${s.bg} ${s.border} overflow-hidden`}>
+      <div className="flex items-start gap-3 px-4 py-3">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <CloudRain className={`h-5 w-5 flex-shrink-0 ${s.icon}`} />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className={`text-sm font-bold ${s.text}`}>Storm Event Detected</span>
+              <span className={`text-xs px-2 py-0.5 rounded-full font-bold uppercase ${s.badge} text-white`}>
+                {event.severity}
+              </span>
+              <span className={`text-xs ${s.text} opacity-70`}>
+                {event.timestamp.toLocaleTimeString()}
+              </span>
+            </div>
+            <p className={`text-xs mt-0.5 ${s.text} opacity-80 leading-relaxed`}>
+              {event.description}
             </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {detectedEvent.triggers.tss && (
-                <div className="bg-white rounded-lg p-3 border border-red-200">
-                  <div className="text-xs font-medium text-gray-600 mb-1">TSS SPIKE</div>
-                  <div className="text-lg font-bold text-red-700">
-                    +{detectedEvent.triggers.tss.increase.toFixed(0)}%
-                  </div>
-                  <div className="text-xs text-gray-600">
-                    (+{detectedEvent.triggers.tss.absolute.toFixed(0)} mg/L)
-                  </div>
-                </div>
-              )}
-              {detectedEvent.triggers.turbidity && (
-                <div className="bg-white rounded-lg p-3 border border-orange-200">
-                  <div className="text-xs font-medium text-gray-600 mb-1">TURBIDITY INCREASE</div>
-                  <div className="text-lg font-bold text-orange-700">
-                    +{detectedEvent.triggers.turbidity.increase.toFixed(0)}%
-                  </div>
-                  <div className="text-xs text-gray-600">{detectedEvent.triggers.turbidity.threshold}</div>
-                </div>
-              )}
-              {detectedEvent.triggers.tn && (
-                <div className="bg-white rounded-lg p-3 border border-blue-200">
-                  <div className="text-xs font-medium text-gray-600 mb-1">TN INCREASE</div>
-                  <div className="text-lg font-bold text-blue-700">
-                    +{detectedEvent.triggers.tn.increase.toFixed(0)}%
-                  </div>
-                  <div className="text-xs text-gray-600">{detectedEvent.triggers.tn.threshold}</div>
-                </div>
-              )}
-              {detectedEvent.triggers.tp && (
-                <div className="bg-white rounded-lg p-3 border border-purple-200">
-                  <div className="text-xs font-medium text-gray-600 mb-1">TP INCREASE</div>
-                  <div className="text-lg font-bold text-purple-700">
-                    +{detectedEvent.triggers.tp.increase.toFixed(0)}%
-                  </div>
-                  <div className="text-xs text-gray-600">{detectedEvent.triggers.tp.threshold}</div>
-                </div>
-              )}
-              {detectedEvent.triggers.do && (
-                <div className="bg-white rounded-lg p-3 border border-cyan-200">
-                  <div className="text-xs font-medium text-gray-600 mb-1">DO DROP</div>
-                  <div className="text-lg font-bold text-cyan-700">
-                    -{detectedEvent.triggers.do.decrease.toFixed(0)}%
-                  </div>
-                  <div className="text-xs text-gray-600">{detectedEvent.triggers.do.threshold}</div>
-                </div>
-              )}
-            </div>
-
-            {detectedEvent.recommendations.length > 0 && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <div className="font-semibold text-sm text-blue-900 mb-2">
-                  Recommended Actions:
-                </div>
-                <ul className="space-y-1 text-sm text-blue-800">
-                  {detectedEvent.recommendations.map((rec, idx) => (
-                    <li key={idx} className="flex items-start gap-2">
-                      <span className="text-blue-600 mt-0.5">•</span>
-                      <span>{rec}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            <div className="bg-gradient-to-r from-cyan-50 to-blue-50 border border-cyan-200 rounded-lg p-3">
-              <p className="text-sm text-cyan-900">
-                <span className="font-semibold">MS4/TMDL Documentation:</span> This event documents BMP performance for permit compliance during high-flow stormwater conditions. Influent vs effluent data and % removal efficiency are critical for annual reporting.
-              </p>
-            </div>
-          </AlertDescription>
+          </div>
+        </div>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className={`p-1 rounded hover:bg-white/10 ${s.text}`}
+          >
+            {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </button>
+          <button
+            onClick={onDismiss}
+            className={`p-1 rounded hover:bg-white/10 ${s.text}`}
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
       </div>
-    </Alert>
+
+      {expanded && event.recommendations.length > 0 && (
+        <div className={`border-t ${s.border} px-4 py-3`}>
+          <div className={`text-xs font-bold ${s.text} mb-2 uppercase tracking-wide`}>
+            Recommended Actions
+          </div>
+          <ul className="space-y-1">
+            {event.recommendations.map((rec, i) => (
+              <li key={i} className={`flex items-start gap-2 text-xs ${s.text} opacity-80`}>
+                <AlertTriangle className={`h-3 w-3 mt-0.5 flex-shrink-0 ${s.icon}`} />
+                {rec}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
   );
 }

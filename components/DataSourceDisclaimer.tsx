@@ -1,56 +1,32 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Database, Satellite } from 'lucide-react';
-
 interface DataSourceDisclaimerProps {
-  hasPearlData: boolean;
-  dataSource: string;
-  regionName: string;
+  dataSource?: string;
+  hasPearlData?: boolean;
+  regionName?: string;
 }
 
-export function DataSourceDisclaimer({ hasPearlData, dataSource, regionName }: DataSourceDisclaimerProps) {
-  const [mounted, setMounted] = useState(false);
+export function DataSourceDisclaimer({ dataSource, hasPearlData, regionName }: DataSourceDisclaimerProps) {
+  if (!dataSource) return null;
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return (
-      <Alert className="bg-slate-50 border-slate-200 border-2 animate-pulse">
-        <div className="flex items-center gap-3">
-          <div className="h-5 w-5 bg-slate-300 rounded"></div>
-          <AlertDescription className="m-0">
-            <div className="h-4 bg-slate-300 rounded w-3/4"></div>
-          </AlertDescription>
-        </div>
-      </Alert>
-    );
-  }
-
-  if (hasPearlData) {
-    return (
-      <Alert className="bg-green-50 border-green-300 border-2">
-        <div className="flex items-center gap-3">
-          <Satellite className="h-5 w-5 text-green-700" />
-          <AlertDescription className="text-green-900 font-medium m-0">
-            <span className="font-bold">Live Project Pearl Data:</span> Real-time sensor data from deployed Pearl units in {regionName}
-          </AlertDescription>
-        </div>
-      </Alert>
-    );
-  }
+  const isPearl = hasPearlData || dataSource.toLowerCase().includes('pearl');
 
   return (
-    <Alert className="bg-amber-50 border-amber-400 border-2">
-      <div className="flex items-center gap-3">
-        <Database className="h-5 w-5 text-amber-700" />
-        <AlertDescription className="text-amber-900 font-medium m-0">
-          <span className="font-bold">⚠️ Ambient Monitoring Data:</span> Data shown is from ambient monitoring sources (USGS, state agencies, public databases) and NOT from Project Pearl sensors. Deploy a Pearl to access real-time, high-frequency water quality data for {regionName}.
-        </AlertDescription>
-      </div>
-    </Alert>
+    <div className={`flex items-start gap-2 px-3 py-2 rounded-lg border text-xs ${
+      isPearl
+        ? 'bg-green-50 border-green-200 text-green-800'
+        : 'bg-yellow-50 border-yellow-200 text-yellow-800'
+    }`}>
+      <span className="mt-0.5 flex-shrink-0">{isPearl ? '🟢' : '🟡'}</span>
+      <span>
+        <span className={`font-semibold ${isPearl ? 'text-green-700' : 'text-yellow-700'}`}>
+          {isPearl ? 'PEARL sensors — ' : 'Ambient monitoring — '}
+        </span>
+        {regionName && <span className="font-medium">{regionName}</span>}
+        {dataSource && !isPearl && (
+          <span className="opacity-80"> · {dataSource}</span>
+        )}
+      </span>
+    </div>
   );
 }

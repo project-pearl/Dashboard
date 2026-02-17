@@ -1,0 +1,4978 @@
+'use client';
+
+import { useEffect, useMemo, useRef, useState } from 'react';
+import Image from 'next/image';
+import { ComposableMap, Geographies, Geography } from 'react-simple-maps';
+import { feature } from 'topojson-client';
+import statesTopo from 'us-atlas/states-10m.json';
+
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { X, AlertTriangle, AlertCircle, CheckCircle, MapPin, Droplets, Leaf, DollarSign, Users, TrendingUp, BarChart3, Gauge, Shield, LogOut, Building2, Info, ChevronDown, Printer } from 'lucide-react';
+import { getRegionById } from '@/lib/regionsConfig';
+import { REGION_META, getWaterbodyDataSources } from '@/lib/useWaterData';
+import { computeRestorationPlan, resolveAttainsCategory, mergeAttainsCauses, COST_PER_UNIT_YEAR, type RestorationResult } from '@/lib/restorationEngine';
+import { WaterbodyDetailCard } from '@/components/WaterbodyDetailCard';
+import { getEcoScore, getEcoData } from '@/lib/ecologicalSensitivity';
+import { getEJScore, getEJData } from '@/lib/ejVulnerability';
+import { BrandedPDFGenerator } from '@/lib/brandedPdfGenerator';
+import { useAuth } from '@/lib/authContext';
+import { useWaterData, DATA_SOURCES } from '@/lib/useWaterData';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type AlertLevel = 'none' | 'low' | 'medium' | 'high';
+type OverlayId = 'hotspots' | 'ms4' | 'ej' | 'economy' | 'wildlife' | 'trend' | 'coverage';
+type ViewLens = 'full' | 'compliance' | 'coverage' | 'programs' | 'analysis';
+
+// ─── Lens Configuration: what each view shows/hides ────────────────────────────
+const LENS_CONFIG: Record<ViewLens, {
+  label: string;
+  description: string;
+  defaultOverlay: OverlayId;
+  showTopStrip: boolean;       // Federal-style 6-tile numbers
+  showPriorityQueue: boolean;  // Intervention/funding queue
+  showCoverageGaps: boolean;   // State coverage gap panel
+  showNetworkHealth: boolean;  // Big grade banner
+  showNationalImpact: boolean; // Gallons treated counter
+  showAIInsights: boolean;     // AI narrative cards
+  showHotspots: boolean;       // Top 10 worsening/improving
+  showSituationSummary: boolean; // 7-tile national summary
+  showTimeRange: boolean;      // Time range + PEARL impact toggle
+  showSLA: boolean;            // SLA compliance tracking
+  showRestorationPlan: boolean; // Restoration plan card
+  collapseStateTable: boolean; // Collapse behind button vs full
+}> = {
+  full: {
+    label: 'Full Dashboard',
+    description: 'All panels visible — power user view',
+    defaultOverlay: 'hotspots',
+    showTopStrip: false, showPriorityQueue: false, showCoverageGaps: false,
+    showNetworkHealth: true, showNationalImpact: true, showAIInsights: true,
+    showHotspots: true, showSituationSummary: true, showTimeRange: true,
+    showSLA: true, showRestorationPlan: true, collapseStateTable: false,
+  },
+  compliance: {
+    label: 'Compliance',
+    description: 'Impairment severity, Category 5, enforcement priorities',
+    defaultOverlay: 'hotspots',
+    showTopStrip: true, showPriorityQueue: true, showCoverageGaps: false,
+    showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
+    showHotspots: false, showSituationSummary: false, showTimeRange: false,
+    showSLA: false, showRestorationPlan: true, collapseStateTable: true,
+  },
+  coverage: {
+    label: 'Coverage',
+    description: 'Monitoring gaps, blind spots, data freshness',
+    defaultOverlay: 'coverage',
+    showTopStrip: true, showPriorityQueue: false, showCoverageGaps: true,
+    showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
+    showHotspots: false, showSituationSummary: false, showTimeRange: false,
+    showSLA: false, showRestorationPlan: false, collapseStateTable: true,
+  },
+  programs: {
+    label: 'Programs',
+    description: 'Funding targets, intervention candidates, EJ + severity',
+    defaultOverlay: 'ej',
+    showTopStrip: true, showPriorityQueue: true, showCoverageGaps: true,
+    showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
+    showHotspots: false, showSituationSummary: false, showTimeRange: false,
+    showSLA: false, showRestorationPlan: true, collapseStateTable: true,
+  },
+  analysis: {
+    label: 'Analysis',
+    description: 'Trends, measurements, basin-level changes',
+    defaultOverlay: 'trend',
+    showTopStrip: false, showPriorityQueue: false, showCoverageGaps: false,
+    showNetworkHealth: true, showNationalImpact: false, showAIInsights: true,
+    showHotspots: true, showSituationSummary: true, showTimeRange: true,
+    showSLA: false, showRestorationPlan: false, collapseStateTable: false,
+  },
+};
+
+type RegionRow = {
+  id: string;
+  name: string;
+  state: string;
+  alertLevel: AlertLevel;
+  activeAlerts: number;
+  lastUpdatedISO: string;
+  status: 'assessed' | 'monitored' | 'unmonitored';
+  dataSourceCount: number;
+};
+
+type Props = {
+  onClose: () => void;
+  onSelectRegion: (regionId: string) => void;
+  federalMode?: boolean;
+};
+
+interface GeoFeature {
+  id: string;
+  properties?: { name?: string };
+  rsmKey?: string;
+}
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+// Letter grade scale (0-100 → A+ through F)
+function scoreToGrade(score: number): { letter: string; color: string; bg: string } {
+  if (score >= 97) return { letter: 'A+', color: 'text-green-700', bg: 'bg-green-100 border-green-300' };
+  if (score >= 93) return { letter: 'A',  color: 'text-green-700', bg: 'bg-green-100 border-green-300' };
+  if (score >= 90) return { letter: 'A-', color: 'text-green-600', bg: 'bg-green-50 border-green-200' };
+  if (score >= 87) return { letter: 'B+', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' };
+  if (score >= 83) return { letter: 'B',  color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' };
+  if (score >= 80) return { letter: 'B-', color: 'text-teal-600', bg: 'bg-teal-50 border-teal-200' };
+  if (score >= 77) return { letter: 'C+', color: 'text-yellow-700', bg: 'bg-yellow-50 border-yellow-300' };
+  if (score >= 73) return { letter: 'C',  color: 'text-yellow-700', bg: 'bg-yellow-50 border-yellow-300' };
+  if (score >= 70) return { letter: 'C-', color: 'text-yellow-600', bg: 'bg-yellow-50 border-yellow-200' };
+  if (score >= 67) return { letter: 'D+', color: 'text-orange-700', bg: 'bg-orange-50 border-orange-300' };
+  if (score >= 63) return { letter: 'D',  color: 'text-orange-600', bg: 'bg-orange-50 border-orange-200' };
+  if (score >= 60) return { letter: 'D-', color: 'text-orange-500', bg: 'bg-orange-50 border-orange-200' };
+  return { letter: 'F', color: 'text-red-700', bg: 'bg-red-50 border-red-300' };
+}
+
+const STATE_ABBR_TO_NAME: Record<string, string> = {
+  AL: 'Alabama', AK: 'Alaska', AZ: 'Arizona', AR: 'Arkansas', CA: 'California',
+  CO: 'Colorado', CT: 'Connecticut', DE: 'Delaware', FL: 'Florida', GA: 'Georgia',
+  HI: 'Hawaii', ID: 'Idaho', IL: 'Illinois', IN: 'Indiana', IA: 'Iowa',
+  KS: 'Kansas', KY: 'Kentucky', LA: 'Louisiana', ME: 'Maine', MD: 'Maryland',
+  MA: 'Massachusetts', MI: 'Michigan', MN: 'Minnesota', MS: 'Mississippi', MO: 'Missouri',
+  MT: 'Montana', NE: 'Nebraska', NV: 'Nevada', NH: 'New Hampshire', NJ: 'New Jersey',
+  NM: 'New Mexico', NY: 'New York', NC: 'North Carolina', ND: 'North Dakota', OH: 'Ohio',
+  OK: 'Oklahoma', OR: 'Oregon', PA: 'Pennsylvania', RI: 'Rhode Island', SC: 'South Carolina',
+  SD: 'South Dakota', TN: 'Tennessee', TX: 'Texas', UT: 'Utah', VT: 'Vermont',
+  VA: 'Virginia', WA: 'Washington', WV: 'West Virginia', WI: 'Wisconsin', WY: 'Wyoming',
+  DC: 'District of Columbia',
+};
+
+const NAME_TO_ABBR: Record<string, string> = Object.entries(STATE_ABBR_TO_NAME).reduce(
+  (acc, [abbr, name]) => {
+    acc[name] = abbr;
+    return acc;
+  },
+  {} as Record<string, string>
+);
+
+// FIPS code → abbreviation (us-atlas uses FIPS as geometry.id)
+const FIPS_TO_ABBR: Record<string, string> = {
+  '01': 'AL', '02': 'AK', '04': 'AZ', '05': 'AR', '06': 'CA',
+  '08': 'CO', '09': 'CT', '10': 'DE', '11': 'DC', '12': 'FL',
+  '13': 'GA', '15': 'HI', '16': 'ID', '17': 'IL', '18': 'IN',
+  '19': 'IA', '20': 'KS', '21': 'KY', '22': 'LA', '23': 'ME',
+  '24': 'MD', '25': 'MA', '26': 'MI', '27': 'MN', '28': 'MS',
+  '29': 'MO', '30': 'MT', '31': 'NE', '32': 'NV', '33': 'NH',
+  '34': 'NJ', '35': 'NM', '36': 'NY', '37': 'NC', '38': 'ND',
+  '39': 'OH', '40': 'OK', '41': 'OR', '42': 'PA', '44': 'RI',
+  '45': 'SC', '46': 'SD', '47': 'TN', '48': 'TX', '49': 'UT',
+  '50': 'VT', '51': 'VA', '53': 'WA', '54': 'WV', '55': 'WI',
+  '56': 'WY',
+};
+
+/** Resolve a GeoJSON feature to a 2-letter state abbreviation */
+function geoToAbbr(g: GeoFeature): string | undefined {
+  if (g.id) {
+    const fips = String(g.id).padStart(2, '0');
+    if (FIPS_TO_ABBR[fips]) return FIPS_TO_ABBR[fips];
+  }
+  if (g.properties?.name && NAME_TO_ABBR[g.properties.name]) return NAME_TO_ABBR[g.properties.name];
+  return undefined;
+}
+
+// ─── State Water Quality Agency Directory ─────────────────────────────────────
+// Real agency names, water quality program URLs, and CWA regulatory contacts
+interface StateAgency {
+  name: string;           // Agency name
+  division: string;       // Water quality division/bureau
+  url: string;            // Direct link to water quality program page
+  ms4Program: string;     // MS4/stormwater permit program name
+  cwaSec: string;         // Primary CWA section (303d, 319, 402)
+  phone?: string;
+}
+
+const STATE_AGENCIES: Record<string, StateAgency> = {
+  AL: { name: 'Alabama Dept. of Environmental Management', division: 'Water Division', url: 'https://adem.alabama.gov/programs/water/', ms4Program: 'NPDES MS4', cwaSec: '§303(d)/§402' },
+  AK: { name: 'Alaska Dept. of Environmental Conservation', division: 'Division of Water', url: 'https://dec.alaska.gov/water/', ms4Program: 'APDES MS4', cwaSec: '§303(d)/§402' },
+  AZ: { name: 'Arizona Dept. of Environmental Quality', division: 'Water Quality Division', url: 'https://www.azdeq.gov/WQD', ms4Program: 'AZPDES MS4', cwaSec: '§303(d)/§402' },
+  AR: { name: 'Arkansas Dept. of Energy & Environment', division: 'Office of Water Quality', url: 'https://www.adeq.state.ar.us/water/', ms4Program: 'NPDES MS4', cwaSec: '§303(d)/§402' },
+  CA: { name: 'California State Water Resources Control Board', division: 'Division of Water Quality', url: 'https://www.waterboards.ca.gov/water_issues/programs/', ms4Program: 'NPDES MS4 Phase I/II', cwaSec: '§303(d)/§402' },
+  CO: { name: 'Colorado Dept. of Public Health & Environment', division: 'Water Quality Control Division', url: 'https://cdphe.colorado.gov/wqcd', ms4Program: 'CDPS MS4', cwaSec: '§303(d)/§402' },
+  CT: { name: 'Connecticut DEEP', division: 'Bureau of Water Protection & Land Reuse', url: 'https://portal.ct.gov/deep/water', ms4Program: 'General Permit MS4', cwaSec: '§303(d)/§402' },
+  DE: { name: 'Delaware DNREC', division: 'Division of Water', url: 'https://dnrec.alpha.delaware.gov/water/', ms4Program: 'NPDES MS4', cwaSec: '§303(d)/§402' },
+  DC: { name: 'DC Dept. of Energy & Environment', division: 'Water Quality Division', url: 'https://doee.dc.gov/service/water-quality', ms4Program: 'DC MS4 Permit', cwaSec: '§303(d)/§402' },
+  FL: { name: 'Florida Dept. of Environmental Protection', division: 'Division of Water Resource Management', url: 'https://floridadep.gov/water', ms4Program: 'NPDES MS4', cwaSec: '§303(d)/§402' },
+  GA: { name: 'Georgia Environmental Protection Division', division: 'Watershed Protection Branch', url: 'https://epd.georgia.gov/watershed-protection-branch', ms4Program: 'NPDES MS4 Phase I/II', cwaSec: '§303(d)/§402' },
+  HI: { name: 'Hawaii Dept. of Health', division: 'Clean Water Branch', url: 'https://health.hawaii.gov/cwb/', ms4Program: 'NPDES MS4', cwaSec: '§303(d)/§402' },
+  ID: { name: 'Idaho Dept. of Environmental Quality', division: 'Water Quality Division', url: 'https://www.deq.idaho.gov/water-quality/', ms4Program: 'IPDES MS4', cwaSec: '§303(d)/§402' },
+  IL: { name: 'Illinois EPA', division: 'Bureau of Water', url: 'https://epa.illinois.gov/topics/water-quality.html', ms4Program: 'ILR40 MS4', cwaSec: '§303(d)/§402' },
+  IN: { name: 'Indiana Dept. of Environmental Management', division: 'Office of Water Quality', url: 'https://www.in.gov/idem/water/', ms4Program: 'Rule 13 MS4', cwaSec: '§303(d)/§402' },
+  IA: { name: 'Iowa Dept. of Natural Resources', division: 'Water Quality Bureau', url: 'https://www.iowadnr.gov/Environmental-Protection/Water-Quality', ms4Program: 'NPDES MS4', cwaSec: '§303(d)/§402' },
+  KS: { name: 'Kansas Dept. of Health & Environment', division: 'Bureau of Water', url: 'https://www.kdhe.ks.gov/149/Water', ms4Program: 'NPDES MS4', cwaSec: '§303(d)/§402' },
+  KY: { name: 'Kentucky Energy & Environment Cabinet', division: 'Division of Water', url: 'https://eec.ky.gov/Environmental-Protection/Water', ms4Program: 'KPDES MS4', cwaSec: '§303(d)/§402' },
+  LA: { name: 'Louisiana DEQ', division: 'Water Permits Division', url: 'https://www.deq.louisiana.gov/page/water', ms4Program: 'LPDES MS4', cwaSec: '§303(d)/§402' },
+  ME: { name: 'Maine DEP', division: 'Bureau of Water Quality', url: 'https://www.maine.gov/dep/water/', ms4Program: 'MEPDES MS4', cwaSec: '§303(d)/§402' },
+  MD: { name: 'Maryland Dept. of the Environment', division: 'Water & Science Administration', url: 'https://mde.maryland.gov/programs/water/Pages/index.aspx', ms4Program: 'MD MS4/NPDES', cwaSec: '§303(d)/§402', phone: '(410) 537-3000' },
+  MA: { name: 'Massachusetts DEP', division: 'Bureau of Water Resources', url: 'https://www.mass.gov/orgs/massdep-bureau-of-water-resources', ms4Program: 'NPDES MS4 General Permit', cwaSec: '§303(d)/§402' },
+  MI: { name: 'Michigan EGLE', division: 'Water Resources Division', url: 'https://www.michigan.gov/egle/about/organization/water-resources', ms4Program: 'NPDES MS4', cwaSec: '§303(d)/§402' },
+  MN: { name: 'Minnesota Pollution Control Agency', division: 'Water Quality Division', url: 'https://www.pca.state.mn.us/water', ms4Program: 'NPDES/SDS MS4', cwaSec: '§303(d)/§402' },
+  MS: { name: 'Mississippi DEQ', division: 'Office of Pollution Control', url: 'https://www.mdeq.ms.gov/water/', ms4Program: 'NPDES MS4', cwaSec: '§303(d)/§402' },
+  MO: { name: 'Missouri DNR', division: 'Water Protection Program', url: 'https://dnr.mo.gov/water', ms4Program: 'NPDES MS4 Phase I/II', cwaSec: '§303(d)/§402' },
+  MT: { name: 'Montana DEQ', division: 'Water Quality Division', url: 'https://deq.mt.gov/water', ms4Program: 'MPDES MS4', cwaSec: '§303(d)/§402' },
+  NE: { name: 'Nebraska DEE', division: 'Water Quality Division', url: 'https://dee.ne.gov/NDEQProg.nsf/WaterHome.xsp', ms4Program: 'NPDES MS4', cwaSec: '§303(d)/§402' },
+  NV: { name: 'Nevada Division of Environmental Protection', division: 'Bureau of Water Quality Planning', url: 'https://ndep.nv.gov/water', ms4Program: 'NPDES MS4', cwaSec: '§303(d)/§402' },
+  NH: { name: 'New Hampshire DES', division: 'Water Division', url: 'https://www.des.nh.gov/water', ms4Program: 'EPA Region 1 MS4', cwaSec: '§303(d)/§402' },
+  NJ: { name: 'New Jersey DEP', division: 'Division of Water Quality', url: 'https://www.nj.gov/dep/dwq/', ms4Program: 'NJ Tier A MS4', cwaSec: '§303(d)/§402' },
+  NM: { name: 'New Mexico Environment Dept.', division: 'Surface Water Quality Bureau', url: 'https://www.env.nm.gov/surface-water-quality/', ms4Program: 'NPDES MS4', cwaSec: '§303(d)/§402' },
+  NY: { name: 'New York DEC', division: 'Division of Water', url: 'https://www.dec.ny.gov/chemical/water.html', ms4Program: 'SPDES MS4 GP-0-24-001', cwaSec: '§303(d)/§402' },
+  NC: { name: 'North Carolina DEQ', division: 'Division of Water Resources', url: 'https://www.deq.nc.gov/about/divisions/water-resources', ms4Program: 'NPDES MS4 Phase I/II', cwaSec: '§303(d)/§402' },
+  ND: { name: 'North Dakota DEQ', division: 'Division of Water Quality', url: 'https://deq.nd.gov/wq/', ms4Program: 'NDPDES MS4', cwaSec: '§303(d)/§402' },
+  OH: { name: 'Ohio EPA', division: 'Division of Surface Water', url: 'https://epa.ohio.gov/divisions-and-offices/surface-water', ms4Program: 'NPDES MS4', cwaSec: '§303(d)/§402' },
+  OK: { name: 'Oklahoma DEQ', division: 'Water Quality Division', url: 'https://www.deq.ok.gov/water-quality-division/', ms4Program: 'OPDES MS4', cwaSec: '§303(d)/§402' },
+  OR: { name: 'Oregon DEQ', division: 'Water Quality Division', url: 'https://www.oregon.gov/deq/wq/Pages/default.aspx', ms4Program: 'NPDES MS4 Phase I', cwaSec: '§303(d)/§402' },
+  PA: { name: 'Pennsylvania DEP', division: 'Bureau of Clean Water', url: 'https://www.dep.pa.gov/Business/Water/CleanWater/Pages/default.aspx', ms4Program: 'PAG-13 MS4', cwaSec: '§303(d)/§402' },
+  RI: { name: 'Rhode Island DEM', division: 'Office of Water Resources', url: 'https://dem.ri.gov/programs/water', ms4Program: 'RIPDES MS4', cwaSec: '§303(d)/§402' },
+  SC: { name: 'South Carolina DHEC', division: 'Bureau of Water', url: 'https://scdhec.gov/environment/water-quality', ms4Program: 'NPDES MS4', cwaSec: '§303(d)/§402' },
+  SD: { name: 'South Dakota DANR', division: 'Water Quality Program', url: 'https://danr.sd.gov/Environment/WaterQuality/', ms4Program: 'NPDES MS4', cwaSec: '§303(d)/§402' },
+  TN: { name: 'Tennessee Dept. of Environment & Conservation', division: 'Division of Water Resources', url: 'https://www.tn.gov/environment/program-areas/wr-water-resources.html', ms4Program: 'NPDES MS4 Phase I/II', cwaSec: '§303(d)/§402' },
+  TX: { name: 'Texas Commission on Environmental Quality', division: 'Water Quality Division', url: 'https://www.tceq.texas.gov/waterquality', ms4Program: 'TPDES MS4 Phase I/II', cwaSec: '§303(d)/§402' },
+  UT: { name: 'Utah DEQ', division: 'Division of Water Quality', url: 'https://deq.utah.gov/division-water-quality', ms4Program: 'UPDES MS4', cwaSec: '§303(d)/§402' },
+  VT: { name: 'Vermont DEC', division: 'Watershed Management Division', url: 'https://dec.vermont.gov/watershed', ms4Program: 'NPDES MS4', cwaSec: '§303(d)/§402' },
+  VA: { name: 'Virginia DEQ', division: 'Water Division', url: 'https://www.deq.virginia.gov/water', ms4Program: 'VPDES MS4', cwaSec: '§303(d)/§402' },
+  WA: { name: 'Washington Dept. of Ecology', division: 'Water Quality Program', url: 'https://ecology.wa.gov/water-shorelines/water-quality', ms4Program: 'NPDES WA MS4 Phase I/II', cwaSec: '§303(d)/§402' },
+  WV: { name: 'West Virginia DEP', division: 'Division of Water & Waste Management', url: 'https://dep.wv.gov/WWE/Programs/wqmonitoring/Pages/default.aspx', ms4Program: 'NPDES MS4', cwaSec: '§303(d)/§402' },
+  WI: { name: 'Wisconsin DNR', division: 'Water Quality Bureau', url: 'https://dnr.wisconsin.gov/topic/Water', ms4Program: 'WPDES MS4', cwaSec: '§303(d)/§402' },
+  WY: { name: 'Wyoming DEQ', division: 'Water Quality Division', url: 'https://deq.wyoming.gov/water-quality/', ms4Program: 'WYPDES MS4', cwaSec: '§303(d)/§402' },
+};
+
+// ─── Waterbody Coordinates for Story Modal Map Imagery ────────────────────────
+const REGION_COORDS: Record<string, [number, number]> = {
+  'maryland_middle_branch': [39.2644, -76.6264], 'maryland_back_river': [39.25, -76.49],
+  'maryland_gwynns_falls': [39.28, -76.68], 'maryland_bear_creek': [39.24, -76.5],
+  'maryland_rock_creek_aa': [39.07, -76.63], 'virginia_elizabeth': [36.82, -76.29],
+  'virginia_lynnhaven': [36.88, -76.08], 'virginia_james_lower': [37.52, -77.45],
+  'virginia_rappahannock_tidal': [37.58, -76.7], 'virginia_back_bay': [36.65, -75.99],
+  'pennsylvania_conestoga': [40.04, -76.3], 'pennsylvania_swatara': [40.34, -76.45],
+  'pennsylvania_codorus': [39.96, -76.73], 'pennsylvania_pequea': [39.97, -76.25],
+  'pennsylvania_susquehanna_lower': [40.03, -76.5], 'dc_anacostia': [38.88, -76.97],
+  'dc_potomac_tidal': [38.87, -77.05], 'dc_rock_creek': [38.95, -77.05],
+  'delaware_christina': [39.73, -75.57], 'delaware_broadkill': [38.8, -75.25],
+  'westvirginia_kanawha': [38.35, -81.63], 'westvirginia_coal': [38.1, -81.8],
+  'westvirginia_elk': [38.39, -80.85], 'westvirginia_monongahela': [39.63, -79.95],
+  'westvirginia_potomac_south': [39.28, -78.76], 'florida_escambia': [30.41, -87.21],
+  'florida_blackwater': [30.66, -86.95], 'florida_pensacola_bay': [30.38, -87.12],
+  'florida_tampa_hillsborough': [27.94, -82.46], 'florida_caloosahatchee': [26.71, -81.87],
+  'louisiana_pontchartrain': [30.1, -90.07], 'louisiana_barataria': [29.5, -90.0],
+  'louisiana_calcasieu': [30.21, -93.25], 'louisiana_atchafalaya': [29.88, -91.3],
+  'louisiana_vermilion': [29.74, -92.12], 'texas_galveston': [29.28, -94.88],
+  'texas_houston_ship': [29.75, -95.07], 'texas_san_jacinto': [29.8, -95.08],
+  'texas_trinity': [30.05, -94.75], 'texas_corpus_christi': [27.8, -97.39],
+  'mississippi_back_biloxi': [30.4, -88.9], 'mississippi_pascagoula': [30.36, -88.56],
+  'mississippi_pearl_lower': [30.31, -89.64], 'mississippi_ross_barnett': [32.43, -90.0],
+  'mississippi_yazoo': [32.67, -90.44], 'alabama_mobile_river': [30.69, -88.04],
+  'alabama_dog_river': [30.58, -88.1], 'alabama_fowl_river': [30.4, -88.14],
+  'alabama_three_mile': [30.62, -88.06], 'alabama_cahaba': [33.13, -87.0],
+  'northcarolina_neuse': [35.11, -77.04], 'northcarolina_cape_fear': [34.18, -77.95],
+  'northcarolina_haw': [35.7, -79.18], 'northcarolina_tar_pamlico': [35.55, -77.58],
+  'northcarolina_catawba': [35.4, -81.0], 'southcarolina_ashley': [32.77, -80.0],
+  'southcarolina_waccamaw': [33.67, -79.05], 'southcarolina_congaree': [33.98, -81.05],
+  'southcarolina_broad': [34.36, -81.5], 'southcarolina_catawba_sc': [34.85, -80.85],
+  'georgia_savannah': [32.08, -81.09], 'georgia_ogeechee': [32.1, -81.28],
+  'georgia_altamaha': [31.33, -81.49], 'georgia_chattahoochee_atlanta': [33.77, -84.42],
+  'georgia_ocmulgee': [32.84, -83.63], 'newyork_gowanus': [40.67, -73.98],
+  'newyork_newtown': [40.73, -73.94], 'newyork_flushing_bay': [40.77, -73.85],
+  'newyork_jamaica_bay': [40.61, -73.84], 'newyork_onondaga': [43.06, -76.21],
+  'newjersey_passaic': [40.74, -74.18], 'newjersey_hackensack': [40.88, -74.05],
+  'newjersey_raritan': [40.51, -74.33], 'newjersey_barnegat': [39.78, -74.12],
+  'newjersey_delaware_estuary': [39.83, -75.35], 'connecticut_harbor': [41.27, -72.91],
+  'connecticut_quinnipiac': [41.35, -72.87], 'connecticut_housatonic': [41.18, -73.2],
+  'connecticut_thames': [41.35, -72.09], 'connecticut_park': [41.17, -73.22],
+  'massachusetts_charles': [42.36, -71.08], 'massachusetts_merrimack': [42.78, -71.09],
+  'massachusetts_mystic': [42.39, -71.1], 'massachusetts_taunton': [41.9, -71.09],
+  'massachusetts_buzzards': [41.58, -70.8], 'california_sf_bay': [37.6, -122.15],
+  'california_la_river': [33.94, -118.24], 'california_santa_ana': [33.64, -117.87],
+  'california_san_diego': [32.71, -117.24], 'california_sacramento': [38.56, -121.5],
+  'oregon_tualatin': [45.39, -122.77], 'oregon_willamette': [45.46, -122.67],
+  'oregon_johnson': [45.35, -122.62], 'oregon_klamath': [42.22, -121.77],
+  'oregon_rogue': [42.43, -123.33], 'washington_duwamish': [47.54, -122.34],
+  'washington_green_river': [47.32, -122.34], 'washington_puyallup': [47.2, -122.42],
+  'washington_spokane': [47.66, -117.43], 'washington_yakima': [46.6, -120.51],
+  'michigan_rouge': [42.27, -83.28], 'michigan_clinton': [42.61, -82.94],
+  'michigan_kalamazoo': [42.3, -86.26], 'michigan_grand': [43.06, -86.24],
+  'michigan_saginaw': [43.42, -83.95], 'ohio_cuyahoga': [41.49, -81.7],
+  'ohio_great_miami': [39.75, -84.2], 'ohio_scioto': [39.96, -83.0],
+  'ohio_maumee': [41.68, -83.52], 'ohio_mahoning': [41.08, -80.67],
+  'indiana_white_river': [39.77, -86.17], 'indiana_wabash': [40.42, -86.89],
+  'indiana_st_joseph': [41.67, -86.25], 'indiana_eagle_creek': [39.84, -86.27],
+  'indiana_fall_creek': [39.81, -86.11], 'illinois_chicago_river': [41.89, -87.62],
+  'illinois_des_plaines': [41.82, -87.85], 'illinois_fox': [41.85, -88.35],
+  'illinois_sangamon': [39.76, -89.69], 'illinois_kaskaskia': [38.59, -89.9],
+  'wisconsin_milwaukee': [43.03, -87.91], 'wisconsin_menomonee': [43.04, -88.03],
+  'wisconsin_kinnickinnic': [43.0, -87.9], 'wisconsin_fox': [44.26, -88.4],
+  'wisconsin_wisconsin_river': [43.44, -89.76], 'minnesota_minnesota': [44.74, -93.52],
+  'minnesota_mississippi_twin': [44.95, -93.26], 'minnesota_st_louis': [46.75, -92.11],
+  'minnesota_bassett_creek': [44.98, -93.3], 'minnesota_rum': [45.58, -93.56],
+  'iowa_des_moines': [41.59, -93.62], 'iowa_cedar': [41.65, -91.53],
+  'iowa_raccoon': [41.6, -94.05], 'iowa_floyd': [42.53, -92.34],
+  'iowa_south_skunk': [41.45, -92.53], 'missouri_meramec': [38.51, -90.55],
+  'missouri_grand': [39.11, -93.38], 'missouri_james': [37.21, -93.29],
+  'missouri_osage': [38.64, -92.08], 'missouri_river_des_peres': [38.58, -90.33],
+  'colorado_south_platte': [39.75, -104.99], 'colorado_cherry_creek': [39.65, -104.87],
+  'colorado_clear_creek': [39.76, -105.02], 'colorado_bear_creek': [39.65, -105.13],
+  'colorado_sand_creek': [39.79, -104.86], 'arizona_salt': [33.44, -111.94],
+  'arizona_gila': [32.85, -112.72], 'arizona_santa_cruz': [32.22, -110.97],
+  'arizona_verde': [34.56, -111.86], 'arizona_rillito': [32.27, -110.97],
+  'nevada_truckee': [39.53, -119.81], 'nevada_las_vegas_wash': [36.09, -114.94],
+  'nevada_carson': [39.16, -119.76], 'nevada_walker': [38.7, -118.73],
+  'nevada_humboldt': [40.84, -117.82], 'utah_jordan': [40.76, -111.93],
+  'utah_provo': [40.25, -111.65], 'utah_weber': [41.23, -111.98],
+  'utah_ogden': [41.22, -111.97], 'utah_spanish_fork': [40.11, -111.65],
+  'idaho_boise': [43.62, -116.24], 'idaho_snake': [42.58, -114.46],
+  'idaho_coeur_dalene': [47.68, -116.78], 'idaho_portneuf': [42.86, -112.45],
+  'idaho_clearwater': [46.42, -116.98], 'montana_clark_fork': [46.87, -113.99],
+  'montana_yellowstone': [45.78, -108.5], 'montana_flathead': [48.06, -114.31],
+  'montana_gallatin': [45.68, -111.05], 'montana_missouri_headwaters': [45.93, -111.51],
+  'wyoming_north_platte': [42.83, -106.33], 'wyoming_bighorn': [44.79, -108.38],
+  'wyoming_wind': [43.24, -109.67], 'wyoming_green': [41.77, -109.23],
+  'wyoming_laramie': [41.31, -105.59], 'newmexico_rio_grande_abq': [35.08, -106.65],
+  'newmexico_pecos': [34.45, -104.58], 'newmexico_san_juan': [36.77, -108.68],
+  'newmexico_gila_nm': [33.06, -108.54], 'newmexico_canadian': [35.48, -105.0],
+  'oklahoma_arkansas': [35.4, -94.62], 'oklahoma_cimarron': [36.11, -96.92],
+  'oklahoma_illinois': [36.0, -94.8], 'oklahoma_north_canadian': [35.47, -97.52],
+  'oklahoma_washita': [34.76, -97.94], 'kansas_missouri_kc': [39.12, -94.63],
+  'kansas_arkansas_wichita': [37.69, -97.34], 'kansas_smoky_hill': [38.76, -99.32],
+  'kansas_republican': [39.83, -97.61], 'kansas_verdigris': [37.17, -95.6],
+  'nebraska_platte': [41.01, -96.47], 'nebraska_elkhorn': [41.32, -96.24],
+  'nebraska_missouri_omaha': [41.26, -95.94], 'nebraska_big_blue': [40.35, -96.74],
+  'nebraska_loup': [41.38, -98.27], 'southdakota_big_sioux': [43.55, -96.73],
+  'southdakota_james': [43.72, -98.35], 'southdakota_cheyenne': [44.06, -101.35],
+  'southdakota_white': [43.57, -100.75], 'southdakota_vermillion': [42.78, -97.04],
+  'northdakota_red': [47.92, -97.06], 'northdakota_missouri_bismarck': [46.81, -100.78],
+  'northdakota_sheyenne': [47.06, -97.51], 'northdakota_souris': [48.23, -101.3],
+  'northdakota_heart': [46.81, -100.84], 'tennessee_wolf': [35.05, -89.98],
+  'tennessee_stones': [36.16, -86.78], 'tennessee_harpeth': [35.98, -87.05],
+  'tennessee_south_fork_holston': [36.54, -82.56], 'tennessee_cumberland': [36.17, -86.78],
+  'kentucky_ohio_louisville': [38.26, -85.75], 'kentucky_beargrass': [38.25, -85.68],
+  'kentucky_licking': [38.63, -84.6], 'kentucky_kentucky_river': [38.05, -84.5],
+  'kentucky_green': [37.32, -86.88], 'arkansas_buffalo': [35.99, -92.74],
+  'arkansas_illinois_ar': [36.12, -94.14], 'arkansas_ouachita': [34.47, -93.06],
+  'arkansas_strawberry': [36.06, -91.54], 'arkansas_caddo': [34.18, -93.51],
+  'maine_androscoggin': [44.1, -70.21], 'maine_kennebec': [44.31, -69.78],
+  'maine_penobscot': [44.8, -68.77], 'maine_presumpscot': [43.7, -70.3],
+  'maine_saco': [43.48, -70.45], 'newhampshire_merrimack': [43.21, -71.54],
+  'newhampshire_piscataquog': [43.0, -71.64], 'newhampshire_suncook': [43.22, -71.44],
+  'vermont_lake_champlain': [44.53, -73.28], 'vermont_winooski': [44.48, -72.81],
+  'vermont_otter_creek': [43.86, -73.21], 'rhodeisland_narragansett': [41.57, -71.38],
+  'rhodeisland_blackstone': [41.88, -71.38], 'rhodeisland_woonasquatucket': [41.84, -71.44],
+  'hawaii_ala_wai': [21.28, -157.83], 'hawaii_manoa': [21.3, -157.8],
+  'hawaii_pearl_harbor': [21.35, -157.95],
+};
+
+// State center fallback for waterbodies not in REGION_COORDS
+const STATE_CENTERS: Record<string, [number, number]> = {
+  AL: [32.8, -86.8], AK: [64.2, -152.5], AZ: [34.3, -111.7], AR: [34.8, -92.2],
+  CA: [36.8, -119.4], CO: [39.1, -105.4], CT: [41.6, -72.7], DE: [39.0, -75.5],
+  DC: [38.9, -77.0], FL: [28.6, -82.5], GA: [32.7, -83.5], HI: [21.3, -157.8],
+  ID: [44.1, -114.7], IL: [40.0, -89.2], IN: [39.8, -86.3], IA: [42.0, -93.5],
+  KS: [38.5, -98.3], KY: [37.8, -85.3], LA: [30.5, -91.9], ME: [45.3, -69.4],
+  MD: [39.0, -76.6], MA: [42.2, -71.5], MI: [44.3, -85.6], MN: [46.3, -94.2],
+  MS: [32.7, -89.7], MO: [38.5, -92.3], MT: [47.0, -110.0], NE: [41.5, -99.8],
+  NV: [39.9, -116.4], NH: [43.5, -71.6], NJ: [40.3, -74.5], NM: [34.5, -106.0],
+  NY: [42.8, -75.5], NC: [35.5, -79.4], ND: [47.5, -100.5], OH: [40.4, -82.8],
+  OK: [35.5, -97.5], OR: [43.8, -120.6], PA: [40.9, -77.8], RI: [41.7, -71.5],
+  SC: [34.0, -81.0], SD: [44.4, -100.2], TN: [35.7, -86.7], TX: [31.0, -97.5],
+  UT: [39.3, -111.7], VT: [44.0, -72.7], VA: [37.4, -79.5], WA: [47.4, -120.7],
+  WV: [38.6, -80.6], WI: [44.5, -89.5], WY: [43.0, -107.6],
+};
+
+function getRegionCoords(id: string, state: string): [number, number] {
+  return REGION_COORDS[id] || STATE_CENTERS[state] || [39.0, -98.0];
+}
+
+const SEVERITY_SCORE: Record<AlertLevel, number> = {
+  none: 0,
+  low: 1,
+  medium: 2,
+  high: 3,
+};
+
+const DEPLOYMENT_START = new Date('2025-01-09'); // Milton FL pilot launch
+
+const OVERLAYS: { id: OverlayId; label: string; description: string; icon: any }[] = [
+  { id: 'hotspots', label: 'Water Quality Risk', description: 'Impairment severity from EPA 303(d) and state assessments', icon: Droplets },
+  { id: 'ms4', label: 'MS4 Jurisdictions', description: 'Municipal Separate Storm Sewer System permit holders — potential PEARL deployment targets', icon: Building2 },
+  { id: 'ej', label: 'EJ Vulnerability', description: 'Census ACS demographics + EPA drinking water violations — community environmental burden', icon: Users },
+  { id: 'economy', label: 'Compliance Cost', description: 'Estimated annual MS4 stormwater compliance cost burden', icon: DollarSign },
+  { id: 'wildlife', label: 'Ecological Sensitivity', description: 'USFWS ESA-listed threatened & endangered species density (aquatic-weighted)', icon: Leaf },
+  { id: 'trend', label: 'Trends', description: 'Water quality change vs prior assessment period', icon: TrendingUp },
+  { id: 'coverage', label: 'Monitoring Coverage', description: 'PEARL deployment and monitoring network gaps', icon: BarChart3 },
+];
+
+// ─── MS4 Jurisdiction Data (EPA NPDES universe, est. 2024) ──────────────────
+// Phase I = large/medium cities (pop ≥100k), Phase II = small urbanized (pop ≥50k UA)
+// Source: EPA NPDES permit program, state stormwater program data, Census UA designations
+const MS4_JURISDICTIONS: Record<string, { phase1: number; phase2: number; notes?: string }> = {
+  AL: { phase1: 6, phase2: 55, notes: 'Birmingham, Mobile, Huntsville metro areas' },
+  AK: { phase1: 1, phase2: 8 },
+  AZ: { phase1: 8, phase2: 45, notes: 'Phoenix-Mesa-Tucson metro complex' },
+  AR: { phase1: 3, phase2: 30 },
+  CA: { phase1: 120, phase2: 450, notes: 'Largest MS4 program nationally; LA, Bay Area, SD individual permits' },
+  CO: { phase1: 8, phase2: 65, notes: 'Front Range corridor Denver-Colorado Springs' },
+  CT: { phase1: 4, phase2: 120, notes: 'Dense municipal structure; EPA Region 1 general permit' },
+  DE: { phase1: 2, phase2: 15 },
+  DC: { phase1: 1, phase2: 0, notes: 'Single DC MS4 permit covers entire district' },
+  FL: { phase1: 18, phase2: 180, notes: 'Extensive Phase II; coastal nutrient TMDLs driving compliance' },
+  GA: { phase1: 10, phase2: 85, notes: 'Metro Atlanta Phase I cluster' },
+  HI: { phase1: 2, phase2: 8 },
+  ID: { phase1: 2, phase2: 15 },
+  IL: { phase1: 12, phase2: 200, notes: 'Chicagoland + downstate urbanized areas' },
+  IN: { phase1: 8, phase2: 100, notes: 'Rule 13 MS4 program; Indianapolis metro' },
+  IA: { phase1: 3, phase2: 40 },
+  KS: { phase1: 4, phase2: 35, notes: 'KC metro, Wichita' },
+  KY: { phase1: 4, phase2: 45, notes: 'Louisville, Lexington Phase I' },
+  LA: { phase1: 5, phase2: 35 },
+  ME: { phase1: 1, phase2: 30, notes: 'EPA Region 1 general permit' },
+  MD: { phase1: 10, phase2: 75, notes: 'County-based Phase I (AA, Baltimore Co, PG, Montgomery); aggressive nutrient TMDLs' },
+  MA: { phase1: 4, phase2: 260, notes: 'Highest density Phase II nationally; Charles River/nutrient TMDLs' },
+  MI: { phase1: 10, phase2: 130, notes: 'SE Michigan, Grand Rapids metro' },
+  MN: { phase1: 5, phase2: 80, notes: 'Twin Cities metro + MS4/SDS program' },
+  MS: { phase1: 3, phase2: 20 },
+  MO: { phase1: 6, phase2: 55, notes: 'KC, St. Louis Phase I; Phase II expanding' },
+  MT: { phase1: 1, phase2: 8 },
+  NE: { phase1: 2, phase2: 25 },
+  NV: { phase1: 4, phase2: 15, notes: 'Las Vegas metro dominates; Reno/Sparks' },
+  NH: { phase1: 1, phase2: 40, notes: 'EPA Region 1 general permit' },
+  NJ: { phase1: 15, phase2: 350, notes: 'Tier A MS4 — nearly every municipality; very high density' },
+  NM: { phase1: 3, phase2: 15 },
+  NY: { phase1: 20, phase2: 450, notes: 'NYC watershed + upstate Phase II; SPDES MS4 GP' },
+  NC: { phase1: 10, phase2: 140, notes: 'Charlotte, Raleigh-Durham, Triad metros' },
+  ND: { phase1: 1, phase2: 8 },
+  OH: { phase1: 15, phase2: 200, notes: 'Major metro areas; OEPA Phase II general permit' },
+  OK: { phase1: 4, phase2: 30, notes: 'OKC, Tulsa Phase I' },
+  OR: { phase1: 5, phase2: 40, notes: 'Portland metro Phase I consortium' },
+  PA: { phase1: 10, phase2: 250, notes: 'PAG-13 general permit; Philly + Pittsburgh Phase I; Chesapeake Bay TMDL pressure' },
+  RI: { phase1: 2, phase2: 35, notes: 'EPA Region 1; Narragansett Bay TMDLs' },
+  SC: { phase1: 5, phase2: 50, notes: 'Charleston, Greenville, Columbia metros' },
+  SD: { phase1: 1, phase2: 10 },
+  TN: { phase1: 6, phase2: 60, notes: 'Nashville, Memphis, Knoxville Phase I' },
+  TX: { phase1: 25, phase2: 400, notes: 'Second largest MS4 program; TCEQ 4-level system' },
+  UT: { phase1: 3, phase2: 40, notes: 'Wasatch Front urbanized area' },
+  VT: { phase1: 1, phase2: 12 },
+  VA: { phase1: 10, phase2: 100, notes: 'NoVA, Hampton Roads Phase I; Chesapeake Bay TMDL' },
+  WA: { phase1: 8, phase2: 95, notes: 'Puget Sound Phase I consortium; Ecology MS4 permits' },
+  WV: { phase1: 2, phase2: 20 },
+  WI: { phase1: 5, phase2: 90, notes: 'Milwaukee metro + WDNR MS4 general permit' },
+  WY: { phase1: 1, phase2: 6 },
+};
+
+// ─── Helper Functions ─────────────────────────────────────────────────────────
+
+function scoreToBadgeVariant(score: number): 'default' | 'secondary' | 'destructive' {
+  if (score >= 3) return 'destructive';
+  if (score === 2) return 'default';
+  return 'secondary';
+}
+
+function levelToIcon(level: AlertLevel) {
+  if (level === 'high') return <AlertTriangle size={16} />;
+  if (level === 'medium') return <AlertCircle size={16} />;
+  if (level === 'low') return <AlertCircle size={16} />;
+  return <CheckCircle size={16} />;
+}
+
+function levelToLabel(level: AlertLevel) {
+  if (level === 'high') return 'Severe';
+  if (level === 'medium') return 'Impaired';
+  if (level === 'low') return 'Watch';
+  return 'Healthy';
+}
+
+function generateRegionData(): RegionRow[] {
+  const now = new Date();
+  const iso = now.toISOString();
+
+  // Legacy alert seeds — hand-verified waterbodies with known conditions
+  const LEGACY_ALERTS: Record<string, { alertLevel: AlertLevel; activeAlerts: number }> = {
+    // Maryland
+    maryland_middle_branch:    { alertLevel: 'high',   activeAlerts: 5 },
+    maryland_back_river:       { alertLevel: 'high',   activeAlerts: 4 },
+    maryland_gwynns_falls:     { alertLevel: 'high',   activeAlerts: 4 },
+    maryland_bear_creek:       { alertLevel: 'medium', activeAlerts: 3 },
+    maryland_inner_harbor:     { alertLevel: 'high',   activeAlerts: 4 },
+    maryland_jones_falls:      { alertLevel: 'medium', activeAlerts: 3 },
+    maryland_patapsco_river:   { alertLevel: 'medium', activeAlerts: 2 },
+    maryland_patapsco:         { alertLevel: 'medium', activeAlerts: 2 },
+    maryland_stony_creek:      { alertLevel: 'medium', activeAlerts: 2 },
+    maryland_gunpowder:        { alertLevel: 'low',    activeAlerts: 1 },
+    maryland_potomac:          { alertLevel: 'medium', activeAlerts: 2 },
+    maryland_chester_river:    { alertLevel: 'medium', activeAlerts: 2 },
+    maryland_choptank_river:   { alertLevel: 'medium', activeAlerts: 2 },
+    maryland_patuxent_river:   { alertLevel: 'medium', activeAlerts: 2 },
+    maryland_severn_river:     { alertLevel: 'medium', activeAlerts: 2 },
+    maryland_nanticoke_river:  { alertLevel: 'low',    activeAlerts: 1 },
+    // Virginia
+    virginia_elizabeth:        { alertLevel: 'high',   activeAlerts: 6 },
+    virginia_james_lower:      { alertLevel: 'high',   activeAlerts: 4 },
+    virginia_rappahannock:     { alertLevel: 'medium', activeAlerts: 3 },
+    virginia_york:             { alertLevel: 'medium', activeAlerts: 2 },
+    virginia_lynnhaven:        { alertLevel: 'high',   activeAlerts: 4 },
+    // DC
+    dc_anacostia:              { alertLevel: 'high',   activeAlerts: 6 },
+    dc_rock_creek:             { alertLevel: 'high',   activeAlerts: 4 },
+    dc_potomac:                { alertLevel: 'medium', activeAlerts: 3 },
+    dc_oxon_run:               { alertLevel: 'medium', activeAlerts: 3 },
+    dc_watts_branch:           { alertLevel: 'medium', activeAlerts: 2 },
+    // Pennsylvania
+    pennsylvania_conestoga:    { alertLevel: 'high',   activeAlerts: 5 },
+    pennsylvania_swatara:      { alertLevel: 'high',   activeAlerts: 4 },
+    pennsylvania_codorus:      { alertLevel: 'medium', activeAlerts: 3 },
+    pennsylvania_susquehanna:  { alertLevel: 'medium', activeAlerts: 2 },
+    // Delaware
+    delaware_christina:        { alertLevel: 'high',   activeAlerts: 4 },
+    delaware_brandywine:       { alertLevel: 'medium', activeAlerts: 3 },
+    // Florida — PEARL pilot
+    florida_escambia:          { alertLevel: 'high',   activeAlerts: 4 },
+    florida_tampa_bay:         { alertLevel: 'high',   activeAlerts: 5 },
+    florida_charlotte_harbor:  { alertLevel: 'high',   activeAlerts: 4 },
+    florida_pensacola_bay:     { alertLevel: 'medium', activeAlerts: 2 },
+    // West Virginia
+    westvirginia_shenandoah:   { alertLevel: 'high',   activeAlerts: 5 },
+    westvirginia_opequon:      { alertLevel: 'high',   activeAlerts: 4 },
+    westvirginia_potomac_sb:   { alertLevel: 'medium', activeAlerts: 3 },
+  };
+
+  // Convert stateCode (US:24) → abbreviation (MD) using FIPS
+  function stateCodeToAbbr(stateCode: string): string {
+    const fips = stateCode.replace('US:', '');
+    return FIPS_TO_ABBR[fips] || fips;
+  }
+
+  // Build from registry — every entry has confirmed data
+  const rows: RegionRow[] = [];
+  const seen = new Set<string>();
+
+  for (const [id, meta] of Object.entries(REGION_META)) {
+    if (seen.has(id)) continue;
+    seen.add(id);
+
+    const legacy = LEGACY_ALERTS[id];
+    const abbr = stateCodeToAbbr(meta.stateCode);
+    const sources = getWaterbodyDataSources(id);
+    const hasLegacyAssessment = !!legacy;
+
+    rows.push({
+      id,
+      name: meta.name,
+      state: abbr,
+      alertLevel: legacy?.alertLevel ?? 'none',
+      activeAlerts: legacy?.activeAlerts ?? 0,
+      lastUpdatedISO: iso,
+      status: hasLegacyAssessment ? 'assessed' : sources.length > 0 ? 'monitored' : 'unmonitored',
+      dataSourceCount: sources.length,
+    });
+  }
+
+  return rows;
+}
+
+
+// ─── Animated Counter Hook ───────────────────────────────────────────────────
+
+function useAnimatedCounter(target: number, duration = 2000) {
+  const [value, setValue] = useState(0);
+  useEffect(() => {
+    const start = performance.now();
+    const step = (now: number) => {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(Math.round(target * eased));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [target, duration]);
+  return value;
+}
+
+// ─── Live Tick Hook (increments a value over time) ──────────────────────────
+
+function useLiveTick(baseValue: number, ratePerSecond: number) {
+  const [value, setValue] = useState(baseValue);
+  useEffect(() => {
+    setValue(baseValue);
+    const interval = setInterval(() => {
+      setValue(v => v + ratePerSecond);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [baseValue, ratePerSecond]);
+  return value;
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
+export function NationalCommandCenter(props: Props) {
+  const { onClose, onSelectRegion, federalMode = false } = props;
+  const { logout, user } = useAuth();
+
+  // ── View Lens: controls layout composition ──
+  const [viewLens, setViewLens] = useState<ViewLens>(federalMode ? 'compliance' : 'full');
+  const lens = LENS_CONFIG[viewLens];
+
+  // ── ATTAINS Bulk State Assessment Data ──
+  // Keyed by state abbreviation → array of matched waterbody assessments
+  const [attainsBulk, setAttainsBulk] = useState<Record<string, Array<{
+    name: string; category: string; alertLevel: AlertLevel; causes: string[]; cycle: string;
+  }>>>({});
+  const [attainsBulkLoading, setAttainsBulkLoading] = useState<Set<string>>(new Set());
+  const [attainsBulkLoaded, setAttainsBulkLoaded] = useState<Set<string>>(new Set());
+
+  // Base region data from registry + legacy seeds (static)
+  const baseRegionData = useMemo(() => generateRegionData(), []);
+
+  // Normalized name index for fuzzy matching ATTAINS → registry
+  const nameIndex = useMemo(() => {
+    const idx = new Map<string, string[]>(); // normalized → regionId[]
+    for (const r of baseRegionData) {
+      // Multiple normalized variants for matching
+      const variants = [
+        r.name.toLowerCase().trim(),
+        r.name.toLowerCase().replace(/,.*$/, '').trim(), // strip after comma
+        r.id.replace(/^[a-z]+_/, '').replace(/_/g, ' '), // strip state prefix, underscores to spaces
+      ];
+      for (const v of variants) {
+        if (!idx.has(v)) idx.set(v, []);
+        idx.get(v)!.push(r.id);
+      }
+    }
+    return idx;
+  }, [baseRegionData]);
+
+  // Build a lookup of regionId → state abbreviation for fast filtering
+  const regionStateMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const r of baseRegionData) map.set(r.id, r.state);
+    return map;
+  }, [baseRegionData]);
+
+  // Match an ATTAINS waterbody name to registry IDs
+  function matchAttainsToRegistry(attainsName: string, stateAbbr: string): string[] {
+    const norm = attainsName.toLowerCase().trim();
+    if (!norm) return [];
+    // Direct match — filter by state abbreviation using regionStateMap (not ID prefix)
+    if (nameIndex.has(norm)) {
+      return nameIndex.get(norm)!.filter(id => regionStateMap.get(id) === stateAbbr);
+    }
+    // Strip common suffixes and retry
+    const stripped = norm.replace(/ (river|creek|bay|harbor|inlet|lake|pond|branch|run|falls|fork|stream|reservoir)\b/g, '').trim();
+    if (stripped && nameIndex.has(stripped)) {
+      return nameIndex.get(stripped)!.filter(id => regionStateMap.get(id) === stateAbbr);
+    }
+    // Partial match: check if ATTAINS name is contained in any registry name for this state
+    const matches: string[] = [];
+    for (const r of baseRegionData) {
+      if (r.state !== stateAbbr) continue;
+      const rNorm = r.name.toLowerCase();
+      const rBase = rNorm.replace(/,.*$/, '').trim();
+      if (rNorm.includes(norm) || norm.includes(rBase)) {
+        matches.push(r.id);
+      }
+    }
+    return matches;
+  }
+
+  // Merge base data with ATTAINS bulk assessments → reactive regionData
+  // Two-phase: (1) upgrade existing registry entries, (2) ADD new ATTAINS-only waterbodies
+  const regionData = useMemo(() => {
+    if (Object.keys(attainsBulk).length === 0) return baseRegionData;
+
+    try {
+    const SEVERITY: Record<string, number> = { high: 3, medium: 2, low: 1, none: 0 };
+    const stateKeys = Object.keys(attainsBulk);
+    const totalEntries = Object.values(attainsBulk).reduce((s, a) => s + a.length, 0);
+    console.log(`[ATTAINS Merge] Starting merge: ${stateKeys.length} states, ${totalEntries} total ATTAINS entries, ${baseRegionData.length} base regions`);
+
+    // Phase 1: Build lookup for registry matches (same as before)
+    const attainsLookup = new Map<string, { alertLevel: AlertLevel; category: string; causes: string[]; cycle: string }>();
+    const matchedAttainsNames = new Set<string>(); // track which ATTAINS entries matched
+
+    for (const [stateAbbr, assessments] of Object.entries(attainsBulk)) {
+      for (const a of assessments) {
+        const matchedIds = matchAttainsToRegistry(a.name, stateAbbr);
+        if (matchedIds.length > 0) {
+          matchedAttainsNames.add(`${stateAbbr}:${a.name}`);
+          for (const id of matchedIds) {
+            const existing = attainsLookup.get(id);
+            if (!existing || (SEVERITY[a.alertLevel] ?? 0) > (SEVERITY[existing.alertLevel] ?? 0)) {
+              attainsLookup.set(id, { alertLevel: a.alertLevel as AlertLevel, category: a.category, causes: a.causes, cycle: a.cycle });
+            }
+          }
+        }
+      }
+    }
+
+    // Phase 1b: Merge registry entries with ATTAINS upgrades
+    const merged = baseRegionData.map(r => {
+      const attains = attainsLookup.get(r.id);
+      if (!attains) return r;
+      if (r.status === 'assessed') return r; // Legacy seed — keep
+      return {
+        ...r,
+        status: 'assessed' as const,
+        alertLevel: attains.alertLevel,
+        activeAlerts: (SEVERITY[attains.alertLevel] ?? 0) > 0 ? attains.causes.length || 1 : 0,
+      };
+    });
+
+    // Phase 2: ADD unmatched ATTAINS waterbodies as new RegionRow entries
+    // Cap per state to prevent memory issues — prioritize impaired waterbodies
+    const MAX_NEW_PER_STATE = 1500;
+    const existingIdsByState = new Map<string, Set<string>>();
+    for (const r of merged) {
+      const set = existingIdsByState.get(r.state) ?? new Set();
+      set.add(r.id);
+      existingIdsByState.set(r.state, set);
+    }
+
+    const newRows: RegionRow[] = [];
+    let totalAdded = 0;
+
+    for (const [stateAbbr, assessments] of Object.entries(attainsBulk)) {
+      // Debug: check data quality
+      const withName = assessments.filter(a => a.name && a.name.trim().length > 0);
+      const withoutName = assessments.length - withName.length;
+      if (withoutName > 0) {
+        console.log(`[ATTAINS Merge] ${stateAbbr}: ${withoutName}/${assessments.length} entries have empty names`);
+      }
+
+      // Filter to unmatched only, sort impaired first
+      const unmatched = assessments
+        .filter(a => {
+          const name = (a.name || '').trim();
+          if (name.length === 0) return false;
+          return !matchedAttainsNames.has(`${stateAbbr}:${a.name}`);
+        })
+        .sort((a, b) => (SEVERITY[b.alertLevel] ?? 0) - (SEVERITY[a.alertLevel] ?? 0));
+
+      let added = 0;
+      const seenNames = new Set<string>();
+      for (const a of unmatched) {
+        if (added >= MAX_NEW_PER_STATE) break;
+        // Deduplicate by name within state
+        const normName = (a.name || '').trim().toLowerCase();
+        if (!normName || seenNames.has(normName)) continue;
+        seenNames.add(normName);
+
+        const syntheticId = `attains-${stateAbbr}-${normName.replace(/[^a-z0-9]/g, '-').slice(0, 60)}`;
+        // Skip if somehow collides with existing
+        if (existingIdsByState.get(stateAbbr)?.has(syntheticId)) continue;
+
+        newRows.push({
+          id: syntheticId,
+          name: a.name.trim(),
+          state: stateAbbr,
+          alertLevel: a.alertLevel as AlertLevel,
+          activeAlerts: (SEVERITY[a.alertLevel] ?? 0) > 0 ? a.causes.length || 1 : 0,
+          lastUpdatedISO: new Date().toISOString(),
+          status: 'assessed',
+          dataSourceCount: 1, // EPA ATTAINS
+        });
+        added++;
+      }
+      if (added > 0 || assessments.length > 0) {
+        console.log(`[ATTAINS Merge] ${stateAbbr}: ${added} new waterbodies added (${assessments.length} total ATTAINS, ${unmatched.length} unmatched, ${matchedAttainsNames.size} matched globally)`);
+      }
+      totalAdded += added;
+    }
+
+    console.log(`[ATTAINS Merge] Phase 2 complete: ${totalAdded} new waterbodies across ${Object.keys(attainsBulk).length} states. Total regionData: ${merged.length + newRows.length}`);
+
+    return [...merged, ...newRows];
+    } catch (err) {
+      console.error('[ATTAINS Merge] ERROR in merge — falling back to baseRegionData:', err);
+      return baseRegionData;
+    }
+  }, [baseRegionData, attainsBulk]);
+
+  // ── ATTAINS National Cache Loader ──
+  // Reads from server cache if available. Does NOT trigger a build.
+  // To build cache: run `npx ts-node scripts/build-attains-cache.ts` in a separate terminal
+  // Or hit: /api/water-data?action=attains-build (one-time trigger)
+  useEffect(() => {
+    let cancelled = false;
+    let pollTimer: ReturnType<typeof setTimeout> | null = null;
+
+    async function loadFromCache() {
+      try {
+        // Use status endpoint first (lightweight, no build trigger)
+        const statusRes = await fetch('/api/water-data?action=attains-national-status');
+        if (!statusRes.ok) return;
+        const { status: cacheStatus, loadedStates: loadedCount } = await statusRes.json();
+
+        // If cache has no data yet, just wait — don't trigger a build from the browser
+        if (loadedCount === 0) {
+          console.log('[ATTAINS] No cache data yet. Run build script or hit /api/water-data?action=attains-build');
+          if (!cancelled) pollTimer = setTimeout(loadFromCache, 30_000);
+          return;
+        }
+
+        // Cache has data — fetch it
+        console.log(`[ATTAINS] Cache ${cacheStatus}, ${loadedCount} states — fetching...`);
+        const r = await fetch('/api/water-data?action=attains-national-cache');
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const json = await r.json();
+        const { states } = json;
+
+        if (states && Object.keys(states).length > 0) {
+          const bulk: Record<string, Array<{ name: string; category: string; alertLevel: AlertLevel; causes: string[]; cycle: string }>> = {};
+          const loaded = new Set<string>();
+
+          for (const [st, summary] of Object.entries(states) as [string, any][]) {
+            const waterbodies = (summary.waterbodies || []).map((wb: any) => ({
+              name: wb.name || wb.id || '',
+              category: wb.category || '',
+              alertLevel: (wb.alertLevel || 'none') as AlertLevel,
+              causes: wb.causes || [],
+              cycle: '',
+            }));
+            if (waterbodies.length > 0) {
+              bulk[st] = waterbodies;
+              loaded.add(st);
+            }
+          }
+
+          if (!cancelled) {
+            setAttainsBulk(bulk);
+            setAttainsBulkLoaded(loaded);
+            const allStates = [...new Set(baseRegionData.map(r => r.state))];
+            setAttainsBulkLoading(new Set(allStates.filter(s => !loaded.has(s))));
+            console.log(`[ATTAINS] Loaded ${loaded.size} states into UI`);
+          }
+        }
+
+        // Keep polling if cache is still building
+        if (!cancelled && (cacheStatus === 'building' || cacheStatus === 'cold')) {
+          pollTimer = setTimeout(loadFromCache, 15_000);
+        } else if (!cancelled) {
+          setAttainsBulkLoading(new Set());
+        }
+      } catch (e: any) {
+        console.warn('[ATTAINS] Cache fetch failed:', e.message);
+        if (!cancelled) pollTimer = setTimeout(loadFromCache, 30_000);
+      }
+    }
+
+    // Delay initial check so page renders first
+    pollTimer = setTimeout(loadFromCache, 3_000);
+    return () => {
+      cancelled = true;
+      if (pollTimer) clearTimeout(pollTimer);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const [selectedState, setSelectedState] = useState<string>('MD');
+
+  // ── Signals Intelligence Fetcher ──
+  useEffect(() => {
+    let cancelled = false;
+    async function loadSignals() {
+      setSignalsLoading(true);
+      try {
+        const r = await fetch(`/api/water-data?action=signals&limit=30`);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        if (!cancelled) {
+          setSignals(data.signals || []);
+          setSignalSources(data.sources || []);
+        }
+      } catch (e: any) {
+        console.warn('[Signals] Fetch failed:', e.message);
+      } finally {
+        if (!cancelled) setSignalsLoading(false);
+      }
+    }
+    // Delay so page renders first
+    const timer = setTimeout(loadSignals, 5_000);
+    // Refresh every 5 minutes
+    const interval = setInterval(loadSignals, 300_000);
+    return () => { cancelled = true; clearTimeout(timer); clearInterval(interval); };
+  }, []);
+  const [waterbodySearch, setWaterbodySearch] = useState<string>('');
+  const [waterbodyFilter, setWaterbodyFilter] = useState<'all' | 'impaired' | 'severe' | 'monitored'>('all');
+  const [overlay, setOverlay] = useState<OverlayId>(lens.defaultOverlay);
+  const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d' | 'custom'>('24h');
+  const [showImpact, setShowImpact] = useState(false);
+  const [alertWorkflow, setAlertWorkflow] = useState<Record<string, { status: 'new' | 'acknowledged' | 'assigned' | 'resolved'; owner?: string; }>>({});
+  
+  // Inline detail panel — works for ALL roles
+  const [activeDetailId, setActiveDetailId] = useState<string | null>(null);
+
+  // Fetch real water quality data for the active waterbody
+  const { waterData, isLoading: waterLoading, hasRealData, primarySource } = useWaterData(activeDetailId);
+
+  // ── ATTAINS: Real 303(d) data per waterbody ──
+  const [attainsCache, setAttainsCache] = useState<Record<string, {
+    category: string; causes: string[]; causeCount: number; status: string; cycle: string; loading: boolean;
+  }>>({});
+
+  // ── EJScreen: Real EJ index per waterbody ──
+  const [ejCache, setEjCache] = useState<Record<string, {
+    ejIndex: number | null; loading: boolean; error?: string;
+  }>>({});
+
+  // ── ATTAINS state summaries (replaces mock overlay scores) ──
+  const [stateSummaryCache, setStateSummaryCache] = useState<Record<string, {
+    totalAssessed: number; totalImpaired: number; impairedPct: number; loading: boolean;
+  }>>({});
+
+  // Fetch ATTAINS when detail panel opens
+  useEffect(() => {
+    if (!activeDetailId) return;
+    const nccRegion = regionData.find(r => r.id === activeDetailId);
+    if (!nccRegion) return;
+
+    // Skip if already cached
+    if (attainsCache[activeDetailId] && !attainsCache[activeDetailId].loading) return;
+
+    // Mark loading
+    setAttainsCache(prev => ({ ...prev, [activeDetailId]: { category: '', causes: [], causeCount: 0, status: '', cycle: '', loading: true } }));
+
+    // Build search name variants (ATTAINS uses specific assessment unit names that may differ)
+    const baseName = nccRegion.name.split(',')[0].split('/')[0].split('–')[0].trim();
+    // Try multiple name variants: full name, then shorter keywords
+    const nameVariants = [
+      baseName,
+      baseName.split(' ').slice(0, 2).join(' '), // First two words: "San Francisco", "Los Angeles"
+    ].filter(n => n.length > 2);
+
+    const tryFetch = async (nameIdx: number): Promise<void> => {
+      if (nameIdx >= nameVariants.length) {
+        // All variants exhausted — try state impaired list as last resort
+        try {
+          const r = await fetch(`/api/water-data?action=attains-impaired&statecode=${nccRegion.state}&limit=20`);
+          const json = await r.json();
+          const waterbodies = json?.waterbodies || [];
+          // Fuzzy match: find waterbody whose name contains our base name
+          const match = waterbodies.find((wb: any) =>
+            wb.name?.toLowerCase().includes(baseName.toLowerCase().split(' ')[0])
+          );
+          if (match) {
+            setAttainsCache(prev => ({
+              ...prev,
+              [activeDetailId]: {
+                category: match.category || '', causes: match.causes || [],
+                causeCount: match.causeCount || 0, status: match.status || '',
+                cycle: match.cycle || '', loading: false,
+              }
+            }));
+          } else {
+            setAttainsCache(prev => ({
+              ...prev,
+              [activeDetailId]: { category: 'No ATTAINS match', causes: [], causeCount: 0, status: '', cycle: '', loading: false }
+            }));
+          }
+        } catch {
+          setAttainsCache(prev => ({
+            ...prev,
+            [activeDetailId]: { category: 'API error', causes: [], causeCount: 0, status: '', cycle: '', loading: false }
+          }));
+        }
+        return;
+      }
+
+      try {
+        const searchName = nameVariants[nameIdx];
+        const r = await fetch(`/api/water-data?action=attains-assessments&statecode=${nccRegion.state}&assessmentUnitName=${encodeURIComponent(searchName)}&limit=5`);
+        const json = await r.json();
+        const items = json?.data?.items || [];
+        if (items.length > 0) {
+          const best = items[0];
+
+          // Extract causes from ALL paths — ATTAINS responses vary
+          const causesSet = new Set<string>();
+
+          // Path 1: parameters[].parameterName (most common — matches bulk parser)
+          for (const p of (best?.parameters || [])) {
+            const pName = (p?.parameterName || '').trim();
+            if (pName && pName !== 'CAUSE UNKNOWN' && pName !== 'CAUSE UNKNOWN - IMPAIRED BIOTA') {
+              causesSet.add(pName);
+            }
+            // Also check nested associatedCauses within each parameter
+            for (const c of (p?.associatedCauses || [])) {
+              if (c?.causeName) causesSet.add(c.causeName.trim());
+            }
+          }
+
+          // Path 2: useAttainments[].threatenedActivities/impairedActivities[].associatedCauses
+          if (causesSet.size === 0) {
+            for (const u of (best?.useAttainments || [])) {
+              for (const a of (u?.threatenedActivities || []).concat(u?.impairedActivities || [])) {
+                for (const c of (a?.associatedCauses || [])) {
+                  if (c?.causeName) causesSet.add(c.causeName.trim());
+                }
+              }
+            }
+          }
+
+          // Path 3: probableSources (bonus context, not causes, but useful metadata)
+          // Not adding to causes — just noting it's available
+
+          const uniqueCauses = [...causesSet];
+          setAttainsCache(prev => ({
+            ...prev,
+            [activeDetailId]: {
+              category: best?.epaIRCategory || '',
+              causes: uniqueCauses, causeCount: uniqueCauses.length,
+              status: best?.overallStatus || '',
+              cycle: best?.reportingCycle || '', loading: false,
+            }
+          }));
+        } else {
+          // Try next variant
+          await tryFetch(nameIdx + 1);
+        }
+      } catch {
+        // Try next variant on error too
+        await tryFetch(nameIdx + 1);
+      }
+    };
+
+    tryFetch(0);
+  }, [activeDetailId, regionData]);
+
+  // Fetch EJScreen when detail panel opens
+  useEffect(() => {
+    if (!activeDetailId) return;
+    const nccRegion = regionData.find(r => r.id === activeDetailId);
+    if (!nccRegion) return;
+
+    if (ejCache[activeDetailId] && !ejCache[activeDetailId].loading) return;
+
+    const coords = getRegionCoords(activeDetailId, nccRegion.state);
+    setEjCache(prev => ({ ...prev, [activeDetailId]: { ejIndex: null, loading: true } }));
+
+    fetch(`/api/water-data?action=ejscreen&lat=${coords[0]}&lng=${coords[1]}`)
+      .then(r => r.json())
+      .then(json => {
+        // EJScreen returns various indicators — extract the EJ index
+        const data = json?.data;
+        let ejIndex: number | null = null;
+        if (data && !data.error) {
+          // The REST broker returns demographic + environmental indicators
+          // Try to find the EJ index percentage
+          const raw = data?.RAW_E_PM25 || data?.RAW_EJ_SCORE || data?.P_LDPNT_D2 || null;
+          // Fallback: use the overall percentile if available
+          ejIndex = typeof raw === 'number' ? Math.round(raw) : null;
+          // If we got block-group level data, try the supplemental index
+          if (ejIndex === null && data?.S_P_LDPNT_D2) {
+            ejIndex = Math.round(data.S_P_LDPNT_D2);
+          }
+        }
+        setEjCache(prev => ({ ...prev, [activeDetailId]: { ejIndex, loading: false } }));
+      })
+      .catch(() => {
+        setEjCache(prev => ({ ...prev, [activeDetailId]: { ejIndex: null, loading: false, error: 'unavailable' } }));
+      });
+  }, [activeDetailId, regionData]);
+
+  // Fetch ATTAINS state summaries on mount (staggered to avoid rate limiting)
+  useEffect(() => {
+    const uniqueStates = [...new Set(regionData.map(r => r.state))];
+    let delay = 0;
+    for (const st of uniqueStates) {
+      if (stateSummaryCache[st]) continue;
+      setTimeout(() => {
+        setStateSummaryCache(prev => ({ ...prev, [st]: { totalAssessed: 0, totalImpaired: 0, impairedPct: 0, loading: true } }));
+        fetch(`/api/water-data?action=attains-state-summary&statecode=${st}`)
+          .then(r => r.json())
+          .then(json => {
+            const summary = json?.data;
+            // Parse state summary to get impairment percentage
+            const cycles = summary?.reportingCycles || [];
+            const latest = cycles[0] || {};
+            const waterTypes = latest?.waterTypes || [];
+            let totalAssessed = 0, totalImpaired = 0;
+            for (const wt of waterTypes) {
+              const uses = wt?.useAttainments || [];
+              for (const u of uses) {
+                totalAssessed += (u?.fullySupporting || 0) + (u?.notSupporting || 0);
+                totalImpaired += (u?.notSupporting || 0);
+              }
+            }
+            const impairedPct = totalAssessed > 0 ? Math.round((totalImpaired / totalAssessed) * 100) : 0;
+            setStateSummaryCache(prev => ({ ...prev, [st]: { totalAssessed, totalImpaired, impairedPct, loading: false } }));
+          })
+          .catch(() => {
+            setStateSummaryCache(prev => ({ ...prev, [st]: { totalAssessed: 0, totalImpaired: 0, impairedPct: 0, loading: false } }));
+          });
+      }, delay);
+      delay += 200; // Stagger 200ms between state requests
+    }
+  }, [regionData]);
+
+  // Handle region click — Federal stays in NCC with detail panel, others navigate out
+  const handleRegionClick = (regionId: string) => {
+    // Always show inline detail panel — works for all roles
+    setActiveDetailId(regionId);
+  };
+  
+  // Feature 7: Program/Jurisdiction Filters
+  const [watershedFilter, setWatershedFilter] = useState<string>('all');
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  
+  // Feature 10: Public vs Private Toggle
+  
+  // Feature 11: SLA Tracking
+  const [showSLAMetrics, setShowSLAMetrics] = useState(false);
+
+  // Watershed classification for filtering
+  const WATERSHED_MAP: Record<string, string> = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const r of regionData) {
+      const prefix = r.id.split('_')[0];
+      // Chesapeake Bay watershed states
+      if (['maryland', 'virginia', 'pennsylvania', 'delaware', 'dc', 'newyork', 'westvirginia'].includes(prefix) || r.id.includes('chesapeake')) {
+        map[r.id] = 'chesapeake';
+      }
+      // Gulf of Mexico
+      else if (['florida', 'texas', 'louisiana', 'mississippi', 'alabama'].includes(prefix)) {
+        map[r.id] = 'gulf';
+      }
+      // Great Lakes
+      else if (['michigan', 'wisconsin', 'illinois', 'indiana', 'ohio', 'minnesota'].includes(prefix)) {
+        map[r.id] = 'great_lakes';
+      }
+      // Pacific Coast
+      else if (['california', 'oregon', 'washington', 'alaska', 'hawaii'].includes(prefix)) {
+        map[r.id] = 'pacific';
+      }
+      // South Atlantic
+      else if (['northcarolina', 'southcarolina', 'georgia'].includes(prefix)) {
+        map[r.id] = 'south_atlantic';
+      }
+      // Everything else
+      else {
+        map[r.id] = 'other';
+      }
+    }
+    return map;
+  }, [regionData]);
+
+  // Apply watershed filter
+  const filteredRegionData = useMemo(() => {
+    if (watershedFilter === 'all') return regionData;
+    return regionData.filter(r => WATERSHED_MAP[r.id] === watershedFilter);
+  }, [regionData, watershedFilter, WATERSHED_MAP]);
+
+  const derived = useMemo(() => {
+    const regionsByState = new Map<string, RegionRow[]>();
+    const severityByState = new Map<string, number>();
+    const activeAlertsByState = new Map<string, number>();
+
+    for (const r of filteredRegionData) {
+      const abbr = r.state;
+      if (!abbr) continue;
+
+      const list = regionsByState.get(abbr) ?? [];
+      list.push(r);
+      regionsByState.set(abbr, list);
+
+      const score = SEVERITY_SCORE[(r.alertLevel || 'none').toLowerCase() as AlertLevel] ?? 0;
+      const prevScore = severityByState.get(abbr) ?? 0;
+      if (score > prevScore) severityByState.set(abbr, score);
+
+      const prevAlerts = activeAlertsByState.get(abbr) ?? 0;
+      activeAlertsByState.set(abbr, prevAlerts + (Number.isFinite(r.activeAlerts) ? r.activeAlerts : 0));
+    }
+
+    for (const [abbr, list] of regionsByState.entries()) {
+      list.sort((a, b) => {
+        const sa = SEVERITY_SCORE[a.alertLevel] ?? 0;
+        const sb = SEVERITY_SCORE[b.alertLevel] ?? 0;
+        if (sb !== sa) return sb - sa;
+        return (b.activeAlerts ?? 0) - (a.activeAlerts ?? 0);
+      });
+      regionsByState.set(abbr, list);
+    }
+
+    return { regionsByState, severityByState, activeAlertsByState };
+  }, [filteredRegionData]);
+
+  // Generate stable overlay scores per state
+  const overlayByState = useMemo(() => {
+    const states = Array.from(derived.regionsByState.keys());
+
+    const stableHash01 = (s: string) => {
+      let h = 2166136261;
+      for (let i = 0; i < s.length; i++) {
+        h ^= s.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return (h >>> 0) / 4294967295;
+    };
+
+    const pick01 = (abbr: string, salt: string) => stableHash01(abbr + '|' + salt);
+
+    const result = new Map<string, { ej: number; economy: number; wildlife: number; trend: number; coverage: number; ms4Total: number; ms4Phase1: number; ms4Phase2: number }>();
+
+    for (const abbr of states) {
+      const ej = getEJScore(abbr); // Census ACS + EPA SDWIS — real EJ vulnerability data
+      const economy = Math.round(pick01(abbr, 'economy') * 100);
+      const wildlife = getEcoScore(abbr); // USFWS ECOS — real T&E species data
+      const coverage = Math.round(pick01(abbr, 'coverage') * 100);
+
+      const t01 = pick01(abbr, 'trend');
+      const trend = Math.round((t01 * 100 - 50) * 10) / 10;
+
+      const ms4 = MS4_JURISDICTIONS[abbr];
+      const ms4Phase1 = ms4?.phase1 ?? 0;
+      const ms4Phase2 = ms4?.phase2 ?? 0;
+      const ms4Total = ms4Phase1 + ms4Phase2;
+
+      result.set(abbr, { ej, economy, wildlife, trend, coverage, ms4Total, ms4Phase1, ms4Phase2 });
+    }
+
+    return result;
+  }, [derived.regionsByState]);
+
+  const selectedStateRegions = derived.regionsByState.get(selectedState) ?? [];
+  const selectedStateTopRegion = selectedStateRegions[0]?.id;
+
+  // Filter and sort waterbodies: alerts first, then alphabetical, with search
+  const filteredStateRegions = useMemo(() => {
+    let regions = [...selectedStateRegions];
+    // Apply category filter
+    if (waterbodyFilter === 'impaired') {
+      regions = regions.filter(r => r.status === 'assessed' && (r.alertLevel === 'high' || r.alertLevel === 'medium'));
+    } else if (waterbodyFilter === 'severe') {
+      regions = regions.filter(r => r.status === 'assessed' && r.alertLevel === 'high');
+    } else if (waterbodyFilter === 'monitored') {
+      regions = regions.filter(r => r.status === 'monitored');
+    }
+    // Apply search filter
+    if (waterbodySearch.trim()) {
+      const q = waterbodySearch.toLowerCase();
+      regions = regions.filter(r => r.name.toLowerCase().includes(q));
+    }
+    // Sort: assessed first (by alert severity), then monitored, then unmonitored
+    const STATUS_ORDER: Record<string, number> = { assessed: 0, monitored: 1, unmonitored: 2 };
+    const SORT_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2, none: 3 };
+    regions.sort((a, b) => {
+      const statusDiff = (STATUS_ORDER[a.status] ?? 2) - (STATUS_ORDER[b.status] ?? 2);
+      if (statusDiff !== 0) return statusDiff;
+      if (a.status === 'assessed' && b.status === 'assessed') {
+        const levelDiff = (SORT_ORDER[a.alertLevel] ?? 3) - (SORT_ORDER[b.alertLevel] ?? 3);
+        if (levelDiff !== 0) return levelDiff;
+      }
+      return a.name.localeCompare(b.name);
+    });
+    return regions;
+  }, [selectedStateRegions, waterbodySearch, waterbodyFilter]);
+  const DISPLAY_LIMIT = 100;
+  const [showAllWaterbodies, setShowAllWaterbodies] = useState(false);
+  const [showMethodology, setShowMethodology] = useState(false);
+  const [showAccountPanel, setShowAccountPanel] = useState(false);
+  const [showViewDropdown, setShowViewDropdown] = useState(false);
+  const [showRestorationCard, setShowRestorationCard] = useState(false);
+  const [showCostPanel, setShowCostPanel] = useState(false);
+  const [signals, setSignals] = useState<Array<{
+    id: string; source: string; sourceLabel: string; category: string;
+    title: string; summary: string; publishedAt: string; url: string;
+    state?: string; waterbody?: string; pearlRelevant: boolean; tags: string[];
+  }>>([]);
+  const [signalSources, setSignalSources] = useState<Array<{ name: string; status: string; count: number }>>([]);
+  const [signalsLoading, setSignalsLoading] = useState(false);
+  const [signalFilter, setSignalFilter] = useState<'all' | 'pearl' | 'state'>('all');
+
+  // ── Signals Intelligence types (server provides the data) ──
+  const displayedRegions = showAllWaterbodies ? filteredStateRegions : filteredStateRegions.slice(0, DISPLAY_LIMIT);
+
+  // Auto-select top priority waterbody when state changes
+  useEffect(() => {
+    if (selectedStateTopRegion) {
+      setActiveDetailId(selectedStateTopRegion);
+    } else {
+      setActiveDetailId(null);
+    }
+  }, [selectedState, selectedStateTopRegion]);
+
+  const topo = useMemo(() => {
+    try {
+      return feature(statesTopo as any, (statesTopo as any).objects.states) as any;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const allActiveAlerts = useMemo(() => {
+    const rows = regionData
+      .filter((r) => (r.activeAlerts ?? 0) > 0)
+      .slice()
+      .sort((a, b) => {
+        const sa = SEVERITY_SCORE[a.alertLevel] ?? 0;
+        const sb = SEVERITY_SCORE[b.alertLevel] ?? 0;
+        if (sb !== sa) return sb - sa;
+        return (b.activeAlerts ?? 0) - (a.activeAlerts ?? 0);
+      });
+
+    return rows;
+  }, [regionData]);
+
+  // Feature 1: National Summary Stats — three-tier awareness + ATTAINS
+  // Feature 2: State Rollup Data — three-tier system + ATTAINS fallback
+  const stateRollup = useMemo(() => {
+    // Tier 1: ASSESSED waterbodies (legacy alerts or per-waterbody matches) → direct grading
+    // Tier 2: ATTAINS bulk data (EPA 303(d) state counts) → grade from federal data
+    // Tier 3: No data → N/A
+    const LEVEL_SCORE: Record<string, number> = { none: 100, low: 85, medium: 65, high: 40 };
+    const rows = Array.from(derived.regionsByState.entries()).map(([abbr, regions]) => {
+      const assessed = regions.filter(r => r.status === 'assessed');
+      const monitored = regions.filter(r => r.status === 'monitored');
+      const unmonitored = regions.filter(r => r.status === 'unmonitored');
+
+      // Check for ATTAINS bulk data for this state
+      const attainsState = attainsBulk[abbr];
+      const hasAttains = !!attainsState && attainsState.length > 0;
+
+      // Compute alert counts from per-waterbody assessed OR ATTAINS bulk
+      let high: number, medium: number, low: number, none: number, totalAlerts: number;
+      let assessedCount: number;
+      let canGradeState: boolean;
+      let score: number;
+      let dataSource: 'per-waterbody' | 'attains' | 'none';
+
+      if (assessed.length > 0) {
+        // Tier 1: We have per-waterbody assessments (legacy + matched ATTAINS)
+        high = assessed.filter(r => r.alertLevel === 'high').length;
+        medium = assessed.filter(r => r.alertLevel === 'medium').length;
+        low = assessed.filter(r => r.alertLevel === 'low').length;
+        none = assessed.filter(r => r.alertLevel === 'none').length;
+        totalAlerts = assessed.reduce((sum, r) => sum + (r.activeAlerts || 0), 0);
+        assessedCount = assessed.length;
+        canGradeState = true;
+        score = Math.round(assessed.reduce((s, r) => s + (LEVEL_SCORE[r.alertLevel] ?? 65), 0) / assessed.length);
+        dataSource = 'per-waterbody';
+      } else if (hasAttains) {
+        // Tier 2: No per-waterbody matches, but ATTAINS bulk data exists
+        // Use EPA assessment category counts directly for state grading
+        high = attainsState.filter(a => a.alertLevel === 'high').length;
+        medium = attainsState.filter(a => a.alertLevel === 'medium').length;
+        low = attainsState.filter(a => a.alertLevel === 'low').length;
+        none = attainsState.filter(a => a.alertLevel === 'none').length;
+        totalAlerts = high + medium; // Cat 5 + Cat 4 = impaired
+        assessedCount = attainsState.length;
+        canGradeState = true;
+        // Score from ATTAINS category distribution
+        const attainsTotal = high + medium + low + none;
+        score = attainsTotal > 0
+          ? Math.round((high * 40 + medium * 65 + low * 85 + none * 100) / attainsTotal)
+          : -1;
+        dataSource = 'attains';
+      } else {
+        // Tier 3: No data at all
+        high = 0; medium = 0; low = 0; none = 0; totalAlerts = 0;
+        assessedCount = 0;
+        canGradeState = false;
+        score = -1;
+        dataSource = 'none';
+      }
+
+      const grade = canGradeState ? scoreToGrade(score) : { letter: 'N/A', color: 'text-slate-400', bg: 'bg-slate-100 border-slate-300' };
+
+      return {
+        abbr, name: STATE_ABBR_TO_NAME[abbr],
+        high, medium, low, none, total: totalAlerts,
+        waterbodies: regions.length,
+        assessed: assessedCount,
+        monitored: monitored.length,
+        unmonitored: unmonitored.length,
+        canGradeState,
+        score, grade, dataSource,
+      };
+    });
+    // Graded states first (worst scores first), then ungraded states alphabetically
+    return rows.sort((a, b) => {
+      if (a.canGradeState && !b.canGradeState) return -1;
+      if (!a.canGradeState && b.canGradeState) return 1;
+      if (a.canGradeState && b.canGradeState) return a.score - b.score;
+      return a.name.localeCompare(b.name);
+    });
+  }, [derived.regionsByState, attainsBulk]);
+
+  // Feature 1: National Summary Stats — three-tier awareness + ATTAINS
+  const nationalStats = useMemo(() => {
+    const statesCovered = derived.regionsByState.size;
+    const totalWaterbodies = filteredRegionData.length;
+    const perWaterbodyAssessed = filteredRegionData.filter(r => r.status === 'assessed').length;
+    const monitored = filteredRegionData.filter(r => r.status === 'monitored').length;
+    const unmonitored = filteredRegionData.filter(r => r.status === 'unmonitored').length;
+
+    // Assessed count includes ATTAINS-only states
+    const attainsOnlyAssessed = stateRollup
+      .filter(s => s.dataSource === 'attains')
+      .reduce((sum, s) => sum + s.assessed, 0);
+    const assessed = perWaterbodyAssessed + attainsOnlyAssessed;
+
+    // Alert counts from stateRollup (which includes ATTAINS)
+    const highAlerts = stateRollup.reduce((s, r) => s + r.high, 0);
+    const mediumAlerts = stateRollup.reduce((s, r) => s + r.medium, 0);
+    const lowAlerts = stateRollup.reduce((s, r) => s + r.low, 0);
+    const totalAlerts = stateRollup.reduce((s, r) => s + r.total, 0);
+    const systemsOnline = filteredRegionData.filter(r => r.dataSourceCount > 0).length;
+    const gradedStates = stateRollup.filter(s => s.canGradeState).length;
+    
+    return { statesCovered, totalWaterbodies, assessed, monitored, unmonitored, totalAlerts, highAlerts, mediumAlerts, lowAlerts, systemsOnline, gradedStates,
+      waterbodiesMonitored: totalWaterbodies,
+    };
+  }, [filteredRegionData, derived.regionsByState, stateRollup]);
+
+  // ── Federal Priority Score: composite waterbody ranking for federal action queue ──
+  const federalPriorities = useMemo(() => {
+    if (!lens.showPriorityQueue) return [];
+    // Score each waterbody: Cat 5 (+40), no TMDL (+20), EJ ≥60 (+20), no recent data (+15), high population (+5)
+    return regionData
+      .map(r => {
+        let score = 0;
+        const reasons: string[] = [];
+        if (r.alertLevel === 'high') { score += 40; reasons.push('Cat 5'); }
+        else if (r.alertLevel === 'medium') { score += 25; reasons.push('Cat 4'); }
+        if (r.alertLevel === 'high') { score += 20; reasons.push('No TMDL'); } // Cat 5 = no approved TMDL
+        const ov = r.state ? overlayByState.get(r.state) : undefined;
+        if (ov && ov.ej >= 60) { score += 20; reasons.push(`EJ ${ov.ej}`); }
+        if (r.status === 'unmonitored' || r.dataSourceCount === 0) { score += 15; reasons.push('No data'); }
+        else if (r.status === 'monitored' && r.activeAlerts === 0) { score += 5; reasons.push('Monitor only'); }
+        return { ...r, priorityScore: score, reasons };
+      })
+      .filter(r => r.priorityScore > 0)
+      .sort((a, b) => b.priorityScore - a.priorityScore)
+      .slice(0, 20);
+  }, [viewLens, regionData, overlayByState]);
+
+  // ── Federal Coverage Gaps: states ranked by worst coverage ──
+  const federalCoverageGaps = useMemo(() => {
+    if (!lens.showCoverageGaps) return { worstCoverage: [], mostSevere: [] };
+    const worstCoverage = [...stateRollup]
+      .map(s => ({
+        ...s,
+        coveragePct: s.waterbodies > 0 ? Math.round(((s.assessed + s.monitored) / s.waterbodies) * 100) : 0,
+        blindSpots: s.unmonitored,
+      }))
+      .sort((a, b) => a.coveragePct - b.coveragePct)
+      .slice(0, 10);
+    const mostSevere = [...stateRollup]
+      .filter(s => s.high > 0 || s.medium > 0)
+      .sort((a, b) => (b.high * 3 + b.medium) - (a.high * 3 + a.medium))
+      .slice(0, 10);
+    return { worstCoverage, mostSevere };
+  }, [viewLens, stateRollup]);
+
+  // ── Federal top strip stats ──
+  const topStrip = useMemo(() => {
+    if (!lens.showTopStrip) return null;
+    const statesWithData = stateRollup.filter(s => s.assessed > 0 || s.monitored > 0).length;
+    const cat5Count = stateRollup.reduce((s, r) => s + r.high, 0);
+    const worstAge = 45; // days — will be real when last_updated tracked
+    const pctWithData = nationalStats.totalWaterbodies > 0
+      ? Math.round(((nationalStats.assessed + nationalStats.monitored) / nationalStats.totalWaterbodies) * 100) : 0;
+    const highEJStates = stateRollup.filter(s => {
+      const ov = overlayByState.get(s.abbr);
+      return ov && ov.ej >= 60;
+    }).length;
+    return {
+      statesReporting: statesWithData,
+      totalStates: stateRollup.length,
+      withData: nationalStats.assessed + nationalStats.monitored,
+      noData: nationalStats.unmonitored,
+      severeCount: nationalStats.highAlerts,
+      cat5Count,
+      worstAge,
+      pctWithData,
+      highEJStates,
+      sitesOnline: nationalStats.systemsOnline,
+    };
+  }, [viewLens, stateRollup, nationalStats, overlayByState]);
+
+  const [showStateTable, setShowStateTable] = useState(false);
+
+  // Feature 3: Hotspots Rankings
+  const hotspots = useMemo(() => {
+    const worsening = [...regionData]
+      .filter(r => r.activeAlerts > 0)
+      .sort((a, b) => {
+        const scoreA = SEVERITY_SCORE[a.alertLevel] * 10 + a.activeAlerts;
+        const scoreB = SEVERITY_SCORE[b.alertLevel] * 10 + b.activeAlerts;
+        return scoreB - scoreA;
+      })
+      .slice(0, 10);
+    
+    const improving = [...regionData]
+      .filter(r => r.alertLevel === 'none' || r.alertLevel === 'low')
+      .sort((a, b) => SEVERITY_SCORE[a.alertLevel] - SEVERITY_SCORE[b.alertLevel])
+      .slice(0, 10);
+    
+    return { worsening, improving };
+  }, [regionData]);
+
+  // Feature 11: SLA/Compliance Tracking
+  const slaMetrics = useMemo(() => {
+    const alerts = Object.entries(alertWorkflow);
+    const now = Date.now();
+    
+    const metrics = alerts.map(([regionId, workflow]) => {
+      const region = regionData.find(r => r.id === regionId);
+      if (!region) return null;
+      
+      // Mock: simulate alert created time (12-72 hours ago)
+      const createdHoursAgo = Math.floor(Math.random() * 60) + 12;
+      const createdAt = now - (createdHoursAgo * 60 * 60 * 1000);
+      const ageHours = Math.floor((now - createdAt) / (60 * 60 * 1000));
+      
+      // SLA thresholds
+      const acknowledgeTargetHours = 4;
+      const resolveTargetHours = 48;
+      
+      const acknowledgedLate = workflow.status === 'new' && ageHours > acknowledgeTargetHours;
+      const resolveLate = workflow.status !== 'resolved' && ageHours > resolveTargetHours;
+      
+      return {
+        regionId,
+        regionName: region.name,
+        state: region.state,
+        status: workflow.status,
+        ageHours,
+        acknowledgedLate,
+        resolveLate,
+        severity: region.alertLevel
+      };
+    }).filter(Boolean);
+    
+    const overdueCount = metrics.filter(m => m && (m.acknowledgedLate || m.resolveLate)).length;
+    const withinSLA = metrics.filter(m => m && !m.acknowledgedLate && !m.resolveLate).length;
+    const avgResolutionTime = metrics.filter(m => m && m.status === 'resolved').length > 0
+      ? Math.round(metrics.filter(m => m && m.status === 'resolved').reduce((sum, m) => sum + (m?.ageHours || 0), 0) / metrics.filter(m => m && m.status === 'resolved').length)
+      : 0;
+    
+    return { metrics, overdueCount, withinSLA, avgResolutionTime, total: alerts.length };
+  }, [alertWorkflow, regionData]);
+
+  // Feature 12: AI-Powered Insights — driven by real data status
+  const aiInsights = useMemo(() => {
+    const insights: Array<{ type: 'warning' | 'success' | 'info' | 'urgent'; title: string; detail: string; action?: string }> = [];
+    
+    // Insight 1: Monitoring coverage gap — the biggest honest insight
+    const totalWB = nationalStats.totalWaterbodies;
+    const assessed = nationalStats.assessed;
+    const monitored = nationalStats.monitored;
+    const unmonitored = nationalStats.unmonitored;
+    const gradedStates = stateRollup.filter(s => s.canGradeState).length;
+    const ungradedStates = stateRollup.filter(s => !s.canGradeState).length;
+
+    if (unmonitored > 0) {
+      insights.push({
+        type: 'info',
+        title: `${unmonitored.toLocaleString()} waterbodies lack monitoring data`,
+        detail: `Of ${totalWB.toLocaleString()} tracked waterbodies, ${unmonitored.toLocaleString()} have no mapped data sources. ${ungradedStates} states cannot be graded. PEARL deployment could close critical data gaps in underserved watersheds.`,
+        action: 'View deployment opportunities'
+      });
+    }
+    
+    // Insight 2: States with critical alerts
+    const highAlertStates = stateRollup.filter(s => s.high > 0);
+    if (highAlertStates.length > 0) {
+      insights.push({
+        type: 'warning',
+        title: `${highAlertStates.length} state${highAlertStates.length !== 1 ? 's' : ''} with severe waterbody conditions`,
+        detail: `${highAlertStates.slice(0, 4).map(s => s.name).join(', ')}${highAlertStates.length > 4 ? ` +${highAlertStates.length - 4} more` : ''}: ${highAlertStates.reduce((s, r) => s + r.high, 0)} severe waterbodies needing immediate assessment and EPA coordination.`,
+        action: 'Schedule interventions'
+      });
+    }
+    
+    // Insight 3: Monitored but unassessed — opportunity
+    if (monitored > assessed) {
+      const gap = monitored;
+      insights.push({
+        type: 'info',
+        title: `${gap.toLocaleString()} waterbodies have data sources but no assessment`,
+        detail: `These waterbodies have USGS gauges or other monitoring but haven't been assessed yet. Running live scoring on these could reveal conditions needing attention.`,
+        action: 'Begin assessments'
+      });
+    }
+
+    // Insight 4: Healthy assessed waterbodies — success story
+    const healthyAssessed = stateRollup.reduce((s, r) => s + r.none, 0);
+    if (healthyAssessed > 0) {
+      insights.push({
+        type: 'success',
+        title: `${healthyAssessed} assessed waterbodies meeting targets`,
+        detail: `These sites demonstrate achievable water quality standards. Document success factors for replication in impaired watersheds.`,
+        action: 'Review success factors'
+      });
+    }
+    
+    // Insight 5: SLA compliance
+    if (slaMetrics.overdueCount > 0) {
+      insights.push({
+        type: 'urgent',
+        title: `${slaMetrics.overdueCount} alerts overdue for response`,
+        detail: `${slaMetrics.overdueCount} alerts exceed SLA thresholds. Average resolution time: ${slaMetrics.avgResolutionTime}h (target: <48h).`,
+        action: 'Review assignments'
+      });
+    }
+
+    // Insight 6: MS4 market opportunity (if MS4 overlay active)
+    if (overlay === 'ms4') {
+      const totalMS4 = Object.values(MS4_JURISDICTIONS).reduce((s, m) => s + m.phase1 + m.phase2, 0);
+      const topStates = Object.entries(MS4_JURISDICTIONS)
+        .map(([abbr, m]) => ({ abbr, total: m.phase1 + m.phase2 }))
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 5);
+      insights.push({
+        type: 'info',
+        title: `${totalMS4.toLocaleString()} MS4 jurisdictions nationwide — potential PEARL customers`,
+        detail: `Top markets: ${topStates.map(s => `${STATE_ABBR_TO_NAME[s.abbr]} (${s.total})`).join(', ')}. Each MS4 must meet NPDES stormwater compliance requirements that PEARL directly addresses.`,
+        action: 'View market analysis'
+      });
+    }
+
+    // Insight 7: EJ overlap (if EJ overlay active)
+    if (overlay === 'ej') {
+      const ejHighRisk = Array.from(derived.regionsByState.entries())
+        .filter(([abbr]) => overlayByState.get(abbr)?.ej && overlayByState.get(abbr)!.ej > 70)
+        .slice(0, 2);
+      
+      if (ejHighRisk.length > 0) {
+        insights.push({
+          type: 'warning',
+          title: 'EJ communities with high alert overlap',
+          detail: `Environmental justice communities in ${ejHighRisk.map(([abbr]) => STATE_ABBR_TO_NAME[abbr]).join(', ')} show elevated pollution burden. Prioritize interventions and community outreach.`,
+          action: 'Generate EJ report'
+        });
+      }
+    }
+    
+    return insights;
+  }, [nationalStats, stateRollup, derived.regionsByState, overlay, overlayByState, slaMetrics]);
+
+  // ─── Network Health Score (derived from state grades) ────────────────────────
+  const [showHealthDetails, setShowHealthDetails] = useState(false);
+
+  const mapSectionRef = useRef<HTMLDivElement>(null);
+
+  const networkHealth = useMemo(() => {
+    const gradedStates = stateRollup.filter(s => s.canGradeState);
+    const ungradedStates = stateRollup.filter(s => !s.canGradeState);
+    const totalAssessed = stateRollup.reduce((s, r) => s + r.assessed, 0);
+    const totalMonitored = stateRollup.reduce((s, r) => s + r.monitored, 0);
+    const totalUnmonitored = stateRollup.reduce((s, r) => s + r.unmonitored, 0);
+
+    if (gradedStates.length === 0) return {
+      percentage: -1, status: 'unknown' as const, color: 'slate' as const,
+      grade: { letter: 'N/A', color: 'text-slate-400', bg: 'bg-slate-100 border-slate-300' },
+      sitesNeedingAttention: 0, worstStates: [] as typeof stateRollup,
+      drivers: ['No assessed waterbodies yet — data collection in progress'],
+      stateCount: stateRollup.length,
+      gradedStateCount: 0, ungradedStateCount: ungradedStates.length,
+      totalAssessed, totalMonitored, totalUnmonitored,
+    };
+
+    // Network score = average of GRADED state scores only
+    const avgScore = Math.round(gradedStates.reduce((s, r) => s + r.score, 0) / gradedStates.length);
+    const grade = scoreToGrade(avgScore);
+
+    const sitesNeedingAttention = gradedStates.filter(s => s.score < 70).length;
+    const worstStates = [...gradedStates].sort((a, b) => a.score - b.score).slice(0, 10);
+
+    // Drivers: based on assessed waterbodies only
+    const drivers: string[] = [];
+    const totalHigh = stateRollup.reduce((s, r) => s + r.high, 0);
+    const totalMed = stateRollup.reduce((s, r) => s + r.medium, 0);
+    const totalLow = stateRollup.reduce((s, r) => s + r.low, 0);
+
+    if (totalHigh > 0) drivers.push(`${totalHigh} severe waterbodies across ${stateRollup.filter(s => s.high > 0).length} states`);
+    if (totalMed > 0) drivers.push(`${totalMed} impaired waterbodies across ${stateRollup.filter(s => s.medium > 0).length} states`);
+    if (totalLow > 0) drivers.push(`${totalLow} watch-level sites`);
+    if (totalUnmonitored > 0) drivers.push(`${totalUnmonitored.toLocaleString()} waterbodies awaiting sensor deployment`);
+    if (drivers.length === 0) drivers.push('All assessed waterbodies within acceptable ranges');
+    drivers.splice(4);
+
+    const status = avgScore >= 90 ? 'healthy' as const : avgScore >= 75 ? 'caution' as const : 'critical' as const;
+    const color = avgScore >= 90 ? 'green' as const : avgScore >= 75 ? 'yellow' as const : 'red' as const;
+
+    return {
+      percentage: avgScore, status, color, grade,
+      sitesNeedingAttention, worstStates, drivers,
+      stateCount: stateRollup.length,
+      gradedStateCount: gradedStates.length, ungradedStateCount: ungradedStates.length,
+      totalAssessed, totalMonitored, totalUnmonitored,
+    };
+  }, [stateRollup]);
+
+  // ─── National Impact Counter ──────────────────────────────────────────────
+  const [impactPeriod, setImpactPeriod] = useState<'all' | string>('all');
+
+  // Build dynamic year list from deployment start to current year
+  const impactYears = useMemo(() => {
+    const startYear = 2025;
+    const currentYear = new Date().getFullYear();
+    const years: number[] = [];
+    for (let y = startYear; y <= currentYear; y++) years.push(y);
+    return years;
+  }, []);
+
+  const nationalImpact = useMemo(() => {
+    const deployedSites = regionData.filter(r => r.state === 'MD' || r.state === 'FL');
+    const activeSiteCount = deployedSites.length;
+    const now = new Date();
+
+    // Determine window start/end based on selected period
+    let windowStart: Date;
+    let windowEnd: Date;
+
+    if (impactPeriod === 'all') {
+      windowStart = DEPLOYMENT_START;
+      windowEnd = now;
+    } else {
+      const year = parseInt(impactPeriod, 10);
+      windowStart = new Date(Math.max(DEPLOYMENT_START.getTime(), new Date(`${year}-01-01`).getTime()));
+      windowEnd = year === now.getFullYear() ? now : new Date(`${year}-12-31T23:59:59`);
+    }
+
+    const daysInWindow = Math.max(1, Math.floor((windowEnd.getTime() - windowStart.getTime()) / (1000 * 60 * 60 * 24)));
+    const daysSinceDeployment = Math.max(1, Math.floor((now.getTime() - DEPLOYMENT_START.getTime()) / (1000 * 60 * 60 * 24)));
+
+    // Per-site daily rates based on pilot data
+    const gallonsPerSitePerDay = 50_000;
+    const tssLbsPerSitePerDay = 12.5;
+    const nutrientLbsPerSitePerDay = 2.8;
+    const bacteriaColoniesPerDay = 850_000;
+
+    const totalGallons = activeSiteCount * gallonsPerSitePerDay * daysInWindow;
+    const totalTSSLbs = activeSiteCount * tssLbsPerSitePerDay * daysInWindow;
+    const totalNutrientLbs = activeSiteCount * nutrientLbsPerSitePerDay * daysInWindow;
+    const totalBacteria = activeSiteCount * bacteriaColoniesPerDay * daysInWindow;
+
+    // Only tick live if window includes "now"
+    const isLive = impactPeriod === 'all' || parseInt(impactPeriod, 10) === now.getFullYear();
+    const gallonsPerSecond = isLive ? (activeSiteCount * gallonsPerSitePerDay) / 86400 : 0;
+    const tssPerSecond = isLive ? (activeSiteCount * tssLbsPerSitePerDay) / 86400 : 0;
+
+    // Period label
+    let periodLabel: string;
+    if (impactPeriod === 'all') {
+      periodLabel = `All time · Day ${daysSinceDeployment.toLocaleString()} since first deployment`;
+    } else {
+      const year = parseInt(impactPeriod, 10);
+      periodLabel = year === now.getFullYear()
+        ? `${year} year-to-date · ${daysInWindow} days`
+        : `${year} · ${daysInWindow} days`;
+    }
+
+    return {
+      activeSiteCount,
+      daysInWindow,
+      daysSinceDeployment,
+      totalGallons,
+      totalTSSLbs,
+      totalNutrientLbs,
+      totalBacteria,
+      gallonsPerSecond,
+      tssPerSecond,
+      isLive,
+      periodLabel,
+    };
+  }, [regionData, impactPeriod]);
+
+  // Live ticking values (gallons and TSS tick every second)
+  const liveGallons = useLiveTick(nationalImpact.totalGallons, nationalImpact.gallonsPerSecond);
+  const liveTSS = useLiveTick(nationalImpact.totalTSSLbs, nationalImpact.tssPerSecond);
+
+  // Format large numbers cleanly
+  const formatImpactNum = (n: number, decimals = 1) => {
+    if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(decimals)}B`;
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(decimals)}M`;
+    if (n >= 1_000) return `${(n / 1_000).toFixed(decimals)}K`;
+    return n.toLocaleString();
+  };
+
+  // Print a single card section by its DOM id
+  const printSection = (sectionId: string, title: string) => {
+    const el = document.getElementById(`section-${sectionId}`);
+    if (!el) return;
+    const win = window.open('', '_blank', 'width=900,height=700');
+    if (!win) return;
+    win.document.write(`<!DOCTYPE html><html><head><title>${title} — PEARL National Command Center</title>
+      <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 24px; color: #1e293b; }
+        .print-header { border-bottom: 2px solid #1e3a5f; padding-bottom: 12px; margin-bottom: 16px; }
+        .print-header h1 { font-size: 16px; font-weight: 700; color: #1e3a5f; }
+        .print-header p { font-size: 11px; color: #64748b; margin-top: 4px; }
+        .print-content { font-size: 13px; line-height: 1.5; }
+        .print-content table { width: 100%; border-collapse: collapse; margin: 8px 0; }
+        .print-content th, .print-content td { border: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; font-size: 12px; }
+        .print-content th { background: #f8fafc; font-weight: 600; }
+        canvas, svg { max-width: 100%; }
+        button, [role="button"] { display: none !important; }
+        @media print { body { padding: 0; } }
+      </style>
+    </head><body>
+      <div class="print-header">
+        <h1>🦪 ${title}</h1>
+        <p>National Command Center · Printed ${new Date().toLocaleDateString()} · Project PEARL</p>
+      </div>
+      <div class="print-content">${el.innerHTML}</div>
+    </body></html>`);
+    win.document.close();
+    setTimeout(() => { win.print(); }, 400);
+  };
+
+  // Print button component for Card headers
+  const PrintBtn = ({ sectionId, title }: { sectionId: string; title: string }) => (
+    <button
+      onClick={(e) => { e.stopPropagation(); printSection(sectionId, title); }}
+      className="p-1 hover:bg-slate-200 rounded transition-colors"
+      title="Print this section"
+    >
+      <Printer className="h-3.5 w-3.5 text-slate-400" />
+    </button>
+  );
+
+  return (
+    <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-cyan-50">
+      <div className="mx-auto max-w-7xl p-4 space-y-6">
+
+        {/* Toast notification */}
+        {toastMsg && (
+          <div className="fixed top-4 right-4 z-50 max-w-sm animate-in fade-in slide-in-from-top-2">
+            <div className="bg-white border-2 border-blue-300 rounded-xl shadow-lg p-4 flex items-start gap-3">
+              <div className="text-blue-600 mt-0.5">ℹ️</div>
+              <div className="flex-1">
+                <div className="text-sm text-slate-700">{toastMsg}</div>
+              </div>
+              <button onClick={() => setToastMsg(null)} className="text-slate-400 hover:text-slate-600 text-lg leading-none">×</button>
+            </div>
+          </div>
+        )}
+        {/* Header */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="relative h-12 w-40">
+              <Image
+                src="/Logo_Pearl_as_Headline.JPG"
+                alt="Project Pearl Logo"
+                fill
+                className="object-contain object-left"
+                priority
+              />
+            </div>
+            <div>
+              <div className="text-xl font-semibold text-slate-800">National Command Center</div>
+              <div className="text-sm text-slate-600">
+                Surface water intelligence — real-time aquatic health monitoring & restoration
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* View Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => { setShowViewDropdown(!showViewDropdown); setShowAccountPanel(false); }}
+                className="inline-flex items-center h-8 px-3 text-xs font-medium rounded-md border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                <span className="text-[10px] text-slate-400 mr-1.5">View:</span>
+                {lens.label}
+                <span className="ml-1.5 text-slate-400">▾</span>
+              </button>
+              {showViewDropdown && (
+                <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowViewDropdown(false)} />
+                <div className="absolute right-0 top-full mt-1.5 w-64 bg-white rounded-lg border border-slate-200 shadow-xl z-50 overflow-hidden">
+                  <div className="px-3 py-2 border-b border-slate-100">
+                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Switch View</span>
+                  </div>
+                  <div className="p-1.5">
+                    {(['compliance', 'coverage', 'programs', 'analysis'] as ViewLens[]).map((key) => {
+                      const cfg = LENS_CONFIG[key];
+                      return (
+                        <button
+                          key={key}
+                          onClick={() => {
+                            setViewLens(key);
+                            setOverlay(cfg.defaultOverlay);
+                            setShowViewDropdown(false);
+                          }}
+                          className={`w-full text-left px-3 py-2 rounded-md text-xs transition-all flex items-center justify-between ${
+                            viewLens === key
+                              ? 'bg-blue-50 text-blue-700'
+                              : 'text-slate-600 hover:bg-slate-50'
+                          }`}
+                        >
+                          <div>
+                            <div className="font-medium">{cfg.label}</div>
+                            <div className="text-[10px] text-slate-400 mt-0.5">{cfg.description}</div>
+                          </div>
+                          {viewLens === key && <CheckCircle size={14} className="text-blue-600 flex-shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="border-t border-slate-100 p-1.5">
+                    <button
+                      onClick={() => {
+                        setViewLens('full');
+                        setOverlay(LENS_CONFIG.full.defaultOverlay);
+                        setShowViewDropdown(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-md text-xs transition-all flex items-center justify-between ${
+                        viewLens === 'full'
+                          ? 'bg-slate-100 text-slate-700'
+                          : 'text-slate-500 hover:bg-slate-50'
+                      }`}
+                    >
+                      <div>
+                        <div className="font-medium">Full Dashboard</div>
+                        <div className="text-[10px] text-slate-400 mt-0.5">All panels — power user view</div>
+                      </div>
+                      {viewLens === 'full' && <CheckCircle size={14} className="text-slate-600 flex-shrink-0" />}
+                    </button>
+                  </div>
+                </div>
+                </>
+              )}
+            </div>
+
+            {federalMode ? (
+              <div className="flex items-center gap-2">
+                {user && (
+                <div className="relative">
+                  <button
+                    onClick={() => { setShowAccountPanel(!showAccountPanel); setShowViewDropdown(false); }}
+                    className="inline-flex items-center h-8 px-3 text-xs font-semibold rounded-md border bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 transition-colors cursor-pointer"
+                  >
+                    <Shield className="h-3.5 w-3.5 mr-1.5" />
+                    {user.name}
+                    <span className="ml-1.5 text-blue-400">▾</span>
+                  </button>
+
+                  {showAccountPanel && (
+                    <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowAccountPanel(false)} />
+                    <div
+                      className="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg border border-slate-200 shadow-xl z-50 overflow-hidden"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {/* Header */}
+                      <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-slate-50 border-b border-slate-200">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold">
+                              {user.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                            </div>
+                            <div>
+                              <div className="text-sm font-semibold text-slate-800">{user.name}</div>
+                              <div className="text-[11px] text-slate-500">{user.email || 'federal@project-pearl.org'}</div>
+                            </div>
+                          </div>
+                          <button onClick={() => setShowAccountPanel(false)} className="text-slate-400 hover:text-slate-600">
+                            <X size={14} />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Account info */}
+                      <div className="px-4 py-3 space-y-2 text-xs border-b border-slate-100">
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">Role</span>
+                          <span className="font-medium text-slate-700">{user.role || 'Federal Administrator'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-500 flex-shrink-0">Organization</span>
+                          <span className="font-medium text-slate-700 text-right">{user.organization || 'PEARL National Operations'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">Access Level</span>
+                          <Badge variant="outline" className="text-[10px] h-5 bg-green-50 border-green-200 text-green-700">Full Access</Badge>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">Monitoring</span>
+                          <span className="font-medium text-slate-700">{nationalStats.statesCovered} states · {nationalStats.totalWaterbodies.toLocaleString()} waterbodies</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">Current View</span>
+                          <span className="font-medium text-blue-600">{lens.label}</span>
+                        </div>
+                      </div>
+
+                      {/* Account actions */}
+                      <div className="px-4 py-2.5 space-y-1">
+                        <button
+                          onClick={() => { /* TODO: wire to password change route */ }}
+                          className="w-full text-left px-3 py-2 rounded-md text-xs text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors"
+                        >
+                          <Shield size={13} className="text-slate-400" />
+                          Change Password
+                        </button>
+                        <button
+                          onClick={() => { setShowAccountPanel(false); logout(); }}
+                          className="w-full text-left px-3 py-2 rounded-md text-xs text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                        >
+                          <LogOut size={13} />
+                          Sign Out
+                        </button>
+                      </div>
+
+                      {/* Footer */}
+                      <div className="px-4 py-2 border-t border-slate-100 bg-slate-50">
+                        <span className="text-[10px] text-slate-400">PEARL NCC v1.0 · Session {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
+                    </div>
+                    </>
+                  )}
+                </div>
+                )}
+              </div>
+            ) : (
+              <Button variant="outline" onClick={onClose}>
+                <X size={16} />
+                <span className="ml-2">Close</span>
+              </Button>
+            )}
+          </div>
+        </div>
+
+
+        {/* ── MONITORING NETWORK MAP ──────────────────────────────── */}
+
+        <div ref={mapSectionRef} className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          {/* Map Card */}
+          <Card id="section-usmap" className="lg:col-span-2">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>United States Monitoring Network</CardTitle>
+                <PrintBtn sectionId="usmap" title="United States Monitoring Network" />
+              </div>
+              <CardDescription>
+                Real state outlines. Colors reflect data based on selected overlay.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* Overlay Selector */}
+              <div className="flex flex-wrap gap-2 pb-3">
+                {OVERLAYS.map((o) => {
+                  const Icon = o.icon;
+                  return (
+                    <Button
+                      key={o.id}
+                      variant={overlay === o.id ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setOverlay(o.id)}
+                      title={o.description}
+                    >
+                      <Icon className="h-4 w-4 mr-1" />
+                      {o.label}
+                    </Button>
+                  );
+                })}
+              </div>
+
+              {!topo ? (
+                <div className="text-sm text-slate-500">
+                  Map data unavailable. Install react-simple-maps, us-atlas, and topojson-client.
+                </div>
+              ) : (
+                <div className="w-full overflow-hidden rounded-lg border border-slate-200 bg-white">
+                  <div className="p-2 text-xs text-slate-500 bg-slate-50 border-b border-slate-200">
+                    Selected: {selectedState} ({STATE_ABBR_TO_NAME[selectedState] || 'Unknown'}) · 50 states + DC
+                  </div>
+                  <div className="h-[480px] w-full">
+                    <ComposableMap
+                      projection="geoAlbersUsa"
+                      projectionConfig={{ scale: 1000 }}
+                      width={800}
+                      height={500}
+                      style={{ width: '100%', height: '100%' }}
+                    >
+                      <Geographies geography={topo}>
+                        {({ geographies }: { geographies: GeoFeature[] }) =>
+                          geographies.map((g: GeoFeature) => {
+                            const abbr = geoToAbbr(g);
+                            const sev = abbr ? derived.severityByState.get(abbr) ?? 0 : 0;
+                            const o = abbr ? overlayByState.get(abbr) : undefined;
+
+                            let fill = '#e5e7eb';
+
+                            // Feature 5: Show PEARL Impact - only for states with actual deployments
+                            const hasPEARLDeployment = abbr === 'MD' || abbr === 'FL';
+                            const impactMultiplier = (showImpact && hasPEARLDeployment) ? 0.6 : 1;
+
+                            if (overlay === 'hotspots') {
+                              // Use stateRollup grade score (ATTAINS-driven) instead of per-waterbody max
+                              const stateRow = abbr ? stateRollup.find(s => s.abbr === abbr) : undefined;
+                              const gradeScore = stateRow?.canGradeState ? stateRow.score : -1;
+                              const adjustedScore = (showImpact && hasPEARLDeployment && gradeScore >= 0) ? Math.min(100, gradeScore + 20) : gradeScore;
+                              if (gradeScore < 0) {
+                                fill = '#e5e7eb'; // No data — gray
+                              } else if (adjustedScore >= 90) {
+                                fill = '#22c55e'; // A range — green
+                              } else if (adjustedScore >= 80) {
+                                fill = '#86efac'; // B range — light green
+                              } else if (adjustedScore >= 70) {
+                                fill = '#fde68a'; // C range — yellow
+                              } else if (adjustedScore >= 60) {
+                                fill = '#f59e0b'; // D range — amber
+                              } else {
+                                fill = '#ef4444'; // F — red
+                              }
+                            } else if (overlay === 'ms4') {
+                              const total = o?.ms4Total ?? 0;
+                              fill = total >= 300 ? '#7c2d12' :  // 300+ dark orange-brown (CA, NY, TX, NJ)
+                                     total >= 150 ? '#c2410c' :  // 150-299 deep orange (FL, PA, OH, IL, MA)
+                                     total >= 75  ? '#ea580c' :  // 75-149 orange (MD, VA, NC, GA, MI, etc)
+                                     total >= 30  ? '#fb923c' :  // 30-74 light orange
+                                     total >= 10  ? '#fed7aa' :  // 10-29 pale
+                                     total > 0    ? '#fff7ed' :  // 1-9 very light
+                                     '#e5e7eb';                  // 0 gray
+                            } else if (overlay === 'ej') {
+                              const v = o?.ej ?? 0;
+                              fill = v >= 80 ? '#7f1d1d' : v >= 60 ? '#dc2626' : v >= 40 ? '#f59e0b' : v >= 20 ? '#fde68a' : '#e5e7eb';
+                            } else if (overlay === 'economy') {
+                              const v = o?.economy ?? 0;
+                              fill = v >= 80 ? '#1d4ed8' : v >= 60 ? '#3b82f6' : v >= 40 ? '#60a5fa' : v >= 20 ? '#93c5fd' : '#e5e7eb';
+                            } else if (overlay === 'wildlife') {
+                              const v = o?.wildlife ?? 0;
+                              fill = v >= 80 ? '#064e3b' : v >= 60 ? '#059669' : v >= 40 ? '#10b981' : v >= 20 ? '#6ee7b7' : '#e5e7eb';
+                            } else if (overlay === 'trend') {
+                              const v = o?.trend ?? 0;
+                              fill = v >= 20 ? '#16a34a' : v >= 5 ? '#86efac' : v <= -20 ? '#dc2626' : v <= -5 ? '#fecaca' : '#e5e7eb';
+                            } else if (overlay === 'coverage') {
+                              // Real coverage from stateRollup: % of waterbodies with assessment data
+                              const stateRow = abbr ? stateRollup.find(s => s.abbr === abbr) : undefined;
+                              if (!stateRow || stateRow.waterbodies === 0) {
+                                fill = '#e5e7eb'; // No data
+                              } else {
+                                const covPct = Math.round(((stateRow.assessed + stateRow.monitored) / stateRow.waterbodies) * 100);
+                                if (covPct >= 80) fill = '#166534';      // Deep green — excellent
+                                else if (covPct >= 60) fill = '#16a34a'; // Green — good
+                                else if (covPct >= 40) fill = '#fbbf24'; // Yellow — gaps
+                                else if (covPct >= 20) fill = '#f59e0b'; // Amber — poor
+                                else fill = '#d1d5db';                   // Gray — blind
+                              }
+                            }
+
+                            const isSelected = abbr && abbr === selectedState;
+
+                            return (
+                              <Geography
+                                key={g.rsmKey ?? g.id}
+                                geography={g as any}
+                                onClick={() => {
+                                  if (!abbr) return;
+                                  setSelectedState(abbr);
+                                  setWaterbodySearch('');
+                                  setWaterbodyFilter('all');
+                                  setShowAllWaterbodies(false);
+                                }}
+                                style={{
+                                  default: {
+                                    fill,
+                                    outline: 'none',
+                                    stroke: isSelected ? '#111827' : '#ffffff',
+                                    strokeWidth: isSelected ? 1.5 : 0.5,
+                                  },
+                                  hover: {
+                                    fill,
+                                    outline: 'none',
+                                    cursor: abbr ? 'pointer' : 'default',
+                                    stroke: '#111827',
+                                    strokeWidth: 1,
+                                  },
+                                  pressed: { fill, outline: 'none' },
+                                }}
+                              />
+                            );
+                          })
+                        }
+                      </Geographies>
+                    </ComposableMap>
+                  </div>
+                  
+                  {/* Legend */}
+                  <div className="flex flex-wrap gap-2 p-3 text-xs bg-slate-50 border-t border-slate-200">
+                    {overlay === 'hotspots' && (
+                      <>
+                        <span className="text-slate-500 font-medium self-center mr-1">Impairment Risk:</span>
+                        <Badge variant="secondary" className="bg-gray-200 text-gray-700">Healthy</Badge>
+                        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">Watch</Badge>
+                        <Badge className="bg-orange-500 text-white">Impaired</Badge>
+                        <Badge variant="destructive">Severe</Badge>
+                      </>
+                    )}
+                    {overlay === 'ms4' && (
+                      <>
+                        <span className="text-slate-500 font-medium self-center mr-1">MS4 Permits (Phase I + II):</span>
+                        <Badge variant="secondary" className="bg-orange-50 text-orange-700 border-orange-200">&lt;10</Badge>
+                        <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-orange-200">10–29</Badge>
+                        <Badge className="bg-orange-300 text-orange-900">30–74</Badge>
+                        <Badge className="bg-orange-500 text-white">75–149</Badge>
+                        <Badge className="bg-orange-700 text-white">150–299</Badge>
+                        <Badge className="bg-orange-900 text-white">300+</Badge>
+                      </>
+                    )}
+                    {overlay === 'ej' && (
+                      <>
+                        <span className="text-slate-500 font-medium self-center mr-1">EJScreen Index:</span>
+                        <Badge variant="secondary" className="bg-gray-200 text-gray-700">Low (0–19)</Badge>
+                        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">Moderate (20–39)</Badge>
+                        <Badge className="bg-orange-500 text-white">High (40–59)</Badge>
+                        <Badge variant="destructive">Very High (60–79)</Badge>
+                        <Badge className="bg-red-950 text-white">Critical (80–100)</Badge>
+                      </>
+                    )}
+                    {overlay === 'economy' && (
+                      <>
+                        <span className="text-slate-500 font-medium self-center mr-1">Annual MS4 Compliance Cost:</span>
+                        <Badge variant="secondary" className="bg-gray-200 text-gray-700">Low (&lt;$1M)</Badge>
+                        <Badge className="bg-blue-200 text-blue-900">Moderate ($1–5M)</Badge>
+                        <Badge className="bg-blue-500 text-white">High ($5–20M)</Badge>
+                        <Badge className="bg-blue-800 text-white">Very High (&gt;$20M)</Badge>
+                      </>
+                    )}
+                    {overlay === 'wildlife' && (
+                      <>
+                        <span className="text-slate-500 font-medium self-center mr-1">T&E Species (USFWS):</span>
+                        <Badge variant="secondary" className="bg-gray-200 text-gray-700">Minimal</Badge>
+                        <Badge className="bg-green-200 text-green-900">Low</Badge>
+                        <Badge className="bg-green-500 text-white">Moderate</Badge>
+                        <Badge className="bg-green-600 text-white">High</Badge>
+                        <Badge className="bg-green-900 text-white">Very High</Badge>
+                      </>
+                    )}
+                    {overlay === 'trend' && (
+                      <>
+                        <span className="text-slate-500 font-medium self-center mr-1">vs Prior Period:</span>
+                        <Badge variant="destructive">Worsening</Badge>
+                        <Badge variant="secondary" className="bg-gray-200 text-gray-700">Stable</Badge>
+                        <Badge className="bg-green-500 text-white">Improving</Badge>
+                      </>
+                    )}
+                    {overlay === 'coverage' && (
+                      <>
+                        <span className="text-slate-500 font-medium self-center mr-1">Monitoring Network:</span>
+                        <Badge variant="secondary" className="bg-gray-200 text-gray-700">No Coverage</Badge>
+                        <Badge className="bg-yellow-400 text-yellow-900">Ambient Only</Badge>
+                        <Badge className="bg-green-500 text-white">PEARL Deployed</Badge>
+                        <Badge className="bg-green-800 text-white">Full Coverage</Badge>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* State Detail Panel */}
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <MapPin size={18} />
+                    <span>{STATE_ABBR_TO_NAME[selectedState] ?? selectedState}</span>
+                  </CardTitle>
+                  <CardDescription>Waterbody monitoring summary</CardDescription>
+                </div>
+                {selectedStateRegions.length > 0 && (() => {
+                  // Use stateRollup which already incorporates ATTAINS data
+                  const rollup = stateRollup.find(s => s.abbr === selectedState);
+                  if (!rollup?.canGradeState) {
+                    return (
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 bg-slate-100 border-slate-300">
+                        <div className="text-2xl font-black text-slate-400">N/A</div>
+                        <div className="text-right">
+                          <div className="text-[10px] text-slate-500">Ungraded</div>
+                          <div className="text-[10px] text-slate-400">{attainsBulkLoading.has(selectedState) ? 'Loading ATTAINS...' : 'No assessment data'}</div>
+                        </div>
+                      </div>
+                    );
+                  }
+                  const grade = rollup.grade;
+                  return (
+                    <div className="relative">
+                      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 ${grade.bg}`}>
+                        <div className={`text-2xl font-black ${grade.color}`}>{grade.letter}</div>
+                        <div className="text-right">
+                          <div className={`text-sm font-bold ${grade.color}`}>{rollup.score}%</div>
+                          <div className="text-[10px] text-slate-500">
+                            {rollup.assessed} assessed{rollup.dataSource === 'attains' ? ' (EPA)' : ''}
+                          </div>
+                        </div>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setShowMethodology(!showMethodology); }}
+                          className="ml-1 p-0.5 rounded-full hover:bg-black/10 transition-colors"
+                          title="Grading methodology"
+                        >
+                          <Info size={13} className="text-slate-400" />
+                        </button>
+                      </div>
+                      {/* Methodology Popover */}
+                      {showMethodology && (
+                        <div className="absolute right-0 top-full mt-2 w-80 z-50 rounded-lg border border-slate-200 bg-white shadow-xl p-4 text-xs text-slate-600 space-y-2"
+                          onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-semibold text-slate-800 text-sm">PEARL Grading Methodology</span>
+                            <button onClick={() => setShowMethodology(false)} className="p-0.5 hover:bg-slate-100 rounded">
+                              <X size={14} />
+                            </button>
+                          </div>
+                          <div className="space-y-1.5">
+                            <p><span className="font-medium text-slate-700">Base score</span> from recent parameter readings vs. regulatory targets (CBP tidal criteria, state WQ standards, EPA recommended limits).</p>
+                            <p><span className="font-medium text-slate-700">Adjustments</span> for data freshness (deductions for &gt;30 days old), active alerts, and EPA ATTAINS impairment status.</p>
+                            <p><span className="font-medium text-slate-700">No sensors or stale data</span> = "Unassessed" (neutral — not assumed good or bad).</p>
+                            <div className="border-t border-slate-100 pt-1.5">
+                              <p className="font-medium text-slate-700 mb-0.5">Data Sources:</p>
+                              <p className="text-slate-500">USGS NWIS • Water Quality Portal • EPA ATTAINS • Blue Water Baltimore • NOAA CO-OPS</p>
+                            </div>
+                            <div className="border-t border-slate-100 pt-1.5">
+                              <p className="font-medium text-slate-700 mb-0.5">Scale:</p>
+                              <p className="text-slate-500">A+ (97+) · A (93) · A- (90) · B+ (87) · B (83) · B- (80) · C+ (77) · C (73) · C- (70) · D+ (67) · D (63) · D- (60) · F (&lt;60)</p>
+                            </div>
+                          </div>
+                          <p className="text-[10px] text-slate-400 italic pt-1 border-t border-slate-100">Not an official EPA/state assessment — informational only. See primary agency data for compliance purposes.</p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {/* Quick stats — three-tier breakdown */}
+              {(() => {
+                const assessedCount = selectedStateRegions.filter(r => r.status === 'assessed').length;
+                const monitoredCount = selectedStateRegions.filter(r => r.status === 'monitored').length;
+                const unmonitoredCount = selectedStateRegions.filter(r => r.status === 'unmonitored').length;
+                const severeCount = selectedStateRegions.filter(r => r.status === 'assessed' && r.alertLevel === 'high').length;
+                return (
+                  <div className="grid grid-cols-4 gap-1.5 text-center">
+                    <div className="rounded-lg bg-slate-50 p-2">
+                      <div className="text-lg font-bold text-slate-800">{selectedStateRegions.length}</div>
+                      <div className="text-[10px] text-slate-500">Total</div>
+                    </div>
+                    <div className="rounded-lg bg-green-50 p-2">
+                      <div className="text-lg font-bold text-green-700">{assessedCount}</div>
+                      <div className="text-[10px] text-slate-500">Assessed</div>
+                    </div>
+                    <div className="rounded-lg bg-blue-50 p-2">
+                      <div className="text-lg font-bold text-blue-600">{monitoredCount}</div>
+                      <div className="text-[10px] text-slate-500">Monitored</div>
+                    </div>
+                    <div className="rounded-lg bg-slate-50 p-2">
+                      <div className="text-lg font-bold text-slate-400">{unmonitoredCount}</div>
+                      <div className="text-[10px] text-slate-500">No Data</div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Waterbody Filters */}
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {[
+                  { key: 'all' as const, label: 'All', color: 'bg-slate-100 text-slate-700 border-slate-200' },
+                  { key: 'impaired' as const, label: 'Impaired', color: 'bg-orange-100 text-orange-700 border-orange-200' },
+                  { key: 'severe' as const, label: 'Severe', color: 'bg-red-100 text-red-700 border-red-200' },
+                  { key: 'monitored' as const, label: 'Monitored', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+                ].map((f) => (
+                  <button
+                    key={f.key}
+                    onClick={() => { setWaterbodyFilter(f.key); setShowAllWaterbodies(false); }}
+                    className={`px-2.5 py-1 text-[11px] font-medium rounded-full border transition-all ${
+                      waterbodyFilter === f.key
+                        ? f.color + ' ring-1 ring-offset-1 shadow-sm'
+                        : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    {f.label}
+                    {f.key !== 'all' && (() => {
+                      const count = f.key === 'impaired'
+                        ? selectedStateRegions.filter(r => r.status === 'assessed' && (r.alertLevel === 'high' || r.alertLevel === 'medium')).length
+                        : f.key === 'severe'
+                        ? selectedStateRegions.filter(r => r.status === 'assessed' && r.alertLevel === 'high').length
+                        : selectedStateRegions.filter(r => r.status === 'monitored').length;
+                      return count > 0 ? ` (${count})` : '';
+                    })()}
+                  </button>
+                ))}
+              </div>
+
+              {/* Waterbody list — height matched to US map (480px) */}
+              <div className="space-y-1.5 max-h-[480px] overflow-y-auto">
+                {selectedStateRegions.length === 0 ? (
+                  <div className="text-sm text-slate-500 py-4 text-center">
+                    No monitored waterbodies in this state yet.
+                    <div className="text-xs mt-1 text-slate-400">Click a colored state on the map to explore.</div>
+                  </div>
+                ) : (
+                  <>
+                    {selectedStateRegions.length > 10 && (
+                      <div className="mb-2">
+                        <input
+                          type="text"
+                          placeholder="Search waterbodies..."
+                          value={waterbodySearch}
+                          onChange={(e) => { setWaterbodySearch(e.target.value); setShowAllWaterbodies(false); }}
+                          className="w-full px-2 py-1.5 text-sm border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-300"
+                        />
+                        <div className="text-[10px] text-slate-400 mt-1">
+                          {filteredStateRegions.length} of {selectedStateRegions.length} waterbodies
+                        </div>
+                      </div>
+                    )}
+                    {displayedRegions.map((r) => {
+                    const isActive = r.id === activeDetailId;
+                    return (
+                    <div key={r.id} className={`flex items-center justify-between rounded-md border p-2 cursor-pointer transition-colors ${
+                      isActive ? 'border-blue-400 bg-blue-50 ring-1 ring-blue-200' : 'border-slate-200 hover:bg-slate-50'
+                    }`}
+                      onClick={() => handleRegionClick(r.id)}>
+                      <div className="min-w-0 flex-1">
+                        <div className={`truncate text-sm font-medium ${isActive ? 'text-blue-900' : ''}`}>{r.name}</div>
+                        <div className="flex items-center gap-2 text-xs text-slate-500">
+                          {r.status === 'assessed' ? (
+                            <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
+                              r.alertLevel === 'high' ? 'bg-red-100 text-red-700' :
+                              r.alertLevel === 'medium' ? 'bg-orange-100 text-orange-700' :
+                              r.alertLevel === 'low' ? 'bg-yellow-100 text-yellow-700' :
+                              'bg-green-100 text-green-700'
+                            }`}>
+                              {r.alertLevel === 'high' ? 'Severe' : r.alertLevel === 'medium' ? 'Impaired' : r.alertLevel === 'low' ? 'Watch' : 'Healthy'}
+                            </span>
+                          ) : r.status === 'monitored' ? (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-600">
+                              ◐ {r.dataSourceCount} source{r.dataSourceCount !== 1 ? 's' : ''}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-500">
+                              — Unmonitored
+                            </span>
+                          )}
+                          {r.activeAlerts > 0 && <span>{r.activeAlerts} alert{r.activeAlerts !== 1 ? 's' : ''}</span>}
+                          {r.status === 'assessed' && (
+                            <span className="text-[9px] text-slate-400">EPA ATTAINS</span>
+                          )}
+                          {r.status === 'monitored' && r.dataSourceCount > 0 && (
+                            <span className="text-[9px] text-slate-400">USGS/WQP</span>
+                          )}
+                        </div>
+                      </div>
+                      {isActive && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0 mr-1" />
+                      )}
+                    </div>
+                    );
+                  })}
+                  {filteredStateRegions.length > DISPLAY_LIMIT && !showAllWaterbodies && (
+                    <button
+                      onClick={() => setShowAllWaterbodies(true)}
+                      className="w-full py-2 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
+                    >
+                      Show all {filteredStateRegions.length} waterbodies
+                    </button>
+                  )}
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+        </div>
+
+        {/* ── MS4 & REGULATORY PROFILE — Full-width bar below map ────── */}
+        {(() => {
+          const ms4 = MS4_JURISDICTIONS[selectedState];
+          const ov = overlayByState.get(selectedState);
+          if (!ms4 && !ov) return null;
+          const total = ms4 ? ms4.phase1 + ms4.phase2 : 0;
+          return (
+            <Card>
+              <CardContent className="py-3 px-4">
+                <div className="flex items-center gap-2 mb-2.5">
+                  <Building2 size={15} className="text-orange-600" />
+                  <span className="text-sm font-semibold text-slate-700">{STATE_ABBR_TO_NAME[selectedState]} — MS4 & Regulatory Profile</span>
+                </div>
+                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 text-xs">
+                  {ms4 && (
+                    <>
+                      <div className="rounded-lg bg-orange-50 border border-orange-100 p-2.5 text-center">
+                        <div className="text-2xl font-black text-orange-700">{total}</div>
+                        <div className="text-[10px] text-orange-600 font-medium">MS4 Total</div>
+                      </div>
+                      <div className="rounded-lg bg-orange-50/50 border border-orange-100 p-2.5 text-center">
+                        <div className="text-xl font-bold text-orange-800">{ms4.phase1}</div>
+                        <div className="text-[10px] text-orange-500">Phase I (≥100k)</div>
+                      </div>
+                      <div className="rounded-lg bg-amber-50 border border-amber-100 p-2.5 text-center">
+                        <div className="text-xl font-bold text-amber-700">{ms4.phase2}</div>
+                        <div className="text-[10px] text-amber-500">Phase II (small)</div>
+                      </div>
+                    </>
+                  )}
+                  <div className="rounded-lg bg-slate-50 border border-slate-200 p-2.5 text-center">
+                    <div className="text-sm font-bold text-slate-700 leading-tight">{STATE_AGENCIES[selectedState]?.ms4Program || 'NPDES MS4'}</div>
+                    <div className="text-[10px] text-slate-400">Permit Program</div>
+                  </div>
+                  {ov && (
+                    <>
+                      <div className="rounded-lg bg-purple-50 border border-purple-100 p-2.5 text-center">
+                        <div className="text-xl font-bold text-purple-700">{ov.ej}<span className="text-xs font-normal text-purple-400">/100</span></div>
+                        <div className="text-[10px] text-purple-500">EJ Vulnerability</div>
+                      </div>
+                      <div className="rounded-lg bg-blue-50 border border-blue-100 p-2.5 text-center">
+                        <div className="text-sm font-bold text-blue-700 leading-tight">
+                          {(() => { const v = ov.economy ?? 0; return v >= 80 ? 'Very High' : v >= 60 ? 'High' : v >= 40 ? 'Moderate' : 'Low'; })()}
+                        </div>
+                        <div className="text-[10px] text-blue-400">Compliance Burden</div>
+                      </div>
+                      <div className="rounded-lg border p-2.5 text-center" style={{
+                        backgroundColor: (ov.trend ?? 0) > 5 ? '#f0fdf4' : (ov.trend ?? 0) < -5 ? '#fef2f2' : '#f8fafc',
+                        borderColor: (ov.trend ?? 0) > 5 ? '#bbf7d0' : (ov.trend ?? 0) < -5 ? '#fecaca' : '#e2e8f0',
+                      }}>
+                        <div className={`text-sm font-bold ${(ov.trend ?? 0) > 5 ? 'text-green-700' : (ov.trend ?? 0) < -5 ? 'text-red-700' : 'text-slate-500'}`}>
+                          {(() => { const t = ov.trend ?? 0; return t > 5 ? '↑ Improving' : t < -5 ? '↓ Worsening' : '— Stable'; })()}
+                        </div>
+                        <div className="text-[10px] text-slate-400">WQ Trend</div>
+                      </div>
+                    </>
+                  )}
+                </div>
+                {ms4?.notes && (
+                  <div className="text-[10px] text-slate-400 italic mt-2">{ms4.notes}</div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })()}
+
+        {/* ── WATERBODY DETAIL — Shows below map, auto-selected ────── */}
+        {activeDetailId && (() => {
+          const nccRegion = regionData.find(r => r.id === activeDetailId);
+          const regionConfig = getRegionById(activeDetailId);
+          const regionName = regionConfig?.name || nccRegion?.name || activeDetailId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+          const stateAbbr = nccRegion?.state || '';
+
+          // Resolve bulk ATTAINS for this waterbody
+          const bulkAttainsResolved = (() => {
+            const stateData = attainsBulk[stateAbbr];
+            if (!stateData) return null;
+            const matches = matchAttainsToRegistry(regionName, stateAbbr);
+            const matchId = matches.find(id => id === activeDetailId);
+            if (!matchId) {
+              const normName = regionName.toLowerCase().replace(/,.*$/, '').trim();
+              return stateData.find(a => {
+                const aN = a.name.toLowerCase().trim();
+                return aN.includes(normName) || normName.includes(aN);
+              }) || null;
+            }
+            return stateData.find(a => {
+              const matched = matchAttainsToRegistry(a.name, stateAbbr);
+              return matched.includes(activeDetailId!);
+            }) || null;
+          })();
+
+          return (
+            <WaterbodyDetailCard
+              regionName={regionName}
+              stateAbbr={stateAbbr}
+              stateName={STATE_ABBR_TO_NAME[stateAbbr] || stateAbbr}
+              alertLevel={nccRegion?.alertLevel || 'none'}
+              activeAlerts={nccRegion?.activeAlerts ?? 0}
+              lastUpdatedISO={nccRegion?.lastUpdatedISO}
+              waterData={waterData}
+              waterLoading={waterLoading}
+              hasRealData={hasRealData}
+              attainsPerWb={attainsCache[activeDetailId]}
+              attainsBulk={bulkAttainsResolved}
+              ejData={ejCache[activeDetailId]}
+              ejDetail={getEJData(stateAbbr)}
+              ecoScore={overlayByState.get(stateAbbr)?.wildlife ?? 0}
+              ecoData={getEcoData(stateAbbr)}
+              overlay={overlayByState.get(stateAbbr)}
+              stSummary={stateSummaryCache[stateAbbr]}
+              stateAgency={STATE_AGENCIES[stateAbbr]}
+              dataSources={DATA_SOURCES}
+              onToast={(msg) => { setToastMsg(msg); setTimeout(() => setToastMsg(null), 2500); }}
+            />
+          );
+        })()}
+
+        {/* ── RESTORATION PLAN — Standalone collapsible card ────── */}
+        {lens.showRestorationPlan && activeDetailId && (() => {
+          const nccRegion = regionData.find(r => r.id === activeDetailId);
+          const regionConfig = getRegionById(activeDetailId);
+          const regionName = regionConfig?.name || nccRegion?.name || activeDetailId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+          const stateAbbr = nccRegion?.state || '';
+          const level = nccRegion?.alertLevel || 'none';
+
+          // ── Water data params ──
+          const params = waterData?.parameters ?? {};
+
+          // ── ATTAINS data (per-waterbody AND bulk — always resolve both for worst-case comparison) ──
+          const attainsData = attainsCache[activeDetailId];
+          const bulkAttains = (() => {
+            const stateData = attainsBulk[stateAbbr];
+            if (!stateData) return null;
+            const normName = regionName.toLowerCase().replace(/,.*$/, '').trim();
+            return stateData.find(a => {
+              const aN = a.name.toLowerCase().trim();
+              return aN.includes(normName) || normName.includes(aN);
+            }) || null;
+          })();
+          // ── Resolve ATTAINS category & causes using shared helpers ──
+          const attainsCategory = resolveAttainsCategory(
+            attainsData?.category || '',
+            bulkAttains?.category || '',
+            level as any,
+          );
+          const attainsCauses = mergeAttainsCauses(
+            attainsData?.causes || [],
+            bulkAttains?.causes || [],
+          );
+          const attainsCycle = attainsData?.cycle || bulkAttains?.cycle || '';
+
+          // ── Compute full restoration plan via engine ──
+          const plan = computeRestorationPlan({
+            regionName,
+            stateAbbr,
+            alertLevel: level as any,
+            params,
+            attainsCategory,
+            attainsCauses,
+            attainsCycle,
+            attainsAcres: (attainsData as any)?.acres ?? (bulkAttains as any)?.acres ?? null,
+          });
+
+          // Destructure everything the JSX needs
+          const {
+            waterType, isCat5, isImpaired, tmdlStatus,
+            impairmentClassification, tier1Count, tier2Count, tier3Count,
+            totalClassified, pearlAddressable, addressabilityPct,
+            hasNutrients, hasBacteria, hasSediment, hasMetals, hasStormwaterMetals,
+            hasMercury, hasPFAS, hasPCBs, hasTemperature, hasHabitat, hasTrash,
+            hasOrganic, hasDOImpairment,
+            doSeverity, bloomSeverity, turbiditySeverity, nutrientSeverity,
+            nutrientExceedsBiofilt, bacteriaElevated,
+            isMD, thresholdSource, thresholdSourceShort,
+            doCritical, doStressed, chlBloom, chlSignificant, chlSevere,
+            turbElevated, turbImpaired,
+            doVal, chlVal, turbVal, tnVal, tpVal,
+            siteSeverityScore, siteSeverityLabel, siteSeverityColor,
+            doScore, bloomScore, turbScore, impairScore, monitoringGapScore,
+            treatmentPriorities, categories,
+            pearlModel, totalBMPs, compliancePathway,
+            totalQuads, totalUnits, phase1Quads, phase1Units, isPhasedDeployment,
+            phase1AnnualCost, fullAnnualCost, phase1GPM, fullGPM,
+            sizingBasis, estimatedAcres, acresSource,
+            dataAgeDays, dataConfidence,
+            threats, whyBullets, isHealthy,
+          } = plan;
+          const prelimSeverity = siteSeverityScore; // compat alias
+          const severityMultiplier = siteSeverityScore; // compat alias
+
+          if (isHealthy) {
+            return (
+              <Card className="border-2 border-green-300 shadow-md">
+                <div className="px-4 py-4 flex items-center gap-3">
+                  <span className="text-2xl">✅</span>
+                  <div>
+                    <div className="text-sm font-semibold text-green-800">
+                      {regionName} — No Restoration Action Indicated
+                    </div>
+                    <div className="text-xs text-green-600 mt-0.5">
+                      This waterbody is currently attaining designated uses with no Category 4/5 impairments or parameter exceedances detected.
+                      PEARL monitoring recommended for early warning and baseline documentation.
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            );
+          }
+
+          return (
+            <Card className="border-2 border-cyan-300 shadow-md">
+              {/* Collapsed summary header — always visible */}
+              <button
+                onClick={() => setShowRestorationCard(prev => !prev)}
+                className="w-full px-4 py-3 flex items-center justify-between hover:bg-cyan-50/50 transition-colors rounded-t-lg"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">🔧</span>
+                  <div className="text-left">
+                    <div className="text-sm font-semibold text-cyan-800 flex items-center gap-2">
+                      Restoration Plan — {regionName}
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${siteSeverityColor}`}>
+                        {siteSeverityLabel} ({siteSeverityScore})
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-500">
+                      {pearlModel} × {totalUnits} unit{totalUnits > 1 ? 's' : ''} ({totalQuads} quad{totalQuads > 1 ? 's' : ''}, {fullGPM} GPM) + {totalBMPs} BMPs · {waterType === 'brackish' ? '🦪 Oyster' : '🐚 Mussel'} Biofilt · {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(fullAnnualCost)}/yr
+                    </div>
+                    {(attainsCategory || isCat5) && (
+                      <div className="text-[10px] mt-0.5 flex items-center gap-1.5 flex-wrap">
+                        <span className={`font-bold px-1.5 py-0.5 rounded ${
+                          isCat5 ? 'bg-red-100 text-red-700' :
+                          attainsCategory.includes('4') ? 'bg-orange-100 text-orange-700' :
+                          'bg-slate-100 text-slate-600'
+                        }`}>
+                          Cat {isCat5 ? '5' : attainsCategory}{tmdlStatus === 'needed' ? ' — No TMDL' : tmdlStatus === 'completed' ? ' — TMDL in place' : tmdlStatus === 'alternative' ? ' — Alt. controls' : ''}
+                        </span>
+                        {attainsCauses.length > 0 && (
+                          <span className="text-slate-500">
+                            Listed for: <span className="font-medium text-slate-700">{attainsCauses.join(', ')}</span>
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 text-[9px]">
+                    {categories.reduce((n, c) => n + c.modules.filter(m => m.status === 'warranted').length, 0) > 0 && (
+                      <span className="bg-red-200 text-red-800 font-bold px-1.5 py-0.5 rounded-full">
+                        {categories.reduce((n, c) => n + c.modules.filter(m => m.status === 'warranted').length, 0)} warranted
+                      </span>
+                    )}
+                    <span className="bg-blue-200 text-blue-800 font-bold px-1.5 py-0.5 rounded-full">{totalBMPs} recommended</span>
+                    {totalClassified > 0 && (
+                      <span className={`font-bold px-1.5 py-0.5 rounded-full ${
+                        addressabilityPct >= 80 ? 'bg-green-200 text-green-800' :
+                        addressabilityPct >= 50 ? 'bg-amber-200 text-amber-800' :
+                        'bg-slate-200 text-slate-700'
+                      }`}>
+                        {pearlAddressable}/{totalClassified} addressable
+                      </span>
+                    )}
+                  </div>
+                  <ChevronDown size={16} className={`text-cyan-600 transition-transform ${showRestorationCard ? 'rotate-180' : ''}`} />
+                </div>
+              </button>
+
+              {/* Expanded content */}
+              {showRestorationCard && (
+                <CardContent className="pt-0 pb-4 space-y-4">
+
+                  {/* ═══ EXECUTIVE SUMMARY ═══ */}
+                  {(() => {
+                    return (
+                      <div className="rounded-lg border-2 border-slate-300 bg-white p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm font-bold text-slate-900 uppercase tracking-wide">Executive Summary</div>
+                          <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${siteSeverityColor}`}>
+                            Site Severity: {siteSeverityLabel} ({siteSeverityScore}/100)
+                          </span>
+                        </div>
+
+                        {/* Severity score breakdown bar */}
+                        <div className="rounded-md bg-slate-50 border border-slate-200 p-3 space-y-2">
+                          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{isMD ? 'MD DNR Threshold' : 'EPA Criteria'} Assessment</div>
+                          <div className="grid grid-cols-5 gap-1.5 text-[10px]">
+                            <div className="text-center">
+                              <div className={`font-bold ${doSeverity === 'critical' ? 'text-red-700' : doSeverity === 'stressed' ? 'text-amber-600' : doSeverity === 'adequate' ? 'text-green-600' : 'text-slate-400'}`}>
+                                {doSeverity === 'unknown' ? '?' : doVal?.toFixed(1)} mg/L
+                              </div>
+                              <div className="text-slate-500">DO</div>
+                              <div className={`text-[9px] font-medium ${doSeverity === 'critical' ? 'text-red-600' : doSeverity === 'stressed' ? 'text-amber-600' : 'text-green-600'}`}>
+                                {doSeverity !== 'unknown' ? doSeverity : 'no data'}
+                              </div>
+                            </div>
+                            <div className="text-center">
+                              <div className={`font-bold ${bloomSeverity === 'severe' || bloomSeverity === 'significant' ? 'text-red-700' : bloomSeverity === 'bloom' ? 'text-amber-600' : bloomSeverity === 'normal' ? 'text-green-600' : 'text-slate-400'}`}>
+                                {bloomSeverity === 'unknown' ? '?' : chlVal} ug/L
+                              </div>
+                              <div className="text-slate-500">Chl-a</div>
+                              <div className={`text-[9px] font-medium ${bloomSeverity === 'severe' ? 'text-red-600' : bloomSeverity === 'significant' ? 'text-orange-600' : bloomSeverity === 'bloom' ? 'text-amber-600' : 'text-green-600'}`}>
+                                {bloomSeverity !== 'unknown' ? bloomSeverity : 'no data'}
+                              </div>
+                            </div>
+                            <div className="text-center">
+                              <div className={`font-bold ${turbiditySeverity === 'impaired' ? 'text-red-700' : turbiditySeverity === 'elevated' ? 'text-amber-600' : turbiditySeverity === 'clear' ? 'text-green-600' : 'text-slate-400'}`}>
+                                {turbiditySeverity === 'unknown' ? '?' : turbVal?.toFixed(1)} FNU
+                              </div>
+                              <div className="text-slate-500">Turbidity</div>
+                              <div className={`text-[9px] font-medium ${turbiditySeverity === 'impaired' ? 'text-red-600' : turbiditySeverity === 'elevated' ? 'text-amber-600' : 'text-green-600'}`}>
+                                {turbiditySeverity !== 'unknown' ? (turbiditySeverity === 'clear' ? 'ok' : turbiditySeverity) : 'no data'}
+                              </div>
+                            </div>
+                            <div className="text-center">
+                              <div className={`font-bold ${nutrientSeverity === 'excessive' ? 'text-red-700' : nutrientSeverity === 'elevated' ? 'text-amber-600' : nutrientSeverity === 'normal' ? 'text-green-600' : 'text-slate-400'}`}>
+                                {nutrientSeverity === 'unknown' ? '?' : `TN ${tnVal?.toFixed(1) ?? '?'}`}
+                              </div>
+                              <div className="text-slate-500">Nutrients</div>
+                              <div className={`text-[9px] font-medium ${nutrientSeverity === 'excessive' ? 'text-red-600' : nutrientSeverity === 'elevated' ? 'text-amber-600' : 'text-green-600'}`}>
+                                {nutrientSeverity !== 'unknown' ? nutrientSeverity : 'no data'}
+                              </div>
+                            </div>
+                            <div className="text-center">
+                              <div className="font-bold text-slate-700">{attainsCategory || '?'}</div>
+                              <div className="text-slate-500">ATTAINS</div>
+                              <div className={`text-[9px] font-medium ${isCat5 ? 'text-red-600' : isImpaired ? 'text-amber-600' : 'text-green-600'}`}>
+                                {tmdlStatus === 'needed' ? 'no TMDL' : tmdlStatus === 'completed' ? 'has TMDL' : tmdlStatus}
+                              </div>
+                            </div>
+                          </div>
+                          {/* Severity bar */}
+                          <div className="w-full bg-slate-200 rounded-full h-2 mt-1">
+                            <div className={`h-2 rounded-full transition-all ${siteSeverityScore >= 75 ? 'bg-red-500' : siteSeverityScore >= 50 ? 'bg-amber-500' : siteSeverityScore >= 25 ? 'bg-yellow-500' : 'bg-green-500'}`} style={{ width: `${Math.min(100, siteSeverityScore)}%` }} />
+                          </div>
+                          <div className="text-[9px] text-slate-400">Composite: DO (25%) + Bloom/Nutrients (25%) + Turbidity (15%) + Impairment (20%) + Monitoring Gap (15%) | Thresholds: {thresholdSource}</div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {/* Situation */}
+                          <div className="rounded-md bg-slate-50 border border-slate-200 p-3">
+                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Situation</div>
+                            <div className="space-y-1 text-xs text-slate-700 leading-relaxed">
+                              <div><span className="font-semibold">{regionName}</span> is {isCat5 ? 'Category 5 impaired' : attainsCategory.includes('4') ? 'Category 4 impaired' : isImpaired ? 'impaired' : 'under monitoring'}{attainsCauses.length > 0 ? ` for ${attainsCauses.join(', ').toLowerCase()}` : ''}.</div>
+                              {dataAgeDays !== null && <div>Most recent data is <span className="font-semibold">{dataAgeDays} days old</span>. Confidence is <span className={`font-semibold ${dataConfidence === 'low' ? 'text-red-600' : dataConfidence === 'moderate' ? 'text-amber-600' : 'text-green-600'}`}>{dataConfidence}</span>.</div>}
+                              <div>{tmdlStatus === 'needed' ? 'No approved TMDL is in place.' : tmdlStatus === 'completed' ? 'An approved TMDL exists.' : tmdlStatus === 'alternative' ? 'Alternative controls are in place.' : 'TMDL status is not applicable.'}</div>
+                            </div>
+                          </div>
+
+                          {/* Treatment Priorities */}
+                          <div className="rounded-md bg-red-50 border border-red-200 p-3">
+                            <div className="text-[10px] font-bold text-red-700 uppercase tracking-wider mb-1.5">Treatment Priorities</div>
+                            <div className="space-y-1 text-xs text-red-800 leading-relaxed">
+                              {treatmentPriorities.length > 0 ? treatmentPriorities.slice(0, 3).map((tp, i) => (
+                                <div key={i} className="flex items-start gap-1">
+                                  <span className={`flex-shrink-0 font-bold ${tp.urgency === 'immediate' ? 'text-red-700' : tp.urgency === 'high' ? 'text-amber-700' : 'text-yellow-700'}`}>
+                                    {tp.urgency === 'immediate' ? '!!!' : tp.urgency === 'high' ? '!!' : '!'}
+                                  </span>
+                                  <span>{tp.driver}</span>
+                                </div>
+                              )) : (
+                                <>
+                                  {isImpaired && <div>Regulatory exposure under CWA 303(d) and MS4 permits.</div>}
+                                  {(dataAgeDays === null || dataAgeDays > 60) && <div>High uncertainty due to monitoring gaps.</div>}
+                                  {!isImpaired && <div>Preventive action recommended to maintain water quality.</div>}
+                                </>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Plan */}
+                          <div className="rounded-md bg-blue-50 border border-blue-200 p-3">
+                            <div className="text-[10px] font-bold text-blue-700 uppercase tracking-wider mb-1.5">Plan</div>
+                            <div className="space-y-1 text-xs text-blue-800 leading-relaxed">
+                              <div>Layered approach:</div>
+                              <div className="pl-2 space-y-0.5 text-[11px]">
+                                <div>-> Upstream BMPs and source control</div>
+                                <div>-> Nature-based restoration for long-term recovery</div>
+                                <div>-> Community programs for compliance and stewardship</div>
+                                <div>-> <span className="font-semibold">PEARL for immediate treatment and real-time verification</span></div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Why PEARL First */}
+                          <div className="rounded-md bg-cyan-50 border-2 border-cyan-300 p-3">
+                            <div className="text-[10px] font-bold text-cyan-800 uppercase tracking-wider mb-1.5">Why PEARL First</div>
+                            <div className="space-y-1.5 text-xs text-cyan-900 leading-relaxed">
+                              {dataAgeDays !== null && dataAgeDays > 30 && (
+                                <div><span className="font-semibold text-red-700">Data is {dataAgeDays} days old.</span> PEARL restores continuous, compliance-grade monitoring.</div>
+                              )}
+                              {treatmentPriorities.length > 0 && treatmentPriorities[0].urgency === 'immediate' && (
+                                <div><span className="font-semibold text-red-700">{treatmentPriorities[0].driver.charAt(0).toUpperCase() + treatmentPriorities[0].driver.slice(1).split('(')[0].trim()}.</span> PEARL provides immediate treatment.</div>
+                              )}
+                              {treatmentPriorities.length > 0 && treatmentPriorities[0].urgency !== 'immediate' && (
+                                <div><span className="font-semibold">{hasBacteria ? 'Pathogen risk is elevated' : hasNutrients ? 'Nutrient loading is degrading habitat' : hasSediment ? 'Sediment is impairing aquatic life' : 'Conditions are deteriorating'}.</span> PEARL begins treatment immediately.</div>
+                              )}
+                              <div><span className="font-semibold">Long-term restoration takes years.</span> PEARL delivers measurable results in weeks.</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Action line */}
+                        <div className="rounded-md bg-cyan-700 text-white px-4 py-2.5">
+                          <div className="text-xs font-semibold">
+                            Recommended next step: Deploy {isPhasedDeployment ? `Phase 1 (${phase1Units} unit${phase1Units > 1 ? 's' : ''}, ${phase1GPM} GPM)` : `${totalUnits} PEARL unit${totalUnits > 1 ? 's' : ''}`} at {regionName} and begin continuous monitoring within 30 days.
+                          </div>
+                          <div className="text-[10px] text-cyan-200 mt-1">
+                            Typical deployment: 30-60 days. Pilot generates continuous data and measurable reductions within the first operating cycle.
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* ═══ IMPAIRMENT CLASSIFICATION — What PEARL Can/Can't Address ═══ */}
+                  {impairmentClassification.length > 0 && (
+                    <div className="rounded-lg border-2 border-slate-300 bg-white p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm font-bold text-slate-900 uppercase tracking-wide">
+                          Impairment Classification
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px]">
+                          <span className={`font-bold px-2 py-0.5 rounded-full ${
+                            addressabilityPct >= 80 ? 'bg-green-200 text-green-800' :
+                            addressabilityPct >= 50 ? 'bg-amber-200 text-amber-800' :
+                            'bg-red-200 text-red-800'
+                          }`}>
+                            PEARL addresses {pearlAddressable} of {totalClassified} impairment{totalClassified !== 1 ? 's' : ''} ({addressabilityPct}%)
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        {/* Tier 1 */}
+                        {impairmentClassification.filter(i => i.tier === 1).length > 0 && (
+                          <div className="text-[10px] font-bold text-green-700 uppercase tracking-wider mt-1">Tier 1 — PEARL Primary Target</div>
+                        )}
+                        {impairmentClassification.filter(i => i.tier === 1).map((item, i) => (
+                          <div key={`t1-${i}`} className="flex items-start gap-2 text-xs py-1 px-2 rounded bg-green-50 border border-green-100">
+                            <span className="flex-shrink-0">{item.icon}</span>
+                            <div className="flex-1 min-w-0">
+                              <span className="font-semibold text-green-900">{item.cause}</span>
+                              <span className="text-green-700 ml-1">— {item.pearlAction}</span>
+                            </div>
+                          </div>
+                        ))}
+
+                        {/* Tier 2 */}
+                        {impairmentClassification.filter(i => i.tier === 2).length > 0 && (
+                          <div className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mt-2">Tier 2 — PEARL Contributes / Planned</div>
+                        )}
+                        {impairmentClassification.filter(i => i.tier === 2).map((item, i) => (
+                          <div key={`t2-${i}`} className="flex items-start gap-2 text-xs py-1 px-2 rounded bg-amber-50 border border-amber-100">
+                            <span className="flex-shrink-0">{item.icon}</span>
+                            <div className="flex-1 min-w-0">
+                              <span className="font-semibold text-amber-900">{item.cause}</span>
+                              <span className="text-amber-700 ml-1">— {item.pearlAction}</span>
+                            </div>
+                          </div>
+                        ))}
+
+                        {/* Tier 3 */}
+                        {impairmentClassification.filter(i => i.tier === 3).length > 0 && (
+                          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-2">Tier 3 — Outside PEARL Scope</div>
+                        )}
+                        {impairmentClassification.filter(i => i.tier === 3).map((item, i) => (
+                          <div key={`t3-${i}`} className="flex items-start gap-2 text-xs py-1 px-2 rounded bg-slate-50 border border-slate-200">
+                            <span className="flex-shrink-0">{item.icon}</span>
+                            <div className="flex-1 min-w-0">
+                              <span className="font-semibold text-slate-700">{item.cause}</span>
+                              <span className="text-slate-500 ml-1">— {item.pearlAction}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="text-[9px] text-slate-400 pt-1 border-t border-slate-100">
+                        Classification based on EPA ATTAINS impairment causes and PEARL treatment train capabilities. Tier 1: directly treated. Tier 2: indirect benefit or planned module. Tier 3: requires different intervention.
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ═══ PEARL — IMMEDIATE IMPACT LAYER (elevated, shown first) ═══ */}
+                  {(() => {
+                    const pearlCat = categories.find(c => c.id === 'pearl');
+                    if (!pearlCat) return null;
+                    const warranted = pearlCat.modules.filter(m => m.status === 'warranted');
+                    const accelerators = pearlCat.modules.filter(m => m.status === 'accelerator');
+                    const coBenefits = pearlCat.modules.filter(m => m.status === 'co-benefit');
+
+                    return (
+                      <div className="rounded-lg border-2 border-cyan-400 bg-gradient-to-br from-cyan-50 to-blue-50 p-3 space-y-3 shadow-md">
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm font-bold text-cyan-900 uppercase tracking-wide flex items-center gap-2">
+                            ⚡ Fastest Path to Measurable Results
+                          </div>
+                          <div className="flex items-center gap-1.5 text-[9px]">
+                            {warranted.length > 0 && <span className="bg-red-200 text-red-800 font-bold px-1.5 py-0.5 rounded-full">{warranted.length} warranted</span>}
+                            <span className="bg-cyan-200 text-cyan-800 font-bold px-1.5 py-0.5 rounded-full">{totalQuads}Q / {totalUnits} units / {fullGPM} GPM</span>
+                          </div>
+                        </div>
+
+                        {/* Why PEARL here — dynamic evidence box */}
+                        <div className="rounded-md border border-cyan-300 bg-white p-3 space-y-2">
+                          <div className="text-[10px] font-bold text-cyan-800 uppercase tracking-wider">Why PEARL at this site</div>
+                          <div className="space-y-1.5">
+                            {whyBullets.map((b, i) => (
+                              <div key={i} className="flex items-start gap-2">
+                                <span className="text-sm flex-shrink-0 mt-0.5">{b.icon}</span>
+                                <div className="text-[11px] leading-relaxed">
+                                  <span className="text-red-700 font-medium">{b.problem}.</span>{' '}
+                                  <span className="text-cyan-800">→ {b.solution}.</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* PEARL modules */}
+                        <div className="space-y-1">
+                          {[...warranted, ...accelerators].map((t) => (
+                            <div key={t.id} className={`rounded-md border p-2 ${t.color}`}>
+                              <div className="flex items-start gap-2">
+                                <span className="text-sm flex-shrink-0">{t.icon}</span>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-semibold">{t.label}</span>
+                                    <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase ${
+                                      t.status === 'warranted' ? 'bg-red-200 text-red-800' : 'bg-cyan-200 text-cyan-800'
+                                    }`}>{t.status === 'warranted' ? 'WARRANTED' : 'PEARL'}</span>
+                                  </div>
+                                  <div className="text-[10px] mt-0.5 leading-relaxed opacity-90">{t.detail}</div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          {coBenefits.length > 0 && (
+                            <div className="flex flex-wrap gap-1 pt-0.5">
+                              {coBenefits.map((t) => (
+                                <span key={t.id} className="inline-flex items-center gap-1 text-[10px] text-slate-500 bg-white/70 border border-slate-200 rounded px-2 py-1" title={t.detail}>
+                                  {t.icon} {t.label}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* System config + sizing */}
+                        <div className="rounded-md bg-white border border-cyan-200 p-3 space-y-2">
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div>
+                              <div className="text-[10px] text-slate-500 uppercase">Configuration</div>
+                              <div className="text-sm font-bold text-cyan-800">{pearlModel}</div>
+                              <div className="text-[10px] text-slate-500">{waterType === 'brackish' ? 'Oyster' : 'Mussel'} Biofilt{categories.find(c => c.id === 'pearl')?.modules.some(t => t.id.startsWith('pearl-resin')) ? ' + Resin' : ''}{categories.find(c => c.id === 'pearl')?.modules.some(t => t.id === 'pearl-uv') ? ' + UV' : ''}{categories.find(c => c.id === 'pearl')?.modules.some(t => t.id === 'pearl-gac') ? ' + GAC' : ''}</div>
+                            </div>
+                            <div>
+                              <div className="text-[10px] text-slate-500 uppercase">Full Build Target</div>
+                              <div className="text-sm font-bold text-cyan-800">{totalQuads} quad{totalQuads > 1 ? 's' : ''} ({totalUnits} units)</div>
+                              <div className="text-[10px] text-slate-500">{fullGPM} GPM total capacity</div>
+                            </div>
+                            <div>
+                              <div className="text-[10px] text-slate-500 uppercase">Full Build Annual</div>
+                              <div className="text-sm font-bold text-cyan-800">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(fullAnnualCost)}/yr</div>
+                              <div className="text-[10px] text-slate-500">$200K/unit/yr</div>
+                            </div>
+                            <div>
+                              <div className="text-[10px] text-slate-500 uppercase">Sizing Basis</div>
+                              <div className={`text-xs font-semibold ${siteSeverityScore >= 75 ? 'text-red-700' : siteSeverityScore >= 50 ? 'text-amber-700' : 'text-slate-700'}`}>Severity {prelimSeverity}/100</div>
+                              <div className="text-[10px] text-slate-500">{sizingBasis}</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* ═══ DEPLOYMENT ROADMAP ═══ */}
+                        {isPhasedDeployment && (() => {
+                          // Each quad targets a ranked critical zone. Every PEARL unit treats AND monitors.
+                          // Monitoring continuity & verification is universal -- not unique to any single phase.
+                          type PhaseInfo = { phase: string; quads: number; units: number; gpm: number; cost: number; mission: string; placement: string; why: string; trigger: string; color: string; bgColor: string };
+                          const phases: PhaseInfo[] = [];
+                          const hasMonitoringGap = dataAgeDays === null || dataAgeDays > 365;
+                          const monitoringNote = hasMonitoringGap
+                            ? `+ Monitoring continuity & verification (restores data record lost for ${dataAgeDays !== null ? Math.round(dataAgeDays / 365) + '+ year' + (Math.round(dataAgeDays / 365) > 1 ? 's' : '') : 'an extended period'})`
+                            : '+ Continuous monitoring, compliance-grade data & treatment verification';
+
+                          // ── PHASE 1: #1 most critical zone ──
+                          const p1Mission = (hasNutrients || bloomSeverity !== 'normal' || bloomSeverity === 'unknown')
+                            ? 'Primary Nutrient Interception'
+                            : hasBacteria ? 'Primary Pathogen Treatment'
+                            : hasSediment ? 'Primary Sediment Capture'
+                            : 'Primary Treatment & Monitoring';
+
+                          const p1Placement = (hasNutrients || bloomSeverity !== 'normal' || bloomSeverity === 'unknown')
+                            ? '#1 critical zone: Highest-load tributary confluence -- intercept nutrient and sediment loading at the dominant inflow before it reaches the receiving waterbody'
+                            : hasBacteria ? '#1 critical zone: Highest-volume discharge point -- treat pathogen loading at the primary outfall or CSO'
+                            : hasSediment ? '#1 critical zone: Primary tributary mouth -- capture suspended solids at the highest-load inflow'
+                            : '#1 critical zone: Highest-priority inflow -- treat and monitor at the most impacted location';
+
+                          const p1Why = bloomSeverity !== 'normal' && bloomSeverity !== 'unknown'
+                            ? `Chlorophyll at ${chlVal} ug/L confirms active bloom cycle. #1 priority -- intercept nutrients at the dominant source before they drive downstream eutrophication. ${monitoringNote}.`
+                            : hasNutrients ? `ATTAINS lists nutrient impairment. #1 priority: treat the primary urban watershed inflow. ${monitoringNote}.`
+                            : hasBacteria ? `Bacteria exceeds recreational standards. #1 priority: treat at highest-volume discharge. ${monitoringNote}.`
+                            : hasSediment ? `Turbidity at ${turbVal?.toFixed(1) ?? '?'} FNU. #1 priority: capture sediment at the dominant tributary. ${monitoringNote}.`
+                            : `#1 priority treatment zone. ${monitoringNote}.`;
+
+                          phases.push({
+                            phase: 'Phase 1', quads: phase1Quads, units: phase1Units, gpm: phase1GPM,
+                            cost: phase1AnnualCost,
+                            mission: p1Mission, placement: p1Placement, why: p1Why,
+                            trigger: 'Immediate -- deploy within 30 days of site assessment',
+                            color: 'border-cyan-400 text-cyan-900', bgColor: 'bg-cyan-50',
+                          });
+
+                          // ── PHASE 2: #2 most critical zone ──
+                          if (totalQuads >= 2) {
+                            const p2Quads = totalQuads === 2 ? (totalQuads - phase1Quads) : 1;
+                            const p2Units = p2Quads * 4;
+
+                            const p2Mission = (hasSediment || turbiditySeverity !== 'clear')
+                              ? 'Secondary Outfall Treatment'
+                              : (hasNutrients || bloomSeverity !== 'normal') ? 'Secondary Nutrient Treatment'
+                              : hasBacteria ? 'Secondary Source Treatment'
+                              : 'Secondary Zone Treatment';
+
+                            const p2Placement = waterType === 'brackish'
+                              ? (hasSediment || turbiditySeverity !== 'clear'
+                                ? '#2 critical zone: MS4 outfall cluster along shoreline -- treat stormwater discharge from adjacent subwatersheds where multiple outfalls concentrate pollutant loading'
+                                : '#2 critical zone: Embayment or low-circulation area -- treat where longest water residence time allows bloom development and DO depletion')
+                              : (hasSediment || turbiditySeverity !== 'clear'
+                                ? '#2 critical zone: Secondary tributary or stormwater outfall cluster -- capture additional loading from adjacent drainage area'
+                                : '#2 critical zone: Secondary inflow or pooling area -- treat where nutrient accumulation drives worst conditions');
+
+                            const p2Why = turbiditySeverity !== 'clear' && turbiditySeverity !== 'unknown'
+                              ? `Turbidity at ${turbVal?.toFixed(1)} FNU indicates sediment loading from multiple sources. Phase 1 intercepts the primary tributary; Phase 2 treats the next-highest loading zone. ${monitoringNote}.`
+                              : hasNutrients && (bloomSeverity !== 'normal')
+                              ? `Bloom conditions persist beyond the primary inflow. Phase 2 treats the #2 nutrient loading zone. ${monitoringNote}.`
+                              : attainsCauses.length >= 3
+                              ? `${attainsCauses.length} impairment causes indicate multiple pollution sources. Phase 2 addresses the #2 priority loading pathway. ${monitoringNote}.`
+                              : `Phase 1 data identifies the second-highest treatment priority. ${monitoringNote}.`;
+
+                            phases.push({
+                              phase: 'Phase 2', quads: p2Quads, units: p2Units, gpm: p2Units * 50,
+                              cost: p2Units * COST_PER_UNIT_YEAR,
+                              mission: p2Mission, placement: p2Placement, why: p2Why,
+                              trigger: 'After 90 days -- Phase 1 data confirms #2 priority zone and optimal placement',
+                              color: 'border-blue-300 text-blue-900', bgColor: 'bg-blue-50',
+                            });
+                          }
+
+                          // ── PHASE 3: #3 most critical zone ──
+                          if (totalQuads >= 3) {
+                            const remainQuads = totalQuads - phase1Quads - (totalQuads === 2 ? totalQuads - phase1Quads : 1);
+                            const remainUnits = remainQuads * 4;
+                            if (remainQuads > 0) {
+                              const p3Mission = waterType === 'brackish'
+                                ? (hasBacteria ? 'Tertiary Outfall Treatment' : 'Tertiary Zone Treatment')
+                                : 'Tertiary Zone Treatment';
+
+                              const p3Placement = waterType === 'brackish'
+                                ? (hasBacteria
+                                  ? '#3 critical zone: Remaining outfall cluster or CSO discharge -- treat pathogen and nutrient loading from the third-highest contributing subwatershed along the tidal corridor'
+                                  : hasNutrients || bloomSeverity !== 'normal'
+                                  ? '#3 critical zone: Remaining tributary or embayment -- treat nutrient loading from the third-highest contributing inflow, capturing pollutants that Phases 1+2 cannot reach'
+                                  : '#3 critical zone: Third-highest loading area along the shoreline -- extend treatment coverage to remaining untreated outfall discharge')
+                                : (hasNutrients
+                                  ? '#3 critical zone: Tertiary inflow or accumulation point -- treat remaining nutrient loading from the third-highest contributing drainage area'
+                                  : '#3 critical zone: Remaining untreated inflow -- extend treatment coverage to the third-highest loading area in the watershed');
+
+                              const p3Why = attainsCauses.length >= 3
+                                ? `${attainsCauses.length} documented impairment causes require treatment across multiple zones. Phases 1+2 address the two highest-load sources. Phase 3 extends to the #3 priority zone -- ${totalUnits} total units providing ${fullGPM} GPM treatment capacity across all major loading points. ${monitoringNote}.`
+                                : `Phase 3 extends treatment to the third-highest loading zone identified by Phases 1+2 data. Full ${totalQuads}-quad deployment ensures coverage across all major pollution sources -- ${totalUnits} units, ${fullGPM} GPM total capacity. ${monitoringNote}.`;
+
+                              phases.push({
+                                phase: totalQuads > 3 ? `Phase 3 (${remainQuads}Q)` : 'Phase 3', quads: remainQuads, units: remainUnits, gpm: remainUnits * 50,
+                                cost: remainUnits * COST_PER_UNIT_YEAR,
+                                mission: p3Mission, placement: p3Placement, why: p3Why,
+                                trigger: 'After 180 days -- Phase 1+2 data identifies #3 priority zone and confirms full-build need',
+                                color: 'border-indigo-300 text-indigo-900', bgColor: 'bg-indigo-50',
+                              });
+                            }
+                          }
+
+                          return (
+                            <div className="rounded-md border border-slate-200 bg-white p-3 space-y-2">
+                              <div className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Deployment Roadmap -- Path to {totalQuads} Quads ({totalUnits} Units)</div>
+
+                              <div className="space-y-2">
+                                {phases.map((p, i) => (
+                                  <div key={i} className={`rounded-md border-2 ${p.color} ${p.bgColor} p-2.5`}>
+                                    <div className="flex items-center justify-between mb-1">
+                                      <div className="flex items-center gap-2">
+                                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${i === 0 ? 'bg-cyan-700 text-white' : i === 1 ? 'bg-blue-600 text-white' : 'bg-indigo-600 text-white'}`}>
+                                          {p.phase}
+                                        </span>
+                                        <span className="text-[10px] font-bold uppercase tracking-wider opacity-70">{p.mission}</span>
+                                      </div>
+                                      <span className="text-xs font-bold">{p.quads} quad{p.quads > 1 ? 's' : ''} ({p.units}U, {p.gpm} GPM) -- {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(p.cost)}/yr</span>
+                                    </div>
+                                    <div className="text-[11px] leading-relaxed">
+                                      <span className="font-semibold">Placement:</span> {p.placement}
+                                    </div>
+                                    <div className="text-[11px] leading-relaxed mt-1">
+                                      <span className="font-semibold">Justification:</span> {p.why}
+                                    </div>
+                                    <div className="text-[10px] text-slate-500 mt-1">
+                                      <span className="font-medium">Trigger:</span> {p.trigger}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+
+                              {/* Running total bar */}
+                              <div className="flex items-center gap-2 pt-1">
+                                {phases.map((p, i) => (
+                                  <div key={i} className={`flex-1 h-2 rounded-full ${i === 0 ? 'bg-cyan-500' : i === 1 ? 'bg-blue-500' : 'bg-indigo-500'}`} title={`${p.phase}: ${p.units} units`} />
+                                ))}
+                              </div>
+                              <div className="flex justify-between text-[9px] text-slate-400">
+                                <span>Day 1</span>
+                                <span>90 days</span>
+                                {phases.length > 2 && <span>180 days</span>}
+                                <span>Full build: {totalUnits} units, {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(fullAnnualCost)}/yr</span>
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+                        {/* CTAs */}
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            onClick={() => {
+                              const subject = encodeURIComponent(`PEARL Pilot Deployment Request — ${regionName}, ${stateAbbr}`);
+                              const body = encodeURIComponent(
+                                `PEARL Pilot Deployment Request\n` +
+                                `${'='.repeat(40)}\n\n` +
+                                `Site: ${regionName}\n` +
+                                `State: ${STATE_ABBR_TO_NAME[stateAbbr] || stateAbbr}\n` +
+                                `Site Severity: ${siteSeverityLabel} (${siteSeverityScore}/100)\n` +
+                                `EPA Category: ${attainsCategory || 'N/A'}\n` +
+                                `Impairment Causes: ${attainsCauses.join(', ') || 'N/A'}\n` +
+                                `TMDL Status: ${tmdlStatus === 'needed' ? 'Needed — not established' : tmdlStatus === 'completed' ? 'Approved' : tmdlStatus === 'alternative' ? 'Alternative controls' : 'N/A'}\n` +
+                                `Recommended Config: ${pearlModel} (${waterType === 'brackish' ? 'Oyster' : 'Mussel'} Biofiltration)\n` +
+                                `Deployment: ${totalQuads} quad${totalQuads > 1 ? 's' : ''} (${totalUnits} units, ${fullGPM} GPM)${isPhasedDeployment ? `\nPhase 1: ${phase1Quads} quad${phase1Quads > 1 ? 's' : ''} (${phase1Units} units, ${phase1GPM} GPM)` : ''}\n` +
+                                `Estimated Annual Cost: $${fullAnnualCost.toLocaleString()}${isPhasedDeployment ? ` (Phase 1: $${phase1AnnualCost.toLocaleString()}/yr)` : '/yr'}\n` +
+                                `Sizing Basis: ${sizingBasis}\n` +
+                                `Compliance Pathway: ${compliancePathway}\n\n` +
+                                `Requesting organization: \n` +
+                                `Contact name: \n` +
+                                `Contact email: \n` +
+                                `Preferred timeline: \n` +
+                                `Additional notes: \n`
+                              );
+                              window.open(`mailto:info@project-pearl.org?subject=${subject}&body=${body}`, '_blank');
+                            }}
+                            className="flex-1 min-w-[140px] bg-cyan-700 hover:bg-cyan-800 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition-colors shadow-sm"
+                          >
+                            🚀 Deploy PEARL Pilot Here
+                          </button>
+                          <button
+                            onClick={async () => {
+                              try {
+                                const pdf = new BrandedPDFGenerator('portrait');
+                                await pdf.loadLogo();
+                                pdf.initialize();
+
+                                // Sanitize text for jsPDF (no emoji, no extended unicode)
+                                const clean = (s: string) => s
+                                  .replace(/[\u{1F000}-\u{1FFFF}]/gu, '')  // emoji block 1
+                                  .replace(/[\u{2600}-\u{27BF}]/gu, '')    // misc symbols
+                                  .replace(/[\u{FE00}-\u{FE0F}]/gu, '')    // variation selectors
+                                  .replace(/[\u{200D}]/gu, '')             // zero-width joiner
+                                  .replace(/[\u{E0020}-\u{E007F}]/gu, '')  // tags
+                                  .replace(/\u00B5/g, 'u')                 // micro sign
+                                  .replace(/\u03BC/g, 'u')                 // greek mu
+                                  .replace(/\u2192/g, '->')                // right arrow
+                                  .replace(/\u2190/g, '<-')                // left arrow
+                                  .replace(/\u2014/g, '--')                // em dash
+                                  .replace(/\u2013/g, '-')                 // en dash
+                                  .replace(/\u00A7/g, 'Section ')          // section sign
+                                  .replace(/\u2022/g, '-')                 // bullet
+                                  .replace(/\u00B0/g, ' deg')              // degree
+                                  .replace(/\u2019/g, "'")                 // right single quote
+                                  .replace(/\u2018/g, "'")                 // left single quote
+                                  .replace(/\u201C/g, '"')                 // left double quote
+                                  .replace(/\u201D/g, '"')                 // right double quote
+                                  .replace(/[^\x00-\x7F]/g, '')           // strip any remaining non-ASCII
+                                  .replace(/\s+/g, ' ')                    // collapse whitespace
+                                  .trim();
+
+                                // Category title map (emoji-free)
+                                const catTitleMap: Record<string, string> = {
+                                  source: 'SOURCE CONTROL -- Upstream BMPs',
+                                  nature: 'NATURE-BASED SOLUTIONS',
+                                  pearl: 'PEARL -- Treatment Accelerator',
+                                  community: 'COMMUNITY ENGAGEMENT & STEWARDSHIP',
+                                  regulatory: 'REGULATORY & PLANNING',
+                                };
+
+                                // Title
+                                pdf.addTitle('PEARL Deployment Plan');
+                                pdf.addText(clean(`${regionName}, ${STATE_ABBR_TO_NAME[stateAbbr] || stateAbbr}`), { bold: true, fontSize: 12 });
+                                pdf.addText(`Generated ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, { fontSize: 9 });
+                                pdf.addSpacer(5);
+
+                                // Executive Summary
+                                pdf.addSubtitle('Executive Summary');
+                                pdf.addDivider();
+
+                                pdf.addText(`SITE SEVERITY: ${siteSeverityLabel} (${siteSeverityScore}/100)`, { bold: true });
+                                pdf.addText(clean(`Assessment based on ${thresholdSource}: DO (${doSeverity}), Bloom/Nutrients (${bloomSeverity !== 'unknown' ? bloomSeverity : nutrientSeverity}), Turbidity (${turbiditySeverity}), Impairment (${attainsCategory || 'N/A'}).`), { indent: 5, fontSize: 9 });
+                                pdf.addSpacer(3);
+
+                                pdf.addText('SITUATION', { bold: true });
+                                pdf.addText(clean(`${regionName} is ${isCat5 ? 'Category 5 impaired' : attainsCategory.includes('4') ? 'Category 4 impaired' : isImpaired ? 'impaired' : 'under monitoring'}${attainsCauses.length > 0 ? ` for ${attainsCauses.slice(0, 3).join(', ').toLowerCase()}` : ''}.`), { indent: 5 });
+                                if (dataAgeDays !== null) pdf.addText(clean(`Most recent data is ${dataAgeDays} days old. Confidence: ${dataAgeDays > 90 ? 'LOW' : dataAgeDays > 30 ? 'MODERATE' : 'HIGH'}.`), { indent: 5 });
+                                pdf.addText(clean(`TMDL Status: ${tmdlStatus === 'needed' ? 'No approved TMDL in place' : tmdlStatus === 'completed' ? 'Approved TMDL exists' : tmdlStatus === 'alternative' ? 'Alternative controls in place' : 'Not applicable'}.`), { indent: 5 });
+                                pdf.addSpacer(3);
+
+                                pdf.addText('TREATMENT PRIORITIES', { bold: true });
+                                if (treatmentPriorities.length > 0) {
+                                  for (const tp of treatmentPriorities.slice(0, 4)) {
+                                    pdf.addText(clean(`- [${tp.urgency.toUpperCase()}] ${tp.driver}`), { indent: 5 });
+                                    pdf.addText(clean(`  -> ${tp.action}`), { indent: 10, fontSize: 9 });
+                                  }
+                                } else {
+                                  if (hasBacteria) pdf.addText('- Ongoing public health risk from pathogens.', { indent: 5 });
+                                  if (hasNutrients) pdf.addText('- Eutrophication risk from nutrient loading.', { indent: 5 });
+                                  if (isImpaired) pdf.addText('- Regulatory exposure under CWA Section 303(d) and MS4 permits.', { indent: 5 });
+                                  if (dataAgeDays === null || dataAgeDays > 60) pdf.addText('- High uncertainty due to monitoring gaps.', { indent: 5 });
+                                }
+                                pdf.addSpacer(3);
+
+                                pdf.addText('RECOMMENDED ACTION', { bold: true });
+                                pdf.addText(clean(`Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} unit${phase1Units > 1 ? 's' : ''}, ${phase1GPM} GPM)` : `${totalUnits} PEARL unit${totalUnits > 1 ? 's' : ''}`} at ${regionName} and begin continuous monitoring within 30 days.`), { indent: 5, bold: true });
+                                pdf.addText('Typical deployment: 30-60 days. Pilot generates continuous data and measurable reductions within the first operating cycle.', { indent: 5, fontSize: 9 });
+                                pdf.addSpacer(5);
+
+                                // Site Profile
+                                pdf.addSubtitle('Site Profile');
+                                pdf.addDivider();
+                                pdf.addTable(
+                                  ['Attribute', 'Value'],
+                                  [
+                                    ['Waterbody', clean(regionName)],
+                                    ['State', STATE_ABBR_TO_NAME[stateAbbr] || stateAbbr],
+                                    ['Water Type', waterType === 'brackish' ? 'Brackish / Estuarine' : 'Freshwater'],
+                                    ['Site Severity', `${siteSeverityLabel} (${siteSeverityScore}/100)`],
+                                    ['EPA IR Category', attainsCategory || 'Not assessed'],
+                                    ['Impairment Causes', clean(attainsCauses.join(', ')) || 'None listed'],
+                                    ['TMDL Status', tmdlStatus === 'needed' ? 'Needed -- not established' : tmdlStatus === 'completed' ? 'Approved' : tmdlStatus === 'alternative' ? 'Alternative controls' : 'N/A'],
+                                    ['Compliance Pathway', clean(compliancePathway)],
+                                    ['Data Age', dataAgeDays !== null ? `${dataAgeDays} days` : 'Unknown'],
+                                    ['Waterbody Size', `~${estimatedAcres} acres (${acresSource})`],
+                                    ['DO Status', `${doSeverity !== 'unknown' ? `${doVal?.toFixed(1)} mg/L (${doSeverity})` : 'No data'}`],
+                                    ['Bloom Status', `${bloomSeverity !== 'unknown' ? `${chlVal} ug/L (${bloomSeverity})` : nutrientSeverity !== 'unknown' ? `Nutrients: ${nutrientSeverity}` : 'No data'}`],
+                                    ['Turbidity Status', `${turbiditySeverity !== 'unknown' ? `${turbVal?.toFixed(1)} FNU (${turbiditySeverity})` : 'No data'}`],
+                                  ],
+                                  [55, 115]
+                                );
+                                pdf.addSpacer(3);
+
+                                // Live Parameters
+                                const paramKeys = Object.keys(params);
+                                if (paramKeys.length > 0) {
+                                  pdf.addSubtitle('Current Water Quality Parameters');
+                                  pdf.addDivider();
+                                  const paramRows = paramKeys.map(key => {
+                                    const p = params[key];
+                                    const val = p.value < 0.01 && p.value > 0 ? p.value.toFixed(3) : p.value < 1 ? p.value.toFixed(2) : p.value < 100 ? p.value.toFixed(1) : Math.round(p.value).toLocaleString();
+                                    return [
+                                      key,
+                                      clean(`${val} ${p.unit || ''}`),
+                                      p.source || '',
+                                      p.lastSampled ? new Date(p.lastSampled).toLocaleDateString() : 'N/A',
+                                    ];
+                                  });
+                                  pdf.addTable(['Parameter', 'Value', 'Source', 'Last Sampled'], paramRows, [40, 45, 35, 50]);
+                                  pdf.addSpacer(3);
+                                }
+
+                                // Why PEARL at this site
+                                pdf.addSubtitle('Why PEARL at This Site');
+                                pdf.addDivider();
+                                for (const b of whyBullets) {
+                                  pdf.addText(clean(`- ${b.problem}`), { indent: 5, bold: true });
+                                  pdf.addText(clean(`  -> ${b.solution}.`), { indent: 10 });
+                                }
+                                pdf.addSpacer(3);
+
+                                // PEARL Configuration
+                                pdf.addSubtitle(`PEARL Configuration: ${pearlModel}`);
+                                pdf.addDivider();
+                                pdf.addText(`System Type: ${waterType === 'brackish' ? 'Oyster (C. virginica)' : 'Freshwater Mussel'} Biofiltration`, { indent: 5 });
+                                const pearlCatMods = categories.find(c => c.id === 'pearl');
+                                if (pearlCatMods) {
+                                  const modRows = pearlCatMods.modules
+                                    .filter(m => m.status !== 'co-benefit')
+                                    .map(m => [clean(m.label), m.status.toUpperCase(), clean(m.detail)]);
+                                  pdf.addTable(['Module', 'Status', 'Detail'], modRows, [50, 25, 95]);
+                                }
+                                pdf.addSpacer(3);
+
+                                // Deployment Sizing & Cost
+                                pdf.addSubtitle('Deployment Sizing & Cost Estimate');
+                                pdf.addDivider();
+                                pdf.addTable(
+                                  ['Metric', 'Value'],
+                                  [
+                                    ['Sizing Method', 'Severity-driven treatment need assessment'],
+                                    ['Site Severity Score', `${prelimSeverity}/100 (${siteSeverityLabel})`],
+                                    ['Unit Capacity', '50 GPM per PEARL unit (4 units per quad)'],
+                                    ['Waterbody Size', `~${estimatedAcres} acres (${acresSource})`],
+                                    ['Deployment Size', `${totalQuads} quad${totalQuads > 1 ? 's' : ''} (${totalUnits} units, ${fullGPM} GPM)`],
+                                    ...(isPhasedDeployment ? [
+                                      ['Phase 1', `${phase1Quads} quad${phase1Quads > 1 ? 's' : ''} (${phase1Units} units, ${phase1GPM} GPM)`],
+                                      ['Phase 1 Annual Cost', `$${phase1AnnualCost.toLocaleString()}/yr`],
+                                      ['Full Build Annual Cost', `$${fullAnnualCost.toLocaleString()}/yr`],
+                                    ] : [
+                                      ['Annual Cost', `$${fullAnnualCost.toLocaleString()}/yr ($200,000/unit)`],
+                                    ]),
+                                    ['Sizing Basis', clean(sizingBasis)],
+                                  ],
+                                  [55, 115]
+                                );
+                                pdf.addSpacer(2);
+                                pdf.addText('SIZING METHODOLOGY', { bold: true, fontSize: 9 });
+                                pdf.addText(clean(`Site severity score derived from ${thresholdSource}. Thresholds: DO criteria (${doStressed} mg/L avg, ${doCritical} mg/L min), chlorophyll bloom thresholds (${chlBloom}/${chlSignificant}/${chlSevere} ug/L), turbidity ${isMD ? 'SAV' : 'habitat'} threshold (${turbElevated} FNU), and EPA ATTAINS impairment category. Composite score weighted: DO 25%, Bloom/Nutrients 25%, Turbidity 15%, Impairment 20%, Monitoring Gap 15%. Severity floor: impaired + >1yr data gap = minimum DEGRADED; Cat 5 + >180d gap = near-CRITICAL. CRITICAL (>=75): 3 quads. DEGRADED (>=50): 2 quads. STRESSED (>=25): 1 quad. Large waterbodies (>500 acres) add scale modifier.`), { indent: 5, fontSize: 8 });
+                                if (isPhasedDeployment) {
+                                  pdf.addText(clean(`Phased deployment recommended. Deploy Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} units) at highest-priority inflow zone(s), then scale to full ${totalQuads}-quad build based on 90 days of monitoring data.`), { indent: 5, fontSize: 9 });
+                                }
+                                pdf.addSpacer(3);
+
+                                // Phased Deployment Roadmap (matches card detail)
+                                if (isPhasedDeployment) {
+                                  pdf.addSubtitle('Phased Deployment Roadmap');
+                                  pdf.addDivider();
+
+                                  const pdfHasMonitoringGap = dataAgeDays === null || dataAgeDays > 365;
+                                  const pdfMonitoringNote = pdfHasMonitoringGap
+                                    ? `+ Monitoring continuity & verification (restores data record lost for ${dataAgeDays !== null ? Math.round(dataAgeDays / 365) + '+ year' + (Math.round(dataAgeDays / 365) > 1 ? 's' : '') : 'an extended period'})`
+                                    : '+ Continuous monitoring, compliance-grade data & treatment verification';
+
+                                  // Phase 1
+                                  const pdfP1Mission = (hasNutrients || bloomSeverity !== 'normal' || bloomSeverity === 'unknown')
+                                    ? 'Primary Nutrient Interception'
+                                    : hasBacteria ? 'Primary Pathogen Treatment'
+                                    : hasSediment ? 'Primary Sediment Capture'
+                                    : 'Primary Treatment & Monitoring';
+                                  const pdfP1Placement = (hasNutrients || bloomSeverity !== 'normal' || bloomSeverity === 'unknown')
+                                    ? '#1 critical zone: Highest-load tributary confluence -- intercept nutrient and sediment loading at the dominant inflow before it reaches the receiving waterbody'
+                                    : hasBacteria ? '#1 critical zone: Highest-volume discharge point -- treat pathogen loading at the primary outfall or CSO'
+                                    : hasSediment ? '#1 critical zone: Primary tributary mouth -- capture suspended solids at the highest-load inflow'
+                                    : '#1 critical zone: Highest-priority inflow -- treat and monitor at the most impacted location';
+                                  const pdfP1Why = bloomSeverity !== 'normal' && bloomSeverity !== 'unknown'
+                                    ? `Chlorophyll at ${chlVal} ug/L confirms active bloom cycle. #1 priority -- intercept nutrients at the dominant source before they drive downstream eutrophication. ${pdfMonitoringNote}.`
+                                    : hasNutrients ? `ATTAINS lists nutrient impairment. #1 priority: treat the primary urban watershed inflow. ${pdfMonitoringNote}.`
+                                    : hasBacteria ? `Bacteria exceeds recreational standards. #1 priority: treat at highest-volume discharge. ${pdfMonitoringNote}.`
+                                    : hasSediment ? `Turbidity at ${turbVal?.toFixed(1) ?? '?'} FNU. #1 priority: capture sediment at the dominant tributary. ${pdfMonitoringNote}.`
+                                    : `#1 priority treatment zone. ${pdfMonitoringNote}.`;
+
+                                  pdf.addText(`PHASE 1: ${pdfP1Mission.toUpperCase()} -- ${phase1Quads} quad${phase1Quads > 1 ? 's' : ''} (${phase1Units} units, ${phase1GPM} GPM) -- $${phase1AnnualCost.toLocaleString()}/yr`, { bold: true, fontSize: 9 });
+                                  pdf.addText(clean(`Placement: ${pdfP1Placement}`), { indent: 5, fontSize: 9 });
+                                  pdf.addText(clean(`Justification: ${pdfP1Why}`), { indent: 5, fontSize: 8 });
+                                  pdf.addText('Trigger: Immediate -- deploy within 30 days of site assessment', { indent: 5, fontSize: 8 });
+                                  pdf.addSpacer(2);
+
+                                  // Phase 2
+                                  if (totalQuads >= 2) {
+                                    const pdfP2Quads = totalQuads === 2 ? (totalQuads - phase1Quads) : 1;
+                                    const pdfP2Units = pdfP2Quads * 4;
+                                    const pdfP2GPM = pdfP2Units * 50;
+                                    const pdfP2Cost = pdfP2Units * COST_PER_UNIT_YEAR;
+
+                                    const pdfP2Mission = (hasSediment || turbiditySeverity !== 'clear')
+                                      ? 'Secondary Outfall Treatment'
+                                      : (hasNutrients || bloomSeverity !== 'normal') ? 'Secondary Nutrient Treatment'
+                                      : hasBacteria ? 'Secondary Source Treatment'
+                                      : 'Secondary Zone Treatment';
+                                    const pdfP2Placement = waterType === 'brackish'
+                                      ? (hasSediment || turbiditySeverity !== 'clear'
+                                        ? '#2 critical zone: MS4 outfall cluster along shoreline -- treat stormwater discharge from adjacent subwatersheds where multiple outfalls concentrate pollutant loading'
+                                        : '#2 critical zone: Embayment or low-circulation area -- treat where longest water residence time allows bloom development and DO depletion')
+                                      : (hasSediment || turbiditySeverity !== 'clear'
+                                        ? '#2 critical zone: Secondary tributary or stormwater outfall cluster -- capture additional loading from adjacent drainage area'
+                                        : '#2 critical zone: Secondary inflow or pooling area -- treat where nutrient accumulation drives worst conditions');
+                                    const pdfP2Why = turbiditySeverity !== 'clear' && turbiditySeverity !== 'unknown'
+                                      ? `Turbidity at ${turbVal?.toFixed(1)} FNU indicates sediment loading from multiple sources. Phase 1 intercepts the primary tributary; Phase 2 treats the next-highest loading zone. ${pdfMonitoringNote}.`
+                                      : hasNutrients && (bloomSeverity !== 'normal')
+                                      ? `Bloom conditions persist beyond the primary inflow. Phase 2 treats the #2 nutrient loading zone. ${pdfMonitoringNote}.`
+                                      : attainsCauses.length >= 3
+                                      ? `${attainsCauses.length} impairment causes indicate multiple pollution sources. Phase 2 addresses the #2 priority loading pathway. ${pdfMonitoringNote}.`
+                                      : `Phase 1 data identifies the second-highest treatment priority. ${pdfMonitoringNote}.`;
+
+                                    pdf.addText(`PHASE 2: ${pdfP2Mission.toUpperCase()} -- ${pdfP2Quads} quad${pdfP2Quads > 1 ? 's' : ''} (${pdfP2Units} units, ${pdfP2GPM} GPM) -- $${pdfP2Cost.toLocaleString()}/yr`, { bold: true, fontSize: 9 });
+                                    pdf.addText(clean(`Placement: ${pdfP2Placement}`), { indent: 5, fontSize: 9 });
+                                    pdf.addText(clean(`Justification: ${pdfP2Why}`), { indent: 5, fontSize: 8 });
+                                    pdf.addText('Trigger: After 90 days -- Phase 1 data confirms #2 priority zone and optimal placement', { indent: 5, fontSize: 8 });
+                                    pdf.addSpacer(2);
+                                  }
+
+                                  // Phase 3
+                                  if (totalQuads >= 3) {
+                                    const pdfP3RemainQuads = totalQuads - phase1Quads - (totalQuads === 2 ? totalQuads - phase1Quads : 1);
+                                    const pdfP3Units = pdfP3RemainQuads * 4;
+                                    const pdfP3GPM = pdfP3Units * 50;
+                                    const pdfP3Cost = pdfP3Units * COST_PER_UNIT_YEAR;
+                                    if (pdfP3RemainQuads > 0) {
+                                      const pdfP3Mission = waterType === 'brackish'
+                                        ? (hasBacteria ? 'Tertiary Outfall Treatment' : 'Tertiary Zone Treatment')
+                                        : 'Tertiary Zone Treatment';
+                                      const pdfP3Placement = waterType === 'brackish'
+                                        ? (hasBacteria
+                                          ? '#3 critical zone: Remaining outfall cluster or CSO discharge -- treat pathogen and nutrient loading from the third-highest contributing subwatershed along the tidal corridor'
+                                          : hasNutrients || bloomSeverity !== 'normal'
+                                          ? '#3 critical zone: Remaining tributary or embayment -- treat nutrient loading from the third-highest contributing inflow, capturing pollutants that Phases 1+2 cannot reach'
+                                          : '#3 critical zone: Third-highest loading area along the shoreline -- extend treatment coverage to remaining untreated outfall discharge')
+                                        : (hasNutrients
+                                          ? '#3 critical zone: Tertiary inflow or accumulation point -- treat remaining nutrient loading from the third-highest contributing drainage area'
+                                          : '#3 critical zone: Remaining untreated inflow -- extend treatment coverage to the third-highest loading area in the watershed');
+                                      const pdfP3Why = attainsCauses.length >= 3
+                                        ? `${attainsCauses.length} documented impairment causes require treatment across multiple zones. Phases 1+2 address the two highest-load sources. Phase 3 extends to the #3 priority zone -- ${totalUnits} total units providing ${fullGPM} GPM treatment capacity across all major loading points. ${pdfMonitoringNote}.`
+                                        : `Phase 3 extends treatment to the third-highest loading zone identified by Phases 1+2 data. Full ${totalQuads}-quad deployment ensures coverage across all major pollution sources -- ${totalUnits} units, ${fullGPM} GPM total capacity. ${pdfMonitoringNote}.`;
+
+                                      const pdfP3Label = totalQuads > 3 ? `PHASE 3 (${pdfP3RemainQuads}Q)` : 'PHASE 3';
+                                      pdf.addText(`${pdfP3Label}: ${pdfP3Mission.toUpperCase()} -- ${pdfP3RemainQuads} quad${pdfP3RemainQuads > 1 ? 's' : ''} (${pdfP3Units} units, ${pdfP3GPM} GPM) -- $${pdfP3Cost.toLocaleString()}/yr`, { bold: true, fontSize: 9 });
+                                      pdf.addText(clean(`Placement: ${pdfP3Placement}`), { indent: 5, fontSize: 9 });
+                                      pdf.addText(clean(`Justification: ${pdfP3Why}`), { indent: 5, fontSize: 8 });
+                                      pdf.addText('Trigger: After 180 days -- Phase 1+2 data identifies #3 priority zone and confirms full-build need', { indent: 5, fontSize: 8 });
+                                      pdf.addSpacer(2);
+                                    }
+                                  }
+
+                                  pdf.addText(`FULL BUILD: ${totalQuads} quads (${totalUnits} units, ${fullGPM} GPM) -- $${fullAnnualCost.toLocaleString()}/yr`, { bold: true, fontSize: 9 });
+                                  pdf.addSpacer(3);
+                                }
+
+                                // Impairment Classification
+                                if (impairmentClassification.length > 0) {
+                                  pdf.addSubtitle(`Impairment Classification — PEARL addresses ${pearlAddressable} of ${totalClassified} (${addressabilityPct}%)`);
+                                  pdf.addDivider();
+                                  pdf.addTable(
+                                    ['Cause', 'Tier', 'PEARL Action'],
+                                    impairmentClassification.map(item => [
+                                      clean(item.cause),
+                                      item.tier === 1 ? 'T1 — Primary Target' : item.tier === 2 ? 'T2 — Contributes/Planned' : 'T3 — Outside Scope',
+                                      clean(item.pearlAction)
+                                    ]),
+                                    [45, 40, 85]
+                                  );
+                                  pdf.addSpacer(3);
+                                }
+
+                                // Threat Assessment
+                                pdf.addSubtitle('Threat Assessment');
+                                pdf.addDivider();
+                                pdf.addTable(
+                                  ['Threat', 'Level', 'Detail'],
+                                  threats.map(t => [t.label, t.level, clean(t.detail)]),
+                                  [35, 25, 110]
+                                );
+                                pdf.addSpacer(3);
+
+                                // Full Restoration Plan
+                                pdf.addSubtitle('Full Restoration Plan');
+                                pdf.addDivider();
+                                pdf.addText(`This plan combines ${totalBMPs} conventional BMPs and nature-based solutions with PEARL accelerated treatment.`);
+                                pdf.addSpacer(3);
+
+                                for (const cat of categories.filter(c => c.id !== 'pearl')) {
+                                  pdf.addText(catTitleMap[cat.id] || clean(cat.title), { bold: true });
+                                  const activeItems = cat.modules.filter(m => m.status === 'warranted' || m.status === 'recommended');
+                                  const coItems = cat.modules.filter(m => m.status === 'co-benefit');
+                                  for (const m of activeItems) {
+                                    pdf.addText(clean(`- [${m.status.toUpperCase()}] ${m.label} -- ${m.detail}`), { indent: 5, fontSize: 9 });
+                                  }
+                                  if (coItems.length > 0) {
+                                    pdf.addText(clean(`Co-benefits: ${coItems.map(m => m.label).join(', ')}`), { indent: 5, fontSize: 8 });
+                                  }
+                                  pdf.addSpacer(3);
+                                }
+
+                                // Next Steps
+                                pdf.addSubtitle('Recommended Next Steps');
+                                pdf.addDivider();
+                                pdf.addText(clean(`1. Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} PEARL units, ${phase1GPM} GPM) at highest-priority inflow zone${phase1Quads > 1 ? 's' : ''}` : `${totalUnits} PEARL unit${totalUnits > 1 ? 's' : ''}`} within 30 days.`), { indent: 5 });
+                                pdf.addText('2. Begin continuous water quality monitoring (15-min intervals, telemetered).', { indent: 5 });
+                                pdf.addText('3. Use 90-day baseline dataset to calibrate treatment priorities and validate severity assessment.', { indent: 5 });
+                                if (isPhasedDeployment) {
+                                  pdf.addText(clean(`4. Scale to full ${totalQuads}-quad (${totalUnits}-unit) deployment based on Phase 1 field data.`), { indent: 5 });
+                                  pdf.addText('5. Coordinate with state agency on compliance pathway and grant eligibility.', { indent: 5 });
+                                  pdf.addText('6. Implement supporting BMPs and nature-based solutions per this restoration plan.', { indent: 5 });
+                                } else {
+                                  pdf.addText('4. Coordinate with state agency on compliance pathway and grant eligibility.', { indent: 5 });
+                                  pdf.addText('5. Implement supporting BMPs and nature-based solutions per this restoration plan.', { indent: 5 });
+                                }
+                                pdf.addSpacer(5);
+
+                                pdf.addText('Contact: info@project-pearl.org | project-pearl.org', { bold: true });
+
+                                const safeName = regionName.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 40);
+                                pdf.download(`PEARL_Deployment_Plan_${safeName}_${stateAbbr}.pdf`);
+                              } catch (err) {
+                                console.error('PDF generation failed:', err);
+                                alert('PDF generation failed. Check console for details.');
+                              }
+                            }}
+                            className="flex-1 min-w-[140px] bg-white hover:bg-cyan-50 text-cyan-800 text-xs font-semibold px-4 py-2.5 rounded-lg border-2 border-cyan-300 transition-colors"
+                          >
+                            📋 Generate Deployment Plan
+                          </button>
+                          <button
+                            onClick={() => setShowCostPanel(prev => !prev)}
+                            className={`flex-1 min-w-[140px] text-xs font-semibold px-4 py-2.5 rounded-lg border-2 transition-colors ${showCostPanel ? 'bg-cyan-700 text-white border-cyan-700' : 'bg-white hover:bg-cyan-50 text-cyan-800 border-cyan-300'}`}
+                          >
+                            {showCostPanel ? '✕ Close' : '💰 Cost & Economics'}
+                          </button>
+                        </div>
+
+                        {/* ═══ ECONOMICS PANEL (toggles open) ═══ */}
+                        {showCostPanel && (() => {
+                          const fmt = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
+
+                          // ═══ COMPLIANCE SAVINGS MODEL ═══
+                          // Framed as: "How much existing compliance cost can PEARL replace or compress?"
+                          // NOT fines avoided. This is reduced spend on monitoring, reporting, and BMP execution.
+                          // Partial displacement assumptions — conservative, defensible for city procurement.
+
+                          const unitCost = COST_PER_UNIT_YEAR; // $200,000
+                          const p1Annual = phase1Units * unitCost;
+                          const fullAnnual = totalUnits * unitCost;
+
+                          // ── Traditional compliance costs (per zone, annual) ──
+                          const tradMonitoringLow = 100000;   // Continuous station install amortized + ops + lab QA + data management
+                          const tradMonitoringHigh = 200000;
+                          const tradBMPLow = 150000;          // Constructed wetland or engineered BMP, amortized over 20yr + maintenance
+                          const tradBMPHigh = 400000;         // Urban sites: land, permitting, space constraints
+                          const tradConsultingLow = 75000;    // MS4 program management, lab analysis, quarterly sampling, permit reporting
+                          const tradConsultingHigh = 175000;  // Cat 5: TMDL participation, enhanced documentation, regulatory coordination
+                          const tradTotalLow = (tradMonitoringLow + tradBMPLow + tradConsultingLow) * totalQuads;
+                          const tradTotalHigh = (tradMonitoringHigh + tradBMPHigh + tradConsultingHigh) * totalQuads;
+
+                          // ── Bucket 1: Monitoring & Reporting Efficiency ──
+                          // PEARL replaces 50-75% of fixed monitoring station cost
+                          const monStationSavingsLow = Math.round(0.50 * tradMonitoringLow * totalQuads);
+                          const monStationSavingsHigh = Math.round(0.75 * tradMonitoringHigh * totalQuads);
+                          // PEARL replaces 40-60% of consulting, lab, and reporting
+                          const consultSavingsLow = Math.round(0.40 * tradConsultingLow * totalQuads);
+                          const consultSavingsHigh = Math.round(0.60 * tradConsultingHigh * totalQuads);
+                          const bucket1Low = monStationSavingsLow + consultSavingsLow;
+                          const bucket1High = monStationSavingsHigh + consultSavingsHigh;
+
+                          // ── Bucket 2: BMP Execution Efficiency ──
+                          // PEARL data improves targeting, reduces rework and mis-targeted spend
+                          // Conservative: 5-10% of amortized BMP program
+                          const bucket2Low = Math.round(0.05 * tradBMPLow * totalQuads);
+                          const bucket2High = Math.round(0.10 * tradBMPHigh * totalQuads);
+
+                          // ── Total compliance savings ──
+                          const compSavingsLow = bucket1Low + bucket2Low;
+                          const compSavingsHigh = bucket1High + bucket2High;
+                          // Round for clean presentation
+                          const compSavingsLowRound = Math.round(compSavingsLow / 10000) * 10000;
+                          const compSavingsHighRound = Math.round(compSavingsHigh / 10000) * 10000;
+
+                          // ── What this means relative to PEARL cost ──
+                          const offsetPctLow = Math.round((compSavingsLowRound / fullAnnual) * 100);
+                          const offsetPctHigh = Math.round((compSavingsHighRound / fullAnnual) * 100);
+
+                          // ── Grant offset potential ──
+                          const grantOffsetLow = Math.round(fullAnnual * 0.40);
+                          const grantOffsetHigh = Math.round(fullAnnual * 0.75);
+
+                          // ── Combined: compliance savings + grants ──
+                          const combinedOffsetLow = compSavingsLowRound + grantOffsetLow;
+                          const combinedOffsetHigh = compSavingsHighRound + grantOffsetHigh;
+                          const effectiveCostLow = Math.max(0, fullAnnual - combinedOffsetHigh);
+                          const effectiveCostHigh = Math.max(0, fullAnnual - combinedOffsetLow);
+
+                          return (
+                            <div className="rounded-lg border-2 border-green-300 bg-gradient-to-br from-green-50 to-emerald-50 p-3 space-y-3">
+                              <div className="text-[10px] font-bold text-green-800 uppercase tracking-wider">PEARL Economics -- {regionName}</div>
+
+                              {/* Unit pricing */}
+                              <div className="space-y-1">
+                                <div className="text-[10px] font-bold text-slate-600 uppercase">PEARL Unit Pricing</div>
+                                <div className="rounded-md bg-white border border-slate-200 overflow-hidden">
+                                  <div className="grid grid-cols-[1fr_auto] text-[11px]">
+                                    <div className="px-2 py-1.5 bg-slate-100 font-semibold border-b border-slate-200">PEARL Unit (50 GPM)</div>
+                                    <div className="px-2 py-1.5 bg-slate-100 font-bold text-right border-b border-slate-200">{fmt(unitCost)}/unit/year</div>
+                                    <div className="px-2 py-1.5 border-b border-slate-100 text-[10px] text-slate-500" style={{ gridColumn: '1 / -1' }}>
+                                      All-inclusive: hardware, deployment, calibration, continuous monitoring, dashboards, automated reporting, maintenance, and support
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Deployment costs by phase */}
+                              <div className="space-y-1">
+                                <div className="text-[10px] font-bold text-slate-600 uppercase">{isPhasedDeployment ? 'Phased Deployment Costs' : 'Deployment Cost'}</div>
+                                <div className="rounded-md bg-white border border-slate-200 overflow-hidden">
+                                  <div className="grid grid-cols-[1fr_auto_auto_auto] text-[11px]">
+                                    <div className="px-2 py-1 bg-slate-200 font-bold border-b border-slate-300">Phase</div>
+                                    <div className="px-2 py-1 bg-slate-200 font-bold text-right border-b border-slate-300">Units</div>
+                                    <div className="px-2 py-1 bg-slate-200 font-bold text-right border-b border-slate-300">GPM</div>
+                                    <div className="px-2 py-1 bg-slate-200 font-bold text-right border-b border-slate-300">Annual Cost</div>
+
+                                    {isPhasedDeployment ? (
+                                      <>
+                                        <div className="px-2 py-1.5 font-semibold border-b border-slate-100">Phase 1 ({phase1Quads} quad{phase1Quads > 1 ? 's' : ''})</div>
+                                        <div className="px-2 py-1.5 text-right border-b border-slate-100">{phase1Units}</div>
+                                        <div className="px-2 py-1.5 text-right border-b border-slate-100">{phase1GPM}</div>
+                                        <div className="px-2 py-1.5 font-bold text-right border-b border-slate-100">{fmt(p1Annual)}/yr</div>
+
+                                        {totalQuads >= 2 && (() => {
+                                          const p2q = totalQuads === 2 ? totalQuads - phase1Quads : 1;
+                                          const p2u = p2q * 4;
+                                          return (
+                                            <>
+                                              <div className="px-2 py-1.5 bg-slate-50 font-semibold border-b border-slate-100">+ Phase 2 ({p2q}Q)</div>
+                                              <div className="px-2 py-1.5 bg-slate-50 text-right border-b border-slate-100">+{p2u}</div>
+                                              <div className="px-2 py-1.5 bg-slate-50 text-right border-b border-slate-100">+{p2u * 50}</div>
+                                              <div className="px-2 py-1.5 bg-slate-50 font-bold text-right border-b border-slate-100">+{fmt(p2u * unitCost)}/yr</div>
+                                            </>
+                                          );
+                                        })()}
+
+                                        {totalQuads >= 3 && (() => {
+                                          const p3q = totalQuads - phase1Quads - (totalQuads === 2 ? totalQuads - phase1Quads : 1);
+                                          const p3u = p3q * 4;
+                                          return p3q > 0 ? (
+                                            <>
+                                              <div className="px-2 py-1.5 font-semibold border-b border-slate-100">+ Phase 3 ({p3q}Q)</div>
+                                              <div className="px-2 py-1.5 text-right border-b border-slate-100">+{p3u}</div>
+                                              <div className="px-2 py-1.5 text-right border-b border-slate-100">+{p3u * 50}</div>
+                                              <div className="px-2 py-1.5 font-bold text-right border-b border-slate-100">+{fmt(p3u * unitCost)}/yr</div>
+                                            </>
+                                          ) : null;
+                                        })()}
+                                      </>
+                                    ) : (
+                                      <>
+                                        <div className="px-2 py-1.5 font-semibold border-b border-slate-100">Full deployment</div>
+                                        <div className="px-2 py-1.5 text-right border-b border-slate-100">{totalUnits}</div>
+                                        <div className="px-2 py-1.5 text-right border-b border-slate-100">{fullGPM}</div>
+                                        <div className="px-2 py-1.5 font-bold text-right border-b border-slate-100">{fmt(fullAnnual)}/yr</div>
+                                      </>
+                                    )}
+
+                                    <div className="px-2 py-1.5 bg-cyan-100 font-bold text-cyan-800">Full Build</div>
+                                    <div className="px-2 py-1.5 bg-cyan-100 font-bold text-cyan-800 text-right">{totalUnits}</div>
+                                    <div className="px-2 py-1.5 bg-cyan-100 font-bold text-cyan-800 text-right">{fullGPM}</div>
+                                    <div className="px-2 py-1.5 bg-cyan-100 font-bold text-cyan-800 text-right">{fmt(fullAnnual)}/yr</div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Traditional compliance baseline */}
+                              <div className="space-y-1">
+                                <div className="text-[10px] font-bold text-slate-600 uppercase">Current Compliance Cost Baseline ({totalQuads} Zones, Annual)</div>
+                                <div className="rounded-md bg-white border border-slate-200 overflow-hidden">
+                                  <div className="grid grid-cols-[1fr_auto] text-[11px]">
+                                    <div className="px-2 py-1.5 border-b border-slate-100">Continuous monitoring stations (install amortized + ops)</div>
+                                    <div className="px-2 py-1.5 font-bold text-slate-600 text-right border-b border-slate-100">{fmt(tradMonitoringLow * totalQuads)} -- {fmt(tradMonitoringHigh * totalQuads)}/yr</div>
+                                    <div className="px-2 py-1.5 bg-slate-50 border-b border-slate-100">Treatment BMPs (constructed wetland / bioretention, amortized)</div>
+                                    <div className="px-2 py-1.5 bg-slate-50 font-bold text-slate-600 text-right border-b border-slate-100">{fmt(tradBMPLow * totalQuads)} -- {fmt(tradBMPHigh * totalQuads)}/yr</div>
+                                    <div className="px-2 py-1.5 border-b border-slate-100">MS4 consulting, lab work & permit reporting</div>
+                                    <div className="px-2 py-1.5 font-bold text-slate-600 text-right border-b border-slate-100">{fmt(tradConsultingLow * totalQuads)} -- {fmt(tradConsultingHigh * totalQuads)}/yr</div>
+                                    <div className="px-2 py-1.5 bg-slate-200 font-semibold text-slate-700">Traditional Total (separate contracts)</div>
+                                    <div className="px-2 py-1.5 bg-slate-200 font-bold text-slate-700 text-right">{fmt(tradTotalLow)} -- {fmt(tradTotalHigh)}/yr</div>
+                                  </div>
+                                </div>
+                                <div className="text-[9px] text-slate-500 px-1">These are costs Baltimore already pays or would pay to achieve equivalent compliance coverage. PEARL does not eliminate all of these -- it partially displaces and compresses them.</div>
+                              </div>
+
+                              {/* Compliance cost savings */}
+                              <div className="space-y-1">
+                                <div className="text-[10px] font-bold text-green-700 uppercase">Compliance Cost Savings From Meeting Permit Requirements</div>
+                                <div className="rounded-md bg-white border border-green-200 overflow-hidden">
+                                  <div className="grid grid-cols-[1fr_auto] text-[11px]">
+                                    <div className="px-2 py-1.5 border-b border-green-100">
+                                      <div className="font-semibold">Monitoring & reporting efficiency</div>
+                                      <div className="text-[9px] text-slate-500">Replaces 50-75% of fixed stations, 40-60% of consulting & lab work</div>
+                                    </div>
+                                    <div className="px-2 py-1.5 font-bold text-green-700 text-right border-b border-green-100">{fmt(bucket1Low)} -- {fmt(bucket1High)}/yr</div>
+                                    <div className="px-2 py-1.5 bg-green-50/50 border-b border-green-100">
+                                      <div className="font-semibold">BMP execution efficiency</div>
+                                      <div className="text-[9px] text-slate-500">Better targeting reduces rework, redesign & mis-targeted spend (5-10% of BMP program)</div>
+                                    </div>
+                                    <div className="px-2 py-1.5 bg-green-50/50 font-bold text-green-700 text-right border-b border-green-100">{fmt(bucket2Low)} -- {fmt(bucket2High)}/yr</div>
+                                    <div className="px-2 py-1.5 bg-green-200 font-bold text-green-900">Total Compliance Savings</div>
+                                    <div className="px-2 py-1.5 bg-green-200 font-bold text-green-900 text-right">{fmt(compSavingsLowRound)} -- {fmt(compSavingsHighRound)}/yr</div>
+                                  </div>
+                                </div>
+                                <div className="text-[9px] text-slate-500 px-1">This is not avoided fines. This is reduced spend on monitoring, reporting, and inefficient BMP execution -- tied directly to Baltimore's existing cost categories.</div>
+                              </div>
+
+                              {/* What this means */}
+                              <div className="grid grid-cols-2 gap-2">
+                                <div className="rounded-md bg-green-100 border border-green-200 text-center py-2">
+                                  <div className="text-[9px] text-green-600">Compliance Savings Offset</div>
+                                  <div className="text-lg font-bold text-green-700">{offsetPctLow}% -- {offsetPctHigh}%</div>
+                                  <div className="text-[9px] text-green-500">of PEARL cost offset by reduced compliance spend</div>
+                                </div>
+                                <div className="rounded-md bg-cyan-100 border border-cyan-200 text-center py-2">
+                                  <div className="text-[9px] text-cyan-600">Time to Compliance Data</div>
+                                  <div className="text-lg font-bold text-cyan-700">30 -- 60 days</div>
+                                  <div className="text-[9px] text-cyan-500">vs. 12-24 months traditional BMP</div>
+                                </div>
+                              </div>
+
+                              {/* Grant offset */}
+                              <div className="space-y-1">
+                                <div className="text-[10px] font-bold text-slate-600 uppercase">Grant Funding Offset</div>
+                                <div className="rounded-md bg-white border border-slate-200 overflow-hidden">
+                                  <div className="grid grid-cols-[1fr_auto] text-[11px]">
+                                    <div className="px-2 py-1.5 border-b border-slate-100">Estimated grant-eligible portion (40-75%)</div>
+                                    <div className="px-2 py-1.5 font-bold text-green-700 text-right border-b border-slate-100">{fmt(grantOffsetLow)} -- {fmt(grantOffsetHigh)}/yr</div>
+                                    <div className="px-2 py-1.5 bg-slate-50 border-b border-slate-100">+ Compliance savings</div>
+                                    <div className="px-2 py-1.5 bg-slate-50 font-bold text-green-700 text-right border-b border-slate-100">{fmt(compSavingsLowRound)} -- {fmt(compSavingsHighRound)}/yr</div>
+                                    <div className="px-2 py-1.5 bg-green-200 font-bold text-green-900">Effective Net Cost</div>
+                                    <div className="px-2 py-1.5 bg-green-200 font-bold text-green-900 text-right">{fmt(effectiveCostLow)} -- {fmt(effectiveCostHigh)}/yr</div>
+                                  </div>
+                                </div>
+                                <div className="text-[9px] text-slate-500 px-1">Effective net cost = PEARL annual cost minus grant funding minus compliance savings. This is the incremental budget impact for capabilities that would otherwise require {totalQuads} separate monitoring, treatment, and consulting contracts.</div>
+                              </div>
+
+                              {/* Grant alignment */}
+                              <div className="space-y-1">
+                                <div className="text-[10px] font-bold text-slate-600 uppercase">Grant Alignment</div>
+                                <div className="grid grid-cols-3 gap-1 text-[10px]">
+                                  <div className="rounded bg-green-100 border border-green-200 p-1.5 text-center">
+                                    <div className="font-bold text-green-800">Equipment</div>
+                                    <div className="text-green-600 text-[9px]">"Pilot deployment & equipment"</div>
+                                    <div className="font-bold text-green-700 mt-0.5">HIGHLY FUNDABLE</div>
+                                  </div>
+                                  <div className="rounded bg-green-100 border border-green-200 p-1.5 text-center">
+                                    <div className="font-bold text-green-800">Monitoring</div>
+                                    <div className="text-green-600 text-[9px]">"Monitoring, evaluation & data"</div>
+                                    <div className="font-bold text-green-700 mt-0.5">HIGHLY FUNDABLE</div>
+                                  </div>
+                                  <div className="rounded bg-green-100 border border-green-200 p-1.5 text-center">
+                                    <div className="font-bold text-green-800">Treatment</div>
+                                    <div className="text-green-600 text-[9px]">"Nature-based BMP implementation"</div>
+                                    <div className="font-bold text-green-700 mt-0.5">HIGHLY FUNDABLE</div>
+                                  </div>
+                                </div>
+                                <div className="text-[10px] text-slate-500">Eligible: EPA 319, {stateAbbr === 'MD' ? 'MD Bay Restoration Fund, ' : ''}Justice40, CBRAP, NOAA Habitat Restoration, state revolving funds</div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    );
+                  })()}
+
+                  {/* ═══ SUPPORTING LAYERS (source, nature, community, regulatory) ═══ */}
+                  <div className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold px-1 pt-1">Supporting Restoration Layers</div>
+                  <div className="text-[11px] text-slate-500 px-1 -mt-2">
+                    PEARL accelerates results. These layers provide the long-term foundation.
+                  </div>
+
+                  {categories.filter(cat => cat.id !== 'pearl').map((cat) => {
+                    const warranted = cat.modules.filter(m => m.status === 'warranted');
+                    const recommended = cat.modules.filter(m => m.status === 'recommended' || m.status === 'accelerator');
+                    const coBenefits = cat.modules.filter(m => m.status === 'co-benefit');
+                    return (
+                      <div key={cat.id} className={`rounded-lg border ${cat.color} p-2.5 space-y-1.5`}>
+                        <div className="flex items-center justify-between">
+                          <div className="text-[11px] font-semibold uppercase tracking-wide flex items-center gap-1.5">
+                            <span>{cat.icon}</span> {cat.title}
+                          </div>
+                          <div className="flex items-center gap-1.5 text-[9px]">
+                            {warranted.length > 0 && <span className="bg-red-200 text-red-800 font-bold px-1.5 py-0.5 rounded-full">{warranted.length} warranted</span>}
+                            {recommended.length > 0 && <span className="bg-blue-200 text-blue-800 font-bold px-1.5 py-0.5 rounded-full">{recommended.length} recommended</span>}
+                            {coBenefits.length > 0 && <span className="bg-slate-200 text-slate-600 font-bold px-1.5 py-0.5 rounded-full">{coBenefits.length} co-benefit</span>}
+                          </div>
+                        </div>
+                        <div className="text-[10px] text-slate-500 -mt-0.5">{cat.subtitle}</div>
+                        <div className="space-y-1">
+                          {[...warranted, ...recommended].map((t) => (
+                            <div key={t.id} className={`rounded-md border p-2 ${t.color}`}>
+                              <div className="flex items-start gap-2">
+                                <span className="text-sm flex-shrink-0">{t.icon}</span>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-semibold">{t.label}</span>
+                                    <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase ${
+                                      t.status === 'warranted' ? 'bg-red-200 text-red-800' : 'bg-blue-200 text-blue-800'
+                                    }`}>{t.status}</span>
+                                  </div>
+                                  <div className="text-[10px] mt-0.5 leading-relaxed opacity-90">{t.detail}</div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          {coBenefits.length > 0 && (
+                            <div className="flex flex-wrap gap-1 pt-0.5">
+                              {coBenefits.map((t) => (
+                                <span key={t.id} className="inline-flex items-center gap-1 text-[10px] text-slate-500 bg-white/70 border border-slate-200 rounded px-2 py-1" title={t.detail}>
+                                  {t.icon} {t.label}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Threat Assessment */}
+                  <div className="grid grid-cols-3 gap-2">
+                    {threats.map((t) => (
+                      <div key={t.label} className="bg-white rounded-md border border-cyan-100 p-2 text-center">
+                        <div className="text-[10px] text-slate-500 uppercase">{t.label}</div>
+                        <div className={`text-sm font-bold ${t.color}`}>{t.level}</div>
+                        <div className="text-[9px] text-slate-400 mt-0.5">{t.detail}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Full Plan Summary */}
+                  <div className="rounded-md bg-white border border-slate-200 p-2.5">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                      <div>
+                        <div className="text-[10px] text-slate-500 uppercase">Full Plan</div>
+                        <div className="text-sm font-bold text-slate-700">{totalBMPs} BMPs + {pearlModel}</div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] text-slate-500 uppercase">Deployment</div>
+                        <div className="text-sm font-bold text-slate-700">{totalQuads} quad{totalQuads > 1 ? 's' : ''} ({totalUnits} units)</div>
+                        <div className="text-[9px] text-slate-400">{isPhasedDeployment ? `Phase 1: ${phase1Quads}Q / ${phase1Units}U` : `${fullGPM} GPM`}</div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] text-slate-500 uppercase">Annual Cost</div>
+                        <div className="text-sm font-bold text-slate-700">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(fullAnnualCost)}/yr</div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] text-slate-500 uppercase">Severity</div>
+                        <div className={`text-sm font-bold ${siteSeverityScore >= 75 ? 'text-red-700' : siteSeverityScore >= 50 ? 'text-amber-700' : siteSeverityScore >= 25 ? 'text-yellow-700' : 'text-green-700'}`}>{siteSeverityLabel}</div>
+                        <div className="text-[9px] text-slate-400">{siteSeverityScore}/100</div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] text-slate-500 uppercase">Pathway</div>
+                        <div className="text-xs font-semibold text-slate-700">{compliancePathway}</div>
+                      </div>
+                    </div>
+                    <div className="text-[10px] text-slate-400 mt-2 border-t border-slate-100 pt-1.5">
+                      Sizing derived from {isMD ? 'MD DNR Shallow Water Monitoring thresholds: DO (5.0/3.2 mg/L), chlorophyll (15/50/100 ug/L), turbidity (7 FNU)' : 'EPA National Recommended Water Quality Criteria: DO (5.0/4.0 mg/L), chlorophyll (20/40/60 ug/L), turbidity (10/25 FNU)'}, EPA ATTAINS category. PEARL is the data backbone -- it measures, verifies, and optimizes every restoration layer from day one.
+                    </div>
+                  </div>
+                </CardContent>
+              )}
+            </Card>
+          );
+        })()}
+
+        {/* ── NATIONAL STATUS AT A GLANCE ─────────────────────────── */}
+
+        {/* ── TOP STRIP — lens controlled, tiles vary by view ────── */}
+        {lens.showTopStrip && topStrip && (() => {
+          const s = topStrip;
+          const tilesByLens: Record<ViewLens, Array<{ label: string; value: string; color: string; bg: string }>> = {
+            compliance: [
+              { label: 'Severe', value: s.severeCount.toLocaleString(), color: s.severeCount > 0 ? 'text-red-700' : 'text-slate-500', bg: s.severeCount > 0 ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200' },
+              { label: 'Category 5', value: s.cat5Count.toLocaleString(), color: s.cat5Count > 0 ? 'text-red-700' : 'text-slate-500', bg: s.cat5Count > 0 ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200' },
+              { label: 'No TMDL', value: s.cat5Count.toLocaleString(), color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200' },
+              { label: 'Active Alerts', value: (s.severeCount + nationalStats.mediumAlerts).toLocaleString(), color: 'text-orange-700', bg: 'bg-orange-50 border-orange-200' },
+              { label: 'States Reporting', value: `${s.statesReporting}/${s.totalStates}`, color: s.statesReporting > 40 ? 'text-green-700' : 'text-amber-700', bg: 'bg-slate-50 border-slate-200' },
+              { label: 'Worst Data Age', value: `${s.worstAge}d`, color: s.worstAge > 30 ? 'text-amber-700' : 'text-green-700', bg: s.worstAge > 30 ? 'bg-amber-50 border-amber-200' : 'bg-green-50 border-green-200' },
+            ],
+            coverage: [
+              { label: '% With Data', value: `${s.pctWithData}%`, color: s.pctWithData > 70 ? 'text-green-700' : 'text-amber-700', bg: s.pctWithData > 70 ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200' },
+              { label: 'No Data (Blind)', value: s.noData.toLocaleString(), color: s.noData > 0 ? 'text-red-700' : 'text-green-700', bg: s.noData > 0 ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200' },
+              { label: 'Worst Data Age', value: `${s.worstAge}d`, color: s.worstAge > 30 ? 'text-amber-700' : 'text-green-700', bg: s.worstAge > 30 ? 'bg-amber-50 border-amber-200' : 'bg-green-50 border-green-200' },
+              { label: 'States Reporting', value: `${s.statesReporting}/${s.totalStates}`, color: s.statesReporting > 40 ? 'text-green-700' : 'text-amber-700', bg: 'bg-slate-50 border-slate-200' },
+              { label: 'Sites Online', value: s.sitesOnline.toLocaleString(), color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
+              { label: 'Waterbodies w/ Data', value: s.withData.toLocaleString(), color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
+            ],
+            programs: [
+              { label: 'Severe', value: s.severeCount.toLocaleString(), color: s.severeCount > 0 ? 'text-red-700' : 'text-slate-500', bg: s.severeCount > 0 ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200' },
+              { label: 'High EJ States', value: s.highEJStates.toLocaleString(), color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200' },
+              { label: 'No Data (Blind)', value: s.noData.toLocaleString(), color: s.noData > 0 ? 'text-red-700' : 'text-green-700', bg: s.noData > 0 ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200' },
+              { label: 'Candidate Sites', value: federalPriorities.length.toLocaleString(), color: 'text-green-700', bg: 'bg-green-50 border-green-200' },
+              { label: 'States Reporting', value: `${s.statesReporting}/${s.totalStates}`, color: s.statesReporting > 40 ? 'text-green-700' : 'text-amber-700', bg: 'bg-slate-50 border-slate-200' },
+              { label: 'Category 5', value: s.cat5Count.toLocaleString(), color: s.cat5Count > 0 ? 'text-red-700' : 'text-slate-500', bg: s.cat5Count > 0 ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200' },
+            ],
+            full: [],
+            analysis: [],
+          };
+          const tiles = tilesByLens[viewLens] || tilesByLens.compliance;
+          if (!tiles.length) return null;
+          return (
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+              {tiles.map((tile, i) => (
+                <div key={i} className={`rounded-lg border p-3 text-center ${tile.bg}`}>
+                  <div className={`text-2xl font-black tabular-nums ${tile.color}`}>{tile.value}</div>
+                  <div className="text-[10px] text-slate-500 font-medium mt-0.5 uppercase tracking-wide">{tile.label}</div>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
+
+        {/* Network Health Score — lens controlled */}
+        {lens.showNetworkHealth && (
+        <Card id="section-networkhealth" className={`border-2 ${
+          networkHealth.color === 'green' ? 'border-green-300 bg-gradient-to-r from-green-50 to-emerald-50' :
+          networkHealth.color === 'yellow' ? 'border-yellow-300 bg-gradient-to-r from-yellow-50 to-amber-50' :
+          'border-red-300 bg-gradient-to-r from-red-50 to-rose-50'
+        }`}>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2">
+                <span>{networkHealth.color === 'green' ? '🟢' : networkHealth.color === 'yellow' ? '🟡' : networkHealth.color === 'red' ? '🔴' : '⚪'}</span>
+                Network Health Score
+                <span className="text-xs font-normal text-slate-500 ml-1">
+                  ({networkHealth.gradedStateCount ?? 0} of {networkHealth.stateCount} states graded)
+                </span>
+              </CardTitle>
+              <PrintBtn sectionId="networkhealth" title="Network Health Score" />
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-0">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-end gap-3">
+                  <div className={`text-5xl font-bold ${
+                    networkHealth.percentage < 0 ? 'text-slate-400' :
+                    networkHealth.color === 'green' ? 'text-green-700' :
+                    networkHealth.color === 'yellow' ? 'text-yellow-700' :
+                    'text-red-700'
+                  }`}>
+                    {networkHealth.percentage >= 0 ? `${networkHealth.percentage}%` : '—'}
+                  </div>
+                  <div className={`text-3xl font-black mb-1 px-3 py-0.5 rounded-lg border-2 ${networkHealth.grade.bg} ${networkHealth.grade.color}`}>
+                    {networkHealth.grade.letter}
+                  </div>
+                </div>
+                <div className={`text-sm font-semibold mt-1 flex items-center gap-1.5 ${
+                  networkHealth.color === 'green' ? 'text-green-700' :
+                  networkHealth.color === 'yellow' ? 'text-yellow-700' :
+                  networkHealth.color === 'red' ? 'text-red-700' :
+                  'text-slate-500'
+                }`}>
+                  {networkHealth.status === 'healthy' && <><CheckCircle size={16} /> NETWORK HEALTHY</>}
+                  {networkHealth.status === 'caution' && <><AlertCircle size={16} /> CAUTION</>}
+                  {networkHealth.status === 'critical' && <><AlertTriangle size={16} /> ATTENTION REQUIRED</>}
+                  {networkHealth.status === 'unknown' && <><AlertCircle size={16} /> INSUFFICIENT DATA</>}
+                </div>
+                <div className="text-sm text-slate-600 mt-2">
+                  {networkHealth.sitesNeedingAttention > 0
+                    ? `${networkHealth.sitesNeedingAttention} state${networkHealth.sitesNeedingAttention !== 1 ? 's' : ''} below C- grade`
+                    : networkHealth.percentage >= 0 ? 'All graded states scoring C- or above' : 'Awaiting assessment data'}
+                </div>
+              </div>
+              <div className="text-right flex flex-col items-end gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowHealthDetails(!showHealthDetails)}
+                  className={`${
+                    networkHealth.color === 'green' ? 'text-green-700 border-green-300 hover:bg-green-100' :
+                    networkHealth.color === 'yellow' ? 'text-yellow-700 border-yellow-300 hover:bg-yellow-100' :
+                    networkHealth.color === 'red' ? 'text-red-700 border-red-300 hover:bg-red-100' :
+                    'text-slate-500 border-slate-300 hover:bg-slate-100'
+                  }`}
+                >
+                  {showHealthDetails ? 'Hide Details ↑' : 'View Details →'}
+                </Button>
+                <div className="text-xs text-slate-500">
+                  {nationalStats.assessed} assessed · {nationalStats.monitored.toLocaleString()} monitored · {nationalStats.totalWaterbodies.toLocaleString()} total
+                </div>
+                {attainsBulkLoading.size > 0 && (
+                  <div className="text-[10px] text-blue-500 animate-pulse">
+                    ⏳ Loading EPA ATTAINS data ({attainsBulkLoaded.size}/{[...new Set(baseRegionData.map(r => r.state))].length} states)...
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Drivers strip */}
+            <div className="flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-slate-200/40">
+              <div className="text-[11px] text-slate-400 italic">
+                Average of state-level waterbody health grades
+              </div>
+              <div className="h-4 w-px bg-slate-200" />
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[11px] text-slate-500 font-medium">Drivers:</span>
+                {networkHealth.drivers.map((driver, i) => (
+                  <Badge key={i} variant="secondary" className="text-[10px] py-0 px-1.5 h-5 bg-slate-100 text-slate-600 border-slate-200">
+                    {driver}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            {/* Inline Details — worst states by grade */}
+            {showHealthDetails && networkHealth.worstStates.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-slate-200/60">
+                <div className="text-xs font-semibold text-slate-700 mb-2 uppercase tracking-wide">
+                  Lowest-Graded States
+                </div>
+                <div className="space-y-1.5">
+                  {networkHealth.worstStates.map((st, idx) => (
+                    <div
+                      key={st.abbr}
+                      onClick={() => {
+                        setSelectedState(st.abbr);
+                        setWaterbodyFilter('all');
+                        mapSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }}
+                      className="flex items-center justify-between p-2.5 rounded-lg bg-white/80 border border-slate-200 hover:bg-white hover:shadow-sm cursor-pointer transition-all"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold border ${st.grade.bg} ${st.grade.color}`}>
+                          {st.grade.letter}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-sm font-medium text-slate-800 truncate">{st.name}</div>
+                          <div className="text-xs text-slate-500">
+                            {st.assessed} assessed · {st.monitored} monitored · {st.high > 0 ? `${st.high} severe` : `${st.waterbodies} total`}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className={`text-sm font-bold ${st.grade.color}`}>
+                          {st.canGradeState ? `${st.score}%` : 'N/A'}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {showHealthDetails && networkHealth.worstStates.length === 0 && (
+              <div className="mt-4 pt-4 border-t border-slate-200/60">
+                <div className="flex items-center gap-2 text-sm text-green-700">
+                  <CheckCircle size={16} />
+                  All states operating within normal parameters. No action required.
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        )}
+
+        {/* National Impact Counter — lens controlled */}
+        {lens.showNationalImpact && (
+        <Card id="section-nationalimpact" className="border-2 border-cyan-200 bg-gradient-to-r from-cyan-50 via-white to-blue-50 overflow-hidden">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Droplets className="h-5 w-5 text-cyan-600" />
+                National Impact — All PEARL Deployments
+              </CardTitle>
+              <div className="flex items-center gap-1">
+                <PrintBtn sectionId="nationalimpact" title="National Impact — All PEARL Deployments" />
+                <Button
+                  size="sm"
+                  variant={impactPeriod === 'all' ? 'default' : 'outline'}
+                  onClick={() => setImpactPeriod('all')}
+                  className="h-7 text-xs"
+                >
+                  All Time
+                </Button>
+                {impactYears.map((year) => (
+                  <Button
+                    key={year}
+                    size="sm"
+                    variant={impactPeriod === String(year) ? 'default' : 'outline'}
+                    onClick={() => setImpactPeriod(String(year))}
+                    className="h-7 text-xs"
+                  >
+                    {year}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <CardDescription>
+              {nationalImpact.periodLabel} · {nationalImpact.activeSiteCount} active site{nationalImpact.activeSiteCount !== 1 ? 's' : ''}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {/* Gallons Treated */}
+              <div className="text-center">
+                <div className="text-3xl font-bold text-cyan-700 tabular-nums">
+                  {formatImpactNum(Math.round(liveGallons))}
+                </div>
+                <div className="text-xs text-slate-600 mt-1 font-medium">Gallons Treated</div>
+                {nationalImpact.isLive && (
+                  <div className="text-[10px] text-cyan-600 mt-0.5 tabular-nums">
+                    +{Math.round(nationalImpact.gallonsPerSecond * 60).toLocaleString()}/min
+                  </div>
+                )}
+              </div>
+
+              {/* TSS Removed */}
+              <div className="text-center">
+                <div className="text-3xl font-bold text-amber-700 tabular-nums">
+                  {formatImpactNum(Math.round(liveTSS))}
+                </div>
+                <div className="text-xs text-slate-600 mt-1 font-medium">lbs TSS Removed</div>
+                <div className="text-[10px] text-amber-600 mt-0.5">
+                  88–95% removal rate
+                </div>
+              </div>
+
+              {/* Nutrients Removed */}
+              <div className="text-center">
+                <div className="text-3xl font-bold text-green-700 tabular-nums">
+                  {formatImpactNum(nationalImpact.totalNutrientLbs)}
+                </div>
+                <div className="text-xs text-slate-600 mt-1 font-medium">lbs Nutrients Removed</div>
+                <div className="text-[10px] text-green-600 mt-0.5">
+                  Nitrogen + Phosphorus
+                </div>
+              </div>
+
+              {/* Bacteria Reduced */}
+              <div className="text-center">
+                <div className="text-3xl font-bold text-purple-700 tabular-nums">
+                  {formatImpactNum(nationalImpact.totalBacteria)}
+                </div>
+                <div className="text-xs text-slate-600 mt-1 font-medium">Bacteria Colonies Prevented</div>
+                <div className="text-[10px] text-purple-600 mt-0.5">
+                  CFU reduction
+                </div>
+              </div>
+            </div>
+
+            {/* Live pulse indicator — only when viewing current period */}
+            <div className="flex items-center justify-center gap-2 mt-4 pt-3 border-t border-slate-200/60">
+              {nationalImpact.isLive ? (
+                <>
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500" />
+                  </span>
+                  <span className="text-xs text-slate-500">Updating live from deployed PEARL systems</span>
+                </>
+              ) : (
+                <>
+                  <span className="inline-flex rounded-full h-2.5 w-2.5 bg-slate-300" />
+                  <span className="text-xs text-slate-400">Historical period — final totals</span>
+                </>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+        )}
+
+        {/* ── PRIORITIES — Action queue + coverage gaps (lens controlled) ────── */}
+        {(lens.showPriorityQueue || lens.showCoverageGaps) && (
+          <div className={`grid grid-cols-1 gap-4 ${lens.showPriorityQueue && lens.showCoverageGaps ? 'lg:grid-cols-2' : ''}`}>
+            {/* Panel A: Priority Action Queue */}
+            {lens.showPriorityQueue && (
+            <Card id="section-priorityqueue" className="border-2 border-red-200">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <AlertTriangle size={16} className="text-red-600" />
+                    Priority Queue
+                  </CardTitle>
+                  <PrintBtn sectionId="priorityqueue" title="Priority Queue" />
+                </div>
+                <CardDescription className="text-xs">Top waterbodies by composite priority score (Cat 5 + No TMDL + EJ + data gaps)</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-1 max-h-[calc(100vh-400px)] min-h-[250px] overflow-y-auto">
+                  {federalPriorities.length === 0 ? (
+                    <div className="text-sm text-slate-400 py-4 text-center">No priority items — all waterbodies nominal</div>
+                  ) : federalPriorities.map((r, i) => (
+                    <div
+                      key={r.id}
+                      onClick={() => { handleRegionClick(r.id); if (r.state) setSelectedState(r.state); }}
+                      className="flex items-center gap-2 p-2 rounded-md border border-slate-200 hover:bg-red-50 hover:border-red-200 cursor-pointer transition-all"
+                    >
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 flex items-center justify-center text-[10px] font-bold text-red-700">
+                        {i + 1}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-medium text-slate-800 truncate">{r.name}</div>
+                        <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                          {r.state && <span className="font-medium">{r.state}</span>}
+                          <span>·</span>
+                          {r.reasons.map((reason, j) => (
+                            <span key={j} className={`px-1 py-0.5 rounded text-[9px] font-medium ${
+                              reason === 'Cat 5' ? 'bg-red-100 text-red-700' :
+                              reason === 'Cat 4' ? 'bg-orange-100 text-orange-700' :
+                              reason === 'No TMDL' ? 'bg-purple-100 text-purple-700' :
+                              reason.startsWith('EJ') ? 'bg-amber-100 text-amber-700' :
+                              reason === 'No data' ? 'bg-slate-100 text-slate-600' :
+                              'bg-blue-100 text-blue-700'
+                            }`}>{reason}</span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0 text-right">
+                        <div className="text-lg font-black text-red-700 tabular-nums">{r.priorityScore}</div>
+                        <div className="text-[9px] text-slate-400">score</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+            )}
+
+            {/* Panel B: State Coverage Gaps */}
+            {lens.showCoverageGaps && (
+            <Card id="section-coveragegaps" className="border-2 border-amber-200">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <BarChart3 size={16} className="text-amber-600" />
+                      State Coverage Gaps
+                    </CardTitle>
+                    <CardDescription className="text-xs">States ranked by monitoring gaps and severity burden</CardDescription>
+                  </div>
+                  <div className="flex gap-1">
+                    <PrintBtn sectionId="coveragegaps" title="State Coverage Gaps" />
+                    <Button size="sm" variant={!showImpact ? 'default' : 'outline'} onClick={() => setShowImpact(false)} className="h-6 text-[10px] px-2">By Coverage</Button>
+                    <Button size="sm" variant={showImpact ? 'default' : 'outline'} onClick={() => setShowImpact(true)} className="h-6 text-[10px] px-2">By Severity</Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-1 max-h-[calc(100vh-400px)] min-h-[250px] overflow-y-auto">
+                  {(showImpact ? federalCoverageGaps.mostSevere : federalCoverageGaps.worstCoverage).map((s, i) => (
+                    <div
+                      key={s.abbr}
+                      onClick={() => {
+                        setSelectedState(s.abbr);
+                        setWaterbodyFilter('all');
+                        mapSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }}
+                      className="flex items-center gap-2 p-2 rounded-md border border-slate-200 hover:bg-amber-50 hover:border-amber-200 cursor-pointer transition-all"
+                    >
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center text-[10px] font-bold text-amber-700">
+                        {i + 1}
+                      </div>
+                      <div className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold border ${s.grade.bg} ${s.grade.color}`}>
+                        {s.grade.letter}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-medium text-slate-800">{s.name}</div>
+                        <div className="text-[10px] text-slate-500">
+                          {showImpact
+                            ? `${s.high} severe · ${s.medium} impaired · ${s.waterbodies} total`
+                            : `${s.unmonitored} blind spots · ${('coveragePct' in s ? (s as any).coveragePct : 0)}% coverage`
+                          }
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0 text-right">
+                        {showImpact ? (
+                          <>
+                            <div className="text-lg font-black text-red-700 tabular-nums">{s.high + s.medium}</div>
+                            <div className="text-[9px] text-slate-400">impaired</div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="text-lg font-black text-amber-700 tabular-nums">{s.unmonitored}</div>
+                            <div className="text-[9px] text-slate-400">no data</div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+            )}
+          </div>
+        )}
+
+
+        {/* ── TIER 3: INTELLIGENCE & SITUATION ──────────────────── */}
+
+        {/* Time Range + PEARL Impact Toggle — lens controlled */}
+        {lens.showTimeRange && (
+        <div className="flex flex-wrap items-center gap-3 p-3 rounded-lg border border-slate-200 bg-white">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-slate-700">Time Range:</span>
+            <div className="flex gap-1">
+              {(['24h', '7d', '30d'] as const).map((range) => (
+                <Button
+                  key={range}
+                  size="sm"
+                  variant={timeRange === range ? 'default' : 'outline'}
+                  onClick={() => setTimeRange(range)}
+                  className="h-8 text-xs"
+                >
+                  {range === '24h' ? '24 Hours' : range === '7d' ? '7 Days' : '30 Days'}
+                </Button>
+              ))}
+            </div>
+          </div>
+          
+          <div className="h-6 w-px bg-slate-300" />
+          
+          <Button
+            size="sm"
+            variant={showImpact ? 'default' : 'outline'}
+            onClick={() => setShowImpact(!showImpact)}
+            className={`h-8 ${showImpact ? 'bg-green-600 hover:bg-green-700' : ''}`}
+          >
+            {showImpact ? '✓ Showing PEARL Impact' : 'Show PEARL Impact'}
+          </Button>
+
+          {showImpact && (
+            <div className="flex-1 text-xs text-green-700 font-medium">
+              Map shows improvement in PEARL-deployed states (MD, FL) vs ambient baseline
+            </div>
+          )}
+        </div>
+        )}
+
+        {/* Feature 12: AI-Powered Insights — lens controlled */}
+        {lens.showAIInsights && aiInsights.length > 0 && (
+          <Card id="section-aiinsights" className="border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-white">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  🤖 AI-Powered Insights
+                </CardTitle>
+                <PrintBtn sectionId="aiinsights" title="AI-Powered Insights" />
+              </div>
+              <CardDescription>Proactive recommendations and trend analysis</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {aiInsights.map((insight, idx) => {
+                  const bgColor = insight.type === 'urgent' ? 'bg-red-50 border-red-300' :
+                                 insight.type === 'warning' ? 'bg-orange-50 border-orange-300' :
+                                 insight.type === 'success' ? 'bg-green-50 border-green-300' :
+                                 'bg-blue-50 border-blue-300';
+                  
+                  const textColor = insight.type === 'urgent' ? 'text-red-700' :
+                                   insight.type === 'warning' ? 'text-orange-700' :
+                                   insight.type === 'success' ? 'text-green-700' :
+                                   'text-blue-700';
+                  
+                  const icon = insight.type === 'urgent' ? '🚨' :
+                              insight.type === 'warning' ? '⚠️' :
+                              insight.type === 'success' ? '✅' :
+                              'ℹ️';
+                  
+                  return (
+                    <div key={idx} className={`p-3 rounded-lg border ${bgColor}`}>
+                      <div className="flex items-start gap-2">
+                        <span className="text-lg flex-shrink-0">{icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className={`font-semibold text-sm ${textColor} mb-1`}>
+                            {insight.title}
+                          </div>
+                          <div className="text-xs text-slate-700 leading-relaxed">
+                            {insight.detail}
+                          </div>
+                          {insight.action && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="mt-2 h-7 text-xs"
+                            >
+                              {insight.action}
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+
+        {/* Feature 1: National Situation Summary — lens controlled */}
+        {lens.showSituationSummary && (
+        <Card id="section-situation" className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-cyan-50">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">National Situation Summary</CardTitle>
+              <PrintBtn sectionId="situation" title="National Situation Summary" />
+            </div>
+            <CardDescription>Real-time monitoring network status</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-blue-600">{nationalStats.statesCovered}</div>
+                <div className="text-xs text-slate-600 mt-1">States + DC</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-slate-800">{nationalStats.totalWaterbodies.toLocaleString()}</div>
+                <div className="text-xs text-slate-600 mt-1">Waterbodies</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-green-600">{nationalStats.assessed}</div>
+                <div className="text-xs text-slate-600 mt-1">Assessed</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-blue-600">{nationalStats.monitored.toLocaleString()}</div>
+                <div className="text-xs text-slate-600 mt-1">Monitored</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-red-600">{nationalStats.highAlerts}</div>
+                <div className="text-xs text-slate-600 mt-1">Severe</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-orange-600">{nationalStats.mediumAlerts}</div>
+                <div className="text-xs text-slate-600 mt-1">Impaired</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-yellow-600">{nationalStats.lowAlerts}</div>
+                <div className="text-xs text-slate-600 mt-1">Watch</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        )}
+
+        {/* Feature 3: Hotspots Rankings — lens controlled */}
+        {lens.showHotspots && (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {(
+          <Card id="section-worsening" className="border-2 border-red-200">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-red-600" />
+                  Top 10 Worsening
+                </CardTitle>
+                <PrintBtn sectionId="worsening" title="Top 10 Worsening" />
+              </div>
+              <CardDescription>Highest priority intervention areas</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {hotspots.worsening.map((region, idx) => (
+                    <div
+                      key={region.id}
+                      onClick={() => handleRegionClick(region.id)}
+                      className="rounded-lg border border-red-100 bg-white hover:bg-red-50 cursor-pointer transition-colors"
+                    >
+                      <div className="flex items-center justify-between p-2.5">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xs font-bold">
+                            {idx + 1}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-sm font-medium text-slate-700 truncate">
+                              {region.state} · {region.name}
+                            </div>
+                            <div className="text-xs text-slate-500">{region.activeAlerts} active alert{region.activeAlerts !== 1 ? 's' : ''}</div>
+                          </div>
+                        </div>
+                        <Badge variant={
+                          region.alertLevel === 'high' ? 'destructive' :
+                          region.alertLevel === 'medium' ? 'default' : 'secondary'
+                        } className="text-xs">
+                          {levelToLabel(region.alertLevel)}
+                        </Badge>
+                      </div>
+                    </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+          )}
+
+          <Card id="section-improving" className="border-2 border-green-200">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  {'Top 10 Improving'}
+                </CardTitle>
+                <PrintBtn sectionId="improving" title="Top 10 Improving" />
+              </div>
+              <CardDescription>
+                {'Success stories and best performers'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {hotspots.improving.map((region, idx) => (
+                  <div
+                    key={region.id}
+                    onClick={() => handleRegionClick(region.id)}
+                    className="flex items-center justify-between p-2 rounded-lg border border-green-100 hover:bg-green-50 cursor-pointer transition-colors"
+                  >
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xs font-bold">
+                        {idx + 1}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-medium text-slate-700 truncate">
+                          {region.state} · {region.name}
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {region.alertLevel === 'none' ? 'No alerts' : `${region.activeAlerts} minor alerts`}
+                        </div>
+                      </div>
+                    </div>
+                    <Badge variant="secondary" className="text-xs bg-green-100 text-green-800 border-green-200">
+                      Healthy
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        )}
+
+        {/* ── TIER 4: OPERATIONAL CONTROLS & DEEP DIVE ──────────── */}
+
+        {/* Feature 2: State Rollup Table — collapsible when lens says so */}
+        <>
+        {lens.collapseStateTable && (
+          <button
+            onClick={() => setShowStateTable(!showStateTable)}
+            className="w-full py-2.5 px-4 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-between transition-colors"
+          >
+            <span className="text-sm font-medium text-slate-700">State-by-State Coverage & Grading Detail</span>
+            <span className="text-xs text-slate-400">{showStateTable ? '▲ Collapse' : '▼ Expand full table'}</span>
+          </button>
+        )}
+        {(!lens.collapseStateTable || showStateTable) && (
+        <Card id="section-statebystatesummary">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>State-by-State Summary</CardTitle>
+              <PrintBtn sectionId="statebystatesummary" title="State-by-State Summary" />
+            </div>
+            <CardDescription>Click any state to view its waterbodies on the map above</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {/* Watershed filter + export controls */}
+            <div className="flex flex-wrap items-center gap-3 p-3 mb-3 rounded-lg border border-blue-200 bg-blue-50">
+              <span className="text-xs font-semibold text-slate-600">Watershed:</span>
+              <select
+                value={watershedFilter}
+                onChange={(e) => setWatershedFilter(e.target.value)}
+                className="px-2.5 py-1.5 rounded-md border border-slate-300 text-xs bg-white"
+              >
+                <option value="all">All Watersheds</option>
+                <option value="chesapeake">Chesapeake Bay</option>
+                <option value="gulf">Gulf of Mexico</option>
+                <option value="great_lakes">Great Lakes</option>
+                <option value="south_atlantic">South Atlantic</option>
+                <option value="pacific">Pacific Coast</option>
+              </select>
+              {watershedFilter !== 'all' && (
+                <Button size="sm" variant="outline" onClick={() => setWatershedFilter('all')} className="h-7 text-xs">
+                  Clear
+                </Button>
+              )}
+              {watershedFilter !== 'all' && (
+                <span className="text-xs text-blue-700 font-medium">
+                  Showing {filteredRegionData.length} of {regionData.length} waterbodies
+                </span>
+              )}
+              <div className="ml-auto flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const reportData = {
+                      title: 'National Water Quality Report',
+                      timeRange,
+                      stats: nationalStats,
+                      stateRollup,
+                      hotspots,
+                      filters: { watershedFilter },
+                      generated: new Date().toISOString()
+                    };
+                    console.log('PDF Report Data:', reportData);
+                    setToastMsg('PDF report generation coming in the next release. CSV export is available now.');
+                    setTimeout(() => setToastMsg(null), 4000);
+                  }}
+                  className="h-7 text-xs"
+                >
+                  📄 PDF Report
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const csv = [
+                      ['State', 'Grade', 'Score', 'Assessed', 'Monitored', 'Unmonitored', 'Severe', 'Impaired', 'Total Waterbodies'],
+                      ...stateRollup.map(r => [r.name, r.grade.letter, r.canGradeState ? r.score : 'N/A', r.assessed, r.monitored, r.unmonitored, r.high, r.medium, r.waterbodies])
+                    ].map(row => row.join(',')).join('\n');
+                    const blob = new Blob([csv], { type: 'text/csv' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `pearl-national-summary-${new Date().toISOString().split('T')[0]}.csv`;
+                    a.click();
+                  }}
+                  className="h-7 text-xs"
+                >
+                  📊 Export CSV
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setToastMsg('EJ Impact Report coming in the next release — will include community vulnerability scores, water quality overlap analysis, and PEARL deployment priorities.');
+                    setTimeout(() => setToastMsg(null), 5000);
+                  }}
+                  className="h-7 text-xs"
+                >
+                  🎯 EJ Report
+                </Button>
+              </div>
+            </div>
+            {/* Grading methodology */}
+            <div className="mb-3 p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-600">
+              <span className="font-semibold text-slate-700">Grading Scale: </span>
+              Grades are based on the average condition of monitored priority waterbodies in each state. 
+              Each waterbody is scored by its current alert level (Healthy = 100, Watch = 85, Impaired = 65, Severe = 40) 
+              and averaged across all monitored sites. States with more severe impairments will score lower. 
+              <span className="text-slate-500 ml-1">A+ (97+) · A (93) · A- (90) · B+ (87) · B (83) · B- (80) · C+ (77) · C (73) · C- (70) · D+ (67) · D (63) · D- (60) · F (&lt;60)</span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200">
+                    <th className="text-left py-2 px-3 font-semibold text-slate-700">State</th>
+                    <th className="text-center py-2 px-3 font-semibold text-slate-700">Grade</th>
+                    <th className="text-center py-2 px-3 font-semibold text-green-700">Assessed</th>
+                    <th className="text-center py-2 px-3 font-semibold text-blue-700">Monitored</th>
+                    <th className="text-center py-2 px-3 font-semibold text-red-700">Severe</th>
+                    <th className="text-center py-2 px-3 font-semibold text-orange-700">Impaired</th>
+                    <th className="text-center py-2 px-3 font-semibold text-slate-700">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stateRollup.map(row => (
+                    <tr 
+                      key={row.abbr}
+                      onClick={() => {
+                        setSelectedState(row.abbr);
+                        setWaterbodyFilter('all');
+                        mapSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }}
+                      className={`border-b border-slate-100 cursor-pointer hover:bg-blue-50 transition-colors ${
+                        selectedState === row.abbr ? 'bg-blue-100' : ''
+                      }`}
+                    >
+                      <td className="py-2 px-3 font-medium text-slate-700">{row.name}</td>
+                      <td className="py-2 px-3 text-center">
+                        <span className={`inline-block px-2 py-0.5 rounded-md border text-xs font-bold ${row.grade.bg} ${row.grade.color}`}>
+                          {row.grade.letter}
+                        </span>
+                      </td>
+                      <td className="py-2 px-3 text-center text-green-700 font-medium">
+                        {row.assessed || '—'}
+                        {row.dataSource === 'attains' && <span className="text-[9px] text-blue-500 ml-0.5">EPA</span>}
+                      </td>
+                      <td className="py-2 px-3 text-center text-blue-600">{row.monitored || '—'}</td>
+                      <td className="py-2 px-3 text-center">
+                        {row.high > 0 && <Badge variant="destructive" className="text-xs">{row.high}</Badge>}
+                      </td>
+                      <td className="py-2 px-3 text-center">
+                        {row.medium > 0 && <Badge variant="default" className="text-xs bg-orange-500">{row.medium}</Badge>}
+                      </td>
+                      <td className="py-2 px-3 text-center text-slate-600">{row.waterbodies}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+        )}
+        </>
+
+        {/* Feature 11: SLA/Compliance Tracking — lens controlled */}
+        {lens.showSLA && slaMetrics.total > 0 && (
+          <Card id="section-sla" className="border-2 border-purple-200">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  ⏰ SLA Compliance Tracking
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <PrintBtn sectionId="sla" title="SLA Compliance Tracking" />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowSLAMetrics(!showSLAMetrics)}
+                    className="h-7 text-xs"
+                  >
+                    {showSLAMetrics ? 'Hide Details' : 'Show Details'}
+                </Button>
+                </div>
+              </div>
+              <CardDescription>Alert response time performance metrics</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* SLA Summary Stats */}
+              <div className="grid grid-cols-4 gap-4 mb-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-slate-700">{slaMetrics.total}</div>
+                  <div className="text-xs text-slate-600">Total Alerts</div>
+                </div>
+                <div className="text-center">
+                  <div className={`text-2xl font-bold ${slaMetrics.overdueCount > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                    {slaMetrics.overdueCount}
+                  </div>
+                  <div className="text-xs text-slate-600">Overdue</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">{slaMetrics.withinSLA}</div>
+                  <div className="text-xs text-slate-600">Within SLA</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">{slaMetrics.avgResolutionTime}h</div>
+                  <div className="text-xs text-slate-600">Avg Resolution</div>
+                </div>
+              </div>
+
+              {/* Detailed SLA Table */}
+              {showSLAMetrics && slaMetrics.metrics.length > 0 && (
+                <div className="border-t border-slate-200 pt-3">
+                  <div className="text-xs font-semibold text-slate-700 mb-2">Alert Details (Target: Acknowledge &lt;4h, Resolve &lt;48h)</div>
+                  <div className="space-y-1">
+                    {slaMetrics.metrics.slice(0, 10).map((metric: any) => (
+                      <div
+                        key={metric.regionId}
+                        className={`flex items-center justify-between p-2 rounded text-xs ${
+                          metric.resolveLate ? 'bg-red-50 border border-red-200' : 
+                          metric.acknowledgedLate ? 'bg-orange-50 border border-orange-200' : 
+                          'bg-green-50 border border-green-200'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <Badge variant={metric.severity === 'high' ? 'destructive' : 'secondary'} className="text-xs">
+                            {metric.severity}
+                          </Badge>
+                          <span className="truncate font-medium">{metric.state} · {metric.regionName}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-slate-600">{metric.status}</span>
+                          <span className={`font-bold ${metric.ageHours > 48 ? 'text-red-600' : 'text-slate-700'}`}>
+                            {metric.ageHours}h old
+                          </span>
+                          {metric.resolveLate && <span className="text-red-600 font-bold">⚠️ OVERDUE</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ── SIGNALS INTELLIGENCE — Live feed from authoritative sources ────── */}
+        <Card id="section-signals">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <AlertCircle size={18} className="text-amber-500" />
+                Signals Intelligence
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <PrintBtn sectionId="signals" title="Signals Intelligence" />
+                <div className="flex items-center gap-1">
+                  {signalSources.map((src, i) => (
+                    <div key={i} className="group relative">
+                      <div className={`w-2 h-2 rounded-full ${src.status === 'ok' ? 'bg-green-400' : 'bg-red-400'}`}
+                        title={`${src.name}: ${src.status === 'ok' ? `${src.count} signals` : 'unavailable'}`} />
+                    </div>
+                  ))}
+                </div>
+                {signalsLoading && <span className="text-[10px] text-blue-400 animate-pulse">fetching...</span>}
+                <span className="text-[10px] text-slate-400">{signals.length} signals</span>
+              </div>
+            </div>
+            <CardDescription className="text-xs">
+              USCG safety bulletins · EPA beach advisories · NOAA HAB monitoring · EPA enforcement
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {[
+                { key: 'all' as const, label: 'All Signals', count: signals.length },
+                { key: 'pearl' as const, label: 'PEARL-Relevant', count: signals.filter(s => s.pearlRelevant).length },
+                { key: 'state' as const, label: `${STATE_ABBR_TO_NAME[selectedState] || selectedState} Only`, count: signals.filter(s => s.state === selectedState).length },
+              ].map(f => (
+                <button
+                  key={f.key}
+                  onClick={() => setSignalFilter(f.key)}
+                  className={`px-2.5 py-1 text-[11px] font-medium rounded-full border transition-all ${
+                    signalFilter === f.key
+                      ? 'bg-amber-100 text-amber-700 border-amber-200 ring-1 ring-offset-1 ring-amber-200 shadow-sm'
+                      : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  {f.label} {f.count > 0 ? `(${f.count})` : ''}
+                </button>
+              ))}
+            </div>
+            <div className="space-y-1.5 max-h-[300px] min-h-[120px] overflow-y-auto">
+              {(() => {
+                let filtered = signals;
+                if (signalFilter === 'pearl') filtered = signals.filter(s => s.pearlRelevant);
+                if (signalFilter === 'state') filtered = signals.filter(s => s.state === selectedState);
+                if (filtered.length === 0) {
+                  return (
+                    <div className="text-sm text-slate-400 py-6 text-center">
+                      {signalsLoading ? 'Loading signals...' : signals.length === 0 ? 'No signals yet — feeds refresh every 5 minutes' : 'No signals match this filter'}
+                    </div>
+                  );
+                }
+                const CATEGORY_STYLE: Record<string, { icon: string; bg: string; text: string }> = {
+                  spill: { icon: '🛢️', bg: 'bg-red-50 border-red-200', text: 'text-red-700' },
+                  bacteria: { icon: '🦠', bg: 'bg-orange-50 border-orange-200', text: 'text-orange-700' },
+                  hab: { icon: '🌊', bg: 'bg-emerald-50 border-emerald-200', text: 'text-emerald-700' },
+                  enforcement: { icon: '⚖️', bg: 'bg-purple-50 border-purple-200', text: 'text-purple-700' },
+                  advisory: { icon: '⚠️', bg: 'bg-amber-50 border-amber-200', text: 'text-amber-700' },
+                  safety: { icon: '🚢', bg: 'bg-blue-50 border-blue-200', text: 'text-blue-700' },
+                  regulatory: { icon: '📋', bg: 'bg-indigo-50 border-indigo-200', text: 'text-indigo-700' },
+                  general: { icon: '📡', bg: 'bg-slate-50 border-slate-200', text: 'text-slate-600' },
+                };
+                return filtered.slice(0, 20).map((sig) => {
+                  const style = CATEGORY_STYLE[sig.category] || CATEGORY_STYLE.general;
+                  const age = Date.now() - new Date(sig.publishedAt).getTime();
+                  const ageLabel = age < 3600000 ? `${Math.floor(age / 60000)}m ago` :
+                    age < 86400000 ? `${Math.floor(age / 3600000)}h ago` :
+                    `${Math.floor(age / 86400000)}d ago`;
+                  return (
+                    <a key={sig.id} href={sig.url} target="_blank" rel="noopener noreferrer"
+                      className={`block rounded-md border p-2.5 hover:shadow-sm transition-all ${style.bg}`}>
+                      <div className="flex items-start gap-2">
+                        <span className="text-sm flex-shrink-0 mt-0.5">{style.icon}</span>
+                        <div className="min-w-0 flex-1">
+                          <div className={`text-sm font-medium leading-snug ${style.text}`}>{sig.title}</div>
+                          <div className="text-[11px] text-slate-500 mt-0.5 line-clamp-2">{sig.summary}</div>
+                          <div className="flex items-center gap-2 mt-1 text-[10px] text-slate-400">
+                            <span className="font-medium">{sig.sourceLabel}</span>
+                            <span>·</span>
+                            <span>{ageLabel}</span>
+                            {sig.state && (<><span>·</span><span className="px-1 py-0.5 rounded bg-white/60 font-medium">{sig.state}</span></>)}
+                            {sig.pearlRelevant && (<span className="px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">PEARL</span>)}
+                          </div>
+                        </div>
+                      </div>
+                    </a>
+                  );
+                });
+              })()}
+            </div>
+            <div className="flex items-center gap-1.5 pt-2 mt-2 border-t border-slate-100 text-[10px] text-slate-400">
+              <Info size={10} />
+              <span>Signals are metadata only — click to view authoritative source. Not all feeds update in real-time.</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ── DISCLAIMER FOOTER ────── */}
+        <div className="mt-6 pt-4 border-t border-slate-200">
+          <div className="flex items-start gap-2 text-[10px] text-slate-400 leading-relaxed max-w-4xl">
+            <Info size={14} className="flex-shrink-0 mt-0.5 text-slate-300" />
+            <div>
+              <p className="mb-1">
+                <span className="font-medium text-slate-500">Data Sources:</span> USGS NWIS · EPA ATTAINS · Water Quality Portal · Blue Water Baltimore · NOAA CO-OPS · EPA ECHO
+              </p>
+              <p>
+                PEARL grades and alerts are informational tools derived from publicly available data and automated analysis. They are not official EPA, MDE, or state assessments and do not constitute regulatory determinations. Always verify with primary agency data for compliance or permitting purposes. Data freshness and completeness vary — stale or absent data results in "Unassessed" status to reflect uncertainty.
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  );
+}

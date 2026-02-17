@@ -1,125 +1,104 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { TrendingDown, TrendingUp } from 'lucide-react';
-import { getParameterStatus } from '@/lib/mockData';
-import { WaterQualityParameter } from '@/lib/types';
+import { useMemo } from 'react';
 
 interface RemovalEfficiencyGaugeProps {
   parameterName: string;
+  parameterKey: string;
   influentValue: number;
   effluentValue: number;
   efficiency: number;
   unit: string;
-  effluentParameter: WaterQualityParameter;
 }
 
 export function RemovalEfficiencyGauge({
   parameterName,
-  influentValue,
-  effluentValue,
-  efficiency,
+  parameterKey,
+  influentValue: rawInfluent,
+  effluentValue: rawEffluent,
+  efficiency: rawEfficiency,
   unit,
-  effluentParameter
 }: RemovalEfficiencyGaugeProps) {
-  const [mounted, setMounted] = useState(false);
+  // Guard against undefined/NaN from missing mock data
+  const efficiency = rawEfficiency ?? 0;
+  const influentValue = rawInfluent ?? 0;
+  const effluentValue = rawEffluent ?? 0;
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const isDO = parameterKey === 'DO';
 
-  if (!mounted) {
-    return (
-      <div className="flex flex-col items-center space-y-3 animate-pulse">
-        <div className="h-48 w-full bg-slate-200 rounded-lg"></div>
-        <div className="h-6 w-32 bg-slate-200 rounded"></div>
-      </div>
-    );
-  }
-
-  const parameterType = effluentParameter.type;
-  const valueIncreased = effluentValue > influentValue;
-  const percentChange = ((effluentValue - influentValue) / influentValue) * 100;
-
-  const effluentStatus = getParameterStatus(effluentValue, effluentParameter);
-
-  const getStatusColor = () => {
-    if (effluentStatus === 'green') return 'bg-green-100 text-green-800 border-green-300';
-    if (effluentStatus === 'yellow') return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-    if (effluentStatus === 'orange') return 'bg-orange-100 text-orange-800 border-orange-300';
-    return 'bg-red-100 text-red-800 border-red-300';
-  };
-
-  const getArrowColor = () => {
-    if (effluentStatus === 'green') return 'text-green-600';
-    if (effluentStatus === 'yellow') return 'text-yellow-600';
-    if (effluentStatus === 'orange') return 'text-orange-600';
-    return 'text-red-600';
-  };
-
-  const getPerformanceLabel = () => {
-    if (effluentStatus === 'green') return 'Excellent';
-    if (effluentStatus === 'yellow') return 'Good';
-    if (effluentStatus === 'orange') return 'Fair';
-    return 'Needs Improvement';
-  };
-
-  const getChangeLabel = () => {
-    if (parameterType === 'range-based' || parameterType === 'decreasing-bad') {
-      return valueIncreased ? 'Increase' : 'Decrease';
+  const { color, bgColor, borderColor, label } = useMemo(() => {
+    if (isDO) {
+      // DO: improvement is positive
+      if (efficiency >= 10) return { color: '#16a34a', bgColor: 'bg-green-50', borderColor: 'border-green-200', label: 'Improved' };
+      if (efficiency >= 0)  return { color: '#ca8a04', bgColor: 'bg-yellow-50', borderColor: 'border-yellow-200', label: 'Stable' };
+      return { color: '#dc2626', bgColor: 'bg-red-50', borderColor: 'border-red-200', label: 'Reduced' };
     }
-    return valueIncreased ? 'Increase' : 'Removal';
-  };
+    // Pollutants: high removal = good
+    if (efficiency >= 80) return { color: '#16a34a', bgColor: 'bg-green-50', borderColor: 'border-green-200', label: 'Excellent' };
+    if (efficiency >= 60) return { color: '#ca8a04', bgColor: 'bg-yellow-50', borderColor: 'border-yellow-200', label: 'Good' };
+    if (efficiency >= 40) return { color: '#ea580c', bgColor: 'bg-orange-50', borderColor: 'border-orange-200', label: 'Fair' };
+    return { color: '#dc2626', bgColor: 'bg-red-50', borderColor: 'border-red-200', label: 'Poor' };
+  }, [efficiency, isDO]);
 
-  const getMetricLabel = () => {
-    if (parameterType === 'range-based' || parameterType === 'decreasing-bad') {
-      return 'Change';
-    }
-    return valueIncreased ? 'Increase' : 'Removal';
-  };
+  const pct = Math.max(0, Math.min(100, Math.abs(efficiency)));
 
   return (
-    <div className="flex flex-col items-center space-y-4 p-6 bg-gradient-to-br from-white to-slate-50 rounded-xl border-2 hover:shadow-lg transition-all duration-300">
-      <h3 className="font-semibold text-lg text-center">{parameterName}</h3>
-
-      <div className={`rounded-full p-4 border-4 ${getStatusColor()}`}>
-        <div className="text-center">
-          <div className="text-4xl font-bold mb-1">
-            {percentChange >= 0 ? '+' : ''}{percentChange.toFixed(1)}%
-          </div>
-          <div className="text-xs font-medium uppercase">
-            Change
-          </div>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2">
-        {valueIncreased ? (
-          <TrendingUp className={`h-5 w-5 ${getArrowColor()}`} />
-        ) : (
-          <TrendingDown className={`h-5 w-5 ${getArrowColor()}`} />
-        )}
-        <span className={`text-sm font-semibold ${getArrowColor()}`}>
-          {getPerformanceLabel()}
+    <div className={`rounded-xl border-2 p-4 flex flex-col gap-3 ${bgColor} ${borderColor}`}>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="text-sm font-semibold text-slate-700">{parameterName}</div>
+        <span className="text-xs font-bold px-2 py-0.5 rounded-full text-white" style={{ background: color }}>
+          {label}
         </span>
       </div>
 
-      <div className="w-full space-y-2 text-xs bg-white rounded-lg p-3 border">
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Influent:</span>
-          <span className="font-semibold">{influentValue.toFixed(2)} {unit}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Effluent:</span>
-          <span className="font-semibold">{effluentValue.toFixed(2)} {unit}</span>
-        </div>
-        <div className="flex justify-between pt-2 border-t">
-          <span className="text-muted-foreground">{getChangeLabel()}:</span>
-          <span className="font-bold text-blue-700">
-            {valueIncreased ? '+' : '-'}{Math.abs(effluentValue - influentValue).toFixed(2)} {unit}
+      {/* Efficiency bar */}
+      <div>
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-xs text-slate-500 font-medium">{isDO ? 'Improvement' : 'Removal'}</span>
+          <span className="text-lg font-bold" style={{ color }}>
+            {isDO && efficiency > 0 ? '+' : ''}{efficiency.toFixed(1)}%
           </span>
         </div>
+        <div className="h-3 rounded-full bg-slate-200 overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all duration-700"
+            style={{ width: `${pct}%`, background: color }}
+          />
+        </div>
+        {!isDO && (
+          <div className="flex justify-between text-xs text-slate-400 mt-1">
+            <span>0%</span>
+            <span className="text-slate-500 font-medium">Target: 80%</span>
+            <span>100%</span>
+          </div>
+        )}
       </div>
+
+      {/* In/Out values */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="bg-white/60 rounded-lg px-3 py-2 text-center">
+          <div className="text-xs font-medium text-slate-500 mb-0.5">Influent</div>
+          <div className="text-sm font-bold text-slate-700">{influentValue.toFixed(2)}</div>
+          <div className="text-xs text-slate-400">{unit}</div>
+        </div>
+        <div className="bg-white/60 rounded-lg px-3 py-2 text-center">
+          <div className="text-xs font-medium text-slate-500 mb-0.5">Effluent</div>
+          <div className="text-sm font-bold" style={{ color }}>{effluentValue.toFixed(2)}</div>
+          <div className="text-xs text-slate-400">{unit}</div>
+        </div>
+      </div>
+
+      {/* MS4 compliance note */}
+      {!isDO && parameterKey !== 'salinity' && (
+        <div className="text-xs text-slate-500 text-center">
+          {efficiency >= 80
+            ? '✓ Meets MS4 target (≥80%)'
+            : efficiency >= 60
+            ? '~ Marginal for MS4 reporting'
+            : '✗ Below MS4 target — review BMP'}
+        </div>
+      )}
     </div>
   );
 }

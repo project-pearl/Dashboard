@@ -1,411 +1,237 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import ReactECharts from 'echarts-for-react';
+import { useMemo } from 'react';
 import { WaterQualityParameter } from '@/lib/types';
-import { getParameterStatus } from '@/lib/mockData';
 import { getWildlifeImpact } from '@/lib/wildlifeImpact';
-import { Droplet, Waves, Thermometer, Fish } from 'lucide-react';
 
 interface WaterQualityGaugeProps {
   parameter: WaterQualityParameter;
   dataSource?: string;
-  removalInfo?: {
-    text: string;
-    color: string;
-    bgColor: string;
-  };
-  wildlifePerspective?: boolean;
+  showWildlife?: boolean;
+  compact?: boolean;
 }
 
-export function WaterQualityGauge({ parameter, dataSource, removalInfo, wildlifePerspective = false }: WaterQualityGaugeProps) {
-  const [mounted, setMounted] = useState(false);
+function getStatusColor(parameter: WaterQualityParameter): { 
+  fill: string; 
+  text: string; 
+  bg: string; 
+  border: string; 
+  label: string;
+  ringColor: string;
+} {
+  const v = parameter.value;
+  const t = parameter.thresholds;
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const status = getParameterStatus(parameter.value, parameter);
-
-  const getWildlifeParameterName = () => {
-    if (!wildlifePerspective) return parameter.name;
-
-    if (parameter.name.includes('Dissolved Oxygen') || parameter.name.includes('DO')) {
-      return `Oxygen for Us Fish & Shellfish`;
-    }
-    if (parameter.name.includes('Turbidity')) {
-      return `Water Clarity for Our Plants`;
-    }
-    if (parameter.name.includes('Total Nitrogen') || parameter.name.includes('TN')) {
-      return `Nitrogen Nutrients in Our Home`;
-    }
-    if (parameter.name.includes('Total Phosphorus') || parameter.name.includes('TP')) {
-      return `Phosphorus Nutrients in Our Home`;
-    }
-    if (parameter.name.includes('Suspended Solids') || parameter.name.includes('TSS')) {
-      return `Sediment in Our Water`;
-    }
-    if (parameter.name.includes('Salinity')) {
-      return `Saltiness of Our Home`;
-    }
-    return parameter.name;
+  const inRange = (v: number, range: { min?: number; max?: number }) => {
+    const lo = range.min ?? -Infinity;
+    const hi = range.max ?? Infinity;
+    return v >= lo && v <= hi;
   };
 
-  const getWildlifeStatusText = () => {
-    if (!wildlifePerspective) return getStatusText();
-
-    if (status === 'green') {
-      if (parameter.name.includes('Dissolved Oxygen') || parameter.name.includes('DO')) {
-        return "We're breathing easy!";
-      }
-      if (parameter.name.includes('Turbidity')) {
-        return "Light is good for SAV!";
-      }
-      if (parameter.name.includes('Nitrogen') || parameter.name.includes('Phosphorus')) {
-        return "No bloom party today";
-      }
-      if (parameter.name.includes('Suspended')) {
-        return "Water feels clean";
-      }
-      if (parameter.name.includes('Salinity')) {
-        return "Salinity feels right";
-      }
-      return "Feels great!";
-    }
-    if (status === 'yellow') {
-      return "Getting uncomfortable";
-    }
-    if (status === 'orange') {
-      return "Hard to live here";
-    }
-    return "Survival is tough";
+  if (inRange(v, t.green)) {
+    return { 
+      fill: '#16a34a', 
+      text: 'text-green-700', 
+      bg: 'bg-green-50', 
+      border: 'border-green-200', 
+      label: 'Healthy',
+      ringColor: '#22c55e'
+    };
+  }
+  if (t.orange && inRange(v, t.orange)) {
+    return { 
+      fill: '#ea580c', 
+      text: 'text-orange-700', 
+      bg: 'bg-orange-50', 
+      border: 'border-orange-200', 
+      label: 'Elevated',
+      ringColor: '#f97316'
+    };
+  }
+  if (inRange(v, t.yellow)) {
+    return { 
+      fill: '#ca8a04', 
+      text: 'text-yellow-700', 
+      bg: 'bg-yellow-50', 
+      border: 'border-yellow-200', 
+      label: 'Caution',
+      ringColor: '#eab308'
+    };
+  }
+  return { 
+    fill: '#dc2626', 
+    text: 'text-red-700', 
+    bg: 'bg-red-50', 
+    border: 'border-red-200', 
+    label: 'Critical',
+    ringColor: '#ef4444'
   };
+}
 
-  const getWildlifeZoneExplanation = () => {
-    if (!wildlifePerspective) return getZoneExplanation();
+function getGaugeAngle(parameter: WaterQualityParameter): number {
+  const { value, min, max } = parameter;
+  const pct = Math.max(0, Math.min(1, (value - min) / (max - min)));
+  
+  // Map to 270 degree arc (from -135° to +135°)
+  // For decreasing-bad (DO): high values = right side (good)
+  // For increasing-bad: low values = left side (good), high = right (bad)
+  if (parameter.type === 'decreasing-bad') {
+    return -135 + pct * 270;
+  }
+  return -135 + pct * 270;
+}
 
-    if (status === 'green') {
-      if (parameter.name.includes('Dissolved Oxygen') || parameter.name.includes('DO')) {
-        return "Plenty of oxygen for us to breathe - we fish, crabs, and oysters are thriving!";
-      }
-      if (parameter.name.includes('Turbidity')) {
-        return "The water is clear enough for sunlight to reach our underwater grass beds (SAV)";
-      }
-      if (parameter.name.includes('Nitrogen') || parameter.name.includes('Phosphorus')) {
-        return "Nutrient levels are balanced - no algae blooms blocking our sunlight";
-      }
-      return "Water conditions are perfect for bay life";
-    }
-    if (status === 'yellow') {
-      return "Things are getting harder for us - we're stressed";
-    }
-    if (status === 'orange') {
-      return "Many of us are struggling to survive in these conditions";
-    }
-    return "These conditions are dangerous for most bay creatures";
-  };
+export function WaterQualityGauge({ parameter, dataSource, showWildlife, compact }: WaterQualityGaugeProps) {
+  const status = useMemo(() => getStatusColor(parameter), [parameter]);
+  const angle = useMemo(() => getGaugeAngle(parameter), [parameter]);
 
-  const calculateNeedlePosition = () => {
-    const value = parameter.value;
-    const hasOrange = parameter.thresholds.orange !== undefined;
-
-    if (parameter.type === 'decreasing-bad') {
-      const redMax = parameter.thresholds.red.max || 0;
-      const yellowMin = parameter.thresholds.yellow.min || 0;
-      const yellowMax = parameter.thresholds.yellow.max || 0;
-      const greenMin = parameter.thresholds.green.min || 0;
-      const max = parameter.max;
-
-      if (value <= redMax) {
-        return (value / redMax) * 33.33;
-      } else if (value <= yellowMax) {
-        return 33.33 + ((value - yellowMin) / (yellowMax - yellowMin)) * 16.67;
-      } else {
-        return 50 + ((value - greenMin) / (max - greenMin)) * 50;
-      }
-    }
-
-    if (parameter.type === 'increasing-bad') {
-      const greenMax = parameter.thresholds.green.max || 0;
-      const yellowMax = parameter.thresholds.yellow.max || 0;
-      const max = parameter.max;
-
-      if (hasOrange) {
-        const orangeMax = parameter.thresholds.orange?.max || 0;
-        const greenPercent = greenMax / max;
-        const yellowPercent = yellowMax / max;
-        const orangePercent = orangeMax / max;
-
-        if (value <= greenMax) {
-          return (value / max) * 100;
-        } else if (value <= yellowMax) {
-          return (value / max) * 100;
-        } else if (value <= orangeMax) {
-          return (value / max) * 100;
-        } else {
-          return (value / max) * 100;
-        }
-      }
-
-      if (value <= greenMax) {
-        return (value / greenMax) * 33.33;
-      } else if (value <= yellowMax) {
-        return 33.33 + ((value - greenMax) / (yellowMax - greenMax)) * 33.33;
-      } else {
-        return 66.67 + ((value - yellowMax) / (max - yellowMax)) * 33.33;
-      }
-    }
-
-    if (parameter.type === 'range-based') {
-      const greenMin = parameter.thresholds.green.min || 0;
-      const greenMax = parameter.thresholds.green.max || 0;
-      const yellowMin = parameter.thresholds.yellow.min || 0;
-      const yellowMax = parameter.thresholds.yellow.max || 0;
-      const max = parameter.max;
-
-      return (value / max) * 100;
-    }
-
-    return 50;
-  };
-
-  const percent = calculateNeedlePosition();
-
-  if (!mounted) {
+  if (compact) {
     return (
-      <div className="flex flex-col items-center">
-        <div className="w-full h-56 bg-muted animate-pulse rounded-lg" />
-        <div className="text-center mt-4">
-          <div className="h-5 w-32 bg-muted animate-pulse rounded mx-auto" />
-          <div className="h-4 w-40 bg-muted animate-pulse rounded mt-2 mx-auto" />
+      <div className={`flex items-center gap-3 px-3 py-2 rounded-lg border ${status.bg} ${status.border}`}>
+        <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0`} style={{ background: status.fill }} />
+        <div className="flex-1 min-w-0">
+          <div className="text-xs font-semibold text-slate-700 truncate">{parameter.name}</div>
+          <div className={`text-sm font-bold ${status.text}`}>{parameter.value.toFixed(2)} {parameter.unit}</div>
         </div>
+        <div className={`text-xs font-bold ${status.text}`}>{status.label}</div>
       </div>
     );
   }
 
-  const getStatusText = () => {
-    if (status === 'green') return 'Healthy';
-    if (status === 'yellow') return 'Caution';
-    if (status === 'orange') return 'Elevated';
-    return 'Unhealthy';
-  };
+  const cx = 100, cy = 100, radius = 70;
+  const startAngle = -135;
+  const endAngle = 135;
+  
+  // Convert angles to radians
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  
+  // Calculate arc path
+  const startRad = toRad(startAngle);
+  const endRad = toRad(endAngle);
+  const needleRad = toRad(angle);
+  
+  const startX = cx + radius * Math.cos(startRad);
+  const startY = cy + radius * Math.sin(startRad);
+  const endX = cx + radius * Math.cos(endRad);
+  const endY = cy + radius * Math.sin(endRad);
+  
+  const arcPath = `M ${startX} ${startY} A ${radius} ${radius} 0 1 1 ${endX} ${endY}`;
+  
+  // Needle tip position
+  const needleLength = radius - 10;
+  const needleTipX = cx + needleLength * Math.cos(needleRad);
+  const needleTipY = cy + needleLength * Math.sin(needleRad);
 
-  const getThresholdText = () => {
-    if (parameter.type === 'increasing-bad') {
-      return `Optimal: ≤${parameter.thresholds.green.max} ${parameter.unit}`;
-    }
-    if (parameter.type === 'decreasing-bad') {
-      return `Optimal: ≥${parameter.thresholds.green.min} ${parameter.unit}`;
-    }
-    if (parameter.type === 'range-based') {
-      return `Optimal: ${parameter.thresholds.green.min}-${parameter.thresholds.green.max} ${parameter.unit}`;
-    }
-    return '';
-  };
-
-  const getZoneExplanation = () => {
-    if (status === 'green') return 'Water quality is within healthy parameters';
-    if (status === 'yellow') return 'Approaching concerning levels, monitor closely';
-    if (status === 'orange') return 'Elevated levels detected, increased monitoring recommended';
-    return 'Exceeds safe thresholds, action recommended';
-  };
-
-  const getIcon = () => {
-    if (parameter.name.includes('Oxygen') || parameter.name.includes('Salinity')) {
-      return <Droplet className="h-4 w-4" />;
-    }
-    if (parameter.name.includes('Turbidity') || parameter.name.includes('Suspended')) {
-      return <Waves className="h-4 w-4" />;
-    }
-    return <Thermometer className="h-4 w-4" />;
-  };
-
-  const getNeedleColor = () => {
-    if (status === 'green') return '#10b981';
-    if (status === 'yellow') return '#f59e0b';
-    if (status === 'orange') return '#fb923c';
-    return '#ef4444';
-  };
-
-  const getGaugeColors = () => {
-    const hasOrange = parameter.thresholds.orange !== undefined;
-
-    if (parameter.type === 'decreasing-bad') {
-      return [
-        [0.3333, '#ef4444'],
-        [0.50, '#f59e0b'],
-        [1, '#10b981']
-      ];
-    }
-
-    if (parameter.type === 'range-based') {
-      const greenMin = parameter.thresholds.green.min || 0;
-      const greenMax = parameter.thresholds.green.max || 0;
-      const yellowMin = parameter.thresholds.yellow.min || 0;
-      const yellowMax = parameter.thresholds.yellow.max || 0;
-      const redMax = parameter.thresholds.red.max || parameter.max;
-      const max = parameter.max;
-
-      const greenStart = greenMin / max;
-      const greenEnd = greenMax / max;
-      const yellowEnd1 = yellowMin / max;
-      const yellowEnd2 = yellowMax / max;
-
-      return [
-        [yellowEnd1, '#f59e0b'],
-        [greenStart, '#f59e0b'],
-        [greenEnd, '#10b981'],
-        [yellowEnd2, '#f59e0b'],
-        [1, '#ef4444']
-      ];
-    }
-
-    if (hasOrange) {
-      const greenMax = parameter.thresholds.green.max || 0;
-      const yellowMax = parameter.thresholds.yellow.max || 0;
-      const orangeMax = parameter.thresholds.orange?.max || 0;
-      const max = parameter.max;
-
-      return [
-        [greenMax / max, '#10b981'],
-        [yellowMax / max, '#f59e0b'],
-        [orangeMax / max, '#fb923c'],
-        [1, '#ef4444']
-      ];
-    }
-
-    return [
-      [0.3333, '#10b981'],
-      [0.6667, '#f59e0b'],
-      [1, '#ef4444']
-    ];
-  };
-
-  const option = {
-    series: [
-      {
-        type: 'gauge',
-        startAngle: 180,
-        endAngle: 0,
-        min: 0,
-        max: 100,
-        splitNumber: 3,
-        radius: '85%',
-        center: ['50%', '70%'],
-        axisLine: {
-          lineStyle: {
-            width: 18,
-            color: getGaugeColors()
-          }
-        },
-        pointer: {
-          itemStyle: {
-            color: getNeedleColor(),
-            shadowColor: 'rgba(0, 0, 0, 0.3)',
-            shadowBlur: 8,
-            shadowOffsetY: 2
-          },
-          length: '65%',
-          width: 6
-        },
-        axisTick: {
-          distance: -20,
-          length: 6,
-          lineStyle: {
-            color: '#cbd5e1',
-            width: 2
-          }
-        },
-        splitLine: {
-          distance: -22,
-          length: 12,
-          lineStyle: {
-            color: '#94a3b8',
-            width: 3
-          }
-        },
-        axisLabel: {
-          show: false
-        },
-        detail: {
-          valueAnimation: true,
-          formatter: '{value}',
-          color: '#1e293b',
-          fontSize: 0,
-          offsetCenter: [0, '-10%']
-        },
-        data: [{ value: Math.min(Math.max(percent, 0), 100) }],
-        animationDuration: 1200,
-        animationEasing: 'elasticOut'
-      }
-    ]
-  };
+  // Determine decimal places
+  const decimals = parameter.name.includes('Phosphorus') || parameter.name.includes('TP') ? 3 : 
+                   parameter.name.includes('Nitrogen') || parameter.name.includes('TN') ? 2 : 1;
 
   return (
-    <div className="flex flex-col items-center transition-all duration-300 hover:scale-[1.02]">
-      <div className="w-full" suppressHydrationWarning>
-        <ReactECharts option={option} style={{ height: '220px', width: '100%' }} opts={{ renderer: 'svg' }} />
-      </div>
-      <div className="text-center -mt-4 w-full" suppressHydrationWarning>
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <span className="text-muted-foreground">{getIcon()}</span>
-          <h3 className="font-semibold text-base">{getWildlifeParameterName()}</h3>
-        </div>
-        <p className="text-3xl font-bold mb-1">
-          {parameter.value.toFixed(2)} <span className="text-lg text-muted-foreground font-normal">{parameter.unit}</span>
-        </p>
-        <p className="text-xs text-muted-foreground mb-3">
-          {getThresholdText()}
-        </p>
-        <div className="flex justify-center">
-          <span
-            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200 ${
-              status === 'green'
-                ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                : status === 'yellow'
-                ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
-                : status === 'orange'
-                ? 'bg-orange-100 text-orange-800 hover:bg-orange-200'
-                : 'bg-red-100 text-red-800 hover:bg-red-200'
-            }`}
-            title={getWildlifeZoneExplanation()}
+    <div className="flex flex-col items-center">
+      {/* Large Gauge SVG */}
+      <div className="relative w-full max-w-[280px] aspect-square">
+        <svg viewBox="0 0 200 200" className="w-full h-full">
+          {/* Background arc (light gray) */}
+          <path
+            d={arcPath}
+            fill="none"
+            stroke="#f1f5f9"
+            strokeWidth="24"
+            strokeLinecap="round"
+          />
+          
+          {/* Colored status arc */}
+          <path
+            d={arcPath}
+            fill="none"
+            stroke={status.ringColor}
+            strokeWidth="24"
+            strokeLinecap="round"
+            strokeDasharray={`${((angle - startAngle) / 270) * 330} 330`}
+          />
+          
+          {/* Small red segment on right for critical zone (for increasing-bad params) */}
+          {parameter.type !== 'decreasing-bad' && (
+            <path
+              d={arcPath}
+              fill="none"
+              stroke="#fee2e2"
+              strokeWidth="24"
+              strokeLinecap="round"
+              strokeDasharray={`${270 * 0.85 * 330 / 270} 330`}
+              strokeDashoffset={`-${270 * 0.85 * 330 / 270}`}
+              opacity="0.5"
+            />
+          )}
+          
+          {/* Needle */}
+          <line
+            x1={cx}
+            y1={cy}
+            x2={needleTipX}
+            y2={needleTipY}
+            stroke="#1e293b"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+          
+          {/* Center circle */}
+          <circle cx={cx} cy={cy} r="6" fill="#1e293b" />
+          <circle cx={cx} cy={cy} r="3" fill="white" />
+          
+          {/* Value text */}
+          <text
+            x={cx}
+            y={cy + 35}
+            textAnchor="middle"
+            fontSize="26"
+            fontWeight="700"
+            fill={status.fill}
           >
-            {getWildlifeStatusText()}
-          </span>
-        </div>
-        {(() => {
-          const wildlifeImpact = getWildlifeImpact(parameter);
-          return (
-            <div className="mt-2 px-2">
-              <div
-                className={`flex items-start gap-1.5 text-xs transition-all duration-200 ${
-                  wildlifeImpact.status === 'supportive'
-                    ? 'text-green-700'
-                    : wildlifeImpact.status === 'caution'
-                    ? 'text-yellow-700'
-                    : 'text-red-700'
-                }`}
-                title="Wildlife impact indicator based on EPA Chesapeake Bay Program and water quality standards"
-              >
-                <Fish className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
-                <span className="leading-tight">{wildlifeImpact.text}</span>
-              </div>
-            </div>
-          );
-        })()}
-        {removalInfo && (
-          <div className="mt-3 w-full px-2">
-            <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border-2 ${removalInfo.bgColor} ${removalInfo.color} w-full justify-center`}>
-              {removalInfo.text}
-            </div>
-          </div>
-        )}
-        {dataSource && (
-          <div className="mt-2 text-xs text-muted-foreground opacity-60" title={`Data source: ${dataSource}`}>
-            Source: {dataSource.includes('Pearl') ? 'Pearl' : 'Ambient'}
-          </div>
-        )}
+            {parameter.value.toFixed(decimals)}
+          </text>
+          <text
+            x={cx}
+            y={cy + 48}
+            textAnchor="middle"
+            fontSize="11"
+            fill="#64748b"
+          >
+            {parameter.unit}
+          </text>
+        </svg>
       </div>
+
+      {/* Label and Status Badge */}
+      <div className="text-center mt-3 w-full">
+        <div className="text-base font-semibold text-slate-700 mb-1.5">{parameter.name}</div>
+        <div className={`inline-block px-3 py-1 rounded-full text-sm font-bold ${status.bg} ${status.text} border ${status.border}`}>
+          {status.label}
+        </div>
+      </div>
+
+      {/* Wildlife Impact (if enabled) */}
+      {showWildlife && (() => {
+        const impact = getWildlifeImpact(parameter);
+        const wildlifeBg = impact.status === 'supportive' ? 'bg-green-50 border-green-200' :
+                          impact.status === 'caution' ? 'bg-yellow-50 border-yellow-200' :
+                          'bg-red-50 border-red-200';
+        const wildlifeText = impact.status === 'supportive' ? 'text-green-700' :
+                            impact.status === 'caution' ? 'text-yellow-700' :
+                            'text-red-700';
+        const emoji = impact.status === 'supportive' ? '🐟' : impact.status === 'caution' ? '⚠️' : '🚨';
+        
+        return (
+          <div className={`mt-2 px-3 py-2 rounded-lg border text-xs ${wildlifeBg} ${wildlifeText} text-center max-w-[240px]`}>
+            <span className="mr-1">{emoji}</span>
+            {impact.text}
+          </div>
+        );
+      })()}
+
+      {dataSource && (
+        <div className="text-xs text-slate-400 text-center mt-1.5">{dataSource}</div>
+      )}
     </div>
   );
 }

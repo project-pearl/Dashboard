@@ -1,127 +1,93 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { X, AlertTriangle, AlertCircle, Info } from 'lucide-react';
-import { WaterQualityAlert, getAlertColor, getAlertBadgeColor, getAlertIcon } from '@/lib/alertDetection';
+import { WaterQualityAlert } from '@/lib/alertDetection';
+import { AlertTriangle, AlertCircle, Info, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { useState } from 'react';
 
 interface WaterQualityAlertsProps {
   alerts: WaterQualityAlert[];
-  onDismiss: (alertId: string) => void;
   dismissedAlerts: Set<string>;
+  onDismiss: (id: string) => void;
+  compact?: boolean;
 }
 
-export function WaterQualityAlerts({ alerts, onDismiss, dismissedAlerts }: WaterQualityAlertsProps) {
-  const [mounted, setMounted] = useState(false);
+function AlertItem({ alert, onDismiss }: { alert: WaterQualityAlert; onDismiss: () => void }) {
+  const [expanded, setExpanded] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const styles = {
+    severe:  { bg: 'bg-red-50',   border: 'border-red-300',   title: 'text-red-900',   body: 'text-red-700',   badge: 'bg-red-600 text-white',   icon: 'text-red-500'   },
+    caution: { bg: 'bg-amber-50', border: 'border-amber-300', title: 'text-amber-900', body: 'text-amber-700', badge: 'bg-amber-500 text-white', icon: 'text-amber-500' },
+    info:    { bg: 'bg-blue-50',  border: 'border-blue-300',  title: 'text-blue-900',  body: 'text-blue-700',  badge: 'bg-blue-600 text-white',  icon: 'text-blue-500'  },
+  };
+  const s = styles[alert.severity] || styles.info;
+  const Icon = alert.severity === 'severe' ? AlertTriangle : alert.severity === 'caution' ? AlertCircle : Info;
 
-  const activeAlerts = alerts.filter(alert => !dismissedAlerts.has(alert.id));
-
-  if (activeAlerts.length === 0) {
-    return null;
-  }
-
-  if (!mounted) {
-    return (
-      <Alert className="border-2 border-slate-300 bg-slate-50 animate-pulse">
-        <div className="flex items-start gap-3">
-          <div className="h-5 w-5 bg-slate-300 rounded mt-0.5"></div>
-          <div className="flex-1 space-y-2">
-            <div className="h-5 bg-slate-300 rounded w-1/4"></div>
-            <div className="h-4 bg-slate-300 rounded w-3/4"></div>
+  return (
+    <div className={`rounded-xl border-2 ${s.bg} ${s.border} overflow-hidden`}>
+      <div className="flex items-start gap-3 px-4 py-3">
+        <Icon className={`h-5 w-5 mt-0.5 flex-shrink-0 ${s.icon}`} />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`text-sm font-bold ${s.title}`}>{alert.title}</span>
+            <span className={`text-xs px-2 py-0.5 rounded-full font-bold uppercase ${s.badge}`}>
+              {alert.severity}
+            </span>
+            {alert.isEJArea && (
+              <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-purple-600 text-white">
+                EJ Area
+              </span>
+            )}
+          </div>
+          <p className={`text-xs mt-1 leading-relaxed ${s.body}`}>{alert.message}</p>
+          <div className={`text-xs mt-1 ${s.body} opacity-70`}>
+            {alert.parameter} · {alert.threshold} · {alert.timestamp.toLocaleTimeString()}
           </div>
         </div>
-      </Alert>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          {alert.recommendations && alert.recommendations.length > 0 && (
+            <button onClick={() => setExpanded(!expanded)} className={`p-1 rounded hover:bg-black/5 ${s.title}`}>
+              {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </button>
+          )}
+          <button onClick={onDismiss} className={`p-1 rounded hover:bg-black/5 ${s.title}`}>
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+
+      {expanded && alert.recommendations && alert.recommendations.length > 0 && (
+        <div className={`border-t ${s.border} px-4 py-3`}>
+          <div className={`text-xs font-bold ${s.title} mb-2 uppercase tracking-wide`}>Recommendations</div>
+          <ul className="space-y-1">
+            {alert.recommendations.map((rec, i) => (
+              <li key={i} className={`flex items-start gap-2 text-xs ${s.body}`}>
+                <span className="mt-1 h-1.5 w-1.5 rounded-full flex-shrink-0 bg-current opacity-60" />
+                {rec}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function WaterQualityAlerts({ alerts, dismissedAlerts, onDismiss, compact }: WaterQualityAlertsProps) {
+  const visible = alerts.filter(a => !dismissedAlerts.has(a.id));
+
+  if (visible.length === 0) {
+    return (
+      <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-green-50 border-2 border-green-200 text-green-700">
+        <span className="h-2 w-2 rounded-full bg-green-500 flex-shrink-0" />
+        <span className="text-sm font-medium">All parameters within acceptable ranges — no active alerts</span>
+      </div>
     );
   }
 
-  const getSeverityIcon = (severity: string) => {
-    switch (severity) {
-      case 'severe':
-        return <AlertTriangle className={`h-5 w-5 ${getAlertIcon(severity as any)}`} />;
-      case 'caution':
-        return <AlertCircle className={`h-5 w-5 ${getAlertIcon(severity as any)}`} />;
-      case 'info':
-        return <Info className={`h-5 w-5 ${getAlertIcon(severity as any)}`} />;
-      default:
-        return <Info className="h-5 w-5" />;
-    }
-  };
-
   return (
-    <div className="space-y-3">
-      {activeAlerts.map((alert) => (
-        <Alert
-          key={alert.id}
-          className={`${getAlertColor(alert.severity)} border-2 relative animate-in slide-in-from-top-5 duration-300`}
-        >
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-2 right-2 h-6 w-6"
-            onClick={() => onDismiss(alert.id)}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-
-          <div className="flex items-start gap-3 pr-8">
-            <div className="flex-shrink-0 mt-0.5">
-              {getSeverityIcon(alert.severity)}
-            </div>
-            <div className="flex-1 space-y-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                <AlertTitle className="text-base font-bold m-0">
-                  {alert.title}
-                </AlertTitle>
-                <Badge className={`${getAlertBadgeColor(alert.severity)} text-xs font-bold`}>
-                  {alert.severity.toUpperCase()}
-                </Badge>
-                {alert.isEJArea && (
-                  <Badge className="bg-blue-600 text-white text-xs font-bold">
-                    EJ AREA
-                  </Badge>
-                )}
-                <span className="text-xs opacity-75 ml-auto">
-                  {alert.timestamp.toLocaleTimeString()}
-                </span>
-              </div>
-
-              <AlertDescription className="space-y-2">
-                <p className="font-medium">
-                  {alert.message}
-                </p>
-
-                <div className="flex items-center gap-4 text-sm">
-                  <div>
-                    <span className="font-semibold">{alert.parameter}:</span> {alert.value.toFixed(2)} {alert.type === 'poor-bmp' ? '%' : ''}
-                  </div>
-                  <div className="opacity-75">
-                    Threshold: {alert.threshold}
-                  </div>
-                </div>
-
-                {alert.recommendations && alert.recommendations.length > 0 && (
-                  <div className="mt-2 pt-2 border-t border-current/20">
-                    <div className="text-xs font-semibold mb-1">Recommended Actions:</div>
-                    <ul className="space-y-0.5 text-xs">
-                      {alert.recommendations.map((rec, idx) => (
-                        <li key={idx} className="flex items-start gap-1.5">
-                          <span className="mt-0.5">•</span>
-                          <span>{rec}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </AlertDescription>
-            </div>
-          </div>
-        </Alert>
+    <div className="flex flex-col gap-2">
+      {visible.map(alert => (
+        <AlertItem key={alert.id} alert={alert} onDismiss={() => onDismiss(alert.id)} />
       ))}
     </div>
   );

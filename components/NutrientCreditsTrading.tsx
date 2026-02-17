@@ -305,13 +305,79 @@ export function NutrientCreditsTrading({
     alert(`Purchase initiated for ${offer.credits} ${offer.nutrient} credits from ${offer.seller}.\n\nIn production, this would process through the state trading platform with escrow and verification.`);
   };
 
+  const exportMarketplaceSummary = async () => {
+    setIsGenerating(true);
+    try {
+      const totalValue = creditBank.tn.marketValue + creditBank.tp.marketValue;
+      const sections: PDFContentSection[] = [
+        {
+          content: [
+            `Generated: ${new Date().toLocaleString()}`,
+            `Reporting Period: ${timeRange.start.toLocaleDateString()} - ${timeRange.end.toLocaleDateString()}`,
+          ]
+        },
+        {
+          title: 'CREDIT BANK — YOUR BALANCES',
+          content: ['Current nutrient credit holdings and estimated market value:'],
+          table: {
+            headers: ['Nutrient', 'Total Credits', 'Sellable (80%)', 'Rate', 'Est. Value', 'Status'],
+            rows: [
+              ['Total Nitrogen (TN)', creditBank.tn.total.toFixed(1), creditBank.tn.sellable.toFixed(1), '$50/credit', `$${creditBank.tn.marketValue.toLocaleString()}`, 'Tradeable'],
+              ['Total Phosphorus (TP)', creditBank.tp.total.toFixed(1), creditBank.tp.sellable.toFixed(1), '$75/credit', `$${creditBank.tp.marketValue.toLocaleString()}`, 'Tradeable'],
+              ['Total Suspended Solids', creditBank.tss.total.toFixed(1), 'N/A', 'N/A', 'N/A', 'Tracked Only'],
+            ]
+          }
+        },
+        {
+          title: 'TOTAL PORTFOLIO VALUE',
+          content: [
+            `Combined market value: $${totalValue.toLocaleString()} at current MD trading rates`,
+            '',
+            `TN: $${creditBank.tn.marketValue.toLocaleString()} (${creditBank.tn.sellable.toFixed(1)} credits × $50)`,
+            `TP: $${creditBank.tp.marketValue.toLocaleString()} (${creditBank.tp.sellable.toFixed(1)} credits × $75)`,
+          ]
+        },
+        {
+          title: 'AVAILABLE MARKETPLACE LISTINGS',
+          content: ['Current credit offerings from verified BMPs in the Chesapeake Bay watershed:'],
+          table: {
+            headers: ['Seller', 'Nutrient', 'Credits', 'Price/Credit', 'Total', 'BMP Type'],
+            rows: mockTradingOffers.map(o => [
+              o.seller, o.nutrient, o.credits.toLocaleString(),
+              `$${o.pricePerCredit}`, `$${o.totalPrice.toLocaleString()}`, o.bmpType
+            ])
+          }
+        },
+        {
+          title: 'DISCLAIMER',
+          content: [
+            'This is a demonstration marketplace summary. Actual nutrient credit trading requires:',
+            '',
+            '• Registration with state trading platform (e.g., Maryland Nutrient Trading Tool)',
+            '• Third-party verification of BMP performance',
+            '• Compliance with watershed-specific trading ratios and geographic constraints',
+            '• Annual certification and reporting to regulatory authority',
+          ]
+        }
+      ];
+
+      const pdf = await createBrandedPDF('NUTRIENT CREDIT MARKETPLACE SUMMARY', sections);
+      pdf.download(`nutrient-marketplace-summary-${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF report. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Alert className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-300">
         <Leaf className="h-5 w-5 text-green-600" />
-        <AlertTitle className="text-green-900 font-bold">Chesapeake Bay Nutrient Credits & Trading</AlertTitle>
+        <AlertTitle className="text-green-900 font-bold">MS4 Nutrient Credit Tracking — Chesapeake Bay TMDL Compliance</AlertTitle>
         <AlertDescription className="text-green-800">
-          Track nutrient load reductions for Chesapeake Bay TMDL and MS4 compliance. Generate tradeable credits
+          Track nutrient load reductions for NPDES permit TMDL compliance and Chesapeake Bay WIP goals. Generate tradeable credits
           from verified BMP performance. Future integration with Maryland Nutrient Trading Tool and Virginia Nutrient Credit Exchange.
         </AlertDescription>
       </Alert>
@@ -476,8 +542,10 @@ export function NutrientCreditsTrading({
                 </TableBody>
               </Table>
               <div className="mt-4 flex justify-between items-center">
-                <div className="text-sm text-muted-foreground">
-                  Total potential market value: <span className="font-bold text-slate-900">${(creditBank.tn.marketValue + creditBank.tp.marketValue).toLocaleString()}</span>
+                <div className="text-sm">
+                  <span className="text-muted-foreground">Total potential market value: </span>
+                  <span className="text-xl font-black text-green-700">${(creditBank.tn.marketValue + creditBank.tp.marketValue).toLocaleString()}</span>
+                  <span className="text-xs text-muted-foreground ml-1">at current MD trading rates</span>
                 </div>
                 <Button onClick={exportCreditReport} variant="outline" className="gap-2" disabled={isGenerating}>
                   <Download className="h-4 w-4" />
@@ -553,6 +621,7 @@ export function NutrientCreditsTrading({
                   Available Credits to Buy
                 </CardTitle>
                 <CardDescription>Purchase credits from other verified BMPs</CardDescription>
+                <div className="text-[10px] text-muted-foreground mt-1">Last refreshed: {new Date().toLocaleString()} · Market data is demonstration only</div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 max-h-[400px] overflow-y-auto">
@@ -613,10 +682,22 @@ export function NutrientCreditsTrading({
                 <li>Annual certification and reporting to Maryland Department of Environment or Virginia DEQ</li>
               </ul>
               <div className="mt-2">
-                Contact your state environmental agency for Chesapeake Bay TMDL credit program details.
+                Contact your state environmental agency for Chesapeake Bay TMDL credit program details.{' '}
+                <a href="https://mde.maryland.gov/programs/water/TMDL/TMDLImplementation/Pages/NutrientTrading.aspx"
+                  target="_blank" rel="noopener noreferrer"
+                  className="text-blue-600 underline hover:text-blue-800 font-medium">
+                  How to certify & trade credits with MDE →
+                </a>
               </div>
             </AlertDescription>
           </Alert>
+
+          <div className="flex justify-end">
+            <Button onClick={exportMarketplaceSummary} variant="outline" className="gap-2" disabled={isGenerating}>
+              <Download className="h-4 w-4" />
+              {isGenerating ? 'Generating PDF...' : 'Export Marketplace Summary (PDF)'}
+            </Button>
+          </div>
         </TabsContent>
 
         <TabsContent value="calculations" className="space-y-6">
@@ -649,7 +730,12 @@ export function NutrientCreditsTrading({
                         {calc.loadReduction.toFixed(2)}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Badge variant={calc.removalEfficiency >= 80 ? 'default' : 'secondary'}>
+                        <Badge className={calc.removalEfficiency >= 80
+                          ? 'bg-green-100 text-green-800 hover:bg-green-100'
+                          : calc.removalEfficiency >= 60
+                          ? 'bg-amber-100 text-amber-800 hover:bg-amber-100'
+                          : 'bg-red-100 text-red-800 hover:bg-red-100'
+                        }>
                           {calc.removalEfficiency.toFixed(1)}%
                         </Badge>
                       </TableCell>
@@ -658,6 +744,19 @@ export function NutrientCreditsTrading({
                       </TableCell>
                     </TableRow>
                   ))}
+                  {/* Summary row */}
+                  <TableRow className="bg-slate-50 border-t-2 border-slate-300">
+                    <TableCell className="font-bold text-slate-900">TOTAL ({stormEvents.length} events)</TableCell>
+                    <TableCell className="text-right font-bold">{creditCalculations.reduce((s, c) => s + c.influentLoad, 0).toFixed(2)}</TableCell>
+                    <TableCell className="text-right font-bold">{creditCalculations.reduce((s, c) => s + c.effluentLoad, 0).toFixed(2)}</TableCell>
+                    <TableCell className="text-right font-black text-green-700">{creditCalculations.reduce((s, c) => s + c.loadReduction, 0).toFixed(2)}</TableCell>
+                    <TableCell className="text-right">
+                      <Badge className="bg-green-600 text-white hover:bg-green-600">
+                        {(creditCalculations.reduce((s, c) => s + c.removalEfficiency, 0) / Math.max(creditCalculations.length, 1)).toFixed(1)}% avg
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right font-black text-blue-700">{creditCalculations.reduce((s, c) => s + c.creditsGenerated, 0).toFixed(1)}</TableCell>
+                  </TableRow>
                 </TableBody>
               </Table>
             </CardContent>
