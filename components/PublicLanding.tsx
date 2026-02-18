@@ -300,16 +300,43 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
         </div>
       </section>
 
-      {/* ═══ DIFFERENTIATORS ═══ */}
+      {/* ═══ THE TECHNOLOGY — barge hero ═══ */}
       <section id="technology" className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <p className="text-xs font-bold tracking-[0.2em] uppercase text-slate-400 mb-3">The PEARL Difference</p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-              Not another dashboard.<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-blue-600">A new category of water intelligence.</span>
-            </h2>
+          <div className="grid lg:grid-cols-2 gap-12 items-center mb-20">
+            <div>
+              <p className="text-xs font-bold tracking-[0.2em] uppercase text-slate-400 mb-3">The PEARL Difference</p>
+              <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-6" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+                Not another dashboard.<br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-blue-600">A new category of water intelligence.</span>
+              </h2>
+              <p className="text-slate-600 leading-relaxed mb-8">
+                Every PEARL unit is a modular treatment platform and high-frequency data node with 8 monitoring points, transforming environmental restoration into a source of valuable, real-time intelligence for regulators, researchers, and municipalities.
+              </p>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center p-4 rounded-xl bg-slate-50">
+                  <div className="text-2xl font-bold text-slate-900">90-95%</div>
+                  <div className="text-xs text-slate-500 mt-1">TSS Removal</div>
+                </div>
+                <div className="text-center p-4 rounded-xl bg-slate-50">
+                  <div className="text-2xl font-bold text-slate-900">93.8%</div>
+                  <div className="text-xs text-slate-500 mt-1">E. Coli Reduction</div>
+                </div>
+                <div className="text-center p-4 rounded-xl bg-slate-50">
+                  <div className="text-2xl font-bold text-slate-900">4-Stage</div>
+                  <div className="text-xs text-slate-500 mt-1">Treatment Process</div>
+                </div>
+              </div>
+            </div>
+            <div className="relative">
+              <Image src="/pearl-barge.jpg" alt="PEARL modular treatment barge" width={700} height={400} className="rounded-2xl shadow-2xl" />
+              <div className="absolute -bottom-4 -right-4 bg-white rounded-xl shadow-lg border border-slate-200 px-4 py-3 hidden sm:block">
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Field Validated</div>
+                <div className="text-sm font-bold text-slate-900">Milton, FL &mdash; Jan 2026</div>
+              </div>
+            </div>
           </div>
+
           <div className="grid sm:grid-cols-2 gap-6">
             {DIFFERENTIATORS.map((d, i) => {
               const Icon = d.icon;
@@ -368,24 +395,24 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
       </section>
 
       {/* ═══ CTA ═══ */}
-      <section className="relative py-24 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-cyan-50 via-blue-50 to-white" />
-        <div className="absolute inset-0 opacity-30" style={{
-          backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(6,182,212,0.2) 0%, transparent 50%), radial-gradient(circle at 80% 30%, rgba(59,130,246,0.15) 0%, transparent 50%)'
-        }} />
+      <section className="relative py-28 overflow-hidden">
+        <div className="absolute inset-0">
+          <Image src="/coral-reef.jpg" alt="" fill className="object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/70 to-cyan-900/50" />
+        </div>
         <div className="relative max-w-3xl mx-auto px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
             Water quality data should work as hard as you do.
           </h2>
-          <p className="text-lg text-slate-600 mb-10 max-w-xl mx-auto">
+          <p className="text-lg text-white/70 mb-10 max-w-xl mx-auto">
             Whether you manage stormwater permits, regulate a state&#39;s waters, or research
             aquatic ecosystems &mdash; PEARL puts actionable intelligence at your fingertips.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <button onClick={onSignIn} className="group inline-flex items-center gap-3 px-8 py-4 text-base font-semibold text-white bg-slate-900 rounded-full hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/20">
+            <button onClick={onSignIn} className="group inline-flex items-center gap-3 px-8 py-4 text-base font-semibold text-slate-900 bg-white rounded-full hover:bg-slate-100 transition-all shadow-2xl shadow-black/30">
               Create Free Account <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </button>
-            <a href="mailto:doug@project-pearl.org?subject=PEARL%20Platform%20Inquiry" className="inline-flex items-center gap-2 px-8 py-4 text-base font-medium text-slate-700 border-2 border-slate-200 rounded-full hover:border-slate-300 hover:bg-white transition-all">
+            <a href="mailto:doug@project-pearl.org?subject=PEARL%20Platform%20Inquiry" className="inline-flex items-center gap-2 px-8 py-4 text-base font-medium text-white/90 border border-white/30 rounded-full hover:bg-white/10 transition-all backdrop-blur-sm">
               Talk to Our Team
             </a>
           </div>
@@ -398,10 +425,11 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
           <div className="grid md:grid-cols-4 gap-12">
             <div className="md:col-span-2">
               <Image src="/Logo_Pearl_as_Headline.JPG" alt="Project PEARL" width={140} height={38} className="object-contain brightness-0 invert opacity-80 mb-4" />
-              <p className="text-sm text-slate-500 leading-relaxed max-w-sm">
+              <p className="text-sm text-slate-500 leading-relaxed max-w-sm mb-4">
                 Proactive Engineering for Aquatic Rehabilitation &amp; Legacy. A platform by Local Seafood Projects Inc.
               </p>
-              <div className="flex items-center gap-2 mt-4">
+              <Image src="/logo-lsp.jpg" alt="Local Seafood Projects" width={100} height={50} className="object-contain rounded opacity-70 mb-3" />
+              <div className="flex items-center gap-2 mt-2">
                 <LivePulse />
                 <span className="text-xs text-emerald-400/70 font-medium">Systems operational</span>
               </div>

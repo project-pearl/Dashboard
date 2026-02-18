@@ -7,6 +7,7 @@ import type { UserRole } from '@/lib/authTypes';
 import Image from 'next/image';
 
 const ROLES: { value: UserRole; label: string; desc: string }[] = [
+  { value: 'K12',        label: 'K-12 Education',  desc: 'STEM curriculum' },
   { value: 'MS4',        label: 'MS4 Operator',    desc: 'Municipal stormwater permits' },
   { value: 'State',      label: 'State Agency',    desc: 'State regulatory compliance' },
   { value: 'Federal',    label: 'Federal Agency',  desc: 'EPA oversight & national metrics' },
@@ -14,7 +15,6 @@ const ROLES: { value: UserRole; label: string; desc: string }[] = [
   { value: 'Researcher', label: 'Researcher',      desc: 'Data analysis & publications' },
   { value: 'College',    label: 'University',      desc: 'Academic programs & field studies' },
   { value: 'NGO',        label: 'NGO',             desc: 'Conservation & advocacy' },
-  { value: 'K12',        label: 'K-12 Education',  desc: 'STEM curriculum' },
 ];
 
 export default function LoginPage() {
@@ -50,78 +50,81 @@ export default function LoginPage() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password.length < 6) {
-      return;
-    }
+    if (password.length < 6) return;
     setIsSubmitting(true);
     clearError();
     setSuccessMsg('');
-
-    const result = await signup({
-      email,
-      password,
-      name,
-      role,
-      organization,
-      state,
-    });
-
+    const result = await signup({ email, password, name, role, organization, state });
     if (result.success) {
       if (result.user?.status === 'pending') {
         setSuccessMsg('Account created! An admin will approve your access shortly.');
-        setMode('login');
       } else {
         setSuccessMsg('Account created! Check your email to confirm, then sign in.');
-        setMode('login');
       }
+      setMode('login');
     }
     setIsSubmitting(false);
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="w-12 h-12 border-4 border-blue-300 border-t-blue-600 rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+        <div className="w-12 h-12 border-4 border-cyan-300/30 border-t-cyan-400 rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen relative flex items-center justify-center px-4">
+      {/* Underwater background */}
+      <div className="fixed inset-0 z-0">
+        <Image
+          src="/underwater.png"
+          alt=""
+          fill
+          className="object-cover"
+          priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-900/40 to-cyan-900/20" />
+        <div className="absolute inset-0 backdrop-blur-[2px]" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-md py-12">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <Image
-              src="/Logo_Pearl_with_reef.jpg"
-              alt="Project PEARL"
-              width={320}
-              height={320}
-              className="rounded-2xl shadow-lg"
-            />
-          </div>
+          <Image
+            src="/Logo_Pearl_as_Headline.JPG"
+            alt="Project PEARL"
+            width={260}
+            height={72}
+            className="mx-auto object-contain brightness-0 invert drop-shadow-2xl"
+            priority
+          />
+          <p className="text-cyan-200/60 text-sm mt-2 tracking-widest uppercase font-medium" style={{ letterSpacing: '0.15em' }}>
+            Water Quality Intelligence
+          </p>
         </div>
 
-        {/* Card */}
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-xl p-8">
+        {/* Card — frosted glass */}
+        <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-8 shadow-2xl shadow-black/30">
           {/* Tab toggle */}
-          <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
+          <div className="flex mb-6 bg-white/10 rounded-lg p-1">
             <button
               onClick={() => { setMode('login'); clearError(); setSuccessMsg(''); }}
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+              className={`flex-1 py-2.5 text-sm font-semibold rounded-md transition-all ${
                 mode === 'login'
-                  ? 'bg-blue-600 text-white shadow'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'bg-white/20 text-white shadow-lg shadow-black/10'
+                  : 'text-white/50 hover:text-white/80'
               }`}
             >
               Sign In
             </button>
             <button
               onClick={() => { setMode('signup'); clearError(); setSuccessMsg(''); }}
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+              className={`flex-1 py-2.5 text-sm font-semibold rounded-md transition-all ${
                 mode === 'signup'
-                  ? 'bg-blue-600 text-white shadow'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'bg-white/20 text-white shadow-lg shadow-black/10'
+                  : 'text-white/50 hover:text-white/80'
               }`}
             >
               Create Account
@@ -129,13 +132,13 @@ export default function LoginPage() {
           </div>
 
           {successMsg && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-300 rounded-lg text-green-700 text-sm">
+            <div className="mb-4 p-3 bg-emerald-500/20 border border-emerald-400/30 rounded-lg text-emerald-200 text-sm">
               {successMsg}
             </div>
           )}
 
           {loginError && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-300 rounded-lg text-red-700 text-sm">
+            <div className="mb-4 p-3 bg-red-500/20 border border-red-400/30 rounded-lg text-red-200 text-sm">
               {loginError}
             </div>
           )}
@@ -143,35 +146,35 @@ export default function LoginPage() {
           {mode === 'login' ? (
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label className="block text-sm font-medium text-white/80 mb-1.5">Email</label>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-transparent transition-all"
                   placeholder="you@example.com"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <label className="block text-sm font-medium text-white/80 mb-1.5">Password</label>
                 <input
                   type="password"
                   required
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-transparent transition-all"
                   placeholder="••••••••"
                 />
               </div>
               <div className="flex items-center gap-2">
-                <input type="checkbox" id="remember" className="accent-blue-600" />
-                <label htmlFor="remember" className="text-sm text-gray-600">Remember me</label>
+                <input type="checkbox" id="remember" className="accent-cyan-400 w-4 h-4 rounded" />
+                <label htmlFor="remember" className="text-sm text-white/60">Remember me</label>
               </div>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-300 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors"
+                className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all shadow-lg shadow-cyan-500/20"
               >
                 {isSubmitting ? 'Signing in...' : 'Sign In'}
               </button>
@@ -179,45 +182,45 @@ export default function LoginPage() {
           ) : (
             <form onSubmit={handleSignup} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <label className="block text-sm font-medium text-white/80 mb-1.5">Full Name</label>
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-transparent transition-all"
                   placeholder="Jane Smith"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label className="block text-sm font-medium text-white/80 mb-1.5">Email</label>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-transparent transition-all"
                   placeholder="you@example.com"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <label className="block text-sm font-medium text-white/80 mb-1.5">Password</label>
                 <input
                   type="password"
                   required
                   minLength={6}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-transparent transition-all"
                   placeholder="Min 6 characters"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                <label className="block text-sm font-medium text-white/80 mb-1.5">Role</label>
                 <select
                   value={role}
                   onChange={e => setRole(e.target.value as UserRole)}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-transparent transition-all [&>option]:bg-slate-900 [&>option]:text-white"
                 >
                   {ROLES.map(r => (
                     <option key={r.value} value={r.value}>{r.label} — {r.desc}</option>
@@ -225,42 +228,42 @@ export default function LoginPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Organization (optional)</label>
+                <label className="block text-sm font-medium text-white/80 mb-1.5">Organization (optional)</label>
                 <input
                   type="text"
                   value={organization}
                   onChange={e => setOrganization(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-transparent transition-all"
                   placeholder="e.g. Anne Arundel County DPW"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">State (optional)</label>
+                <label className="block text-sm font-medium text-white/80 mb-1.5">State (optional)</label>
                 <input
                   type="text"
                   value={state}
                   onChange={e => setState(e.target.value.toUpperCase().slice(0, 2))}
                   maxLength={2}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-transparent transition-all"
                   placeholder="MD"
                 />
               </div>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-300 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors"
+                className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all shadow-lg shadow-cyan-500/20"
               >
                 {isSubmitting ? 'Creating account...' : 'Create Account'}
               </button>
-              <p className="text-xs text-gray-500 text-center">
+              <p className="text-xs text-white/40 text-center">
                 MS4, State, Federal, and Corporate accounts require admin approval.
               </p>
             </form>
           )}
         </div>
 
-        <p className="text-center text-gray-400 text-xs mt-6">
-          © {new Date().getFullYear()} Local Seafood Projects Inc. — Project PEARL
+        <p className="text-center text-white/25 text-xs mt-8">
+          &copy; {new Date().getFullYear()} Local Seafood Projects Inc. &mdash; Project PEARL
         </p>
       </div>
     </div>
