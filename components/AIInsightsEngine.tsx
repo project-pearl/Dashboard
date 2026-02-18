@@ -83,9 +83,11 @@ export function AIInsightsEngine({ role, stateAbbr, selectedWaterbody, regionDat
   const [insights, setInsights] = useState<Insight[]>([]);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const hasFetched = useRef(false);
+  const fetchingRef = useRef(false); // prevent concurrent fetches
 
   const fetchInsights = useCallback(async (force = false) => {
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
     const cacheKey = getCacheKey(role, stateAbbr, selectedWaterbody);
 
     // Check cache
@@ -94,6 +96,7 @@ export function AIInsightsEngine({ role, stateAbbr, selectedWaterbody, regionDat
       if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
         setInsights(cached.insights);
         setLastUpdated(new Date(cached.timestamp));
+        fetchingRef.current = false;
         return;
       }
     }
@@ -181,34 +184,31 @@ export function AIInsightsEngine({ role, stateAbbr, selectedWaterbody, regionDat
       setLastUpdated(new Date());
     } finally {
       setLoading(false);
+      fetchingRef.current = false;
     }
   }, [role, stateAbbr, selectedWaterbody, regionData]);
 
-  // Reset when state or role changes — clear stale insights and re-fetch if panel is open
-  const prevStateRef = useRef(stateAbbr);
-  const prevRoleRef = useRef(role);
+  // Fetch when expanded — cache key includes state+role, so:
+  // - Same state/role → cache hit, returns instantly (no duplicate API call)
+  // - New state/role  → cache miss, fetches fresh data
+  // On state/role change: clear stale insights so shimmer shows, then fetch
+  const prevKeyRef = useRef(getCacheKey(role, stateAbbr, selectedWaterbody));
   useEffect(() => {
-    if (prevStateRef.current !== stateAbbr || prevRoleRef.current !== role) {
-      prevStateRef.current = stateAbbr;
-      prevRoleRef.current = role;
-      hasFetched.current = false;
+    const key = getCacheKey(role, stateAbbr, selectedWaterbody);
+    const keyChanged = key !== prevKeyRef.current;
+    prevKeyRef.current = key;
+
+    if (keyChanged) {
+      // State/role/waterbody changed — clear old insights immediately
       setInsights([]);
       setLastUpdated(null);
       setError(null);
-      if (expanded) {
-        hasFetched.current = true;
-        fetchInsights(true);
-      }
     }
-  }, [stateAbbr, role, expanded, fetchInsights]);
 
-  // Auto-fetch when first expanded
-  useEffect(() => {
-    if (expanded && !hasFetched.current && insights.length === 0) {
-      hasFetched.current = true;
-      fetchInsights();
+    if (expanded) {
+      fetchInsights(keyChanged); // force bypass cache if key changed
     }
-  }, [expanded, insights.length, fetchInsights]);
+  }, [expanded, role, stateAbbr, selectedWaterbody, fetchInsights]);
 
   return (
     <div className="rounded-2xl border border-indigo-200 bg-white shadow-sm overflow-hidden">
