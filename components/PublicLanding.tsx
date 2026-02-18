@@ -181,7 +181,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
       <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
       {/* ═══ NAVBAR ═══ */}
-      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-white/70 border-b border-slate-200/50">
+      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-white border-b border-slate-200/50">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Image src="/Logo_Pearl_as_Headline.JPG" alt="Project PEARL" width={160} height={44} className="object-contain" priority />
@@ -202,8 +202,8 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
       <section className="relative min-h-[92vh] flex items-end overflow-hidden">
         <div className="absolute inset-0">
           <Image src="/marsh-waterfront.jpeg" alt="Coastal marsh waterfront" fill className="object-cover" priority />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-slate-950/20" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/50 via-transparent to-transparent" />
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 pb-20 pt-32 w-full">
@@ -398,7 +398,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
       <section className="relative py-28 overflow-hidden">
         <div className="absolute inset-0">
           <Image src="/coral-reef.jpg" alt="" fill className="object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/70 to-cyan-900/50" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-cyan-900/40 to-transparent" />
         </div>
         <div className="relative max-w-3xl mx-auto px-6 lg:px-8 text-center">
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
@@ -424,7 +424,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
           <div className="grid md:grid-cols-4 gap-12">
             <div className="md:col-span-2">
-              <Image src="/Logo_Pearl_as_Headline.JPG" alt="Project PEARL" width={140} height={38} className="object-contain brightness-0 invert opacity-80 mb-4" />
+              <Image src="/Logo_Pearl_with_reef.jpg" alt="Project PEARL" width={120} height={120} className="object-contain rounded-lg opacity-90 mb-4" />
               <p className="text-sm text-slate-500 leading-relaxed max-w-sm mb-4">
                 Proactive Engineering for Aquatic Rehabilitation &amp; Legacy. A platform by Local Seafood Projects Inc.
               </p>
