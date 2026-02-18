@@ -19,6 +19,8 @@ import {
   CheckCircle2, Circle, AlertCircle, Sparkles, ClipboardList, Link2, PenTool, Package
 } from 'lucide-react';
 import { useAuth } from '@/lib/authContext';
+import { getRegionById } from '@/lib/regionsConfig';
+import { REGION_META, getWaterbodyDataSources } from '@/lib/useWaterData';
 import { BrandedPDFGenerator } from '@/lib/brandedPdfGenerator';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
@@ -340,14 +342,55 @@ const CLOSE_THE_GAP: Record<string, CloseTheGapEntry> = {
 
 // ─── State GEO (reuse from SCC) ─────────────────────────────────────────────
 
+const STATE_NAMES: Record<string, string> = {
+  AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',
+  CT:'Connecticut',DE:'Delaware',DC:'District of Columbia',FL:'Florida',GA:'Georgia',
+  HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',
+  LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',
+  MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',
+  NJ:'New Jersey',NM:'New Mexico',NY:'New York',NC:'North Carolina',ND:'North Dakota',
+  OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',
+  SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',
+  WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming',
+};
+
+const FIPS_TO_ABBR: Record<string, string> = {
+  '01':'AL','02':'AK','04':'AZ','05':'AR','06':'CA','08':'CO','09':'CT','10':'DE','11':'DC',
+  '12':'FL','13':'GA','15':'HI','16':'ID','17':'IL','18':'IN','19':'IA','20':'KS','21':'KY',
+  '22':'LA','23':'ME','24':'MD','25':'MA','26':'MI','27':'MN','28':'MS','29':'MO','30':'MT',
+  '31':'NE','32':'NV','33':'NH','34':'NJ','35':'NM','36':'NY','37':'NC','38':'ND','39':'OH',
+  '40':'OK','41':'OR','42':'PA','44':'RI','45':'SC','46':'SD','47':'TN','48':'TX','49':'UT',
+  '50':'VT','51':'VA','53':'WA','54':'WV','55':'WI','56':'WY',
+};
+
 const STATE_GEO: Record<string, { center: [number, number]; scale: number }> = {
-  US: { center: [-98.5, 39.8] as [number, number], scale: 1000 },
-  MD: { center: [-76.7, 39.0] as [number, number], scale: 7500 },
-  VA: { center: [-79.5, 37.5] as [number, number], scale: 4500 },
-  DC: { center: [-77.02, 38.9] as [number, number], scale: 90000 },
-  PA: { center: [-77.8, 40.9] as [number, number], scale: 4500 },
-  FL: { center: [-82.5, 28.5] as [number, number], scale: 3200 },
-  DE: { center: [-75.5, 39.0] as [number, number], scale: 14000 },
+  US: { center: [-98.5, 39.8], scale: 1000 },
+  AL: { center: [-86.8, 32.8], scale: 4500 }, AK: { center: [-153, 64], scale: 900 },
+  AZ: { center: [-111.7, 34.2], scale: 4000 }, AR: { center: [-92.4, 34.8], scale: 5000 },
+  CA: { center: [-119.5, 37.5], scale: 2800 }, CO: { center: [-105.5, 39.0], scale: 4000 },
+  CT: { center: [-72.7, 41.6], scale: 12000 }, DE: { center: [-75.5, 39.0], scale: 14000 },
+  DC: { center: [-77.02, 38.9], scale: 90000 }, FL: { center: [-82.5, 28.5], scale: 3200 },
+  GA: { center: [-83.5, 32.7], scale: 4000 }, HI: { center: [-157, 20.5], scale: 5000 },
+  ID: { center: [-114.5, 44.5], scale: 3200 }, IL: { center: [-89.2, 40.0], scale: 3800 },
+  IN: { center: [-86.3, 39.8], scale: 5000 }, IA: { center: [-93.5, 42.0], scale: 4500 },
+  KS: { center: [-98.5, 38.5], scale: 4200 }, KY: { center: [-85.3, 37.8], scale: 4800 },
+  LA: { center: [-92.0, 31.0], scale: 4500 }, ME: { center: [-69.0, 45.5], scale: 4500 },
+  MD: { center: [-77.0, 39.0], scale: 7500 }, MA: { center: [-71.8, 42.3], scale: 9000 },
+  MI: { center: [-85.5, 44.0], scale: 3200 }, MN: { center: [-94.5, 46.3], scale: 3200 },
+  MS: { center: [-89.7, 32.7], scale: 4500 }, MO: { center: [-92.5, 38.5], scale: 4000 },
+  MT: { center: [-109.6, 47.0], scale: 3200 }, NE: { center: [-99.8, 41.5], scale: 3800 },
+  NV: { center: [-117.0, 39.5], scale: 3200 }, NH: { center: [-71.6, 43.8], scale: 7500 },
+  NJ: { center: [-74.7, 40.1], scale: 9000 }, NM: { center: [-106.0, 34.5], scale: 3800 },
+  NY: { center: [-75.5, 42.5], scale: 4000 }, NC: { center: [-79.5, 35.5], scale: 4500 },
+  ND: { center: [-100.5, 47.5], scale: 4500 }, OH: { center: [-82.8, 40.2], scale: 5000 },
+  OK: { center: [-97.5, 35.5], scale: 4200 }, OR: { center: [-120.5, 44.0], scale: 3500 },
+  PA: { center: [-77.6, 41.0], scale: 5000 }, RI: { center: [-71.5, 41.7], scale: 22000 },
+  SC: { center: [-80.9, 33.8], scale: 5500 }, SD: { center: [-100.2, 44.5], scale: 4200 },
+  TN: { center: [-86.3, 35.8], scale: 4800 }, TX: { center: [-99.5, 31.5], scale: 2500 },
+  UT: { center: [-111.7, 39.5], scale: 3800 }, VT: { center: [-72.6, 44.0], scale: 7500 },
+  VA: { center: [-79.5, 37.8], scale: 4500 }, WA: { center: [-120.5, 47.5], scale: 4000 },
+  WV: { center: [-80.6, 38.6], scale: 6000 }, WI: { center: [-89.8, 44.5], scale: 3800 },
+  WY: { center: [-107.5, 43.0], scale: 4000 },
 };
 
 // Chesapeake Bay watershed: 6 states + DC
@@ -386,6 +429,7 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
   const [mapCenter, setMapCenter] = useState<[number, number]>(isCBPortfolio ? CB_CENTER : STATE_GEO['US'].center);
   const [selectedFacility, setSelectedFacility] = useState<string | null>(null);
   const [hoveredFacility, setHoveredFacility] = useState<string | null>(null);
+  const [focusedState, setFocusedState] = useState<string>('US');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterLevel, setFilterLevel] = useState<'all' | 'high' | 'medium' | 'low'>('all');
 
@@ -423,6 +467,27 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
       { id: 'fac_dc_office', name: 'DC Government Affairs', state: 'DC', type: 'office' as const, alertLevel: 'none' as AlertLevel, activeAlerts: 0, lastUpdatedISO: new Date().toISOString(), status: 'unmonitored' as const, dataSourceCount: 0, waterRiskScore: 15, lat: 38.905, lon: -77.035, gallonsTreated: 0, tnReduced: 0, tpReduced: 0, tssReduced: 0, tssEfficiency: 0, receivingWaterbody: 'Anacostia River', ejScore: 54 },
     ];
   }, [propFacilities]);
+
+  // ── Waterbody markers for focused state (from REGION_META, same as other CCs) ──
+  const stateWaterbodies = useMemo(() => {
+    if (focusedState === 'US') return [];
+    const markers: { id: string; name: string; lat: number; lon: number; alertLevel: AlertLevel; status: string; dataSourceCount: number }[] = [];
+    for (const [id, meta] of Object.entries(REGION_META)) {
+      const fips = (meta as any).stateCode?.replace('US:', '') || '';
+      const abbr = FIPS_TO_ABBR[fips] || fips;
+      if (abbr !== focusedState) continue;
+      const cfg = getRegionById(id) as any;
+      if (!cfg) continue;
+      const lat = cfg.lat ?? cfg.latitude ?? null;
+      const lon = cfg.lon ?? cfg.lng ?? cfg.longitude ?? null;
+      if (lat == null || lon == null) continue;
+      const sources = getWaterbodyDataSources(id);
+      // Derive alert level from sources
+      const alertLevel: AlertLevel = sources.length >= 3 ? 'high' : sources.length >= 2 ? 'medium' : sources.length >= 1 ? 'low' : 'none';
+      markers.push({ id, name: (meta as any).name || id, lat, lon, alertLevel, status: sources.length > 0 ? 'assessed' : 'unmonitored', dataSourceCount: sources.length });
+    }
+    return markers;
+  }, [focusedState]);
 
   // ── Filtered list ──
   const filteredFacilities = useMemo(() => {
@@ -935,8 +1000,27 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
                 </div>
 
                 <div className="p-2 text-xs text-slate-500 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-                  <span>{companyName} · {facilitiesData.length} facilities</span>
-                  {mapZoom > 1.1 && <span className="text-slate-400">{mapZoom.toFixed(1)}×</span>}
+                  <span>{companyName} · {facilitiesData.length} facilities{focusedState !== 'US' ? ` · ${STATE_NAMES[focusedState] || focusedState} waterbodies` : ''}</span>
+                  <div className="flex items-center gap-2">
+                    {mapZoom > 1.1 && <span className="text-slate-400">{mapZoom.toFixed(1)}×</span>}
+                    <select
+                      value={focusedState}
+                      onChange={(e) => {
+                        const st = e.target.value;
+                        setFocusedState(st);
+                        setSelectedFacility(null);
+                        const geo = STATE_GEO[st] || STATE_GEO['US'];
+                        setMapCenter(geo.center);
+                        setMapZoom(st === 'US' ? (isCBPortfolio ? CB_ZOOM : 1) : geo.scale > 10000 ? 1.5 : 1);
+                      }}
+                      className="h-7 px-2 text-xs font-semibold rounded-md border bg-white border-emerald-300 text-emerald-800 hover:border-emerald-400 focus:ring-2 focus:ring-emerald-400/50 focus:outline-none transition-colors cursor-pointer"
+                    >
+                      <option value="US">All States (Portfolio)</option>
+                      {Object.entries(STATE_NAMES).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
+                        <option key={abbr} value={abbr}>{abbr} — {name}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 <div className="h-[450px] w-full relative">
@@ -964,19 +1048,41 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
                       >
                         <Geographies geography={topo}>
                           {({ geographies }: { geographies: any[] }) =>
-                            geographies.map((g: any) => (
-                              <Geography
-                                key={g.rsmKey ?? g.id}
-                                geography={g}
-                                style={{
-                                  default: { fill: '#f1f5f9', outline: 'none', stroke: '#cbd5e1', strokeWidth: 0.3 / mapZoom },
-                                  hover: { fill: '#e2e8f0', outline: 'none', stroke: '#cbd5e1', strokeWidth: 0.3 / mapZoom },
-                                  pressed: { fill: '#e2e8f0', outline: 'none' },
-                                }}
-                              />
-                            ))
+                            geographies.map((g: any) => {
+                              const gFips = String(g.id).padStart(2, '0');
+                              const gAbbr = FIPS_TO_ABBR[gFips] || g.properties?.name;
+                              const isFocused = focusedState !== 'US' && gAbbr === focusedState;
+                              return (
+                                <Geography
+                                  key={g.rsmKey ?? g.id}
+                                  geography={g}
+                                  style={{
+                                    default: { fill: isFocused ? '#d1fae5' : '#f1f5f9', outline: 'none', stroke: isFocused ? '#059669' : '#cbd5e1', strokeWidth: (isFocused ? 1.5 : 0.3) / mapZoom },
+                                    hover: { fill: isFocused ? '#a7f3d0' : '#e2e8f0', outline: 'none', stroke: isFocused ? '#059669' : '#cbd5e1', strokeWidth: (isFocused ? 1.5 : 0.3) / mapZoom },
+                                    pressed: { fill: isFocused ? '#a7f3d0' : '#e2e8f0', outline: 'none' },
+                                  }}
+                                />
+                              );
+                            })
                           }
                         </Geographies>
+
+                        {/* Waterbody dots for focused state */}
+                        {stateWaterbodies.map(wb => {
+                          const wbColor = wb.alertLevel === 'high' ? '#ef4444' : wb.alertLevel === 'medium' ? '#f59e0b' : wb.alertLevel === 'low' ? '#eab308' : '#22c55e';
+                          return (
+                            <Marker key={`wb-${wb.id}`} coordinates={[wb.lon, wb.lat]}>
+                              <circle
+                                r={3.5 / mapZoom}
+                                fill={wbColor}
+                                stroke="#ffffff"
+                                strokeWidth={0.8 / mapZoom}
+                                opacity={0.7}
+                                style={{ cursor: 'default' }}
+                              />
+                            </Marker>
+                          );
+                        })}
 
                         {/* Facility markers */}
                         {facilitiesData.filter(f => f.lat && f.lon).map(f => {
@@ -1073,6 +1179,15 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
                     <svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="5" fill="none" stroke="#16a34a" strokeWidth="1.5" strokeDasharray="3 1.5" /></svg>
                     Verified Impact
                   </span>
+                  {focusedState !== 'US' && stateWaterbodies.length > 0 && (
+                    <>
+                      <span className="mx-1 text-slate-300">|</span>
+                      <span className="text-slate-500">
+                        <svg width="8" height="8" viewBox="0 0 8 8" className="inline mr-1"><circle cx="4" cy="4" r="3.5" fill="#f59e0b" stroke="#fff" strokeWidth="0.8" opacity="0.7" /></svg>
+                        {stateWaterbodies.length} waterbodies
+                      </span>
+                    </>
+                  )}
                 </div>
               </CardContent>
             </Card>
