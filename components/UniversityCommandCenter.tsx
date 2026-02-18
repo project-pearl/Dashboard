@@ -468,7 +468,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
     const regionConfig = getRegionById(activeDetailId);
     const regionName = regionConfig?.name || nccRegion.name;
     const encodedName = encodeURIComponent(regionName);
-    const url = `/api/water-data?action=attains&waterbody=${encodedName}&state=${stateAbbr}`;
+    const url = `/api/water-data?action=attains-assessments&assessmentUnitName=${encodedName}&statecode=${stateAbbr}`;
 
     let cancelled = false;
     const tryFetch = async () => {
