@@ -457,32 +457,6 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
   const toggleCollapse = (id: string) => setCollapsedSections(prev => ({ ...prev, [id]: !prev[id] }));
   const isSectionOpen = (id: string) => !collapsedSections[id];
 
-  // ── Signals Intelligence ──
-  const [signals, setSignals] = useState<Array<{
-    id: string; source: string; sourceLabel: string; category: string;
-    title: string; summary: string; publishedAt: string; url: string;
-    state?: string; waterbody?: string; pearlRelevant: boolean; tags: string[];
-  }>>([]);
-  const [signalSources, setSignalSources] = useState<Array<{ name: string; status: string; count: number }>>([]);
-  const [signalsLoading, setSignalsLoading] = useState(false);
-  const [signalFilter, setSignalFilter] = useState<'all' | 'pearl' | 'state'>('state');
-
-  useEffect(() => {
-    let cancelled = false;
-    async function loadSignals() {
-      setSignalsLoading(true);
-      try {
-        const r = await fetch(`/api/water-data?action=signals&limit=30`);
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        const data = await r.json();
-        if (!cancelled) { setSignals(data.signals || []); setSignalSources(data.sources || []); }
-      } catch (e: any) { console.warn('[Signals] Fetch failed:', e.message); }
-      finally { if (!cancelled) setSignalsLoading(false); }
-    }
-    const timer = setTimeout(loadSignals, 5_000);
-    const interval = setInterval(loadSignals, 300_000);
-    return () => { cancelled = true; clearTimeout(timer); clearInterval(interval); };
-  }, []);
 
   // Print a single card section by its DOM id
   const printSection = (sectionId: string, title: string) => {
@@ -2866,71 +2840,6 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
           )}
         </div>
 
-        {/* ── SIGNALS INTELLIGENCE ── */}
-        <div id="section-signals" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <button onClick={() => toggleCollapse('signals')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-            <div className="flex items-center gap-2">
-              <AlertCircle size={15} className="text-amber-500" />
-              <span className="text-sm font-bold text-slate-800">Signals Intelligence</span>
-              {signalsLoading && <span className="text-[10px] text-blue-400 animate-pulse">fetching...</span>}
-              <span className="text-[10px] text-slate-400">{signals.length} signals</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span onClick={(e) => { e.stopPropagation(); printSection('signals', 'Signals Intelligence'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section"><Printer className="h-3.5 w-3.5 text-slate-400" /></span>
-              {isSectionOpen('signals') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
-            </div>
-          </button>
-          {isSectionOpen('signals') && (
-            <div className="p-4">
-              <div className="text-xs text-slate-500 mb-3">USCG safety bulletins · EPA beach advisories · NOAA HAB monitoring · EPA enforcement</div>
-              <div className="flex flex-wrap gap-1.5 mb-3">
-                {[
-                  { key: 'all' as const, label: 'All Signals', count: signals.length },
-                  { key: 'pearl' as const, label: 'PEARL-Relevant', count: signals.filter(s => s.pearlRelevant).length },
-                  { key: 'state' as const, label: `${stateName} Only`, count: signals.filter(s => s.state === stateAbbr).length },
-                ].map(f => (
-                  <button key={f.key} onClick={() => setSignalFilter(f.key)}
-                    className={`px-2.5 py-1 text-[11px] font-medium rounded-full border transition-all ${
-                      signalFilter === f.key ? 'bg-amber-100 text-amber-700 border-amber-200 ring-1 ring-offset-1 ring-amber-200 shadow-sm' : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'
-                    }`}>{f.label} {f.count > 0 ? `(${f.count})` : ''}</button>
-                ))}
-              </div>
-              <div className="space-y-1.5 max-h-[300px] min-h-[80px] overflow-y-auto">
-                {(() => {
-                  let filtered = signals;
-                  if (signalFilter === 'pearl') filtered = signals.filter(s => s.pearlRelevant);
-                  if (signalFilter === 'state') filtered = signals.filter(s => s.state === stateAbbr);
-                  if (filtered.length === 0) return <div className="text-sm text-slate-400 py-6 text-center">{signalsLoading ? 'Loading signals...' : signals.length === 0 ? 'No signals yet — feeds refresh every 5 minutes' : 'No signals match this filter'}</div>;
-                  const CS: Record<string, { icon: string; bg: string; text: string }> = { spill: { icon: '🛢️', bg: 'bg-red-50 border-red-200', text: 'text-red-700' }, bacteria: { icon: '🦠', bg: 'bg-orange-50 border-orange-200', text: 'text-orange-700' }, hab: { icon: '🌊', bg: 'bg-emerald-50 border-emerald-200', text: 'text-emerald-700' }, enforcement: { icon: '⚖️', bg: 'bg-purple-50 border-purple-200', text: 'text-purple-700' }, advisory: { icon: '⚠️', bg: 'bg-amber-50 border-amber-200', text: 'text-amber-700' }, safety: { icon: '🚢', bg: 'bg-blue-50 border-blue-200', text: 'text-blue-700' }, regulatory: { icon: '📋', bg: 'bg-indigo-50 border-indigo-200', text: 'text-indigo-700' }, general: { icon: '📡', bg: 'bg-slate-50 border-slate-200', text: 'text-slate-600' } };
-                  return filtered.slice(0, 20).map(sig => {
-                    const style = CS[sig.category] || CS.general;
-                    const age = Date.now() - new Date(sig.publishedAt).getTime();
-                    const ageLabel = age < 3600000 ? `${Math.floor(age / 60000)}m ago` : age < 86400000 ? `${Math.floor(age / 3600000)}h ago` : `${Math.floor(age / 86400000)}d ago`;
-                    return (
-                      <a key={sig.id} href={sig.url} target="_blank" rel="noopener noreferrer" className={`block rounded-md border p-2.5 hover:shadow-sm transition-all ${style.bg}`}>
-                        <div className="flex items-start gap-2">
-                          <span className="text-sm flex-shrink-0 mt-0.5">{style.icon}</span>
-                          <div className="min-w-0 flex-1">
-                            <div className={`text-sm font-medium leading-snug ${style.text}`}>{sig.title}</div>
-                            <div className="text-[11px] text-slate-500 mt-0.5 line-clamp-2">{sig.summary}</div>
-                            <div className="flex items-center gap-2 mt-1 text-[10px] text-slate-400">
-                              <span className="font-medium">{sig.sourceLabel}</span><span>·</span><span>{ageLabel}</span>
-                              {sig.state && (<><span>·</span><span className="px-1 py-0.5 rounded bg-white/60 font-medium">{sig.state}</span></>)}
-                              {sig.pearlRelevant && (<span className="px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">PEARL</span>)}
-                            </div>
-                          </div>
-                        </div>
-                      </a>
-                    );
-                  });
-                })()}
-              </div>
-              <div className="flex items-center gap-1.5 pt-2 mt-2 border-t border-slate-100 text-[10px] text-slate-400">
-                <Info size={10} /><span>Signals are metadata only — click to view authoritative source. Not all feeds update in real-time.</span>
-              </div>
-            </div>
-          )}
-        </div>
 
         {/* ── GRANT OPPORTUNITIES — always at bottom ── */}
         {activeDetailId && displayData && regionMockData && (
