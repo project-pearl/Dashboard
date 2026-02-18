@@ -957,22 +957,6 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeDetailId, scopedRegionData]);
 
-  // Fetch state summary
-  useEffect(() => {
-    if (stateSummaryCache[stateAbbr]) return;
-    setStateSummaryCache(prev => ({ ...prev, [stateAbbr]: { loading: true, impairedPct: 0, totalAssessed: 0 } }));
-    fetch(`/api/water-data?action=attains-state-summary&statecode=${stateAbbr}`)
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (!data) return;
-        setStateSummaryCache(prev => ({
-          ...prev,
-          [stateAbbr]: { loading: false, impairedPct: data.impairedPct ?? 0, totalAssessed: data.totalAssessed ?? 0 },
-        }));
-      })
-      .catch(() => setStateSummaryCache(prev => ({ ...prev, [stateAbbr]: { ...prev[stateAbbr], loading: false } })));
-  }, [stateAbbr, stateSummaryCache]);
-
   // ── Filtering & sorting ──
   const [searchQuery, setSearchQuery] = useState('');
   const [filterLevel, setFilterLevel] = useState<'all' | 'high' | 'medium' | 'low' | 'impaired' | 'monitored' | 'primary'>('all');

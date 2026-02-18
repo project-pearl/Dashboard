@@ -426,6 +426,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
         const r = await fetch('/api/water-data?action=attains-national-cache');
         if (!r.ok) return;
         const json = await r.json();
+        console.log('[ATTAINS Cache]', { loaded: !!json, stateCount: Object.keys(json?.states || {}).length });
         const stateData = json.states?.[stateAbbr];
         if (!stateData || cancelled) return;
         const waterbodies = (stateData.waterbodies || []).map((wb: any) => ({
@@ -586,26 +587,6 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
       .catch(() => setEjCache(prev => ({ ...prev, [activeDetailId]: { ejIndex: null, loading: false, error: 'failed' } })));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeDetailId, regionData]);
-
-  // Fetch state summary
-  useEffect(() => {
-    if (stateSummaryCache[stateAbbr]) return;
-    setStateSummaryCache(prev => ({ ...prev, [stateAbbr]: { loading: true, impairedPct: 0, totalAssessed: 0 } }));
-    fetch(`/api/water-data?action=attains-state-summary&statecode=${stateAbbr}`)
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (!data) {
-          setStateSummaryCache(prev => ({ ...prev, [stateAbbr]: { loading: false, impairedPct: 0, totalAssessed: 0 } }));
-          return;
-        }
-        setStateSummaryCache(prev => ({
-          ...prev,
-          [stateAbbr]: { loading: false, impairedPct: data.impairedPct ?? 0, totalAssessed: data.totalAssessed ?? 0 },
-        }));
-      })
-      .catch(() => setStateSummaryCache(prev => ({ ...prev, [stateAbbr]: { ...prev[stateAbbr], loading: false } })));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stateAbbr]);
 
   // ── Filtering & sorting ──
   const [searchQuery, setSearchQuery] = useState('');

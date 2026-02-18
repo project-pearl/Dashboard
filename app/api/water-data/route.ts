@@ -948,32 +948,6 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ source: 'attains', endpoint: 'assessments', data });
       }
 
-      // State-level impairment summary
-      // Example: ?action=attains-state-summary&statecode=CA
-      case 'attains-state-summary': {
-        const stateCode = (sp.get('statecode') || '').toUpperCase();
-        const STATE_ORG: Record<string, string> = {
-          AL: 'ADEM', AK: '21AKAL', AZ: 'AZDEQ', AR: 'ARDEQ', CA: 'SWRCB', CO: 'CDPHE',
-          CT: 'CT_DEP', DE: 'DNRECWQ', DC: 'DOEE', FL: 'FLASRCE', GA: 'GAEPD', HI: 'HI_DOH',
-          ID: 'IDEQ', IL: 'IL_EPA', IN: 'IDEM', IA: 'IADNR', KS: 'KDHE', KY: 'KDOW',
-          LA: 'LADEQ', ME: 'MEDEP', MD: 'MDDNR', MA: 'MADEP', MI: 'MIDEQ', MN: 'MNPCA',
-          MS: 'MSDEQ', MO: 'MDNR', MT: 'MTDEQ', NE: 'NDEQ', NV: 'NVDEP', NH: 'NHDES',
-          NJ: 'NJDEP', NM: 'NMED', NY: 'NYDEC', NC: 'NC_DEQD', ND: 'NDDH', OH: 'OHEPAS',
-          OK: 'OWRB', OR: 'ODEQ', PA: 'PADEP', RI: 'RIDEM', SC: 'SCDHEC', SD: 'SDDENR',
-          TN: 'TDEC', TX: 'TCEQMAIN', UT: 'UTAHDWQ', VT: 'VTANR', VA: 'VADEQ',
-          WA: 'WAECY', WV: 'WVDEP', WI: 'WIDNR', WY: 'WYDEQ',
-        };
-        const orgId = sp.get('organizationId') || STATE_ORG[stateCode] || '';
-        if (!orgId) {
-          return NextResponse.json({ error: 'Provide statecode or organizationId' }, { status: 400 });
-        }
-        const data = await attainsFetch('stateSummary', {
-          organizationId: orgId,
-          reportingCycle: sp.get('reportingCycle') || '',
-        });
-        return NextResponse.json({ source: 'attains', endpoint: 'stateSummary', state: stateCode, data });
-      }
-
       // TMDL/actions lookup
       // Example: ?action=attains-actions&statecode=MD&type=TMDL
       case 'attains-actions': {
@@ -1719,7 +1693,7 @@ export async function GET(request: NextRequest) {
               usgsRealtime: ['usgs-iv', 'usgs-sites', 'usgs-site-iv', 'usgs-state-discovery'],
               usgsSamples: ['usgs-samples', 'usgs-samples-summary'],
               usgsDaily: ['usgs-daily', 'usgs-locations'],
-              attains: ['attains-assessments', 'attains-state-summary', 'attains-actions', 'attains-impaired'],
+              attains: ['attains-assessments', 'attains-actions', 'attains-impaired'],
               echo: ['echo-facilities'],
               ejscreen: ['ejscreen'],
               erddap: ['erddap-latest', 'erddap-range', 'erddap-stations'],

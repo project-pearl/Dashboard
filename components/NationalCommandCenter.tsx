@@ -1057,41 +1057,6 @@ export function NationalCommandCenter(props: Props) {
       });
   }, [activeDetailId, regionData]);
 
-  // Fetch ATTAINS state summaries on mount (staggered to avoid rate limiting)
-  useEffect(() => {
-    const uniqueStates = [...new Set(regionData.map(r => r.state))];
-    let delay = 0;
-    for (const st of uniqueStates) {
-      if (stateSummaryCache[st]) continue;
-      setTimeout(() => {
-        setStateSummaryCache(prev => ({ ...prev, [st]: { totalAssessed: 0, totalImpaired: 0, impairedPct: 0, loading: true } }));
-        fetch(`/api/water-data?action=attains-state-summary&statecode=${st}`)
-          .then(r => r.json())
-          .then(json => {
-            const summary = json?.data;
-            // Parse state summary to get impairment percentage
-            const cycles = summary?.reportingCycles || [];
-            const latest = cycles[0] || {};
-            const waterTypes = latest?.waterTypes || [];
-            let totalAssessed = 0, totalImpaired = 0;
-            for (const wt of waterTypes) {
-              const uses = wt?.useAttainments || [];
-              for (const u of uses) {
-                totalAssessed += (u?.fullySupporting || 0) + (u?.notSupporting || 0);
-                totalImpaired += (u?.notSupporting || 0);
-              }
-            }
-            const impairedPct = totalAssessed > 0 ? Math.round((totalImpaired / totalAssessed) * 100) : 0;
-            setStateSummaryCache(prev => ({ ...prev, [st]: { totalAssessed, totalImpaired, impairedPct, loading: false } }));
-          })
-          .catch(() => {
-            setStateSummaryCache(prev => ({ ...prev, [st]: { totalAssessed: 0, totalImpaired: 0, impairedPct: 0, loading: false } }));
-          });
-      }, delay);
-      delay += 200; // Stagger 200ms between state requests
-    }
-  }, [regionData]);
-
   // Handle region click — Federal stays in NCC with detail panel, others navigate out
   const handleRegionClick = (regionId: string) => {
     // Always show inline detail panel — works for all roles
