@@ -397,7 +397,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
       {/* ═══ CORAL REEF IMAGE ═══ */}
       <section className="relative">
         <div className="relative w-full h-[400px] sm:h-[500px]">
-          <Image src="/Coral Reef.JPG" alt="Coral reef restoration — the next chapter" fill className="object-cover" />
+          <Image src="/coral-reef.jpg" alt="Coral reef restoration — the next chapter" fill className="object-cover" />
         </div>
         <div className="absolute bottom-6 left-6 sm:bottom-8 sm:left-8">
           <span className="inline-block px-4 py-2 bg-white/90 backdrop-blur-sm rounded-full text-sm font-semibold text-slate-800 shadow-lg">

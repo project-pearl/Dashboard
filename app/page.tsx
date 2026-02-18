@@ -960,6 +960,11 @@ export default function Home() {
                 if (value === 'Federal') { setShowNationalView(true); setShowStatewideView(false); }
                 if (value === 'State') { setShowNationalView(false); setShowStatewideView(true); }
                 if (value === 'MS4') { setShowNationalView(false); setShowStatewideView(false); }
+                if (value === 'Corporate') { setShowNationalView(false); setShowStatewideView(false); }
+                if (value === 'K12') { setShowNationalView(false); setShowStatewideView(false); }
+                if (value === 'College') { setShowNationalView(false); setShowStatewideView(false); }
+                if (value === 'Researcher') { setShowNationalView(false); setShowStatewideView(false); }
+                if (value === 'NGO') { setShowNationalView(false); setShowStatewideView(false); }
                 if (!['Federal', 'State'].includes(value)) { setShowNationalView(false); setShowStatewideView(false); }
               }}>
                 <SelectTrigger className="w-[220px] h-8 text-sm border-amber-300 bg-white">
