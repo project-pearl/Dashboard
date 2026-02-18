@@ -214,13 +214,13 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
             </div>
 
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-[1.05] tracking-tight" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-              The surface water<br />intelligence platform
+              America&#39;s surface water<br />intelligence platform
             </h1>
 
             <p className="mt-6 text-lg sm:text-xl text-slate-300 leading-relaxed max-w-2xl font-light">
-              Every river, lake, estuary, and coastline in the United States &mdash; monitored, analyzed,
-              and made actionable. One platform connecting federal data, continuous sensors,
-              and nature-based treatment into water quality intelligence that drives decisions.
+              Every river, lake, estuary, and coastline &mdash; continuously monitored, intelligently
+              analyzed, and transformed into decision-ready intelligence. One platform connecting
+              federal datasets, live sensors, and nature-based treatment to protect water resources at national scale.
             </p>
 
             <div className="mt-10 flex flex-wrap gap-4">
