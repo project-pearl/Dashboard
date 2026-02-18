@@ -1345,7 +1345,7 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
 
                       // ─── Title ───
                       pdf.addTitle('ESG Summary Report');
-                      pdf.addText(clean(`${wbName}, ${stateName} -- ${ms4Jurisdiction || 'MS4 Jurisdiction'}`), { bold: true, fontSize: 12 });
+                      pdf.addText(clean(((((`${wbName}, ${stateName} -- ${ms4Jurisdiction || 'MS4 Jurisdiction'}`), { bold: true, fontSize: 12 });
                       pdf.addText(`Generated ${dateStr}`, { fontSize: 9 });
                       pdf.addSpacer(5);
 
@@ -2390,7 +2390,7 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
 
                               // ─── Title ───
                               pdf.addTitle('PEARL Deployment Plan');
-                              pdf.addText(clean(`${regionName}, ${stateName}`), { bold: true, fontSize: 12 });
+                              pdf.addText(clean(((((`${regionName}, ${stateName}`), { bold: true, fontSize: 12 });
                               pdf.addText(`Generated ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, { fontSize: 9 });
                               pdf.addSpacer(5);
 
@@ -2399,20 +2399,20 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
                               pdf.addDivider();
 
                               pdf.addText(`SITE SEVERITY: ${siteSeverityLabel} (${siteSeverityScore}/100)`, { bold: true });
-                              pdf.addText(clean(`Assessment based on ${thresholdSource}: DO (${doSeverity}), Bloom/Nutrients (${bloomSeverity !== 'unknown' ? bloomSeverity : nutrientSeverity}), Turbidity (${turbiditySeverity}), Impairment (${attainsCategory || 'N/A'}).`), { indent: 5, fontSize: 9 });
+                              pdf.addText(clean(((((`Assessment based on ${thresholdSource}: DO (${doSeverity}), Bloom/Nutrients (${bloomSeverity !== 'unknown' ? bloomSeverity : nutrientSeverity}), Turbidity (${turbiditySeverity}), Impairment (${attainsCategory || 'N/A'}).`), { indent: 5, fontSize: 9 });
                               pdf.addSpacer(3);
 
                               pdf.addText('SITUATION', { bold: true });
-                              pdf.addText(clean(`${regionName} is ${isCat5 ? 'Category 5 impaired' : attainsCategory.includes('4') ? 'Category 4 impaired' : isImpaired ? 'impaired' : 'under monitoring'}${attainsCauses.length > 0 ? ` for ${attainsCauses.slice(0, 3).join(', ').toLowerCase()}` : ''}.`), { indent: 5 });
-                              if (dataAgeDays !== null) pdf.addText(clean(`Most recent data is ${dataAgeDays} days old. Confidence: ${dataAgeDays > 90 ? 'LOW' : dataAgeDays > 30 ? 'MODERATE' : 'HIGH'}.`), { indent: 5 });
-                              pdf.addText(clean(`TMDL Status: ${tmdlStatus === 'needed' ? 'No approved TMDL in place' : tmdlStatus === 'completed' ? 'Approved TMDL exists' : tmdlStatus === 'alternative' ? 'Alternative controls in place' : 'Not applicable'}.`), { indent: 5 });
+                              pdf.addText(clean(((((`${regionName} is ${isCat5 ? 'Category 5 impaired' : attainsCategory.includes('4') ? 'Category 4 impaired' : isImpaired ? 'impaired' : 'under monitoring'}${attainsCauses.length > 0 ? ` for ${attainsCauses.slice(0, 3).join(', ').toLowerCase()}` : ''}.`), { indent: 5 });
+                              if (dataAgeDays !== null) pdf.addText(clean(((((`Most recent data is ${dataAgeDays} days old. Confidence: ${dataAgeDays > 90 ? 'LOW' : dataAgeDays > 30 ? 'MODERATE' : 'HIGH'}.`), { indent: 5 });
+                              pdf.addText(clean(((((`TMDL Status: ${tmdlStatus === 'needed' ? 'No approved TMDL in place' : tmdlStatus === 'completed' ? 'Approved TMDL exists' : tmdlStatus === 'alternative' ? 'Alternative controls in place' : 'Not applicable'}.`), { indent: 5 });
                               pdf.addSpacer(3);
 
                               pdf.addText('TREATMENT PRIORITIES', { bold: true });
                               if (treatmentPriorities.length > 0) {
                                 for (const tp of treatmentPriorities.slice(0, 4)) {
-                                  pdf.addText(clean(`- [${(tp as any).urgency.toUpperCase()}] ${(tp as any).driver}`), { indent: 5 });
-                                  pdf.addText(clean(`  -> ${(tp as any).action}`), { indent: 10, fontSize: 9 });
+                                  pdf.addText(clean(((((`- [${(tp as any).urgency.toUpperCase()}] ${(tp as any).driver}`), { indent: 5 });
+                                  pdf.addText(clean(((((`  -> ${(tp as any).action}`), { indent: 10, fontSize: 9 });
                                 }
                               } else {
                                 if (hasBacteria) pdf.addText('- Ongoing public health risk from pathogens.', { indent: 5 });
@@ -2423,7 +2423,7 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
                               pdf.addSpacer(3);
 
                               pdf.addText('RECOMMENDED ACTION', { bold: true });
-                              pdf.addText(clean(`Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} unit${phase1Units > 1 ? 's' : ''}, ${phase1GPM} GPM)` : `${totalUnits} PEARL unit${totalUnits > 1 ? 's' : ''}`} at ${regionName} and begin continuous monitoring within 30 days.`), { indent: 5, bold: true });
+                              pdf.addText(clean(((((`Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} unit${phase1Units > 1 ? 's' : ''}, ${phase1GPM} GPM)` : `${totalUnits} PEARL unit${totalUnits > 1 ? 's' : ''}`} at ${regionName} and begin continuous monitoring within 30 days.`), { indent: 5, bold: true });
                               pdf.addText('Typical deployment: 30-60 days. Pilot generates continuous data and measurable reductions within the first operating cycle.', { indent: 5, fontSize: 9 });
                               pdf.addSpacer(5);
 
@@ -2474,8 +2474,8 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
                               pdf.addSubtitle('Why PEARL at This Site');
                               pdf.addDivider();
                               for (const b of whyBullets) {
-                                pdf.addText(clean(`- ${b.problem}`), { indent: 5, bold: true });
-                                pdf.addText(clean(`  -> ${b.solution}.`), { indent: 10 });
+                                pdf.addText(clean(((((`- ${b.problem}`), { indent: 5, bold: true });
+                                pdf.addText(clean(((((`  -> ${b.solution}.`), { indent: 10 });
                               }
                               pdf.addSpacer(3);
 
@@ -2516,9 +2516,9 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
                               );
                               pdf.addSpacer(2);
                               pdf.addText('SIZING METHODOLOGY', { bold: true, fontSize: 9 });
-                              pdf.addText(clean(`Site severity score derived from ${thresholdSource}. Thresholds: DO criteria (${doStressed} mg/L avg, ${doCritical} mg/L min), chlorophyll bloom thresholds (${chlBloom}/${chlSignificant}/${chlSevere} ug/L), turbidity ${isMD ? 'SAV' : 'habitat'} threshold (${turbElevated} FNU), and EPA ATTAINS impairment category. Composite score weighted: DO 25%, Bloom/Nutrients 25%, Turbidity 15%, Impairment 20%, Monitoring Gap 15%. Severity floor: impaired + >1yr data gap = minimum DEGRADED; Cat 5 + >180d gap = near-CRITICAL. CRITICAL (>=75): 3 quads. DEGRADED (>=50): 2 quads. STRESSED (>=25): 1 quad. Large waterbodies (>500 acres) add scale modifier.`), { indent: 5, fontSize: 8 });
+                              pdf.addText(clean(((((`Site severity score derived from ${thresholdSource}. Thresholds: DO criteria (${doStressed} mg/L avg, ${doCritical} mg/L min), chlorophyll bloom thresholds (${chlBloom}/${chlSignificant}/${chlSevere} ug/L), turbidity ${isMD ? 'SAV' : 'habitat'} threshold (${turbElevated} FNU), and EPA ATTAINS impairment category. Composite score weighted: DO 25%, Bloom/Nutrients 25%, Turbidity 15%, Impairment 20%, Monitoring Gap 15%. Severity floor: impaired + >1yr data gap = minimum DEGRADED; Cat 5 + >180d gap = near-CRITICAL. CRITICAL (>=75): 3 quads. DEGRADED (>=50): 2 quads. STRESSED (>=25): 1 quad. Large waterbodies (>500 acres) add scale modifier.`), { indent: 5, fontSize: 8 });
                               if (isPhasedDeployment) {
-                                pdf.addText(clean(`Phased deployment recommended. Deploy Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} units) at highest-priority inflow zone(s), then scale to full ${totalQuads}-quad build based on 90 days of monitoring data.`), { indent: 5, fontSize: 9 });
+                                pdf.addText(clean(((((`Phased deployment recommended. Deploy Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} units) at highest-priority inflow zone(s), then scale to full ${totalQuads}-quad build based on 90 days of monitoring data.`), { indent: 5, fontSize: 9 });
                               }
                               pdf.addSpacer(3);
 
@@ -2551,8 +2551,8 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
                                   : `#1 priority treatment zone. ${pdfMonitoringNote}.`;
 
                                 pdf.addText(`PHASE 1: ${pdfP1Mission.toUpperCase()} -- ${phase1Quads} quad${phase1Quads > 1 ? 's' : ''} (${phase1Units} units, ${phase1GPM} GPM) -- $${phase1AnnualCost.toLocaleString()}/yr`, { bold: true, fontSize: 9 });
-                                pdf.addText(clean(`Placement: ${pdfP1Placement}`), { indent: 5, fontSize: 9 });
-                                pdf.addText(clean(`Justification: ${pdfP1Why}`), { indent: 5, fontSize: 8 });
+                                pdf.addText(clean(((((`Placement: ${pdfP1Placement}`), { indent: 5, fontSize: 9 });
+                                pdf.addText(clean(((((`Justification: ${pdfP1Why}`), { indent: 5, fontSize: 8 });
                                 pdf.addText('Trigger: Immediate -- deploy within 30 days of site assessment', { indent: 5, fontSize: 8 });
                                 pdf.addSpacer(2);
 
@@ -2584,8 +2584,8 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
                                     : `Phase 1 data identifies the second-highest treatment priority. ${pdfMonitoringNote}.`;
 
                                   pdf.addText(`PHASE 2: ${pdfP2Mission.toUpperCase()} -- ${pdfP2Quads} quad${pdfP2Quads > 1 ? 's' : ''} (${pdfP2Units} units, ${pdfP2GPM} GPM) -- $${pdfP2Cost.toLocaleString()}/yr`, { bold: true, fontSize: 9 });
-                                  pdf.addText(clean(`Placement: ${pdfP2Placement}`), { indent: 5, fontSize: 9 });
-                                  pdf.addText(clean(`Justification: ${pdfP2Why}`), { indent: 5, fontSize: 8 });
+                                  pdf.addText(clean(((((`Placement: ${pdfP2Placement}`), { indent: 5, fontSize: 9 });
+                                  pdf.addText(clean(((((`Justification: ${pdfP2Why}`), { indent: 5, fontSize: 8 });
                                   pdf.addText('Trigger: After 90 days -- Phase 1 data confirms #2 priority zone and optimal placement', { indent: 5, fontSize: 8 });
                                   pdf.addSpacer(2);
                                 }
@@ -2615,8 +2615,8 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
 
                                     const pdfP3Label = totalQuads > 3 ? `PHASE 3 (${pdfP3RemainQuads}Q)` : 'PHASE 3';
                                     pdf.addText(`${pdfP3Label}: ${pdfP3Mission.toUpperCase()} -- ${pdfP3RemainQuads} quad${pdfP3RemainQuads > 1 ? 's' : ''} (${pdfP3Units} units, ${pdfP3GPM} GPM) -- $${pdfP3Cost.toLocaleString()}/yr`, { bold: true, fontSize: 9 });
-                                    pdf.addText(clean(`Placement: ${pdfP3Placement}`), { indent: 5, fontSize: 9 });
-                                    pdf.addText(clean(`Justification: ${pdfP3Why}`), { indent: 5, fontSize: 8 });
+                                    pdf.addText(clean(((((`Placement: ${pdfP3Placement}`), { indent: 5, fontSize: 9 });
+                                    pdf.addText(clean(((((`Justification: ${pdfP3Why}`), { indent: 5, fontSize: 8 });
                                     pdf.addText('Trigger: After 180 days -- Phase 1+2 data identifies #3 priority zone and confirms full-build need', { indent: 5, fontSize: 8 });
                                     pdf.addSpacer(2);
                                   }
@@ -2665,10 +2665,10 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
                                 const activeItems = cat.modules.filter((m: any) => m.status === 'warranted' || m.status === 'recommended');
                                 const coItems = cat.modules.filter((m: any) => m.status === 'co-benefit');
                                 for (const m of activeItems) {
-                                  pdf.addText(clean(`- [${m.status.toUpperCase()}] ${m.label} -- ${m.detail}`), { indent: 5, fontSize: 9 });
+                                  pdf.addText(clean(((((`- [${m.status.toUpperCase()}] ${m.label} -- ${m.detail}`), { indent: 5, fontSize: 9 });
                                 }
                                 if (coItems.length > 0) {
-                                  pdf.addText(clean(`Co-benefits: ${coItems.map((m: any) => m.label).join(', ')}`), { indent: 5, fontSize: 8 });
+                                  pdf.addText(clean(((((`Co-benefits: ${coItems.map((m: any) => m.label).join(', ')}`), { indent: 5, fontSize: 8 });
                                 }
                                 pdf.addSpacer(3);
                               }
@@ -2676,11 +2676,11 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
                               // ─── Recommended Next Steps ───
                               pdf.addSubtitle('Recommended Next Steps');
                               pdf.addDivider();
-                              pdf.addText(clean(`1. Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} PEARL units, ${phase1GPM} GPM) at highest-priority inflow zone${phase1Quads > 1 ? 's' : ''}` : `${totalUnits} PEARL unit${totalUnits > 1 ? 's' : ''}`} within 30 days.`), { indent: 5 });
+                              pdf.addText(clean(((((`1. Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} PEARL units, ${phase1GPM} GPM) at highest-priority inflow zone${phase1Quads > 1 ? 's' : ''}` : `${totalUnits} PEARL unit${totalUnits > 1 ? 's' : ''}`} within 30 days.`), { indent: 5 });
                               pdf.addText('2. Begin continuous water quality monitoring (15-min intervals, telemetered).', { indent: 5 });
                               pdf.addText('3. Use 90-day baseline dataset to calibrate treatment priorities and validate severity assessment.', { indent: 5 });
                               if (isPhasedDeployment) {
-                                pdf.addText(clean(`4. Scale to full ${totalQuads}-quad (${totalUnits}-unit) deployment based on Phase 1 field data.`), { indent: 5 });
+                                pdf.addText(clean(((((`4. Scale to full ${totalQuads}-quad (${totalUnits}-unit) deployment based on Phase 1 field data.`), { indent: 5 });
                                 pdf.addText('5. Coordinate with state agency on compliance pathway and grant eligibility.', { indent: 5 });
                                 pdf.addText('6. Implement supporting BMPs and nature-based solutions per this restoration plan.', { indent: 5 });
                               } else {
@@ -3138,8 +3138,8 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
                           const clean = (s: string) => s.replace(/[\u{1F000}-\u{1FFFF}]/gu, '').replace(/[\u{2600}-\u{27BF}]/gu, '').replace(/[\u{FE00}-\u{FE0F}]/gu, '').replace(/[\u{200D}]/gu, '').replace(/[\u{E0020}-\u{E007F}]/gu, '').replace(/\u2014/g, '--').replace(/\u2013/g, '-').replace(/\u2019/g, "'").replace(/\u2018/g, "'").replace(/\u201C/g, '"').replace(/\u201D/g, '"').replace(/[^\x00-\x7F]/g, '').replace(/\s+/g, ' ').trim();
                           const event = selectedStormEvent;
                           pdf.addTitle('Storm Event BMP Performance Report');
-                          pdf.addText(clean(`${wbName} -- ${jurisdictionMeta?.name || stateName}`), { bold: true, fontSize: 12 });
-                          pdf.addText(clean(`${event.name} | ${event.date?.toLocaleDateString?.() || 'N/A'} | ${event.rainfall} | ${event.duration}`), { fontSize: 9 });
+                          pdf.addText(clean(((((`${wbName} -- ${jurisdictionMeta?.name || stateName}`), { bold: true, fontSize: 12 });
+                          pdf.addText(clean(((((`${event.name} | ${event.date?.toLocaleDateString?.() || 'N/A'} | ${event.rainfall} | ${event.duration}`), { fontSize: 9 });
                           if (jurisdictionMeta?.permit) pdf.addText(`NPDES Permit: ${jurisdictionMeta.permit}`, { fontSize: 9 });
                           pdf.addSpacer(5);
                           pdf.addSubtitle('Paired Sample Analysis');
