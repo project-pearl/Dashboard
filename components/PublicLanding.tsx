@@ -425,7 +425,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <button onClick={onSignIn} className="group inline-flex items-center gap-3 px-8 py-4 text-base font-semibold text-white bg-slate-900 rounded-full hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/20">
-              Create Free Account <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              Request Access <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </button>
             <a href="mailto:doug@project-pearl.org?subject=PEARL%20Platform%20Inquiry" className="inline-flex items-center gap-2 px-8 py-4 text-base font-medium text-slate-700 border-2 border-slate-200 rounded-full hover:border-slate-300 hover:bg-white transition-all">
               Talk to Our Team

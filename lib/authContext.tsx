@@ -45,6 +45,7 @@ interface SignupParams {
   state?: string;
   requestedJurisdiction?: string;
   inviteToken?: string;
+  useCase?: string;
 }
 
 interface CreateInviteParams {
@@ -188,7 +189,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signup = useCallback(async (params: SignupParams) => {
     setError(null);
-    const { email, password, name, role, organization, state, requestedJurisdiction } = params;
+    const { email, password, name, role, organization, state, requestedJurisdiction, useCase } = params;
 
     const { data, error: authError } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),
@@ -204,7 +205,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (data.user) {
-      const status: AccountStatus = isOperatorRole(role) ? 'pending' : 'active';
+      // All new accounts require admin approval
+      const status: AccountStatus = 'pending';
       const isAdmin = checkIsAdmin(email);
 
       await supabase
@@ -217,16 +219,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ms4_jurisdiction: requestedJurisdiction || '',
           status,
           is_admin: isAdmin,
+          use_case: useCase || '',
         })
         .eq('id', data.user.id);
 
       const profile = await fetchProfile(data.user.id);
       const pearlUser = profile ? profileToPearlUser(profile, data.user) : null;
 
-      if (pearlUser && pearlUser.status === 'active') {
-        setUser(pearlUser);
-      }
-
+      // Do not auto-login — all accounts start as pending
       return { success: true, user: pearlUser || undefined };
     }
 

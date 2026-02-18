@@ -6,30 +6,54 @@ import { useAuth } from '@/lib/authContext';
 import type { UserRole } from '@/lib/authTypes';
 import Image from 'next/image';
 
-const ROLES: { value: UserRole; label: string; desc: string }[] = [
-  { value: 'K12',        label: 'K-12 Education',  desc: 'STEM curriculum' },
-  { value: 'MS4',        label: 'MS4 Operator',    desc: 'Municipal stormwater permits' },
-  { value: 'State',      label: 'State Agency',    desc: 'State regulatory compliance' },
-  { value: 'Federal',    label: 'Federal Agency',  desc: 'EPA oversight & national metrics' },
-  { value: 'Corporate',  label: 'Corporate / ESG', desc: 'ESG & environmental impact' },
-  { value: 'Researcher', label: 'Researcher',      desc: 'Data analysis & publications' },
-  { value: 'College',    label: 'University',      desc: 'Academic programs & field studies' },
-  { value: 'NGO',        label: 'NGO',             desc: 'Conservation & advocacy' },
+const ROLES: { value: UserRole; label: string }[] = [
+  { value: 'MS4',        label: 'MS4 Operator' },
+  { value: 'State',      label: 'State Agency' },
+  { value: 'Federal',    label: 'Federal' },
+  { value: 'Corporate',  label: 'Corporate / ESG' },
+  { value: 'Researcher', label: 'Researcher' },
+  { value: 'College',    label: 'University' },
+  { value: 'K12',        label: 'K-12 Educator' },
+  { value: 'NGO',        label: 'NGO / Conservation' },
 ];
+
+const US_STATES: { abbr: string; name: string }[] = [
+  { abbr: 'AL', name: 'Alabama' }, { abbr: 'AK', name: 'Alaska' }, { abbr: 'AZ', name: 'Arizona' },
+  { abbr: 'AR', name: 'Arkansas' }, { abbr: 'CA', name: 'California' }, { abbr: 'CO', name: 'Colorado' },
+  { abbr: 'CT', name: 'Connecticut' }, { abbr: 'DE', name: 'Delaware' }, { abbr: 'DC', name: 'District of Columbia' },
+  { abbr: 'FL', name: 'Florida' }, { abbr: 'GA', name: 'Georgia' }, { abbr: 'HI', name: 'Hawaii' },
+  { abbr: 'ID', name: 'Idaho' }, { abbr: 'IL', name: 'Illinois' }, { abbr: 'IN', name: 'Indiana' },
+  { abbr: 'IA', name: 'Iowa' }, { abbr: 'KS', name: 'Kansas' }, { abbr: 'KY', name: 'Kentucky' },
+  { abbr: 'LA', name: 'Louisiana' }, { abbr: 'ME', name: 'Maine' }, { abbr: 'MD', name: 'Maryland' },
+  { abbr: 'MA', name: 'Massachusetts' }, { abbr: 'MI', name: 'Michigan' }, { abbr: 'MN', name: 'Minnesota' },
+  { abbr: 'MS', name: 'Mississippi' }, { abbr: 'MO', name: 'Missouri' }, { abbr: 'MT', name: 'Montana' },
+  { abbr: 'NE', name: 'Nebraska' }, { abbr: 'NV', name: 'Nevada' }, { abbr: 'NH', name: 'New Hampshire' },
+  { abbr: 'NJ', name: 'New Jersey' }, { abbr: 'NM', name: 'New Mexico' }, { abbr: 'NY', name: 'New York' },
+  { abbr: 'NC', name: 'North Carolina' }, { abbr: 'ND', name: 'North Dakota' }, { abbr: 'OH', name: 'Ohio' },
+  { abbr: 'OK', name: 'Oklahoma' }, { abbr: 'OR', name: 'Oregon' }, { abbr: 'PA', name: 'Pennsylvania' },
+  { abbr: 'RI', name: 'Rhode Island' }, { abbr: 'SC', name: 'South Carolina' }, { abbr: 'SD', name: 'South Dakota' },
+  { abbr: 'TN', name: 'Tennessee' }, { abbr: 'TX', name: 'Texas' }, { abbr: 'UT', name: 'Utah' },
+  { abbr: 'VT', name: 'Vermont' }, { abbr: 'VA', name: 'Virginia' }, { abbr: 'WA', name: 'Washington' },
+  { abbr: 'WV', name: 'West Virginia' }, { abbr: 'WI', name: 'Wisconsin' }, { abbr: 'WY', name: 'Wyoming' },
+];
+
+const inputClass = 'w-full px-4 py-3 bg-white/10 border border-white/15 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-transparent transition-all';
+const selectClass = `${inputClass} [&>option]:bg-slate-900 [&>option]:text-white`;
 
 export default function LoginPage() {
   const router = useRouter();
   const { loginAsync, signup, isAuthenticated, isLoading, loginError, clearError } = useAuth();
 
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const [mode, setMode] = useState<'login' | 'request'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [role, setRole] = useState<UserRole>('K12');
+  const [role, setRole] = useState<UserRole>('MS4');
   const [organization, setOrganization] = useState('');
   const [state, setState] = useState('');
+  const [useCase, setUseCase] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successMsg, setSuccessMsg] = useState('');
+  const [accessRequested, setAccessRequested] = useState(false);
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
@@ -48,20 +72,14 @@ export default function LoginPage() {
     setIsSubmitting(false);
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleRequestAccess = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password.length < 6) return;
     setIsSubmitting(true);
     clearError();
-    setSuccessMsg('');
-    const result = await signup({ email, password, name, role, organization, state });
+    const result = await signup({ email, password, name, role, organization, state, useCase });
     if (result.success) {
-      if (result.user?.status === 'pending') {
-        setSuccessMsg('Account created! An admin will approve your access shortly.');
-      } else {
-        setSuccessMsg('Account created! Check your email to confirm, then sign in.');
-      }
-      setMode('login');
+      setAccessRequested(true);
     }
     setIsSubmitting(false);
   };
@@ -74,31 +92,62 @@ export default function LoginPage() {
     );
   }
 
+  // ── Access Requested success screen ──
+  if (accessRequested) {
+    return (
+      <div className="min-h-screen relative flex items-center justify-center px-4">
+        <div className="fixed inset-0 z-0">
+          <Image src="/underwater.png" alt="" fill className="object-cover" priority />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-900/40 to-cyan-900/20" />
+        </div>
+        <div className="relative z-10 w-full max-w-md py-12">
+          <div className="text-center mb-8">
+            <Image src="/Logo_Pearl_with_reef.jpg" alt="Project PEARL" width={200} height={200} className="mx-auto object-contain drop-shadow-2xl rounded-xl" priority />
+          </div>
+          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-8 shadow-2xl shadow-black/30 text-center">
+            <div className="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-400/40 flex items-center justify-center mx-auto mb-5">
+              <svg className="h-8 w-8 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-white mb-3">Access Requested!</h2>
+            <p className="text-sm text-white/70 leading-relaxed mb-6">
+              We&#39;ll review and activate your account within 24 hours.
+              You&#39;ll receive an email when approved.
+            </p>
+            <div className="bg-white/5 rounded-lg border border-white/10 p-4 mb-6">
+              <div className="text-xs text-white/50 mb-1">Submitted as</div>
+              <div className="text-sm font-semibold text-white">{name}</div>
+              <div className="text-xs text-white/60">{email}</div>
+              <div className="text-xs text-white/40 mt-1">{ROLES.find(r => r.value === role)?.label}{organization ? ` at ${organization}` : ''}</div>
+            </div>
+            <button
+              onClick={() => { setAccessRequested(false); setMode('login'); clearError(); }}
+              className="text-sm font-medium text-cyan-400 hover:text-cyan-300 transition-colors"
+            >
+              Back to Sign In
+            </button>
+          </div>
+          <p className="text-center text-white/25 text-xs mt-8">
+            &copy; {new Date().getFullYear()} Local Seafood Projects Inc. &mdash; Project PEARL
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen relative flex items-center justify-center px-4">
       {/* Underwater background */}
       <div className="fixed inset-0 z-0">
-        <Image
-          src="/underwater.png"
-          alt=""
-          fill
-          className="object-cover"
-          priority
-        />
+        <Image src="/underwater.png" alt="" fill className="object-cover" priority />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-900/40 to-cyan-900/20" />
       </div>
 
       <div className="relative z-10 w-full max-w-md py-12">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Image
-            src="/Logo_Pearl_with_reef.jpg"
-            alt="Project PEARL"
-            width={200}
-            height={200}
-            className="mx-auto object-contain drop-shadow-2xl rounded-xl"
-            priority
-          />
+          <Image src="/Logo_Pearl_with_reef.jpg" alt="Project PEARL" width={200} height={200} className="mx-auto object-contain drop-shadow-2xl rounded-xl" priority />
         </div>
 
         {/* Card — frosted glass */}
@@ -106,7 +155,7 @@ export default function LoginPage() {
           {/* Tab toggle */}
           <div className="flex mb-6 bg-white/10 rounded-lg p-1">
             <button
-              onClick={() => { setMode('login'); clearError(); setSuccessMsg(''); }}
+              onClick={() => { setMode('login'); clearError(); }}
               className={`flex-1 py-2.5 text-sm font-semibold rounded-md transition-all ${
                 mode === 'login'
                   ? 'bg-white/20 text-white shadow-lg shadow-black/10'
@@ -116,22 +165,16 @@ export default function LoginPage() {
               Sign In
             </button>
             <button
-              onClick={() => { setMode('signup'); clearError(); setSuccessMsg(''); }}
+              onClick={() => { setMode('request'); clearError(); }}
               className={`flex-1 py-2.5 text-sm font-semibold rounded-md transition-all ${
-                mode === 'signup'
+                mode === 'request'
                   ? 'bg-white/20 text-white shadow-lg shadow-black/10'
                   : 'text-white/50 hover:text-white/80'
               }`}
             >
-              Create Account
+              Request Access
             </button>
           </div>
-
-          {successMsg && (
-            <div className="mb-4 p-3 bg-emerald-500/20 border border-emerald-400/30 rounded-lg text-emerald-200 text-sm">
-              {successMsg}
-            </div>
-          )}
 
           {loginError && (
             <div className="mb-4 p-3 bg-red-500/20 border border-red-400/30 rounded-lg text-red-200 text-sm">
@@ -148,7 +191,7 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-transparent transition-all"
+                  className={inputClass}
                   placeholder="you@example.com"
                 />
               </div>
@@ -159,7 +202,7 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-transparent transition-all"
+                  className={inputClass}
                   placeholder="••••••••"
                 />
               </div>
@@ -176,72 +219,89 @@ export default function LoginPage() {
               </button>
             </form>
           ) : (
-            <form onSubmit={handleSignup} className="space-y-4">
+            <form onSubmit={handleRequestAccess} className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-1.5">Full Name</label>
+                <label className="block text-sm font-medium text-white/80 mb-1">Full Name</label>
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-transparent transition-all"
+                  className={inputClass}
                   placeholder="Jane Smith"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-1.5">Email</label>
+                <label className="block text-sm font-medium text-white/80 mb-1">Email</label>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-transparent transition-all"
+                  className={inputClass}
                   placeholder="you@example.com"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-1.5">Password</label>
+                <label className="block text-sm font-medium text-white/80 mb-1">Password</label>
                 <input
                   type="password"
                   required
                   minLength={6}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-transparent transition-all"
+                  className={inputClass}
                   placeholder="Min 6 characters"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-1.5">Role</label>
-                <select
-                  value={role}
-                  onChange={e => setRole(e.target.value as UserRole)}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-transparent transition-all [&>option]:bg-slate-900 [&>option]:text-white"
-                >
-                  {ROLES.map(r => (
-                    <option key={r.value} value={r.value}>{r.label} — {r.desc}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-white/80 mb-1.5">Organization (optional)</label>
+                <label className="block text-sm font-medium text-white/80 mb-1">Organization</label>
                 <input
                   type="text"
+                  required
                   value={organization}
                   onChange={e => setOrganization(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-transparent transition-all"
+                  className={inputClass}
                   placeholder="e.g. Anne Arundel County DPW"
                 />
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-white/80 mb-1">Role</label>
+                  <select
+                    value={role}
+                    onChange={e => setRole(e.target.value as UserRole)}
+                    className={selectClass}
+                  >
+                    {ROLES.map(r => (
+                      <option key={r.value} value={r.value}>{r.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-white/80 mb-1">State</label>
+                  <select
+                    value={state}
+                    onChange={e => setState(e.target.value)}
+                    className={selectClass}
+                  >
+                    <option value="">Select state</option>
+                    {US_STATES.map(s => (
+                      <option key={s.abbr} value={s.abbr}>{s.abbr} — {s.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-1.5">State (optional)</label>
-                <input
-                  type="text"
-                  value={state}
-                  onChange={e => setState(e.target.value.toUpperCase().slice(0, 2))}
-                  maxLength={2}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-transparent transition-all"
-                  placeholder="MD"
+                <label className="block text-sm font-medium text-white/80 mb-1">
+                  How will you use PEARL? <span className="text-white/40 font-normal">(optional)</span>
+                </label>
+                <textarea
+                  value={useCase}
+                  onChange={e => setUseCase(e.target.value)}
+                  rows={2}
+                  className={`${inputClass} resize-none`}
+                  placeholder="e.g. MS4 permit compliance reporting, research on urban stormwater..."
                 />
               </div>
               <button
@@ -249,10 +309,10 @@ export default function LoginPage() {
                 disabled={isSubmitting}
                 className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all shadow-lg shadow-cyan-500/20"
               >
-                {isSubmitting ? 'Creating account...' : 'Create Account'}
+                {isSubmitting ? 'Submitting...' : 'Request Access'}
               </button>
               <p className="text-xs text-white/40 text-center">
-                MS4, State, Federal, and Corporate accounts require admin approval.
+                All accounts are reviewed before activation.
               </p>
             </form>
           )}
