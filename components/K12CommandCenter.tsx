@@ -2437,7 +2437,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
         <WaterQualityChallenges context={isTeacher ? 'k12-teacher' : 'k12-student'} />
 
         {/* ── AI INSIGHTS ── */}
-        <AIInsightsEngine role="K12" stateAbbr={stateAbbr} regionData={regionData as any} />
+        <AIInsightsEngine key={stateAbbr} role="K12" stateAbbr={stateAbbr} regionData={regionData as any} />
 
         {/* ── STATEWIDE COMPONENTS — shown when a waterbody is selected AND mock data is available ── */}
         {activeDetailId && displayData && regionMockData && (

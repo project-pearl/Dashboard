@@ -1361,7 +1361,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
         </div>
 
         {/* ── AI INSIGHTS ── */}
-        <AIInsightsEngine role="State" stateAbbr={stateAbbr} regionData={regionData as any} />
+        <AIInsightsEngine key={stateAbbr} role="State" stateAbbr={stateAbbr} regionData={regionData as any} />
 
         {/* ── DETAIL + RESTORATION (full width below map grid) — lens controlled ── */}
         {lens.showDetail && (

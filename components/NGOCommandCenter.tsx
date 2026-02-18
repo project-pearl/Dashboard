@@ -768,7 +768,7 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
         </div>
 
         {/* ── AI INSIGHTS ── */}
-        <AIInsightsEngine role="NGO" stateAbbr={stateAbbr} regionData={regionData as any} />
+        <AIInsightsEngine key={stateAbbr} role="NGO" stateAbbr={stateAbbr} regionData={regionData as any} />
 
         {/* ── WATERSHED HEALTH OVERVIEW — below oyster image ── */}
         {(() => {

@@ -1183,7 +1183,7 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
         </div>
 
         {/* ── AI INSIGHTS ── */}
-        <AIInsightsEngine role="MS4" stateAbbr={stateAbbr} regionData={scopedRegionData as any} />
+        <AIInsightsEngine key={stateAbbr} role="MS4" stateAbbr={stateAbbr} regionData={scopedRegionData as any} />
 
         {/* ── MS4 JURISDICTION SNAPSHOT — compliance-at-a-glance strip ── */}
         {jurisdictionMeta && (() => {

@@ -2502,7 +2502,7 @@ export function NationalCommandCenter(props: Props) {
         </div>
 
         {/* ── AI INSIGHTS ── */}
-        <AIInsightsEngine role="Federal" stateAbbr={selectedState} regionData={selectedStateRegions as any} />
+        <AIInsightsEngine key={selectedState} role="Federal" stateAbbr={selectedState} regionData={selectedStateRegions as any} />
 
         {/* ── MS4 & REGULATORY PROFILE — Full-width bar below map ────── */}
         {(() => {

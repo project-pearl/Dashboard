@@ -1254,7 +1254,7 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
         )}
 
         {/* ── AI INSIGHTS ── */}
-        <AIInsightsEngine role="Corporate" stateAbbr="US" regionData={facilitiesData as any} />
+        <AIInsightsEngine key="US" role="Corporate" stateAbbr="US" regionData={facilitiesData as any} />
 
         {/* ── ENVIRONMENTAL IMPACT SUMMARY ── */}
         {lens.showImpact && (

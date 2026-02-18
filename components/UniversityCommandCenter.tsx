@@ -845,7 +845,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
         })()}
 
         {/* ── AI INSIGHTS ── */}
-        <AIInsightsEngine role={userRole === 'College' ? 'College' : 'Researcher'} stateAbbr={stateAbbr} regionData={regionData as any} />
+        <AIInsightsEngine key={stateAbbr} role={userRole === 'College' ? 'College' : 'Researcher'} stateAbbr={stateAbbr} regionData={regionData as any} />
 
         {/* ── MAIN CONTENT: Map (2/3) + Waterbody List (1/3) ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
