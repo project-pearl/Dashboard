@@ -42,7 +42,7 @@ async function callAnthropic(apiKey: string, systemPrompt: string, userMessage: 
   if (!res.ok) {
     const errBody = await res.text().catch(() => '');
     console.error(`[AI-Insights] Anthropic error ${res.status}: ${errBody.slice(0, 300)}`);
-    throw new Error(`Anthropic API error: ${res.status}`);
+    throw new Error(`Anthropic API error: ${res.status} — ${errBody.slice(0, 200)}`);
   }
 
   const data = await res.json();
