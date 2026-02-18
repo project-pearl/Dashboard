@@ -94,16 +94,13 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <Image
-              src="/Logo_Pearl_as_Headline.JPG"
+              src="/Logo_Pearl_with_reef.jpg"
               alt="Project PEARL"
-              width={200}
-              height={60}
-              className="rounded-lg"
+              width={320}
+              height={320}
+              className="rounded-2xl shadow-lg"
             />
           </div>
-          <p className="text-cyan-400/70 text-sm tracking-wide">
-            Water Quality Monitoring Platform
-          </p>
         </div>
 
         {/* Card */}
