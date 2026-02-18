@@ -21,15 +21,8 @@ import { STATE_AUTHORITIES } from '@/lib/stateWaterData';
 import { useAuth } from '@/lib/authContext';
 import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
 import { MS4FineAvoidanceCalculator } from '@/components/MS4FineAvoidanceCalculator';
-import { BayImpactCounter } from '@/components/BayImpactCounter';
-import { ForecastChart } from '@/components/ForecastChart';
 import { WaterQualityChallenges } from '@/components/WaterQualityChallenges';
 import dynamic from 'next/dynamic';
-
-const PeerBenchmarking = dynamic(
-  () => import('@/components/PeerBenchmarking').then((mod) => mod.PeerBenchmarking),
-  { ssr: false }
-);
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
   { ssr: false }
@@ -607,41 +600,36 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
           </div>
         )}
 
-        {/* ── HERO BANNER ── */}
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between gap-4">
-            {/* Left: Logo + Badge */}
-            <div className="flex items-center gap-3">
-              <div className="relative h-10 w-36 cursor-default select-none" onDoubleClick={() => onToggleDevMode?.()}>
-                <Image src="/Logo_Pearl_as_Headline.JPG" alt="Project Pearl Logo" fill className="object-contain object-left" priority />
-              </div>
-              <div className="h-8 w-px bg-violet-200" />
-              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-100 border border-violet-200">
-                <Microscope className="h-3.5 w-3.5 text-violet-600" />
-                <span className="text-xs font-semibold text-violet-700">Academic Research Hub</span>
-              </div>
+        {/* ── HEADER ── */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="relative h-12 w-40 cursor-default select-none" onDoubleClick={() => onToggleDevMode?.()}>
+              <Image src="/Logo_Pearl_as_Headline.JPG" alt="Project Pearl Logo" fill className="object-contain object-left" priority />
             </div>
-
-            {/* Right: Stats + Role + Account */}
-            <div className="flex items-center gap-3">
-              <div className="hidden md:flex items-center gap-2">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 border border-indigo-100">
-                  <span className="text-sm font-bold text-indigo-700">{regionData.length.toLocaleString()}</span>
-                  <span className="text-[10px] text-indigo-500">Waterbodies</span>
-                </div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-50 border border-violet-100">
-                  <span className="text-sm font-bold text-violet-700">6</span>
-                  <span className="text-[10px] text-violet-500">Federal APIs</span>
-                </div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-100">
-                  <Shield className="h-3 w-3 text-emerald-600" />
-                  <span className="text-[10px] font-semibold text-emerald-700">QAPP-Grade QA/QC</span>
-                </div>
-              </div>
-              <div className="inline-flex items-center h-8 px-3 text-xs font-medium rounded-full border border-violet-200 bg-violet-50 text-violet-700">
-                {userRole === 'College' ? '🎓 Undergrad Research' : '🔬 Principal Investigator'}
-              </div>
-
+            <div>
+              <div className="text-xl font-semibold text-slate-800">Academic Research Hub</div>
+              <div className="text-sm text-slate-600">Multi-source water quality data, analysis tools &amp; publication support</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* Lens Switcher */}
+            <div className="hidden md:flex items-center gap-1 p-1 rounded-full bg-violet-100/60 border border-violet-200">
+              {LENSES.map(lens => (
+                <button
+                  key={lens.id}
+                  onClick={() => setActiveLens(lens.id)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                    activeLens === lens.id
+                      ? 'bg-violet-600 text-white shadow-md'
+                      : 'text-violet-600 hover:bg-violet-200/60'
+                  }`}
+                  title={lens.description}
+                >
+                  {lens.label}
+                </button>
+              ))}
+            </div>
+            {/* Account */}
             {user && (
             <div className="relative">
               <button
@@ -652,7 +640,6 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
                 {user.name || (userRole === 'College' ? 'Undergrad Researcher' : 'Principal Investigator')}
                 <span className="ml-1.5 text-indigo-400">▾</span>
               </button>
-
               {showAccountPanel && (
                 <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowAccountPanel(false)} />
@@ -660,7 +647,6 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
                   className="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg border border-slate-200 shadow-xl z-50 overflow-hidden"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {/* Header */}
                   <div className="px-4 py-3 bg-gradient-to-r from-indigo-50 to-slate-50 border-b border-slate-200">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -672,82 +658,24 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
                           <div className="text-[11px] text-slate-500">{user.email || 'research@project-pearl.org'}</div>
                         </div>
                       </div>
-                      <button onClick={() => setShowAccountPanel(false)} className="text-slate-400 hover:text-slate-600">
-                        <X size={14} />
-                      </button>
+                      <button onClick={() => setShowAccountPanel(false)} className="text-slate-400 hover:text-slate-600"><X size={14} /></button>
                     </div>
                   </div>
-
-                  {/* Account info */}
                   <div className="px-4 py-3 space-y-2 text-xs border-b border-slate-100">
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Role</span>
-                      <span className="font-medium text-slate-700">{user.role || userRole}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500 flex-shrink-0">Organization</span>
-                      <span className="font-medium text-slate-700 text-right">{user.organization || (userRole === 'College' ? `${stateName} University` : `${stateName} Research Institute`)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Access Level</span>
-                      <Badge variant="outline" className="text-[10px] h-5 bg-green-50 border-green-200 text-green-700">Full Access</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Monitoring</span>
-                      <span className="font-medium text-slate-700">{stateName} · {regionData.length.toLocaleString()} waterbodies</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Current View</span>
-                      <span className="font-medium text-indigo-600">{userRole === "College" ? "Undergrad Research" : "Research"}</span>
-                    </div>
+                    <div className="flex justify-between"><span className="text-slate-500">Role</span><span className="font-medium text-slate-700">{user.role || userRole}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500 flex-shrink-0">Organization</span><span className="font-medium text-slate-700 text-right">{user.organization || (userRole === 'College' ? `${stateName} University` : `${stateName} Research Institute`)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500">Monitoring</span><span className="font-medium text-slate-700">{stateName} · {regionData.length.toLocaleString()} waterbodies</span></div>
                   </div>
-
-                  {/* Account actions */}
                   <div className="px-4 py-2.5 space-y-1">
-                    <button
-                      onClick={() => { /* TODO: wire to password change route */ }}
-                      className="w-full text-left px-3 py-2 rounded-md text-xs text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors"
-                    >
-                      <Shield size={13} className="text-slate-400" />
-                      Change Password
+                    <button onClick={() => { setShowAccountPanel(false); logout(); }} className="w-full text-left px-3 py-2 rounded-md text-xs text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors">
+                      <LogOut size={13} />Sign Out
                     </button>
-                    <button
-                      onClick={() => { setShowAccountPanel(false); logout(); }}
-                      className="w-full text-left px-3 py-2 rounded-md text-xs text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
-                    >
-                      <LogOut size={13} />
-                      Sign Out
-                    </button>
-                  </div>
-
-                  {/* Footer */}
-                  <div className="px-4 py-2 border-t border-slate-100 bg-slate-50">
-                    <span className="text-[10px] text-slate-400">PEARL SCC v1.0 · Session {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                 </div>
                 </>
               )}
             </div>
             )}
-          </div>
-          </div>
-
-          {/* Lens Switcher */}
-          <div className="flex items-center gap-1 p-1 rounded-full bg-violet-100/60 border border-violet-200 w-fit">
-            {LENSES.map(lens => (
-              <button
-                key={lens.id}
-                onClick={() => setActiveLens(lens.id)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  activeLens === lens.id
-                    ? 'bg-violet-600 text-white shadow-md'
-                    : 'text-violet-600 hover:bg-violet-200/60'
-                }`}
-                title={lens.description}
-              >
-                {lens.label}
-              </button>
-            ))}
           </div>
         </div>
 
@@ -2394,69 +2322,6 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
               );
             })()}
 
-            {/* Peer Benchmarking — data-analysis + publication lenses */}
-            {showInLens(['data-analysis', 'publication']) && (
-            <div id="section-bench" className="rounded-2xl border border-violet-200 bg-white shadow-sm overflow-hidden">
-              <button onClick={() => toggleCollapse('bench')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
-                <span className="text-sm font-bold text-violet-900">📊 Peer Benchmarking Analysis</span>
-                <div className="flex items-center gap-1.5">
-                <span onClick={(e) => { e.stopPropagation(); printSection('bench', 'Peer Benchmarking'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                  <Printer className="h-3.5 w-3.5 text-slate-400" />
-                </span>
-                {isSectionOpen('bench') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
-              </div>
-              </button>
-              {isSectionOpen('bench') && (
-                <PeerBenchmarking
-                  removalEfficiencies={removalEfficiencies as any}
-                  regionId={activeDetailId}
-                  userRole="State"
-                />
-              )}
-            </div>
-            )}
-
-            {/* Bay Impact Counter (Chesapeake states) */}
-            {['MD','VA','PA','DE','DC','WV','NY'].includes(stateAbbr) && (
-              <div id="section-bay" className="rounded-2xl border border-violet-200 bg-white shadow-sm overflow-hidden">
-                <button onClick={() => toggleCollapse('bay')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
-                  <span className="text-sm font-bold text-violet-900">🌊 Chesapeake Bay Impact</span>
-                  <div className="flex items-center gap-1.5">
-                <span onClick={(e) => { e.stopPropagation(); printSection('bay', 'Chesapeake Bay Impact'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                  <Printer className="h-3.5 w-3.5 text-slate-400" />
-                </span>
-                {isSectionOpen('bay') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
-              </div>
-                </button>
-                {isSectionOpen('bay') && (
-                  <BayImpactCounter
-                    removalEfficiencies={removalEfficiencies as any}
-                    regionId={activeDetailId}
-                    userRole="State"
-                  />
-                )}
-              </div>
-            )}
-
-            {/* 24-Hour Forecast */}
-            <div id="section-forecast" className="rounded-2xl border border-violet-200 bg-white shadow-sm overflow-hidden">
-              <button onClick={() => toggleCollapse('forecast')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
-                <span className="text-sm font-bold text-violet-900">📈 24-Hour Water Quality Forecast</span>
-                <div className="flex items-center gap-1.5">
-                <span onClick={(e) => { e.stopPropagation(); printSection('forecast', '24-Hour Water Quality Forecast'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                  <Printer className="h-3.5 w-3.5 text-slate-400" />
-                </span>
-                {isSectionOpen('forecast') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
-              </div>
-              </button>
-              {isSectionOpen('forecast') && (
-                <ForecastChart
-                  data={displayData as any}
-                  removalEfficiencies={removalEfficiencies as any}
-                  userRole="State"
-                />
-              )}
-            </div>
 
           </div>
         )}
