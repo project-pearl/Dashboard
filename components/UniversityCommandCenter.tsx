@@ -8,7 +8,7 @@ import statesTopo from 'us-atlas/states-10m.json';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Info, LogOut, Printer } from 'lucide-react';
+import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Info, LogOut, Printer, Microscope } from 'lucide-react';
 import { getRegionById } from '@/lib/regionsConfig';
 import { REGION_META, getWaterbodyDataSources } from '@/lib/useWaterData';
 import { useWaterData, DATA_SOURCES } from '@/lib/useWaterData';
@@ -23,6 +23,7 @@ import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
 import { MS4FineAvoidanceCalculator } from '@/components/MS4FineAvoidanceCalculator';
 import { BayImpactCounter } from '@/components/BayImpactCounter';
 import { ForecastChart } from '@/components/ForecastChart';
+import { WaterQualityChallenges } from '@/components/WaterQualityChallenges';
 import dynamic from 'next/dynamic';
 
 const PeerBenchmarking = dynamic(
@@ -59,6 +60,16 @@ type Props = {
   onSelectRegion?: (regionId: string) => void;
   onToggleDevMode?: () => void;
 };
+
+// ─── Lenses ──────────────────────────────────────────────────────────────────
+
+type LensId = 'data-analysis' | 'field-study' | 'publication';
+
+const LENSES: { id: LensId; label: string; description: string }[] = [
+  { id: 'data-analysis', label: 'Data Analysis', description: 'Water quality data exploration, trends, and statistical analysis' },
+  { id: 'field-study', label: 'Field Study', description: 'Field investigation guides, sampling protocols, and coursework tools' },
+  { id: 'publication', label: 'Publication', description: 'Manuscript preparation, citation tools, and research export' },
+];
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -257,8 +268,15 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
   const agency = STATE_AGENCIES[stateAbbr] || STATE_AUTHORITIES[stateAbbr] || null;
   const { user, logout } = useAuth();
 
-  // ── View (all panels visible — no lens switching for research) ──
+  // ── Lens switching ──
+  const [activeLens, setActiveLens] = useState<LensId>('data-analysis');
+  const isFieldStudy = activeLens === 'field-study';
+  const isPublication = activeLens === 'publication';
+  const showInLens = (ids: LensId[]) => ids.includes(activeLens);
+
+  // ── View state ──
   const [showAccountPanel, setShowAccountPanel] = useState(false);
+  const [showViewDropdown, setShowViewDropdown] = useState(false);
   const [overlay, setOverlay] = useState<OverlayId>('risk');
 
   // ── State-filtered region data ──
