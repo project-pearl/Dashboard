@@ -1415,11 +1415,6 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
               );
             })()}
 
-            {/* Wildlife Impact Disclaimer — below waterbody details (teachers only) */}
-            {activeDetailId && isTeacher && (
-              <WildlifeImpactDisclaimer enabled={showWildlife} onToggle={setShowWildlife} />
-            )}
-
             {/* K12 Educational Hub */}
             {activeDetailId && (
               <K12EducationalHub data={displayData} isTeacher={isTeacher} />
@@ -2851,10 +2846,6 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
           </button>
           {isSectionOpen('eduhub') && (
             <div className="p-4 space-y-3">
-              <K12EducationalHub data={displayData} isTeacher={isTeacher} />
-
-              {/* Water Quality Challenges */}
-              <WaterQualityChallenges context={isTeacher ? 'k12-teacher' : 'k12-student'} />
 
               {/* Quick parameter explainers */}
               <div className="text-xs font-semibold text-slate-700 mb-1">🔬 What Do These Numbers Mean?</div>
