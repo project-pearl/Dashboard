@@ -40,13 +40,34 @@ const STATE_NAMES: Record<string, string> = {
   RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',
   VT:'Vermont',VA:'Virginia',WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming',
 };
-import { NationalCommandCenter } from '@/components/NationalCommandCenter';
-import { StateCommandCenter } from '@/components/StateCommandCenter';
-import { ESGCommandCenter } from '@/components/ESGCommandCenter';
-import { AcademicTools } from '@/components/AcademicTools';
-import { K12EducationalHub } from '@/components/K12EducationalHub';
-import { NGOProjects } from '@/components/NGOProjects';
-import { CorporateESGDashboard } from '@/components/CorporateESGDashboard';
+const NationalCommandCenter = dynamic(
+  () => import('@/components/NationalCommandCenter').then((mod) => mod.NationalCommandCenter),
+  { ssr: false, loading: () => <div className="flex items-center justify-center min-h-[400px]"><Skeleton className="w-full h-[400px]" /></div> }
+);
+const StateCommandCenter = dynamic(
+  () => import('@/components/StateCommandCenter').then((mod) => mod.StateCommandCenter),
+  { ssr: false, loading: () => <div className="flex items-center justify-center min-h-[400px]"><Skeleton className="w-full h-[400px]" /></div> }
+);
+const ESGCommandCenter = dynamic(
+  () => import('@/components/ESGCommandCenter').then((mod) => mod.ESGCommandCenter),
+  { ssr: false, loading: () => <div className="flex items-center justify-center min-h-[400px]"><Skeleton className="w-full h-[400px]" /></div> }
+);
+const AcademicTools = dynamic(
+  () => import('@/components/AcademicTools').then((mod) => mod.AcademicTools),
+  { ssr: false }
+);
+const K12EducationalHub = dynamic(
+  () => import('@/components/K12EducationalHub').then((mod) => mod.K12EducationalHub),
+  { ssr: false }
+);
+const NGOProjects = dynamic(
+  () => import('@/components/NGOProjects').then((mod) => mod.NGOProjects),
+  { ssr: false }
+);
+const CorporateESGDashboard = dynamic(
+  () => import('@/components/CorporateESGDashboard').then((mod) => mod.CorporateESGDashboard),
+  { ssr: false }
+);
 // MarylandStateView removed — MS4 Jurisdictions table (with PEARL Fit) covers MD
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useLiveSimulation } from '@/lib/useLiveSimulation';
