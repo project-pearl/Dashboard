@@ -714,7 +714,29 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
           </div>
         </div>
 
-        {/* ── WATERSHED HEALTH OVERVIEW — above map ── */}
+        {/* ── OYSTER RESTORATION — full-width banner image ── */}
+        <div className="rounded-2xl border border-emerald-200 bg-white shadow-sm overflow-hidden">
+          <div className="relative w-full h-[280px] md:h-[360px]">
+            <Image
+              src="/oyster-restoration.png"
+              alt="Community-driven oyster restoration monitoring — PEARL biofiltration infrastructure"
+              fill
+              className="object-cover"
+              sizes="100vw"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
+              <div className="text-xs font-semibold text-emerald-300 uppercase tracking-wide mb-1">Restoration in Action</div>
+              <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">Community-driven restoration in action</h3>
+              <p className="text-sm text-white/80 max-w-2xl leading-relaxed">
+                PEARL deploys vessel-mounted oyster biofiltration modules that continuously monitor and improve water quality. Each oyster filters up to 50 gallons daily while collecting real-time sensor data for advocacy and compliance reporting.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* ── WATERSHED HEALTH OVERVIEW — below oyster image ── */}
         {(() => {
           const agency = STATE_AGENCIES[stateAbbr];
           const ejScore = getEJScore(stateAbbr);
@@ -784,28 +806,6 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
             </div>
           );
         })()}
-
-        {/* ── OYSTER RESTORATION — full-width banner image ── */}
-        <div className="rounded-2xl border border-emerald-200 bg-white shadow-sm overflow-hidden">
-          <div className="relative w-full h-[280px] md:h-[360px]">
-            <Image
-              src="/oyster-restoration.png"
-              alt="Community-driven oyster restoration monitoring — PEARL biofiltration infrastructure"
-              fill
-              className="object-cover"
-              sizes="100vw"
-              priority
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-              <div className="text-xs font-semibold text-emerald-300 uppercase tracking-wide mb-1">Restoration in Action</div>
-              <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">Community-driven restoration in action</h3>
-              <p className="text-sm text-white/80 max-w-2xl leading-relaxed">
-                PEARL deploys vessel-mounted oyster biofiltration modules that continuously monitor and improve water quality. Each oyster filters up to 50 gallons daily while collecting real-time sensor data for advocacy and compliance reporting.
-              </p>
-            </div>
-          </div>
-        </div>
 
         {/* ── STATEWIDE ALERT FEED — above map ── */}
         {(() => {
