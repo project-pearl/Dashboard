@@ -358,6 +358,33 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
         </div>
       </section>
 
+      {/* ═══ CASE STUDY CALLOUT ═══ */}
+      <section className="py-20 bg-slate-900">
+        <div className="max-w-4xl mx-auto px-6 lg:px-8">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl sm:text-4xl font-bold text-white leading-tight" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+              What if PEARL had been there?
+            </h2>
+          </div>
+          <p className="text-lg text-slate-300 leading-relaxed text-center max-w-3xl mx-auto mb-10">
+            In January 2026, a collapsed sewer line dumped 200+ million gallons of raw sewage into the Potomac River &mdash; one of the largest spills in U.S. history. No independent monitoring detected it. No treatment intercepted it.
+          </p>
+          <div className="rounded-2xl border border-cyan-500/30 bg-gradient-to-br from-cyan-950/60 to-slate-800/60 p-8 backdrop-blur-sm">
+            <p className="text-lg sm:text-xl text-white font-semibold leading-relaxed text-center">
+              In our first pilot, PEARL achieved <span className="text-cyan-400">93.8% E. coli reduction</span> and <span className="text-cyan-400">90-95% TSS removal</span> &mdash; without even targeting bacteria. Imagine that technology deployed at every overflow point.
+            </p>
+          </div>
+          <div className="mt-10 text-center">
+            <a
+              href="mailto:doug@project-pearl.org?subject=PEARL Demo Request"
+              className="group inline-flex items-center gap-3 px-8 py-4 text-base font-semibold text-slate-900 bg-white rounded-full hover:bg-slate-100 transition-all shadow-2xl shadow-black/30"
+            >
+              Request a Demo <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* ═══ STAKEHOLDERS ═══ */}
       <section id="stakeholders" className="py-24 bg-slate-950">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
