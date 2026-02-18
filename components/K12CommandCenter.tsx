@@ -1285,12 +1285,6 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                     {causes.length > 0 && (
                       <div className="rounded-xl bg-white border border-slate-200 p-4">
                         <div className="text-sm font-bold text-slate-800 mb-3">🔍 What&apos;s causing the problem?</div>
-                        {!isTeacher && (
-                          <div className="mb-3">
-                            <Image src="/stormwater.jpg" alt="Stormwater runoff carrying pollutants into a local waterway" width={600} height={340} className="w-full rounded-2xl object-cover" />
-                            <p className="text-[10px] text-slate-400 mt-1 text-center">Stormwater runoff carries oil, trash, and chemicals from roads into our waterways</p>
-                          </div>
-                        )}
                         <div className="space-y-2">
                           {causes.slice(0, 5).map((cause, i) => {
                             const kidInfo = getKidCause(cause);
@@ -1324,38 +1318,11 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                       </div>
                     </div>
 
-                    {/* Success story — student mode only */}
-                    {!isTeacher && (
-                      <div className="rounded-xl bg-green-50 border border-green-200 p-4">
-                        <div className="text-sm font-bold text-green-900 mb-2">🌟 Success Story</div>
-                        <Image src="/happy-neighbors.jpg" alt="Community members celebrating a successful water cleanup project" width={600} height={340} className="w-full rounded-2xl object-cover mb-2" />
-                        <p className="text-xs text-green-800 leading-relaxed">When communities work together to protect their waterways, everyone benefits — cleaner water, healthier wildlife, and happier neighbors!</p>
-                      </div>
-                    )}
-
                     {/* What's being done? */}
                     <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4">
                       <div className="text-sm font-bold text-emerald-900 mb-2">🛠️ What&apos;s being done to help?</div>
                       <div className="text-sm text-emerald-800 leading-relaxed">{restorationSummary}</div>
                     </div>
-
-                    {/* PEARL Results — student mode only */}
-                    {!isTeacher && (
-                      <div className="rounded-xl bg-sky-50 border border-sky-200 p-4">
-                        <div className="text-sm font-bold text-sky-900 mb-3">📊 PEARL Results — Real Data!</div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <Image src="/tss-results-kid.jpg" alt="95% drop in Total Suspended Solids after PEARL filtration" width={300} height={200} className="w-full rounded-2xl object-cover" />
-                            <p className="text-[10px] text-sky-700 mt-1 text-center font-medium">95% drop in sediment (TSS)</p>
-                          </div>
-                          <div>
-                            <Image src="/ecoli-results-kid.jpg" alt="93.8% drop in E. coli after PEARL filtration" width={300} height={200} className="w-full rounded-2xl object-cover" />
-                            <p className="text-[10px] text-sky-700 mt-1 text-center font-medium">93.8% drop in E. coli bacteria</p>
-                          </div>
-                        </div>
-                        <p className="text-xs text-sky-800 mt-2 leading-relaxed">These are real results from PEARL biofiltration systems — cleaning water using nature-inspired technology!</p>
-                      </div>
-                    )}
 
                     {/* Fun fact */}
                     <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 flex items-start gap-3">
@@ -2425,8 +2392,36 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
           </div>
         )}
 
+        {/* ── PEARL PILOT RESULTS — always visible, student mode only ── */}
+        {!isTeacher && (
+          <div className="my-8 rounded-2xl border-2 border-sky-200 bg-gradient-to-br from-sky-50 to-white shadow-lg p-6">
+            <div className="text-center mb-5">
+              <div className="text-lg font-bold text-sky-900">📊 Real Results from Our First Pilot</div>
+              <p className="text-sm text-sky-700 mt-1">These are real results from PEARL biofiltration systems — cleaning water using nature-inspired technology!</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <Image src="/tss-results-kid.jpg" alt="95% drop in Total Suspended Solids after PEARL filtration" width={600} height={400} className="w-full rounded-2xl shadow-lg object-cover" />
+                <p className="text-xs text-sky-700 mt-2 text-center font-medium">95% drop in sediment (TSS)</p>
+              </div>
+              <div>
+                <Image src="/ecoli-results-kid.jpg" alt="93.8% drop in E. coli after PEARL filtration" width={600} height={400} className="w-full rounded-2xl shadow-lg object-cover" />
+                <p className="text-xs text-sky-700 mt-2 text-center font-medium">93.8% drop in E. coli bacteria</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* K12 Educational Hub — always visible */}
         <K12EducationalHub data={displayData} isTeacher={isTeacher} />
+
+        {/* ── STORMWATER IMAGE — always visible, student mode only ── */}
+        {!isTeacher && (
+          <div className="my-6">
+            <Image src="/stormwater.jpg" alt="Stormwater runoff carrying pollutants into a local waterway" width={1200} height={600} className="w-full rounded-2xl shadow-lg object-cover" />
+            <p className="text-xs text-slate-400 mt-2 text-center">Stormwater runoff carries oil, trash, and chemicals from roads into our waterways — this is the #1 threat to water quality</p>
+          </div>
+        )}
 
         {/* Water Quality Challenges — always visible */}
         <WaterQualityChallenges context={isTeacher ? 'k12-teacher' : 'k12-student'} />
@@ -2837,6 +2832,17 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
             </div>
           )}
         </div>
+
+        {/* ── SUCCESS STORY — always visible, student mode only ── */}
+        {!isTeacher && (
+          <div className="my-8 rounded-2xl border-2 border-green-200 bg-gradient-to-br from-green-50 to-white shadow-lg overflow-hidden">
+            <Image src="/happy-neighbors.jpg" alt="Community members celebrating a successful water cleanup project" width={1200} height={600} className="w-full rounded-2xl shadow-lg object-cover" />
+            <div className="p-5">
+              <div className="text-base font-bold text-green-900 mb-1">🌟 Success Story — Communities Making a Difference</div>
+              <p className="text-sm text-green-800 leading-relaxed">When communities work together to protect their waterways, everyone benefits — cleaner water, healthier wildlife, and happier neighbors!</p>
+            </div>
+          </div>
+        )}
 
         {/* ── FIELD REPORT EXPORT ── */}
         <div id="section-fieldreport" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
