@@ -394,15 +394,22 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
         </div>
       </section>
 
-      {/* ═══ CORAL REEF IMAGE ═══ */}
-      <section className="relative">
-        <div className="relative w-full h-[250px] sm:h-[300px]">
-          <Image src="/coral-reef.jpg" alt="Coral reef restoration — the next chapter" fill className="object-cover" />
-        </div>
-        <div className="absolute bottom-6 left-6 sm:bottom-8 sm:left-8">
-          <span className="inline-block px-4 py-2 bg-white/90 backdrop-blur-sm rounded-full text-sm font-semibold text-slate-800 shadow-lg">
-            The Next Chapter &mdash; Reef Restoration
-          </span>
+      {/* ═══ NEXT CHAPTER — partnership CTA bridge ═══ */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-slate-950 via-cyan-950 to-slate-50">
+        <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(circle at 20% 80%, rgba(6,182,212,.4) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(59,130,246,.3) 0%, transparent 50%), radial-gradient(circle at 50% 50%, rgba(20,184,166,.2) 0%, transparent 60%)' }} />
+        {/* Animated wave SVG divider */}
+        <svg className="absolute bottom-0 left-0 w-full" viewBox="0 0 1440 120" preserveAspectRatio="none" style={{ height: '60px' }}>
+          <path d="M0,60 C360,120 720,0 1080,60 C1260,90 1380,80 1440,60 L1440,120 L0,120Z" fill="rgb(249,250,251)" />
+          <path d="M0,80 C320,40 640,100 960,60 C1200,30 1360,70 1440,80 L1440,120 L0,120Z" fill="rgb(249,250,251)" opacity="0.5" />
+        </svg>
+        <div className="relative max-w-3xl mx-auto px-6 lg:px-8 py-20 sm:py-24 text-center">
+          <p className="text-xs font-bold tracking-[0.2em] uppercase text-cyan-400 mb-4">The Next Chapter</p>
+          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+            Partnership &amp; Discovery
+          </h2>
+          <p className="text-slate-300 leading-relaxed max-w-xl mx-auto text-[15px]">
+            Project PEARL is more than a technology &mdash; it is a platform for collaboration. We are seeking scientific partners, research institutions, and foundational investors to help scale our impact and unlock the next wave of discoveries in marine restoration.
+          </p>
         </div>
       </section>
 
