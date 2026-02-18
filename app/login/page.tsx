@@ -86,23 +86,19 @@ export default function LoginPage() {
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-900/40 to-cyan-900/20" />
-        <div className="absolute inset-0 backdrop-blur-[2px]" />
       </div>
 
       <div className="relative z-10 w-full max-w-md py-12">
         {/* Logo */}
         <div className="text-center mb-8">
           <Image
-            src="/Logo_Pearl_as_Headline.JPG"
+            src="/Logo_Pearl_with_reef.jpg"
             alt="Project PEARL"
-            width={260}
-            height={72}
-            className="mx-auto object-contain brightness-0 invert drop-shadow-2xl"
+            width={200}
+            height={200}
+            className="mx-auto object-contain drop-shadow-2xl rounded-xl"
             priority
           />
-          <p className="text-cyan-200/60 text-sm mt-2 tracking-widest uppercase font-medium" style={{ letterSpacing: '0.15em' }}>
-            Water Quality Intelligence
-          </p>
         </div>
 
         {/* Card — frosted glass */}
