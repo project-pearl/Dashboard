@@ -791,6 +791,46 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
           );
         })()}
 
+        {/* ── OYSTER RESTORATION IMPACT — hero image + summary ── */}
+        <div className="rounded-2xl border border-emerald-200 bg-white shadow-sm overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
+            <div className="relative h-48 md:h-auto min-h-[220px]">
+              <Image
+                src="/oyster-restoration.png"
+                alt="Oyster restoration monitoring — PEARL biofiltration infrastructure"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
+            </div>
+            <div className="p-6 flex flex-col justify-center">
+              <div className="text-xs font-semibold text-emerald-600 uppercase tracking-wide mb-1">Restoration Impact</div>
+              <h3 className="text-lg font-bold text-slate-900 mb-3">Living Infrastructure Monitoring</h3>
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div>
+                  <div className="text-4xl font-bold text-emerald-700">50</div>
+                  <div className="text-xs text-slate-500">gal/day filtered per oyster</div>
+                </div>
+                <div>
+                  <div className="text-4xl font-bold text-teal-700">{stats.total}</div>
+                  <div className="text-xs text-slate-500">waterbodies monitored</div>
+                </div>
+                <div>
+                  <div className="text-4xl font-bold text-red-600">{stats.high}</div>
+                  <div className="text-xs text-slate-500">critical — action needed</div>
+                </div>
+                <div>
+                  <div className="text-4xl font-bold text-amber-600">{stats.medium}</div>
+                  <div className="text-xs text-slate-500">impaired — advocacy targets</div>
+                </div>
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                PEARL deploys vessel-mounted oyster biofiltration modules that continuously monitor and improve water quality. Each module filters thousands of gallons daily while collecting real-time sensor data for advocacy and compliance reporting.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* ── STATEWIDE ALERT FEED — above map ── */}
         {(() => {
           const alertRegions = regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium');
@@ -2570,6 +2610,34 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
         {/* ── WATER QUALITY CHALLENGES — core advocacy content ── */}
         <div className="rounded-2xl border-l-4 border-l-emerald-500 border border-emerald-200 bg-white shadow-sm overflow-hidden p-6">
           <WaterQualityChallenges context="ngo" />
+        </div>
+
+        {/* ── ECOLOGICAL RESTORATION — turtle image + advocacy context ── */}
+        <div className="rounded-2xl border border-emerald-200 bg-white shadow-sm overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-0">
+            <div className="relative h-48 md:h-auto min-h-[200px]">
+              <Image
+                src="/turtle-eggs-solution.png"
+                alt="Turtle nesting habitat restoration — protecting vulnerable species through water quality improvement"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 33vw"
+              />
+            </div>
+            <div className="md:col-span-2 p-6">
+              <div className="text-xs font-semibold text-teal-600 uppercase tracking-wide mb-1">Species & Habitat Protection</div>
+              <h3 className="text-lg font-bold text-slate-900 mb-2">Why Clean Water Matters for Wildlife</h3>
+              <p className="text-sm text-slate-600 leading-relaxed mb-3">
+                Impaired waterways threaten nesting habitats, egg viability, and juvenile survival for turtles, shorebirds, and other species that depend on healthy watersheds. PEARL monitoring data connects water quality metrics directly to ecological outcomes — giving your advocacy real, measurable impact.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <span className="px-3 py-1 rounded-full text-xs font-medium bg-teal-50 text-teal-700 border border-teal-200">Habitat Restoration</span>
+                <span className="px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">Species Protection</span>
+                <span className="px-3 py-1 rounded-full text-xs font-medium bg-cyan-50 text-cyan-700 border border-cyan-200">Water Quality Nexus</span>
+                <span className="px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">EJ Communities</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* ── COMMUNITY ENGAGEMENT & PUBLIC TRANSPARENCY ── */}
