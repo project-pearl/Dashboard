@@ -1415,16 +1415,6 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
               );
             })()}
 
-            {/* K12 Educational Hub */}
-            {activeDetailId && (
-              <K12EducationalHub data={displayData} isTeacher={isTeacher} />
-            )}
-
-            {/* Water Quality Challenges */}
-            {activeDetailId && (
-              <WaterQualityChallenges context={isTeacher ? 'k12-teacher' : 'k12-student'} />
-            )}
-
             {/* Restoration plan not shown in K12 mode */}
             {activeDetailId && false && (() => {
               const nccRegion = regionData.find(r => r.id === activeDetailId);
@@ -2393,6 +2383,11 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
           </div>
         )}
 
+        {/* K12 Educational Hub — always visible */}
+        <K12EducationalHub data={displayData} isTeacher={isTeacher} />
+
+        {/* Water Quality Challenges — always visible */}
+        <WaterQualityChallenges context={isTeacher ? 'k12-teacher' : 'k12-student'} />
 
         {/* ── STATEWIDE COMPONENTS — shown when a waterbody is selected AND mock data is available ── */}
         {activeDetailId && displayData && regionMockData && (

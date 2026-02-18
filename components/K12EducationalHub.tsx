@@ -276,7 +276,8 @@ export function K12EducationalHub({ data, isTeacher }: K12EducationalHubProps) {
               </div>
             ))}
 
-            {/* Current Conditions for Bay Life */}
+            {/* Current Conditions for Bay Life — only when waterbody data is available */}
+            {data?.parameters && (
             <div className="bg-gradient-to-r from-cyan-50 to-blue-50 border-2 border-cyan-300 rounded-lg p-3">
               <div className="text-sm font-semibold text-cyan-900 mb-2 flex items-center gap-2">
                 <TrendingUp className="h-4 w-4" />
@@ -307,6 +308,7 @@ export function K12EducationalHub({ data, isTeacher }: K12EducationalHubProps) {
                 </div>
               </div>
             </div>
+            )}
 
             <div className="text-xs text-slate-600 bg-white border border-slate-200 rounded p-3">
               <span className="font-semibold">🌊 Activity Idea:</span> Pick one species above. 
