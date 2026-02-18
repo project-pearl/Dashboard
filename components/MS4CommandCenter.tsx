@@ -47,6 +47,10 @@ const ComplianceEconomics = dynamic(
   () => import('@/components/ComplianceEconomics').then((mod) => mod.ComplianceEconomics),
   { ssr: false }
 );
+const DataExportHub = dynamic(
+  () => import('@/components/DataExportHub').then((mod) => mod.DataExportHub),
+  { ssr: false }
+);
 
 import { MS4FineAvoidanceCalculator } from '@/components/MS4FineAvoidanceCalculator';
 import { BayImpactCounter } from '@/components/BayImpactCounter';
@@ -3790,6 +3794,7 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
         <div className="flex flex-col gap-1 text-[10px] text-slate-400 pt-2 border-t border-slate-200">
           <div className="flex items-center justify-between">
             <span>PEARL MS4 Compliance Center v1.0 · {jurisdictionMeta ? `${jurisdictionMeta.name} (${jurisdictionMeta.permit})` : stateName} · {scopedRegionData.length} waterbodies monitored</span>
+            <a href="/methodology" className="text-blue-500 hover:text-blue-700 underline font-medium">Methodology</a>
             <span className="font-medium text-slate-500">Data Sources:</span>
             <span>USGS NWIS · EPA ATTAINS · Water Quality Portal · NOAA CO-OPS · EPA ECHO</span>
           </div>

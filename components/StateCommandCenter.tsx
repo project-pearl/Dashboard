@@ -2814,6 +2814,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
         {/* ── FOOTER ── */}
         <div className="flex items-center justify-between text-[10px] text-slate-400 pt-2 border-t border-slate-200">
           <span>PEARL {stateName} Command Center v1.0 · {regionData.length} waterbodies monitored</span>
+          <a href="/methodology" className="text-blue-500 hover:text-blue-700 underline font-medium">Methodology</a>
           <span className="font-medium text-slate-500">Data Sources:</span>
           <span>USGS NWIS · EPA ATTAINS · Water Quality Portal · NOAA CO-OPS · EPA ECHO</span>
         </div>

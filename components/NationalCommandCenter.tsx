@@ -4968,6 +4968,7 @@ export function NationalCommandCenter(props: Props) {
               <p>
                 PEARL grades and alerts are informational tools derived from publicly available data and automated analysis. They are not official EPA, MDE, or state assessments and do not constitute regulatory determinations. Always verify with primary agency data for compliance or permitting purposes. Data freshness and completeness vary — stale or absent data results in "Unassessed" status to reflect uncertainty.
               </p>
+              <p className="mt-1"><a href="/methodology" className="text-blue-500 hover:text-blue-700 underline">Methodology & Data Standards</a></p>
             </div>
           </div>
         </div>

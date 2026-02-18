@@ -15,7 +15,8 @@ import {
   Droplets, BarChart3, Shield, TrendingUp, TrendingDown, AlertTriangle, ChevronDown,
   Minus, MapPin, Building2, FileText, Award, Globe, Leaf, Users, Target,
   DollarSign, Eye, Lock, Activity, ArrowRight, ChevronRight, Search, Filter,
-  Download, ExternalLink, Star, Zap, Heart, Scale, X, LogOut, Printer
+  Download, ExternalLink, Star, Zap, Heart, Scale, X, LogOut, Printer,
+  CheckCircle2, Circle, AlertCircle, Sparkles, ClipboardList, Link2, PenTool, Package
 } from 'lucide-react';
 import { useAuth } from '@/lib/authContext';
 import { BrandedPDFGenerator } from '@/lib/brandedPdfGenerator';
@@ -1703,6 +1704,7 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
         <div className="flex flex-col gap-1 text-[10px] text-slate-400 pt-2 border-t border-slate-200">
           <div className="flex items-center justify-between">
             <span>PEARL Corporate E/S/G Command Center v1.0 · {companyName} · {facilitiesData.length} facilities</span>
+            <a href="/methodology" className="text-blue-500 hover:text-blue-700 underline font-medium">Methodology</a>
             <span>{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
           </div>
           <div>Data Sources: Verified PEARL continuous monitoring | Milton pilot baseline (Jan 2025, 88-95% TSS, 50K GPD) | EPA ATTAINS | EPA ECHO | USGS NWIS | NOAA CO-OPS | WRI Aqueduct | EJScreen</div>
