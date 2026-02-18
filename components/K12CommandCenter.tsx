@@ -20,11 +20,15 @@ import { getEJScore, getEJData, ejScoreLabel } from '@/lib/ejVulnerability';
 import { STATE_AUTHORITIES } from '@/lib/stateWaterData';
 import { useAuth } from '@/lib/authContext';
 import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
-import { BayImpactCounter } from '@/components/BayImpactCounter';
-import { ForecastChart } from '@/components/ForecastChart';
 import { WildlifeImpactDisclaimer } from '@/components/WildlifeImpactDisclaimer';
 import { K12EducationalHub } from '@/components/K12EducationalHub';
 import { WaterQualityChallenges } from '@/components/WaterQualityChallenges';
+import dynamic from 'next/dynamic';
+
+const GrantOpportunityMatcher = dynamic(
+  () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
+  { ssr: false }
+);
 
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -250,7 +254,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
   const [isTeacher, setIsTeacher] = useState(isTeacherProp);
   const [showAccountPanel, setShowAccountPanel] = useState(false);
   const [overlay, setOverlay] = useState<OverlayId>('risk');
-  const [showWildlife, setShowWildlife] = useState(false);
+  const [showWildlife, setShowWildlife] = useState(!isTeacherProp);
 
   // ── Water fun facts for students ──
   const k12WaterFacts = [
@@ -826,8 +830,8 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
           );
         })()}
 
-        {/* ── Wildlife Toggle Banner — above the map ── */}
-        <WildlifeImpactDisclaimer enabled={showWildlife} onToggle={setShowWildlife} />
+        {/* ── Wildlife Toggle Banner — above the map (teachers only; students always see wildlife) ── */}
+        {isTeacher && <WildlifeImpactDisclaimer enabled={showWildlife} onToggle={setShowWildlife} />}
 
         {/* ── MAIN CONTENT: Map (2/3) + Waterbody List (1/3) ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -1411,8 +1415,8 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
               );
             })()}
 
-            {/* Wildlife Impact Disclaimer — below waterbody details */}
-            {activeDetailId && (
+            {/* Wildlife Impact Disclaimer — below waterbody details (teachers only) */}
+            {activeDetailId && isTeacher && (
               <WildlifeImpactDisclaimer enabled={showWildlife} onToggle={setShowWildlife} />
             )}
 
@@ -2526,47 +2530,6 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
               );
             })()}
 
-            {/* Bay Impact Counter (Chesapeake states) */}
-            {['MD','VA','PA','DE','DC','WV','NY'].includes(stateAbbr) && (
-              <div id="section-bay" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-                <button onClick={() => toggleCollapse('bay')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-                  <span className="text-sm font-bold text-slate-800">🌊 Chesapeake Bay Impact</span>
-                  <div className="flex items-center gap-1.5">
-                <span onClick={(e) => { e.stopPropagation(); printSection('bay', 'Chesapeake Bay Impact'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                  <Printer className="h-3.5 w-3.5 text-slate-400" />
-                </span>
-                {isSectionOpen('bay') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
-              </div>
-                </button>
-                {isSectionOpen('bay') && (
-                  <BayImpactCounter
-                    removalEfficiencies={removalEfficiencies as any}
-                    regionId={activeDetailId}
-                    userRole="State"
-                  />
-                )}
-              </div>
-            )}
-
-            {/* 24-Hour Forecast */}
-            <div id="section-forecast" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-              <button onClick={() => toggleCollapse('forecast')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-                <span className="text-sm font-bold text-slate-800">📈 24-Hour Water Quality Forecast</span>
-                <div className="flex items-center gap-1.5">
-                <span onClick={(e) => { e.stopPropagation(); printSection('forecast', '24-Hour Water Quality Forecast'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                  <Printer className="h-3.5 w-3.5 text-slate-400" />
-                </span>
-                {isSectionOpen('forecast') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
-              </div>
-              </button>
-              {isSectionOpen('forecast') && (
-                <ForecastChart
-                  data={displayData as any}
-                  removalEfficiencies={removalEfficiencies as any}
-                  userRole="State"
-                />
-              )}
-            </div>
 
           </div>
         )}
@@ -2964,109 +2927,21 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
 
         {/* ── GRANTS — teacher mode only ── */}
         {isTeacher && (
-          <div id="section-grants" className="rounded-xl border-2 border-green-200 bg-gradient-to-r from-green-50 via-white to-emerald-50 shadow-sm overflow-hidden">
-            <button onClick={() => toggleCollapse('grants')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-green-100/50 transition-colors">
-              <div className="flex items-center gap-2">
-                <span className="text-lg">💰</span>
-                <span className="text-sm font-bold text-green-800">STEM &amp; K-12 Education Grants</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span onClick={(e) => { e.stopPropagation(); printSection('grants', 'Education Grants & Funding'); }} className="p-1 hover:bg-green-200 rounded transition-colors" title="Print this section">
-                  <Printer className="h-3.5 w-3.5 text-green-400" />
-                </span>
-                {isSectionOpen('grants') ? <Minus className="h-4 w-4 text-green-400" /> : <ChevronDown className="h-4 w-4 text-green-400" />}
+          <div id="section-grants" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <button onClick={() => toggleCollapse('grants')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+              <span className="text-sm font-bold text-slate-800">💰 K-12 Education Grant Opportunities — {stateName}</span>
+              <div className="flex items-center gap-1">
+                {isSectionOpen('grants') && <span onClick={(e) => { e.stopPropagation(); printSection('grants', `K-12 Education Grants — ${stateName}`); }} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
+                {isSectionOpen('grants') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
               </div>
             </button>
             {isSectionOpen('grants') && (
-              <div className="p-4 space-y-4">
-                <p className="text-sm text-slate-700">Federal and state grants for environmental education programs using real water quality data.</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {/* NOAA B-WET */}
-                  <div className="rounded-xl border-2 border-blue-200 bg-blue-50 p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-2xl">🌊</span>
-                      <div>
-                        <div className="text-sm font-bold text-blue-900">NOAA B-WET</div>
-                        <div className="text-[10px] text-blue-600 font-medium">Bay Watershed Education &amp; Training</div>
-                      </div>
-                    </div>
-                    <div className="space-y-1.5 text-xs text-blue-800">
-                      <div><span className="font-semibold">Award:</span> $50,000 &ndash; $200,000</div>
-                      <div><span className="font-semibold">Duration:</span> 1&ndash;3 years</div>
-                      <div><span className="font-semibold">Focus:</span> Meaningful watershed educational experiences (MWEEs) for K&ndash;12 students using real environmental data</div>
-                      <div><span className="font-semibold">PEARL fit:</span> Live water quality monitoring aligns directly with B-WET&apos;s hands-on, place-based environmental literacy goals</div>
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-1">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-200 text-blue-800">Chesapeake Bay</span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-200 text-blue-800">Great Lakes</span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-200 text-blue-800">Gulf of Mexico</span>
-                    </div>
-                  </div>
-                  {/* EPA Environmental Education */}
-                  <div className="rounded-xl border-2 border-emerald-200 bg-emerald-50 p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-2xl">🏛️</span>
-                      <div>
-                        <div className="text-sm font-bold text-emerald-900">EPA Environmental Education Grants</div>
-                        <div className="text-[10px] text-emerald-600 font-medium">Office of Environmental Education</div>
-                      </div>
-                    </div>
-                    <div className="space-y-1.5 text-xs text-emerald-800">
-                      <div><span className="font-semibold">Award:</span> Up to $100,000</div>
-                      <div><span className="font-semibold">Duration:</span> 1&ndash;2 years</div>
-                      <div><span className="font-semibold">Focus:</span> Environmental awareness, data literacy, stewardship, and community-based projects for underserved schools</div>
-                      <div><span className="font-semibold">PEARL fit:</span> Real-time monitoring dashboards provide the data-driven, place-based learning EPA prioritizes</div>
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-1">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-200 text-emerald-800">Nationwide</span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-200 text-emerald-800">EJ Priority</span>
-                    </div>
-                  </div>
-                  {/* NSF Broader Impacts */}
-                  <div className="rounded-xl border-2 border-purple-200 bg-purple-50 p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-2xl">🔬</span>
-                      <div>
-                        <div className="text-sm font-bold text-purple-900">NSF Broader Impacts</div>
-                        <div className="text-[10px] text-purple-600 font-medium">National Science Foundation</div>
-                      </div>
-                    </div>
-                    <div className="space-y-1.5 text-xs text-purple-800">
-                      <div><span className="font-semibold">Award:</span> $50,000 &ndash; $500,000+ (as part of research grants)</div>
-                      <div><span className="font-semibold">Duration:</span> 2&ndash;5 years</div>
-                      <div><span className="font-semibold">Focus:</span> K&ndash;12 STEM outreach, citizen science, broadening participation through data-driven field experiences</div>
-                      <div><span className="font-semibold">PEARL fit:</span> Real sensor data and NGSS-aligned curriculum make PEARL an ideal broader impacts component</div>
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-1">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-200 text-purple-800">STEM Education</span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-200 text-purple-800">Citizen Science</span>
-                    </div>
-                  </div>
-                  {/* State Education Funding */}
-                  <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-2xl">🏫</span>
-                      <div>
-                        <div className="text-sm font-bold text-amber-900">{stateName} Education Funding</div>
-                        <div className="text-[10px] text-amber-600 font-medium">State-Specific Programs</div>
-                      </div>
-                    </div>
-                    <div className="space-y-1.5 text-xs text-amber-800">
-                      <div><span className="font-semibold">Programs:</span> State environmental ed grants, STEM initiative funds, {['MD','VA','PA','DC','DE','WV'].includes(stateAbbr) ? 'Chesapeake Bay Trust, ' : ''}CWA Section 319 education components</div>
-                      <div><span className="font-semibold">Award:</span> $5,000 &ndash; $75,000 (varies by state)</div>
-                      <div><span className="font-semibold">Focus:</span> Local watershed education, teacher PD, outdoor classroom equipment, field trip support</div>
-                      <div><span className="font-semibold">PEARL fit:</span> State programs favor local, place-based projects with measurable outcomes</div>
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-1">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-200 text-amber-800">{stateAbbr}</span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-200 text-amber-800">Teacher PD</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="text-[10px] text-slate-400 italic">
-                  Grant info is for reference. Check program websites for current deadlines. Contact info@project-pearl.org for grant writing support.
-                </div>
-              </div>
+              <GrantOpportunityMatcher
+                regionId={activeDetailId || `${stateAbbr.toLowerCase()}_statewide`}
+                removalEfficiencies={removalEfficiencies as any}
+                alertsCount={regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length}
+                userRole="K12"
+              />
             )}
           </div>
         )}
