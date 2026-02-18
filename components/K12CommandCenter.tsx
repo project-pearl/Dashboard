@@ -600,16 +600,23 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
           </div>
         )}
 
-        {/* ── HERO BANNER — compact single row, 60px max ── */}
-        <div className="flex items-center justify-between h-[60px] px-4 rounded-xl border border-slate-200 bg-white shadow-sm">
+        {/* ── HEADER ── */}
+        <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div
-              className="relative h-9 w-32 cursor-default select-none flex-shrink-0"
+              className="relative h-12 w-40 cursor-default select-none flex-shrink-0"
               onDoubleClick={() => onToggleDevMode?.()}
             >
               <Image src="/Logo_Pearl_as_Headline.JPG" alt="Project Pearl Logo" fill className="object-contain object-left" priority />
             </div>
-            <span className="text-sm font-bold text-slate-700 hidden sm:inline">{stateName} PEARL Explorer</span>
+            <div>
+              <div className="text-xl font-semibold text-slate-800">{stateName} PEARL Explorer</div>
+              <div className="text-sm text-slate-600">
+                {isTeacher
+                  ? 'NGSS-aligned water quality data, field report tools & curriculum resources'
+                  : 'Discover your local waterways — explore real water quality data and learn what it means for wildlife'}
+              </div>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {/* Teacher / Student toggle */}
