@@ -387,7 +387,7 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
   const [showRestorationPlan, setShowRestorationPlan] = useState(true);
   const [showRestorationCard, setShowRestorationCard] = useState(false);
   const [showCostPanel, setShowCostPanel] = useState(false);
-  const [alertFeedMinimized, setAlertFeedMinimized] = useState(false);
+  const [alertFeedMinimized, setAlertFeedMinimized] = useState(true);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const toggleCollapse = (id: string) => setCollapsedSections(prev => ({ ...prev, [id]: !prev[id] }));
   const isSectionOpen = (id: string) => !collapsedSections[id];

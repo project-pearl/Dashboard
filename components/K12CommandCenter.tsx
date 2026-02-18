@@ -841,7 +841,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
         })()}
 
         {/* ── Wildlife Toggle Banner — above the map (teachers only; students always see wildlife) ── */}
-        {isTeacher && <WildlifeImpactDisclaimer enabled={showWildlife} onToggle={setShowWildlife} />}
+        {!isTeacher && <WildlifeImpactDisclaimer enabled={showWildlife} onToggle={setShowWildlife} />}
 
         {/* ── MAIN CONTENT: Map (2/3) + Waterbody List (1/3) ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -2400,7 +2400,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
               <div className="text-lg font-bold text-sky-900">📊 Real Results from Our First Pilot</div>
               <p className="text-sm text-sky-700 mt-1">These are real results from PEARL biofiltration systems — cleaning water using nature-inspired technology!</p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="flex flex-col gap-6">
               <div>
                 <Image src="/tss-results-kid.jpg" alt="95% drop in Total Suspended Solids after PEARL filtration" width={600} height={400} className="w-full rounded-2xl shadow-lg object-cover" />
                 <p className="text-xs text-sky-700 mt-2 text-center font-medium">95% drop in sediment (TSS)</p>
