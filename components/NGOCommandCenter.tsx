@@ -21,6 +21,7 @@ import { STATE_AUTHORITIES } from '@/lib/stateWaterData';
 import { useAuth } from '@/lib/authContext';
 import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
 import { WaterQualityChallenges } from '@/components/WaterQualityChallenges';
+import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import dynamic from 'next/dynamic';
 
 const GrantOpportunityMatcher = dynamic(
@@ -735,6 +736,9 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
             </div>
           </div>
         </div>
+
+        {/* ── AI INSIGHTS ── */}
+        <AIInsightsEngine role="NGO" stateAbbr={stateAbbr} regionData={regionData as any} />
 
         {/* ── WATERSHED HEALTH OVERVIEW — below oyster image ── */}
         {(() => {

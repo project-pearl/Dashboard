@@ -23,6 +23,7 @@ import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
 import { WildlifeImpactDisclaimer } from '@/components/WildlifeImpactDisclaimer';
 import { K12EducationalHub } from '@/components/K12EducationalHub';
 import { WaterQualityChallenges } from '@/components/WaterQualityChallenges';
+import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { exportK12FieldReport } from '@/components/PearlExports';
 import dynamic from 'next/dynamic';
 
@@ -2429,6 +2430,9 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
 
         {/* Water Quality Challenges — always visible */}
         <WaterQualityChallenges context={isTeacher ? 'k12-teacher' : 'k12-student'} />
+
+        {/* ── AI INSIGHTS ── */}
+        <AIInsightsEngine role="K12" stateAbbr={stateAbbr} regionData={regionData as any} />
 
         {/* ── STATEWIDE COMPONENTS — shown when a waterbody is selected AND mock data is available ── */}
         {activeDetailId && displayData && regionMockData && (

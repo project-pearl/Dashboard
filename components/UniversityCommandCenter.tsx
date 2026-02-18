@@ -22,6 +22,7 @@ import { useAuth } from '@/lib/authContext';
 import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
 import { MS4FineAvoidanceCalculator } from '@/components/MS4FineAvoidanceCalculator';
 import { WaterQualityChallenges } from '@/components/WaterQualityChallenges';
+import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import dynamic from 'next/dynamic';
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
@@ -681,6 +682,9 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
 
         {/* ── WATER QUALITY CHALLENGES — all lenses ── */}
         <WaterQualityChallenges context="academic" />
+
+        {/* ── AI INSIGHTS ── */}
+        <AIInsightsEngine role={userRole === 'College' ? 'College' : 'Researcher'} stateAbbr={stateAbbr} regionData={regionData as any} />
 
         {/* ── DATA SOURCES & RESEARCH CONTEXT — above map ── */}
         {(() => {

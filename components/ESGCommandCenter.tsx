@@ -21,6 +21,7 @@ import {
 import { useAuth } from '@/lib/authContext';
 import { BrandedPDFGenerator } from '@/lib/brandedPdfGenerator';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
+import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import dynamic from 'next/dynamic';
 
 const DataExportHub = dynamic(
@@ -1135,6 +1136,9 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
             </Card>
           </div>
         )}
+
+        {/* ── AI INSIGHTS ── */}
+        <AIInsightsEngine role="Corporate" stateAbbr="US" regionData={facilitiesData as any} />
 
         {/* ── ENVIRONMENTAL IMPACT SUMMARY ── */}
         {lens.showImpact && (

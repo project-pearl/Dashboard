@@ -24,6 +24,7 @@ import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { MS4FineAvoidanceCalculator } from '@/components/MS4FineAvoidanceCalculator';
 import { BayImpactCounter } from '@/components/BayImpactCounter';
 import { ForecastChart } from '@/components/ForecastChart';
+import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import dynamic from 'next/dynamic';
 
 const PeerBenchmarking = dynamic(
@@ -1267,6 +1268,9 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
             </CardContent>
           </Card>
         </div>
+
+        {/* ── AI INSIGHTS ── */}
+        <AIInsightsEngine role="State" stateAbbr={stateAbbr} regionData={regionData as any} />
 
         {/* ── DETAIL + RESTORATION (full width below map grid) — lens controlled ── */}
         {lens.showDetail && (

@@ -20,6 +20,7 @@ import { BrandedPDFGenerator } from '@/lib/brandedPdfGenerator';
 import { useAuth } from '@/lib/authContext';
 import { useWaterData, DATA_SOURCES } from '@/lib/useWaterData';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
+import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -2488,6 +2489,9 @@ export function NationalCommandCenter(props: Props) {
           </Card>
 
         </div>
+
+        {/* ── AI INSIGHTS ── */}
+        <AIInsightsEngine role="Federal" stateAbbr={selectedState} regionData={selectedStateRegions as any} />
 
         {/* ── MS4 & REGULATORY PROFILE — Full-width bar below map ────── */}
         {(() => {
