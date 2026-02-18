@@ -1506,7 +1506,7 @@ export async function GET(request: NextRequest) {
           if (nwsRes.ok) {
             const nwsData = await nwsRes.json();
             const features = nwsData?.features || [];
-            const waterKeywords = ['Flood', 'Flash Flood', 'Storm', 'Hurricane', 'Tropical', 'Tsunami', 'Coastal Flood', 'Storm Surge'];
+            const waterKeywords = ['Flood', 'Flash Flood', 'Storm', 'Hurricane', 'Tropical', 'Tsunami', 'Coastal Flood', 'Storm Surge', 'Landslide', 'Winter Storm', 'Debris Flow', 'Avalanche'];
 
             const wqImpactMap: Record<string, string> = {
               'Flood': 'Expect elevated turbidity, nutrient loading, potential CSO/SSO overflows',
@@ -1517,6 +1517,10 @@ export async function GET(request: NextRequest) {
               'Tsunami': 'Saltwater intrusion, coastal infrastructure damage, debris contamination',
               'Coastal Flood': 'Saltwater intrusion into freshwater systems, septic system flooding',
               'Storm Surge': 'Saltwater intrusion, wastewater treatment plant inundation risk',
+              'Landslide': 'Massive sediment mobilization, turbidity spikes in downstream waterways, potential dam/infrastructure blockage',
+              'Winter Storm': 'Snowmelt surge increases pollutant loading, road salt contamination of waterways',
+              'Debris Flow': 'Extreme sediment and contaminant loading, destruction of riparian zones, long-term turbidity impacts',
+              'Avalanche': 'Snowmelt surge risk, sediment mobilization when debris field thaws',
             };
 
             for (const f of features) {
