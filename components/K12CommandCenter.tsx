@@ -22,6 +22,9 @@ import { useAuth } from '@/lib/authContext';
 import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
 import { BayImpactCounter } from '@/components/BayImpactCounter';
 import { ForecastChart } from '@/components/ForecastChart';
+import { WildlifeImpactDisclaimer } from '@/components/WildlifeImpactDisclaimer';
+import { K12EducationalHub } from '@/components/K12EducationalHub';
+import { WaterQualityChallenges } from '@/components/WaterQualityChallenges';
 
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -247,6 +250,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
   const [isTeacher, setIsTeacher] = useState(isTeacherProp);
   const [showAccountPanel, setShowAccountPanel] = useState(false);
   const [overlay, setOverlay] = useState<OverlayId>('risk');
+  const [showWildlife, setShowWildlife] = useState(false);
 
   // ── Water fun facts for students ──
   const k12WaterFacts = [
@@ -370,7 +374,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
   const [showRestorationPlan, setShowRestorationPlan] = useState(true);
   const [showRestorationCard, setShowRestorationCard] = useState(false);
   const [showCostPanel, setShowCostPanel] = useState(false);
-  const [alertFeedMinimized, setAlertFeedMinimized] = useState(false);
+  const [alertFeedMinimized, setAlertFeedMinimized] = useState(true);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const toggleCollapse = (id: string) => setCollapsedSections(prev => ({ ...prev, [id]: !prev[id] }));
   const isSectionOpen = (id: string) => !collapsedSections[id];
@@ -591,51 +595,62 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
           </div>
         )}
 
-        {/* ── HEADER ── */}
-        <div className="flex items-center justify-between gap-3">
+        {/* ── HERO BANNER — compact single row, 60px max ── */}
+        <div className="flex items-center justify-between h-[60px] px-4 rounded-xl border border-slate-200 bg-white shadow-sm">
           <div className="flex items-center gap-3">
             <div
-              className="relative h-12 w-40 cursor-default select-none"
+              className="relative h-9 w-32 cursor-default select-none flex-shrink-0"
               onDoubleClick={() => onToggleDevMode?.()}
             >
               <Image src="/Logo_Pearl_as_Headline.JPG" alt="Project Pearl Logo" fill className="object-contain object-left" priority />
             </div>
-            <div>
-              <div className="text-xl font-bold text-slate-800">{stateName} PEARL Explorer 🌊</div>
-              <div className="text-sm text-emerald-700 font-medium">
-                Discover real water quality data &mdash; be a water scientist!
-              </div>
-            </div>
+            <span className="text-sm font-bold text-slate-700 hidden sm:inline">{stateName} PEARL Explorer</span>
           </div>
           <div className="flex items-center gap-2">
+            {/* Teacher / Student toggle */}
+            <button
+              onClick={() => setIsTeacher(false)}
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                !isTeacher
+                  ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 text-white shadow-sm'
+                  : 'bg-slate-100 text-slate-500 hover:bg-emerald-50 hover:text-emerald-600'
+              }`}
+            >
+              🎒 Student
+            </button>
+            <button
+              onClick={() => setIsTeacher(true)}
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                isTeacher
+                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm'
+                  : 'bg-slate-100 text-slate-500 hover:bg-purple-50 hover:text-purple-600'
+              }`}
+            >
+              📚 Teacher
+            </button>
             {/* Role badge */}
-            <div className={`inline-flex items-center h-8 px-3 text-xs font-bold rounded-full border-2 shadow-sm ${
+            <div className={`hidden md:inline-flex items-center h-7 px-2.5 text-[10px] font-bold rounded-full border ${
               isTeacher
-                ? 'border-purple-300 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700'
-                : 'border-emerald-300 bg-gradient-to-r from-emerald-100 to-cyan-100 text-emerald-700'
+                ? 'border-purple-300 bg-purple-50 text-purple-700'
+                : 'border-emerald-300 bg-emerald-50 text-emerald-700'
             }`}>
-              {isTeacher ? '👩‍🏫 Teacher Mode' : '🎓 Student Explorer'}
+              {isTeacher ? '👩‍🏫 Teacher' : '🎓 Student'}
             </div>
-
+            {/* Account */}
             {user && (
             <div className="relative">
               <button
                 onClick={() => setShowAccountPanel(!showAccountPanel)}
-                className="inline-flex items-center h-8 px-3 text-xs font-semibold rounded-md border bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 transition-colors cursor-pointer"
+                className="inline-flex items-center h-7 px-2.5 text-[10px] font-semibold rounded-md border bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 transition-colors cursor-pointer"
               >
-                <Shield className="h-3.5 w-3.5 mr-1.5" />
+                <Shield className="h-3 w-3 mr-1" />
                 {user.name || (isTeacher ? 'Teacher' : 'Student')}
-                <span className="ml-1.5 text-indigo-400">▾</span>
+                <span className="ml-1 text-indigo-400">▾</span>
               </button>
-
               {showAccountPanel && (
                 <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowAccountPanel(false)} />
-                <div
-                  className="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg border border-slate-200 shadow-xl z-50 overflow-hidden"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {/* Header */}
+                <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg border border-slate-200 shadow-xl z-50 overflow-hidden" onClick={(e) => e.stopPropagation()}>
                   <div className="px-4 py-3 bg-gradient-to-r from-indigo-50 to-slate-50 border-b border-slate-200">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -647,115 +662,24 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                           <div className="text-[11px] text-slate-500">{user.email || 'student@project-pearl.org'}</div>
                         </div>
                       </div>
-                      <button onClick={() => setShowAccountPanel(false)} className="text-slate-400 hover:text-slate-600">
-                        <X size={14} />
-                      </button>
+                      <button onClick={() => setShowAccountPanel(false)} className="text-slate-400 hover:text-slate-600"><X size={14} /></button>
                     </div>
                   </div>
-
-                  {/* Account info */}
                   <div className="px-4 py-3 space-y-2 text-xs border-b border-slate-100">
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Role</span>
-                      <span className="font-medium text-slate-700">{user.role || 'K12'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500 flex-shrink-0">Organization</span>
-                      <span className="font-medium text-slate-700 text-right">{user.organization || `${stateName} School District`}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Access Level</span>
-                      <Badge variant="outline" className="text-[10px] h-5 bg-green-50 border-green-200 text-green-700">Full Access</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Monitoring</span>
-                      <span className="font-medium text-slate-700">{stateName} · {regionData.length.toLocaleString()} waterbodies</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Current View</span>
-                      <span className="font-medium text-indigo-600">{isTeacher ? "Teacher" : "Student"}</span>
-                    </div>
+                    <div className="flex justify-between"><span className="text-slate-500">Role</span><span className="font-medium text-slate-700">{user.role || 'K12'}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500">Organization</span><span className="font-medium text-slate-700 text-right">{user.organization || `${stateName} School District`}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500">Monitoring</span><span className="font-medium text-slate-700">{stateName} · {regionData.length.toLocaleString()} waterbodies</span></div>
                   </div>
-
-                  {/* Account actions */}
                   <div className="px-4 py-2.5 space-y-1">
-                    <button
-                      onClick={() => { /* TODO: wire to password change route */ }}
-                      className="w-full text-left px-3 py-2 rounded-md text-xs text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors"
-                    >
-                      <Shield size={13} className="text-slate-400" />
-                      Change Password
+                    <button onClick={() => { setShowAccountPanel(false); logout(); }} className="w-full text-left px-3 py-2 rounded-md text-xs text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors">
+                      <LogOut size={13} />Sign Out
                     </button>
-                    <button
-                      onClick={() => { setShowAccountPanel(false); logout(); }}
-                      className="w-full text-left px-3 py-2 rounded-md text-xs text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
-                    >
-                      <LogOut size={13} />
-                      Sign Out
-                    </button>
-                  </div>
-
-                  {/* Footer */}
-                  <div className="px-4 py-2 border-t border-slate-100 bg-slate-50">
-                    <span className="text-[10px] text-slate-400">PEARL SCC v1.0 · Session {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                 </div>
                 </>
               )}
             </div>
             )}
-          </div>
-        </div>
-
-        {/* ── TEACHER / STUDENT TOGGLE — always visible at top ── */}
-        <div className="rounded-2xl border-2 border-cyan-300 bg-gradient-to-r from-cyan-50 via-white to-emerald-50 p-4 shadow-sm">
-          <div className="flex items-center justify-center gap-4">
-            <span className="text-base font-bold text-slate-700">I am a:</span>
-            <button
-              onClick={() => setIsTeacher(false)}
-              className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all shadow-sm ${
-                !isTeacher
-                  ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 text-white shadow-emerald-200 scale-105'
-                  : 'bg-white text-slate-600 border-2 border-slate-200 hover:border-emerald-300 hover:bg-emerald-50'
-              }`}
-            >
-              🎒 Student
-            </button>
-            <button
-              onClick={() => setIsTeacher(true)}
-              className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all shadow-sm ${
-                isTeacher
-                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-purple-200 scale-105'
-                  : 'bg-white text-slate-600 border-2 border-slate-200 hover:border-purple-300 hover:bg-purple-50'
-              }`}
-            >
-              📚 Teacher
-            </button>
-          </div>
-        </div>
-
-        {/* ── HERO: Kid Lab Results + Fun Fact ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 rounded-2xl overflow-hidden border-2 border-emerald-200 shadow-md">
-            <Image
-              src="/kid-lab-results.png"
-              alt="Students analyzing PEARL water quality lab results"
-              width={900}
-              height={400}
-              className="w-full h-auto object-cover"
-            />
-          </div>
-          <div className="rounded-2xl border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 p-5 flex flex-col justify-center shadow-sm">
-            <div className="text-3xl mb-3">💡</div>
-            <div className="text-xs font-bold uppercase tracking-wider text-amber-600 mb-2">Did You Know?</div>
-            <div className="text-sm text-amber-900 leading-relaxed font-medium">
-              {k12WaterFacts[k12FactIndex]}
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">🌊 Water Science</span>
-              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-200">📊 Real Data</span>
-              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700 border border-purple-200">🔬 STEM</span>
-            </div>
           </div>
         </div>
 
@@ -901,6 +825,9 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
             </div>
           );
         })()}
+
+        {/* ── Wildlife Toggle Banner — above the map ── */}
+        <WildlifeImpactDisclaimer enabled={showWildlife} onToggle={setShowWildlife} />
 
         {/* ── MAIN CONTENT: Map (2/3) + Waterbody List (1/3) ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -1196,7 +1123,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
           </Card>
         </div>
 
-        {/* ── DETAIL + RESTORATION (full width below map grid) — lens controlled ── */}
+        {/* ── WATERBODY DETAIL — student-friendly / teacher-enhanced ── */}
         {(
         <div className="space-y-4">
 
@@ -1211,40 +1138,296 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
               </Card>
             )}
 
-            {/* Waterbody Detail Card */}
+            {/* K12 Waterbody Detail — student-friendly with teacher extras */}
             {activeDetailId && (() => {
               const nccRegion = regionData.find(r => r.id === activeDetailId);
               const regionConfig = getRegionById(activeDetailId);
               const regionName = regionConfig?.name || nccRegion?.name || activeDetailId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
               const bulkMatch = resolveBulkAttains(regionName);
+              const level = nccRegion?.alertLevel || 'none';
+              const attainsData = attainsCache[activeDetailId];
+              const causes = attainsData?.causes || bulkMatch?.causes || [];
+              const category = attainsData?.category || bulkMatch?.category || '';
+              const params = waterData?.parameters ?? {};
+
+              // Health grade
+              const gradeScore = level === 'none' ? 95 : level === 'low' ? 80 : level === 'medium' ? 60 : 35;
+              const grade = scoreToGrade(gradeScore);
+              const gradeEmoji = gradeScore >= 90 ? '🌟' : gradeScore >= 80 ? '😊' : gradeScore >= 70 ? '😐' : gradeScore >= 60 ? '😟' : '😰';
+
+              // Kid-friendly cause labels
+              const kidCauseMap: Record<string, { kid: string; icon: string }> = {
+                'nutrients': { kid: 'Too much fertilizer washing into the water', icon: '🌱' },
+                'nitrogen': { kid: 'Too much fertilizer (nitrogen) in the water', icon: '🌱' },
+                'phosphorus': { kid: 'Too much fertilizer (phosphorus) causing green algae', icon: '🧪' },
+                'sediment': { kid: 'Too much dirt and mud making the water cloudy', icon: '🪨' },
+                'sedimentation': { kid: 'Dirt and sand settling on the bottom and harming habitat', icon: '🪨' },
+                'turbidity': { kid: 'Water is too cloudy for fish to see and plants to grow', icon: '🌫️' },
+                'dissolved oxygen': { kid: 'Not enough oxygen in the water for fish to breathe', icon: '🫧' },
+                'oxygen': { kid: 'Not enough oxygen for fish and crabs', icon: '🫧' },
+                'bacteria': { kid: 'Germs in the water that make it unsafe to swim', icon: '🦠' },
+                'e. coli': { kid: 'Bacteria from sewage making the water unsafe', icon: '🦠' },
+                'fecal coliform': { kid: 'Bacteria from animal waste in the water', icon: '🦠' },
+                'temperature': { kid: 'Water is too warm — warm water holds less oxygen', icon: '🌡️' },
+                'metals': { kid: 'Metals from old factories or roads washing into the water', icon: '⚙️' },
+                'mercury': { kid: 'Mercury pollution that builds up in fish', icon: '⚙️' },
+                'pcbs': { kid: 'Chemical pollution from old industrial sites', icon: '🏭' },
+                'ph': { kid: 'Water is too acidic or too basic for aquatic life', icon: '⚗️' },
+                'chlorophyll-a': { kid: 'Too much algae growing in the water', icon: '🟢' },
+                'trash': { kid: 'Litter and trash polluting the water', icon: '🗑️' },
+                'oil': { kid: 'Oil and grease from roads and parking lots', icon: '🛢️' },
+              };
+
+              const getKidCause = (cause: string) => {
+                const lower = cause.toLowerCase();
+                for (const [key, val] of Object.entries(kidCauseMap)) {
+                  if (lower.includes(key)) return val;
+                }
+                return { kid: cause, icon: '⚠️' };
+              };
+
+              // Wildlife impact based on alert level and causes
+              const wildlifeImpacts = (() => {
+                const impacts: { animal: string; emoji: string; effect: string }[] = [];
+                if (causes.some(c => c.toLowerCase().includes('oxygen') || c.toLowerCase().includes('dissolved'))) {
+                  impacts.push({ animal: 'Fish', emoji: '🐟', effect: 'Fish need oxygen to breathe. Low oxygen can cause fish kills.' });
+                }
+                if (causes.some(c => c.toLowerCase().includes('nutrient') || c.toLowerCase().includes('nitrogen') || c.toLowerCase().includes('phosphor') || c.toLowerCase().includes('chlorophyll'))) {
+                  impacts.push({ animal: 'Blue Crabs', emoji: '🦀', effect: 'Algae blooms from too much fertilizer create dead zones where crabs can\'t survive.' });
+                }
+                if (causes.some(c => c.toLowerCase().includes('sediment') || c.toLowerCase().includes('turbid'))) {
+                  impacts.push({ animal: 'Turtles', emoji: '🐢', effect: 'Cloudy water blocks sunlight that underwater grasses need. Turtles eat those grasses!' });
+                }
+                if (causes.some(c => c.toLowerCase().includes('bacteria') || c.toLowerCase().includes('e. coli') || c.toLowerCase().includes('fecal'))) {
+                  impacts.push({ animal: 'Otters', emoji: '🦦', effect: 'Bacteria makes the water unsafe for animals that swim and play in it.' });
+                }
+                // Default impacts if none matched
+                if (impacts.length === 0) {
+                  if (level === 'high') {
+                    impacts.push({ animal: 'Fish', emoji: '🐟', effect: 'Polluted water makes it hard for fish to survive and reproduce.' });
+                    impacts.push({ animal: 'Birds', emoji: '🦅', effect: 'Herons and osprey depend on clean water to catch healthy fish.' });
+                  } else if (level === 'medium') {
+                    impacts.push({ animal: 'Blue Crabs', emoji: '🦀', effect: 'Water quality affects crabs that live on the bottom.' });
+                  } else {
+                    impacts.push({ animal: 'Oysters', emoji: '🦪', effect: 'Oysters filter water and help keep it clean — they love healthy water!' });
+                  }
+                }
+                return impacts;
+              })();
+
+              // Simple restoration summary
+              const restorationSummary = level === 'high'
+                ? 'Scientists and engineers are working on cleanup plans. PEARL devices help filter the water using natural oyster and mussel power!'
+                : level === 'medium'
+                ? 'This waterbody is being monitored closely. Rain gardens and PEARL filters are being considered to help clean it up.'
+                : level === 'low'
+                ? 'This waterbody is mostly healthy but being watched. Planting trees along the shore and reducing fertilizer use can help.'
+                : 'This waterbody is healthy! Keeping it this way means protecting the land around it from pollution.';
+
+              // Waterbody fun facts
+              const wbFunFacts = [
+                `${regionName} is monitored by real scientists using sensors that take readings every 15 minutes — that's 96 times per day!`,
+                `The water in ${regionName} is connected to the ocean through rivers and streams. What happens here affects the whole ecosystem!`,
+                `Every rainstorm washes pollutants from roads and lawns into ${regionName}. The first 30 minutes carry the most pollution!`,
+                `Oysters can filter up to 50 gallons of water per day — nature's water treatment plant at ${regionName}!`,
+              ];
+              const wbFactIdx = Math.abs(regionName.split('').reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 0)) % wbFunFacts.length;
 
               return (
-                <WaterbodyDetailCard
-                  regionName={regionName}
-                  stateAbbr={stateAbbr}
-                  stateName={stateName}
-                  alertLevel={nccRegion?.alertLevel || 'none'}
-                  activeAlerts={nccRegion?.activeAlerts ?? 0}
-                  lastUpdatedISO={nccRegion?.lastUpdatedISO}
-                  waterData={waterData}
-                  waterLoading={waterLoading}
-                  hasRealData={hasRealData}
-                  attainsPerWb={attainsCache[activeDetailId]}
-                  attainsBulk={bulkMatch}
-                  ejData={ejCache[activeDetailId]}
-                  ejDetail={getEJData(stateAbbr)}
-                  ecoScore={getEcoScore(stateAbbr)}
-                  ecoData={getEcoData(stateAbbr)}
-                  stSummary={stateSummaryCache[stateAbbr]}
-                  stateAgency={STATE_AGENCIES[stateAbbr]}
-                  dataSources={DATA_SOURCES}
-                  onToast={(msg) => { setToastMsg(msg); setTimeout(() => setToastMsg(null), 2500); }}
-                />
+                <Card className={`border-2 ${level === 'high' ? 'border-red-300' : level === 'medium' ? 'border-amber-300' : level === 'low' ? 'border-yellow-200' : 'border-green-300'} shadow-md`}>
+                  <CardContent className="p-5 space-y-4">
+                    {/* Header: Name + Grade */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-lg font-bold text-slate-800">{regionName}</div>
+                        <div className="text-xs text-slate-500">{stateName} · {nccRegion?.status === 'assessed' ? 'EPA Assessed' : nccRegion?.status === 'monitored' ? 'Monitored' : 'Data Pending'}</div>
+                      </div>
+                      <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 ${grade.bg}`}>
+                        <span className="text-2xl">{gradeEmoji}</span>
+                        <div>
+                          <div className={`text-3xl font-black ${grade.color}`}>{grade.letter}</div>
+                          <div className="text-[10px] text-slate-500">Health Grade</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* What's wrong? — plain language */}
+                    <div className={`rounded-xl p-4 ${level === 'none' ? 'bg-green-50 border border-green-200' : 'bg-orange-50 border border-orange-200'}`}>
+                      <div className="text-sm font-bold text-slate-800 mb-2">
+                        {level === 'none' ? '✅ This water is healthy!' : level === 'low' ? '👀 Keep an eye on this water' : level === 'medium' ? '⚠️ This water needs some help' : '🚨 This water needs serious help'}
+                      </div>
+                      <div className="text-sm text-slate-700 leading-relaxed">
+                        {level === 'none'
+                          ? `${regionName} is in good shape! The water quality is healthy for fish, crabs, and other wildlife.`
+                          : level === 'low'
+                          ? `${regionName} has some minor issues. Scientists are watching it to make sure it doesn't get worse.`
+                          : level === 'medium'
+                          ? `${regionName} has water quality problems that are hurting the animals and plants that live there.`
+                          : `${regionName} has serious water quality problems. The water is unsafe for many animals and may not be safe for swimming.`
+                        }
+                      </div>
+                    </div>
+
+                    {/* Pollution causes — kid-friendly labels */}
+                    {causes.length > 0 && (
+                      <div className="rounded-xl bg-white border border-slate-200 p-4">
+                        <div className="text-sm font-bold text-slate-800 mb-3">🔍 What&apos;s causing the problem?</div>
+                        <div className="space-y-2">
+                          {causes.slice(0, 5).map((cause, i) => {
+                            const kidInfo = getKidCause(cause);
+                            return (
+                              <div key={i} className="flex items-start gap-3 p-2 rounded-lg bg-slate-50">
+                                <span className="text-xl flex-shrink-0">{kidInfo.icon}</span>
+                                <div>
+                                  <div className="text-sm font-medium text-slate-800">{kidInfo.kid}</div>
+                                  {isTeacher && <div className="text-[10px] text-slate-400 mt-0.5">EPA: {cause}</div>}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Why it matters — wildlife impact */}
+                    <div className="rounded-xl bg-cyan-50 border border-cyan-200 p-4">
+                      <div className="text-sm font-bold text-cyan-900 mb-3">🐾 Why does this matter?</div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {wildlifeImpacts.map((wi, i) => (
+                          <div key={i} className="flex items-start gap-3 bg-white rounded-lg p-3 border border-cyan-100">
+                            <span className="text-2xl flex-shrink-0">{wi.emoji}</span>
+                            <div>
+                              <div className="text-xs font-bold text-cyan-800">{wi.animal}</div>
+                              <div className="text-xs text-slate-600 leading-relaxed">{wi.effect}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* What's being done? */}
+                    <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4">
+                      <div className="text-sm font-bold text-emerald-900 mb-2">🛠️ What&apos;s being done to help?</div>
+                      <div className="text-sm text-emerald-800 leading-relaxed">{restorationSummary}</div>
+                    </div>
+
+                    {/* Fun fact */}
+                    <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 flex items-start gap-3">
+                      <span className="text-xl flex-shrink-0">💡</span>
+                      <div>
+                        <div className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-1">Fun Fact</div>
+                        <div className="text-xs text-amber-900 leading-relaxed">{wbFunFacts[wbFactIdx]}</div>
+                      </div>
+                    </div>
+
+                    {/* ── TEACHER EXTRAS ── */}
+                    {isTeacher && (
+                      <div className="space-y-4 pt-2 border-t-2 border-dashed border-purple-200">
+                        <div className="text-xs font-bold text-purple-700 uppercase tracking-wider">📚 Teacher Details</div>
+
+                        {/* Actual parameter values */}
+                        {Object.keys(params).length > 0 && (
+                          <div className="rounded-lg border border-purple-200 bg-white p-3">
+                            <div className="text-xs font-bold text-slate-700 mb-2">Water Quality Parameters</div>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                              {Object.entries(params).map(([key, p]) => (
+                                <div key={key} className="rounded bg-slate-50 p-2 text-center">
+                                  <div className="text-sm font-bold text-slate-800">
+                                    {(p as any).value < 0.01 && (p as any).value > 0 ? (p as any).value.toFixed(3) : (p as any).value < 1 ? (p as any).value.toFixed(2) : (p as any).value.toFixed(1)}
+                                  </div>
+                                  <div className="text-[10px] text-slate-500">{key} ({(p as any).unit || ''})</div>
+                                  {(p as any).source && <div className="text-[9px] text-slate-400">{(p as any).source}</div>}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Impairment causes — proper names */}
+                        {causes.length > 0 && (
+                          <div className="rounded-lg border border-purple-200 bg-white p-3">
+                            <div className="text-xs font-bold text-slate-700 mb-2">EPA Impairment Causes</div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {causes.map((c, i) => (
+                                <span key={i} className="px-2 py-1 rounded-full text-[10px] font-medium bg-orange-100 text-orange-800 border border-orange-200">{c}</span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Assessment category — explained */}
+                        {category && (
+                          <div className="rounded-lg border border-purple-200 bg-white p-3">
+                            <div className="text-xs font-bold text-slate-700 mb-1">EPA Assessment Category</div>
+                            <div className="flex items-center gap-2">
+                              <span className={`text-sm font-bold px-2 py-1 rounded ${
+                                category.includes('5') ? 'bg-red-100 text-red-800' :
+                                category.includes('4') ? 'bg-orange-100 text-orange-800' :
+                                category.includes('3') ? 'bg-yellow-100 text-yellow-800' :
+                                category.includes('2') ? 'bg-green-100 text-green-800' :
+                                'bg-slate-100 text-slate-800'
+                              }`}>Category {category}</span>
+                              <span className="text-xs text-slate-600">
+                                {category.includes('5') ? '= Needs a cleanup plan (TMDL required)' :
+                                 category.includes('4a') ? '= Has a cleanup plan in place (TMDL completed)' :
+                                 category.includes('4b') ? '= Being cleaned up through other programs' :
+                                 category.includes('4c') ? '= Impaired but not by a pollutant' :
+                                 category.includes('3') ? '= Not enough data to decide yet' :
+                                 category.includes('2') ? '= Meeting water quality standards' :
+                                 category.includes('1') ? '= All uses supported, water is healthy' :
+                                 ''}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Data sources — simple list */}
+                        <div className="rounded-lg border border-purple-200 bg-white p-3">
+                          <div className="text-xs font-bold text-slate-700 mb-1">Data Sources</div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {['EPA ATTAINS', 'USGS NWIS', 'Water Quality Portal', hasRealData ? 'Live Sensors' : null].filter(Boolean).map((src, i) => (
+                              <span key={i} className="px-2 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200">{src}</span>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Curriculum connections */}
+                        <div className="rounded-lg border border-purple-200 bg-purple-50 p-3">
+                          <div className="text-xs font-bold text-purple-800 mb-2">🎯 Curriculum Connections</div>
+                          <div className="space-y-1.5 text-xs text-purple-700">
+                            <div>• <strong>NGSS ESS3.C:</strong> Human Impacts on Earth Systems — How human activity affects water quality at {regionName}</div>
+                            <div>• <strong>NGSS LS2.C:</strong> Ecosystem Dynamics — How pollution disrupts food webs and habitats</div>
+                            {causes.some(c => c.toLowerCase().includes('nutrient') || c.toLowerCase().includes('nitrogen')) && (
+                              <div>• <strong>NGSS LS2.B:</strong> Cycles of Matter — Nitrogen and phosphorus cycles, eutrophication</div>
+                            )}
+                            <div>• <strong>NGSS ETS1.B:</strong> Developing Solutions — Engineering approaches to water quality (PEARL biofiltration)</div>
+                            <div>• <strong>Common Core Math:</strong> Data analysis using real water quality measurements, graphing trends</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               );
             })()}
 
-            {/* Restoration Plan — NCC-matching collapsible with Deploy/PDF/Cost buttons */}
-            {showRestorationPlan && activeDetailId && (() => {
+            {/* Wildlife Impact Disclaimer — below waterbody details */}
+            {activeDetailId && (
+              <WildlifeImpactDisclaimer enabled={showWildlife} onToggle={setShowWildlife} />
+            )}
+
+            {/* K12 Educational Hub */}
+            {activeDetailId && (
+              <K12EducationalHub data={displayData} isTeacher={isTeacher} />
+            )}
+
+            {/* Water Quality Challenges */}
+            {activeDetailId && (
+              <WaterQualityChallenges context={isTeacher ? 'k12-teacher' : 'k12-student'} />
+            )}
+
+            {/* Restoration plan not shown in K12 mode */}
+            {activeDetailId && false && (() => {
               const nccRegion = regionData.find(r => r.id === activeDetailId);
               const regionConfig = getRegionById(activeDetailId);
               const regionName = regionConfig?.name || nccRegion?.name || activeDetailId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -2705,15 +2888,10 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
           </button>
           {isSectionOpen('eduhub') && (
             <div className="p-4 space-y-3">
-              <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-4">
-                <div className="text-sm font-semibold text-cyan-800 mb-2">📋 Scaffold: K12EducationalHub</div>
-                <p className="text-xs text-cyan-700 leading-relaxed">
-                  Wire <code className="bg-cyan-100 px-1 rounded">{'<K12EducationalHub data={displayData} isTeacher={isTeacher} />'}</code> here.
-                  Component provides: interactive water quality lessons, parameter explainers with animations,
-                  virtual field trip mode, quiz/assessment builder (teacher mode), student progress tracking,
-                  printable worksheets, and NGSS-aligned curriculum modules (grades 3-5, 6-8, 9-12).
-                </p>
-              </div>
+              <K12EducationalHub data={displayData} isTeacher={isTeacher} />
+
+              {/* Water Quality Challenges */}
+              <WaterQualityChallenges context={isTeacher ? 'k12-teacher' : 'k12-student'} />
 
               {/* Quick parameter explainers */}
               <div className="text-xs font-semibold text-slate-700 mb-1">🔬 What Do These Numbers Mean?</div>
@@ -2778,6 +2956,115 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                       <span key={s} className="px-2 py-0.5 bg-purple-100 text-purple-700 text-[10px] rounded-full font-medium">{s}</span>
                     ))}
                   </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── GRANTS — teacher mode only ── */}
+        {isTeacher && (
+          <div id="section-grants" className="rounded-xl border-2 border-green-200 bg-gradient-to-r from-green-50 via-white to-emerald-50 shadow-sm overflow-hidden">
+            <button onClick={() => toggleCollapse('grants')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-green-100/50 transition-colors">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">💰</span>
+                <span className="text-sm font-bold text-green-800">STEM &amp; K-12 Education Grants</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span onClick={(e) => { e.stopPropagation(); printSection('grants', 'Education Grants & Funding'); }} className="p-1 hover:bg-green-200 rounded transition-colors" title="Print this section">
+                  <Printer className="h-3.5 w-3.5 text-green-400" />
+                </span>
+                {isSectionOpen('grants') ? <Minus className="h-4 w-4 text-green-400" /> : <ChevronDown className="h-4 w-4 text-green-400" />}
+              </div>
+            </button>
+            {isSectionOpen('grants') && (
+              <div className="p-4 space-y-4">
+                <p className="text-sm text-slate-700">Federal and state grants for environmental education programs using real water quality data.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {/* NOAA B-WET */}
+                  <div className="rounded-xl border-2 border-blue-200 bg-blue-50 p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-2xl">🌊</span>
+                      <div>
+                        <div className="text-sm font-bold text-blue-900">NOAA B-WET</div>
+                        <div className="text-[10px] text-blue-600 font-medium">Bay Watershed Education &amp; Training</div>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5 text-xs text-blue-800">
+                      <div><span className="font-semibold">Award:</span> $50,000 &ndash; $200,000</div>
+                      <div><span className="font-semibold">Duration:</span> 1&ndash;3 years</div>
+                      <div><span className="font-semibold">Focus:</span> Meaningful watershed educational experiences (MWEEs) for K&ndash;12 students using real environmental data</div>
+                      <div><span className="font-semibold">PEARL fit:</span> Live water quality monitoring aligns directly with B-WET&apos;s hands-on, place-based environmental literacy goals</div>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-1">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-200 text-blue-800">Chesapeake Bay</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-200 text-blue-800">Great Lakes</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-200 text-blue-800">Gulf of Mexico</span>
+                    </div>
+                  </div>
+                  {/* EPA Environmental Education */}
+                  <div className="rounded-xl border-2 border-emerald-200 bg-emerald-50 p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-2xl">🏛️</span>
+                      <div>
+                        <div className="text-sm font-bold text-emerald-900">EPA Environmental Education Grants</div>
+                        <div className="text-[10px] text-emerald-600 font-medium">Office of Environmental Education</div>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5 text-xs text-emerald-800">
+                      <div><span className="font-semibold">Award:</span> Up to $100,000</div>
+                      <div><span className="font-semibold">Duration:</span> 1&ndash;2 years</div>
+                      <div><span className="font-semibold">Focus:</span> Environmental awareness, data literacy, stewardship, and community-based projects for underserved schools</div>
+                      <div><span className="font-semibold">PEARL fit:</span> Real-time monitoring dashboards provide the data-driven, place-based learning EPA prioritizes</div>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-1">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-200 text-emerald-800">Nationwide</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-200 text-emerald-800">EJ Priority</span>
+                    </div>
+                  </div>
+                  {/* NSF Broader Impacts */}
+                  <div className="rounded-xl border-2 border-purple-200 bg-purple-50 p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-2xl">🔬</span>
+                      <div>
+                        <div className="text-sm font-bold text-purple-900">NSF Broader Impacts</div>
+                        <div className="text-[10px] text-purple-600 font-medium">National Science Foundation</div>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5 text-xs text-purple-800">
+                      <div><span className="font-semibold">Award:</span> $50,000 &ndash; $500,000+ (as part of research grants)</div>
+                      <div><span className="font-semibold">Duration:</span> 2&ndash;5 years</div>
+                      <div><span className="font-semibold">Focus:</span> K&ndash;12 STEM outreach, citizen science, broadening participation through data-driven field experiences</div>
+                      <div><span className="font-semibold">PEARL fit:</span> Real sensor data and NGSS-aligned curriculum make PEARL an ideal broader impacts component</div>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-1">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-200 text-purple-800">STEM Education</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-200 text-purple-800">Citizen Science</span>
+                    </div>
+                  </div>
+                  {/* State Education Funding */}
+                  <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-2xl">🏫</span>
+                      <div>
+                        <div className="text-sm font-bold text-amber-900">{stateName} Education Funding</div>
+                        <div className="text-[10px] text-amber-600 font-medium">State-Specific Programs</div>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5 text-xs text-amber-800">
+                      <div><span className="font-semibold">Programs:</span> State environmental ed grants, STEM initiative funds, {['MD','VA','PA','DC','DE','WV'].includes(stateAbbr) ? 'Chesapeake Bay Trust, ' : ''}CWA Section 319 education components</div>
+                      <div><span className="font-semibold">Award:</span> $5,000 &ndash; $75,000 (varies by state)</div>
+                      <div><span className="font-semibold">Focus:</span> Local watershed education, teacher PD, outdoor classroom equipment, field trip support</div>
+                      <div><span className="font-semibold">PEARL fit:</span> State programs favor local, place-based projects with measurable outcomes</div>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-1">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-200 text-amber-800">{stateAbbr}</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-200 text-amber-800">Teacher PD</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-[10px] text-slate-400 italic">
+                  Grant info is for reference. Check program websites for current deadlines. Contact info@project-pearl.org for grant writing support.
                 </div>
               </div>
             )}
