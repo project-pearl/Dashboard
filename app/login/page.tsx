@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/authContext';
 import type { UserRole } from '@/lib/authTypes';
 import Image from 'next/image';
+import { Eye, EyeOff } from 'lucide-react';
 
 const ROLES: { value: UserRole; label: string }[] = [
   { value: 'MS4',        label: 'MS4 Operator' },
@@ -52,8 +53,12 @@ export default function LoginPage() {
   const [organization, setOrganization] = useState('');
   const [state, setState] = useState('');
   const [useCase, setUseCase] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [accessRequested, setAccessRequested] = useState(false);
+  const [showLoginPw, setShowLoginPw] = useState(false);
+  const [showSignupPw, setShowSignupPw] = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
@@ -75,6 +80,7 @@ export default function LoginPage() {
   const handleRequestAccess = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password.length < 6) return;
+    if (password !== confirmPassword) return;
     setIsSubmitting(true);
     clearError();
     const result = await signup({ email, password, name, role, organization, state, useCase });
@@ -197,14 +203,24 @@ export default function LoginPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-white/80 mb-1.5">Password</label>
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  className={inputClass}
-                  placeholder="••••••••"
-                />
+                <div className="relative">
+                  <input
+                    type={showLoginPw ? 'text' : 'password'}
+                    required
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    className={`${inputClass} pr-11`}
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginPw(prev => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showLoginPw ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
+                  </button>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <input type="checkbox" id="remember" className="accent-cyan-400 w-4 h-4 rounded" />
@@ -244,15 +260,50 @@ export default function LoginPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-white/80 mb-1">Password</label>
-                <input
-                  type="password"
-                  required
-                  minLength={6}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  className={inputClass}
-                  placeholder="Min 6 characters"
-                />
+                <div className="relative">
+                  <input
+                    type={showSignupPw ? 'text' : 'password'}
+                    required
+                    minLength={6}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    className={`${inputClass} pr-11`}
+                    placeholder="Min 6 characters"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSignupPw(prev => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showSignupPw ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-white/80 mb-1">Confirm Password</label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPw ? 'text' : 'password'}
+                    required
+                    minLength={6}
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    className={`${inputClass} pr-11 ${confirmPassword && password !== confirmPassword ? 'border-red-400/50 focus:ring-red-400/50' : ''}`}
+                    placeholder="Re-enter password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPw(prev => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showConfirmPw ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
+                  </button>
+                </div>
+                {confirmPassword && password !== confirmPassword && (
+                  <p className="text-xs text-red-300 mt-1">Passwords do not match</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-white/80 mb-1">Organization</label>
