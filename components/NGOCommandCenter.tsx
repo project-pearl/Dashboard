@@ -8,7 +8,7 @@ import statesTopo from 'us-atlas/states-10m.json';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Info, LogOut, Printer, Users, Heart } from 'lucide-react';
+import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Info, LogOut, Printer, Users, Heart, Leaf } from 'lucide-react';
 import { getRegionById } from '@/lib/regionsConfig';
 import { REGION_META, getWaterbodyDataSources } from '@/lib/useWaterData';
 import { useWaterData, DATA_SOURCES } from '@/lib/useWaterData';
@@ -21,14 +21,9 @@ import { STATE_AUTHORITIES } from '@/lib/stateWaterData';
 import { useAuth } from '@/lib/authContext';
 import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
 import { MS4FineAvoidanceCalculator } from '@/components/MS4FineAvoidanceCalculator';
-import { BayImpactCounter } from '@/components/BayImpactCounter';
-import { ForecastChart } from '@/components/ForecastChart';
+import { WaterQualityChallenges } from '@/components/WaterQualityChallenges';
 import dynamic from 'next/dynamic';
 
-const PeerBenchmarking = dynamic(
-  () => import('@/components/PeerBenchmarking').then((mod) => mod.PeerBenchmarking),
-  { ssr: false }
-);
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
   { ssr: false }
@@ -152,6 +147,31 @@ function scoreToGrade(score: number): { letter: string; color: string; bg: strin
   return { letter: 'F', color: 'text-red-700', bg: 'bg-red-100 border-red-300' };
 }
 
+// ─── Watershed Groups by State ───────────────────────────────────────────────
+
+const WATERSHED_GROUPS: Record<string, string[]> = {
+  MD: ['All Watersheds', 'Chesapeake Bay Watershed', 'Patuxent River', 'Anacostia Watershed', 'Severn River', 'South River', 'Magothy River', 'Chester River'],
+  VA: ['All Watersheds', 'Chesapeake Bay Watershed', 'James River', 'York River', 'Rappahannock River', 'Elizabeth River'],
+  FL: ['All Watersheds', 'Pensacola Bay', 'Blackwater River', 'Escambia River', 'Santa Rosa Sound'],
+  PA: ['All Watersheds', 'Chesapeake Bay Watershed', 'Susquehanna River', 'Delaware River'],
+  DC: ['All Watersheds', 'Anacostia Watershed', 'Potomac River', 'Rock Creek'],
+  DE: ['All Watersheds', 'Christina River', 'Brandywine Creek', 'Delaware Bay'],
+  WV: ['All Watersheds', 'Shenandoah River', 'Potomac South Branch', 'Opequon Creek'],
+};
+
+function getWatershedGroups(stateAbbr: string): string[] {
+  return WATERSHED_GROUPS[stateAbbr] || ['All Watersheds'];
+}
+
+// Keyword match: does a waterbody name/id match the selected watershed group?
+function matchesWatershed(wb: { id: string; name: string }, watershed: string): boolean {
+  if (watershed === 'All Watersheds') return true;
+  const kw = watershed.toLowerCase().replace(/\s*(river|watershed|creek|bay|sound|branch)\s*/gi, '').trim();
+  const n = wb.name.toLowerCase();
+  const i = wb.id.toLowerCase();
+  return n.includes(kw) || i.includes(kw);
+}
+
 // ─── View Lens: controls what each view shows/hides ──────────────────────────
 
 
@@ -256,6 +276,8 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
   // ── View (all panels visible — NGOs see everything for advocacy) ──
   const [showAccountPanel, setShowAccountPanel] = useState(false);
   const [overlay, setOverlay] = useState<OverlayId>('risk');
+  const [selectedWatershed, setSelectedWatershed] = useState('All Watersheds');
+  const watershedGroups = useMemo(() => getWatershedGroups(stateAbbr), [stateAbbr]);
 
   // ── State-filtered region data ──
   const baseRegions = useMemo(() => generateStateRegionData(stateAbbr), [stateAbbr]);
@@ -512,6 +534,10 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
 
   const sortedRegions = useMemo(() => {
     let filtered = regionData;
+    // Watershed group filter
+    if (selectedWatershed !== 'All Watersheds') {
+      filtered = filtered.filter(r => matchesWatershed(r, selectedWatershed));
+    }
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       filtered = filtered.filter(r => r.name.toLowerCase().includes(q) || r.id.toLowerCase().includes(q));
@@ -526,7 +552,7 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
       }
     }
     return [...filtered].sort((a, b) => SEVERITY_ORDER[b.alertLevel] - SEVERITY_ORDER[a.alertLevel] || a.name.localeCompare(b.name));
-  }, [regionData, searchQuery, filterLevel]);
+  }, [regionData, searchQuery, filterLevel, selectedWatershed]);
 
   // ── Summary stats ──
   const stats = useMemo(() => {
@@ -570,7 +596,7 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
   const toggleSection = (id: string) => setExpandedSections(prev => ({ ...prev, [id]: !prev[id] }));
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
+    <div className="min-h-screen w-full bg-gradient-to-br from-emerald-50 via-teal-50/30 to-cyan-50">
       <div className="mx-auto max-w-7xl p-4 space-y-6">
 
         {/* Toast */}
@@ -584,37 +610,53 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
           </div>
         )}
 
-        {/* ── HEADER ── */}
-        <div className="flex items-center justify-between gap-3">
+        {/* ── HERO BANNER — compact single row, 60px max ── */}
+        <div className="flex items-center justify-between h-[60px] px-4 rounded-2xl border border-emerald-200 bg-white shadow-sm">
           <div className="flex items-center gap-3">
             <div
-              className="relative h-12 w-40 cursor-default select-none"
+              className="relative h-10 w-36 cursor-default select-none flex-shrink-0"
               onDoubleClick={() => onToggleDevMode?.()}
             >
               <Image src="/Logo_Pearl_as_Headline.JPG" alt="Project Pearl Logo" fill className="object-contain object-left" priority />
             </div>
-            <div>
-              <div className="text-xl font-semibold text-slate-800">{stateName} Watershed Advocacy Center</div>
-              <div className="text-sm text-slate-600">
-                Watershed health intelligence — community advocacy, monitoring \Surface water intelligence — real-time aquatic health monitoring &amp; restorationamp; environmental justice
+            <div className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full border border-emerald-300 bg-emerald-50 text-emerald-700 text-xs font-semibold flex-shrink-0">
+              <Leaf className="h-3.5 w-3.5" />
+              Conservation Hub
+            </div>
+            {/* Watershed Group Selector */}
+            {watershedGroups.length > 1 && (
+              <div className="flex items-center gap-1 overflow-x-auto hide-scrollbar">
+                {watershedGroups.map(ws => (
+                  <button
+                    key={ws}
+                    onClick={() => setSelectedWatershed(ws)}
+                    className={`whitespace-nowrap px-2.5 py-1 rounded-full text-xs font-medium transition-all flex-shrink-0 ${
+                      selectedWatershed === ws
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                    }`}
+                  >
+                    {ws}
+                  </button>
+                ))}
               </div>
-            </div>
+            )}
           </div>
-          <div className="flex items-center gap-2">
-            {/* Role badge */}
-            <div className="inline-flex items-center h-8 px-3 text-xs font-medium rounded-md border border-green-200 bg-green-50 text-green-700">
-              🌿 Watershed Advocacy
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="hidden md:flex items-center gap-3 text-xs text-slate-500 mr-2">
+              <span><span className="text-lg font-bold text-emerald-700">{stats.total}</span> waterbodies</span>
+              <span><span className="text-lg font-bold text-red-600">{stats.high}</span> critical</span>
+              <span><span className="text-lg font-bold text-amber-600">{stats.medium}</span> impaired</span>
             </div>
-
             {user && (
             <div className="relative">
               <button
-                onClick={() => { setShowAccountPanel(!showAccountPanel); setShowViewDropdown(false); }}
-                className="inline-flex items-center h-8 px-3 text-xs font-semibold rounded-md border bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 transition-colors cursor-pointer"
+                onClick={() => setShowAccountPanel(!showAccountPanel)}
+                className="inline-flex items-center h-8 px-3 text-xs font-semibold rounded-full border bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 transition-colors cursor-pointer"
               >
                 <Shield className="h-3.5 w-3.5 mr-1.5" />
                 {user.name || 'Program Director'}
-                <span className="ml-1.5 text-indigo-400">▾</span>
+                <span className="ml-1.5 text-emerald-400">▾</span>
               </button>
 
               {showAccountPanel && (
@@ -624,11 +666,10 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
                   className="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg border border-slate-200 shadow-xl z-50 overflow-hidden"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {/* Header */}
-                  <div className="px-4 py-3 bg-gradient-to-r from-indigo-50 to-slate-50 border-b border-slate-200">
+                  <div className="px-4 py-3 bg-gradient-to-r from-emerald-50 to-slate-50 border-b border-slate-200">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-bold">
+                        <div className="w-9 h-9 rounded-full bg-emerald-600 flex items-center justify-center text-white text-sm font-bold">
                           {user.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                         </div>
                         <div>
@@ -641,8 +682,6 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
                       </button>
                     </div>
                   </div>
-
-                  {/* Account info */}
                   <div className="px-4 py-3 space-y-2 text-xs border-b border-slate-100">
                     <div className="flex justify-between">
                       <span className="text-slate-500">Role</span>
@@ -654,27 +693,14 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-500">Access Level</span>
-                      <Badge variant="outline" className="text-[10px] h-5 bg-green-50 border-green-200 text-green-700">Full Access</Badge>
+                      <Badge variant="outline" className="text-[10px] h-5 bg-emerald-50 border-emerald-200 text-emerald-700">Full Access</Badge>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-500">Monitoring</span>
                       <span className="font-medium text-slate-700">{stateName} · {regionData.length.toLocaleString()} waterbodies</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Current View</span>
-                      <span className="font-medium text-indigo-600">{"Watershed Advocacy"}</span>
-                    </div>
                   </div>
-
-                  {/* Account actions */}
                   <div className="px-4 py-2.5 space-y-1">
-                    <button
-                      onClick={() => { /* TODO: wire to password change route */ }}
-                      className="w-full text-left px-3 py-2 rounded-md text-xs text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors"
-                    >
-                      <Shield size={13} className="text-slate-400" />
-                      Change Password
-                    </button>
                     <button
                       onClick={() => { setShowAccountPanel(false); logout(); }}
                       className="w-full text-left px-3 py-2 rounded-md text-xs text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
@@ -683,10 +709,8 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
                       Sign Out
                     </button>
                   </div>
-
-                  {/* Footer */}
                   <div className="px-4 py-2 border-t border-slate-100 bg-slate-50">
-                    <span className="text-[10px] text-slate-400">PEARL SCC v1.0 · Session {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span className="text-[10px] text-slate-400">PEARL Conservation Hub v1.0 · Session {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                 </div>
                 </>
@@ -710,47 +734,47 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
           const highAlertCount = regionData.filter(r => r.alertLevel === 'high').length;
 
           return (
-            <div id="section-regprofile" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-              <button onClick={() => toggleCollapse('regprofile')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+            <div id="section-regprofile" className="rounded-2xl border-l-4 border-l-emerald-500 border border-emerald-200 bg-white shadow-sm overflow-hidden">
+              <button onClick={() => toggleCollapse('regprofile')} className="w-full flex items-center justify-between px-6 py-3 bg-emerald-50/50 hover:bg-emerald-100/50 transition-colors">
                 <div className="flex items-center gap-2">
-                  <Droplets size={15} className="text-green-600" />
-                  <span className="text-sm font-bold text-slate-800">{stateName} — Watershed Health Overview</span>
+                  <Droplets size={15} className="text-emerald-600" />
+                  <span className="text-sm font-bold text-emerald-900">{stateName} — Watershed Health Overview{selectedWatershed !== 'All Watersheds' ? ` · ${selectedWatershed}` : ''}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                <span onClick={(e) => { e.stopPropagation(); printSection('regprofile', 'Watershed Health Overview'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                  <Printer className="h-3.5 w-3.5 text-slate-400" />
+                <span onClick={(e) => { e.stopPropagation(); printSection('regprofile', 'Watershed Health Overview'); }} className="p-1 hover:bg-emerald-200 rounded transition-colors" title="Print this section">
+                  <Printer className="h-3.5 w-3.5 text-emerald-400" />
                 </span>
-                {isSectionOpen('regprofile') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+                {isSectionOpen('regprofile') ? <Minus className="h-4 w-4 text-emerald-400" /> : <ChevronDown className="h-4 w-4 text-emerald-400" />}
               </div>
               </button>
               {isSectionOpen('regprofile') && (
-              <div className="px-4 pb-3 pt-1">
+              <div className="p-6">
                 <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 text-xs">
-                  <div className="rounded-lg bg-blue-50 border border-blue-100 p-2.5 text-center">
-                    <div className="text-2xl font-black text-blue-700">{wbCount}</div>
-                    <div className="text-[10px] text-blue-600 font-medium">Waterbodies Tracked</div>
+                  <div className="rounded-2xl bg-emerald-50 border border-emerald-200 p-3 text-center">
+                    <div className="text-4xl font-bold text-emerald-700">{wbCount}</div>
+                    <div className="text-[10px] text-emerald-600 font-medium">Waterbodies Tracked</div>
                   </div>
-                  <div className="rounded-lg bg-red-50 border border-red-100 p-2.5 text-center">
-                    <div className="text-xl font-bold text-red-700">{highAlertCount}</div>
+                  <div className="rounded-2xl bg-red-50 border border-red-200 p-3 text-center">
+                    <div className="text-4xl font-bold text-red-700">{highAlertCount}</div>
                     <div className="text-[10px] text-red-500">Critical (Action Needed)</div>
                   </div>
-                  <div className="rounded-lg bg-amber-50 border border-amber-100 p-2.5 text-center">
-                    <div className="text-xl font-bold text-amber-700">{impairedCount - highAlertCount}</div>
+                  <div className="rounded-2xl bg-amber-50 border border-amber-200 p-3 text-center">
+                    <div className="text-4xl font-bold text-amber-700">{impairedCount - highAlertCount}</div>
                     <div className="text-[10px] text-amber-500">Impaired (Watch List)</div>
                   </div>
-                  <div className="rounded-lg bg-green-50 border border-green-100 p-2.5 text-center">
-                    <div className="text-xl font-bold text-green-700">{wbCount - impairedCount}</div>
+                  <div className="rounded-2xl bg-green-50 border border-green-200 p-3 text-center">
+                    <div className="text-4xl font-bold text-green-700">{wbCount - impairedCount}</div>
                     <div className="text-[10px] text-green-500">Healthy / Attaining</div>
                   </div>
-                  <div className="rounded-lg bg-purple-50 border border-purple-100 p-2.5 text-center">
-                    <div className="text-xl font-bold text-purple-700">{ejScore}<span className="text-xs font-normal text-purple-400">/100</span></div>
+                  <div className="rounded-2xl bg-purple-50 border border-purple-200 p-3 text-center">
+                    <div className="text-4xl font-bold text-purple-700">{ejScore}<span className="text-sm font-normal text-purple-400">/100</span></div>
                     <div className="text-[10px] text-purple-500">EJ Vulnerability</div>
                   </div>
-                  <div className="rounded-lg bg-indigo-50 border border-indigo-100 p-2.5 text-center">
-                    <div className="text-sm font-bold text-indigo-700 leading-tight">—</div>
-                    <div className="text-[10px] text-indigo-400">Volunteer Monitors</div>
+                  <div className="rounded-2xl bg-teal-50 border border-teal-200 p-3 text-center">
+                    <div className="text-sm font-bold text-teal-700 leading-tight">—</div>
+                    <div className="text-[10px] text-teal-500">Volunteer Monitors</div>
                   </div>
-                  <div className={`rounded-lg border p-2.5 text-center ${trendBg}`}>
+                  <div className={`rounded-2xl border p-3 text-center ${trendBg}`}>
                     <div className={`text-sm font-bold ${trendColor}`}>{trendLabel}</div>
                     <div className="text-[10px] text-slate-400">WQ Trend</div>
                   </div>
@@ -850,7 +874,7 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
           {/* LEFT: State Map (2/3 width — matches NCC layout) */}
-          <Card className="lg:col-span-2 border-2 border-slate-200">
+          <Card className="lg:col-span-2 rounded-2xl border-2 border-emerald-200">
             <CardHeader>
               <CardTitle>{stateName} Monitoring Network</CardTitle>
               <CardDescription>
@@ -980,7 +1004,7 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
           </Card>
 
           {/* RIGHT: Waterbody List (1/3 width) — matches NCC layout */}
-          <Card className="lg:col-span-1 border-2 border-slate-200">
+          <Card className="lg:col-span-1 rounded-2xl border-2 border-emerald-200">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div>
@@ -2161,7 +2185,7 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
           <div className="space-y-4">
 
             {/* MS4 Compliance & Fine Avoidance */}
-            <div id="section-regcontext" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div id="section-regcontext" className="rounded-2xl border-l-4 border-l-emerald-500 border border-emerald-200 bg-white shadow-sm overflow-hidden">
               <button onClick={() => toggleCollapse('regcontext')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
                 <span className="text-sm font-bold text-slate-800">💲 Regulatory Compliance Context</span>
                 <div className="flex items-center gap-1.5">
@@ -2308,67 +2332,6 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
               );
             })()}
 
-            {/* Peer Benchmarking */}
-            <div id="section-bench" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-              <button onClick={() => toggleCollapse('bench')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-                <span className="text-sm font-bold text-slate-800">📊 Peer Benchmarking Analysis</span>
-                <div className="flex items-center gap-1.5">
-                <span onClick={(e) => { e.stopPropagation(); printSection('bench', 'Peer Benchmarking'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                  <Printer className="h-3.5 w-3.5 text-slate-400" />
-                </span>
-                {isSectionOpen('bench') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
-              </div>
-              </button>
-              {isSectionOpen('bench') && (
-                <PeerBenchmarking
-                  removalEfficiencies={removalEfficiencies as any}
-                  regionId={activeDetailId}
-                  userRole="NGO"
-                />
-              )}
-            </div>
-
-            {/* Bay Impact Counter (Chesapeake states) */}
-            {['MD','VA','PA','DE','DC','WV','NY'].includes(stateAbbr) && (
-              <div id="section-bay" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-                <button onClick={() => toggleCollapse('bay')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-                  <span className="text-sm font-bold text-slate-800">🌊 Chesapeake Bay Impact</span>
-                  <div className="flex items-center gap-1.5">
-                <span onClick={(e) => { e.stopPropagation(); printSection('bay', 'Chesapeake Bay Impact'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                  <Printer className="h-3.5 w-3.5 text-slate-400" />
-                </span>
-                {isSectionOpen('bay') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
-              </div>
-                </button>
-                {isSectionOpen('bay') && (
-                  <BayImpactCounter
-                    removalEfficiencies={removalEfficiencies as any}
-                    regionId={activeDetailId}
-                    userRole="NGO"
-                  />
-                )}
-              </div>
-            )}
-
-            {/* 24-Hour Forecast */}
-            <div id="section-forecast" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-              <button onClick={() => toggleCollapse('forecast')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-                <span className="text-sm font-bold text-slate-800">📈 24-Hour Water Quality Forecast</span>
-                <div className="flex items-center gap-1.5">
-                <span onClick={(e) => { e.stopPropagation(); printSection('forecast', '24-Hour Water Quality Forecast'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                  <Printer className="h-3.5 w-3.5 text-slate-400" />
-                </span>
-                {isSectionOpen('forecast') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
-              </div>
-              </button>
-              {isSectionOpen('forecast') && (
-                <ForecastChart
-                  data={displayData as any}
-                  removalEfficiencies={removalEfficiencies as any}
-                  userRole="NGO"
-                />
-              )}
-            </div>
 
           </div>
         )}
@@ -2376,7 +2339,7 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
 
         {/* ── TOP 10 WORSENING / IMPROVING — full + programs view ── */}
         {(
-        <div id="section-top10" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div id="section-top10" className="rounded-2xl border-l-4 border-l-emerald-500 border border-emerald-200 bg-white shadow-sm overflow-hidden">
           <button onClick={() => toggleCollapse('top10')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
             <span className="text-sm font-bold text-slate-800">🔥 Top 5 Worsening / Improving Waterbodies</span>
             <div className="flex items-center gap-1.5">
@@ -2554,7 +2517,7 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
         )}
 
         {/* ── VOLUNTEER MONITORING COORDINATION ── */}
-        <Card id="section-volunteer" className="border-2 border-green-200 bg-gradient-to-br from-green-50/30 to-white">
+        <Card id="section-volunteer" className="rounded-2xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50/30 to-white">
           <CardHeader className="pb-2 cursor-pointer" onClick={() => toggleSection('volunteer')}>
             <div className="flex items-center justify-between">
               <CardTitle className="text-base flex items-center gap-2">
@@ -2604,8 +2567,13 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
           )}
         </Card>
 
+        {/* ── WATER QUALITY CHALLENGES — core advocacy content ── */}
+        <div className="rounded-2xl border-l-4 border-l-emerald-500 border border-emerald-200 bg-white shadow-sm overflow-hidden p-6">
+          <WaterQualityChallenges context="ngo" />
+        </div>
+
         {/* ── COMMUNITY ENGAGEMENT & PUBLIC TRANSPARENCY ── */}
-        <div id="section-community" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div id="section-community" className="rounded-2xl border-l-4 border-l-emerald-500 border border-emerald-200 bg-white shadow-sm overflow-hidden">
           <button onClick={() => toggleCollapse('community')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
             <span className="text-sm font-bold text-slate-800">📢 Community Engagement & Public Transparency</span>
             <div className="flex items-center gap-1.5">
@@ -2640,7 +2608,7 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
         </div>
 
         {/* ── POLICY ADVOCACY TOOLKIT ── */}
-        <div id="section-policy" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div id="section-policy" className="rounded-2xl border-l-4 border-l-emerald-500 border border-emerald-200 bg-white shadow-sm overflow-hidden">
           <button onClick={() => toggleCollapse('policy')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
             <span className="text-sm font-bold text-slate-800">⚖️ Policy Advocacy Toolkit</span>
             <div className="flex items-center gap-1.5">
@@ -2676,7 +2644,7 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
         </div>
 
         {/* ── WATERSHED PARTNERSHIP NETWORK ── */}
-        <div id="section-partners" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div id="section-partners" className="rounded-2xl border-l-4 border-l-emerald-500 border border-emerald-200 bg-white shadow-sm overflow-hidden">
           <button onClick={() => toggleCollapse('partners')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
             <span className="text-sm font-bold text-slate-800">🤝 Watershed Partnership Network</span>
             <div className="flex items-center gap-1.5">
@@ -2703,7 +2671,7 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
         {/* ── GRANT & FUNDING OPPORTUNITIES ── */}
         {/* ── GRANT OPPORTUNITIES — always at bottom ── */}
         {activeDetailId && displayData && regionMockData && (
-          <div id="section-grants" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <div id="section-grants" className="rounded-2xl border-l-4 border-l-emerald-500 border border-emerald-200 bg-white shadow-sm overflow-hidden">
             <button onClick={() => toggleCollapse('grants')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
               <span className="text-sm font-bold text-slate-800">🌱 Grant & Funding Opportunities — {stateName}</span>
               <div className="flex items-center gap-1.5">
@@ -2725,9 +2693,9 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
         )}
 
         {/* ── FOOTER ── */}
-        <div className="flex items-center justify-between text-[10px] text-slate-400 pt-2 border-t border-slate-200">
-          <span>PEARL {stateName} Watershed Advocacy Center v1.0 · {regionData.length} waterbodies monitored</span>
-          <span className="font-medium text-slate-500">Data Sources:</span>
+        <div className="flex items-center justify-between text-[10px] text-slate-400 pt-2 border-t border-emerald-200">
+          <span>PEARL {stateName} Conservation Hub v1.0 · {regionData.length} waterbodies monitored</span>
+          <span className="font-medium text-emerald-600">Data Sources:</span>
           <span>USGS NWIS · EPA ATTAINS · Water Quality Portal · NOAA CO-OPS · EPA ECHO · EJScreen</span>
         </div>
 
