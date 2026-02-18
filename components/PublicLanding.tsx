@@ -394,25 +394,33 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
         </div>
       </section>
 
-      {/* ═══ CTA ═══ */}
-      <section className="relative py-28 overflow-hidden">
-        <div className="absolute inset-0">
-          <Image src="/coral-reef.jpg" alt="" fill className="object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-cyan-900/40 to-transparent" />
+      {/* ═══ CORAL REEF IMAGE ═══ */}
+      <section className="relative">
+        <div className="relative w-full h-[400px] sm:h-[500px]">
+          <Image src="/Coral Reef.JPG" alt="Coral reef restoration — the next chapter" fill className="object-cover" />
         </div>
-        <div className="relative max-w-3xl mx-auto px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+        <div className="absolute bottom-6 left-6 sm:bottom-8 sm:left-8">
+          <span className="inline-block px-4 py-2 bg-white/90 backdrop-blur-sm rounded-full text-sm font-semibold text-slate-800 shadow-lg">
+            The Next Chapter &mdash; Reef Restoration
+          </span>
+        </div>
+      </section>
+
+      {/* ═══ CTA ═══ */}
+      <section className="py-24 bg-gradient-to-br from-slate-50 via-white to-cyan-50">
+        <div className="max-w-3xl mx-auto px-6 lg:px-8 text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
             Water quality data should work as hard as you do.
           </h2>
-          <p className="text-lg text-white/70 mb-10 max-w-xl mx-auto">
+          <p className="text-lg text-slate-600 mb-10 max-w-xl mx-auto">
             Whether you manage stormwater permits, regulate a state&#39;s waters, or research
             aquatic ecosystems &mdash; PEARL puts actionable intelligence at your fingertips.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <button onClick={onSignIn} className="group inline-flex items-center gap-3 px-8 py-4 text-base font-semibold text-slate-900 bg-white rounded-full hover:bg-slate-100 transition-all shadow-2xl shadow-black/30">
+            <button onClick={onSignIn} className="group inline-flex items-center gap-3 px-8 py-4 text-base font-semibold text-white bg-slate-900 rounded-full hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/20">
               Create Free Account <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </button>
-            <a href="mailto:doug@project-pearl.org?subject=PEARL%20Platform%20Inquiry" className="inline-flex items-center gap-2 px-8 py-4 text-base font-medium text-white/90 border border-white/30 rounded-full hover:bg-white/10 transition-all backdrop-blur-sm">
+            <a href="mailto:doug@project-pearl.org?subject=PEARL%20Platform%20Inquiry" className="inline-flex items-center gap-2 px-8 py-4 text-base font-medium text-slate-700 border-2 border-slate-200 rounded-full hover:border-slate-300 hover:bg-white transition-all">
               Talk to Our Team
             </a>
           </div>
@@ -424,11 +432,13 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
           <div className="grid md:grid-cols-4 gap-12">
             <div className="md:col-span-2">
-              <Image src="/Logo_Pearl_with_reef.jpg" alt="Project PEARL" width={120} height={120} className="object-contain rounded-lg opacity-90 mb-4" />
+              <div className="flex items-center gap-4 mb-4">
+                <Image src="/Logo_Pearl_with_reef.jpg" alt="Project PEARL" width={120} height={120} className="object-contain rounded-lg opacity-90" />
+                <Image src="/logo-lsp.jpg" alt="Local Seafood Projects" width={100} height={50} className="object-contain rounded opacity-70" />
+              </div>
               <p className="text-sm text-slate-500 leading-relaxed max-w-sm mb-4">
                 Proactive Engineering for Aquatic Rehabilitation &amp; Legacy. A platform by Local Seafood Projects Inc.
               </p>
-              <Image src="/logo-lsp.jpg" alt="Local Seafood Projects" width={100} height={50} className="object-contain rounded opacity-70 mb-3" />
               <div className="flex items-center gap-2 mt-2">
                 <LivePulse />
                 <span className="text-xs text-emerald-400/70 font-medium">Systems operational</span>

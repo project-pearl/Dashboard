@@ -56,6 +56,18 @@ const MS4CommandCenter = dynamic(
   () => import('@/components/MS4CommandCenter').then((mod) => mod.MS4CommandCenter),
   { ssr: false, loading: () => <div className="flex items-center justify-center min-h-[400px]"><Skeleton className="w-full h-[400px]" /></div> }
 );
+const K12CommandCenter = dynamic(
+  () => import('@/components/K12CommandCenter').then((mod) => mod.K12CommandCenter),
+  { ssr: false, loading: () => <div className="flex items-center justify-center min-h-[400px]"><Skeleton className="w-full h-[400px]" /></div> }
+);
+const UniversityCommandCenter = dynamic(
+  () => import('@/components/UniversityCommandCenter').then((mod) => mod.UniversityCommandCenter),
+  { ssr: false, loading: () => <div className="flex items-center justify-center min-h-[400px]"><Skeleton className="w-full h-[400px]" /></div> }
+);
+const NGOCommandCenter = dynamic(
+  () => import('@/components/NGOCommandCenter').then((mod) => mod.NGOCommandCenter),
+  { ssr: false, loading: () => <div className="flex items-center justify-center min-h-[400px]"><Skeleton className="w-full h-[400px]" /></div> }
+);
 const AcademicTools = dynamic(
   () => import('@/components/AcademicTools').then((mod) => mod.AcademicTools),
   { ssr: false }
@@ -1096,8 +1108,51 @@ export default function Home() {
           onToggleDevMode={() => setDevMode(prev => !prev)}
         />
     )}
-    {/* Federal/State/Corporate/MS4: command centers are the entire dashboard — hide everything below */}
-    {userRole !== 'Federal' && userRole !== 'State' && userRole !== 'Corporate' && userRole !== 'MS4' && (
+    {userRole === 'K12' && !showNationalView && (
+        <K12CommandCenter
+          stateAbbr={userState}
+          isTeacher={false}
+          onSelectRegion={(regionId) => {
+            setSelectedRegionId(regionId);
+            setUserRegion(regionId);
+          }}
+          onToggleDevMode={() => setDevMode(prev => !prev)}
+        />
+    )}
+    {userRole === 'College' && !showNationalView && (
+        <UniversityCommandCenter
+          stateAbbr={userState}
+          userRole="Researcher"
+          onSelectRegion={(regionId) => {
+            setSelectedRegionId(regionId);
+            setUserRegion(regionId);
+          }}
+          onToggleDevMode={() => setDevMode(prev => !prev)}
+        />
+    )}
+    {userRole === 'Researcher' && !showNationalView && (
+        <UniversityCommandCenter
+          stateAbbr={userState}
+          userRole="Researcher"
+          onSelectRegion={(regionId) => {
+            setSelectedRegionId(regionId);
+            setUserRegion(regionId);
+          }}
+          onToggleDevMode={() => setDevMode(prev => !prev)}
+        />
+    )}
+    {userRole === 'NGO' && !showNationalView && (
+        <NGOCommandCenter
+          stateAbbr={userState}
+          onSelectRegion={(regionId) => {
+            setSelectedRegionId(regionId);
+            setUserRegion(regionId);
+          }}
+          onToggleDevMode={() => setDevMode(prev => !prev)}
+        />
+    )}
+    {/* All roles now have command centers — old shared dashboard disabled */}
+    {false && (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50" suppressHydrationWarning>
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="flex flex-col gap-8">
