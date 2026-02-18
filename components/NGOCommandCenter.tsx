@@ -2589,12 +2589,14 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
           <WaterQualityChallenges context="ngo" />
         </div>
 
-        {/* ── ECOLOGICAL RESTORATION — turtle habitat feature card ── */}
+        {/* ── ECOLOGICAL RESTORATION — turtle habitat (MD only) / oyster restoration (all other states) ── */}
         <div className="rounded-2xl border border-emerald-200 bg-white shadow-sm overflow-hidden">
           <div className="relative w-full h-[240px] md:h-[320px]">
             <Image
-              src="/turtle-eggs-solution.png"
-              alt="Turtle nesting habitat restoration — protecting vulnerable species through water quality improvement"
+              src={stateAbbr === 'MD' ? '/turtle-eggs-solution.png' : '/oyster-restoration.png'}
+              alt={stateAbbr === 'MD'
+                ? "Turtle nesting habitat restoration — protecting Maryland's state reptile through water quality improvement"
+                : 'Oyster reef restoration — community-driven biofiltration improving coastal water quality'}
               fill
               className="object-cover"
               sizes="100vw"
@@ -2604,7 +2606,9 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
               <div className="text-xs font-semibold text-teal-300 uppercase tracking-wide mb-1">Species &amp; Habitat Protection</div>
               <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">Why Clean Water Matters for Wildlife</h3>
               <p className="text-sm text-white/80 max-w-2xl leading-relaxed mb-3">
-                Impaired waterways threaten nesting habitats, egg viability, and juvenile survival for turtles, shorebirds, and other species that depend on healthy watersheds. PEARL monitoring data connects water quality metrics directly to ecological outcomes.
+                {stateAbbr === 'MD'
+                  ? "Impaired waterways threaten nesting habitats, egg viability, and juvenile survival for turtles, shorebirds, and other species that depend on healthy watersheds. PEARL monitoring data connects water quality metrics directly to ecological outcomes."
+                  : 'Degraded water quality threatens aquatic ecosystems, from shellfish reefs to shorebird habitats. PEARL monitoring data connects water quality metrics directly to ecological outcomes, enabling targeted restoration and species protection.'}
               </p>
               <div className="flex flex-wrap gap-2">
                 <span className="px-3 py-1 rounded-full text-xs font-medium bg-white/20 text-white border border-white/30 backdrop-blur-sm">Habitat Restoration</span>
