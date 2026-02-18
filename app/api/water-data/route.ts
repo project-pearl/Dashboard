@@ -1292,8 +1292,9 @@ export async function GET(request: NextRequest) {
           }
         }
 
-        // 3. USGS real-time threshold alerts — check sentinel stations for DO/temp extremes
-        // State-specific sentinel stations for key waterways
+        // 3. USGS real-time multi-parameter analysis — threshold alerts + sewage discharge detection
+        // Sewage signature = simultaneous DO crash + conductivity spike + turbidity surge at same station
+        // This pattern would have caught the Jan 2026 Potomac Interceptor collapse within hours
         const SENTINEL_SITES: Record<string, string> = {
           MD: '01589440,01585219,01594440',  // Back River, Patapsco, Patuxent
           VA: '01668000,02035000,02037500',  // Rappahannock, James, James at Richmond
@@ -1306,66 +1307,190 @@ export async function GET(request: NextRequest) {
         const sentinelSites = SENTINEL_SITES[stateFilter] || '';
         if (sentinelSites) {
           try {
-          const ivUrl = `${USGS_IV_BASE}?format=json&sites=${sentinelSites}&parameterCd=00300,00010&period=PT4H&siteStatus=active`;
-          const ivRes = await fetch(ivUrl, {
+            // Fetch DO (00300), Temp (00010), Conductivity (00095), Turbidity (63680)
+            // All four needed for sewage discharge signature detection
+            const ivUrl = `${USGS_IV_BASE}?format=json&sites=${sentinelSites}&parameterCd=00300,00010,00095,63680&period=PT6H&siteStatus=active`;
+            const ivRes = await fetch(ivUrl, {
+              headers: { 'Accept': 'application/json' },
+              signal: AbortSignal.timeout(15_000),
+              next: { revalidate: 300 },
+            });
+            if (ivRes.ok) {
+              const ivData = await ivRes.json();
+              const timeSeries = ivData?.value?.timeSeries || [];
+
+              // Group all parameters by site for cross-correlation
+              const siteReadings: Record<string, {
+                name: string; siteCode: string;
+                DO?: { val: number; prev: number; time: string };
+                conductivity?: { val: number; prev: number; time: string };
+                turbidity?: { val: number; prev: number; time: string };
+                temp?: { val: number; time: string };
+              }> = {};
+
+              for (const ts of timeSeries) {
+                const paramCode = ts?.variable?.variableCode?.[0]?.value;
+                const siteName = ts?.sourceInfo?.siteName || 'Unknown';
+                const siteCode = ts?.sourceInfo?.siteCode?.[0]?.value || '';
+                const values = ts?.values?.[0]?.value || [];
+                if (values.length === 0) continue;
+
+                const latest = values[values.length - 1];
+                const val = parseFloat(latest?.value);
+                if (isNaN(val)) continue;
+
+                // Get previous reading for rate-of-change detection
+                const prevReading = values.length >= 2 ? values[values.length - 2] : null;
+                const prevVal = prevReading ? parseFloat(prevReading.value) : val;
+
+                if (!siteReadings[siteCode]) {
+                  siteReadings[siteCode] = { name: siteName, siteCode };
+                }
+                const site = siteReadings[siteCode];
+
+                if (paramCode === '00300') site.DO = { val, prev: isNaN(prevVal) ? val : prevVal, time: latest.dateTime };
+                if (paramCode === '00095') site.conductivity = { val, prev: isNaN(prevVal) ? val : prevVal, time: latest.dateTime };
+                if (paramCode === '63680') site.turbidity = { val, prev: isNaN(prevVal) ? val : prevVal, time: latest.dateTime };
+                if (paramCode === '00010') site.temp = { val, time: latest.dateTime };
+              }
+
+              // Analyze each site for anomalies and sewage signatures
+              for (const [siteCode, site] of Object.entries(siteReadings)) {
+                const timestamp = site.DO?.time || site.conductivity?.time || site.turbidity?.time || new Date().toISOString();
+
+                // ── Sewage Discharge Signature Detection ──
+                // Pattern: DO drops sharply + conductivity spikes + turbidity surges
+                // Any 2 of 3 = warning, all 3 = critical (probable discharge event)
+                let sewageIndicators = 0;
+                const sewageDetails: string[] = [];
+
+                if (site.DO && site.DO.val < 4 && site.DO.prev > 0 && (site.DO.prev - site.DO.val) / site.DO.prev > 0.25) {
+                  sewageIndicators++;
+                  sewageDetails.push(`DO crashed ${((1 - site.DO.val / site.DO.prev) * 100).toFixed(0)}% to ${site.DO.val.toFixed(1)} mg/L`);
+                }
+                if (site.conductivity && site.conductivity.prev > 0 && (site.conductivity.val - site.conductivity.prev) / site.conductivity.prev > 0.30) {
+                  sewageIndicators++;
+                  sewageDetails.push(`conductivity spiked ${((site.conductivity.val / site.conductivity.prev - 1) * 100).toFixed(0)}% to ${site.conductivity.val.toFixed(0)} µS/cm`);
+                }
+                if (site.turbidity && site.turbidity.val > 50 && site.turbidity.prev > 0 && (site.turbidity.val - site.turbidity.prev) / site.turbidity.prev > 0.40) {
+                  sewageIndicators++;
+                  sewageDetails.push(`turbidity surged ${((site.turbidity.val / site.turbidity.prev - 1) * 100).toFixed(0)}% to ${site.turbidity.val.toFixed(0)} NTU`);
+                }
+
+                if (sewageIndicators >= 2) {
+                  signals.push({
+                    type: 'discharge_signature',
+                    severity: sewageIndicators >= 3 ? 'high' : 'medium',
+                    title: `${sewageIndicators >= 3 ? '⚠️ Probable Sewage Discharge' : 'Potential Discharge Event'}: ${site.name}`,
+                    location: site.name,
+                    state: stateFilter,
+                    source: 'PEARL Multi-Parameter Analysis',
+                    reason: `Simultaneous anomaly detected: ${sewageDetails.join('; ')}. Pattern consistent with untreated sewage discharge or CSO/SSO event. Recommend immediate investigation of upstream outfalls and interceptors.`,
+                    indicators: sewageIndicators,
+                    details: sewageDetails,
+                    siteCode,
+                    timestamp,
+                  });
+                }
+
+                // ── Standard single-parameter threshold alerts ──
+                // (only if not already flagged as part of a discharge signature)
+                if (sewageIndicators < 2) {
+                  if (site.DO && site.DO.val < 4) {
+                    signals.push({
+                      type: 'sensor_alert',
+                      severity: site.DO.val < 2 ? 'high' : 'medium',
+                      title: `${site.DO.val < 2 ? 'Hypoxic' : 'Low DO'} Alert: ${site.name}`,
+                      location: site.name,
+                      state: stateFilter,
+                      source: 'USGS Real-Time',
+                      reason: `Dissolved oxygen at ${site.DO.val.toFixed(1)} mg/L (${site.DO.val < 2 ? 'critically low — aquatic life at risk' : 'below 4 mg/L stress threshold'})`,
+                      value: site.DO.val,
+                      unit: 'mg/L',
+                      parameter: 'Dissolved Oxygen',
+                      siteCode,
+                      timestamp,
+                    });
+                  }
+
+                  if (site.temp && site.temp.val > 30) {
+                    signals.push({
+                      type: 'sensor_alert',
+                      severity: 'medium',
+                      title: `Elevated Water Temperature: ${site.name}`,
+                      location: site.name,
+                      state: stateFilter,
+                      source: 'USGS Real-Time',
+                      reason: `Water temperature at ${site.temp.val.toFixed(1)}°C — above 30°C thermal stress threshold`,
+                      value: site.temp.val,
+                      unit: '°C',
+                      parameter: 'Water Temperature',
+                      siteCode,
+                      timestamp,
+                    });
+                  }
+
+                  // Standalone turbidity spike (not part of sewage pattern)
+                  if (site.turbidity && site.turbidity.val > 100) {
+                    signals.push({
+                      type: 'sensor_alert',
+                      severity: site.turbidity.val > 250 ? 'high' : 'medium',
+                      title: `High Turbidity: ${site.name}`,
+                      location: site.name,
+                      state: stateFilter,
+                      source: 'USGS Real-Time',
+                      reason: `Turbidity at ${site.turbidity.val.toFixed(0)} NTU — may indicate sediment runoff, construction discharge, or upstream disturbance`,
+                      value: site.turbidity.val,
+                      unit: 'NTU',
+                      parameter: 'Turbidity',
+                      siteCode,
+                      timestamp,
+                    });
+                  }
+                }
+              }
+            }
+          } catch (e: any) {
+            console.warn('[Signals] USGS multi-parameter analysis failed:', e.message);
+          }
+        } // end if (sentinelSites)
+
+        // 4. EPA ECHO — Recent significant violations / enforcement actions
+        // Catches reported spills, permit violations, and enforcement that utilities self-report
+        try {
+          const echoUrl = `${ECHO_BASE}/get_facility_info?output=JSON&p_st=${stateFilter}&p_med=CWA&p_qiv=VIOL&p_act=Y&responseset=10`;
+          const echoRes = await fetch(echoUrl, {
             headers: { 'Accept': 'application/json' },
             signal: AbortSignal.timeout(10_000),
-            next: { revalidate: 300 },
+            next: { revalidate: 1800 }, // 30 min cache
           });
-          if (ivRes.ok) {
-            const ivData = await ivRes.json();
-            const timeSeries = ivData?.value?.timeSeries || [];
-            for (const ts of timeSeries) {
-              const paramCode = ts?.variable?.variableCode?.[0]?.value;
-              const siteName = ts?.sourceInfo?.siteName || 'Unknown';
-              const siteCode = ts?.sourceInfo?.siteCode?.[0]?.value || '';
-              const values = ts?.values?.[0]?.value || [];
-              const latest = values[values.length - 1];
-              if (!latest) continue;
-              const val = parseFloat(latest.value);
-              if (isNaN(val)) continue;
+          if (echoRes.ok) {
+            const echoData = await echoRes.json();
+            const facilities = echoData?.Results?.Facilities || [];
+            for (const fac of facilities.slice(0, 5)) {
+              const facName = fac?.CWPName || fac?.FacName || 'Unknown Facility';
+              const qtrStatus = fac?.CWPSNCStatus || fac?.CWPStatus || '';
+              const isSignificant = qtrStatus.includes('S') || qtrStatus.includes('SNC');
+              if (!isSignificant) continue;
 
-              // DO < 2 mg/L = hypoxic crisis, < 4 = stress
-              if (paramCode === '00300' && val < 4) {
-                signals.push({
-                  type: 'sensor_alert',
-                  severity: val < 2 ? 'high' : 'medium',
-                  title: `${val < 2 ? 'Hypoxic' : 'Low DO'} Alert: ${siteName}`,
-                  location: siteName,
-                  state: stateFilter,
-                  source: 'USGS Real-Time',
-                  reason: `Dissolved oxygen at ${val.toFixed(1)} mg/L (${val < 2 ? 'critically low — aquatic life at risk' : 'below 4 mg/L stress threshold'})`,
-                  value: val,
-                  unit: 'mg/L',
-                  parameter: 'Dissolved Oxygen',
-                  siteCode,
-                  timestamp: latest.dateTime || new Date().toISOString(),
-                });
-              }
-
-              // Water temp > 30°C = thermal stress for most Bay species
-              if (paramCode === '00010' && val > 30) {
-                signals.push({
-                  type: 'sensor_alert',
-                  severity: 'medium',
-                  title: `Elevated Water Temperature: ${siteName}`,
-                  location: siteName,
-                  state: stateFilter,
-                  source: 'USGS Real-Time',
-                  reason: `Water temperature at ${val.toFixed(1)}°C — above 30°C thermal stress threshold`,
-                  value: val,
-                  unit: '°C',
-                  parameter: 'Water Temperature',
-                  siteCode,
-                  timestamp: latest.dateTime || new Date().toISOString(),
-                });
-              }
+              signals.push({
+                type: 'permit_violation',
+                severity: 'high',
+                title: `CWA Violation: ${facName}`,
+                location: facName,
+                state: stateFilter,
+                source: 'EPA ECHO',
+                reason: `Facility in significant non-compliance with Clean Water Act permit. Status: ${qtrStatus}. May indicate ongoing unpermitted discharge affecting downstream water quality.`,
+                facilityId: fac?.RegistryID || fac?.CWPFacilityID || '',
+                latitude: fac?.FacLat || null,
+                longitude: fac?.FacLong || null,
+                timestamp: new Date().toISOString(),
+              });
             }
           }
         } catch (e: any) {
-          console.warn('[Signals] USGS threshold check failed:', e.message);
+          console.warn('[Signals] ECHO violations check failed:', e.message);
         }
-        } // end if (sentinelSites)
 
         // Sort by severity (high → medium → info) then by timestamp descending
         const sevOrder: Record<string, number> = { high: 0, medium: 1, low: 2, info: 3 };
