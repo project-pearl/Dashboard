@@ -19,6 +19,7 @@ import { getEJScore, getEJData } from '@/lib/ejVulnerability';
 import { BrandedPDFGenerator } from '@/lib/brandedPdfGenerator';
 import { useAuth } from '@/lib/authContext';
 import { useWaterData, DATA_SOURCES } from '@/lib/useWaterData';
+import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -4487,23 +4488,23 @@ export function NationalCommandCenter(props: Props) {
                 <div className="text-xs text-slate-600 mt-1">States + DC</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-slate-800">{nationalStats.totalWaterbodies.toLocaleString()}</div>
+                <div className="text-3xl font-bold text-slate-800 inline-flex items-center gap-1">{nationalStats.totalWaterbodies.toLocaleString()}<ProvenanceIcon metricName="Waterbodies" displayValue={String(nationalStats.totalWaterbodies)} /></div>
                 <div className="text-xs text-slate-600 mt-1">Waterbodies</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-green-600">{nationalStats.assessed}</div>
+                <div className="text-3xl font-bold text-green-600 inline-flex items-center gap-1">{nationalStats.assessed}<ProvenanceIcon metricName="Assessed Waterbodies" displayValue={String(nationalStats.assessed)} /></div>
                 <div className="text-xs text-slate-600 mt-1">Assessed</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-blue-600">{nationalStats.monitored.toLocaleString()}</div>
+                <div className="text-3xl font-bold text-blue-600 inline-flex items-center gap-1">{nationalStats.monitored.toLocaleString()}<ProvenanceIcon metricName="Monitored Waterbodies" displayValue={String(nationalStats.monitored)} /></div>
                 <div className="text-xs text-slate-600 mt-1">Monitored</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-red-600">{nationalStats.highAlerts}</div>
+                <div className="text-3xl font-bold text-red-600 inline-flex items-center gap-1">{nationalStats.highAlerts}<ProvenanceIcon metricName="Severe Alerts" displayValue={String(nationalStats.highAlerts)} /></div>
                 <div className="text-xs text-slate-600 mt-1">Severe</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-orange-600">{nationalStats.mediumAlerts}</div>
+                <div className="text-3xl font-bold text-orange-600 inline-flex items-center gap-1">{nationalStats.mediumAlerts}<ProvenanceIcon metricName="Impaired Waterbodies" displayValue={String(nationalStats.mediumAlerts)} /></div>
                 <div className="text-xs text-slate-600 mt-1">Impaired</div>
               </div>
               <div className="text-center">
