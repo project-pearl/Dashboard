@@ -36,7 +36,6 @@ const MD_JURISDICTIONS: { key: string; label: string; permit: string }[] = [
 ];
 
 const ROLE_META: Record<UserRole, { icon: typeof Shield; label: string; desc: string; tier: 'explorer' | 'operator' }> = {
-  Public:     { icon: Globe,          label: 'Public',                desc: 'View public water quality data',                              tier: 'explorer' },
   K12:        { icon: Users,          label: 'K-12 Educator',         desc: 'Classroom tools & educational content',                       tier: 'explorer' },
   College:    { icon: GraduationCap,  label: 'College / University',  desc: 'Research data access & academic tools',                       tier: 'explorer' },
   Researcher: { icon: GraduationCap,  label: 'Researcher',            desc: 'Full data export, API access, citation tools',                tier: 'explorer' },

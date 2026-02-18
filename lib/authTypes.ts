@@ -1,13 +1,13 @@
 // ─── Auth Types ─────────────────────────────────────────────────────────────
 // Shared types for the PEARL authentication & authorization system.
 
-export type UserRole = 'Federal' | 'State' | 'MS4' | 'Corporate' | 'Researcher' | 'College' | 'NGO' | 'K12' | 'Public';
+export type UserRole = 'Federal' | 'State' | 'MS4' | 'Corporate' | 'Researcher' | 'College' | 'NGO' | 'K12';
 export type AccountStatus = 'active' | 'pending' | 'rejected' | 'deactivated';
 
 /** Roles that require admin approval + jurisdiction binding */
 export const OPERATOR_ROLES: UserRole[] = ['MS4', 'State', 'Federal', 'Corporate'];
 /** Roles that get instant access on self-signup */
-export const EXPLORER_ROLES: UserRole[] = ['Public', 'K12', 'College', 'Researcher', 'NGO'];
+export const EXPLORER_ROLES: UserRole[] = ['K12', 'College', 'Researcher', 'NGO'];
 
 export function isOperatorRole(role: UserRole): boolean {
   return OPERATOR_ROLES.includes(role);

@@ -7,7 +7,6 @@ import type { UserRole } from '@/lib/authTypes';
 import Image from 'next/image';
 
 const ROLES: { value: UserRole; label: string; desc: string }[] = [
-  { value: 'Public',     label: 'Public',          desc: 'Community water quality access' },
   { value: 'MS4',        label: 'MS4 Operator',    desc: 'Municipal stormwater permits' },
   { value: 'State',      label: 'State Agency',    desc: 'State regulatory compliance' },
   { value: 'Federal',    label: 'Federal Agency',  desc: 'EPA oversight & national metrics' },
@@ -26,7 +25,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [role, setRole] = useState<UserRole>('Public');
+  const [role, setRole] = useState<UserRole>('K12');
   const [organization, setOrganization] = useState('');
   const [state, setState] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -164,6 +163,10 @@ export default function LoginPage() {
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="••••••••"
                 />
+              </div>
+              <div className="flex items-center gap-2">
+                <input type="checkbox" id="remember" className="accent-blue-600" />
+                <label htmlFor="remember" className="text-sm text-gray-600">Remember me</label>
               </div>
               <button
                 type="submit"

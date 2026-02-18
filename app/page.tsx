@@ -19,7 +19,7 @@ import { getEJMetricsForLocation } from '@/lib/ejImpact';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Download, Droplets, GitCompare, MapPin, CloudRain, FileText, Eye, EyeOff, Coins, BarChart3, BookOpen, Share2, Copy, Check, TrendingUp,
+import { Download, Droplets, GitCompare, MapPin, CloudRain, FileText, Coins, BarChart3, BookOpen, Copy, Check, TrendingUp,
   Globe} from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertsBanner } from '@/components/AlertsBanner';
@@ -225,7 +225,6 @@ export default function Home() {
   const [stormDetectionDismissed, setStormDetectionDismissed] = useState(false);
   const [demoStormActive, setDemoStormActive] = useState(false);
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
-  const [isPublicView, setIsPublicView] = useState(false);
   const [showNutrientCredits, setShowNutrientCredits] = useState(false);
   const [showESG, setShowESG] = useState(false);
   const [showManuscript, setShowManuscript] = useState(false);
@@ -234,7 +233,7 @@ export default function Home() {
   const [endDate, setEndDate] = useState('');
   
   // Phase 1: Role Selector for Demos
-  const [userRole, setUserRole] = useState<'Federal' | 'State' | 'MS4' | 'Corporate' | 'Researcher' | 'College' | 'NGO' | 'K12' | 'Public'>('MS4');
+  const [userRole, setUserRole] = useState<'Federal' | 'State' | 'MS4' | 'Corporate' | 'Researcher' | 'College' | 'NGO' | 'K12'>('MS4');
   const { user } = useAuth();
 
   // Sync role, state, and region from auth session
@@ -298,8 +297,6 @@ export default function Home() {
   const collapseAll = () => setCollapsedSections(new Set(ALL_SECTION_IDS));
   const allExpanded = collapsedSections.size === 0;
 
-  const [linkCopied, setLinkCopied] = useState(false);
-
   useEffect(() => {
     setMounted(true);
     setStartDate(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16));
@@ -307,12 +304,9 @@ export default function Home() {
 
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('view') === 'public') {
-        setIsPublicView(true);
-        const region = urlParams.get('region');
-        if (region) {
-          setSelectedRegionId(region);
-        }
+      const region = urlParams.get('region');
+      if (region) {
+        setSelectedRegionId(region);
       }
     }
   }, []);
@@ -374,25 +368,19 @@ export default function Home() {
   };
 
   const shouldShowComparison = () => {
-    // Hide from K12 and Public only
-    return !['K12', 'Public'].includes(userRole);
+    // Hide from K12 only
+    return userRole !== 'K12';
   };
 
   const shouldShowTimeRange = () => {
-    // Hide from K12 and Public only
-    return !['K12', 'Public'].includes(userRole);
+    // Hide from K12 only
+    return userRole !== 'K12';
   };
 
   const shouldShowExportCSV = () => {
     // Data export for operational, research, advocacy, corporate roles
     return ['MS4', 'State', 'Corporate', 'Researcher', 'College', 'NGO'].includes(userRole);
   };
-
-  const shouldShowPublicView = () => {
-    // Public transparency feature for MS4s, NGOs, Corporate (stakeholder dashboards)
-    return ['MS4', 'Corporate', 'NGO'].includes(userRole);
-  };
-
 
   const shouldShowESGImpact = () => {
     // ESG for Corporate + MS4s + NGOs
@@ -462,13 +450,13 @@ export default function Home() {
   };
 
   const shouldShowEJImpact = () => {
-    // Hide from K12 and Public only
-    return !['K12', 'Public'].includes(userRole);
+    // Hide from K12 only
+    return userRole !== 'K12';
   };
 
   const shouldShowAIInsights = () => {
-    // Hide from K12 and Public only
-    return !['K12', 'Public'].includes(userRole);
+    // Hide from K12 only
+    return userRole !== 'K12';
   };
 
   const shouldShowTrendsChart = () => {
@@ -780,27 +768,6 @@ export default function Home() {
     window.URL.revokeObjectURL(url);
   };
 
-  const createPublicSnapshotLink = () => {
-    const region = getRegionById(selectedRegionId);
-    const regionSlug = region?.name.replace(/[^a-zA-Z0-9]/g, '') || 'Region';
-    const dateSlug = new Date().toISOString().slice(0, 7).replace('-', '');
-    const mockShortUrl = `pearl.sh/${regionSlug}-${dateSlug}`;
-
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-    const fullUrl = `${baseUrl}/?view=public&region=${selectedRegionId}`;
-
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(fullUrl).then(() => {
-        setLinkCopied(true);
-        setTimeout(() => setLinkCopied(false), 3000);
-      }).catch(() => {
-        window.open(fullUrl, '_blank');
-      });
-    } else {
-      window.open(fullUrl, '_blank');
-    }
-  };
-
   // ── Branded PDF Exports for sections missing them ──────────────────────
   const exportWaterQualityPDF = async () => {
     const regionName = selectedRegion?.name || 'Unknown';
@@ -970,7 +937,7 @@ export default function Home() {
     <AuthGuard>
     <>
       {/* ── FLOATING DEV MODE PANEL (renders above all views) ── */}
-      {devMode && mounted && !isPublicView && (
+      {devMode && mounted && (
         <div className="fixed bottom-4 left-4 z-[100] max-w-xl animate-in fade-in slide-in-from-bottom-2">
           <div className="bg-amber-50 border-2 border-amber-400 rounded-xl px-4 py-3 shadow-xl space-y-2">
             <div className="flex items-center gap-3">
@@ -995,7 +962,6 @@ export default function Home() {
                   <SelectItem value="College">🎓 College Student</SelectItem>
                   <SelectItem value="NGO">🌿 NGO / Nonprofit</SelectItem>
                   <SelectItem value="K12">🎓 K-12 Teacher / Student</SelectItem>
-                  <SelectItem value="Public">🌐 Public / Anonymous</SelectItem>
                 </SelectContent>
               </Select>
               <button onClick={() => setDevMode(false)} className="text-amber-400 hover:text-amber-600 text-lg leading-none ml-2">×</button>
@@ -1106,21 +1072,21 @@ export default function Home() {
         />
       )}
     {/* State role: SCC is the entire dashboard — like Federal/NCC */}
-    {userRole === 'State' && !showNationalView && !isPublicView && (
+    {userRole === 'State' && !showNationalView && (
         <StateCommandCenter
           stateAbbr={userState}
           onToggleDevMode={() => setDevMode(prev => !prev)}
         />
     )}
     {/* Corporate/ESG: ESGCC is the entire dashboard */}
-    {userRole === 'Corporate' && !showNationalView && !isPublicView && (
+    {userRole === 'Corporate' && !showNationalView && (
         <ESGCommandCenter
           companyName={(user as any)?.organization || user?.name || 'PEARL Portfolio'}
           onBack={() => setUserRole('MS4')}
           onToggleDevMode={() => setDevMode(prev => !prev)}
         />
     )}
-    {userRole === 'MS4' && !showNationalView && !isPublicView && (
+    {userRole === 'MS4' && !showNationalView && (
         <MS4CommandCenter
           stateAbbr={userState}
           onSelectRegion={(regionId) => {
@@ -1135,24 +1101,6 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50" suppressHydrationWarning>
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="flex flex-col gap-8">
-          {isPublicView && (
-            <Card className="border-2 border-green-500 bg-gradient-to-r from-green-50 to-emerald-50">
-              <CardContent className="py-4">
-                <div className="flex items-center gap-3 justify-center">
-                  <Share2 className="h-5 w-5 text-green-700" />
-                  <div className="text-center">
-                    <p className="text-sm font-semibold text-green-900">
-                      Public View – Data from Project Pearl monitoring
-                    </p>
-                    <p className="text-xs text-green-700 mt-0.5">
-                      Real-time water quality transparency for community stakeholders
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
           <div className="flex items-start justify-between flex-wrap gap-6">
             <div className="flex flex-col gap-2">
               <div
@@ -1171,10 +1119,10 @@ export default function Home() {
                 />
               </div>
               <p className="text-sm sm:text-base text-muted-foreground">
-                {isPublicView ? 'Community Water Quality Transparency' : 'Water Quality Monitoring Dashboard'}
+                Water Quality Monitoring Dashboard
               </p>
             </div>
-            {!isPublicView && timeMode === 'real-time' && dataMode === 'ambient' && mounted && (
+            {timeMode === 'real-time' && dataMode === 'ambient' && mounted && (
               <div className="flex items-center gap-2">
                 <LiveStatusBadge secondsSinceUpdate={secondsSinceUpdate} isStormSpiking={isStormSpiking} stormIntensity={stormIntensity} />
                 <button
@@ -1220,7 +1168,7 @@ export default function Home() {
                 </SelectContent>
               </Select>
 
-              {!isPublicView && (
+              {(
                 <Tabs value={timeMode} onValueChange={(v) => setTimeMode(v as TimeMode)} className="w-full sm:w-auto">
                   <TabsList className="w-full sm:w-auto">
                     <TabsTrigger value="real-time" className="flex-1 sm:flex-none">Real-Time</TabsTrigger>
@@ -1231,7 +1179,7 @@ export default function Home() {
                 </Tabs>
               )}
 
-              {!isPublicView && (
+              {(
                 <Tabs value={dataMode} onValueChange={(v) => setDataMode(v as DataMode)} className="w-full sm:w-auto">
                   <TabsList className="w-full sm:w-auto grid grid-cols-2 lg:grid-cols-4">
                     <TabsTrigger value="ambient" className="text-xs sm:text-sm">Ambient</TabsTrigger>
@@ -1257,7 +1205,7 @@ export default function Home() {
                 </Tabs>
               )}
 
-              {!isPublicView && (userRole === 'Researcher' || userRole === 'NGO') && (
+              {(userRole === 'Researcher' || userRole === 'NGO') && (
                 <Button
                   onClick={() => setShowNationalView(true)}
                   variant="default"
@@ -1271,7 +1219,7 @@ export default function Home() {
                 </Button>
               )}
 
-              {!isPublicView && shouldShowNutrientCreditsButton() && (
+              {shouldShowNutrientCreditsButton() && (
                 isChesapeakeBayRegion(selectedRegionId) ? (
                   <Button
                     onClick={() => {
@@ -1302,7 +1250,7 @@ export default function Home() {
                 )
               )}
 
-              {!isPublicView && shouldShowESGImpact() && (
+              {shouldShowESGImpact() && (
                 <Button
                   onClick={() => {
                     setShowESG(!showESG);
@@ -1320,7 +1268,7 @@ export default function Home() {
                 </Button>
               )}
 
-              {!isPublicView && shouldShowManuscriptButton() && (
+              {shouldShowManuscriptButton() && (
                 <Button
                   onClick={() => {
                     setShowManuscript(!showManuscript);
@@ -1338,7 +1286,7 @@ export default function Home() {
                 </Button>
               )}
 
-              {!isPublicView && shouldShowComparison() && (
+              {shouldShowComparison() && (
                 <Button
                   onClick={() => {
                     setShowComparison(!showComparison);
@@ -1356,18 +1304,7 @@ export default function Home() {
                 </Button>
               )}
 
-              {shouldShowPublicView() && (
-                <Button
-                  onClick={() => setIsPublicView(!isPublicView)}
-                  variant={!isPublicView ? "default" : "outline"}
-                  className="gap-2 w-full sm:w-auto"
-                >
-                  {!isPublicView ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                  <span className="sm:inline">Expert View</span>
-                </Button>
-              )}
-
-              {!isPublicView && shouldShowExportCSV() && (
+              {shouldShowExportCSV() && (
                 <>
                   {dataMode === 'storm-event' ? (
                     <Button onClick={exportStormReport} variant="outline" className="gap-2 w-full sm:w-auto">
@@ -1378,17 +1315,6 @@ export default function Home() {
                     <Button onClick={exportToCSV} variant="outline" className="gap-2 w-full sm:w-auto">
                       <Download className="h-4 w-4" />
                       <span className="sm:inline">Export CSV</span>
-                    </Button>
-                  )}
-
-                  {shouldShowPublicView() && (
-                    <Button
-                      onClick={createPublicSnapshotLink}
-                      variant="default"
-                      className="gap-2 w-full sm:w-auto bg-green-600 hover:bg-green-700"
-                    >
-                      {linkCopied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
-                      <span className="sm:inline">{linkCopied ? 'Link Copied!' : 'Share Public Link'}</span>
                     </Button>
                   )}
                 </>
@@ -1503,7 +1429,7 @@ export default function Home() {
             );
           })()}
 
-          {!isPublicView && timeMode === 'range' && shouldShowTimeRange() && (
+          {timeMode === 'range' && shouldShowTimeRange() && (
             <Card>
               <CardHeader>
                 <CardTitle>Time Range Selection</CardTitle>
@@ -1576,7 +1502,7 @@ export default function Home() {
           </div>
 
           {/* ── EXPAND / COLLAPSE ALL ─────────────────────────── */}
-          {!isPublicView && mounted && (
+          {mounted && (
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {devMode && (
@@ -1686,7 +1612,7 @@ export default function Home() {
           <div suppressHydrationWarning>
           
           {/* ── ECONOMIC REPLACEMENT PANEL (MS4 Budget Justification) ────────────────────── */}
-          {!isPublicView && dataMode === 'ambient' && !showNutrientCredits && !showESG && !showManuscript && userRole === 'MS4' && (
+          {dataMode === 'ambient' && !showNutrientCredits && !showESG && !showManuscript && userRole === 'MS4' && (
             <CollapsibleSection id="economic" title="Economic Replacement Analysis" icon="💰" collapsed={isCollapsed('economic')} onToggle={toggleSection}>
               <div className="mb-6">
                 <EconomicReplacementPanel 
@@ -1698,7 +1624,7 @@ export default function Home() {
           )}
 
           {/* ── WILDLIFE PERSPECTIVE TOGGLE ────────────────────── */}
-          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && !isPublicView && userRole === 'K12' && (
+          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && userRole === 'K12' && (
             <div className="flex items-center justify-between p-3 bg-gradient-to-r from-cyan-50 to-blue-50 border-2 border-cyan-300 rounded-lg">
               <div className="flex items-center gap-2">
                 <span className="text-lg">🦪🐟</span>
@@ -1928,7 +1854,7 @@ export default function Home() {
           )}
 
 {/* ── TRENDS ────────────────────────────────────────────────── */}
-          {!isPublicView && !showNutrientCredits && !showESG && !showManuscript && userRole !== 'K12' && (
+          {!showNutrientCredits && !showESG && !showManuscript && userRole !== 'K12' && (
             <CollapsibleSection id="trends" title="Trends & Historical Data" icon="📈" collapsed={isCollapsed('trends')} onToggle={toggleSection}>
             <Card className="border-2">
               <CardHeader>
@@ -1956,7 +1882,7 @@ export default function Home() {
           )}
 
           {/* ── AI INSIGHTS ───────────────────────────────────────────── */}
-          {!isPublicView && !showNutrientCredits && !showESG && !showManuscript && shouldShowAIInsights() && (
+          {!showNutrientCredits && !showESG && !showManuscript && shouldShowAIInsights() && (
             <CollapsibleSection id="ai" title="AI Trends & Predictions" icon="🤖" collapsed={isCollapsed('ai')} onToggle={toggleSection}>
             <Card className="border-2">
               <CardHeader>
@@ -2261,7 +2187,7 @@ export default function Home() {
           )}
 
           {/* ── LIVE ESG SCORE ─────────────────────────────────────────── */}
-          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && !isPublicView && (userRole as string) === 'Corporate' && (
+          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && (userRole as string) === 'Corporate' && (
             <CollapsibleSection id="esg-score" title="ESG Score Dashboard" icon="📊" collapsed={isCollapsed('esg-score')} onToggle={toggleSection}>
             {(() => {
             // Calculate ESG scores for Corporate dashboard
@@ -2315,7 +2241,7 @@ export default function Home() {
           )}
 
           {/* ── MS4 FINE AVOIDANCE ─────────────────────────────────────── */}
-          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && !isPublicView && userRole === 'MS4' && (
+          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && userRole === 'MS4' && (
             <CollapsibleSection id="ms4-fines" title="Fine Avoidance Calculator" icon="🛡" collapsed={isCollapsed('ms4-fines')} onToggle={toggleSection}>
               <MS4FineAvoidanceCalculator data={displayData} removalEfficiencies={removalEfficiencies} regionId={selectedRegionId} stormEventsMonitored={stormEvents.length} />
               <div className="flex justify-end mt-3">
@@ -2331,7 +2257,7 @@ export default function Home() {
           )}
 
           {/* ── K-12 WELCOME ─────────────────────────────────────────────── */}
-          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && !isPublicView && userRole === 'K12' && (
+          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && userRole === 'K12' && (
             <div className="rounded-xl border-2 border-cyan-300 bg-gradient-to-r from-cyan-50 to-teal-50 px-4 py-3">
               <p className="text-sm font-semibold text-cyan-800">🌊 You are viewing live water quality data from <span className="font-bold">{selectedRegion?.name ?? 'this water body'}</span>.</p>
               <p className="text-xs text-cyan-700 mt-1">These are real sensor readings. Scroll down to explore what the numbers mean, see how PEARL cleans the water, and export your field report.</p>
@@ -2339,7 +2265,7 @@ export default function Home() {
           )}
 
           {/* ── BAY IMPACT ────────────────────────────────────────── */}
-          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && !isPublicView && (
+          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && (
             <CollapsibleSection id="bay-impact" title="Bay / Watershed Impact" icon="🦪" collapsed={isCollapsed('bay-impact')} onToggle={toggleSection}>
             <div className="space-y-2">
               <BayImpactCounter removalEfficiencies={removalEfficiencies} regionId={selectedRegionId} userRole={userRole} />
@@ -2359,7 +2285,7 @@ export default function Home() {
           )}
 
           {/* ── K-12 STUDENT LEARNING MODE ─────────────────────── */}
-          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && !isPublicView && userRole === 'K12' && (
+          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && userRole === 'K12' && (
             <Card className="border-2 border-cyan-300 bg-gradient-to-r from-cyan-50 to-white">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -2384,7 +2310,7 @@ export default function Home() {
           )}
 
           {/* ── K-12 STUDENT EXPORT ──────────────────────────────────────── */}
-          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && !isPublicView && userRole === 'K12' && (
+          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && userRole === 'K12' && (
             <div className="flex gap-3 justify-center flex-wrap">
               <button
                 onClick={() => exportK12FieldReport(displayData, selectedRegion?.name || 'Unknown')}
@@ -2406,7 +2332,7 @@ export default function Home() {
           )}
 
           {/* ── K-12 BEFORE/AFTER WATER CARD ─────────────────── */}
-          {!showNutrientCredits && !showESG && !showManuscript && !isPublicView && userRole === 'K12' && (
+          {!showNutrientCredits && !showESG && !showManuscript && userRole === 'K12' && (
             <Card className="border-2 border-cyan-200 bg-white">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -2446,7 +2372,7 @@ export default function Home() {
           )}
 
           {/* ── K-12 PROJECTS ────────────────────────────────────────── */}
-          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && !isPublicView && userRole === 'K12' && (
+          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && userRole === 'K12' && (
             <Card className="border-2 border-cyan-400 bg-gradient-to-br from-cyan-50 via-white to-cyan-50 shadow-lg">
                   <CardHeader>
                     <CardTitle className="text-xl flex items-center gap-2">
@@ -2557,7 +2483,7 @@ export default function Home() {
           )}
 
           {/* ── K-12 TRENDS ──────────────────────────────────────────────── */}
-          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && !isPublicView && userRole === 'K12' && (
+          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && userRole === 'K12' && (
             <CollapsibleSection id="trends" title="Trends & Historical Data" icon="📈" collapsed={isCollapsed('trends')} onToggle={toggleSection}>
               <Card className="border-2 border-cyan-200">
                 <CardHeader>
@@ -2574,28 +2500,28 @@ export default function Home() {
           )}
 
           {/* ── MDE EXPORT ─────────────────────────────────────────────── */}
-          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && !isPublicView && (userRole === 'MS4' || userRole === 'Researcher') && (
+          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && (userRole === 'MS4' || userRole === 'Researcher') && (
             <CollapsibleSection id="mde-export" title="Compliance Report" icon="📄" collapsed={isCollapsed('mde-export')} onToggle={toggleSection}>
               <MDEExportTool data={displayData} removalEfficiencies={removalEfficiencies} regionId={selectedRegionId} regionName={selectedRegion?.name || ''} stormEvents={stormEvents} overallScore={overallScore} />
             </CollapsibleSection>
           )}
 
           {/* ── DATA INTEGRITY & AUDIT TRAIL ───────────────────────────────── */}
-          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && !isPublicView && (userRole === 'MS4' || (userRole as string) === 'State' || userRole === 'Researcher') && (
+          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && (userRole === 'MS4' || (userRole as string) === 'State' || userRole === 'Researcher') && (
             <CollapsibleSection id="data-integrity" title="Data Integrity & Audit Trail" icon="🛡" collapsed={isCollapsed('data-integrity')} onToggle={toggleSection}>
               <DataIntegrityPanel regionName={selectedRegion?.name || 'Middle Branch'} />
             </CollapsibleSection>
           )}
 
           {/* ── RESEARCH COLLABORATION HUB ───────────────────────────────── */}
-          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && !isPublicView && (userRole === 'Researcher' || userRole === 'College') && (
+          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && (userRole === 'Researcher' || userRole === 'College') && (
             <CollapsibleSection id="research" title="Research Collaboration Hub" icon="🔬" collapsed={isCollapsed('research')} onToggle={toggleSection}>
               <ResearchCollaborationHub userRole={userRole as 'Researcher' | 'College'} />
             </CollapsibleSection>
           )}
 
           {/* ── TMDL + EXISTING FEATURES ───────────────────────────────── */}
-          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && !isPublicView && (userRole === 'MS4' || userRole === 'Researcher') && (
+          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && (userRole === 'MS4' || userRole === 'Researcher') && (
             <CollapsibleSection id="tmdl" title="TMDL Compliance & EJ Impact" icon="🎯" collapsed={isCollapsed('tmdl')} onToggle={toggleSection}>
             <>
               {userRole !== 'K12' && userRole !== 'College' && (
@@ -2634,7 +2560,7 @@ export default function Home() {
           )}
 
           {/* ── FORECAST ──────────────────────────────────────────────── */}
-          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && !isPublicView && (
+          {!showComparison && !showNutrientCredits && !showESG && !showManuscript && (
             <CollapsibleSection id="forecast" title="Water Quality Forecast" icon="🌦" collapsed={isCollapsed('forecast')} onToggle={toggleSection}>
             <div className="space-y-2">
               <ForecastChart data={displayData} removalEfficiencies={removalEfficiencies} userRole={userRole} />
@@ -2651,7 +2577,7 @@ export default function Home() {
             </CollapsibleSection>
           )}
 
-          {!isPublicView && dataMode === 'ambient' && showComparison && !showNutrientCredits && !showESG && !showManuscript && (
+          {dataMode === 'ambient' && showComparison && !showNutrientCredits && !showESG && !showManuscript && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card className="border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-white">
@@ -2716,7 +2642,7 @@ export default function Home() {
             </div>
           )}
 
-          {showNutrientCredits && !isPublicView && (
+          {showNutrientCredits && (
             <NutrientCreditsTrading
               stormEvents={stormEvents}
               influentData={influentData}
@@ -2729,18 +2655,18 @@ export default function Home() {
             />
           )}
 
-          {showESG && !isPublicView && (
+          {showESG && (
             <ESGImpactReporting
               data={data}
               regionName={selectedRegion?.name || ''}
               removalEfficiencies={removalEfficiencies}
               ejMetrics={ejMetrics}
               alertCount={waterQualityAlerts.length}
-              isPublicView={isPublicView}
+              isPublicView={false}
             />
           )}
 
-          {showManuscript && !isPublicView && (
+          {showManuscript && (
             <ManuscriptGenerator
               data={data}
               regionName={selectedRegion?.name || ''}
@@ -2807,7 +2733,7 @@ export default function Home() {
             </div>
           )}
 
-          {!isPublicView && dataMode === 'ambient' && !showNutrientCredits && !showESG && !showManuscript && (
+          {dataMode === 'ambient' && !showNutrientCredits && !showESG && !showManuscript && (
             <div suppressHydrationWarning>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {shouldShowROICalculator() && (
