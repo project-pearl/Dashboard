@@ -1,7 +1,8 @@
 // app/api/ai-insights/route.ts
-// LLM-powered water quality insights — receives context from AIInsightsEngine,
-// forwards to Claude or OpenAI, returns structured insight array.
+// LLM-powered water quality insights — serves pre-generated cache when available,
+// falls back to on-demand generation. Receives context from AIInsightsEngine.
 import { NextRequest, NextResponse } from 'next/server';
+import { getInsights } from '@/lib/insightsCache';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
@@ -102,6 +103,29 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // ── Cache-first: serve pre-generated insights if available ──
+    // Cron job pre-generates for state/role combos every 6 hours
+    // Only fall through to on-demand LLM call if cache misses
+    try {
+      const parsed = JSON.parse(userMessage);
+      const state = parsed?.state || '';
+      const role = parsed?.role || '';
+      const hasWaterbody = !!parsed?.selectedWaterbody;
+
+      // Cache is keyed by state:role — only use for general views (no specific waterbody)
+      if (state && role && !hasWaterbody) {
+        const cached = getInsights(state, role);
+        if (cached) {
+          return NextResponse.json({
+            insights: cached.insights,
+            provider: cached.provider,
+            generated: cached.generatedAt,
+            cached: true,
+          });
+        }
+      }
+    } catch { /* parse failed — proceed to on-demand */ }
 
     // Pick provider: Anthropic preferred, OpenAI fallback
     let rawText = '';
