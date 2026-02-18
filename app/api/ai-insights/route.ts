@@ -6,9 +6,6 @@ import { getInsights } from '@/lib/insightsCache';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
-
 // Rate limit: simple in-memory throttle (per-deployment, resets on cold start)
 const rateLimitMap = new Map<string, number[]>();
 const RATE_LIMIT_WINDOW = 60_000; // 1 minute
@@ -26,12 +23,12 @@ function checkRateLimit(key: string): boolean {
 
 // ─── Anthropic Claude ────────────────────────────────────────────────────────
 
-async function callAnthropic(systemPrompt: string, userMessage: string): Promise<string> {
+async function callAnthropic(apiKey: string, systemPrompt: string, userMessage: string): Promise<string> {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': ANTHROPIC_API_KEY,
+      'x-api-key': apiKey,
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
@@ -54,12 +51,12 @@ async function callAnthropic(systemPrompt: string, userMessage: string): Promise
 
 // ─── OpenAI Fallback ─────────────────────────────────────────────────────────
 
-async function callOpenAI(systemPrompt: string, userMessage: string): Promise<string> {
+async function callOpenAI(apiKey: string, systemPrompt: string, userMessage: string): Promise<string> {
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${OPENAI_API_KEY}`,
+      'Authorization': `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
       model: 'gpt-4o-mini',
@@ -94,8 +91,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Read API keys at request time (not module scope) so Vercel env vars are always fresh
+    const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
+    const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
+    console.log('[AI-Insights] ENV CHECK:', { hasAnthropicKey: !!ANTHROPIC_API_KEY, hasOpenAIKey: !!OPENAI_API_KEY });
+
     const body = await request.json();
-    console.log('[AI-Insights] ENV CHECK:', { hasAnthropicKey: !!process.env.ANTHROPIC_API_KEY, hasOpenAIKey: !!process.env.OPENAI_API_KEY });
     const { systemPrompt, userMessage } = body;
 
     if (!systemPrompt || !userMessage) {
@@ -132,9 +133,9 @@ export async function POST(request: NextRequest) {
     let rawText = '';
 
     if (ANTHROPIC_API_KEY) {
-      rawText = await callAnthropic(systemPrompt, userMessage);
+      rawText = await callAnthropic(ANTHROPIC_API_KEY, systemPrompt, userMessage);
     } else if (OPENAI_API_KEY) {
-      rawText = await callOpenAI(systemPrompt, userMessage);
+      rawText = await callOpenAI(OPENAI_API_KEY, systemPrompt, userMessage);
     } else {
       return NextResponse.json(
         { error: 'No AI provider configured. Set ANTHROPIC_API_KEY or OPENAI_API_KEY in environment.' },
