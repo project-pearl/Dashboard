@@ -20,6 +20,7 @@ import { getEJScore, getEJData, ejScoreLabel } from '@/lib/ejVulnerability';
 import { getStateMS4Jurisdictions, getMS4ComplianceSummary, STATE_AUTHORITIES } from '@/lib/stateWaterData';
 import { useAuth } from '@/lib/authContext';
 import { getRegionMockData, calculateRemovalEfficiency, calculateOverallScore } from '@/lib/mockData';
+import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { resolveWaterbodyCoordinates } from '@/lib/waterbodyCentroids';
 import dynamic from 'next/dynamic';
 
@@ -1198,17 +1199,17 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
               <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
                 <div className="bg-white rounded-lg border border-slate-200 px-3 py-2 text-center">
                   <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Active Alerts</div>
-                  <div className="text-lg font-bold text-red-600">{activeAlerts.length}</div>
+                  <div className="text-lg font-bold text-red-600 inline-flex items-center justify-center gap-1">{activeAlerts.length}<ProvenanceIcon metricName="Active Alerts" displayValue={String(activeAlerts.length)} /></div>
                   <div className="text-[10px] text-slate-400">{severeCount > 0 ? `${severeCount} severe` : 'none severe'}</div>
                 </div>
                 <div className="bg-white rounded-lg border border-slate-200 px-3 py-2 text-center">
                   <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Impaired</div>
-                  <div className="text-lg font-bold text-amber-600">{impairedCount}</div>
+                  <div className="text-lg font-bold text-amber-600 inline-flex items-center justify-center gap-1">{impairedCount}<ProvenanceIcon metricName="Impaired Waterbodies" displayValue={String(impairedCount)} /></div>
                   <div className="text-[10px] text-slate-400">of {scopedRegionData.length} waterbodies</div>
                 </div>
                 <div className="bg-white rounded-lg border border-slate-200 px-3 py-2 text-center">
                   <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Assessed</div>
-                  <div className="text-lg font-bold text-blue-600">{assessedCount}</div>
+                  <div className="text-lg font-bold text-blue-600 inline-flex items-center justify-center gap-1">{assessedCount}<ProvenanceIcon metricName="Assessed Waterbodies" displayValue={String(assessedCount)} /></div>
                   <div className="text-[10px] text-slate-400">{scopedRegionData.length > 0 ? Math.round(assessedCount / scopedRegionData.length * 100) : 0}% coverage</div>
                 </div>
                 <div className="bg-white rounded-lg border border-slate-200 px-3 py-2 text-center">
@@ -1218,12 +1219,12 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
                 </div>
                 <div className="bg-white rounded-lg border border-slate-200 px-3 py-2 text-center">
                   <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">EJ Burden</div>
-                  <div className="text-lg font-bold" style={{ color: ejScore >= 70 ? '#dc2626' : ejScore >= 50 ? '#ea580c' : ejScore >= 30 ? '#d97706' : '#16a34a' }}>{ejScore}/100</div>
+                  <div className="text-lg font-bold inline-flex items-center justify-center gap-1" style={{ color: ejScore >= 70 ? '#dc2626' : ejScore >= 50 ? '#ea580c' : ejScore >= 30 ? '#d97706' : '#16a34a' }}>{ejScore}/100<ProvenanceIcon metricName="EJ Burden" displayValue={String(ejScore)} unit="/100" /></div>
                   <div className="text-[10px] text-slate-400">{ejLabel}</div>
                 </div>
                 <div className="bg-white rounded-lg border border-slate-200 px-3 py-2 text-center">
                   <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Waterbodies</div>
-                  <div className="text-lg font-bold text-slate-700">{scopedRegionData.length}</div>
+                  <div className="text-lg font-bold text-slate-700 inline-flex items-center justify-center gap-1">{scopedRegionData.length}<ProvenanceIcon metricName="Waterbodies" displayValue={String(scopedRegionData.length)} /></div>
                   <div className="text-[10px] text-slate-400">in permit boundary</div>
                 </div>
               </div>
@@ -3770,6 +3771,22 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
             )}
           </Card>
         )}
+
+        {/* ── DATA EXPORT HUB ── */}
+        <div id="section-exporthub" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <button onClick={() => toggleCollapse('exporthub')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+            <span className="text-sm font-bold text-slate-800">📦 Data Export Hub</span>
+            <div className="flex items-center gap-1">
+              {isSectionOpen('exporthub') && <span onClick={(e) => { e.stopPropagation(); printSection('section-exporthub', 'Data Export Hub'); }} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
+              {isSectionOpen('exporthub') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+            </div>
+          </button>
+          {isSectionOpen('exporthub') && (
+            <div className="p-4">
+              <DataExportHub context="ms4" />
+            </div>
+          )}
+        </div>
 
         {/* ── GRANT OPPORTUNITIES — always visible at state level ── */}
         <div id="section-grants" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">

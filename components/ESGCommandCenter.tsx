@@ -20,6 +20,13 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/lib/authContext';
 import { BrandedPDFGenerator } from '@/lib/brandedPdfGenerator';
+import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
+import dynamic from 'next/dynamic';
+
+const DataExportHub = dynamic(
+  () => import('@/components/DataExportHub').then((mod) => mod.DataExportHub),
+  { ssr: false }
+);
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -176,6 +183,159 @@ const ESG_FRAMEWORKS: DisclosureFramework[] = [
   },
 ];
 
+// ─── Close the Gap — framework-specific gap analysis data ────────────────────
+
+type GapStatus = 'red' | 'amber' | 'green';
+type WizardStep = 1 | 2 | 3 | 4;
+const WIZARD_STEPS: { step: WizardStep; label: string; icon: any }[] = [
+  { step: 1, label: 'Review Gaps', icon: ClipboardList },
+  { step: 2, label: 'Connect Data', icon: Link2 },
+  { step: 3, label: 'Generate Narrative', icon: PenTool },
+  { step: 4, label: 'Export Package', icon: Package },
+];
+
+interface GapField { field: string; status: GapStatus; description: string }
+interface PearlMapping { field: string; pearlParameter: string; availability: 'available' | 'partial' | 'planned' }
+interface EvidenceExhibit { name: string; type: 'chart' | 'table' | 'report' | 'export'; description: string }
+interface CloseTheGapEntry { missingFields: GapField[]; pearlMappings: PearlMapping[]; narrativeTemplate: string; evidenceExhibits: EvidenceExhibit[] }
+
+const CLOSE_THE_GAP: Record<string, CloseTheGapEntry> = {
+  gri303: {
+    missingFields: [
+      { field: '303-1: Water withdrawal by source', status: 'amber', description: 'Surface water, groundwater, third-party breakdown required' },
+      { field: '303-2: Management of discharge impacts', status: 'green', description: 'BMP verification & TMDL tracking available via PEARL' },
+      { field: '303-3: Water withdrawal (water-stressed areas)', status: 'red', description: 'Need facility-level intake volumes + WRI Aqueduct overlay' },
+      { field: '303-4: Water discharge by destination', status: 'amber', description: 'Receiving waterbody identified; need volume + quality breakdown' },
+      { field: '303-5: Water consumption', status: 'red', description: 'Consumption = withdrawal minus discharge; need intake metering data' },
+    ],
+    pearlMappings: [
+      { field: '303-1: Water withdrawal by source', pearlParameter: 'ATTAINS waterbody type + facility HUC-12 intake classification', availability: 'partial' },
+      { field: '303-2: Management of discharge impacts', pearlParameter: 'BMP verification records, TMDL progress tracking, nutrient load reductions (TN/TP/TSS)', availability: 'available' },
+      { field: '303-3: Water withdrawal (water-stressed areas)', pearlParameter: 'WRI Aqueduct water-stress scores overlaid on facility locations', availability: 'partial' },
+      { field: '303-4: Water discharge by destination', pearlParameter: 'Receiving waterbody ID, NPDES discharge monitoring reports (DMRs)', availability: 'available' },
+      { field: '303-5: Water consumption', pearlParameter: 'Calculated from PEARL intake/discharge differential per facility', availability: 'planned' },
+    ],
+    narrativeTemplate: 'During the reporting period, [Company] withdrew approximately [X] megaliters of water across [N] facilities monitored through the PEARL platform. Surface water accounted for [Y]% of total withdrawal, primarily from Chesapeake Bay watershed tributaries.\n\nDischarge impacts are managed through verified BMPs achieving [TN]% nitrogen reduction and [TP]% phosphorus reduction against TMDL targets. All facilities discharge to waterbodies tracked in EPA ATTAINS, with [Z]% meeting designated use standards.\n\nFacilities in water-stressed basins (WRI Aqueduct score >=3) represent [W]% of total withdrawal. Water consumption totaled [C] megaliters, calculated as the differential between metered withdrawal and monitored discharge volumes.',
+    evidenceExhibits: [
+      { name: 'Facility Water Risk Heatmap', type: 'chart', description: 'Interactive map showing water stress scores per facility location' },
+      { name: 'Nutrient Load Reduction Summary', type: 'table', description: 'TN/TP/TSS reduction by facility with BMP verification status' },
+      { name: 'ATTAINS Waterbody Assessment Report', type: 'report', description: 'EPA impairment status for all receiving waterbodies' },
+      { name: 'Discharge Monitoring Data Export', type: 'export', description: 'Monthly DMR data in GRI-compatible CSV format' },
+    ],
+  },
+  gri13: {
+    missingFields: [
+      { field: '13.7: Water & effluents in operations', status: 'amber', description: 'Aquaculture/agriculture water use and discharge quality' },
+      { field: '13.8: Biodiversity in operational areas', status: 'amber', description: 'Species counts and habitat quality near facilities' },
+      { field: '13.4: Natural ecosystem conversion', status: 'red', description: 'Land-use change data for operational footprint' },
+      { field: '13.10: Local community water impacts', status: 'green', description: 'EJScreen data + community proximity analysis available' },
+    ],
+    pearlMappings: [
+      { field: '13.7: Water & effluents in operations', pearlParameter: 'Facility discharge parameters (TN, TP, TSS, DO) + BMP records', availability: 'available' },
+      { field: '13.8: Biodiversity in operational areas', pearlParameter: 'Chesapeake Bay species indices, SAV coverage, benthic IBI', availability: 'partial' },
+      { field: '13.4: Natural ecosystem conversion', pearlParameter: 'NLCD land cover change detection (planned integration)', availability: 'planned' },
+      { field: '13.10: Local community water impacts', pearlParameter: 'EJScreen burden scores, community water supply impairment data', availability: 'available' },
+    ],
+    narrativeTemplate: '[Company] operations interact with freshwater and estuarine ecosystems across [N] facilities in the Chesapeake Bay watershed. Water effluent management follows TMDL-aligned reduction targets, with PEARL-verified BMPs achieving measurable nutrient load reductions.\n\nBiodiversity monitoring leverages PEARL platform data including submerged aquatic vegetation (SAV) coverage and benthic index of biological integrity (IBI) for waterbodies adjacent to operations.\n\nEnvironmental justice screening (EJScreen) confirms [X]% of facility communities fall below the 80th percentile burden threshold, with active community engagement programs in high-burden areas.',
+    evidenceExhibits: [
+      { name: 'Biodiversity Indicator Dashboard', type: 'chart', description: 'SAV, benthic IBI, and species trends near operational areas' },
+      { name: 'EJScreen Community Impact Report', type: 'report', description: 'Environmental justice scores for all facility zip codes' },
+      { name: 'Effluent Quality Trend Data', type: 'export', description: 'Monthly water quality parameters by facility' },
+    ],
+  },
+  sasb: {
+    missingFields: [
+      { field: 'FB-MP-140a.1: Water withdrawn in stressed basins', status: 'amber', description: 'Facility-level volumes in WRI high-stress basins needed' },
+      { field: 'FB-MP-140a.2: Non-compliance incidents', status: 'green', description: 'ECHO violation data integrated via PEARL' },
+      { field: 'FB-MP-140a.3: Water management risks', status: 'amber', description: 'Risk narrative linking water stress to business continuity' },
+      { field: 'FB-SF-140a.3: Fleet water impact', status: 'red', description: 'Supply chain water footprint not yet quantified' },
+    ],
+    pearlMappings: [
+      { field: 'FB-MP-140a.1: Water withdrawn in stressed basins', pearlParameter: 'WRI Aqueduct overlay + facility HUC-12 withdrawal estimates', availability: 'partial' },
+      { field: 'FB-MP-140a.2: Non-compliance incidents', pearlParameter: 'EPA ECHO compliance data, permit violation history', availability: 'available' },
+      { field: 'FB-MP-140a.3: Water management risks', pearlParameter: 'PEARL water risk scores + TMDL exposure analysis', availability: 'available' },
+      { field: 'FB-SF-140a.3: Fleet water impact', pearlParameter: 'Supply chain water risk mapping (planned feature)', availability: 'planned' },
+    ],
+    narrativeTemplate: '[Company] operates [N] facilities, of which [X] are located in basins classified as high or extremely high water stress per WRI Aqueduct. Total water withdrawn in stressed basins was approximately [Y] megaliters.\n\nDuring the reporting period, [Z] incidents of water-related non-compliance were recorded across the portfolio, as tracked through EPA ECHO integration in the PEARL platform. All incidents were remediated within [D] days.\n\nWater management risks are assessed quarterly using PEARL composite water risk scoring, which integrates TMDL status, impairment listings, and regulatory trajectory for each facility receiving waterbody.',
+    evidenceExhibits: [
+      { name: 'Water Stress Basin Map', type: 'chart', description: 'Facilities overlaid on WRI Aqueduct stress classification' },
+      { name: 'ECHO Compliance History', type: 'table', description: 'Permit violations and remediation timelines' },
+      { name: 'Water Risk Score Export', type: 'export', description: 'Facility-level risk scores with methodology documentation' },
+    ],
+  },
+  cdp: {
+    missingFields: [
+      { field: 'W1: Current state — water accounting', status: 'red', description: 'Total withdrawal, discharge, consumption volumes by source' },
+      { field: 'W2: Business impacts of water issues', status: 'red', description: 'Financial quantification of water-related business impacts' },
+      { field: 'W3: Procedures for water assessment', status: 'amber', description: 'Documented water risk assessment methodology' },
+      { field: 'W4: Risk assessment details', status: 'amber', description: 'Basin-level risk with likelihood/magnitude scoring' },
+      { field: 'W8: Targets & goals', status: 'red', description: 'Quantitative water reduction targets with timelines' },
+    ],
+    pearlMappings: [
+      { field: 'W1: Current state — water accounting', pearlParameter: 'Facility-level water parameters, BMP treatment volumes, discharge monitoring', availability: 'partial' },
+      { field: 'W2: Business impacts of water issues', pearlParameter: 'Nutrient credit valuations, compliance cost tracking, risk exposure scores', availability: 'partial' },
+      { field: 'W3: Procedures for water assessment', pearlParameter: 'PEARL risk scoring methodology documentation + QAPP-grade QA/QC', availability: 'available' },
+      { field: 'W4: Risk assessment details', pearlParameter: 'Per-facility water risk scores, TMDL exposure, impairment trends by HUC-12', availability: 'available' },
+      { field: 'W8: Targets & goals', pearlParameter: 'TMDL reduction targets, BMP implementation milestones, restoration timeline', availability: 'partial' },
+    ],
+    narrativeTemplate: '[Company] completed a comprehensive water security assessment across [N] facilities using the PEARL water intelligence platform. The assessment identified [X] facilities in basins with substantive water risk (PEARL risk score >=60/100).\n\nKey water-related risks include regulatory tightening under Clean Water Act TMDL programs, with [Y] facilities subject to nutrient reduction mandates. Physical risks include projected increases in precipitation intensity affecting stormwater management at [Z] locations.\n\nPEARL QAPP-grade quality assurance protocol ensures data integrity across all monitoring points. Risk assessments incorporate EPA ATTAINS impairment data, ECHO compliance records, and real-time BMP performance metrics.\n\nThe company targets a [T]% reduction in nutrient loading by [Year], tracked through PEARL TMDL credit accounting system. Progress to date: [P]% of target achieved across the portfolio.',
+    evidenceExhibits: [
+      { name: 'CDP Water Response Data Tables', type: 'table', description: 'Pre-formatted W1 accounting tables from PEARL data' },
+      { name: 'Basin Risk Assessment Map', type: 'chart', description: 'Facility risk scores with basin-level context' },
+      { name: 'TMDL Progress Tracker', type: 'report', description: 'Nutrient reduction targets vs. actuals by facility' },
+      { name: 'Water Quality Trend Analysis', type: 'chart', description: '3-year parameter trends for all monitored waterbodies' },
+      { name: 'Full CDP Data Package', type: 'export', description: 'CDP-formatted Excel workbook with all quantitative responses' },
+    ],
+  },
+  tcfd: {
+    missingFields: [
+      { field: 'Physical Risk: Acute (flooding, drought)', status: 'amber', description: 'Facility-level exposure to extreme water events' },
+      { field: 'Physical Risk: Chronic (water stress trends)', status: 'green', description: 'PEARL tracks long-term impairment and stress trends' },
+      { field: 'Transition Risk: Regulatory (TMDLs, permits)', status: 'green', description: 'TMDL compliance trajectory and regulatory pipeline tracked' },
+      { field: 'Transition Risk: Market (water pricing)', status: 'red', description: 'Water pricing and market shift data not yet integrated' },
+      { field: 'Metrics & Targets: Nutrient credits', status: 'amber', description: 'Credit generation tracked; financial valuation methodology needed' },
+    ],
+    pearlMappings: [
+      { field: 'Physical Risk: Acute (flooding, drought)', pearlParameter: 'NOAA precipitation data + facility stormwater capacity analysis', availability: 'partial' },
+      { field: 'Physical Risk: Chronic (water stress trends)', pearlParameter: 'ATTAINS impairment trend data, 5-year water quality trajectories', availability: 'available' },
+      { field: 'Transition Risk: Regulatory (TMDLs, permits)', pearlParameter: 'TMDL status by HUC-12, permit expiration timeline, ECHO enforcement actions', availability: 'available' },
+      { field: 'Transition Risk: Market (water pricing)', pearlParameter: 'Nutrient credit market pricing (planned integration)', availability: 'planned' },
+      { field: 'Metrics & Targets: Nutrient credits', pearlParameter: 'BMP-verified nutrient reductions convertible to tradeable credits', availability: 'available' },
+    ],
+    narrativeTemplate: '[Company] has assessed climate-related water risks across its [N]-facility portfolio using the PEARL platform integrated risk scoring framework.\n\nPhysical Risks: [X] facilities face elevated acute water risk from projected increases in extreme precipitation events, based on NOAA climate projections. Chronic water stress affects [Y] facilities in basins showing declining water quality trends over the past 5 years (EPA ATTAINS data).\n\nTransition Risks: [Z] facilities operate under active TMDL mandates requiring measurable nutrient load reductions. Regulatory trajectory analysis indicates [W] additional facilities likely subject to new TMDLs within 3 years. Compliance costs are estimated at $[C] annually.\n\nMetrics & Targets: The portfolio has generated [M] lbs of verified nutrient credits through BMP implementation, representing [P]% progress toward the [Year] reduction target. Credit valuation at current market rates: $[V].',
+    evidenceExhibits: [
+      { name: 'Physical Risk Heatmap', type: 'chart', description: 'Facility locations with acute/chronic water risk overlay' },
+      { name: 'TMDL Regulatory Exposure Report', type: 'report', description: 'Current and projected TMDL mandates by facility' },
+      { name: 'Nutrient Credit Ledger', type: 'table', description: 'Verified credits generated, banked, and retired by facility' },
+      { name: 'Climate Scenario Analysis', type: 'report', description: 'Water risk under RCP 4.5 and 8.5 scenarios' },
+    ],
+  },
+  tnfd: {
+    missingFields: [
+      { field: 'Dependencies on freshwater ecosystems', status: 'amber', description: 'Ecosystem services valuation for operational water use' },
+      { field: 'Impacts on freshwater biodiversity', status: 'amber', description: 'Species and habitat impact assessment per facility' },
+      { field: 'Risk management: Nature-related risks', status: 'red', description: 'Formal nature-risk governance framework not documented' },
+      { field: 'Restoration metrics & targets', status: 'green', description: 'BMP restoration data and SAV/habitat metrics available via PEARL' },
+      { field: 'LEAP assessment (Locate, Evaluate, Assess, Prepare)', status: 'red', description: 'Full LEAP methodology assessment not yet completed' },
+    ],
+    pearlMappings: [
+      { field: 'Dependencies on freshwater ecosystems', pearlParameter: 'Waterbody designated-use classifications, ecosystem service indicators', availability: 'partial' },
+      { field: 'Impacts on freshwater biodiversity', pearlParameter: 'SAV coverage, benthic IBI, fish passage data, species-of-concern proximity', availability: 'available' },
+      { field: 'Risk management: Nature-related risks', pearlParameter: 'PEARL risk framework documentation + board reporting templates', availability: 'partial' },
+      { field: 'Restoration metrics & targets', pearlParameter: 'BMP restoration acres, riparian buffer miles, SAV recovery trends', availability: 'available' },
+      { field: 'LEAP assessment (Locate, Evaluate, Assess, Prepare)', pearlParameter: 'PEARL facility-waterbody mapping + impact scoring (partial LEAP coverage)', availability: 'partial' },
+    ],
+    narrativeTemplate: '[Company] recognizes its dependencies and impacts on freshwater and estuarine ecosystems across the Chesapeake Bay watershed and beyond. This disclosure follows the TNFD LEAP framework.\n\nLocate: [N] facilities have been mapped to their receiving waterbodies and associated ecosystems using PEARL HUC-12 delineation. [X] facilities are adjacent to priority biodiversity areas.\n\nEvaluate: Dependencies include water supply for operations, effluent assimilation capacity, and ecosystem services (flood attenuation, water purification). PEARL data quantifies these at $[V] annual ecosystem service value.\n\nAssess: Key nature-related risks include biodiversity loss in impaired waterbodies ([Y] facilities), regulatory restrictions on water use in stressed basins, and reputational risk from proximity to degraded ecosystems.\n\nPrepare: The company has invested in [Z] verified BMPs through the PEARL platform, restoring [A] acres of riparian habitat and contributing to [B]% improvement in submerged aquatic vegetation coverage in target watersheds.',
+    evidenceExhibits: [
+      { name: 'LEAP Location Map', type: 'chart', description: 'Facilities mapped to priority biodiversity areas and sensitive ecosystems' },
+      { name: 'Biodiversity Impact Dashboard', type: 'chart', description: 'SAV, benthic IBI, and species trends near operations' },
+      { name: 'Ecosystem Service Valuation', type: 'table', description: 'Monetary valuation of freshwater ecosystem dependencies' },
+      { name: 'Restoration Impact Report', type: 'report', description: 'BMP implementation, habitat acres restored, water quality improvements' },
+      { name: 'TNFD LEAP Data Package', type: 'export', description: 'Full TNFD-aligned data export with methodology notes' },
+    ],
+  },
+};
+
 // ─── State GEO (reuse from SCC) ─────────────────────────────────────────────
 
 const STATE_GEO: Record<string, { center: [number, number]; scale: number }> = {
@@ -236,6 +396,12 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
   const toggleSection = (id: string) => setExpandedSections(prev => ({ ...prev, [id]: !prev[id] }));
   const isSectionExpanded = (id: string) => expandedSections[id] ?? false;
+
+  // ── Close the Gap wizard state ──
+  const [gapWizardFramework, setGapWizardFramework] = useState<string | null>(null);
+  const [gapWizardStep, setGapWizardStep] = useState<WizardStep>(1);
+  const openGapWizard = (fwId: string) => { setGapWizardFramework(fwId); setGapWizardStep(1); };
+  const closeGapWizard = () => { setGapWizardFramework(null); setGapWizardStep(1); };
 
   // ── Topo data ──
   const topo = useMemo(() => {
@@ -1659,6 +1825,22 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
             </div>
           </div>
         )}
+
+        {/* ── DATA EXPORT HUB ── */}
+        <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <button onClick={() => toggleCollapse('exporthub')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+            <span className="text-sm font-bold text-slate-800">📦 Data Export Hub</span>
+            <span className="flex items-center gap-1">
+              {isSectionOpen('exporthub') && <span onClick={(e) => { e.stopPropagation(); printSection('section-exporthub', 'Data Export Hub'); }} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
+              {isSectionOpen('exporthub') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+            </span>
+          </button>
+          {isSectionOpen('exporthub') && (
+            <div className="p-4">
+              <DataExportHub context="esg" />
+            </div>
+          )}
+        </div>
 
         {/* ── GRANT OPPORTUNITIES ── */}
         {lens.showGrants && (

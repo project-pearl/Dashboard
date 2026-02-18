@@ -20,6 +20,7 @@ import { getEJScore, getEJData, ejScoreLabel } from '@/lib/ejVulnerability';
 import { getStateMS4Jurisdictions, getMS4ComplianceSummary, STATE_AUTHORITIES } from '@/lib/stateWaterData';
 import { useAuth } from '@/lib/authContext';
 import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
+import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { MS4FineAvoidanceCalculator } from '@/components/MS4FineAvoidanceCalculator';
 import { BayImpactCounter } from '@/components/BayImpactCounter';
 import { ForecastChart } from '@/components/ForecastChart';
@@ -31,6 +32,10 @@ const PeerBenchmarking = dynamic(
 );
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
+  { ssr: false }
+);
+const DataExportHub = dynamic(
+  () => import('@/components/DataExportHub').then((mod) => mod.DataExportHub),
   { ssr: false }
 );
 
@@ -848,7 +853,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
                   {ms4Total > 0 && (
                     <>
                       <div className="rounded-lg bg-orange-50 border border-orange-100 p-2.5 text-center">
-                        <div className="text-2xl font-black text-orange-700">{ms4Total}</div>
+                        <div className="text-2xl font-black text-orange-700 inline-flex items-center gap-1">{ms4Total}<ProvenanceIcon metricName="MS4 Total" displayValue={String(ms4Total)} /></div>
                         <div className="text-[10px] text-orange-600 font-medium">MS4 Total</div>
                       </div>
                       <div className="rounded-lg bg-orange-50/50 border border-orange-100 p-2.5 text-center">
@@ -866,11 +871,11 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
                     <div className="text-[10px] text-slate-400">Permit Program</div>
                   </div>
                   <div className="rounded-lg bg-purple-50 border border-purple-100 p-2.5 text-center">
-                    <div className="text-xl font-bold text-purple-700">{ejScore}<span className="text-xs font-normal text-purple-400">/100</span></div>
+                    <div className="text-xl font-bold text-purple-700 inline-flex items-center gap-1">{ejScore}<span className="text-xs font-normal text-purple-400">/100</span><ProvenanceIcon metricName="EJ Vulnerability" displayValue={String(ejScore)} unit="/100" /></div>
                     <div className="text-[10px] text-purple-500">EJ Vulnerability</div>
                   </div>
                   <div className="rounded-lg bg-blue-50 border border-blue-100 p-2.5 text-center">
-                    <div className="text-sm font-bold text-blue-700 leading-tight">{complianceLabel}</div>
+                    <div className="text-sm font-bold text-blue-700 leading-tight inline-flex items-center gap-1">{complianceLabel}<ProvenanceIcon metricName="Compliance Burden" displayValue={complianceLabel} /></div>
                     <div className="text-[10px] text-blue-400">Compliance Burden</div>
                   </div>
                   <div className={`rounded-lg border p-2.5 text-center ${trendBg}`}>
@@ -2787,6 +2792,24 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
             )}
           </Card>
         )}
+
+        {/* ── DATA EXPORT HUB ── */}
+        <div id="section-exporthub" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <button onClick={() => toggleCollapse('exporthub')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+            <span className="text-sm font-bold text-slate-800">📦 Data Export Hub</span>
+            <div className="flex items-center gap-1.5">
+              <span onClick={(e) => { e.stopPropagation(); printSection('exporthub', 'Data Export Hub'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
+                <Printer className="h-3.5 w-3.5 text-slate-400" />
+              </span>
+              {isSectionOpen('exporthub') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+            </div>
+          </button>
+          {isSectionOpen('exporthub') && (
+            <div className="p-4">
+              <DataExportHub context="state" />
+            </div>
+          )}
+        </div>
 
         {/* ── GRANT OPPORTUNITIES — always at bottom ── */}
         {activeDetailId && displayData && regionMockData && (

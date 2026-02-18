@@ -33,6 +33,10 @@ const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
   { ssr: false }
 );
+const DataExportHub = dynamic(
+  () => import('@/components/DataExportHub').then((mod) => mod.DataExportHub),
+  { ssr: false }
+);
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -2848,6 +2852,24 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
           )}
         </div>
         )}
+
+        {/* ── DATA EXPORT HUB ── */}
+        <div id="section-exporthub" className="rounded-2xl border border-violet-200 bg-white shadow-sm overflow-hidden">
+          <button onClick={() => toggleCollapse('exporthub')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
+            <span className="text-sm font-bold text-violet-900">📦 Data Export Hub</span>
+            <div className="flex items-center gap-1.5">
+              <span onClick={(e) => { e.stopPropagation(); printSection('exporthub', 'Data Export Hub'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
+                <Printer className="h-3.5 w-3.5 text-slate-400" />
+              </span>
+              {isSectionOpen('exporthub') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+            </div>
+          </button>
+          {isSectionOpen('exporthub') && (
+            <div className="p-4">
+              <DataExportHub context="university" />
+            </div>
+          )}
+        </div>
 
         {/* ── RESEARCH FUNDING OPPORTUNITIES ── */}
         {activeDetailId && displayData && regionMockData && (
