@@ -944,6 +944,7 @@ export async function GET(request: NextRequest) {
         if (sp.get('useAttainment')) params.useSupport = sp.get('useAttainment')!;
         if (sp.get('parameterName')) params.parameter = sp.get('parameterName')!;
         const data = await attainsFetch('assessments', params);
+        if (data?.error) return NextResponse.json({ source: 'attains', endpoint: 'assessments', ...data }, { status: 502 });
         return NextResponse.json({ source: 'attains', endpoint: 'assessments', data });
       }
 
@@ -1225,6 +1226,166 @@ export async function GET(request: NextRequest) {
       }
 
       // ════════════════════════════════════════════════════════════════════════
+      // SIGNALS FEED — Beach closures, harvest stops, water quality advisories
+      // Aggregates EPA BEACON, state shellfish data, and sensor threshold alerts
+      // Example: ?action=signals&limit=30&statecode=MD
+      // ════════════════════════════════════════════════════════════════════════
+      case 'signals': {
+        const limit = parseInt(sp.get('limit') || '30', 10);
+        const stateFilter = (sp.get('statecode') || 'MD').toUpperCase();
+        const signals: any[] = [];
+
+        // 1. EPA BEACON — Beach advisories & closures (national)
+        try {
+          const beaconUrl = `https://watersgeo.epa.gov/beacon2/beaches.json?state=${stateFilter}`;
+          const beaconRes = await fetch(beaconUrl, {
+            headers: { 'Accept': 'application/json' },
+            signal: AbortSignal.timeout(10_000),
+            next: { revalidate: 900 }, // 15 min cache
+          });
+          if (beaconRes.ok) {
+            const beaconData = await beaconRes.json();
+            const beaches = beaconData?.features || beaconData || [];
+            for (const b of (Array.isArray(beaches) ? beaches : [])) {
+              const props = b?.properties || b;
+              const status = (props?.BEACH_STATUS || props?.beachStatus || '').toString().toUpperCase();
+              if (status.includes('CLOS') || status.includes('ADVIS')) {
+                signals.push({
+                  type: 'beach_closure',
+                  severity: status.includes('CLOS') ? 'high' : 'medium',
+                  title: `Beach ${status.includes('CLOS') ? 'Closure' : 'Advisory'}: ${props?.BEACH_NAME || props?.beachName || 'Unknown Beach'}`,
+                  location: props?.BEACH_NAME || props?.beachName || '',
+                  county: props?.COUNTY_NAME || props?.countyName || '',
+                  state: stateFilter,
+                  source: 'EPA BEACON',
+                  reason: props?.ADVISORY_REASON || props?.advisoryReason || props?.NOTIFICATION_REASON || '',
+                  startDate: props?.ADVISORY_START_DATE || props?.advisoryStartDate || '',
+                  endDate: props?.ADVISORY_END_DATE || props?.advisoryEndDate || '',
+                  lat: props?.LATITUDE || props?.latitude || b?.geometry?.coordinates?.[1] || null,
+                  lng: props?.LONGITUDE || props?.longitude || b?.geometry?.coordinates?.[0] || null,
+                  timestamp: props?.ADVISORY_START_DATE || props?.advisoryStartDate || new Date().toISOString(),
+                });
+              }
+            }
+          }
+        } catch (e: any) {
+          console.warn('[Signals] BEACON fetch failed:', e.message);
+        }
+
+        // 2. MD DNR Shellfish Harvest Area closures (Chesapeake-specific — only for MD)
+        if (stateFilter === 'MD') {
+          try {
+            const shellfishUrl = 'https://mde.maryland.gov/programs/water/shellfish_harvest/Pages/index.aspx';
+            signals.push({
+              type: 'harvest_monitoring',
+              severity: 'info',
+              title: 'MD Shellfish Harvest Area Monitoring Active',
+              location: 'Chesapeake Bay & Coastal Bays',
+              state: 'MD',
+              source: 'MDE Shellfish Program',
+              reason: 'Continuous monitoring of conditional harvest areas. Check MDE for current closure status.',
+              sourceUrl: shellfishUrl,
+              timestamp: new Date().toISOString(),
+            });
+          } catch (e: any) {
+            console.warn('[Signals] Shellfish status failed:', e.message);
+          }
+        }
+
+        // 3. USGS real-time threshold alerts — check sentinel stations for DO/temp extremes
+        // State-specific sentinel stations for key waterways
+        const SENTINEL_SITES: Record<string, string> = {
+          MD: '01589440,01585219,01594440',  // Back River, Patapsco, Patuxent
+          VA: '01668000,02035000,02037500',  // Rappahannock, James, James at Richmond
+          DC: '01646500,01651000',            // Potomac at Georgetown, Anacostia
+          DE: '01483700,01484100',            // St Jones, Murderkill
+          PA: '01576000,01570500',            // Susquehanna, Susquehanna at Harrisburg
+          CA: '11169025,11162765',            // SF Bay stations
+          FL: '02323500,02320500',            // Suwannee, St Johns
+        };
+        const sentinelSites = SENTINEL_SITES[stateFilter] || '';
+        if (sentinelSites) {
+          try {
+          const ivUrl = `${USGS_IV_BASE}?format=json&sites=${sentinelSites}&parameterCd=00300,00010&period=PT4H&siteStatus=active`;
+          const ivRes = await fetch(ivUrl, {
+            headers: { 'Accept': 'application/json' },
+            signal: AbortSignal.timeout(10_000),
+            next: { revalidate: 300 },
+          });
+          if (ivRes.ok) {
+            const ivData = await ivRes.json();
+            const timeSeries = ivData?.value?.timeSeries || [];
+            for (const ts of timeSeries) {
+              const paramCode = ts?.variable?.variableCode?.[0]?.value;
+              const siteName = ts?.sourceInfo?.siteName || 'Unknown';
+              const siteCode = ts?.sourceInfo?.siteCode?.[0]?.value || '';
+              const values = ts?.values?.[0]?.value || [];
+              const latest = values[values.length - 1];
+              if (!latest) continue;
+              const val = parseFloat(latest.value);
+              if (isNaN(val)) continue;
+
+              // DO < 2 mg/L = hypoxic crisis, < 4 = stress
+              if (paramCode === '00300' && val < 4) {
+                signals.push({
+                  type: 'sensor_alert',
+                  severity: val < 2 ? 'high' : 'medium',
+                  title: `${val < 2 ? 'Hypoxic' : 'Low DO'} Alert: ${siteName}`,
+                  location: siteName,
+                  state: stateFilter,
+                  source: 'USGS Real-Time',
+                  reason: `Dissolved oxygen at ${val.toFixed(1)} mg/L (${val < 2 ? 'critically low — aquatic life at risk' : 'below 4 mg/L stress threshold'})`,
+                  value: val,
+                  unit: 'mg/L',
+                  parameter: 'Dissolved Oxygen',
+                  siteCode,
+                  timestamp: latest.dateTime || new Date().toISOString(),
+                });
+              }
+
+              // Water temp > 30°C = thermal stress for most Bay species
+              if (paramCode === '00010' && val > 30) {
+                signals.push({
+                  type: 'sensor_alert',
+                  severity: 'medium',
+                  title: `Elevated Water Temperature: ${siteName}`,
+                  location: siteName,
+                  state: stateFilter,
+                  source: 'USGS Real-Time',
+                  reason: `Water temperature at ${val.toFixed(1)}°C — above 30°C thermal stress threshold`,
+                  value: val,
+                  unit: '°C',
+                  parameter: 'Water Temperature',
+                  siteCode,
+                  timestamp: latest.dateTime || new Date().toISOString(),
+                });
+              }
+            }
+          }
+        } catch (e: any) {
+          console.warn('[Signals] USGS threshold check failed:', e.message);
+        }
+        } // end if (sentinelSites)
+
+        // Sort by severity (high → medium → info) then by timestamp descending
+        const sevOrder: Record<string, number> = { high: 0, medium: 1, low: 2, info: 3 };
+        signals.sort((a, b) => {
+          const sevDiff = (sevOrder[a.severity] ?? 9) - (sevOrder[b.severity] ?? 9);
+          if (sevDiff !== 0) return sevDiff;
+          return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+        });
+
+        return NextResponse.json({
+          source: 'signals',
+          state: stateFilter,
+          count: Math.min(signals.length, limit),
+          total: signals.length,
+          generated: new Date().toISOString(),
+          signals: signals.slice(0, limit),
+        });
+      }
+
+      // ════════════════════════════════════════════════════════════════════════
       // Debug: test all sources server-side for a region
       // Example: ?action=debug-region&regionId=maryland_back_river
       // ════════════════════════════════════════════════════════════════════════
@@ -1334,6 +1495,7 @@ export async function GET(request: NextRequest) {
                 'cbp-segments', 'cbp-substances', 'cbp-datastreams', 'cbp-waterquality'],
               unified: ['unified'],
               debug: ['debug-region'],
+              signals: ['signals'],
             }
           },
           { status: 400 }
