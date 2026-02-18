@@ -23,6 +23,7 @@ import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
 import { WildlifeImpactDisclaimer } from '@/components/WildlifeImpactDisclaimer';
 import { K12EducationalHub } from '@/components/K12EducationalHub';
 import { WaterQualityChallenges } from '@/components/WaterQualityChallenges';
+import { exportK12FieldReport } from '@/components/PearlExports';
 import dynamic from 'next/dynamic';
 
 const GrantOpportunityMatcher = dynamic(
@@ -2806,24 +2807,25 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
           </button>
           {isSectionOpen('fieldreport') && (
             <div className="p-4 space-y-3">
-              <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-4">
-                <div className="text-sm font-semibold text-cyan-800 mb-2">📋 Scaffold: K12FieldReportExporter</div>
-                <p className="text-xs text-cyan-700 leading-relaxed">
-                  Wire <code className="bg-cyan-100 px-1 rounded">{'exportK12FieldReport(displayData, regionName)'}</code> here.
-                  Student field report includes: waterbody name, date, key parameters (DO, pH, turbidity, TSS, nutrients),
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <div className="text-sm font-semibold text-amber-800 mb-2">📋 Student Field Report</div>
+                <p className="text-xs text-amber-700 leading-relaxed mb-3">
+                  Export a printable field investigation report with waterbody name, date, key parameters (DO, pH, turbidity, TSS, nutrients),
                   color-coded pass/fail vs EPA standards, space for student observations, and NGSS alignment tags.
                 </p>
+                <button
+                  disabled={!displayData}
+                  onClick={() => {
+                    const regionConfig = getRegionById(activeDetailId!);
+                    const nccRegion = regionData.find(r => r.id === activeDetailId);
+                    const regionName = regionConfig?.name || nccRegion?.name || activeDetailId!.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                    exportK12FieldReport(displayData, regionName);
+                  }}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold shadow-sm transition-colors bg-amber-500 hover:bg-amber-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  📋 Export Field Report
+                </button>
               </div>
-              {isTeacher && (
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                  <div className="text-sm font-semibold text-purple-800 mb-2">📚 Scaffold: TeacherLessonExporter</div>
-                  <p className="text-xs text-purple-700 leading-relaxed">
-                    Wire <code className="bg-purple-100 px-1 rounded">{'exportTeacherLessonData(displayData, removalEfficiencies, regionName)'}</code> here.
-                    Teacher lesson pack includes: raw data CSV, pre-formatted worksheet, answer key with analysis,
-                    NGSS standards mapping, and discussion questions tied to current waterbody conditions.
-                  </p>
-                </div>
-              )}
             </div>
           )}
         </div>
