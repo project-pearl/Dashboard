@@ -571,8 +571,8 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
   const toggleSection = (id: string) => setExpandedSections(prev => ({ ...prev, [id]: !prev[id] }));
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
-      <div className="mx-auto max-w-7xl p-4 space-y-6">
+    <div className="min-h-screen w-full bg-gradient-to-br from-violet-50/40 via-white to-indigo-50/30">
+      <div className="mx-auto max-w-7xl p-4 space-y-8">
 
         {/* Toast */}
         {toastMsg && (
@@ -585,27 +585,40 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
           </div>
         )}
 
-        {/* ── HEADER ── */}
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div
-              className="relative h-12 w-40 cursor-default select-none"
-              onDoubleClick={() => onToggleDevMode?.()}
-            >
-              <Image src="/Logo_Pearl_as_Headline.JPG" alt="Project Pearl Logo" fill className="object-contain object-left" priority />
-            </div>
-            <div>
-              <div className="text-xl font-semibold text-slate-800">{stateName} Research Command Center</div>
-              <div className="text-sm text-slate-600">
-                Aquatic research intelligence — water quality data, analysis tools &amp; collaboration
+        {/* ── HERO BANNER ── */}
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-4">
+            {/* Left: Logo + Badge */}
+            <div className="flex items-center gap-3">
+              <div className="relative h-10 w-36 cursor-default select-none" onDoubleClick={() => onToggleDevMode?.()}>
+                <Image src="/Logo_Pearl_as_Headline.JPG" alt="Project Pearl Logo" fill className="object-contain object-left" priority />
+              </div>
+              <div className="h-8 w-px bg-violet-200" />
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-100 border border-violet-200">
+                <Microscope className="h-3.5 w-3.5 text-violet-600" />
+                <span className="text-xs font-semibold text-violet-700">Academic Research Hub</span>
               </div>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {/* Role badge */}
-            <div className="inline-flex items-center h-8 px-3 text-xs font-medium rounded-md border border-purple-200 bg-purple-50 text-purple-700">
-              {userRole === 'College' ? '🎓 College Research' : '🔬 Scientist / Researcher'}
-            </div>
+
+            {/* Right: Stats + Role + Account */}
+            <div className="flex items-center gap-3">
+              <div className="hidden md:flex items-center gap-2">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 border border-indigo-100">
+                  <span className="text-sm font-bold text-indigo-700">{regionData.length.toLocaleString()}</span>
+                  <span className="text-[10px] text-indigo-500">Waterbodies</span>
+                </div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-50 border border-violet-100">
+                  <span className="text-sm font-bold text-violet-700">6</span>
+                  <span className="text-[10px] text-violet-500">Federal APIs</span>
+                </div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-100">
+                  <Shield className="h-3 w-3 text-emerald-600" />
+                  <span className="text-[10px] font-semibold text-emerald-700">QAPP-Grade QA/QC</span>
+                </div>
+              </div>
+              <div className="inline-flex items-center h-8 px-3 text-xs font-medium rounded-full border border-violet-200 bg-violet-50 text-violet-700">
+                {userRole === 'College' ? '🎓 Undergrad Research' : '🔬 Principal Investigator'}
+              </div>
 
             {user && (
             <div className="relative">
@@ -614,7 +627,7 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
                 className="inline-flex items-center h-8 px-3 text-xs font-semibold rounded-md border bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 transition-colors cursor-pointer"
               >
                 <Shield className="h-3.5 w-3.5 mr-1.5" />
-                {user.name || (userRole === 'College' ? 'Student Researcher' : 'Principal Investigator')}
+                {user.name || (userRole === 'College' ? 'Undergrad Researcher' : 'Principal Investigator')}
                 <span className="ml-1.5 text-indigo-400">▾</span>
               </button>
 
@@ -663,7 +676,7 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-500">Current View</span>
-                      <span className="font-medium text-indigo-600">{userRole === "College" ? "College Research" : "Research"}</span>
+                      <span className="font-medium text-indigo-600">{userRole === "College" ? "Undergrad Research" : "Research"}</span>
                     </div>
                   </div>
 
@@ -695,7 +708,29 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
             </div>
             )}
           </div>
+          </div>
+
+          {/* Lens Switcher */}
+          <div className="flex items-center gap-1 p-1 rounded-full bg-violet-100/60 border border-violet-200 w-fit">
+            {LENSES.map(lens => (
+              <button
+                key={lens.id}
+                onClick={() => setActiveLens(lens.id)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  activeLens === lens.id
+                    ? 'bg-violet-600 text-white shadow-md'
+                    : 'text-violet-600 hover:bg-violet-200/60'
+                }`}
+                title={lens.description}
+              >
+                {lens.label}
+              </button>
+            ))}
+          </div>
         </div>
+
+        {/* ── WATER QUALITY CHALLENGES — all lenses ── */}
+        <WaterQualityChallenges context="academic" />
 
         {/* ── DATA SOURCES & RESEARCH CONTEXT — above map ── */}
         {(() => {
@@ -710,11 +745,11 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
           const impairedCount = regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length;
 
           return (
-            <div id="section-regprofile" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-              <button onClick={() => toggleCollapse('regprofile')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+            <div id="section-regprofile" className="rounded-2xl border border-violet-200 bg-white shadow-sm overflow-hidden">
+              <button onClick={() => toggleCollapse('regprofile')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
                 <div className="flex items-center gap-2">
-                  <Droplets size={15} className="text-purple-600" />
-                  <span className="text-sm font-bold text-slate-800">{stateName} — Data Sources & Research Context</span>
+                  <Droplets size={15} className="text-violet-600" />
+                  <span className="text-sm font-bold text-violet-900">{stateName} — Data Sources &amp; Research Context</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                 <span onClick={(e) => { e.stopPropagation(); printSection('regprofile', 'Data Sources & Research Context'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
@@ -726,9 +761,9 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
               {isSectionOpen('regprofile') && (
               <div className="px-4 pb-3 pt-1">
                 <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 text-xs">
-                  <div className="rounded-lg bg-blue-50 border border-blue-100 p-2.5 text-center">
-                    <div className="text-2xl font-black text-blue-700">{wbCount}</div>
-                    <div className="text-[10px] text-blue-600 font-medium">Waterbodies</div>
+                  <div className="rounded-lg bg-indigo-50 border border-indigo-100 p-2.5 text-center">
+                    <div className="text-4xl font-black text-indigo-700">{wbCount}</div>
+                    <div className="text-[10px] text-indigo-600 font-medium">Waterbodies</div>
                   </div>
                   <div className="rounded-lg bg-red-50 border border-red-100 p-2.5 text-center">
                     <div className="text-xl font-bold text-red-700">{impairedCount}</div>
@@ -1187,8 +1222,35 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
               );
             })()}
 
-            {/* Restoration Plan — NCC-matching collapsible with Deploy/PDF/Cost buttons */}
-            {showRestorationPlan && activeDetailId && (() => {
+            {/* Field Study Guide — shown in field-study lens when waterbody selected */}
+            {isFieldStudy && activeDetailId && (
+              <div className="rounded-2xl border-2 border-violet-200 bg-gradient-to-br from-violet-50 to-white p-5 space-y-4">
+                <div className="flex items-center gap-2">
+                  <Microscope className="h-5 w-5 text-violet-600" />
+                  <h3 className="text-base font-bold text-violet-900">Field Study Guide</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="rounded-xl border border-violet-100 bg-white p-3 space-y-1">
+                    <div className="text-xs font-bold text-violet-700">1. Observe &amp; Record</div>
+                    <p className="text-xs text-slate-600">Note weather, water color, odor, and surrounding land use. Record GPS coordinates and time of observation.</p>
+                  </div>
+                  <div className="rounded-xl border border-violet-100 bg-white p-3 space-y-1">
+                    <div className="text-xs font-bold text-violet-700">2. Measure Parameters</div>
+                    <p className="text-xs text-slate-600">Collect DO, turbidity, pH, temperature, and conductivity using field instruments. Follow EPA-approved methods.</p>
+                  </div>
+                  <div className="rounded-xl border border-violet-100 bg-white p-3 space-y-1">
+                    <div className="text-xs font-bold text-violet-700">3. Analyze &amp; Compare</div>
+                    <p className="text-xs text-slate-600">Compare your readings to the PEARL dashboard data above. Calculate percent difference and discuss potential causes.</p>
+                  </div>
+                </div>
+                <div className="text-xs text-violet-600 bg-violet-50 border border-violet-200 rounded-lg p-3">
+                  <span className="font-semibold">Coursework Connections:</span> Environmental Science (field methods), Statistics (data comparison), GIS (spatial analysis), Chemistry (water quality parameters), Ecology (ecosystem health indicators)
+                </div>
+              </div>
+            )}
+
+            {/* Restoration Plan — data-analysis + publication lenses */}
+            {showInLens(['data-analysis', 'publication']) && showRestorationPlan && activeDetailId && (() => {
               const nccRegion = regionData.find(r => r.id === activeDetailId);
               const regionConfig = getRegionById(activeDetailId);
               const regionName = regionConfig?.name || nccRegion?.name || activeDetailId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -2160,10 +2222,11 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
         {activeDetailId && displayData && regionMockData && (
           <div className="space-y-4">
 
-            {/* Compliance Economics Context — useful for policy research */}
-            <div id="section-complianceecon" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-              <button onClick={() => toggleCollapse('complianceecon')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-                <span className="text-sm font-bold text-slate-800">💲 Compliance Economics & Policy Context</span>
+            {/* Compliance Economics — data-analysis + publication lenses */}
+            {showInLens(['data-analysis', 'publication']) && (
+            <div id="section-complianceecon" className="rounded-2xl border border-violet-200 bg-white shadow-sm overflow-hidden">
+              <button onClick={() => toggleCollapse('complianceecon')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
+                <span className="text-sm font-bold text-violet-900">💲 Compliance Economics & Policy Context</span>
                 <div className="flex items-center gap-1.5">
                 <span onClick={(e) => { e.stopPropagation(); printSection('complianceecon', 'Compliance Economics & Policy Context'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
                   <Printer className="h-3.5 w-3.5 text-slate-400" />
@@ -2180,6 +2243,7 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
                 />
               )}
             </div>
+            )}
 
             {/* Environmental Justice — Census ACS + EPA SDWIS (statewide) + EJScreen (per-waterbody) */}
             {(() => {
@@ -2203,8 +2267,8 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
               const highEJWaterbodies = Object.entries(ejCache).filter(([, v]) => v.ejIndex !== null && v.ejIndex !== undefined && v.ejIndex >= 60).length;
               const totalEJCached = Object.entries(ejCache).filter(([, v]) => v.ejIndex !== null && v.ejIndex !== undefined).length;
               return (
-                <div className={`rounded-xl border ${scoreBorder} bg-white shadow-sm overflow-hidden`}>
-                  <button onClick={() => toggleCollapse('ej')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+                <div className={`rounded-2xl border ${scoreBorder} bg-white shadow-sm overflow-hidden`}>
+                  <button onClick={() => toggleCollapse('ej')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
                     <span className="text-sm font-bold text-slate-800">⚖️ Environmental Justice — {wbName}</span>
                     <div className="flex items-center gap-2">
                       {wbEJLoading ? (
@@ -2308,10 +2372,11 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
               );
             })()}
 
-            {/* Peer Benchmarking */}
-            <div id="section-bench" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-              <button onClick={() => toggleCollapse('bench')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-                <span className="text-sm font-bold text-slate-800">📊 Peer Benchmarking Analysis</span>
+            {/* Peer Benchmarking — data-analysis + publication lenses */}
+            {showInLens(['data-analysis', 'publication']) && (
+            <div id="section-bench" className="rounded-2xl border border-violet-200 bg-white shadow-sm overflow-hidden">
+              <button onClick={() => toggleCollapse('bench')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
+                <span className="text-sm font-bold text-violet-900">📊 Peer Benchmarking Analysis</span>
                 <div className="flex items-center gap-1.5">
                 <span onClick={(e) => { e.stopPropagation(); printSection('bench', 'Peer Benchmarking'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
                   <Printer className="h-3.5 w-3.5 text-slate-400" />
@@ -2327,12 +2392,13 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
                 />
               )}
             </div>
+            )}
 
             {/* Bay Impact Counter (Chesapeake states) */}
             {['MD','VA','PA','DE','DC','WV','NY'].includes(stateAbbr) && (
-              <div id="section-bay" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-                <button onClick={() => toggleCollapse('bay')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-                  <span className="text-sm font-bold text-slate-800">🌊 Chesapeake Bay Impact</span>
+              <div id="section-bay" className="rounded-2xl border border-violet-200 bg-white shadow-sm overflow-hidden">
+                <button onClick={() => toggleCollapse('bay')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
+                  <span className="text-sm font-bold text-violet-900">🌊 Chesapeake Bay Impact</span>
                   <div className="flex items-center gap-1.5">
                 <span onClick={(e) => { e.stopPropagation(); printSection('bay', 'Chesapeake Bay Impact'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
                   <Printer className="h-3.5 w-3.5 text-slate-400" />
@@ -2351,9 +2417,9 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
             )}
 
             {/* 24-Hour Forecast */}
-            <div id="section-forecast" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-              <button onClick={() => toggleCollapse('forecast')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-                <span className="text-sm font-bold text-slate-800">📈 24-Hour Water Quality Forecast</span>
+            <div id="section-forecast" className="rounded-2xl border border-violet-200 bg-white shadow-sm overflow-hidden">
+              <button onClick={() => toggleCollapse('forecast')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
+                <span className="text-sm font-bold text-violet-900">📈 24-Hour Water Quality Forecast</span>
                 <div className="flex items-center gap-1.5">
                 <span onClick={(e) => { e.stopPropagation(); printSection('forecast', '24-Hour Water Quality Forecast'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
                   <Printer className="h-3.5 w-3.5 text-slate-400" />
@@ -2376,8 +2442,8 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
 
         {/* ── TOP 10 WORSENING / IMPROVING — full + programs view ── */}
         {(
-        <div id="section-top10" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <button onClick={() => toggleCollapse('top10')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+        <div id="section-top10" className="rounded-2xl border border-violet-200 bg-white shadow-sm overflow-hidden">
+          <button onClick={() => toggleCollapse('top10')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
             <span className="text-sm font-bold text-slate-800">🔥 Top 5 Worsening / Improving Waterbodies</span>
             <div className="flex items-center gap-1.5">
                 <span onClick={(e) => { e.stopPropagation(); printSection('top10', 'Top 5 Worsening / Improving'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
@@ -2554,7 +2620,7 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
         )}
 
         {/* ── RESEARCH COLLABORATION HUB ── */}
-        <Card id="section-research" className="border-2 border-purple-200 bg-gradient-to-br from-purple-50/30 to-white">
+        <Card id="section-research" className="rounded-2xl border-2 border-violet-200 bg-gradient-to-br from-violet-50/30 to-white">
           <CardHeader className="pb-2 cursor-pointer" onClick={() => toggleSection('research')}>
             <div className="flex items-center justify-between">
               <CardTitle className="text-base flex items-center gap-2">
@@ -2569,7 +2635,7 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
                 </div>
               ) : <ChevronDown className="h-4 w-4 text-slate-400" />}
             </div>
-            <CardDescription>{userRole === 'College' ? 'Find advisors, datasets, and research groups' : 'Collaborate with institutions, share datasets, and co-author'}</CardDescription>
+            <CardDescription>{userRole === 'College' ? 'Find advisors, datasets, and undergraduate research groups' : 'Collaborate with institutions, share datasets, and co-author'}</CardDescription>
           </CardHeader>
           {expandedSections.research && (
             <CardContent className="space-y-3">
@@ -2608,10 +2674,11 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
           )}
         </Card>
 
-        {/* ── MANUSCRIPT & PUBLICATION TOOLS ── */}
-        <div id="section-manuscript" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <button onClick={() => toggleCollapse('manuscript')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-            <span className="text-sm font-bold text-slate-800">📝 Manuscript & Publication Tools</span>
+        {/* ── MANUSCRIPT & PUBLICATION TOOLS — publication lens only ── */}
+        {showInLens(['publication']) && (
+        <div id="section-manuscript" className="rounded-2xl border border-violet-200 bg-white shadow-sm overflow-hidden">
+          <button onClick={() => toggleCollapse('manuscript')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
+            <span className="text-sm font-bold text-violet-900">📝 Manuscript & Publication Tools</span>
             <div className="flex items-center gap-1.5">
               <span onClick={(e) => { e.stopPropagation(); printSection('manuscript', 'Manuscript & Publication Tools'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
                 <Printer className="h-3.5 w-3.5 text-slate-400" />
@@ -2649,11 +2716,13 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
             </div>
           )}
         </div>
+        )}
 
-        {/* ── ACADEMIC TOOLS (College students) ── */}
-        <div id="section-academic" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <button onClick={() => toggleCollapse('academic')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-            <span className="text-sm font-bold text-slate-800">{userRole === 'College' ? '🎓 Academic Tools & Learning Resources' : '🎓 Academic & Teaching Resources'}</span>
+        {/* ── ACADEMIC TOOLS — field-study lens only ── */}
+        {showInLens(['field-study']) && (
+        <div id="section-academic" className="rounded-2xl border border-violet-200 bg-white shadow-sm overflow-hidden">
+          <button onClick={() => toggleCollapse('academic')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
+            <span className="text-sm font-bold text-violet-900">{userRole === 'College' ? '🎓 Undergrad Tools & Learning Resources' : '🎓 Academic & Teaching Resources'}</span>
             <div className="flex items-center gap-1.5">
               <span onClick={(e) => { e.stopPropagation(); printSection('academic', 'Academic Tools'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
                 <Printer className="h-3.5 w-3.5 text-slate-400" />
@@ -2676,11 +2745,13 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
             </div>
           )}
         </div>
+        )}
 
-        {/* ── DATA INTEGRITY & METHODOLOGY ── */}
-        <div id="section-methodology" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <button onClick={() => toggleCollapse('methodology')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-            <span className="text-sm font-bold text-slate-800">🛡️ Data Integrity, QA/QC & Methodology</span>
+        {/* ── DATA INTEGRITY & METHODOLOGY — data-analysis + publication lenses ── */}
+        {showInLens(['data-analysis', 'publication']) && (
+        <div id="section-methodology" className="rounded-2xl border border-violet-200 bg-white shadow-sm overflow-hidden">
+          <button onClick={() => toggleCollapse('methodology')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
+            <span className="text-sm font-bold text-violet-900">🛡️ Data Integrity, QA/QC & Methodology</span>
             <div className="flex items-center gap-1.5">
               <span onClick={(e) => { e.stopPropagation(); printSection('methodology', 'Data Integrity & Methodology'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
                 <Printer className="h-3.5 w-3.5 text-slate-400" />
@@ -2726,11 +2797,13 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
             </div>
           )}
         </div>
+        )}
 
-        {/* ── DATASET CATALOG & EXPORT ── */}
-        <div id="section-datasets" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <button onClick={() => toggleCollapse('datasets')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-            <span className="text-sm font-bold text-slate-800">📦 Dataset Catalog & Research Export</span>
+        {/* ── DATASET CATALOG & EXPORT — data-analysis + publication lenses ── */}
+        {showInLens(['data-analysis', 'publication']) && (
+        <div id="section-datasets" className="rounded-2xl border border-violet-200 bg-white shadow-sm overflow-hidden">
+          <button onClick={() => toggleCollapse('datasets')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
+            <span className="text-sm font-bold text-violet-900">📦 Dataset Catalog & Research Export</span>
             <div className="flex items-center gap-1.5">
               <span onClick={(e) => { e.stopPropagation(); printSection('datasets', 'Dataset Catalog & Research Export'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
                 <Printer className="h-3.5 w-3.5 text-slate-400" />
@@ -2774,12 +2847,13 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
             </div>
           )}
         </div>
+        )}
 
         {/* ── RESEARCH FUNDING OPPORTUNITIES ── */}
         {activeDetailId && displayData && regionMockData && (
-          <div id="section-grants" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <button onClick={() => toggleCollapse('grants')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-              <span className="text-sm font-bold text-slate-800">🎓 Research Funding Opportunities — {stateName}</span>
+          <div id="section-grants" className="rounded-2xl border border-violet-200 bg-white shadow-sm overflow-hidden">
+            <button onClick={() => toggleCollapse('grants')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
+              <span className="text-sm font-bold text-violet-900">🎓 Research Funding Opportunities — {stateName}</span>
               <div className="flex items-center gap-1.5">
                 <span onClick={(e) => { e.stopPropagation(); printSection('grants', 'Research Funding Opportunities'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
                   <Printer className="h-3.5 w-3.5 text-slate-400" />
