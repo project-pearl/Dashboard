@@ -7,7 +7,11 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: { unoptimized: true },
-  swcMinify: false,
+  compiler: {
+    removeConsole: {
+      exclude: ['warn'],
+    },
+  },
 };
 
 module.exports = nextConfig;
