@@ -1492,6 +1492,112 @@ export async function GET(request: NextRequest) {
           console.warn('[Signals] ECHO violations check failed:', e.message);
         }
 
+        // 5. NWS Active Alerts — water-relevant weather warnings
+        try {
+          const nwsUrl = `https://api.weather.gov/alerts/active?area=${stateFilter}&status=actual&message_type=alert`;
+          const nwsRes = await fetch(nwsUrl, {
+            headers: {
+              'Accept': 'application/geo+json',
+              'User-Agent': 'PEARL Platform (info@localseafoodprojects.com)',
+            },
+            signal: AbortSignal.timeout(10_000),
+            next: { revalidate: 600 }, // 10 min cache
+          });
+          if (nwsRes.ok) {
+            const nwsData = await nwsRes.json();
+            const features = nwsData?.features || [];
+            const waterKeywords = ['Flood', 'Flash Flood', 'Storm', 'Hurricane', 'Tropical', 'Tsunami', 'Coastal Flood', 'Storm Surge'];
+
+            const wqImpactMap: Record<string, string> = {
+              'Flood': 'Expect elevated turbidity, nutrient loading, potential CSO/SSO overflows',
+              'Flash Flood': 'Rapid sediment mobilization, sewage infrastructure overwhelm risk, dangerous bacterial spikes',
+              'Storm': 'Stormwater surge increases pollutant loading, runoff from impervious surfaces',
+              'Hurricane': 'Risk of saltwater intrusion, infrastructure damage, sewage bypass events',
+              'Tropical': 'Risk of saltwater intrusion, infrastructure damage, sewage bypass events',
+              'Tsunami': 'Saltwater intrusion, coastal infrastructure damage, debris contamination',
+              'Coastal Flood': 'Saltwater intrusion into freshwater systems, septic system flooding',
+              'Storm Surge': 'Saltwater intrusion, wastewater treatment plant inundation risk',
+            };
+
+            for (const f of features) {
+              const props = f?.properties || {};
+              const event = props?.event || '';
+              const matchedKeyword = waterKeywords.find(kw => event.includes(kw));
+              if (!matchedKeyword) continue;
+
+              const nwsSeverity = (props?.severity || '').toString();
+              const severity = (nwsSeverity === 'Extreme' || nwsSeverity === 'Severe') ? 'high'
+                : nwsSeverity === 'Moderate' ? 'medium' : 'low';
+
+              signals.push({
+                type: 'weather_alert',
+                severity,
+                title: props?.headline || `${event} — ${stateFilter}`,
+                location: (props?.areaDesc || '').slice(0, 200),
+                state: stateFilter,
+                source: 'NWS',
+                reason: (props?.description || '').slice(0, 300),
+                event,
+                wqImpact: wqImpactMap[matchedKeyword] || 'Monitor downstream water quality for post-event impacts',
+                urgency: props?.urgency || '',
+                onset: props?.onset || '',
+                expires: props?.expires || '',
+                timestamp: props?.sent || props?.onset || new Date().toISOString(),
+              });
+            }
+          }
+        } catch (e: any) {
+          console.warn('[Signals] NWS weather alerts failed:', e.message);
+        }
+
+        // 6. FEMA Disaster Declarations — recent declarations affecting water infrastructure
+        try {
+          const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+          const femaUrl = `https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries?$filter=state eq '${stateFilter}' and declarationDate gt '${thirtyDaysAgo}'&$top=5&$orderby=declarationDate desc`;
+          const femaRes = await fetch(femaUrl, {
+            headers: { 'Accept': 'application/json' },
+            signal: AbortSignal.timeout(10_000),
+            next: { revalidate: 3600 }, // 1 hour cache
+          });
+          if (femaRes.ok) {
+            const femaData = await femaRes.json();
+            const declarations = femaData?.DisasterDeclarationsSummaries || [];
+
+            const femaWqImpact: Record<string, string> = {
+              'Flood': 'Widespread contamination of water sources, sewage system overflows, drinking water advisories likely',
+              'Hurricane': 'Major risk of sewage bypass events, saltwater intrusion, water treatment plant damage',
+              'Severe Storm': 'Stormwater infrastructure overwhelm, increased pollutant loading to receiving waters',
+              'Fire': 'Post-fire ash runoff increases phosphorus and turbidity in downstream watersheds',
+              'Tornado': 'Infrastructure damage may cause sewage spills, debris contamination of waterways',
+              'Earthquake': 'Pipe breaks may cause sewage releases, water main contamination',
+            };
+
+            for (const d of declarations) {
+              const incidentType = d?.incidentType || '';
+              const wqImpact = Object.entries(femaWqImpact).find(([key]) => incidentType.includes(key))?.[1]
+                || 'Potential disruption to water/wastewater infrastructure; monitor downstream water quality';
+
+              signals.push({
+                type: 'disaster_declaration',
+                severity: 'high',
+                title: d?.declarationTitle || `FEMA Disaster: ${incidentType}`,
+                location: d?.designatedArea || stateFilter,
+                state: stateFilter,
+                source: 'FEMA',
+                reason: `Federal disaster declaration (${d?.declarationType || 'DR'}). Incident: ${incidentType}. Declared: ${d?.declarationDate?.split('T')[0] || 'unknown'}.`,
+                disasterType: d?.declarationType || '',
+                incidentType,
+                wqImpact,
+                disasterNumber: d?.disasterNumber || '',
+                declarationDate: d?.declarationDate || '',
+                timestamp: d?.declarationDate || new Date().toISOString(),
+              });
+            }
+          }
+        } catch (e: any) {
+          console.warn('[Signals] FEMA disaster declarations failed:', e.message);
+        }
+
         // Sort by severity (high → medium → info) then by timestamp descending
         const sevOrder: Record<string, number> = { high: 0, medium: 1, low: 2, info: 3 };
         signals.sort((a, b) => {
