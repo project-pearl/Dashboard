@@ -320,6 +320,7 @@ function generateStateRegionData(stateAbbr: string): RegionRow[] {
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }: Props) {
+  console.log('[StateCC] stateAbbr prop:', stateAbbr);
   const stateName = STATE_NAMES[stateAbbr] || stateAbbr;
   const agency = STATE_AGENCIES[stateAbbr] || STATE_AUTHORITIES[stateAbbr] || null;
   const { user, logout } = useAuth();

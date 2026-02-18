@@ -988,7 +988,7 @@ export default function Home() {
             {userRole === 'State' && (
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-amber-600 uppercase tracking-wide whitespace-nowrap">State:</span>
-                <Select value={userState} onValueChange={setUserState}>
+                <Select value={userState} onValueChange={(val) => { setUserState(val); console.log('[page.tsx] userState changed:', val); }}>
                   <SelectTrigger className="w-[160px] h-8 text-sm border-amber-300 bg-white">
                     <SelectValue />
                   </SelectTrigger>
@@ -1009,6 +1009,7 @@ export default function Home() {
                   <Select value={homeState} onValueChange={(val) => {
                     setHomeState(val);
                     setUserState(val);
+                    console.log('[page.tsx] userState changed:', val);
                     const first = getRegionsForState(val)[0];
                     if (first) { setUserRegion(first.id); setSelectedRegionId(first.id); }
                   }}>
@@ -1048,6 +1049,7 @@ export default function Home() {
                 <Select value={homeState} onValueChange={(val) => {
                   setHomeState(val);
                   setUserState(val);
+                  console.log('[page.tsx] userState changed:', val);
                   const first = getRegionsForState(val)[0];
                   if (first) setSelectedRegionId(first.id);
                 }}>
