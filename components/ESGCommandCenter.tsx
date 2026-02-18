@@ -863,7 +863,7 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
           <Card className="border-2 border-emerald-200 bg-gradient-to-br from-emerald-50/50 to-white">
             <CardContent className="p-3 text-center">
-              <div className="text-2xl font-bold text-emerald-700">{portfolioScores.avgESG}</div>
+              <div className="text-2xl font-bold text-emerald-700 inline-flex items-center gap-1">{portfolioScores.avgESG}<ProvenanceIcon metricName="ESG Score" displayValue={String(portfolioScores.avgESG)} /></div>
               <div className="text-[10px] text-emerald-600 font-medium">ESG Score</div>
             </CardContent>
           </Card>
@@ -875,7 +875,7 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
           </Card>
           <Card className="border border-red-200">
             <CardContent className="p-3 text-center">
-              <div className="text-2xl font-bold text-red-600">{portfolioScores.highRisk}</div>
+              <div className="text-2xl font-bold text-red-600 inline-flex items-center gap-1">{portfolioScores.highRisk}<ProvenanceIcon metricName="High Risk Facilities" displayValue={String(portfolioScores.highRisk)} /></div>
               <div className="text-[10px] text-red-500">High Risk</div>
             </CardContent>
           </Card>
@@ -896,13 +896,13 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
               <div className="flex items-center justify-center gap-1 mb-0.5">
                 <Shield className="h-3.5 w-3.5 text-green-600" />
               </div>
-              <div className="text-2xl font-bold text-green-600">{portfolioScores.monitored}</div>
+              <div className="text-2xl font-bold text-green-600 inline-flex items-center gap-1">{portfolioScores.monitored}<ProvenanceIcon metricName="Verified Impact" displayValue={String(portfolioScores.monitored)} /></div>
               <div className="text-[10px] text-green-600 font-medium">Verified Impact</div>
             </CardContent>
           </Card>
           <Card className="border border-slate-200">
             <CardContent className="p-3 text-center">
-              <div className="text-2xl font-bold text-slate-600">{portfolioScores.avgRisk}</div>
+              <div className="text-2xl font-bold text-slate-600 inline-flex items-center gap-1">{portfolioScores.avgRisk}<ProvenanceIcon metricName="Avg Risk Score" displayValue={String(portfolioScores.avgRisk)} /></div>
               <div className="text-[10px] text-slate-500">Avg Risk Score</div>
             </CardContent>
           </Card>
@@ -1402,13 +1402,24 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
                         <span className="text-sm font-bold text-slate-800">{fw.name}</span>
                         <span className="text-[10px] text-slate-500">{fw.fullName}</span>
                       </div>
-                      <Badge variant="secondary" className={
-                        fw.status === 'ready' ? 'bg-green-100 text-green-700 border-green-200' :
-                        fw.status === 'partial' ? 'bg-amber-100 text-amber-700 border-amber-200' :
-                        'bg-red-100 text-red-700 border-red-200'
-                      }>
-                        {fw.status === 'ready' ? 'Ready' : fw.status === 'partial' ? 'Partial' : 'Gaps'}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        {CLOSE_THE_GAP[fw.id] && (
+                          <button
+                            onClick={() => openGapWizard(fw.id)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-sm hover:from-violet-700 hover:to-indigo-700 transition-all"
+                          >
+                            <Sparkles className="h-3 w-3" />
+                            Close the Gap
+                          </button>
+                        )}
+                        <Badge variant="secondary" className={
+                          fw.status === 'ready' ? 'bg-green-100 text-green-700 border-green-200' :
+                          fw.status === 'partial' ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                          'bg-red-100 text-red-700 border-red-200'
+                        }>
+                          {fw.status === 'ready' ? 'Ready' : fw.status === 'partial' ? 'Partial' : 'Gaps'}
+                        </Badge>
+                      </div>
                     </div>
                     <div className="w-full h-1.5 bg-slate-100 rounded-full">
                       <div
@@ -1435,6 +1446,212 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
             )}
           </div>
         )}
+
+        {/* ── CLOSE THE GAP WIZARD MODAL ── */}
+        {gapWizardFramework && CLOSE_THE_GAP[gapWizardFramework] && (() => {
+          const fw = ESG_FRAMEWORKS.find(f => f.id === gapWizardFramework)!;
+          const gap = CLOSE_THE_GAP[gapWizardFramework];
+          const statusIcon = (s: GapStatus) => s === 'green' ? <CheckCircle2 className="h-4 w-4 text-green-600" /> : s === 'amber' ? <AlertCircle className="h-4 w-4 text-amber-500" /> : <Circle className="h-4 w-4 text-red-400" />;
+          const availBadge = (a: PearlMapping['availability']) => a === 'available' ? 'bg-green-100 text-green-700 border-green-200' : a === 'partial' ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-slate-100 text-slate-500 border-slate-200';
+          const exhibitIcon = (t: EvidenceExhibit['type']) => t === 'chart' ? <BarChart3 className="h-4 w-4" /> : t === 'table' ? <FileText className="h-4 w-4" /> : t === 'report' ? <ClipboardList className="h-4 w-4" /> : <Download className="h-4 w-4" />;
+
+          return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={closeGapWizard} />
+              <div className="relative w-full max-w-3xl max-h-[85vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+                {/* Premium gradient header */}
+                <div className="bg-gradient-to-r from-violet-700 via-indigo-600 to-purple-700 px-6 py-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <Sparkles className="h-5 w-5 text-violet-200" />
+                        <span className="text-white font-bold text-lg">Close the Gap</span>
+                        <Badge className="bg-white/20 text-white border-white/30 text-[10px]">Premium</Badge>
+                      </div>
+                      <div className="text-violet-200 text-sm">{fw.name} — {fw.fullName}</div>
+                    </div>
+                    <button onClick={closeGapWizard} className="text-white/70 hover:text-white transition-colors"><X className="h-5 w-5" /></button>
+                  </div>
+                  {/* Step indicator */}
+                  <div className="flex items-center gap-1 mt-4">
+                    {WIZARD_STEPS.map(({ step, label, icon: StepIcon }) => (
+                      <button key={step} onClick={() => setGapWizardStep(step)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                        gapWizardStep === step ? 'bg-white text-violet-700 shadow-md' : gapWizardStep > step ? 'bg-white/20 text-white' : 'bg-white/10 text-white/50'
+                      }`}>
+                        <StepIcon className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">{label}</span>
+                        <span className="sm:hidden">{step}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Wizard body */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-4">
+
+                  {/* STEP 1: Missing Data Fields */}
+                  {gapWizardStep === 1 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-bold text-slate-800">Missing Data Fields</h3>
+                        <div className="flex items-center gap-3 text-[10px] text-slate-500">
+                          <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-green-600" /> Available</span>
+                          <span className="flex items-center gap-1"><AlertCircle className="h-3 w-3 text-amber-500" /> Partial</span>
+                          <span className="flex items-center gap-1"><Circle className="h-3 w-3 text-red-400" /> Missing</span>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        {gap.missingFields.map(f => (
+                          <div key={f.field} className={`flex items-start gap-3 p-3 rounded-lg border ${
+                            f.status === 'green' ? 'border-green-200 bg-green-50/50' : f.status === 'amber' ? 'border-amber-200 bg-amber-50/50' : 'border-red-200 bg-red-50/50'
+                          }`}>
+                            <div className="mt-0.5">{statusIcon(f.status)}</div>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-semibold text-slate-800">{f.field}</div>
+                              <div className="text-xs text-slate-600 mt-0.5">{f.description}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="pt-2 border-t border-slate-100">
+                        <div className="flex items-center justify-between text-xs text-slate-600">
+                          <span>Coverage: {fw.coverage}% complete</span>
+                          <span>{gap.missingFields.filter(f => f.status === 'red').length} critical gaps, {gap.missingFields.filter(f => f.status === 'amber').length} partial</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* STEP 2: PEARL Can Measure */}
+                  {gapWizardStep === 2 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-bold text-slate-800">PEARL Data Connections</h3>
+                        <div className="flex items-center gap-3 text-[10px] text-slate-500">
+                          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> Available</span>
+                          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500" /> Partial</span>
+                          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-slate-300" /> Planned</span>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        {gap.pearlMappings.map(m => (
+                          <div key={m.field} className="p-3 rounded-lg border border-slate-200 bg-white">
+                            <div className="flex items-center justify-between mb-1.5">
+                              <span className="text-xs font-semibold text-slate-700">{m.field}</span>
+                              <Badge variant="secondary" className={`text-[9px] ${availBadge(m.availability)}`}>
+                                {m.availability === 'available' ? 'Available' : m.availability === 'partial' ? 'Partial' : 'Planned'}
+                              </Badge>
+                            </div>
+                            <div className="text-[11px] text-slate-600 mb-2">{m.pearlParameter}</div>
+                            <button className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold transition-all ${
+                              m.availability === 'available' ? 'bg-green-600 text-white hover:bg-green-700' :
+                              m.availability === 'partial' ? 'bg-amber-500 text-white hover:bg-amber-600' :
+                              'bg-slate-200 text-slate-500 cursor-not-allowed'
+                            }`} disabled={m.availability === 'planned'}>
+                              <Link2 className="h-3 w-3" />
+                              {m.availability === 'planned' ? 'Coming Soon' : 'Connect Data'}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* STEP 3: Draft Narrative */}
+                  {gapWizardStep === 3 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-bold text-slate-800">Draft Disclosure Narrative</h3>
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-violet-100 text-violet-700 border-violet-200 text-[10px]">AI-Generated Draft</Badge>
+                        </div>
+                      </div>
+                      <div className="relative rounded-xl border border-violet-200 bg-gradient-to-br from-violet-50/50 to-indigo-50/30 p-4">
+                        <div className="absolute top-3 right-3 flex items-center gap-1">
+                          <button className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+                            <Download className="h-3 w-3" /> Copy
+                          </button>
+                        </div>
+                        <div className="text-xs text-slate-700 leading-relaxed whitespace-pre-line pr-20">
+                          {gap.narrativeTemplate}
+                        </div>
+                      </div>
+                      <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3">
+                        <div className="flex items-start gap-2">
+                          <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <div className="text-xs font-semibold text-amber-800">Placeholders require your data</div>
+                            <div className="text-[11px] text-amber-700 mt-0.5">Bracketed values like [X], [N], [Company] must be replaced with actual figures from your facility data. Connect PEARL data sources in Step 2 to auto-populate where available.</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* STEP 4: Evidence Exhibits */}
+                  {gapWizardStep === 4 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-bold text-slate-800">Evidence Exhibits & Supporting Documentation</h3>
+                      </div>
+                      <div className="grid gap-2">
+                        {gap.evidenceExhibits.map(ex => (
+                          <div key={ex.name} className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 bg-white hover:border-violet-300 hover:bg-violet-50/30 transition-colors group">
+                            <div className="w-9 h-9 rounded-lg bg-violet-100 flex items-center justify-center text-violet-600 group-hover:bg-violet-200 transition-colors">
+                              {exhibitIcon(ex.type)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-semibold text-slate-800">{ex.name}</div>
+                              <div className="text-[11px] text-slate-500">{ex.description}</div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="secondary" className="text-[9px] bg-slate-100 text-slate-600 border-slate-200 capitalize">{ex.type}</Badge>
+                              <button className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold bg-violet-600 text-white hover:bg-violet-700 transition-colors">
+                                <Download className="h-3 w-3" /> Export
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="pt-3 border-t border-slate-100">
+                        <button className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md hover:from-violet-700 hover:to-indigo-700 transition-all">
+                          <Package className="h-4 w-4" />
+                          Export Complete {fw.name} Disclosure Package
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer navigation */}
+                <div className="border-t border-slate-200 px-6 py-3 flex items-center justify-between bg-slate-50">
+                  <button
+                    onClick={() => setGapWizardStep(Math.max(1, gapWizardStep - 1) as WizardStep)}
+                    className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                      gapWizardStep === 1 ? 'text-slate-300 cursor-not-allowed' : 'text-slate-600 hover:bg-slate-200'
+                    }`}
+                    disabled={gapWizardStep === 1}
+                  >
+                    <ChevronRight className="h-3.5 w-3.5 rotate-180" /> Previous
+                  </button>
+                  <div className="text-[10px] text-slate-400">Step {gapWizardStep} of 4</div>
+                  {gapWizardStep < 4 ? (
+                    <button
+                      onClick={() => setGapWizardStep(Math.min(4, gapWizardStep + 1) as WizardStep)}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-violet-600 text-white hover:bg-violet-700 transition-colors"
+                    >
+                      Next <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
+                  ) : (
+                    <button onClick={closeGapWizard} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700 transition-colors">
+                      <CheckCircle2 className="h-3.5 w-3.5" /> Done
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ── SUPPLY CHAIN WATER RISK ── */}
         {lens.showRisk && (
