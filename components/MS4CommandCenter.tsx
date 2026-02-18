@@ -23,6 +23,7 @@ import { getRegionMockData, calculateRemovalEfficiency, calculateOverallScore } 
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { resolveWaterbodyCoordinates } from '@/lib/waterbodyCentroids';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
+import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import dynamic from 'next/dynamic';
 
 const GrantOpportunityMatcher = dynamic(
@@ -3811,16 +3812,8 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
           )}
         </div>
 
-        {/* ── FOOTER ── */}
-        <div className="flex flex-col gap-1 text-[10px] text-slate-400 pt-2 border-t border-slate-200">
-          <div className="flex items-center justify-between">
-            <span>PEARL MS4 Compliance Center v1.0 · {jurisdictionMeta ? `${jurisdictionMeta.name} (${jurisdictionMeta.permit})` : stateName} · {scopedRegionData.length} waterbodies monitored</span>
-            <a href="/methodology" className="text-blue-500 hover:text-blue-700 underline font-medium">Methodology</a>
-            <span className="font-medium text-slate-500">Data Sources:</span>
-            <span>USGS NWIS · EPA ATTAINS · Water Quality Portal · NOAA CO-OPS · EPA ECHO</span>
-          </div>
-          <div className="text-slate-400 italic">MS4-focused view — ambient surface water monitoring only. Not wastewater influent/effluent or drinking water supply data.</div>
-        </div>
+        {/* ── DISCLAIMER FOOTER ── */}
+        <PlatformDisclaimer />
 
       </div>
     </div>

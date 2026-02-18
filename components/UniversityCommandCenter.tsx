@@ -23,6 +23,7 @@ import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
 
 import { WaterQualityChallenges } from '@/components/WaterQualityChallenges';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
+import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import dynamic from 'next/dynamic';
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
@@ -2586,13 +2587,8 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
           </div>
         )}
 
-        {/* ── FOOTER ── */}
-        <div className="flex items-center justify-between text-[10px] text-slate-400 pt-2 border-t border-slate-200">
-          <span>PEARL {stateName} Research Command Center v1.0 · {regionData.length} waterbodies monitored</span>
-          <a href="/methodology" className="text-blue-500 hover:text-blue-700 underline font-medium">Methodology</a>
-          <span className="font-medium text-slate-500">Data Sources:</span>
-          <span>USGS NWIS · EPA ATTAINS · Water Quality Portal · NOAA CO-OPS · EPA ECHO · EJScreen</span>
-        </div>
+        {/* ── DISCLAIMER FOOTER ── */}
+        <PlatformDisclaimer />
 
       </div>
     </div>

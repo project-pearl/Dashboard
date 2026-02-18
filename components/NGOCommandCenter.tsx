@@ -22,6 +22,7 @@ import { useAuth } from '@/lib/authContext';
 import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
 import { WaterQualityChallenges } from '@/components/WaterQualityChallenges';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
+import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import dynamic from 'next/dynamic';
 
 const GrantOpportunityMatcher = dynamic(
@@ -2722,13 +2723,8 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
           </div>
         )}
 
-        {/* ── FOOTER ── */}
-        <div className="flex items-center justify-between text-[10px] text-slate-400 pt-2 border-t border-emerald-200">
-          <span>PEARL {stateName} Conservation Hub v1.0 · {regionData.length} waterbodies monitored</span>
-          <a href="/methodology" className="text-emerald-600 hover:text-emerald-800 underline font-medium">Methodology</a>
-          <span className="font-medium text-emerald-600">Data Sources:</span>
-          <span>USGS NWIS · EPA ATTAINS · Water Quality Portal · NOAA CO-OPS · EPA ECHO · EJScreen</span>
-        </div>
+        {/* ── DISCLAIMER FOOTER ── */}
+        <PlatformDisclaimer />
 
       </div>
     </div>

@@ -21,6 +21,7 @@ import { useAuth } from '@/lib/authContext';
 import { useWaterData, DATA_SOURCES } from '@/lib/useWaterData';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
+import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -4962,21 +4963,8 @@ export function NationalCommandCenter(props: Props) {
           </CardContent>
         </Card>
 
-        {/* ── DISCLAIMER FOOTER ────── */}
-        <div className="mt-6 pt-4 border-t border-slate-200">
-          <div className="flex items-start gap-2 text-[10px] text-slate-400 leading-relaxed max-w-4xl">
-            <Info size={14} className="flex-shrink-0 mt-0.5 text-slate-300" />
-            <div>
-              <p className="mb-1">
-                <span className="font-medium text-slate-500">Data Sources:</span> USGS NWIS · EPA ATTAINS · Water Quality Portal · Blue Water Baltimore · NOAA CO-OPS · EPA ECHO
-              </p>
-              <p>
-                PEARL grades and alerts are informational tools derived from publicly available data and automated analysis. They are not official EPA, MDE, or state assessments and do not constitute regulatory determinations. Always verify with primary agency data for compliance or permitting purposes. Data freshness and completeness vary — stale or absent data results in "Unassessed" status to reflect uncertainty.
-              </p>
-              <p className="mt-1"><a href="/methodology" className="text-blue-500 hover:text-blue-700 underline">Methodology & Data Standards</a></p>
-            </div>
-          </div>
-        </div>
+        {/* ── DISCLAIMER FOOTER ── */}
+        <PlatformDisclaimer />
 
       </div>
 

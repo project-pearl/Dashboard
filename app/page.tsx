@@ -1008,6 +1008,7 @@ export default function Home() {
                   <span className="text-xs font-bold text-amber-600 uppercase tracking-wide whitespace-nowrap">State:</span>
                   <Select value={homeState} onValueChange={(val) => {
                     setHomeState(val);
+                    setUserState(val);
                     const first = getRegionsForState(val)[0];
                     if (first) { setUserRegion(first.id); setSelectedRegionId(first.id); }
                   }}>
@@ -1046,6 +1047,7 @@ export default function Home() {
                 <span className="text-xs font-bold text-amber-600 uppercase tracking-wide whitespace-nowrap">State:</span>
                 <Select value={homeState} onValueChange={(val) => {
                   setHomeState(val);
+                  setUserState(val);
                   const first = getRegionsForState(val)[0];
                   if (first) setSelectedRegionId(first.id);
                 }}>
