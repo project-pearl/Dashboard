@@ -4,7 +4,26 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npx next build:*)",
+      "Bash(git checkout:*)",
+      "Bash(tee:*)",
+      "Bash(tr:*)",
+      "Bash(awk:*)",
+      "Bash(git status:*)",
+      "Bash(git push:*)",
+      "Bash(node -e:*)",
+      "Bash(node check_parens.js:*)",
+      "Bash(node check_syntax.js:*)",
+      "Bash(node check_jsx.js:*)",
+      "Bash(node check_smart.js:*)",
+      "Bash(node:*)",
+      "Bash(findstr:*)",
+      "Bash(git --no-pager diff components/K12CommandCenter.tsx)",
+      "Bash(GIT_PAGER=cat git diff:*)",
+      "Bash(ls:*)",
+      "Bash(git pull:*)",
+      "Bash(wc:*)"
     ]
   }
 }

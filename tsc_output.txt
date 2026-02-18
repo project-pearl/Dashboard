@@ -1,0 +1,141 @@
+app/page.tsx(1407,24): error TS18048: 'selectedRegion' is possibly 'undefined'.
+app/page.tsx(1838,49): error TS18047: 'waterData' is possibly 'null'.
+app/page.tsx(1852,37): error TS18047: 'waterData' is possibly 'null'.
+app/page.tsx(2024,33): error TS2322: Type '{ parameter: WaterQualityParameter; removalInfo: RemovalDisplayInfo; }' is not assignable to type 'IntrinsicAttributes & WaterQualityGaugeProps'.
+  Property 'removalInfo' does not exist on type 'IntrinsicAttributes & WaterQualityGaugeProps'.
+app/page.tsx(2407,58): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ DO: number; turbidity: number; TN: number; TP: number; TSS: number; salinity: number; }'.
+  No index signature with a parameter of type 'string' was found on type '{ DO: number; turbidity: number; TN: number; TP: number; TSS: number; salinity: number; }'.
+app/page.tsx(2408,37): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ DO: number; turbidity: number; TN: number; TP: number; TSS: number; salinity: number; }'.
+  No index signature with a parameter of type 'string' was found on type '{ DO: number; turbidity: number; TN: number; TP: number; TSS: number; salinity: number; }'.
+app/page.tsx(2686,33): error TS2322: Type '{ parameter: WaterQualityParameter; removalInfo: RemovalDisplayInfo; }' is not assignable to type 'IntrinsicAttributes & WaterQualityGaugeProps'.
+  Property 'removalInfo' does not exist on type 'IntrinsicAttributes & WaterQualityGaugeProps'.
+app/page.tsx(2804,23): error TS2322: Type '{ stormEventsMonitored: number; regionId: string; userRole: "State" | "Federal" | "MS4" | "Corporate" | "Researcher" | "College" | "NGO" | "K12"; }' is not assignable to type 'IntrinsicAttributes & ROISavingsCalculatorProps'.
+  Property 'userRole' does not exist on type 'IntrinsicAttributes & ROISavingsCalculatorProps'.
+app/page.tsx(2837,19): error TS2322: Type '"State" | "Federal" | "MS4" | "Corporate" | "Researcher" | "College" | "NGO" | "K12"' is not assignable to type '"Researcher" | "College"'.
+  Type '"State"' is not assignable to type '"Researcher" | "College"'.
+components/ESGCommandCenter.tsx(9,78): error TS7016: Could not find a declaration file for module 'react-simple-maps'. 'C:/Users/Doug/Dashboard/node_modules/react-simple-maps/dist/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react-simple-maps` if it exists or add a new declaration (.d.ts) file containing `declare module 'react-simple-maps';`
+components/ESGCommandCenter.tsx(10,25): error TS7016: Could not find a declaration file for module 'topojson-client'. 'C:/Users/Doug/Dashboard/node_modules/topojson-client/dist/topojson-client.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/topojson-client` if it exists or add a new declaration (.d.ts) file containing `declare module 'topojson-client';`
+components/ESGCommandCenter.tsx(959,39): error TS7031: Binding element 'coordinates' implicitly has an 'any' type.
+components/ESGCommandCenter.tsx(959,52): error TS7031: Binding element 'zoom' implicitly has an 'any' type.
+components/K12CommandCenter.tsx(5,63): error TS7016: Could not find a declaration file for module 'react-simple-maps'. 'C:/Users/Doug/Dashboard/node_modules/react-simple-maps/dist/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react-simple-maps` if it exists or add a new declaration (.d.ts) file containing `declare module 'react-simple-maps';`
+components/K12CommandCenter.tsx(6,25): error TS7016: Could not find a declaration file for module 'topojson-client'. 'C:/Users/Doug/Dashboard/node_modules/topojson-client/dist/topojson-client.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/topojson-client` if it exists or add a new declaration (.d.ts) file containing `declare module 'topojson-client';`
+components/K12CommandCenter.tsx(1462,50): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string'.
+  Type 'null' is not assignable to type 'string'.
+components/K12CommandCenter.tsx(1463,75): error TS18047: 'activeDetailId' is possibly 'null'.
+components/K12CommandCenter.tsx(1469,30): error TS2538: Type 'null' cannot be used as an index type.
+components/K12CommandCenter.tsx(1474,30): error TS2538: Type 'null' cannot be used as an index type.
+components/K12CommandCenter.tsx(1477,49): error TS2538: Type 'null' cannot be used as an index type.
+components/K12CommandCenter.tsx(1667,61): error TS18047: 'dataAgeDays' is possibly 'null'.
+components/K12CommandCenter.tsx(1756,74): error TS18047: 'dataAgeDays' is possibly 'null'.
+components/K12CommandCenter.tsx(1758,136): error TS18047: 'dataAgeDays' is possibly 'null'.
+components/K12CommandCenter.tsx(1758,180): error TS18047: 'dataAgeDays' is possibly 'null'.
+components/K12CommandCenter.tsx(2074,101): error TS2367: This comparison appears to be unintentional because the types '"normal"' and '"unknown"' have no overlap.
+components/K12CommandCenter.tsx(2079,103): error TS2367: This comparison appears to be unintentional because the types '"normal"' and '"unknown"' have no overlap.
+components/MS4CommandCenter.tsx(5,63): error TS7016: Could not find a declaration file for module 'react-simple-maps'. 'C:/Users/Doug/Dashboard/node_modules/react-simple-maps/dist/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react-simple-maps` if it exists or add a new declaration (.d.ts) file containing `declare module 'react-simple-maps';`
+components/MS4CommandCenter.tsx(6,25): error TS7016: Could not find a declaration file for module 'topojson-client'. 'C:/Users/Doug/Dashboard/node_modules/topojson-client/dist/topojson-client.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/topojson-client` if it exists or add a new declaration (.d.ts) file containing `declare module 'topojson-client';`
+components/MS4CommandCenter.tsx(2541,101): error TS2367: This comparison appears to be unintentional because the types '"normal"' and '"unknown"' have no overlap.
+components/MS4CommandCenter.tsx(2546,103): error TS2367: This comparison appears to be unintentional because the types '"normal"' and '"unknown"' have no overlap.
+components/MS4CommandCenter.tsx(2913,21): error TS2322: Type 'WaterQualityData | null' is not assignable to type 'WaterQualityData'.
+  Type 'null' is not assignable to type 'WaterQualityData'.
+components/MS4CommandCenter.tsx(3055,35): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ DO: number; turbidity: number; TN: number; TP: number; TSS: number; salinity: number; }'.
+  No index signature with a parameter of type 'string' was found on type '{ DO: number; turbidity: number; TN: number; TP: number; TSS: number; salinity: number; }'.
+components/MS4CommandCenter.tsx(3056,35): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ DO: WaterQualityParameter; turbidity: WaterQualityParameter; TN: WaterQualityParameter; TP: WaterQualityParameter; TSS: WaterQualityParameter; salinity: WaterQualityParameter; }'.
+  No index signature with a parameter of type 'string' was found on type '{ DO: WaterQualityParameter; turbidity: WaterQualityParameter; TN: WaterQualityParameter; TP: WaterQualityParameter; TSS: WaterQualityParameter; salinity: WaterQualityParameter; }'.
+components/MS4CommandCenter.tsx(3057,35): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ DO: WaterQualityParameter; turbidity: WaterQualityParameter; TN: WaterQualityParameter; TP: WaterQualityParameter; TSS: WaterQualityParameter; salinity: WaterQualityParameter; }'.
+  No index signature with a parameter of type 'string' was found on type '{ DO: WaterQualityParameter; turbidity: WaterQualityParameter; TN: WaterQualityParameter; TP: WaterQualityParameter; TSS: WaterQualityParameter; salinity: WaterQualityParameter; }'.
+components/NationalCommandCenter.tsx(5,55): error TS7016: Could not find a declaration file for module 'react-simple-maps'. 'C:/Users/Doug/Dashboard/node_modules/react-simple-maps/dist/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react-simple-maps` if it exists or add a new declaration (.d.ts) file containing `declare module 'react-simple-maps';`
+components/NationalCommandCenter.tsx(6,25): error TS7016: Could not find a declaration file for module 'topojson-client'. 'C:/Users/Doug/Dashboard/node_modules/topojson-client/dist/topojson-client.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/topojson-client` if it exists or add a new declaration (.d.ts) file containing `declare module 'topojson-client';`
+components/NationalCommandCenter.tsx(3079,92): error TS2367: This comparison appears to be unintentional because the types '"normal"' and '"unknown"' have no overlap.
+components/NationalCommandCenter.tsx(3085,94): error TS2367: This comparison appears to be unintentional because the types '"normal"' and '"unknown"' have no overlap.
+components/NationalCommandCenter.tsx(3436,103): error TS2367: This comparison appears to be unintentional because the types '"normal"' and '"unknown"' have no overlap.
+components/NationalCommandCenter.tsx(3441,105): error TS2367: This comparison appears to be unintentional because the types '"normal"' and '"unknown"' have no overlap.
+components/NGOCommandCenter.tsx(5,63): error TS7016: Could not find a declaration file for module 'react-simple-maps'. 'C:/Users/Doug/Dashboard/node_modules/react-simple-maps/dist/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react-simple-maps` if it exists or add a new declaration (.d.ts) file containing `declare module 'react-simple-maps';`
+components/NGOCommandCenter.tsx(6,25): error TS7016: Could not find a declaration file for module 'topojson-client'. 'C:/Users/Doug/Dashboard/node_modules/topojson-client/dist/topojson-client.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/topojson-client` if it exists or add a new declaration (.d.ts) file containing `declare module 'topojson-client';`
+components/NGOCommandCenter.tsx(1846,101): error TS2367: This comparison appears to be unintentional because the types '"normal"' and '"unknown"' have no overlap.
+components/NGOCommandCenter.tsx(1851,103): error TS2367: This comparison appears to be unintentional because the types '"normal"' and '"unknown"' have no overlap.
+components/SiteAssessmentCard.tsx(815,84): error TS2367: This comparison appears to be unintentional because the types '"normal"' and '"unknown"' have no overlap.
+components/SiteAssessmentCard.tsx(821,86): error TS2367: This comparison appears to be unintentional because the types '"normal"' and '"unknown"' have no overlap.
+components/SiteAssessmentCard.tsx(1102,33): error TS2339: Property 'lastSampled' does not exist on type 'WaterParam'.
+components/SiteAssessmentCard.tsx(1102,58): error TS2339: Property 'lastSampled' does not exist on type 'WaterParam'.
+components/SiteAssessmentCard.tsx(1172,95): error TS2367: This comparison appears to be unintentional because the types '"normal"' and '"unknown"' have no overlap.
+components/SiteAssessmentCard.tsx(1177,97): error TS2367: This comparison appears to be unintentional because the types '"normal"' and '"unknown"' have no overlap.
+components/StateCommandCenter.tsx(5,63): error TS7016: Could not find a declaration file for module 'react-simple-maps'. 'C:/Users/Doug/Dashboard/node_modules/react-simple-maps/dist/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react-simple-maps` if it exists or add a new declaration (.d.ts) file containing `declare module 'react-simple-maps';`
+components/StateCommandCenter.tsx(6,25): error TS7016: Could not find a declaration file for module 'topojson-client'. 'C:/Users/Doug/Dashboard/node_modules/topojson-client/dist/topojson-client.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/topojson-client` if it exists or add a new declaration (.d.ts) file containing `declare module 'topojson-client';`
+components/StateCommandCenter.tsx(1933,101): error TS2367: This comparison appears to be unintentional because the types '"normal"' and '"unknown"' have no overlap.
+components/StateCommandCenter.tsx(1938,103): error TS2367: This comparison appears to be unintentional because the types '"normal"' and '"unknown"' have no overlap.
+components/StormEventTable.tsx(50,32): error TS2722: Cannot invoke an object which is possibly 'undefined'.
+components/TrendsChart.tsx(51,13): error TS2322: Type 'number' is not assignable to type 'Date'.
+components/UniversityCommandCenter.tsx(5,63): error TS7016: Could not find a declaration file for module 'react-simple-maps'. 'C:/Users/Doug/Dashboard/node_modules/react-simple-maps/dist/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react-simple-maps` if it exists or add a new declaration (.d.ts) file containing `declare module 'react-simple-maps';`
+components/UniversityCommandCenter.tsx(6,25): error TS7016: Could not find a declaration file for module 'topojson-client'. 'C:/Users/Doug/Dashboard/node_modules/topojson-client/dist/topojson-client.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/topojson-client` if it exists or add a new declaration (.d.ts) file containing `declare module 'topojson-client';`
+components/UniversityCommandCenter.tsx(602,18): error TS2304: Cannot find name 'Microscope'.
+components/UniversityCommandCenter.tsx(630,74): error TS2304: Cannot find name 'setShowViewDropdown'.
+components/UniversityCommandCenter.tsx(719,14): error TS2304: Cannot find name 'LENSES'.
+components/UniversityCommandCenter.tsx(719,25): error TS7006: Parameter 'lens' implicitly has an 'any' type.
+components/UniversityCommandCenter.tsx(722,32): error TS2304: Cannot find name 'setActiveLens'.
+components/UniversityCommandCenter.tsx(724,19): error TS2304: Cannot find name 'activeLens'.
+components/UniversityCommandCenter.tsx(737,10): error TS2304: Cannot find name 'WaterQualityChallenges'.
+components/UniversityCommandCenter.tsx(1230,14): error TS2304: Cannot find name 'isFieldStudy'.
+components/UniversityCommandCenter.tsx(1233,20): error TS2304: Cannot find name 'Microscope'.
+components/UniversityCommandCenter.tsx(1257,14): error TS2304: Cannot find name 'showInLens'.
+components/UniversityCommandCenter.tsx(1871,101): error TS2367: This comparison appears to be unintentional because the types '"normal"' and '"unknown"' have no overlap.
+components/UniversityCommandCenter.tsx(1876,103): error TS2367: This comparison appears to be unintentional because the types '"normal"' and '"unknown"' have no overlap.
+components/UniversityCommandCenter.tsx(2230,14): error TS2304: Cannot find name 'showInLens'.
+components/UniversityCommandCenter.tsx(2380,14): error TS2304: Cannot find name 'showInLens'.
+components/UniversityCommandCenter.tsx(2682,10): error TS2304: Cannot find name 'showInLens'.
+components/UniversityCommandCenter.tsx(2726,10): error TS2304: Cannot find name 'showInLens'.
+components/UniversityCommandCenter.tsx(2755,10): error TS2304: Cannot find name 'showInLens'.
+components/UniversityCommandCenter.tsx(2807,10): error TS2304: Cannot find name 'showInLens'.
+components/UserMenu.tsx(34,17): error TS2339: Property 'avatar' does not exist on type 'PearlUser'.
+components/UserMenu.tsx(55,23): error TS2339: Property 'avatar' does not exist on type 'PearlUser'.
+components/UserMenu.tsx(59,71): error TS2339: Property 'title' does not exist on type 'PearlUser'.
+lib/mockData.ts(107,10): error TS2305: Module '"./regionsConfig"' has no exported member 'RegionParameterConfig'.
+lib/regionsConfig.ts(1367,7): error TS2367: This comparison appears to be unintentional because the types '"chesapeake" | "gulf" | "pacific" | "other" | undefined' and '"greatlakes"' have no overlap.
+lib/scripts/discover-stations.ts(677,35): error TS2802: Type 'Map<string, DiscoveredStation[]>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+lib/useLiveSimulation.ts(171,13): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ DO: WaterQualityParameter; turbidity: WaterQualityParameter; TN: WaterQualityParameter; TP: WaterQualityParameter; TSS: WaterQualityParameter; salinity: WaterQualityParameter; }'.
+  No index signature with a parameter of type 'string' was found on type '{ DO: WaterQualityParameter; turbidity: WaterQualityParameter; TN: WaterQualityParameter; TP: WaterQualityParameter; TSS: WaterQualityParameter; salinity: WaterQualityParameter; }'.
+lib/useLiveSimulation.ts(172,11): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ DO: WaterQualityParameter; turbidity: WaterQualityParameter; TN: WaterQualityParameter; TP: WaterQualityParameter; TSS: WaterQualityParameter; salinity: WaterQualityParameter; }'.
+  No index signature with a parameter of type 'string' was found on type '{ DO: WaterQualityParameter; turbidity: WaterQualityParameter; TN: WaterQualityParameter; TP: WaterQualityParameter; TSS: WaterQualityParameter; salinity: WaterQualityParameter; }'.
+lib/useLiveSimulation.ts(173,16): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ DO: WaterQualityParameter; turbidity: WaterQualityParameter; TN: WaterQualityParameter; TP: WaterQualityParameter; TSS: WaterQualityParameter; salinity: WaterQualityParameter; }'.
+  No index signature with a parameter of type 'string' was found on type '{ DO: WaterQualityParameter; turbidity: WaterQualityParameter; TN: WaterQualityParameter; TP: WaterQualityParameter; TSS: WaterQualityParameter; salinity: WaterQualityParameter; }'.
+lib/useLiveSimulation.ts(175,15): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ DO: WaterQualityParameter; turbidity: WaterQualityParameter; TN: WaterQualityParameter; TP: WaterQualityParameter; TSS: WaterQualityParameter; salinity: WaterQualityParameter; }'.
+  No index signature with a parameter of type 'string' was found on type '{ DO: WaterQualityParameter; turbidity: WaterQualityParameter; TN: WaterQualityParameter; TP: WaterQualityParameter; TSS: WaterQualityParameter; salinity: WaterQualityParameter; }'.
+lib/useLiveSimulation.ts(176,15): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ DO: WaterQualityParameter; turbidity: WaterQualityParameter; TN: WaterQualityParameter; TP: WaterQualityParameter; TSS: WaterQualityParameter; salinity: WaterQualityParameter; }'.
+  No index signature with a parameter of type 'string' was found on type '{ DO: WaterQualityParameter; turbidity: WaterQualityParameter; TN: WaterQualityParameter; TP: WaterQualityParameter; TSS: WaterQualityParameter; salinity: WaterQualityParameter; }'.
+lib/useLiveSimulation.ts(176,46): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ DO: WaterQualityParameter; turbidity: WaterQualityParameter; TN: WaterQualityParameter; TP: WaterQualityParameter; TSS: WaterQualityParameter; salinity: WaterQualityParameter; }'.
+  No index signature with a parameter of type 'string' was found on type '{ DO: WaterQualityParameter; turbidity: WaterQualityParameter; TN: WaterQualityParameter; TP: WaterQualityParameter; TSS: WaterQualityParameter; salinity: WaterQualityParameter; }'.
+lib/useWaterData.ts(1384,15): error TS2739: Type '{ value: number; source: "NOAA"; }' is missing the following properties from type 'ParameterReading': pearlKey, unit, stationName, lastSampled, parameterName
+page.tsx(662,36): error TS2339: Property 'description' does not exist on type 'RegionConfig'.
+page.tsx(1176,44): error TS2339: Property 'hasPearlData' does not exist on type 'RegionConfig'.
+page.tsx(1229,15): error TS2322: Type '{ detectedEvent: DetectedStormEvent; onDismiss: () => void; }' is not assignable to type 'IntrinsicAttributes & StormDetectionBannerProps'.
+  Property 'detectedEvent' does not exist on type 'IntrinsicAttributes & StormDetectionBannerProps'.
+page.tsx(1241,13): error TS2322: Type '{ data: WaterQualityData; dataMode: DataMode; removalEfficiencies: { DO: number; turbidity: number; TN: number; TP: number; TSS: number; salinity: number; }; }' is not assignable to type 'IntrinsicAttributes & AlertsBannerProps'.
+  Property 'data' does not exist on type 'IntrinsicAttributes & AlertsBannerProps'.
+page.tsx(1305,113): error TS2322: Type '{ parameter: WaterQualityParameter; dataSource: string | undefined; wildlifePerspective: boolean; }' is not assignable to type 'IntrinsicAttributes & WaterQualityGaugeProps'.
+  Property 'wildlifePerspective' does not exist on type 'IntrinsicAttributes & WaterQualityGaugeProps'.
+page.tsx(1311,120): error TS2322: Type '{ parameter: WaterQualityParameter; dataSource: string | undefined; wildlifePerspective: boolean; }' is not assignable to type 'IntrinsicAttributes & WaterQualityGaugeProps'.
+  Property 'wildlifePerspective' does not exist on type 'IntrinsicAttributes & WaterQualityGaugeProps'.
+page.tsx(1317,113): error TS2322: Type '{ parameter: WaterQualityParameter; dataSource: string | undefined; wildlifePerspective: boolean; }' is not assignable to type 'IntrinsicAttributes & WaterQualityGaugeProps'.
+  Property 'wildlifePerspective' does not exist on type 'IntrinsicAttributes & WaterQualityGaugeProps'.
+page.tsx(1323,113): error TS2322: Type '{ parameter: WaterQualityParameter; dataSource: string | undefined; wildlifePerspective: boolean; }' is not assignable to type 'IntrinsicAttributes & WaterQualityGaugeProps'.
+  Property 'wildlifePerspective' does not exist on type 'IntrinsicAttributes & WaterQualityGaugeProps'.
+page.tsx(1329,114): error TS2322: Type '{ parameter: WaterQualityParameter; dataSource: string | undefined; wildlifePerspective: boolean; }' is not assignable to type 'IntrinsicAttributes & WaterQualityGaugeProps'.
+  Property 'wildlifePerspective' does not exist on type 'IntrinsicAttributes & WaterQualityGaugeProps'.
+page.tsx(1335,119): error TS2322: Type '{ parameter: WaterQualityParameter; dataSource: string | undefined; wildlifePerspective: boolean; }' is not assignable to type 'IntrinsicAttributes & WaterQualityGaugeProps'.
+  Property 'wildlifePerspective' does not exist on type 'IntrinsicAttributes & WaterQualityGaugeProps'.
+page.tsx(1358,16): error TS2739: Type '{}' is missing the following properties from type 'WildlifeImpactDisclaimerProps': enabled, onToggle
+page.tsx(1415,33): error TS2322: Type '{ parameter: WaterQualityParameter; removalInfo: RemovalDisplayInfo; }' is not assignable to type 'IntrinsicAttributes & WaterQualityGaugeProps'.
+  Property 'removalInfo' does not exist on type 'IntrinsicAttributes & WaterQualityGaugeProps'.

@@ -190,6 +190,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
               <a href="#data" className="hover:text-slate-900 transition-colors">Data Sources</a>
               <a href="#stakeholders" className="hover:text-slate-900 transition-colors">Who It&#39;s For</a>
               <a href="#technology" className="hover:text-slate-900 transition-colors">Technology</a>
+              <a href="/explore" className="hover:text-slate-900 transition-colors">Explore</a>
             </div>
             <button onClick={onSignIn} className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white rounded-full bg-slate-900 hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20">
               Sign In <ArrowRight className="h-3.5 w-3.5" />
@@ -229,6 +230,9 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
               </button>
               <a href="#platform" className="inline-flex items-center gap-2 px-8 py-4 text-base font-medium text-white/90 border border-white/20 rounded-full hover:bg-white/10 transition-all backdrop-blur-sm">
                 <Eye className="h-4 w-4" /> See How It Works
+              </a>
+              <a href="/explore" className="inline-flex items-center gap-2 px-8 py-4 text-base font-medium text-white/90 border border-white/20 rounded-full hover:bg-white/10 transition-all backdrop-blur-sm">
+                <Droplets className="h-4 w-4" /> Explore Water Quality
               </a>
             </div>
           </div>
@@ -486,6 +490,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
                 <li><span className="hover:text-white cursor-pointer transition-colors" onClick={onSignIn}>Federal Overview</span></li>
                 <li><span className="hover:text-white cursor-pointer transition-colors" onClick={onSignIn}>Research Tools</span></li>
                 <li><span className="hover:text-white cursor-pointer transition-colors" onClick={onSignIn}>ESG Reporting</span></li>
+                <li><a href="/explore" className="hover:text-white transition-colors">Explore Water Quality</a></li>
               </ul>
             </div>
             <div>
