@@ -95,6 +95,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    console.log('[AI-Insights] ENV CHECK:', { hasAnthropicKey: !!process.env.ANTHROPIC_API_KEY, hasOpenAIKey: !!process.env.OPENAI_API_KEY });
     const { systemPrompt, userMessage } = body;
 
     if (!systemPrompt || !userMessage) {
