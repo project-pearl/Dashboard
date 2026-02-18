@@ -20,7 +20,6 @@ import { getEJScore, getEJData, ejScoreLabel } from '@/lib/ejVulnerability';
 import { STATE_AUTHORITIES } from '@/lib/stateWaterData';
 import { useAuth } from '@/lib/authContext';
 import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
-import { MS4FineAvoidanceCalculator } from '@/components/MS4FineAvoidanceCalculator';
 import { WaterQualityChallenges } from '@/components/WaterQualityChallenges';
 import dynamic from 'next/dynamic';
 
@@ -2200,27 +2199,6 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
         {/* ── STATEWIDE COMPONENTS — shown when a waterbody is selected AND mock data is available ── */}
         {activeDetailId && displayData && regionMockData && (
           <div className="space-y-4">
-
-            {/* MS4 Compliance & Fine Avoidance */}
-            <div id="section-regcontext" className="rounded-2xl border-l-4 border-l-emerald-500 border border-emerald-200 bg-white shadow-sm overflow-hidden">
-              <button onClick={() => toggleCollapse('regcontext')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-                <span className="text-sm font-bold text-slate-800">💲 Regulatory Compliance Context</span>
-                <div className="flex items-center gap-1.5">
-                <span onClick={(e) => { e.stopPropagation(); printSection('regcontext', 'Regulatory Compliance Context'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                  <Printer className="h-3.5 w-3.5 text-slate-400" />
-                </span>
-                {isSectionOpen('regcontext') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
-              </div>
-              </button>
-              {isSectionOpen('regcontext') && (
-                <MS4FineAvoidanceCalculator
-                  data={displayData as any}
-                  removalEfficiencies={removalEfficiencies as any}
-                  regionId={activeDetailId}
-                  stormEventsMonitored={stormEvents.length}
-                />
-              )}
-            </div>
 
             {/* Environmental Justice — Census ACS + EPA SDWIS (statewide) + EJScreen (per-waterbody) */}
             {(() => {
