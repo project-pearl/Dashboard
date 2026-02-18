@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
-import { ComposableMap, Geographies, Geography, Marker } from 'react-simple-maps';
+import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from 'react-simple-maps';
 import { feature } from 'topojson-client';
 import statesTopo from 'us-atlas/states-10m.json';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -259,7 +259,8 @@ function generateStateRegionData(stateAbbr: string): RegionRow[] {
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', defaultLens, onSelectRegion, onToggleDevMode }: Props) {
+export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole = 'Researcher', defaultLens, onSelectRegion, onToggleDevMode }: Props) {
+  const [stateAbbr, setStateAbbr] = useState(initialStateAbbr);
   const stateName = STATE_NAMES[stateAbbr] || stateAbbr;
   const agency = STATE_AGENCIES[stateAbbr] || STATE_AUTHORITIES[stateAbbr] || null;
   const { user, logout } = useAuth();
@@ -274,6 +275,8 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', de
   const [showAccountPanel, setShowAccountPanel] = useState(false);
   const [showViewDropdown, setShowViewDropdown] = useState(false);
   const [overlay, setOverlay] = useState<OverlayId>('risk');
+  const [mapZoom, setMapZoom] = useState(1);
+  const [mapCenter, setMapCenter] = useState<[number, number]>(STATE_GEO[stateAbbr]?.center || [-98.5, 39.8]);
 
   // ── State-filtered region data ──
   const baseRegions = useMemo(() => generateStateRegionData(stateAbbr), [stateAbbr]);
@@ -632,6 +635,16 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', de
                 </button>
               ))}
             </div>
+            {/* State Selector */}
+            <select
+              value={stateAbbr}
+              onChange={(e) => { setStateAbbr(e.target.value); setActiveDetailId(null); setMapZoom(1); setMapCenter(STATE_GEO[e.target.value]?.center || [-98.5, 39.8]); }}
+              className="h-8 px-2 text-xs font-semibold rounded-md border bg-white border-slate-200 text-slate-700 hover:border-violet-300 focus:ring-2 focus:ring-violet-400/50 focus:outline-none transition-colors cursor-pointer"
+            >
+              {Object.entries(STATE_NAMES).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
+                <option key={abbr} value={abbr}>{abbr} — {name}</option>
+              ))}
+            </select>
             {/* Account */}
             {user && (
             <div className="relative">
@@ -834,9 +847,6 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', de
         {/* ── AI INSIGHTS ── */}
         <AIInsightsEngine role={userRole === 'College' ? 'College' : 'Researcher'} stateAbbr={stateAbbr} regionData={regionData as any} />
 
-        {/* ── WATER QUALITY CHALLENGES — all lenses ── */}
-        <WaterQualityChallenges context="academic" />
-
         {/* ── MAIN CONTENT: Map (2/3) + Waterbody List (1/3) ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
@@ -878,7 +888,13 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', de
                     <span>{stateName} · {regionData.length} waterbodies monitored</span>
                     {attainsBulkLoaded && <span className="text-green-600 font-medium">● ATTAINS live</span>}
                   </div>
-                  <div className="h-[480px] w-full">
+                  <div className="h-[480px] w-full relative">
+                    {/* Zoom controls */}
+                    <div className="absolute top-2 right-2 z-10 flex flex-col gap-1">
+                      <button onClick={() => setMapZoom(z => Math.min(z * 1.5, 12))} className="w-7 h-7 rounded bg-white border border-slate-300 shadow-sm flex items-center justify-center text-slate-600 hover:bg-slate-50 text-sm font-bold">+</button>
+                      <button onClick={() => setMapZoom(z => Math.max(z / 1.5, 1))} className="w-7 h-7 rounded bg-white border border-slate-300 shadow-sm flex items-center justify-center text-slate-600 hover:bg-slate-50 text-sm font-bold">{'\u2212'}</button>
+                      <button onClick={() => { setMapZoom(1); setMapCenter(stateGeo.center); }} className="w-7 h-7 rounded bg-white border border-slate-300 shadow-sm flex items-center justify-center text-slate-500 hover:bg-slate-50 text-[10px] font-medium">{'\u2302'}</button>
+                    </div>
                     <ComposableMap
                       projection="geoMercator"
                       projectionConfig={{ center: stateGeo.center, scale: stateGeo.scale }}
@@ -886,6 +902,7 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', de
                       height={500}
                       style={{ width: '100%', height: '100%' }}
                     >
+                      <ZoomableGroup zoom={mapZoom} center={mapCenter} onMoveEnd={({ coordinates, zoom }) => { setMapCenter(coordinates as [number, number]); setMapZoom(zoom); }} minZoom={1} maxZoom={12}>
                       <Geographies geography={topo}>
                         {({ geographies }: { geographies: GeoFeature[] }) =>
                           geographies.map((g: GeoFeature) => {
@@ -900,13 +917,13 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', de
                                     fill: isSelected ? '#e0e7ff' : '#f1f5f9',
                                     outline: 'none',
                                     stroke: isSelected ? '#4338ca' : '#cbd5e1',
-                                    strokeWidth: isSelected ? 1.5 : 0.3,
+                                    strokeWidth: (isSelected ? 1.5 : 0.3) / mapZoom,
                                   },
                                   hover: {
                                     fill: isSelected ? '#c7d2fe' : '#f1f5f9',
                                     outline: 'none',
                                     stroke: isSelected ? '#4338ca' : '#cbd5e1',
-                                    strokeWidth: isSelected ? 1.5 : 0.3,
+                                    strokeWidth: (isSelected ? 1.5 : 0.3) / mapZoom,
                                   },
                                   pressed: { fill: isSelected ? '#c7d2fe' : '#f1f5f9', outline: 'none' },
                                 }}
@@ -923,18 +940,18 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', de
                         return (
                           <Marker key={wb.id} coordinates={[wb.lon, wb.lat]}>
                             <circle
-                              r={isActive ? 7 : 4.5}
+                              r={(isActive ? 7 : 4.5) / mapZoom}
                               fill={markerColor}
                               stroke={isActive ? '#1e40af' : '#ffffff'}
-                              strokeWidth={isActive ? 2.5 : 1.5}
+                              strokeWidth={(isActive ? 2.5 : 1.5) / mapZoom}
                               style={{ cursor: 'pointer' }}
                               onClick={() => setActiveDetailId(isActive ? null : wb.id)}
                             />
                             {isActive && (
                               <text
                                 textAnchor="middle"
-                                y={-12}
-                                style={{ fontSize: '10px', fontWeight: 700, fill: '#1e3a5f', pointerEvents: 'none' }}
+                                y={-12 / mapZoom}
+                                style={{ fontSize: `${10 / mapZoom}px`, fontWeight: 700, fill: '#1e3a5f', pointerEvents: 'none' }}
                               >
                                 {wb.name}
                               </text>
@@ -942,6 +959,7 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', de
                           </Marker>
                         );
                       })}
+                      </ZoomableGroup>
                     </ComposableMap>
                   </div>
                   {/* Dynamic Legend */}
@@ -2176,6 +2194,9 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', de
 
 
 
+
+        {/* ── WATER QUALITY CHALLENGES — all lenses ── */}
+        <WaterQualityChallenges context="academic" />
 
         {/* ── TOP 10 WORSENING / IMPROVING — full + programs view ── */}
         {(

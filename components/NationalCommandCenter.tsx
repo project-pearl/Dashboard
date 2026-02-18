@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
-import { ComposableMap, Geographies, Geography } from 'react-simple-maps';
+import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps';
 import { feature } from 'topojson-client';
 import statesTopo from 'us-atlas/states-10m.json';
 
@@ -905,6 +905,8 @@ export function NationalCommandCenter(props: Props) {
   const [waterbodySearch, setWaterbodySearch] = useState<string>('');
   const [waterbodyFilter, setWaterbodyFilter] = useState<'all' | 'impaired' | 'severe' | 'monitored'>('all');
   const [overlay, setOverlay] = useState<OverlayId>(lens.defaultOverlay);
+  const [mapZoom, setMapZoom] = useState(1);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([0, 0]);
   const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d' | 'custom'>('24h');
   const [showImpact, setShowImpact] = useState(false);
   const [alertWorkflow, setAlertWorkflow] = useState<Record<string, { status: 'new' | 'acknowledged' | 'assigned' | 'resolved'; owner?: string; }>>({});
@@ -2089,7 +2091,12 @@ export function NationalCommandCenter(props: Props) {
                   <div className="p-2 text-xs text-slate-500 bg-slate-50 border-b border-slate-200">
                     Selected: {selectedState} ({STATE_ABBR_TO_NAME[selectedState] || 'Unknown'}) · 50 states + DC
                   </div>
-                  <div className="h-[480px] w-full">
+                  <div className="h-[480px] w-full relative">
+                    <div className="absolute top-2 right-2 z-10 flex flex-col gap-1">
+                      <button onClick={() => setMapZoom(z => Math.min(z * 1.5, 8))} className="w-7 h-7 rounded bg-white border border-slate-300 shadow-sm flex items-center justify-center text-slate-600 hover:bg-slate-50 text-sm font-bold">+</button>
+                      <button onClick={() => setMapZoom(z => Math.max(z / 1.5, 1))} className="w-7 h-7 rounded bg-white border border-slate-300 shadow-sm flex items-center justify-center text-slate-600 hover:bg-slate-50 text-sm font-bold">{'\u2212'}</button>
+                      <button onClick={() => { setMapZoom(1); setMapCenter([0, 0]); }} className="w-7 h-7 rounded bg-white border border-slate-300 shadow-sm flex items-center justify-center text-slate-500 hover:bg-slate-50 text-[10px] font-medium">{'\u2302'}</button>
+                    </div>
                     <ComposableMap
                       projection="geoAlbersUsa"
                       projectionConfig={{ scale: 1000 }}
@@ -2097,6 +2104,7 @@ export function NationalCommandCenter(props: Props) {
                       height={500}
                       style={{ width: '100%', height: '100%' }}
                     >
+                      <ZoomableGroup zoom={mapZoom} center={mapCenter} onMoveEnd={({ coordinates, zoom }) => { setMapCenter(coordinates as [number, number]); setMapZoom(zoom); }} minZoom={1} maxZoom={8}>
                       <Geographies geography={topo}>
                         {({ geographies }: { geographies: GeoFeature[] }) =>
                           geographies.map((g: GeoFeature) => {
@@ -2182,14 +2190,14 @@ export function NationalCommandCenter(props: Props) {
                                     fill,
                                     outline: 'none',
                                     stroke: isSelected ? '#111827' : '#ffffff',
-                                    strokeWidth: isSelected ? 1.5 : 0.5,
+                                    strokeWidth: (isSelected ? 1.5 : 0.5) / mapZoom,
                                   },
                                   hover: {
                                     fill,
                                     outline: 'none',
                                     cursor: abbr ? 'pointer' : 'default',
                                     stroke: '#111827',
-                                    strokeWidth: 1,
+                                    strokeWidth: 1 / mapZoom,
                                   },
                                   pressed: { fill, outline: 'none' },
                                 }}
@@ -2198,6 +2206,7 @@ export function NationalCommandCenter(props: Props) {
                           })
                         }
                       </Geographies>
+                      </ZoomableGroup>
                     </ComposableMap>
                   </div>
                   

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
-import { ComposableMap, Geographies, Geography, Marker } from 'react-simple-maps';
+import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from 'react-simple-maps';
 import { feature } from 'topojson-client';
 import statesTopo from 'us-atlas/states-10m.json';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -22,8 +22,6 @@ import { useAuth } from '@/lib/authContext';
 import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { MS4FineAvoidanceCalculator } from '@/components/MS4FineAvoidanceCalculator';
-import { BayImpactCounter } from '@/components/BayImpactCounter';
-import { ForecastChart } from '@/components/ForecastChart';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import dynamic from 'next/dynamic';
@@ -319,6 +317,8 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
   const [showViewDropdown, setShowViewDropdown] = useState(false);
   const [showAccountPanel, setShowAccountPanel] = useState(false);
   const [overlay, setOverlay] = useState<OverlayId>('risk');
+  const [mapZoom, setMapZoom] = useState(1);
+  const [mapCenter, setMapCenter] = useState<[number, number]>(STATE_GEO[stateAbbr]?.center || [-98.5, 39.8]);
 
   // ── State-filtered region data ──
   const baseRegions = useMemo(() => generateStateRegionData(stateAbbr), [stateAbbr]);
@@ -1044,7 +1044,12 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
                     <span>{stateName} · {regionData.length} waterbodies monitored</span>
                     {attainsBulkLoaded && <span className="text-green-600 font-medium">● ATTAINS live</span>}
                   </div>
-                  <div className="h-[480px] w-full">
+                  <div className="h-[480px] w-full relative">
+                    <div className="absolute top-2 right-2 z-10 flex flex-col gap-1">
+                      <button onClick={() => setMapZoom(z => Math.min(z * 1.5, 12))} className="w-7 h-7 rounded bg-white border border-slate-300 shadow-sm flex items-center justify-center text-slate-600 hover:bg-slate-50 text-sm font-bold">+</button>
+                      <button onClick={() => setMapZoom(z => Math.max(z / 1.5, 1))} className="w-7 h-7 rounded bg-white border border-slate-300 shadow-sm flex items-center justify-center text-slate-600 hover:bg-slate-50 text-sm font-bold">{'\u2212'}</button>
+                      <button onClick={() => { setMapZoom(1); setMapCenter(stateGeo.center); }} className="w-7 h-7 rounded bg-white border border-slate-300 shadow-sm flex items-center justify-center text-slate-500 hover:bg-slate-50 text-[10px] font-medium">{'\u2302'}</button>
+                    </div>
                     <ComposableMap
                       projection="geoMercator"
                       projectionConfig={{ center: stateGeo.center, scale: stateGeo.scale }}
@@ -1052,6 +1057,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
                       height={500}
                       style={{ width: '100%', height: '100%' }}
                     >
+                      <ZoomableGroup zoom={mapZoom} center={mapCenter} onMoveEnd={({ coordinates, zoom }) => { setMapCenter(coordinates as [number, number]); setMapZoom(zoom); }} minZoom={1} maxZoom={12}>
                       <Geographies geography={topo}>
                         {({ geographies }: { geographies: GeoFeature[] }) =>
                           geographies.map((g: GeoFeature) => {
@@ -1066,13 +1072,13 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
                                     fill: isSelected ? '#e0e7ff' : '#f1f5f9',
                                     outline: 'none',
                                     stroke: isSelected ? '#4338ca' : '#cbd5e1',
-                                    strokeWidth: isSelected ? 1.5 : 0.3,
+                                    strokeWidth: (isSelected ? 1.5 : 0.3) / mapZoom,
                                   },
                                   hover: {
                                     fill: isSelected ? '#c7d2fe' : '#f1f5f9',
                                     outline: 'none',
                                     stroke: isSelected ? '#4338ca' : '#cbd5e1',
-                                    strokeWidth: isSelected ? 1.5 : 0.3,
+                                    strokeWidth: (isSelected ? 1.5 : 0.3) / mapZoom,
                                   },
                                   pressed: { fill: isSelected ? '#c7d2fe' : '#f1f5f9', outline: 'none' },
                                 }}
@@ -1089,18 +1095,18 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
                         return (
                           <Marker key={wb.id} coordinates={[wb.lon, wb.lat]}>
                             <circle
-                              r={isActive ? 7 : 4.5}
+                              r={(isActive ? 7 : 4.5) / mapZoom}
                               fill={markerColor}
                               stroke={isActive ? '#1e40af' : '#ffffff'}
-                              strokeWidth={isActive ? 2.5 : 1.5}
+                              strokeWidth={(isActive ? 2.5 : 1.5) / mapZoom}
                               style={{ cursor: 'pointer' }}
                               onClick={() => setActiveDetailId(isActive ? null : wb.id)}
                             />
                             {isActive && (
                               <text
                                 textAnchor="middle"
-                                y={-12}
-                                style={{ fontSize: '10px', fontWeight: 700, fill: '#1e3a5f', pointerEvents: 'none' }}
+                                y={-12 / mapZoom}
+                                style={{ fontSize: `${10 / mapZoom}px`, fontWeight: 700, fill: '#1e3a5f', pointerEvents: 'none' }}
                               >
                                 {wb.name}
                               </text>
@@ -1108,6 +1114,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
                           </Marker>
                         );
                       })}
+                      </ZoomableGroup>
                     </ComposableMap>
                   </div>
                   {/* Dynamic Legend */}
@@ -2483,48 +2490,6 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
                 <PeerBenchmarking
                   removalEfficiencies={removalEfficiencies as any}
                   regionId={activeDetailId}
-                  userRole="State"
-                />
-              )}
-            </div>
-
-            {/* Bay Impact Counter (Chesapeake states) */}
-            {['MD','VA','PA','DE','DC','WV','NY'].includes(stateAbbr) && (
-              <div id="section-bay" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-                <button onClick={() => toggleCollapse('bay')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-                  <span className="text-sm font-bold text-slate-800">🌊 Chesapeake Bay Impact</span>
-                  <div className="flex items-center gap-1.5">
-                <span onClick={(e) => { e.stopPropagation(); printSection('bay', 'Chesapeake Bay Impact'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                  <Printer className="h-3.5 w-3.5 text-slate-400" />
-                </span>
-                {isSectionOpen('bay') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
-              </div>
-                </button>
-                {isSectionOpen('bay') && (
-                  <BayImpactCounter
-                    removalEfficiencies={removalEfficiencies as any}
-                    regionId={activeDetailId}
-                    userRole="State"
-                  />
-                )}
-              </div>
-            )}
-
-            {/* 24-Hour Forecast */}
-            <div id="section-forecast" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-              <button onClick={() => toggleCollapse('forecast')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-                <span className="text-sm font-bold text-slate-800">📈 24-Hour Water Quality Forecast</span>
-                <div className="flex items-center gap-1.5">
-                <span onClick={(e) => { e.stopPropagation(); printSection('forecast', '24-Hour Water Quality Forecast'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                  <Printer className="h-3.5 w-3.5 text-slate-400" />
-                </span>
-                {isSectionOpen('forecast') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
-              </div>
-              </button>
-              {isSectionOpen('forecast') && (
-                <ForecastChart
-                  data={displayData as any}
-                  removalEfficiencies={removalEfficiencies as any}
                   userRole="State"
                 />
               )}
