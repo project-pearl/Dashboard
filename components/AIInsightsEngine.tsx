@@ -112,6 +112,16 @@ export function AIInsightsEngine({ role, stateAbbr, selectedWaterbody, regionDat
         }
       : null;
 
+    // Fetch active signals (beach closures, harvest stops, sensor alerts)
+    let activeSignals: any[] = [];
+    try {
+      const sigRes = await fetch(`/api/water-data?action=signals&statecode=${stateAbbr}&limit=10`);
+      if (sigRes.ok) {
+        const sigData = await sigRes.json();
+        activeSignals = sigData?.signals || [];
+      }
+    } catch { /* signals unavailable — proceed without */ }
+
     const userMessage = JSON.stringify({
       role,
       state: stateAbbr,
@@ -119,6 +129,7 @@ export function AIInsightsEngine({ role, stateAbbr, selectedWaterbody, regionDat
         ? { name: selectedWaterbody.name, category: selectedWaterbody.category, causes: selectedWaterbody.causes, parameters: selectedWaterbody.parameters }
         : null,
       regionSummary,
+      activeSignals: activeSignals.length > 0 ? activeSignals : undefined,
     });
 
     try {
@@ -126,7 +137,7 @@ export function AIInsightsEngine({ role, stateAbbr, selectedWaterbody, regionDat
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          systemPrompt: `You are a water quality data analyst for the PEARL platform. Generate actionable insights based on the provided water quality data. Be specific, cite parameter values, and provide early warnings. When analyzing waterbody data near major infrastructure (CSO outfalls, interceptors, treatment plants), flag sudden multi-parameter anomalies (simultaneous E. coli spike + DO crash + turbidity surge) as potential sewage discharge events. Reference the January 2026 Potomac Interceptor collapse as an example of why early detection matters — 200M+ gallons went unmonitored because no independent continuous monitoring existed. ${ROLE_TONE[role]} Format your response as a JSON array of exactly 4 objects, each with: {type: "predictive"|"anomaly"|"comparison"|"recommendation"|"summary", severity: "info"|"warning"|"critical", title: string, body: string, waterbody?: string, timeframe?: string}. Return ONLY the JSON array, no markdown or extra text.`,
+          systemPrompt: `You are a water quality data analyst for the PEARL platform. Generate actionable insights based on the provided water quality data. Be specific, cite parameter values, and provide early warnings. When analyzing waterbody data near major infrastructure (CSO outfalls, interceptors, treatment plants), flag sudden multi-parameter anomalies (simultaneous E. coli spike + DO crash + turbidity surge) as potential sewage discharge events. Reference the January 2026 Potomac Interceptor collapse as an example of why early detection matters — 200M+ gallons went unmonitored because no independent continuous monitoring existed. If activeSignals are present in the data, incorporate them prominently into your analysis. CRITICAL: If any signal has type "discharge_signature" or "permit_violation", this is a potential sewage spill or illegal discharge — lead with it as your top insight, frame it as urgent, recommend immediate investigation of upstream outfalls, and note that PEARL's multi-parameter correlation detected the pattern (simultaneous DO crash + conductivity spike + turbidity surge = sewage fingerprint). For beach closures or harvest stops, connect them to downstream impact on public health and economy. ${ROLE_TONE[role]} Format your response as a JSON array of exactly 4 objects, each with: {type: "predictive"|"anomaly"|"comparison"|"recommendation"|"summary", severity: "info"|"warning"|"critical", title: string, body: string, waterbody?: string, timeframe?: string}. Return ONLY the JSON array, no markdown or extra text.`,
           userMessage,
         }),
       });
