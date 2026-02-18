@@ -904,24 +904,44 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
     const regionConfig = getRegionById(activeDetailId);
     const regionName = regionConfig?.name || nccRegion.name;
     const encodedName = encodeURIComponent(regionName);
-    fetch(`/api/water-data?action=attains-assessments&assessmentUnitName=${encodedName}&statecode=${stateAbbr}`)
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (!data) return;
-        setAttainsCache(prev => ({
-          ...prev,
-          [activeDetailId]: {
-            category: data.category || '',
-            causes: data.causes || [],
-            causeCount: data.causeCount || 0,
-            status: data.overallStatus || '',
-            cycle: data.reportingCycle || '',
-            loading: false,
-          },
-        }));
-      })
-      .catch(() => setAttainsCache(prev => ({ ...prev, [activeDetailId]: { ...prev[activeDetailId], loading: false } })));
-  }, [activeDetailId, scopedRegionData, stateAbbr, attainsCache]);
+    const url = `/api/water-data?action=attains-assessments&assessmentUnitName=${encodedName}&statecode=${stateAbbr}`;
+
+    let cancelled = false;
+    const tryFetch = async () => {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        if (cancelled) return;
+        try {
+          const r = await fetch(url);
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          const data = await r.json();
+          if (!cancelled) {
+            setAttainsCache(prev => ({
+              ...prev,
+              [activeDetailId]: {
+                category: data.category || '',
+                causes: data.causes || [],
+                causeCount: data.causeCount || 0,
+                status: data.overallStatus || '',
+                cycle: data.reportingCycle || '',
+                loading: false,
+              },
+            }));
+          }
+          return;
+        } catch {
+          if (attempt < 2 && !cancelled) {
+            await new Promise(res => setTimeout(res, 1000 * Math.pow(2, attempt)));
+          }
+        }
+      }
+      if (!cancelled) {
+        setAttainsCache(prev => ({ ...prev, [activeDetailId]: { category: 'Unavailable', causes: [], causeCount: 0, status: '', cycle: '', loading: false } }));
+      }
+    };
+    tryFetch();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeDetailId, scopedRegionData, stateAbbr]);
 
   // Fetch EJ data when detail opens
   useEffect(() => {
@@ -934,17 +954,34 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
     const regionConfig = getRegionById(activeDetailId);
     const lat = (regionConfig as any)?.lat || 39.0;
     const lng = (regionConfig as any)?.lon || (regionConfig as any)?.lng || -76.5;
-    fetch(`/api/water-data?action=ejscreen&lat=${lat}&lng=${lng}`)
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (!data) {
-          setEjCache(prev => ({ ...prev, [activeDetailId]: { ejIndex: null, loading: false, error: 'unavailable' } }));
+    const url = `/api/water-data?action=ejscreen&lat=${lat}&lng=${lng}`;
+
+    let cancelled = false;
+    const tryFetch = async () => {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        if (cancelled) return;
+        try {
+          const r = await fetch(url);
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          const data = await r.json();
+          if (!cancelled) {
+            setEjCache(prev => ({ ...prev, [activeDetailId]: { ejIndex: data.ejIndex ?? null, loading: false } }));
+          }
           return;
+        } catch {
+          if (attempt < 2 && !cancelled) {
+            await new Promise(res => setTimeout(res, 1000 * Math.pow(2, attempt)));
+          }
         }
-        setEjCache(prev => ({ ...prev, [activeDetailId]: { ejIndex: data.ejIndex ?? null, loading: false } }));
-      })
-      .catch(() => setEjCache(prev => ({ ...prev, [activeDetailId]: { ejIndex: null, loading: false, error: 'failed' } })));
-  }, [activeDetailId, scopedRegionData, ejCache]);
+      }
+      if (!cancelled) {
+        setEjCache(prev => ({ ...prev, [activeDetailId]: { ejIndex: null, loading: false, error: 'failed' } }));
+      }
+    };
+    tryFetch();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeDetailId, scopedRegionData]);
 
   // Fetch state summary
   useEffect(() => {
