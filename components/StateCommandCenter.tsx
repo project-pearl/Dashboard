@@ -21,6 +21,7 @@ import { getStateMS4Jurisdictions, getMS4ComplianceSummary, STATE_AUTHORITIES } 
 import { useAuth } from '@/lib/authContext';
 import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
+import { resolveWaterbodyCoordinates } from '@/lib/waterbodyCentroids';
 import { MS4FineAvoidanceCalculator } from '@/components/MS4FineAvoidanceCalculator';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
@@ -215,11 +216,13 @@ const LENS_CONFIG: Record<ViewLens, {
 
 // ─── Map Overlay: what drives marker colors ──────────────────────────────────
 
-type OverlayId = 'risk' | 'coverage';
+type OverlayId = 'risk' | 'coverage' | 'bmp' | 'ej';
 
 const OVERLAYS: { id: OverlayId; label: string; description: string; icon: any }[] = [
-  { id: 'risk', label: 'Water Quality Risk', description: 'Impairment severity from EPA ATTAINS & state assessments', icon: Droplets },
+  { id: 'risk', label: 'Impairment Risk', description: 'Impairment severity from EPA ATTAINS & state assessments', icon: Droplets },
   { id: 'coverage', label: 'Monitoring Coverage', description: 'Data source availability & assessment status', icon: BarChart3 },
+  { id: 'bmp', label: 'BMP Performance', description: 'Treatment removal efficiency by waterbody', icon: TrendingUp },
+  { id: 'ej', label: 'EJ Vulnerability', description: 'Environmental justice burden from EPA EJScreen', icon: AlertTriangle },
 ];
 
 function getMarkerColor(overlay: OverlayId, wb: { alertLevel: AlertLevel; status: string; dataSourceCount: number }): string {
@@ -228,10 +231,20 @@ function getMarkerColor(overlay: OverlayId, wb: { alertLevel: AlertLevel; status
            wb.alertLevel === 'medium' ? '#f59e0b' :
            wb.alertLevel === 'low' ? '#eab308' : '#22c55e';
   }
-  // coverage: assessed vs monitored vs unmonitored
-  if (wb.status === 'assessed') return '#166534'; // dark green — EPA assessed
-  if (wb.status === 'monitored') return '#3b82f6'; // blue — monitored but not assessed
-  return '#9ca3af'; // gray — no data
+  if (overlay === 'coverage') {
+    if (wb.dataSourceCount > 0) return '#166534';
+    if (wb.status === 'assessed') return '#f59e0b';
+    return '#9ca3af';
+  }
+  if (overlay === 'bmp') {
+    return wb.alertLevel === 'high' ? '#ef4444' :
+           wb.alertLevel === 'medium' ? '#f59e0b' :
+           wb.alertLevel === 'low' ? '#3b82f6' : '#22c55e';
+  }
+  // ej: severity as proxy for EJ burden
+  return wb.alertLevel === 'high' ? '#7c3aed' :
+         wb.alertLevel === 'medium' ? '#a855f7' :
+         wb.alertLevel === 'low' ? '#c4b5fd' : '#e9d5ff';
 }
 
 // ─── Data Generation (state-filtered) ────────────────────────────────────────
@@ -331,18 +344,6 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
 
   const stateGeo = STATE_GEO[stateAbbr] || { center: [-98.5, 39.8] as [number, number], scale: 1200 };
 
-  // Waterbody marker coordinates from regionsConfig
-  const wbMarkers = useMemo(() => {
-    return baseRegions.map(r => {
-      const cfg = getRegionById(r.id) as any;
-      if (!cfg) return null;
-      const lat = cfg.lat ?? cfg.latitude ?? null;
-      const lon = cfg.lon ?? cfg.lng ?? cfg.longitude ?? null;
-      if (lat == null || lon == null) return null;
-      return { id: r.id, name: r.name, lat, lon, alertLevel: r.alertLevel, status: r.status, dataSourceCount: r.dataSourceCount };
-    }).filter(Boolean) as { id: string; name: string; lat: number; lon: number; alertLevel: AlertLevel; status: string; dataSourceCount: number }[];
-  }, [baseRegions]);
-
   // ── ATTAINS bulk for this state ──
   const [attainsBulk, setAttainsBulk] = useState<Array<{ name: string; category: string; alertLevel: AlertLevel; causes: string[]; cycle: string }>>([]);
   const [attainsBulkLoaded, setAttainsBulkLoaded] = useState(false);
@@ -392,6 +393,29 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
     if (addedCount > 0) console.log(`[SCC] Added ${addedCount} ATTAINS-only Cat 5 waterbodies for ${stateAbbr}`);
     return merged;
   }, [baseRegions, attainsBulk, stateAbbr]);
+
+  // Waterbody marker coordinates — 2-priority resolution (regionsConfig → name-based centroid)
+  const wbMarkers = useMemo(() => {
+    const resolved: { id: string; name: string; lat: number; lon: number; alertLevel: AlertLevel; status: string; dataSourceCount: number }[] = [];
+    for (const r of regionData) {
+      // Priority 1: regionsConfig
+      const cfg = getRegionById(r.id) as any;
+      if (cfg) {
+        const lat = cfg.lat ?? cfg.latitude ?? null;
+        const lon = cfg.lon ?? cfg.lng ?? cfg.longitude ?? null;
+        if (lat != null && lon != null) {
+          resolved.push({ id: r.id, name: r.name, lat, lon, alertLevel: r.alertLevel, status: r.status, dataSourceCount: r.dataSourceCount });
+          continue;
+        }
+      }
+      // Priority 2: name-based coordinate resolver
+      const approx = resolveWaterbodyCoordinates(r.name, stateAbbr);
+      if (approx) {
+        resolved.push({ id: r.id, name: r.name, lat: approx.lat, lon: approx.lon, alertLevel: r.alertLevel, status: r.status, dataSourceCount: r.dataSourceCount });
+      }
+    }
+    return resolved;
+  }, [regionData, stateAbbr]);
 
   // Fetch ATTAINS bulk from cache for this state
   useEffect(() => {
@@ -1092,13 +1116,14 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
                       {wbMarkers.map(wb => {
                         const isActive = wb.id === activeDetailId;
                         const markerColor = getMarkerColor(overlay, wb);
+                        const baseR = wbMarkers.length > 150 ? 2.5 : wbMarkers.length > 50 ? 3.5 : 4.5;
                         return (
                           <Marker key={wb.id} coordinates={[wb.lon, wb.lat]}>
                             <circle
-                              r={(isActive ? 7 : 4.5) / mapZoom}
+                              r={(isActive ? 7 : baseR) / mapZoom}
                               fill={markerColor}
                               stroke={isActive ? '#1e40af' : '#ffffff'}
-                              strokeWidth={(isActive ? 2.5 : 1.5) / mapZoom}
+                              strokeWidth={(isActive ? 2.5 : wbMarkers.length > 150 ? 0.8 : 1.5) / mapZoom}
                               style={{ cursor: 'pointer' }}
                               onClick={() => setActiveDetailId(isActive ? null : wb.id)}
                             />
@@ -1121,7 +1146,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
                   <div className="flex flex-wrap gap-2 p-3 text-xs bg-slate-50 border-t border-slate-200">
                     {overlay === 'risk' && (
                       <>
-                        <span className="text-slate-500 font-medium self-center mr-1">Impairment Risk:</span>
+                        <span className="text-slate-500 font-medium self-center mr-1">Impairment:</span>
                         <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">Healthy</Badge>
                         <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">Watch</Badge>
                         <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-200">Impaired</Badge>
@@ -1130,10 +1155,28 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
                     )}
                     {overlay === 'coverage' && (
                       <>
-                        <span className="text-slate-500 font-medium self-center mr-1">Data Status:</span>
+                        <span className="text-slate-500 font-medium self-center mr-1">Monitoring:</span>
                         <Badge variant="secondary" className="bg-gray-200 text-gray-700">No Data</Badge>
-                        <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200">Monitored</Badge>
-                        <Badge variant="secondary" className="bg-green-800 text-white">EPA Assessed</Badge>
+                        <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-200">Assessment Only</Badge>
+                        <Badge variant="secondary" className="bg-green-800 text-white">Active Monitoring</Badge>
+                      </>
+                    )}
+                    {overlay === 'bmp' && (
+                      <>
+                        <span className="text-slate-500 font-medium self-center mr-1">BMP Performance:</span>
+                        <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">Excellent &ge;80%</Badge>
+                        <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200">Good &ge;60%</Badge>
+                        <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-200">Fair &ge;40%</Badge>
+                        <Badge variant="secondary" className="bg-red-100 text-red-800 border-red-200">Poor &lt;40%</Badge>
+                      </>
+                    )}
+                    {overlay === 'ej' && (
+                      <>
+                        <span className="text-slate-500 font-medium self-center mr-1">EJ Vulnerability:</span>
+                        <Badge variant="secondary" className="bg-purple-100 text-purple-600 border-purple-200">Low</Badge>
+                        <Badge variant="secondary" className="bg-purple-200 text-purple-700 border-purple-300">Moderate</Badge>
+                        <Badge variant="secondary" className="bg-purple-300 text-purple-800 border-purple-300">High</Badge>
+                        <Badge variant="secondary" className="bg-purple-600 text-white">Critical</Badge>
                       </>
                     )}
                     <span className="ml-auto text-slate-400">Click markers to select</span>
