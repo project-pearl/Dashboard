@@ -564,7 +564,11 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
     fetch(`/api/water-data?action=attains&waterbody=${encodedName}&state=${stateAbbr}`)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
-        if (!data) return;
+        if (!data) {
+          // Request failed or returned empty — stop loading to prevent retry loop
+          setAttainsCache(prev => ({ ...prev, [activeDetailId]: { category: '', causes: [], causeCount: 0, status: '', cycle: '', loading: false } }));
+          return;
+        }
         setAttainsCache(prev => ({
           ...prev,
           [activeDetailId]: {
@@ -578,7 +582,8 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
         }));
       })
       .catch(() => setAttainsCache(prev => ({ ...prev, [activeDetailId]: { ...prev[activeDetailId], loading: false } })));
-  }, [activeDetailId, regionData, stateAbbr, attainsCache]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeDetailId, regionData, stateAbbr]);
 
   // Fetch EJ data when detail opens
   useEffect(() => {
@@ -587,7 +592,10 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
     setEjCache(prev => ({ ...prev, [activeDetailId]: { ejIndex: null, loading: true } }));
 
     const nccRegion = regionData.find(r => r.id === activeDetailId);
-    if (!nccRegion) return;
+    if (!nccRegion) {
+      setEjCache(prev => ({ ...prev, [activeDetailId]: { ejIndex: null, loading: false, error: 'no region' } }));
+      return;
+    }
     const regionConfig = getRegionById(activeDetailId);
     const lat = (regionConfig as any)?.lat || 39.0;
     const lng = (regionConfig as any)?.lon || (regionConfig as any)?.lng || -76.5;
@@ -601,7 +609,8 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
         setEjCache(prev => ({ ...prev, [activeDetailId]: { ejIndex: data.ejIndex ?? null, loading: false } }));
       })
       .catch(() => setEjCache(prev => ({ ...prev, [activeDetailId]: { ejIndex: null, loading: false, error: 'failed' } })));
-  }, [activeDetailId, regionData, ejCache]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeDetailId, regionData]);
 
   // Fetch state summary
   useEffect(() => {
@@ -610,14 +619,18 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
     fetch(`/api/water-data?action=attains-state-summary&state=${stateAbbr}`)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
-        if (!data) return;
+        if (!data) {
+          setStateSummaryCache(prev => ({ ...prev, [stateAbbr]: { loading: false, impairedPct: 0, totalAssessed: 0 } }));
+          return;
+        }
         setStateSummaryCache(prev => ({
           ...prev,
           [stateAbbr]: { loading: false, impairedPct: data.impairedPct ?? 0, totalAssessed: data.totalAssessed ?? 0 },
         }));
       })
       .catch(() => setStateSummaryCache(prev => ({ ...prev, [stateAbbr]: { ...prev[stateAbbr], loading: false } })));
-  }, [stateAbbr, stateSummaryCache]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stateAbbr]);
 
   // ── Filtering & sorting ──
   const [searchQuery, setSearchQuery] = useState('');
