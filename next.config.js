@@ -7,6 +7,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: { unoptimized: true },
+  swcMinify: false,
 };
 
 module.exports = nextConfig;
