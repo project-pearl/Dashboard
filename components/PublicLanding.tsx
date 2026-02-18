@@ -99,7 +99,7 @@ const STAKEHOLDER_TRACKS = [
     ],
   },
   {
-    role: 'Researchers & Universities',
+    role: 'Research / Academic',
     icon: Microscope,
     accent: 'text-violet-400',
     accentBg: 'bg-violet-400/10 border-violet-400/20',

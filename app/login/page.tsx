@@ -42,8 +42,8 @@ const ROLES: { value: UserRole; label: string }[] = [
   { value: 'State',      label: 'State Agency' },
   { value: 'Federal',    label: 'Federal' },
   { value: 'Corporate',  label: 'Corporate / ESG' },
-  { value: 'Researcher', label: 'Researcher' },
-  { value: 'College',    label: 'University' },
+  { value: 'Researcher', label: 'Research / Academic' },
+  { value: 'College',    label: 'Undergrad' },
   { value: 'K12',        label: 'K-12 Educator' },
   { value: 'NGO',        label: 'NGO / Conservation' },
 ];

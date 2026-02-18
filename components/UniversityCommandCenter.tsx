@@ -52,6 +52,7 @@ type RegionRow = {
 type Props = {
   stateAbbr: string;
   userRole?: 'Researcher' | 'College';
+  defaultLens?: 'data-analysis' | 'field-study' | 'publication';
   onSelectRegion?: (regionId: string) => void;
   onToggleDevMode?: () => void;
 };
@@ -258,13 +259,13 @@ function generateStateRegionData(stateAbbr: string): RegionRow[] {
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', onSelectRegion, onToggleDevMode }: Props) {
+export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', defaultLens, onSelectRegion, onToggleDevMode }: Props) {
   const stateName = STATE_NAMES[stateAbbr] || stateAbbr;
   const agency = STATE_AGENCIES[stateAbbr] || STATE_AUTHORITIES[stateAbbr] || null;
   const { user, logout } = useAuth();
 
   // ── Lens switching ──
-  const [activeLens, setActiveLens] = useState<LensId>('data-analysis');
+  const [activeLens, setActiveLens] = useState<LensId>(defaultLens || 'data-analysis');
   const isFieldStudy = activeLens === 'field-study';
   const isPublication = activeLens === 'publication';
   const showInLens = (ids: LensId[]) => ids.includes(activeLens);
@@ -609,7 +610,7 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
               <Image src="/Logo_Pearl_as_Headline.JPG" alt="Project Pearl Logo" fill className="object-contain object-left" priority />
             </div>
             <div>
-              <div className="text-xl font-semibold text-slate-800">Academic Research Hub</div>
+              <div className="text-xl font-semibold text-slate-800">Research / Academic Hub</div>
               <div className="text-sm text-slate-600">Multi-source water quality data, analysis tools &amp; publication support</div>
             </div>
           </div>
@@ -665,7 +666,7 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
                   </div>
                   <div className="px-4 py-3 space-y-2 text-xs border-b border-slate-100">
                     <div className="flex justify-between"><span className="text-slate-500">Role</span><span className="font-medium text-slate-700">{user.role || userRole}</span></div>
-                    <div className="flex justify-between"><span className="text-slate-500 flex-shrink-0">Organization</span><span className="font-medium text-slate-700 text-right">{user.organization || (userRole === 'College' ? `${stateName} University` : `${stateName} Research Institute`)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500 flex-shrink-0">Organization</span><span className="font-medium text-slate-700 text-right">{user.organization || `${stateName} Research Institute`}</span></div>
                     <div className="flex justify-between"><span className="text-slate-500">Monitoring</span><span className="font-medium text-slate-700">{stateName} · {regionData.length.toLocaleString()} waterbodies</span></div>
                   </div>
                   <div className="px-4 py-2.5 space-y-1">
