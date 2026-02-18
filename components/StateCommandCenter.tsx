@@ -600,7 +600,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
     const regionConfig = getRegionById(activeDetailId);
     const lat = (regionConfig as any)?.lat || 39.0;
     const lng = (regionConfig as any)?.lon || (regionConfig as any)?.lng || -76.5;
-    fetch(`/api/water-data?action=ejscreen&lat=${lat}&lon=${lng}`)
+    fetch(`/api/water-data?action=ejscreen&lat=${lat}&lng=${lng}`)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (!data) {
@@ -617,7 +617,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
   useEffect(() => {
     if (stateSummaryCache[stateAbbr]) return;
     setStateSummaryCache(prev => ({ ...prev, [stateAbbr]: { loading: true, impairedPct: 0, totalAssessed: 0 } }));
-    fetch(`/api/water-data?action=attains-state-summary&state=${stateAbbr}`)
+    fetch(`/api/water-data?action=attains-state-summary&statecode=${stateAbbr}`)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (!data) {
