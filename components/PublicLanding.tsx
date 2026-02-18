@@ -56,9 +56,9 @@ function LivePulse() {
 // ─── Data ───────────────────────────────────────────────────────────────────
 
 const PLATFORM_STATS = [
-  { value: 14000, suffix: '+', label: 'MS4 Permits Nationwide', icon: Building2 },
+  { value: 7000, suffix: '+', label: 'MS4s Nationwide', icon: Building2 },
   { value: 50, suffix: '', label: 'States Monitored', icon: Globe },
-  { value: 3500000, suffix: '+', label: 'Waterbodies in ATTAINS', icon: Droplets },
+  { value: 100000, suffix: 's+', label: 'Assessed Waterbody Segments', icon: Droplets },
   { value: 15, suffix: 'min', label: 'Sensor Interval', icon: Activity },
 ];
 
@@ -396,7 +396,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
 
       {/* ═══ CORAL REEF IMAGE ═══ */}
       <section className="relative">
-        <div className="relative w-full h-[400px] sm:h-[500px]">
+        <div className="relative w-full h-[250px] sm:h-[300px]">
           <Image src="/coral-reef.jpg" alt="Coral reef restoration — the next chapter" fill className="object-cover" />
         </div>
         <div className="absolute bottom-6 left-6 sm:bottom-8 sm:left-8">
