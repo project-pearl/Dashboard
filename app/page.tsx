@@ -975,8 +975,8 @@ export default function Home() {
                   <SelectItem value="State">🏢 State Regulator (MDE, FL DEP)</SelectItem>
                   <SelectItem value="MS4">🏙️ MS4 Operator (Municipal)</SelectItem>
                   <SelectItem value="Corporate">🏢 Corporate / ESG</SelectItem>
-                  <SelectItem value="Researcher">🔬 Research / Academic</SelectItem>
-                  <SelectItem value="College">🎓 Undergrad</SelectItem>
+                  <SelectItem value="Researcher">🔬 Principal Investigator</SelectItem>
+                  <SelectItem value="College">🎓 Undergrad (Research)</SelectItem>
                   <SelectItem value="NGO">🌿 NGO / Nonprofit</SelectItem>
                   <SelectItem value="K12">🎓 K-12 Teacher / Student</SelectItem>
                 </SelectContent>
