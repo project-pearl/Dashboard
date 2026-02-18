@@ -453,7 +453,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
     const regionConfig = getRegionById(activeDetailId);
     const regionName = regionConfig?.name || nccRegion.name;
     const encodedName = encodeURIComponent(regionName);
-    fetch(`/api/water-data?action=attains&waterbody=${encodedName}&state=${stateAbbr}`)
+    fetch(`/api/water-data?action=attains-assessments&assessmentUnitName=${encodedName}&statecode=${stateAbbr}`)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (!data) return;
@@ -483,7 +483,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
     const regionConfig = getRegionById(activeDetailId);
     const lat = (regionConfig as any)?.lat || 39.0;
     const lng = (regionConfig as any)?.lon || (regionConfig as any)?.lng || -76.5;
-    fetch(`/api/water-data?action=ejscreen&lat=${lat}&lon=${lng}`)
+    fetch(`/api/water-data?action=ejscreen&lat=${lat}&lng=${lng}`)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (!data) {
@@ -499,7 +499,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
   useEffect(() => {
     if (stateSummaryCache[stateAbbr]) return;
     setStateSummaryCache(prev => ({ ...prev, [stateAbbr]: { loading: true, impairedPct: 0, totalAssessed: 0 } }));
-    fetch(`/api/water-data?action=attains-state-summary&state=${stateAbbr}`)
+    fetch(`/api/water-data?action=attains-state-summary&statecode=${stateAbbr}`)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (!data) return;
@@ -577,7 +577,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
   const toggleSection = (id: string) => setExpandedSections(prev => ({ ...prev, [id]: !prev[id] }));
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
+    <div className="min-h-screen w-full bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50">
       <div className="mx-auto max-w-7xl p-4 space-y-6">
 
         {/* Toast */}
@@ -601,22 +601,26 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
               <Image src="/Logo_Pearl_as_Headline.JPG" alt="Project Pearl Logo" fill className="object-contain object-left" priority />
             </div>
             <div>
-              <div className="text-xl font-semibold text-slate-800">{stateName} PEARL Explorer</div>
-              <div className="text-sm text-slate-600">
-                Explore real water quality data — learn how scientists monitor \&amp; protect our waterways
+              <div className="text-xl font-bold text-slate-800">{stateName} PEARL Explorer 🌊</div>
+              <div className="text-sm text-emerald-700 font-medium">
+                Discover real water quality data &mdash; be a water scientist!
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
             {/* Role badge */}
-            <div className="inline-flex items-center h-8 px-3 text-xs font-medium rounded-md border border-cyan-200 bg-cyan-50 text-cyan-700">
+            <div className={`inline-flex items-center h-8 px-3 text-xs font-bold rounded-full border-2 shadow-sm ${
+              isTeacher
+                ? 'border-purple-300 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700'
+                : 'border-emerald-300 bg-gradient-to-r from-emerald-100 to-cyan-100 text-emerald-700'
+            }`}>
               {isTeacher ? '👩‍🏫 Teacher Mode' : '🎓 Student Explorer'}
             </div>
 
             {user && (
             <div className="relative">
               <button
-                onClick={() => { setShowAccountPanel(!showAccountPanel); setShowViewDropdown(false); }}
+                onClick={() => setShowAccountPanel(!showAccountPanel)}
                 className="inline-flex items-center h-8 px-3 text-xs font-semibold rounded-md border bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 transition-colors cursor-pointer"
               >
                 <Shield className="h-3.5 w-3.5 mr-1.5" />
@@ -700,6 +704,58 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
               )}
             </div>
             )}
+          </div>
+        </div>
+
+        {/* ── TEACHER / STUDENT TOGGLE — always visible at top ── */}
+        <div className="rounded-2xl border-2 border-cyan-300 bg-gradient-to-r from-cyan-50 via-white to-emerald-50 p-4 shadow-sm">
+          <div className="flex items-center justify-center gap-4">
+            <span className="text-base font-bold text-slate-700">I am a:</span>
+            <button
+              onClick={() => setIsTeacher(false)}
+              className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all shadow-sm ${
+                !isTeacher
+                  ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 text-white shadow-emerald-200 scale-105'
+                  : 'bg-white text-slate-600 border-2 border-slate-200 hover:border-emerald-300 hover:bg-emerald-50'
+              }`}
+            >
+              🎒 Student
+            </button>
+            <button
+              onClick={() => setIsTeacher(true)}
+              className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all shadow-sm ${
+                isTeacher
+                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-purple-200 scale-105'
+                  : 'bg-white text-slate-600 border-2 border-slate-200 hover:border-purple-300 hover:bg-purple-50'
+              }`}
+            >
+              📚 Teacher
+            </button>
+          </div>
+        </div>
+
+        {/* ── HERO: Kid Lab Results + Fun Fact ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 rounded-2xl overflow-hidden border-2 border-emerald-200 shadow-md">
+            <Image
+              src="/kid-lab-results.png"
+              alt="Students analyzing PEARL water quality lab results"
+              width={900}
+              height={400}
+              className="w-full h-auto object-cover"
+            />
+          </div>
+          <div className="rounded-2xl border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 p-5 flex flex-col justify-center shadow-sm">
+            <div className="text-3xl mb-3">💡</div>
+            <div className="text-xs font-bold uppercase tracking-wider text-amber-600 mb-2">Did You Know?</div>
+            <div className="text-sm text-amber-900 leading-relaxed font-medium">
+              {k12WaterFacts[k12FactIndex]}
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">🌊 Water Science</span>
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-200">📊 Real Data</span>
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700 border border-purple-200">🔬 STEM</span>
+            </div>
           </div>
         </div>
 
@@ -2509,25 +2565,6 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
           </Card>
         </div>
           )}
-        </div>
-        )}
-
-        {/* ── STUDENT / TEACHER TOGGLE — only visible to teachers (auth-level) ── */}
-        {isTeacherProp && (
-        <div className="flex items-center justify-center gap-3 py-2 px-4 rounded-lg bg-cyan-50 border border-cyan-200">
-          <span className="text-sm font-medium text-cyan-800">Viewing as:</span>
-          <button
-            onClick={() => setIsTeacher(false)}
-            className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${!isTeacher ? 'bg-cyan-600 text-white shadow-sm' : 'bg-white text-cyan-700 border border-cyan-300 hover:bg-cyan-50'}`}
-          >
-            🎓 Student View
-          </button>
-          <button
-            onClick={() => setIsTeacher(true)}
-            className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${isTeacher ? 'bg-cyan-600 text-white shadow-sm' : 'bg-white text-cyan-700 border border-cyan-300 hover:bg-cyan-50'}`}
-          >
-            👩‍🏫 Teacher View
-          </button>
         </div>
         )}
 
