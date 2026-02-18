@@ -16,11 +16,11 @@ import { computeRestorationPlan, resolveAttainsCategory, mergeAttainsCauses, COS
 import { BrandedPDFGenerator } from '@/lib/brandedPdfGenerator';
 import { WaterbodyDetailCard } from '@/components/WaterbodyDetailCard';
 import { getEcoScore, getEcoData } from '@/lib/ecologicalSensitivity';
-import { getEJScore, getEJData, ejScoreLabel } from '@/lib/ejVulnerability';
+import { getEJScore, getEJData } from '@/lib/ejVulnerability';
 import { STATE_AUTHORITIES } from '@/lib/stateWaterData';
 import { useAuth } from '@/lib/authContext';
 import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
-import { MS4FineAvoidanceCalculator } from '@/components/MS4FineAvoidanceCalculator';
+
 import { WaterQualityChallenges } from '@/components/WaterQualityChallenges';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import dynamic from 'next/dynamic';
@@ -380,7 +380,7 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
   const [showRestorationPlan, setShowRestorationPlan] = useState(true);
   const [showRestorationCard, setShowRestorationCard] = useState(false);
   const [showCostPanel, setShowCostPanel] = useState(false);
-  const [alertFeedMinimized, setAlertFeedMinimized] = useState(false);
+  const [alertFeedMinimized, setAlertFeedMinimized] = useState(true);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const toggleCollapse = (id: string) => setCollapsedSections(prev => ({ ...prev, [id]: !prev[id] }));
   const isSectionOpen = (id: string) => !collapsedSections[id];
@@ -680,13 +680,7 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
           </div>
         </div>
 
-        {/* ── WATER QUALITY CHALLENGES — all lenses ── */}
-        <WaterQualityChallenges context="academic" />
-
-        {/* ── AI INSIGHTS ── */}
-        <AIInsightsEngine role={userRole === 'College' ? 'College' : 'Researcher'} stateAbbr={stateAbbr} regionData={regionData as any} />
-
-        {/* ── DATA SOURCES & RESEARCH CONTEXT — above map ── */}
+        {/* ── DATA SOURCES & RESEARCH CONTEXT ── */}
         {(() => {
           const agency = STATE_AGENCIES[stateAbbr];
           const ejScore = getEJScore(stateAbbr);
@@ -834,6 +828,12 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
             </div>
           );
         })()}
+
+        {/* ── AI INSIGHTS ── */}
+        <AIInsightsEngine role={userRole === 'College' ? 'College' : 'Researcher'} stateAbbr={stateAbbr} regionData={regionData as any} />
+
+        {/* ── WATER QUALITY CHALLENGES — all lenses ── */}
+        <WaterQualityChallenges context="academic" />
 
         {/* ── MAIN CONTENT: Map (2/3) + Waterbody List (1/3) ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -2172,163 +2172,7 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
         )}
 
 
-        {/* ── STATEWIDE COMPONENTS — shown when a waterbody is selected AND mock data is available ── */}
-        {activeDetailId && displayData && regionMockData && (
-          <div className="space-y-4">
 
-            {/* Compliance Economics — data-analysis + publication lenses */}
-            {showInLens(['data-analysis', 'publication']) && (
-            <div id="section-complianceecon" className="rounded-2xl border border-violet-200 bg-white shadow-sm overflow-hidden">
-              <button onClick={() => toggleCollapse('complianceecon')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
-                <span className="text-sm font-bold text-violet-900">💲 Compliance Economics & Policy Context</span>
-                <div className="flex items-center gap-1.5">
-                <span onClick={(e) => { e.stopPropagation(); printSection('complianceecon', 'Compliance Economics & Policy Context'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                  <Printer className="h-3.5 w-3.5 text-slate-400" />
-                </span>
-                {isSectionOpen('complianceecon') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
-              </div>
-              </button>
-              {isSectionOpen('complianceecon') && (
-                <MS4FineAvoidanceCalculator
-                  data={displayData as any}
-                  removalEfficiencies={removalEfficiencies as any}
-                  regionId={activeDetailId}
-                  stormEventsMonitored={stormEvents.length}
-                />
-              )}
-            </div>
-            )}
-
-            {/* Environmental Justice — Census ACS + EPA SDWIS (statewide) + EJScreen (per-waterbody) */}
-            {(() => {
-              const ejScore = getEJScore(stateAbbr);
-              const ejDetail = getEJData(stateAbbr);
-              if (!ejDetail) return null;
-              const label = ejScoreLabel(ejScore);
-              const scoreBg = ejScore >= 70 ? 'bg-red-600' : ejScore >= 50 ? 'bg-orange-500' : ejScore >= 30 ? 'bg-amber-500' : 'bg-green-500';
-              const scoreBorder = ejScore >= 70 ? 'border-red-200' : ejScore >= 50 ? 'border-orange-200' : ejScore >= 30 ? 'border-amber-200' : 'border-green-200';
-              // Per-waterbody EJScreen
-              const wbEJ = activeDetailId ? ejCache[activeDetailId] : null;
-              const wbEJScore = wbEJ?.ejIndex ?? null;
-              const wbEJLoading = wbEJ?.loading ?? false;
-              const wbName = (() => {
-                const rc = getRegionById(activeDetailId || '');
-                const nr = regionData.find(r => r.id === activeDetailId);
-                return rc?.name || nr?.name || (activeDetailId || '').replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
-              })();
-              const wbScoreBg = wbEJScore !== null ? (wbEJScore >= 70 ? 'bg-red-600' : wbEJScore >= 50 ? 'bg-orange-500' : wbEJScore >= 30 ? 'bg-amber-500' : 'bg-green-500') : 'bg-slate-400';
-              // Statewide rollup from ejCache
-              const highEJWaterbodies = Object.entries(ejCache).filter(([, v]) => v.ejIndex !== null && v.ejIndex !== undefined && v.ejIndex >= 60).length;
-              const totalEJCached = Object.entries(ejCache).filter(([, v]) => v.ejIndex !== null && v.ejIndex !== undefined).length;
-              return (
-                <div className={`rounded-2xl border ${scoreBorder} bg-white shadow-sm overflow-hidden`}>
-                  <button onClick={() => toggleCollapse('ej')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
-                    <span className="text-sm font-bold text-slate-800">⚖️ Environmental Justice — {wbName}</span>
-                    <div className="flex items-center gap-2">
-                      {wbEJLoading ? (
-                        <span className="px-2 py-0.5 rounded-full text-xs font-bold text-slate-500 bg-slate-200 animate-pulse">Loading…</span>
-                      ) : wbEJScore !== null ? (
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-bold text-white ${wbScoreBg}`}>EJScreen {wbEJScore}/100</span>
-                      ) : (
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-bold text-white ${scoreBg}`}>State {ejScore}/100</span>
-                      )}
-                      <div className="flex items-center gap-1.5">
-                <span onClick={(e) => { e.stopPropagation(); printSection('ej', 'Environmental Justice'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                  <Printer className="h-3.5 w-3.5 text-slate-400" />
-                </span>
-                {isSectionOpen('ej') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
-              </div>
-                    </div>
-                  </button>
-                  {isSectionOpen('ej') && (
-                    <div className="px-4 pb-4 pt-2 space-y-3">
-                      {/* Per-waterbody EJScreen score — dynamic */}
-                      {wbEJScore !== null && (
-                        <div className={`rounded-lg border-2 p-3 ${wbEJScore >= 70 ? 'border-red-300 bg-red-50' : wbEJScore >= 50 ? 'border-orange-200 bg-orange-50' : wbEJScore >= 30 ? 'border-amber-200 bg-amber-50' : 'border-green-200 bg-green-50'}`}>
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm font-bold text-slate-800">{wbName} — EJScreen Index</span>
-                            <span className={`px-2 py-0.5 rounded-full text-xs font-bold text-white ${wbScoreBg}`}>{wbEJScore}/100 {ejScoreLabel(wbEJScore)}</span>
-                          </div>
-                          <div className="text-xs text-slate-600">
-                            {wbEJScore >= 70
-                              ? 'This waterbody is in a high EJ-burden community. Eligible for enhanced federal support under Justice40 (EO 14008) and EPA Office of Environmental Justice programs.'
-                              : wbEJScore >= 50
-                              ? 'Moderate-to-high EJ vulnerability. Community faces elevated environmental and health burden relative to state baseline.'
-                              : wbEJScore >= 30
-                              ? 'Moderate EJ vulnerability. Some demographic indicators exceed state averages.'
-                              : 'Low EJ vulnerability relative to national benchmarks.'
-                            }
-                          </div>
-                          <div className="text-[9px] text-slate-400 mt-1">Source: EPA EJScreen API (live geospatial lookup)</div>
-                        </div>
-                      )}
-                      {wbEJLoading && (
-                        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-500 animate-pulse">
-                          Fetching EJScreen data for {wbName}…
-                        </div>
-                      )}
-                      {/* State Census baseline */}
-                      <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{stateName} State Baseline — Census ACS</div>
-                      <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-                        <div className="rounded-lg bg-purple-50 border border-purple-100 p-2 text-center">
-                          <div className="text-lg font-bold text-purple-700">{ejDetail.povertyPct}%</div>
-                          <div className="text-[10px] text-purple-500 font-medium">Below Poverty</div>
-                          <div className="text-[9px] text-slate-400">Census ACS</div>
-                        </div>
-                        <div className="rounded-lg bg-purple-50 border border-purple-100 p-2 text-center">
-                          <div className="text-lg font-bold text-purple-700">{ejDetail.minorityPct}%</div>
-                          <div className="text-[10px] text-purple-500 font-medium">Minority</div>
-                          <div className="text-[9px] text-slate-400">Census ACS</div>
-                        </div>
-                        <div className="rounded-lg bg-purple-50 border border-purple-100 p-2 text-center">
-                          <div className="text-lg font-bold text-purple-700">{ejDetail.uninsuredPct}%</div>
-                          <div className="text-[10px] text-purple-500 font-medium">Uninsured</div>
-                          <div className="text-[9px] text-slate-400">Census ACS</div>
-                        </div>
-                        <div className="rounded-lg bg-purple-50 border border-purple-100 p-2 text-center">
-                          <div className="text-lg font-bold text-purple-700">{ejDetail.lingIsolatedPct}%</div>
-                          <div className="text-[10px] text-purple-500 font-medium">Ling. Isolated</div>
-                          <div className="text-[9px] text-slate-400">Census ACS</div>
-                        </div>
-                        <div className="rounded-lg bg-purple-50 border border-purple-100 p-2 text-center">
-                          <div className="text-lg font-bold text-purple-700">{ejDetail.noHSDiplomaPct}%</div>
-                          <div className="text-[10px] text-purple-500 font-medium">No HS Diploma</div>
-                          <div className="text-[9px] text-slate-400">Census ACS</div>
-                        </div>
-                        <div className="rounded-lg bg-red-50 border border-red-100 p-2 text-center">
-                          <div className="text-lg font-bold text-red-700">{ejDetail.drinkingWaterViol}</div>
-                          <div className="text-[10px] text-red-500 font-medium">SDWA Violations</div>
-                          <div className="text-[9px] text-slate-400">per 100k (SDWIS)</div>
-                        </div>
-                      </div>
-                      {/* Per-waterbody EJ breakdown */}
-                      {totalEJCached > 0 && (
-                        <div className="text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-lg p-2.5">
-                          <span className="font-semibold">Statewide EJScreen Rollup:</span>{' '}
-                          {highEJWaterbodies} of {totalEJCached} assessed waterbodies have EJ index ≥60 (high vulnerability).
-                          {highEJWaterbodies > 0 && ' These overlap EJ-designated communities and qualify for enhanced federal support under Justice40.'}
-                        </div>
-                      )}
-                      {/* Policy callout */}
-                      <div className="text-xs text-cyan-900 bg-cyan-50 border border-cyan-200 rounded-lg p-2.5">
-                        <span className="font-bold">📋 Regulatory Relevance:</span>{' '}
-                        {(wbEJScore ?? ejScore) >= 60
-                          ? `${wbEJScore !== null ? wbName : stateName} has elevated EJ vulnerability. Impaired waterbodies in high-EJ communities are priority candidates for EPA Office of Environmental Justice grants, Justice40 funding (Executive Order 14008), and CEJST-designated community benefits.`
-                          : `${wbEJScore !== null ? wbName : stateName} shows moderate EJ burden. Communities near impaired waterbodies may qualify for Justice40 and EPA EJ program support where local indicators exceed thresholds.`
-                        }
-                      </div>
-                      <div className="text-[10px] text-slate-400 italic">
-                        Sources: Census ACS 5-Year (2018–2022) S1701, DP05, S2701, S1601, S1501 · EPA SDWIS · EPA EJScreen API (per-waterbody)
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
-
-
-          </div>
-        )}
 
 
         {/* ── TOP 10 WORSENING / IMPROVING — full + programs view ── */}
@@ -2549,15 +2393,6 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
                 </div>
               </div>
 
-              {/* Placeholder: ResearchCollaborationHub component will mount here */}
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                <div className="text-sm font-semibold text-purple-800 mb-2">📋 Scaffold: ResearchCollaborationHub</div>
-                <p className="text-xs text-purple-700 leading-relaxed">
-                  Wire <code className="bg-purple-100 px-1 rounded">{'<ResearchCollaborationHub userRole={userRole} />'}</code> here.
-                  Component provides: active study tracking, co-investigator directory, dataset sharing, inter-institutional collaboration tools, and literature review integration.
-                </p>
-              </div>
-
               <div className="text-[10px] text-slate-400 italic">
                 Research collaboration features powered by PEARL data platform. Integrates with ORCID, Google Scholar, and institution SSO.
               </div>
@@ -2579,16 +2414,6 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
           </button>
           {isSectionOpen('manuscript') && (
             <div className="p-4 space-y-3">
-              {/* Scaffold: ManuscriptGenerator mounts here */}
-              <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-                <div className="text-sm font-semibold text-indigo-800 mb-2">📋 Scaffold: ManuscriptGenerator</div>
-                <p className="text-xs text-indigo-700 leading-relaxed">
-                  Wire <code className="bg-indigo-100 px-1 rounded">{'<ManuscriptGenerator regionId={activeDetailId} data={displayData} />'}</code> here.
-                  Component provides: auto-generate methods sections from PEARL data, format citations for ATTAINS/WQP/USGS sources,
-                  export to LaTeX/Word/Markdown, journal-specific formatting (ES&T, Water Research, JAWRA), and figure generation from dashboard charts.
-                </p>
-              </div>
-
               {/* Quick citation export */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="bg-white rounded-lg border border-slate-200 p-3">
@@ -2623,16 +2448,7 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
           </button>
           {isSectionOpen('academic') && (
             <div className="p-4 space-y-3">
-              {/* Scaffold: AcademicTools mounts here */}
-              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-                <div className="text-sm font-semibold text-emerald-800 mb-2">📋 Scaffold: AcademicTools</div>
-                <p className="text-xs text-emerald-700 leading-relaxed">
-                  Wire <code className="bg-emerald-100 px-1 rounded">{'<AcademicTools userRole={userRole} regionId={activeDetailId} stateAbbr={stateAbbr} />'}</code> here.
-                  Component provides: water quality parameter explainers, EPA method references, statistical analysis guides,
-                  {userRole === 'College' ? ' lab report templates, coursework integration, study group matching,' : ' curriculum development tools, student dataset access management,'}
-                  {' '}and learning pathways from basic water chemistry to advanced biomonitoring.
-                </p>
-              </div>
+              <div className="text-xs text-slate-500 italic">Academic tools and learning resources coming soon.</div>
             </div>
           )}
         </div>
@@ -2652,17 +2468,6 @@ export function UniversityCommandCenter({ stateAbbr, userRole = 'Researcher', on
           </button>
           {isSectionOpen('methodology') && (
             <div className="p-4 space-y-3">
-              {/* Scaffold: DataIntegrityPanel mounts here */}
-              <div className="bg-slate-50 border border-slate-300 rounded-lg p-4">
-                <div className="text-sm font-semibold text-slate-800 mb-2">📋 Scaffold: DataIntegrityPanel</div>
-                <p className="text-xs text-slate-700 leading-relaxed">
-                  Wire <code className="bg-slate-200 px-1 rounded">{'<DataIntegrityPanel regionName={displayData?.name || ""} />'}</code> here.
-                  Component provides: sensor calibration logs, data completeness metrics, QA/QC flag summaries, chain of custody documentation,
-                  method detection limits (MDLs), measurement uncertainty quantification, EPA-approved method IDs (e.g., SM 2540D for TSS),
-                  and audit trail for all data transformations.
-                </p>
-              </div>
-
               {/* Method reference quick-view */}
               <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
                 <div className="text-xs font-semibold text-amber-800 mb-1.5">⚗️ Monitoring Methods Reference</div>
