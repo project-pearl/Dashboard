@@ -610,49 +610,40 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
           </div>
         )}
 
-        {/* ── HERO BANNER — compact single row, 60px max ── */}
-        <div className="flex items-center justify-between h-[60px] px-4 rounded-2xl border border-emerald-200 bg-white shadow-sm">
+        {/* ── HEADER — NationalCommandCenter style ── */}
+        <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div
-              className="relative h-10 w-36 cursor-default select-none flex-shrink-0"
+              className="relative h-12 w-40 cursor-default select-none flex-shrink-0"
               onDoubleClick={() => onToggleDevMode?.()}
             >
               <Image src="/Logo_Pearl_as_Headline.JPG" alt="Project Pearl Logo" fill className="object-contain object-left" priority />
             </div>
-            <div className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full border border-emerald-300 bg-emerald-50 text-emerald-700 text-xs font-semibold flex-shrink-0">
-              <Leaf className="h-3.5 w-3.5" />
-              Conservation Hub
-            </div>
-            {/* Watershed Group Selector */}
-            {watershedGroups.length > 1 && (
-              <div className="flex items-center gap-1 overflow-x-auto hide-scrollbar">
-                {watershedGroups.map(ws => (
-                  <button
-                    key={ws}
-                    onClick={() => setSelectedWatershed(ws)}
-                    className={`whitespace-nowrap px-2.5 py-1 rounded-full text-xs font-medium transition-all flex-shrink-0 ${
-                      selectedWatershed === ws
-                        ? 'bg-emerald-600 text-white shadow-sm'
-                        : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
-                    }`}
-                  >
-                    {ws}
-                  </button>
-                ))}
+            <div>
+              <div className="text-xl font-semibold text-slate-800">Conservation Hub</div>
+              <div className="text-sm text-slate-600">
+                Watershed advocacy, restoration intelligence &amp; grant opportunities
               </div>
-            )}
-          </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <div className="hidden md:flex items-center gap-3 text-xs text-slate-500 mr-2">
-              <span><span className="text-lg font-bold text-emerald-700">{stats.total}</span> waterbodies</span>
-              <span><span className="text-lg font-bold text-red-600">{stats.high}</span> critical</span>
-              <span><span className="text-lg font-bold text-amber-600">{stats.medium}</span> impaired</span>
             </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* Watershed Dropdown Selector */}
+            {watershedGroups.length > 1 && (
+              <select
+                value={selectedWatershed}
+                onChange={(e) => setSelectedWatershed(e.target.value)}
+                className="h-8 px-3 text-xs font-medium rounded-md border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              >
+                {watershedGroups.map(ws => (
+                  <option key={ws} value={ws}>{ws}</option>
+                ))}
+              </select>
+            )}
             {user && (
             <div className="relative">
               <button
                 onClick={() => setShowAccountPanel(!showAccountPanel)}
-                className="inline-flex items-center h-8 px-3 text-xs font-semibold rounded-full border bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 transition-colors cursor-pointer"
+                className="inline-flex items-center h-8 px-3 text-xs font-semibold rounded-md border bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 transition-colors cursor-pointer"
               >
                 <Shield className="h-3.5 w-3.5 mr-1.5" />
                 {user.name || 'Program Director'}
@@ -717,6 +708,10 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
               )}
             </div>
             )}
+            <Badge variant="outline" className="text-[10px] h-6 bg-emerald-50 border-emerald-200 text-emerald-700">
+              <Leaf className="h-3 w-3 mr-1" />
+              NGO
+            </Badge>
           </div>
         </div>
 
@@ -791,41 +786,23 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
           );
         })()}
 
-        {/* ── OYSTER RESTORATION IMPACT — hero image + summary ── */}
+        {/* ── OYSTER RESTORATION — full-width banner image ── */}
         <div className="rounded-2xl border border-emerald-200 bg-white shadow-sm overflow-hidden">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
-            <div className="relative h-48 md:h-auto min-h-[220px]">
-              <Image
-                src="/oyster-restoration.png"
-                alt="Oyster restoration monitoring — PEARL biofiltration infrastructure"
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 50vw"
-              />
-            </div>
-            <div className="p-6 flex flex-col justify-center">
-              <div className="text-xs font-semibold text-emerald-600 uppercase tracking-wide mb-1">Restoration Impact</div>
-              <h3 className="text-lg font-bold text-slate-900 mb-3">Living Infrastructure Monitoring</h3>
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div>
-                  <div className="text-4xl font-bold text-emerald-700">50</div>
-                  <div className="text-xs text-slate-500">gal/day filtered per oyster</div>
-                </div>
-                <div>
-                  <div className="text-4xl font-bold text-teal-700">{stats.total}</div>
-                  <div className="text-xs text-slate-500">waterbodies monitored</div>
-                </div>
-                <div>
-                  <div className="text-4xl font-bold text-red-600">{stats.high}</div>
-                  <div className="text-xs text-slate-500">critical — action needed</div>
-                </div>
-                <div>
-                  <div className="text-4xl font-bold text-amber-600">{stats.medium}</div>
-                  <div className="text-xs text-slate-500">impaired — advocacy targets</div>
-                </div>
-              </div>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                PEARL deploys vessel-mounted oyster biofiltration modules that continuously monitor and improve water quality. Each module filters thousands of gallons daily while collecting real-time sensor data for advocacy and compliance reporting.
+          <div className="relative w-full h-[280px] md:h-[360px]">
+            <Image
+              src="/oyster-restoration.png"
+              alt="Community-driven oyster restoration monitoring — PEARL biofiltration infrastructure"
+              fill
+              className="object-cover"
+              sizes="100vw"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
+              <div className="text-xs font-semibold text-emerald-300 uppercase tracking-wide mb-1">Restoration in Action</div>
+              <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">Community-driven restoration in action</h3>
+              <p className="text-sm text-white/80 max-w-2xl leading-relaxed">
+                PEARL deploys vessel-mounted oyster biofiltration modules that continuously monitor and improve water quality. Each oyster filters up to 50 gallons daily while collecting real-time sensor data for advocacy and compliance reporting.
               </p>
             </div>
           </div>
@@ -2612,29 +2589,28 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
           <WaterQualityChallenges context="ngo" />
         </div>
 
-        {/* ── ECOLOGICAL RESTORATION — turtle image + advocacy context ── */}
+        {/* ── ECOLOGICAL RESTORATION — turtle habitat feature card ── */}
         <div className="rounded-2xl border border-emerald-200 bg-white shadow-sm overflow-hidden">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-0">
-            <div className="relative h-48 md:h-auto min-h-[200px]">
-              <Image
-                src="/turtle-eggs-solution.png"
-                alt="Turtle nesting habitat restoration — protecting vulnerable species through water quality improvement"
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 33vw"
-              />
-            </div>
-            <div className="md:col-span-2 p-6">
-              <div className="text-xs font-semibold text-teal-600 uppercase tracking-wide mb-1">Species & Habitat Protection</div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2">Why Clean Water Matters for Wildlife</h3>
-              <p className="text-sm text-slate-600 leading-relaxed mb-3">
-                Impaired waterways threaten nesting habitats, egg viability, and juvenile survival for turtles, shorebirds, and other species that depend on healthy watersheds. PEARL monitoring data connects water quality metrics directly to ecological outcomes — giving your advocacy real, measurable impact.
+          <div className="relative w-full h-[240px] md:h-[320px]">
+            <Image
+              src="/turtle-eggs-solution.png"
+              alt="Turtle nesting habitat restoration — protecting vulnerable species through water quality improvement"
+              fill
+              className="object-cover"
+              sizes="100vw"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
+              <div className="text-xs font-semibold text-teal-300 uppercase tracking-wide mb-1">Species &amp; Habitat Protection</div>
+              <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">Why Clean Water Matters for Wildlife</h3>
+              <p className="text-sm text-white/80 max-w-2xl leading-relaxed mb-3">
+                Impaired waterways threaten nesting habitats, egg viability, and juvenile survival for turtles, shorebirds, and other species that depend on healthy watersheds. PEARL monitoring data connects water quality metrics directly to ecological outcomes.
               </p>
               <div className="flex flex-wrap gap-2">
-                <span className="px-3 py-1 rounded-full text-xs font-medium bg-teal-50 text-teal-700 border border-teal-200">Habitat Restoration</span>
-                <span className="px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">Species Protection</span>
-                <span className="px-3 py-1 rounded-full text-xs font-medium bg-cyan-50 text-cyan-700 border border-cyan-200">Water Quality Nexus</span>
-                <span className="px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">EJ Communities</span>
+                <span className="px-3 py-1 rounded-full text-xs font-medium bg-white/20 text-white border border-white/30 backdrop-blur-sm">Habitat Restoration</span>
+                <span className="px-3 py-1 rounded-full text-xs font-medium bg-white/20 text-white border border-white/30 backdrop-blur-sm">Species Protection</span>
+                <span className="px-3 py-1 rounded-full text-xs font-medium bg-white/20 text-white border border-white/30 backdrop-blur-sm">Water Quality Nexus</span>
+                <span className="px-3 py-1 rounded-full text-xs font-medium bg-white/20 text-white border border-white/30 backdrop-blur-sm">EJ Communities</span>
               </div>
             </div>
           </div>
