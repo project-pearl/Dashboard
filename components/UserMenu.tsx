@@ -2,9 +2,11 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/authContext';
 
 export default function UserMenu() {
+  const router = useRouter();
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -83,7 +85,19 @@ export default function UserMenu() {
           </div>
 
           {/* Actions */}
-          <div className="p-2">
+          <div className="p-2 space-y-0.5">
+            <button
+              onClick={() => {
+                setOpen(false);
+                router.push('/account');
+              }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-300 hover:bg-white/10 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              My Account
+            </button>
             <button
               onClick={() => {
                 setOpen(false);

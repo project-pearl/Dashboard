@@ -452,7 +452,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
   const [showRestorationCard, setShowRestorationCard] = useState(false);
   const [showCostPanel, setShowCostPanel] = useState(false);
   const [alertFeedMinimized, setAlertFeedMinimized] = useState(true);
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({ top10: true });
   const toggleCollapse = (id: string) => setCollapsedSections(prev => ({ ...prev, [id]: !prev[id] }));
   const isSectionOpen = (id: string) => !collapsedSections[id];
 

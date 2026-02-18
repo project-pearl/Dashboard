@@ -787,7 +787,7 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
   const [showRestorationCard, setShowRestorationCard] = useState(false);
   const [showCostPanel, setShowCostPanel] = useState(false);
   const [alertFeedMinimized, setAlertFeedMinimized] = useState(true);
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({ potomac: true, storms: true, mdeexport: true, tmdl: true, nutrientcredits: true, stormsim: true, economics: true });
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({ top10: true, potomac: true, storms: true, mdeexport: true, tmdl: true, nutrientcredits: true, stormsim: true, economics: true });
   const toggleCollapse = (id: string) => setCollapsedSections(prev => ({ ...prev, [id]: !prev[id] }));
   const isSectionOpen = (id: string) => !collapsedSections[id];
 

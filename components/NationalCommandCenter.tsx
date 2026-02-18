@@ -9,7 +9,7 @@ import statesTopo from 'us-atlas/states-10m.json';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, AlertTriangle, AlertCircle, CheckCircle, MapPin, Droplets, Leaf, DollarSign, Users, TrendingUp, BarChart3, Gauge, Shield, LogOut, Building2, Info, ChevronDown, Printer } from 'lucide-react';
+import { X, AlertTriangle, AlertCircle, CheckCircle, MapPin, Droplets, Leaf, DollarSign, Users, TrendingUp, BarChart3, Gauge, Shield, LogOut, Building2, Info, ChevronDown, Minus, Printer } from 'lucide-react';
 import { getRegionById } from '@/lib/regionsConfig';
 import { REGION_META, getWaterbodyDataSources } from '@/lib/useWaterData';
 import { computeRestorationPlan, resolveAttainsCategory, mergeAttainsCauses, COST_PER_UNIT_YEAR, type RestorationResult } from '@/lib/restorationEngine';
@@ -1500,6 +1500,7 @@ export function NationalCommandCenter(props: Props) {
   }, [viewLens, stateRollup, nationalStats, overlayByState]);
 
   const [showStateTable, setShowStateTable] = useState(false);
+  const [showHotspotsSection, setShowHotspotsSection] = useState(false);
 
   // Feature 3: Hotspots Rankings
   const hotspots = useMemo(() => {
@@ -4530,10 +4531,17 @@ export function NationalCommandCenter(props: Props) {
         </Card>
         )}
 
-        {/* Feature 3: Hotspots Rankings — lens controlled */}
+        {/* Feature 3: Hotspots Rankings — lens controlled, starts collapsed */}
         {lens.showHotspots && (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {(
+        <div id="section-top10" className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+          <button onClick={() => setShowHotspotsSection(prev => !prev)} className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors">
+            <span className="text-sm font-semibold text-slate-700 flex items-center gap-2">🔥 Top 10 Worsening / Improving Waterbodies</span>
+            <div className="flex items-center gap-1.5">
+              {showHotspotsSection ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+            </div>
+          </button>
+          {showHotspotsSection && (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 p-4">
           <Card id="section-worsening" className="border-2 border-red-200">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -4577,7 +4585,6 @@ export function NationalCommandCenter(props: Props) {
               </div>
             </CardContent>
           </Card>
-          )}
 
           <Card id="section-improving" className="border-2 border-green-200">
             <CardHeader className="pb-3">
@@ -4621,6 +4628,8 @@ export function NationalCommandCenter(props: Props) {
               </div>
             </CardContent>
           </Card>
+          </div>
+          )}
         </div>
         )}
 
