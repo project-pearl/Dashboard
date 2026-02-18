@@ -184,6 +184,24 @@ export function AIInsightsEngine({ role, stateAbbr, selectedWaterbody, regionDat
     }
   }, [role, stateAbbr, selectedWaterbody, regionData]);
 
+  // Reset when state or role changes — clear stale insights and re-fetch if panel is open
+  const prevStateRef = useRef(stateAbbr);
+  const prevRoleRef = useRef(role);
+  useEffect(() => {
+    if (prevStateRef.current !== stateAbbr || prevRoleRef.current !== role) {
+      prevStateRef.current = stateAbbr;
+      prevRoleRef.current = role;
+      hasFetched.current = false;
+      setInsights([]);
+      setLastUpdated(null);
+      setError(null);
+      if (expanded) {
+        hasFetched.current = true;
+        fetchInsights(true);
+      }
+    }
+  }, [stateAbbr, role, expanded, fetchInsights]);
+
   // Auto-fetch when first expanded
   useEffect(() => {
     if (expanded && !hasFetched.current && insights.length === 0) {
