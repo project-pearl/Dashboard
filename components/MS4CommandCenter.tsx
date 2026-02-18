@@ -868,7 +868,7 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
     const regionConfig = getRegionById(activeDetailId);
     const regionName = regionConfig?.name || nccRegion.name;
     const encodedName = encodeURIComponent(regionName);
-    fetch(`/api/water-data?action=attains&waterbody=${encodedName}&state=${stateAbbr}`)
+    fetch(`/api/water-data?action=attains-assessments&assessmentUnitName=${encodedName}&statecode=${stateAbbr}`)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (!data) return;
@@ -898,7 +898,7 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
     const regionConfig = getRegionById(activeDetailId);
     const lat = (regionConfig as any)?.lat || 39.0;
     const lng = (regionConfig as any)?.lon || (regionConfig as any)?.lng || -76.5;
-    fetch(`/api/water-data?action=ejscreen&lat=${lat}&lon=${lng}`)
+    fetch(`/api/water-data?action=ejscreen&lat=${lat}&lng=${lng}`)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (!data) {
@@ -914,7 +914,7 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
   useEffect(() => {
     if (stateSummaryCache[stateAbbr]) return;
     setStateSummaryCache(prev => ({ ...prev, [stateAbbr]: { loading: true, impairedPct: 0, totalAssessed: 0 } }));
-    fetch(`/api/water-data?action=attains-state-summary&state=${stateAbbr}`)
+    fetch(`/api/water-data?action=attains-state-summary&statecode=${stateAbbr}`)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (!data) return;
