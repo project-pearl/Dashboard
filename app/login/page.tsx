@@ -1,11 +1,41 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/authContext';
+import { supabase } from '@/lib/supabase';
 import type { UserRole } from '@/lib/authTypes';
 import Image from 'next/image';
 import { Eye, EyeOff } from 'lucide-react';
+
+// ── Password strength rules ────────────────────────────────────────────────
+const PW_RULES = [
+  { id: 'length', label: 'At least 8 characters', test: (pw: string) => pw.length >= 8 },
+  { id: 'upper',  label: 'One uppercase letter',  test: (pw: string) => /[A-Z]/.test(pw) },
+  { id: 'lower',  label: 'One lowercase letter',  test: (pw: string) => /[a-z]/.test(pw) },
+  { id: 'number', label: 'One number',             test: (pw: string) => /\d/.test(pw) },
+];
+
+function PasswordRequirements({ password, touched }: { password: string; touched: boolean }) {
+  if (!touched && password.length === 0) return null;
+  return (
+    <div className="mt-1.5 space-y-0.5">
+      {PW_RULES.map(rule => {
+        const pass = rule.test(password);
+        return (
+          <div key={rule.id} className="flex items-center gap-1.5">
+            <span className={`text-xs ${pass ? 'text-emerald-400' : 'text-red-400'}`}>
+              {pass ? '\u2713' : '\u2717'}
+            </span>
+            <span className={`text-xs ${pass ? 'text-emerald-300/70' : 'text-red-300/70'}`}>
+              {rule.label}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 const ROLES: { value: UserRole; label: string }[] = [
   { value: 'MS4',        label: 'MS4 Operator' },
@@ -45,7 +75,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { loginAsync, signup, isAuthenticated, isLoading, loginError, clearError } = useAuth();
 
-  const [mode, setMode] = useState<'login' | 'request'>('login');
+  const [mode, setMode] = useState<'login' | 'request' | 'forgot'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -59,6 +89,14 @@ export default function LoginPage() {
   const [showLoginPw, setShowLoginPw] = useState(false);
   const [showSignupPw, setShowSignupPw] = useState(false);
   const [showConfirmPw, setShowConfirmPw] = useState(false);
+  const [pwTouched, setPwTouched] = useState(false);
+  const [confirmTouched, setConfirmTouched] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
+
+  const passwordValid = useMemo(() => PW_RULES.every(r => r.test(password)), [password]);
+  const passwordsMatch = password === confirmPassword;
+  const signupReady = passwordValid && passwordsMatch && confirmPassword.length > 0;
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
@@ -77,10 +115,22 @@ export default function LoginPage() {
     setIsSubmitting(false);
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setResetError(null);
+    const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase());
+    if (resetErr) {
+      setResetError(resetErr.message);
+    } else {
+      setResetSent(true);
+    }
+    setIsSubmitting(false);
+  };
+
   const handleRequestAccess = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password.length < 6) return;
-    if (password !== confirmPassword) return;
+    if (!signupReady) return;
     setIsSubmitting(true);
     clearError();
     const result = await signup({ email, password, name, role, organization, state, useCase });
@@ -161,9 +211,9 @@ export default function LoginPage() {
           {/* Tab toggle */}
           <div className="flex mb-6 bg-white/10 rounded-lg p-1">
             <button
-              onClick={() => { setMode('login'); clearError(); }}
+              onClick={() => { setMode('login'); clearError(); setResetSent(false); setResetError(null); }}
               className={`flex-1 py-2.5 text-sm font-semibold rounded-md transition-all ${
-                mode === 'login'
+                mode === 'login' || mode === 'forgot'
                   ? 'bg-white/20 text-white shadow-lg shadow-black/10'
                   : 'text-white/50 hover:text-white/80'
               }`}
@@ -188,7 +238,66 @@ export default function LoginPage() {
             </div>
           )}
 
-          {mode === 'login' ? (
+          {mode === 'forgot' ? (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-white text-center">Reset Password</h3>
+              {resetSent ? (
+                <div className="text-center space-y-4">
+                  <div className="w-14 h-14 rounded-full bg-emerald-500/20 border-2 border-emerald-400/40 flex items-center justify-center mx-auto">
+                    <svg className="h-7 w-7 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <p className="text-sm text-white/70">
+                    If an account exists for <span className="text-white font-medium">{email}</span>, you&apos;ll receive a password reset link shortly.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => { setMode('login'); setResetSent(false); }}
+                    className="text-sm font-medium text-cyan-400 hover:text-cyan-300 transition-colors"
+                  >
+                    Back to Sign In
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <p className="text-sm text-white/60 text-center">
+                    Enter your email and we&apos;ll send a reset link.
+                  </p>
+                  {resetError && (
+                    <div className="p-3 bg-red-500/20 border border-red-400/30 rounded-lg text-red-200 text-sm">
+                      {resetError}
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-sm font-medium text-white/80 mb-1.5">Email</label>
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      className={inputClass}
+                      placeholder="you@example.com"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all shadow-lg shadow-cyan-500/20"
+                  >
+                    {isSubmitting ? 'Sending...' : 'Send Reset Link'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMode('login')}
+                    className="w-full text-sm text-white/50 hover:text-white/80 transition-colors"
+                  >
+                    Back to Sign In
+                  </button>
+                </form>
+              )}
+            </div>
+          ) : mode === 'login' ? (
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-white/80 mb-1.5">Email</label>
@@ -222,9 +331,18 @@ export default function LoginPage() {
                   </button>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <input type="checkbox" id="remember" className="accent-cyan-400 w-4 h-4 rounded" />
-                <label htmlFor="remember" className="text-sm text-white/60">Remember me</label>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" id="remember" className="accent-cyan-400 w-4 h-4 rounded" />
+                  <label htmlFor="remember" className="text-sm text-white/60">Remember me</label>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setMode('forgot'); clearError(); setResetSent(false); setResetError(null); }}
+                  className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
+                >
+                  Forgot password?
+                </button>
               </div>
               <button
                 type="submit"
@@ -264,11 +382,12 @@ export default function LoginPage() {
                   <input
                     type={showSignupPw ? 'text' : 'password'}
                     required
-                    minLength={6}
+                    minLength={8}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
+                    onFocus={() => setPwTouched(true)}
                     className={`${inputClass} pr-11`}
-                    placeholder="Min 6 characters"
+                    placeholder="Min 8 characters"
                   />
                   <button
                     type="button"
@@ -279,6 +398,7 @@ export default function LoginPage() {
                     {showSignupPw ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
                   </button>
                 </div>
+                <PasswordRequirements password={password} touched={pwTouched} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-white/80 mb-1">Confirm Password</label>
@@ -286,10 +406,11 @@ export default function LoginPage() {
                   <input
                     type={showConfirmPw ? 'text' : 'password'}
                     required
-                    minLength={6}
+                    minLength={8}
                     value={confirmPassword}
                     onChange={e => setConfirmPassword(e.target.value)}
-                    className={`${inputClass} pr-11 ${confirmPassword && password !== confirmPassword ? 'border-red-400/50 focus:ring-red-400/50' : ''}`}
+                    onFocus={() => setConfirmTouched(true)}
+                    className={`${inputClass} pr-11 ${confirmTouched && !passwordsMatch ? 'border-red-400/50 focus:ring-red-400/50' : ''}`}
                     placeholder="Re-enter password"
                   />
                   <button
@@ -301,7 +422,7 @@ export default function LoginPage() {
                     {showConfirmPw ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
                   </button>
                 </div>
-                {confirmPassword && password !== confirmPassword && (
+                {confirmTouched && confirmPassword.length > 0 && !passwordsMatch && (
                   <p className="text-xs text-red-300 mt-1">Passwords do not match</p>
                 )}
               </div>
@@ -357,7 +478,7 @@ export default function LoginPage() {
               </div>
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !signupReady}
                 className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all shadow-lg shadow-cyan-500/20"
               >
                 {isSubmitting ? 'Submitting...' : 'Request Access'}
