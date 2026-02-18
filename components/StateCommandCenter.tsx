@@ -1214,6 +1214,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
                 {/* State Grade Circle */}
                 {(() => {
                   const assessed = regionData.filter(r => r.status === 'assessed');
+                  console.log('[Grade Debug]', { totalRegionData: regionData.length, assessedCount: assessed.length, attainsBulkLoaded, sampleStatuses: regionData.slice(0, 5).map(r => ({ name: r.name, status: r.status, alertLevel: r.alertLevel })) });
                   if (assessed.length === 0) return (
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 bg-slate-100 border-slate-300">
                       <div className="text-2xl font-black text-slate-400">N/A</div>
