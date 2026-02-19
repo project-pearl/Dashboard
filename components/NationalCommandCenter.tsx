@@ -179,7 +179,7 @@ const FIPS_TO_ABBR: Record<string, string> = {
 // ─── Leaflet Map Constants ────────────────────────────────────────────────────
 const US_CENTER: [number, number] = [39.8, -98.5];
 const US_ZOOM = 4;
-const CARTO_TILES = 'https://basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png';
+const CARTO_TILES = 'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
 const CARTO_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>';
 
 /** Resolve a GeoJSON feature to a 2-letter state abbreviation */
@@ -1124,8 +1124,6 @@ export function NationalCommandCenter(props: Props) {
       .then(json => {
         // EJScreen returns various indicators — extract the EJ index
         const data = json?.data;
-        console.log('[EJScreen Response]', JSON.stringify(data).slice(0, 500));
-        console.log('[EJScreen Keys]', data && !data.error ? Object.keys(data).slice(0, 30).join(', ') : 'ERROR or empty');
         let ejIndex: number | null = null;
         if (data && !data.error) {
           // The REST broker returns demographic + environmental indicators
@@ -1404,6 +1402,28 @@ export function NationalCommandCenter(props: Props) {
 
       const grade = canGradeState ? scoreToGrade(score) : { letter: 'N/A', color: 'text-slate-400', bg: 'bg-slate-100 border-slate-300' };
 
+      // Aggregate ATTAINS categories + causes for this state
+      const stateAttains = attainsBulk[abbr] || [];
+      let cat5 = 0, cat4a = 0, cat4b = 0, cat4c = 0;
+      const stateCauses: Record<string, number> = {};
+      for (const a of stateAttains) {
+        const rawCat = (a.category || '').trim().toUpperCase();
+        if (rawCat.startsWith('5')) cat5++;
+        else if (rawCat.startsWith('4A')) cat4a++;
+        else if (rawCat.startsWith('4B')) cat4b++;
+        else if (rawCat.startsWith('4C')) cat4c++;
+        if (rawCat.startsWith('5') || rawCat.startsWith('4')) {
+          for (const cause of (a.causes || [])) {
+            const n = cause.trim();
+            if (n && n !== 'CAUSE UNKNOWN') stateCauses[n] = (stateCauses[n] || 0) + 1;
+          }
+        }
+      }
+      const stateTopCauses = Object.entries(stateCauses)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)
+        .map(([cause, count]) => ({ cause, count }));
+
       return {
         abbr, name: STATE_ABBR_TO_NAME[abbr],
         high, medium, low, none, total: totalAlerts,
@@ -1413,6 +1433,9 @@ export function NationalCommandCenter(props: Props) {
         unmonitored: unmonitored.length,
         canGradeState,
         score, grade, dataSource,
+        cat5, cat4a, cat4b, cat4c,
+        totalImpaired: cat5 + cat4a + cat4b + cat4c,
+        topCauses: stateTopCauses,
       };
     });
     // Graded states first (worst scores first), then ungraded states alphabetically
@@ -1491,11 +1514,83 @@ export function NationalCommandCenter(props: Props) {
     return { worstCoverage, mostSevere };
   }, [viewLens, stateRollup]);
 
+  // ── National ATTAINS aggregation: category + cause breakdown from bulk data ──
+  const attainsAggregation = useMemo(() => {
+    const catCounts: Record<string, number> = { '5': 0, '4A': 0, '4B': 0, '4C': 0, '3': 0, '2': 0, '1': 0, unknown: 0 };
+    const causeCounts: Record<string, number> = {};
+    let totalAssessed = 0;
+    let totalImpaired = 0; // Cat 4 + Cat 5
+
+    for (const assessments of Object.values(attainsBulk)) {
+      for (const a of assessments) {
+        totalAssessed++;
+        // Normalize category: "5", "4a", "4A", "4b", etc.
+        const rawCat = (a.category || '').trim().toUpperCase();
+        if (rawCat.startsWith('5')) { catCounts['5']++; totalImpaired++; }
+        else if (rawCat.startsWith('4A')) { catCounts['4A']++; totalImpaired++; }
+        else if (rawCat.startsWith('4B')) { catCounts['4B']++; totalImpaired++; }
+        else if (rawCat.startsWith('4C')) { catCounts['4C']++; totalImpaired++; }
+        else if (rawCat.startsWith('3')) { catCounts['3']++; }
+        else if (rawCat.startsWith('2')) { catCounts['2']++; }
+        else if (rawCat.startsWith('1')) { catCounts['1']++; }
+        else { catCounts['unknown']++; }
+
+        // Aggregate causes (only for impaired waterbodies)
+        if (rawCat.startsWith('5') || rawCat.startsWith('4')) {
+          for (const cause of (a.causes || [])) {
+            const normalized = cause.trim();
+            if (normalized && normalized !== 'CAUSE UNKNOWN' && normalized !== 'CAUSE UNKNOWN - IMPAIRED BIOTA') {
+              causeCounts[normalized] = (causeCounts[normalized] || 0) + 1;
+            }
+          }
+        }
+      }
+    }
+
+    // Sort causes by frequency
+    const topCauses = Object.entries(causeCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 20)
+      .map(([cause, count]) => ({ cause, count }));
+
+    // PEARL-addressable causes (sediment, nutrients, bacteria, turbidity, DO, metals from stormwater)
+    const PEARL_ADDRESSABLE = ['sediment', 'silt', 'tss', 'suspended solid', 'turbidity',
+      'nutrient', 'nitrogen', 'phosphor', 'ammonia', 'nitrate', 'nitrite',
+      'bacteria', 'e. coli', 'e.coli', 'enterococ', 'fecal', 'coliform', 'pathogen',
+      'dissolved oxygen', 'oxygen, dissolved', 'organic enrichment',
+      'iron', 'manganese', 'copper', 'zinc', 'lead', 'aluminum', 'stormwater'];
+    let addressableCount = 0;
+    for (const [cause, count] of Object.entries(causeCounts)) {
+      const lower = cause.toLowerCase();
+      if (PEARL_ADDRESSABLE.some(p => lower.includes(p))) {
+        addressableCount += count;
+      }
+    }
+
+    // TMDL gap: Cat 5 / total impaired
+    const tmdlGapPct = totalImpaired > 0 ? Math.round((catCounts['5'] / totalImpaired) * 100) : 0;
+
+    return {
+      catCounts,
+      totalAssessed,
+      totalImpaired,
+      cat5: catCounts['5'],        // No TMDL
+      cat4a: catCounts['4A'],      // Has approved TMDL
+      cat4b: catCounts['4B'],      // Alternative controls
+      cat4c: catCounts['4C'],      // Not pollutant-caused
+      tmdlGapPct,
+      topCauses,
+      addressableCount,
+      totalCauseInstances: Object.values(causeCounts).reduce((s, c) => s + c, 0),
+      addressablePct: Object.values(causeCounts).reduce((s, c) => s + c, 0) > 0
+        ? Math.round((addressableCount / Object.values(causeCounts).reduce((s, c) => s + c, 0)) * 100) : 0,
+    };
+  }, [attainsBulk]);
+
   // ── Federal top strip stats ──
   const topStrip = useMemo(() => {
     if (!lens.showTopStrip) return null;
     const statesWithData = stateRollup.filter(s => s.assessed > 0 || s.monitored > 0).length;
-    const cat5Count = stateRollup.reduce((s, r) => s + r.high, 0);
     const worstAge = 45; // days — will be real when last_updated tracked
     const pctWithData = nationalStats.totalWaterbodies > 0
       ? Math.round(((nationalStats.assessed + nationalStats.monitored) / nationalStats.totalWaterbodies) * 100) : 0;
@@ -1503,19 +1598,29 @@ export function NationalCommandCenter(props: Props) {
       const ov = overlayByState.get(s.abbr);
       return ov && ov.ej >= 60;
     }).length;
+
+    // Use ATTAINS category aggregation when available, fall back to alertLevel counts
+    const hasAttainsCategories = attainsAggregation.totalAssessed > 0;
+
     return {
       statesReporting: statesWithData,
       totalStates: stateRollup.length,
       withData: nationalStats.assessed + nationalStats.monitored,
       noData: nationalStats.unmonitored,
       severeCount: nationalStats.highAlerts,
-      cat5Count,
+      // Proper distinct counts from ATTAINS categories
+      cat5Count: hasAttainsCategories ? attainsAggregation.cat5 : stateRollup.reduce((s, r) => s + r.high, 0),
+      noTmdlCount: hasAttainsCategories ? attainsAggregation.cat5 : stateRollup.reduce((s, r) => s + r.high, 0),
+      hasTmdlCount: hasAttainsCategories ? attainsAggregation.cat4a : 0,
+      altControlsCount: hasAttainsCategories ? attainsAggregation.cat4b : 0,
+      totalImpaired: hasAttainsCategories ? attainsAggregation.totalImpaired : stateRollup.reduce((s, r) => s + r.high + r.medium, 0),
+      tmdlGapPct: attainsAggregation.tmdlGapPct,
       worstAge,
       pctWithData,
       highEJStates,
       sitesOnline: nationalStats.systemsOnline,
     };
-  }, [viewLens, stateRollup, nationalStats, overlayByState]);
+  }, [viewLens, stateRollup, nationalStats, overlayByState, attainsAggregation]);
 
   const [showStateTable, setShowStateTable] = useState(false);
   const [showHotspotsSection, setShowHotspotsSection] = useState(false);
@@ -3914,12 +4019,12 @@ export function NationalCommandCenter(props: Props) {
           const s = topStrip;
           const tilesByLens: Record<ViewLens, Array<{ label: string; value: string; color: string; bg: string }>> = {
             compliance: [
-              { label: 'Severe', value: s.severeCount.toLocaleString(), color: s.severeCount > 0 ? 'text-red-700' : 'text-slate-500', bg: s.severeCount > 0 ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200' },
-              { label: 'Category 5', value: s.cat5Count.toLocaleString(), color: s.cat5Count > 0 ? 'text-red-700' : 'text-slate-500', bg: s.cat5Count > 0 ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200' },
-              { label: 'No TMDL', value: s.cat5Count.toLocaleString(), color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200' },
+              { label: 'Cat 5 (No TMDL)', value: s.noTmdlCount.toLocaleString(), color: s.noTmdlCount > 0 ? 'text-red-700' : 'text-slate-500', bg: s.noTmdlCount > 0 ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200' },
+              { label: 'Cat 4a (Has TMDL)', value: s.hasTmdlCount.toLocaleString(), color: s.hasTmdlCount > 0 ? 'text-green-700' : 'text-slate-500', bg: s.hasTmdlCount > 0 ? 'bg-green-50 border-green-200' : 'bg-slate-50 border-slate-200' },
+              { label: 'Total Impaired', value: s.totalImpaired.toLocaleString(), color: s.totalImpaired > 0 ? 'text-purple-700' : 'text-slate-500', bg: s.totalImpaired > 0 ? 'bg-purple-50 border-purple-200' : 'bg-slate-50 border-slate-200' },
               { label: 'Active Alerts', value: (s.severeCount + nationalStats.mediumAlerts).toLocaleString(), color: 'text-orange-700', bg: 'bg-orange-50 border-orange-200' },
               { label: 'States Reporting', value: `${s.statesReporting}/${s.totalStates}`, color: s.statesReporting > 40 ? 'text-green-700' : 'text-amber-700', bg: 'bg-slate-50 border-slate-200' },
-              { label: 'Worst Data Age', value: `${s.worstAge}d`, color: s.worstAge > 30 ? 'text-amber-700' : 'text-green-700', bg: s.worstAge > 30 ? 'bg-amber-50 border-amber-200' : 'bg-green-50 border-green-200' },
+              { label: 'TMDL Gap', value: `${s.tmdlGapPct}%`, color: s.tmdlGapPct > 50 ? 'text-red-700' : 'text-amber-700', bg: s.tmdlGapPct > 50 ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200' },
             ],
             coverage: [
               { label: '% With Data', value: `${s.pctWithData}%`, color: s.pctWithData > 70 ? 'text-green-700' : 'text-amber-700', bg: s.pctWithData > 70 ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200' },
@@ -3930,12 +4035,12 @@ export function NationalCommandCenter(props: Props) {
               { label: 'Waterbodies w/ Data', value: s.withData.toLocaleString(), color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
             ],
             programs: [
-              { label: 'Severe', value: s.severeCount.toLocaleString(), color: s.severeCount > 0 ? 'text-red-700' : 'text-slate-500', bg: s.severeCount > 0 ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200' },
+              { label: 'Cat 5 (No TMDL)', value: s.noTmdlCount.toLocaleString(), color: s.noTmdlCount > 0 ? 'text-red-700' : 'text-slate-500', bg: s.noTmdlCount > 0 ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200' },
               { label: 'High EJ States', value: s.highEJStates.toLocaleString(), color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200' },
               { label: 'No Data (Blind)', value: s.noData.toLocaleString(), color: s.noData > 0 ? 'text-red-700' : 'text-green-700', bg: s.noData > 0 ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200' },
               { label: 'Candidate Sites', value: federalPriorities.length.toLocaleString(), color: 'text-green-700', bg: 'bg-green-50 border-green-200' },
               { label: 'States Reporting', value: `${s.statesReporting}/${s.totalStates}`, color: s.statesReporting > 40 ? 'text-green-700' : 'text-amber-700', bg: 'bg-slate-50 border-slate-200' },
-              { label: 'Category 5', value: s.cat5Count.toLocaleString(), color: s.cat5Count > 0 ? 'text-red-700' : 'text-slate-500', bg: s.cat5Count > 0 ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200' },
+              { label: 'Total Impaired', value: s.totalImpaired.toLocaleString(), color: s.totalImpaired > 0 ? 'text-purple-700' : 'text-slate-500', bg: s.totalImpaired > 0 ? 'bg-purple-50 border-purple-200' : 'bg-slate-50 border-slate-200' },
             ],
             full: [],
             analysis: [],
@@ -3953,6 +4058,102 @@ export function NationalCommandCenter(props: Props) {
             </div>
           );
         })()}
+
+        {/* ── National Impairment Cause Breakdown — from ATTAINS category + causes ── */}
+        {lens.showTopStrip && attainsAggregation.totalAssessed > 0 && (
+          <Card id="section-impairmentprofile" className="border border-slate-200">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  📊 National Impairment Profile
+                  <span className="text-[10px] font-normal text-slate-400">
+                    {attainsAggregation.totalAssessed.toLocaleString()} waterbodies from EPA ATTAINS
+                  </span>
+                </CardTitle>
+                <PrintBtn sectionId="impairmentprofile" title="Impairment Profile" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                {/* Column 1: EPA Category Distribution */}
+                <div>
+                  <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">EPA Assessment Categories</div>
+                  <div className="space-y-1.5">
+                    {[
+                      { cat: '5', label: 'Cat 5 — Impaired, No TMDL', count: attainsAggregation.cat5, color: 'bg-red-500' },
+                      { cat: '4A', label: 'Cat 4a — Has TMDL', count: attainsAggregation.cat4a, color: 'bg-amber-500' },
+                      { cat: '4B', label: 'Cat 4b — Alt. Controls', count: attainsAggregation.cat4b, color: 'bg-yellow-400' },
+                      { cat: '4C', label: 'Cat 4c — Not Pollutant-Caused', count: attainsAggregation.cat4c, color: 'bg-blue-300' },
+                      { cat: '3', label: 'Cat 3 — Insufficient Data', count: attainsAggregation.catCounts['3'], color: 'bg-slate-300' },
+                      { cat: '2', label: 'Cat 2 — Good (some concerns)', count: attainsAggregation.catCounts['2'], color: 'bg-green-300' },
+                      { cat: '1', label: 'Cat 1 — Good', count: attainsAggregation.catCounts['1'], color: 'bg-green-500' },
+                    ].filter(r => r.count > 0).map(r => {
+                      const pct = attainsAggregation.totalAssessed > 0 ? (r.count / attainsAggregation.totalAssessed) * 100 : 0;
+                      return (
+                        <div key={r.cat} className="flex items-center gap-2">
+                          <div className="w-[140px] text-[10px] text-slate-600 truncate">{r.label}</div>
+                          <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
+                            <div className={`h-full ${r.color} rounded-full`} style={{ width: `${Math.max(pct, 1)}%` }} />
+                          </div>
+                          <div className="text-[10px] font-mono text-slate-700 w-[52px] text-right">{r.count.toLocaleString()}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-2 pt-2 border-t border-slate-100 text-[10px] text-slate-500">
+                    TMDL Gap: <span className={`font-bold ${attainsAggregation.tmdlGapPct > 50 ? 'text-red-700' : 'text-amber-700'}`}>{attainsAggregation.tmdlGapPct}%</span> of impaired waterbodies lack an approved TMDL
+                  </div>
+                </div>
+
+                {/* Column 2: Top Impairment Causes */}
+                <div>
+                  <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Top Impairment Causes</div>
+                  <div className="space-y-1">
+                    {attainsAggregation.topCauses.slice(0, 12).map((c, i) => {
+                      const maxCount = attainsAggregation.topCauses[0]?.count || 1;
+                      const pct = (c.count / maxCount) * 100;
+                      return (
+                        <div key={i} className="flex items-center gap-2">
+                          <div className="w-[120px] text-[10px] text-slate-600 truncate" title={c.cause}>{c.cause}</div>
+                          <div className="flex-1 h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-blue-400 rounded-full" style={{ width: `${pct}%` }} />
+                          </div>
+                          <div className="text-[10px] font-mono text-slate-700 w-[42px] text-right">{c.count.toLocaleString()}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Column 3: PEARL Addressability */}
+                <div>
+                  <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">PEARL Addressability</div>
+                  <div className="text-center py-3">
+                    <div className="inline-flex items-center justify-center w-24 h-24 rounded-full border-4 border-emerald-200 bg-emerald-50">
+                      <div>
+                        <div className="text-2xl font-black text-emerald-700">{attainsAggregation.addressablePct}%</div>
+                        <div className="text-[8px] text-emerald-600 font-medium">ADDRESSABLE</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-[10px] text-slate-500 text-center mb-3">
+                    <span className="font-bold text-emerald-700">{attainsAggregation.addressableCount.toLocaleString()}</span> of{' '}
+                    <span className="font-bold">{attainsAggregation.totalCauseInstances.toLocaleString()}</span> cause-instances treatable by PEARL
+                  </div>
+                  <div className="space-y-1 text-[9px] text-slate-500">
+                    <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" /> Sediment / TSS / Turbidity</div>
+                    <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" /> Nutrients (N, P, Ammonia)</div>
+                    <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" /> Bacteria (E. coli, Enterococci)</div>
+                    <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" /> Dissolved Oxygen / Organic</div>
+                    <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" /> Stormwater metals (Fe, Mn, Cu, Zn)</div>
+                    <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-slate-300 flex-shrink-0" /> Mercury, PCBs, PFAS — not addressable</div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Network Health Score — lens controlled */}
         {lens.showNetworkHealth && (
@@ -4696,8 +4897,8 @@ export function NationalCommandCenter(props: Props) {
                     <th className="text-left py-2 px-3 font-semibold text-slate-700">State</th>
                     <th className="text-center py-2 px-3 font-semibold text-slate-700">Grade</th>
                     <th className="text-center py-2 px-3 font-semibold text-green-700">Assessed</th>
-                    <th className="text-center py-2 px-3 font-semibold text-blue-700">Monitored</th>
-                    <th className="text-center py-2 px-3 font-semibold text-red-700">Severe</th>
+                    <th className="text-center py-2 px-3 font-semibold text-red-700">Cat 5</th>
+                    <th className="text-center py-2 px-3 font-semibold text-amber-700">Has TMDL</th>
                     <th className="text-center py-2 px-3 font-semibold text-orange-700">Impaired</th>
                     <th className="text-center py-2 px-3 font-semibold text-slate-700">Total</th>
                   </tr>
@@ -4725,12 +4926,14 @@ export function NationalCommandCenter(props: Props) {
                         {row.assessed || '—'}
                         {row.dataSource === 'attains' && <span className="text-[9px] text-blue-500 ml-0.5">EPA</span>}
                       </td>
-                      <td className="py-2 px-3 text-center text-blue-600">{row.monitored || '—'}</td>
                       <td className="py-2 px-3 text-center">
-                        {row.high > 0 && <Badge variant="destructive" className="text-xs">{row.high}</Badge>}
+                        {row.cat5 > 0 && <Badge variant="destructive" className="text-xs">{row.cat5}</Badge>}
                       </td>
                       <td className="py-2 px-3 text-center">
-                        {row.medium > 0 && <Badge variant="default" className="text-xs bg-orange-500">{row.medium}</Badge>}
+                        {row.cat4a > 0 && <Badge variant="default" className="text-xs bg-amber-500">{row.cat4a}</Badge>}
+                      </td>
+                      <td className="py-2 px-3 text-center">
+                        {row.totalImpaired > 0 && <Badge variant="default" className="text-xs bg-orange-500">{row.totalImpaired}</Badge>}
                       </td>
                       <td className="py-2 px-3 text-center text-slate-600">{row.waterbodies}</td>
                     </tr>
