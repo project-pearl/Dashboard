@@ -37,6 +37,16 @@ const LeafletMapShell = dynamic(
   { ssr: false }
 );
 
+const OysterFilterRace = dynamic(
+  () => import('@/components/OysterFilterRace').then(m => m.OysterFilterRace),
+  { ssr: false }
+);
+
+const WaterTowerDefense = dynamic(
+  () => import('@/components/WaterTowerDefense').then(m => m.WaterTowerDefense),
+  { ssr: false }
+);
+
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -2365,6 +2375,17 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
 
         {/* Water Quality Challenges — always visible */}
         <WaterQualityChallenges context={isTeacher ? 'k12-teacher' : 'k12-student'} />
+
+        {/* ── WATER QUALITY GAMES ── */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 px-1">
+            <span className="text-lg">🎮</span>
+            <h2 className="text-lg font-bold text-slate-800">Water Quality Games</h2>
+            <span className="text-xs text-slate-400">— Learn by playing!</span>
+          </div>
+          <OysterFilterRace />
+          <WaterTowerDefense />
+        </div>
 
         {/* ── AI INSIGHTS ── */}
         <AIInsightsEngine key={stateAbbr} role="K12" stateAbbr={stateAbbr} regionData={regionData as any} />
