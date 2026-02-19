@@ -147,6 +147,7 @@ export function WaterbodyDetailCard({
       gradeParams[key] = { value: (p as any).value, lastSampled: (p as any).lastSampled };
     }
   }
+  console.log('[Grade Params]', Object.entries(gradeParams).map(([k,v]) => ({ param: k, value: v.value, lastSampled: v.lastSampled, source: (v as any).source })));
   const grade = calculateGrade(gradeParams, 'freshwater');
   const { coverage } = grade;
 
