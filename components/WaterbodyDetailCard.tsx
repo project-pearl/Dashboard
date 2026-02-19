@@ -312,7 +312,10 @@ export function WaterbodyDetailCard({
                   <div className={`text-base font-bold ${grade.canBeGraded ? grade.color : 'text-slate-400'}`}>
                     {grade.canBeGraded ? grade.letter : 'N/A'}
                   </div>
-                  {grade.canBeGraded && (
+                  {grade.canBeGraded && grade.gradeSource === 'attains' && (
+                    <div className="text-[9px] text-amber-600 font-medium">ATTAINS-based</div>
+                  )}
+                  {grade.canBeGraded && grade.gradeSource !== 'attains' && (
                     <div className="text-[9px] text-slate-400">
                       {grade.score}/100{grade.isPartialGrade ? ` · ${grade.gradedParamCount}/${grade.gradedParamTotal} params` : ''}
                     </div>

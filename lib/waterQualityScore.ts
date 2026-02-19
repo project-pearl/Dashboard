@@ -379,6 +379,7 @@ export interface WaterQualityGrade {
   gradedParamCount: number;      // Number of key params used in composite
   gradedParamTotal: number;      // Total key params present
   isPartialGrade: boolean;       // true when some key params excluded as reference
+  gradeSource: 'sensor' | 'attains' | 'none';  // What the grade is based on
 }
 
 function scoreToLetter(score: number): GradeLetter {
@@ -482,6 +483,22 @@ function regulatoryDeduction(
   return { totalDeduction, details };
 }
 
+// ─── ATTAINS Fallback Grade ──────────────────────────────────────────────────
+// When live sensor data is insufficient for grading, derive a grade from the
+// EPA ATTAINS Integrated Report category. This is regulatory-based, not measured.
+
+function attainsCategoryToGrade(cat: string): { letter: GradeLetter; score: number } | null {
+  if (!cat) return null;
+  if (cat.includes('5'))  return { letter: 'F',  score: 45 };
+  if (cat.includes('4a')) return { letter: 'D',  score: 63 };
+  if (cat.includes('4b') || cat.includes('4c')) return { letter: 'D+', score: 67 };
+  if (cat.includes('4'))  return { letter: 'D',  score: 63 };
+  if (cat.includes('3'))  return { letter: 'C',  score: 73 };
+  if (cat.includes('2'))  return { letter: 'B',  score: 83 };
+  if (cat.includes('1'))  return { letter: 'A',  score: 93 };
+  return null;
+}
+
 /**
  * Calculate the PEARL Water Quality Grade for a waterbody.
  *
@@ -533,6 +550,37 @@ export function calculateGrade(
 
   // Can we grade? Require ≥2 live key params
   if (!coverage.canBeGraded) {
+    // ── ATTAINS fallback: derive grade from regulatory category when sensor data is insufficient ──
+    const attainsFallback = attainsCategoryToGrade(regulatoryContext?.attainsCategory || '');
+    if (attainsFallback) {
+      let reason: string;
+      if (coverage.liveKeyParamCount === 1) {
+        reason = `Only 1 live parameter (${coverage.liveKeyParams[0]}). Grade derived from EPA ATTAINS Category ${regulatoryContext!.attainsCategory}.`;
+      } else if (coverage.liveKeyParamCount === 0 && coverage.keyParamsPresent > 0) {
+        reason = `All ${coverage.keyParamsPresent} parameters are reference data. Grade derived from EPA ATTAINS Category ${regulatoryContext!.attainsCategory}.`;
+      } else {
+        reason = `Insufficient live sensor data. Grade derived from EPA ATTAINS Category ${regulatoryContext!.attainsCategory}.`;
+      }
+
+      return {
+        canBeGraded: true,
+        score: attainsFallback.score,
+        letter: attainsFallback.letter,
+        label: attainsFallback.letter,
+        reason,
+        ...gradeStyle(attainsFallback.letter),
+        parameterScores,
+        coverage,
+        avgFreshnessWeight: 0,
+        regulatoryPenalty: 0,
+        gradedParamCount: 0,
+        gradedParamTotal: coverage.keyParamsPresent,
+        isPartialGrade: false,
+        gradeSource: 'attains',
+      };
+    }
+
+    // Truly ungraded: no sensors AND no ATTAINS
     let reason: string;
     if (coverage.keyParamsPresent === 0) {
       reason = 'No monitoring data available. This waterbody needs sensor deployment to be assessed.';
@@ -558,6 +606,7 @@ export function calculateGrade(
       gradedParamCount: 0,
       gradedParamTotal: coverage.keyParamsPresent,
       isPartialGrade: false,
+      gradeSource: 'none',
     };
   }
 
@@ -627,6 +676,7 @@ export function calculateGrade(
     gradedParamCount,
     gradedParamTotal,
     isPartialGrade,
+    gradeSource: 'sensor',
   };
 }
 
