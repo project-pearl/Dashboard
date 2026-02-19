@@ -68,6 +68,10 @@ const NGOCommandCenter = dynamic(
   () => import('@/components/NGOCommandCenter').then((mod) => mod.NGOCommandCenter),
   { ssr: false, loading: () => <div className="flex items-center justify-center min-h-[400px]"><Skeleton className="w-full h-[400px]" /></div> }
 );
+const PEARLCommandCenter = dynamic(
+  () => import('@/components/PEARLCommandCenter').then((mod) => mod.PEARLCommandCenter),
+  { ssr: false }
+);
 const AcademicTools = dynamic(
   () => import('@/components/AcademicTools').then((mod) => mod.AcademicTools),
   { ssr: false }
@@ -245,7 +249,7 @@ export default function Home() {
   const [endDate, setEndDate] = useState('');
   
   // Phase 1: Role Selector for Demos
-  const [userRole, setUserRole] = useState<'Federal' | 'State' | 'MS4' | 'Corporate' | 'Researcher' | 'College' | 'NGO' | 'K12'>('MS4');
+  const [userRole, setUserRole] = useState<'Federal' | 'State' | 'MS4' | 'Corporate' | 'Researcher' | 'College' | 'NGO' | 'K12' | 'Pearl'>('MS4');
   const { user } = useAuth();
 
   // Sync role, state, and region from auth session
@@ -965,6 +969,7 @@ export default function Home() {
                 if (value === 'College') { setShowNationalView(false); setShowStatewideView(false); }
                 if (value === 'Researcher') { setShowNationalView(false); setShowStatewideView(false); }
                 if (value === 'NGO') { setShowNationalView(false); setShowStatewideView(false); }
+                if (value === 'Pearl') { setShowNationalView(false); setShowStatewideView(false); }
                 if (!['Federal', 'State'].includes(value)) { setShowNationalView(false); setShowStatewideView(false); }
               }}>
                 <SelectTrigger className="w-[220px] h-8 text-sm border-amber-300 bg-white">
@@ -979,6 +984,7 @@ export default function Home() {
                   <SelectItem value="College">🎓 Undergrad (Research)</SelectItem>
                   <SelectItem value="NGO">🌿 NGO / Nonprofit</SelectItem>
                   <SelectItem value="K12">🎓 K-12 Teacher / Student</SelectItem>
+                  <SelectItem value="Pearl">🐚 PEARL Admin (Internal)</SelectItem>
                 </SelectContent>
               </Select>
               <button onClick={() => setDevMode(false)} className="text-amber-400 hover:text-amber-600 text-lg leading-none ml-2">×</button>
@@ -1159,6 +1165,12 @@ export default function Home() {
             setSelectedRegionId(regionId);
             setUserRegion(regionId);
           }}
+          onToggleDevMode={() => setDevMode(prev => !prev)}
+        />
+    )}
+    {userRole === 'Pearl' && !showNationalView && (
+        <PEARLCommandCenter
+          onClose={() => {}}
           onToggleDevMode={() => setDevMode(prev => !prev)}
         />
     )}
