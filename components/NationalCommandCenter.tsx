@@ -1124,6 +1124,8 @@ export function NationalCommandCenter(props: Props) {
       .then(json => {
         // EJScreen returns various indicators — extract the EJ index
         const data = json?.data;
+        console.log('[EJScreen Response]', JSON.stringify(data).slice(0, 500));
+        console.log('[EJScreen Keys]', data && !data.error ? Object.keys(data).slice(0, 30).join(', ') : 'ERROR or empty');
         let ejIndex: number | null = null;
         if (data && !data.error) {
           // The REST broker returns demographic + environmental indicators

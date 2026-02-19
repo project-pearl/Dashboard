@@ -1176,6 +1176,8 @@ export async function GET(request: NextRequest) {
           return NextResponse.json({ error: 'lat and lng required' }, { status: 400 });
         }
         const data = await ejscreenFetch(lat, lng);
+        console.log('[EJScreen Response]', JSON.stringify(data).slice(0, 500));
+        console.log('[EJScreen Keys]', data && !data.error ? Object.keys(data).slice(0, 30).join(', ') : 'ERROR or empty');
         return NextResponse.json({ source: 'ejscreen', data });
       }
 

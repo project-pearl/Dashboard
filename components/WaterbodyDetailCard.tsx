@@ -292,7 +292,7 @@ export function WaterbodyDetailCard({
               }
 
               return (
-                <div key={key} className="bg-white rounded-lg border border-slate-200 p-2.5 text-center relative group cursor-pointer hover:border-blue-300 transition-colors" onClick={() => setExpandedParam(key)}>
+                <div key={key} className="bg-white rounded-lg border border-slate-200 p-2.5 text-center relative group cursor-pointer hover:border-blue-300 transition-colors" onClick={(e) => { e.stopPropagation(); setExpandedParam(key); }}>
                   <button className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-blue-600" onClick={(e) => { e.stopPropagation(); setExpandedParam(key); }} title="Expand details">
                     <Maximize2 size={10} />
                   </button>
@@ -327,7 +327,7 @@ export function WaterbodyDetailCard({
               {/* 5-tile row */}
               <div className="grid grid-cols-5 gap-2">
                 {/* Tile 1: Grade */}
-                <div className={`rounded-lg border-2 ${grade.canBeGraded ? grade.borderColor : 'border-slate-300'} ${grade.canBeGraded ? grade.bgColor : 'bg-slate-50'} p-2 text-center relative group cursor-pointer hover:border-blue-300 transition-colors`} onClick={() => setExpandedParam('health')}>
+                <div className={`rounded-lg border-2 ${grade.canBeGraded ? grade.borderColor : 'border-slate-300'} ${grade.canBeGraded ? grade.bgColor : 'bg-slate-50'} p-2 text-center relative group cursor-pointer hover:border-blue-300 transition-colors`} onClick={(e) => { e.stopPropagation(); setExpandedParam('health'); }}>
                   <button className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-blue-600" onClick={(e) => { e.stopPropagation(); setExpandedParam('health'); }} title="Expand details">
                     <Maximize2 size={10} />
                   </button>
@@ -663,7 +663,7 @@ export function WaterbodyDetailCard({
           };
 
           return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setExpandedParam(null)}>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={(e) => { e.stopPropagation(); setExpandedParam(null); }}>
               <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-[420px] max-w-[90vw] max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between p-4 border-b border-slate-100">
                   <h3 className="text-sm font-semibold text-slate-800">
