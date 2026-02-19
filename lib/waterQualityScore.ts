@@ -49,6 +49,19 @@ export const ALL_PARAM_LABELS: Record<string, string> = {
   ...SUPPLEMENTAL_PARAM_LABELS,
 };
 
+// ─── Per-Parameter Freshness Classification ──────────────────────────────────
+// Parameters sampled within 180 days are "live" (suitable for grading);
+// older or missing timestamps are "reference" (display only, excluded from composite).
+
+const LIVE_THRESHOLD_MS = 180 * 24 * 60 * 60 * 1000;
+
+function classifyParamFreshness(lastSampled: string | null | undefined): 'live' | 'reference' {
+  if (!lastSampled) return 'reference';
+  const ts = new Date(lastSampled).getTime();
+  if (isNaN(ts)) return 'reference';
+  return (Date.now() - ts) < LIVE_THRESHOLD_MS ? 'live' : 'reference';
+}
+
 // National default thresholds by waterbody type
 const THRESHOLDS: Record<WaterbodyType, Record<string, ThresholdRange>> = {
   freshwater: {
@@ -206,11 +219,18 @@ export interface MonitoringCoverage {
   presentParams: string[];
   missingParams: string[];
   missingLabels: string[];
-  canBeGraded: boolean;   // true only if ≥3 key params AND <60 days old
+  canBeGraded: boolean;   // true only if ≥2 live key params
   dataAgeMs: number | null;
   dataAgeDays: number | null;
   freshnessLabel: string;
   freshnessConfidence: string;
+  liveKeyParamCount: number;
+  referenceKeyParamCount: number;
+  liveKeyParams: string[];
+  referenceKeyParams: string[];
+  oldestLiveAgeDays: number | null;
+  oldestLiveAgeMs: number | null;
+  freshnessSummary: string;  // e.g. "2 of 7 live · 5 reference"
 }
 
 const COVERAGE_STYLES: Record<CoverageLevel, Omit<MonitoringCoverage, 'keyParamsPresent' | 'keyParamsTotal' | 'presentParams' | 'missingParams' | 'missingLabels' | 'canBeGraded' | 'dataAgeMs' | 'dataAgeDays' | 'freshnessLabel' | 'freshnessConfidence'>> = {
@@ -245,30 +265,54 @@ function getFreshnessConfidence(ageMs: number | null): string {
 
 export function assessCoverage(
   presentParamKeys: string[],
-  mostRecentTimestamp: string | number | null,
+  paramTimestamps: Record<string, string | null>,
 ): MonitoringCoverage {
   const keyPresent = KEY_PARAMS.filter(k => presentParamKeys.includes(k));
   const keyMissing = KEY_PARAMS.filter(k => !presentParamKeys.includes(k));
   const count = keyPresent.length;
 
-  // Data age
-  let dataAgeMs: number | null = null;
-  let dataAgeDays: number | null = null;
-  if (mostRecentTimestamp) {
-    const ts = typeof mostRecentTimestamp === 'string' ? new Date(mostRecentTimestamp).getTime() : mostRecentTimestamp;
-    if (!isNaN(ts)) {
-      dataAgeMs = Date.now() - ts;
-      dataAgeDays = Math.floor(dataAgeMs / (24 * 60 * 60 * 1000));
+  // Classify each key param as live or reference
+  const liveKeyParams: string[] = [];
+  const referenceKeyParams: string[] = [];
+  for (const k of keyPresent) {
+    if (classifyParamFreshness(paramTimestamps[k]) === 'live') {
+      liveKeyParams.push(k as string);
+    } else {
+      referenceKeyParams.push(k as string);
     }
   }
 
-  const SIXTY_DAYS = 60 * 24 * 60 * 60 * 1000;
-  const ONE_EIGHTY_DAYS = 180 * 24 * 60 * 60 * 1000;
-  const isRecent = dataAgeMs !== null && dataAgeMs < SIXTY_DAYS;
-  const isExtendedRecent = dataAgeMs !== null && dataAgeMs < ONE_EIGHTY_DAYS;
+  // Oldest live param age (conservative — worst-case among live params)
+  let oldestLiveAgeMs: number | null = null;
+  for (const k of liveKeyParams) {
+    const ts = paramTimestamps[k] ? new Date(paramTimestamps[k]!).getTime() : NaN;
+    if (!isNaN(ts)) {
+      const age = Date.now() - ts;
+      if (oldestLiveAgeMs === null || age > oldestLiveAgeMs) {
+        oldestLiveAgeMs = age;
+      }
+    }
+  }
+  const oldestLiveAgeDays = oldestLiveAgeMs !== null ? Math.floor(oldestLiveAgeMs / (24 * 60 * 60 * 1000)) : null;
 
-  // Determine coverage level — based on param count only
-  // Freshness is handled separately in the Freshness tile
+  // Weighted average data age across ALL key params (not just live).
+  // Params with no timestamp count as 999 days. This prevents 2 live readings
+  // from masking 5 stale reference params.
+  const DEFAULT_AGE_MS = 999 * 24 * 60 * 60 * 1000;
+  let ageSum = 0;
+  for (const k of keyPresent) {
+    const raw = paramTimestamps[k as string];
+    if (raw) {
+      const ts = new Date(raw).getTime();
+      ageSum += isNaN(ts) ? DEFAULT_AGE_MS : (Date.now() - ts);
+    } else {
+      ageSum += DEFAULT_AGE_MS;
+    }
+  }
+  const dataAgeMs = count > 0 ? ageSum / count : null;
+  const dataAgeDays = dataAgeMs !== null ? Math.floor(dataAgeMs / (24 * 60 * 60 * 1000)) : null;
+
+  // Determine coverage level — based on total param count
   let level: CoverageLevel;
   if (count === 0) {
     level = 'unmonitored';
@@ -282,12 +326,14 @@ export function assessCoverage(
     level = 'minimal';
   }
 
-  // Can be graded:
-  // Tier 1: ≥3 key params AND <60 days old (standard — high confidence)
-  // Tier 2: ≥5 key params AND <180 days old (comprehensive monitoring — penalized but gradeable)
-  // Rationale: 7/7 params at 95 days should get a penalized grade, not N/A.
-  // The freshness penalty already applies heavy deductions for stale data.
-  const canBeGraded = (count >= 3 && isRecent) || (count >= 5 && isExtendedRecent);
+  // Can be graded: ≥2 live key params
+  // Live classification already enforces the 180-day window
+  const canBeGraded = liveKeyParams.length >= 2;
+
+  // Build freshness summary
+  const freshnessSummary = liveKeyParams.length === 0
+    ? `${count} reference only`
+    : `${liveKeyParams.length} of ${count} live · ${referenceKeyParams.length} reference`;
 
   const style = COVERAGE_STYLES[level];
 
@@ -303,6 +349,13 @@ export function assessCoverage(
     dataAgeDays,
     freshnessLabel: getFreshnessLabel(dataAgeMs),
     freshnessConfidence: getFreshnessConfidence(dataAgeMs),
+    liveKeyParamCount: liveKeyParams.length,
+    referenceKeyParamCount: referenceKeyParams.length,
+    liveKeyParams,
+    referenceKeyParams,
+    oldestLiveAgeDays,
+    oldestLiveAgeMs,
+    freshnessSummary,
   };
 }
 
@@ -321,7 +374,11 @@ export interface WaterQualityGrade {
   borderColor: string;           // Tailwind border color
   parameterScores: ParameterScore[];  // Individual param breakdowns
   coverage: MonitoringCoverage;
-  freshnessPenalty: number;      // 0.0–1.0 multiplier applied
+  avgFreshnessWeight: number;    // Average per-param freshness weight (0–1)
+  regulatoryPenalty: number;     // Total regulatory deduction (points subtracted)
+  gradedParamCount: number;      // Number of key params used in composite
+  gradedParamTotal: number;      // Total key params present
+  isPartialGrade: boolean;       // true when some key params excluded as reference
 }
 
 function scoreToLetter(score: number): GradeLetter {
@@ -353,59 +410,118 @@ function gradeStyle(letter: GradeLetter | null): { color: string; bgColor: strin
   }
 }
 
-// Freshness penalty: degrades grade for stale data
-function freshnessPenalty(dataAgeMs: number | null): number {
-  if (dataAgeMs === null) return 0.30;
-  const days = dataAgeMs / (24 * 60 * 60 * 1000);
-  if (days < 1)   return 1.0;    // Live
-  if (days < 7)   return 0.97;   // Very recent
-  if (days < 14)  return 0.93;   // Recent
-  if (days < 30)  return 0.88;   // Acceptable
-  if (days < 45)  return 0.80;   // Getting stale
-  if (days < 60)  return 0.72;   // Stale — still standard-gradeable
-  if (days < 90)  return 0.60;   // Extended grading — significant penalty
-  if (days < 120) return 0.50;   // Extended grading — heavy penalty
-  if (days < 150) return 0.42;   // Extended grading — severe penalty
-  if (days < 180) return 0.35;   // Extended grading — near-minimum
-  return 0.30;                    // Beyond extended range
+// ─── Per-Parameter Freshness Weighting ────────────────────────────────────────
+// Each parameter's contribution to the composite gets scaled by how fresh its data is.
+// This replaces the old global freshness multiplier with per-param confidence weights.
+
+function paramFreshnessWeight(lastSampled: string | null | undefined): number {
+  if (!lastSampled) return 0.25;
+  const ts = new Date(lastSampled).getTime();
+  if (isNaN(ts)) return 0.25;
+  const days = (Date.now() - ts) / (24 * 60 * 60 * 1000);
+  if (days < 1)   return 1.0;   // Live
+  if (days < 7)   return 0.95;  // Recent
+  if (days < 60)  return 0.85;  // Aging
+  if (days < 180) return 0.70;  // Stale
+  if (days < 365) return 0.50;  // Old
+  return 0.30;                   // Very old (>1yr)
+}
+
+// ─── Regulatory Context & Penalties ──────────────────────────────────────────
+// Point deductions for ATTAINS impairment status and parameter exceedances.
+// These are subtracted from the composite score, not multiplied.
+
+export interface RegulatoryContext {
+  attainsCategory?: string;       // "5", "4a", "3", etc.
+  is303dListed?: boolean;
+  hasTmdl?: boolean;              // false = TMDL needed but not established
+  impairmentCauseCount?: number;  // number of ATTAINS impairment causes
+}
+
+function regulatoryDeduction(
+  ctx: RegulatoryContext | undefined,
+  parameterScores: ParameterScore[],
+): { totalDeduction: number; details: string[] } {
+  if (!ctx) return { totalDeduction: 0, details: [] };
+
+  let totalDeduction = 0;
+  const details: string[] = [];
+
+  // 1. ATTAINS category penalty
+  const cat = ctx.attainsCategory || '';
+  if (cat.includes('5') && ctx.hasTmdl === false) {
+    totalDeduction += 15;
+    details.push('Cat 5 no TMDL (−15)');
+  } else if (cat.includes('5')) {
+    totalDeduction += 8;
+    details.push('Cat 5 (−8)');
+  } else if (cat.includes('4a')) {
+    totalDeduction += 5;
+    details.push('Cat 4a TMDL (−5)');
+  } else if (cat.includes('4')) {
+    totalDeduction += 3;
+    details.push('Cat 4 (−3)');
+  } else if (ctx.is303dListed && !cat) {
+    // 303(d) listed but no ATTAINS category data
+    totalDeduction += 10;
+    details.push('303(d) listed (−10)');
+  }
+
+  // 2. Exceedance severity amplifier — per failing key param
+  for (const ps of parameterScores) {
+    if (!(KEY_PARAMS as readonly string[]).includes(ps.param)) continue;
+    if (ps.condition === 'severe') {
+      totalDeduction += 5;
+      details.push(`${ps.label} severe (−5)`);
+    } else if (ps.condition === 'poor') {
+      totalDeduction += 3;
+      details.push(`${ps.label} poor (−3)`);
+    }
+  }
+
+  return { totalDeduction, details };
 }
 
 /**
  * Calculate the PEARL Water Quality Grade for a waterbody.
  *
+ * Scoring pipeline:
+ *   1. Score each parameter against thresholds (0–100)
+ *   2. Weight each key param's score by its freshness confidence
+ *   3. Composite = sum(score × weight) / keyParamCount
+ *   4. Subtract regulatory deductions (ATTAINS Cat 5, exceedances)
+ *   5. Clamp to 0–100
+ *
  * @param parameters - Map of param key → { value, lastSampled } from useWaterData
  * @param waterbodyType - freshwater, estuarine, coastal, or lake
+ * @param regulatoryContext - Optional ATTAINS/303(d) context for regulatory penalties
  * @returns Full grade breakdown with coverage, freshness, and per-parameter scores
  *
  * Usage:
- *   const grade = calculateGrade(waterData.parameters, 'estuarine');
- *   if (grade.canBeGraded) { show grade.letter }
- *   else { show 'Ungraded' + grade.reason }
+ *   const grade = calculateGrade(waterData.parameters, 'estuarine', {
+ *     attainsCategory: '5', is303dListed: true, hasTmdl: false,
+ *   });
  */
 export function calculateGrade(
   parameters: Record<string, { value: number; lastSampled?: string | null; unit?: string }> | null | undefined,
   waterbodyType: WaterbodyType = 'freshwater',
+  regulatoryContext?: RegulatoryContext,
 ): WaterQualityGrade {
   // Gather what we have
   const presentKeys = parameters ? Object.keys(parameters) : [];
 
-  // Find most recent timestamp across all parameters
-  let mostRecentTs: number | null = null;
+  // Build per-param timestamp map
+  const paramTimestamps: Record<string, string | null> = {};
   if (parameters) {
-    for (const p of Object.values(parameters)) {
-      if (p.lastSampled) {
-        const ts = new Date(p.lastSampled).getTime();
-        if (!isNaN(ts) && (mostRecentTs === null || ts > mostRecentTs)) {
-          mostRecentTs = ts;
-        }
-      }
+    for (const [key, p] of Object.entries(parameters)) {
+      paramTimestamps[key] = p.lastSampled ?? null;
     }
   }
 
-  // Assess monitoring coverage
-  const coverage = assessCoverage(presentKeys, mostRecentTs);
+  // Assess monitoring coverage (per-param freshness aware)
+  const coverage = assessCoverage(presentKeys, paramTimestamps);
 
-  // Score each available parameter
+  // Score each available parameter (all params, for display)
   const parameterScores: ParameterScore[] = [];
   if (parameters) {
     for (const [key, data] of Object.entries(parameters)) {
@@ -415,19 +531,17 @@ export function calculateGrade(
     }
   }
 
-  // Can we grade?
+  // Can we grade? Require ≥2 live key params
   if (!coverage.canBeGraded) {
     let reason: string;
     if (coverage.keyParamsPresent === 0) {
       reason = 'No monitoring data available. This waterbody needs sensor deployment to be assessed.';
-    } else if (coverage.keyParamsPresent < 3) {
-      reason = `Only ${coverage.keyParamsPresent} of 7 key parameters reporting. At least 3 required for grading.`;
-    } else if (coverage.dataAgeDays !== null && coverage.keyParamsPresent >= 5 && coverage.dataAgeDays >= 180) {
-      reason = `Data is ${coverage.dataAgeDays} days old. Comprehensive monitoring (5+ params) requires data within 180 days for grading.`;
-    } else if (coverage.dataAgeDays !== null && coverage.keyParamsPresent < 5 && coverage.dataAgeDays >= 60) {
-      reason = `Data is ${coverage.dataAgeDays} days old. With ${coverage.keyParamsPresent} parameters, readings must be within 60 days. Add more sensors (5+) to extend grading window to 180 days.`;
+    } else if (coverage.liveKeyParamCount === 0) {
+      reason = 'All parameters are reference data (>180 days old). Live sensor readings required for grading.';
+    } else if (coverage.liveKeyParamCount === 1) {
+      reason = `Only 1 live parameter (${coverage.liveKeyParams[0]}). At least 2 live parameters required for grading.`;
     } else {
-      reason = 'Insufficient data for reliable water quality assessment.';
+      reason = 'Insufficient live data for reliable water quality assessment.';
     }
 
     return {
@@ -439,32 +553,64 @@ export function calculateGrade(
       ...gradeStyle(null),
       parameterScores,
       coverage,
-      freshnessPenalty: 0,
+      avgFreshnessWeight: 0,
+      regulatoryPenalty: 0,
+      gradedParamCount: 0,
+      gradedParamTotal: coverage.keyParamsPresent,
+      isPartialGrade: false,
     };
   }
 
-  // Calculate composite WQ score from key params only
-  const keyScores = parameterScores.filter(ps => (KEY_PARAMS as readonly string[]).includes(ps.param));
-  const rawWqScore = keyScores.length > 0
-    ? keyScores.reduce((sum, ps) => sum + ps.score, 0) / keyScores.length
-    : 50;
+  // ── Per-param freshness-weighted composite ──
+  // Each key param's score is scaled by its freshness weight, then divided by
+  // the number of key params present. Stale data naturally degrades the composite.
+  const keyScores = parameterScores.filter(
+    ps => (KEY_PARAMS as readonly string[]).includes(ps.param)
+  );
+  let weightedSum = 0;
+  let totalWeight = 0;
+  const gradedParamCount = keyScores.length;
 
-  // Apply freshness penalty
-  const fp = freshnessPenalty(coverage.dataAgeMs);
-  const finalScore = Math.round(rawWqScore * fp);
+  for (const ps of keyScores) {
+    const w = paramFreshnessWeight(paramTimestamps[ps.param]);
+    weightedSum += ps.score * w;
+    totalWeight += w;
+  }
+
+  const rawWqScore = gradedParamCount > 0
+    ? weightedSum / gradedParamCount
+    : 50;
+  const avgWeight = gradedParamCount > 0
+    ? totalWeight / gradedParamCount
+    : 0;
+
+  // ── Regulatory penalties ──
+  const { totalDeduction, details: regDetails } = regulatoryDeduction(regulatoryContext, parameterScores);
+
+  // Final score: freshness-weighted composite minus regulatory deductions, clamped 0–100
+  const finalScore = Math.round(Math.max(0, Math.min(100, rawWqScore - totalDeduction)));
   const letter = scoreToLetter(finalScore);
 
+  const gradedParamTotal = coverage.keyParamsPresent;
+  const isPartialGrade = coverage.referenceKeyParamCount > 0;
+
   // Build reason
-  const conditions = parameterScores.filter(ps => ps.condition === 'severe' || ps.condition === 'poor');
+  const failingParams = keyScores.filter(ps => ps.condition === 'severe' || ps.condition === 'poor');
   let reason: string;
-  if (conditions.length === 0) {
+  if (failingParams.length === 0) {
     reason = 'All monitored parameters within acceptable ranges.';
   } else {
-    const labels = conditions.map(c => c.label).slice(0, 3);
-    reason = `${labels.join(', ')} ${conditions.length === 1 ? 'is' : 'are'} outside acceptable ranges.`;
+    const labels = failingParams.map(c => c.label).slice(0, 3);
+    reason = `${labels.join(', ')} ${failingParams.length === 1 ? 'is' : 'are'} outside acceptable ranges.`;
   }
-  if (fp < 0.9) {
-    reason += ` Score reduced ${Math.round((1 - fp) * 100)}% due to data staleness (${coverage.dataAgeDays}d old).`;
+  if (avgWeight < 0.9) {
+    reason += ` Data confidence reduced (avg weight ${(avgWeight * 100).toFixed(0)}%).`;
+  }
+  if (totalDeduction > 0) {
+    reason += ` Score reduced ${totalDeduction}pts for ${regDetails.join(', ')}.`;
+  }
+  if (isPartialGrade) {
+    reason += ` Partial — ${coverage.liveKeyParamCount} of ${gradedParamTotal} parameters live.`;
   }
 
   return {
@@ -476,7 +622,11 @@ export function calculateGrade(
     ...gradeStyle(letter),
     parameterScores,
     coverage,
-    freshnessPenalty: fp,
+    avgFreshnessWeight: avgWeight,
+    regulatoryPenalty: totalDeduction,
+    gradedParamCount,
+    gradedParamTotal,
+    isPartialGrade,
   };
 }
 
@@ -543,11 +693,23 @@ export function generateObservations(grade: WaterQualityGrade): Observation[] {
     }
   }
 
-  // 2. Data freshness with confidence language
-  if (coverage.dataAgeDays !== null && coverage.dataAgeDays > 30) {
+  // 2. Live/reference data breakdown
+  if (coverage.liveKeyParamCount > 0 && coverage.referenceKeyParamCount > 0) {
+    obs.push({
+      icon: '📡',
+      text: `${coverage.liveKeyParamCount} of ${coverage.keyParamsPresent} live · ${coverage.referenceKeyParamCount} reference. Grade based on ${coverage.liveKeyParamCount} live parameter${coverage.liveKeyParamCount !== 1 ? 's' : ''}. ${coverage.referenceKeyParamCount} reference excluded.`,
+      severity: 'info',
+    });
+  } else if (coverage.liveKeyParamCount === 0 && coverage.keyParamsPresent > 0) {
     obs.push({
       icon: '⏰',
-      text: `Data is ${coverage.dataAgeDays} days old. ${coverage.freshnessConfidence}`,
+      text: `All ${coverage.keyParamsPresent} parameters are reference data (>180 days old). No live readings available for grading.`,
+      severity: 'critical',
+    });
+  } else if (coverage.dataAgeDays !== null && coverage.dataAgeDays > 30) {
+    obs.push({
+      icon: '⏰',
+      text: `Average data age is ${coverage.dataAgeDays} days. ${coverage.freshnessConfidence}`,
       severity: coverage.dataAgeDays > 90 ? 'critical' : 'warning',
     });
   }

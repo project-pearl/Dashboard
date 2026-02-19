@@ -147,8 +147,12 @@ export function WaterbodyDetailCard({
       gradeParams[key] = { value: (p as any).value, lastSampled: (p as any).lastSampled };
     }
   }
-  console.log('[Grade Params]', Object.entries(gradeParams).map(([k,v]) => ({ param: k, value: v.value, lastSampled: v.lastSampled, source: (v as any).source })));
-  const grade = calculateGrade(gradeParams, 'freshwater');
+  const grade = calculateGrade(gradeParams, 'freshwater', {
+    attainsCategory,
+    is303dListed,
+    hasTmdl: is303dListed ? level !== 'high' : undefined,
+    impairmentCauseCount: attainsCauses.length,
+  });
   const { coverage } = grade;
 
   // ── Observations ──
@@ -308,7 +312,11 @@ export function WaterbodyDetailCard({
                   <div className={`text-base font-bold ${grade.canBeGraded ? grade.color : 'text-slate-400'}`}>
                     {grade.canBeGraded ? grade.letter : 'N/A'}
                   </div>
-                  {grade.canBeGraded && <div className="text-[9px] text-slate-400">{grade.score}/100</div>}
+                  {grade.canBeGraded && (
+                    <div className="text-[9px] text-slate-400">
+                      {grade.score}/100{grade.isPartialGrade ? ` · ${grade.gradedParamCount}/${grade.gradedParamTotal} params` : ''}
+                    </div>
+                  )}
                   {!grade.canBeGraded && <div className="text-[9px] text-slate-400">Ungraded</div>}
                 </div>
                 {/* Tile 2: Monitoring */}
@@ -335,14 +343,26 @@ export function WaterbodyDetailCard({
                   </div>
                   <div className="text-[9px] text-slate-400">USFWS ECOS</div>
                 </div>
-                {/* Tile 5: Freshness */}
-                <div className={`rounded-lg border-2 ${coverage.dataAgeDays !== null && coverage.dataAgeDays > 60 ? 'border-orange-200 bg-orange-50' : coverage.dataAgeDays !== null && coverage.dataAgeDays > 14 ? 'border-yellow-200 bg-yellow-50' : 'border-green-200 bg-green-50'} p-2 text-center`}>
+                {/* Tile 5: Freshness — uses weighted average age across ALL key params */}
+                <div className={`rounded-lg border-2 ${
+                  coverage.dataAgeDays !== null && coverage.dataAgeDays > 180 ? 'border-red-200 bg-red-50'
+                  : coverage.dataAgeDays !== null && coverage.dataAgeDays > 60 ? 'border-orange-200 bg-orange-50'
+                  : coverage.dataAgeDays !== null && coverage.dataAgeDays > 14 ? 'border-yellow-200 bg-yellow-50'
+                  : 'border-green-200 bg-green-50'
+                } p-2 text-center`}>
                   <div className="text-[10px] uppercase tracking-wider text-slate-500">Freshness</div>
-                  <div className={`text-base font-bold ${coverage.dataAgeDays !== null && coverage.dataAgeDays > 60 ? 'text-orange-700' : coverage.dataAgeDays !== null && coverage.dataAgeDays > 14 ? 'text-yellow-700' : 'text-green-700'}`}>
+                  <div className={`text-base font-bold ${
+                    coverage.dataAgeDays !== null && coverage.dataAgeDays > 180 ? 'text-red-700'
+                    : coverage.dataAgeDays !== null && coverage.dataAgeDays > 60 ? 'text-orange-700'
+                    : coverage.dataAgeDays !== null && coverage.dataAgeDays > 14 ? 'text-yellow-700'
+                    : 'text-green-700'
+                  }`}>
                     {coverage.freshnessLabel}
                   </div>
                   <div className="text-[9px] text-slate-400">
-                    {coverage.dataAgeDays !== null && coverage.dataAgeDays > 90 ? 'Low confidence' : coverage.dataAgeDays !== null && coverage.dataAgeDays > 30 ? 'Moderate' : 'High confidence'}
+                    {coverage.liveKeyParamCount > 0
+                      ? `${coverage.liveKeyParamCount} live · ${coverage.referenceKeyParamCount} ref`
+                      : `${coverage.keyParamsPresent} reference only`}
                   </div>
                 </div>
               </div>
