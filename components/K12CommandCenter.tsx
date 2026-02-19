@@ -37,11 +37,6 @@ const LeafletMapShell = dynamic(
   { ssr: false }
 );
 
-const OysterFilterRace = dynamic(
-  () => import('@/components/OysterFilterRace').then(m => m.OysterFilterRace),
-  { ssr: false }
-);
-
 const WaterTowerDefense = dynamic(
   () => import('@/components/WaterTowerDefense').then(m => m.WaterTowerDefense),
   { ssr: false }
@@ -587,6 +582,9 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
             >
               <Image src="/Logo_Pearl_as_Headline.JPG" alt="Project Pearl Logo" fill className="object-contain object-left" priority />
             </div>
+            <div className="relative w-10 h-10 flex-shrink-0">
+              <Image src="/Mascot.png" alt="PEARL Bubble Mascot" width={40} height={40} className="rounded-full object-cover" />
+            </div>
             <div>
               <div className="text-xl font-semibold text-slate-800">{stateName} PEARL Explorer</div>
               <div className="text-sm text-slate-600">
@@ -736,6 +734,9 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
             </div>
           );
         })()}
+
+        {/* ── AI INSIGHTS — near top like all command centers ── */}
+        <AIInsightsEngine key={stateAbbr} role="K12" stateAbbr={stateAbbr} regionData={regionData as any} />
 
         {/* ── STATEWIDE ALERT FEED — above map ── */}
         {(() => {
@@ -2345,18 +2346,23 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
         {/* ── PEARL PILOT RESULTS — always visible, student mode only ── */}
         {!isTeacher && (
           <div className="my-8 rounded-2xl border-2 border-sky-200 bg-gradient-to-br from-sky-50 to-white shadow-lg p-6">
-            <div className="text-center mb-5">
-              <div className="text-lg font-bold text-sky-900">📊 Real Results from Our First Pilot</div>
-              <p className="text-sm text-sky-700 mt-1">These are real results from PEARL biofiltration systems — cleaning water using nature-inspired technology!</p>
-            </div>
-            <div className="flex flex-col gap-6">
-              <div>
-                <Image src="/tss-results-kid.jpg" alt="95% drop in Total Suspended Solids after PEARL filtration" width={600} height={400} className="w-full rounded-2xl shadow-lg object-cover" />
-                <p className="text-xs text-sky-700 mt-2 text-center font-medium">95% drop in sediment (TSS)</p>
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <Image src="/Mascot.png" alt="PEARL Bubble Mascot" width={64} height={64} className="flex-shrink-0" />
+              <div className="text-center">
+                <div className="text-lg font-bold text-sky-900">Real Results from Our First Pilot!</div>
+                <p className="text-sm text-sky-700 mt-1">PEARL cleaned real water in Milton, Florida using nature-inspired technology</p>
               </div>
-              <div>
-                <Image src="/ecoli-results-kid.jpg" alt="93.8% drop in E. coli after PEARL filtration" width={600} height={400} className="w-full rounded-2xl shadow-lg object-cover" />
-                <p className="text-xs text-sky-700 mt-2 text-center font-medium">93.8% drop in E. coli bacteria</p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="rounded-xl bg-green-50 border border-green-200 p-4 text-center">
+                <div className="text-3xl font-bold text-green-700 font-mono">95%</div>
+                <div className="text-xs font-semibold text-green-600 mt-1">Sediment Removed (TSS)</div>
+                <div className="text-[10px] text-green-500 mt-0.5">Dirty water in → clean water out!</div>
+              </div>
+              <div className="rounded-xl bg-blue-50 border border-blue-200 p-4 text-center">
+                <div className="text-3xl font-bold text-blue-700 font-mono">93.8%</div>
+                <div className="text-xs font-semibold text-blue-600 mt-1">E. coli Bacteria Removed</div>
+                <div className="text-[10px] text-blue-500 mt-0.5">Oysters + filters = super clean!</div>
               </div>
             </div>
           </div>
@@ -2365,7 +2371,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
         {/* K12 Educational Hub — always visible */}
         <K12EducationalHub data={displayData} isTeacher={isTeacher} />
 
-        {/* ── STORMWATER IMAGE — always visible, student mode only ── */}
+        {/* ── STORMWATER IMAGE — student mode only ── */}
         {!isTeacher && (
           <div className="my-6">
             <Image src="/stormwater.jpg" alt="Stormwater runoff carrying pollutants into a local waterway" width={1200} height={600} className="w-full rounded-2xl shadow-lg object-cover" />
@@ -2378,17 +2384,16 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
 
         {/* ── WATER QUALITY GAMES ── */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2 px-1">
-            <span className="text-lg">🎮</span>
-            <h2 className="text-lg font-bold text-slate-800">Water Quality Games</h2>
-            <span className="text-xs text-slate-400">— Learn by playing!</span>
+          <div className="flex items-center gap-3 px-1">
+            <Image src="/Mascot.png" alt="PEARL Mascot" width={36} height={36} />
+            <div>
+              <h2 className="text-lg font-bold text-slate-800">Water Quality Games</h2>
+              <span className="text-xs text-slate-400">Learn by playing — can you save the bay?</span>
+            </div>
           </div>
-          <OysterFilterRace />
           <WaterTowerDefense />
         </div>
 
-        {/* ── AI INSIGHTS ── */}
-        <AIInsightsEngine key={stateAbbr} role="K12" stateAbbr={stateAbbr} regionData={regionData as any} />
 
         {/* ── STATEWIDE COMPONENTS — shown when a waterbody is selected AND mock data is available ── */}
         {activeDetailId && displayData && regionMockData && (
@@ -2794,17 +2799,6 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
           )}
         </div>
 
-        {/* ── SUCCESS STORY — always visible, student mode only ── */}
-        {!isTeacher && (
-          <div className="my-8 rounded-2xl border-2 border-green-200 bg-gradient-to-br from-green-50 to-white shadow-lg overflow-hidden">
-            <Image src="/happy-neighbors.jpg" alt="Community members celebrating a successful water cleanup project" width={1200} height={600} className="w-full rounded-2xl shadow-lg object-cover" />
-            <div className="p-5">
-              <div className="text-base font-bold text-green-900 mb-1">🌟 Success Story — Communities Making a Difference</div>
-              <p className="text-sm text-green-800 leading-relaxed">When communities work together to protect their waterways, everyone benefits — cleaner water, healthier wildlife, and happier neighbors!</p>
-            </div>
-          </div>
-        )}
-
         {/* ── FIELD REPORT EXPORT ── */}
         <div id="section-fieldreport" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
           <button onClick={() => toggleCollapse('fieldreport')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
@@ -2942,6 +2936,14 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                 userRole="K12"
               />
             )}
+          </div>
+        )}
+
+        {/* ── GOODBYE IMAGE ── */}
+        {!isTeacher && (
+          <div className="my-6">
+            <Image src="/happy-neighbors.jpg" alt="Community members celebrating a successful water cleanup project" width={1200} height={600} className="w-full rounded-2xl shadow-lg object-cover" />
+            <p className="text-xs text-slate-400 mt-2 text-center">Together we can make a difference — every drop counts!</p>
           </div>
         )}
 
