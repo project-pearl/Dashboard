@@ -1,9 +1,14 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from 'react-simple-maps';
-import { feature } from 'topojson-client';
-import statesTopo from 'us-atlas/states-10m.json';
+import { GeoJSON, CircleMarker, Tooltip } from 'react-leaflet';
+import dynamic from 'next/dynamic';
+import { getStatesGeoJSON, geoToAbbr, STATE_GEO_LEAFLET, STATE_NAMES as _SN } from '@/lib/leafletMapUtils';
+
+const LeafletMapShell = dynamic(
+  () => import('@/components/LeafletMapShell').then(m => m.LeafletMapShell),
+  { ssr: false }
+);
 import Image from 'next/image';
 import { ArrowRight, ExternalLink, Droplets, AlertTriangle, ShieldCheck, TrendingDown, X } from 'lucide-react';
 
@@ -11,60 +16,7 @@ import { ArrowRight, ExternalLink, Droplets, AlertTriangle, ShieldCheck, Trendin
    CONSTANTS
    ═══════════════════════════════════════════════════════════════════════════ */
 
-const STATE_NAMES: Record<string, string> = {
-  AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',
-  CT:'Connecticut',DE:'Delaware',DC:'District of Columbia',FL:'Florida',GA:'Georgia',
-  HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',
-  LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',
-  MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',
-  NJ:'New Jersey',NM:'New Mexico',NY:'New York',NC:'North Carolina',ND:'North Dakota',
-  OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',
-  SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',
-  WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming',
-};
-
-const FIPS_TO_ABBR: Record<string, string> = {
-  '01':'AL','02':'AK','04':'AZ','05':'AR','06':'CA','08':'CO','09':'CT','10':'DE','11':'DC',
-  '12':'FL','13':'GA','15':'HI','16':'ID','17':'IL','18':'IN','19':'IA','20':'KS','21':'KY',
-  '22':'LA','23':'ME','24':'MD','25':'MA','26':'MI','27':'MN','28':'MS','29':'MO','30':'MT',
-  '31':'NE','32':'NV','33':'NH','34':'NJ','35':'NM','36':'NY','37':'NC','38':'ND','39':'OH',
-  '40':'OK','41':'OR','42':'PA','44':'RI','45':'SC','46':'SD','47':'TN','48':'TX','49':'UT',
-  '50':'VT','51':'VA','53':'WA','54':'WV','55':'WI','56':'WY',
-};
-
-const NAME_TO_ABBR: Record<string, string> = Object.entries(STATE_NAMES).reduce(
-  (acc, [abbr, name]) => { acc[name] = abbr; return acc; },
-  {} as Record<string, string>,
-);
-
-const STATE_GEO: Record<string, { center: [number, number]; scale: number }> = {
-  AL:{center:[-86.8,32.8],scale:4500},AK:{center:[-153,64],scale:900},
-  AZ:{center:[-111.7,34.2],scale:4000},AR:{center:[-92.4,34.8],scale:5000},
-  CA:{center:[-119.5,37.5],scale:2800},CO:{center:[-105.5,39.0],scale:4000},
-  CT:{center:[-72.7,41.6],scale:12000},DE:{center:[-75.5,39.0],scale:14000},
-  DC:{center:[-77.02,38.9],scale:90000},FL:{center:[-82.5,28.5],scale:3200},
-  GA:{center:[-83.5,32.7],scale:4000},HI:{center:[-157,20.5],scale:5000},
-  ID:{center:[-114.5,44.5],scale:3200},IL:{center:[-89.2,40.0],scale:3800},
-  IN:{center:[-86.3,39.8],scale:5000},IA:{center:[-93.5,42.0],scale:4500},
-  KS:{center:[-98.5,38.5],scale:4200},KY:{center:[-85.3,37.8],scale:4800},
-  LA:{center:[-92.0,31.0],scale:4500},ME:{center:[-69.0,45.5],scale:4500},
-  MD:{center:[-77.0,39.0],scale:7500},MA:{center:[-71.8,42.3],scale:9000},
-  MI:{center:[-85.5,44.0],scale:3200},MN:{center:[-94.5,46.3],scale:3200},
-  MS:{center:[-89.7,32.7],scale:4500},MO:{center:[-92.5,38.5],scale:4000},
-  MT:{center:[-109.6,47.0],scale:3200},NE:{center:[-99.8,41.5],scale:3800},
-  NV:{center:[-117.0,39.5],scale:3200},NH:{center:[-71.6,43.8],scale:7500},
-  NJ:{center:[-74.7,40.1],scale:9000},NM:{center:[-106.0,34.5],scale:3800},
-  NY:{center:[-75.5,42.5],scale:4000},NC:{center:[-79.5,35.5],scale:4500},
-  ND:{center:[-100.5,47.5],scale:4500},OH:{center:[-82.8,40.2],scale:5000},
-  OK:{center:[-97.5,35.5],scale:4200},OR:{center:[-120.5,44.0],scale:3500},
-  PA:{center:[-77.6,41.0],scale:5000},RI:{center:[-71.5,41.7],scale:22000},
-  SC:{center:[-80.9,33.8],scale:5500},SD:{center:[-100.2,44.5],scale:4200},
-  TN:{center:[-86.3,35.8],scale:4800},TX:{center:[-99.5,31.5],scale:2500},
-  UT:{center:[-111.7,39.5],scale:3800},VT:{center:[-72.6,44.0],scale:7500},
-  VA:{center:[-79.5,37.8],scale:4500},WA:{center:[-120.5,47.5],scale:4000},
-  WV:{center:[-80.6,38.6],scale:6000},WI:{center:[-89.8,44.5],scale:3800},
-  WY:{center:[-107.5,43.0],scale:4000},
-};
+const STATE_NAMES = _SN;
 
 const CAUSE_EMOJI: Record<string, string> = {
   'PATHOGENS': '🦠', 'NUTRIENTS': '🧪', 'NITROGEN (TOTAL)': '🧪',
@@ -208,23 +160,6 @@ interface CacheResponse {
   states: Record<string, StateSummary>;
 }
 
-/* ═══ GEO HELPERS ═══ */
-
-interface GeoFeature {
-  id: string;
-  properties?: { name?: string };
-  rsmKey?: string;
-}
-
-function geoToAbbr(g: GeoFeature): string | undefined {
-  if (g.id) {
-    const fips = String(g.id).padStart(2, '0');
-    if (FIPS_TO_ABBR[fips]) return FIPS_TO_ABBR[fips];
-  }
-  if (g.properties?.name && NAME_TO_ABBR[g.properties.name]) return NAME_TO_ABBR[g.properties.name];
-  return undefined;
-}
-
 /* ═══ ANIMATED COUNTER ═══ */
 
 function Counter({ target, suffix = '', duration = 2000 }: {
@@ -290,12 +225,9 @@ export default function WaterQualityExplorer() {
   const [aiLoading, setAiLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [selectedMarker, setSelectedMarker] = useState<CachedWaterbody | null>(null);
-  const [mapZoom, setMapZoom] = useState(1);
-  const [mapCenter, setMapCenter] = useState<[number, number]>([0, 0]);
-
-  /* ─── Topo ─── */
-  const topo = useMemo(() => {
-    try { return feature(statesTopo as any, (statesTopo as any).objects.states) as any; }
+  /* ─── GeoJSON ─── */
+  const geoData = useMemo(() => {
+    try { return getStatesGeoJSON() as any; }
     catch { return null; }
   }, []);
 
@@ -390,10 +322,6 @@ export default function WaterQualityExplorer() {
   const handleStateSelect = useCallback((abbr: string) => {
     setSelectedState(abbr);
     setSelectedMarker(null);
-    setMapZoom(1);
-    if (abbr && STATE_GEO[abbr]) {
-      setMapCenter(STATE_GEO[abbr].center);
-    }
     if (abbr && nationalCache?.states?.[abbr]) {
       fetchAiInsights(abbr, nationalCache.states[abbr]);
     } else {
@@ -617,113 +545,75 @@ export default function WaterQualityExplorer() {
             <div className="h-[300px] sm:h-[400px] lg:h-[500px]">
               {!selectedState ? (
                 /* ─── National view ─── */
-                <ComposableMap
-                  projection="geoAlbersUsa"
-                  projectionConfig={{ scale: 1000 }}
-                  width={800}
-                  height={500}
-                  style={{ width: '100%', height: '100%' }}
+                <LeafletMapShell center={[39.8, -98.5]} zoom={4} maxZoom={8} darkMode height="100%" showZoomControls={false}>
+                  <GeoJSON
+                    data={geoData}
+                    style={(feature: any) => {
+                      const abbr = geoToAbbr(feature as any);
+                      const sg = abbr ? stateGrades[abbr] : undefined;
+                      const fillColor = sg && sg.score >= 0 ? gradeColorFill(sg.score) : '#334155';
+                      return { fillColor, fillOpacity: 0.8, color: '#1e293b', weight: 0.5 };
+                    }}
+                    onEachFeature={(feature: any, layer: any) => {
+                      const abbr = geoToAbbr(feature as any);
+                      if (!abbr) return;
+                      layer.on('click', () => handleStateSelect(abbr));
+                      layer.on('mouseover', () => layer.setStyle({ color: '#06b6d4', weight: 1.5 }));
+                      layer.on('mouseout', () => layer.setStyle({ color: '#1e293b', weight: 0.5 }));
+                    }}
+                  />
+                </LeafletMapShell>
+              ) : STATE_GEO_LEAFLET[selectedState] ? (
+                <LeafletMapShell
+                  center={STATE_GEO_LEAFLET[selectedState].center}
+                  zoom={STATE_GEO_LEAFLET[selectedState].zoom}
+                  maxZoom={12}
+                  darkMode
+                  height="100%"
+                  mapKey={selectedState}
                 >
-                  <Geographies geography={topo}>
-                    {({ geographies }: { geographies: GeoFeature[] }) =>
-                      geographies.map((g) => {
-                        const abbr = geoToAbbr(g);
-                        const sg = abbr ? stateGrades[abbr] : undefined;
-                        const fill = sg && sg.score >= 0 ? gradeColorFill(sg.score) : '#334155';
-                        return (
-                          <Geography
-                            key={g.rsmKey ?? g.id}
-                            geography={g as any}
-                            onClick={() => abbr && handleStateSelect(abbr)}
-                            style={{
-                              default: { fill, outline: 'none', stroke: '#1e293b', strokeWidth: 0.5, cursor: 'pointer' },
-                              hover: { fill, outline: 'none', stroke: '#06b6d4', strokeWidth: 1.5, cursor: 'pointer' },
-                              pressed: { fill, outline: 'none' },
-                            }}
-                          />
-                        );
-                      })
-                    }
-                  </Geographies>
-                </ComposableMap>
-              ) : STATE_GEO[selectedState] ? (
-                /* ─── State view ─── */
-                <ComposableMap
-                  projection="geoMercator"
-                  projectionConfig={{ center: STATE_GEO[selectedState].center, scale: STATE_GEO[selectedState].scale }}
-                  width={800}
-                  height={500}
-                  style={{ width: '100%', height: '100%' }}
-                >
-                  <ZoomableGroup
-                    zoom={mapZoom}
-                    center={mapCenter}
-                    onMoveEnd={({ coordinates, zoom }: { coordinates: [number, number]; zoom: number }) => { setMapCenter(coordinates); setMapZoom(zoom); }}
-                    minZoom={1}
-                    maxZoom={12}
-                  >
-                    <Geographies geography={topo}>
-                      {({ geographies }: { geographies: GeoFeature[] }) =>
-                        geographies.map((g) => {
-                          const abbr = geoToAbbr(g);
-                          const isSelected = abbr === selectedState;
-                          return (
-                            <Geography
-                              key={g.rsmKey ?? g.id}
-                              geography={g as any}
-                              style={{
-                                default: {
-                                  fill: isSelected ? '#164e63' : '#1e293b',
-                                  stroke: isSelected ? '#06b6d4' : '#334155',
-                                  strokeWidth: (isSelected ? 1.5 : 0.3) / mapZoom,
-                                  outline: 'none',
-                                },
-                                hover: { fill: isSelected ? '#164e63' : '#1e293b', stroke: '#06b6d4', strokeWidth: 1 / mapZoom, outline: 'none' },
-                                pressed: { fill: isSelected ? '#164e63' : '#1e293b', outline: 'none' },
-                              }}
-                            />
-                          );
-                        })
-                      }
-                    </Geographies>
-
-                    {/* Waterbody markers — sample up to 200 for performance */}
-                    {stateData?.waterbodies?.slice(0, 200).map((wb, i) => {
-                      // Distribute markers across state area with deterministic pseudo-random offsets
-                      const geo = STATE_GEO[selectedState];
-                      const scaleOffset = 5000 / geo.scale;
-                      const hash = (wb.id.charCodeAt(0) * 31 + wb.id.charCodeAt(Math.min(1, wb.id.length - 1)) * 17 + i) % 1000;
-                      const lon = geo.center[0] + (hash / 1000 - 0.5) * scaleOffset * 4;
-                      const lat = geo.center[1] + ((hash * 7 % 1000) / 1000 - 0.5) * scaleOffset * 3;
-                      const markerColor = wb.alertLevel === 'high' ? '#ef4444' : wb.alertLevel === 'medium' ? '#f59e0b' : wb.alertLevel === 'low' ? '#3b82f6' : '#22c55e';
-                      const isActive = selectedMarker?.id === wb.id;
-
-                      return (
-                        <Marker key={wb.id} coordinates={[lon, lat]}>
-                          <circle
-                            r={(isActive ? 6 : 3.5) / mapZoom}
-                            fill={markerColor}
-                            stroke={isActive ? '#ffffff' : 'rgba(255,255,255,0.4)'}
-                            strokeWidth={(isActive ? 2 : 0.8) / mapZoom}
-                            style={{ cursor: 'pointer', transition: 'r 0.2s' }}
-                            onClick={() => setSelectedMarker(isActive ? null : wb)}
-                          />
-                        </Marker>
-                      );
-                    })}
-                  </ZoomableGroup>
-                </ComposableMap>
+                  <GeoJSON
+                    key={selectedState}
+                    data={geoData}
+                    style={(feature: any) => {
+                      const abbr = geoToAbbr(feature as any);
+                      const isSelected = abbr === selectedState;
+                      return {
+                        fillColor: isSelected ? '#164e63' : '#1e293b',
+                        fillOpacity: 1,
+                        color: isSelected ? '#06b6d4' : '#334155',
+                        weight: isSelected ? 1.5 : 0.3,
+                      };
+                    }}
+                  />
+                  {/* Waterbody markers — sample up to 200 for performance */}
+                  {stateData?.waterbodies?.slice(0, 200).map((wb, i) => {
+                    const geo = STATE_GEO_LEAFLET[selectedState];
+                    const latSpread = 3;
+                    const lonSpread = 4;
+                    const hash = (wb.id.charCodeAt(0) * 31 + wb.id.charCodeAt(Math.min(1, wb.id.length - 1)) * 17 + i) % 1000;
+                    const lat = geo.center[0] + (hash / 1000 - 0.5) * latSpread;
+                    const lon = geo.center[1] + ((hash * 7 % 1000) / 1000 - 0.5) * lonSpread;
+                    const markerColor = wb.alertLevel === 'high' ? '#ef4444' : wb.alertLevel === 'medium' ? '#f59e0b' : wb.alertLevel === 'low' ? '#3b82f6' : '#22c55e';
+                    const isActive = selectedMarker?.id === wb.id;
+                    return (
+                      <CircleMarker
+                        key={wb.id}
+                        center={[lat, lon]}
+                        radius={isActive ? 6 : 3.5}
+                        pathOptions={{
+                          fillColor: markerColor,
+                          color: isActive ? '#ffffff' : 'rgba(255,255,255,0.4)',
+                          weight: isActive ? 2 : 0.8,
+                          fillOpacity: 0.9,
+                        }}
+                        eventHandlers={{ click: () => setSelectedMarker(isActive ? null : wb) }}
+                      />
+                    );
+                  })}
+                </LeafletMapShell>
               ) : null}
             </div>
-
-            {/* Zoom controls */}
-            {selectedState && (
-              <div className="absolute top-3 right-3 z-10 flex flex-col gap-1">
-                <button onClick={() => setMapZoom(z => Math.min(z * 1.5, 12))} className="w-8 h-8 rounded-lg bg-slate-800/80 backdrop-blur border border-white/10 flex items-center justify-center text-white hover:bg-slate-700 text-sm font-bold">+</button>
-                <button onClick={() => setMapZoom(z => Math.max(z / 1.5, 1))} className="w-8 h-8 rounded-lg bg-slate-800/80 backdrop-blur border border-white/10 flex items-center justify-center text-white hover:bg-slate-700 text-sm font-bold">{'\u2212'}</button>
-                <button onClick={() => { setMapZoom(1); if (STATE_GEO[selectedState]) setMapCenter(STATE_GEO[selectedState].center); }} className="w-8 h-8 rounded-lg bg-slate-800/80 backdrop-blur border border-white/10 flex items-center justify-center text-slate-400 hover:bg-slate-700 text-[10px] font-medium">{'\u2302'}</button>
-              </div>
-            )}
 
             {/* Map legend */}
             <div className="absolute bottom-3 left-3 z-10 flex items-center gap-3 px-4 py-2 rounded-lg bg-slate-800/80 backdrop-blur border border-white/10 text-[11px] text-slate-300">
