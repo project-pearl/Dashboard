@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -24,6 +24,8 @@ import { useWaterData, DATA_SOURCES } from '@/lib/useWaterData';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
+import { LayoutEditor } from './LayoutEditor';
+import { DraggableSection } from './DraggableSection';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -2211,6 +2213,23 @@ export function NationalCommandCenter(props: Props) {
         </div>
 
 
+        {/* ── LAYOUT EDITOR WRAPPER ── */}
+        <LayoutEditor ccKey="NCC">
+        {({ sections, isEditMode, onToggleVisibility, onToggleCollapse, collapsedSections }) => {
+          const isSectionOpen = (id: string) => !collapsedSections[id];
+          return (<>
+          <div className={`space-y-6 ${isEditMode ? 'pl-12' : ''}`}>
+
+        {sections.filter(s => s.visible || isEditMode).map(section => {
+          const DS = (children: React.ReactNode) => (
+            <DraggableSection key={section.id} id={section.id} label={section.label}
+              isEditMode={isEditMode} isVisible={section.visible} onToggleVisibility={onToggleVisibility}>
+              {children}
+            </DraggableSection>
+          );
+          switch (section.id) {
+
+        case 'usmap': return DS(<>
         {/* ── MONITORING NETWORK MAP ──────────────────────────────── */}
 
         <div ref={mapSectionRef} className="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -4051,8 +4070,9 @@ export function NationalCommandCenter(props: Props) {
           );
         })()}
 
-        {/* ── NATIONAL STATUS AT A GLANCE ─────────────────────────── */}
+        </>); {/* end usmap */}
 
+        case 'impairmentprofile': return DS(<>
         {/* ── TOP STRIP — lens controlled, tiles vary by view ────── */}
         {lens.showTopStrip && topStrip && (() => {
           const s = topStrip;
@@ -4097,17 +4117,6 @@ export function NationalCommandCenter(props: Props) {
             </div>
           );
         })()}
-
-        {/* ── National AI Water Intelligence — Claude-powered, ATTAINS-fed ── */}
-        {lens.showAIInsights && (
-          <AIInsightsEngine
-            key={`national-${attainsAggregation.totalAssessed}`}
-            role="Federal"
-            stateAbbr="US"
-            regionData={regionData as any}
-            nationalData={nationalAIData}
-          />
-        )}
 
         {/* ── National Impairment Cause Breakdown — from ATTAINS category + causes ── */}
         {lens.showTopStrip && attainsAggregation.totalAssessed > 0 && (
@@ -4205,6 +4214,20 @@ export function NationalCommandCenter(props: Props) {
           </Card>
         )}
 
+        </>); {/* end impairmentprofile */}
+
+        case 'aiinsights': return DS(<>
+        {/* ── National AI Water Intelligence — Claude-powered, ATTAINS-fed ── */}
+        {lens.showAIInsights && (
+          <AIInsightsEngine
+            key={`national-${attainsAggregation.totalAssessed}`}
+            role="Federal"
+            stateAbbr="US"
+            regionData={regionData as any}
+            nationalData={nationalAIData}
+          />
+        )}
+
         {/* ── AI-Powered National Intelligence — lens controlled, data-driven ── */}
         {lens.showAIInsights && aiInsights.length > 0 && (
           <Card id="section-aiinsights" className="border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-white">
@@ -4254,6 +4277,9 @@ export function NationalCommandCenter(props: Props) {
           </Card>
         )}
 
+        </>); {/* end aiinsights */}
+
+        case 'networkhealth': return DS(<>
         {/* Network Health Score — lens controlled */}
         {lens.showNetworkHealth && (
         <Card id="section-networkhealth" className={`border-2 ${
@@ -4398,6 +4424,9 @@ export function NationalCommandCenter(props: Props) {
         </Card>
         )}
 
+        </>); {/* end networkhealth */}
+
+        case 'nationalimpact': return DS(<>
         {/* National Impact Counter — lens controlled */}
         {lens.showNationalImpact && (
         <Card id="section-nationalimpact" className="border-2 border-cyan-200 bg-gradient-to-r from-cyan-50 via-white to-blue-50 overflow-hidden">
@@ -4504,10 +4533,10 @@ export function NationalCommandCenter(props: Props) {
         </Card>
         )}
 
-        {/* ── PRIORITIES — Action queue + coverage gaps (lens controlled) ────── */}
-        {(lens.showPriorityQueue || lens.showCoverageGaps) && (
-          <div className={`grid grid-cols-1 gap-4 ${lens.showPriorityQueue && lens.showCoverageGaps ? 'lg:grid-cols-2' : ''}`}>
-            {/* Panel A: Priority Action Queue */}
+        </>); {/* end nationalimpact */}
+
+        case 'priorityqueue': return DS(<>
+        {/* Panel A: Priority Action Queue */}
             {lens.showPriorityQueue && (
             <Card id="section-priorityqueue" className="border-2 border-red-200">
               <CardHeader className="pb-2">
@@ -4561,6 +4590,9 @@ export function NationalCommandCenter(props: Props) {
             </Card>
             )}
 
+        </>); {/* end priorityqueue */}
+
+        case 'coveragegaps': return DS(<>
             {/* Panel B: State Coverage Gaps */}
             {lens.showCoverageGaps && (
             <Card id="section-coveragegaps" className="border-2 border-amber-200">
@@ -4626,12 +4658,9 @@ export function NationalCommandCenter(props: Props) {
               </CardContent>
             </Card>
             )}
-          </div>
-        )}
+        </>); {/* end coveragegaps */}
 
-
-        {/* ── TIER 3: INTELLIGENCE & SITUATION ──────────────────── */}
-
+        case 'situation': return DS(<>
         {/* Time Range + PEARL Impact Toggle — lens controlled */}
         {lens.showTimeRange && (
         <div className="flex flex-wrap items-center gap-3 p-3 rounded-lg border border-slate-200 bg-white">
@@ -4717,6 +4746,9 @@ export function NationalCommandCenter(props: Props) {
         </Card>
         )}
 
+        </>); {/* end situation */}
+
+        case 'top10': return DS(<>
         {/* Feature 3: Hotspots Rankings — lens controlled, starts collapsed */}
         {lens.showHotspots && (
         <div id="section-top10" className="rounded-xl border border-slate-200 bg-white overflow-hidden">
@@ -4819,8 +4851,9 @@ export function NationalCommandCenter(props: Props) {
         </div>
         )}
 
-        {/* ── TIER 4: OPERATIONAL CONTROLS & DEEP DIVE ──────────── */}
+        </>); {/* end top10 */}
 
+        case 'statebystatesummary': return DS(<>
         {/* Feature 2: State Rollup Table — collapsible when lens says so */}
         <>
         {lens.collapseStateTable && (
@@ -4985,6 +5018,9 @@ export function NationalCommandCenter(props: Props) {
         )}
         </>
 
+        </>); {/* end statebystatesummary */}
+
+        case 'sla': return DS(<>
         {/* Feature 11: SLA/Compliance Tracking — lens controlled */}
         {lens.showSLA && slaMetrics.total > 0 && (
           <Card id="section-sla" className="border-2 border-purple-200">
@@ -5066,6 +5102,17 @@ export function NationalCommandCenter(props: Props) {
           </Card>
         )}
 
+
+        </>); {/* end sla */}
+
+        default: return null;
+          } {/* end switch */}
+        })} {/* end sections.map */}
+
+          </div> {/* end space-y-6 isEditMode wrapper */}
+          </>);
+        }} {/* end LayoutEditor render prop */}
+        </LayoutEditor>
 
         {/* ── DISCLAIMER FOOTER ── */}
         <PlatformDisclaimer />

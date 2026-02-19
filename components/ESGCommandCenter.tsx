@@ -35,6 +35,8 @@ import { BrandedPDFGenerator } from '@/lib/brandedPdfGenerator';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
+import { LayoutEditor } from './LayoutEditor';
+import { DraggableSection } from './DraggableSection';
 
 const DataExportHub = dynamic(
   () => import('@/components/DataExportHub').then((mod) => mod.DataExportHub),
@@ -395,10 +397,6 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterLevel, setFilterLevel] = useState<'all' | 'high' | 'medium' | 'low'>('all');
 
-  // ── Collapse state ──
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
-  const toggleCollapse = (id: string) => setCollapsedSections(prev => ({ ...prev, [id]: !prev[id] }));
-  const isSectionOpen = (id: string) => !collapsedSections[id];
 
   // ── Expanded section state (for cards) ──
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
@@ -836,7 +834,22 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
           <div className="text-2xl font-bold text-emerald-700 text-center pt-3">{companyName}</div>
         </div>
 
-        {/* ── EXECUTIVE SUMMARY BANNER ── */}
+        <LayoutEditor ccKey="ESG">
+        {({ sections, isEditMode, onToggleVisibility, onToggleCollapse, collapsedSections }) => {
+          const isSectionOpen = (id: string) => !collapsedSections[id];
+          return (<>
+          <div className={`space-y-4 ${isEditMode ? 'pl-12' : ''}`}>
+
+        {sections.filter(s => s.visible || isEditMode).map(section => {
+          const DS = (children: React.ReactNode) => (
+            <DraggableSection key={section.id} id={section.id} label={section.label}
+              isEditMode={isEditMode} isVisible={section.visible} onToggleVisibility={onToggleVisibility}>
+              {children}
+            </DraggableSection>
+          );
+          switch (section.id) {
+
+            case 'summary': return DS(
         <div className="rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-emerald-50 p-4 shadow-sm">
           <div className="flex items-center gap-2 mb-2">
             <Award className="h-4 w-4 text-emerald-600" />
@@ -904,8 +917,9 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
             </div>
           </div>
         </div>
+            );
 
-        {/* ── PORTFOLIO SCORECARD ── */}
+            case 'kpis': return DS(
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
           <Card className="border-2 border-emerald-200 bg-gradient-to-br from-emerald-50/50 to-white">
             <CardContent className="p-3 text-center">
@@ -954,7 +968,10 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
           </Card>
         </div>
 
-        {/* ── MAP + FACILITY LIST ── */}
+            );
+
+            case 'map-grid': return DS(
+        <>
         {lens.showMap && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* LEFT: Map (2/3) */}
@@ -1178,11 +1195,14 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
 
         {/* ── AI INSIGHTS ── */}
         <AIInsightsEngine key="US" role="Corporate" stateAbbr="US" regionData={facilitiesData as any} />
+        </>
+            );
 
-        {/* ── ENVIRONMENTAL IMPACT SUMMARY ── */}
+            case 'impact': return DS(
+        <>
         {lens.showImpact && (
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <button onClick={() => toggleCollapse('impact')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+            <button onClick={() => onToggleCollapse('impact')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
               <span className="text-sm font-bold text-slate-800">Environmental Impact Summary</span>
               <span className="flex items-center gap-1">
                 {isSectionOpen('impact') && <span onClick={(e) => { e.stopPropagation(); printSection('section-impact', 'Environmental Impact Summary'); }} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
@@ -1274,12 +1294,14 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
             )}
           </div>
         )}
+        </>
+            );
 
-        {/* ── CHESAPEAKE BAY CONTRIBUTION ── */}
-        {/* Only renders when portfolio has facilities in CB watershed states */}
+            case 'chesbay': return DS(
+        <>
         {lens.showImpact && portfolioScores.cbFacs > 0 && (
           <div className="rounded-xl border border-blue-200 bg-white shadow-sm overflow-hidden">
-            <button onClick={() => toggleCollapse('chesbay')} className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 transition-colors">
+            <button onClick={() => onToggleCollapse('chesbay')} className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 transition-colors">
               <span className="text-sm font-bold text-blue-900">Chesapeake Bay Watershed Contribution</span>
               <span className="flex items-center gap-1">
                 {isSectionOpen('chesbay') && <span onClick={(e) => { e.stopPropagation(); printSection('section-chesbay', 'Chesapeake Bay Watershed Contribution'); }} className="p-1 rounded hover:bg-blue-200 text-blue-400 hover:text-blue-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
@@ -1377,11 +1399,14 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
             )}
           </div>
         )}
+        </>
+            );
 
-        {/* ── CORPORATE SUSTAINABILITY DASHBOARD ── */}
+            case 'sustainability': return DS(
+        <>
         {lens.showImpact && (
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <button onClick={() => toggleCollapse('sustainability')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+            <button onClick={() => onToggleCollapse('sustainability')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
               <span className="text-sm font-bold text-slate-800">Corporate Sustainability Dashboard</span>
               <span className="flex items-center gap-1">
                 {isSectionOpen('sustainability') && <span onClick={(e) => { e.stopPropagation(); printSection('section-sustainability', 'Corporate Sustainability Dashboard'); }} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
@@ -1426,10 +1451,14 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
           </div>
         )}
 
-        {/* ── DISCLOSURE & REPORTING READINESS ── */}
+        </>
+            );
+
+            case 'disclosure': return DS(
+        <>
         {lens.showDisclosure && (
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <button onClick={() => toggleCollapse('disclosure')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+            <button onClick={() => onToggleCollapse('disclosure')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
               <span className="text-sm font-bold text-slate-800">Disclosure & Reporting Readiness</span>
               <span className="flex items-center gap-1">
                 {isSectionOpen('disclosure') && <span onClick={(e) => { e.stopPropagation(); printSection('section-disclosure', 'Disclosure & Reporting Readiness'); }} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
@@ -1696,10 +1725,14 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
           );
         })()}
 
-        {/* ── SUPPLY CHAIN WATER RISK ── */}
+        </>
+            );
+
+            case 'supplychain': return DS(
+        <>
         {lens.showRisk && (
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <button onClick={() => toggleCollapse('supplychain')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+            <button onClick={() => onToggleCollapse('supplychain')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
               <span className="text-sm font-bold text-slate-800">Supply Chain Water Risk</span>
               <span className="flex items-center gap-1">
                 {isSectionOpen('supplychain') && <span onClick={(e) => { e.stopPropagation(); printSection('section-supplychain', 'Supply Chain Water Risk'); }} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
@@ -1763,10 +1796,14 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
           </div>
         )}
 
-        {/* ── ECONOMIC CO-BENEFITS ── */}
+        </>
+            );
+
+            case 'economic': return DS(
+        <>
         {lens.showImpact && (
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <button onClick={() => toggleCollapse('economic')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+            <button onClick={() => onToggleCollapse('economic')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
               <span className="text-sm font-bold text-slate-800">Economic Co-Benefits</span>
               <span className="flex items-center gap-1">
                 {isSectionOpen('economic') && <span onClick={(e) => { e.stopPropagation(); printSection('section-economic', 'Economic Co-Benefits'); }} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
@@ -1818,10 +1855,14 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
           </div>
         )}
 
-        {/* ── SHAREHOLDER REPORTING ── */}
+        </>
+            );
+
+            case 'shareholder': return DS(
+        <>
         {lens.showShareholder && (
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <button onClick={() => toggleCollapse('shareholder')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+            <button onClick={() => onToggleCollapse('shareholder')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
               <span className="text-sm font-bold text-slate-800">Shareholder & Investor Reporting</span>
               <span className="flex items-center gap-1">
                 {isSectionOpen('shareholder') && <span onClick={(e) => { e.stopPropagation(); printSection('section-shareholder', 'Shareholder & Investor Reporting'); }} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
@@ -1875,10 +1916,14 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
           </div>
         )}
 
-        {/* ── INDUSTRY ESG BENCHMARKING ── */}
+        </>
+            );
+
+            case 'benchmark': return DS(
+        <>
         {lens.showBenchmark && (
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <button onClick={() => toggleCollapse('benchmark')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+            <button onClick={() => onToggleCollapse('benchmark')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
               <span className="text-sm font-bold text-slate-800">Industry ESG Benchmarking</span>
               <span className="flex items-center gap-1">
                 {isSectionOpen('benchmark') && <span onClick={(e) => { e.stopPropagation(); printSection('section-benchmark', 'Industry ESG Benchmarking'); }} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
@@ -1917,10 +1962,14 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
           </div>
         )}
 
-        {/* ── REGULATORY COMPLIANCE ── */}
+        </>
+            );
+
+            case 'compliance': return DS(
+        <>
         {lens.showCompliance && (
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <button onClick={() => toggleCollapse('compliance')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+            <button onClick={() => onToggleCollapse('compliance')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
               <span className="text-sm font-bold text-slate-800">Regulatory Compliance Status</span>
               <span className="flex items-center gap-1">
                 {isSectionOpen('compliance') && <span onClick={(e) => { e.stopPropagation(); printSection('section-compliance', 'Regulatory Compliance Status'); }} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
@@ -1960,10 +2009,14 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
           </div>
         )}
 
-        {/* ── BRAND & VALUE TRUST ── */}
+        </>
+            );
+
+            case 'brand': return DS(
+        <>
         {lens.showBrand && (
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <button onClick={() => toggleCollapse('brand')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+            <button onClick={() => onToggleCollapse('brand')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
               <span className="text-sm font-bold text-slate-800">Brand & Value Trust</span>
               <span className="flex items-center gap-1">
                 {isSectionOpen('brand') && <span onClick={(e) => { e.stopPropagation(); printSection('section-brand', 'Brand & Value Trust'); }} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
@@ -2015,6 +2068,55 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
             )}
           </div>
         )}
+
+        </>
+            );
+
+            case 'grants': return DS(
+        <>
+        {lens.showGrants && (
+          <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <button onClick={() => onToggleCollapse('grants')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+              <span className="text-sm font-bold text-slate-800">Grant & Incentive Opportunities</span>
+              <span className="flex items-center gap-1">
+                {isSectionOpen('grants') && <span onClick={(e: React.MouseEvent) => { e.stopPropagation(); printSection('section-grants', 'Grant & Incentive Opportunities'); }} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
+                {isSectionOpen('grants') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+              </span>
+            </button>
+            {isSectionOpen('grants') && (
+              <div id="section-grants" className="p-4">
+                <p className="text-xs text-slate-500 mb-3">
+                  Environmental grants, tax incentives, and sustainability funding that align with your PEARL deployments.
+                  Filtered by facility locations and eligible programs.
+                </p>
+                <div className="space-y-2">
+                  {[
+                    { name: 'EPA Clean Water State Revolving Fund', amount: '$500K-$5M', match: 'High', deadline: 'Rolling' },
+                    { name: 'CWA Section 319 Nonpoint Source', amount: '$100K-$500K', match: 'High', deadline: 'Varies by state' },
+                    { name: 'USDA Conservation Innovation Grants', amount: '$150K-$2M', match: 'Medium', deadline: 'Annual' },
+                    { name: 'State Green Infrastructure Tax Credit', amount: 'Up to 50% of cost', match: 'Medium', deadline: 'Varies' },
+                  ].map(g => (
+                    <div key={g.name} className="flex items-center justify-between p-2 rounded-lg border border-slate-100 hover:bg-slate-50">
+                      <div>
+                        <div className="text-xs font-medium text-slate-800">{g.name}</div>
+                        <div className="text-[10px] text-slate-500">{g.amount} · Deadline: {g.deadline}</div>
+                      </div>
+                      <Badge variant="secondary" className={g.match === 'High' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}>
+                        {g.match} Match
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        </>
+            );
+
+            default: return null;
+          }
+        })}
 
         {/* ── WATER RISK DETAIL (selected facility) ── */}
         {lens.showRisk && selectedFac && (
@@ -2088,10 +2190,10 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
 
         {/* ── DATA EXPORT HUB ── */}
         <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <button onClick={() => toggleCollapse('exporthub')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-            <span className="text-sm font-bold text-slate-800">📦 Data Export Hub</span>
+          <button onClick={() => onToggleCollapse('exporthub')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+            <span className="text-sm font-bold text-slate-800">Data Export Hub</span>
             <span className="flex items-center gap-1">
-              {isSectionOpen('exporthub') && <span onClick={(e) => { e.stopPropagation(); printSection('section-exporthub', 'Data Export Hub'); }} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
+              {isSectionOpen('exporthub') && <span onClick={(e: React.MouseEvent) => { e.stopPropagation(); printSection('section-exporthub', 'Data Export Hub'); }} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
               {isSectionOpen('exporthub') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
             </span>
           </button>
@@ -2102,45 +2204,10 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
           )}
         </div>
 
-        {/* ── GRANT OPPORTUNITIES ── */}
-        {lens.showGrants && (
-          <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <button onClick={() => toggleCollapse('grants')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-              <span className="text-sm font-bold text-slate-800">Grant & Incentive Opportunities</span>
-              <span className="flex items-center gap-1">
-                {isSectionOpen('grants') && <span onClick={(e) => { e.stopPropagation(); printSection('section-grants', 'Grant & Incentive Opportunities'); }} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
-                {isSectionOpen('grants') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
-              </span>
-            </button>
-            {isSectionOpen('grants') && (
-              <div id="section-grants" className="p-4">
-                <p className="text-xs text-slate-500 mb-3">
-                  Environmental grants, tax incentives, and sustainability funding that align with your PEARL deployments.
-                  Filtered by facility locations and eligible programs.
-                </p>
-                {/* TODO: Wire GrantOpportunityMatcher component */}
-                <div className="space-y-2">
-                  {[
-                    { name: 'EPA Clean Water State Revolving Fund', amount: '$500K-$5M', match: 'High', deadline: 'Rolling' },
-                    { name: 'CWA Section 319 Nonpoint Source', amount: '$100K-$500K', match: 'High', deadline: 'Varies by state' },
-                    { name: 'USDA Conservation Innovation Grants', amount: '$150K-$2M', match: 'Medium', deadline: 'Annual' },
-                    { name: 'State Green Infrastructure Tax Credit', amount: 'Up to 50% of cost', match: 'Medium', deadline: 'Varies' },
-                  ].map(g => (
-                    <div key={g.name} className="flex items-center justify-between p-2 rounded-lg border border-slate-100 hover:bg-slate-50">
-                      <div>
-                        <div className="text-xs font-medium text-slate-800">{g.name}</div>
-                        <div className="text-[10px] text-slate-500">{g.amount} · Deadline: {g.deadline}</div>
-                      </div>
-                      <Badge variant="secondary" className={g.match === 'High' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}>
-                        {g.match} Match
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+        </div>
+        </>);
+        }}
+        </LayoutEditor>
 
         {/* ── DISCLAIMER FOOTER ── */}
         <PlatformDisclaimer />

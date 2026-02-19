@@ -30,11 +30,28 @@ interface SelectedWaterbody {
   category: string;
 }
 
+interface NationalData {
+  catCounts: Record<string, number>;
+  totalAssessed: number;
+  totalImpaired: number;
+  cat5: number;
+  cat4a: number;
+  cat4b: number;
+  cat4c: number;
+  tmdlGapPct: number;
+  topCauses: Array<{ cause: string; count: number }>;
+  addressableCount: number;
+  totalCauseInstances: number;
+  addressablePct: number;
+  worstStates?: Array<{ abbr: string; name: string; cat5: number; totalImpaired: number; topCauses: Array<{ cause: string; count: number }> }>;
+}
+
 interface Props {
   role: Role;
   stateAbbr: string;
   selectedWaterbody?: SelectedWaterbody;
   regionData?: Array<{ name: string; alertLevel: string; causes: string[] }>;
+  nationalData?: NationalData;
 }
 
 // ─── Cache ──────────────────────────────────────────────────────────────────
@@ -42,8 +59,8 @@ interface Props {
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
 const insightCache = new Map<string, { insights: Insight[]; timestamp: number }>();
 
-function getCacheKey(role: Role, stateAbbr: string, wb?: SelectedWaterbody): string {
-  return `${role}:${stateAbbr}:${wb?.name || 'none'}`;
+function getCacheKey(role: Role, stateAbbr: string, wb?: SelectedWaterbody, hasNational?: boolean): string {
+  return `${role}:${hasNational ? 'NATIONAL' : stateAbbr}:${wb?.name || 'none'}`;
 }
 
 // ─── Role tone descriptors ──────────────────────────────────────────────────
@@ -77,7 +94,7 @@ const SEVERITY_CONFIG: Record<Severity, { bg: string; text: string; border: stri
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-export function AIInsightsEngine({ role, stateAbbr, selectedWaterbody, regionData }: Props) {
+export function AIInsightsEngine({ role, stateAbbr, selectedWaterbody, regionData, nationalData }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [insights, setInsights] = useState<Insight[]>([]);
@@ -88,7 +105,8 @@ export function AIInsightsEngine({ role, stateAbbr, selectedWaterbody, regionDat
   const fetchInsights = useCallback(async (force = false) => {
     if (fetchingRef.current) return;
     fetchingRef.current = true;
-    const cacheKey = getCacheKey(role, stateAbbr, selectedWaterbody);
+    const isNational = !!nationalData && nationalData.totalAssessed > 0;
+    const cacheKey = getCacheKey(role, stateAbbr, selectedWaterbody, isNational);
 
     // Check cache
     if (!force) {
@@ -115,6 +133,22 @@ export function AIInsightsEngine({ role, stateAbbr, selectedWaterbody, regionDat
         }
       : null;
 
+    // National ATTAINS aggregation (when available)
+    const nationalSummary = isNational ? {
+      totalAssessed: nationalData.totalAssessed,
+      totalImpaired: nationalData.totalImpaired,
+      cat5_noTMDL: nationalData.cat5,
+      cat4a_hasTMDL: nationalData.cat4a,
+      cat4b_altControls: nationalData.cat4b,
+      cat4c_notPollutant: nationalData.cat4c,
+      tmdlGapPct: nationalData.tmdlGapPct,
+      topCauses: nationalData.topCauses.slice(0, 15),
+      pearlAddressablePct: nationalData.addressablePct,
+      pearlAddressableCount: nationalData.addressableCount,
+      totalCauseInstances: nationalData.totalCauseInstances,
+      worstStates: nationalData.worstStates?.slice(0, 8) || [],
+    } : null;
+
     // Fetch active signals (beach closures, harvest stops, sensor alerts)
     let activeSignals: any[] = [];
     try {
@@ -128,19 +162,29 @@ export function AIInsightsEngine({ role, stateAbbr, selectedWaterbody, regionDat
     const userMessage = JSON.stringify({
       role,
       state: stateAbbr,
+      scope: isNational ? 'national' : 'state',
       selectedWaterbody: selectedWaterbody
         ? { name: selectedWaterbody.name, category: selectedWaterbody.category, causes: selectedWaterbody.causes, parameters: selectedWaterbody.parameters }
         : null,
       regionSummary,
+      nationalSummary,
       activeSignals: activeSignals.length > 0 ? activeSignals : undefined,
     });
+
+    // Build system prompt — national or state scope
+    const nationalPromptAddendum = isNational ? `
+NATIONAL SCOPE: You are analyzing ALL 50 states + DC. The data includes EPA ATTAINS assessment categories (Cat 1-5), TMDL status, impairment causes, and PEARL addressability analysis.
+CRITICAL CONTEXT — POTOMAC/CHESAPEAKE: The Chesapeake Bay TMDL is the LARGEST and most complex Total Maximum Daily Load ever issued by EPA. The Potomac River basin carries the heaviest nutrient and sediment loads into the Bay. This is arguably the biggest water quality crisis in U.S. regulatory history. The January 2026 Potomac Interceptor collapse (200M+ gallons of raw sewage) demonstrates why independent continuous monitoring is critical. Maryland faces the most intense TMDL compliance pressure of any state. ALWAYS lead with or prominently feature the Chesapeake/Potomac crisis in national analysis.
+ATTAINS CATEGORIES: Cat 5 = impaired, NO approved TMDL (on 303(d) list — worst). Cat 4a = impaired, HAS approved TMDL. Cat 4b = impaired, alternative controls. Cat 4c = impaired, not pollutant-caused. Cat 3 = insufficient data. Cat 2 = good with some concerns. Cat 1 = fully meeting standards.
+PEARL ADDRESSABILITY: PEARL treats sediment/TSS, nutrients (N, P), bacteria (E. coli, Enterococci), dissolved oxygen, and stormwater metals. It does NOT treat mercury, PCBs, PFAS, or legacy contaminants.
+Use the nationalSummary data to provide specific numbers: cat5 count, TMDL gap percentage, top impairment causes with counts, PEARL addressable percentage, and worst states by Cat 5 concentration.` : '';
 
     try {
       const res = await fetch('/api/ai-insights', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          systemPrompt: `You are a water quality data analyst for the PEARL platform. Generate actionable insights based on the provided water quality data. Be specific, cite parameter values, and provide early warnings. When analyzing waterbody data near major infrastructure (CSO outfalls, interceptors, treatment plants), flag sudden multi-parameter anomalies (simultaneous E. coli spike + DO crash + turbidity surge) as potential sewage discharge events. Reference the January 2026 Potomac Interceptor collapse as an example of why early detection matters — 200M+ gallons went unmonitored because no independent continuous monitoring existed. If activeSignals are present in the data, incorporate them prominently into your analysis. CRITICAL: If any signal has type "discharge_signature" or "permit_violation", this is a potential sewage spill or illegal discharge — lead with it as your top insight, frame it as urgent, recommend immediate investigation of upstream outfalls, and note that PEARL's multi-parameter correlation detected the pattern (simultaneous DO crash + conductivity spike + turbidity surge = sewage fingerprint). For beach closures or harvest stops, connect them to downstream impact on public health and economy. ${ROLE_TONE[role]} Format your response as a JSON array of exactly 4 objects, each with: {type: "predictive"|"anomaly"|"comparison"|"recommendation"|"summary", severity: "info"|"warning"|"critical", title: string, body: string, waterbody?: string, timeframe?: string}. Return ONLY the JSON array, no markdown or extra text.`,
+          systemPrompt: `You are a water quality data analyst for the PEARL platform. Generate actionable insights based on the provided water quality data. Be specific, cite parameter values, and provide early warnings. When analyzing waterbody data near major infrastructure (CSO outfalls, interceptors, treatment plants), flag sudden multi-parameter anomalies (simultaneous E. coli spike + DO crash + turbidity surge) as potential sewage discharge events. Reference the January 2026 Potomac Interceptor collapse as an example of why early detection matters — 200M+ gallons went unmonitored because no independent continuous monitoring existed. If activeSignals are present in the data, incorporate them prominently into your analysis. CRITICAL: If any signal has type "discharge_signature" or "permit_violation", this is a potential sewage spill or illegal discharge — lead with it as your top insight, frame it as urgent, recommend immediate investigation of upstream outfalls, and note that PEARL's multi-parameter correlation detected the pattern (simultaneous DO crash + conductivity spike + turbidity surge = sewage fingerprint). For beach closures or harvest stops, connect them to downstream impact on public health and economy.${nationalPromptAddendum} ${ROLE_TONE[role]} Format your response as a JSON array of exactly ${isNational ? 6 : 4} objects, each with: {type: "predictive"|"anomaly"|"comparison"|"recommendation"|"summary", severity: "info"|"warning"|"critical", title: string, body: string, waterbody?: string, timeframe?: string}. Return ONLY the JSON array, no markdown or extra text.`,
           userMessage,
         }),
       });
@@ -165,7 +209,7 @@ export function AIInsightsEngine({ role, stateAbbr, selectedWaterbody, regionDat
         i && typeof i.title === 'string' && typeof i.body === 'string' &&
         ['predictive', 'anomaly', 'comparison', 'recommendation', 'summary'].includes(i.type) &&
         ['info', 'warning', 'critical'].includes(i.severity)
-      ).slice(0, 5);
+      ).slice(0, isNational ? 7 : 5);
 
       if (parsed.length === 0) {
         throw new Error('No valid insights returned');
@@ -179,22 +223,23 @@ export function AIInsightsEngine({ role, stateAbbr, selectedWaterbody, regionDat
     } catch (err: any) {
       setError(err.message || 'Failed to generate insights');
       // Fallback: generate local placeholder insights
-      const fallback = generateFallbackInsights(role, stateAbbr, selectedWaterbody, regionData);
+      const fallback = generateFallbackInsights(role, stateAbbr, selectedWaterbody, regionData, nationalData);
       setInsights(fallback);
       setLastUpdated(new Date());
     } finally {
       setLoading(false);
       fetchingRef.current = false;
     }
-  }, [role, stateAbbr, selectedWaterbody, regionData]);
+  }, [role, stateAbbr, selectedWaterbody, regionData, nationalData]);
 
-  // Fetch when expanded — cache key includes state+role, so:
+  // Fetch when expanded — cache key includes state+role+scope, so:
   // - Same state/role → cache hit, returns instantly (no duplicate API call)
   // - New state/role  → cache miss, fetches fresh data
   // On state/role change: clear stale insights so shimmer shows, then fetch
-  const prevKeyRef = useRef(getCacheKey(role, stateAbbr, selectedWaterbody));
+  const isNational = !!nationalData && nationalData.totalAssessed > 0;
+  const prevKeyRef = useRef(getCacheKey(role, stateAbbr, selectedWaterbody, isNational));
   useEffect(() => {
-    const key = getCacheKey(role, stateAbbr, selectedWaterbody);
+    const key = getCacheKey(role, stateAbbr, selectedWaterbody, isNational);
     const keyChanged = key !== prevKeyRef.current;
     prevKeyRef.current = key;
 
@@ -208,7 +253,7 @@ export function AIInsightsEngine({ role, stateAbbr, selectedWaterbody, regionDat
     if (expanded) {
       fetchInsights(keyChanged); // force bypass cache if key changed
     }
-  }, [expanded, role, stateAbbr, selectedWaterbody, fetchInsights]);
+  }, [expanded, role, stateAbbr, selectedWaterbody, isNational, fetchInsights]);
 
   return (
     <div className="rounded-2xl border border-indigo-200 bg-white shadow-sm overflow-hidden">
@@ -219,7 +264,7 @@ export function AIInsightsEngine({ role, stateAbbr, selectedWaterbody, regionDat
       >
         <div className="flex items-center gap-2">
           <Brain className="h-4 w-4 text-indigo-600" />
-          <span className="text-sm font-bold text-slate-800">AI Water Intelligence</span>
+          <span className="text-sm font-bold text-slate-800">AI Water Intelligence{isNational ? ' — National' : ` — ${stateAbbr}`}</span>
           <Badge className="bg-gradient-to-r from-indigo-500 to-violet-500 text-white border-0 text-[9px] px-1.5 py-0">
             <Sparkles className="h-2.5 w-2.5 mr-0.5" />AI
           </Badge>
@@ -323,7 +368,64 @@ function generateFallbackInsights(
   stateAbbr: string,
   wb?: SelectedWaterbody,
   regionData?: Array<{ name: string; alertLevel: string; causes: string[] }>,
+  nationalData?: NationalData,
 ): Insight[] {
+  const isNational = !!nationalData && nationalData.totalAssessed > 0;
+
+  // ═══ NATIONAL-SCALE FALLBACK ═══
+  if (isNational) {
+    const nd = nationalData;
+    const worstStates = nd.worstStates?.slice(0, 5) || [];
+    const topCauses = nd.topCauses.slice(0, 5);
+
+    const insights: Insight[] = [
+      {
+        type: 'summary',
+        severity: 'critical',
+        title: 'Potomac–Chesapeake: Largest Water Quality Crisis in U.S. Regulatory History',
+        body: `The Chesapeake Bay TMDL is the most complex ever issued by EPA, spanning 7 states and requiring decades of coordinated pollution reduction. The Potomac River basin carries the heaviest nutrient and sediment loads feeding the Bay's chronic dead zones. The January 2026 Potomac Interceptor collapse — 200M+ gallons of raw sewage discharged with no independent monitoring — demonstrated catastrophic infrastructure failure. Maryland faces the most intense TMDL compliance pressure of any state. This watershed represents the single largest opportunity for PEARL deployment at scale.`,
+        timeframe: 'Ongoing — multi-decade federal mandate',
+      },
+      {
+        type: 'anomaly',
+        severity: 'critical',
+        title: `${nd.cat5.toLocaleString()} Waterbodies on 303(d) List — No Approved TMDL`,
+        body: `Of ${nd.totalImpaired.toLocaleString()} impaired waterbodies nationally, ${nd.tmdlGapPct}% are Category 5 — impaired with NO Total Maximum Daily Load plan. Only ${nd.cat4a.toLocaleString()} have approved TMDLs (Cat 4a), while ${nd.cat4b.toLocaleString()} rely on alternative controls (Cat 4b). States face increasing EPA enforcement pressure to close this regulatory gap.${worstStates.length > 0 ? ` Worst states by Cat 5 concentration: ${worstStates.map(s => `${s.name} (${s.cat5})`).join(', ')}.` : ''}`,
+      },
+      {
+        type: 'comparison',
+        severity: 'warning',
+        title: `${nd.addressablePct}% of National Impairment Causes Are PEARL-Addressable`,
+        body: `Of ${nd.totalCauseInstances.toLocaleString()} cause-instances across all impaired waterbodies, ${nd.addressableCount.toLocaleString()} involve pollutants PEARL directly treats: sediment/TSS, nutrients (N, P), bacteria (E. coli, Enterococci), dissolved oxygen, and stormwater metals. The remaining ${100 - nd.addressablePct}% include mercury, PCBs, PFAS, and legacy contaminants requiring specialized treatment.${topCauses.length > 0 ? ` Top national impairment causes: ${topCauses.map(c => `${c.cause} (${c.count.toLocaleString()})`).join(', ')}.` : ''}`,
+      },
+      {
+        type: 'predictive',
+        severity: 'warning',
+        title: 'Spring Runoff Will Intensify Nutrient Loading Nationwide',
+        body: `Historical patterns show 40-60% of annual nitrogen and phosphorus loads are delivered during March-June storm events. Waterbodies already impaired for nutrients — particularly in the Chesapeake, Gulf of Mexico, and Great Lakes watersheds — will see elevated concentrations. PEARL deployments targeting high-loading outfalls during this window capture the most pollutant mass per dollar invested.`,
+        timeframe: 'March–June 2026',
+      },
+      {
+        type: 'recommendation',
+        severity: 'info',
+        title: 'Deploy at the Worst Hotspots First — Not Everywhere',
+        body: `PEARL's strategy: clusters of 4× PEARL-50 units (200 GPM each) targeting the 3 worst pollutant-loading outfalls per waterbody. Don't try to match total stormwater flow — target where pollution concentrates. ${nd.cat5 > 0 ? `With ${nd.cat5.toLocaleString()} Cat 5 waterbodies lacking TMDLs, every PEARL deployment that demonstrates measurable pollutant reduction creates compliance documentation municipalities desperately need.` : ''}`,
+      },
+    ];
+
+    if (role === 'Federal') {
+      insights.push({
+        type: 'recommendation',
+        severity: 'warning',
+        title: 'Federal Infrastructure Funding Favors Nature-Based Solutions',
+        body: `The Bipartisan Infrastructure Law and State Revolving Fund programs increasingly prioritize nature-based BMPs and environmental justice targeting. PEARL qualifies as a nature-based solution (oyster biofiltration + living habitat creation) while providing the verifiable sensor data SRF applications require. ${nd.totalImpaired > 0 ? `The ${nd.totalImpaired.toLocaleString()} impaired waterbodies represent a federal intervention backlog that traditional approaches cannot clear at current funding levels.` : ''}`,
+      });
+    }
+
+    return insights;
+  }
+
+  // ═══ STATE-LEVEL FALLBACK (original logic) ═══
   const highCount = regionData?.filter(r => r.alertLevel === 'high').length || 0;
   const total = regionData?.length || 0;
   const topCauses = Array.from(new Set(regionData?.flatMap(r => r.causes || []) || [])).slice(0, 3);

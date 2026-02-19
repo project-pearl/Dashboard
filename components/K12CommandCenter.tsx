@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { GeoJSON, CircleMarker, Tooltip } from 'react-leaflet';
 import { getStatesGeoJSON, geoToAbbr, STATE_GEO_LEAFLET, FIPS_TO_ABBR as _FIPS, STATE_NAMES as _SN } from '@/lib/leafletMapUtils';
@@ -336,9 +336,6 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
   const [showRestorationCard, setShowRestorationCard] = useState(false);
   const [showCostPanel, setShowCostPanel] = useState(false);
   const [alertFeedMinimized, setAlertFeedMinimized] = useState(true);
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({ top10: true });
-  const toggleCollapse = (id: string) => setCollapsedSections(prev => ({ ...prev, [id]: !prev[id] }));
-  const isSectionOpen = (id: string) => !collapsedSections[id];
 
   // Print a single card section by its DOM id
   const printSection = (sectionId: string, title: string) => {
@@ -678,8 +675,26 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
           </div>
         </div>
 
-        {/* ── DATA SOURCES & RESEARCH CONTEXT — above map ── */}
-        {(() => {
+        <LayoutEditor ccKey="K12">
+        {({ sections, isEditMode, onToggleVisibility, onToggleCollapse, collapsedSections }) => {
+          const isSectionOpen = (id: string) => !collapsedSections[id];
+          const sec = (id: string) => sections.find(s => s.id === id);
+          return (<>
+        <div className={`space-y-6 ${isEditMode ? 'pl-12' : ''}`}>
+
+        {/* Wildlife disclaimer — not a draggable section */}
+        {!isTeacher && <WildlifeImpactDisclaimer enabled={showWildlife} onToggle={setShowWildlife} />}
+
+        {sections.filter(s => s.visible || isEditMode).map(section => {
+          const DS = (children: React.ReactNode) => (
+            <DraggableSection key={section.id} id={section.id} label={section.label}
+              isEditMode={isEditMode} isVisible={section.visible} onToggleVisibility={onToggleVisibility}>
+              {children}
+            </DraggableSection>
+          );
+          switch (section.id) {
+
+            case 'regprofile': return DS((() => {
           const agency = STATE_AGENCIES[stateAbbr];
           const ejScore = getEJScore(stateAbbr);
           const stableHash01 = (s: string) => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967295; };
@@ -692,7 +707,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
 
           return (
             <div id="section-regprofile" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-              <button onClick={() => toggleCollapse('regprofile')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+              <button onClick={() => onToggleCollapse('regprofile')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
                 <div className="flex items-center gap-2">
                   <Droplets size={15} className="text-purple-600" />
                   <span className="text-sm font-bold text-slate-800">{stateName} — Water Health Dashboard</span>
@@ -742,13 +757,13 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
               )}
             </div>
           );
-        })()}
+        })());
 
-        {/* ── AI INSIGHTS — near top like all command centers ── */}
-        <AIInsightsEngine key={stateAbbr} role="K12" stateAbbr={stateAbbr} regionData={regionData as any} />
+            case 'insights': return DS(
+              <AIInsightsEngine key={stateAbbr} role="K12" stateAbbr={stateAbbr} regionData={regionData as any} />
+            );
 
-        {/* ── STATEWIDE ALERT FEED — above map ── */}
-        {(() => {
+            case 'alertfeed': return DS((() => {
           const alertRegions = regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium');
           if (alertRegions.length === 0) return null;
           const criticalCount = alertRegions.filter(r => r.alertLevel === 'high').length;
@@ -824,12 +839,9 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
               )}
             </div>
           );
-        })()}
+        })());
 
-        {/* ── Wildlife Toggle Banner — above the map (teachers only; students always see wildlife) ── */}
-        {!isTeacher && <WildlifeImpactDisclaimer enabled={showWildlife} onToggle={setShowWildlife} />}
-
-        {/* ── MAIN CONTENT: Map (2/3) + Waterbody List (1/3) ── */}
+            case 'map-grid': return DS(
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
           {/* LEFT: State Map (2/3 width — matches NCC layout) */}
@@ -1095,9 +1107,9 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
             </CardContent>
           </Card>
         </div>
+            );
 
-        {/* ── WATERBODY DETAIL — student-friendly / teacher-enhanced ── */}
-        {(
+            case 'detail': return DS(<>
         <div className="space-y-4">
 
             {/* No selection state */}
@@ -2350,7 +2362,6 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
               );
             })()}
           </div>
-        )}
 
         {/* ── PEARL PILOT RESULTS — always visible, student mode only ── */}
         {!isTeacher && (
@@ -2431,7 +2442,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
               const totalEJCached = Object.entries(ejCache).filter(([, v]) => v.ejIndex !== null && v.ejIndex !== undefined).length;
               return (
                 <div className={`rounded-xl border ${scoreBorder} bg-white shadow-sm overflow-hidden`}>
-                  <button onClick={() => toggleCollapse('ej')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+                  <button onClick={() => onToggleCollapse('ej')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
                     <span className="text-sm font-bold text-slate-800">⚖️ Environmental Justice — {wbName}</span>
                     <div className="flex items-center gap-2">
                       {wbEJLoading ? (
@@ -2538,12 +2549,11 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
 
           </div>
         )}
+            </>);
 
-
-        {/* ── TOP 10 WORSENING / IMPROVING — full + programs view ── */}
-        {(
+            case 'top10': return DS(
         <div id="section-top10" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <button onClick={() => toggleCollapse('top10')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+          <button onClick={() => onToggleCollapse('top10')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
             <span className="text-sm font-bold text-slate-800">🔥 Top 5 Worsening / Improving Waterbodies</span>
             <div className="flex items-center gap-1.5">
                 <span onClick={(e) => { e.stopPropagation(); printSection('top10', 'Top 5 Worsening / Improving'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
@@ -2592,7 +2602,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                         <Printer className="h-3.5 w-3.5" />
                       </button>
                       <button
-                        onClick={(e) => { e.stopPropagation(); toggleCollapse('potomac'); }}
+                        onClick={(e) => { e.stopPropagation(); onToggleCollapse('potomac'); }}
                         className="p-0.5 text-red-400 hover:text-red-600 transition-colors"
                         title={isSectionOpen('potomac') ? 'Collapse details' : 'Expand details'}
                       >
@@ -2717,11 +2727,11 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
         </div>
           )}
         </div>
-        )}
+            );
 
-        {/* ── STUDENT LEARNING MODE ── */}
+            case 'learning': return DS(
         <div id="section-learning" className="rounded-xl border-2 border-cyan-300 bg-gradient-to-r from-cyan-50 to-teal-50 shadow-sm overflow-hidden">
-          <button onClick={() => toggleCollapse('learning')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-cyan-100/50 transition-colors">
+          <button onClick={() => onToggleCollapse('learning')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-cyan-100/50 transition-colors">
             <div className="flex items-center gap-2">
               <BookOpen size={15} className="text-cyan-600" />
               <span className="text-sm font-bold text-cyan-800">Student Learning Mode 🌊</span>
@@ -2756,10 +2766,11 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
             </div>
           )}
         </div>
+            );
 
-        {/* ── SCIENCE FAIR & STEM PROJECT IDEAS ── */}
+            case 'projects': return DS(
         <div id="section-projects" className="rounded-xl border-2 border-cyan-300 bg-gradient-to-br from-cyan-50 via-white to-cyan-50 shadow-sm overflow-hidden">
-          <button onClick={() => toggleCollapse('projects')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-cyan-100/50 transition-colors">
+          <button onClick={() => onToggleCollapse('projects')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-cyan-100/50 transition-colors">
             <span className="text-sm font-bold text-cyan-800">🌟 Science Fair & STEM Project Ideas</span>
             <div className="flex items-center gap-1.5">
               <span onClick={(e) => { e.stopPropagation(); printSection('projects', 'Science Fair & STEM Project Ideas'); }} className="p-1 hover:bg-cyan-200 rounded transition-colors" title="Print this section">
@@ -2807,10 +2818,11 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
             </div>
           )}
         </div>
+            );
 
-        {/* ── FIELD REPORT EXPORT ── */}
+            case 'fieldreport': return DS(
         <div id="section-fieldreport" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <button onClick={() => toggleCollapse('fieldreport')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+          <button onClick={() => onToggleCollapse('fieldreport')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
             <span className="text-sm font-bold text-slate-800">📋 Field Report & Data Export</span>
             <div className="flex items-center gap-1.5">
               <span onClick={(e) => { e.stopPropagation(); printSection('fieldreport', 'Field Report & Data Export'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
@@ -2843,10 +2855,11 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
             </div>
           )}
         </div>
+            );
 
-        {/* ── K12 EDUCATIONAL HUB ── */}
+            case 'eduhub': return DS(
         <div id="section-eduhub" className="rounded-xl border-2 border-cyan-200 bg-white shadow-sm overflow-hidden">
-          <button onClick={() => toggleCollapse('eduhub')} className="w-full flex items-center justify-between px-4 py-3 bg-cyan-50 hover:bg-cyan-100 transition-colors">
+          <button onClick={() => onToggleCollapse('eduhub')} className="w-full flex items-center justify-between px-4 py-3 bg-cyan-50 hover:bg-cyan-100 transition-colors">
             <span className="text-sm font-bold text-cyan-800">🏫 K-12 Educational Hub</span>
             <div className="flex items-center gap-1.5">
               <span onClick={(e) => { e.stopPropagation(); printSection('eduhub', 'K-12 Educational Hub'); }} className="p-1 hover:bg-cyan-200 rounded transition-colors" title="Print this section">
@@ -2884,11 +2897,11 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
             </div>
           )}
         </div>
+            );
 
-        {/* ── TEACHER RESOURCES (teacher mode only) ── */}
-        {isTeacher && (
+            case 'teacher': return DS(isTeacher ? (
           <div id="section-teacher" className="rounded-xl border-2 border-purple-200 bg-gradient-to-r from-purple-50 to-white shadow-sm overflow-hidden">
-            <button onClick={() => toggleCollapse('teacher')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-purple-100/50 transition-colors">
+            <button onClick={() => onToggleCollapse('teacher')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-purple-100/50 transition-colors">
               <span className="text-sm font-bold text-purple-800">👩‍🏫 Teacher Resources & Curriculum Tools</span>
               <div className="flex items-center gap-1.5">
                 <span onClick={(e) => { e.stopPropagation(); printSection('teacher', 'Teacher Resources & Curriculum Tools'); }} className="p-1 hover:bg-purple-200 rounded transition-colors" title="Print this section">
@@ -2925,12 +2938,11 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
               </div>
             )}
           </div>
-        )}
+        ) : null);
 
-        {/* ── GRANTS — teacher mode only ── */}
-        {isTeacher && (
+            case 'grants': return DS(isTeacher ? (
           <div id="section-grants" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <button onClick={() => toggleCollapse('grants')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+            <button onClick={() => onToggleCollapse('grants')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
               <span className="text-sm font-bold text-slate-800">💰 K-12 Education Grant Opportunities — {stateName}</span>
               <div className="flex items-center gap-1">
                 {isSectionOpen('grants') && <span onClick={(e) => { e.stopPropagation(); printSection('grants', `K-12 Education Grants — ${stateName}`); }} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
@@ -2947,15 +2959,24 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
               />
             )}
           </div>
-        )}
+        ) : null);
 
-        {/* ── GOODBYE IMAGE ── */}
+            default: return null;
+          }
+        })}
+
+        {/* ── GOODBYE IMAGE — not a draggable section ── */}
         {!isTeacher && (
           <div className="my-6">
             <Image src="/happy-neighbors.jpg" alt="Community members celebrating a successful water cleanup project" width={1200} height={600} className="w-full rounded-2xl shadow-lg object-cover" />
             <p className="text-xs text-slate-400 mt-2 text-center">Together we can make a difference — every drop counts!</p>
           </div>
         )}
+
+        </div>
+        </>);
+        }}
+        </LayoutEditor>
 
         {/* ── DISCLAIMER FOOTER ── */}
         <PlatformDisclaimer />

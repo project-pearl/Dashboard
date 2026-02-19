@@ -23,6 +23,8 @@ import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
 import { WaterQualityChallenges } from '@/components/WaterQualityChallenges';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
+import { LayoutEditor } from './LayoutEditor';
+import { DraggableSection } from './DraggableSection';
 import dynamic from 'next/dynamic';
 
 const GrantOpportunityMatcher = dynamic(
@@ -337,9 +339,6 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
   const [showRestorationCard, setShowRestorationCard] = useState(false);
   const [showCostPanel, setShowCostPanel] = useState(false);
   const [alertFeedMinimized, setAlertFeedMinimized] = useState(true);
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({ top10: true });
-  const toggleCollapse = (id: string) => setCollapsedSections(prev => ({ ...prev, [id]: !prev[id] }));
-  const isSectionOpen = (id: string) => !collapsedSections[id];
 
 
   // Print a single card section by its DOM id
@@ -733,8 +732,23 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
         {/* ── AI INSIGHTS ── */}
         <AIInsightsEngine key={stateAbbr} role="NGO" stateAbbr={stateAbbr} regionData={regionData as any} />
 
-        {/* ── WATERSHED HEALTH OVERVIEW — below oyster image ── */}
-        {(() => {
+        <LayoutEditor ccKey="NGO">
+        {({ sections, isEditMode, onToggleVisibility, onToggleCollapse, collapsedSections }) => {
+          const isSectionOpen = (id: string) => !collapsedSections[id];
+          return (<>
+        <div className={`space-y-6 ${isEditMode ? 'pl-12' : ''}`}>
+
+        {sections.filter(s => s.visible || isEditMode).map(section => {
+          const DS = (children: React.ReactNode) => (
+            <DraggableSection key={section.id} id={section.id} label={section.label}
+              isEditMode={isEditMode} isVisible={section.visible} onToggleVisibility={onToggleVisibility}>
+              {children}
+            </DraggableSection>
+          );
+          switch (section.id) {
+
+            case 'regprofile': return DS(
+        (() => {
           const agency = STATE_AGENCIES[stateAbbr];
           const ejScore = getEJScore(stateAbbr);
           const stableHash01 = (s: string) => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967295; };
@@ -748,7 +762,7 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
 
           return (
             <div id="section-regprofile" className="rounded-2xl border-l-4 border-l-emerald-500 border border-emerald-200 bg-white shadow-sm overflow-hidden">
-              <button onClick={() => toggleCollapse('regprofile')} className="w-full flex items-center justify-between px-6 py-3 bg-emerald-50/50 hover:bg-emerald-100/50 transition-colors">
+              <button onClick={() => onToggleCollapse('regprofile')} className="w-full flex items-center justify-between px-6 py-3 bg-emerald-50/50 hover:bg-emerald-100/50 transition-colors">
                 <div className="flex items-center gap-2">
                   <Droplets size={15} className="text-emerald-600" />
                   <span className="text-sm font-bold text-emerald-900">{stateName} — Watershed Health Overview{selectedWatershed !== 'All Watersheds' ? ` · ${selectedWatershed}` : ''}</span>
@@ -802,10 +816,11 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
               )}
             </div>
           );
-        })()}
+        })()
+            );
 
-        {/* ── STATEWIDE ALERT FEED — above map ── */}
-        {(() => {
+            case 'alertfeed': return DS(
+        (() => {
           const alertRegions = regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium');
           if (alertRegions.length === 0) return null;
           const criticalCount = alertRegions.filter(r => r.alertLevel === 'high').length;
@@ -881,9 +896,10 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
               )}
             </div>
           );
-        })()}
+        })()
+            );
 
-        {/* ── MAIN CONTENT: Map (2/3) + Waterbody List (1/3) ── */}
+            case 'map-grid': return DS(
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
           {/* LEFT: State Map (2/3 width — matches NCC layout) */}
@@ -1148,9 +1164,10 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
             </CardContent>
           </Card>
         </div>
+            );
 
-        {/* ── DETAIL + RESTORATION (full width below map grid) — lens controlled ── */}
-        {(
+            case 'detail': return DS(
+        <>
         <div className="space-y-4">
 
             {/* No selection state */}
@@ -2162,7 +2179,6 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
               );
             })()}
           </div>
-        )}
 
 
         {/* ── STATEWIDE COMPONENTS — shown when a waterbody is selected AND mock data is available ── */}
@@ -2192,7 +2208,7 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
               const totalEJCached = Object.entries(ejCache).filter(([, v]) => v.ejIndex !== null && v.ejIndex !== undefined).length;
               return (
                 <div className={`rounded-xl border ${scoreBorder} bg-white shadow-sm overflow-hidden`}>
-                  <button onClick={() => toggleCollapse('ej')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+                  <button onClick={() => onToggleCollapse('ej')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
                     <span className="text-sm font-bold text-slate-800">⚖️ Environmental Justice — {wbName}</span>
                     <div className="flex items-center gap-2">
                       {wbEJLoading ? (
@@ -2299,12 +2315,12 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
 
           </div>
         )}
+        </>
+            );
 
-
-        {/* ── TOP 10 WORSENING / IMPROVING — full + programs view ── */}
-        {(
+            case 'top10': return DS(
         <div id="section-top10" className="rounded-2xl border-l-4 border-l-emerald-500 border border-emerald-200 bg-white shadow-sm overflow-hidden">
-          <button onClick={() => toggleCollapse('top10')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+          <button onClick={() => onToggleCollapse('top10')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
             <span className="text-sm font-bold text-slate-800">🔥 Top 5 Worsening / Improving Waterbodies</span>
             <div className="flex items-center gap-1.5">
                 <span onClick={(e) => { e.stopPropagation(); printSection('top10', 'Top 5 Worsening / Improving'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
@@ -2353,7 +2369,7 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
                         <Printer className="h-3.5 w-3.5" />
                       </button>
                       <button
-                        onClick={(e) => { e.stopPropagation(); toggleCollapse('potomac'); }}
+                        onClick={(e) => { e.stopPropagation(); onToggleCollapse('potomac'); }}
                         className="p-0.5 text-red-400 hover:text-red-600 transition-colors"
                         title={isSectionOpen('potomac') ? 'Collapse details' : 'Expand details'}
                       >
@@ -2478,9 +2494,9 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
         </div>
           )}
         </div>
-        )}
+            );
 
-        {/* ── VOLUNTEER MONITORING COORDINATION ── */}
+            case 'volunteer': return DS(
         <Card id="section-volunteer" className="rounded-2xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50/30 to-white">
           <CardHeader className="pb-2 cursor-pointer" onClick={() => toggleSection('volunteer')}>
             <div className="flex items-center justify-between">
@@ -2530,14 +2546,17 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
             </CardContent>
           )}
         </Card>
+            );
 
+            case 'community': return DS(
+        <>
         {/* ── WATER QUALITY CHALLENGES — core advocacy content ── */}
         <div className="rounded-2xl border-l-4 border-l-emerald-500 border border-emerald-200 bg-white shadow-sm overflow-hidden p-6">
           <WaterQualityChallenges context="ngo" />
         </div>
 
         {/* ── ECOLOGICAL RESTORATION — turtle habitat (MD only) / oyster restoration (all other states) ── */}
-        <div className="rounded-2xl border border-emerald-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-2xl border border-emerald-200 bg-white shadow-sm overflow-hidden mt-6">
           <div className="relative w-full h-[240px] md:h-[320px]">
             <Image
               src={stateAbbr === 'MD' ? '/turtle-eggs-solution.png' : '/oyster-restoration.png'}
@@ -2568,8 +2587,8 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
         </div>
 
         {/* ── COMMUNITY ENGAGEMENT & PUBLIC TRANSPARENCY ── */}
-        <div id="section-community" className="rounded-2xl border-l-4 border-l-emerald-500 border border-emerald-200 bg-white shadow-sm overflow-hidden">
-          <button onClick={() => toggleCollapse('community')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+        <div id="section-community" className="mt-6 rounded-2xl border-l-4 border-l-emerald-500 border border-emerald-200 bg-white shadow-sm overflow-hidden">
+          <button onClick={() => onToggleCollapse('community')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
             <span className="text-sm font-bold text-slate-800">📢 Community Engagement & Public Transparency</span>
             <div className="flex items-center gap-1.5">
               <span onClick={(e) => { e.stopPropagation(); printSection('community', 'Community Engagement & Public Transparency'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
@@ -2601,10 +2620,12 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
             </div>
           )}
         </div>
+        </>
+            );
 
-        {/* ── POLICY ADVOCACY TOOLKIT ── */}
+            case 'policy': return DS(
         <div id="section-policy" className="rounded-2xl border-l-4 border-l-emerald-500 border border-emerald-200 bg-white shadow-sm overflow-hidden">
-          <button onClick={() => toggleCollapse('policy')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+          <button onClick={() => onToggleCollapse('policy')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
             <span className="text-sm font-bold text-slate-800">⚖️ Policy Advocacy Toolkit</span>
             <div className="flex items-center gap-1.5">
               <span onClick={(e) => { e.stopPropagation(); printSection('policy', 'Policy Advocacy Toolkit'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
@@ -2637,10 +2658,11 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
             </div>
           )}
         </div>
+            );
 
-        {/* ── WATERSHED PARTNERSHIP NETWORK ── */}
+            case 'partners': return DS(
         <div id="section-partners" className="rounded-2xl border-l-4 border-l-emerald-500 border border-emerald-200 bg-white shadow-sm overflow-hidden">
-          <button onClick={() => toggleCollapse('partners')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+          <button onClick={() => onToggleCollapse('partners')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
             <span className="text-sm font-bold text-slate-800">🤝 Watershed Partnership Network</span>
             <div className="flex items-center gap-1.5">
               <span onClick={(e) => { e.stopPropagation(); printSection('partners', 'Watershed Partnership Network'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
@@ -2662,13 +2684,12 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
             </div>
           )}
         </div>
+            );
 
-
-        {/* ── GRANT & FUNDING OPPORTUNITIES ── */}
-        {/* ── GRANT OPPORTUNITIES — always at bottom ── */}
-        {activeDetailId && displayData && regionMockData && (
+            case 'grants': return DS(
+        activeDetailId && displayData && regionMockData ? (
           <div id="section-grants" className="rounded-2xl border-l-4 border-l-emerald-500 border border-emerald-200 bg-white shadow-sm overflow-hidden">
-            <button onClick={() => toggleCollapse('grants')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+            <button onClick={() => onToggleCollapse('grants')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
               <span className="text-sm font-bold text-slate-800">🌱 Grant & Funding Opportunities — {stateName}</span>
               <div className="flex items-center gap-1.5">
                 <span onClick={(e) => { e.stopPropagation(); printSection('grants', 'Grant & Funding Opportunities'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
@@ -2687,7 +2708,17 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
               />
             )}
           </div>
-        )}
+        ) : null
+            );
+
+            default: return null;
+          }
+        })}
+
+        </div>
+        </>);
+        }}
+        </LayoutEditor>
 
         {/* ── DISCLAIMER FOOTER ── */}
         <PlatformDisclaimer />

@@ -24,6 +24,8 @@ import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { resolveWaterbodyCoordinates } from '@/lib/waterbodyCentroids';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
+import { LayoutEditor } from './LayoutEditor';
+import { DraggableSection } from './DraggableSection';
 import dynamic from 'next/dynamic';
 
 const LeafletMapShell = dynamic(
@@ -732,9 +734,6 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
   const [showRestorationCard, setShowRestorationCard] = useState(false);
   const [showCostPanel, setShowCostPanel] = useState(false);
   const [alertFeedMinimized, setAlertFeedMinimized] = useState(true);
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({ top10: true, potomac: true, storms: true, mdeexport: true, tmdl: true, nutrientcredits: true, stormsim: true, economics: true });
-  const toggleCollapse = (id: string) => setCollapsedSections(prev => ({ ...prev, [id]: !prev[id] }));
-  const isSectionOpen = (id: string) => !collapsedSections[id];
 
 
   const printSection = (sectionId: string, title: string) => {
@@ -976,7 +975,7 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
   const displayedRegions = showAll ? sortedRegions : sortedRegions.slice(0, 15);
 
   // ── Expanded sections ──
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({ waterbodies: true, ms4: true, provenance: false });
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({ waterbodies: true, ms4: true, provenance: false, potomac: false });
   const toggleSection = (id: string) => setExpandedSections(prev => ({ ...prev, [id]: !prev[id] }));
 
   return (
@@ -1125,31 +1124,39 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
         {/* ── AI INSIGHTS ── */}
         <AIInsightsEngine key={stateAbbr} role="MS4" stateAbbr={stateAbbr} regionData={scopedRegionData as any} />
 
-        {/* ── MS4 JURISDICTION SNAPSHOT — compliance-at-a-glance strip ── */}
-        {jurisdictionMeta && (() => {
-          const activeAlerts = scopedRegionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium');
-          const severeCount = scopedRegionData.filter(r => r.alertLevel === 'high').length;
-          const assessedCount = scopedRegionData.filter(r => r.status === 'assessed').length;
-          const impairedCount = scopedRegionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length;
-          const ejScore = getEJScore(stateAbbr);
-          const ejLabel = ejScoreLabel(ejScore);
+        <LayoutEditor ccKey="MS4">
+        {({ sections, isEditMode, onToggleVisibility, onToggleCollapse, collapsedSections }) => {
+          const isSectionOpen = (id: string) => !collapsedSections[id];
+          return (<>
+        <div className={`space-y-6 ${isEditMode ? 'pl-12' : ''}`}>
 
-          // Data freshness: mock based on data source count
-          const withData = scopedRegionData.filter(r => r.dataSourceCount > 0).length;
-          const freshnessLabel = withData > scopedRegionData.length * 0.7 ? 'Current' : withData > scopedRegionData.length * 0.3 ? 'Moderate' : 'Stale';
-          const freshnessBg = freshnessLabel === 'Current' ? 'bg-green-100 text-green-700 border-green-200' : freshnessLabel === 'Moderate' ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-red-100 text-red-700 border-red-200';
+        {sections.filter(s => s.visible || isEditMode).map(section => {
+          const DS = (children: React.ReactNode) => (
+            <DraggableSection key={section.id} id={section.id} label={section.label}
+              isEditMode={isEditMode} isVisible={section.visible} onToggleVisibility={onToggleVisibility}>
+              {children}
+            </DraggableSection>
+          );
+          switch (section.id) {
 
-          // Compliance status from ms4Summary
-          const complianceStatus = ms4Summary ? (
-            jurisdictions.find((j: any) => j.name === jurisdictionMeta.name)?.status || 'Under Review'
-          ) : 'Under Review';
-          const complianceBg = complianceStatus === 'In Compliance' ? 'bg-emerald-100 text-emerald-800 border-emerald-200' :
-            complianceStatus === 'Consent Decree' || complianceStatus === 'NOV Issued' ? 'bg-red-100 text-red-800 border-red-200' :
-            'bg-amber-100 text-amber-800 border-amber-200';
-
-          return (
-          <div className="space-y-3">
-            {/* Identity row */}
+            case 'identity': return DS((() => {
+        if (!jurisdictionMeta) return null;
+        const activeAlerts = scopedRegionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium');
+        const severeCount = scopedRegionData.filter(r => r.alertLevel === 'high').length;
+        const assessedCount = scopedRegionData.filter(r => r.status === 'assessed').length;
+        const impairedCount = scopedRegionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length;
+        const ejScore = getEJScore(stateAbbr);
+        const ejLabel = ejScoreLabel(ejScore);
+        const withData = scopedRegionData.filter(r => r.dataSourceCount > 0).length;
+        const freshnessLabel = withData > scopedRegionData.length * 0.7 ? 'Current' : withData > scopedRegionData.length * 0.3 ? 'Moderate' : 'Stale';
+        const freshnessBg = freshnessLabel === 'Current' ? 'bg-green-100 text-green-700 border-green-200' : freshnessLabel === 'Moderate' ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-red-100 text-red-700 border-red-200';
+        const complianceStatus = ms4Summary ? (
+          jurisdictions.find((j: any) => j.name === jurisdictionMeta.name)?.status || 'Under Review'
+        ) : 'Under Review';
+        const complianceBg = complianceStatus === 'In Compliance' ? 'bg-emerald-100 text-emerald-800 border-emerald-200' :
+          complianceStatus === 'Consent Decree' || complianceStatus === 'NOV Issued' ? 'bg-red-100 text-red-800 border-red-200' :
+          'bg-amber-100 text-amber-800 border-amber-200';
+        return (
             <div className="rounded-xl border-2 border-blue-300 bg-gradient-to-r from-blue-50 via-white to-indigo-50 p-4 shadow-sm">
               <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
                 <div className="flex items-center gap-3">
@@ -1203,9 +1210,11 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
                 </div>
               </div>
             </div>
+        );
+        })());
 
-            {/* Quick Compliance Actions — scroll to + expand sections */}
-            <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-3">
+            case 'quickactions': return DS(
+        <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-3">
               <div className="flex items-center gap-2 mb-2">
                 <FileCheck className="h-4 w-4 text-slate-500" />
                 <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Quick Actions</span>
@@ -1215,7 +1224,7 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
                 <button
                   disabled={!activeDetailId || !regionMockData}
                   onClick={() => {
-                    setCollapsedSections(prev => ({ ...prev, mdeexport: false }));
+                    if (collapsedSections['mdeexport']) onToggleCollapse('mdeexport');
                     setTimeout(() => document.getElementById('section-mdeexport')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
                   }}
                   className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border-2 border-cyan-300 bg-white hover:bg-cyan-50 text-cyan-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
@@ -1226,7 +1235,7 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
                 <button
                   disabled={!activeDetailId || !regionMockData}
                   onClick={() => {
-                    setCollapsedSections(prev => ({ ...prev, tmdl: false }));
+                    if (collapsedSections['tmdl']) onToggleCollapse('tmdl');
                     setTimeout(() => document.getElementById('section-tmdl')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
                   }}
                   className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border-2 border-indigo-300 bg-white hover:bg-indigo-50 text-indigo-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
@@ -1237,7 +1246,7 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
                 <button
                   disabled={!activeDetailId || !regionMockData}
                   onClick={() => {
-                    setCollapsedSections(prev => ({ ...prev, nutrientcredits: false }));
+                    if (collapsedSections['nutrientcredits']) onToggleCollapse('nutrientcredits');
                     setTimeout(() => document.getElementById('section-nutrientcredits')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
                   }}
                   className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border-2 border-green-300 bg-white hover:bg-green-50 text-green-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
@@ -1248,7 +1257,7 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
                 <button
                   disabled={!activeDetailId || !regionMockData || stormEvents.length === 0}
                   onClick={() => {
-                    setCollapsedSections(prev => ({ ...prev, stormsim: false }));
+                    if (collapsedSections['stormsim']) onToggleCollapse('stormsim');
                     setTimeout(() => document.getElementById('section-stormsim')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
                   }}
                   className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border-2 border-amber-300 bg-white hover:bg-amber-50 text-amber-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
@@ -1259,7 +1268,7 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
                 <button
                   disabled={!activeDetailId || !regionMockData}
                   onClick={() => {
-                    setCollapsedSections(prev => ({ ...prev, economics: false }));
+                    if (collapsedSections['economics']) onToggleCollapse('economics');
                     setTimeout(() => document.getElementById('section-economics')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
                   }}
                   className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border-2 border-slate-300 bg-white hover:bg-slate-50 text-slate-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
@@ -1446,13 +1455,9 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
                 </button>
               </div>
             </div>
-          </div>
-          );
-        })()}
+        );
 
-
-        {/* ── STATEWIDE ALERT FEED — above map ── */}
-        {(() => {
+            case 'alertfeed': return DS((() => {
           const alertRegions = scopedRegionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium');
           if (alertRegions.length === 0) return null;
           const criticalCount = alertRegions.filter(r => r.alertLevel === 'high').length;
@@ -1528,9 +1533,9 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
               )}
             </div>
           );
-        })()}
+        })());
 
-        {/* ── MAIN CONTENT: Map (2/3) + Waterbody List (1/3) ── */}
+            case 'map-grid': return DS(
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
           {/* LEFT: State Map (2/3 width — matches NCC layout) */}
@@ -1822,9 +1827,9 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
             </CardContent>
           </Card>
         </div>
+        );
 
-        {/* ── DETAIL + RESTORATION (full width below map grid) — lens controlled ── */}
-        {(
+            case 'detail': return DS(
         <div className="space-y-4">
 
             {/* No selection state */}
@@ -2836,18 +2841,16 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
               );
             })()}
           </div>
-        )}
+        );
 
-
-
-        {/* ── MDE COMPLIANCE REPORT — waterbody-level, requires mock data ── */}
-        {activeDetailId && regionMockData && (() => {
-          const nccRegion = scopedRegionData.find(r => r.id === activeDetailId);
-          const regionConfig = getRegionById(activeDetailId);
-          const regionName = regionConfig?.name || nccRegion?.name || activeDetailId.replace(/_/g, ' ');
-          return (
+            case 'mdeexport': return DS((() => {
+        if (!activeDetailId || !regionMockData) return null;
+        const nccRegion = scopedRegionData.find(r => r.id === activeDetailId);
+        const regionConfig = getRegionById(activeDetailId);
+        const regionName = regionConfig?.name || nccRegion?.name || activeDetailId.replace(/_/g, ' ');
+        return (
             <div id="section-mdeexport" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-              <button onClick={() => toggleCollapse('mdeexport')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+              <button onClick={() => onToggleCollapse('mdeexport')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
                 <span className="text-sm font-bold text-slate-800">📄 MDE Compliance Report — {regionName}</span>
                 <div className="flex items-center gap-1">
                   {isSectionOpen('mdeexport') && <span onClick={(e) => { e.stopPropagation(); printSection('section-mdeexport', `MDE Compliance Report — ${regionName}`); }} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
@@ -2867,15 +2870,15 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
                 </div>
               )}
             </div>
-          );
-        })()}
+        );
+        })());
 
-        {/* ── TMDL COMPLIANCE & REPORT GENERATOR — waterbody-level, requires mock data ── */}
-        {activeDetailId && regionMockData && (() => {
-          const activeAlertCount = scopedRegionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length;
-          return (
+            case 'tmdl': return DS((() => {
+        if (!activeDetailId || !regionMockData) return null;
+        const activeAlertCount = scopedRegionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length;
+        return (
             <div id="section-tmdl" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-              <button onClick={() => toggleCollapse('tmdl')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+              <button onClick={() => onToggleCollapse('tmdl')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
                 <span className="text-sm font-bold text-slate-800">🎯 TMDL Compliance & EJ Impact — {scopedRegionData.find(r => r.id === activeDetailId)?.name || activeDetailId}</span>
                 <div className="flex items-center gap-1">
                   {isSectionOpen('tmdl') && <span onClick={(e) => { e.stopPropagation(); printSection('section-tmdl', `TMDL Compliance & EJ Impact — ${scopedRegionData.find(r => r.id === activeDetailId)?.name || activeDetailId}`); }} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
@@ -2895,15 +2898,15 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
                 </div>
               )}
             </div>
-          );
-        })()}
+        );
+        })());
 
-        {/* ── NUTRIENT CREDITS TRADING — waterbody-level, requires mock data ── */}
-        {activeDetailId && regionMockData && (() => {
-          const wbName = scopedRegionData.find(r => r.id === activeDetailId)?.name || activeDetailId;
-          return (
+            case 'nutrientcredits': return DS((() => {
+        if (!activeDetailId || !regionMockData) return null;
+        const wbName = scopedRegionData.find(r => r.id === activeDetailId)?.name || activeDetailId;
+        return (
             <div id="section-nutrientcredits" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-              <button onClick={() => toggleCollapse('nutrientcredits')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+              <button onClick={() => onToggleCollapse('nutrientcredits')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
                 <span className="text-sm font-bold text-slate-800">💰 Nutrient Credit Trading — {wbName}</span>
                 <div className="flex items-center gap-1">
                   {isSectionOpen('nutrientcredits') && <span onClick={(e) => { e.stopPropagation(); printSection('section-nutrientcredits', `Nutrient Credit Trading — ${wbName}`); }} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
@@ -2925,15 +2928,15 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
                 </div>
               )}
             </div>
-          );
-        })()}
+        );
+        })());
 
-        {/* ── STORM EVENT BMP PERFORMANCE — waterbody-level, requires storm data ── */}
-        {activeDetailId && stormEvents.length > 0 && selectedStormEvent && (() => {
-          const wbName = scopedRegionData.find(r => r.id === activeDetailId)?.name || activeDetailId;
-          return (
+            case 'stormsim': return DS((() => {
+        if (!activeDetailId || stormEvents.length === 0 || !selectedStormEvent) return null;
+        const wbName = scopedRegionData.find(r => r.id === activeDetailId)?.name || activeDetailId;
+        return (
             <div id="section-stormsim" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-              <button onClick={() => toggleCollapse('stormsim')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+              <button onClick={() => onToggleCollapse('stormsim')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
                 <span className="text-sm font-bold text-slate-800">🌧️ Storm Event BMP Performance — {wbName}</span>
                 <div className="flex items-center gap-1">
                   {isSectionOpen('stormsim') && <span onClick={(e) => { e.stopPropagation(); printSection('section-stormsim', `Storm Event BMP Performance — ${wbName}`); }} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
@@ -3159,17 +3162,16 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
                 </div>
               )}
             </div>
-          );
-        })()}
+        );
+        })());
 
-        {/* ── COMPLIANCE ECONOMICS — waterbody-level, requires mock data ── */}
-        {activeDetailId && regionMockData && (() => {
-          const wbName = scopedRegionData.find(r => r.id === activeDetailId)?.name || activeDetailId;
-          // Infer tier from jurisdiction phase
-          const tier = jurisdictionMeta?.phase === 'Phase I' ? 'large' as const : 'medium' as const;
-          return (
+            case 'economics': return DS((() => {
+        if (!activeDetailId || !regionMockData) return null;
+        const wbName = scopedRegionData.find(r => r.id === activeDetailId)?.name || activeDetailId;
+        const tier = jurisdictionMeta?.phase === 'Phase I' ? 'large' as const : 'medium' as const;
+        return (
             <div id="section-economics" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-              <button onClick={() => toggleCollapse('economics')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+              <button onClick={() => onToggleCollapse('economics')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
                 <span className="text-sm font-bold text-slate-800">💲 Compliance Economics — {jurisdictionMeta?.name || wbName}</span>
                 <div className="flex items-center gap-1">
                   {isSectionOpen('economics') && <span onClick={(e) => { e.stopPropagation(); printSection('section-economics', `Compliance Economics — ${jurisdictionMeta?.name || wbName}`); }} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
@@ -3187,13 +3189,12 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
                 </div>
               )}
             </div>
-          );
-        })()}
+        );
+        })());
 
-        {/* ── TOP 10 WORSENING / IMPROVING — full + programs view ── */}
-        {(
+            case 'top10': return DS(
         <div id="section-top10" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <button onClick={() => toggleCollapse('top10')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+          <button onClick={() => onToggleCollapse('top10')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
             <span className="text-sm font-bold text-slate-800">🔥 Top 5 Worsening / Improving Waterbodies</span>
             <div className="flex items-center gap-1">
               {isSectionOpen('top10') && <span onClick={(e) => { e.stopPropagation(); printSection('section-top10', 'Top 5 Worsening / Improving Waterbodies'); }} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
@@ -3232,15 +3233,15 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
                     <div className="flex items-center gap-1.5">
                       <Badge variant="destructive" className="text-xs animate-pulse">CRITICAL</Badge>
                       <button
-                        onClick={(e) => { e.stopPropagation(); toggleCollapse('potomac'); }}
+                        onClick={(e) => { e.stopPropagation(); toggleSection('potomac'); }}
                         className="p-0.5 text-red-400 hover:text-red-600 transition-colors"
-                        title={isSectionOpen('potomac') ? 'Collapse details' : 'Expand details'}
+                        title={expandedSections['potomac'] ? 'Collapse details' : 'Expand details'}
                       >
-                        {isSectionOpen('potomac') ? <Minus className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                        {expandedSections['potomac'] ? <Minus className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                       </button>
                     </div>
                   </div>
-                  {isSectionOpen('potomac') && (
+                  {expandedSections['potomac'] && (
                   <div className="px-3 pb-3 pt-1 text-xs text-red-900 leading-relaxed border-t border-red-200 bg-red-50/80 space-y-2">
                     {/* Incident summary */}
                     <div>
@@ -3357,7 +3358,49 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
         </div>
           )}
         </div>
-        )}
+        );
+
+            case 'exporthub': return DS(
+        <div id="section-exporthub" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <button onClick={() => onToggleCollapse('exporthub')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+            <span className="text-sm font-bold text-slate-800">📦 Data Export Hub</span>
+            <div className="flex items-center gap-1">
+              {isSectionOpen('exporthub') && <span onClick={(e) => { e.stopPropagation(); printSection('section-exporthub', 'Data Export Hub'); }} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
+              {isSectionOpen('exporthub') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+            </div>
+          </button>
+          {isSectionOpen('exporthub') && (
+            <div className="p-4">
+              <DataExportHub context="ms4" />
+            </div>
+          )}
+        </div>
+        );
+
+            case 'grants': return DS(
+        <div id="section-grants" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <button onClick={() => onToggleCollapse('grants')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+            <span className="text-sm font-bold text-slate-800">💰 Grant Opportunities — {stateName}</span>
+            <div className="flex items-center gap-1">
+              {isSectionOpen('grants') && <span onClick={(e) => { e.stopPropagation(); printSection('section-grants', `Grant Opportunities — ${stateName}`); }} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
+              {isSectionOpen('grants') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+            </div>
+          </button>
+          {isSectionOpen('grants') && (
+            <GrantOpportunityMatcher
+              regionId={activeDetailId || `${stateAbbr.toLowerCase()}_statewide`}
+              removalEfficiencies={removalEfficiencies as any}
+              alertsCount={scopedRegionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length}
+              userRole="State"
+              stateAbbr={stateAbbr}
+            />
+          )}
+        </div>
+        );
+
+            default: return null;
+          }
+        })}
 
         {/* ── DATA PROVENANCE & CHAIN OF CUSTODY — regulator audit view ── */}
         {(
@@ -3719,42 +3762,10 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
           </Card>
         )}
 
-        {/* ── DATA EXPORT HUB ── */}
-        <div id="section-exporthub" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <button onClick={() => toggleCollapse('exporthub')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-            <span className="text-sm font-bold text-slate-800">📦 Data Export Hub</span>
-            <div className="flex items-center gap-1">
-              {isSectionOpen('exporthub') && <span onClick={(e) => { e.stopPropagation(); printSection('section-exporthub', 'Data Export Hub'); }} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
-              {isSectionOpen('exporthub') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
-            </div>
-          </button>
-          {isSectionOpen('exporthub') && (
-            <div className="p-4">
-              <DataExportHub context="ms4" />
-            </div>
-          )}
         </div>
-
-
-        {/* ── GRANT OPPORTUNITIES — always visible at state level ── */}
-        <div id="section-grants" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <button onClick={() => toggleCollapse('grants')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-            <span className="text-sm font-bold text-slate-800">💰 Grant Opportunities — {stateName}</span>
-            <div className="flex items-center gap-1">
-              {isSectionOpen('grants') && <span onClick={(e) => { e.stopPropagation(); printSection('section-grants', `Grant Opportunities — ${stateName}`); }} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
-              {isSectionOpen('grants') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
-            </div>
-          </button>
-          {isSectionOpen('grants') && (
-            <GrantOpportunityMatcher
-              regionId={activeDetailId || `${stateAbbr.toLowerCase()}_statewide`}
-              removalEfficiencies={removalEfficiencies as any}
-              alertsCount={scopedRegionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length}
-              userRole="State"
-              stateAbbr={stateAbbr}
-            />
-          )}
-        </div>
+        </>);
+        }}
+        </LayoutEditor>
 
         {/* ── DISCLAIMER FOOTER ── */}
         <PlatformDisclaimer />
