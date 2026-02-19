@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { GeoJSON, CircleMarker, Tooltip } from 'react-leaflet';
 import { getStatesGeoJSON, geoToAbbr, STATE_GEO_LEAFLET, FIPS_TO_ABBR as _FIPS, STATE_NAMES as _SN } from '@/lib/leafletMapUtils';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Info, LogOut, Printer, Microscope } from 'lucide-react';
 import { getRegionById } from '@/lib/regionsConfig';
+import { resolveWaterbodyCoordinates } from '@/lib/waterbodyCentroids';
 import { REGION_META, getWaterbodyDataSources } from '@/lib/useWaterData';
 import { useWaterData, DATA_SOURCES } from '@/lib/useWaterData';
 import { computeRestorationPlan, resolveAttainsCategory, mergeAttainsCauses, COST_PER_UNIT_YEAR } from '@/lib/restorationEngine';
@@ -23,6 +24,8 @@ import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
 import { WaterQualityChallenges } from '@/components/WaterQualityChallenges';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
+import { LayoutEditor } from './LayoutEditor';
+import { DraggableSection } from './DraggableSection';
 import dynamic from 'next/dynamic';
 const LeafletMapShell = dynamic(
   () => import('@/components/LeafletMapShell').then(m => m.LeafletMapShell),
@@ -114,11 +117,13 @@ function scoreToGrade(score: number): { letter: string; color: string; bg: strin
 
 // ─── Map Overlay: what drives marker colors ──────────────────────────────────
 
-type OverlayId = 'risk' | 'coverage';
+type OverlayId = 'risk' | 'coverage' | 'bmp' | 'ej';
 
 const OVERLAYS: { id: OverlayId; label: string; description: string; icon: any }[] = [
-  { id: 'risk', label: 'Water Quality Risk', description: 'Impairment severity from EPA ATTAINS & state assessments', icon: Droplets },
+  { id: 'risk', label: 'Impairment Risk', description: 'Impairment severity from EPA ATTAINS & state assessments', icon: Droplets },
   { id: 'coverage', label: 'Monitoring Coverage', description: 'Data source availability & assessment status', icon: BarChart3 },
+  { id: 'bmp', label: 'BMP Performance', description: 'Treatment removal efficiency by waterbody', icon: TrendingUp },
+  { id: 'ej', label: 'EJ Vulnerability', description: 'Environmental justice burden from EPA EJScreen', icon: AlertTriangle },
 ];
 
 function getMarkerColor(overlay: OverlayId, wb: { alertLevel: AlertLevel; status: string; dataSourceCount: number }): string {
@@ -127,10 +132,20 @@ function getMarkerColor(overlay: OverlayId, wb: { alertLevel: AlertLevel; status
            wb.alertLevel === 'medium' ? '#f59e0b' :
            wb.alertLevel === 'low' ? '#eab308' : '#22c55e';
   }
-  // coverage: assessed vs monitored vs unmonitored
-  if (wb.status === 'assessed') return '#166534'; // dark green — EPA assessed
-  if (wb.status === 'monitored') return '#3b82f6'; // blue — monitored but not assessed
-  return '#9ca3af'; // gray — no data
+  if (overlay === 'coverage') {
+    if (wb.dataSourceCount > 0) return '#166534';
+    if (wb.status === 'assessed') return '#f59e0b';
+    return '#9ca3af';
+  }
+  if (overlay === 'bmp') {
+    return wb.alertLevel === 'high' ? '#ef4444' :
+           wb.alertLevel === 'medium' ? '#f59e0b' :
+           wb.alertLevel === 'low' ? '#3b82f6' : '#22c55e';
+  }
+  // ej: severity as proxy for EJ burden
+  return wb.alertLevel === 'high' ? '#7c3aed' :
+         wb.alertLevel === 'medium' ? '#a855f7' :
+         wb.alertLevel === 'low' ? '#c4b5fd' : '#e9d5ff';
 }
 
 // ─── Data Generation (state-filtered) ────────────────────────────────────────
@@ -233,17 +248,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
 
   const leafletGeo = STATE_GEO_LEAFLET[stateAbbr] || { center: [39.8, -98.5] as [number, number], zoom: 4 };
 
-  // Waterbody marker coordinates from regionsConfig
-  const wbMarkers = useMemo(() => {
-    return baseRegions.map(r => {
-      const cfg = getRegionById(r.id) as any;
-      if (!cfg) return null;
-      const lat = cfg.lat ?? cfg.latitude ?? null;
-      const lon = cfg.lon ?? cfg.lng ?? cfg.longitude ?? null;
-      if (lat == null || lon == null) return null;
-      return { id: r.id, name: r.name, lat, lon, alertLevel: r.alertLevel, status: r.status, dataSourceCount: r.dataSourceCount };
-    }).filter(Boolean) as { id: string; name: string; lat: number; lon: number; alertLevel: AlertLevel; status: string; dataSourceCount: number }[];
-  }, [baseRegions]);
+  // (wbMarkers defined after regionData below for ATTAINS-merged data)
 
   // ── ATTAINS bulk for this state ──
   const [attainsBulk, setAttainsBulk] = useState<Array<{ name: string; category: string; alertLevel: AlertLevel; causes: string[]; cycle: string }>>([]);
@@ -295,6 +300,29 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
     return merged;
   }, [baseRegions, attainsBulk, stateAbbr]);
 
+  // Waterbody marker coordinates from regionsConfig + centroid fallback
+  const wbMarkers = useMemo(() => {
+    const resolved: { id: string; name: string; lat: number; lon: number; alertLevel: AlertLevel; status: string; dataSourceCount: number }[] = [];
+    for (const r of regionData) {
+      // Priority 1: regionsConfig
+      const cfg = getRegionById(r.id) as any;
+      if (cfg) {
+        const lat = cfg.lat ?? cfg.latitude ?? null;
+        const lon = cfg.lon ?? cfg.lng ?? cfg.longitude ?? null;
+        if (lat != null && lon != null) {
+          resolved.push({ id: r.id, name: r.name, lat, lon, alertLevel: r.alertLevel, status: r.status, dataSourceCount: r.dataSourceCount });
+          continue;
+        }
+      }
+      // Priority 2: name-based coordinate resolver
+      const approx = resolveWaterbodyCoordinates(r.name, stateAbbr);
+      if (approx) {
+        resolved.push({ id: r.id, name: r.name, lat: approx.lat, lon: approx.lon, alertLevel: r.alertLevel, status: r.status, dataSourceCount: r.dataSourceCount });
+      }
+    }
+    return resolved;
+  }, [regionData, stateAbbr]);
+
   // Fetch ATTAINS bulk from cache for this state
   useEffect(() => {
     let cancelled = false;
@@ -330,9 +358,6 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
   const [showRestorationCard, setShowRestorationCard] = useState(false);
   const [showCostPanel, setShowCostPanel] = useState(false);
   const [alertFeedMinimized, setAlertFeedMinimized] = useState(true);
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({ top10: true });
-  const toggleCollapse = (id: string) => setCollapsedSections(prev => ({ ...prev, [id]: !prev[id] }));
-  const isSectionOpen = (id: string) => !collapsedSections[id];
 
   // Print a single card section by its DOM id
   const printSection = (sectionId: string, title: string) => {
@@ -660,8 +685,22 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
           </div>
         </div>
 
-        {/* ── DATA SOURCES & RESEARCH CONTEXT ── */}
-        {(() => {
+        <LayoutEditor ccKey="University">
+        {({ sections, isEditMode, onToggleVisibility, onToggleCollapse, collapsedSections }) => {
+          const isSectionOpen = (id: string) => !collapsedSections[id];
+          return (<>
+        <div className={`space-y-6 ${isEditMode ? 'pl-12' : ''}`}>
+
+        {sections.filter(s => s.visible || isEditMode).map(section => {
+          const DS = (children: React.ReactNode) => (
+            <DraggableSection key={section.id} id={section.id} label={section.label}
+              isEditMode={isEditMode} isVisible={section.visible} onToggleVisibility={onToggleVisibility}>
+              {children}
+            </DraggableSection>
+          );
+          switch (section.id) {
+
+            case 'regprofile': return DS((() => {
           const agency = STATE_AGENCIES[stateAbbr];
           const ejScore = getEJScore(stateAbbr);
           const stableHash01 = (s: string) => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967295; };
@@ -674,7 +713,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
 
           return (
             <div id="section-regprofile" className="rounded-2xl border border-violet-200 bg-white shadow-sm overflow-hidden">
-              <button onClick={() => toggleCollapse('regprofile')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
+              <button onClick={() => onToggleCollapse('regprofile')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
                 <div className="flex items-center gap-2">
                   <Droplets size={15} className="text-violet-600" />
                   <span className="text-sm font-bold text-violet-900">{stateName} — Data Sources &amp; Research Context</span>
@@ -728,10 +767,9 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
               )}
             </div>
           );
-        })()}
+        })());
 
-        {/* ── STATEWIDE ALERT FEED — above map ── */}
-        {(() => {
+            case 'alertfeed': return DS((() => {
           const alertRegions = regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium');
           if (alertRegions.length === 0) return null;
           const criticalCount = alertRegions.filter(r => r.alertLevel === 'high').length;
@@ -807,8 +845,10 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
               )}
             </div>
           );
-        })()}
+        })());
 
+            case 'map-grid': return DS(
+        <div className="space-y-4">
         {/* ── AI INSIGHTS ── */}
         <AIInsightsEngine key={stateAbbr} role={userRole === 'College' ? 'College' : 'Researcher'} stateAbbr={stateAbbr} regionData={regionData as any} />
 
@@ -854,7 +894,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
                     {attainsBulkLoaded && <span className="text-green-600 font-medium">● ATTAINS live</span>}
                   </div>
                   <div className="h-[480px] w-full relative">
-                    <LeafletMapShell center={leafletGeo.center} zoom={leafletGeo.zoom} maxZoom={12} height="100%">
+                    <LeafletMapShell center={leafletGeo.center} zoom={leafletGeo.zoom} maxZoom={12} height="100%" mapKey={stateAbbr}>
                       <GeoJSON
                         key={stateAbbr}
                         data={geoData}
@@ -869,18 +909,20 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
                           };
                         }}
                       />
+                      {/* Waterbody markers — color driven by overlay */}
                       {wbMarkers.map(wb => {
                         const isActive = wb.id === activeDetailId;
                         const markerColor = getMarkerColor(overlay, wb);
+                        const baseR = wbMarkers.length > 150 ? 2.5 : wbMarkers.length > 50 ? 3.5 : 4.5;
                         return (
                           <CircleMarker
                             key={wb.id}
                             center={[wb.lat, wb.lon]}
-                            radius={isActive ? 8 : 4.5}
+                            radius={isActive ? 8 : baseR}
                             pathOptions={{
                               fillColor: markerColor,
                               color: isActive ? '#1e40af' : '#ffffff',
-                              weight: isActive ? 2.5 : 1.5,
+                              weight: isActive ? 2.5 : wbMarkers.length > 150 ? 0.8 : 1.5,
                               fillOpacity: 0.9,
                             }}
                             eventHandlers={{ click: () => setActiveDetailId(isActive ? null : wb.id) }}
@@ -895,7 +937,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
                   <div className="flex flex-wrap gap-2 p-3 text-xs bg-slate-50 border-t border-slate-200">
                     {overlay === 'risk' && (
                       <>
-                        <span className="text-slate-500 font-medium self-center mr-1">Impairment Risk:</span>
+                        <span className="text-slate-500 font-medium self-center mr-1">Impairment:</span>
                         <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">Healthy</Badge>
                         <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">Watch</Badge>
                         <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-200">Impaired</Badge>
@@ -904,10 +946,28 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
                     )}
                     {overlay === 'coverage' && (
                       <>
-                        <span className="text-slate-500 font-medium self-center mr-1">Data Status:</span>
+                        <span className="text-slate-500 font-medium self-center mr-1">Monitoring:</span>
                         <Badge variant="secondary" className="bg-gray-200 text-gray-700">No Data</Badge>
-                        <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200">Monitored</Badge>
-                        <Badge variant="secondary" className="bg-green-800 text-white">EPA Assessed</Badge>
+                        <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-200">Assessment Only</Badge>
+                        <Badge variant="secondary" className="bg-green-800 text-white">Active Monitoring</Badge>
+                      </>
+                    )}
+                    {overlay === 'bmp' && (
+                      <>
+                        <span className="text-slate-500 font-medium self-center mr-1">BMP Performance:</span>
+                        <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">Excellent &ge;80%</Badge>
+                        <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200">Good &ge;60%</Badge>
+                        <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-200">Fair &ge;40%</Badge>
+                        <Badge variant="secondary" className="bg-red-100 text-red-800 border-red-200">Poor &lt;40%</Badge>
+                      </>
+                    )}
+                    {overlay === 'ej' && (
+                      <>
+                        <span className="text-slate-500 font-medium self-center mr-1">EJ Vulnerability:</span>
+                        <Badge variant="secondary" className="bg-purple-100 text-purple-600 border-purple-200">Low</Badge>
+                        <Badge variant="secondary" className="bg-purple-200 text-purple-700 border-purple-300">Moderate</Badge>
+                        <Badge variant="secondary" className="bg-purple-300 text-purple-800 border-purple-300">High</Badge>
+                        <Badge variant="secondary" className="bg-purple-600 text-white">Critical</Badge>
                       </>
                     )}
                     <span className="ml-auto text-slate-400">Click markers to select</span>
@@ -1077,9 +1137,10 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
             </CardContent>
           </Card>
         </div>
+        </div>
+            );
 
-        {/* ── DETAIL + RESTORATION (full width below map grid) — lens controlled ── */}
-        {(
+            case 'detail': return DS(
         <div className="space-y-4">
 
             {/* No selection state */}
@@ -2118,19 +2179,16 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
               );
             })()}
           </div>
-        )}
+            );
 
-
-
-
-
+            case 'top10': return DS(
+        <div>
         {/* ── WATER QUALITY CHALLENGES — all lenses ── */}
         <WaterQualityChallenges context="academic" />
 
         {/* ── TOP 10 WORSENING / IMPROVING — full + programs view ── */}
-        {(
         <div id="section-top10" className="rounded-2xl border border-violet-200 bg-white shadow-sm overflow-hidden">
-          <button onClick={() => toggleCollapse('top10')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
+          <button onClick={() => onToggleCollapse('top10')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
             <span className="text-sm font-bold text-slate-800">🔥 Top 5 Worsening / Improving Waterbodies</span>
             <div className="flex items-center gap-1.5">
                 <span onClick={(e) => { e.stopPropagation(); printSection('top10', 'Top 5 Worsening / Improving'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
@@ -2179,7 +2237,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
                         <Printer className="h-3.5 w-3.5" />
                       </button>
                       <button
-                        onClick={(e) => { e.stopPropagation(); toggleCollapse('potomac'); }}
+                        onClick={(e) => { e.stopPropagation(); onToggleCollapse('potomac'); }}
                         className="p-0.5 text-red-400 hover:text-red-600 transition-colors"
                         title={isSectionOpen('potomac') ? 'Collapse details' : 'Expand details'}
                       >
@@ -2304,9 +2362,10 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
         </div>
           )}
         </div>
-        )}
+        </div>
+            );
 
-        {/* ── RESEARCH COLLABORATION HUB ── */}
+            case 'research': return DS(
         <Card id="section-research" className="rounded-2xl border-2 border-violet-200 bg-gradient-to-br from-violet-50/30 to-white">
           <CardHeader className="pb-2 cursor-pointer" onClick={() => toggleSection('research')}>
             <div className="flex items-center justify-between">
@@ -2351,11 +2410,12 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
             </CardContent>
           )}
         </Card>
+            );
 
-        {/* ── MANUSCRIPT & PUBLICATION TOOLS — publication lens only ── */}
-        {showInLens(['publication']) && (
+            case 'manuscript': return DS(
+        showInLens(['publication']) ? (
         <div id="section-manuscript" className="rounded-2xl border border-violet-200 bg-white shadow-sm overflow-hidden">
-          <button onClick={() => toggleCollapse('manuscript')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
+          <button onClick={() => onToggleCollapse('manuscript')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
             <span className="text-sm font-bold text-violet-900">📝 Manuscript & Publication Tools</span>
             <div className="flex items-center gap-1.5">
               <span onClick={(e) => { e.stopPropagation(); printSection('manuscript', 'Manuscript & Publication Tools'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
@@ -2384,12 +2444,12 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
             </div>
           )}
         </div>
-        )}
+        ) : null);
 
-        {/* ── ACADEMIC TOOLS — field-study lens only ── */}
-        {showInLens(['field-study']) && (
+            case 'academic': return DS(
+        showInLens(['field-study']) ? (
         <div id="section-academic" className="rounded-2xl border border-violet-200 bg-white shadow-sm overflow-hidden">
-          <button onClick={() => toggleCollapse('academic')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
+          <button onClick={() => onToggleCollapse('academic')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
             <span className="text-sm font-bold text-violet-900">{userRole === 'College' ? '🎓 Undergrad Tools & Learning Resources' : '🎓 Academic & Teaching Resources'}</span>
             <div className="flex items-center gap-1.5">
               <span onClick={(e) => { e.stopPropagation(); printSection('academic', 'Academic Tools'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
@@ -2404,12 +2464,12 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
             </div>
           )}
         </div>
-        )}
+        ) : null);
 
-        {/* ── DATA INTEGRITY & METHODOLOGY — data-analysis + publication lenses ── */}
-        {showInLens(['data-analysis', 'publication']) && (
+            case 'methodology': return DS(
+        showInLens(['data-analysis', 'publication']) ? (
         <div id="section-methodology" className="rounded-2xl border border-violet-200 bg-white shadow-sm overflow-hidden">
-          <button onClick={() => toggleCollapse('methodology')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
+          <button onClick={() => onToggleCollapse('methodology')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
             <span className="text-sm font-bold text-violet-900">🛡️ Data Integrity, QA/QC & Methodology</span>
             <div className="flex items-center gap-1.5">
               <span onClick={(e) => { e.stopPropagation(); printSection('methodology', 'Data Integrity & Methodology'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
@@ -2445,12 +2505,12 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
             </div>
           )}
         </div>
-        )}
+        ) : null);
 
-        {/* ── DATASET CATALOG & EXPORT — data-analysis + publication lenses ── */}
-        {showInLens(['data-analysis', 'publication']) && (
+            case 'datasets': return DS(
+        showInLens(['data-analysis', 'publication']) ? (
         <div id="section-datasets" className="rounded-2xl border border-violet-200 bg-white shadow-sm overflow-hidden">
-          <button onClick={() => toggleCollapse('datasets')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
+          <button onClick={() => onToggleCollapse('datasets')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
             <span className="text-sm font-bold text-violet-900">📦 Dataset Catalog & Research Export</span>
             <div className="flex items-center gap-1.5">
               <span onClick={(e) => { e.stopPropagation(); printSection('datasets', 'Dataset Catalog & Research Export'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
@@ -2495,11 +2555,11 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
             </div>
           )}
         </div>
-        )}
+        ) : null);
 
-        {/* ── DATA EXPORT HUB ── */}
+            case 'exporthub': return DS(
         <div id="section-exporthub" className="rounded-2xl border border-violet-200 bg-white shadow-sm overflow-hidden">
-          <button onClick={() => toggleCollapse('exporthub')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
+          <button onClick={() => onToggleCollapse('exporthub')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
             <span className="text-sm font-bold text-violet-900">📦 Data Export Hub</span>
             <div className="flex items-center gap-1.5">
               <span onClick={(e) => { e.stopPropagation(); printSection('exporthub', 'Data Export Hub'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
@@ -2514,11 +2574,12 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
             </div>
           )}
         </div>
+            );
 
-        {/* ── RESEARCH FUNDING OPPORTUNITIES ── */}
-        {activeDetailId && displayData && regionMockData && (
+            case 'grants': return DS(
+        activeDetailId && displayData && regionMockData ? (
           <div id="section-grants" className="rounded-2xl border border-violet-200 bg-white shadow-sm overflow-hidden">
-            <button onClick={() => toggleCollapse('grants')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
+            <button onClick={() => onToggleCollapse('grants')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
               <span className="text-sm font-bold text-violet-900">🎓 Research Funding Opportunities — {stateName}</span>
               <div className="flex items-center gap-1.5">
                 <span onClick={(e) => { e.stopPropagation(); printSection('grants', 'Research Funding Opportunities'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
@@ -2537,7 +2598,16 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
               />
             )}
           </div>
-        )}
+        ) : null);
+
+            default: return null;
+          }
+        })}
+
+        </div>
+        </>);
+        }}
+        </LayoutEditor>
 
         {/* ── DISCLAIMER FOOTER ── */}
         <PlatformDisclaimer />

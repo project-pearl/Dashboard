@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { GeoJSON, CircleMarker, Tooltip } from 'react-leaflet';
 import dynamic from 'next/dynamic';
@@ -30,6 +30,8 @@ import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { resolveWaterbodyCoordinates } from '@/lib/waterbodyCentroids';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
+import { LayoutEditor } from './LayoutEditor';
+import { DraggableSection } from './DraggableSection';
 
 const PeerBenchmarking = dynamic(
   () => import('@/components/PeerBenchmarking').then((mod) => mod.PeerBenchmarking),
@@ -397,9 +399,6 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
   const [showRestorationCard, setShowRestorationCard] = useState(false);
   const [showCostPanel, setShowCostPanel] = useState(false);
   const [alertFeedMinimized, setAlertFeedMinimized] = useState(true);
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({ top10: true });
-  const toggleCollapse = (id: string) => setCollapsedSections(prev => ({ ...prev, [id]: !prev[id] }));
-  const isSectionOpen = (id: string) => !collapsedSections[id];
 
 
   // Print a single card section by its DOM id
@@ -784,8 +783,22 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
           </div>
         </div>
 
-        {/* ── MS4 & REGULATORY PROFILE — above map ── */}
-        {(() => {
+        <LayoutEditor ccKey="State">
+        {({ sections, isEditMode, onToggleVisibility, onToggleCollapse, collapsedSections }) => {
+          const isSectionOpen = (id: string) => !collapsedSections[id];
+          return (<>
+        <div className={`space-y-6 ${isEditMode ? 'pl-12' : ''}`}>
+
+        {sections.filter(s => s.visible || isEditMode).map(section => {
+          const DS = (children: React.ReactNode) => (
+            <DraggableSection key={section.id} id={section.id} label={section.label}
+              isEditMode={isEditMode} isVisible={section.visible} onToggleVisibility={onToggleVisibility}>
+              {children}
+            </DraggableSection>
+          );
+          switch (section.id) {
+
+            case 'regprofile': return DS((() => {
           const ms4Total = jurisdictions.length;
           const agency = STATE_AGENCIES[stateAbbr];
           const ejScore = getEJScore(stateAbbr);
@@ -800,7 +813,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
           if (ms4Total === 0 && !ejScore) return null;
           return (
             <div id="section-regprofile" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-              <button onClick={() => toggleCollapse('regprofile')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+              <button onClick={() => onToggleCollapse('regprofile')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
                 <div className="flex items-center gap-2">
                   <Building2 size={15} className="text-orange-600" />
                   <span className="text-sm font-bold text-slate-800">{stateName} — MS4 & Regulatory Profile</span>
@@ -858,10 +871,9 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
               )}
             </div>
           );
-        })()}
+        })());
 
-        {/* ── STATEWIDE ALERT FEED — above map ── */}
-        {(() => {
+            case 'alertfeed': return DS((() => {
           const alertRegions = regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium');
           if (alertRegions.length === 0) return null;
           const criticalCount = alertRegions.filter(r => r.alertLevel === 'high').length;
@@ -937,9 +949,9 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
               )}
             </div>
           );
-        })()}
+        })());
 
-        {/* ── MAIN CONTENT: Map (2/3) + Waterbody List (1/3) ── */}
+            case 'map-grid': return DS(
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
           {/* LEFT: State Map (2/3 width — matches NCC layout) */}
@@ -1224,11 +1236,13 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
             </CardContent>
           </Card>
         </div>
+            );
 
-        {/* ── AI INSIGHTS ── */}
+            case 'insights': return DS(
         <AIInsightsEngine key={stateAbbr} role="State" stateAbbr={stateAbbr} regionData={regionData as any} />
+            );
 
-        {/* ── DETAIL + RESTORATION (full width below map grid) — lens controlled ── */}
+            case 'detail': return DS(<>
         {lens.showDetail && (
         <div className="space-y-4">
 
@@ -2243,13 +2257,9 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
           </div>
         )}
 
-
-        {/* ── STATEWIDE COMPONENTS — shown when a waterbody is selected AND mock data is available ── */}
+        {/* ── Environmental Justice — Census ACS + EPA SDWIS (statewide) + EJScreen (per-waterbody) ── */}
         {activeDetailId && displayData && regionMockData && (
-          <div className="space-y-4">
-
-            {/* Environmental Justice — Census ACS + EPA SDWIS (statewide) + EJScreen (per-waterbody) */}
-            {(() => {
+            (() => {
               const ejScore = getEJScore(stateAbbr);
               const ejDetail = getEJData(stateAbbr);
               if (!ejDetail) return null;
@@ -2271,7 +2281,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
               const totalEJCached = Object.entries(ejCache).filter(([, v]) => v.ejIndex !== null && v.ejIndex !== undefined).length;
               return (
                 <div className={`rounded-xl border ${scoreBorder} bg-white shadow-sm overflow-hidden`}>
-                  <button onClick={() => toggleCollapse('ej')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+                  <button onClick={() => onToggleCollapse('ej')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
                     <span className="text-sm font-bold text-slate-800">⚖️ Environmental Justice — {wbName}</span>
                     <div className="flex items-center gap-2">
                       {wbEJLoading ? (
@@ -2373,11 +2383,15 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
                   )}
                 </div>
               );
-            })()}
+            })()
+        )}
+            </>);
 
-            {/* Peer Benchmarking */}
+            case 'bench': return DS(
+        <div className="space-y-4">
+        {activeDetailId && displayData && regionMockData && (
             <div id="section-bench" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-              <button onClick={() => toggleCollapse('bench')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+              <button onClick={() => onToggleCollapse('bench')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
                 <span className="text-sm font-bold text-slate-800">📊 Peer Benchmarking Analysis</span>
                 <div className="flex items-center gap-1.5">
                 <span onClick={(e) => { e.stopPropagation(); printSection('bench', 'Peer Benchmarking'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
@@ -2394,15 +2408,14 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
                 />
               )}
             </div>
-
-          </div>
         )}
+        </div>
+            );
 
-
-        {/* ── TOP 10 WORSENING / IMPROVING — full + programs view ── */}
+            case 'top10': return DS(<>
         {lens.showHotspots && (
         <div id="section-top10" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <button onClick={() => toggleCollapse('top10')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+          <button onClick={() => onToggleCollapse('top10')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
             <span className="text-sm font-bold text-slate-800">🔥 Top 5 Worsening / Improving Waterbodies</span>
             <div className="flex items-center gap-1.5">
                 <span onClick={(e) => { e.stopPropagation(); printSection('top10', 'Top 5 Worsening / Improving'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
@@ -2451,7 +2464,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
                         <Printer className="h-3.5 w-3.5" />
                       </button>
                       <button
-                        onClick={(e) => { e.stopPropagation(); toggleCollapse('potomac'); }}
+                        onClick={(e) => { e.stopPropagation(); onToggleCollapse('potomac'); }}
                         className="p-0.5 text-red-400 hover:text-red-600 transition-colors"
                         title={isSectionOpen('potomac') ? 'Collapse details' : 'Expand details'}
                       >
@@ -2577,8 +2590,9 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
           )}
         </div>
         )}
+            </>);
 
-        {/* ── MS4 JURISDICTIONS (collapsible, full-width below grid) — lens controlled ── */}
+            case 'ms4jurisdictions': return DS(<>
         {lens.showMS4 && jurisdictions.length > 0 && (
           <Card id="section-ms4jurisdictions" className="border-2 border-indigo-200 bg-gradient-to-br from-indigo-50/30 to-white">
             <CardHeader className="pb-2 cursor-pointer" onClick={() => toggleSection('ms4')}>
@@ -2689,10 +2703,11 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
             )}
           </Card>
         )}
+            </>);
 
-        {/* ── DATA EXPORT HUB ── */}
+            case 'exporthub': return DS(
         <div id="section-exporthub" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <button onClick={() => toggleCollapse('exporthub')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+          <button onClick={() => onToggleCollapse('exporthub')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
             <span className="text-sm font-bold text-slate-800">📦 Data Export Hub</span>
             <div className="flex items-center gap-1.5">
               <span onClick={(e) => { e.stopPropagation(); printSection('exporthub', 'Data Export Hub'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
@@ -2707,12 +2722,12 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
             </div>
           )}
         </div>
+            );
 
-
-        {/* ── GRANT OPPORTUNITIES — always at bottom ── */}
+            case 'grants': return DS(<>
         {activeDetailId && displayData && regionMockData && (
           <div id="section-grants" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <button onClick={() => toggleCollapse('grants')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+            <button onClick={() => onToggleCollapse('grants')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
               <span className="text-sm font-bold text-slate-800">💰 Grant Opportunities — {stateName}</span>
               <div className="flex items-center gap-1.5">
                 <span onClick={(e) => { e.stopPropagation(); printSection('grants', 'Grant Opportunities'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
@@ -2732,6 +2747,16 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
             )}
           </div>
         )}
+            </>);
+
+            default: return null;
+          }
+        })}
+
+        </div>
+        </>);
+        }}
+        </LayoutEditor>
 
         {/* ── DISCLAIMER FOOTER ── */}
         <PlatformDisclaimer />
