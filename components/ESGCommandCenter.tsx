@@ -27,6 +27,7 @@ import {
   Download, ExternalLink, Star, Zap, Heart, Scale, X, LogOut, Printer,
   CheckCircle2, Circle, AlertCircle, Sparkles, ClipboardList, Link2, PenTool, Package
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/authContext';
 import { getRegionById } from '@/lib/regionsConfig';
 import { REGION_META, getWaterbodyDataSources } from '@/lib/useWaterData';
@@ -370,6 +371,7 @@ type Props = {
 
 export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: propFacilities, onBack, onToggleDevMode }: Props) {
   const { user, logout } = useAuth();
+  const router = useRouter();
 
   // ── View Lens ──
   const [viewLens, setViewLens] = useState<ESGLens>('overview');
@@ -690,6 +692,23 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
             </div>
 
             <div className="flex items-center gap-2">
+            {/* State selector */}
+            <select
+              value={focusedState}
+              onChange={(e) => {
+                const st = e.target.value;
+                setFocusedState(st);
+                setSelectedFacility(null);
+                const geo = STATE_GEO_LEAFLET[st] || STATE_GEO_LEAFLET['US'];
+                setFlyTarget({ center: geo.center, zoom: st === 'US' ? (isCBPortfolio ? CB_ZOOM : 4) : geo.zoom });
+              }}
+              className="h-8 px-3 text-xs font-medium rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 focus:ring-2 focus:ring-emerald-400/50 focus:outline-none transition-colors cursor-pointer"
+            >
+              <option value="US">All States</option>
+              {Object.entries(STATE_NAMES).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
+                <option key={abbr} value={abbr}>{name}</option>
+              ))}
+            </select>
             {/* Lens selector */}
             <div className="relative">
               <button
@@ -788,11 +807,11 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
                   {/* Account actions */}
                   <div className="px-4 py-2.5 space-y-1">
                     <button
-                      onClick={() => { /* TODO: wire to password change route */ }}
+                      onClick={() => { setShowAccountPanel(false); router.push('/account'); }}
                       className="w-full text-left px-3 py-2 rounded-md text-xs text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors"
                     >
                       <Shield size={13} className="text-slate-400" />
-                      Change Password
+                      My Account
                     </button>
                     <button
                       onClick={() => { setShowAccountPanel(false); logout(); }}

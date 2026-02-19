@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Info, LogOut, Printer, Users, Heart, Leaf, AlertCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { getRegionById } from '@/lib/regionsConfig';
 import { REGION_META, getWaterbodyDataSources } from '@/lib/useWaterData';
 import { useWaterData, DATA_SOURCES } from '@/lib/useWaterData';
@@ -215,10 +216,12 @@ function generateStateRegionData(stateAbbr: string): RegionRow[] {
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }: Props) {
+export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, onToggleDevMode }: Props) {
+  const [stateAbbr, setStateAbbr] = useState(initialStateAbbr);
   const stateName = STATE_NAMES[stateAbbr] || stateAbbr;
   const agency = STATE_AGENCIES[stateAbbr] || STATE_AUTHORITIES[stateAbbr] || null;
   const { user, logout } = useAuth();
+  const router = useRouter();
 
   // ── View (all panels visible — NGOs see everything for advocacy) ──
   const [showAccountPanel, setShowAccountPanel] = useState(false);
@@ -596,6 +599,20 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {/* State Selector */}
+            <select
+              value={stateAbbr}
+              onChange={(e) => {
+                setStateAbbr(e.target.value);
+                setSelectedWatershed('All Watersheds');
+                setActiveDetailId(null);
+              }}
+              className="h-8 px-3 text-xs font-medium rounded-md border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            >
+              {Object.entries(STATE_NAMES).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
+                <option key={abbr} value={abbr}>{name}</option>
+              ))}
+            </select>
             {/* Watershed Dropdown Selector */}
             {watershedGroups.length > 1 && (
               <select
@@ -661,6 +678,13 @@ export function NGOCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }:
                     </div>
                   </div>
                   <div className="px-4 py-2.5 space-y-1">
+                    <button
+                      onClick={() => { setShowAccountPanel(false); router.push('/account'); }}
+                      className="w-full text-left px-3 py-2 rounded-md text-xs text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors"
+                    >
+                      <Shield size={13} className="text-slate-400" />
+                      My Account
+                    </button>
                     <button
                       onClick={() => { setShowAccountPanel(false); logout(); }}
                       className="w-full text-left px-3 py-2 rounded-md text-xs text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"

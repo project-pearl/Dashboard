@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { X, AlertTriangle, AlertCircle, CheckCircle, MapPin, Droplets, Leaf, DollarSign, Users, TrendingUp, BarChart3, Gauge, Shield, LogOut, Building2, Info, ChevronDown, Minus, Printer } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { getRegionById } from '@/lib/regionsConfig';
 import { REGION_META, getWaterbodyDataSources } from '@/lib/useWaterData';
 import { computeRestorationPlan, resolveAttainsCategory, mergeAttainsCauses, COST_PER_UNIT_YEAR, type RestorationResult } from '@/lib/restorationEngine';
@@ -705,6 +706,7 @@ function MapController({ mapRef }: { mapRef: React.MutableRefObject<L.Map | null
 export function NationalCommandCenter(props: Props) {
   const { onClose, onSelectRegion, federalMode = false } = props;
   const { logout, user } = useAuth();
+  const router = useRouter();
 
   // ── View Lens: controls layout composition ──
   const [viewLens, setViewLens] = useState<ViewLens>(federalMode ? 'compliance' : 'full');
@@ -1622,6 +1624,17 @@ export function NationalCommandCenter(props: Props) {
     };
   }, [viewLens, stateRollup, nationalStats, overlayByState, attainsAggregation]);
 
+  // ── National AI data prop for AIInsightsEngine ──
+  const nationalAIData = useMemo(() => {
+    if (attainsAggregation.totalAssessed === 0) return undefined;
+    const worstStates = [...stateRollup]
+      .filter(s => s.cat5 > 0)
+      .sort((a, b) => b.cat5 - a.cat5)
+      .slice(0, 8)
+      .map(s => ({ abbr: s.abbr, name: s.name, cat5: s.cat5, totalImpaired: s.totalImpaired, topCauses: s.topCauses }));
+    return { ...attainsAggregation, worstStates };
+  }, [attainsAggregation, stateRollup]);
+
   const [showStateTable, setShowStateTable] = useState(false);
   const [showHotspotsSection, setShowHotspotsSection] = useState(false);
 
@@ -1686,61 +1699,103 @@ export function NationalCommandCenter(props: Props) {
     return { metrics, overdueCount, withinSLA, avgResolutionTime, total: alerts.length };
   }, [alertWorkflow, regionData]);
 
-  // Feature 12: AI-Powered Insights — driven by real data status
+  // Feature 12: AI-Powered Insights — national-scale, data-driven
   const aiInsights = useMemo(() => {
     const insights: Array<{ type: 'warning' | 'success' | 'info' | 'urgent'; title: string; detail: string; action?: string }> = [];
-    
-    // Insight 1: Monitoring coverage gap — the biggest honest insight
+    const agg = attainsAggregation;
     const totalWB = nationalStats.totalWaterbodies;
     const assessed = nationalStats.assessed;
-    const monitored = nationalStats.monitored;
     const unmonitored = nationalStats.unmonitored;
     const gradedStates = stateRollup.filter(s => s.canGradeState).length;
     const ungradedStates = stateRollup.filter(s => !s.canGradeState).length;
 
+    // ── INSIGHT 1: Potomac — the #1 national water quality crisis ──
+    // The Potomac/Chesapeake system is the most impaired watershed in US history by regulatory volume
+    const mdRow = stateRollup.find(s => s.abbr === 'MD');
+    const vaRow = stateRollup.find(s => s.abbr === 'VA');
+    const dcRow = stateRollup.find(s => s.abbr === 'DC');
+    const chesapeakeStates = [mdRow, vaRow, dcRow].filter(Boolean);
+    const chesapeakeCat5 = chesapeakeStates.reduce((s, r) => s + (r?.cat5 || 0), 0);
+    const chesapeakeImpaired = chesapeakeStates.reduce((s, r) => s + (r?.totalImpaired || 0), 0);
+    if (chesapeakeCat5 > 0 || chesapeakeImpaired > 0) {
+      insights.push({
+        type: 'urgent',
+        title: 'Potomac–Chesapeake: Largest water quality crisis in U.S. regulatory history',
+        detail: `The Chesapeake Bay TMDL — the largest and most complex ever issued by EPA — covers MD, VA, DC, and 4 other states. ${chesapeakeCat5.toLocaleString()} waterbodies in MD/VA/DC alone are Cat 5 (no approved TMDL). The Potomac River basin carries the heaviest nutrient and sediment loads feeding the Bay's dead zones. Decades of nitrogen, phosphorus, and sediment from agriculture, urban runoff, and wastewater have driven chronic hypoxia, SAV loss, and fisheries collapse. This watershed represents the single largest opportunity for PEARL deployment at scale.`,
+        action: 'View Chesapeake deployment plan'
+      });
+    }
+
+    // ── INSIGHT 2: National TMDL gap — from real ATTAINS categories ──
+    if (agg.cat5 > 0) {
+      insights.push({
+        type: 'warning',
+        title: `${agg.cat5.toLocaleString()} waterbodies on 303(d) list — no approved TMDL`,
+        detail: `Of ${agg.totalImpaired.toLocaleString()} impaired waterbodies nationwide, ${agg.tmdlGapPct}% are Category 5 — impaired with NO approved Total Maximum Daily Load plan. Only ${agg.cat4a.toLocaleString()} have approved TMDLs (Cat 4a). ${agg.cat4b.toLocaleString()} rely on alternative controls (Cat 4b). States face increasing EPA enforcement pressure to close this gap, creating demand for treatment technologies that can demonstrate measurable pollutant reduction.`,
+        action: 'View TMDL gap by state'
+      });
+    }
+
+    // ── INSIGHT 3: PEARL addressability — what % of national impairments we can treat ──
+    if (agg.addressablePct > 0) {
+      insights.push({
+        type: 'success',
+        title: `${agg.addressablePct}% of impairment causes nationally are PEARL-addressable`,
+        detail: `Of ${agg.totalCauseInstances.toLocaleString()} cause-instances across all impaired waterbodies, ${agg.addressableCount.toLocaleString()} involve sediment, nutrients, bacteria, dissolved oxygen, or stormwater metals — pollutants that PEARL's mechanical + oyster biofiltration system directly targets. The remaining ${100 - agg.addressablePct}% include mercury, PCBs, PFAS, and legacy contaminants requiring specialized treatment. ${agg.topCauses.length > 0 ? `Top national causes: ${agg.topCauses.slice(0, 5).map(c => c.cause).join(', ')}.` : ''}`,
+        action: 'View addressable market'
+      });
+    }
+
+    // ── INSIGHT 4: Top impairment causes — what's actually polluting America's water ──
+    if (agg.topCauses.length >= 3) {
+      const top3 = agg.topCauses.slice(0, 3);
+      insights.push({
+        type: 'info',
+        title: `Top impairment causes: ${top3.map(c => c.cause).join(', ')}`,
+        detail: `Across ${agg.totalImpaired.toLocaleString()} impaired waterbodies, ${top3[0].cause} appears ${top3[0].count.toLocaleString()} times, followed by ${top3[1].cause} (${top3[1].count.toLocaleString()}) and ${top3[2].cause} (${top3[2].count.toLocaleString()}). These patterns guide PEARL configuration — high-nutrient watersheds prioritize oyster biofiltration, high-sediment areas lead with mechanical filtration, and bacterial hotspots get UV treatment stages.`,
+      });
+    }
+
+    // ── INSIGHT 5: Worst states by TMDL gap ──
+    const worstStates = [...stateRollup]
+      .filter(s => s.cat5 > 0)
+      .sort((a, b) => b.cat5 - a.cat5)
+      .slice(0, 5);
+    if (worstStates.length > 0) {
+      insights.push({
+        type: 'warning',
+        title: `Highest Cat 5 concentrations: ${worstStates.map(s => `${s.name} (${s.cat5})`).join(', ')}`,
+        detail: `These states carry the greatest density of impaired waterbodies without approved TMDLs. They face the most regulatory pressure and represent the highest-value deployment targets for PEARL. Maryland's Chesapeake Bay TMDL obligations make it uniquely positioned — the state must demonstrate pollution reduction to meet EPA milestones or face federal backstop measures.`,
+        action: 'View state breakdown'
+      });
+    }
+
+    // ── INSIGHT 6: Monitoring coverage gap ──
     if (unmonitored > 0) {
       insights.push({
         type: 'info',
         title: `${unmonitored.toLocaleString()} waterbodies lack monitoring data`,
-        detail: `Of ${totalWB.toLocaleString()} tracked waterbodies, ${unmonitored.toLocaleString()} have no mapped data sources. ${ungradedStates} states cannot be graded. PEARL deployment could close critical data gaps in underserved watersheds.`,
-        action: 'View deployment opportunities'
-      });
-    }
-    
-    // Insight 2: States with critical alerts
-    const highAlertStates = stateRollup.filter(s => s.high > 0);
-    if (highAlertStates.length > 0) {
-      insights.push({
-        type: 'warning',
-        title: `${highAlertStates.length} state${highAlertStates.length !== 1 ? 's' : ''} with severe waterbody conditions`,
-        detail: `${highAlertStates.slice(0, 4).map(s => s.name).join(', ')}${highAlertStates.length > 4 ? ` +${highAlertStates.length - 4} more` : ''}: ${highAlertStates.reduce((s, r) => s + r.high, 0)} severe waterbodies needing immediate assessment and EPA coordination.`,
-        action: 'Schedule interventions'
-      });
-    }
-    
-    // Insight 3: Monitored but unassessed — opportunity
-    if (monitored > assessed) {
-      const gap = monitored;
-      insights.push({
-        type: 'info',
-        title: `${gap.toLocaleString()} waterbodies have data sources but no assessment`,
-        detail: `These waterbodies have USGS gauges or other monitoring but haven't been assessed yet. Running live scoring on these could reveal conditions needing attention.`,
-        action: 'Begin assessments'
+        detail: `Of ${totalWB.toLocaleString()} tracked waterbodies, ${unmonitored.toLocaleString()} have no mapped data sources. ${ungradedStates} states cannot be graded. PEARL deployment creates real-time sensor networks in data-blind freshwater systems where USGS gauges are sparse and ATTAINS listings are stale.`,
+        action: 'View data gaps'
       });
     }
 
-    // Insight 4: Healthy assessed waterbodies — success story
-    const healthyAssessed = stateRollup.reduce((s, r) => s + r.none, 0);
-    if (healthyAssessed > 0) {
+    // ── INSIGHT 7: MS4 market (if overlay active) ──
+    if (overlay === 'ms4') {
+      const totalMS4 = Object.values(MS4_JURISDICTIONS).reduce((s, m) => s + m.phase1 + m.phase2, 0);
+      const topMS4States = Object.entries(MS4_JURISDICTIONS)
+        .map(([abbr, m]) => ({ abbr, total: m.phase1 + m.phase2 }))
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 5);
       insights.push({
-        type: 'success',
-        title: `${healthyAssessed} assessed waterbodies meeting targets`,
-        detail: `These sites demonstrate achievable water quality standards. Document success factors for replication in impaired watersheds.`,
-        action: 'Review success factors'
+        type: 'info',
+        title: `${totalMS4.toLocaleString()} MS4 jurisdictions nationwide — PEARL compliance market`,
+        detail: `Top markets: ${topMS4States.map(s => `${STATE_ABBR_TO_NAME[s.abbr]} (${s.total})`).join(', ')}. Every MS4 must meet NPDES stormwater discharge requirements. PEARL provides verifiable TSS, nutrient, and bacteria reduction data for permit compliance documentation.`,
+        action: 'View market analysis'
       });
     }
-    
-    // Insight 5: SLA compliance
+
+    // ── INSIGHT 8: SLA compliance ──
     if (slaMetrics.overdueCount > 0) {
       insights.push({
         type: 'urgent',
@@ -1750,39 +1805,23 @@ export function NationalCommandCenter(props: Props) {
       });
     }
 
-    // Insight 6: MS4 market opportunity (if MS4 overlay active)
-    if (overlay === 'ms4') {
-      const totalMS4 = Object.values(MS4_JURISDICTIONS).reduce((s, m) => s + m.phase1 + m.phase2, 0);
-      const topStates = Object.entries(MS4_JURISDICTIONS)
-        .map(([abbr, m]) => ({ abbr, total: m.phase1 + m.phase2 }))
-        .sort((a, b) => b.total - a.total)
-        .slice(0, 5);
-      insights.push({
-        type: 'info',
-        title: `${totalMS4.toLocaleString()} MS4 jurisdictions nationwide — potential PEARL customers`,
-        detail: `Top markets: ${topStates.map(s => `${STATE_ABBR_TO_NAME[s.abbr]} (${s.total})`).join(', ')}. Each MS4 must meet NPDES stormwater compliance requirements that PEARL directly addresses.`,
-        action: 'View market analysis'
-      });
-    }
-
-    // Insight 7: EJ overlap (if EJ overlay active)
+    // ── INSIGHT 9: EJ overlap (if overlay active) ──
     if (overlay === 'ej') {
       const ejHighRisk = Array.from(derived.regionsByState.entries())
         .filter(([abbr]) => overlayByState.get(abbr)?.ej && overlayByState.get(abbr)!.ej > 70)
-        .slice(0, 2);
-      
+        .slice(0, 3);
       if (ejHighRisk.length > 0) {
         insights.push({
           type: 'warning',
-          title: 'EJ communities with high alert overlap',
-          detail: `Environmental justice communities in ${ejHighRisk.map(([abbr]) => STATE_ABBR_TO_NAME[abbr]).join(', ')} show elevated pollution burden. Prioritize interventions and community outreach.`,
+          title: 'Environmental justice communities with elevated pollution burden',
+          detail: `Communities in ${ejHighRisk.map(([abbr]) => STATE_ABBR_TO_NAME[abbr]).join(', ')} face disproportionate water quality impacts. Federal infrastructure funding (BIL, SRF) increasingly requires EJ targeting — PEARL deployments in these areas qualify for priority funding.`,
           action: 'Generate EJ report'
         });
       }
     }
-    
+
     return insights;
-  }, [nationalStats, stateRollup, derived.regionsByState, overlay, overlayByState, slaMetrics]);
+  }, [nationalStats, stateRollup, derived.regionsByState, overlay, overlayByState, slaMetrics, attainsAggregation]);
 
   // ─── Network Health Score (derived from state grades) ────────────────────────
   const [showHealthDetails, setShowHealthDetails] = useState(false);
@@ -2137,11 +2176,11 @@ export function NationalCommandCenter(props: Props) {
                       {/* Account actions */}
                       <div className="px-4 py-2.5 space-y-1">
                         <button
-                          onClick={() => { /* TODO: wire to password change route */ }}
+                          onClick={() => { setShowAccountPanel(false); router.push('/account'); }}
                           className="w-full text-left px-3 py-2 rounded-md text-xs text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors"
                         >
                           <Shield size={13} className="text-slate-400" />
-                          Change Password
+                          My Account
                         </button>
                         <button
                           onClick={() => { setShowAccountPanel(false); logout(); }}
@@ -4059,6 +4098,17 @@ export function NationalCommandCenter(props: Props) {
           );
         })()}
 
+        {/* ── National AI Water Intelligence — Claude-powered, ATTAINS-fed ── */}
+        {lens.showAIInsights && (
+          <AIInsightsEngine
+            key={`national-${attainsAggregation.totalAssessed}`}
+            role="Federal"
+            stateAbbr="US"
+            regionData={regionData as any}
+            nationalData={nationalAIData}
+          />
+        )}
+
         {/* ── National Impairment Cause Breakdown — from ATTAINS category + causes ── */}
         {lens.showTopStrip && attainsAggregation.totalAssessed > 0 && (
           <Card id="section-impairmentprofile" className="border border-slate-200">
@@ -4150,6 +4200,55 @@ export function NationalCommandCenter(props: Props) {
                     <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-slate-300 flex-shrink-0" /> Mercury, PCBs, PFAS — not addressable</div>
                   </div>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ── AI-Powered National Intelligence — lens controlled, data-driven ── */}
+        {lens.showAIInsights && aiInsights.length > 0 && (
+          <Card id="section-aiinsights" className="border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-white">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  🤖 National Intelligence Briefing
+                  <span className="text-[10px] font-normal text-slate-400 ml-1">
+                    {aiInsights.length} findings from {attainsAggregation.totalAssessed.toLocaleString()} ATTAINS records
+                  </span>
+                </CardTitle>
+                <PrintBtn sectionId="aiinsights" title="National Intelligence Briefing" />
+              </div>
+              <CardDescription>AI analysis of EPA ATTAINS data, TMDL gaps, impairment causes, and deployment opportunities</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {aiInsights.map((insight, idx) => {
+                  const bgColor = insight.type === 'urgent' ? 'bg-red-50 border-red-300' :
+                                 insight.type === 'warning' ? 'bg-orange-50 border-orange-300' :
+                                 insight.type === 'success' ? 'bg-green-50 border-green-300' :
+                                 'bg-blue-50 border-blue-300';
+                  const textColor = insight.type === 'urgent' ? 'text-red-700' :
+                                   insight.type === 'warning' ? 'text-orange-700' :
+                                   insight.type === 'success' ? 'text-green-700' :
+                                   'text-blue-700';
+                  const icon = insight.type === 'urgent' ? '🚨' :
+                              insight.type === 'warning' ? '⚠️' :
+                              insight.type === 'success' ? '✅' : 'ℹ️';
+                  return (
+                    <div key={idx} className={`p-3 rounded-lg border ${bgColor}`}>
+                      <div className="flex items-start gap-2">
+                        <span className="text-lg flex-shrink-0">{icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className={`font-semibold text-sm ${textColor} mb-1`}>{insight.title}</div>
+                          <div className="text-xs text-slate-700 leading-relaxed">{insight.detail}</div>
+                          {insight.action && (
+                            <Button size="sm" variant="outline" className="mt-2 h-7 text-xs">{insight.action}</Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
@@ -4570,66 +4669,6 @@ export function NationalCommandCenter(props: Props) {
             </div>
           )}
         </div>
-        )}
-
-        {/* Feature 12: AI-Powered Insights — lens controlled */}
-        {lens.showAIInsights && aiInsights.length > 0 && (
-          <Card id="section-aiinsights" className="border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-white">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  🤖 AI-Powered Insights
-                </CardTitle>
-                <PrintBtn sectionId="aiinsights" title="AI-Powered Insights" />
-              </div>
-              <CardDescription>Proactive recommendations and trend analysis</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {aiInsights.map((insight, idx) => {
-                  const bgColor = insight.type === 'urgent' ? 'bg-red-50 border-red-300' :
-                                 insight.type === 'warning' ? 'bg-orange-50 border-orange-300' :
-                                 insight.type === 'success' ? 'bg-green-50 border-green-300' :
-                                 'bg-blue-50 border-blue-300';
-                  
-                  const textColor = insight.type === 'urgent' ? 'text-red-700' :
-                                   insight.type === 'warning' ? 'text-orange-700' :
-                                   insight.type === 'success' ? 'text-green-700' :
-                                   'text-blue-700';
-                  
-                  const icon = insight.type === 'urgent' ? '🚨' :
-                              insight.type === 'warning' ? '⚠️' :
-                              insight.type === 'success' ? '✅' :
-                              'ℹ️';
-                  
-                  return (
-                    <div key={idx} className={`p-3 rounded-lg border ${bgColor}`}>
-                      <div className="flex items-start gap-2">
-                        <span className="text-lg flex-shrink-0">{icon}</span>
-                        <div className="flex-1 min-w-0">
-                          <div className={`font-semibold text-sm ${textColor} mb-1`}>
-                            {insight.title}
-                          </div>
-                          <div className="text-xs text-slate-700 leading-relaxed">
-                            {insight.detail}
-                          </div>
-                          {insight.action && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="mt-2 h-7 text-xs"
-                            >
-                              {insight.action}
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
         )}
 
 

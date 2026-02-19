@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Info, LogOut, Printer, BookOpen } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { getRegionById } from '@/lib/regionsConfig';
 import { REGION_META, getWaterbodyDataSources } from '@/lib/useWaterData';
 import { useWaterData, DATA_SOURCES } from '@/lib/useWaterData';
@@ -25,6 +26,8 @@ import { WaterQualityChallenges } from '@/components/WaterQualityChallenges';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import { exportK12FieldReport } from '@/components/PearlExports';
+import { LayoutEditor } from './LayoutEditor';
+import { DraggableSection } from './DraggableSection';
 import dynamic from 'next/dynamic';
 
 const GrantOpportunityMatcher = dynamic(
@@ -202,6 +205,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
   const stateName = STATE_NAMES[stateAbbr] || stateAbbr;
   const agency = STATE_AGENCIES[stateAbbr] || STATE_AUTHORITIES[stateAbbr] || null;
   const { user, logout } = useAuth();
+  const router = useRouter();
 
   // ── K12-specific state ──
   const [isTeacher, setIsTeacher] = useState(isTeacherProp);
@@ -659,6 +663,9 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                     <div className="flex justify-between"><span className="text-slate-500">Monitoring</span><span className="font-medium text-slate-700">{stateName} · {regionData.length.toLocaleString()} waterbodies</span></div>
                   </div>
                   <div className="px-4 py-2.5 space-y-1">
+                    <button onClick={() => { setShowAccountPanel(false); router.push('/account'); }} className="w-full text-left px-3 py-2 rounded-md text-xs text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors">
+                      <Shield size={13} className="text-slate-400" />My Account
+                    </button>
                     <button onClick={() => { setShowAccountPanel(false); logout(); }} className="w-full text-left px-3 py-2 rounded-md text-xs text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors">
                       <LogOut size={13} />Sign Out
                     </button>
@@ -716,10 +723,12 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                     <div className="text-sm font-bold text-cyan-700 leading-tight">Real Data</div>
                     <div className="text-[10px] text-cyan-400">From EPA Sensors</div>
                   </div>
+                  {isTeacher && (
                   <div className="rounded-lg bg-purple-50 border border-purple-100 p-2.5 text-center">
                     <div className="text-xl font-bold text-purple-700">{ejScore}<span className="text-xs font-normal text-purple-400">/100</span></div>
                     <div className="text-[10px] text-purple-500">EJ Score</div>
                   </div>
+                  )}
                   <div className="rounded-lg bg-amber-50 border border-amber-100 p-2.5 text-center">
                     <div className="text-sm font-bold text-amber-700 leading-tight">6</div>
                     <div className="text-[10px] text-amber-400">Data Sources</div>
@@ -2400,7 +2409,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
           <div className="space-y-4">
 
             {/* Environmental Justice — Census ACS + EPA SDWIS (statewide) + EJScreen (per-waterbody) */}
-            {(() => {
+            {isTeacher && (() => {
               const ejScore = getEJScore(stateAbbr);
               const ejDetail = getEJData(stateAbbr);
               if (!ejDetail) return null;

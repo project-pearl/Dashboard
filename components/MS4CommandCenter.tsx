@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Building2, Info, LogOut, FileCheck, Lock, Database, Activity, Eye, Fingerprint, Cpu, FlaskConical, ArrowRight, DollarSign, Printer, FileText, Leaf, AlertCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { getRegionById } from '@/lib/regionsConfig';
 import { REGION_META, getWaterbodyDataSources } from '@/lib/useWaterData';
 import { useWaterData, DATA_SOURCES } from '@/lib/useWaterData';
@@ -441,6 +442,7 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
   const stateName = STATE_NAMES[stateAbbr] || stateAbbr;
   const agency = STATE_AGENCIES[stateAbbr] || STATE_AUTHORITIES[stateAbbr] || null;
   const { user, logout } = useAuth();
+  const router = useRouter();
 
   // ── MS4 Jurisdiction Scoping ──
   // Dev override dropdown (temporary — remove when auth is wired)
@@ -1093,11 +1095,11 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
                   {/* Account actions */}
                   <div className="px-4 py-2.5 space-y-1">
                     <button
-                      onClick={() => { /* TODO: wire to password change route */ }}
+                      onClick={() => { setShowAccountPanel(false); router.push('/account'); }}
                       className="w-full text-left px-3 py-2 rounded-md text-xs text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors"
                     >
                       <Shield size={13} className="text-slate-400" />
-                      Change Password
+                      My Account
                     </button>
                     <button
                       onClick={() => { setShowAccountPanel(false); logout(); }}
