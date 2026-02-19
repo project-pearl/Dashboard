@@ -1381,7 +1381,7 @@ export function useWaterData(regionId: string | null): UseWaterDataResult {
           console.log(`[PEARL Source 3] CO-OPS results:`, coopsResults.map(r => r ? `${r.key}=${r.value}` : 'null'));
           for (const r of coopsResults) {
             if (r) {
-              allParams[r.key] = { value: r.value, source: 'NOAA' };
+              allParams[r.key] = { value: r.value, source: 'NOAA', lastSampled: r.time || coopsTime || null };
               coopsCount++;
               if (r.time) coopsTime = r.time;
             }

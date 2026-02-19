@@ -319,7 +319,6 @@ function generateStateRegionData(stateAbbr: string): RegionRow[] {
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }: Props) {
-  console.log('[StateCC] Mounted, stateAbbr:', stateAbbr);
   const stateName = STATE_NAMES[stateAbbr] || stateAbbr;
   const agency = STATE_AGENCIES[stateAbbr] || STATE_AUTHORITIES[stateAbbr] || null;
   const { user, logout } = useAuth();
@@ -347,11 +346,9 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
   // ── ATTAINS bulk for this state ──
   const [attainsBulk, setAttainsBulk] = useState<Array<{ name: string; category: string; alertLevel: AlertLevel; causes: string[]; cycle: string }>>([]);
   const [attainsBulkLoaded, setAttainsBulkLoaded] = useState(false);
-  console.log('[StateCC] attainsBulk length:', attainsBulk.length);
 
   // Merge ATTAINS into region data
   const regionData = useMemo(() => {
-    console.log('[ATTAINS Merge Debug]', { stateAbbr, attainsBulkLength: attainsBulk.length, regionDataLength: baseRegions.length, sampleAttains: attainsBulk.slice(0,3).map(a => a.name), sampleRegions: baseRegions.slice(0,3).map(r => r.name) });
     if (attainsBulk.length === 0) return baseRegions;
 
     const SEVERITY: Record<string, number> = { high: 3, medium: 2, low: 1, none: 0 };
@@ -362,7 +359,6 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
         const aN = a.name.toLowerCase().trim();
         return aN.includes(normName) || normName.includes(aN);
       });
-      if (match) console.log('[ATTAINS Match]', r.name, '→', match.name);
       if (!match) return r;
       // Upgrade if ATTAINS is worse
       if (SEVERITY[match.alertLevel] > SEVERITY[r.alertLevel]) {
@@ -1171,7 +1167,6 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
                 {/* State Grade Circle */}
                 {(() => {
                   const assessed = regionData.filter(r => r.status === 'assessed');
-                  console.log('[Grade Debug]', { totalRegionData: regionData.length, assessedCount: assessed.length, attainsBulkLoaded, sampleStatuses: regionData.slice(0, 5).map(r => ({ name: r.name, status: r.status, alertLevel: r.alertLevel })) });
                   if (assessed.length === 0) return (
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 bg-slate-100 border-slate-300">
                       <div className="text-2xl font-black text-slate-400">N/A</div>
