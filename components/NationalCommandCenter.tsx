@@ -179,7 +179,7 @@ const FIPS_TO_ABBR: Record<string, string> = {
 // ─── Leaflet Map Constants ────────────────────────────────────────────────────
 const US_CENTER: [number, number] = [39.8, -98.5];
 const US_ZOOM = 4;
-const CARTO_TILES = 'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+const CARTO_TILES = 'https://basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png';
 const CARTO_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>';
 
 /** Resolve a GeoJSON feature to a 2-letter state abbreviation */
