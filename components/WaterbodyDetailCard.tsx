@@ -5,9 +5,9 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { MapPin, Info, Shield } from 'lucide-react';
+import { MapPin, Info, Shield, Maximize2, X } from 'lucide-react';
 import { calculateGrade, generateObservations, generateImplications } from '@/lib/waterQualityScore';
 import { resolveAttainsCategory, mergeAttainsCauses } from '@/lib/restorationEngine';
 
@@ -113,6 +113,9 @@ export function WaterbodyDetailCard({
   dataSources = {},
   onToast,
 }: WaterbodyDetailCardProps) {
+
+  // ── Expand modal state ──
+  const [expandedParam, setExpandedParam] = useState<string | null>(null); // param key or 'health'
 
   // ── Resolve ATTAINS ──
   const attainsCategory = resolveAttainsCategory(
@@ -289,7 +292,10 @@ export function WaterbodyDetailCard({
               }
 
               return (
-                <div key={key} className="bg-white rounded-lg border border-slate-200 p-2.5 text-center">
+                <div key={key} className="bg-white rounded-lg border border-slate-200 p-2.5 text-center relative group cursor-pointer hover:border-blue-300 transition-colors" onClick={() => setExpandedParam(key)}>
+                  <button className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-blue-600" onClick={(e) => { e.stopPropagation(); setExpandedParam(key); }} title="Expand details">
+                    <Maximize2 size={10} />
+                  </button>
                   <div className="text-[10px] uppercase tracking-wider text-slate-500 mb-0.5">{display.label}</div>
                   <div className={`text-lg font-bold ${
                     isGood === true ? 'text-green-700' : isGood === false ? 'text-red-600' : 'text-slate-800'
@@ -321,7 +327,10 @@ export function WaterbodyDetailCard({
               {/* 5-tile row */}
               <div className="grid grid-cols-5 gap-2">
                 {/* Tile 1: Grade */}
-                <div className={`rounded-lg border-2 ${grade.canBeGraded ? grade.borderColor : 'border-slate-300'} ${grade.canBeGraded ? grade.bgColor : 'bg-slate-50'} p-2 text-center`}>
+                <div className={`rounded-lg border-2 ${grade.canBeGraded ? grade.borderColor : 'border-slate-300'} ${grade.canBeGraded ? grade.bgColor : 'bg-slate-50'} p-2 text-center relative group cursor-pointer hover:border-blue-300 transition-colors`} onClick={() => setExpandedParam('health')}>
+                  <button className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-blue-600" onClick={(e) => { e.stopPropagation(); setExpandedParam('health'); }} title="Expand details">
+                    <Maximize2 size={10} />
+                  </button>
                   <div className="text-[10px] uppercase tracking-wider text-slate-500">Grade</div>
                   <div className={`text-base font-bold ${grade.canBeGraded ? grade.color : 'text-slate-400'}`}>
                     {grade.canBeGraded ? grade.letter : 'N/A'}
@@ -337,12 +346,33 @@ export function WaterbodyDetailCard({
                   {!grade.canBeGraded && <div className="text-[9px] text-slate-400">Ungraded</div>}
                 </div>
                 {/* Tile 2: Monitoring */}
-                <div className={`rounded-lg border-2 ${coverage.borderColor} ${coverage.bgColor} p-2 text-center`}>
+                <div className={`rounded-lg border-2 ${
+                  coverage.liveKeyParamCount === 0
+                    ? 'border-amber-300 bg-amber-50'
+                    : `${coverage.borderColor} ${coverage.bgColor}`
+                } p-2 text-center`}>
                   <div className="text-[10px] uppercase tracking-wider text-slate-500">Monitoring</div>
-                  <div className={`text-base font-bold ${coverage.color}`}>
-                    {coverage.icon} {coverage.keyParamsPresent}/{coverage.keyParamsTotal}
-                  </div>
-                  <div className="text-[9px] text-slate-400">{coverage.label}</div>
+                  {coverage.liveKeyParamCount === 0 ? (
+                    <>
+                      <div className="text-base font-bold text-amber-600">
+                        {coverage.keyParamsPresent > 0 ? 'Reference' : 'None'}
+                      </div>
+                      <div className="text-[9px] text-amber-500">
+                        {coverage.keyParamsPresent > 0 ? `${coverage.keyParamsPresent} ref · No live` : 'No live monitoring'}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className={`text-base font-bold ${coverage.color}`}>
+                        {coverage.icon} {coverage.liveKeyParamCount}/{coverage.keyParamsTotal}
+                      </div>
+                      <div className="text-[9px] text-slate-400">
+                        {coverage.liveKeyParamCount >= 5 ? 'Comprehensive' :
+                         coverage.liveKeyParamCount >= 3 ? 'Adequate' :
+                         'Limited'} live
+                      </div>
+                    </>
+                  )}
                 </div>
                 {/* Tile 3: EJ Index */}
                 <div className={`rounded-lg border-2 ${ejScore >= 70 ? 'border-red-200 bg-red-50' : ejScore >= 40 ? 'border-amber-200 bg-amber-50' : 'border-slate-200 bg-slate-50'} p-2 text-center`}>
@@ -591,6 +621,164 @@ export function WaterbodyDetailCard({
           <Info size={10} className="flex-shrink-0" />
           <span>Grades derived from {waterData?.activeSources?.filter((s: string) => s !== 'MOCK').join(', ') || 'EPA ATTAINS'} against regulatory targets. Informational only — not an official assessment.</span>
         </div>
+
+        {/* Expand modal overlay */}
+        {expandedParam && (() => {
+          const isHealth = expandedParam === 'health';
+          const p = !isHealth ? params[expandedParam] : null;
+          const display = !isHealth && p ? (PARAM_DISPLAY[expandedParam] || { label: p.parameterName || expandedParam, unit: p.unit || '' }) : null;
+          const isGood = display?.good && p ? display.good(p.value) : undefined;
+
+          // Compute age for parameter
+          let ageLabel: string | null = null;
+          let ageMs: number | null = null;
+          if (p?.lastSampled) {
+            ageMs = Date.now() - new Date(p.lastSampled).getTime();
+            if (!isNaN(ageMs)) {
+              if (ageMs < 3600000) ageLabel = `${Math.max(1, Math.floor(ageMs / 60000))} min ago`;
+              else if (ageMs < 86400000) ageLabel = `${Math.floor(ageMs / 3600000)} hours ago`;
+              else ageLabel = `${Math.floor(ageMs / 86400000)} days ago`;
+            }
+          }
+
+          // Simple sparkline from value (simulated range visualization)
+          const renderSparkline = (value: number, target?: { min?: number; max?: number }) => {
+            const min = target?.min ?? 0;
+            const max = target?.max ?? value * 2;
+            const range = max - min || 1;
+            const pct = Math.max(0, Math.min(100, ((value - min) / range) * 100));
+            return (
+              <div className="mt-3">
+                <div className="text-[10px] text-slate-500 mb-1">Value in range</div>
+                <div className="h-3 bg-slate-100 rounded-full relative overflow-hidden">
+                  <div className={`h-full rounded-full ${isGood === true ? 'bg-green-400' : isGood === false ? 'bg-red-400' : 'bg-blue-400'}`}
+                    style={{ width: `${pct}%` }} />
+                </div>
+                <div className="flex justify-between text-[9px] text-slate-400 mt-0.5">
+                  <span>{min}{display?.unit ? ` ${display.unit}` : ''}</span>
+                  <span>{max}{display?.unit ? ` ${display.unit}` : ''}</span>
+                </div>
+              </div>
+            );
+          };
+
+          return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setExpandedParam(null)}>
+              <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-[420px] max-w-[90vw] max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between p-4 border-b border-slate-100">
+                  <h3 className="text-sm font-semibold text-slate-800">
+                    {isHealth ? 'Waterbody Health Grade' : display?.label || expandedParam}
+                  </h3>
+                  <button onClick={() => setExpandedParam(null)} className="p-1 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
+                    <X size={16} />
+                  </button>
+                </div>
+                <div className="p-4 space-y-4">
+                  {isHealth ? (
+                    <>
+                      {/* Health grade expanded view */}
+                      <div className="text-center">
+                        <div className={`text-5xl font-bold ${grade.canBeGraded ? grade.color : 'text-slate-400'}`}>
+                          {grade.canBeGraded ? grade.letter : 'N/A'}
+                        </div>
+                        {grade.canBeGraded && (
+                          <div className="text-lg text-slate-500 mt-1">{grade.score}/100</div>
+                        )}
+                      </div>
+                      <div className="bg-slate-50 rounded-lg p-3 text-sm text-slate-600">
+                        {grade.reason}
+                      </div>
+                      {grade.canBeGraded && (
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div className="bg-slate-50 rounded-lg p-2">
+                            <div className="text-slate-500">Source</div>
+                            <div className="font-medium text-slate-700">{grade.gradeSource === 'attains' ? 'EPA ATTAINS' : grade.gradeSource === 'sensor' ? 'Live sensors' : 'N/A'}</div>
+                          </div>
+                          <div className="bg-slate-50 rounded-lg p-2">
+                            <div className="text-slate-500">Parameters</div>
+                            <div className="font-medium text-slate-700">{grade.gradedParamCount}/{grade.gradedParamTotal} graded</div>
+                          </div>
+                          <div className="bg-slate-50 rounded-lg p-2">
+                            <div className="text-slate-500">Monitoring</div>
+                            <div className="font-medium text-slate-700">{coverage.liveKeyParamCount} live / {coverage.referenceKeyParamCount} ref</div>
+                          </div>
+                          <div className="bg-slate-50 rounded-lg p-2">
+                            <div className="text-slate-500">Freshness</div>
+                            <div className="font-medium text-slate-700">{coverage.freshnessLabel}</div>
+                          </div>
+                        </div>
+                      )}
+                      {coverage.missingLabels.length > 0 && (
+                        <div className="text-xs text-slate-500">
+                          <div className="font-medium text-slate-600 mb-1">Missing parameters:</div>
+                          <div className="flex flex-wrap gap-1">
+                            {coverage.missingLabels.map((label, i) => (
+                              <span key={i} className="px-2 py-0.5 bg-slate-100 rounded-full text-[10px]">{label}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : p && display ? (
+                    <>
+                      {/* Parameter expanded view */}
+                      <div className="text-center">
+                        <div className={`text-4xl font-bold ${
+                          isGood === true ? 'text-green-700' : isGood === false ? 'text-red-600' : 'text-slate-800'
+                        }`}>
+                          {p.value < 0.01 && p.value > 0 ? p.value.toFixed(4) : p.value < 1 ? p.value.toFixed(3) : p.value < 100 ? p.value.toFixed(2) : Math.round(p.value).toLocaleString()}
+                          <span className="text-base font-normal text-slate-400 ml-1">{display.unit}</span>
+                        </div>
+                        <div className={`text-sm mt-1 font-medium ${
+                          isGood === true ? 'text-green-600' : isGood === false ? 'text-red-500' : 'text-slate-500'
+                        }`}>
+                          {isGood === true ? 'Within target range' : isGood === false ? 'Outside target range' : 'No target defined'}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="bg-slate-50 rounded-lg p-2">
+                          <div className="text-slate-500">Target</div>
+                          <div className="font-medium text-slate-700">{display.target || 'N/A'}</div>
+                        </div>
+                        <div className="bg-slate-50 rounded-lg p-2">
+                          <div className="text-slate-500">Source</div>
+                          <div className="font-medium text-slate-700">
+                            <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${SOURCE_COLOR[p.source] || 'bg-slate-100 text-slate-500'}`}>
+                              {getSourceName(p.source)}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="bg-slate-50 rounded-lg p-2">
+                          <div className="text-slate-500">Last sampled</div>
+                          <div className="font-medium text-slate-700">
+                            {p.lastSampled
+                              ? new Date(p.lastSampled).toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                              : 'No timestamp'}
+                          </div>
+                        </div>
+                        <div className="bg-slate-50 rounded-lg p-2">
+                          <div className="text-slate-500">Data age</div>
+                          <div className="font-medium text-slate-700">{ageLabel || 'Unknown'}</div>
+                        </div>
+                      </div>
+                      {p.stationName && (
+                        <div className="bg-slate-50 rounded-lg p-2 text-xs">
+                          <div className="text-slate-500">Station</div>
+                          <div className="font-medium text-slate-700">{p.stationName}{p.stationId ? ` (${p.stationId})` : ''}</div>
+                        </div>
+                      )}
+                      {/* Range bar */}
+                      {display.good && renderSparkline(p.value, display.target ? {
+                        min: display.target.includes('≥') ? 0 : undefined,
+                        max: display.target.includes('<') ? parseFloat(display.target.replace(/[^0-9.]/g, '')) * 1.5 : undefined,
+                      } : undefined)}
+                    </>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </CardContent>
     </Card>
   );
