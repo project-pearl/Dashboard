@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
-import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps';
+import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { feature } from 'topojson-client';
 import statesTopo from 'us-atlas/states-10m.json';
 
@@ -114,8 +116,9 @@ type Props = {
 
 interface GeoFeature {
   id: string;
+  type?: string;
+  geometry?: any;
   properties?: { name?: string };
-  rsmKey?: string;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -173,6 +176,12 @@ const FIPS_TO_ABBR: Record<string, string> = {
   '50': 'VT', '51': 'VA', '53': 'WA', '54': 'WV', '55': 'WI',
   '56': 'WY',
 };
+
+// ─── Leaflet Map Constants ────────────────────────────────────────────────────
+const US_CENTER: [number, number] = [39.8, -98.5];
+const US_ZOOM = 4;
+const CARTO_TILES = 'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+const CARTO_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>';
 
 /** Resolve a GeoJSON feature to a 2-letter state abbreviation */
 function geoToAbbr(g: GeoFeature): string | undefined {
@@ -613,6 +622,85 @@ function useLiveTick(baseValue: number, ratePerSecond: number) {
   return value;
 }
 
+// ─── State Fill Color (pure function for Leaflet GeoJSON style callback) ─────
+
+function getStateFill(
+  abbr: string | undefined,
+  overlay: OverlayId,
+  overlayByState: Map<string, { ej: number; economy: number; wildlife: number; trend: number; coverage: number; ms4Total: number }>,
+  stateRollup: Array<{ abbr: string; canGradeState: boolean; score: number; assessed: number; monitored: number; waterbodies: number }>,
+  showImpact: boolean,
+): string {
+  if (!abbr) return '#e5e7eb';
+
+  const o = overlayByState.get(abbr);
+  const hasPEARLDeployment = abbr === 'MD' || abbr === 'FL';
+
+  if (overlay === 'hotspots') {
+    const stateRow = stateRollup.find(s => s.abbr === abbr);
+    const gradeScore = stateRow?.canGradeState ? stateRow.score : -1;
+    const adjustedScore = (showImpact && hasPEARLDeployment && gradeScore >= 0) ? Math.min(100, gradeScore + 20) : gradeScore;
+    if (gradeScore < 0) return '#e5e7eb';
+    if (adjustedScore >= 90) return '#22c55e';
+    if (adjustedScore >= 80) return '#86efac';
+    if (adjustedScore >= 70) return '#fde68a';
+    if (adjustedScore >= 60) return '#f59e0b';
+    return '#ef4444';
+  }
+
+  if (overlay === 'ms4') {
+    const total = o?.ms4Total ?? 0;
+    if (total >= 300) return '#7c2d12';
+    if (total >= 150) return '#c2410c';
+    if (total >= 75) return '#ea580c';
+    if (total >= 30) return '#fb923c';
+    if (total >= 10) return '#fed7aa';
+    if (total > 0) return '#fff7ed';
+    return '#e5e7eb';
+  }
+
+  if (overlay === 'ej') {
+    const v = o?.ej ?? 0;
+    return v >= 80 ? '#7f1d1d' : v >= 60 ? '#dc2626' : v >= 40 ? '#f59e0b' : v >= 20 ? '#fde68a' : '#e5e7eb';
+  }
+
+  if (overlay === 'economy') {
+    const v = o?.economy ?? 0;
+    return v >= 80 ? '#1d4ed8' : v >= 60 ? '#3b82f6' : v >= 40 ? '#60a5fa' : v >= 20 ? '#93c5fd' : '#e5e7eb';
+  }
+
+  if (overlay === 'wildlife') {
+    const v = o?.wildlife ?? 0;
+    return v >= 80 ? '#064e3b' : v >= 60 ? '#059669' : v >= 40 ? '#10b981' : v >= 20 ? '#6ee7b7' : '#e5e7eb';
+  }
+
+  if (overlay === 'trend') {
+    const v = o?.trend ?? 0;
+    return v >= 20 ? '#16a34a' : v >= 5 ? '#86efac' : v <= -20 ? '#dc2626' : v <= -5 ? '#fecaca' : '#e5e7eb';
+  }
+
+  if (overlay === 'coverage') {
+    const stateRow = stateRollup.find(s => s.abbr === abbr);
+    if (!stateRow || stateRow.waterbodies === 0) return '#e5e7eb';
+    const covPct = Math.round(((stateRow.assessed + stateRow.monitored) / stateRow.waterbodies) * 100);
+    if (covPct >= 80) return '#166534';
+    if (covPct >= 60) return '#16a34a';
+    if (covPct >= 40) return '#fbbf24';
+    if (covPct >= 20) return '#f59e0b';
+    return '#d1d5db';
+  }
+
+  return '#e5e7eb';
+}
+
+// ─── Leaflet Map Controller (captures map instance into ref) ─────────────────
+
+function MapController({ mapRef }: { mapRef: React.MutableRefObject<L.Map | null> }) {
+  const map = useMap();
+  useEffect(() => { mapRef.current = map; }, [map, mapRef]);
+  return null;
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function NationalCommandCenter(props: Props) {
@@ -880,8 +968,7 @@ export function NationalCommandCenter(props: Props) {
   const [waterbodySearch, setWaterbodySearch] = useState<string>('');
   const [waterbodyFilter, setWaterbodyFilter] = useState<'all' | 'impaired' | 'severe' | 'monitored'>('all');
   const [overlay, setOverlay] = useState<OverlayId>(lens.defaultOverlay);
-  const [mapZoom, setMapZoom] = useState(1);
-  const [mapCenter, setMapCenter] = useState<[number, number]>([0, 0]);
+  const mapRef = useRef<L.Map | null>(null);
   const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d' | 'custom'>('24h');
   const [showImpact, setShowImpact] = useState(false);
   const [alertWorkflow, setAlertWorkflow] = useState<Record<string, { status: 'new' | 'acknowledged' | 'assigned' | 'resolved'; owner?: string; }>>({});
@@ -2015,130 +2102,58 @@ export function NationalCommandCenter(props: Props) {
 
               {!topo ? (
                 <div className="text-sm text-slate-500">
-                  Map data unavailable. Install react-simple-maps, us-atlas, and topojson-client.
+                  Map data unavailable. Install react-leaflet, leaflet, us-atlas, and topojson-client.
                 </div>
               ) : (
                 <div className="w-full overflow-hidden rounded-lg border border-slate-200 bg-white">
-                  <div className="p-2 text-xs text-slate-500 bg-slate-50 border-b border-slate-200">
-                    Selected: {selectedState} ({STATE_ABBR_TO_NAME[selectedState] || 'Unknown'}) · 50 states + DC
+                  <div className="p-2 text-xs text-slate-500 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                    <span>Selected: {selectedState} ({STATE_ABBR_TO_NAME[selectedState] || 'Unknown'}) · 50 states + DC</span>
+                    <button onClick={() => mapRef.current?.setView(US_CENTER, US_ZOOM)}
+                      className="text-xs text-blue-600 hover:text-blue-800 hover:underline">
+                      Back to National View
+                    </button>
                   </div>
                   <div className="h-[480px] w-full relative">
-                    <div className="absolute top-2 right-2 z-10 flex flex-col gap-1">
-                      <button onClick={() => setMapZoom(z => Math.min(z * 1.5, 8))} className="w-7 h-7 rounded bg-white border border-slate-300 shadow-sm flex items-center justify-center text-slate-600 hover:bg-slate-50 text-sm font-bold">+</button>
-                      <button onClick={() => setMapZoom(z => Math.max(z / 1.5, 1))} className="w-7 h-7 rounded bg-white border border-slate-300 shadow-sm flex items-center justify-center text-slate-600 hover:bg-slate-50 text-sm font-bold">{'\u2212'}</button>
-                      <button onClick={() => { setMapZoom(1); setMapCenter([0, 0]); }} className="w-7 h-7 rounded bg-white border border-slate-300 shadow-sm flex items-center justify-center text-slate-500 hover:bg-slate-50 text-[10px] font-medium">{'\u2302'}</button>
+                    <div className="absolute top-2 right-2 z-[1000] flex flex-col gap-1">
+                      <button onClick={() => mapRef.current?.zoomIn()} className="w-7 h-7 rounded bg-white border border-slate-300 shadow-sm flex items-center justify-center text-slate-600 hover:bg-slate-50 text-sm font-bold">+</button>
+                      <button onClick={() => mapRef.current?.zoomOut()} className="w-7 h-7 rounded bg-white border border-slate-300 shadow-sm flex items-center justify-center text-slate-600 hover:bg-slate-50 text-sm font-bold">{'\u2212'}</button>
+                      <button onClick={() => mapRef.current?.setView(US_CENTER, US_ZOOM)} className="w-7 h-7 rounded bg-white border border-slate-300 shadow-sm flex items-center justify-center text-slate-500 hover:bg-slate-50 text-[10px] font-medium">{'\u2302'}</button>
                     </div>
-                    <ComposableMap
-                      projection="geoAlbersUsa"
-                      projectionConfig={{ scale: 1000 }}
-                      width={800}
-                      height={500}
-                      style={{ width: '100%', height: '100%' }}
-                    >
-                      <ZoomableGroup zoom={mapZoom} center={mapCenter} onMoveEnd={({ coordinates, zoom }) => { setMapCenter(coordinates as [number, number]); setMapZoom(zoom); }} minZoom={1} maxZoom={8}>
-                      <Geographies geography={topo}>
-                        {({ geographies }: { geographies: GeoFeature[] }) =>
-                          geographies.map((g: GeoFeature) => {
-                            const abbr = geoToAbbr(g);
-                            const sev = abbr ? derived.severityByState.get(abbr) ?? 0 : 0;
-                            const o = abbr ? overlayByState.get(abbr) : undefined;
-
-                            let fill = '#e5e7eb';
-
-                            // Feature 5: Show PEARL Impact - only for states with actual deployments
-                            const hasPEARLDeployment = abbr === 'MD' || abbr === 'FL';
-                            const impactMultiplier = (showImpact && hasPEARLDeployment) ? 0.6 : 1;
-
-                            if (overlay === 'hotspots') {
-                              // Use stateRollup grade score (ATTAINS-driven) instead of per-waterbody max
-                              const stateRow = abbr ? stateRollup.find(s => s.abbr === abbr) : undefined;
-                              const gradeScore = stateRow?.canGradeState ? stateRow.score : -1;
-                              const adjustedScore = (showImpact && hasPEARLDeployment && gradeScore >= 0) ? Math.min(100, gradeScore + 20) : gradeScore;
-                              if (gradeScore < 0) {
-                                fill = '#e5e7eb'; // No data — gray
-                              } else if (adjustedScore >= 90) {
-                                fill = '#22c55e'; // A range — green
-                              } else if (adjustedScore >= 80) {
-                                fill = '#86efac'; // B range — light green
-                              } else if (adjustedScore >= 70) {
-                                fill = '#fde68a'; // C range — yellow
-                              } else if (adjustedScore >= 60) {
-                                fill = '#f59e0b'; // D range — amber
-                              } else {
-                                fill = '#ef4444'; // F — red
-                              }
-                            } else if (overlay === 'ms4') {
-                              const total = o?.ms4Total ?? 0;
-                              fill = total >= 300 ? '#7c2d12' :  // 300+ dark orange-brown (CA, NY, TX, NJ)
-                                     total >= 150 ? '#c2410c' :  // 150-299 deep orange (FL, PA, OH, IL, MA)
-                                     total >= 75  ? '#ea580c' :  // 75-149 orange (MD, VA, NC, GA, MI, etc)
-                                     total >= 30  ? '#fb923c' :  // 30-74 light orange
-                                     total >= 10  ? '#fed7aa' :  // 10-29 pale
-                                     total > 0    ? '#fff7ed' :  // 1-9 very light
-                                     '#e5e7eb';                  // 0 gray
-                            } else if (overlay === 'ej') {
-                              const v = o?.ej ?? 0;
-                              fill = v >= 80 ? '#7f1d1d' : v >= 60 ? '#dc2626' : v >= 40 ? '#f59e0b' : v >= 20 ? '#fde68a' : '#e5e7eb';
-                            } else if (overlay === 'economy') {
-                              const v = o?.economy ?? 0;
-                              fill = v >= 80 ? '#1d4ed8' : v >= 60 ? '#3b82f6' : v >= 40 ? '#60a5fa' : v >= 20 ? '#93c5fd' : '#e5e7eb';
-                            } else if (overlay === 'wildlife') {
-                              const v = o?.wildlife ?? 0;
-                              fill = v >= 80 ? '#064e3b' : v >= 60 ? '#059669' : v >= 40 ? '#10b981' : v >= 20 ? '#6ee7b7' : '#e5e7eb';
-                            } else if (overlay === 'trend') {
-                              const v = o?.trend ?? 0;
-                              fill = v >= 20 ? '#16a34a' : v >= 5 ? '#86efac' : v <= -20 ? '#dc2626' : v <= -5 ? '#fecaca' : '#e5e7eb';
-                            } else if (overlay === 'coverage') {
-                              // Real coverage from stateRollup: % of waterbodies with assessment data
-                              const stateRow = abbr ? stateRollup.find(s => s.abbr === abbr) : undefined;
-                              if (!stateRow || stateRow.waterbodies === 0) {
-                                fill = '#e5e7eb'; // No data
-                              } else {
-                                const covPct = Math.round(((stateRow.assessed + stateRow.monitored) / stateRow.waterbodies) * 100);
-                                if (covPct >= 80) fill = '#166534';      // Deep green — excellent
-                                else if (covPct >= 60) fill = '#16a34a'; // Green — good
-                                else if (covPct >= 40) fill = '#fbbf24'; // Yellow — gaps
-                                else if (covPct >= 20) fill = '#f59e0b'; // Amber — poor
-                                else fill = '#d1d5db';                   // Gray — blind
-                              }
-                            }
-
-                            const isSelected = abbr && abbr === selectedState;
-
-                            return (
-                              <Geography
-                                key={g.rsmKey ?? g.id}
-                                geography={g as any}
-                                onClick={() => {
-                                  if (!abbr) return;
-                                  setSelectedState(abbr);
-                                  setWaterbodySearch('');
-                                  setWaterbodyFilter('all');
-                                  setShowAllWaterbodies(false);
-                                }}
-                                style={{
-                                  default: {
-                                    fill,
-                                    outline: 'none',
-                                    stroke: isSelected ? '#111827' : '#ffffff',
-                                    strokeWidth: (isSelected ? 1.5 : 0.5) / mapZoom,
-                                  },
-                                  hover: {
-                                    fill,
-                                    outline: 'none',
-                                    cursor: abbr ? 'pointer' : 'default',
-                                    stroke: '#111827',
-                                    strokeWidth: 1 / mapZoom,
-                                  },
-                                  pressed: { fill, outline: 'none' },
-                                }}
-                              />
-                            );
-                          })
-                        }
-                      </Geographies>
-                      </ZoomableGroup>
-                    </ComposableMap>
+                    <MapContainer center={US_CENTER} zoom={US_ZOOM} zoomControl={false}
+                      scrollWheelZoom={true} style={{ width: '100%', height: '100%' }}>
+                      <MapController mapRef={mapRef} />
+                      <TileLayer url={CARTO_TILES} attribution={CARTO_ATTR} />
+                      <GeoJSON
+                        key={`${overlay}-${selectedState}-${showImpact}`}
+                        data={topo}
+                        style={(feature) => {
+                          const abbr = geoToAbbr(feature as GeoFeature);
+                          return {
+                            fillColor: getStateFill(abbr, overlay, overlayByState, stateRollup, showImpact),
+                            fillOpacity: 0.65,
+                            color: abbr === selectedState ? '#111827' : '#ffffff',
+                            weight: abbr === selectedState ? 3 : 1,
+                          };
+                        }}
+                        onEachFeature={(feature, layer) => {
+                          const abbr = geoToAbbr(feature as GeoFeature);
+                          if (!abbr) return;
+                          layer.bindTooltip(STATE_ABBR_TO_NAME[abbr] || abbr, { sticky: true });
+                          layer.on('click', () => {
+                            setSelectedState(abbr);
+                            setWaterbodySearch('');
+                            setWaterbodyFilter('all');
+                            setShowAllWaterbodies(false);
+                            mapRef.current?.fitBounds((layer as any).getBounds(), { padding: [20, 20] });
+                          });
+                          layer.on('mouseover', () => (layer as any).setStyle({ weight: 2, color: '#111827' }));
+                          layer.on('mouseout', () => (layer as any).setStyle({
+                            weight: abbr === selectedState ? 3 : 1,
+                            color: abbr === selectedState ? '#111827' : '#ffffff',
+                          }));
+                        }}
+                      />
+                    </MapContainer>
                   </div>
                   
                   {/* Legend */}

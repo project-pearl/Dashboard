@@ -137,10 +137,18 @@ function getCauseDescription(cause: string): string {
 /* ═══ GRADING ═══ */
 
 function scoreToGrade(score: number): { letter: string; color: string; bg: string } {
-  if (score >= 90) return { letter: 'A', color: 'text-green-400', bg: 'bg-green-500' };
-  if (score >= 80) return { letter: 'B', color: 'text-blue-400', bg: 'bg-blue-500' };
-  if (score >= 70) return { letter: 'C', color: 'text-yellow-400', bg: 'bg-yellow-500' };
-  if (score >= 60) return { letter: 'D', color: 'text-orange-400', bg: 'bg-orange-500' };
+  if (score >= 97) return { letter: 'A+', color: 'text-green-400', bg: 'bg-green-500' };
+  if (score >= 93) return { letter: 'A',  color: 'text-green-400', bg: 'bg-green-500' };
+  if (score >= 90) return { letter: 'A-', color: 'text-green-300', bg: 'bg-green-500' };
+  if (score >= 87) return { letter: 'B+', color: 'text-emerald-400', bg: 'bg-emerald-500' };
+  if (score >= 83) return { letter: 'B',  color: 'text-emerald-300', bg: 'bg-emerald-500' };
+  if (score >= 80) return { letter: 'B-', color: 'text-teal-300', bg: 'bg-teal-500' };
+  if (score >= 77) return { letter: 'C+', color: 'text-yellow-400', bg: 'bg-yellow-500' };
+  if (score >= 73) return { letter: 'C',  color: 'text-yellow-400', bg: 'bg-yellow-500' };
+  if (score >= 70) return { letter: 'C-', color: 'text-yellow-300', bg: 'bg-yellow-500' };
+  if (score >= 67) return { letter: 'D+', color: 'text-orange-400', bg: 'bg-orange-500' };
+  if (score >= 63) return { letter: 'D',  color: 'text-orange-300', bg: 'bg-orange-500' };
+  if (score >= 60) return { letter: 'D-', color: 'text-orange-300', bg: 'bg-orange-500' };
   return { letter: 'F', color: 'text-red-400', bg: 'bg-red-500' };
 }
 

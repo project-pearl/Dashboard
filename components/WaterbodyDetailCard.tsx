@@ -277,6 +277,17 @@ export function WaterbodyDetailCard({
               const display = PARAM_DISPLAY[key] || { label: p.parameterName || key, unit: p.unit || '' };
               const isGood = display.good ? display.good(p.value) : undefined;
 
+              const lastSampled = (p as any).lastSampled;
+              let ageLabel: string | null = null;
+              if (lastSampled) {
+                const ageMs = Date.now() - new Date(lastSampled).getTime();
+                if (!isNaN(ageMs)) {
+                  if (ageMs < 3600000) ageLabel = `${Math.max(1, Math.floor(ageMs / 60000))}m ago`;
+                  else if (ageMs < 86400000) ageLabel = `${Math.floor(ageMs / 3600000)}h ago`;
+                  else ageLabel = `${Math.floor(ageMs / 86400000)}d ago`;
+                }
+              }
+
               return (
                 <div key={key} className="bg-white rounded-lg border border-slate-200 p-2.5 text-center">
                   <div className="text-[10px] uppercase tracking-wider text-slate-500 mb-0.5">{display.label}</div>
@@ -290,6 +301,9 @@ export function WaterbodyDetailCard({
                     <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${SOURCE_COLOR[p.source] || 'bg-slate-100 text-slate-500'}`}>
                       {getSourceName(p.source)}
                     </span>
+                  </div>
+                  <div className="text-[8px] text-slate-400 mt-0.5">
+                    {ageLabel || <span className="text-slate-300">No timestamp</span>}
                   </div>
                   {display.target && (
                     <div className="text-[9px] text-slate-400 mt-0.5">Target: {display.target}</div>
