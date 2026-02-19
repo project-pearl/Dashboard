@@ -2934,6 +2934,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                 removalEfficiencies={removalEfficiencies as any}
                 alertsCount={regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length}
                 userRole="K12"
+                stateAbbr={stateAbbr}
               />
             )}
           </div>

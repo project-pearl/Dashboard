@@ -2725,6 +2725,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
                 removalEfficiencies={removalEfficiencies as any}
                 alertsCount={regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length}
                 userRole="State"
+                stateAbbr={stateAbbr}
               />
             )}
           </div>

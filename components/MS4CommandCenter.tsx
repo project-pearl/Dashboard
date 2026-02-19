@@ -3749,6 +3749,7 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
               removalEfficiencies={removalEfficiencies as any}
               alertsCount={scopedRegionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length}
               userRole="State"
+              stateAbbr={stateAbbr}
             />
           )}
         </div>

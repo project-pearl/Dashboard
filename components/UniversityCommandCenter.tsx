@@ -2533,6 +2533,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
                 removalEfficiencies={removalEfficiencies as any}
                 alertsCount={regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length}
                 userRole="Researcher"
+                stateAbbr={stateAbbr}
               />
             )}
           </div>

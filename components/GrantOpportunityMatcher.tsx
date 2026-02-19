@@ -23,6 +23,7 @@ interface GrantOpportunityMatcherProps {
   removalEfficiencies: Record<string, number>;
   alertsCount: number;
   userRole?: string;
+  stateAbbr?: string;
 }
 
 // ─── Derive state abbreviation from regionId ──────────────────────────────────
@@ -566,8 +567,9 @@ export function GrantOpportunityMatcher({
   removalEfficiencies,
   alertsCount,
   userRole = 'MS4',
+  stateAbbr: stateAbbrProp,
 }: GrantOpportunityMatcherProps) {
-  const stateAbbr = getStateFromRegion(regionId);
+  const stateAbbr = stateAbbrProp || getStateFromRegion(regionId);
   const stateName = STATE_NAMES[stateAbbr] || stateAbbr;
   const stateAuth = STATE_AUTHORITIES[stateAbbr];
 
