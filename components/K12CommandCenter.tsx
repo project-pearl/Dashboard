@@ -40,8 +40,8 @@ const LeafletMapShell = dynamic(
   { ssr: false }
 );
 
-const WaterTowerDefense = dynamic(
-  () => import('@/components/WaterTowerDefense').then(m => m.WaterTowerDefense),
+const ShuckAndDestroy = dynamic(
+  () => import('@/components/ShuckAndDestroy').then(m => m.ShuckAndDestroy),
   { ssr: false }
 );
 
@@ -2412,7 +2412,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
               <span className="text-xs text-slate-400">Learn by playing — can you save the bay?</span>
             </div>
           </div>
-          <WaterTowerDefense />
+          <ShuckAndDestroy />
         </div>
 
 
