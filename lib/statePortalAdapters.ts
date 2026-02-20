@@ -1,6 +1,6 @@
 // lib/statePortalAdapters.ts
 // Adapter pattern for querying state open data portals
-// Phase 4: 3 pilot states — Maryland (Socrata), Virginia (ArcGIS REST), California (CKAN)
+// Phase 4: 3 pilot states — Maryland (MDE via WQP), Virginia (DEQ via WQP), California (CEDEN/CKAN)
 
 interface StatePortalQuery {
   lat?: number;
@@ -30,157 +30,204 @@ interface StatePortalAdapter {
   fetch(query: StatePortalQuery): Promise<StatePortalResponse>;
 }
 
-// ─── Maryland iMap (Socrata) ─────────────────────────────────────────────────
-// https://data.imap.maryland.gov — Socrata Open Data API (SODA)
+// ─── Maryland — MDE water quality via WQP (state provider) ──────────────────
+// Maryland iMap is ArcGIS Hub with no data API. Instead query WQP filtering
+// to Maryland state providers (STORET/MDE) for state-specific data.
 const marylandAdapter: StatePortalAdapter = {
   state: 'MD',
-  name: 'Maryland iMap (Socrata)',
+  name: 'Maryland MDE (via WQP)',
   async fetch(query) {
     const results: StatePortalResult[] = [];
     try {
-      // Maryland water quality monitoring via Socrata
-      // Dataset: Water Quality Data (MDE)
-      let url = 'https://data.imap.maryland.gov/resource/7kyn-mdrw.json?$limit=20&$order=date_time DESC';
+      const eighteenMonthsAgo = new Date();
+      eighteenMonthsAgo.setMonth(eighteenMonthsAgo.getMonth() - 18);
+      const startDate = eighteenMonthsAgo.toISOString().split('T')[0];
+
+      const url = new URL('https://www.waterqualitydata.us/wqx3/Result/search');
+      url.searchParams.set('statecode', 'US:24'); // Maryland FIPS
+      url.searchParams.set('providers', 'STORET'); // State/tribal data only (excludes USGS)
+      url.searchParams.set('startDateLo', startDate);
+      url.searchParams.set('dataProfile', 'narrow');
+      url.searchParams.set('mimeType', 'csv');
+      url.searchParams.set('sampleMedia', 'Water');
 
       if (query.lat && query.lng) {
-        // Socrata geo query — within ~15km
-        url += `&$where=within_circle(location, ${query.lat}, ${query.lng}, 15000)`;
+        url.searchParams.set('lat', String(query.lat));
+        url.searchParams.set('long', String(query.lng));
+        url.searchParams.set('within', '15');
       }
 
-      const res = await fetch(url, {
-        headers: { 'Accept': 'application/json' },
-        signal: AbortSignal.timeout(12_000),
+      const res = await fetch(url.toString(), {
+        signal: AbortSignal.timeout(20_000),
+        redirect: 'follow',
       });
 
       if (res.ok) {
-        const data = await res.json();
-        for (const row of (Array.isArray(data) ? data : [])) {
-          const param = row.parameter || row.analyte || '';
-          const val = row.value || row.result || row.measurement || '';
+        const text = await res.text();
+        const rows = csvToRows(text);
+        for (const row of rows.slice(0, 20)) {
+          const param = row.CharacteristicName || row['Characteristic Name'] || '';
+          const val = row.ResultMeasureValue || row['ResultMeasure/MeasureValue'] || row['Result Value'] || '';
           if (param && val) {
             results.push({
               parameter: param,
               value: val,
-              unit: row.units || row.unit || '',
-              station_name: row.station || row.site_name || row.monitoring_station || 'MD Station',
-              date: row.date_time || row.sample_date || '',
-              source_url: 'https://data.imap.maryland.gov',
+              unit: row['ResultMeasure/MeasureUnitCode'] || row.ResultMeasure_MeasureUnitCode || '',
+              station_name: row.MonitoringLocationName || row['Monitoring Location Name'] || 'MDE Station',
+              date: row.ActivityStartDate || row['Activity Start Date'] || '',
+              source_url: 'https://www.waterqualitydata.us',
             });
           }
         }
       }
     } catch (e: any) {
-      return { data: results, adapter: 'maryland-socrata', error: e.message };
+      return { data: results, adapter: 'maryland-wqp', error: e.message };
     }
-    return { data: results, adapter: 'maryland-socrata' };
+    return { data: results, adapter: 'maryland-wqp' };
   },
 };
 
-// ─── Virginia DEQ (ArcGIS REST) ──────────────────────────────────────────────
-// https://gis.deq.virginia.gov/arcgis/rest/services/
+// ─── Virginia — DEQ water quality via WQP (state provider) ──────────────────
+// gis.deq.virginia.gov DNS fails. Use WQP filtering to Virginia STORET data.
 const virginiaAdapter: StatePortalAdapter = {
   state: 'VA',
-  name: 'Virginia DEQ (ArcGIS REST)',
+  name: 'Virginia DEQ (via WQP)',
   async fetch(query) {
     const results: StatePortalResult[] = [];
     try {
-      // VA DEQ monitoring stations via ArcGIS REST
-      let url = 'https://gis.deq.virginia.gov/arcgis/rest/services/public/DEQ_WATER_MONITORING/MapServer/0/query';
-      const params = new URLSearchParams({
-        f: 'json',
-        outFields: '*',
-        returnGeometry: 'false',
-        resultRecordCount: '20',
-        orderByFields: 'SAMPLE_DATE DESC',
-      });
+      const eighteenMonthsAgo = new Date();
+      eighteenMonthsAgo.setMonth(eighteenMonthsAgo.getMonth() - 18);
+      const startDate = eighteenMonthsAgo.toISOString().split('T')[0];
+
+      const url = new URL('https://www.waterqualitydata.us/wqx3/Result/search');
+      url.searchParams.set('statecode', 'US:51'); // Virginia FIPS
+      url.searchParams.set('providers', 'STORET');
+      url.searchParams.set('startDateLo', startDate);
+      url.searchParams.set('dataProfile', 'narrow');
+      url.searchParams.set('mimeType', 'csv');
+      url.searchParams.set('sampleMedia', 'Water');
 
       if (query.lat && query.lng) {
-        params.set('geometry', JSON.stringify({
-          x: query.lng,
-          y: query.lat,
-          spatialReference: { wkid: 4326 },
-        }));
-        params.set('geometryType', 'esriGeometryPoint');
-        params.set('spatialRel', 'esriSpatialRelIntersects');
-        params.set('distance', '15000');
-        params.set('units', 'esriSRUnit_Meter');
-      } else {
-        params.set('where', '1=1');
-      }
-
-      const res = await fetch(`${url}?${params.toString()}`, {
-        headers: { 'Accept': 'application/json' },
-        signal: AbortSignal.timeout(12_000),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        const features = data?.features || [];
-        for (const feat of features) {
-          const attr = feat.attributes || {};
-          const param = attr.PARAMETER || attr.ANALYTE || '';
-          const val = attr.VALUE || attr.RESULT || '';
-          if (param && val) {
-            results.push({
-              parameter: param,
-              value: String(val),
-              unit: attr.UNITS || attr.UNIT || '',
-              station_name: attr.STATION_NAME || attr.SITE_NAME || 'VA Station',
-              date: attr.SAMPLE_DATE ? new Date(attr.SAMPLE_DATE).toISOString() : '',
-              source_url: 'https://gis.deq.virginia.gov',
-            });
-          }
-        }
-      }
-    } catch (e: any) {
-      return { data: results, adapter: 'virginia-arcgis', error: e.message };
-    }
-    return { data: results, adapter: 'virginia-arcgis' };
-  },
-};
-
-// ─── California Open Data (CKAN) ────────────────────────────────────────────
-// https://data.ca.gov/api/3/ — CKAN API
-const californiaAdapter: StatePortalAdapter = {
-  state: 'CA',
-  name: 'California Open Data (CKAN)',
-  async fetch(query) {
-    const results: StatePortalResult[] = [];
-    try {
-      // CA CEWQO portal — Surface Water Quality Results
-      // Dataset resource_id for CA water quality data
-      const url = new URL('https://data.ca.gov/api/3/action/datastore_search');
-      url.searchParams.set('resource_id', '8d5331c8-e209-4c0b-874e-3e9c2c2b9f5d');
-      url.searchParams.set('limit', '20');
-      url.searchParams.set('sort', 'SampleDate desc');
-
-      if (query.lat && query.lng) {
-        // CKAN doesn't have native geo queries — filter by nearby coordinates
-        const delta = 0.15;
-        url.searchParams.set('filters', JSON.stringify({
-          Latitude: { gte: query.lat - delta, lte: query.lat + delta },
-          Longitude: { gte: query.lng - delta, lte: query.lng + delta },
-        }));
+        url.searchParams.set('lat', String(query.lat));
+        url.searchParams.set('long', String(query.lng));
+        url.searchParams.set('within', '15');
       }
 
       const res = await fetch(url.toString(), {
-        headers: { 'Accept': 'application/json' },
-        signal: AbortSignal.timeout(12_000),
+        signal: AbortSignal.timeout(20_000),
+        redirect: 'follow',
       });
 
       if (res.ok) {
-        const data = await res.json();
-        const records = data?.result?.records || [];
-        for (const row of records) {
-          const param = row.Analyte || row.Parameter || row.ConstituentName || '';
-          const val = row.Result || row.Value || '';
+        const text = await res.text();
+        const rows = csvToRows(text);
+        for (const row of rows.slice(0, 20)) {
+          const param = row.CharacteristicName || row['Characteristic Name'] || '';
+          const val = row.ResultMeasureValue || row['ResultMeasure/MeasureValue'] || row['Result Value'] || '';
           if (param && val) {
             results.push({
               parameter: param,
-              value: String(val),
-              unit: row.Unit || row.Units || '',
-              station_name: row.StationName || row.SiteName || 'CA Station',
-              date: row.SampleDate || '',
+              value: val,
+              unit: row['ResultMeasure/MeasureUnitCode'] || row.ResultMeasure_MeasureUnitCode || '',
+              station_name: row.MonitoringLocationName || row['Monitoring Location Name'] || 'VA DEQ Station',
+              date: row.ActivityStartDate || row['Activity Start Date'] || '',
+              source_url: 'https://www.waterqualitydata.us',
+            });
+          }
+        }
+      }
+    } catch (e: any) {
+      return { data: results, adapter: 'virginia-wqp', error: e.message };
+    }
+    return { data: results, adapter: 'virginia-wqp' };
+  },
+};
+
+// ─── California — CEDEN/DWR water quality via data.ca.gov (CKAN) ────────────
+// Original resource_id was invalid. Using DWR groundwater quality dataset
+// (805e6762-1b82-48d9-b68f-5d79cca06ace) which is confirmed active with 297k+ records.
+// For surface water, fall through to WQP.
+const californiaAdapter: StatePortalAdapter = {
+  state: 'CA',
+  name: 'California DWR (CKAN)',
+  async fetch(query) {
+    const results: StatePortalResult[] = [];
+    try {
+      // Try CA CKAN first with the known working resource
+      const url = new URL('https://data.ca.gov/api/3/action/datastore_search');
+      url.searchParams.set('resource_id', '805e6762-1b82-48d9-b68f-5d79cca06ace');
+      url.searchParams.set('limit', '20');
+
+      // CKAN datastore_search supports SQL-like filtering
+      if (query.lat && query.lng) {
+        const delta = 0.25;
+        // Use q for text search or filters for exact match — CKAN doesn't support range in filters
+        // Instead use raw SQL via datastore_search_sql
+        const sqlUrl = new URL('https://data.ca.gov/api/3/action/datastore_search_sql');
+        const sql = `SELECT * FROM "805e6762-1b82-48d9-b68f-5d79cca06ace" WHERE "gm_latitude" BETWEEN ${query.lat - delta} AND ${query.lat + delta} AND "gm_longitude" BETWEEN ${query.lng - delta} AND ${query.lng + delta} LIMIT 20`;
+        sqlUrl.searchParams.set('sql', sql);
+
+        const res = await fetch(sqlUrl.toString(), {
+          headers: { 'Accept': 'application/json' },
+          signal: AbortSignal.timeout(15_000),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const records = data?.result?.records || [];
+          for (const row of records) {
+            const param = row.gm_chemical_name || row.gm_result_parameter || '';
+            const val = row.gm_result || row.gm_result_modifier || '';
+            if (param && val) {
+              results.push({
+                parameter: param,
+                value: String(val),
+                unit: row.gm_result_units || '',
+                station_name: row.gm_well_id || row.gm_dataset_name || 'CA DWR Well',
+                date: row.gm_samp_collection_date || '',
+                source_url: 'https://data.ca.gov',
+              });
+            }
+          }
+          if (results.length > 0) {
+            return { data: results, adapter: 'california-ckan' };
+          }
+        }
+      }
+
+      // Fallback: WQP for California surface water
+      const eighteenMonthsAgo = new Date();
+      eighteenMonthsAgo.setMonth(eighteenMonthsAgo.getMonth() - 18);
+      const wqpUrl = new URL('https://www.waterqualitydata.us/wqx3/Result/search');
+      wqpUrl.searchParams.set('statecode', 'US:06'); // California FIPS
+      wqpUrl.searchParams.set('providers', 'STORET');
+      wqpUrl.searchParams.set('startDateLo', eighteenMonthsAgo.toISOString().split('T')[0]);
+      wqpUrl.searchParams.set('dataProfile', 'narrow');
+      wqpUrl.searchParams.set('mimeType', 'csv');
+      wqpUrl.searchParams.set('sampleMedia', 'Water');
+      if (query.lat && query.lng) {
+        wqpUrl.searchParams.set('lat', String(query.lat));
+        wqpUrl.searchParams.set('long', String(query.lng));
+        wqpUrl.searchParams.set('within', '15');
+      }
+
+      const wqpRes = await fetch(wqpUrl.toString(), {
+        signal: AbortSignal.timeout(20_000),
+        redirect: 'follow',
+      });
+      if (wqpRes.ok) {
+        const text = await wqpRes.text();
+        const rows = csvToRows(text);
+        for (const row of rows.slice(0, 20)) {
+          const param = row.CharacteristicName || row['Characteristic Name'] || '';
+          const val = row.ResultMeasureValue || row['ResultMeasure/MeasureValue'] || row['Result Value'] || '';
+          if (param && val) {
+            results.push({
+              parameter: param,
+              value: val,
+              unit: row['ResultMeasure/MeasureUnitCode'] || '',
+              station_name: row.MonitoringLocationName || row['Monitoring Location Name'] || 'CA Station',
+              date: row.ActivityStartDate || row['Activity Start Date'] || '',
               source_url: 'https://data.ca.gov',
             });
           }
@@ -192,6 +239,43 @@ const californiaAdapter: StatePortalAdapter = {
     return { data: results, adapter: 'california-ckan' };
   },
 };
+
+// ─── CSV Parser (minimal) ───────────────────────────────────────────────────
+function csvToRows(csv: string): Record<string, string>[] {
+  const lines = csv.trim().split('\n');
+  if (lines.length < 2) return [];
+  const headers = parseLine(lines[0]);
+  const rows: Record<string, string>[] = [];
+  for (let i = 1; i < lines.length && i < 50; i++) {
+    const values = parseLine(lines[i]);
+    const obj: Record<string, string> = {};
+    for (let j = 0; j < headers.length; j++) {
+      obj[headers[j]] = values[j] || '';
+    }
+    rows.push(obj);
+  }
+  return rows;
+}
+
+function parseLine(line: string): string[] {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
+      else inQuotes = !inQuotes;
+    } else if (ch === ',' && !inQuotes) {
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  result.push(current.trim());
+  return result;
+}
 
 // ─── Adapter Registry ───────────────────────────────────────────────────────
 

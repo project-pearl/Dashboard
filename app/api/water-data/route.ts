@@ -136,54 +136,74 @@ async function usgsSamplesFetch(path: string, params: Record<string, string> = {
   return csvToJson(text);
 }
 
-// ─── MARACOOS ERDDAP — MD DNR continuous tidal WQ monitoring ────────────────
-// 15-min interval: DO, temperature, salinity, DO% sat from Eyes on the Bay
-const ERDDAP_BASE = 'https://erddap.maracoos.org/erddap/tabledap';
+// ─── CBIBS — Chesapeake Bay Interpretive Buoy System (real-time) ─────────────
+// Replaces MARACOOS ERDDAP (frozen at 2018). Real-time temp, salinity, conductivity.
+// API docs: https://mw.buoybay.noaa.gov/api/v1
+const CBIBS_BASE = 'https://mw.buoybay.noaa.gov/api/v1';
+const CBIBS_API_KEY = process.env.CBIBS_API_KEY || 'e824512c1a763440b7fd909ffac81705f76b213e'; // test key
 
-// Map PEARL regions → nearest MDDNR ERDDAP dataset IDs + coordinates
-const ERDDAP_STATION_MAP: Record<string, { datasetId: string; name: string; lat: number; lng: number }> = {
-  'patuxent':         { datasetId: 'mddnr_Jug_Bay',                 name: 'Jug Bay',                 lat: 38.7813, lng: -76.7137 },
-  'chester':          { datasetId: 'mddnr_Harris_Creek_Upstream',   name: 'Harris Creek Upstream',   lat: 38.7732, lng: -76.2823 },
-  'choptank':         { datasetId: 'mddnr_Harris_Creek_Downstream', name: 'Harris Creek Downstream', lat: 38.7125, lng: -76.3168 },
-  'upper_bay':        { datasetId: 'mddnr_Havre_de_Grace',          name: 'Havre de Grace',          lat: 39.5478, lng: -76.0848 },
-  'gunpowder':        { datasetId: 'mddnr_Pleasure_Island',         name: 'Pleasure Island',         lat: 39.2282, lng: -76.4006 },
-  'coastal_bays':     { datasetId: 'mddnr_Public_Landing',          name: 'Public Landing',          lat: 38.1483, lng: -75.2862 },
-  'lower_eastern':    { datasetId: 'mddnr_Little_Monie_Creek',      name: 'Little Monie Creek',      lat: 38.2086, lng: -75.8046 },
-  'budds_landing':    { datasetId: 'mddnr_Budds_Landing',           name: 'Budds Landing',           lat: 39.3723, lng: -75.8399 },
+// CBIBS stations mapped to PEARL regions
+const CBIBS_STATION_MAP: Record<string, { stationCode: string; name: string; lat: number; lng: number }> = {
+  // Baltimore Harbor area
+  'maryland_middle_branch':  { stationCode: 'BH', name: 'Baltimore Harbor',   lat: 39.223, lng: -76.530 },
+  'maryland_inner_harbor':   { stationCode: 'BH', name: 'Baltimore Harbor',   lat: 39.223, lng: -76.530 },
+  'maryland_patapsco_river': { stationCode: 'BH', name: 'Baltimore Harbor',   lat: 39.223, lng: -76.530 },
+  'maryland_patapsco':       { stationCode: 'BH', name: 'Baltimore Harbor',   lat: 39.223, lng: -76.530 },
+  'maryland_back_river':     { stationCode: 'BH', name: 'Baltimore Harbor',   lat: 39.223, lng: -76.530 },
+  'maryland_bear_creek':     { stationCode: 'BH', name: 'Baltimore Harbor',   lat: 39.223, lng: -76.530 },
+  'maryland_curtis_bay':     { stationCode: 'BH', name: 'Baltimore Harbor',   lat: 39.223, lng: -76.530 },
+  'maryland_stony_creek':    { stationCode: 'BH', name: 'Baltimore Harbor',   lat: 39.223, lng: -76.530 },
+  'maryland_canton':         { stationCode: 'BH', name: 'Baltimore Harbor',   lat: 39.223, lng: -76.530 },
+  'maryland_jones_falls':    { stationCode: 'BH', name: 'Baltimore Harbor',   lat: 39.223, lng: -76.530 },
+  'maryland_gwynns_falls':   { stationCode: 'BH', name: 'Baltimore Harbor',   lat: 39.223, lng: -76.530 },
+  'baltimore':               { stationCode: 'BH', name: 'Baltimore Harbor',   lat: 39.223, lng: -76.530 },
+  // Annapolis / Western Shore
+  'maryland_severn_river':   { stationCode: 'AN', name: 'Annapolis',          lat: 38.964, lng: -76.447 },
+  'maryland_severn':         { stationCode: 'AN', name: 'Annapolis',          lat: 38.964, lng: -76.447 },
+  'maryland_magothy_river':  { stationCode: 'AN', name: 'Annapolis',          lat: 38.964, lng: -76.447 },
+  'annapolis':               { stationCode: 'AN', name: 'Annapolis',          lat: 38.964, lng: -76.447 },
+  'chesapeake_bay_main':     { stationCode: 'AN', name: 'Annapolis',          lat: 38.964, lng: -76.447 },
+  // Gooses Reef (mid-bay)
+  'maryland_choptank_river': { stationCode: 'GR', name: 'Gooses Reef',        lat: 38.556, lng: -76.415 },
+  'maryland_choptank':       { stationCode: 'GR', name: 'Gooses Reef',        lat: 38.556, lng: -76.415 },
+  'maryland_chester_river':  { stationCode: 'GR', name: 'Gooses Reef',        lat: 38.556, lng: -76.415 },
+  // Potomac
+  'maryland_potomac':        { stationCode: 'PL', name: 'Potomac',            lat: 38.033, lng: -76.337 },
+  'dc_potomac':              { stationCode: 'PL', name: 'Potomac',            lat: 38.033, lng: -76.337 },
+  // Stingray Point / York Spit (Virginia side)
+  'virginia_york_river':     { stationCode: 'YS', name: 'York Spit',          lat: 37.208, lng: -76.269 },
+  'virginia_rappahannock':   { stationCode: 'SR', name: 'Stingray Point',     lat: 37.568, lng: -76.263 },
+  // Short keys
+  'patuxent':                { stationCode: 'PL', name: 'Potomac',            lat: 38.033, lng: -76.337 },
+  'upper_bay':               { stationCode: 'BH', name: 'Baltimore Harbor',   lat: 39.223, lng: -76.530 },
+  'gunpowder':               { stationCode: 'BH', name: 'Baltimore Harbor',   lat: 39.223, lng: -76.530 },
 };
 
-// ERDDAP column → PEARL key mapping
-const ERDDAP_COLUMNS = [
-  'time',
-  'mass_concentration_of_oxygen_in_sea_water',  // DO mg/L
-  'sea_water_temperature',                       // °C
-  'sea_water_salinity',                          // PSU
-  'fractional_saturation_of_oxygen_in_sea_water' // DO %
-];
-
-async function erddapFetch(datasetId: string, constraints: string = '') {
-  // Request last row (most recent) by ordering descending and limiting to 1
-  const columns = ERDDAP_COLUMNS.join(',');
-  const defaultConstraints = constraints || '&orderByLimit("1,time/desc")';
-  const url = `${ERDDAP_BASE}/${datasetId}.csv?${columns}${defaultConstraints}`;
-
-  console.log('[ERDDAP]', url);
+async function cbibsFetch(stationCode: string) {
+  const url = `${CBIBS_BASE}/json/station/${stationCode}?key=${CBIBS_API_KEY}`;
+  console.log('[CBIBS]', url.replace(CBIBS_API_KEY, '***'));
 
   const res = await fetch(url, {
-    next: { revalidate: 300 }, // Cache 5 min (data updates every 15 min)
+    headers: { 'Accept': 'application/json' },
+    next: { revalidate: 300 },
   });
   if (!res.ok) {
     const body = await res.text().catch(() => '');
-    console.error(`[ERDDAP] Error ${res.status}: ${body.slice(0, 300)}`);
-    return { error: `ERDDAP error: ${res.status}`, detail: body.slice(0, 200) };
+    console.error(`[CBIBS] Error ${res.status}: ${body.slice(0, 300)}`);
+    return { error: `CBIBS error: ${res.status}`, detail: body.slice(0, 200) };
   }
-  const text = await res.text();
-  // ERDDAP CSV has a units row (row 2) — skip it
-  const lines = text.trim().split('\n');
-  if (lines.length < 3) return []; // header + units + at least 1 data row
-  const csvWithoutUnits = [lines[0], ...lines.slice(2)].join('\n');
-  return csvToJson(csvWithoutUnits);
+  return res.json();
 }
+
+// Legacy ERDDAP kept for backwards compatibility but data is stale (2018)
+const ERDDAP_BASE = 'https://erddap.maracoos.org/erddap/tabledap';
+const ERDDAP_STATION_MAP: Record<string, { datasetId: string; name: string; lat: number; lng: number }> = {
+  'patuxent':      { datasetId: 'mddnr_Jug_Bay',                 name: 'Jug Bay',              lat: 38.7813, lng: -76.7137 },
+  'chester':       { datasetId: 'mddnr_Harris_Creek_Upstream',   name: 'Harris Creek',         lat: 38.7732, lng: -76.2823 },
+  'choptank':      { datasetId: 'mddnr_Harris_Creek_Downstream', name: 'Harris Creek Down',    lat: 38.7125, lng: -76.3168 },
+  'upper_bay':     { datasetId: 'mddnr_Havre_de_Grace',          name: 'Havre de Grace',       lat: 39.5478, lng: -76.0848 },
+  'budds_landing': { datasetId: 'mddnr_Budds_Landing',           name: 'Budds Landing',        lat: 39.3723, lng: -75.8399 },
+};
 
 // ─── NOAA CO-OPS — Tides, water temp, conductivity for coastal/tidal stations ─
 // https://api.tidesandcurrents.noaa.gov/api/prod/
@@ -649,55 +669,82 @@ export async function GET(request: NextRequest) {
       // ════════════════════════════════════════════════════════════════════════
 
       // Get latest reading from a specific MDDNR station
-      // Example: ?action=erddap-latest&datasetId=mddnr_Jug_Bay
-      // Example: ?action=erddap-latest&region=patuxent
+      // CBIBS real-time data (replaces stale ERDDAP)
+      // Example: ?action=erddap-latest&region=maryland_middle_branch
+      // Example: ?action=erddap-latest&stationCode=BH
       case 'erddap-latest': {
-        const datasetId = sp.get('datasetId') || '';
         const regionKey = sp.get('region') || '';
-        const station = datasetId
-          ? { datasetId, name: datasetId, lat: 0, lng: 0 }
-          : ERDDAP_STATION_MAP[regionKey];
-        if (!station) {
+        const stationCode = sp.get('stationCode') || '';
+        const cbibsStation = stationCode
+          ? { stationCode, name: stationCode, lat: 0, lng: 0 }
+          : CBIBS_STATION_MAP[regionKey];
+
+        if (cbibsStation) {
+          // Use CBIBS (real-time)
+          const data = await cbibsFetch(cbibsStation.stationCode);
+          if (data && !data.error) {
+            // Normalize to ERDDAP-like output for cascade compatibility
+            const stationData = Array.isArray(data) ? data[0] : data;
+            const normalized = [{
+              time: stationData?.last_updated || new Date().toISOString(),
+              sea_water_temperature: stationData?.sea_water_temperature ?? stationData?.water_temp ?? '',
+              sea_water_salinity: stationData?.sea_water_salinity ?? stationData?.salinity ?? '',
+              sea_water_electrical_conductivity: stationData?.sea_water_electrical_conductivity ?? '',
+              source: 'CBIBS',
+            }];
+            return NextResponse.json({ source: 'cbibs', station: cbibsStation.name, data: normalized });
+          }
+        }
+
+        // Fallback to legacy ERDDAP (stale but may have historical data)
+        const erddapStation = ERDDAP_STATION_MAP[regionKey];
+        if (erddapStation) {
           return NextResponse.json({
-            error: 'Provide datasetId or region',
-            availableRegions: Object.keys(ERDDAP_STATION_MAP),
-          }, { status: 400 });
+            source: 'erddap',
+            station: erddapStation.name,
+            warning: 'ERDDAP data is stale (last updated 2018). CBIBS station not available for this region.',
+            data: [],
+          });
         }
-        const data = await erddapFetch(station.datasetId);
-        if ('error' in data) return NextResponse.json({ source: 'erddap', ...data }, { status: 502 });
-        return NextResponse.json({ source: 'erddap', station: station.name, data });
-      }
 
-      // Get time range from an MDDNR station
-      // Example: ?action=erddap-range&datasetId=mddnr_Jug_Bay&start=2025-01-01&end=2025-02-01
-      case 'erddap-range': {
-        const dsId = sp.get('datasetId') || '';
-        const regionKey2 = sp.get('region') || '';
-        const station2 = dsId
-          ? { datasetId: dsId, name: dsId, lat: 0, lng: 0 }
-          : ERDDAP_STATION_MAP[regionKey2];
-        if (!station2) {
-          return NextResponse.json({ error: 'Provide datasetId or region' }, { status: 400 });
-        }
-        const start = sp.get('start') || '';
-        const end = sp.get('end') || '';
-        let constraints = '&orderByLimit("500,time/desc")';
-        if (start) constraints += `&time>=${start}T00:00:00Z`;
-        if (end) constraints += `&time<=${end}T23:59:59Z`;
-        const data = await erddapFetch(station2.datasetId, constraints);
-        if ('error' in data) return NextResponse.json({ source: 'erddap', ...data }, { status: 502 });
-        return NextResponse.json({ source: 'erddap', station: station2.name, data, count: Array.isArray(data) ? data.length : 0 });
-      }
-
-      // List all mapped ERDDAP stations
-      case 'erddap-stations': {
         return NextResponse.json({
-          source: 'erddap',
-          provider: 'MARACOOS / MD DNR Eyes on the Bay',
-          stations: Object.entries(ERDDAP_STATION_MAP).map(([region, s]) => ({
-            region, ...s, url: `${ERDDAP_BASE}/${s.datasetId}.html`
-          })),
+          error: 'Provide region or stationCode',
+          availableCBIBS: [...new Set(Object.values(CBIBS_STATION_MAP).map(s => s.stationCode))],
+        }, { status: 400 });
+      }
+
+      // List all mapped CBIBS + legacy ERDDAP stations
+      case 'erddap-stations': {
+        const cbibsStations = [...new Set(Object.values(CBIBS_STATION_MAP).map(s => s.stationCode))];
+        return NextResponse.json({
+          source: 'cbibs',
+          provider: 'NOAA CBIBS (Chesapeake Bay Interpretive Buoy System)',
+          note: 'Replaces stale MARACOOS ERDDAP (frozen at 2018)',
+          stations: cbibsStations.map(code => {
+            const entry = Object.values(CBIBS_STATION_MAP).find(s => s.stationCode === code)!;
+            return { code, name: entry.name, lat: entry.lat, lng: entry.lng };
+          }),
         });
+      }
+
+      // CBIBS all stations with latest readings
+      // Example: ?action=cbibs-all
+      case 'cbibs-all': {
+        try {
+          const url = `${CBIBS_BASE}/json/station?key=${CBIBS_API_KEY}`;
+          const res = await fetch(url, {
+            headers: { 'Accept': 'application/json' },
+            signal: AbortSignal.timeout(15_000),
+            next: { revalidate: 300 },
+          });
+          if (!res.ok) {
+            return NextResponse.json({ source: 'cbibs', error: `CBIBS error: ${res.status}` }, { status: 502 });
+          }
+          const data = await res.json();
+          return NextResponse.json({ source: 'cbibs', data });
+        } catch (e: any) {
+          return NextResponse.json({ source: 'cbibs', error: e.message }, { status: 502 });
+        }
       }
 
       // ════════════════════════════════════════════════════════════════════════
@@ -1605,64 +1652,114 @@ export async function GET(request: NextRequest) {
       case 'mmw-latest': {
         const lat = sp.get('lat');
         const lng = sp.get('lng');
-        const radius = sp.get('radius') || '25'; // km
+        const radiusKm = parseFloat(sp.get('radius') || '25');
         if (!lat || !lng) {
           return NextResponse.json({ error: 'lat and lng required' }, { status: 400 });
         }
+        const targetLat = parseFloat(lat);
+        const targetLng = parseFloat(lng);
 
         try {
-          // MMW API: search nearby sites then get latest values
-          const mmwSitesUrl = `https://monitormywatershed.org/api/v1/sites?latitude=${lat}&longitude=${lng}&radius=${radius}`;
-          const mmwSitesRes = await fetch(mmwSitesUrl, {
-            headers: { 'Accept': 'application/json' },
-            signal: AbortSignal.timeout(15_000),
-            next: { revalidate: 600 },
+          // MMW has no REST API — site data is embedded as JSON in the /browse/ HTML page
+          const browseRes = await fetch('https://monitormywatershed.org/browse/', {
+            signal: AbortSignal.timeout(20_000),
+            next: { revalidate: 3600 }, // Cache 1hr — site list rarely changes
           });
-
-          if (!mmwSitesRes.ok) {
-            return NextResponse.json({
-              source: 'mmw',
-              error: `MMW API error: ${mmwSitesRes.status}`,
-              data: [],
-            }, { status: 502 });
+          if (!browseRes.ok) {
+            return NextResponse.json({ source: 'mmw', error: `MMW browse error: ${browseRes.status}`, data: [] }, { status: 502 });
           }
+          const html = await browseRes.text();
 
-          const sitesData = await mmwSitesRes.json();
-          const sites = Array.isArray(sitesData) ? sitesData : sitesData?.results || sitesData?.sites || [];
+          // Extract embedded JSON from <script id="sites-data" type="application/json">
+          const match = html.match(/<script\s+id="sites-data"[^>]*>([\s\S]*?)<\/script>/);
+          if (!match) {
+            return NextResponse.json({ source: 'mmw', error: 'Could not parse site data from MMW', data: [] }, { status: 502 });
+          }
+          const allSites = JSON.parse(match[1]);
+
+          // Haversine distance filter
+          const toRad = (d: number) => d * Math.PI / 180;
+          const haversine = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+            const R = 6371;
+            const dLat = toRad(lat2 - lat1);
+            const dLng = toRad(lng2 - lng1);
+            const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng/2)**2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          };
+
+          const nearbySites = (Array.isArray(allSites) ? allSites : [])
+            .filter((s: any) => s.latitude && s.longitude)
+            .map((s: any) => ({ ...s, distance: haversine(targetLat, targetLng, parseFloat(s.latitude), parseFloat(s.longitude)) }))
+            .filter((s: any) => s.distance <= radiusKm)
+            .sort((a: any, b: any) => a.distance - b.distance)
+            .slice(0, 10);
 
           if (action === 'mmw-sites') {
-            return NextResponse.json({ source: 'mmw', data: sites });
+            return NextResponse.json({ source: 'mmw', data: nearbySites, total: nearbySites.length });
           }
 
-          // For mmw-latest: get latest readings from nearest site
+          // For mmw-latest: scrape nearest site's page for result_ids, then fetch CSV data
           const results: any[] = [];
-          for (const site of sites.slice(0, 3)) {
-            const siteCode = site.sampling_feature_code || site.siteCode || site.id;
+          for (const site of nearbySites.slice(0, 3)) {
+            const siteCode = site.code || site.id;
             if (!siteCode) continue;
 
             try {
-              const latestUrl = `https://monitormywatershed.org/api/v1/sites/${siteCode}/latest_values`;
-              const latestRes = await fetch(latestUrl, {
-                headers: { 'Accept': 'application/json' },
+              // Get site detail page to extract result_ids
+              const siteRes = await fetch(`https://monitormywatershed.org/sites/${siteCode}/`, {
                 signal: AbortSignal.timeout(10_000),
-                next: { revalidate: 300 },
               });
-              if (latestRes.ok) {
-                const latestData = await latestRes.json();
-                const values = Array.isArray(latestData) ? latestData : latestData?.values || latestData?.results || [];
-                for (const v of values) {
-                  results.push({
-                    ...v,
-                    station_name: site.sampling_feature_name || site.siteName || siteCode,
-                    site_code: siteCode,
+              if (!siteRes.ok) continue;
+              const siteHtml = await siteRes.text();
+
+              // Extract result-ids from download button attribute
+              const idsMatch = siteHtml.match(/result-ids="([^"]+)"/);
+              if (!idsMatch) continue;
+              const resultIds = idsMatch[1].split(',').slice(0, 4); // limit to 4 params
+
+              // Fetch latest values from each result_id
+              for (const rid of resultIds) {
+                try {
+                  const csvRes = await fetch(`https://monitormywatershed.org/api/csv-values/?result_id=${rid.trim()}`, {
+                    signal: AbortSignal.timeout(8_000),
                   });
-                }
+                  if (!csvRes.ok) continue;
+                  const csvText = await csvRes.text();
+                  const lines = csvText.trim().split('\n');
+
+                  // CSV has metadata headers (lines starting with #), then column headers, then data
+                  const dataLines = lines.filter(l => !l.startsWith('#'));
+                  if (dataLines.length < 2) continue;
+                  const headers = dataLines[0].split(',');
+                  const lastRow = dataLines[dataLines.length - 1].split(',');
+
+                  // Extract variable name from metadata
+                  const varLine = lines.find(l => l.startsWith('#VariableName'));
+                  const variableName = varLine ? varLine.split(',')[1]?.trim()?.replace(/"/g, '') : headers[3] || 'Unknown';
+                  const unitLine = lines.find(l => l.startsWith('#VariableUnitsAbbreviation'));
+                  const unit = unitLine ? unitLine.split(',')[1]?.trim()?.replace(/"/g, '') : '';
+
+                  const value = lastRow[3] || lastRow[lastRow.length - 1] || '';
+                  const datetime = lastRow[0] || '';
+
+                  if (value && !isNaN(parseFloat(value))) {
+                    results.push({
+                      variable_name: variableName,
+                      value: parseFloat(value),
+                      unit,
+                      datetime,
+                      station_name: site.name || siteCode,
+                      site_code: siteCode,
+                      distance_km: site.distance?.toFixed(1),
+                    });
+                  }
+                } catch { /* skip failed result_id */ }
               }
             } catch { /* skip failed site */ }
             if (results.length > 0) break; // use first site with data
           }
 
-          return NextResponse.json({ source: 'mmw', data: results, siteCount: sites.length });
+          return NextResponse.json({ source: 'mmw', data: results, siteCount: nearbySites.length });
         } catch (e: any) {
           return NextResponse.json({ source: 'mmw', error: e.message, data: [] }, { status: 502 });
         }

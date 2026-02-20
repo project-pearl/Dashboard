@@ -1182,115 +1182,86 @@ export function useWaterData(regionId: string | null): UseWaterDataResult {
         } catch (e) { /* BWB unavailable, continue to next source */ }
       }
 
-      // ── Source 2: MARACOOS ERDDAP — MD DNR continuous tidal monitoring ──────
-      // 15-min interval DO, temp, salinity for Chesapeake Bay regions
-      const ERDDAP_REGION_MAP: Record<string, string> = {
-        // Full region keys (as they come from the dashboard)
-        'maryland_patuxent_river': 'mddnr_Jug_Bay',
-        'maryland_patuxent':       'mddnr_Jug_Bay',
-        'maryland_chester_river':  'mddnr_Harris_Creek_Upstream',
-        'maryland_chester':        'mddnr_Harris_Creek_Upstream',
-        'maryland_choptank_river': 'mddnr_Harris_Creek_Downstream',
-        'maryland_choptank':       'mddnr_Harris_Creek_Downstream',
-        'maryland_sassafras_river':'mddnr_Havre_de_Grace',
-        'maryland_back_river':     'mddnr_Pleasure_Island',       // closest Bay station
-        'maryland_bear_creek':     'mddnr_Pleasure_Island',
-        'maryland_gunpowder':      'mddnr_Pleasure_Island',       // Gunpowder Falls area
-        'maryland_middle_branch':  'mddnr_Budds_Landing',
-        'maryland_inner_harbor':   'mddnr_Budds_Landing',
-        'maryland_patapsco_river': 'mddnr_Budds_Landing',
-        'maryland_patapsco':       'mddnr_Budds_Landing',
-        'maryland_nanticoke_river':'mddnr_Little_Monie_Creek',
-        'maryland_wicomico_river': 'mddnr_Little_Monie_Creek',
-        'maryland_pocomoke_river': 'mddnr_Public_Landing',
-        'maryland_severn_river':   'mddnr_Annapolis',
-        'maryland_severn':         'mddnr_Annapolis',
-        'maryland_magothy_river':  'mddnr_Annapolis',
-        'maryland_magothy':        'mddnr_Annapolis',
-        'maryland_rock_creek_aa':  'mddnr_Annapolis',
-        'maryland_potomac':        'mddnr_Budds_Landing',
-        'chesapeake_bay_main':     'mddnr_Annapolis',
-        // Short keys (legacy / alternate dashboard regions)
-        'patuxent':      'mddnr_Jug_Bay',
-        'chester':       'mddnr_Harris_Creek_Upstream',
-        'choptank':      'mddnr_Harris_Creek_Downstream',
-        'upper_bay':     'mddnr_Havre_de_Grace',
-        'gunpowder':     'mddnr_Pleasure_Island',
-        'coastal_bays':  'mddnr_Public_Landing',
-        'lower_eastern': 'mddnr_Little_Monie_Creek',
-        'budds_landing': 'mddnr_Budds_Landing',
+      // ── Source 2: CBIBS — Chesapeake Bay real-time buoy data ─────────────
+      // Replaces MARACOOS ERDDAP (frozen at 2018). Real-time temp, salinity, conductivity.
+      // CBIBS stations: BH (Baltimore), AN (Annapolis), GR (Gooses Reef), PL (Potomac), YS (York Spit), SR (Stingray Point)
+      const CBIBS_REGION_MAP: Record<string, string> = {
+        'maryland_middle_branch':  'BH', 'maryland_inner_harbor': 'BH', 'maryland_patapsco_river': 'BH',
+        'maryland_patapsco': 'BH', 'maryland_back_river': 'BH', 'maryland_bear_creek': 'BH',
+        'maryland_curtis_bay': 'BH', 'maryland_stony_creek': 'BH', 'maryland_canton': 'BH',
+        'maryland_jones_falls': 'BH', 'maryland_gwynns_falls': 'BH', 'maryland_gunpowder': 'BH',
+        'baltimore': 'BH', 'upper_bay': 'BH', 'gunpowder': 'BH',
+        'maryland_severn_river': 'AN', 'maryland_severn': 'AN', 'maryland_magothy_river': 'AN',
+        'maryland_magothy': 'AN', 'annapolis': 'AN', 'chesapeake_bay_main': 'AN',
+        'maryland_choptank_river': 'GR', 'maryland_choptank': 'GR',
+        'maryland_chester_river': 'GR', 'maryland_chester': 'GR',
+        'maryland_potomac': 'PL', 'dc_potomac': 'PL', 'patuxent': 'PL',
+        'virginia_york_river': 'YS', 'virginia_york': 'YS',
+        'virginia_rappahannock': 'SR', 'virginia_rappahannock_tidal': 'SR',
       };
 
-      const erddapDatasetId = ERDDAP_REGION_MAP[regionId];
-      if (erddapDatasetId && !allParams['DO']) {
-        console.log(`[PEARL Source 2] ERDDAP: querying ${erddapDatasetId} for ${regionId}`);
+      const cbibsCode = CBIBS_REGION_MAP[regionId];
+      if (cbibsCode && (!allParams['temperature'] || !allParams['salinity'])) {
+        console.log(`[PEARL Source 2] CBIBS: querying station ${cbibsCode} for ${regionId}`);
         try {
           const controller = new AbortController();
           const timer = setTimeout(() => controller.abort(), 12000);
-          const erddapRes = await fetch(
-            `/api/water-data?action=erddap-latest&datasetId=${erddapDatasetId}`,
+          const cbibsRes = await fetch(
+            `/api/water-data?action=erddap-latest&region=${regionId}`,
             { signal: controller.signal }
           ).catch(() => null);
           clearTimeout(timer);
 
-          if (erddapRes?.ok) {
-            const json = await erddapRes.json();
+          if (cbibsRes?.ok) {
+            const json = await cbibsRes.json();
             const rows = Array.isArray(json?.data) ? json.data : [];
             if (rows.length > 0) {
               const row = rows[0];
-              const erddapTime = row.time || null;
-
-              // DO (mg/L)
-              const doVal = parseFloat(row.mass_concentration_of_oxygen_in_sea_water);
-              if (!isNaN(doVal) && doVal > 0 && !allParams['DO']) {
-                allParams['DO'] = {
-                  pearlKey: 'DO', value: doVal, unit: 'mg/L',
-                  source: 'ERDDAP', stationName: `MD DNR ${erddapDatasetId.replace('mddnr_', '').replace(/_/g, ' ')}`,
-                  lastSampled: erddapTime, parameterName: 'Dissolved Oxygen',
-                };
-              }
+              const cbibsTime = row.time || null;
+              const stationName = `CBIBS ${json?.station || cbibsCode}`;
 
               // Temperature (°C)
               const tempVal = parseFloat(row.sea_water_temperature);
               if (!isNaN(tempVal) && tempVal > -5 && !allParams['temperature']) {
                 allParams['temperature'] = {
                   pearlKey: 'temperature', value: tempVal, unit: '°C',
-                  source: 'ERDDAP', stationName: `MD DNR ${erddapDatasetId.replace('mddnr_', '').replace(/_/g, ' ')}`,
-                  lastSampled: erddapTime, parameterName: 'Water Temperature',
+                  source: 'ERDDAP', stationName, lastSampled: cbibsTime, parameterName: 'Water Temperature',
                 };
               }
 
-              // Salinity (PSU) — bonus param for tidal stations
+              // Salinity (PSU)
               const salVal = parseFloat(row.sea_water_salinity);
               if (!isNaN(salVal) && salVal >= 0 && !allParams['salinity']) {
                 allParams['salinity'] = {
                   pearlKey: 'salinity', value: salVal, unit: 'PSU',
-                  source: 'ERDDAP', stationName: `MD DNR ${erddapDatasetId.replace('mddnr_', '').replace(/_/g, ' ')}`,
-                  lastSampled: erddapTime, parameterName: 'Salinity',
+                  source: 'ERDDAP', stationName, lastSampled: cbibsTime, parameterName: 'Salinity',
                 };
               }
 
-              // DO % saturation — bonus
-              const doPctVal = parseFloat(row.fractional_saturation_of_oxygen_in_sea_water);
-              if (!isNaN(doPctVal) && doPctVal >= 0 && !allParams['DO_pct']) {
-                allParams['DO_pct'] = {
-                  pearlKey: 'DO_pct', value: doPctVal, unit: '%',
-                  source: 'ERDDAP', stationName: `MD DNR ${erddapDatasetId.replace('mddnr_', '').replace(/_/g, ' ')}`,
-                  lastSampled: erddapTime, parameterName: 'DO % Saturation',
+              // Conductivity (S/m → convert to µS/cm)
+              const condVal = parseFloat(row.sea_water_electrical_conductivity);
+              if (!isNaN(condVal) && condVal > 0 && !allParams['conductivity']) {
+                allParams['conductivity'] = {
+                  pearlKey: 'conductivity', value: condVal * 10000, unit: 'µS/cm',
+                  source: 'ERDDAP', stationName, lastSampled: cbibsTime, parameterName: 'Conductivity',
                 };
               }
 
-              activeSources.push('ERDDAP');
-              sourceDetails.push({
-                source: DATA_SOURCES.ERDDAP,
-                parameterCount: Object.values(allParams).filter(p => p.source === 'ERDDAP').length,
-                stationName: erddapDatasetId.replace('mddnr_', '').replace(/_/g, ' '),
-                lastSampled: erddapTime,
-              });
+              const erddapCount = Object.values(allParams).filter(p => p.source === 'ERDDAP').length;
+              if (erddapCount > 0) {
+                activeSources.push('ERDDAP');
+                sourceDetails.push({
+                  source: DATA_SOURCES.ERDDAP,
+                  parameterCount: erddapCount,
+                  stationName,
+                  lastSampled: cbibsTime,
+                });
+                console.log(`[PEARL Source 2] CBIBS: filled ${erddapCount} params from ${stationName}`);
+              }
             }
           }
         } catch (e) {
-          console.warn(`[PEARL Source 2] ERDDAP failed:`, e instanceof Error ? e.message : e);
+          console.warn(`[PEARL Source 2] CBIBS failed:`, e instanceof Error ? e.message : e);
         }
       }
 
