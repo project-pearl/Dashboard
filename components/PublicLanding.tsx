@@ -58,7 +58,7 @@ function LivePulse() {
 const PLATFORM_STATS = [
   { value: 7000, suffix: '+', label: 'MS4s Nationwide', icon: Building2 },
   { value: 50, suffix: '', label: 'States Monitored', icon: Globe },
-  { value: 565000, suffix: '+', label: 'Data Points Analyzed', icon: Droplets },
+  { value: 565000, suffix: '+', label: 'Assessment Units', icon: Droplets },
   { value: 15, suffix: 'min', label: 'Sensor Interval', icon: Activity },
 ];
 
