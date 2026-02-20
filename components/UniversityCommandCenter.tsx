@@ -847,11 +847,12 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
           );
         })());
 
+            case 'insights': return DS(
+              <AIInsightsEngine key={stateAbbr} role={userRole === 'College' ? 'College' : 'Researcher'} stateAbbr={stateAbbr} regionData={regionData as any} />
+            );
+
             case 'map-grid': return DS(
         <div className="space-y-4">
-        {/* ── AI INSIGHTS ── */}
-        <AIInsightsEngine key={stateAbbr} role={userRole === 'College' ? 'College' : 'Researcher'} stateAbbr={stateAbbr} regionData={regionData as any} />
-
         {/* ── MAIN CONTENT: Map (2/3) + Waterbody List (1/3) ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
@@ -2600,6 +2601,10 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
           </div>
         ) : null);
 
+            case 'disclaimer': return DS(
+              <PlatformDisclaimer />
+            );
+
             default: return null;
           }
         })}
@@ -2608,9 +2613,6 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
         </>);
         }}
         </LayoutEditor>
-
-        {/* ── DISCLAIMER FOOTER ── */}
-        <PlatformDisclaimer />
 
       </div>
     </div>

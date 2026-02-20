@@ -1193,9 +1193,11 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
           </div>
         )}
 
-        {/* ── AI INSIGHTS ── */}
-        <AIInsightsEngine key="US" role="Corporate" stateAbbr="US" regionData={facilitiesData as any} />
         </>
+            );
+
+            case 'insights': return DS(
+              <AIInsightsEngine key="US" role="Corporate" stateAbbr="US" regionData={facilitiesData as any} />
             );
 
             case 'impact': return DS(
@@ -2114,6 +2116,10 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
         </>
             );
 
+            case 'disclaimer': return DS(
+              <PlatformDisclaimer />
+            );
+
             default: return null;
           }
         })}
@@ -2208,9 +2214,6 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
         </>);
         }}
         </LayoutEditor>
-
-        {/* ── DISCLAIMER FOOTER ── */}
-        <PlatformDisclaimer />
 
       </div>
     </div>

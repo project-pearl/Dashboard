@@ -2749,6 +2749,10 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
         )}
             </>);
 
+            case 'disclaimer': return DS(
+              <PlatformDisclaimer />
+            );
+
             default: return null;
           }
         })}
@@ -2757,9 +2761,6 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
         </>);
         }}
         </LayoutEditor>
-
-        {/* ── DISCLAIMER FOOTER ── */}
-        <PlatformDisclaimer />
 
       </div>
     </div>

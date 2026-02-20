@@ -729,9 +729,6 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
           </div>
         </div>
 
-        {/* ── AI INSIGHTS ── */}
-        <AIInsightsEngine key={stateAbbr} role="NGO" stateAbbr={stateAbbr} regionData={regionData as any} />
-
         <LayoutEditor ccKey="NGO">
         {({ sections, isEditMode, onToggleVisibility, onToggleCollapse, collapsedSections }) => {
           const isSectionOpen = (id: string) => !collapsedSections[id];
@@ -817,6 +814,10 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
             </div>
           );
         })()
+            );
+
+            case 'insights': return DS(
+              <AIInsightsEngine key={stateAbbr} role="NGO" stateAbbr={stateAbbr} regionData={regionData as any} />
             );
 
             case 'alertfeed': return DS(
@@ -941,7 +942,7 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
                     {attainsBulkLoaded && <span className="text-green-600 font-medium">● ATTAINS live</span>}
                   </div>
                   <div className="h-[480px] w-full relative">
-                    <LeafletMapShell center={leafletGeo.center} zoom={leafletGeo.zoom} maxZoom={12} height="100%">
+                    <LeafletMapShell center={leafletGeo.center} zoom={leafletGeo.zoom} maxZoom={12} height="100%" mapKey={stateAbbr}>
                       <GeoJSON
                         key={stateAbbr}
                         data={geoData}
@@ -2711,6 +2712,10 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
         ) : null
             );
 
+            case 'disclaimer': return DS(
+              <PlatformDisclaimer />
+            );
+
             default: return null;
           }
         })}
@@ -2719,9 +2724,6 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
         </>);
         }}
         </LayoutEditor>
-
-        {/* ── DISCLAIMER FOOTER ── */}
-        <PlatformDisclaimer />
 
       </div>
     </div>

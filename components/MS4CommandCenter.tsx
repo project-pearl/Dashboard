@@ -1121,9 +1121,6 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
           </div>
         </div>
 
-        {/* ── AI INSIGHTS ── */}
-        <AIInsightsEngine key={stateAbbr} role="MS4" stateAbbr={stateAbbr} regionData={scopedRegionData as any} />
-
         <LayoutEditor ccKey="MS4">
         {({ sections, isEditMode, onToggleVisibility, onToggleCollapse, collapsedSections }) => {
           const isSectionOpen = (id: string) => !collapsedSections[id];
@@ -1212,6 +1209,10 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
             </div>
         );
         })());
+
+            case 'insights': return DS(
+              <AIInsightsEngine key={stateAbbr} role="MS4" stateAbbr={stateAbbr} regionData={scopedRegionData as any} />
+            );
 
             case 'quickactions': return DS(
         <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-3">
@@ -1579,7 +1580,7 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
                     {attainsBulkLoaded && <span className="text-green-600 font-medium">● ATTAINS live</span>}
                   </div>
                   <div className="h-[480px] w-full relative">
-                    <LeafletMapShell center={leafletGeo.center} zoom={leafletGeo.zoom} maxZoom={12} height="100%">
+                    <LeafletMapShell center={leafletGeo.center} zoom={leafletGeo.zoom} maxZoom={12} height="100%" mapKey={stateAbbr}>
                       <GeoJSON
                         key={stateAbbr}
                         data={geoData}
@@ -3398,12 +3399,7 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
         </div>
         );
 
-            default: return null;
-          }
-        })}
-
-        {/* ── DATA PROVENANCE & CHAIN OF CUSTODY — regulator audit view ── */}
-        {(
+            case 'provenance': return DS(
           <Card className="border-2 border-slate-300 bg-gradient-to-br from-slate-50/50 to-white">
             <CardHeader className="pb-2 cursor-pointer" onClick={() => toggleSection('provenance')}>
               <div className="flex items-center justify-between">
@@ -3760,15 +3756,20 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
               </CardContent>
             )}
           </Card>
-        )}
+            );
+
+            case 'disclaimer': return DS(
+              <PlatformDisclaimer />
+            );
+
+            default: return null;
+          }
+        })}
 
         </div>
         </>);
         }}
         </LayoutEditor>
-
-        {/* ── DISCLAIMER FOOTER ── */}
-        <PlatformDisclaimer />
 
       </div>
     </div>

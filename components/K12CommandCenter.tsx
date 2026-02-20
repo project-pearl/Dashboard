@@ -682,9 +682,6 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
           return (<>
         <div className={`space-y-6 ${isEditMode ? 'pl-12' : ''}`}>
 
-        {/* Wildlife disclaimer — not a draggable section */}
-        {!isTeacher && <WildlifeImpactDisclaimer enabled={showWildlife} onToggle={setShowWildlife} />}
-
         {sections.filter(s => s.visible || isEditMode).map(section => {
           const DS = (children: React.ReactNode) => (
             <DraggableSection key={section.id} id={section.id} label={section.label}
@@ -693,6 +690,10 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
             </DraggableSection>
           );
           switch (section.id) {
+
+            case 'wildlife': return DS(
+              !isTeacher ? <WildlifeImpactDisclaimer enabled={showWildlife} onToggle={setShowWildlife} /> : null
+            );
 
             case 'regprofile': return DS((() => {
           const agency = STATE_AGENCIES[stateAbbr];
@@ -883,7 +884,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                     {attainsBulkLoaded && <span className="text-green-600 font-medium">● ATTAINS live</span>}
                   </div>
                   <div className="h-[480px] w-full relative">
-                    <LeafletMapShell center={leafletGeo.center} zoom={leafletGeo.zoom} maxZoom={12} height="100%">
+                    <LeafletMapShell center={leafletGeo.center} zoom={leafletGeo.zoom} maxZoom={12} height="100%" mapKey={stateAbbr}>
                       <GeoJSON
                         key={stateAbbr}
                         data={geoData}
@@ -2961,25 +2962,27 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
           </div>
         ) : null);
 
+            case 'goodbye': return DS(
+              !isTeacher ? (
+                <div className="my-6">
+                  <Image src="/happy-neighbors.jpg" alt="Community members celebrating a successful water cleanup project" width={1200} height={600} className="w-full rounded-2xl shadow-lg object-cover" />
+                  <p className="text-xs text-slate-400 mt-2 text-center">Together we can make a difference — every drop counts!</p>
+                </div>
+              ) : null
+            );
+
+            case 'disclaimer': return DS(
+              <PlatformDisclaimer />
+            );
+
             default: return null;
           }
         })}
-
-        {/* ── GOODBYE IMAGE — not a draggable section ── */}
-        {!isTeacher && (
-          <div className="my-6">
-            <Image src="/happy-neighbors.jpg" alt="Community members celebrating a successful water cleanup project" width={1200} height={600} className="w-full rounded-2xl shadow-lg object-cover" />
-            <p className="text-xs text-slate-400 mt-2 text-center">Together we can make a difference — every drop counts!</p>
-          </div>
-        )}
 
         </div>
         </>);
         }}
         </LayoutEditor>
-
-        {/* ── DISCLAIMER FOOTER ── */}
-        <PlatformDisclaimer />
 
       </div>
     </div>

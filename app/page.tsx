@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import AuthGuard from '@/components/AuthGuard';
 import UserMenu from '@/components/UserMenu';
 import { useAuth } from '@/lib/authContext';
@@ -231,6 +231,42 @@ const CollapsibleSection = ({ id, title, icon, collapsed, onToggle, children }: 
     </div>
   );
 };
+
+// ── Error Boundary — prevents white-screen crashes in command centers ──
+class CommandCenterErrorBoundary extends React.Component<
+  { children: React.ReactNode; name: string },
+  { hasError: boolean; error: string; errorInfo: string }
+> {
+  state = { hasError: false, error: '', errorInfo: '' };
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error: error.message };
+  }
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error(`[${this.props.name}] Crash:`, error, info.componentStack);
+    this.setState({ errorInfo: info.componentStack || '' });
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-8 text-center max-w-2xl mx-auto mt-12">
+          <div className="text-red-600 font-bold text-lg mb-2">⚠️ {this.props.name} encountered an error</div>
+          <div className="text-sm text-slate-600 mb-3 bg-red-50 border border-red-200 rounded-lg p-3 text-left font-mono break-all">{this.state.error}</div>
+          {this.state.errorInfo && (
+            <details className="text-left mb-4">
+              <summary className="text-xs text-slate-500 cursor-pointer">Component Stack</summary>
+              <pre className="text-[10px] text-slate-400 mt-1 bg-slate-50 p-2 rounded overflow-auto max-h-40">{this.state.errorInfo}</pre>
+            </details>
+          )}
+          <button onClick={() => this.setState({ hasError: false, error: '', errorInfo: '' })}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
+            Retry
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function Home() {
   const [timeMode, setTimeMode] = useState<TimeMode>('real-time');
@@ -1077,6 +1113,7 @@ export default function Home() {
       )}
 
       {showNationalView && (
+        <CommandCenterErrorBoundary name="National Command Center">
         <NationalCommandCenter
           federalMode={userRole === 'Federal'}
           onToggleDevMode={() => setDevMode(prev => !prev)}
@@ -1097,6 +1134,7 @@ export default function Home() {
             if (userRole !== 'Federal') setShowNationalView(false);
           }}
         />
+        </CommandCenterErrorBoundary>
       )}
     {/* State role: SCC is the entire dashboard — like Federal/NCC */}
     {userRole === 'State' && !showNationalView && (

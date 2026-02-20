@@ -5105,6 +5105,10 @@ export function NationalCommandCenter(props: Props) {
 
         </>); {/* end sla */}
 
+        case 'disclaimer': return DS(
+              <PlatformDisclaimer />
+            );
+
         default: return null;
           } {/* end switch */}
         })} {/* end sections.map */}
@@ -5113,9 +5117,6 @@ export function NationalCommandCenter(props: Props) {
           </>);
         }} {/* end LayoutEditor render prop */}
         </LayoutEditor>
-
-        {/* ── DISCLAIMER FOOTER ── */}
-        <PlatformDisclaimer />
 
       </div>
 
