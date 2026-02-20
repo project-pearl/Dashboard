@@ -1119,7 +1119,7 @@ export default function Home() {
       )}
 
       {showNationalView && (
-        <CommandCenterErrorBoundary name="National Command Center">
+        <CommandCenterErrorBoundary name="PEARL Intelligence Network — National Command Center">
         <NationalCommandCenter
           federalMode={userRole === 'Federal'}
           onToggleDevMode={() => setDevMode(prev => !prev)}
@@ -1471,7 +1471,7 @@ export default function Home() {
           {/* ── DATA SOURCE DISCLAIMER ─────────────────────────────────────── */}
           {mounted && (() => {
             const ds = selectedRegion?.dataSource
-              ? String(selectedRegion.dataSource).toLowerCase()
+              ? String(selectedRegion!.dataSource).toLowerCase()
               : '';
             const hasPearl   = ds.includes('pearl');
             const hasAmbient = !hasPearl && ds.length > 0;
@@ -1901,8 +1901,9 @@ export default function Home() {
 
                 {/* Extra live parameters not in mock data */}
                 {waterData && (() => {
+                  const wd = waterData!;
                   const mockKeys = new Set(Object.keys(displayData.parameters));
-                  const extraKeys = Object.keys(waterData.parameters).filter(k => !mockKeys.has(k));
+                  const extraKeys = Object.keys(wd.parameters).filter(k => !mockKeys.has(k));
                   if (extraKeys.length === 0) return null;
 
                   const extraLabels: Record<string, string> = {
@@ -1916,7 +1917,7 @@ export default function Home() {
                       <div className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold mb-2">Additional Live Parameters</div>
                       <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
                         {extraKeys.map(key => {
-                          const p = waterData.parameters[key];
+                          const p = wd.parameters[key];
                           const sourceColors: Record<string, string> = {
                             USGS: 'bg-green-100 text-green-800',
                             ERDDAP: 'bg-cyan-100 text-cyan-800',
@@ -2471,8 +2472,9 @@ export default function Home() {
               <CardContent>
                 <div className="grid grid-cols-2 gap-4">
                   {Object.entries(displayData.parameters).slice(0, 4).map(([key, param]) => {
-                    const influent = param.value * (1 + (removalEfficiencies[key] || 0) / 100);
-                    const removal = removalEfficiencies[key] || 0;
+                    const k = key as keyof typeof removalEfficiencies;
+                    const influent = param.value * (1 + (removalEfficiencies[k] || 0) / 100);
+                    const removal = removalEfficiencies[k] || 0;
                     const improved = removal > 0;
                     return (
                       <div key={key} className="bg-slate-50 rounded-lg p-3 border border-slate-200">
@@ -2868,7 +2870,6 @@ export default function Home() {
                     <ROISavingsCalculator
                       stormEventsMonitored={stormEvents.length}
                       regionId={selectedRegionId}
-                      userRole={userRole}
                     />
                     <button
                       onClick={() => exportROIReport(displayData, removalEfficiencies, selectedRegion?.name || 'Unknown')}
@@ -2901,11 +2902,9 @@ export default function Home() {
               {/* Academic Tools for College Students & Researchers */}
               {(userRole === 'College' || userRole === 'Researcher') && (
                 <AcademicTools
-                  userRole={userRole}
-                  regionName={selectedRegion?.name || 'Unknown Region'}
-                  data={displayData}
-                  removalEfficiencies={removalEfficiencies}
-                  timeRange={{ start: startDate, end: endDate }}
+                  userRole={userRole as 'College' | 'Researcher'}
+                  regionId={selectedRegionId}
+                  stateAbbr={userState}
                 />
               )}
 

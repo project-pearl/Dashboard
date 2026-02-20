@@ -365,7 +365,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
     if (!el) return;
     const win = window.open('', '_blank', 'width=900,height=700');
     if (!win) return;
-    win.document.write(`<!DOCTYPE html><html><head><title>${title} — PEARL ${stateName} Research Command Center</title>
+    win.document.write(`<!DOCTYPE html><html><head><title>${title} — PEARL Intelligence Network — ${stateName} Research Command Center</title>
       <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 24px; color: #1e293b; }
@@ -383,7 +383,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
     </head><body>
       <div class="print-header">
         <h1>🦪 ${title}</h1>
-        <p>${stateName} Research Command Center · Printed ${new Date().toLocaleDateString()} · Project PEARL</p>
+        <p>PEARL Intelligence Network — ${stateName} Research Command Center · Printed ${new Date().toLocaleDateString()} · Project PEARL</p>
       </div>
       <div class="print-content">${el.innerHTML}</div>
     </body></html>`);
@@ -1829,12 +1829,12 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
                                   : '+ Continuous monitoring, compliance-grade data & treatment verification';
 
                                 // Phase 1
-                                const pdfP1Mission = (hasNutrients || bloomSeverity !== 'normal' || bloomSeverity === 'unknown')
+                                const pdfP1Mission = (hasNutrients || bloomSeverity !== 'normal')
                                   ? 'Primary Nutrient Interception'
                                   : hasBacteria ? 'Primary Pathogen Treatment'
                                   : hasSediment ? 'Primary Sediment Capture'
                                   : 'Primary Treatment & Monitoring';
-                                const pdfP1Placement = (hasNutrients || bloomSeverity !== 'normal' || bloomSeverity === 'unknown')
+                                const pdfP1Placement = (hasNutrients || bloomSeverity !== 'normal')
                                   ? '#1 critical zone: Highest-load tributary confluence -- intercept nutrient and sediment loading at the dominant inflow before it reaches the receiving waterbody'
                                   : hasBacteria ? '#1 critical zone: Highest-volume discharge point -- treat pathogen loading at the primary outfall or CSO'
                                   : hasSediment ? '#1 critical zone: Primary tributary mouth -- capture suspended solids at the highest-load inflow'

@@ -45,6 +45,7 @@ const ROLE_META: Record<UserRole, { icon: typeof Shield; label: string; desc: st
   Federal:    { icon: Shield,         label: 'Federal Agency',        desc: 'National monitoring & Bay-wide analytics',                    tier: 'operator' },
   Corporate:  { icon: Building2,      label: 'Corporate / ESG',       desc: 'ESG compliance reporting & sustainability dashboards',         tier: 'operator' },
   Temp:       { icon: Shield,         label: 'Temp (Breakpoint)',     desc: 'Breakpoint Revenue Group dashboard',                          tier: 'explorer' },
+  Pearl:      { icon: Shield,         label: 'PEARL Admin',           desc: 'Internal PEARL operations dashboard',                         tier: 'operator' },
 };
 
 const STATES = [

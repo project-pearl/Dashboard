@@ -587,7 +587,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
               <Image src="/Mascot.png" alt="PEARL Bubble Mascot" width={40} height={40} className="rounded-full object-cover" />
             </div>
             <div>
-              <div className="text-xl font-semibold text-slate-800">{stateName} PEARL Explorer</div>
+              <div className="text-xl font-semibold text-slate-800">PEARL Intelligence Network — {stateName} Explorer</div>
               <div className="text-sm text-slate-600">
                 {isTeacher
                   ? 'NGSS-aligned water quality data, field report tools & curriculum resources'
@@ -1399,23 +1399,24 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
 
             {/* Restoration plan not shown in K12 mode */}
             {activeDetailId && false && (() => {
-              const nccRegion = regionData.find(r => r.id === activeDetailId);
-              const regionConfig = getRegionById(activeDetailId);
-              const regionName = regionConfig?.name || nccRegion?.name || activeDetailId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+              const detailId = activeDetailId!;
+              const nccRegion = regionData.find(r => r.id === detailId);
+              const regionConfig = getRegionById(detailId);
+              const regionName = regionConfig?.name || nccRegion?.name || detailId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
               const level = nccRegion?.alertLevel || 'none';
               const params = waterData?.parameters ?? {};
 
               const bulkMatch = resolveBulkAttains(regionName);
               const attainsCategory = resolveAttainsCategory(
-                attainsCache[activeDetailId]?.category || '',
+                attainsCache[detailId]?.category || '',
                 bulkMatch?.category || '',
                 level as any,
               );
               const attainsCauses = mergeAttainsCauses(
-                attainsCache[activeDetailId]?.causes || [],
+                attainsCache[detailId]?.causes || [],
                 bulkMatch?.causes || [],
               );
-              const attainsCycle = attainsCache[activeDetailId]?.cycle || bulkMatch?.cycle || '';
+              const attainsCycle = attainsCache[detailId]?.cycle || bulkMatch?.cycle || '';
 
               const plan = computeRestorationPlan({
                 regionName, stateAbbr,
@@ -1605,7 +1606,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                               )) : (
                                 <>
                                   {isImpaired && <div>Regulatory exposure under CWA 303(d) and MS4 permits.</div>}
-                                  {(dataAgeDays === null || dataAgeDays > 60) && <div>High uncertainty due to monitoring gaps.</div>}
+                                  {(dataAgeDays === null || (dataAgeDays ?? 0) > 60) && <div>High uncertainty due to monitoring gaps.</div>}
                                   {!isImpaired && <div>Preventive action recommended to maintain water quality.</div>}
                                 </>
                               )}
@@ -1694,9 +1695,10 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                       {isPhasedDeployment && (() => {
                         type PhaseInfo = { phase: string; quads: number; units: number; gpm: number; cost: number; mission: string; placement: string; why: string; trigger: string; color: string; bgColor: string };
                         const phases: PhaseInfo[] = [];
-                        const hasMonitoringGap = dataAgeDays === null || dataAgeDays > 365;
+                        const hasMonitoringGap = dataAgeDays === null || (dataAgeDays ?? 0) > 365;
+                        const ageYears = dataAgeDays != null ? Math.round((dataAgeDays ?? 0) / 365) : 0;
                         const monitoringNote = hasMonitoringGap
-                          ? `+ Monitoring continuity & verification (restores data record lost for ${dataAgeDays !== null ? Math.round(dataAgeDays / 365) + '+ year' + (Math.round(dataAgeDays / 365) > 1 ? 's' : '') : 'an extended period'})`
+                          ? `+ Monitoring continuity & verification (restores data record lost for ${dataAgeDays != null ? ageYears + '+ year' + (ageYears > 1 ? 's' : '') : 'an extended period'})`
                           : '+ Continuous monitoring, compliance-grade data & treatment verification';
 
                         // Phase 1
@@ -1897,7 +1899,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                                 if (hasBacteria) pdf.addText('- Ongoing public health risk from pathogens.', { indent: 5 });
                                 if (hasNutrients) pdf.addText('- Eutrophication risk from nutrient loading.', { indent: 5 });
                                 if (isImpaired) pdf.addText('- Regulatory exposure under CWA Section 303(d) and MS4 permits.', { indent: 5 });
-                                if (dataAgeDays === null || dataAgeDays > 60) pdf.addText('- High uncertainty due to monitoring gaps.', { indent: 5 });
+                                if (dataAgeDays === null || (dataAgeDays ?? 0) > 60) pdf.addText('- High uncertainty due to monitoring gaps.', { indent: 5 });
                               }
                               pdf.addSpacer(3);
 
@@ -2006,18 +2008,19 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                                 pdf.addSubtitle('Phased Deployment Roadmap');
                                 pdf.addDivider();
 
-                                const pdfHasMonitoringGap = dataAgeDays === null || dataAgeDays > 365;
+                                const pdfHasMonitoringGap = dataAgeDays === null || (dataAgeDays ?? 0) > 365;
+                                const pdfAgeYears = dataAgeDays != null ? Math.round(dataAgeDays / 365) : 0;
                                 const pdfMonitoringNote = pdfHasMonitoringGap
-                                  ? `+ Monitoring continuity & verification (restores data record lost for ${dataAgeDays !== null ? Math.round(dataAgeDays / 365) + '+ year' + (Math.round(dataAgeDays / 365) > 1 ? 's' : '') : 'an extended period'})`
+                                  ? `+ Monitoring continuity & verification (restores data record lost for ${dataAgeDays != null ? pdfAgeYears + '+ year' + (pdfAgeYears > 1 ? 's' : '') : 'an extended period'})`
                                   : '+ Continuous monitoring, compliance-grade data & treatment verification';
 
                                 // Phase 1
-                                const pdfP1Mission = (hasNutrients || bloomSeverity !== 'normal' || bloomSeverity === 'unknown')
+                                const pdfP1Mission = (hasNutrients || bloomSeverity !== 'normal')
                                   ? 'Primary Nutrient Interception'
                                   : hasBacteria ? 'Primary Pathogen Treatment'
                                   : hasSediment ? 'Primary Sediment Capture'
                                   : 'Primary Treatment & Monitoring';
-                                const pdfP1Placement = (hasNutrients || bloomSeverity !== 'normal' || bloomSeverity === 'unknown')
+                                const pdfP1Placement = (hasNutrients || bloomSeverity !== 'normal')
                                   ? '#1 critical zone: Highest-load tributary confluence -- intercept nutrient and sediment loading at the dominant inflow before it reaches the receiving waterbody'
                                   : hasBacteria ? '#1 critical zone: Highest-volume discharge point -- treat pathogen loading at the primary outfall or CSO'
                                   : hasSediment ? '#1 critical zone: Primary tributary mouth -- capture suspended solids at the highest-load inflow'

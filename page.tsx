@@ -207,7 +207,7 @@ export default function Home() {
 
   const data = useMemo(() => {
     if (!selectedRegion) return regionData.ambient;
-    return applyRegionThresholds(regionData.ambient, selectedRegion.thresholds);
+    return applyRegionThresholds(regionData.ambient, selectedRegion.thresholds || {});
   }, [selectedRegion, regionData]);
 
   const influentData = useMemo(() => {
@@ -284,7 +284,7 @@ export default function Home() {
       }
     };
     if (!selectedRegion) return baseData;
-    return applyRegionThresholds(baseData, selectedRegion.thresholds);
+    return applyRegionThresholds(baseData, selectedRegion.thresholds || {});
   }, [selectedRegion, regionData]);
 
   const calculateChange = (current: number, previous: number) => {
@@ -1226,7 +1226,7 @@ export default function Home() {
 
           {detectedStormEvent && !stormDetectionDismissed && (
             <StormDetectionBanner
-              detectedEvent={detectedStormEvent}
+              event={detectedStormEvent}
               onDismiss={() => setStormDetectionDismissed(true)}
             />
           )}
@@ -1238,9 +1238,9 @@ export default function Home() {
           />
 
           <AlertsBanner
-            data={dataMode === 'ambient' ? data : dataMode === 'storm-event' ? selectedStormEvent.effluent : effluentData}
-            dataMode={dataMode}
-            removalEfficiencies={dataMode === 'storm-event' ? selectedStormEvent.removalEfficiencies : removalEfficiencies}
+            alerts={waterQualityAlerts}
+            dismissedAlerts={dismissedAlerts}
+            onDismiss={handleDismissAlert}
           />
 
           {wildlifePerspective && mounted && (
@@ -1355,7 +1355,7 @@ export default function Home() {
                   }}
                 />
               )}
-              <WildlifeImpactDisclaimer />
+              <WildlifeImpactDisclaimer enabled={wildlifePerspective} onToggle={setWildlifePerspective} />
               {shouldShowEJImpact() && (
                 <EnvironmentalJusticeImpact
                   regionId={selectedRegionId}

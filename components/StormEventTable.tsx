@@ -47,7 +47,7 @@ export function StormEventTable({ events, selectedEventId, onSelectEvent, event 
             return (
               <tr
                 key={event.id}
-                onClick={() => onSelectEvent(event.id)}
+                onClick={() => onSelectEvent?.(event.id)}
                 className={`border-b border-slate-100 cursor-pointer transition-colors ${isSelected ? 'bg-blue-50' : 'hover:bg-slate-50'}`}
               >
                 <td className="px-4 py-2.5">

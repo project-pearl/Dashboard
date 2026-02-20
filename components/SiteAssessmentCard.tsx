@@ -31,6 +31,7 @@ interface WaterParam {
   unit?: string;
   timestamp?: string;
   source?: string;
+  lastSampled?: string;
 }
 
 export interface SiteAssessmentProps {
@@ -812,13 +813,13 @@ export default function SiteAssessmentCard({
                     : '+ Continuous monitoring, compliance-grade data & treatment verification';
 
                   // ── PHASE 1: #1 most critical zone ──
-                  const p1Mission = (hasNutrients || bloomSeverity !== 'normal' || bloomSeverity === 'unknown')
+                  const p1Mission = (hasNutrients || bloomSeverity !== 'normal')
                     ? 'Primary Nutrient Interception'
                     : hasBacteria ? 'Primary Pathogen Treatment'
                     : hasSediment ? 'Primary Sediment Capture'
                     : 'Primary Treatment & Monitoring';
 
-                  const p1Placement = (hasNutrients || bloomSeverity !== 'normal' || bloomSeverity === 'unknown')
+                  const p1Placement = (hasNutrients || bloomSeverity !== 'normal')
                     ? '#1 critical zone: Highest-load tributary confluence -- intercept nutrient and sediment loading at the dominant inflow before it reaches the receiving waterbody'
                     : hasBacteria ? '#1 critical zone: Highest-volume discharge point -- treat pathogen loading at the primary outfall or CSO'
                     : hasSediment ? '#1 critical zone: Primary tributary mouth -- capture suspended solids at the highest-load inflow'
@@ -1169,12 +1170,12 @@ export default function SiteAssessmentCard({
                             : '+ Continuous monitoring, compliance-grade data & treatment verification';
 
                           // Phase 1
-                          const pdfP1Mission = (hasNutrients || bloomSeverity !== 'normal' || bloomSeverity === 'unknown')
+                          const pdfP1Mission = (hasNutrients || bloomSeverity !== 'normal')
                             ? 'Primary Nutrient Interception'
                             : hasBacteria ? 'Primary Pathogen Treatment'
                             : hasSediment ? 'Primary Sediment Capture'
                             : 'Primary Treatment & Monitoring';
-                          const pdfP1Placement = (hasNutrients || bloomSeverity !== 'normal' || bloomSeverity === 'unknown')
+                          const pdfP1Placement = (hasNutrients || bloomSeverity !== 'normal')
                             ? '#1 critical zone: Highest-load tributary confluence -- intercept nutrient and sediment loading at the dominant inflow before it reaches the receiving waterbody'
                             : hasBacteria ? '#1 critical zone: Highest-volume discharge point -- treat pathogen loading at the primary outfall or CSO'
                             : hasSediment ? '#1 critical zone: Primary tributary mouth -- capture suspended solids at the highest-load inflow'

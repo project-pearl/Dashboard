@@ -1,6 +1,6 @@
 // lib/useWaterData.ts
 // Unified React hook — fetches real water quality data from multiple sources
-// Priority: USGS IV → BWB → ERDDAP → NOAA → USGS Samples → WQP → Reference → Mock
+// Priority: USGS IV → BWB → ERDDAP → MMW → NOAA → USGS Samples → USGS DV → WQP → STATE → EPA_EF → Reference → Mock
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -48,7 +48,11 @@ function getRegistryCoverage(): Record<string, { hasData: boolean; sources: stri
 }
 
 // ─── Source Definitions ──────────────────────────────────────────────────────
-export type DataSourceId = 'USGS' | 'BWB' | 'CBP' | 'WQP' | 'ERDDAP' | 'NOAA' | 'REFERENCE' | 'MOCK';
+export type DataSourceId =
+  | 'USGS' | 'USGS_DV' | 'BWB' | 'CBP' | 'WQP'
+  | 'ERDDAP' | 'NOAA' | 'MMW' | 'EPA_EF'
+  | 'STATE' | 'NASA_STREAM' | 'HYDROSHARE'
+  | 'REFERENCE' | 'MOCK';
 
 export interface DataSourceInfo {
   id: DataSourceId;
@@ -114,6 +118,60 @@ export const DATA_SOURCES: Record<DataSourceId, DataSourceInfo> = {
     textColor: 'text-sky-700',
     url: 'https://tidesandcurrents.noaa.gov',
     description: 'Real-time water temperature, conductivity, and water levels',
+  },
+  USGS_DV: {
+    id: 'USGS_DV',
+    name: 'USGS Daily',
+    fullName: 'USGS Daily Values Service',
+    color: 'bg-cyan-50',
+    textColor: 'text-cyan-600',
+    url: 'https://waterservices.usgs.gov',
+    description: 'Daily aggregated values (min/max/mean) from USGS monitoring stations',
+  },
+  MMW: {
+    id: 'MMW',
+    name: 'Monitor My Watershed',
+    fullName: 'Monitor My Watershed (EnviroDIY/Stroud)',
+    color: 'bg-lime-100',
+    textColor: 'text-lime-700',
+    url: 'https://monitormywatershed.org',
+    description: 'Citizen science sensor data from the EnviroDIY/Stroud Research Center network',
+  },
+  EPA_EF: {
+    id: 'EPA_EF',
+    name: 'EPA Envirofacts',
+    fullName: 'EPA Envirofacts (SDWIS/TRI/PCS)',
+    color: 'bg-orange-100',
+    textColor: 'text-orange-700',
+    url: 'https://data.epa.gov/efservice/',
+    description: 'EPA compliance data — SDWIS violations, TRI releases, PCS permit compliance',
+  },
+  STATE: {
+    id: 'STATE',
+    name: 'State Portal',
+    fullName: 'State Open Data Portal',
+    color: 'bg-rose-100',
+    textColor: 'text-rose-700',
+    url: '',
+    description: 'Water quality data from state open data portals (MD iMap, VA DEQ, CA Open Data)',
+  },
+  NASA_STREAM: {
+    id: 'NASA_STREAM',
+    name: 'NASA STREAM',
+    fullName: 'NASA Satellite-derived Water Quality',
+    color: 'bg-indigo-100',
+    textColor: 'text-indigo-700',
+    url: 'https://earthdata.nasa.gov',
+    description: 'Satellite-derived chlorophyll-a, turbidity, and Secchi depth estimates',
+  },
+  HYDROSHARE: {
+    id: 'HYDROSHARE',
+    name: 'HydroShare',
+    fullName: 'CUAHSI HydroShare Repository',
+    color: 'bg-fuchsia-100',
+    textColor: 'text-fuchsia-700',
+    url: 'https://www.hydroshare.org',
+    description: 'Hydrologic dataset repository from CUAHSI research network',
   },
   REFERENCE: {
     id: 'REFERENCE',
@@ -1236,7 +1294,74 @@ export function useWaterData(regionId: string | null): UseWaterDataResult {
         }
       }
 
-      // ── Source 3: NOAA CO-OPS — Water temp, conductivity for tidal stations ──
+      // ── Source 3: Monitor My Watershed — citizen science sensor data ────────
+      // EnviroDIY/Stroud Research Center network — query by lat/lng proximity
+      const mmwMissingKeys = ['DO', 'temperature', 'pH', 'conductivity', 'turbidity'].filter(k => !allParams[k]);
+      if (mmwMissingKeys.length > 0 && regionMeta) {
+        try {
+          const MMW_PARAM_TO_PEARL: Record<string, string> = {
+            'Dissolved Oxygen': 'DO',
+            'Temperature': 'temperature',
+            'pH': 'pH',
+            'Electrical Conductivity': 'conductivity',
+            'Specific Conductance': 'conductivity',
+            'Turbidity': 'turbidity',
+          };
+
+          const controller = new AbortController();
+          const mmwTimer = setTimeout(() => controller.abort(), 10000);
+          const mmwRes = await fetch(
+            `/api/water-data?action=mmw-latest&lat=${regionMeta.lat}&lng=${regionMeta.lng}&radius=25`,
+            { signal: controller.signal }
+          ).catch(() => null);
+          clearTimeout(mmwTimer);
+
+          if (mmwRes?.ok) {
+            const mmwJson = await mmwRes.json();
+            const results = mmwJson?.data || [];
+            let mmwCount = 0;
+            let mmwStationName = 'MMW Station';
+            let mmwLastTime: string | null = null;
+
+            for (const r of results) {
+              const paramName = r.variable_name || r.variableName || '';
+              const pearlKey = MMW_PARAM_TO_PEARL[paramName];
+              if (!pearlKey || allParams[pearlKey]) continue;
+
+              const value = parseFloat(r.value ?? r.dataValue ?? '');
+              if (isNaN(value)) continue;
+
+              mmwStationName = r.station_name || r.siteName || 'MMW Station';
+              mmwLastTime = r.datetime || r.timestamp || null;
+              allParams[pearlKey] = {
+                pearlKey,
+                value,
+                unit: r.unit || r.variableUnitsAbbreviation || '',
+                source: 'MMW',
+                stationName: mmwStationName,
+                lastSampled: mmwLastTime,
+                parameterName: paramName,
+              };
+              mmwCount++;
+            }
+
+            if (mmwCount > 0) {
+              activeSources.push('MMW');
+              sourceDetails.push({
+                source: DATA_SOURCES.MMW,
+                parameterCount: mmwCount,
+                stationName: mmwStationName,
+                lastSampled: mmwLastTime,
+              });
+              console.log(`[PEARL Source 3] MMW: filled ${mmwCount} params`);
+            }
+          }
+        } catch (e) {
+          console.warn(`[PEARL Source 3] MMW failed:`, e instanceof Error ? e.message : e);
+        }
+      }
+
+      // ── Source 4: NOAA CO-OPS — Water temp, conductivity for tidal stations ──
       // Key MD stations: 8574680 (Baltimore), 8575512 (Annapolis), 8577330 (Solomons),
       //   8573364 (Tolchester), 8571892 (Cambridge), 8573927 (Chesapeake City), 8570283 (Ocean City)
       const BALT = { stationId: '8574680', name: 'Baltimore (Fort McHenry)' };
@@ -1343,7 +1468,7 @@ export function useWaterData(regionId: string | null): UseWaterDataResult {
 
       const coopsStation = COOPS_STATION_MAP[regionId];
       if (coopsStation && (!allParams['temperature'] || !allParams['conductivity'])) {
-        console.log(`[PEARL Source 3] CO-OPS: querying station ${coopsStation.stationId} (${coopsStation.name}) for ${regionId}`);
+        console.log(`[PEARL Source 4] CO-OPS: querying station ${coopsStation.stationId} (${coopsStation.name}) for ${regionId}`);
         try {
           const coopsProducts: { key: string; product: string }[] = [];
           if (!allParams['temperature'])  coopsProducts.push({ key: 'temperature', product: 'water_temperature' });
@@ -1378,10 +1503,10 @@ export function useWaterData(regionId: string | null): UseWaterDataResult {
 
           let coopsCount = 0;
           let coopsTime = '';
-          console.log(`[PEARL Source 3] CO-OPS results:`, coopsResults.map(r => r ? `${r.key}=${r.value}` : 'null'));
+          console.log(`[PEARL Source 4] CO-OPS results:`, coopsResults.map(r => r ? `${r.key}=${r.value}` : 'null'));
           for (const r of coopsResults) {
             if (r) {
-              allParams[r.key] = { value: r.value, source: 'NOAA', lastSampled: r.time || coopsTime || null };
+              allParams[r.key] = { pearlKey: r.key, value: r.value, unit: r.key === 'temperature' ? '°C' : 'uS/cm', source: 'NOAA', stationName: coopsStation.name, lastSampled: r.time || coopsTime || null, parameterName: r.key };
               coopsCount++;
               if (r.time) coopsTime = r.time;
             }
@@ -1397,7 +1522,7 @@ export function useWaterData(regionId: string | null): UseWaterDataResult {
             });
           }
         } catch (e) {
-          console.warn(`[PEARL Source 3] CO-OPS failed:`, e instanceof Error ? e.message : e);
+          console.warn(`[PEARL Source 4] CO-OPS failed:`, e instanceof Error ? e.message : e);
         }
       }
 
@@ -1498,13 +1623,81 @@ export function useWaterData(regionId: string | null): UseWaterDataResult {
             });
           }
         } catch (e) {
-          console.warn(`[PEARL Source 4] USGS Samples failed:`, e instanceof Error ? e.message : e);
+          console.warn(`[PEARL Source 5] USGS Samples failed:`, e instanceof Error ? e.message : e);
         }
       }
 
       if (cancelled) return;
 
-      // ── Source 5: Water Quality Portal — true multi-provider national WQ data ──
+      // ── Source 6: USGS Daily Values — daily aggregates (min/max/mean) ──────
+      // Uses OGC /dv endpoint for mean daily values (statistic_id=00003)
+      // Only queries for params still missing after real-time + samples
+      const dvMissingKeys = ['DO', 'temperature', 'pH', 'conductivity', 'turbidity', 'discharge'].filter(k => !allParams[k]);
+      const dvSiteId = USGS_SITE_MAP[regionId];
+      if (dvMissingKeys.length > 0 && dvSiteId) {
+        try {
+          const dvParamCodes: Record<string, string> = {
+            DO: '00300', temperature: '00010', pH: '00400',
+            conductivity: '00095', turbidity: '63680', discharge: '00060',
+          };
+          const codesToFetch = dvMissingKeys.map(k => dvParamCodes[k]).filter(Boolean);
+          if (codesToFetch.length > 0) {
+            const controller = new AbortController();
+            const dvTimer = setTimeout(() => controller.abort(), 12000);
+            const dvRes = await fetch(
+              `/api/water-data?action=usgs-daily&monitoring_location_id=USGS-${dvSiteId}` +
+              `&parameter_code=${codesToFetch.join(',')}` +
+              `&statistic_id=00003&limit=50`,
+              { signal: controller.signal }
+            ).catch(() => null);
+            clearTimeout(dvTimer);
+
+            if (dvRes?.ok) {
+              const dvJson = await dvRes.json();
+              const features = dvJson?.data?.features || [];
+              let dvCount = 0;
+
+              for (const feat of features) {
+                const props = feat.properties || feat;
+                const paramCode = props.parameter_code || props.parameterCode || '';
+                const pearlKey = USGS_PARAM_TO_PEARL[paramCode];
+                if (!pearlKey || allParams[pearlKey]) continue;
+
+                const value = parseFloat(props.value ?? props.result ?? '');
+                if (isNaN(value)) continue;
+
+                allParams[pearlKey] = {
+                  pearlKey,
+                  value,
+                  unit: props.unit || '',
+                  source: 'USGS_DV',
+                  stationName: `USGS ${dvSiteId} (Daily)`,
+                  lastSampled: props.time || props.datetime || null,
+                  parameterName: pearlKey,
+                };
+                dvCount++;
+              }
+
+              if (dvCount > 0) {
+                activeSources.push('USGS_DV');
+                sourceDetails.push({
+                  source: DATA_SOURCES.USGS_DV,
+                  parameterCount: dvCount,
+                  stationName: `USGS ${dvSiteId} (Daily)`,
+                  lastSampled: Object.values(allParams).find(p => p.source === 'USGS_DV')?.lastSampled || null,
+                });
+                console.log(`[PEARL Source 6] USGS DV: filled ${dvCount} params`);
+              }
+            }
+          }
+        } catch (e) {
+          console.warn(`[PEARL Source 6] USGS DV failed:`, e instanceof Error ? e.message : e);
+        }
+      }
+
+      if (cancelled) return;
+
+      // ── Source 7: Water Quality Portal — true multi-provider national WQ data ────
       // Queries waterqualitydata.us for EPA STORET + STEWARDS (state, tribal, local)
       // USGS data excluded since Source 4 already covers it
       const wqpMissingKeys = ['DO', 'TN', 'TP', 'turbidity', 'TSS', 'pH', 'temperature', 'enterococcus', 'e_coli', 'fecal_coliform', 'chlorophyll_a', 'conductivity'].filter(k => !allParams[k]);
@@ -1605,16 +1798,138 @@ export function useWaterData(regionId: string | null): UseWaterDataResult {
               stationName: wqpParams[0]?.stationName || 'WQP Station',
               lastSampled: wqpParams[0]?.lastSampled || null,
             });
-            console.log(`[PEARL Source 5] WQP (multi-provider): filled ${wqpCount} params`);
+            console.log(`[PEARL Source 7] WQP (multi-provider): filled ${wqpCount} params`);
           }
         } catch (e) {
-          console.warn(`[PEARL Source 5] WQP failed:`, e instanceof Error ? e.message : e);
+          console.warn(`[PEARL Source 7] WQP failed:`, e instanceof Error ? e.message : e);
         }
       }
 
       if (cancelled) return;
 
-      // ── Source 6: Reference Data (agency reports fallback) ──────────────
+      // ── Source 8: State Open Data Portals — state-specific WQ data ─────
+      // Only queries for states with configured adapters (MD, VA, CA)
+      const stateCode = regionMeta?.stateCode?.split(':')?.[1] || '';
+      const STATE_ADAPTER_STATES = ['24', '51', '06']; // MD=24, VA=51, CA=06
+      const stateMissingKeys = ['DO', 'TN', 'TP', 'turbidity', 'TSS', 'pH', 'temperature'].filter(k => !allParams[k]);
+      if (stateMissingKeys.length > 0 && stateCode && STATE_ADAPTER_STATES.includes(stateCode) && regionMeta) {
+        try {
+          const stateFipsToAbbr: Record<string, string> = { '24': 'MD', '51': 'VA', '06': 'CA' };
+          const stateAbbr = stateFipsToAbbr[stateCode] || '';
+          const controller = new AbortController();
+          const stateTimer = setTimeout(() => controller.abort(), 12000);
+          const stateRes = await fetch(
+            `/api/water-data?action=state-portal&state=${stateAbbr}&lat=${regionMeta.lat}&lng=${regionMeta.lng}`,
+            { signal: controller.signal }
+          ).catch(() => null);
+          clearTimeout(stateTimer);
+
+          if (stateRes?.ok) {
+            const stateJson = await stateRes.json();
+            const stateResults = stateJson?.data || [];
+            let stateCount = 0;
+            let stateStationName = `${stateAbbr} Portal`;
+
+            const STATE_PARAM_MAP: Record<string, string> = {
+              'Dissolved Oxygen': 'DO', 'Dissolved oxygen': 'DO', 'DO': 'DO',
+              'Temperature': 'temperature', 'Water Temperature': 'temperature',
+              'pH': 'pH',
+              'Turbidity': 'turbidity',
+              'Total Nitrogen': 'TN', 'Nitrogen': 'TN',
+              'Total Phosphorus': 'TP', 'Phosphorus': 'TP',
+              'Total Suspended Solids': 'TSS', 'TSS': 'TSS',
+            };
+
+            for (const r of stateResults) {
+              const paramName = r.parameter || r.characteristic || '';
+              const pearlKey = STATE_PARAM_MAP[paramName];
+              if (!pearlKey || allParams[pearlKey]) continue;
+
+              const value = parseFloat(r.value ?? r.result ?? '');
+              if (isNaN(value)) continue;
+
+              stateStationName = r.station_name || r.siteName || `${stateAbbr} Portal`;
+              allParams[pearlKey] = {
+                pearlKey,
+                value,
+                unit: r.unit || '',
+                source: 'STATE',
+                stationName: stateStationName,
+                lastSampled: r.date || r.datetime || null,
+                parameterName: paramName,
+              };
+              stateCount++;
+            }
+
+            if (stateCount > 0) {
+              activeSources.push('STATE');
+              sourceDetails.push({
+                source: DATA_SOURCES.STATE,
+                parameterCount: stateCount,
+                stationName: stateStationName,
+                lastSampled: Object.values(allParams).find(p => p.source === 'STATE')?.lastSampled || null,
+              });
+              console.log(`[PEARL Source 8] State Portal: filled ${stateCount} params from ${stateAbbr}`);
+            }
+          }
+        } catch (e) {
+          console.warn(`[PEARL Source 8] State Portal failed:`, e instanceof Error ? e.message : e);
+        }
+      }
+
+      if (cancelled) return;
+
+      // ── Source 9: EPA Envirofacts — compliance enrichment (non-blocking) ──
+      // SDWIS violations, TRI releases — not standard WQ parameters
+      // Runs as enrichment alongside cascade, adds metadata to result
+      if (regionMeta) {
+        try {
+          const stateFipsToAbbr: Record<string, string> = { '24': 'MD', '51': 'VA', '06': 'CA', '11': 'DC', '10': 'DE', '42': 'PA', '36': 'NY', '54': 'WV', '12': 'FL' };
+          const efStateAbbr = stateFipsToAbbr[stateCode] || '';
+          if (efStateAbbr) {
+            const controller = new AbortController();
+            const efTimer = setTimeout(() => controller.abort(), 10000);
+            const efRes = await fetch(
+              `/api/water-data?action=envirofacts-sdwis&state=${efStateAbbr}&limit=5`,
+              { signal: controller.signal }
+            ).catch(() => null);
+            clearTimeout(efTimer);
+
+            if (efRes?.ok) {
+              const efJson = await efRes.json();
+              const violations = efJson?.data || [];
+              if (violations.length > 0) {
+                // Store as special enrichment parameter (not a standard WQ measurement)
+                allParams['_epa_violations'] = {
+                  pearlKey: '_epa_violations',
+                  value: violations.length,
+                  unit: 'violations',
+                  source: 'EPA_EF',
+                  stationName: `EPA Envirofacts (${efStateAbbr})`,
+                  lastSampled: new Date().toISOString(),
+                  parameterName: 'SDWIS Violations',
+                };
+                if (!activeSources.includes('EPA_EF')) {
+                  activeSources.push('EPA_EF');
+                  sourceDetails.push({
+                    source: DATA_SOURCES.EPA_EF,
+                    parameterCount: 1,
+                    stationName: `EPA Envirofacts (${efStateAbbr})`,
+                    lastSampled: new Date().toISOString(),
+                  });
+                }
+                console.log(`[PEARL Source 9] EPA_EF: ${violations.length} SDWIS violations for ${efStateAbbr}`);
+              }
+            }
+          }
+        } catch (e) {
+          console.warn(`[PEARL Source 9] EPA_EF failed:`, e instanceof Error ? e.message : e);
+        }
+      }
+
+      if (cancelled) return;
+
+      // ── Source 10: Reference Data (agency reports fallback) ─────────────
       // If live sources returned nothing or are sparse, fill from reference data
       const refEntry = regionId ? REFERENCE_DATA[regionId] : null;
       if (refEntry) {
@@ -1641,7 +1956,7 @@ export function useWaterData(regionId: string | null): UseWaterDataResult {
             stationName: refEntry.source,
             lastSampled: refEntry.reportDate,
           });
-          console.log(`[PEARL Source 6] Reference data: filled ${refCount} params from "${refEntry.source}" (${refEntry.reportDate})`);
+          console.log(`[PEARL Source 10] Reference data: filled ${refCount} params from "${refEntry.source}" (${refEntry.reportDate})`);
         }
       }
 

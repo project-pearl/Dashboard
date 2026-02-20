@@ -167,13 +167,14 @@ export function useLiveSimulation(
       for (const key of Object.keys(DRIFT_CONFIG)) {
         const cfg = DRIFT_CONFIG[key];
         const spike = STORM_SPIKE[key] ?? 1;
+        const k = key as keyof typeof prev.parameters;
 
-        if (prev.parameters[key]) {
-          next.parameters[key] = {
-            ...prev.parameters[key],
+        if (prev.parameters[k]) {
+          next.parameters[k] = {
+            ...prev.parameters[k],
             value: driftValue(
-              prev.parameters[key].value,
-              base.parameters[key]?.value ?? prev.parameters[key].value,
+              prev.parameters[k].value,
+              base.parameters[k]?.value ?? prev.parameters[k].value,
               cfg.variance,
               cfg.min,
               cfg.max,

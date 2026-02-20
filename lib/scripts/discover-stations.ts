@@ -674,7 +674,7 @@ async function main() {
 
   // 1. JSON for debugging
   const jsonData: Record<string, any> = {};
-  for (const [state, stations] of allStations) {
+  for (const [state, stations] of Array.from(allStations)) {
     jsonData[state] = stations;
   }
   const jsonPath = path.join(process.cwd(), 'station-discovery.json');

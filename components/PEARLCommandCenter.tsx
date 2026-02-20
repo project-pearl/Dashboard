@@ -252,7 +252,7 @@ function analyzeDelta(deployment: Deployment): DeltaAlert[] {
   const ts = lr.timestamp;
 
   // Flow drop → pump issue
-  if (lr.flow_gpm != null && bl.flow_gpm > 0) {
+  if (lr.flow_gpm != null && bl.flow_gpm != null && bl.flow_gpm > 0) {
     const flowDelta = ((lr.flow_gpm - bl.flow_gpm) / bl.flow_gpm) * 100;
     if (flowDelta < -25) {
       alerts.push({
@@ -274,7 +274,7 @@ function analyzeDelta(deployment: Deployment): DeltaAlert[] {
   }
 
   // Turbidity spike post-treatment → resin/media degradation
-  if (lr.turbidity_ntu != null && bl.turbidity_ntu > 0) {
+  if (lr.turbidity_ntu != null && bl.turbidity_ntu != null && bl.turbidity_ntu > 0) {
     const turbDelta = ((lr.turbidity_ntu - bl.turbidity_ntu) / bl.turbidity_ntu) * 100;
     // Post-treatment turbidity should be LOW. If it's rising toward baseline, media is failing.
     if (lr.turbidity_ntu > 15 && turbDelta > 50) {
@@ -289,7 +289,7 @@ function analyzeDelta(deployment: Deployment): DeltaAlert[] {
   }
 
   // DO drop in oyster bed → fouling or die-off
-  if (lr.do_mgl != null && bl.do_mgl > 0) {
+  if (lr.do_mgl != null && bl.do_mgl != null && bl.do_mgl > 0) {
     const doDelta = ((lr.do_mgl - bl.do_mgl) / bl.do_mgl) * 100;
     if (lr.do_mgl < 4.0 && doDelta < -20) {
       alerts.push({
@@ -311,7 +311,7 @@ function analyzeDelta(deployment: Deployment): DeltaAlert[] {
   }
 
   // pH drift → chemical change in bed
-  if (lr.ph != null && bl.ph > 0) {
+  if (lr.ph != null && bl.ph != null && bl.ph > 0) {
     const phDelta = lr.ph - bl.ph;
     if (Math.abs(phDelta) > 0.8) {
       alerts.push({
@@ -329,7 +329,7 @@ function analyzeDelta(deployment: Deployment): DeltaAlert[] {
   }
 
   // TSS removal rate degradation
-  if (lr.tss_mgl != null && bl.tss_mgl > 0) {
+  if (lr.tss_mgl != null && bl.tss_mgl != null && bl.tss_mgl > 0) {
     const currentRemoval = ((bl.tss_mgl - lr.tss_mgl) / bl.tss_mgl) * 100;
     if (currentRemoval < 70 && currentRemoval > 0) {
       alerts.push({
@@ -495,7 +495,7 @@ export function PEARLCommandCenter(props: Props) {
             <div className="flex items-center gap-3">
               <Image src="/PearlLogo.png" alt="PEARL" width={32} height={32} className="rounded" />
               <div>
-                <h1 className="text-lg font-bold text-slate-900 tracking-tight">PEARL Command Center</h1>
+                <h1 className="text-lg font-bold text-slate-900 tracking-tight">PEARL Intelligence Network — Operations Command Center</h1>
                 <p className="text-[10px] text-slate-400 font-mono">Internal Operations · {user?.name || 'Admin'} · {new Date().toLocaleDateString()}</p>
               </div>
             </div>
@@ -853,7 +853,7 @@ export function PEARLCommandCenter(props: Props) {
                       {dep.status === 'active' && lr && (
                         <div className="flex gap-4 mt-3 pt-3 border-t border-slate-100">
                           {[
-                            { label: 'Flow', value: `${lr.flow_gpm} GPM`, ok: lr.flow_gpm! > bl.flow_gpm * 0.75 },
+                            { label: 'Flow', value: `${lr.flow_gpm} GPM`, ok: lr.flow_gpm! > (bl.flow_gpm ?? 0) * 0.75 },
                             { label: 'DO', value: `${lr.do_mgl} mg/L`, ok: lr.do_mgl! >= 5.0 },
                             { label: 'TSS', value: `${lr.tss_mgl} mg/L`, ok: lr.tss_mgl! < 20 },
                             { label: 'Temp', value: `${lr.temp_c}°C`, ok: true },
@@ -1049,7 +1049,7 @@ export function PEARLCommandCenter(props: Props) {
         {/* ── FOOTER ── */}
         <div className="border-t border-slate-200 pt-3 mt-6">
           <div className="flex items-center justify-between text-[10px] text-slate-400">
-            <span className="font-mono">PEARL Command Center v1.0 · Internal Use Only · Local Seafood Projects Inc.</span>
+            <span className="font-mono">PEARL Intelligence Network — Operations Command Center v1.0 · Internal Use Only · Local Seafood Projects Inc.</span>
             <span className="font-mono">Session {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
           </div>
         </div>

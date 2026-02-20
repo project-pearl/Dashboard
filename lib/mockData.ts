@@ -452,35 +452,22 @@ export function calculateOverallScore(data: WaterQualityData): number {
 
 export function applyRegionThresholds(
   baseData: WaterQualityData,
-  regionThresholds: RegionParameterConfig
+  regionThresholds?: RegionParameterConfig
 ): WaterQualityData {
+  if (!regionThresholds) return baseData;
+  const merge = (base: WaterQualityParameter, override?: { green?: { min?: number; max?: number }; yellow?: { min?: number; max?: number } }) => ({
+    ...base,
+    thresholds: override ? { ...base.thresholds, ...override } : base.thresholds,
+  });
   return {
     ...baseData,
     parameters: {
-      DO: {
-        ...baseData.parameters.DO,
-        thresholds: regionThresholds.DO
-      },
-      turbidity: {
-        ...baseData.parameters.turbidity,
-        thresholds: regionThresholds.turbidity
-      },
-      TN: {
-        ...baseData.parameters.TN,
-        thresholds: regionThresholds.TN
-      },
-      TP: {
-        ...baseData.parameters.TP,
-        thresholds: regionThresholds.TP
-      },
-      TSS: {
-        ...baseData.parameters.TSS,
-        thresholds: regionThresholds.TSS
-      },
-      salinity: {
-        ...baseData.parameters.salinity,
-        thresholds: regionThresholds.salinity
-      }
+      DO: merge(baseData.parameters.DO, regionThresholds.DO),
+      turbidity: merge(baseData.parameters.turbidity, regionThresholds.turbidity),
+      TN: merge(baseData.parameters.TN, regionThresholds.TN),
+      TP: merge(baseData.parameters.TP, regionThresholds.TP),
+      TSS: merge(baseData.parameters.TSS, regionThresholds.TSS),
+      salinity: merge(baseData.parameters.salinity, regionThresholds.salinity),
     }
   };
 }

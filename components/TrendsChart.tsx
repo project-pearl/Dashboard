@@ -48,7 +48,7 @@ export function TrendsChart({ data }: TrendsChartProps) {
           history.push({
             ...param,
             value: Math.max(0, historicalValue),
-            timestamp: Date.now() - (timeAgo * 60 * 60 * 1000) // hours ago
+            timestamp: new Date(Date.now() - (timeAgo * 60 * 60 * 1000)) // hours ago
           });
         }
       }

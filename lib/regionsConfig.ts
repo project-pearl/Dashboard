@@ -5,6 +5,9 @@
 // Each state: 5 worst impaired waterways identified for PEARL deployment
 // ─────────────────────────────────────────────────────────────────────────────
 
+/** @deprecated Use RegionThresholds instead */
+export type RegionParameterConfig = RegionThresholds;
+
 export interface RegionThresholds {
   DO?:        { green?: { min?: number; max?: number }; yellow?: { min?: number; max?: number }; };
   turbidity?: { green?: { min?: number; max?: number }; yellow?: { min?: number; max?: number }; };
@@ -17,11 +20,13 @@ export interface RegionThresholds {
 export interface RegionConfig {
   id: string;
   name: string;
+  description?: string;
   dataSource?: string;
   thresholds?: RegionThresholds;
-  watershed?: 'chesapeake' | 'gulf' | 'pacific' | 'other';
+  watershed?: 'chesapeake' | 'gulf' | 'pacific' | 'greatlakes' | 'other';
   impairments?: string[];   // primary pollutant categories
   pearlFit?: string;        // why PEARL is suited for this site
+  hasPearlData?: boolean;
 }
 
 // Default Chesapeake Bay thresholds (EPA TMDL targets)

@@ -3,12 +3,15 @@
 import { useMemo } from 'react';
 import { WaterQualityParameter } from '@/lib/types';
 import { getWildlifeImpact } from '@/lib/wildlifeImpact';
+import type { RemovalDisplayInfo } from '@/lib/removalCalculations';
 
-interface WaterQualityGaugeProps {
+export interface WaterQualityGaugeProps {
   parameter: WaterQualityParameter;
   dataSource?: string;
   showWildlife?: boolean;
   compact?: boolean;
+  removalInfo?: RemovalDisplayInfo;
+  wildlifePerspective?: boolean;
 }
 
 function getStatusColor(parameter: WaterQualityParameter): { 

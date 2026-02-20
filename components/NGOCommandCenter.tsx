@@ -591,7 +591,7 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
               <Image src="/Logo_Pearl_as_Headline.JPG" alt="Project Pearl Logo" fill className="object-contain object-left" priority />
             </div>
             <div>
-              <div className="text-xl font-semibold text-slate-800">Conservation Hub</div>
+              <div className="text-xl font-semibold text-slate-800">PEARL Intelligence Network — Conservation Hub</div>
               <div className="text-sm text-slate-600">
                 Watershed advocacy, restoration intelligence &amp; grant opportunities
               </div>
@@ -1829,12 +1829,12 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
                                   : '+ Continuous monitoring, compliance-grade data & treatment verification';
 
                                 // Phase 1
-                                const pdfP1Mission = (hasNutrients || bloomSeverity !== 'normal' || bloomSeverity === 'unknown')
+                                const pdfP1Mission = (hasNutrients || bloomSeverity !== 'normal')
                                   ? 'Primary Nutrient Interception'
                                   : hasBacteria ? 'Primary Pathogen Treatment'
                                   : hasSediment ? 'Primary Sediment Capture'
                                   : 'Primary Treatment & Monitoring';
-                                const pdfP1Placement = (hasNutrients || bloomSeverity !== 'normal' || bloomSeverity === 'unknown')
+                                const pdfP1Placement = (hasNutrients || bloomSeverity !== 'normal')
                                   ? '#1 critical zone: Highest-load tributary confluence -- intercept nutrient and sediment loading at the dominant inflow before it reaches the receiving waterbody'
                                   : hasBacteria ? '#1 critical zone: Highest-volume discharge point -- treat pathogen loading at the primary outfall or CSO'
                                   : hasSediment ? '#1 critical zone: Primary tributary mouth -- capture suspended solids at the highest-load inflow'

@@ -233,7 +233,7 @@ export interface MonitoringCoverage {
   freshnessSummary: string;  // e.g. "2 of 7 live · 5 reference"
 }
 
-const COVERAGE_STYLES: Record<CoverageLevel, Omit<MonitoringCoverage, 'keyParamsPresent' | 'keyParamsTotal' | 'presentParams' | 'missingParams' | 'missingLabels' | 'canBeGraded' | 'dataAgeMs' | 'dataAgeDays' | 'freshnessLabel' | 'freshnessConfidence'>> = {
+const COVERAGE_STYLES: Record<CoverageLevel, Pick<MonitoringCoverage, 'level' | 'label' | 'icon' | 'color' | 'bgColor' | 'borderColor'>> = {
   comprehensive: { level: 'comprehensive', label: 'Comprehensive', icon: '●',  color: 'text-green-700',  bgColor: 'bg-green-50',   borderColor: 'border-green-200' },
   adequate:      { level: 'adequate',      label: 'Adequate',      icon: '◐',  color: 'text-blue-700',   bgColor: 'bg-blue-50',    borderColor: 'border-blue-200' },
   limited:       { level: 'limited',       label: 'Limited',       icon: '◔',  color: 'text-yellow-700', bgColor: 'bg-yellow-50',  borderColor: 'border-yellow-200' },

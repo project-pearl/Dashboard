@@ -403,7 +403,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
     if (!el) return;
     const win = window.open('', '_blank', 'width=900,height=700');
     if (!win) return;
-    win.document.write(`<!DOCTYPE html><html><head><title>${title} — PEARL ${stateName} Command Center</title>
+    win.document.write(`<!DOCTYPE html><html><head><title>${title} — PEARL Intelligence Network — ${stateName} Command Center</title>
       <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 24px; color: #1e293b; }
@@ -618,7 +618,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
               <Image src="/Logo_Pearl_as_Headline.JPG" alt="Project Pearl Logo" fill className="object-contain object-left" priority />
             </div>
             <div>
-              <div className="text-xl font-semibold text-slate-800">{stateName} Command Center</div>
+              <div className="text-xl font-semibold text-slate-800">PEARL Intelligence Network — {stateName} Command Center</div>
               <div className="text-sm text-slate-600">
                 Surface water intelligence — real-time aquatic health monitoring &amp; restoration
               </div>
@@ -1900,12 +1900,12 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
                                   : '+ Continuous monitoring, compliance-grade data & treatment verification';
 
                                 // Phase 1
-                                const pdfP1Mission = (hasNutrients || bloomSeverity !== 'normal' || bloomSeverity === 'unknown')
+                                const pdfP1Mission = (hasNutrients || bloomSeverity !== 'normal')
                                   ? 'Primary Nutrient Interception'
                                   : hasBacteria ? 'Primary Pathogen Treatment'
                                   : hasSediment ? 'Primary Sediment Capture'
                                   : 'Primary Treatment & Monitoring';
-                                const pdfP1Placement = (hasNutrients || bloomSeverity !== 'normal' || bloomSeverity === 'unknown')
+                                const pdfP1Placement = (hasNutrients || bloomSeverity !== 'normal')
                                   ? '#1 critical zone: Highest-load tributary confluence -- intercept nutrient and sediment loading at the dominant inflow before it reaches the receiving waterbody'
                                   : hasBacteria ? '#1 critical zone: Highest-volume discharge point -- treat pathogen loading at the primary outfall or CSO'
                                   : hasSediment ? '#1 critical zone: Primary tributary mouth -- capture suspended solids at the highest-load inflow'

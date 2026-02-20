@@ -1,7 +1,7 @@
 // ─── Auth Types ─────────────────────────────────────────────────────────────
 // Shared types for the PEARL authentication & authorization system.
 
-export type UserRole = 'Federal' | 'State' | 'MS4' | 'Corporate' | 'Researcher' | 'College' | 'NGO' | 'K12' | 'Temp';
+export type UserRole = 'Federal' | 'State' | 'MS4' | 'Corporate' | 'Researcher' | 'College' | 'NGO' | 'K12' | 'Temp' | 'Pearl';
 export type AccountStatus = 'active' | 'pending' | 'rejected' | 'deactivated';
 
 /** Roles that require admin approval + jurisdiction binding */
@@ -22,6 +22,8 @@ export interface PearlUser {
   state?: string;                   // e.g. "MD"
   region?: string;                  // e.g. "maryland_middle_branch"
   ms4Jurisdiction?: string;         // e.g. "anne_arundel_county" — admin-bound for operator roles
+  avatar?: string;                   // Initials or emoji avatar
+  title?: string;                    // Job title, e.g. "Water Quality Manager"
   // ── Auth fields ──
   status: AccountStatus;            // 'active' for explorers, 'pending' until admin approves operators
   isAdmin: boolean;                 // Admin capability bit — Doug/Steve/Gwen

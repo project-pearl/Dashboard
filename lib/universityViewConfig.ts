@@ -1,5 +1,5 @@
 // ============================================================
-// University Command Center — Role-Based View Configuration
+// PEARL Intelligence Network — University Research Command Center — Role-Based View Configuration
 // Controls which sections are visible, their order, and 
 // default expanded state for Researcher vs College roles.
 // ============================================================
