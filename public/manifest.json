@@ -9,16 +9,10 @@
   "orientation": "any",
   "icons": [
     {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "src": "/Logo_Pearl_as_Headline.JPG",
+      "sizes": "any",
+      "type": "image/jpeg",
+      "purpose": "any"
     }
   ],
   "categories": ["utilities", "productivity", "government"],
@@ -42,21 +36,21 @@
       "short_name": "Quality",
       "description": "View current water quality readings",
       "url": "/?view=ambient",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/Logo_Pearl_as_Headline.JPG", "sizes": "any" }]
     },
     {
       "name": "Storm Events",
       "short_name": "Storms",
       "description": "View storm event performance",
       "url": "/?view=storm",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/Logo_Pearl_as_Headline.JPG", "sizes": "any" }]
     },
     {
       "name": "MS4 Report",
       "short_name": "Report",
       "description": "Generate compliance report",
       "url": "/?action=report",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/Logo_Pearl_as_Headline.JPG", "sizes": "any" }]
     }
   ],
   "share_target": {

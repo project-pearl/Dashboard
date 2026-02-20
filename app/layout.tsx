@@ -19,6 +19,9 @@ export const metadata: Metadata = {
     statusBarStyle: 'default',
     title: 'Project Pearl',
   },
+  other: {
+    'mobile-web-app-capable': 'yes',
+  },
   openGraph: {
     title: 'Project Pearl - Water Quality Monitoring',
     description: 'Real-time water quality monitoring and MS4 compliance dashboard',
