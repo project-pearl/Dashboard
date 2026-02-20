@@ -46,6 +46,7 @@ const ROLES: { value: UserRole; label: string }[] = [
   { value: 'College',    label: 'Undergrad' },
   { value: 'K12',        label: 'K-12 Educator' },
   { value: 'NGO',        label: 'NGO / Conservation' },
+  { value: 'Temp',       label: 'Temp (Breakpoint)' },
 ];
 
 const US_STATES: { abbr: string; name: string }[] = [
