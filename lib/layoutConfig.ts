@@ -46,12 +46,11 @@ export const DEFAULT_SECTIONS: Record<CCKey, SectionDefinition[]> = {
     { id: 'alertfeed',   label: 'Statewide Alert Feed',         order: 2,  visible: true, defaultExpanded: false },
     { id: 'map-grid',    label: 'Map & Waterbody List',         order: 3,  visible: true, defaultExpanded: true, compound: true },
     { id: 'detail',      label: 'Waterbody Detail',             order: 4,  visible: true, defaultExpanded: true },
-    { id: 'bench',       label: 'Peer Benchmarking',            order: 5,  visible: true, defaultExpanded: true },
-    { id: 'top10',       label: 'Top 5 Worsening / Improving',  order: 6,  visible: true, defaultExpanded: false },
-    { id: 'ms4jurisdictions', label: 'MS4 Jurisdictions',       order: 7,  visible: true, defaultExpanded: true },
-    { id: 'exporthub',   label: 'Data Export Hub',              order: 8,  visible: true, defaultExpanded: true },
-    { id: 'grants',      label: 'Grant Opportunities',          order: 9,  visible: true, defaultExpanded: true },
-    { id: 'disclaimer',  label: 'Platform Disclaimer',          order: 10, visible: true, defaultExpanded: true },
+    { id: 'top10',       label: 'Top 5 Worsening / Improving',  order: 5,  visible: true, defaultExpanded: false },
+    { id: 'ms4jurisdictions', label: 'MS4 Jurisdictions',       order: 6,  visible: true, defaultExpanded: true },
+    { id: 'exporthub',   label: 'Data Export Hub',              order: 7,  visible: true, defaultExpanded: true },
+    { id: 'grants',      label: 'Grant Opportunities',          order: 8,  visible: true, defaultExpanded: true },
+    { id: 'disclaimer',  label: 'Platform Disclaimer',          order: 9,  visible: true, defaultExpanded: true },
   ],
 
   MS4: [

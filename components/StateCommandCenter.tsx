@@ -33,10 +33,6 @@ import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 
-const PeerBenchmarking = dynamic(
-  () => import('@/components/PeerBenchmarking').then((mod) => mod.PeerBenchmarking),
-  { ssr: false }
-);
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
   { ssr: false }
@@ -2386,31 +2382,6 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
             })()
         )}
             </>);
-
-            case 'bench': return DS(
-        <div className="space-y-4">
-        {activeDetailId && displayData && regionMockData && (
-            <div id="section-bench" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-              <button onClick={() => onToggleCollapse('bench')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-                <span className="text-sm font-bold text-slate-800">📊 Peer Benchmarking Analysis</span>
-                <div className="flex items-center gap-1.5">
-                <span onClick={(e) => { e.stopPropagation(); printSection('bench', 'Peer Benchmarking'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                  <Printer className="h-3.5 w-3.5 text-slate-400" />
-                </span>
-                {isSectionOpen('bench') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
-              </div>
-              </button>
-              {isSectionOpen('bench') && (
-                <PeerBenchmarking
-                  removalEfficiencies={removalEfficiencies as any}
-                  regionId={activeDetailId}
-                  userRole="State"
-                />
-              )}
-            </div>
-        )}
-        </div>
-            );
 
             case 'top10': return DS(<>
         {lens.showHotspots && (
