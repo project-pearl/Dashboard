@@ -55,7 +55,7 @@ export class BrandedPDFGenerator {
         console.warn('Logo image failed to load, continuing without logo');
         resolve();
       };
-      img.src = '/Logo_Pearl_as_Headline.JPG';
+      img.src = '/Pearl-Logo-alt.png';
     });
   }
 
@@ -68,7 +68,7 @@ export class BrandedPDFGenerator {
 
         this.doc.addImage(
           this.logoImage,
-          'JPEG',
+          'PNG',
           logoX,
           10,
           logoWidth,

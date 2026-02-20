@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
-import { GeoJSON, CircleMarker, Tooltip } from 'react-leaflet';
+import { CircleMarker, Tooltip } from 'react-leaflet';
 import { getStatesGeoJSON, geoToAbbr, STATE_GEO_LEAFLET, FIPS_TO_ABBR as _FIPS, STATE_NAMES as _SN } from '@/lib/leafletMapUtils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Info, LogOut, Printer, Users, Heart, Leaf, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getRegionById } from '@/lib/regionsConfig';
+import HeroBanner from './HeroBanner';
 import { REGION_META, getWaterbodyDataSources } from '@/lib/useWaterData';
 import { useWaterData, DATA_SOURCES } from '@/lib/useWaterData';
 import { computeRestorationPlan, resolveAttainsCategory, mergeAttainsCauses, COST_PER_UNIT_YEAR } from '@/lib/restorationEngine';
@@ -581,6 +582,9 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
           </div>
         )}
 
+        {/* ── HERO BANNER ── */}
+        <HeroBanner role="ngo" />
+
         {/* ── HEADER — NationalCommandCenter style ── */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -588,7 +592,7 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
               className="relative h-12 w-40 cursor-default select-none flex-shrink-0"
               onDoubleClick={() => onToggleDevMode?.()}
             >
-              <Image src="/Logo_Pearl_as_Headline.JPG" alt="Project Pearl Logo" fill className="object-contain object-left" priority />
+              <Image src="/Pearl-Logo-alt.png" alt="Project Pearl Logo" fill className="object-contain object-left" priority />
             </div>
             <div>
               <div className="text-xl font-semibold text-slate-800">PEARL Intelligence Network — Conservation Hub</div>
@@ -943,20 +947,6 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
                   </div>
                   <div className="h-[480px] w-full relative">
                     <LeafletMapShell center={leafletGeo.center} zoom={leafletGeo.zoom} maxZoom={12} height="100%" mapKey={stateAbbr}>
-                      <GeoJSON
-                        key={stateAbbr}
-                        data={geoData}
-                        style={(feature: any) => {
-                          const abbr = geoToAbbr(feature as any);
-                          const isSelected = abbr === stateAbbr;
-                          return {
-                            fillColor: isSelected ? '#e0e7ff' : '#f1f5f9',
-                            fillOpacity: 1,
-                            color: isSelected ? '#4338ca' : '#cbd5e1',
-                            weight: isSelected ? 1.5 : 0.3,
-                          };
-                        }}
-                      />
                       {wbMarkers.map(wb => {
                         const isActive = wb.id === activeDetailId;
                         const markerColor = getMarkerColor(overlay, wb);

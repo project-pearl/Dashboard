@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import Image from 'next/image';
+import HeroBanner from './HeroBanner';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -533,6 +534,9 @@ export function PEARLCommandCenter(props: Props) {
       </div>
 
       <div className="max-w-[1600px] mx-auto px-4 py-4 space-y-4">
+
+        {/* ── HERO BANNER ── */}
+        <HeroBanner role="pearl" />
 
         {/* ── NATIONAL WATER HEALTH GAUGE ── */}
         <Card className="overflow-hidden">

@@ -83,7 +83,7 @@ export default function MethodologyPage() {
       {/* ── Fixed sidebar navigation (desktop) ── */}
       <nav className="hidden lg:block fixed left-0 top-0 w-56 h-screen bg-slate-50 border-r border-slate-200 p-5 pt-6 z-40 print:hidden">
         <div className="relative h-10 w-32 mb-4">
-          <Image src="/Logo_Pearl_as_Headline.JPG" alt="PEARL" fill className="object-contain object-left" />
+          <Image src="/Pearl-Logo-alt.png" alt="PEARL" fill className="object-contain object-left" />
         </div>
         <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-3">Methodology</div>
         <ul className="space-y-1">

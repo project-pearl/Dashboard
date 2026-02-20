@@ -379,7 +379,7 @@ export default function WaterQualityExplorer() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <a href="/">
-              <Image src="/Logo_Pearl_as_Headline.JPG" alt="Project PEARL" width={140} height={38} className="object-contain brightness-0 invert" priority />
+              <Image src="/Pearl-Logo-alt.png" alt="Project PEARL" width={140} height={38} className="object-contain brightness-0 invert" priority />
             </a>
             <div className="hidden md:flex items-center gap-8 text-[13px] font-semibold tracking-wide uppercase text-slate-400">
               <a href="/" className="hover:text-white transition-colors">Home</a>

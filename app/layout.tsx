@@ -11,8 +11,8 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
   themeColor: '#2563eb',
   icons: {
-    icon: '/Logo_Pearl_as_Headline.JPG',
-    apple: '/Logo_Pearl_as_Headline.JPG',
+    icon: '/Pearl-Logo-alt.png',
+    apple: '/Pearl-Logo-alt.png',
   },
   appleWebApp: {
     capable: true,
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     description: 'Real-time water quality monitoring and MS4 compliance dashboard',
     images: [
       {
-        url: '/Logo_Pearl_as_Headline.JPG',
+        url: '/Pearl-Logo-alt.png',
       },
     ],
   },
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     description: 'Real-time water quality monitoring and MS4 compliance dashboard',
     images: [
       {
-        url: '/Logo_Pearl_as_Headline.JPG',
+        url: '/Pearl-Logo-alt.png',
       },
     ],
   },

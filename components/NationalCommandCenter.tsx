@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { X, AlertTriangle, AlertCircle, CheckCircle, MapPin, Droplets, Leaf, DollarSign, Users, TrendingUp, BarChart3, Gauge, Shield, LogOut, Building2, Info, ChevronDown, Minus, Printer } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getRegionById } from '@/lib/regionsConfig';
+import HeroBanner from './HeroBanner';
 import { REGION_META, getWaterbodyDataSources } from '@/lib/useWaterData';
 import { computeRestorationPlan, resolveAttainsCategory, mergeAttainsCauses, COST_PER_UNIT_YEAR, type RestorationResult } from '@/lib/restorationEngine';
 import { WaterbodyDetailCard } from '@/components/WaterbodyDetailCard';
@@ -2025,12 +2026,15 @@ export function NationalCommandCenter(props: Props) {
             </div>
           </div>
         )}
+        {/* ── HERO BANNER ── */}
+        <HeroBanner role="national" />
+
         {/* Header */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="relative h-12 w-40">
               <Image
-                src="/Logo_Pearl_as_Headline.JPG"
+                src="/Pearl-Logo-alt.png"
                 alt="Project Pearl Logo"
                 fill
                 className="object-contain object-left"

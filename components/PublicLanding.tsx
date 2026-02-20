@@ -184,7 +184,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
       <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-white border-b border-slate-200/50">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Image src="/Logo_Pearl_as_Headline.JPG" alt="Project PEARL" width={160} height={44} className="object-contain" priority />
+            <Image src="/Pearl-Logo-alt.png" alt="Project PEARL" width={160} height={44} className="object-contain" priority />
             <div className="hidden md:flex items-center gap-8 text-[13px] font-semibold tracking-wide uppercase text-slate-500">
               <a href="#platform" className="hover:text-slate-900 transition-colors">Platform</a>
               <a href="#data" className="hover:text-slate-900 transition-colors">Data Sources</a>

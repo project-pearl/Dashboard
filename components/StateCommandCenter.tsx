@@ -2,7 +2,8 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
-import { GeoJSON, CircleMarker, Tooltip } from 'react-leaflet';
+import { CircleMarker, Tooltip } from 'react-leaflet';
+import HeroBanner from './HeroBanner';
 import dynamic from 'next/dynamic';
 import { getStatesGeoJSON, geoToAbbr, STATE_GEO_LEAFLET, FIPS_TO_ABBR as _FIPS, STATE_NAMES as _SN } from '@/lib/leafletMapUtils';
 
@@ -608,6 +609,9 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
           </div>
         )}
 
+        {/* ── HERO BANNER ── */}
+        <HeroBanner role="state" />
+
         {/* ── HEADER ── */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -615,7 +619,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
               className="relative h-12 w-40 cursor-default select-none"
               onDoubleClick={() => onToggleDevMode?.()}
             >
-              <Image src="/Logo_Pearl_as_Headline.JPG" alt="Project Pearl Logo" fill className="object-contain object-left" priority />
+              <Image src="/Pearl-Logo-alt.png" alt="Project Pearl Logo" fill className="object-contain object-left" priority />
             </div>
             <div>
               <div className="text-xl font-semibold text-slate-800">PEARL Intelligence Network — {stateName} Command Center</div>
@@ -990,20 +994,6 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
                   </div>
                   <div className="h-[480px] w-full relative">
                     <LeafletMapShell center={leafletGeo.center} zoom={leafletGeo.zoom} maxZoom={12} height="100%" mapKey={stateAbbr}>
-                      <GeoJSON
-                        key={stateAbbr}
-                        data={geoData}
-                        style={(feature: any) => {
-                          const abbr = geoToAbbr(feature as any);
-                          const isSelected = abbr === stateAbbr;
-                          return {
-                            fillColor: isSelected ? '#e0e7ff' : '#f1f5f9',
-                            fillOpacity: 1,
-                            color: isSelected ? '#4338ca' : '#cbd5e1',
-                            weight: isSelected ? 1.5 : 0.3,
-                          };
-                        }}
-                      />
                       {/* Waterbody markers — color driven by overlay */}
                       {wbMarkers.map(wb => {
                         const isActive = wb.id === activeDetailId;

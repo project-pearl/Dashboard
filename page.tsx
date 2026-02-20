@@ -440,7 +440,7 @@ export default function Home() {
             <div className="flex flex-col gap-2">
               <div className="relative w-full max-w-[280px] sm:max-w-[400px] h-[50px] sm:h-[70px]">
                 <Image
-                  src="/Logo_Pearl_as_Headline.JPG"
+                  src="/Pearl-Logo-alt.png"
                   alt="Project Pearl Logo"
                   fill
                   className="object-contain object-left"

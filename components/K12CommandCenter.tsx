@@ -2,7 +2,8 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
-import { GeoJSON, CircleMarker, Tooltip } from 'react-leaflet';
+import { CircleMarker, Tooltip } from 'react-leaflet';
+import HeroBanner from './HeroBanner';
 import { getStatesGeoJSON, geoToAbbr, STATE_GEO_LEAFLET, FIPS_TO_ABBR as _FIPS, STATE_NAMES as _SN } from '@/lib/leafletMapUtils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -574,6 +575,9 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
           </div>
         )}
 
+        {/* ── HERO BANNER ── */}
+        <HeroBanner role="k12" />
+
         {/* ── HEADER ── */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -581,10 +585,10 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
               className="relative h-12 w-40 cursor-default select-none flex-shrink-0"
               onDoubleClick={() => onToggleDevMode?.()}
             >
-              <Image src="/Logo_Pearl_as_Headline.JPG" alt="Project Pearl Logo" fill className="object-contain object-left" priority />
+              <Image src="/Pearl-Logo-alt.png" alt="Project Pearl Logo" fill className="object-contain object-left" priority />
             </div>
-            <div className="relative w-10 h-10 flex-shrink-0">
-              <Image src="/Mascot.png" alt="PEARL Bubble Mascot" width={40} height={40} className="rounded-full object-cover" />
+            <div className="relative w-[100px] h-[100px] flex-shrink-0">
+              <Image src="/Mascot.png" alt="PEARL Bubble Mascot" width={100} height={100} className="rounded-full object-cover" />
             </div>
             <div>
               <div className="text-xl font-semibold text-slate-800">PEARL Intelligence Network — {stateName} Explorer</div>
@@ -885,20 +889,6 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                   </div>
                   <div className="h-[480px] w-full relative">
                     <LeafletMapShell center={leafletGeo.center} zoom={leafletGeo.zoom} maxZoom={12} height="100%" mapKey={stateAbbr}>
-                      <GeoJSON
-                        key={stateAbbr}
-                        data={geoData}
-                        style={(feature: any) => {
-                          const abbr = geoToAbbr(feature as any);
-                          const isSelected = abbr === stateAbbr;
-                          return {
-                            fillColor: isSelected ? '#e0e7ff' : '#f1f5f9',
-                            fillOpacity: 1,
-                            color: isSelected ? '#4338ca' : '#cbd5e1',
-                            weight: isSelected ? 1.5 : 0.3,
-                          };
-                        }}
-                      />
                       {/* Waterbody markers */}
                       {wbMarkers.map(wb => {
                         const isActive = wb.id === activeDetailId;
@@ -2371,7 +2361,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
         {!isTeacher && (
           <div className="my-8 rounded-2xl border-2 border-sky-200 bg-gradient-to-br from-sky-50 to-white shadow-lg p-6">
             <div className="flex items-center justify-center gap-4 mb-4">
-              <Image src="/Mascot.png" alt="PEARL Bubble Mascot" width={64} height={64} className="flex-shrink-0" />
+              <Image src="/Mascot.png" alt="PEARL Bubble Mascot" width={160} height={160} className="flex-shrink-0" />
               <div className="text-center">
                 <div className="text-lg font-bold text-sky-900">Real Results from Our First Pilot!</div>
                 <p className="text-sm text-sky-700 mt-1">PEARL cleaned real water in Milton, Florida using nature-inspired technology</p>
@@ -2409,7 +2399,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
         {/* ── WATER QUALITY GAMES ── */}
         <div className="space-y-4">
           <div className="flex items-center gap-3 px-1">
-            <Image src="/Mascot.png" alt="PEARL Mascot" width={36} height={36} />
+            <Image src="/Mascot.png" alt="PEARL Mascot" width={90} height={90} />
             <div>
               <h2 className="text-lg font-bold text-slate-800">Water Quality Games</h2>
               <span className="text-xs text-slate-400">Learn by playing — can you save the bay?</span>

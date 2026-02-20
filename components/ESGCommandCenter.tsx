@@ -6,7 +6,8 @@
 
 import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
-import { GeoJSON, CircleMarker, Tooltip } from 'react-leaflet';
+import { CircleMarker, Tooltip } from 'react-leaflet';
+import HeroBanner from './HeroBanner';
 import dynamic from 'next/dynamic';
 import { getStatesGeoJSON, STATE_GEO_LEAFLET, FIPS_TO_ABBR, STATE_NAMES as _SN } from '@/lib/leafletMapUtils';
 
@@ -671,6 +672,9 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50/30">
       <div className="max-w-[1600px] mx-auto p-4 space-y-4">
 
+        {/* ── HERO BANNER ── */}
+        <HeroBanner role="esg" />
+
         {/* ── HEADER ── */}
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-3">
@@ -679,7 +683,7 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
                 className="relative h-12 w-40 cursor-default select-none"
                 onDoubleClick={() => onToggleDevMode?.()}
               >
-                <Image src="/Logo_Pearl_as_Headline.JPG" alt="Project Pearl Logo" fill className="object-contain object-left" priority />
+                <Image src="/Pearl-Logo-alt.png" alt="Project Pearl Logo" fill className="object-contain object-left" priority />
               </div>
               <div>
                 <div className="text-xl font-semibold text-slate-800">PEARL Intelligence Network — Corporate E/S/G Command Center</div>
@@ -1023,21 +1027,6 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
                   {geoData && (
                     <LeafletMapShell center={defaultCenter} zoom={defaultZoom} maxZoom={12} height="100%">
                       {flyTarget && <FlyToLocation center={flyTarget.center} zoom={flyTarget.zoom} />}
-                      <GeoJSON
-                        key={focusedState}
-                        data={geoData}
-                        style={(feature: any) => {
-                          const gFips = String(feature.id).padStart(2, '0');
-                          const gAbbr = FIPS_TO_ABBR[gFips] || feature.properties?.name;
-                          const isFocused = focusedState !== 'US' && gAbbr === focusedState;
-                          return {
-                            fillColor: isFocused ? '#d1fae5' : '#f1f5f9',
-                            fillOpacity: 1,
-                            color: isFocused ? '#059669' : '#cbd5e1',
-                            weight: isFocused ? 1.5 : 0.3,
-                          };
-                        }}
-                      />
                       {/* Waterbody dots for focused state */}
                       {stateWaterbodies.map(wb => {
                         const wbColor = wb.alertLevel === 'high' ? '#ef4444' : wb.alertLevel === 'medium' ? '#f59e0b' : wb.alertLevel === 'low' ? '#eab308' : '#22c55e';

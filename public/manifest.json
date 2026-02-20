@@ -9,9 +9,9 @@
   "orientation": "any",
   "icons": [
     {
-      "src": "/Logo_Pearl_as_Headline.JPG",
+      "src": "/Pearl-Logo-alt.png",
       "sizes": "any",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any"
     }
   ],
@@ -36,21 +36,21 @@
       "short_name": "Quality",
       "description": "View current water quality readings",
       "url": "/?view=ambient",
-      "icons": [{ "src": "/Logo_Pearl_as_Headline.JPG", "sizes": "any" }]
+      "icons": [{ "src": "/Pearl-Logo-alt.png", "sizes": "any" }]
     },
     {
       "name": "Storm Events",
       "short_name": "Storms",
       "description": "View storm event performance",
       "url": "/?view=storm",
-      "icons": [{ "src": "/Logo_Pearl_as_Headline.JPG", "sizes": "any" }]
+      "icons": [{ "src": "/Pearl-Logo-alt.png", "sizes": "any" }]
     },
     {
       "name": "MS4 Report",
       "short_name": "Report",
       "description": "Generate compliance report",
       "url": "/?action=report",
-      "icons": [{ "src": "/Logo_Pearl_as_Headline.JPG", "sizes": "any" }]
+      "icons": [{ "src": "/Pearl-Logo-alt.png", "sizes": "any" }]
     }
   ],
   "share_target": {
