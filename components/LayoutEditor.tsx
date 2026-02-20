@@ -76,7 +76,7 @@ export function LayoutEditor({ ccKey, children }: LayoutEditorProps) {
         });
         setCollapsedSections(collapsed);
       }
-    });
+    }).catch(() => { /* table empty or unreachable — keep defaults */ });
   }, [user, ccKey]);
 
   // ── DnD sensors ──

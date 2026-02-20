@@ -151,7 +151,7 @@ export async function fetchLayout(
     .select('sections')
     .eq('role', role)
     .eq('cc_key', ccKey)
-    .single();
+    .maybeSingle();
 
   if (error || !data) return null;
   return data.sections as SectionDefinition[];
