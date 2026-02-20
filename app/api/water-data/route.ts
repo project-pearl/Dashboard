@@ -1597,6 +1597,217 @@ export async function GET(request: NextRequest) {
       }
 
       // ════════════════════════════════════════════════════════════════════════
+      // Monitor My Watershed (MMW) — EnviroDIY/Stroud citizen science sensors
+      // Example: ?action=mmw-sites&lat=39.27&lng=-76.58&radius=25
+      // Example: ?action=mmw-latest&lat=39.27&lng=-76.58&radius=25
+      // ════════════════════════════════════════════════════════════════════════
+      case 'mmw-sites':
+      case 'mmw-latest': {
+        const lat = sp.get('lat');
+        const lng = sp.get('lng');
+        const radius = sp.get('radius') || '25'; // km
+        if (!lat || !lng) {
+          return NextResponse.json({ error: 'lat and lng required' }, { status: 400 });
+        }
+
+        try {
+          // MMW API: search nearby sites then get latest values
+          const mmwSitesUrl = `https://monitormywatershed.org/api/v1/sites?latitude=${lat}&longitude=${lng}&radius=${radius}`;
+          const mmwSitesRes = await fetch(mmwSitesUrl, {
+            headers: { 'Accept': 'application/json' },
+            signal: AbortSignal.timeout(15_000),
+            next: { revalidate: 600 },
+          });
+
+          if (!mmwSitesRes.ok) {
+            return NextResponse.json({
+              source: 'mmw',
+              error: `MMW API error: ${mmwSitesRes.status}`,
+              data: [],
+            }, { status: 502 });
+          }
+
+          const sitesData = await mmwSitesRes.json();
+          const sites = Array.isArray(sitesData) ? sitesData : sitesData?.results || sitesData?.sites || [];
+
+          if (action === 'mmw-sites') {
+            return NextResponse.json({ source: 'mmw', data: sites });
+          }
+
+          // For mmw-latest: get latest readings from nearest site
+          const results: any[] = [];
+          for (const site of sites.slice(0, 3)) {
+            const siteCode = site.sampling_feature_code || site.siteCode || site.id;
+            if (!siteCode) continue;
+
+            try {
+              const latestUrl = `https://monitormywatershed.org/api/v1/sites/${siteCode}/latest_values`;
+              const latestRes = await fetch(latestUrl, {
+                headers: { 'Accept': 'application/json' },
+                signal: AbortSignal.timeout(10_000),
+                next: { revalidate: 300 },
+              });
+              if (latestRes.ok) {
+                const latestData = await latestRes.json();
+                const values = Array.isArray(latestData) ? latestData : latestData?.values || latestData?.results || [];
+                for (const v of values) {
+                  results.push({
+                    ...v,
+                    station_name: site.sampling_feature_name || site.siteName || siteCode,
+                    site_code: siteCode,
+                  });
+                }
+              }
+            } catch { /* skip failed site */ }
+            if (results.length > 0) break; // use first site with data
+          }
+
+          return NextResponse.json({ source: 'mmw', data: results, siteCount: sites.length });
+        } catch (e: any) {
+          return NextResponse.json({ source: 'mmw', error: e.message, data: [] }, { status: 502 });
+        }
+      }
+
+      // ════════════════════════════════════════════════════════════════════════
+      // EPA Envirofacts — SDWIS violations, TRI releases, PCS permit compliance
+      // Path-based URL syntax: /TABLE/COLUMN/OPERATOR/VALUE/JSON
+      // Example: ?action=envirofacts-sdwis&state=MD&limit=20
+      // Example: ?action=envirofacts-tri&state=MD&zipcode=21201
+      // Example: ?action=envirofacts-pcs&state=MD
+      // ════════════════════════════════════════════════════════════════════════
+      case 'envirofacts-sdwis': {
+        const state = sp.get('state') || 'MD';
+        const limit = sp.get('limit') || '20';
+        try {
+          const url = `https://data.epa.gov/efservice/VIOLATION/PRIMACY_AGENCY_CODE/${state}/ROWS/0:${limit}/JSON`;
+          console.log('[Envirofacts-SDWIS]', url);
+          const res = await fetch(url, {
+            headers: { 'Accept': 'application/json' },
+            signal: AbortSignal.timeout(15_000),
+            next: { revalidate: 3600 },
+          });
+          if (!res.ok) {
+            return NextResponse.json({ source: 'envirofacts-sdwis', error: `EPA error: ${res.status}` }, { status: 502 });
+          }
+          const data = await res.json();
+          return NextResponse.json({ source: 'envirofacts-sdwis', state, count: data.length, data });
+        } catch (e: any) {
+          return NextResponse.json({ source: 'envirofacts-sdwis', error: e.message }, { status: 502 });
+        }
+      }
+
+      case 'envirofacts-tri': {
+        const state = (sp.get('state') || 'MD').toUpperCase();
+        const zipcode = sp.get('zipcode') || '';
+        const limit = sp.get('limit') || '20';
+        try {
+          let path = `https://data.epa.gov/efservice/TRI_FACILITY/STATE_ABBR/${state}`;
+          if (zipcode) path += `/ZIP_CODE/${zipcode}`;
+          path += `/ROWS/0:${limit}/JSON`;
+          console.log('[Envirofacts-TRI]', path);
+          const res = await fetch(path, {
+            headers: { 'Accept': 'application/json' },
+            signal: AbortSignal.timeout(15_000),
+            next: { revalidate: 3600 },
+          });
+          if (!res.ok) {
+            return NextResponse.json({ source: 'envirofacts-tri', error: `EPA error: ${res.status}` }, { status: 502 });
+          }
+          const data = await res.json();
+          return NextResponse.json({ source: 'envirofacts-tri', state, count: data.length, data });
+        } catch (e: any) {
+          return NextResponse.json({ source: 'envirofacts-tri', error: e.message }, { status: 502 });
+        }
+      }
+
+      case 'envirofacts-pcs': {
+        const state = (sp.get('state') || 'MD').toUpperCase();
+        const limit = sp.get('limit') || '20';
+        try {
+          const url = `https://data.epa.gov/efservice/PCS_PERMIT_FACILITY/STATE_CODE/${state}/ROWS/0:${limit}/JSON`;
+          console.log('[Envirofacts-PCS]', url);
+          const res = await fetch(url, {
+            headers: { 'Accept': 'application/json' },
+            signal: AbortSignal.timeout(15_000),
+            next: { revalidate: 3600 },
+          });
+          if (!res.ok) {
+            return NextResponse.json({ source: 'envirofacts-pcs', error: `EPA error: ${res.status}` }, { status: 502 });
+          }
+          const data = await res.json();
+          return NextResponse.json({ source: 'envirofacts-pcs', state, count: data.length, data });
+        } catch (e: any) {
+          return NextResponse.json({ source: 'envirofacts-pcs', error: e.message }, { status: 502 });
+        }
+      }
+
+      // ════════════════════════════════════════════════════════════════════════
+      // State Portal — routes to state-specific adapters
+      // Example: ?action=state-portal&state=MD&lat=39.27&lng=-76.58
+      // ════════════════════════════════════════════════════════════════════════
+      case 'state-portal': {
+        const state = (sp.get('state') || '').toUpperCase();
+        const lat = sp.get('lat');
+        const lng = sp.get('lng');
+        if (!state) {
+          return NextResponse.json({ error: 'state required (e.g., MD, VA, CA)' }, { status: 400 });
+        }
+
+        try {
+          const { fetchStatePortalData } = await import('@/lib/statePortalAdapters');
+          const data = await fetchStatePortalData(state, {
+            lat: lat ? parseFloat(lat) : undefined,
+            lng: lng ? parseFloat(lng) : undefined,
+          });
+          return NextResponse.json({ source: 'state-portal', state, ...data });
+        } catch (e: any) {
+          return NextResponse.json({ source: 'state-portal', error: e.message, data: [] }, { status: 502 });
+        }
+      }
+
+      // ════════════════════════════════════════════════════════════════════════
+      // HydroShare — dataset search by keyword
+      // Example: ?action=hydroshare-search&q=Chesapeake+Bay
+      // ════════════════════════════════════════════════════════════════════════
+      case 'hydroshare-search': {
+        const query = sp.get('q') || sp.get('query') || '';
+        if (!query) {
+          return NextResponse.json({ error: 'q (query) required' }, { status: 400 });
+        }
+
+        try {
+          const hsUrl = `https://www.hydroshare.org/hsapi/resource/?text=${encodeURIComponent(query)}&type=CompositeResource&count=10`;
+          console.log('[HydroShare]', hsUrl);
+          const res = await fetch(hsUrl, {
+            headers: { 'Accept': 'application/json' },
+            signal: AbortSignal.timeout(15_000),
+            next: { revalidate: 3600 },
+          });
+          if (!res.ok) {
+            return NextResponse.json({ source: 'hydroshare', error: `HydroShare error: ${res.status}` }, { status: 502 });
+          }
+          const data = await res.json();
+          const results = data?.results || data || [];
+          return NextResponse.json({
+            source: 'hydroshare',
+            query,
+            count: results.length,
+            data: results.slice(0, 10).map((r: any) => ({
+              id: r.resource_id || r.short_id,
+              title: r.resource_title || r.title,
+              abstract: (r.abstract || '').slice(0, 200),
+              authors: r.creators?.map((c: any) => c.name)?.slice(0, 3) || [],
+              url: r.resource_url || `https://www.hydroshare.org/resource/${r.resource_id || r.short_id}`,
+              created: r.date_created,
+              subjects: r.subjects?.slice(0, 5) || [],
+            })),
+          });
+        } catch (e: any) {
+          return NextResponse.json({ source: 'hydroshare', error: e.message }, { status: 502 });
+        }
+      }
+
+      // ════════════════════════════════════════════════════════════════════════
       // Debug: test all sources server-side for a region
       // Example: ?action=debug-region&regionId=maryland_back_river
       // ════════════════════════════════════════════════════════════════════════
@@ -1700,6 +1911,10 @@ export async function GET(request: NextRequest) {
               ejscreen: ['ejscreen'],
               erddap: ['erddap-latest', 'erddap-range', 'erddap-stations'],
               noaaCoops: ['coops-latest', 'coops-product', 'coops-stations'],
+              mmw: ['mmw-sites', 'mmw-latest'],
+              envirofacts: ['envirofacts-sdwis', 'envirofacts-tri', 'envirofacts-pcs'],
+              statePortal: ['state-portal'],
+              hydroshare: ['hydroshare-search'],
               wqpStations: ['wqp-stations'],
               wqpResults: ['wqp-results'],
               cbpDataHub: ['cbp-stations', 'cbp-programs', 'cbp-projects', 'cbp-huc8', 'cbp-huc12',

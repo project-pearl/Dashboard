@@ -35,10 +35,16 @@ const PARAM_ORDER = ['DO', 'temperature', 'pH', 'turbidity', 'TSS', 'TN', 'TP', 
 
 const SOURCE_COLOR: Record<string, string> = {
   USGS: 'bg-green-100 text-green-800',
+  USGS_DV: 'bg-cyan-50 text-cyan-600',
   ERDDAP: 'bg-cyan-100 text-cyan-800',
   NOAA: 'bg-blue-100 text-blue-800',
   BWB: 'bg-purple-100 text-purple-800',
   WQP: 'bg-indigo-100 text-indigo-800',
+  MMW: 'bg-lime-100 text-lime-800',
+  EPA_EF: 'bg-orange-100 text-orange-700',
+  STATE: 'bg-rose-100 text-rose-700',
+  NASA_STREAM: 'bg-indigo-100 text-indigo-700',
+  HYDROSHARE: 'bg-fuchsia-100 text-fuchsia-700',
   REFERENCE: 'bg-amber-100 text-amber-800',
   MOCK: 'bg-slate-100 text-slate-600',
 };
@@ -598,6 +604,76 @@ export function WaterbodyDetailCard({
             </div>
           );
         })()}
+
+        {/* Compliance Context — EPA Envirofacts enrichment */}
+        {waterData?.parameters?._epa_violations && (
+          <div className="rounded-lg border border-orange-200 bg-orange-50/40 p-3 space-y-1.5">
+            <div className="text-xs font-semibold text-orange-800 uppercase tracking-wide flex items-center gap-1.5">
+              <Shield size={13} /> Compliance Context
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-700 font-medium ml-1">EPA Envirofacts</span>
+            </div>
+            <div className="text-xs text-slate-600">
+              <span className="font-medium">{waterData.parameters._epa_violations.value}</span> SDWIS drinking water violation{waterData.parameters._epa_violations.value !== 1 ? 's' : ''} found
+              in this state via EPA Envirofacts.
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              <a href="https://data.epa.gov/efservice/" target="_blank" rel="noopener noreferrer"
+                className="text-[10px] text-orange-600 hover:text-orange-800 bg-orange-100 px-2 py-0.5 rounded-full">
+                EPA Envirofacts Portal →
+              </a>
+              <a href="https://echo.epa.gov/" target="_blank" rel="noopener noreferrer"
+                className="text-[10px] text-orange-600 hover:text-orange-800 bg-orange-100 px-2 py-0.5 rounded-full">
+                ECHO Compliance →
+              </a>
+            </div>
+          </div>
+        )}
+
+        {/* Supplementary: Satellite Data (NASA STREAM) */}
+        {waterData && !waterLoading && (
+          <div className="rounded-lg border border-indigo-200 bg-indigo-50/30 p-3 space-y-1.5">
+            <div className="text-xs font-semibold text-indigo-800 uppercase tracking-wide flex items-center gap-1.5">
+              Satellite Data
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-medium ml-1">NASA</span>
+            </div>
+            <div className="text-[11px] text-slate-500">
+              Satellite-derived water quality estimates (chlorophyll-a, turbidity, Secchi depth) may be available for this waterbody via NASA STREAM and Landsat/Sentinel imagery.
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              <a href="https://earthdata.nasa.gov/topics/water-quality" target="_blank" rel="noopener noreferrer"
+                className="text-[10px] text-indigo-600 hover:text-indigo-800 bg-indigo-100 px-2 py-0.5 rounded-full">
+                NASA Earth Data — Water Quality →
+              </a>
+              <a href="https://oceancolor.gsfc.nasa.gov/" target="_blank" rel="noopener noreferrer"
+                className="text-[10px] text-indigo-600 hover:text-indigo-800 bg-indigo-100 px-2 py-0.5 rounded-full">
+                Ocean Color Web →
+              </a>
+            </div>
+          </div>
+        )}
+
+        {/* Supplementary: Related Datasets (HydroShare) */}
+        {waterData && !waterLoading && (
+          <div className="rounded-lg border border-fuchsia-200 bg-fuchsia-50/30 p-3 space-y-1.5">
+            <div className="text-xs font-semibold text-fuchsia-800 uppercase tracking-wide flex items-center gap-1.5">
+              Related Datasets
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-fuchsia-100 text-fuchsia-700 font-medium ml-1">HydroShare</span>
+            </div>
+            <div className="text-[11px] text-slate-500">
+              CUAHSI HydroShare may have research datasets, model outputs, and historical data related to {regionName}.
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              <a href={`https://www.hydroshare.org/search/?q=${encodeURIComponent(regionName)}`} target="_blank" rel="noopener noreferrer"
+                className="text-[10px] text-fuchsia-600 hover:text-fuchsia-800 bg-fuchsia-100 px-2 py-0.5 rounded-full">
+                Search HydroShare for &ldquo;{regionName}&rdquo; →
+              </a>
+              <a href="https://www.hydroshare.org" target="_blank" rel="noopener noreferrer"
+                className="text-[10px] text-fuchsia-600 hover:text-fuchsia-800 bg-fuchsia-100 px-2 py-0.5 rounded-full">
+                HydroShare Repository →
+              </a>
+            </div>
+          </div>
+        )}
 
         {/* Source attribution strip */}
         {waterData && waterData.sourceDetails?.length > 0 && (

@@ -16,11 +16,17 @@ interface DataSourceBadgeProps {
 // Map source ID to dot color class
 const SOURCE_DOT_COLORS: Record<string, string> = {
   USGS: 'bg-cyan-500',
+  USGS_DV: 'bg-cyan-400',
   BWB: 'bg-emerald-500',
   CBP: 'bg-blue-500',
   WQP: 'bg-violet-500',
   ERDDAP: 'bg-teal-500',
   NOAA: 'bg-sky-500',
+  MMW: 'bg-lime-500',
+  EPA_EF: 'bg-orange-500',
+  STATE: 'bg-rose-500',
+  NASA_STREAM: 'bg-indigo-500',
+  HYDROSHARE: 'bg-fuchsia-500',
   REFERENCE: 'bg-amber-500',
   MOCK: 'bg-gray-400',
 };
