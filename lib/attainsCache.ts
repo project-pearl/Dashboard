@@ -5,6 +5,8 @@
 // Persists to disk so cache survives server restarts
 
 const ATTAINS_BASE = 'https://attains.epa.gov/attains-public/api';
+const ATTAINS_GIS = 'https://gispub.epa.gov/arcgis/rest/services/OW/ATTAINS_Assessment/MapServer/1/query';
+const LARGE_STATE_THRESHOLD = 50_000; // States with >50k assessments use GIS fallback
 const CACHE_TTL_MS = 90 * 24 * 60 * 60 * 1000; // 90 days — ATTAINS updates biannually
 const BATCH_SIZE = 2;
 const BATCH_DELAY_MS = 3000;
@@ -134,10 +136,156 @@ function ensureDiskLoaded() {
   }
 }
 
+// ─── GIS MapServer fallback for huge states (PA: 216k assessments) ────────────
+
+const GIS_CAUSE_FIELDS: Record<string, string> = {
+  mercury: 'Mercury', nutrients: 'Nutrients', sediment: 'Sediment',
+  pathogens: 'Pathogens', temperature: 'Temperature',
+  metals_other_than_mercury: 'Metals (Other than Mercury)',
+  ph_acidity_caustic_conditions: 'pH/Acidity/Caustic Conditions',
+  habitat_alterations: 'Habitat Alterations', oxygen_depletion: 'Oxygen Depletion',
+  algal_growth: 'Algal Growth', turbidity: 'Turbidity',
+  flow_alterations: 'Flow Alterations', pesticides: 'Pesticides',
+  toxic_organics: 'Toxic Organics', toxic_inorganics: 'Toxic Inorganics',
+  polychlorinated_biphenyls_pcbs: 'PCBs', pfas: 'PFAS',
+};
+
+async function gisQuery(params: Record<string, string>): Promise<any> {
+  const url = new URL(ATTAINS_GIS);
+  url.searchParams.set('f', 'json');
+  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+  const res = await fetch(url.toString(), { signal: AbortSignal.timeout(60_000) });
+  if (!res.ok) throw new Error(`GIS HTTP ${res.status}`);
+  return res.json();
+}
+
+async function fetchViaGIS(stateCode: string): Promise<StateSummary | null> {
+  console.log(`[ATTAINS Cache] ${stateCode}: using GIS MapServer (large state)`);
+
+  // Category breakdown
+  const catData = await gisQuery({
+    where: `STATE='${stateCode}'`,
+    outStatistics: JSON.stringify([
+      { statisticType: 'count', onStatisticField: 'OBJECTID', outStatisticFieldName: 'cnt' }
+    ]),
+    groupByFieldsForStatistics: 'IRCATEGORY',
+  });
+
+  let high = 0, medium = 0, low = 0, none = 0;
+  let tmdlNeeded = 0, tmdlCompleted = 0, tmdlAlternative = 0;
+  let total = 0;
+
+  for (const f of catData.features) {
+    const cat: string = f.attributes.IRCATEGORY || '';
+    const cnt: number = f.attributes.cnt || 0;
+    total += cnt;
+    if (cat.startsWith('5')) { high += cnt; tmdlNeeded += cnt; }
+    else if (cat === '4A' || cat === '4a') { medium += cnt; tmdlCompleted += cnt; }
+    else if (cat === '4B' || cat === '4b') { medium += cnt; tmdlAlternative += cnt; }
+    else if (cat === '4C' || cat === '4c') { medium += cnt; }
+    else if (cat.startsWith('4')) { medium += cnt; tmdlCompleted += cnt; }
+    else if (cat.startsWith('3')) { low += cnt; }
+    else { none += cnt; }
+  }
+
+  // Cause counts (parallel)
+  const causeFields = Object.keys(GIS_CAUSE_FIELDS);
+  const causeFreq: Record<string, number> = {};
+  await Promise.all(causeFields.map(async (field) => {
+    try {
+      const data = await gisQuery({
+        where: `STATE='${stateCode}' AND ISIMPAIRED='Y' AND ${field}='Cause'`,
+        returnCountOnly: 'true',
+      });
+      if (data.count > 0) causeFreq[GIS_CAUSE_FIELDS[field]] = data.count;
+    } catch { /* skip */ }
+  }));
+
+  const topCauses = Object.entries(causeFreq)
+    .sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name]) => name);
+
+  // Fetch impaired waterbodies with pagination
+  const causeOutFields = causeFields.join(',');
+  const waterbodies: CachedWaterbody[] = [];
+  const PAGE = 1000;
+
+  for (const catFilter of ["IRCATEGORY LIKE '5%'", "IRCATEGORY LIKE '4%'"]) {
+    let offset = 0;
+    let keepGoing = true;
+    while (keepGoing && waterbodies.length < MAX_PER_STATE) {
+      const data = await gisQuery({
+        where: `STATE='${stateCode}' AND ${catFilter}`,
+        outFields: `assessmentunitidentifier,assessmentunitname,ircategory,${causeOutFields}`,
+        resultRecordCount: String(PAGE),
+        resultOffset: String(offset),
+        returnGeometry: 'false',
+      });
+      const features = data.features || [];
+      for (const f of features) {
+        if (waterbodies.length >= MAX_PER_STATE) break;
+        const a = f.attributes;
+        const cat: string = a.ircategory || '';
+        const causes: string[] = [];
+        for (const cf of causeFields) {
+          if (a[cf] === 'Cause') causes.push(GIS_CAUSE_FIELDS[cf]);
+          if (causes.length >= 5) break;
+        }
+        const isHigh = cat.startsWith('5');
+        let tmdlStatus: CachedWaterbody['tmdlStatus'] = isHigh ? 'needed' : 'completed';
+        if (cat === '4B' || cat === '4b') tmdlStatus = 'alternative';
+        else if (cat === '4C' || cat === '4c') tmdlStatus = 'not-pollutant';
+
+        waterbodies.push({
+          id: a.assessmentunitidentifier || '',
+          name: a.assessmentunitname || a.assessmentunitidentifier || '',
+          category: cat,
+          alertLevel: isHigh ? 'high' : 'medium',
+          tmdlStatus,
+          causes,
+          causeCount: causes.length,
+        });
+      }
+      offset += PAGE;
+      keepGoing = features.length === PAGE;
+    }
+    if (waterbodies.length >= MAX_PER_STATE) break;
+  }
+
+  console.log(`[ATTAINS Cache] ${stateCode}: GIS complete — ${total} total, ${waterbodies.length} stored`);
+  return {
+    state: stateCode, total, fetched: high + medium, stored: waterbodies.length,
+    high, medium, low, none, tmdlNeeded, tmdlCompleted, tmdlAlternative,
+    topCauses, waterbodies,
+  };
+}
+
 // ─── ATTAINS fetch helper (server-side, no Next.js cache) ──────────────────────
 
 async function fetchAttainsState(stateCode: string, timeoutMs = FETCH_TIMEOUT_MS): Promise<StateSummary | null> {
   try {
+    // ── Check assessment count first — huge states (PA: 216k) need impaired-only filter ──
+    let totalCount = 0;
+    try {
+      const countUrl = new URL(`${ATTAINS_BASE}/assessments`);
+      countUrl.searchParams.set('state', stateCode);
+      countUrl.searchParams.set('returnCountOnly', 'Y');
+      const countRes = await fetch(countUrl.toString(), {
+        headers: { 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(60_000), // 1 min for count-only
+      });
+      if (countRes.ok) {
+        const countData = await countRes.json();
+        totalCount = countData?.count || 0;
+        if (totalCount > LARGE_STATE_THRESHOLD) {
+          // Large states can't be fetched via REST API — use GIS MapServer instead
+          console.log(`[ATTAINS Cache] ${stateCode}: ${totalCount} assessments — switching to GIS fallback`);
+          return fetchViaGIS(stateCode);
+        }
+      }
+    } catch {
+      // Count check failed — proceed with full fetch
+    }
+
     const url = new URL(`${ATTAINS_BASE}/assessments`);
     url.searchParams.set('state', stateCode);
 
@@ -284,7 +432,7 @@ async function fetchAttainsState(stateCode: string, timeoutMs = FETCH_TIMEOUT_MS
 
     return {
       state: stateCode,
-      total: data?.count || allAssessments.length,
+      total: totalCount || data?.count || allAssessments.length,
       fetched: allAssessments.length,
       stored: stored.length,
       high, medium, low, none,
