@@ -59,7 +59,7 @@ const PLATFORM_STATS = [
   { value: 7000, suffix: '+', label: 'MS4s Nationwide', icon: Building2 },
   { value: 50, suffix: '', label: 'States Monitored', icon: Globe },
   { value: 565000, suffix: '+', label: 'Assessment Units', icon: Droplets },
-  { value: 15, suffix: 'min', label: 'Sensor Interval', icon: Activity },
+  { value: 15, suffix: 'min', label: 'Data Resolution', icon: Activity },
 ];
 
 const DATA_FEEDS = [
@@ -68,7 +68,7 @@ const DATA_FEEDS = [
   { name: 'Water Quality Portal', desc: 'Multi-agency monitoring results', icon: Search, color: 'from-violet-600 to-purple-800' },
   { name: 'NOAA CO-OPS', desc: 'Tidal & oceanographic observations', icon: Waves, color: 'from-cyan-600 to-sky-800' },
   { name: 'EJScreen', desc: 'Environmental justice mapping overlays', icon: ShieldCheck, color: 'from-amber-600 to-orange-800' },
-  { name: 'PEARL Sensors', desc: 'Proprietary continuous monitoring network', icon: Zap, color: 'from-rose-600 to-red-800' },
+  { name: 'PEARL Sensors (In Development)', desc: 'Proprietary continuous monitoring network — hardware integration in progress', icon: Zap, color: 'from-rose-600 to-red-800' },
 ];
 
 const STAKEHOLDER_TRACKS = [
@@ -210,12 +210,13 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
           <div className={`max-w-3xl transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/10 mb-8">
               <LivePulse />
-              <span className="text-xs font-semibold text-emerald-300 tracking-wide">Live monitoring active across 50 states</span>
+              <span className="text-xs font-semibold text-emerald-300 tracking-wide">National coverage across 50 states</span>
             </div>
 
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-[1.05] tracking-tight" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
               America&#39;s surface water<br />intelligence platform
             </h1>
+            <p className="mt-3 text-sm font-semibold text-cyan-300/80 tracking-wide uppercase">PEARL Intelligence Network (PIN)</p>
 
             <p className="mt-6 text-lg sm:text-xl text-slate-300 leading-relaxed max-w-2xl font-light">
               Every river, lake, estuary, and coastline &mdash; continuously monitored, intelligently
@@ -467,11 +468,10 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
           <div className="grid md:grid-cols-4 gap-12">
             <div className="md:col-span-2">
               <div className="flex items-center gap-4 mb-4">
-                <Image src="/Logo_Pearl_with_reef.jpg" alt="Project PEARL" width={120} height={120} className="object-contain rounded-lg opacity-90" />
-                <Image src="/logo-lsp.jpg" alt="Local Seafood Projects" width={100} height={50} className="object-contain rounded opacity-70" />
+                <Image src="/Logo_Pearl_with_reef.jpg" alt="PEARL" width={120} height={120} className="object-contain rounded-lg opacity-90" />
               </div>
               <p className="text-sm text-slate-500 leading-relaxed max-w-sm mb-4">
-                Proactive Engineering for Aquatic Rehabilitation &amp; Legacy. A platform by Local Seafood Projects Inc.
+                PEARL Intelligence Network (PIN) &mdash; Proactive Engineering for Aquatic Rehabilitation &amp; Legacy.
               </p>
               <div className="flex items-center gap-2 mt-2">
                 <LivePulse />
@@ -499,7 +499,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
             </div>
           </div>
           <div className="mt-12 pt-8 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-xs text-slate-600">&copy; {new Date().getFullYear()} Local Seafood Projects Inc. All rights reserved.</p>
+            <p className="text-xs text-slate-600">&copy; {new Date().getFullYear()} PEARL. All rights reserved.</p>
             <p className="text-xs text-slate-600">Patent Pending &middot; Built in Maryland</p>
           </div>
         </div>
