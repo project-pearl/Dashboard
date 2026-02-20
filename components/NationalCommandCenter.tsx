@@ -5115,7 +5115,8 @@ export function NationalCommandCenter(props: Props) {
 
           </div> {/* end space-y-6 isEditMode wrapper */}
           </>);
-        }} {/* end LayoutEditor render prop */}
+        }}
+       
         </LayoutEditor>
 
       </div>

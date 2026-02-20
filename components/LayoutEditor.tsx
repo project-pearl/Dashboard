@@ -186,13 +186,18 @@ export function LayoutEditor({ ccKey, children }: LayoutEditorProps) {
           items={sections.map(s => s.id)}
           strategy={verticalListSortingStrategy}
         >
-          {children({
+          {typeof children === 'function' ? children({
             sections,
             isEditMode,
             onToggleVisibility: toggleVisibility,
             onToggleCollapse: toggleCollapse,
             collapsedSections,
-          })}
+          }) : (
+            <div className="p-4 bg-red-100 text-red-700 rounded-lg">
+              <div className="font-bold">LayoutEditor Error: children is {typeof children}</div>
+              <pre className="text-xs mt-1">{String(children)}</pre>
+            </div>
+          )}
         </SortableContext>
       </DndContext>
     </>
