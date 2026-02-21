@@ -268,24 +268,38 @@ def score_usgs_site(site_id: str) -> tuple[int, list[str]]:
 
 # ─── WQP Queries ────────────────────────────────────────────────────────────
 
-def find_wqp_sites(state_code: str) -> list[dict]:
-    """Find WQP stations (state/tribal/local) with recent data in a state."""
+def find_wqp_sites(state_code: str, organization: Optional[str] = None) -> list[dict]:
+    """Find WQP stations (state/tribal/local) with recent data in a state.
+    If organization is set (e.g., 'CEDEN'), filters to that org and allows all site types.
+    """
     lookback = datetime.now() - timedelta(days=WQP_LOOKBACK_MONTHS * 30)
     start_date = lookback.strftime('%m-%d-%Y')  # WQP requires MM-DD-YYYY
 
     # Build URL manually — WQP is picky about encoding
     sc = state_code.replace(':', '%3A')  # US:32 → US%3A32
-    url = (
-        f"https://www.waterqualitydata.us/data/Station/search"
-        f"?statecode={sc}"
-        f"&startDateLo={start_date}"
-        f"&siteType=Stream"
-        f"&sampleMedia=Water"
-        f"&providers=STORET"
-        f"&providers=STEWARDS"
-        f"&mimeType=csv"
-        f"&zip=no"
-    )
+    if organization:
+        # Organization-specific query: skip providers/sampleMedia/siteType filters
+        # (they can conflict with org filter and cause 500 errors)
+        url = (
+            f"https://www.waterqualitydata.us/data/Station/search"
+            f"?statecode={sc}"
+            f"&organization={organization}"
+            f"&mimeType=csv"
+            f"&zip=no"
+            f"&sorted=no"
+        )
+    else:
+        url = (
+            f"https://www.waterqualitydata.us/data/Station/search"
+            f"?statecode={sc}"
+            f"&startDateLo={start_date}"
+            f"&siteType=Stream"
+            f"&sampleMedia=Water"
+            f"&providers=STORET"
+            f"&providers=STEWARDS"
+            f"&mimeType=csv"
+            f"&zip=no"
+        )
 
     try:
         print(f"\n    WQP URL: {url[:150]}")
@@ -296,15 +310,24 @@ def find_wqp_sites(state_code: str) -> list[dict]:
         # Retry with just STORET (simpler query)
         print(f"    ⚠ WQP attempt 1 failed ({str(e)[:50]}), retrying simpler query...")
         try:
-            url_retry = (
-                f"https://www.waterqualitydata.us/data/Station/search"
-                f"?statecode={sc}"
-                f"&siteType=Stream"
-                f"&sampleMedia=Water"
-                f"&providers=STORET"
-                f"&mimeType=csv"
-                f"&zip=no"
-            )
+            if organization:
+                url_retry = (
+                    f"https://www.waterqualitydata.us/data/Station/search"
+                    f"?statecode={sc}"
+                    f"&organization={organization}"
+                    f"&mimeType=csv"
+                    f"&zip=no"
+                )
+            else:
+                url_retry = (
+                    f"https://www.waterqualitydata.us/data/Station/search"
+                    f"?statecode={sc}"
+                    f"&siteType=Stream"
+                    f"&sampleMedia=Water"
+                    f"&providers=STORET"
+                    f"&mimeType=csv"
+                    f"&zip=no"
+                )
             resp = requests.get(url_retry, timeout=60)
             resp.raise_for_status()
             df = pd.read_csv(StringIO(resp.text), dtype=str, on_bad_lines='skip')
@@ -577,12 +600,22 @@ def main():
     parser = argparse.ArgumentParser(description='PEARL Station Discovery v3')
     parser.add_argument('--state', help='Filter to one state (e.g., US:49)')
     parser.add_argument('--max-per-state', type=int, default=MAX_PER_STATE)
+    parser.add_argument('--organization', help='WQP organization filter (e.g., CEDEN). Skips USGS, allows all site types.')
+    parser.add_argument('--append', action='store_true', help='Append to existing public/data/station-registry.json instead of regenerating')
     parser.add_argument('--dry-run', action='store_true')
     parser.add_argument('--verbose', action='store_true')
     args = parser.parse_args()
 
+    # When filtering by organization, raise per-state limit unless explicitly set
+    if args.organization and args.max_per_state == MAX_PER_STATE:
+        args.max_per_state = 9999
+
     print('🔍 PEARL Station Discovery v3 — Python')
     print('══════════════════════════════════════════════════════════')
+    if args.organization:
+        print(f'🏢 Organization filter: {args.organization}')
+    if args.append:
+        print(f'📎 Append mode: will merge into existing registry')
     print(f'📊 Max {args.max_per_state} waterbodies per state')
 
     states = dict(ALL_STATES)
@@ -608,33 +641,37 @@ def main():
     for state_code, (fips, state_name) in states.items():
         print(f'\n── {state_name} ({state_code}) ──')
 
-        # 1. USGS: all active WQ gauges
-        print('  USGS IV gauges... ', end='', flush=True)
-        usgs_sites = find_usgs_wq_sites(fips)
-        print(f'{len(usgs_sites)} found')
-        time.sleep(RATE_LIMIT_SEC)
+        usgs_with_wq = []
+        if not args.organization:
+            # 1. USGS: all active WQ gauges (skip when filtering by org)
+            print('  USGS IV gauges... ', end='', flush=True)
+            usgs_sites = find_usgs_wq_sites(fips)
+            print(f'{len(usgs_sites)} found')
+            time.sleep(RATE_LIMIT_SEC)
 
-        # 2. Score top USGS sites
-        if usgs_sites:
-            top_n = min(len(usgs_sites), 30)
-            print(f'  Scoring {top_n} USGS sites... ', end='', flush=True)
-            for i, site in enumerate(usgs_sites[:top_n]):
-                count, params = score_usgs_site(site['siteId'])
-                site['wqParamCount'] = count
-                site['wqParams'] = params
-                if (i + 1) % 10 == 0:
-                    print(f'{i+1}..', end='', flush=True)
-                time.sleep(0.2)
-            print(f' done')
+            # 2. Score top USGS sites
+            if usgs_sites:
+                top_n = min(len(usgs_sites), 30)
+                print(f'  Scoring {top_n} USGS sites... ', end='', flush=True)
+                for i, site in enumerate(usgs_sites[:top_n]):
+                    count, params = score_usgs_site(site['siteId'])
+                    site['wqParamCount'] = count
+                    site['wqParams'] = params
+                    if (i + 1) % 10 == 0:
+                        print(f'{i+1}..', end='', flush=True)
+                    time.sleep(0.2)
+                print(f' done')
 
-        # Filter to sites with at least 1 WQ param
-        usgs_with_wq = [s for s in usgs_sites if s['wqParamCount'] >= 1]
-        if args.verbose:
-            print(f'  → {len(usgs_with_wq)}/{len(usgs_sites)} USGS sites have WQ params')
+            # Filter to sites with at least 1 WQ param
+            usgs_with_wq = [s for s in usgs_sites if s['wqParamCount'] >= 1]
+            if args.verbose:
+                print(f'  → {len(usgs_with_wq)}/{len(usgs_sites)} USGS sites have WQ params')
+        else:
+            print(f'  ⏭️  Skipping USGS (org-specific import: {args.organization})')
 
         # 3. WQP: state/tribal/local providers
-        print('  WQP stations... ', end='', flush=True)
-        wqp_sites = find_wqp_sites(state_code)
+        print(f'  WQP stations{" (" + args.organization + ")" if args.organization else ""}... ', end='', flush=True)
+        wqp_sites = find_wqp_sites(state_code, organization=args.organization)
         print(f'{len(wqp_sites)} found')
         time.sleep(RATE_LIMIT_SEC)
 
@@ -671,17 +708,41 @@ def main():
 
     # 1. JSON registry
     registry = generate_json(all_stations)
-    json_path = lib_dir / 'station-registry.json'
+
+    if args.append:
+        # Append mode: merge into existing public/data/station-registry.json
+        public_json = project_root / 'public' / 'data' / 'station-registry.json'
+        if public_json.exists():
+            print(f'\n📎 Loading existing registry: {public_json}')
+            with open(public_json) as f:
+                existing = json.load(f)
+            before = len(existing.get('regions', {}))
+            # Merge new entries into existing (new entries override on collision)
+            for section in ['regions', 'usgsSiteMap', 'wqpStationMap', 'coverage']:
+                existing.setdefault(section, {}).update(registry.get(section, {}))
+            existing['_meta']['totalWaterbodies'] = len(existing['regions'])
+            existing['_meta']['lastAppended'] = datetime.now().isoformat()
+            existing['_meta']['lastAppendedOrg'] = args.organization or ''
+            after = len(existing['regions'])
+            registry = existing
+            print(f'   Merged: {before} → {after} waterbodies (+{after - before} new)')
+        else:
+            print(f'\n⚠️  No existing registry at {public_json}, creating new one')
+        json_path = public_json
+    else:
+        json_path = lib_dir / 'station-registry.json'
+
     with open(json_path, 'w') as f:
         json.dump(registry, f, indent=2)
     print(f'\n📄 JSON registry: {json_path}')
 
-    # 2. TypeScript wrapper
-    ts_content = generate_ts_wrapper(str(json_path))
-    ts_path = lib_dir / 'station-registry.ts'
-    with open(ts_path, 'w') as f:
-        f.write(ts_content)
-    print(f'📄 TypeScript wrapper: {ts_path}')
+    # 2. TypeScript wrapper (skip for append mode — existing wrapper still valid)
+    if not args.append:
+        ts_content = generate_ts_wrapper(str(json_path))
+        ts_path = lib_dir / 'station-registry.ts'
+        with open(ts_path, 'w') as f:
+            f.write(ts_content)
+        print(f'📄 TypeScript wrapper: {ts_path}')
 
     # 3. Raw discovery data (for debugging)
     debug_path = project_root / 'station-discovery.json'

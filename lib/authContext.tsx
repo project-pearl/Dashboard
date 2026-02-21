@@ -21,7 +21,7 @@ interface AuthContextType {
   loginError: string | null;
 
   login: (email: string, password: string) => boolean;
-  loginAsync: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  loginAsync: (email: string, password: string) => Promise<{ success: boolean; error?: string; user?: PearlUser }>;
   signup: (params: SignupParams) => Promise<{ success: boolean; error?: string; user?: PearlUser }>;
   logout: () => void;
   clearError: () => void;
@@ -175,7 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         setUser(pearlUser);
         supabase.from('profiles').update({ last_login_at: new Date().toISOString() }).eq('id', data.user.id).then(() => {});
-        return { success: true };
+        return { success: true, user: pearlUser };
       }
     }
     setError('Login failed');

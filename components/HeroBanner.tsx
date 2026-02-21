@@ -77,6 +77,46 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
       'Deployment tracking, fleet performance, and field diagnostics across all active PEARL units.',
     accentColor: 'text-rose-400',
   },
+  utility: {
+    image: '/images/heroes/Industrial.png',
+    subtitle: 'PEARL Intelligence Network',
+    headline: 'Municipal Water Utility',
+    description:
+      'Compliance monitoring, treatment optimization, and contaminant tracking for public water systems.',
+    accentColor: 'text-sky-400',
+  },
+  infrastructure: {
+    image: '/images/heroes/MS4.png',
+    subtitle: 'PEARL Intelligence Network',
+    headline: 'Infrastructure Intelligence',
+    description:
+      'Capital project tracking, capacity analysis, and green infrastructure planning for resilient water systems.',
+    accentColor: 'text-slate-400',
+  },
+  insurance: {
+    image: '/images/heroes/Aerial.png',
+    subtitle: 'PEARL Intelligence Network',
+    headline: 'Water Risk Intelligence',
+    description:
+      'Flood risk assessment, contamination analysis, and portfolio due diligence for informed underwriting decisions.',
+    accentColor: 'text-indigo-400',
+  },
+  agriculture: {
+    image: '/images/heroes/Aerial.png',
+    subtitle: 'PEARL Intelligence Network',
+    headline: 'Agricultural Water Management',
+    description:
+      'Nutrient tracking, irrigation optimization, and conservation credit management for sustainable agriculture.',
+    accentColor: 'text-lime-400',
+  },
+  samplechain: {
+    image: '/images/heroes/Research.png',
+    subtitle: 'PEARL Intelligence Network',
+    headline: 'SampleChain LIMS',
+    description:
+      'Full-spectrum laboratory information management — sample intake, QA/QC, methods, and chain of custody.',
+    accentColor: 'text-teal-400',
+  },
 };
 
 // ─── Component ─────────────────────────────────────────────────────

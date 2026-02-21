@@ -2,6 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import HeroBanner from './HeroBanner';
+import { SourceHealthPanel } from './SourceHealthPanel';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip,
+  ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+  Radar, Legend, AreaChart, Area, Cell, PieChart, Pie,
+} from 'recharts';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -802,6 +808,85 @@ export function PEARLCommandCenter(props: Props) {
               </Card>
             )}
 
+            {/* ── FLEET PERFORMANCE TRENDS ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <BarChart3 size={16} className="text-blue-600" /> Treatment Performance
+                  </CardTitle>
+                  <CardDescription>Simulated 30-day sensor trend — Milton FL Pilot</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <AreaChart data={(() => {
+                      // Generate 30-day mock trend
+                      const data = [];
+                      for (let i = 30; i >= 0; i--) {
+                        const d = new Date();
+                        d.setDate(d.getDate() - i);
+                        data.push({
+                          date: `${d.getMonth() + 1}/${d.getDate()}`,
+                          tss: Math.round(5 + Math.random() * 8),
+                          do: +(6.5 + Math.random() * 1.5).toFixed(1),
+                          turbidity: +(2 + Math.random() * 5).toFixed(1),
+                        });
+                      }
+                      return data;
+                    })()} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="tssGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.3} />
+                          <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.02} />
+                        </linearGradient>
+                        <linearGradient id="doGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#10b981" stopOpacity={0.3} />
+                          <stop offset="100%" stopColor="#10b981" stopOpacity={0.02} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                      <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#94a3b8' }} tickLine={false} axisLine={false} interval={4} />
+                      <YAxis tick={{ fontSize: 9, fill: '#94a3b8' }} tickLine={false} axisLine={false} width={30} />
+                      <RTooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid #e2e8f0' }} />
+                      <Area type="monotone" dataKey="tss" stroke="#3b82f6" strokeWidth={2} fill="url(#tssGrad)" name="TSS (mg/L)" />
+                      <Area type="monotone" dataKey="do" stroke="#10b981" strokeWidth={2} fill="url(#doGrad)" name="DO (mg/L)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Gauge size={16} className="text-emerald-600" /> Removal Efficiency
+                  </CardTitle>
+                  <CardDescription>Contaminant reduction rates across fleet</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <RadarChart data={[
+                      { param: 'TSS', value: 90, target: 80 },
+                      { param: 'Turbidity', value: 77, target: 70 },
+                      { param: 'Nutrients', value: 45, target: 50 },
+                      { param: 'Metals', value: 62, target: 60 },
+                      { param: 'Pathogens', value: 55, target: 50 },
+                      { param: 'Organics', value: 38, target: 40 },
+                    ]} outerRadius={75}>
+                      <PolarGrid stroke="#e2e8f0" />
+                      <PolarAngleAxis dataKey="param" tick={{ fontSize: 10, fill: '#475569' }} />
+                      <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 8, fill: '#94a3b8' }} tickCount={4} />
+                      <Radar name="Actual %" dataKey="value" stroke="#10b981" fill="#10b981" fillOpacity={0.25} strokeWidth={2} />
+                      <Radar name="Target %" dataKey="target" stroke="#94a3b8" fill="transparent" strokeWidth={1.5} strokeDasharray="4 4" />
+                      <Legend iconSize={8} wrapperStyle={{ fontSize: 10 }} />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* ── DATA SOURCE HEALTH MONITOR ── */}
+            <SourceHealthPanel />
+
             {/* ── DEPLOYMENT CARDS ── */}
             <div className="space-y-3">
               <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-2">
@@ -880,34 +965,36 @@ export function PEARLCommandCenter(props: Props) {
                             </div>
                           </div>
 
-                          {/* Baseline vs Current */}
+                          {/* Baseline vs Current — Visual Bar Comparison */}
                           {lr && bl.timestamp && (
                             <div>
-                              <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Baseline → Current</h4>
-                              <div className="space-y-1.5">
-                                {[
-                                  { label: 'DO', bl: bl.do_mgl, cur: lr.do_mgl, unit: 'mg/L', goodUp: true },
-                                  { label: 'TSS', bl: bl.tss_mgl, cur: lr.tss_mgl, unit: 'mg/L', goodUp: false },
-                                  { label: 'Turbidity', bl: bl.turbidity_ntu, cur: lr.turbidity_ntu, unit: 'NTU', goodUp: false },
-                                  { label: 'Flow', bl: bl.flow_gpm, cur: lr.flow_gpm, unit: 'GPM', goodUp: false },
-                                  { label: 'pH', bl: bl.ph, cur: lr.ph, unit: '', goodUp: false },
-                                ].map(({ label, bl: b, cur, unit, goodUp }) => {
-                                  const delta = b && cur != null ? ((cur - b) / b) * 100 : null;
-                                  const isGood = delta != null && (goodUp ? delta > 0 : delta < 0);
-                                  return (
-                                    <div key={label} className="flex items-center gap-2 text-xs">
-                                      <span className="w-16 text-slate-500">{label}</span>
-                                      <span className="font-mono text-slate-400 w-16 text-right">{b} {unit}</span>
-                                      <ChevronRight size={10} className="text-slate-300" />
-                                      <span className="font-mono font-bold w-16 text-right">{cur} {unit}</span>
-                                      {delta != null && (
-                                        <span className={`font-mono text-[10px] font-bold ${isGood ? 'text-green-600' : Math.abs(delta) > 15 ? 'text-red-600' : 'text-amber-600'}`}>
-                                          {delta > 0 ? '+' : ''}{delta.toFixed(0)}%
-                                        </span>
-                                      )}
-                                    </div>
-                                  );
-                                })}
+                              <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Baseline vs Current</h4>
+                              <ResponsiveContainer width="100%" height={200}>
+                                <BarChart
+                                  data={[
+                                    { name: 'DO', baseline: bl.do_mgl, current: lr.do_mgl, unit: 'mg/L' },
+                                    { name: 'TSS', baseline: bl.tss_mgl, current: lr.tss_mgl, unit: 'mg/L' },
+                                    { name: 'Turb', baseline: bl.turbidity_ntu, current: lr.turbidity_ntu, unit: 'NTU' },
+                                    { name: 'pH', baseline: bl.ph, current: lr.ph, unit: '' },
+                                  ]}
+                                  layout="vertical"
+                                  margin={{ top: 0, right: 20, left: 10, bottom: 0 }}
+                                  barGap={2}
+                                >
+                                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
+                                  <XAxis type="number" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                                  <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: '#475569', fontWeight: 600 }} axisLine={false} tickLine={false} width={40} />
+                                  <RTooltip
+                                    contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                    formatter={(value: number, name: string) => [value, name === 'baseline' ? 'Baseline' : 'Current']}
+                                  />
+                                  <Bar dataKey="baseline" fill="#cbd5e1" radius={[0, 4, 4, 0]} name="baseline" barSize={12} />
+                                  <Bar dataKey="current" fill="#3b82f6" radius={[0, 4, 4, 0]} name="current" barSize={12} />
+                                </BarChart>
+                              </ResponsiveContainer>
+                              <div className="flex justify-center gap-4 mt-1">
+                                <div className="flex items-center gap-1.5 text-[10px] text-slate-500"><span className="w-3 h-2 rounded-sm bg-slate-300" />Baseline</div>
+                                <div className="flex items-center gap-1.5 text-[10px] text-blue-600 font-medium"><span className="w-3 h-2 rounded-sm bg-blue-500" />Current</div>
                               </div>
                             </div>
                           )}
@@ -941,20 +1028,76 @@ export function PEARLCommandCenter(props: Props) {
 
         {viewLens === 'proposals' && (
           <>
-            {/* Pipeline Summary */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-              {(['lead', 'contacted', 'demo_scheduled', 'proposal_sent', 'negotiating'] as Prospect['stage'][]).map(stage => {
-                const count = prospects.filter(p => p.stage === stage).length;
-                const value = prospects.filter(p => p.stage === stage).reduce((s, p) => s + p.estimatedACV, 0);
-                return (
-                  <Card key={stage} className="p-3 text-center">
-                    <Badge className={`${stageColor(stage)} text-[10px] mb-1`}>{stageLabel(stage)}</Badge>
-                    <div className="text-xl font-bold font-mono text-slate-900">{count}</div>
-                    <div className="text-[10px] text-slate-400">{value > 0 ? `$${formatNumber(value)} ACV` : '—'}</div>
-                  </Card>
-                );
-              })}
-            </div>
+            {/* Pipeline Summary — Visual Funnel + Cards */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Target size={16} className="text-purple-600" /> Sales Pipeline
+                </CardTitle>
+                <CardDescription>
+                  Total pipeline: <span className="font-bold text-slate-900">${formatNumber(pipelineValue)}</span> ACV across {prospects.filter(p => !['closed_won','closed_lost'].includes(p.stage)).length} prospects
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Funnel visualization */}
+                  <div className="space-y-2">
+                    {(['lead', 'contacted', 'demo_scheduled', 'proposal_sent', 'negotiating'] as Prospect['stage'][]).map((stage, i) => {
+                      const count = prospects.filter(p => p.stage === stage).length;
+                      const value = prospects.filter(p => p.stage === stage).reduce((s, p) => s + p.estimatedACV, 0);
+                      const maxWidth = 100;
+                      const width = maxWidth - (i * 14);
+                      const colors = ['bg-slate-200', 'bg-blue-200', 'bg-indigo-300', 'bg-purple-400', 'bg-amber-400'];
+                      const textColors = ['text-slate-700', 'text-blue-700', 'text-indigo-700', 'text-purple-800', 'text-amber-800'];
+                      return (
+                        <div key={stage} className="flex items-center gap-3">
+                          <div className="flex-1">
+                            <div
+                              className={`${colors[i]} rounded-lg py-2.5 px-4 flex items-center justify-between transition-all`}
+                              style={{ width: `${width}%`, marginLeft: `${(100 - width) / 2}%` }}
+                            >
+                              <span className={`text-xs font-semibold ${textColors[i]}`}>{stageLabel(stage)}</span>
+                              <div className="flex items-center gap-2">
+                                <span className={`text-sm font-bold ${textColors[i]}`}>{count}</span>
+                                {value > 0 && <span className="text-[10px] opacity-70">${formatNumber(value)}</span>}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Pipeline by ACV — bar chart */}
+                  <ResponsiveContainer width="100%" height={200}>
+                    <BarChart
+                      data={prospects
+                        .filter(p => p.estimatedACV > 0 && !['closed_won','closed_lost'].includes(p.stage))
+                        .sort((a, b) => b.estimatedACV - a.estimatedACV)
+                        .map(p => ({ name: p.name.length > 18 ? p.name.slice(0, 16) + '...' : p.name, acv: p.estimatedACV / 1000, stage: p.stage }))}
+                      layout="vertical"
+                      margin={{ top: 0, right: 20, left: 10, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                      <XAxis type="number" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${v}K`} />
+                      <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: '#475569' }} axisLine={false} tickLine={false} width={100} />
+                      <RTooltip
+                        contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid #e2e8f0' }}
+                        formatter={(value: number) => [`$${value}K`, 'Annual Value']}
+                      />
+                      <Bar dataKey="acv" radius={[0, 6, 6, 0]} barSize={16}>
+                        {prospects
+                          .filter(p => p.estimatedACV > 0 && !['closed_won','closed_lost'].includes(p.stage))
+                          .sort((a, b) => b.estimatedACV - a.estimatedACV)
+                          .map((_, i) => (
+                            <Cell key={i} fill={['#6366f1', '#8b5cf6', '#a855f7', '#c084fc', '#d8b4fe'][i % 5]} />
+                          ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Prospect Cards */}
             <div className="space-y-3">

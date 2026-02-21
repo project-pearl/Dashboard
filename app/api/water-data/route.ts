@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAttainsCache, getAttainsCacheSummary, getCacheStatus, triggerAttainsBuild } from '@/lib/attainsCache';
 import { getCedenCache, getCedenCacheStatus } from '@/lib/cedenCache';
+import { getWqpCache, getWqpCacheStatus } from '@/lib/wqpCache';
 
 const WR_BASE = 'https://api.waterreporter.org';
 const CBP_BASE = 'https://datahub.chesapeakebay.net';
@@ -337,7 +338,12 @@ async function coopsFetch(stationId: string, product: string, hours = 24) {
     console.error(`[CO-OPS] Error ${res.status}: ${body.slice(0, 300)}`);
     return { error: `CO-OPS API error: ${res.status}`, detail: body.slice(0, 200) };
   }
-  return res.json();
+  try {
+    return await res.json();
+  } catch (e) {
+    console.warn(`[CO-OPS] JSON parse failed for ${product}@${stationId}:`, e instanceof Error ? e.message : e);
+    return { error: 'CO-OPS returned invalid JSON' };
+  }
 }
 
 async function usgsOgcFetch(collection: string, params: Record<string, string> = {}) {
@@ -953,20 +959,24 @@ export async function GET(request: NextRequest) {
         }
 
         // Fetch water_temperature and conductivity in parallel
-        const [tempData, condData, waterLevelData] = await Promise.all([
-          coopsFetch(station.stationId, 'water_temperature'),
-          coopsFetch(station.stationId, 'conductivity'),
-          coopsFetch(station.stationId, 'water_level'),
-        ]);
+        try {
+          const [tempData, condData, waterLevelData] = await Promise.all([
+            coopsFetch(station.stationId, 'water_temperature').catch(() => ({ error: 'fetch failed' })),
+            coopsFetch(station.stationId, 'conductivity').catch(() => ({ error: 'fetch failed' })),
+            coopsFetch(station.stationId, 'water_level').catch(() => ({ error: 'fetch failed' })),
+          ]);
 
-        return NextResponse.json({
-          source: 'noaa-coops',
-          station: station.name,
-          stationId: station.stationId,
-          water_temperature: tempData,
-          conductivity: condData,
-          water_level: waterLevelData,
-        });
+          return NextResponse.json({
+            source: 'noaa-coops',
+            station: station.name,
+            stationId: station.stationId,
+            water_temperature: tempData,
+            conductivity: condData,
+            water_level: waterLevelData,
+          });
+        } catch (e: any) {
+          return NextResponse.json({ source: 'noaa-coops', error: e.message || 'CO-OPS fetch failed' }, { status: 502 });
+        }
       }
 
       // Get specific CO-OPS product for a station
@@ -974,9 +984,13 @@ export async function GET(request: NextRequest) {
       case 'coops-product': {
         const sid = sp.get('stationId') || '8574680';
         const product = sp.get('product') || 'water_temperature';
-        const data = await coopsFetch(sid, product);
-        if ('error' in data) return NextResponse.json({ source: 'noaa-coops', ...data }, { status: 502 });
-        return NextResponse.json({ source: 'noaa-coops', stationId: sid, product, data });
+        try {
+          const data = await coopsFetch(sid, product);
+          if ('error' in data) return NextResponse.json({ source: 'noaa-coops', ...data }, { status: 502 });
+          return NextResponse.json({ source: 'noaa-coops', stationId: sid, product, data });
+        } catch (e: any) {
+          return NextResponse.json({ source: 'noaa-coops', error: e.message || 'CO-OPS product fetch failed' }, { status: 502 });
+        }
       }
 
       // List all mapped CO-OPS stations
@@ -1040,6 +1054,38 @@ export async function GET(request: NextRequest) {
         const data = await wqpResultsFetch(params);
         if ('error' in data) return NextResponse.json({ source: 'wqp', ...data }, { status: 502 });
         return NextResponse.json({ source: 'wqp', data, count: Array.isArray(data) ? data.length : 0 });
+      }
+
+      // WQP Cached — instant lookup from pre-baked spatial grid (19 priority states)
+      // Example: ?action=wqp-cached&lat=39.27&lng=-76.58
+      case 'wqp-cached': {
+        const lat = parseFloat(sp.get('lat') || '');
+        const lng = parseFloat(sp.get('lng') || '');
+        if (isNaN(lat) || isNaN(lng)) {
+          return NextResponse.json({ error: 'lat and lng required' }, { status: 400 });
+        }
+        const result = getWqpCache(lat, lng);
+        if (!result) {
+          return NextResponse.json({ source: 'wqp-cache', cached: false, data: [] });
+        }
+        return NextResponse.json({
+          source: 'wqp-cache',
+          cached: true,
+          data: result.data,
+          count: result.data.length,
+          cacheBuilt: result.cacheBuilt,
+          statesProcessed: result.statesProcessed,
+        }, {
+          headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=600' },
+        });
+      }
+
+      // WQP cache status
+      // Example: ?action=wqp-cache-status
+      case 'wqp-cache-status': {
+        return NextResponse.json({ source: 'wqp-cache', ...getWqpCacheStatus() }, {
+          headers: { 'Cache-Control': 'no-cache' },
+        });
       }
 
       // ════════════════════════════════════════════════════════════════════════
@@ -1847,20 +1893,30 @@ export async function GET(request: NextRequest) {
         try {
           // MMW has no REST API — site data is embedded as JSON in the /browse/ HTML page
           const browseRes = await fetch('https://monitormywatershed.org/browse/', {
-            signal: AbortSignal.timeout(20_000),
-            next: { revalidate: 3600 }, // Cache 1hr — site list rarely changes
+            signal: AbortSignal.timeout(25_000),
           });
           if (!browseRes.ok) {
+            console.error(`[MMW] browse returned ${browseRes.status}`);
             return NextResponse.json({ source: 'mmw', error: `MMW browse error: ${browseRes.status}`, data: [] }, { status: 502 });
           }
           const html = await browseRes.text();
 
-          // Extract embedded JSON from <script id="sites-data" type="application/json">
-          const match = html.match(/<script\s+id="sites-data"[^>]*>([\s\S]*?)<\/script>/);
-          if (!match) {
+          // Extract embedded JSON — use indexOf for speed on 1MB+ HTML (regex is slow here)
+          const startTag = '<script id="sites-data" type="application/json">';
+          const startIdx = html.indexOf(startTag);
+          const endIdx = startIdx >= 0 ? html.indexOf('</script>', startIdx + startTag.length) : -1;
+          const jsonStr = startIdx >= 0 && endIdx >= 0 ? html.slice(startIdx + startTag.length, endIdx).trim() : null;
+          if (!jsonStr) {
+            console.error('[MMW] Could not find sites-data script tag in HTML');
             return NextResponse.json({ source: 'mmw', error: 'Could not parse site data from MMW', data: [] }, { status: 502 });
           }
-          const allSites = JSON.parse(match[1]);
+          let allSites: any;
+          try {
+            allSites = JSON.parse(jsonStr);
+          } catch (parseErr) {
+            console.error('[MMW] JSON.parse failed:', parseErr instanceof Error ? parseErr.message : parseErr);
+            return NextResponse.json({ source: 'mmw', error: 'MMW returned malformed site data JSON', data: [] }, { status: 502 });
+          }
 
           // Haversine distance filter
           const toRad = (d: number) => d * Math.PI / 180;
@@ -1946,6 +2002,7 @@ export async function GET(request: NextRequest) {
 
           return NextResponse.json({ source: 'mmw', data: results, siteCount: nearbySites.length });
         } catch (e: any) {
+          console.error('[MMW] Unhandled error:', e.message || e);
           return NextResponse.json({ source: 'mmw', error: e.message, data: [] }, { status: 502 });
         }
       }

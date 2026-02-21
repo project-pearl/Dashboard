@@ -6,6 +6,11 @@ import { AuthProvider } from '@/lib/authContext';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:3000'
+  ),
   title: 'Project Pearl - Water Quality Monitoring',
   description: 'Real-time water quality monitoring and MS4 compliance dashboard with automated reporting',
   manifest: '/manifest.json',

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/authContext';
+import { getPrimaryRoute } from '@/lib/roleRoutes';
 import { supabase } from '@/lib/supabase';
 import type { UserRole } from '@/lib/authTypes';
 import Image from 'next/image';
@@ -74,7 +75,7 @@ const selectClass = `${inputClass} [&>option]:bg-slate-900 [&>option]:text-white
 
 export default function LoginPage() {
   const router = useRouter();
-  const { loginAsync, signup, isAuthenticated, isLoading, loginError, clearError } = useAuth();
+  const { loginAsync, signup, isAuthenticated, isLoading, loginError, clearError, user } = useAuth();
 
   const [mode, setMode] = useState<'login' | 'request' | 'forgot'>('login');
   const [email, setEmail] = useState('');
@@ -100,18 +101,18 @@ export default function LoginPage() {
   const signupReady = passwordValid && passwordsMatch && confirmPassword.length > 0;
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      router.replace('/');
+    if (!isLoading && isAuthenticated && user) {
+      router.replace(getPrimaryRoute(user));
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, router, user]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     clearError();
     const result = await loginAsync(email, password);
-    if (result.success) {
-      router.replace('/');
+    if (result.success && result.user) {
+      router.replace(getPrimaryRoute(result.user));
     }
     setIsSubmitting(false);
   };

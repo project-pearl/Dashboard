@@ -1,0 +1,203 @@
+import { NextResponse } from 'next/server';
+import { getAttainsCacheSummary } from '@/lib/attainsCache';
+import { getWqpCacheStatus } from '@/lib/wqpCache';
+import { getCedenCacheStatus } from '@/lib/cedenCache';
+
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+interface SourceHealthEntry {
+  id: string;
+  name: string;
+  status: 'online' | 'degraded' | 'offline';
+  responseTimeMs: number;
+  httpStatus: number | null;
+  error: string | null;
+  checkedAt: string;
+}
+
+// ─── Individual Health Checks ────────────────────────────────────────────────
+
+async function check(
+  id: string,
+  name: string,
+  url: string,
+  timeoutMs: number,
+  method: 'GET' | 'HEAD' = 'GET',
+): Promise<SourceHealthEntry> {
+  const start = Date.now();
+  try {
+    const res = await fetch(url, {
+      method,
+      signal: AbortSignal.timeout(timeoutMs),
+      headers: { 'User-Agent': 'PEARL-HealthCheck/1.0' },
+    });
+    const elapsed = Date.now() - start;
+    return {
+      id,
+      name,
+      status: res.ok ? (elapsed > 5000 ? 'degraded' : 'online') : 'offline',
+      responseTimeMs: elapsed,
+      httpStatus: res.status,
+      error: res.ok ? null : `HTTP ${res.status}`,
+      checkedAt: new Date().toISOString(),
+    };
+  } catch (e: unknown) {
+    return {
+      id,
+      name,
+      status: 'offline',
+      responseTimeMs: Date.now() - start,
+      httpStatus: null,
+      error: e instanceof Error ? e.message : 'Network error',
+      checkedAt: new Date().toISOString(),
+    };
+  }
+}
+
+// ─── GET Handler ─────────────────────────────────────────────────────────────
+
+export async function GET() {
+  const bwbToken = process.env.WATER_REPORTER_API_KEY || '';
+
+  const checks = await Promise.allSettled([
+    // Source 1: USGS Real-Time IV
+    check(
+      'USGS',
+      'USGS Real-Time',
+      'https://waterservices.usgs.gov/nwis/iv/?format=json&sites=01589440&parameterCd=00300&period=PT1H',
+      8_000,
+    ),
+    // Source 2: USGS Daily Values
+    check(
+      'USGS_DV',
+      'USGS Daily',
+      'https://api.waterdata.usgs.gov/ogcapi/v0/collections/daily?f=json&limit=1',
+      8_000,
+    ),
+    // Source 3: Blue Water Baltimore / Water Reporter
+    bwbToken && bwbToken !== 'your_token_here'
+      ? check(
+          'BWB',
+          'Blue Water Baltimore',
+          `https://api.waterreporter.org/datasets?limit=1&access_token=${bwbToken}`,
+          8_000,
+        )
+      : Promise.resolve<SourceHealthEntry>({
+          id: 'BWB',
+          name: 'Blue Water Baltimore',
+          status: 'offline',
+          responseTimeMs: -1,
+          httpStatus: null,
+          error: 'API key not configured',
+          checkedAt: new Date().toISOString(),
+        }),
+    // Source 4: Chesapeake Bay Program
+    check(
+      'CBP',
+      'Chesapeake Bay Program',
+      'https://datahub.chesapeakebay.net/api/WaterQuality/WaterQualityStation/',
+      8_000,
+    ),
+    // Source 5: Water Quality Portal
+    check(
+      'WQP',
+      'EPA / USGS (WQP)',
+      'https://www.waterqualitydata.us/wqx3/Result/search?siteid=USGS-01589440&characteristicName=Dissolved+oxygen&mimeType=csv&dataProfile=narrow&startDateLo=01-01-2025&startDateHi=01-02-2025',
+      15_000,
+    ),
+    // Source 6: ERDDAP / MD DNR
+    check(
+      'ERDDAP',
+      'MD DNR (ERDDAP)',
+      'https://erddap.maracoos.org/erddap/tabledap/allDatasets.json?page=1&itemsPerPage=1',
+      8_000,
+    ),
+    // Source 7: NOAA CO-OPS
+    check(
+      'NOAA',
+      'NOAA CO-OPS',
+      'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?station=8574680&product=water_temperature&date=latest&units=metric&time_zone=gmt&format=json&application=pearl_platform',
+      8_000,
+    ),
+    // Source 8: Monitor My Watershed
+    check(
+      'MMW',
+      'Monitor My Watershed',
+      'https://monitormywatershed.org/api/v1/sites/?limit=1',
+      10_000,
+    ),
+    // Source 9: EPA Envirofacts
+    check(
+      'EPA_EF',
+      'EPA Envirofacts',
+      'https://data.epa.gov/efservice/WATER_SYSTEM/STATE_CODE/MD/ROWS/0:0/JSON',
+      8_000,
+    ),
+    // Source 10: NASA STREAM
+    check(
+      'NASA_STREAM',
+      'NASA STREAM',
+      'https://earthdata.nasa.gov',
+      5_000,
+      'HEAD',
+    ),
+    // Source 11: HydroShare
+    check(
+      'HYDROSHARE',
+      'HydroShare',
+      'https://www.hydroshare.org/hsapi/resource/?count=1',
+      8_000,
+    ),
+    // Source 12: CEDEN
+    check(
+      'CEDEN',
+      'CEDEN',
+      'https://data.ca.gov/api/3/action/package_show?id=surface-water-chemistry-results',
+      8_000,
+    ),
+    // Source 13: State Portals (internal proxy)
+    check(
+      'STATE',
+      'State Portal',
+      `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/water-data?action=state-portal&state=MD&limit=1`,
+      10_000,
+    ),
+  ]);
+
+  const sources: SourceHealthEntry[] = [];
+  for (const result of checks) {
+    if (result.status === 'fulfilled') {
+      sources.push(result.value);
+    }
+  }
+
+  // ─── Datapoint Summary ──────────────────────────────────────────────────────
+  const attainsSummary = getAttainsCacheSummary();
+  const attainsStates = Object.values(attainsSummary.states);
+  const attainsWaterbodies = attainsStates.reduce((sum, s) => sum + s.stored, 0);
+  const attainsAssessments = attainsStates.reduce((sum, s) => sum + s.total, 0);
+
+  const wqpStatus = getWqpCacheStatus();
+  const wqpRecords = wqpStatus.loaded ? (wqpStatus as { totalRecords: number }).totalRecords : 0;
+  const wqpStates = wqpStatus.loaded ? (wqpStatus as { statesProcessed: string[] }).statesProcessed.length : 0;
+
+  const cedenStatus = getCedenCacheStatus();
+  const cedenChem = cedenStatus.loaded ? (cedenStatus as { chemistryRecords: number }).chemistryRecords : 0;
+  const cedenTox = cedenStatus.loaded ? (cedenStatus as { toxicityRecords: number }).toxicityRecords : 0;
+
+  const datapoints = {
+    attains: { states: attainsStates.length, waterbodies: attainsWaterbodies, assessments: attainsAssessments },
+    wqp: { records: wqpRecords, states: wqpStates },
+    ceden: { chemistry: cedenChem, toxicity: cedenTox },
+    total: attainsWaterbodies + wqpRecords + cedenChem + cedenTox,
+  };
+
+  return NextResponse.json(
+    { timestamp: new Date().toISOString(), sources, datapoints },
+    {
+      headers: {
+        'Cache-Control': 'public, max-age=120, stale-while-revalidate=180',
+      },
+    },
+  );
+}

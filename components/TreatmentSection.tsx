@@ -11,25 +11,31 @@ const TreatmentSection: React.FC = () => {
       {/* ══════════════════════════════════════════════════════════════════════
           HERO
           ══════════════════════════════════════════════════════════════════════ */}
-      <div className="relative w-full h-[400px] md:h-[480px]">
-        <Image
-          src="/Waterway Restoration.jpg"
-          alt="Coastal waterway restoration"
-          fill
-          className="object-cover"
-          priority
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-white via-white/40 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 px-6 pb-10 md:pb-14">
-          <div className="max-w-4xl mx-auto">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700/80 mb-2">
-              Treatment Technology
-            </p>
-            <h1 className="text-3xl md:text-5xl font-bold text-slate-800 leading-tight max-w-2xl">
-              Cleaning the water{" "}
-              <span className="text-emerald-700">where it matters most.</span>
-            </h1>
-          </div>
+      <div className="max-w-5xl mx-auto px-6 pt-12 md:pt-16 pb-8">
+        <div className="text-center mb-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700/80 mb-3">
+            Treatment Technology
+          </p>
+          <h1 className="text-3xl md:text-5xl font-bold text-slate-800 leading-tight max-w-3xl mx-auto">
+            Cleaning the water{" "}
+            <span className="text-emerald-700">where it matters most.</span>
+          </h1>
+          <p className="mt-4 text-slate-500 max-w-xl mx-auto text-base">
+            PEARL systems deploy directly in the waterway &mdash; treating pollution at the source
+            with oyster biofiltration and multi-stage mechanical filtration.
+          </p>
+        </div>
+
+        {/* Hero image — displayed prominently, not as a background */}
+        <div className="rounded-2xl overflow-hidden shadow-lg border border-slate-200">
+          <Image
+            src="/Waterway Restoration.jpg"
+            alt="PEARL waterway restoration system deployed in a coastal environment"
+            width={1200}
+            height={600}
+            className="w-full object-cover"
+            priority
+          />
         </div>
       </div>
 

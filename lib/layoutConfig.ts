@@ -17,7 +17,8 @@ export interface SectionDefinition {
   lensControlled?: boolean; // NCC only — visibility driven by ViewLens
 }
 
-export type CCKey = 'K12' | 'State' | 'MS4' | 'ESG' | 'NGO' | 'University' | 'NCC';
+export type CCKey = 'K12' | 'State' | 'MS4' | 'ESG' | 'NGO' | 'University' | 'NCC'
+  | 'Utility' | 'Infrastructure' | 'Insurance' | 'Agriculture' | 'SampleChain';
 
 // ─── Default Section Orders ────────────────────────────────────────────────
 
@@ -137,6 +138,62 @@ export const DEFAULT_SECTIONS: Record<CCKey, SectionDefinition[]> = {
     { id: 'statebystatesummary', label: 'State-by-State Table',       order: 9,  visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'sla',                label: 'SLA Compliance',              order: 10, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'disclaimer',         label: 'Platform Disclaimer',         order: 11, visible: true, defaultExpanded: true },
+  ],
+
+  Utility: [
+    { id: 'compliance',     label: 'Compliance Overview',           order: 0,  visible: true, defaultExpanded: true },
+    { id: 'contaminants',   label: 'Contaminant Tracker',           order: 1,  visible: true, defaultExpanded: true },
+    { id: 'treatment',      label: 'Treatment Process Monitor',     order: 2,  visible: true, defaultExpanded: true },
+    { id: 'violations',     label: 'SDWA Violations',               order: 3,  visible: true, defaultExpanded: true },
+    { id: 'ccr',            label: 'Consumer Confidence Report',    order: 4,  visible: true, defaultExpanded: true },
+    { id: 'capital',        label: 'Capital Planning',              order: 5,  visible: true, defaultExpanded: true },
+    { id: 'distribution',   label: 'Distribution System',           order: 6,  visible: true, defaultExpanded: false },
+    { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 7,  visible: true, defaultExpanded: true },
+  ],
+
+  Infrastructure: [
+    { id: 'projects',       label: 'Capital Project Tracker',       order: 0,  visible: true, defaultExpanded: true },
+    { id: 'greeninfra',     label: 'Green Infrastructure Map',      order: 1,  visible: true, defaultExpanded: true },
+    { id: 'capacity',       label: 'Stormwater Capacity Analysis',  order: 2,  visible: true, defaultExpanded: true },
+    { id: 'funding',        label: 'Funding Pipeline',              order: 3,  visible: true, defaultExpanded: true },
+    { id: 'lifecycle',      label: 'Asset Lifecycle',               order: 4,  visible: true, defaultExpanded: true },
+    { id: 'resilience',     label: 'Climate Resilience',            order: 5,  visible: true, defaultExpanded: false },
+    { id: 'reporting',      label: 'Infrastructure Reporting',      order: 6,  visible: true, defaultExpanded: false },
+    { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 7,  visible: true, defaultExpanded: true },
+  ],
+
+  Insurance: [
+    { id: 'floodrisk',      label: 'Flood Risk Assessment',         order: 0,  visible: true, defaultExpanded: true },
+    { id: 'contamination',  label: 'Contamination Analysis',        order: 1,  visible: true, defaultExpanded: true },
+    { id: 'duediligence',   label: 'Portfolio Due Diligence',       order: 2,  visible: true, defaultExpanded: true },
+    { id: 'propertyvalue',  label: 'Property Value Impact',         order: 3,  visible: true, defaultExpanded: true },
+    { id: 'regulatory',     label: 'Regulatory Exposure',           order: 4,  visible: true, defaultExpanded: true },
+    { id: 'claims',         label: 'Claims Intelligence',           order: 5,  visible: true, defaultExpanded: true },
+    { id: 'underwriting',   label: 'Underwriting Tools',            order: 6,  visible: true, defaultExpanded: false },
+    { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 7,  visible: true, defaultExpanded: true },
+  ],
+
+  Agriculture: [
+    { id: 'nutrients',      label: 'Nutrient Management',           order: 0,  visible: true, defaultExpanded: true },
+    { id: 'irrigation',     label: 'Irrigation Efficiency',         order: 1,  visible: true, defaultExpanded: true },
+    { id: 'runoff',         label: 'Runoff Modeling',                order: 2,  visible: true, defaultExpanded: true },
+    { id: 'credits',        label: 'Nutrient Credit Trading',       order: 3,  visible: true, defaultExpanded: true },
+    { id: 'bmp',            label: 'BMP Inventory',                  order: 4,  visible: true, defaultExpanded: true },
+    { id: 'soilhealth',     label: 'Soil & Water Conservation',     order: 5,  visible: true, defaultExpanded: true },
+    { id: 'conservation',   label: 'Conservation Programs',         order: 6,  visible: true, defaultExpanded: false },
+    { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 7,  visible: true, defaultExpanded: true },
+  ],
+
+  SampleChain: [
+    { id: 'intake',         label: 'Sample Intake Queue',           order: 0,  visible: true, defaultExpanded: true },
+    { id: 'qaqc',           label: 'QA/QC Dashboard',               order: 1,  visible: true, defaultExpanded: true },
+    { id: 'methods',        label: 'Method Registry',               order: 2,  visible: true, defaultExpanded: true },
+    { id: 'coc',            label: 'Chain of Custody',              order: 3,  visible: true, defaultExpanded: true },
+    { id: 'inventory',      label: 'Inventory Management',          order: 4,  visible: true, defaultExpanded: true },
+    { id: 'reporting',      label: 'Reporting Engine',              order: 5,  visible: true, defaultExpanded: true },
+    { id: 'calibration',    label: 'Equipment Calibration',         order: 6,  visible: true, defaultExpanded: false },
+    { id: 'audits',         label: 'Audit Trail',                   order: 7,  visible: true, defaultExpanded: false },
+    { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 8,  visible: true, defaultExpanded: true },
   ],
 };
 

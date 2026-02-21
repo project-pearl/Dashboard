@@ -4,6 +4,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import AuthGuard from '@/components/AuthGuard';
 import UserMenu from '@/components/UserMenu';
 import { useAuth } from '@/lib/authContext';
+import { useRouter } from 'next/navigation';
+import type { UserRole } from '@/lib/authTypes';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { calculateOverallScore, applyRegionThresholds, calculateRemovalEfficiency, getRemovalStatus, getRegionMockData } from '@/lib/mockData';
@@ -272,7 +274,27 @@ class CommandCenterErrorBoundary extends React.Component<
   }
 }
 
+// ─── Role → Dashboard Route mapping ─────────────────────────────────────
+const ROLE_ROUTES: Record<UserRole, string> = {
+  Federal: '/dashboard/federal',
+  State: '/dashboard/state/MD',
+  MS4: '/dashboard/ms4/default',
+  Corporate: '/dashboard/esg',
+  K12: '/dashboard/k12',
+  College: '/dashboard/university',
+  Researcher: '/dashboard/university',
+  NGO: '/dashboard/ngo',
+  Pearl: '/dashboard/federal',
+  Temp: '/dashboard/federal',
+  Utility: '/dashboard/utility/default',
+  Insurance: '/dashboard/insurance',
+  Agriculture: '/dashboard/agriculture',
+  Lab: '/dashboard/samplechain',
+};
+
 export default function Home() {
+  const { user } = useAuth();
+
   const [timeMode, setTimeMode] = useState<TimeMode>('real-time');
   const [dataMode, setDataMode] = useState<DataMode>('ambient');
   const [selectedRegionId, setSelectedRegionId] = useState('maryland_middle_branch');
@@ -290,7 +312,6 @@ export default function Home() {
   
   // Phase 1: Role Selector for Demos
   const [userRole, setUserRole] = useState<'Federal' | 'State' | 'MS4' | 'Corporate' | 'Researcher' | 'College' | 'NGO' | 'K12' | 'Pearl' | 'Temp'>('MS4');
-  const { user } = useAuth();
 
   // Sync role, state, and region from auth session
   useEffect(() => {

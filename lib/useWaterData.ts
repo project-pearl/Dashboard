@@ -1028,6 +1028,18 @@ const CEDEN_TO_PEARL: Record<string, string> = {
   'Suspended Sediment Concentration': 'TSS',
 };
 
+// FIPS state code → state abbreviation (all 51 US states + DC)
+const FIPS_TO_ABBR: Record<string, string> = {
+  '01':'AL','02':'AK','04':'AZ','05':'AR','06':'CA','08':'CO','09':'CT',
+  '10':'DE','11':'DC','12':'FL','13':'GA','15':'HI','16':'ID','17':'IL',
+  '18':'IN','19':'IA','20':'KS','21':'KY','22':'LA','23':'ME','24':'MD',
+  '25':'MA','26':'MI','27':'MN','28':'MS','29':'MO','30':'MT','31':'NE',
+  '32':'NV','33':'NH','34':'NJ','35':'NM','36':'NY','37':'NC','38':'ND',
+  '39':'OH','40':'OK','41':'OR','42':'PA','44':'RI','45':'SC','46':'SD',
+  '47':'TN','48':'TX','49':'UT','50':'VT','51':'VA','53':'WA','54':'WV',
+  '55':'WI','56':'WY',
+};
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 export interface ParameterReading {
   pearlKey: string;
@@ -1322,7 +1334,8 @@ export function useWaterData(regionId: string | null): UseWaterDataResult {
           clearTimeout(mmwTimer);
 
           if (mmwRes?.ok) {
-            const mmwJson = await mmwRes.json();
+            const mmwJson = await mmwRes.json().catch(() => null);
+            if (!mmwJson) { console.warn('[PEARL Source 3] MMW returned invalid JSON'); }
             const results = mmwJson?.data || [];
             let mmwCount = 0;
             let mmwStationName = 'MMW Station';
@@ -1705,122 +1718,167 @@ export function useWaterData(regionId: string | null): UseWaterDataResult {
       // ── Source 7: Water Quality Portal — true multi-provider national WQ data ────
       // Queries waterqualitydata.us for EPA STORET + STEWARDS (state, tribal, local)
       // USGS data excluded since Source 4 already covers it
+      // Strategy: Try pre-baked cache first (instant, 19 priority states), fall back to live API
       const wqpMissingKeys = ['DO', 'TN', 'TP', 'turbidity', 'TSS', 'pH', 'temperature', 'enterococcus', 'e_coli', 'fecal_coliform', 'chlorophyll_a', 'conductivity'].filter(k => !allParams[k]);
       if (wqpMissingKeys.length > 0 && regionMeta) {
+        let wqpCacheHit = false;
+
+        // 7a: Try WQP cache first (instant for pre-baked priority states)
         try {
-          // WQP uses characteristic names, not USGS parameter codes
-          const wqpCharMap: Record<string, string> = {
-            DO: 'Dissolved oxygen (DO)',
-            TN: 'Nitrogen',
-            TP: 'Phosphorus',
-            turbidity: 'Turbidity',
-            TSS: 'Total suspended solids',
-            pH: 'pH',
-            temperature: 'Temperature, water',
-            enterococcus: 'Enterococcus',
-            e_coli: 'Escherichia coli',
-            fecal_coliform: 'Fecal Coliform',
-            chlorophyll_a: 'Chlorophyll a',
-            conductivity: 'Specific conductance',
-          };
+          const cacheController = new AbortController();
+          const cacheTimer = setTimeout(() => cacheController.abort(), 3000);
+          const cacheRes = await fetch(
+            `/api/water-data?action=wqp-cached&lat=${regionMeta.lat}&lng=${regionMeta.lng}`,
+            { signal: cacheController.signal }
+          ).catch(() => null);
+          clearTimeout(cacheTimer);
 
-          const eighteenMonthsAgo = new Date();
-          eighteenMonthsAgo.setMonth(eighteenMonthsAgo.getMonth() - 18);
-          const wqpStartDate = eighteenMonthsAgo.toISOString().split('T')[0];
-
-          const fetchWithTimeout = async (url: string, timeoutMs = 15000): Promise<Response | null> => {
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), timeoutMs);
-            try {
-              const res = await fetch(url, { signal: controller.signal });
-              clearTimeout(timer);
-              return res;
-            } catch {
-              clearTimeout(timer);
-              return null;
-            }
-          };
-
-          // Fetch top 4 missing params in parallel via lat/lng proximity
-          const topWqpMissing = wqpMissingKeys.slice(0, 4);
-          const wqpFetches = topWqpMissing.map(async (key) => {
-            const charName = wqpCharMap[key];
-            if (!charName) return;
-            const res = await fetchWithTimeout(
-              `/api/water-data?action=wqp-results` +
-              `&characteristicName=${encodeURIComponent(charName)}` +
-              `&lat=${regionMeta.lat}&long=${regionMeta.lng}&within=15` +
-              `&startDateLo=${wqpStartDate}` +
-              `&sampleMedia=Water`
-            );
-            if (!res || !res.ok) return;
-            try {
-              const json = await res.json();
-              const results = Array.isArray(json?.data) ? json.data : [];
-              if (results.length > 0) {
-                // Sort by date descending
-                const sorted = results.sort((a: any, b: any) => {
-                  const dateA = a.ActivityStartDate || a['Activity Start Date'] || '';
-                  const dateB = b.ActivityStartDate || b['Activity Start Date'] || '';
-                  return dateB.localeCompare(dateA);
-                });
-                const latest = sorted[0];
-                const rawValue = latest.ResultMeasureValue || latest['ResultMeasure/MeasureValue'] || latest['Result Value'] || '';
-                const value = parseFloat(rawValue);
-                if (!isNaN(value) && !allParams[key]) {
-                  // Handle WQX3 column names + legacy fallbacks + slash/dot variants
-                  const unit =
-                    latest['ResultMeasure/MeasureUnitCode'] ||
-                    latest['ResultMeasure.MeasureUnitCode'] ||
-                    latest.ResultMeasure_MeasureUnitCode ||
-                    latest['Result Unit'] || '';
-                  const monLocName = latest.MonitoringLocationName || latest['Monitoring Location Name'] || '';
-                  const monLocId = latest.MonitoringLocationIdentifier || latest['Monitoring Location Identifier'] || '';
-                  const orgName = latest.OrganizationFormalName || latest['Organization Formal Name'] || '';
-                  allParams[key] = {
-                    pearlKey: key,
-                    value,
-                    unit,
+          if (cacheRes?.ok) {
+            const cacheJson = await cacheRes.json();
+            if (cacheJson.cached === true && Array.isArray(cacheJson.data) && cacheJson.data.length > 0) {
+              for (const rec of cacheJson.data) {
+                if (rec.key && !allParams[rec.key]) {
+                  allParams[rec.key] = {
+                    pearlKey: rec.key,
+                    value: rec.val,
+                    unit: rec.unit || '',
                     source: 'WQP',
-                    stationName: monLocName || monLocId || orgName || 'WQP Station',
-                    lastSampled: latest.ActivityStartDate || latest['Activity Start Date'] || null,
-                    parameterName: latest.CharacteristicName || latest['Characteristic Name'] || key,
+                    stationName: rec.name || rec.stn || 'WQP Station',
+                    lastSampled: rec.date || null,
+                    parameterName: rec.char || rec.key,
                   };
                 }
               }
-            } catch { /* parse error */ }
-          });
-
-          await Promise.allSettled(wqpFetches);
-
-          const wqpCount = Object.values(allParams).filter(p => p.source === 'WQP').length;
-          if (wqpCount > 0) {
-            activeSources.push('WQP');
-            const wqpParams = Object.values(allParams).filter(p => p.source === 'WQP');
-            sourceDetails.push({
-              source: DATA_SOURCES.WQP,
-              parameterCount: wqpCount,
-              stationName: wqpParams[0]?.stationName || 'WQP Station',
-              lastSampled: wqpParams[0]?.lastSampled || null,
-            });
-            console.log(`[PEARL Source 7] WQP (multi-provider): filled ${wqpCount} params`);
+              const cachedCount = Object.values(allParams).filter(p => p.source === 'WQP').length;
+              if (cachedCount > 0) {
+                wqpCacheHit = true;
+                activeSources.push('WQP');
+                const wqpParams = Object.values(allParams).filter(p => p.source === 'WQP');
+                sourceDetails.push({
+                  source: DATA_SOURCES.WQP,
+                  parameterCount: cachedCount,
+                  stationName: wqpParams[0]?.stationName || 'WQP Station',
+                  lastSampled: wqpParams[0]?.lastSampled || null,
+                });
+                console.log(`[PEARL Source 7] WQP cache hit: filled ${cachedCount} params`);
+              }
+            }
           }
-        } catch (e) {
-          console.warn(`[PEARL Source 7] WQP failed:`, e instanceof Error ? e.message : e);
+        } catch { /* cache miss — fall through to live */ }
+
+        // 7b: Live WQP fetch (fallback for cache miss / non-priority states)
+        const wqpStillMissing = wqpMissingKeys.filter(k => !allParams[k]);
+        if (!wqpCacheHit && wqpStillMissing.length > 0) {
+          try {
+            const wqpCharMap: Record<string, string> = {
+              DO: 'Dissolved oxygen (DO)',
+              TN: 'Nitrogen',
+              TP: 'Phosphorus',
+              turbidity: 'Turbidity',
+              TSS: 'Total suspended solids',
+              pH: 'pH',
+              temperature: 'Temperature, water',
+              enterococcus: 'Enterococcus',
+              e_coli: 'Escherichia coli',
+              fecal_coliform: 'Fecal Coliform',
+              chlorophyll_a: 'Chlorophyll a',
+              conductivity: 'Specific conductance',
+            };
+
+            const eighteenMonthsAgo = new Date();
+            eighteenMonthsAgo.setMonth(eighteenMonthsAgo.getMonth() - 18);
+            const wqpStartDate = eighteenMonthsAgo.toISOString().split('T')[0];
+
+            const fetchWithTimeout = async (url: string, timeoutMs = 15000): Promise<Response | null> => {
+              const controller = new AbortController();
+              const timer = setTimeout(() => controller.abort(), timeoutMs);
+              try {
+                const res = await fetch(url, { signal: controller.signal });
+                clearTimeout(timer);
+                return res;
+              } catch {
+                clearTimeout(timer);
+                return null;
+              }
+            };
+
+            // Fetch top 4 missing params in parallel via lat/lng proximity
+            const topWqpMissing = wqpStillMissing.slice(0, 4);
+            const wqpFetches = topWqpMissing.map(async (key) => {
+              const charName = wqpCharMap[key];
+              if (!charName) return;
+              const res = await fetchWithTimeout(
+                `/api/water-data?action=wqp-results` +
+                `&characteristicName=${encodeURIComponent(charName)}` +
+                `&lat=${regionMeta.lat}&long=${regionMeta.lng}&within=15` +
+                `&startDateLo=${wqpStartDate}` +
+                `&sampleMedia=Water`
+              );
+              if (!res || !res.ok) return;
+              try {
+                const json = await res.json();
+                const results = Array.isArray(json?.data) ? json.data : [];
+                if (results.length > 0) {
+                  const sorted = results.sort((a: any, b: any) => {
+                    const dateA = a.ActivityStartDate || a['Activity Start Date'] || '';
+                    const dateB = b.ActivityStartDate || b['Activity Start Date'] || '';
+                    return dateB.localeCompare(dateA);
+                  });
+                  const latest = sorted[0];
+                  const rawValue = latest.ResultMeasureValue || latest['ResultMeasure/MeasureValue'] || latest['Result Value'] || '';
+                  const value = parseFloat(rawValue);
+                  if (!isNaN(value) && !allParams[key]) {
+                    const unit =
+                      latest['ResultMeasure/MeasureUnitCode'] ||
+                      latest['ResultMeasure.MeasureUnitCode'] ||
+                      latest.ResultMeasure_MeasureUnitCode ||
+                      latest['Result Unit'] || '';
+                    const monLocName = latest.MonitoringLocationName || latest['Monitoring Location Name'] || '';
+                    const monLocId = latest.MonitoringLocationIdentifier || latest['Monitoring Location Identifier'] || '';
+                    const orgName = latest.OrganizationFormalName || latest['Organization Formal Name'] || '';
+                    allParams[key] = {
+                      pearlKey: key,
+                      value,
+                      unit,
+                      source: 'WQP',
+                      stationName: monLocName || monLocId || orgName || 'WQP Station',
+                      lastSampled: latest.ActivityStartDate || latest['Activity Start Date'] || null,
+                      parameterName: latest.CharacteristicName || latest['Characteristic Name'] || key,
+                    };
+                  }
+                }
+              } catch { /* parse error */ }
+            });
+
+            await Promise.allSettled(wqpFetches);
+
+            const wqpCount = Object.values(allParams).filter(p => p.source === 'WQP').length;
+            if (wqpCount > 0 && !activeSources.includes('WQP')) {
+              activeSources.push('WQP');
+              const wqpParams = Object.values(allParams).filter(p => p.source === 'WQP');
+              sourceDetails.push({
+                source: DATA_SOURCES.WQP,
+                parameterCount: wqpCount,
+                stationName: wqpParams[0]?.stationName || 'WQP Station',
+                lastSampled: wqpParams[0]?.lastSampled || null,
+              });
+              console.log(`[PEARL Source 7] WQP live: filled ${wqpCount} params`);
+            }
+          } catch (e) {
+            console.warn(`[PEARL Source 7] WQP live failed:`, e instanceof Error ? e.message : e);
+          }
         }
       }
 
       if (cancelled) return;
 
       // ── Source 8: State Open Data Portals — state-specific WQ data ─────
-      // Only queries for states with configured adapters (MD, VA, CA)
+      // Queries WQP-backed state adapters for all 51 US states + DC
       const stateCode = regionMeta?.stateCode?.split(':')?.[1] || '';
-      const STATE_ADAPTER_STATES = ['24', '51', '06']; // MD=24, VA=51, CA=06
       const stateMissingKeys = ['DO', 'TN', 'TP', 'turbidity', 'TSS', 'pH', 'temperature'].filter(k => !allParams[k]);
-      if (stateMissingKeys.length > 0 && stateCode && STATE_ADAPTER_STATES.includes(stateCode) && regionMeta) {
+      const stateAbbr = FIPS_TO_ABBR[stateCode] || '';
+      if (stateMissingKeys.length > 0 && stateAbbr && regionMeta) {
         try {
-          const stateFipsToAbbr: Record<string, string> = { '24': 'MD', '51': 'VA', '06': 'CA' };
-          const stateAbbr = stateFipsToAbbr[stateCode] || '';
           const controller = new AbortController();
           const stateTimer = setTimeout(() => controller.abort(), 12000);
           const stateRes = await fetch(
@@ -1889,8 +1947,7 @@ export function useWaterData(regionId: string | null): UseWaterDataResult {
       // Runs as enrichment alongside cascade, adds metadata to result
       if (regionMeta) {
         try {
-          const stateFipsToAbbr: Record<string, string> = { '24': 'MD', '51': 'VA', '06': 'CA', '11': 'DC', '10': 'DE', '42': 'PA', '36': 'NY', '54': 'WV', '12': 'FL' };
-          const efStateAbbr = stateFipsToAbbr[stateCode] || '';
+          const efStateAbbr = FIPS_TO_ABBR[stateCode] || '';
           if (efStateAbbr) {
             const controller = new AbortController();
             const efTimer = setTimeout(() => controller.abort(), 10000);

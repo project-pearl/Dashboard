@@ -1,7 +1,9 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useAuth } from '@/lib/authContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+import { canAccessRoute, getPrimaryRoute } from '@/lib/roleRoutes';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 
@@ -21,6 +23,17 @@ interface AuthGuardProps {
 export default function AuthGuard({ children }: AuthGuardProps) {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Role-route access check — must be above early returns so the hook is always called
+  const isUnauthorizedRoute = !!user && user.status === 'active' &&
+    pathname.startsWith('/dashboard') && !canAccessRoute(user, pathname);
+
+  useEffect(() => {
+    if (isUnauthorizedRoute && user) {
+      router.replace(getPrimaryRoute(user));
+    }
+  }, [isUnauthorizedRoute, user, router]);
 
   if (isLoading) {
     return (
@@ -118,6 +131,15 @@ export default function AuthGuard({ children }: AuthGuardProps) {
             </button>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  // Show spinner while redirect is in flight
+  if (isUnauthorizedRoute) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-950">
+        <div className="w-12 h-12 border-4 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin" />
       </div>
     );
   }
