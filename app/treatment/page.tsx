@@ -1,5 +1,4 @@
 import { Metadata } from 'next';
-import DarkPageShell from '@/components/DarkPageShell';
 import TreatmentSection from '@/components/TreatmentSection';
 
 export const metadata: Metadata = {
@@ -8,9 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function TreatmentPage() {
-  return (
-    <DarkPageShell>
-      <TreatmentSection />
-    </DarkPageShell>
-  );
+  return <TreatmentSection />;
 }
