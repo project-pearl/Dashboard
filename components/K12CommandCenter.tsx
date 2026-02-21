@@ -283,7 +283,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
       const aN = a.name.toLowerCase().trim();
       const alreadyExists = [...existingNames].some(e => e.includes(aN) || aN.includes(e));
       if (!alreadyExists && a.category.includes('5')) {
-        const id = `${stateAbbr.toLowerCase()}_${a.name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/_+$/, '')}`;
+        const id = a.id || `${stateAbbr.toLowerCase()}_${a.name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/_+$/, '')}`;
         merged.push({
           id,
           name: a.name,
@@ -313,6 +313,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
         const stateData = json.states?.[stateAbbr];
         if (!stateData || cancelled) return;
         const waterbodies = (stateData.waterbodies || []).map((wb: any) => ({
+          id: wb.id || '',
           name: wb.name || '',
           category: wb.category || '',
           alertLevel: (wb.alertLevel || 'none') as AlertLevel,

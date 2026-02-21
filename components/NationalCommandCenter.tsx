@@ -924,6 +924,7 @@ export function NationalCommandCenter(props: Props) {
 
           for (const [st, summary] of Object.entries(states) as [string, any][]) {
             const waterbodies = (summary.waterbodies || []).map((wb: any) => ({
+              id: wb.id || '',
               name: wb.name || wb.id || '',
               category: wb.category || '',
               alertLevel: (wb.alertLevel || 'none') as AlertLevel,

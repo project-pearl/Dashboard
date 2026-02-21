@@ -509,7 +509,7 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
       const alreadyExists = [...existingNames].some(e => e.includes(aN) || aN.includes(e));
       const isImpaired = a.category.includes('5') || a.category.includes('4');
       if (!alreadyExists && isImpaired) {
-        const id = `${stateAbbr.toLowerCase()}_${a.name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/_+$/, '')}`;
+        const id = a.id || `${stateAbbr.toLowerCase()}_${a.name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/_+$/, '')}`;
         merged.push({
           id,
           name: a.name,
