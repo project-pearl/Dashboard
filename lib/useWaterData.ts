@@ -52,6 +52,7 @@ export type DataSourceId =
   | 'USGS' | 'USGS_DV' | 'BWB' | 'CBP' | 'WQP'
   | 'ERDDAP' | 'NOAA' | 'MMW' | 'EPA_EF'
   | 'STATE' | 'NASA_STREAM' | 'HYDROSHARE'
+  | 'CEDEN'
   | 'REFERENCE' | 'MOCK';
 
 export interface DataSourceInfo {
@@ -91,6 +92,15 @@ export const DATA_SOURCES: Record<DataSourceId, DataSourceInfo> = {
     textColor: 'text-blue-700',
     url: 'https://datahub.chesapeakebay.net',
     description: 'Federal/state Chesapeake watershed monitoring (1984–present)',
+  },
+  CEDEN: {
+    id: 'CEDEN',
+    name: 'CEDEN',
+    fullName: 'California Environmental Data Exchange Network',
+    color: 'bg-amber-100',
+    textColor: 'text-amber-700',
+    url: 'https://data.ca.gov/dataset/surface-water-chemistry-results',
+    description: 'California state water quality data (chemistry, toxicity) via Open Data Portal',
   },
   WQP: {
     id: 'WQP',
@@ -992,6 +1002,30 @@ const USGS_PARAM_TO_PEARL: Record<string, string> = {
   '00665': 'TP',           // Total phosphorus, mg/L
   '00076': 'turbidity',    // Turbidity, NTU (alternate code)
   '99133': 'nitrateNitrite', // Nitrate + nitrite, mg/L
+};
+
+// CEDEN analyte name → PEARL key
+const CEDEN_TO_PEARL: Record<string, string> = {
+  'Oxygen, Dissolved, Total': 'DO',
+  'Oxygen, Dissolved': 'DO',
+  'Temperature': 'temperature',
+  'pH': 'pH',
+  'Turbidity, Total': 'turbidity',
+  'Turbidity': 'turbidity',
+  'E. coli': 'bacteria',
+  'Enterococcus': 'bacteria',
+  'Enterococcus, Total': 'bacteria',
+  'Coliform, Fecal': 'bacteria',
+  'Nitrogen, Total': 'TN',
+  'Nitrogen, Total Kjeldahl': 'TN',
+  'Phosphorus as P': 'TP',
+  'Phosphorus, Total': 'TP',
+  'Chlorophyll a': 'chlorophyll',
+  'SpecificConductivity': 'conductivity',
+  'Specific Conductance': 'conductivity',
+  'Salinity': 'salinity',
+  'Total Suspended Solids': 'TSS',
+  'Suspended Sediment Concentration': 'TSS',
 };
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -2015,6 +2049,144 @@ export function useWaterData(regionId: string | null): UseWaterDataResult {
           console.log(`[PEARL Source 9b] CBP DataHub: ${cbpEnrichCount} enrichment params for HUC8 ${huc8}`);
         } catch (e) {
           console.warn(`[PEARL Source 9b] CBP DataHub enrichment failed:`, e instanceof Error ? e.message : e);
+        }
+      }
+
+      if (cancelled) return;
+
+      // ── Source 9c: CEDEN — California state WQ data (chemistry + toxicity) ──
+      // Cache-first: reads from data/ceden-cache.json (built by scripts/ceden_cache.py)
+      // Falls back to live data.ca.gov API on cache miss
+      // Only fires for California (FIPS 06)
+      const isCalifornia = stateCode === '06';
+      if (isCalifornia && regionMeta) {
+        try {
+          const cedenLat = regionMeta.lat;
+          const cedenLng = regionMeta.lng;
+          let cedenCount = 0;
+          let cedenStation = '';
+          let cedenTime: string | null = null;
+          let bacteriaTotal = 0;
+          let bacteriaStation = '';
+          let bacteriaTime: string | null = null;
+          let chemRecords: any[] = [];
+          let toxRecords: any[] = [];
+
+          // Try cache first (instant — reads from local JSON)
+          const cacheRes = await fetch(`/api/water-data?action=ceden-cached&lat=${cedenLat}&lng=${cedenLng}`, { signal: AbortSignal.timeout(5000) }).catch(() => null);
+          const cacheJson = cacheRes?.ok ? await cacheRes.json().catch(() => null) : null;
+
+          if (cacheJson?.fromCache && (cacheJson.chemistry?.length > 0 || cacheJson.toxicity?.length > 0)) {
+            // Cache hit — use pre-fetched data
+            console.log(`[PEARL Source 9c] CEDEN cache hit: ${cacheJson.chemistry?.length || 0} chem, ${cacheJson.toxicity?.length || 0} tox`);
+            // Normalize cache records to match live API field names
+            chemRecords = (cacheJson.chemistry || []).map((r: any) => ({
+              Analyte: r.analyte, Result: r.val, Unit: r.unit,
+              StationName: r.name, SampleDate: r.date, pearl_key: r.key,
+              Latitude: r.lat, Longitude: r.lng,
+            }));
+            toxRecords = (cacheJson.toxicity || []).map((r: any) => ({
+              StationName: r.name, SampleDate: r.date, OrganismName: r.organism,
+              Analyte: r.analyte, Result: r.val, Mean: r.mean,
+              SigEffectCode: r.sig, Unit: r.unit,
+            }));
+          } else {
+            // Cache miss — fall back to live API
+            console.log(`[PEARL Source 9c] CEDEN cache miss, falling back to live API`);
+            const cedenFetches = [
+              fetch(`/api/water-data?action=ceden-chemistry&lat=${cedenLat}&lng=${cedenLng}`, { signal: AbortSignal.timeout(12000) }).catch(() => null),
+              fetch(`/api/water-data?action=ceden-toxicity&lat=${cedenLat}&lng=${cedenLng}`, { signal: AbortSignal.timeout(12000) }).catch(() => null),
+            ];
+            const [chemRes, toxRes] = await Promise.allSettled(cedenFetches);
+            if (chemRes.status === 'fulfilled' && chemRes.value?.ok) {
+              const cJson = await chemRes.value.json().catch(() => null);
+              chemRecords = Array.isArray(cJson?.data) ? cJson.data : [];
+            }
+            if (toxRes.status === 'fulfilled' && toxRes.value?.ok) {
+              const tJson = await toxRes.value.json().catch(() => null);
+              toxRecords = Array.isArray(tJson?.data) ? tJson.data : [];
+            }
+          }
+
+          // Process chemistry records → fill standard PEARL params + count bacteria
+          const seen = new Set<string>();
+          for (const r of chemRecords) {
+            const analyte = r.Analyte || r.analyte || '';
+            const pearlKey = r.pearl_key || CEDEN_TO_PEARL[analyte];
+            if (!pearlKey) continue;
+
+            // Count bacteria indicators for meta-param
+            if (['E. coli', 'Enterococcus', 'Enterococcus, Total', 'Coliform, Fecal', 'Coliform, Total'].includes(analyte)) {
+              bacteriaTotal++;
+              if (!bacteriaStation) bacteriaStation = r.StationName || r.stationName || '';
+              if (!bacteriaTime) bacteriaTime = r.SampleDate || r.sampleDate || null;
+            }
+
+            if (seen.has(pearlKey)) continue;
+            seen.add(pearlKey);
+
+            const value = parseFloat(r.Result ?? r.result ?? '');
+            if (isNaN(value)) continue;
+
+            if (!cedenStation) cedenStation = r.StationName || r.stationName || 'CEDEN Station';
+            if (!cedenTime) cedenTime = r.SampleDate || r.sampleDate || null;
+
+            // Only fill gaps — don't overwrite upstream sources
+            if (!allParams[pearlKey]) {
+              allParams[pearlKey] = {
+                pearlKey,
+                value,
+                unit: r.Unit || r.unit || '',
+                source: 'CEDEN',
+                stationName: r.StationName || r.stationName || 'CEDEN Station',
+                lastSampled: r.SampleDate || r.sampleDate || null,
+                parameterName: analyte,
+              };
+              cedenCount++;
+            }
+          }
+
+          // Store bacteria indicator meta-param
+          if (bacteriaTotal > 0) {
+            allParams['_ceden_bacteria'] = {
+              pearlKey: '_ceden_bacteria',
+              value: bacteriaTotal,
+              unit: 'samples',
+              source: 'CEDEN',
+              stationName: bacteriaStation || cedenStation || 'CEDEN',
+              lastSampled: bacteriaTime || cedenTime,
+              parameterName: 'Bacteria Indicators (E.coli, Enterococcus, Coliform)',
+            };
+            cedenCount++;
+          }
+
+          // Toxicity results → store as meta-param
+          if (toxRecords.length > 0) {
+            const latest = toxRecords[0];
+            allParams['_ceden_toxicity'] = {
+              pearlKey: '_ceden_toxicity',
+              value: toxRecords.length,
+              unit: 'tests',
+              source: 'CEDEN',
+              stationName: latest.StationName || latest.stationName || 'CEDEN Toxicity',
+              lastSampled: latest.SampleDate || latest.sampleDate || null,
+              parameterName: `Toxicity: ${latest.OrganismName || latest.organismName || 'organism'} — ${latest.SigEffectCode || latest.sigEffectCode || 'N/A'}`,
+            };
+            cedenCount++;
+          }
+
+          if (cedenCount > 0 && !activeSources.includes('CEDEN')) {
+            activeSources.push('CEDEN');
+            sourceDetails.push({
+              source: DATA_SOURCES.CEDEN,
+              parameterCount: cedenCount,
+              stationName: cedenStation || 'CEDEN (CA Open Data)',
+              lastSampled: cedenTime || new Date().toISOString(),
+            });
+          }
+          console.log(`[PEARL Source 9c] CEDEN: ${cedenCount} params for CA location (${cedenLat}, ${cedenLng})`);
+        } catch (e) {
+          console.warn(`[PEARL Source 9c] CEDEN enrichment failed:`, e instanceof Error ? e.message : e);
         }
       }
 

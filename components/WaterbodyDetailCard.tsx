@@ -8,7 +8,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { MapPin, Info, Shield, Maximize2, X } from 'lucide-react';
-import { calculateGrade, generateObservations, generateImplications } from '@/lib/waterQualityScore';
+import { calculateGrade, generateObservations, generateImplications, computeFreshnessScore, paramAgeTint, TOTAL_DISPLAY_PARAMS } from '@/lib/waterQualityScore';
 import { resolveAttainsCategory, mergeAttainsCauses } from '@/lib/restorationEngine';
 
 // ─── Static Config ───────────────────────────────────────────────────────────
@@ -278,15 +278,28 @@ export function WaterbodyDetailCard({
           </div>
         )}
 
-        {/* Parameter grid */}
-        {!waterLoading && sortedKeys.length > 0 && (
+        {/* Parameter grid — fixed order, all slots shown */}
+        {!waterLoading && (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 mb-3">
-            {sortedKeys.map(key => {
+            {PARAM_ORDER.concat(Object.keys(params).filter(k => !PARAM_ORDER.includes(k))).map(key => {
               const p = params[key];
-              const display = PARAM_DISPLAY[key] || { label: p.parameterName || key, unit: p.unit || '' };
-              const isGood = display.good ? display.good(p.value) : undefined;
+              const display = PARAM_DISPLAY[key] || { label: key, unit: '' };
 
+              if (!p) {
+                // Empty slot — neutral card, no color
+                return (
+                  <div key={key} className="bg-white rounded-lg border border-slate-200 p-2.5 text-center cursor-pointer hover:border-blue-300 transition-colors" onClick={(e) => { e.stopPropagation(); setExpandedParam(key); }}>
+                    <div className="text-[10px] uppercase tracking-wider text-slate-400 mb-0.5">{display.label}</div>
+                    <div className="text-lg font-bold text-slate-300">&mdash;</div>
+                    <div className="text-[9px] text-slate-300 mt-1">No data</div>
+                  </div>
+                );
+              }
+
+              const isGood = display.good ? display.good(p.value) : undefined;
               const lastSampled = (p as any).lastSampled;
+              const tintClass = paramAgeTint(lastSampled);
+
               let ageLabel: string | null = null;
               if (lastSampled) {
                 const ageMs = Date.now() - new Date(lastSampled).getTime();
@@ -298,7 +311,7 @@ export function WaterbodyDetailCard({
               }
 
               return (
-                <div key={key} className="bg-white rounded-lg border border-slate-200 p-2.5 text-center relative group cursor-pointer hover:border-blue-300 transition-colors" onClick={(e) => { e.stopPropagation(); setExpandedParam(key); }}>
+                <div key={key} className={`rounded-lg border p-2.5 text-center relative group cursor-pointer hover:border-blue-300 transition-colors ${tintClass}`} onClick={(e) => { e.stopPropagation(); setExpandedParam(key); }}>
                   <button className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-blue-600" onClick={(e) => { e.stopPropagation(); setExpandedParam(key); }} title="Expand details">
                     <Maximize2 size={10} />
                   </button>
@@ -396,28 +409,33 @@ export function WaterbodyDetailCard({
                   </div>
                   <div className="text-[9px] text-slate-400">USFWS ECOS</div>
                 </div>
-                {/* Tile 5: Freshness — uses weighted average age across ALL key params */}
-                <div className={`rounded-lg border-2 ${
-                  coverage.dataAgeDays !== null && coverage.dataAgeDays > 180 ? 'border-red-200 bg-red-50'
-                  : coverage.dataAgeDays !== null && coverage.dataAgeDays > 60 ? 'border-orange-200 bg-orange-50'
-                  : coverage.dataAgeDays !== null && coverage.dataAgeDays > 14 ? 'border-yellow-200 bg-yellow-50'
-                  : 'border-green-200 bg-green-50'
-                } p-2 text-center`}>
-                  <div className="text-[10px] uppercase tracking-wider text-slate-500">Freshness</div>
-                  <div className={`text-base font-bold ${
-                    coverage.dataAgeDays !== null && coverage.dataAgeDays > 180 ? 'text-red-700'
-                    : coverage.dataAgeDays !== null && coverage.dataAgeDays > 60 ? 'text-orange-700'
-                    : coverage.dataAgeDays !== null && coverage.dataAgeDays > 14 ? 'text-yellow-700'
-                    : 'text-green-700'
-                  }`}>
-                    {coverage.freshnessLabel}
-                  </div>
-                  <div className="text-[9px] text-slate-400">
-                    {coverage.liveKeyParamCount > 0
-                      ? `${coverage.liveKeyParamCount} live · ${coverage.referenceKeyParamCount} ref`
-                      : `${coverage.keyParamsPresent} reference only`}
-                  </div>
-                </div>
+                {/* Tile 5: Freshness — composite of coverage + recency */}
+                {(() => {
+                  const allTs: Record<string, string | null | undefined> = {};
+                  for (const [k, p] of Object.entries(params)) {
+                    allTs[k] = (p as any).lastSampled ?? null;
+                  }
+                  const fresh = computeFreshnessScore(allTs, TOTAL_DISPLAY_PARAMS);
+                  return (
+                    <div className={`rounded-lg border-2 ${
+                      fresh.score >= 70 ? 'border-green-200 bg-green-50'
+                      : fresh.score >= 40 ? 'border-yellow-200 bg-yellow-50'
+                      : 'border-red-200 bg-red-50'
+                    } p-2 text-center`}>
+                      <div className="text-[10px] uppercase tracking-wider text-slate-500">Freshness</div>
+                      <div className={`text-base font-bold ${
+                        fresh.score >= 70 ? 'text-green-700'
+                        : fresh.score >= 40 ? 'text-yellow-700'
+                        : 'text-red-700'
+                      }`}>
+                        {fresh.populated}/{fresh.total}
+                      </div>
+                      <div className="text-[9px] text-slate-400">
+                        {fresh.label} · {fresh.score}/100
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Observations */}
@@ -702,6 +720,43 @@ export function WaterbodyDetailCard({
           </div>
         )}
 
+        {/* CEDEN Enrichment — California state data */}
+        {waterData?.parameters?._ceden_bacteria && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50/40 p-3 space-y-1.5">
+            <div className="text-xs font-semibold text-amber-800 uppercase tracking-wide flex items-center gap-1.5">
+              California Water Quality
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium ml-1">CEDEN</span>
+            </div>
+            <div className="text-xs text-slate-600">
+              <span className="font-medium">{waterData.parameters._ceden_bacteria.value}</span> bacteria indicator {waterData.parameters._ceden_bacteria.value === 1 ? 'sample' : 'samples'} (E.&nbsp;coli, Enterococcus, Coliform) recorded near this location via California&apos;s CEDEN monitoring network.
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              <a href="https://data.ca.gov/dataset/surface-water-chemistry-results" target="_blank" rel="noopener noreferrer"
+                className="text-[10px] text-amber-600 hover:text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">
+                CEDEN Chemistry Data →
+              </a>
+            </div>
+          </div>
+        )}
+
+        {waterData?.parameters?._ceden_toxicity && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50/40 p-3 space-y-1.5">
+            <div className="text-xs font-semibold text-amber-800 uppercase tracking-wide flex items-center gap-1.5">
+              Toxicity Monitoring
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium ml-1">CEDEN</span>
+            </div>
+            <div className="text-xs text-slate-600">
+              <span className="font-medium">{waterData.parameters._ceden_toxicity.value}</span> toxicity {waterData.parameters._ceden_toxicity.value === 1 ? 'test' : 'tests'} recorded near this location. {waterData.parameters._ceden_toxicity.parameterName}
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              <a href="https://data.ca.gov/dataset/surface-water-toxicity-results" target="_blank" rel="noopener noreferrer"
+                className="text-[10px] text-amber-600 hover:text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">
+                CEDEN Toxicity Data →
+              </a>
+            </div>
+          </div>
+        )}
+
         {/* Supplementary: Satellite Data (NASA STREAM) */}
         {waterData && !waterLoading && (
           <div className="rounded-lg border border-indigo-200 bg-indigo-50/30 p-3 space-y-1.5">
@@ -853,7 +908,16 @@ export function WaterbodyDetailCard({
                           </div>
                           <div className="bg-slate-50 rounded-lg p-2">
                             <div className="text-slate-500">Freshness</div>
-                            <div className="font-medium text-slate-700">{coverage.freshnessLabel}</div>
+                            <div className="font-medium text-slate-700">
+                              {(() => {
+                                const allTs: Record<string, string | null | undefined> = {};
+                                for (const [k, val] of Object.entries(params)) {
+                                  allTs[k] = (val as any).lastSampled ?? null;
+                                }
+                                const f = computeFreshnessScore(allTs, TOTAL_DISPLAY_PARAMS);
+                                return `${f.populated}/${f.total} · ${f.label}`;
+                              })()}
+                            </div>
                           </div>
                         </div>
                       )}
@@ -921,6 +985,23 @@ export function WaterbodyDetailCard({
                         min: display.target.includes('≥') ? 0 : undefined,
                         max: display.target.includes('<') ? parseFloat(display.target.replace(/[^0-9.]/g, '')) * 1.5 : undefined,
                       } : undefined)}
+                    </>
+                  ) : !isHealth ? (
+                    <>
+                      {/* Empty parameter — no data reported */}
+                      <div className="text-center py-6">
+                        <div className="text-4xl font-bold text-slate-300">&mdash;</div>
+                        <div className="text-sm text-slate-500 mt-2">No data reported</div>
+                        <div className="text-xs text-slate-400 mt-1">
+                          {(PARAM_DISPLAY[expandedParam]?.label || expandedParam)} has no monitoring data for this waterbody.
+                        </div>
+                      </div>
+                      {PARAM_DISPLAY[expandedParam]?.target && (
+                        <div className="bg-slate-50 rounded-lg p-2 text-xs">
+                          <div className="text-slate-500">Target</div>
+                          <div className="font-medium text-slate-700">{PARAM_DISPLAY[expandedParam].target}</div>
+                        </div>
+                      )}
                     </>
                   ) : null}
                 </div>

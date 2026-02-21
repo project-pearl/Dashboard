@@ -3,6 +3,7 @@
 // Sources: Water Reporter (BWB), Chesapeake Bay Program DataHub, USGS (IV, Samples, Daily), MARACOOS ERDDAP (MD DNR)
 import { NextRequest, NextResponse } from 'next/server';
 import { getAttainsCache, getAttainsCacheSummary, getCacheStatus, triggerAttainsBuild } from '@/lib/attainsCache';
+import { getCedenCache, getCedenCacheStatus } from '@/lib/cedenCache';
 
 const WR_BASE = 'https://api.waterreporter.org';
 const CBP_BASE = 'https://datahub.chesapeakebay.net';
@@ -12,6 +13,7 @@ const USGS_OGC_BASE = 'https://api.waterdata.usgs.gov/ogcapi/v0';
 const ATTAINS_BASE = 'https://attains.epa.gov/attains-public/api';
 const ECHO_BASE = 'https://echo.epa.gov/api/rest_services';
 const EJSCREEN_BASE = 'https://ejscreen.epa.gov/mapper/ejscreenRESTbroker1.aspx';
+const CEDEN_BASE    = 'https://data.ca.gov/api/3/action';
 
 const getToken = () => process.env.WATER_REPORTER_API_KEY || '';
 
@@ -64,6 +66,25 @@ async function cbpPostFetch(path: string, body: Record<string, string>) {
   if (!res.ok) return { error: `CBP DataHub error: ${res.status} ${res.statusText}` };
   return res.json();
 }
+
+// ─── CEDEN (CA Open Data Portal) SQL Helper ──────────────────────────────────
+async function cedenSqlFetch(sql: string) {
+  const url = new URL(`${CEDEN_BASE}/datastore_search_sql`);
+  url.searchParams.set('sql', sql);
+  const res = await fetch(url.toString(), {
+    headers: { 'Accept': 'application/json' },
+    next: { revalidate: 3600 }, // 1hr cache — data updates weekly
+  });
+  if (!res.ok) return { error: `CEDEN API error: ${res.status} ${res.statusText}` };
+  const json = await res.json();
+  if (!json.success) return { error: json.error?.message || 'CEDEN query failed' };
+  return { data: json.result?.records || [], total: json.result?.total || 0 };
+}
+
+// CEDEN resource IDs
+const CEDEN_CHEM_2025 = '97b8bb60-8e58-4c97-a07f-d51a48cd36d4';
+const CEDEN_CHEM_AUG  = 'e07c5e0b-cace-4b70-9f13-b3e696cd5a99';
+const CEDEN_TOX       = 'bd484e9b-426a-4ba6-ba4d-f5f8ce095836';
 
 // ─── CBP Date Format Helper (M-D-YYYY) ───────────────────────────────────────
 function toCbpDate(iso: string): string {
@@ -701,6 +722,81 @@ export async function GET(request: NextRequest) {
         const path = `/api.json/LivingResources/TidalBenthic/IBI/${startDate}/${endDate}/${projectId}/HUC8`;
         const data = await cbpFetch(path);
         return NextResponse.json({ source: 'cbp', data });
+      }
+
+      // ════════════════════════════════════════════════════════════════════════
+      // CEDEN — California Environmental Data Exchange Network (data.ca.gov)
+      // ════════════════════════════════════════════════════════════════════════
+
+      // Chemistry results near a lat/lng (bounding box ±0.05° ~5km)
+      case 'ceden-chemistry': {
+        const lat = parseFloat(sp.get('lat') || '');
+        const lng = parseFloat(sp.get('lng') || '');
+        if (isNaN(lat) || isNaN(lng)) {
+          return NextResponse.json({ error: 'lat and lng required' }, { status: 400 });
+        }
+        const analyte = sp.get('analyte') || '';
+        const delta = 0.05;
+        const analyteClause = analyte ? ` AND "Analyte" = '${analyte.replace(/'/g, "''")}'` : '';
+        const sql = `SELECT "StationName","StationCode","SampleDate","Analyte","Result","Unit","Latitude","Longitude","DataQuality","MatrixName","SampleAgency" FROM "${CEDEN_CHEM_2025}" WHERE "Latitude" BETWEEN ${lat - delta} AND ${lat + delta} AND "Longitude" BETWEEN ${lng - delta} AND ${lng + delta} AND "DataQuality" NOT IN ('MetaData','Reject')${analyteClause} ORDER BY "SampleDate" DESC LIMIT 200`;
+        let result = await cedenSqlFetch(sql);
+        // Fallback to augmentation dataset if primary returns nothing
+        if (!('error' in result) && result.data.length === 0) {
+          const sqlAug = sql.replace(CEDEN_CHEM_2025, CEDEN_CHEM_AUG);
+          result = await cedenSqlFetch(sqlAug);
+        }
+        if ('error' in result) return NextResponse.json(result, { status: 502 });
+        return NextResponse.json({ source: 'ceden', type: 'chemistry', ...result });
+      }
+
+      // Toxicity results near a lat/lng
+      case 'ceden-toxicity': {
+        const lat = parseFloat(sp.get('lat') || '');
+        const lng = parseFloat(sp.get('lng') || '');
+        if (isNaN(lat) || isNaN(lng)) {
+          return NextResponse.json({ error: 'lat and lng required' }, { status: 400 });
+        }
+        const delta = 0.05;
+        const sql = `SELECT "StationName","StationCode","SampleDate","OrganismName","Analyte","Result","Unit","Mean","StdDev","SigEffectCode","MatrixName","MethodName","Latitude","Longitude","DataQuality" FROM "${CEDEN_TOX}" WHERE "Latitude" BETWEEN ${lat - delta} AND ${lat + delta} AND "Longitude" BETWEEN ${lng - delta} AND ${lng + delta} AND "DataQuality" NOT IN ('MetaData','Reject') ORDER BY "SampleDate" DESC LIMIT 100`;
+        const result = await cedenSqlFetch(sql);
+        if ('error' in result) return NextResponse.json(result, { status: 502 });
+        return NextResponse.json({ source: 'ceden', type: 'toxicity', ...result });
+      }
+
+      // Station search by name or code
+      case 'ceden-search': {
+        const stationCode = sp.get('stationCode') || '';
+        const stationName = sp.get('stationName') || '';
+        const resource = sp.get('resource') === 'toxicity' ? CEDEN_TOX : CEDEN_CHEM_2025;
+        if (!stationCode && !stationName) {
+          return NextResponse.json({ error: 'stationCode or stationName required' }, { status: 400 });
+        }
+        const where = stationCode
+          ? `"StationCode" = '${stationCode.replace(/'/g, "''")}'`
+          : `"StationName" ILIKE '%${stationName.replace(/'/g, "''").replace(/%/g, '')}%'`;
+        const sql = `SELECT DISTINCT "StationName","StationCode","Latitude","Longitude" FROM "${resource}" WHERE ${where} LIMIT 50`;
+        const result = await cedenSqlFetch(sql);
+        if ('error' in result) return NextResponse.json(result, { status: 502 });
+        return NextResponse.json({ source: 'ceden', type: 'stations', ...result });
+      }
+
+      // Cache-first lookup (reads from data/ceden-cache.json built by Python)
+      case 'ceden-cached': {
+        const lat = parseFloat(sp.get('lat') || '');
+        const lng = parseFloat(sp.get('lng') || '');
+        if (isNaN(lat) || isNaN(lng)) {
+          return NextResponse.json({ error: 'lat and lng required' }, { status: 400 });
+        }
+        const cached = getCedenCache(lat, lng);
+        if (cached) {
+          return NextResponse.json({ source: 'ceden', ...cached });
+        }
+        return NextResponse.json({ source: 'ceden', chemistry: [], toxicity: [], fromCache: false });
+      }
+
+      // Cache status (for debug/monitoring)
+      case 'ceden-cache-status': {
+        return NextResponse.json(getCedenCacheStatus());
       }
 
       // ════════════════════════════════════════════════════════════════════════
