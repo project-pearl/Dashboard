@@ -1,0 +1,86 @@
+name: PIN Pipeline — Incremental Fetch
+
+on:
+  schedule:
+    # Run every hour at :15 past
+    - cron: '15 * * * *'
+  workflow_dispatch:
+    inputs:
+      batch_size:
+        description: 'Number of states to fetch this run'
+        required: false
+        default: '4'
+      start_date:
+        description: 'Start date (YYYY-MM-DD)'
+        required: false
+        default: '2024-01-01'
+      full_run:
+        description: 'Run all states (ignores batch_size)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: pin-pipeline/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r pin-pipeline/requirements.txt
+
+      - name: Health check (fast)
+        run: python pin-pipeline/health.py --fast
+        continue-on-error: true
+
+      - name: Fetch data (incremental batch)
+        if: ${{ !inputs.full_run }}
+        run: |
+          BATCH=${{ inputs.batch_size || '4' }}
+          START=${{ inputs.start_date || '2024-01-01' }}
+          python pin-pipeline/fetch.py --next-batch "$BATCH" --from "$START"
+
+      - name: Fetch data (full run)
+        if: ${{ inputs.full_run == true }}
+        run: |
+          START=${{ inputs.start_date || '2024-01-01' }}
+          python pin-pipeline/fetch.py --all-states --from "$START"
+        timeout-minutes: 30
+
+      - name: Staleness report
+        run: python pin-pipeline/stale.py --report
+        continue-on-error: true
+
+      - name: Generate .ts output
+        run: python pin-pipeline/output.py --target pin-pipeline/../lib/pin
+
+      - name: Commit updated data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add pin-pipeline/registry.json pin-pipeline/output/ lib/pin/
+          if git diff --staged --quiet; then
+            echo "No new data to commit"
+          else
+            STATES=$(git diff --staged --name-only | grep -oP 'wqp-\K[A-Z]{2}' | sort -u | tr '\n' ',' | sed 's/,$//')
+            git commit -m "chore(pin): incremental fetch — ${STATES:-batch update}
+
+            Automated by PIN Pipeline GitHub Action
+            Co-Authored-By: github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+            git push
+          fi

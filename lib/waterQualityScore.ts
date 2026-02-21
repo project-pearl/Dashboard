@@ -50,10 +50,16 @@ export const ALL_PARAM_LABELS: Record<string, string> = {
 };
 
 // ─── Per-Parameter Freshness Classification ──────────────────────────────────
-// Parameters sampled within 180 days are "live" (suitable for grading);
+// Industry standard age brackets:
+//   < 2 years  — Current, decision-grade
+//   2–5 years  — Valid for trend analysis and regulatory compliance
+//   5–10 years — Supplemental, used with caveats
+//   > 10 years — Historical baseline only (excluded from scoring)
+//
+// Parameters sampled within 2 years are "live" (suitable for grading);
 // older or missing timestamps are "reference" (display only, excluded from composite).
 
-const LIVE_THRESHOLD_MS = 180 * 24 * 60 * 60 * 1000;
+const LIVE_THRESHOLD_MS = 2 * 365 * 24 * 60 * 60 * 1000; // 2 years
 
 function classifyParamFreshness(lastSampled: string | null | undefined): 'live' | 'reference' {
   if (!lastSampled) return 'reference';
@@ -244,23 +250,25 @@ const COVERAGE_STYLES: Record<CoverageLevel, Pick<MonitoringCoverage, 'level' | 
 function getFreshnessLabel(ageMs: number | null): string {
   if (ageMs === null) return 'Unknown';
   const days = ageMs / (24 * 60 * 60 * 1000);
-  if (days < 1) return 'Live';
-  if (days < 7) return `${Math.floor(days)}d ago`;
-  if (days < 30) return `${Math.floor(days)}d ago`;
-  if (days < 90) return `${Math.floor(days)} days old`;
-  if (days < 180) return `${Math.floor(days)} days old`;
-  return `${Math.floor(days)}+ days old`;
+  if (days < 1)    return 'Live';
+  if (days < 7)    return `${Math.floor(days)}d ago`;
+  if (days < 30)   return `${Math.floor(days)}d ago`;
+  if (days < 365)  return `${Math.floor(days)}d ago`;
+  const yrs = Math.floor(days / 365);
+  if (days < 730)  return `~${yrs}yr ago`;
+  return `${yrs}+ yr old`;
 }
 
 function getFreshnessConfidence(ageMs: number | null): string {
   if (ageMs === null) return 'Unknown freshness — data confidence cannot be verified.';
   const days = ageMs / (24 * 60 * 60 * 1000);
-  if (days < 1) return 'Live data — high confidence.';
-  if (days < 7) return 'Recent data — high confidence.';
-  if (days < 30) return 'Data within 30 days — good confidence.';
-  if (days < 90) return 'Moderate confidence; recommend re-sampling.';
-  if (days < 180) return 'Low confidence — stale data; re-sampling strongly recommended.';
-  return 'Very low confidence — data likely outdated; fresh sampling required.';
+  if (days < 1)    return 'Live data — high confidence.';
+  if (days < 7)    return 'Recent data — high confidence.';
+  if (days < 30)   return 'Current data — high confidence.';
+  if (days < 730)  return 'Decision-grade data (< 2 years) — good confidence.';
+  if (days < 1825) return 'Valid for trend analysis (2–5 years) — moderate confidence.';
+  if (days < 3650) return 'Supplemental data (5–10 years) — use with caveats.';
+  return 'Historical baseline only (> 10 years) — excluded from scoring.';
 }
 
 export function assessCoverage(
@@ -413,19 +421,21 @@ function gradeStyle(letter: GradeLetter | null): { color: string; bgColor: strin
 
 // ─── Per-Parameter Freshness Weighting ────────────────────────────────────────
 // Each parameter's contribution to the composite gets scaled by how fresh its data is.
-// This replaces the old global freshness multiplier with per-param confidence weights.
+// Aligned to industry standard age brackets for water quality data.
 
 function paramFreshnessWeight(lastSampled: string | null | undefined): number {
-  if (!lastSampled) return 0.25;
+  if (!lastSampled) return 0.15;
   const ts = new Date(lastSampled).getTime();
-  if (isNaN(ts)) return 0.25;
+  if (isNaN(ts)) return 0.15;
   const days = (Date.now() - ts) / (24 * 60 * 60 * 1000);
-  if (days < 1)   return 1.0;   // Live
-  if (days < 7)   return 0.95;  // Recent
-  if (days < 60)  return 0.85;  // Aging
-  if (days < 180) return 0.70;  // Stale
-  if (days < 365) return 0.50;  // Old
-  return 0.30;                   // Very old (>1yr)
+  if (days < 1)    return 1.0;    // Live
+  if (days < 7)    return 0.97;   // Recent
+  if (days < 30)   return 0.95;   // Current
+  if (days < 90)   return 0.90;   // Current
+  if (days < 730)  return 0.80;   // < 2 yr — decision-grade
+  if (days < 1825) return 0.55;   // 2–5 yr — trend analysis / regulatory
+  if (days < 3650) return 0.25;   // 5–10 yr — supplemental, used with caveats
+  return 0;                        // > 10 yr — historical baseline only, excluded
 }
 
 // ─── Regulatory Context & Penalties ──────────────────────────────────────────
@@ -822,4 +832,71 @@ export function generateImplications(grade: WaterQualityGrade): Observation[] {
   }
 
   return imp;
+}
+
+// ─── Composite Freshness Score ───────────────────────────────────────────────
+// Freshness = coverage (how many param slots populated) + recency (how old).
+// 1/15 params should never be green. 15/15 within 30 days = near-perfect.
+
+export const TOTAL_DISPLAY_PARAMS = 15;
+
+function paramRecencyScore(lastSampled: string | null | undefined): number {
+  if (!lastSampled) return 0;
+  const ts = new Date(lastSampled).getTime();
+  if (isNaN(ts)) return 0;
+  const days = (Date.now() - ts) / (24 * 60 * 60 * 1000);
+  if (days < 1)    return 100;   // Live
+  if (days < 7)    return 97;    // Recent
+  if (days < 30)   return 95;    // Current
+  if (days < 90)   return 90;    // Current
+  if (days < 730)  return 80;    // < 2 yr — decision-grade
+  if (days < 1825) return 50;    // 2–5 yr — trend analysis
+  if (days < 3650) return 20;    // 5–10 yr — supplemental
+  return 5;                       // > 10 yr — historical baseline
+}
+
+export interface FreshnessResult {
+  score: number;       // 0–100 composite
+  populated: number;   // params with data
+  total: number;       // total possible param slots
+  label: string;       // "Fresh" | "Aging" | "Stale"
+}
+
+export function computeFreshnessScore(
+  allParamTimestamps: Record<string, string | null | undefined>,
+  totalPossibleParams: number = TOTAL_DISPLAY_PARAMS,
+): FreshnessResult {
+  const entries = Object.entries(allParamTimestamps);
+  const populated = entries.length;
+
+  const coveragePct = (populated / Math.max(1, totalPossibleParams)) * 100;
+
+  let recencyPct = 0;
+  if (populated > 0) {
+    let recencySum = 0;
+    for (const [, ts] of entries) {
+      recencySum += paramRecencyScore(ts);
+    }
+    recencyPct = recencySum / populated;
+  }
+
+  const score = Math.round(coveragePct * 0.6 + recencyPct * 0.4);
+  const label = score >= 70 ? 'Fresh' : score >= 40 ? 'Aging' : 'Stale';
+
+  return { score, populated, total: totalPossibleParams, label };
+}
+
+// ─── Per-Card Age Tint ───────────────────────────────────────────────────────
+// Returns Tailwind classes for background tinting individual param cards by age.
+// Aligned to industry standard age brackets.
+
+export function paramAgeTint(lastSampled: string | null | undefined): string {
+  if (!lastSampled) return 'bg-white border-slate-200';
+  const ts = new Date(lastSampled).getTime();
+  if (isNaN(ts)) return 'bg-white border-slate-200';
+  const days = (Date.now() - ts) / (24 * 60 * 60 * 1000);
+  if (days < 730)  return 'bg-green-50/50 border-green-200';   // < 2 yr — decision-grade
+  if (days < 1825) return 'bg-yellow-50/50 border-yellow-200'; // 2–5 yr — trend analysis
+  if (days < 3650) return 'bg-orange-50/50 border-orange-200'; // 5–10 yr — supplemental
+  return 'bg-red-50/50 border-red-200';                         // > 10 yr — historical only
 }
