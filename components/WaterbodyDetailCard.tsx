@@ -629,6 +629,79 @@ export function WaterbodyDetailCard({
           </div>
         )}
 
+        {/* CBP DataHub Enrichment — Chesapeake Bay watershed only */}
+        {waterData?.parameters?._cbp_fluorescence && (
+          <div className="rounded-lg border border-teal-200 bg-teal-50/40 p-3 space-y-1.5">
+            <div className="text-xs font-semibold text-teal-800 uppercase tracking-wide flex items-center gap-1.5">
+              Chlorophyll Profiles
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-700 font-medium ml-1">CBP DataHub</span>
+            </div>
+            <div className="text-xs text-slate-600">
+              Latest chlorophyll fluorescence (CHL_F): <span className="font-medium">{waterData.parameters._cbp_fluorescence.value}</span> {waterData.parameters._cbp_fluorescence.unit} in this HUC8 watershed via CBP Fluorescence monitoring.
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              <a href="https://datahub.chesapeakebay.net/Fluorescence" target="_blank" rel="noopener noreferrer"
+                className="text-[10px] text-teal-600 hover:text-teal-800 bg-teal-100 px-2 py-0.5 rounded-full">
+                CBP Fluorescence Data →
+              </a>
+            </div>
+          </div>
+        )}
+
+        {waterData?.parameters?._cbp_pointsource && (
+          <div className="rounded-lg border border-teal-200 bg-teal-50/40 p-3 space-y-1.5">
+            <div className="text-xs font-semibold text-teal-800 uppercase tracking-wide flex items-center gap-1.5">
+              Point Source Discharges
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-700 font-medium ml-1">CBP DataHub</span>
+            </div>
+            <div className="text-xs text-slate-600">
+              <span className="font-medium">{waterData.parameters._cbp_pointsource.value}</span> active discharge {waterData.parameters._cbp_pointsource.value === 1 ? 'facility' : 'facilities'} tracked in this watershed via CBP Point Source monitoring.
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              <a href="https://datahub.chesapeakebay.net/PointSource" target="_blank" rel="noopener noreferrer"
+                className="text-[10px] text-teal-600 hover:text-teal-800 bg-teal-100 px-2 py-0.5 rounded-full">
+                CBP Point Source Data →
+              </a>
+            </div>
+          </div>
+        )}
+
+        {waterData?.parameters?._cbp_toxics && (
+          <div className="rounded-lg border border-teal-200 bg-teal-50/40 p-3 space-y-1.5">
+            <div className="text-xs font-semibold text-teal-800 uppercase tracking-wide flex items-center gap-1.5">
+              Contaminant Monitoring
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-700 font-medium ml-1">CBP DataHub</span>
+            </div>
+            <div className="text-xs text-slate-600">
+              <span className="font-medium">{waterData.parameters._cbp_toxics.value}</span> contaminant {waterData.parameters._cbp_toxics.value === 1 ? 'sample' : 'samples'} (PAH, pesticides, metals) recorded in this HUC8 watershed over the past 5 years.
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              <a href="https://datahub.chesapeakebay.net/Toxics" target="_blank" rel="noopener noreferrer"
+                className="text-[10px] text-teal-600 hover:text-teal-800 bg-teal-100 px-2 py-0.5 rounded-full">
+                CBP Toxics Data →
+              </a>
+            </div>
+          </div>
+        )}
+
+        {waterData?.parameters?._cbp_benthic && (
+          <div className="rounded-lg border border-teal-200 bg-teal-50/40 p-3 space-y-1.5">
+            <div className="text-xs font-semibold text-teal-800 uppercase tracking-wide flex items-center gap-1.5">
+              Benthic Health
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-700 font-medium ml-1">CBP DataHub</span>
+            </div>
+            <div className="text-xs text-slate-600">
+              Benthic Index of Biotic Integrity (IBI): <span className="font-medium">{waterData.parameters._cbp_benthic.value}</span> {waterData.parameters._cbp_benthic.unit} — measures bottom-dwelling organism community health in tidal waters.
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              <a href="https://datahub.chesapeakebay.net/LivingResources" target="_blank" rel="noopener noreferrer"
+                className="text-[10px] text-teal-600 hover:text-teal-800 bg-teal-100 px-2 py-0.5 rounded-full">
+                CBP Living Resources Data →
+              </a>
+            </div>
+          </div>
+        )}
+
         {/* Supplementary: Satellite Data (NASA STREAM) */}
         {waterData && !waterLoading && (
           <div className="rounded-lg border border-indigo-200 bg-indigo-50/30 p-3 space-y-1.5">

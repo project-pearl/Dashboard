@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAttainsCache, getAttainsCacheSummary, getCacheStatus, triggerAttainsBuild } from '@/lib/attainsCache';
 
 const WR_BASE = 'https://api.waterreporter.org';
-const CBP_BASE = 'http://datahub.chesapeakebay.net';
+const CBP_BASE = 'https://datahub.chesapeakebay.net';
 const USGS_IV_BASE = 'https://waterservices.usgs.gov/nwis/iv';
 const USGS_SITE_BASE = 'https://waterservices.usgs.gov/nwis/site';
 const USGS_OGC_BASE = 'https://api.waterdata.usgs.gov/ogcapi/v0';
@@ -50,6 +50,25 @@ async function cbpFetch(path: string) {
     return { error: `CBP DataHub error: ${res.status} ${res.statusText}` };
   }
   return res.json();
+}
+
+// ─── CBP DataHub POST Helper (Toxics, Living Resources) ───────────────────
+async function cbpPostFetch(path: string, body: Record<string, string>) {
+  const url = `${CBP_BASE}${path}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
+    body: new URLSearchParams(body).toString(),
+    next: { revalidate: 600 },
+  });
+  if (!res.ok) return { error: `CBP DataHub error: ${res.status} ${res.statusText}` };
+  return res.json();
+}
+
+// ─── CBP Date Format Helper (M-D-YYYY) ───────────────────────────────────────
+function toCbpDate(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getMonth() + 1}-${d.getDate()}-${d.getFullYear()}`;
 }
 
 // ─── WQP Station Search Helper (still works for station discovery) ───────────
@@ -593,23 +612,93 @@ export async function GET(request: NextRequest) {
       }
 
       // Get water quality data for a station (filtered by date range)
-      // Example: ?action=cbp-waterquality&station=CB3.3C&startDate=2024-01-01&endDate=2025-01-01
+      // CBP API uses path segments: /api.json/WaterQuality/WaterQuality/{StartDate}/{EndDate}/{DataStream}/{ProgramId}/{ProjectId}/{GeoAttr}/{AttrId}/{SubstanceId}
+      // Date format: M-D-YYYY
       case 'cbp-waterquality': {
-        const station = sp.get('station') || '';
         const startDate = sp.get('startDate') || '';
         const endDate = sp.get('endDate') || '';
-        const program = sp.get('program') || '';
-        const format = 'json';
+        const dataStream = sp.get('dataStream') || '0,1';
+        const program = sp.get('program') || '2'; // 2 = Tidal
+        const project = sp.get('project') || '0'; // 0 = all
+        const geoAttr = sp.get('geoAttr') || 'HUC8';
+        const attrId = sp.get('huc8') || sp.get('station') || '';
+        const substance = sp.get('substance') || '0'; // 0 = all
 
-        // Build the data download URL with query parameters
-        let path = `/api.${format}/WaterQuality`;
-        const queryParts: string[] = [];
-        if (station) queryParts.push(`station=${encodeURIComponent(station)}`);
-        if (startDate) queryParts.push(`startDate=${encodeURIComponent(startDate)}`);
-        if (endDate) queryParts.push(`endDate=${encodeURIComponent(endDate)}`);
-        if (program) queryParts.push(`program=${encodeURIComponent(program)}`);
-        if (queryParts.length) path += `?${queryParts.join('&')}`;
+        const cbpStart = startDate.includes('-') && startDate.length > 7 ? toCbpDate(startDate) : (startDate || '1-1-2024');
+        const cbpEnd = endDate.includes('-') && endDate.length > 7 ? toCbpDate(endDate) : (endDate || '1-1-2026');
 
+        const path = `/api.json/WaterQuality/WaterQuality/${cbpStart}/${cbpEnd}/${dataStream}/${program}/${project}/${geoAttr}/${attrId}/${substance}`;
+        const data = await cbpFetch(path);
+        return NextResponse.json({ source: 'cbp', data });
+      }
+
+      // ── CBP Fluorescence (chlorophyll fluorescence profiles) ──────────────
+      // GET /api.json/Fluorescence/{direction}/{startDate}/{endDate}/HUC8/{huc8}
+      case 'cbp-fluorescence': {
+        const huc8 = sp.get('huc8') || '';
+        const startDate = sp.get('startDate') || '1-1-2024';
+        const endDate = sp.get('endDate') || '1-1-2026';
+        const direction = sp.get('direction') || 'Vertical';
+        const path = `/api.json/Fluorescence/${direction}/${startDate}/${endDate}/HUC8/${huc8}`;
+        const data = await cbpFetch(path);
+        return NextResponse.json({ source: 'cbp', data });
+      }
+
+      // ── CBP Point Source — Facility Information ─────────────────────────
+      // GET /api.json/PointSource/FacilityInformation/State/{stateAbbr}
+      case 'cbp-pointsource-facilities': {
+        const state = sp.get('state') || 'MD';
+        const path = `/api.json/PointSource/FacilityInformation/State/${state}`;
+        const data = await cbpFetch(path);
+        return NextResponse.json({ source: 'cbp', data });
+      }
+
+      // ── CBP Point Source — Load Data for a facility ─────────────────────
+      // GET /api.json/PointSource/LoadData/{startDate}/{endDate}/Facility/{npdes}
+      case 'cbp-pointsource-loads': {
+        const npdes = sp.get('npdes') || '';
+        const startDate = sp.get('startDate') || '1-1-2024';
+        const endDate = sp.get('endDate') || '1-1-2026';
+        const path = `/api.json/PointSource/LoadData/${startDate}/${endDate}/Facility/${npdes}`;
+        const data = await cbpFetch(path);
+        return NextResponse.json({ source: 'cbp', data });
+      }
+
+      // ── CBP Toxics — Chemical Contaminant data (POST) ───────────────────
+      // POST /api.json/Toxics/ChemicalContaminant/{startDate}/{endDate}/HUC8
+      case 'cbp-toxics': {
+        const huc8 = sp.get('huc8') || '';
+        const startDate = sp.get('startDate') || '1-1-2020';
+        const endDate = sp.get('endDate') || '1-1-2026';
+        const mediaTypes = sp.get('mediaTypes') || 'WAT,SED';
+        const path = `/api.json/Toxics/ChemicalContaminant/${startDate}/${endDate}/HUC8`;
+        const data = await cbpPostFetch(path, {
+          geographicalAttributesList: huc8,
+          mediaTypesList: mediaTypes,
+        });
+        return NextResponse.json({ source: 'cbp', data });
+      }
+
+      // ── CBP Living Resources — Tidal Benthic IBI (POST) ────────────────
+      // POST /api.json/LivingResources/TidalBenthic/IBI/{startDate}/{endDate}/{projectId}/HUC8
+      case 'cbp-livingresources': {
+        const huc8 = sp.get('huc8') || '';
+        const startDate = sp.get('startDate') || '1-1-2020';
+        const endDate = sp.get('endDate') || '1-1-2026';
+        const projectId = sp.get('projectId') || '1'; // 1 = BEN
+        const path = `/api.json/LivingResources/TidalBenthic/IBI/${startDate}/${endDate}/${projectId}/HUC8`;
+        const data = await cbpPostFetch(path, {
+          geographicalAttributesList: huc8,
+        });
+        return NextResponse.json({ source: 'cbp', data });
+      }
+
+      // ── CBP Living Resources — Lookup (GET, for discovery) ──────────────
+      case 'cbp-livingresources-lookup': {
+        const startDate = sp.get('startDate') || '1-1-2020';
+        const endDate = sp.get('endDate') || '1-1-2026';
+        const projectId = sp.get('projectId') || '1';
+        const path = `/api.json/LivingResources/TidalBenthic/IBI/${startDate}/${endDate}/${projectId}/HUC8`;
         const data = await cbpFetch(path);
         return NextResponse.json({ source: 'cbp', data });
       }

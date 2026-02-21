@@ -1900,6 +1900,126 @@ export function useWaterData(regionId: string | null): UseWaterDataResult {
 
       if (cancelled) return;
 
+      // ── Source 9b: CBP DataHub Enrichment — Chesapeake watershed only ───
+      // Fluorescence, Point Source, Toxics, Benthic IBI
+      // Only fires for HUC8 codes in Chesapeake Bay watershed (0206xxxx, 0207xxxx)
+      const huc8 = regionMeta?.huc8 || '';
+      const isChesapeakeWatershed = huc8.startsWith('0206') || huc8.startsWith('0207');
+      if (isChesapeakeWatershed && regionMeta) {
+        try {
+          const stateFipsToAbbr2: Record<string, string> = { '24': 'MD', '51': 'VA', '06': 'CA', '11': 'DC', '10': 'DE', '42': 'PA', '36': 'NY', '54': 'WV', '12': 'FL' };
+          const cbpStateAbbr = stateFipsToAbbr2[stateCode] || 'MD';
+          const now = new Date();
+          const twoYrsAgo = `${now.getMonth() + 1}-${now.getDate()}-${now.getFullYear() - 2}`;
+          const fiveYrsAgo = `${now.getMonth() + 1}-${now.getDate()}-${now.getFullYear() - 5}`;
+          const today = `${now.getMonth() + 1}-${now.getDate()}-${now.getFullYear()}`;
+
+          const cbpFetches = [
+            // Fluorescence (chlorophyll profiles)
+            fetch(`/api/water-data?action=cbp-fluorescence&huc8=${huc8}&startDate=${twoYrsAgo}&endDate=${today}&direction=Vertical`, { signal: AbortSignal.timeout(10000) }).catch(() => null),
+            // Point Source facilities
+            fetch(`/api/water-data?action=cbp-pointsource-facilities&state=${cbpStateAbbr}`, { signal: AbortSignal.timeout(10000) }).catch(() => null),
+            // Toxics
+            fetch(`/api/water-data?action=cbp-toxics&huc8=${huc8}&startDate=${fiveYrsAgo}&endDate=${today}`, { signal: AbortSignal.timeout(10000) }).catch(() => null),
+            // Benthic IBI
+            fetch(`/api/water-data?action=cbp-livingresources&huc8=${huc8}&startDate=${fiveYrsAgo}&endDate=${today}`, { signal: AbortSignal.timeout(10000) }).catch(() => null),
+          ];
+
+          const [fluorRes, psRes, toxRes, benRes] = await Promise.allSettled(cbpFetches);
+          let cbpEnrichCount = 0;
+
+          // Fluorescence
+          if (fluorRes.status === 'fulfilled' && fluorRes.value?.ok) {
+            const fJson = await fluorRes.value.json().catch(() => null);
+            const records = Array.isArray(fJson?.data) ? fJson.data : [];
+            if (records.length > 0) {
+              const latest = records[records.length - 1];
+              allParams['_cbp_fluorescence'] = {
+                pearlKey: '_cbp_fluorescence',
+                value: latest.ReportingValue ?? latest.reportingValue ?? records.length,
+                unit: 'UG/L',
+                source: 'CBP',
+                stationName: `CBP Fluorescence (${huc8})`,
+                lastSampled: latest.SampleDate || latest.sampleDate || new Date().toISOString(),
+                parameterName: 'Chlorophyll Fluorescence (CHL_F)',
+              };
+              cbpEnrichCount++;
+            }
+          }
+
+          // Point Source
+          if (psRes.status === 'fulfilled' && psRes.value?.ok) {
+            const psJson = await psRes.value.json().catch(() => null);
+            const facilities = Array.isArray(psJson?.data) ? psJson.data : [];
+            if (facilities.length > 0) {
+              const active = facilities.filter((f: any) => f.Status === 'Active' || f.status === 'Active');
+              allParams['_cbp_pointsource'] = {
+                pearlKey: '_cbp_pointsource',
+                value: active.length || facilities.length,
+                unit: 'facilities',
+                source: 'CBP',
+                stationName: `CBP Point Source (${cbpStateAbbr})`,
+                lastSampled: new Date().toISOString(),
+                parameterName: 'Point Source Facilities',
+              };
+              cbpEnrichCount++;
+            }
+          }
+
+          // Toxics
+          if (toxRes.status === 'fulfilled' && toxRes.value?.ok) {
+            const txJson = await toxRes.value.json().catch(() => null);
+            const samples = Array.isArray(txJson?.data) ? txJson.data : [];
+            if (samples.length > 0) {
+              allParams['_cbp_toxics'] = {
+                pearlKey: '_cbp_toxics',
+                value: samples.length,
+                unit: 'samples',
+                source: 'CBP',
+                stationName: `CBP Toxics (${huc8})`,
+                lastSampled: new Date().toISOString(),
+                parameterName: 'Contaminant Monitoring',
+              };
+              cbpEnrichCount++;
+            }
+          }
+
+          // Benthic IBI
+          if (benRes.status === 'fulfilled' && benRes.value?.ok) {
+            const bnJson = await benRes.value.json().catch(() => null);
+            const records = Array.isArray(bnJson?.data) ? bnJson.data : [];
+            if (records.length > 0) {
+              const latest = records[records.length - 1];
+              allParams['_cbp_benthic'] = {
+                pearlKey: '_cbp_benthic',
+                value: latest.IBIScore ?? latest.ibiScore ?? latest.IBI ?? records.length,
+                unit: 'IBI score',
+                source: 'CBP',
+                stationName: `CBP Benthic (${huc8})`,
+                lastSampled: latest.SampleDate || latest.sampleDate || new Date().toISOString(),
+                parameterName: 'Benthic Index of Biotic Integrity',
+              };
+              cbpEnrichCount++;
+            }
+          }
+
+          if (cbpEnrichCount > 0 && !activeSources.includes('CBP')) {
+            activeSources.push('CBP');
+            sourceDetails.push({
+              source: DATA_SOURCES.CBP,
+              parameterCount: cbpEnrichCount,
+              stationName: `CBP DataHub (${huc8})`,
+              lastSampled: new Date().toISOString(),
+            });
+          }
+          console.log(`[PEARL Source 9b] CBP DataHub: ${cbpEnrichCount} enrichment params for HUC8 ${huc8}`);
+        } catch (e) {
+          console.warn(`[PEARL Source 9b] CBP DataHub enrichment failed:`, e instanceof Error ? e.message : e);
+        }
+      }
+
+      if (cancelled) return;
+
       // ── Source 10: Reference Data (agency reports fallback) ─────────────
       // If live sources returned nothing or are sparse, fill from reference data
       const refEntry = regionId ? REFERENCE_DATA[regionId] : null;

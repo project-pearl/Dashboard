@@ -1238,7 +1238,7 @@ export default function Home() {
                 }}
               >
                 <Image
-                  src="/Pearl-Logo-alt.png"
+                  src="/Pearl-Header.png"
                   alt="Project Pearl Logo"
                   fill
                   className="object-contain object-left"
