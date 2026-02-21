@@ -583,25 +583,7 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
         )}
 
         {/* ── HERO BANNER ── */}
-        <HeroBanner role="ngo" />
-
-        {/* ── HEADER — NationalCommandCenter style ── */}
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div
-              className="relative h-12 w-40 cursor-default select-none flex-shrink-0"
-              onDoubleClick={() => onToggleDevMode?.()}
-            >
-              <Image src="/Pearl-Logo-alt.png" alt="Project Pearl Logo" fill className="object-contain object-left" priority />
-            </div>
-            <div>
-              <div className="text-xl font-semibold text-slate-800">PEARL Intelligence Network — Conservation Hub</div>
-              <div className="text-sm text-slate-600">
-                Watershed advocacy, restoration intelligence &amp; grant opportunities
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
+        <HeroBanner role="ngo" onDoubleClick={() => onToggleDevMode?.()}>
             {/* State Selector */}
             <select
               value={stateAbbr}
@@ -708,8 +690,7 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
               <Leaf className="h-3 w-3 mr-1" />
               NGO
             </Badge>
-          </div>
-        </div>
+        </HeroBanner>
 
         {/* ── OYSTER RESTORATION — full-width banner image ── */}
         <div className="rounded-2xl border border-emerald-200 bg-white shadow-sm overflow-hidden">

@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import Image from 'next/image';
 import HeroBanner from './HeroBanner';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -489,19 +488,10 @@ export function PEARLCommandCenter(props: Props) {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* ── HEADER ── */}
-      <div className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-[1600px] mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Image src="/PearlLogo.png" alt="PEARL" width={32} height={32} className="rounded" />
-              <div>
-                <h1 className="text-lg font-bold text-slate-900 tracking-tight">PEARL Intelligence Network — Operations Command Center</h1>
-                <p className="text-[10px] text-slate-400 font-mono">Internal Operations · {user?.name || 'Admin'} · {new Date().toLocaleDateString()}</p>
-              </div>
-            </div>
+      <div className="max-w-[1600px] mx-auto px-4 py-4 space-y-4">
 
-            <div className="flex items-center gap-2">
+        {/* ── HERO BANNER ── */}
+        <HeroBanner role="pearl" onDoubleClick={() => props.onToggleDevMode?.()}>
               {/* Lens Switcher */}
               <div className="flex rounded-lg border border-slate-200 overflow-hidden">
                 {(['operations', 'proposals'] as ViewLens[]).map(lens => (
@@ -528,15 +518,7 @@ export function PEARLCommandCenter(props: Props) {
                   <LogOut size={14} />
                 </Button>
               )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-[1600px] mx-auto px-4 py-4 space-y-4">
-
-        {/* ── HERO BANNER ── */}
-        <HeroBanner role="pearl" />
+        </HeroBanner>
 
         {/* ── NATIONAL WATER HEALTH GAUGE ── */}
         <Card className="overflow-hidden">

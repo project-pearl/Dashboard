@@ -576,30 +576,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
         )}
 
         {/* ── HERO BANNER ── */}
-        <HeroBanner role="k12" />
-
-        {/* ── HEADER ── */}
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div
-              className="relative h-12 w-40 cursor-default select-none flex-shrink-0"
-              onDoubleClick={() => onToggleDevMode?.()}
-            >
-              <Image src="/Pearl-Logo-alt.png" alt="Project Pearl Logo" fill className="object-contain object-left" priority />
-            </div>
-            <div className="relative w-[100px] h-[100px] flex-shrink-0">
-              <Image src="/Mascot.png" alt="PEARL Bubble Mascot" width={100} height={100} className="rounded-full object-cover" />
-            </div>
-            <div>
-              <div className="text-xl font-semibold text-slate-800">PEARL Intelligence Network — {stateName} Explorer</div>
-              <div className="text-sm text-slate-600">
-                {isTeacher
-                  ? 'NGSS-aligned water quality data, field report tools & curriculum resources'
-                  : 'Discover your local waterways — explore real water quality data and learn what it means for wildlife'}
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
+        <HeroBanner role="k12" onDoubleClick={() => onToggleDevMode?.()}>
             {/* Teacher / Student toggle */}
             <button
               onClick={() => setIsTeacher(false)}
@@ -676,8 +653,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
               )}
             </div>
             )}
-          </div>
-        </div>
+        </HeroBanner>
 
         <LayoutEditor ccKey="K12">
         {({ sections, isEditMode, onToggleVisibility, onToggleCollapse, collapsedSections }) => {
@@ -2361,11 +2337,11 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
         {!isTeacher && (
           <div className="my-8 rounded-2xl border-2 border-sky-200 bg-gradient-to-br from-sky-50 to-white shadow-lg p-6">
             <div className="flex items-center justify-center gap-4 mb-4">
-              <Image src="/Mascot.png" alt="PEARL Bubble Mascot" width={160} height={160} className="flex-shrink-0" />
               <div className="text-center">
                 <div className="text-lg font-bold text-sky-900">Real Results from Our First Pilot!</div>
                 <p className="text-sm text-sky-700 mt-1">PEARL cleaned real water in Milton, Florida using nature-inspired technology</p>
               </div>
+              <Image src="/Mascot.png" alt="PEARL Bubble Mascot" width={160} height={160} className="flex-shrink-0" />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="rounded-xl bg-green-50 border border-green-200 p-4 text-center">

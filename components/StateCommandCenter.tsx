@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import Image from 'next/image';
 import { CircleMarker, Tooltip } from 'react-leaflet';
 import HeroBanner from './HeroBanner';
 import dynamic from 'next/dynamic';
@@ -610,25 +609,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
         )}
 
         {/* ── HERO BANNER ── */}
-        <HeroBanner role="state" />
-
-        {/* ── HEADER ── */}
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div
-              className="relative h-12 w-40 cursor-default select-none"
-              onDoubleClick={() => onToggleDevMode?.()}
-            >
-              <Image src="/Pearl-Logo-alt.png" alt="Project Pearl Logo" fill className="object-contain object-left" priority />
-            </div>
-            <div>
-              <div className="text-xl font-semibold text-slate-800">PEARL Intelligence Network — {stateName} Command Center</div>
-              <div className="text-sm text-slate-600">
-                Surface water intelligence — real-time aquatic health monitoring &amp; restoration
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
+        <HeroBanner role="state" onDoubleClick={() => onToggleDevMode?.()}>
             {/* View Lens Dropdown */}
             <div className="relative">
               <button
@@ -780,8 +761,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
               )}
             </div>
             )}
-          </div>
-        </div>
+        </HeroBanner>
 
         <LayoutEditor ccKey="State">
         {({ sections, isEditMode, onToggleVisibility, onToggleCollapse, collapsedSections }) => {

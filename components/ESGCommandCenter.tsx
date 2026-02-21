@@ -5,7 +5,6 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import Image from 'next/image';
 import { CircleMarker, Tooltip } from 'react-leaflet';
 import HeroBanner from './HeroBanner';
 import dynamic from 'next/dynamic';
@@ -673,27 +672,7 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
       <div className="max-w-[1600px] mx-auto p-4 space-y-4">
 
         {/* ── HERO BANNER ── */}
-        <HeroBanner role="esg" />
-
-        {/* ── HEADER ── */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div
-                className="relative h-12 w-40 cursor-default select-none"
-                onDoubleClick={() => onToggleDevMode?.()}
-              >
-                <Image src="/Pearl-Logo-alt.png" alt="Project Pearl Logo" fill className="object-contain object-left" priority />
-              </div>
-              <div>
-                <div className="text-xl font-semibold text-slate-800">PEARL Intelligence Network — Corporate E/S/G Command Center</div>
-                <div className="text-sm text-slate-600">
-                  Portfolio water risk, ESG disclosure readiness &amp; environmental impact verification
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
+        <HeroBanner role="esg" onDoubleClick={() => onToggleDevMode?.()}>
             {/* State selector */}
             <select
               value={focusedState}
@@ -833,10 +812,10 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
               )}
             </div>
             )}
-            </div>
-        </div>
-          <div className="text-2xl font-bold text-emerald-700 text-center pt-3">{companyName}</div>
-        </div>
+        </HeroBanner>
+
+        {/* ── COMPANY NAME ── */}
+        <div className="text-7xl font-bold text-emerald-700 text-center pt-3 capitalize">{companyName}</div>
 
         <LayoutEditor ccKey="ESG">
         {({ sections, isEditMode, onToggleVisibility, onToggleCollapse, collapsedSections }) => {

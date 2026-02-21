@@ -995,25 +995,7 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
         )}
 
         {/* ── HERO BANNER ── */}
-        <HeroBanner role="ms4" />
-
-        {/* ── HEADER ── */}
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div
-              className="relative h-12 w-40 cursor-default select-none"
-              onDoubleClick={() => onToggleDevMode?.()}
-            >
-              <Image src="/Pearl-Logo-alt.png" alt="Project Pearl Logo" fill className="object-contain object-left" priority />
-            </div>
-            <div>
-              <div className="text-xl font-semibold text-slate-800">MS4 Compliance Center</div>
-              <div className="text-sm text-slate-600">
-                Real-time BMP verification, automated MDE reporting &amp; TMDL credit tracking — tailored for your jurisdiction
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
+        <HeroBanner role="ms4" onDoubleClick={() => onToggleDevMode?.()}>
             {/* DEV: Jurisdiction picker — remove when auth wired */}
             <div className="relative">
               <select
@@ -1122,8 +1104,7 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
               )}
             </div>
             )}
-          </div>
-        </div>
+        </HeroBanner>
 
         <LayoutEditor ccKey="MS4">
         {({ sections, isEditMode, onToggleVisibility, onToggleCollapse, collapsedSections }) => {
@@ -1226,6 +1207,17 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
                 {!activeDetailId && <span className="text-[10px] text-slate-400 italic ml-1">Select a waterbody to enable report tools</span>}
               </div>
               <div className="flex flex-wrap gap-2">
+                <button
+                  disabled={!activeDetailId || !displayData}
+                  onClick={() => {
+                    if (collapsedSections['fineavoidance']) onToggleCollapse('fineavoidance');
+                    setTimeout(() => document.getElementById('section-fineavoidance')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border-2 border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
+                >
+                  <Shield className="h-3.5 w-3.5" />
+                  Fine Avoidance
+                </button>
                 <button
                   disabled={!activeDetailId || !regionMockData}
                   onClick={() => {
@@ -2833,6 +2825,31 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
             })()}
           </div>
         );
+
+            case 'fineavoidance': return DS((() => {
+        if (!activeDetailId || !regionMockData || !displayData) return null;
+        return (
+            <div id="section-fineavoidance" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+              <button onClick={() => onToggleCollapse('fineavoidance')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+                <span className="text-sm font-bold text-slate-800">🛡️ MS4 Compliance & Fine Avoidance</span>
+                <div className="flex items-center gap-1">
+                  {isSectionOpen('fineavoidance') && <span onClick={(e) => { e.stopPropagation(); printSection('section-fineavoidance', 'MS4 Compliance & Fine Avoidance'); }} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
+                  {isSectionOpen('fineavoidance') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+                </div>
+              </button>
+              {isSectionOpen('fineavoidance') && (
+                <div className="p-4">
+                  <MS4FineAvoidanceCalculator
+                    data={displayData as any}
+                    removalEfficiencies={removalEfficiencies as any}
+                    regionId={activeDetailId}
+                    stormEventsMonitored={stormEvents.length}
+                  />
+                </div>
+              )}
+            </div>
+        );
+        })());
 
             case 'mdeexport': return DS((() => {
         if (!activeDetailId || !regionMockData || !displayData) return null;

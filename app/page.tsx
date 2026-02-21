@@ -1220,7 +1220,7 @@ export default function Home() {
     )}
     {userRole === 'Temp' && !showNationalView && (
         <div className="min-h-screen">
-          <BreakpointLanding />
+          <BreakpointLanding onToggleDevMode={() => setDevMode(prev => !prev)} />
         </div>
     )}
     {/* All roles now have command centers — old shared dashboard disabled */}

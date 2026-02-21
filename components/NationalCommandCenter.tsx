@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import Image from 'next/image';
 import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { feature } from 'topojson-client';
@@ -2027,28 +2026,7 @@ export function NationalCommandCenter(props: Props) {
           </div>
         )}
         {/* ── HERO BANNER ── */}
-        <HeroBanner role="national" />
-
-        {/* Header */}
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="relative h-12 w-40">
-              <Image
-                src="/Pearl-Logo-alt.png"
-                alt="Project Pearl Logo"
-                fill
-                className="object-contain object-left"
-                priority
-              />
-            </div>
-            <div>
-              <div className="text-xl font-semibold text-slate-800">PEARL Intelligence Network — National Command Center</div>
-              <div className="text-sm text-slate-600">
-                Surface water intelligence — real-time aquatic health monitoring & restoration
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
+        <HeroBanner role="national" onDoubleClick={() => props.onToggleDevMode?.()}>
             {/* View Dropdown */}
             <div className="relative">
               <button
@@ -2213,8 +2191,7 @@ export function NationalCommandCenter(props: Props) {
                 <span className="ml-2">Close</span>
               </Button>
             )}
-          </div>
-        </div>
+        </HeroBanner>
 
 
         {/* ── LAYOUT EDITOR WRAPPER ── */}
@@ -5114,14 +5091,14 @@ export function NationalCommandCenter(props: Props) {
             );
 
         default: return null;
-          } {/* end switch */}
-        })} {/* end sections.map */}
+        } {/* end switch */}
+      })} {/* end sections.map */}
 
-          </div> {/* end space-y-6 isEditMode wrapper */}
-          </>);
-        }}
-       
-        </LayoutEditor>
+      </div> {/* end space-y-6 isEditMode wrapper */}
+      </>);
+      }}
+
+      </LayoutEditor>
 
       </div>
 

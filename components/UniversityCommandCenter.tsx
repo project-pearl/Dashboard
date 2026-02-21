@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import Image from 'next/image';
 import { CircleMarker, Tooltip } from 'react-leaflet';
 import HeroBanner from './HeroBanner';
 import { getStatesGeoJSON, geoToAbbr, STATE_GEO_LEAFLET, FIPS_TO_ABBR as _FIPS, STATE_NAMES as _SN } from '@/lib/leafletMapUtils';
@@ -598,20 +597,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
         )}
 
         {/* ── HERO BANNER ── */}
-        <HeroBanner role="university" />
-
-        {/* ── HEADER ── */}
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="relative h-12 w-40 cursor-default select-none" onDoubleClick={() => onToggleDevMode?.()}>
-              <Image src="/Pearl-Logo-alt.png" alt="Project Pearl Logo" fill className="object-contain object-left" priority />
-            </div>
-            <div>
-              <div className="text-xl font-semibold text-slate-800">Research / Academic Hub</div>
-              <div className="text-sm text-slate-600">Multi-source water quality data, analysis tools &amp; publication support</div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
+        <HeroBanner role="university" onDoubleClick={() => onToggleDevMode?.()}>
             {/* Lens Switcher */}
             <div className="hidden md:flex items-center gap-1 p-1 rounded-full bg-violet-100/60 border border-violet-200">
               {LENSES.map(lens => (
@@ -686,8 +672,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
               )}
             </div>
             )}
-          </div>
-        </div>
+        </HeroBanner>
 
         <LayoutEditor ccKey="University">
         {({ sections, isEditMode, onToggleVisibility, onToggleCollapse, collapsedSections }) => {
