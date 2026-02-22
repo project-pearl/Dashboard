@@ -5,6 +5,9 @@ import { getCedenCacheStatus } from '@/lib/cedenCache';
 import { getIcisCacheStatus } from '@/lib/icisCache';
 import { getNwisGwCacheStatus } from '@/lib/nwisGwCache';
 import { getSdwisCacheStatus } from '@/lib/sdwisCache';
+import { getEchoCacheStatus } from '@/lib/echoCache';
+import { getFrsCacheStatus } from '@/lib/frsCache';
+import { getPfasCacheStatus } from '@/lib/pfasCache';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -317,6 +320,16 @@ export async function GET() {
   const sdwisViolations = sdwisStatus.loaded ? (sdwisStatus as { violationCount: number }).violationCount : 0;
   const sdwisEnforcement = sdwisStatus.loaded ? (sdwisStatus as { enforcementCount: number }).enforcementCount : 0;
 
+  const echoStatus = getEchoCacheStatus();
+  const echoFacilities = echoStatus.loaded ? (echoStatus as { facilityCount: number }).facilityCount : 0;
+  const echoViolations = echoStatus.loaded ? (echoStatus as { violationCount: number }).violationCount : 0;
+
+  const frsStatus = getFrsCacheStatus();
+  const frsFacilities = frsStatus.loaded ? (frsStatus as { facilityCount: number }).facilityCount : 0;
+
+  const pfasStatus = getPfasCacheStatus();
+  const pfasResults = pfasStatus.loaded ? (pfasStatus as { resultCount: number }).resultCount : 0;
+
   const datapoints = {
     attains: { states: attainsStates.length, waterbodies: attainsWaterbodies, assessments: attainsAssessments },
     wqp: { records: wqpRecords, states: wqpStates },
@@ -324,7 +337,10 @@ export async function GET() {
     icis: { permits: icisPermits, violations: icisViolations, dmr: icisDmr, enforcement: icisEnforcement },
     nwisGw: { sites: nwisGwSites, levels: nwisGwLevels },
     sdwis: { systems: sdwisSystems, violations: sdwisViolations, enforcement: sdwisEnforcement },
-    total: attainsWaterbodies + wqpRecords + cedenChem + cedenTox + icisPermits + icisViolations + icisDmr + icisEnforcement + nwisGwSites + nwisGwLevels + sdwisSystems + sdwisViolations + sdwisEnforcement,
+    echo: { facilities: echoFacilities, violations: echoViolations },
+    frs: { facilities: frsFacilities },
+    pfas: { results: pfasResults },
+    total: attainsWaterbodies + wqpRecords + cedenChem + cedenTox + icisPermits + icisViolations + icisDmr + icisEnforcement + nwisGwSites + nwisGwLevels + sdwisSystems + sdwisViolations + sdwisEnforcement + echoFacilities + echoViolations + frsFacilities + pfasResults,
   };
 
   return NextResponse.json(

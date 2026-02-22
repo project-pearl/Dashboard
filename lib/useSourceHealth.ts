@@ -24,6 +24,9 @@ export interface DatapointSummary {
   icis: { permits: number; violations: number; dmr: number; enforcement: number };
   nwisGw: { sites: number; levels: number };
   sdwis: { systems: number; violations: number; enforcement: number };
+  echo: { facilities: number; violations: number };
+  frs: { facilities: number };
+  pfas: { results: number };
   total: number;
 }
 
