@@ -83,7 +83,7 @@ let buildStatus: 'cold' | 'building' | 'ready' | 'stale' = 'cold';
 let lastBuilt: Date | null = null;
 let buildStarted: Date | null = null;
 let buildPromise: Promise<void> | null = null;
-let _cacheSource: 'disk' | 'memory (self-build)' | null = null;
+let _cacheSource: 'disk' | 'memory (self-build)' | 'memory (cron)' | null = null;
 
 // ─── Load from disk on startup ─────────────────────────────────────────────────
 
@@ -486,6 +486,98 @@ export async function triggerAttainsBuild(): Promise<void> {
   return buildCache();
 }
 
+/**
+ * Time-budgeted build — processes as many states as possible within the
+ * given time budget, saves progress, and returns what was done.
+ * Designed for Vercel cron (maxDuration 300s).
+ */
+export async function buildAttainsChunk(timeBudgetMs: number): Promise<{
+  processed: string[];
+  failed: string[];
+  alreadyCached: number;
+  totalStates: number;
+  savedToDisk: boolean;
+}> {
+  ensureDiskLoaded();
+
+  const cronStart = Date.now();
+  const deadline = cronStart + timeBudgetMs;
+
+  const remaining = ALL_STATES.filter(s => !PRIORITY.includes(s));
+  const loadOrder = [...PRIORITY.filter(s => ALL_STATES.includes(s)), ...remaining];
+  const toFetch = loadOrder.filter(s => !loadedStates.has(s));
+  const alreadyCached = loadedStates.size;
+
+  if (toFetch.length === 0) {
+    // All states cached — just update timestamps
+    if (buildStatus !== 'ready') {
+      buildStatus = 'ready';
+      lastBuilt = new Date();
+      _cacheSource = _cacheSource || 'memory (cron)';
+    }
+    return { processed: [], failed: [], alreadyCached, totalStates: ALL_STATES.length, savedToDisk: false };
+  }
+
+  buildStatus = 'building';
+  buildStarted = new Date();
+
+  const processed: string[] = [];
+  const failed: string[] = [];
+
+  for (const st of toFetch) {
+    // Check time budget — leave 30s for save + response
+    if (Date.now() > deadline - 30_000) {
+      console.log(`[ATTAINS Cron] Time budget reached — stopping after ${processed.length} states`);
+      break;
+    }
+
+    try {
+      const result = await fetchAttainsState(st);
+      if (result) {
+        cache[st] = result;
+        loadedStates.add(st);
+        processed.push(st);
+        console.log(`[ATTAINS Cron] ${st}: ${result.stored} waterbodies (${loadedStates.size}/${ALL_STATES.length})`);
+      } else {
+        failed.push(st);
+        console.warn(`[ATTAINS Cron] ${st}: null result`);
+      }
+    } catch (e: any) {
+      failed.push(st);
+      console.warn(`[ATTAINS Cron] ${st}: FAILED (${e.message})`);
+    }
+
+    // Small delay between states
+    if (Date.now() < deadline - 35_000) {
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  }
+
+  // Update status
+  const allDone = loadedStates.size >= ALL_STATES.length;
+  buildStatus = allDone ? 'ready' : (loadedStates.size > 0 ? 'ready' : 'cold');
+  if (processed.length > 0) {
+    lastBuilt = new Date();
+    _cacheSource = 'memory (cron)';
+  }
+
+  // Save progress to disk
+  let savedToDisk = false;
+  if (processed.length > 0) {
+    saveToDisk();
+    savedToDisk = true;
+  }
+
+  const elapsed = ((Date.now() - cronStart) / 1000).toFixed(1);
+  const stillMissing = ALL_STATES.filter(s => !loadedStates.has(s));
+  console.log(
+    `[ATTAINS Cron] Chunk complete in ${elapsed}s — ${processed.length} new, ${failed.length} failed, ` +
+    `${loadedStates.size}/${ALL_STATES.length} total${stillMissing.length > 0 ? ` | remaining: ${stillMissing.join(', ')}` : ''}`
+  );
+
+  return { processed, failed, alreadyCached, totalStates: ALL_STATES.length, savedToDisk };
+}
+
 async function buildCache(): Promise<void> {
   if (buildStatus === 'building') {
     console.log('[ATTAINS Cache] Build already in progress, skipping');
@@ -601,13 +693,7 @@ export function getAttainsCache(): CacheResponse {
     }
   }
 
-  // Trigger build if needed (non-blocking)
-  if (buildStatus === 'cold' || buildStatus === 'stale') {
-    if (!buildPromise) {
-      buildPromise = buildCache().finally(() => { buildPromise = null; });
-    }
-  }
-
+  // Cron handles builds — no self-triggering in serverless
   return {
     cacheStatus: getCacheStatus(),
     states: { ...cache },
@@ -628,13 +714,7 @@ export function getAttainsCacheSummary(): {
     summary[st] = rest;
   }
 
-  // Trigger build if needed
-  if (buildStatus === 'cold' || buildStatus === 'stale') {
-    if (!buildPromise) {
-      buildPromise = buildCache().finally(() => { buildPromise = null; });
-    }
-  }
-
+  // Cron handles builds — no self-triggering in serverless
   return {
     cacheStatus: getCacheStatus(),
     states: summary,
