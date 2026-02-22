@@ -16,7 +16,7 @@ const CACHE_TTL_MS = 90 * 24 * 60 * 60 * 1000; // 90 days — ATTAINS updates bi
 const BATCH_SIZE = 2;
 const BATCH_DELAY_MS = 3000;
 
-const FETCH_TIMEOUT_MS = 300_000; // 5 min per fetch — large states (CA, TX, NY) need time
+const FETCH_TIMEOUT_MS = 90_000; // 90s per fetch — must fit within 300s function limit
 const RETRY_TIMEOUT_MS = 480_000; // 8 min on retry pass
 const RETRY_DELAY_MS = 5000; // 5s between retries
 

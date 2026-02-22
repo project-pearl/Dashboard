@@ -13,7 +13,7 @@ import {
 // Vercel Pro max is 300s — request 300s, budget 240s (leave margin for response)
 export const maxDuration = 300;
 
-const TIME_BUDGET_MS = 180_000; // 3 minutes — leave 2 min margin for response + cold start
+const TIME_BUDGET_MS = 120_000; // 2 minutes — leave 3 min margin for slow EPA responses + serialization
 
 export async function GET(request: NextRequest) {
   // Auth check
