@@ -2623,7 +2623,7 @@ export async function GET(request: NextRequest) {
               usgsRealtime: ['usgs-iv', 'usgs-sites', 'usgs-site-iv', 'usgs-state-discovery'],
               usgsSamples: ['usgs-samples', 'usgs-samples-summary'],
               usgsDaily: ['usgs-daily', 'usgs-locations'],
-              attains: ['attains-assessments', 'attains-actions', 'attains-impaired'],
+              attains: ['attains-assessments', 'attains-actions', 'attains-impaired', 'attains-national-cache', 'attains-national-summary', 'attains-national-status', 'attains-build'],
               echo: ['echo-facilities'],
               ejscreen: ['ejscreen'],
               erddap: ['erddap-latest', 'erddap-range', 'erddap-stations'],
