@@ -8,12 +8,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   buildAttainsChunk,
   getCacheStatus,
+  ensureWarmed,
 } from '@/lib/attainsCache';
 
 // Vercel Pro max is 300s — request 300s, budget 240s (leave margin for response)
 export const maxDuration = 300;
 
-const TIME_BUDGET_MS = 120_000; // 2 minutes — leave 3 min margin for slow EPA responses + serialization
+const TIME_BUDGET_MS = 230_000; // ~4 minutes — leave 70s margin for blob load + save + response
 
 export async function GET(request: NextRequest) {
   // Auth check
@@ -23,6 +24,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // Load accumulated state from blob so we know what's already built
+  await ensureWarmed();
   const status = getCacheStatus();
 
   // If already building (e.g. self-trigger in progress), skip

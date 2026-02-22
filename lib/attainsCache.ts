@@ -836,7 +836,8 @@ export async function buildAttainsChunk(timeBudgetMs: number): Promise<{
   savedToDisk: boolean;
   savedToBlob: boolean;
 }> {
-  ensureDiskLoaded();
+  // Load accumulated state from blob (cross-instance) before deciding what to fetch
+  await ensureWarmed();
 
   const cronStart = Date.now();
   const deadline = cronStart + timeBudgetMs;
