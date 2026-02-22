@@ -35,7 +35,7 @@ import { DraggableSection } from './DraggableSection';
 
 type AlertLevel = 'none' | 'low' | 'medium' | 'high';
 type OverlayId = 'hotspots' | 'ms4' | 'ej' | 'economy' | 'wildlife' | 'trend' | 'coverage';
-type ViewLens = 'full' | 'compliance' | 'coverage' | 'programs' | 'analysis';
+type ViewLens = 'overview' | 'briefing' | 'compliance' | 'water-quality' | 'infrastructure' | 'monitoring' | 'scorecard' | 'reports';
 
 // ─── Lens Configuration: what each view shows/hides ────────────────────────────
 const LENS_CONFIG: Record<ViewLens, {
@@ -54,51 +54,88 @@ const LENS_CONFIG: Record<ViewLens, {
   showSLA: boolean;            // SLA compliance tracking
   showRestorationPlan: boolean; // Restoration plan card
   collapseStateTable: boolean; // Collapse behind button vs full
+  /** LayoutEditor section IDs to show for this lens (null = show all) */
+  sections: Set<string> | null;
 }> = {
-  full: {
-    label: 'Full Dashboard',
-    description: 'All panels visible — power user view',
+  overview: {
+    label: 'Overview',
+    description: 'Role landing — KPI strip, map, and national situation',
+    defaultOverlay: 'hotspots',
+    showTopStrip: true, showPriorityQueue: false, showCoverageGaps: false,
+    showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
+    showHotspots: false, showSituationSummary: true, showTimeRange: false,
+    showSLA: false, showRestorationPlan: false, collapseStateTable: true,
+    sections: new Set(['usmap', 'impairmentprofile', 'situation', 'disclaimer']),
+  },
+  briefing: {
+    label: 'AI Briefing',
+    description: 'AI-generated summary of all federal data sources',
     defaultOverlay: 'hotspots',
     showTopStrip: false, showPriorityQueue: false, showCoverageGaps: false,
-    showNetworkHealth: true, showNationalImpact: true, showAIInsights: true,
-    showHotspots: true, showSituationSummary: true, showTimeRange: true,
-    showSLA: true, showRestorationPlan: true, collapseStateTable: false,
+    showNetworkHealth: false, showNationalImpact: false, showAIInsights: true,
+    showHotspots: true, showSituationSummary: false, showTimeRange: false,
+    showSLA: false, showRestorationPlan: false, collapseStateTable: true,
+    sections: new Set(['aiinsights', 'top10', 'disclaimer']),
   },
   compliance: {
     label: 'Compliance',
-    description: 'Impairment severity, Category 5, enforcement priorities',
+    description: 'NPDES enforcement + drinking water violations',
     defaultOverlay: 'hotspots',
     showTopStrip: true, showPriorityQueue: true, showCoverageGaps: false,
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: true, collapseStateTable: true,
+    sections: new Set(['impairmentprofile', 'icis', 'sdwis', 'priorityqueue', 'disclaimer']),
   },
-  coverage: {
-    label: 'Coverage',
-    description: 'Monitoring gaps, blind spots, data freshness',
+  'water-quality': {
+    label: 'Water Quality',
+    description: 'ATTAINS assessments, impaired waterbodies, WQP trends',
+    defaultOverlay: 'hotspots',
+    showTopStrip: true, showPriorityQueue: false, showCoverageGaps: false,
+    showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
+    showHotspots: true, showSituationSummary: true, showTimeRange: true,
+    showSLA: false, showRestorationPlan: false, collapseStateTable: false,
+    sections: new Set(['usmap', 'impairmentprofile', 'statebystatesummary', 'top10', 'disclaimer']),
+  },
+  infrastructure: {
+    label: 'Infrastructure',
+    description: 'Facility map, PFAS, groundwater, and compliance status',
+    defaultOverlay: 'ej',
+    showTopStrip: false, showPriorityQueue: false, showCoverageGaps: false,
+    showNetworkHealth: true, showNationalImpact: true, showAIInsights: false,
+    showHotspots: false, showSituationSummary: false, showTimeRange: false,
+    showSLA: false, showRestorationPlan: false, collapseStateTable: true,
+    sections: new Set(['usmap', 'networkhealth', 'nationalimpact', 'groundwater', 'disclaimer']),
+  },
+  monitoring: {
+    label: 'Monitoring',
+    description: 'Coverage gaps, network health, data freshness',
     defaultOverlay: 'coverage',
     showTopStrip: true, showPriorityQueue: false, showCoverageGaps: true,
+    showNetworkHealth: true, showNationalImpact: false, showAIInsights: false,
+    showHotspots: false, showSituationSummary: false, showTimeRange: false,
+    showSLA: true, showRestorationPlan: false, collapseStateTable: true,
+    sections: new Set(['impairmentprofile', 'coveragegaps', 'networkhealth', 'sla', 'disclaimer']),
+  },
+  scorecard: {
+    label: 'Scorecard',
+    description: 'Graded performance metrics across all states',
+    defaultOverlay: 'hotspots',
+    showTopStrip: false, showPriorityQueue: false, showCoverageGaps: false,
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
+    sections: new Set(['disclaimer']),
   },
-  programs: {
-    label: 'Programs',
-    description: 'Funding targets, intervention candidates, EJ + severity',
-    defaultOverlay: 'ej',
-    showTopStrip: true, showPriorityQueue: true, showCoverageGaps: true,
+  reports: {
+    label: 'Reports',
+    description: 'Export data in role-specific formats',
+    defaultOverlay: 'hotspots',
+    showTopStrip: false, showPriorityQueue: false, showCoverageGaps: false,
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
-    showSLA: false, showRestorationPlan: true, collapseStateTable: true,
-  },
-  analysis: {
-    label: 'Analysis',
-    description: 'Trends, measurements, basin-level changes',
-    defaultOverlay: 'trend',
-    showTopStrip: false, showPriorityQueue: false, showCoverageGaps: false,
-    showNetworkHealth: true, showNationalImpact: false, showAIInsights: true,
-    showHotspots: true, showSituationSummary: true, showTimeRange: true,
-    showSLA: false, showRestorationPlan: false, collapseStateTable: false,
+    showSLA: false, showRestorationPlan: false, collapseStateTable: true,
+    sections: new Set(['disclaimer']),
   },
 };
 
@@ -715,7 +752,7 @@ export function NationalCommandCenter(props: Props) {
   const router = useRouter();
 
   // ── View Lens: controls layout composition ──
-  const [viewLens, setViewLens] = useLensParam<ViewLens>(federalMode ? 'compliance' : 'full');
+  const [viewLens, setViewLens] = useLensParam<ViewLens>(federalMode ? 'overview' : 'overview');
   const lens = LENS_CONFIG[viewLens];
 
   // ── ATTAINS Bulk State Assessment Data ──
@@ -1313,8 +1350,7 @@ export function NationalCommandCenter(props: Props) {
   const DISPLAY_LIMIT = 100;
   const [showAllWaterbodies, setShowAllWaterbodies] = useState(false);
   const [showMethodology, setShowMethodology] = useState(false);
-  const [showAccountPanel, setShowAccountPanel] = useState(false);
-  const [showViewDropdown, setShowViewDropdown] = useState(false);
+  // showAccountPanel and showViewDropdown removed — account is in DashboardHeader, lens is in sidebar
   const [showRestorationCard, setShowRestorationCard] = useState(false);
   const [showCostPanel, setShowCostPanel] = useState(false);
   const displayedRegions = showAllWaterbodies ? filteredStateRegions : filteredStateRegions.slice(0, DISPLAY_LIMIT);
@@ -2034,167 +2070,9 @@ export function NationalCommandCenter(props: Props) {
             </div>
           </div>
         )}
-        {/* ── HERO BANNER ── */}
+        {/* ── HERO BANNER — purely informational (lens selection via sidebar) ── */}
         <HeroBanner role="national" onDoubleClick={() => props.onToggleDevMode?.()}>
-            {/* View Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => { setShowViewDropdown(!showViewDropdown); setShowAccountPanel(false); }}
-                className="inline-flex items-center h-8 px-3 text-xs font-medium rounded-md border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
-              >
-                <span className="text-[10px] text-slate-400 mr-1.5">View:</span>
-                {lens.label}
-                <span className="ml-1.5 text-slate-400">▾</span>
-              </button>
-              {showViewDropdown && (
-                <>
-                <div className="fixed inset-0 z-40" onClick={() => setShowViewDropdown(false)} />
-                <div className="absolute right-0 top-full mt-1.5 w-64 bg-white rounded-lg border border-slate-200 shadow-xl z-50 overflow-hidden">
-                  <div className="px-3 py-2 border-b border-slate-100">
-                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Switch View</span>
-                  </div>
-                  <div className="p-1.5">
-                    {(['compliance', 'coverage', 'programs', 'analysis'] as ViewLens[]).map((key) => {
-                      const cfg = LENS_CONFIG[key];
-                      return (
-                        <button
-                          key={key}
-                          onClick={() => {
-                            setViewLens(key);
-                            setOverlay(cfg.defaultOverlay);
-                            setShowViewDropdown(false);
-                          }}
-                          className={`w-full text-left px-3 py-2 rounded-md text-xs transition-all flex items-center justify-between ${
-                            viewLens === key
-                              ? 'bg-blue-50 text-blue-700'
-                              : 'text-slate-600 hover:bg-slate-50'
-                          }`}
-                        >
-                          <div>
-                            <div className="font-medium">{cfg.label}</div>
-                            <div className="text-[10px] text-slate-400 mt-0.5">{cfg.description}</div>
-                          </div>
-                          {viewLens === key && <CheckCircle size={14} className="text-blue-600 flex-shrink-0" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <div className="border-t border-slate-100 p-1.5">
-                    <button
-                      onClick={() => {
-                        setViewLens('full');
-                        setOverlay(LENS_CONFIG.full.defaultOverlay);
-                        setShowViewDropdown(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 rounded-md text-xs transition-all flex items-center justify-between ${
-                        viewLens === 'full'
-                          ? 'bg-slate-100 text-slate-700'
-                          : 'text-slate-500 hover:bg-slate-50'
-                      }`}
-                    >
-                      <div>
-                        <div className="font-medium">Full Dashboard</div>
-                        <div className="text-[10px] text-slate-400 mt-0.5">All panels — power user view</div>
-                      </div>
-                      {viewLens === 'full' && <CheckCircle size={14} className="text-slate-600 flex-shrink-0" />}
-                    </button>
-                  </div>
-                </div>
-                </>
-              )}
-            </div>
-
-            {federalMode ? (
-              <div className="flex items-center gap-2">
-                {user && (
-                <div className="relative">
-                  <button
-                    onClick={() => { setShowAccountPanel(!showAccountPanel); setShowViewDropdown(false); }}
-                    className="inline-flex items-center h-8 px-3 text-xs font-semibold rounded-md border bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 transition-colors cursor-pointer"
-                  >
-                    <Shield className="h-3.5 w-3.5 mr-1.5" />
-                    {user.name}
-                    <span className="ml-1.5 text-blue-400">▾</span>
-                  </button>
-
-                  {showAccountPanel && (
-                    <>
-                    <div className="fixed inset-0 z-40" onClick={() => setShowAccountPanel(false)} />
-                    <div
-                      className="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg border border-slate-200 shadow-xl z-50 overflow-hidden"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {/* Header */}
-                      <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-slate-50 border-b border-slate-200">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold">
-                              {user.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
-                            </div>
-                            <div>
-                              <div className="text-sm font-semibold text-slate-800">{user.name}</div>
-                              <div className="text-[11px] text-slate-500">{user.email || 'federal@project-pearl.org'}</div>
-                            </div>
-                          </div>
-                          <button onClick={() => setShowAccountPanel(false)} className="text-slate-400 hover:text-slate-600">
-                            <X size={14} />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Account info */}
-                      <div className="px-4 py-3 space-y-2 text-xs border-b border-slate-100">
-                        <div className="flex justify-between">
-                          <span className="text-slate-500">Role</span>
-                          <span className="font-medium text-slate-700">{user.role || 'Federal Administrator'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-500 flex-shrink-0">Organization</span>
-                          <span className="font-medium text-slate-700 text-right">{user.organization || 'PEARL National Operations'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-500">Access Level</span>
-                          <Badge variant="outline" className="text-[10px] h-5 bg-green-50 border-green-200 text-green-700">Full Access</Badge>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-500">Monitoring</span>
-                          <span className="font-medium text-slate-700">{nationalStats.statesCovered} states · {nationalStats.totalWaterbodies.toLocaleString()} waterbodies</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-500">Current View</span>
-                          <span className="font-medium text-blue-600">{lens.label}</span>
-                        </div>
-                      </div>
-
-                      {/* Account actions */}
-                      <div className="px-4 py-2.5 space-y-1">
-                        <button
-                          onClick={() => { setShowAccountPanel(false); router.push('/account'); }}
-                          className="w-full text-left px-3 py-2 rounded-md text-xs text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors"
-                        >
-                          <Shield size={13} className="text-slate-400" />
-                          My Account
-                        </button>
-                        <button
-                          onClick={() => { setShowAccountPanel(false); logout(); }}
-                          className="w-full text-left px-3 py-2 rounded-md text-xs text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
-                        >
-                          <LogOut size={13} />
-                          Sign Out
-                        </button>
-                      </div>
-
-                      {/* Footer */}
-                      <div className="px-4 py-2 border-t border-slate-100 bg-slate-50">
-                        <span className="text-[10px] text-slate-400">PEARL NCC v1.0 · Session {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                      </div>
-                    </div>
-                    </>
-                  )}
-                </div>
-                )}
-              </div>
-            ) : (
+            {!federalMode && (
               <Button variant="outline" onClick={onClose}>
                 <X size={16} />
                 <span className="ml-2">Close</span>
@@ -2203,6 +2081,198 @@ export function NationalCommandCenter(props: Props) {
         </HeroBanner>
 
 
+        {/* ── SCORECARD LENS — compiled KPI view ── */}
+        {viewLens === 'scorecard' && (() => {
+          // National composite grade — average of all graded states
+          const gradedStates = stateRollup.filter(s => s.canGradeState);
+          const nationalAvgScore = gradedStates.length > 0
+            ? Math.round(gradedStates.reduce((sum, s) => sum + s.score, 0) / gradedStates.length)
+            : 0;
+          const nationalGrade = scoreToGrade(nationalAvgScore);
+          const totalImpaired = stateRollup.reduce((s, r) => s + r.high + r.medium, 0);
+          const totalAssessed = stateRollup.reduce((s, r) => s + r.assessed, 0);
+          const impairmentPct = totalAssessed > 0 ? Math.round((totalImpaired / totalAssessed) * 100) : 0;
+          const coveragePct = nationalStats.totalWaterbodies > 0
+            ? Math.round(((nationalStats.assessed + nationalStats.monitored) / nationalStats.totalWaterbodies) * 100) : 0;
+
+          // Sort for bottom/top 5
+          const sortedByScore = [...gradedStates].sort((a, b) => a.score - b.score);
+          const bottom5 = sortedByScore.slice(0, 5);
+          const top5 = [...sortedByScore].reverse().slice(0, 5);
+
+          // All states in alpha order for the grid
+          const allStatesAlpha = [...stateRollup].sort((a, b) => a.abbr.localeCompare(b.abbr));
+
+          return (
+            <div className="space-y-4">
+              {/* ── KPI Strip ── */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                <div className={`rounded-xl border-2 p-4 text-center ${nationalGrade.bg}`}>
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">National Grade</div>
+                  <div className={`text-4xl font-black ${nationalGrade.color}`}>{nationalGrade.letter}</div>
+                  <div className="text-[10px] text-slate-400 mt-1">{gradedStates.length} states graded</div>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-white p-4 text-center">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">States Monitored</div>
+                  <div className="text-3xl font-bold text-slate-800">{nationalStats.statesCovered}</div>
+                  <div className="text-[10px] text-slate-400 mt-1">{nationalStats.totalWaterbodies.toLocaleString()} waterbodies</div>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-white p-4 text-center">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Total Violations</div>
+                  <div className={`text-3xl font-bold ${nationalStats.highAlerts > 0 ? 'text-red-600' : 'text-green-600'}`}>{nationalStats.totalAlerts.toLocaleString()}</div>
+                  <div className="text-[10px] text-slate-400 mt-1">{nationalStats.highAlerts} severe</div>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-white p-4 text-center">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Impairment Rate</div>
+                  <div className={`text-3xl font-bold ${impairmentPct > 30 ? 'text-red-600' : impairmentPct > 15 ? 'text-amber-600' : 'text-green-600'}`}>{impairmentPct}%</div>
+                  <div className="text-[10px] text-slate-400 mt-1">{totalImpaired.toLocaleString()} impaired</div>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-white p-4 text-center">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Coverage Rate</div>
+                  <div className={`text-3xl font-bold ${coveragePct > 70 ? 'text-green-600' : coveragePct > 40 ? 'text-amber-600' : 'text-red-600'}`}>{coveragePct}%</div>
+                  <div className="text-[10px] text-slate-400 mt-1">{nationalStats.assessed + nationalStats.monitored} with data</div>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-white p-4 text-center">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">SLA Compliance</div>
+                  <div className={`text-3xl font-bold ${slaMetrics.overdueCount > 0 ? 'text-red-600' : 'text-green-600'}`}>{slaMetrics.total > 0 ? Math.round((slaMetrics.withinSLA / slaMetrics.total) * 100) : 100}%</div>
+                  <div className="text-[10px] text-slate-400 mt-1">{slaMetrics.overdueCount} overdue</div>
+                </div>
+              </div>
+
+              {/* ── State Grade Grid ── */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">State Grades</CardTitle>
+                  <CardDescription>Water quality grades for all {allStatesAlpha.length} states based on ATTAINS assessments</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-13 gap-1.5">
+                    {allStatesAlpha.map(s => {
+                      const g = s.canGradeState ? scoreToGrade(s.score) : { letter: 'N/A', color: 'text-slate-400', bg: 'bg-slate-50 border-slate-200' };
+                      return (
+                        <button
+                          key={s.abbr}
+                          onClick={() => { setSelectedState(s.abbr); setViewLens('overview' as ViewLens); }}
+                          className={`rounded-lg border p-1.5 text-center transition-all hover:shadow-md hover:scale-105 ${g.bg}`}
+                          title={`${STATE_ABBR_TO_NAME[s.abbr] || s.abbr}: ${g.letter} (${s.score >= 0 ? s.score : '?'})`}
+                        >
+                          <div className="text-[10px] font-bold text-slate-600">{s.abbr}</div>
+                          <div className={`text-sm font-black ${g.color}`}>{g.letter}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* ── Bottom 5 / Top 5 ── */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base text-red-700">Needs Attention</CardTitle>
+                    <CardDescription>5 lowest-scoring states</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {bottom5.map((s, i) => {
+                        const g = scoreToGrade(s.score);
+                        return (
+                          <div key={s.abbr} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-slate-50">
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs font-bold text-slate-400 w-4">{i + 1}</span>
+                              <span className="text-sm font-semibold text-slate-800">{STATE_ABBR_TO_NAME[s.abbr] || s.abbr}</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs text-slate-500">{s.high} severe · {s.medium} moderate</span>
+                              <span className={`text-sm font-black px-2 py-0.5 rounded ${g.bg} ${g.color}`}>{g.letter}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base text-green-700">Top Performers</CardTitle>
+                    <CardDescription>5 highest-scoring states</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {top5.map((s, i) => {
+                        const g = scoreToGrade(s.score);
+                        return (
+                          <div key={s.abbr} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-slate-50">
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs font-bold text-slate-400 w-4">{i + 1}</span>
+                              <span className="text-sm font-semibold text-slate-800">{STATE_ABBR_TO_NAME[s.abbr] || s.abbr}</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs text-slate-500">{s.assessed} assessed · {s.monitored} monitored</span>
+                              <span className={`text-sm font-black px-2 py-0.5 rounded ${g.bg} ${g.color}`}>{g.letter}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* ── Trend Cards (placeholder — needs historical data) ── */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { label: 'Violations', value: nationalStats.totalAlerts, trend: null, color: 'text-red-600' },
+                  { label: 'Assessments', value: totalAssessed, trend: null, color: 'text-blue-600' },
+                  { label: 'Coverage', value: `${coveragePct}%`, trend: null, color: 'text-emerald-600' },
+                  { label: 'Graded States', value: gradedStates.length, trend: null, color: 'text-violet-600' },
+                ].map(t => (
+                  <div key={t.label} className="rounded-xl border border-slate-200 bg-white p-4">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{t.label}</div>
+                    <div className={`text-2xl font-bold ${t.color} mt-1`}>{typeof t.value === 'number' ? t.value.toLocaleString() : t.value}</div>
+                    <div className="text-[10px] text-slate-400 mt-2 italic">Trend data available after 30 days</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ── REPORTS LENS — rendered outside LayoutEditor ── */}
+        {viewLens === 'reports' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Federal Reports</CardTitle>
+              <CardDescription>Generate and export data in role-specific formats</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { title: 'National Compliance Summary', desc: 'NPDES + SDWIS violation trends across all states with enforcement actions', formats: ['PDF', 'CSV'] },
+                  { title: 'Impairment Report', desc: 'ATTAINS Category 5 listings, impairment causes, and restoration status by state', formats: ['PDF', 'Excel'] },
+                  { title: 'TMDL Progress Report', desc: 'Total Maximum Daily Load development status and pollutant reduction targets', formats: ['PDF', 'CSV'] },
+                  { title: 'Coverage Analysis', desc: 'Monitoring network gaps, data freshness, and state-by-state coverage metrics', formats: ['PDF', 'Excel'] },
+                  { title: 'Drinking Water Quality', desc: 'SDWIS system violations, enforcement timeline, and compliance rates', formats: ['PDF', 'CSV'] },
+                  { title: 'Groundwater Status', desc: 'NWIS groundwater levels, aquifer trends, and monitoring well inventory', formats: ['PDF', 'Excel'] },
+                ].map((report) => (
+                  <div key={report.title} className="border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-sm transition-all">
+                    <h3 className="text-sm font-semibold text-slate-800">{report.title}</h3>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">{report.desc}</p>
+                    <div className="flex items-center gap-2 mt-3">
+                      {report.formats.map((fmt) => (
+                        <Button key={fmt} variant="outline" size="sm" className="text-xs h-7">
+                          {fmt}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* ── LAYOUT EDITOR WRAPPER ── */}
         <LayoutEditor ccKey="NCC">
         {({ sections, isEditMode, onToggleVisibility, onToggleCollapse, collapsedSections }) => {
@@ -2210,7 +2280,15 @@ export function NationalCommandCenter(props: Props) {
           return (<>
           <div className={`space-y-6 ${isEditMode ? 'pl-12' : ''}`}>
 
-        {sections.filter(s => s.visible || isEditMode).map(section => {
+        {sections.filter(s => {
+          // In edit mode, show all sections for drag-and-drop
+          if (isEditMode) return true;
+          // Must be visible per LayoutEditor config
+          if (!s.visible) return false;
+          // For lens-controlled sections, only show if the active lens includes them
+          if (s.lensControlled && lens.sections) return lens.sections.has(s.id);
+          return true;
+        }).map(section => {
           const DS = (children: React.ReactNode) => (
             <DraggableSection key={section.id} id={section.id} label={section.label}
               isEditMode={isEditMode} isVisible={section.visible} onToggleVisibility={onToggleVisibility}>
@@ -4066,35 +4144,29 @@ export function NationalCommandCenter(props: Props) {
         {/* ── TOP STRIP — lens controlled, tiles vary by view ────── */}
         {lens.showTopStrip && topStrip && (() => {
           const s = topStrip;
-          const tilesByLens: Record<ViewLens, Array<{ label: string; value: string; color: string; bg: string }>> = {
-            compliance: [
+          const complianceTiles = [
               { label: 'Cat 5 (No TMDL)', value: s.noTmdlCount.toLocaleString(), color: s.noTmdlCount > 0 ? 'text-red-700' : 'text-slate-500', bg: s.noTmdlCount > 0 ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200' },
               { label: 'Cat 4a (Has TMDL)', value: s.hasTmdlCount.toLocaleString(), color: s.hasTmdlCount > 0 ? 'text-green-700' : 'text-slate-500', bg: s.hasTmdlCount > 0 ? 'bg-green-50 border-green-200' : 'bg-slate-50 border-slate-200' },
               { label: 'Total Impaired', value: s.totalImpaired.toLocaleString(), color: s.totalImpaired > 0 ? 'text-purple-700' : 'text-slate-500', bg: s.totalImpaired > 0 ? 'bg-purple-50 border-purple-200' : 'bg-slate-50 border-slate-200' },
               { label: 'Active Alerts', value: (s.severeCount + nationalStats.mediumAlerts).toLocaleString(), color: 'text-orange-700', bg: 'bg-orange-50 border-orange-200' },
               { label: 'States Reporting', value: `${s.statesReporting}/${s.totalStates}`, color: s.statesReporting > 40 ? 'text-green-700' : 'text-amber-700', bg: 'bg-slate-50 border-slate-200' },
               { label: 'TMDL Gap', value: `${s.tmdlGapPct}%`, color: s.tmdlGapPct > 50 ? 'text-red-700' : 'text-amber-700', bg: s.tmdlGapPct > 50 ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200' },
-            ],
-            coverage: [
+          ];
+          const coverageTiles = [
               { label: '% With Data', value: `${s.pctWithData}%`, color: s.pctWithData > 70 ? 'text-green-700' : 'text-amber-700', bg: s.pctWithData > 70 ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200' },
               { label: 'No Data (Blind)', value: s.noData.toLocaleString(), color: s.noData > 0 ? 'text-red-700' : 'text-green-700', bg: s.noData > 0 ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200' },
               { label: 'Worst Data Age', value: `${s.worstAge}d`, color: s.worstAge > 30 ? 'text-amber-700' : 'text-green-700', bg: s.worstAge > 30 ? 'bg-amber-50 border-amber-200' : 'bg-green-50 border-green-200' },
               { label: 'States Reporting', value: `${s.statesReporting}/${s.totalStates}`, color: s.statesReporting > 40 ? 'text-green-700' : 'text-amber-700', bg: 'bg-slate-50 border-slate-200' },
               { label: 'Sites Online', value: s.sitesOnline.toLocaleString(), color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
               { label: 'Waterbodies w/ Data', value: s.withData.toLocaleString(), color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
-            ],
-            programs: [
-              { label: 'Cat 5 (No TMDL)', value: s.noTmdlCount.toLocaleString(), color: s.noTmdlCount > 0 ? 'text-red-700' : 'text-slate-500', bg: s.noTmdlCount > 0 ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200' },
-              { label: 'High EJ States', value: s.highEJStates.toLocaleString(), color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200' },
-              { label: 'No Data (Blind)', value: s.noData.toLocaleString(), color: s.noData > 0 ? 'text-red-700' : 'text-green-700', bg: s.noData > 0 ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200' },
-              { label: 'Candidate Sites', value: federalPriorities.length.toLocaleString(), color: 'text-green-700', bg: 'bg-green-50 border-green-200' },
-              { label: 'States Reporting', value: `${s.statesReporting}/${s.totalStates}`, color: s.statesReporting > 40 ? 'text-green-700' : 'text-amber-700', bg: 'bg-slate-50 border-slate-200' },
-              { label: 'Total Impaired', value: s.totalImpaired.toLocaleString(), color: s.totalImpaired > 0 ? 'text-purple-700' : 'text-slate-500', bg: s.totalImpaired > 0 ? 'bg-purple-50 border-purple-200' : 'bg-slate-50 border-slate-200' },
-            ],
-            full: [],
-            analysis: [],
+          ];
+          const tilesByLens: Partial<Record<ViewLens, Array<{ label: string; value: string; color: string; bg: string }>>> = {
+            overview: complianceTiles,
+            compliance: complianceTiles,
+            monitoring: coverageTiles,
+            'water-quality': complianceTiles,
           };
-          const tiles = tilesByLens[viewLens] || tilesByLens.compliance;
+          const tiles = tilesByLens[viewLens] || complianceTiles;
           if (!tiles.length) return null;
           return (
             <div className="grid grid-cols-3 md:grid-cols-6 gap-3">

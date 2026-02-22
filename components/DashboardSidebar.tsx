@@ -27,8 +27,39 @@ import {
   Settings,
   Menu,
   X,
+  LayoutDashboard,
+  Sparkles,
+  ShieldCheck,
+  Waves,
+  Activity,
+  FileText,
+  Trophy,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+
+// Icons for lens items when rendered as top-level nav (single-role mode)
+const LENS_ICONS: Record<string, LucideIcon> = {
+  overview: LayoutDashboard,
+  briefing: Sparkles,
+  compliance: ShieldCheck,
+  'water-quality': Waves,
+  infrastructure: Building2,
+  monitoring: Activity,
+  scorecard: Trophy,
+  reports: FileText,
+  // Fallbacks for other roles' lenses
+  full: LayoutDashboard,
+  coverage: Activity,
+  programs: Landmark,
+  analysis: FlaskConical,
+  disclosure: FileText,
+  risk: Shield,
+  impact: Leaf,
+  'data-analysis': FlaskConical,
+  'field-study': Map,
+  publication: BookOpen,
+  ms4oversight: CloudRain,
+};
 
 interface NavItem {
   label: string;
@@ -107,6 +138,12 @@ export function DashboardSidebar() {
       }))
       .filter((group) => group.items.length > 0);
   }, [user]);
+
+  // Single-role detection: exactly 1 accessible role across all groups
+  const allAccessibleItems = useMemo(() => filteredGroups.flatMap(g => g.items), [filteredGroups]);
+  const isSingleRole = allAccessibleItems.length === 1;
+  const singleRoleItem = isSingleRole ? allAccessibleItems[0] : null;
+  const singleRoleLenses = singleRoleItem ? getLensesForHref(singleRoleItem.href) : null;
 
   const isActive = useCallback((href: string) => {
     if (href === '/dashboard/federal') return pathname === '/dashboard/federal';
@@ -286,18 +323,46 @@ export function DashboardSidebar() {
 
       {/* Nav groups */}
       <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-4">
-        {filteredGroups.map((group) => (
-          <div key={group.title}>
-            {!collapsed && (
-              <div className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                {group.title}
-              </div>
-            )}
-            <div className="space-y-0.5">
-              {group.items.map((item) => renderNavItem(item))}
-            </div>
+        {isSingleRole && singleRoleItem && singleRoleLenses ? (
+          /* ── Single-role mode: lenses as top-level nav items ── */
+          <div className="space-y-0.5">
+            {singleRoleLenses.map((lens) => {
+              const LensIcon = LENS_ICONS[lens.id] || LayoutDashboard;
+              const lensActive = isLensActive(singleRoleItem.href, lens.id)
+                || (lens.id === 'overview' && isActive(singleRoleItem.href) && !currentLensParam);
+              return (
+                <Link
+                  key={lens.id}
+                  href={`${singleRoleItem.href}?lens=${lens.id}`}
+                  onClick={() => setMobileOpen(false)}
+                  title={collapsed ? lens.label : undefined}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
+                    lensActive
+                      ? `${singleRoleItem.accentBg} ${singleRoleItem.accent} font-semibold border shadow-sm`
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  }`}
+                >
+                  <LensIcon className={`w-4 h-4 flex-shrink-0 ${lensActive ? singleRoleItem.accent : 'text-slate-400'}`} />
+                  {!collapsed && <span className="truncate">{lens.label}</span>}
+                </Link>
+              );
+            })}
           </div>
-        ))}
+        ) : (
+          /* ── Admin / multi-role mode: grouped roles with expandable lenses ── */
+          filteredGroups.map((group) => (
+            <div key={group.title}>
+              {!collapsed && (
+                <div className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  {group.title}
+                </div>
+              )}
+              <div className="space-y-0.5">
+                {group.items.map((item) => renderNavItem(item))}
+              </div>
+            </div>
+          ))
+        )}
       </nav>
 
       {/* Bottom section */}
@@ -309,7 +374,7 @@ export function DashboardSidebar() {
           <Settings className="w-4 h-4 flex-shrink-0" />
           {!collapsed && <span>Settings</span>}
         </Link>
-        {!collapsed && user && (
+        {!collapsed && user && !isSingleRole && (
           <div className="px-3 py-2">
             <span className="text-[10px] font-semibold tracking-wider uppercase px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
               {user.role}

@@ -9,11 +9,14 @@ export interface LensDef {
 
 export const LENS_REGISTRY: Record<string, LensDef[]> = {
   '/dashboard/federal': [
-    { id: 'full', label: 'Full Overview' },
+    { id: 'overview', label: 'Overview' },
+    { id: 'briefing', label: 'AI Briefing' },
     { id: 'compliance', label: 'Compliance' },
-    { id: 'coverage', label: 'Coverage' },
-    { id: 'programs', label: 'Programs' },
-    { id: 'analysis', label: 'Analysis' },
+    { id: 'water-quality', label: 'Water Quality' },
+    { id: 'infrastructure', label: 'Infrastructure' },
+    { id: 'monitoring', label: 'Monitoring' },
+    { id: 'scorecard', label: 'Scorecard' },
+    { id: 'reports', label: 'Reports' },
   ],
   '/dashboard/state': [
     { id: 'compliance', label: 'Compliance' },
