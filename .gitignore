@@ -11,3 +11,4 @@ tsc_errors.txt
 station-discovery.json
 nul
 pin-pipeline/__pycache__/
+.cache/
