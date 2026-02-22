@@ -5,7 +5,7 @@
 // - ATTAINS updates ~biannually — this cache uses a long TTL
 // - Persists to Supabase Storage (shared across instances) and local disk (per-instance)
 
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
 // ─── Config ────────────────────────────────────────────────────────────────────
 
@@ -239,7 +239,7 @@ function saveToDisk(): void {
 async function loadFromStorage(): Promise<boolean> {
   try {
     console.log(`[ATTAINS Cache] Attempting storage load from ${STORAGE_BUCKET}/${STORAGE_KEY}...`);
-    const { data, error } = await supabaseAdmin.storage
+    const { data, error } = await getSupabaseAdmin().storage
       .from(STORAGE_BUCKET)
       .download(STORAGE_KEY);
     if (error) {
@@ -280,7 +280,7 @@ async function saveToStorage(): Promise<void> {
       meta: { lastBuilt: lastBuilt?.toISOString(), stateCount: loadedStates.size },
       states: cache,
     });
-    await supabaseAdmin.storage.from(STORAGE_BUCKET).upload(STORAGE_KEY, Buffer.from(payload), {
+    await getSupabaseAdmin().storage.from(STORAGE_BUCKET).upload(STORAGE_KEY, Buffer.from(payload), {
       contentType: "application/json",
       upsert: true,
     });
