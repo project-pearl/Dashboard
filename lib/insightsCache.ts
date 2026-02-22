@@ -3,6 +3,8 @@
 // Populated by cron job every 6 hours, served instantly to users
 // Falls back to on-demand generation on cold start
 
+import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+
 export interface CachedInsight {
   type: 'predictive' | 'anomaly' | 'comparison' | 'recommendation' | 'summary';
   severity: 'info' | 'warning' | 'critical';
@@ -105,6 +107,23 @@ function ensureDiskLoaded() {
   }
 }
 
+let _blobChecked = false;
+export async function ensureWarmed(): Promise<void> {
+  ensureDiskLoaded();
+  if (cache.size > 0) return;
+  if (_blobChecked) return;
+  _blobChecked = true;
+  const data = await loadCacheFromBlob<{ lastFullBuild: string | null; entries: [string, CacheEntry][] }>('cache/insights.json');
+  if (data?.entries && Array.isArray(data.entries)) {
+    cache.clear();
+    for (const [key, entry] of data.entries) {
+      cache.set(key, entry);
+    }
+    lastFullBuild = data.lastFullBuild || null;
+    console.warn(`[Insights Cache] Loaded from blob (${cache.size} entries, last build ${lastFullBuild || 'unknown'})`);
+  }
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 export function getCacheKey(state: string, role: string): CacheKey {
@@ -156,9 +175,13 @@ export function setBuildInProgress(v: boolean): void {
   _buildStartedAt = v ? Date.now() : 0;
 }
 
-export function setLastFullBuild(timestamp: string): void {
+export async function setLastFullBuild(timestamp: string): Promise<void> {
   lastFullBuild = timestamp;
   saveToDisk(); // Force immediate save at end of build
+  await saveCacheToBlob('cache/insights.json', {
+    lastFullBuild,
+    entries: Array.from(cache.entries()),
+  });
 }
 
 export function getCacheStatus(): {

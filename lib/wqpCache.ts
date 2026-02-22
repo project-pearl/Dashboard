@@ -7,6 +7,8 @@
  * Persists to disk so cache survives Vercel cold starts.
  */
 
+import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export interface WqpRecord {
@@ -125,6 +127,22 @@ function ensureDiskLoaded() {
   }
 }
 
+let _blobChecked = false;
+export async function ensureWarmed(): Promise<void> {
+  ensureDiskLoaded();
+  if (_memCache !== null) return;
+  if (_blobChecked) return;
+  _blobChecked = true;
+  const data = await loadCacheFromBlob<{meta: any; grid: any}>('cache/wqp.json');
+  if (data?.meta && data?.grid) {
+    _memCache = { _meta: data.meta, grid: data.grid };
+    _cacheSource = 'disk';
+    const builtTime = data.meta.built ? new Date(data.meta.built).getTime() : 0;
+    buildStatus = (builtTime && (Date.now() - builtTime < CACHE_TTL_MS)) ? 'ready' : 'stale';
+    console.warn(`[WQP Cache] Loaded from blob (${data.meta.totalRecords} records)`);
+  }
+}
+
 // ── Grid Key ─────────────────────────────────────────────────────────────────
 
 export function gridKey(lat: number, lng: number): string {
@@ -178,6 +196,7 @@ export function setWqpCache(data: WqpCacheData): void {
     `${Object.keys(data.grid).length} cells, ${data._meta.statesProcessed.length} states`
   );
   saveToDisk();
+  saveCacheToBlob('cache/wqp.json', { meta: data._meta, grid: data.grid });
 }
 
 /**

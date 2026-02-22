@@ -6,6 +6,8 @@
  * Grid resolution: 0.1° (~11km). Lookup checks target cell + 8 neighbors.
  */
 
+import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export interface NwisGwSite {
@@ -154,6 +156,20 @@ function ensureDiskLoaded() {
   }
 }
 
+let _blobChecked = false;
+export async function ensureWarmed(): Promise<void> {
+  ensureDiskLoaded();
+  if (_memCache !== null) return;
+  if (_blobChecked) return;
+  _blobChecked = true;
+  const data = await loadCacheFromBlob<{meta: any; grid: any}>('cache/nwis-gw.json');
+  if (data?.meta && data?.grid) {
+    _memCache = { _meta: data.meta, grid: data.grid };
+    _cacheSource = 'disk';
+    console.warn(`[NWIS-GW Cache] Loaded from blob`);
+  }
+}
+
 // ── Grid Key ─────────────────────────────────────────────────────────────────
 
 export function gridKey(lat: number, lng: number): string {
@@ -213,6 +229,7 @@ export function setNwisGwCache(data: NwisGwCacheData): void {
     `${m.trendCount} trends, ${m.gridCells} cells, ${m.statesProcessed.length} states`
   );
   saveToDisk();
+  saveCacheToBlob('cache/nwis-gw.json', { meta: data._meta, grid: data.grid });
 }
 
 /**

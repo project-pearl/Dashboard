@@ -2,7 +2,7 @@
 // LLM-powered water quality insights — serves pre-generated cache when available,
 // falls back to on-demand generation. Receives context from AIInsightsEngine.
 import { NextRequest, NextResponse } from 'next/server';
-import { getInsights } from '@/lib/insightsCache';
+import { getInsights, ensureWarmed as warmInsights } from '@/lib/insightsCache';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
@@ -117,6 +117,7 @@ export async function POST(request: NextRequest) {
 
       // Cache is keyed by state:role — only use for general views (no specific waterbody)
       if (state && role && !hasWaterbody) {
+        await warmInsights();
         const cached = getInsights(state, role);
         if (cached) {
           return NextResponse.json({

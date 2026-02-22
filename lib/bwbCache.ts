@@ -7,6 +7,8 @@
  * Grid resolution: 0.1° (~11km). Lookup checks target cell + 8 neighbors.
  */
 
+import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export interface BwbParameter {
@@ -128,6 +130,20 @@ function ensureDiskLoaded() {
   }
 }
 
+let _blobChecked = false;
+export async function ensureWarmed(): Promise<void> {
+  ensureDiskLoaded();
+  if (_memCache !== null) return;
+  if (_blobChecked) return;
+  _blobChecked = true;
+  const data = await loadCacheFromBlob<{meta: any; grid: any}>('cache/bwb.json');
+  if (data?.meta && data?.grid) {
+    _memCache = { _meta: data.meta, grid: data.grid };
+    _cacheSource = 'disk';
+    console.warn(`[BWB Cache] Loaded from blob (${data.meta.stationCount} stations)`);
+  }
+}
+
 // ── Grid Key ─────────────────────────────────────────────────────────────────
 
 export function gridKey(lat: number, lng: number): string {
@@ -178,6 +194,7 @@ export function setBwbCache(data: BwbCacheData): void {
     `${m.datasetsScanned} datasets, ${m.gridCells} cells`
   );
   saveToDisk();
+  saveCacheToBlob('cache/bwb.json', { meta: data._meta, grid: data.grid });
 }
 
 /**

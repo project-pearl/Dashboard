@@ -3,9 +3,9 @@
 // Sources: Water Reporter (BWB), Chesapeake Bay Program DataHub, USGS (IV, Samples, Daily), MARACOOS ERDDAP (MD DNR)
 import { NextRequest, NextResponse } from 'next/server';
 import { getAttainsCache, getAttainsCacheSummary, getCacheStatus, triggerAttainsBuild, ensureWarmed as warmAttains } from '@/lib/attainsCache';
-import { getCedenCache, getCedenCacheStatus } from '@/lib/cedenCache';
-import { getWqpCache, getWqpCacheStatus } from '@/lib/wqpCache';
-import { getStateReport, getAllStateReports, getStateReportStatus } from '@/lib/stateReportCache';
+import { getCedenCache, getCedenCacheStatus, ensureWarmed as warmCeden } from '@/lib/cedenCache';
+import { getWqpCache, getWqpCacheStatus, ensureWarmed as warmWqp } from '@/lib/wqpCache';
+import { getStateReport, getAllStateReports, getStateReportStatus, ensureWarmed as warmStateReports } from '@/lib/stateReportCache';
 
 const WR_BASE = 'https://api.waterreporter.org';
 const CBP_BASE = 'https://datahub.chesapeakebay.net';
@@ -766,6 +766,7 @@ export async function GET(request: NextRequest) {
 
       // Cache-first lookup (reads from data/ceden-cache.json built by Python)
       case 'ceden-cached': {
+        await warmCeden();
         const lat = parseFloat(sp.get('lat') || '');
         const lng = parseFloat(sp.get('lng') || '');
         if (isNaN(lat) || isNaN(lng)) {
@@ -780,6 +781,7 @@ export async function GET(request: NextRequest) {
 
       // Cache status (for debug/monitoring)
       case 'ceden-cache-status': {
+        await warmCeden();
         return NextResponse.json(getCedenCacheStatus());
       }
 
@@ -1009,6 +1011,7 @@ export async function GET(request: NextRequest) {
       // WQP Cached — instant lookup from pre-baked spatial grid (19 priority states)
       // Example: ?action=wqp-cached&lat=39.27&lng=-76.58
       case 'wqp-cached': {
+        await warmWqp();
         const lat = parseFloat(sp.get('lat') || '');
         const lng = parseFloat(sp.get('lng') || '');
         if (isNaN(lat) || isNaN(lng)) {
@@ -1033,6 +1036,7 @@ export async function GET(request: NextRequest) {
       // WQP cache status
       // Example: ?action=wqp-cache-status
       case 'wqp-cache-status': {
+        await warmWqp();
         return NextResponse.json({ source: 'wqp-cache', ...getWqpCacheStatus() }, {
           headers: { 'Cache-Control': 'no-cache' },
         });
@@ -1045,6 +1049,7 @@ export async function GET(request: NextRequest) {
       // Single state report
       // Example: ?action=state-data-report&state=MD
       case 'state-data-report': {
+        await warmStateReports();
         const state = sp.get('state')?.toUpperCase();
         if (!state) {
           return NextResponse.json({ error: 'Missing state parameter' }, { status: 400 });
@@ -1061,6 +1066,7 @@ export async function GET(request: NextRequest) {
       // All state reports
       // Example: ?action=state-data-report-all
       case 'state-data-report-all': {
+        await warmStateReports();
         const allReports = getAllStateReports();
         if (!allReports) {
           return NextResponse.json({ error: 'State reports not yet built', status: getStateReportStatus() }, { status: 404 });
@@ -2173,7 +2179,8 @@ export async function GET(request: NextRequest) {
           return NextResponse.json({ error: 'lat and lng required' }, { status: 400 });
         }
         try {
-          const { getIcisCache } = await import('@/lib/icisCache');
+          const { getIcisCache, ensureWarmed: warmIcis } = await import('@/lib/icisCache');
+          await warmIcis();
           const result = getIcisCache(lat, lng);
           if (!result) {
             return NextResponse.json({ source: 'icis-cached', message: 'No cached ICIS data for this location', data: null });
@@ -2186,7 +2193,8 @@ export async function GET(request: NextRequest) {
 
       case 'icis-cache-status': {
         try {
-          const { getIcisCacheStatus } = await import('@/lib/icisCache');
+          const { getIcisCacheStatus, ensureWarmed: warmIcis } = await import('@/lib/icisCache');
+          await warmIcis();
           return NextResponse.json({ source: 'icis-cache-status', ...getIcisCacheStatus() });
         } catch (e: any) {
           return NextResponse.json({ source: 'icis-cache-status', error: e.message }, { status: 502 });
@@ -2204,7 +2212,8 @@ export async function GET(request: NextRequest) {
           return NextResponse.json({ error: 'lat and lng required' }, { status: 400 });
         }
         try {
-          const { getSdwisCache } = await import('@/lib/sdwisCache');
+          const { getSdwisCache, ensureWarmed: warmSdwis } = await import('@/lib/sdwisCache');
+          await warmSdwis();
           const result = getSdwisCache(lat, lng);
           if (!result) {
             return NextResponse.json({ source: 'sdwis-cached', message: 'No cached SDWIS data for this location', data: null });
@@ -2217,7 +2226,8 @@ export async function GET(request: NextRequest) {
 
       case 'sdwis-cache-status': {
         try {
-          const { getSdwisCacheStatus } = await import('@/lib/sdwisCache');
+          const { getSdwisCacheStatus, ensureWarmed: warmSdwis } = await import('@/lib/sdwisCache');
+          await warmSdwis();
           return NextResponse.json({ source: 'sdwis-cache-status', ...getSdwisCacheStatus() });
         } catch (e: any) {
           return NextResponse.json({ source: 'sdwis-cache-status', error: e.message }, { status: 502 });
@@ -2235,7 +2245,8 @@ export async function GET(request: NextRequest) {
           return NextResponse.json({ error: 'lat and lng required' }, { status: 400 });
         }
         try {
-          const { getNwisGwCache } = await import('@/lib/nwisGwCache');
+          const { getNwisGwCache, ensureWarmed: warmNwisGw } = await import('@/lib/nwisGwCache');
+          await warmNwisGw();
           const result = getNwisGwCache(lat, lng);
           if (!result) {
             return NextResponse.json({ source: 'nwis-gw-cached', message: 'No cached GW data for this location', data: null });
@@ -2248,7 +2259,8 @@ export async function GET(request: NextRequest) {
 
       case 'nwis-gw-cache-status': {
         try {
-          const { getNwisGwCacheStatus } = await import('@/lib/nwisGwCache');
+          const { getNwisGwCacheStatus, ensureWarmed: warmNwisGw } = await import('@/lib/nwisGwCache');
+          await warmNwisGw();
           return NextResponse.json({ source: 'nwis-gw-cache-status', ...getNwisGwCacheStatus() });
         } catch (e: any) {
           return NextResponse.json({ source: 'nwis-gw-cache-status', error: e.message }, { status: 502 });

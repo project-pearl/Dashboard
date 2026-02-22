@@ -6,6 +6,8 @@
  * Grid resolution: 0.1° (~11km). Lookup checks target cell + 8 neighbors.
  */
 
+import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export interface ChemRecord {
@@ -141,6 +143,20 @@ function ensureDiskLoaded() {
   }
 }
 
+let _blobChecked = false;
+export async function ensureWarmed(): Promise<void> {
+  ensureDiskLoaded();
+  if (_memCache !== null) return;
+  if (_blobChecked) return;
+  _blobChecked = true;
+  const data = await loadCacheFromBlob<{meta: any; grid: any}>('cache/ceden.json');
+  if (data?.meta && data?.grid) {
+    _memCache = { _meta: data.meta, grid: data.grid };
+    _cacheSource = 'disk';
+    console.warn(`[CEDEN Cache] Loaded from blob (${data.meta.chemistry_records} chem + ${data.meta.toxicity_records} tox)`);
+  }
+}
+
 // ── Grid Key ─────────────────────────────────────────────────────────────────
 
 export function gridKey(lat: number, lng: number): string {
@@ -188,6 +204,7 @@ export function setCedenCache(data: CedenCacheData): void {
     `${Object.keys(data.grid).length} cells`
   );
   saveToDisk();
+  saveCacheToBlob('cache/ceden.json', { meta: data._meta, grid: data.grid });
 }
 
 /**

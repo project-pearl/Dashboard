@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
-import { getAttainsCacheSummary } from '@/lib/attainsCache';
-import { getWqpCacheStatus } from '@/lib/wqpCache';
-import { getCedenCacheStatus } from '@/lib/cedenCache';
-import { getIcisCacheStatus } from '@/lib/icisCache';
-import { getNwisGwCacheStatus } from '@/lib/nwisGwCache';
-import { getSdwisCacheStatus } from '@/lib/sdwisCache';
-import { getEchoCacheStatus } from '@/lib/echoCache';
-import { getFrsCacheStatus } from '@/lib/frsCache';
-import { getPfasCacheStatus } from '@/lib/pfasCache';
-import { getBwbCacheStatus } from '@/lib/bwbCache';
+import { getAttainsCacheSummary, ensureWarmed as warmAttains } from '@/lib/attainsCache';
+import { getWqpCacheStatus, ensureWarmed as warmWqp } from '@/lib/wqpCache';
+import { getCedenCacheStatus, ensureWarmed as warmCeden } from '@/lib/cedenCache';
+import { getIcisCacheStatus, ensureWarmed as warmIcis } from '@/lib/icisCache';
+import { getNwisGwCacheStatus, ensureWarmed as warmNwisGw } from '@/lib/nwisGwCache';
+import { getSdwisCacheStatus, ensureWarmed as warmSdwis } from '@/lib/sdwisCache';
+import { getEchoCacheStatus, ensureWarmed as warmEcho } from '@/lib/echoCache';
+import { getFrsCacheStatus, ensureWarmed as warmFrs } from '@/lib/frsCache';
+import { getPfasCacheStatus, ensureWarmed as warmPfas } from '@/lib/pfasCache';
+import { getBwbCacheStatus, ensureWarmed as warmBwb } from '@/lib/bwbCache';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -64,6 +64,12 @@ async function check(
 // ─── GET Handler ─────────────────────────────────────────────────────────────
 
 export async function GET() {
+  // Warm all caches from blob in parallel (cold-start recovery)
+  await Promise.all([
+    warmAttains(), warmWqp(), warmCeden(), warmIcis(), warmSdwis(),
+    warmNwisGw(), warmEcho(), warmFrs(), warmPfas(), warmBwb(),
+  ]);
+
   const bwbToken = process.env.WATER_REPORTER_API_KEY || '';
 
   const checks = await Promise.allSettled([

@@ -6,7 +6,7 @@ import { getAttainsCacheSummary } from '@/lib/attainsCache';
 import {
   setInsights, getInsights, setBuildInProgress, setLastFullBuild,
   isBuildInProgress, getCacheStatus as getInsightsCacheStatus,
-  hashSignals,
+  hashSignals, ensureWarmed as warmInsights,
   type CacheEntry, type CachedInsight,
 } from '@/lib/insightsCache';
 
@@ -139,6 +139,9 @@ export async function GET(request: NextRequest) {
   if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  // Warm from blob so delta detection can see existing entries
+  await warmInsights();
 
   // Prevent concurrent builds
   if (isBuildInProgress()) {

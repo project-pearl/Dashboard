@@ -7,6 +7,8 @@
  * Grid resolution: 0.1° (~11km). Lookup checks target cell + 8 neighbors.
  */
 
+import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export interface PfasResult {
@@ -118,6 +120,20 @@ function ensureDiskLoaded() {
   }
 }
 
+let _blobChecked = false;
+export async function ensureWarmed(): Promise<void> {
+  ensureDiskLoaded();
+  if (_memCache !== null) return;
+  if (_blobChecked) return;
+  _blobChecked = true;
+  const data = await loadCacheFromBlob<{meta: any; grid: any}>('cache/pfas.json');
+  if (data?.meta && data?.grid) {
+    _memCache = { _meta: data.meta, grid: data.grid };
+    _cacheSource = 'disk';
+    console.warn(`[PFAS Cache] Loaded from blob (${data.meta.resultCount} results)`);
+  }
+}
+
 // ── Grid Key ─────────────────────────────────────────────────────────────────
 
 export function gridKey(lat: number, lng: number): string {
@@ -169,6 +185,7 @@ export function setPfasCache(data: PfasCacheData): void {
     `${m.gridCells} cells, table=${m.tableName || 'none'}`
   );
   saveToDisk();
+  saveCacheToBlob('cache/pfas.json', { meta: data._meta, grid: data.grid });
 }
 
 /**

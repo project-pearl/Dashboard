@@ -3,18 +3,18 @@
 // and staleness flags for all 12 cache modules.
 
 import { NextResponse } from 'next/server';
-import { getWqpCacheStatus } from '@/lib/wqpCache';
-import { getCacheStatus as getAttainsCacheStatus } from '@/lib/attainsCache';
-import { getCedenCacheStatus } from '@/lib/cedenCache';
-import { getIcisCacheStatus } from '@/lib/icisCache';
-import { getSdwisCacheStatus } from '@/lib/sdwisCache';
-import { getNwisGwCacheStatus } from '@/lib/nwisGwCache';
-import { getEchoCacheStatus } from '@/lib/echoCache';
-import { getFrsCacheStatus } from '@/lib/frsCache';
-import { getPfasCacheStatus } from '@/lib/pfasCache';
-import { getCacheStatus as getInsightsCacheStatus } from '@/lib/insightsCache';
-import { getStateReportStatus } from '@/lib/stateReportCache';
-import { getBwbCacheStatus } from '@/lib/bwbCache';
+import { getWqpCacheStatus, ensureWarmed as warmWqp } from '@/lib/wqpCache';
+import { getCacheStatus as getAttainsCacheStatus, ensureWarmed as warmAttains } from '@/lib/attainsCache';
+import { getCedenCacheStatus, ensureWarmed as warmCeden } from '@/lib/cedenCache';
+import { getIcisCacheStatus, ensureWarmed as warmIcis } from '@/lib/icisCache';
+import { getSdwisCacheStatus, ensureWarmed as warmSdwis } from '@/lib/sdwisCache';
+import { getNwisGwCacheStatus, ensureWarmed as warmNwisGw } from '@/lib/nwisGwCache';
+import { getEchoCacheStatus, ensureWarmed as warmEcho } from '@/lib/echoCache';
+import { getFrsCacheStatus, ensureWarmed as warmFrs } from '@/lib/frsCache';
+import { getPfasCacheStatus, ensureWarmed as warmPfas } from '@/lib/pfasCache';
+import { getCacheStatus as getInsightsCacheStatus, ensureWarmed as warmInsights } from '@/lib/insightsCache';
+import { getStateReportStatus, ensureWarmed as warmStateReports } from '@/lib/stateReportCache';
+import { getBwbCacheStatus, ensureWarmed as warmBwb } from '@/lib/bwbCache';
 import { getStateIRCacheStatus } from '@/lib/stateIRCache';
 
 function staleness(built: string | null | undefined): { stale: boolean; ageHours: number | null } {
@@ -25,6 +25,13 @@ function staleness(built: string | null | undefined): { stale: boolean; ageHours
 }
 
 export async function GET() {
+  // Warm all caches from blob storage in parallel (cold-start recovery)
+  await Promise.all([
+    warmWqp(), warmAttains(), warmCeden(), warmIcis(), warmSdwis(),
+    warmNwisGw(), warmEcho(), warmFrs(), warmPfas(), warmInsights(),
+    warmStateReports(), warmBwb(),
+  ]);
+
   const wqp = getWqpCacheStatus();
   const attains = getAttainsCacheStatus();
   const ceden = getCedenCacheStatus();

@@ -9,6 +9,7 @@
 
 import { getAttainsCache, type StateSummary } from './attainsCache';
 import { getWqpAllRecords, type WqpRecord } from './wqpCache';
+import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -196,6 +197,19 @@ function ensureDiskLoaded() {
   if (!_diskLoaded) {
     _diskLoaded = true;
     loadFromDisk();
+  }
+}
+
+let _blobChecked = false;
+export async function ensureWarmed(): Promise<void> {
+  ensureDiskLoaded();
+  if (_memCache !== null) return;
+  if (_blobChecked) return;
+  _blobChecked = true;
+  const data = await loadCacheFromBlob<StateReportCacheData>('cache/state-reports.json');
+  if (data?._meta && data?.reports) {
+    _memCache = data;
+    console.warn(`[State Reports] Loaded from blob (${data._meta.stateCount} states, built ${data._meta.built})`);
   }
 }
 
@@ -410,7 +424,8 @@ export function buildStateReports(): StateReportCacheData {
 
   _memCache = cacheData;
   saveToDisk();
-  console.log(`[State Reports] Built ${cacheData._meta.stateCount} state reports`);
+  saveCacheToBlob('cache/state-reports.json', cacheData).catch(() => {});
+  console.warn(`[State Reports] Built ${cacheData._meta.stateCount} state reports`);
   return cacheData;
 }
 
