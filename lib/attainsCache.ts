@@ -46,6 +46,7 @@ export interface StateSummary {
 
 export interface CacheStatus {
   status: 'cold' | 'building' | 'ready' | 'stale';
+  source: string | null;
   loadedStates: number;
   totalStates: number;
   lastBuilt: string | null;   // ISO timestamp
@@ -82,6 +83,7 @@ let buildStatus: 'cold' | 'building' | 'ready' | 'stale' = 'cold';
 let lastBuilt: Date | null = null;
 let buildStarted: Date | null = null;
 let buildPromise: Promise<void> | null = null;
+let _cacheSource: 'disk' | 'memory (self-build)' | null = null;
 
 // ─── Load from disk on startup ─────────────────────────────────────────────────
 
@@ -101,6 +103,7 @@ function loadFromDisk(): boolean {
     loadedStates = new Set(stateKeys);
     lastBuilt = data.meta.lastBuilt ? new Date(data.meta.lastBuilt) : null;
     buildStatus = lastBuilt && (Date.now() - lastBuilt.getTime() < CACHE_TTL_MS) ? 'ready' : 'stale';
+    _cacheSource = 'disk';
 
     console.log(`[ATTAINS Cache] Loaded from disk (${stateKeys.length} states, built ${lastBuilt?.toISOString() || 'unknown'})`);
     return true;
@@ -555,6 +558,7 @@ async function buildCache(): Promise<void> {
 
   buildStatus = 'ready';
   lastBuilt = new Date();
+  _cacheSource = 'memory (self-build)';
   const elapsed = ((lastBuilt.getTime() - buildStarted.getTime()) / 1000).toFixed(1);
   const retried = failedStates.length;
   const stillMissing = ALL_STATES.filter(s => !loadedStates.has(s));
@@ -573,6 +577,7 @@ export function getCacheStatus(): CacheStatus {
   ensureDiskLoaded();
   return {
     status: buildStatus,
+    source: _cacheSource,
     loadedStates: loadedStates.size,
     totalStates: ALL_STATES.length,
     lastBuilt: lastBuilt?.toISOString() || null,

@@ -46,9 +46,10 @@ export async function GET() {
     },
     attains: {
       loaded: attains.status !== 'cold',
-      source: attains.source || null,
+      source: attains.source,
       status: attains.status,
-      statesLoaded: attains.statesLoaded?.length || 0,
+      statesLoaded: attains.statesLoaded.length,
+      statesMissing: attains.statesMissing.length,
       ...staleness(attains.lastBuilt),
     },
     ceden: {
