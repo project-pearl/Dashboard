@@ -23,7 +23,17 @@
       "Bash(GIT_PAGER=cat git diff:*)",
       "Bash(ls:*)",
       "Bash(git pull:*)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(echo:*)",
+      "Bash(Ungraded\" when there is truly no data \\(no sensors AND no ATTAINS\\).\n\nMiddle Branch \\(Cat 5, no TMDL, 1 live param\\) now shows F with\n\"ATTAINS-based\" instead of N/A.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(find:*)",
+      "Bash(git reset:*)",
+      "WebSearch",
+      "Bash(grep:*)",
+      "WebFetch(domain:waterservices.usgs.gov)",
+      "Bash(git diff:*)",
+      "Bash(tasklist:*)",
+      "Bash(netstat:*)"
     ]
   }
 }
