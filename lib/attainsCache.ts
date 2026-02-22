@@ -5,8 +5,6 @@
 // - ATTAINS updates ~biannually — this cache uses a long TTL
 // - Persists to local disk (.cache/) + Vercel Blob (cross-instance)
 
-import { put, list } from '@vercel/blob';
-
 // ─── Config ────────────────────────────────────────────────────────────────────
 
 const ATTAINS_BASE = "https://attains.epa.gov/attains-public/api";
@@ -247,6 +245,7 @@ const BLOB_PATH = 'cache/attains-national.json';
 
 async function saveToBlob(): Promise<boolean> {
   try {
+    const { put } = await import('@vercel/blob');
     const payload = JSON.stringify({
       meta: { lastBuilt: lastBuilt?.toISOString(), stateCount: loadedStates.size },
       states: cache,
@@ -267,6 +266,7 @@ async function saveToBlob(): Promise<boolean> {
 
 async function loadFromBlob(): Promise<boolean> {
   try {
+    const { list } = await import('@vercel/blob');
     const { blobs } = await list({ prefix: BLOB_PATH, limit: 1 });
     if (blobs.length === 0) return false;
 
