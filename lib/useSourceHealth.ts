@@ -27,6 +27,7 @@ export interface DatapointSummary {
   echo: { facilities: number; violations: number };
   frs: { facilities: number };
   pfas: { results: number };
+  bwb: { stations: number; readings: number };
   total: number;
 }
 

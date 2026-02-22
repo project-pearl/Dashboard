@@ -8,6 +8,7 @@ import { getSdwisCacheStatus } from '@/lib/sdwisCache';
 import { getEchoCacheStatus } from '@/lib/echoCache';
 import { getFrsCacheStatus } from '@/lib/frsCache';
 import { getPfasCacheStatus } from '@/lib/pfasCache';
+import { getBwbCacheStatus } from '@/lib/bwbCache';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -330,6 +331,10 @@ export async function GET() {
   const pfasStatus = getPfasCacheStatus();
   const pfasResults = pfasStatus.loaded ? (pfasStatus as { resultCount: number }).resultCount : 0;
 
+  const bwbStatus = getBwbCacheStatus();
+  const bwbStations = bwbStatus.loaded ? (bwbStatus as { stationCount: number }).stationCount : 0;
+  const bwbReadings = bwbStatus.loaded ? (bwbStatus as { parameterReadings: number }).parameterReadings : 0;
+
   const datapoints = {
     attains: { states: attainsStates.length, waterbodies: attainsWaterbodies, assessments: attainsAssessments },
     wqp: { records: wqpRecords, states: wqpStates },
@@ -340,7 +345,8 @@ export async function GET() {
     echo: { facilities: echoFacilities, violations: echoViolations },
     frs: { facilities: frsFacilities },
     pfas: { results: pfasResults },
-    total: attainsWaterbodies + wqpRecords + cedenChem + cedenTox + icisPermits + icisViolations + icisDmr + icisEnforcement + nwisGwSites + nwisGwLevels + sdwisSystems + sdwisViolations + sdwisEnforcement + echoFacilities + echoViolations + frsFacilities + pfasResults,
+    bwb: { stations: bwbStations, readings: bwbReadings },
+    total: attainsWaterbodies + wqpRecords + cedenChem + cedenTox + icisPermits + icisViolations + icisDmr + icisEnforcement + nwisGwSites + nwisGwLevels + sdwisSystems + sdwisViolations + sdwisEnforcement + echoFacilities + echoViolations + frsFacilities + pfasResults + bwbStations + bwbReadings,
   };
 
   return NextResponse.json(
