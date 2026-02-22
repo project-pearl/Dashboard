@@ -19,6 +19,7 @@ import {
   Waves,
   Ban,
 } from 'lucide-react';
+import { NwisGwPanel } from '@/components/NwisGwPanel';
 
 const MOCK_PROPERTIES = [
   { address: '1420 Waterfront Dr, Annapolis MD', floodZone: 'AE', riskScore: 82, contamination: 'Low', value: '$425K', claims: 0 },
@@ -55,7 +56,9 @@ export default function InsurancePage() {
 
   return (
     <div className="min-h-full">
-      <HeroBanner role="insurance" />
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <HeroBanner role="insurance" />
+      </div>
 
       <div className="px-4 sm:px-6 lg:px-8 py-6 space-y-6 max-w-[1600px] mx-auto">
         <KPIStrip cards={kpiCards} />
@@ -216,6 +219,9 @@ export default function InsurancePage() {
             </table>
           </div>
         </DashboardSection>
+
+        {/* Groundwater & Subsidence Risk */}
+        <NwisGwPanel compactMode={true} />
       </div>
     </div>
   );

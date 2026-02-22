@@ -3,12 +3,14 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import PublicHeader from "@/components/PublicHeader";
 
 const OurStorySection: React.FC = () => {
   return (
     <section className="min-h-screen bg-gradient-to-b from-stone-50 via-white to-stone-50">
+      <PublicHeader />
       {/* ── Title ── */}
-      <div className="max-w-3xl mx-auto px-6 pt-20 md:pt-28 pb-10 text-center">
+      <div className="max-w-3xl mx-auto px-6 pt-28 md:pt-36 pb-10 text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700/80 mb-3">
           Our Story
         </p>

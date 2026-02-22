@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { GeoJSON, CircleMarker, Tooltip } from 'react-leaflet';
+import { GeoJSON, CircleMarker } from 'react-leaflet';
 import dynamic from 'next/dynamic';
 import { getStatesGeoJSON, geoToAbbr, STATE_GEO_LEAFLET, STATE_NAMES as _SN } from '@/lib/leafletMapUtils';
 
@@ -10,7 +10,11 @@ const LeafletMapShell = dynamic(
   { ssr: false }
 );
 import Image from 'next/image';
-import { ArrowRight, ExternalLink, Droplets, AlertTriangle, ShieldCheck, TrendingDown, X } from 'lucide-react';
+import Link from 'next/link';
+import PublicHeader from '@/components/PublicHeader';
+import {
+  ArrowRight, Droplets, AlertTriangle, ShieldCheck, TrendingDown, X, ChevronDown,
+} from 'lucide-react';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    CONSTANTS
@@ -88,20 +92,20 @@ function getCauseDescription(cause: string): string {
 
 /* ═══ GRADING ═══ */
 
-function scoreToGrade(score: number): { letter: string; color: string; bg: string } {
-  if (score >= 97) return { letter: 'A+', color: 'text-green-400', bg: 'bg-green-500' };
-  if (score >= 93) return { letter: 'A',  color: 'text-green-400', bg: 'bg-green-500' };
-  if (score >= 90) return { letter: 'A-', color: 'text-green-300', bg: 'bg-green-500' };
-  if (score >= 87) return { letter: 'B+', color: 'text-emerald-400', bg: 'bg-emerald-500' };
-  if (score >= 83) return { letter: 'B',  color: 'text-emerald-300', bg: 'bg-emerald-500' };
-  if (score >= 80) return { letter: 'B-', color: 'text-teal-300', bg: 'bg-teal-500' };
-  if (score >= 77) return { letter: 'C+', color: 'text-yellow-400', bg: 'bg-yellow-500' };
-  if (score >= 73) return { letter: 'C',  color: 'text-yellow-400', bg: 'bg-yellow-500' };
-  if (score >= 70) return { letter: 'C-', color: 'text-yellow-300', bg: 'bg-yellow-500' };
-  if (score >= 67) return { letter: 'D+', color: 'text-orange-400', bg: 'bg-orange-500' };
-  if (score >= 63) return { letter: 'D',  color: 'text-orange-300', bg: 'bg-orange-500' };
-  if (score >= 60) return { letter: 'D-', color: 'text-orange-300', bg: 'bg-orange-500' };
-  return { letter: 'F', color: 'text-red-400', bg: 'bg-red-500' };
+function scoreToGrade(score: number): { letter: string; color: string; bg: string; textColor: string } {
+  if (score >= 97) return { letter: 'A+', color: 'text-green-600', bg: 'bg-green-500', textColor: 'text-green-700' };
+  if (score >= 93) return { letter: 'A',  color: 'text-green-600', bg: 'bg-green-500', textColor: 'text-green-700' };
+  if (score >= 90) return { letter: 'A-', color: 'text-green-500', bg: 'bg-green-500', textColor: 'text-green-600' };
+  if (score >= 87) return { letter: 'B+', color: 'text-emerald-600', bg: 'bg-emerald-500', textColor: 'text-emerald-700' };
+  if (score >= 83) return { letter: 'B',  color: 'text-emerald-500', bg: 'bg-emerald-500', textColor: 'text-emerald-600' };
+  if (score >= 80) return { letter: 'B-', color: 'text-teal-500', bg: 'bg-teal-500', textColor: 'text-teal-600' };
+  if (score >= 77) return { letter: 'C+', color: 'text-yellow-600', bg: 'bg-yellow-500', textColor: 'text-yellow-700' };
+  if (score >= 73) return { letter: 'C',  color: 'text-yellow-600', bg: 'bg-yellow-500', textColor: 'text-yellow-700' };
+  if (score >= 70) return { letter: 'C-', color: 'text-yellow-500', bg: 'bg-yellow-500', textColor: 'text-yellow-600' };
+  if (score >= 67) return { letter: 'D+', color: 'text-orange-600', bg: 'bg-orange-500', textColor: 'text-orange-700' };
+  if (score >= 63) return { letter: 'D',  color: 'text-orange-500', bg: 'bg-orange-500', textColor: 'text-orange-600' };
+  if (score >= 60) return { letter: 'D-', color: 'text-orange-500', bg: 'bg-orange-500', textColor: 'text-orange-600' };
+  return { letter: 'F', color: 'text-red-600', bg: 'bg-red-500', textColor: 'text-red-700' };
 }
 
 function gradeColorFill(score: number): string {
@@ -194,29 +198,11 @@ function Counter({ target, suffix = '', duration = 2000 }: {
   return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
 }
 
-/* ═══ SECTION VISIBILITY HOOK ═══ */
-
-function useSectionVisible(threshold = 0.15) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true); }, { threshold });
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [threshold]);
-
-  return { ref, visible };
-}
-
 /* ═══════════════════════════════════════════════════════════════════════════
    MAIN COMPONENT
    ═══════════════════════════════════════════════════════════════════════════ */
 
 export default function WaterQualityExplorer() {
-  /* ─── State ─── */
   const [selectedState, setSelectedState] = useState<string>('');
   const [nationalCache, setNationalCache] = useState<CacheResponse | null>(null);
   const [cacheLoading, setCacheLoading] = useState(true);
@@ -225,16 +211,14 @@ export default function WaterQualityExplorer() {
   const [aiLoading, setAiLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [selectedMarker, setSelectedMarker] = useState<CachedWaterbody | null>(null);
-  /* ─── GeoJSON ─── */
+
   const geoData = useMemo(() => {
     try { return getStatesGeoJSON() as any; }
     catch { return null; }
   }, []);
 
-  /* ─── Mount animation ─── */
   useEffect(() => { setMounted(true); }, []);
 
-  /* ─── Fetch national cache ─── */
   useEffect(() => {
     fetch('/api/water-data?action=attains-national-cache')
       .then(r => r.json())
@@ -242,7 +226,6 @@ export default function WaterQualityExplorer() {
       .catch(() => setCacheLoading(false));
   }, []);
 
-  /* ─── Derived state data ─── */
   const stateData = useMemo(() => {
     if (!selectedState || !nationalCache?.states?.[selectedState]) return null;
     return nationalCache.states[selectedState];
@@ -253,7 +236,6 @@ export default function WaterQualityExplorer() {
     return computeStateGrade(stateData);
   }, [stateData]);
 
-  /* ─── National aggregates ─── */
   const nationalStats = useMemo(() => {
     if (!nationalCache?.states) return null;
     let totalWb = 0, totalCat5 = 0, fGradeCount = 0;
@@ -266,7 +248,6 @@ export default function WaterQualityExplorer() {
     return { totalWb, totalCat5, fGradeCount, stateCount: Object.keys(nationalCache.states).length };
   }, [nationalCache]);
 
-  /* ─── Per-state grade map for choropleth ─── */
   const stateGrades = useMemo(() => {
     if (!nationalCache?.states) return {} as Record<string, { score: number; letter: string }>;
     const map: Record<string, { score: number; letter: string }> = {};
@@ -277,7 +258,6 @@ export default function WaterQualityExplorer() {
     return map;
   }, [nationalCache]);
 
-  /* ─── AI insights fetch ─── */
   const fetchAiInsights = useCallback(async (abbr: string, data: StateSummary) => {
     if (aiCacheRef.current[abbr]) {
       setAiText(aiCacheRef.current[abbr]);
@@ -318,7 +298,6 @@ export default function WaterQualityExplorer() {
     }
   }, []);
 
-  /* ─── State selection handler ─── */
   const handleStateSelect = useCallback((abbr: string) => {
     setSelectedState(abbr);
     setSelectedMarker(null);
@@ -329,7 +308,6 @@ export default function WaterQualityExplorer() {
     }
   }, [nationalCache, fetchAiInsights]);
 
-  /* ─── Cause frequency for selected state ─── */
   const causeFrequency = useMemo(() => {
     if (!stateData?.waterbodies) return [];
     const freq: Record<string, number> = {};
@@ -339,7 +317,6 @@ export default function WaterQualityExplorer() {
     return Object.entries(freq).sort((a, b) => b[1] - a[1]);
   }, [stateData]);
 
-  /* ─── Spotlight waterbodies ─── */
   const spotlight = useMemo(() => {
     if (!stateData?.waterbodies?.length) return null;
     const wbs = stateData.waterbodies;
@@ -349,19 +326,6 @@ export default function WaterQualityExplorer() {
     return { worst, attaining, atRisk };
   }, [stateData]);
 
-  /* ─── Section visibility refs ─── */
-  const overviewVis = useSectionVisible();
-  const aiVis = useSectionVisible();
-  const mapVis = useSectionVisible(0.1);
-  const threatsVis = useSectionVisible();
-  const spotlightVis = useSectionVisible();
-  const infoVis = useSectionVisible();
-  const ctaVis = useSectionVisible();
-
-  /* ═══ RENDER ═══ */
-  const playfair = "'Playfair Display', Georgia, serif";
-  const instrument = "'Instrument Sans', 'DM Sans', system-ui, sans-serif";
-
   const pctImpaired = stateData && stateData.total > 0
     ? ((stateData.high / stateData.total) * 100).toFixed(1)
     : '0';
@@ -369,116 +333,126 @@ export default function WaterQualityExplorer() {
     ? ((stateData.none / stateData.total) * 100).toFixed(1)
     : '0';
 
-  return (
-    <div className="min-h-screen bg-slate-950" style={{ fontFamily: instrument }}>
-      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-      <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  /* ═══ RENDER ═══ */
 
-      {/* ═══ NAVBAR ═══ */}
-      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-slate-950/80 border-b border-white/[0.06]">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <a href="/">
-              <Image src="/Pearl-Logo-alt.png" alt="Project PEARL" width={140} height={38} className="object-contain brightness-0 invert" priority />
-            </a>
-            <div className="hidden md:flex items-center gap-8 text-[13px] font-semibold tracking-wide uppercase text-slate-400">
-              <a href="/" className="hover:text-white transition-colors">Home</a>
-              <a href="/methodology" className="hover:text-white transition-colors">Methodology</a>
-              <a href="#map-section" className="hover:text-white transition-colors">Map</a>
-            </div>
-            <a href="/login" className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-900 rounded-full bg-white hover:bg-slate-100 transition-colors">
-              Sign In <ArrowRight className="h-3.5 w-3.5" />
-            </a>
-          </div>
-        </div>
-      </nav>
+  return (
+    <div className="min-h-screen bg-white">
+      <PublicHeader />
 
       {/* ═══ HERO ═══ */}
-      <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden bg-gradient-to-b from-slate-950 via-cyan-950/40 to-slate-950">
-        <div className="absolute inset-0" style={{
-          backgroundImage: 'radial-gradient(circle at 30% 70%, rgba(6,182,212,.15) 0%, transparent 50%), radial-gradient(circle at 70% 30%, rgba(59,130,246,.1) 0%, transparent 50%)',
-        }} />
-        <div className="absolute inset-0 opacity-[0.03]" style={{
-          backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)',
-          backgroundSize: '60px 60px',
-        }} />
+      <section className="relative min-h-[70vh] flex items-end overflow-hidden">
+        {/* Placeholder hero image — replace with real photo */}
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-800 via-slate-700 to-slate-900">
+          <Image
+            src="/marsh-waterfront.jpeg"
+            alt="Water quality exploration"
+            fill
+            className="object-cover opacity-60"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-white via-white/30 to-transparent" />
+        </div>
 
-        <div className={`relative z-10 max-w-4xl mx-auto px-6 text-center pt-24 pb-16 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/[0.06] backdrop-blur-md border border-white/10 mb-8">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500" />
-            </span>
-            <span className="text-xs font-semibold text-cyan-300 tracking-wide">Powered by EPA ATTAINS data</span>
-          </div>
+        <div className={`relative z-10 max-w-7xl mx-auto px-6 lg:px-8 pb-16 pt-32 w-full transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <div className="max-w-2xl">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-600 mb-3">
+              Free Public Data
+            </p>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-[1.08] tracking-tight">
+              How healthy is<br />your water?
+            </h1>
+            <p className="mt-5 text-lg text-slate-600 leading-relaxed max-w-xl">
+              Explore water quality across every state &mdash; powered by EPA assessment data
+              and AI analysis. No account required.
+            </p>
 
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-[1.08] tracking-tight" style={{ fontFamily: playfair }}>
-            How Healthy Is<br />Your Water?
-          </h1>
-
-          <p className="mt-6 text-lg sm:text-xl text-slate-400 leading-relaxed max-w-2xl mx-auto font-light">
-            Explore water quality across every state &mdash; powered by federal assessment data,
-            AI analysis, and interactive maps. No account required.
-          </p>
-
-          <div className="mt-10 max-w-md mx-auto">
-            <div className="relative">
-              <select
-                value={selectedState}
-                onChange={e => handleStateSelect(e.target.value)}
-                className="w-full appearance-none rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-lg px-8 py-4 pr-12 focus:outline-none focus:border-cyan-400/50 focus:ring-2 focus:ring-cyan-400/20 transition-all cursor-pointer"
-                style={{ fontFamily: instrument }}
-              >
-                <option value="" className="bg-slate-900 text-slate-400">Select a state to explore...</option>
-                {Object.entries(STATE_NAMES).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
-                  <option key={abbr} value={abbr} className="bg-slate-900 text-white">{name}</option>
-                ))}
-              </select>
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                <Droplets className="h-5 w-5 text-cyan-400/60" />
+            {/* State selector */}
+            <div className="mt-8 max-w-md">
+              <div className="relative">
+                <select
+                  value={selectedState}
+                  onChange={e => handleStateSelect(e.target.value)}
+                  className="w-full appearance-none rounded-xl bg-white border-2 border-slate-200 text-slate-800 text-lg px-6 py-4 pr-12 focus:outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100 transition-all cursor-pointer shadow-lg"
+                >
+                  <option value="">Select a state to explore...</option>
+                  {Object.entries(STATE_NAMES).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
+                    <option key={abbr} value={abbr}>{name}</option>
+                  ))}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <ChevronDown className="h-5 w-5 text-slate-400" />
+                </div>
               </div>
             </div>
-          </div>
 
-          {cacheLoading && (
-            <p className="mt-4 text-sm text-slate-500 animate-pulse">Loading national water quality data...</p>
-          )}
+            {cacheLoading && (
+              <p className="mt-4 text-sm text-slate-400 animate-pulse">Loading national water quality data...</p>
+            )}
+          </div>
         </div>
       </section>
 
-      {/* ═══ STATE OVERVIEW ═══ */}
-      {selectedState && stateData && stateGrade && (
-        <section ref={overviewVis.ref} className={`py-20 bg-slate-950 transition-all duration-700 ${overviewVis.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+      {/* ═══ NATIONAL STATS BAR ═══ */}
+      {nationalStats && !selectedState && (
+        <section className="py-12 bg-slate-50 border-b border-slate-200">
           <div className="max-w-6xl mx-auto px-6">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white" style={{ fontFamily: playfair }}>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="text-center p-6 rounded-xl bg-white border border-slate-200 shadow-sm">
+                <div className="text-3xl sm:text-4xl font-bold text-slate-900">
+                  <Counter target={nationalStats.totalWb} />
+                </div>
+                <p className="mt-2 text-sm text-slate-500 font-medium">Assessed Waterbodies</p>
+              </div>
+              <div className="text-center p-6 rounded-xl bg-white border border-slate-200 shadow-sm">
+                <div className="text-3xl sm:text-4xl font-bold text-red-600">
+                  <Counter target={nationalStats.totalCat5} />
+                </div>
+                <p className="mt-2 text-sm text-slate-500 font-medium">Severely Impaired (Category 5)</p>
+              </div>
+              <div className="text-center p-6 rounded-xl bg-white border border-slate-200 shadow-sm">
+                <div className="text-3xl sm:text-4xl font-bold text-orange-600">
+                  <Counter target={nationalStats.fGradeCount} />
+                </div>
+                <p className="mt-2 text-sm text-slate-500 font-medium">States with &ldquo;F&rdquo; Grade</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ═══ STATE REPORT CARD ═══ */}
+      {selectedState && stateData && stateGrade && (
+        <section className="py-16 bg-slate-50 border-b border-slate-200">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
                 {STATE_NAMES[selectedState]}
               </h2>
-              <p className="mt-3 text-slate-400 text-lg">Water Quality Report Card</p>
+              <p className="mt-2 text-slate-500 text-lg">Water Quality Report Card</p>
             </div>
 
-            <div className="flex flex-col lg:flex-row items-center gap-12">
+            <div className="flex flex-col lg:flex-row items-center gap-10">
               {/* Grade circle */}
               <div className="flex-shrink-0">
-                <div className={`w-28 h-28 rounded-full flex items-center justify-center text-5xl font-black text-white shadow-2xl ${stateGrade.bg}`}>
+                <div className={`w-28 h-28 rounded-full flex items-center justify-center text-5xl font-black text-white shadow-xl ${stateGrade.bg}`}>
                   {stateGrade.letter}
                 </div>
-                <p className="text-center mt-3 text-sm text-slate-500">Overall Grade</p>
+                <p className="text-center mt-3 text-sm text-slate-400">Overall Grade</p>
               </div>
 
-              {/* KPI Grid */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 flex-1 w-full">
+              {/* KPI grid */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 flex-1 w-full">
                 {[
                   { label: 'Total Waterbodies', value: stateData.total, suffix: '' },
                   { label: '% Impaired (Cat 5)', value: parseFloat(pctImpaired), suffix: '%' },
                   { label: '% Attaining', value: parseFloat(pctAttaining), suffix: '%' },
                   { label: 'TMDLs Needed', value: stateData.tmdlNeeded, suffix: '' },
                 ].map(kpi => (
-                  <div key={kpi.label} className="text-center p-6 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-                    <div className="text-3xl sm:text-4xl font-bold text-white">
+                  <div key={kpi.label} className="text-center p-5 rounded-xl bg-white border border-slate-200 shadow-sm">
+                    <div className="text-2xl sm:text-3xl font-bold text-slate-900">
                       <Counter target={kpi.value} suffix={kpi.suffix} />
                     </div>
-                    <p className="mt-2 text-sm text-slate-400">{kpi.label}</p>
+                    <p className="mt-1 text-xs text-slate-500">{kpi.label}</p>
                   </div>
                 ))}
               </div>
@@ -487,79 +461,73 @@ export default function WaterQualityExplorer() {
         </section>
       )}
 
-      {/* ═══ AI STATE SUMMARY ═══ */}
+      {/* ═══ AI STATE ANALYSIS ═══ */}
       {selectedState && stateData && (
-        <section ref={aiVis.ref} className={`py-16 bg-gradient-to-b from-slate-950 to-slate-900 transition-all duration-700 ${aiVis.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+        <section className="py-14 bg-white border-b border-slate-100">
           <div className="max-w-4xl mx-auto px-6">
-            <div className="rounded-2xl bg-white/[0.03] border border-white/[0.08] p-8 sm:p-10">
+            <div className="rounded-2xl bg-slate-50 border border-slate-200 p-8 sm:p-10">
               <div className="flex items-center gap-3 mb-6">
-                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-semibold tracking-wide">
-                  <span>🧠</span> AI Analysis
+                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-50 border border-cyan-200 text-cyan-700 text-xs font-semibold tracking-wide">
+                  AI Analysis
                 </span>
-                <span className="text-xs text-slate-500">Powered by Claude</span>
+                <span className="text-xs text-slate-400">Powered by Claude</span>
               </div>
 
               {aiLoading ? (
-                <div className="space-y-4">
-                  <div className="h-4 bg-white/[0.06] rounded animate-pulse w-full" />
-                  <div className="h-4 bg-white/[0.06] rounded animate-pulse w-5/6" />
-                  <div className="h-4 bg-white/[0.06] rounded animate-pulse w-full" />
-                  <div className="h-4 bg-white/[0.06] rounded animate-pulse w-4/6 mt-6" />
-                  <div className="h-4 bg-white/[0.06] rounded animate-pulse w-full" />
-                  <div className="h-4 bg-white/[0.06] rounded animate-pulse w-5/6" />
-                  <div className="h-4 bg-white/[0.06] rounded animate-pulse w-full mt-6" />
-                  <div className="h-4 bg-white/[0.06] rounded animate-pulse w-3/4" />
+                <div className="space-y-3">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="h-4 bg-slate-200 rounded animate-pulse" style={{ width: `${70 + Math.random() * 30}%` }} />
+                  ))}
                 </div>
               ) : aiText ? (
                 <div className="space-y-4">
                   {aiText.split('\n\n').filter(Boolean).map((para, i) => (
-                    <p key={i} className="text-slate-300 leading-relaxed text-[15px]">{para}</p>
+                    <p key={i} className="text-slate-600 leading-relaxed">{para}</p>
                   ))}
                 </div>
               ) : (
-                <p className="text-slate-500 italic">Select a state to see AI-powered analysis.</p>
+                <p className="text-slate-400 italic">Select a state to see AI-powered analysis.</p>
               )}
             </div>
           </div>
         </section>
       )}
 
-      {/* ═══ INTERACTIVE MAP ═══ */}
-      <section id="map-section" ref={mapVis.ref} className={`py-16 bg-slate-900 transition-all duration-700 ${mapVis.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+      {/* ═══ MAP ═══ */}
+      <section id="map-section" className="py-16 bg-white border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-10">
-            <h2 className="text-3xl sm:text-4xl font-bold text-white" style={{ fontFamily: playfair }}>
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
               {selectedState ? `${STATE_NAMES[selectedState]} Water Quality Map` : 'National Water Quality Map'}
             </h2>
-            <p className="mt-3 text-slate-400">
+            <p className="mt-2 text-slate-500">
               {selectedState ? 'Waterbodies colored by impairment level. Click a marker for details.' : 'States colored by overall health grade. Click a state to explore.'}
             </p>
             {selectedState && (
-              <button onClick={() => handleStateSelect('')} className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.06] border border-white/[0.08] text-slate-300 text-sm hover:bg-white/[0.1] transition-all">
+              <button onClick={() => handleStateSelect('')} className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-sm hover:bg-slate-200 transition-all">
                 <ArrowRight className="h-3 w-3 rotate-180" /> Back to national view
               </button>
             )}
           </div>
 
-          <div className="relative rounded-2xl bg-white/[0.03] border border-white/[0.08] overflow-hidden">
+          <div className="relative rounded-2xl bg-slate-50 border border-slate-200 overflow-hidden shadow-sm">
             <div className="h-[300px] sm:h-[400px] lg:h-[500px]">
               {!selectedState ? (
-                /* ─── National view ─── */
-                <LeafletMapShell center={[39.8, -98.5]} zoom={4} maxZoom={8} darkMode height="100%" showZoomControls={false}>
+                <LeafletMapShell center={[39.8, -98.5]} zoom={4} maxZoom={8} height="100%" showZoomControls={false}>
                   <GeoJSON
                     data={geoData}
                     style={(feature: any) => {
                       const abbr = geoToAbbr(feature as any);
                       const sg = abbr ? stateGrades[abbr] : undefined;
-                      const fillColor = sg && sg.score >= 0 ? gradeColorFill(sg.score) : '#334155';
-                      return { fillColor, fillOpacity: 0.8, color: '#1e293b', weight: 0.5 };
+                      const fillColor = sg && sg.score >= 0 ? gradeColorFill(sg.score) : '#e2e8f0';
+                      return { fillColor, fillOpacity: 0.85, color: '#94a3b8', weight: 0.5 };
                     }}
                     onEachFeature={(feature: any, layer: any) => {
                       const abbr = geoToAbbr(feature as any);
                       if (!abbr) return;
                       layer.on('click', () => handleStateSelect(abbr));
-                      layer.on('mouseover', () => layer.setStyle({ color: '#06b6d4', weight: 1.5 }));
-                      layer.on('mouseout', () => layer.setStyle({ color: '#1e293b', weight: 0.5 }));
+                      layer.on('mouseover', () => layer.setStyle({ color: '#0891b2', weight: 2 }));
+                      layer.on('mouseout', () => layer.setStyle({ color: '#94a3b8', weight: 0.5 }));
                     }}
                   />
                 </LeafletMapShell>
@@ -568,7 +536,6 @@ export default function WaterQualityExplorer() {
                   center={STATE_GEO_LEAFLET[selectedState].center}
                   zoom={STATE_GEO_LEAFLET[selectedState].zoom}
                   maxZoom={12}
-                  darkMode
                   height="100%"
                   mapKey={selectedState}
                 >
@@ -579,14 +546,13 @@ export default function WaterQualityExplorer() {
                       const abbr = geoToAbbr(feature as any);
                       const isSelected = abbr === selectedState;
                       return {
-                        fillColor: isSelected ? '#164e63' : '#1e293b',
+                        fillColor: isSelected ? '#cffafe' : '#f1f5f9',
                         fillOpacity: 1,
-                        color: isSelected ? '#06b6d4' : '#334155',
-                        weight: isSelected ? 1.5 : 0.3,
+                        color: isSelected ? '#0891b2' : '#cbd5e1',
+                        weight: isSelected ? 2 : 0.3,
                       };
                     }}
                   />
-                  {/* Waterbody markers — sample up to 200 for performance */}
                   {stateData?.waterbodies?.slice(0, 200).map((wb, i) => {
                     const geo = STATE_GEO_LEAFLET[selectedState];
                     const latSpread = 3;
@@ -603,7 +569,7 @@ export default function WaterQualityExplorer() {
                         radius={isActive ? 6 : 3.5}
                         pathOptions={{
                           fillColor: markerColor,
-                          color: isActive ? '#ffffff' : 'rgba(255,255,255,0.4)',
+                          color: isActive ? '#0f172a' : 'rgba(100,116,139,0.5)',
                           weight: isActive ? 2 : 0.8,
                           fillOpacity: 0.9,
                         }}
@@ -615,8 +581,8 @@ export default function WaterQualityExplorer() {
               ) : null}
             </div>
 
-            {/* Map legend */}
-            <div className="absolute bottom-3 left-3 z-10 flex items-center gap-3 px-4 py-2 rounded-lg bg-slate-800/80 backdrop-blur border border-white/10 text-[11px] text-slate-300">
+            {/* Legend */}
+            <div className="absolute bottom-3 left-3 z-10 flex items-center gap-3 px-4 py-2 rounded-lg bg-white/90 backdrop-blur border border-slate-200 text-[11px] text-slate-600 shadow-sm">
               <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-green-500 inline-block" /> Healthy</span>
               <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-yellow-400 inline-block" /> Moderate</span>
               <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-orange-500 inline-block" /> Impaired</span>
@@ -625,31 +591,31 @@ export default function WaterQualityExplorer() {
 
             {/* Marker popup */}
             {selectedMarker && (
-              <div className="absolute top-3 left-3 z-20 max-w-xs w-full p-4 rounded-xl bg-slate-800/95 backdrop-blur border border-white/10 shadow-2xl">
+              <div className="absolute top-3 left-3 z-20 max-w-xs w-full p-4 rounded-xl bg-white border border-slate-200 shadow-xl">
                 <div className="flex items-start justify-between mb-2">
-                  <h4 className="text-sm font-semibold text-white leading-tight pr-2">{selectedMarker.name || selectedMarker.id}</h4>
-                  <button onClick={() => setSelectedMarker(null)} className="text-slate-400 hover:text-white flex-shrink-0">
+                  <h4 className="text-sm font-semibold text-slate-900 leading-tight pr-2">{selectedMarker.name || selectedMarker.id}</h4>
+                  <button onClick={() => setSelectedMarker(null)} className="text-slate-400 hover:text-slate-700 flex-shrink-0">
                     <X className="h-4 w-4" />
                   </button>
                 </div>
                 <div className="flex items-center gap-2 mb-3">
                   <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                    selectedMarker.alertLevel === 'high' ? 'bg-red-500/20 text-red-400' :
-                    selectedMarker.alertLevel === 'medium' ? 'bg-orange-500/20 text-orange-400' :
-                    selectedMarker.alertLevel === 'low' ? 'bg-blue-500/20 text-blue-400' :
-                    'bg-green-500/20 text-green-400'
+                    selectedMarker.alertLevel === 'high' ? 'bg-red-100 text-red-700' :
+                    selectedMarker.alertLevel === 'medium' ? 'bg-orange-100 text-orange-700' :
+                    selectedMarker.alertLevel === 'low' ? 'bg-blue-100 text-blue-700' :
+                    'bg-green-100 text-green-700'
                   }`}>
                     Category {selectedMarker.category}
                   </span>
-                  <span className="text-[10px] text-slate-500">{selectedMarker.causeCount} pollutant{selectedMarker.causeCount !== 1 ? 's' : ''}</span>
+                  <span className="text-[10px] text-slate-400">{selectedMarker.causeCount} pollutant{selectedMarker.causeCount !== 1 ? 's' : ''}</span>
                 </div>
                 {selectedMarker.causes.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
                     {selectedMarker.causes.slice(0, 5).map(c => (
-                      <span key={c} className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.06] text-slate-300">{getCauseEmoji(c)} {c.toLowerCase().replace(/\b\w/g, l => l.toUpperCase())}</span>
+                      <span key={c} className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">{getCauseEmoji(c)} {c.toLowerCase().replace(/\b\w/g, l => l.toUpperCase())}</span>
                     ))}
                     {selectedMarker.causes.length > 5 && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.06] text-slate-500">+{selectedMarker.causes.length - 5} more</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-400">+{selectedMarker.causes.length - 5} more</span>
                     )}
                   </div>
                 )}
@@ -661,23 +627,23 @@ export default function WaterQualityExplorer() {
 
       {/* ═══ TOP THREATS ═══ */}
       {selectedState && stateData && causeFrequency.length > 0 && (
-        <section ref={threatsVis.ref} className={`py-20 bg-slate-950 transition-all duration-700 ${threatsVis.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+        <section className="py-20 bg-slate-50 border-b border-slate-200">
           <div className="max-w-6xl mx-auto px-6">
             <div className="text-center mb-12">
-              <h2 className="text-3xl sm:text-4xl font-bold text-white" style={{ fontFamily: playfair }}>
+              <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
                 Top Water Quality Threats
               </h2>
-              <p className="mt-3 text-slate-400">The most common pollutants affecting {STATE_NAMES[selectedState]}&rsquo;s waterbodies</p>
+              <p className="mt-2 text-slate-500">The most common pollutants affecting {STATE_NAMES[selectedState]}&rsquo;s waterbodies</p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
-              {causeFrequency.slice(0, 5).map(([cause, count], i) => (
-                <div key={cause} className="group p-6 rounded-2xl bg-gradient-to-b from-white/[0.05] to-white/[0.02] border border-white/[0.08] hover:border-white/[0.15] transition-all duration-300">
-                  <div className="text-3xl mb-3">{getCauseEmoji(cause)}</div>
-                  <h3 className="text-sm font-semibold text-white mb-1 leading-tight">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              {causeFrequency.slice(0, 5).map(([cause, count]) => (
+                <div key={cause} className="p-5 rounded-xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="text-2xl mb-2">{getCauseEmoji(cause)}</div>
+                  <h3 className="text-sm font-semibold text-slate-800 mb-1 leading-tight">
                     {cause.toLowerCase().replace(/\b\w/g, l => l.toUpperCase()).replace(/\(.*?\)/g, '').trim()}
                   </h3>
-                  <p className="text-2xl font-bold text-white mb-2"><Counter target={count} /></p>
+                  <p className="text-2xl font-bold text-slate-900 mb-2"><Counter target={count} /></p>
                   <p className="text-xs text-slate-500 leading-relaxed">{getCauseDescription(cause)}</p>
                 </div>
               ))}
@@ -688,60 +654,57 @@ export default function WaterQualityExplorer() {
 
       {/* ═══ WATERBODY SPOTLIGHT ═══ */}
       {selectedState && spotlight && (spotlight.worst || spotlight.attaining || spotlight.atRisk) && (
-        <section ref={spotlightVis.ref} className={`py-20 bg-gradient-to-b from-slate-950 to-slate-900 transition-all duration-700 ${spotlightVis.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+        <section className="py-20 bg-white border-b border-slate-100">
           <div className="max-w-6xl mx-auto px-6">
             <div className="text-center mb-12">
-              <h2 className="text-3xl sm:text-4xl font-bold text-white" style={{ fontFamily: playfair }}>
+              <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
                 Waterbody Spotlight
               </h2>
-              <p className="mt-3 text-slate-400">A closer look at notable waterbodies in {STATE_NAMES[selectedState]}</p>
+              <p className="mt-2 text-slate-500">A closer look at notable waterbodies in {STATE_NAMES[selectedState]}</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Worst */}
               {spotlight.worst && (
-                <div className="p-6 rounded-2xl bg-white/[0.03] border-l-4 border-red-500 border-r border-t border-b border-r-white/[0.06] border-t-white/[0.06] border-b-white/[0.06]">
+                <div className="p-6 rounded-xl bg-white border-l-4 border-red-500 border border-slate-200 shadow-sm">
                   <div className="flex items-center gap-2 mb-3">
-                    <AlertTriangle className="h-4 w-4 text-red-400" />
-                    <span className="text-xs font-semibold text-red-400 uppercase tracking-wider">Most Impaired</span>
+                    <AlertTriangle className="h-4 w-4 text-red-500" />
+                    <span className="text-xs font-semibold text-red-600 uppercase tracking-wider">Most Impaired</span>
                   </div>
-                  <h3 className="text-lg font-semibold text-white mb-2 leading-tight">{spotlight.worst.name || spotlight.worst.id}</h3>
-                  <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-red-500/20 text-red-400 uppercase mb-3">Category {spotlight.worst.category}</span>
-                  <p className="text-xs text-slate-400 mb-2">{spotlight.worst.causeCount} identified pollutant{spotlight.worst.causeCount !== 1 ? 's' : ''}</p>
+                  <h3 className="text-lg font-semibold text-slate-900 mb-2 leading-tight">{spotlight.worst.name || spotlight.worst.id}</h3>
+                  <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 uppercase mb-3">Category {spotlight.worst.category}</span>
+                  <p className="text-xs text-slate-500 mb-2">{spotlight.worst.causeCount} identified pollutant{spotlight.worst.causeCount !== 1 ? 's' : ''}</p>
                   <div className="flex flex-wrap gap-1">
                     {spotlight.worst.causes.slice(0, 4).map(c => (
-                      <span key={c} className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.06] text-slate-400">{getCauseEmoji(c)} {c.toLowerCase().replace(/\b\w/g, l => l.toUpperCase()).replace(/\(.*?\)/g, '').trim()}</span>
+                      <span key={c} className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">{getCauseEmoji(c)} {c.toLowerCase().replace(/\b\w/g, l => l.toUpperCase()).replace(/\(.*?\)/g, '').trim()}</span>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Attaining */}
               {spotlight.attaining && (
-                <div className="p-6 rounded-2xl bg-white/[0.03] border-l-4 border-green-500 border-r border-t border-b border-r-white/[0.06] border-t-white/[0.06] border-b-white/[0.06]">
+                <div className="p-6 rounded-xl bg-white border-l-4 border-green-500 border border-slate-200 shadow-sm">
                   <div className="flex items-center gap-2 mb-3">
-                    <ShieldCheck className="h-4 w-4 text-green-400" />
-                    <span className="text-xs font-semibold text-green-400 uppercase tracking-wider">Healthy Example</span>
+                    <ShieldCheck className="h-4 w-4 text-green-500" />
+                    <span className="text-xs font-semibold text-green-600 uppercase tracking-wider">Healthy Example</span>
                   </div>
-                  <h3 className="text-lg font-semibold text-white mb-2 leading-tight">{spotlight.attaining.name || spotlight.attaining.id}</h3>
-                  <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-green-500/20 text-green-400 uppercase mb-3">Category {spotlight.attaining.category}</span>
-                  <p className="text-xs text-slate-400">Meeting water quality standards &mdash; an example of what&rsquo;s possible with proper stewardship.</p>
+                  <h3 className="text-lg font-semibold text-slate-900 mb-2 leading-tight">{spotlight.attaining.name || spotlight.attaining.id}</h3>
+                  <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700 uppercase mb-3">Category {spotlight.attaining.category}</span>
+                  <p className="text-xs text-slate-500">Meeting water quality standards &mdash; an example of what&rsquo;s possible with proper stewardship.</p>
                 </div>
               )}
 
-              {/* At-Risk */}
               {spotlight.atRisk && (
-                <div className="p-6 rounded-2xl bg-white/[0.03] border-l-4 border-orange-500 border-r border-t border-b border-r-white/[0.06] border-t-white/[0.06] border-b-white/[0.06]">
+                <div className="p-6 rounded-xl bg-white border-l-4 border-orange-500 border border-slate-200 shadow-sm">
                   <div className="flex items-center gap-2 mb-3">
-                    <TrendingDown className="h-4 w-4 text-orange-400" />
-                    <span className="text-xs font-semibold text-orange-400 uppercase tracking-wider">Most At-Risk</span>
+                    <TrendingDown className="h-4 w-4 text-orange-500" />
+                    <span className="text-xs font-semibold text-orange-600 uppercase tracking-wider">Most At-Risk</span>
                   </div>
-                  <h3 className="text-lg font-semibold text-white mb-2 leading-tight">{spotlight.atRisk.name || spotlight.atRisk.id}</h3>
-                  <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-orange-500/20 text-orange-400 uppercase mb-3">Category {spotlight.atRisk.category}</span>
-                  <p className="text-xs text-slate-400 mb-2">{spotlight.atRisk.causeCount} identified pollutant{spotlight.atRisk.causeCount !== 1 ? 's' : ''}</p>
+                  <h3 className="text-lg font-semibold text-slate-900 mb-2 leading-tight">{spotlight.atRisk.name || spotlight.atRisk.id}</h3>
+                  <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-700 uppercase mb-3">Category {spotlight.atRisk.category}</span>
+                  <p className="text-xs text-slate-500 mb-2">{spotlight.atRisk.causeCount} identified pollutant{spotlight.atRisk.causeCount !== 1 ? 's' : ''}</p>
                   <div className="flex flex-wrap gap-1">
                     {spotlight.atRisk.causes.slice(0, 4).map(c => (
-                      <span key={c} className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.06] text-slate-400">{getCauseEmoji(c)} {c.toLowerCase().replace(/\b\w/g, l => l.toUpperCase()).replace(/\(.*?\)/g, '').trim()}</span>
+                      <span key={c} className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">{getCauseEmoji(c)} {c.toLowerCase().replace(/\b\w/g, l => l.toUpperCase()).replace(/\(.*?\)/g, '').trim()}</span>
                     ))}
                   </div>
                 </div>
@@ -751,102 +714,68 @@ export default function WaterQualityExplorer() {
         </section>
       )}
 
-      {/* ═══ INFOGRAPHIC / BY THE NUMBERS ═══ */}
-      <section ref={infoVis.ref} className={`py-24 bg-slate-50 transition-all duration-700 ${infoVis.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+      {/* ═══ DID YOU KNOW ═══ */}
+      <section className="py-20 bg-slate-50">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900" style={{ fontFamily: playfair }}>
-              By the Numbers
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
+              Did You Know?
             </h2>
-            <p className="mt-3 text-slate-500 text-lg">National water quality at a glance</p>
           </div>
-
-          {nationalStats && (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mb-20">
-              <div className="text-center p-8 rounded-2xl bg-white border border-slate-200 shadow-sm">
-                <div className="text-4xl sm:text-5xl font-bold text-slate-900">
-                  <Counter target={nationalStats.totalWb} />
-                </div>
-                <p className="mt-2 text-sm text-slate-500 font-medium">Assessed Waterbodies</p>
-              </div>
-              <div className="text-center p-8 rounded-2xl bg-white border border-slate-200 shadow-sm">
-                <div className="text-4xl sm:text-5xl font-bold text-red-600">
-                  <Counter target={nationalStats.totalCat5} />
-                </div>
-                <p className="mt-2 text-sm text-slate-500 font-medium">Category 5 (Severely Impaired)</p>
-              </div>
-              <div className="text-center p-8 rounded-2xl bg-white border border-slate-200 shadow-sm">
-                <div className="text-4xl sm:text-5xl font-bold text-orange-600">
-                  <Counter target={nationalStats.fGradeCount} />
-                </div>
-                <p className="mt-2 text-sm text-slate-500 font-medium">States with &ldquo;F&rdquo; Grade</p>
-              </div>
-            </div>
-          )}
-
-          <div className="text-center mb-10">
-            <h3 className="text-2xl font-bold text-slate-900" style={{ fontFamily: playfair }}>Did You Know?</h3>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl mx-auto">
             {[
-              { icon: '🏞️', title: 'Half of US rivers and streams are impaired', desc: 'According to the EPA, over 50% of assessed rivers and streams don\'t meet water quality standards for at least one designated use.' },
-              { icon: '🚰', title: 'Nutrient pollution costs billions', desc: 'Nutrient pollution in U.S. waterways costs an estimated $4.6 billion annually in drinking water treatment, lost recreation, and reduced property values.' },
-              { icon: '🐟', title: 'Fish advisories span all 50 states', desc: 'Every state in the U.S. has issued fish consumption advisories due to mercury, PCBs, or other contaminants found in local waterways.' },
-              { icon: '🌊', title: 'TMDLs drive real improvements', desc: 'Total Maximum Daily Load plans have helped restore thousands of waterbodies nationwide by setting science-based pollution limits.' },
+              { title: 'Half of US rivers and streams are impaired', desc: 'Over 50% of assessed rivers and streams don\'t meet water quality standards for at least one designated use.' },
+              { title: 'Nutrient pollution costs billions', desc: 'Nutrient pollution in U.S. waterways costs an estimated $4.6 billion annually in drinking water treatment, lost recreation, and reduced property values.' },
+              { title: 'Fish advisories span all 50 states', desc: 'Every state in the U.S. has issued fish consumption advisories due to mercury, PCBs, or other contaminants found in local waterways.' },
+              { title: 'TMDLs drive real improvements', desc: 'Total Maximum Daily Load plans have helped restore thousands of waterbodies nationwide by setting science-based pollution limits.' },
             ].map(fact => (
-              <div key={fact.title} className="flex gap-4 p-6 rounded-xl bg-white border border-slate-200 shadow-sm">
-                <span className="text-2xl flex-shrink-0 mt-0.5">{fact.icon}</span>
-                <div>
-                  <h4 className="font-semibold text-slate-900 mb-1">{fact.title}</h4>
-                  <p className="text-sm text-slate-500 leading-relaxed">{fact.desc}</p>
-                </div>
+              <div key={fact.title} className="p-6 rounded-xl bg-white border border-slate-200 shadow-sm">
+                <h4 className="font-semibold text-slate-900 mb-1">{fact.title}</h4>
+                <p className="text-sm text-slate-500 leading-relaxed">{fact.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ═══ PEARL CTA ═══ */}
-      <section ref={ctaVis.ref} className={`py-24 bg-gradient-to-b from-slate-950 via-cyan-950 to-slate-950 relative overflow-hidden transition-all duration-700 ${ctaVis.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
-        style={{
-          backgroundImage: 'radial-gradient(circle at 20% 80%, rgba(6,182,212,.25) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(59,130,246,.2) 0%, transparent 50%)',
-        }}
-      >
-        <div className="absolute inset-0 opacity-[0.03]" style={{
-          backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)',
-          backgroundSize: '60px 60px',
-        }} />
-        <div className="relative z-10 max-w-3xl mx-auto px-6 text-center">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight" style={{ fontFamily: playfair }}>
-            See What&rsquo;s Really Happening<br />Beneath the Surface
+      {/* ═══ CTA ═══ */}
+      <section className="py-20 bg-white border-t border-slate-200">
+        <div className="max-w-3xl mx-auto px-6 text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 leading-tight">
+            Want deeper insights?
           </h2>
-          <p className="mt-6 text-lg text-slate-300 leading-relaxed max-w-xl mx-auto">
-            Project PEARL is America&rsquo;s surface water intelligence platform &mdash; connecting federal datasets,
-            live sensors, and AI-powered analysis into decision-ready intelligence for every stakeholder.
+          <p className="mt-4 text-lg text-slate-500 leading-relaxed max-w-xl mx-auto">
+            Project PEARL gives municipalities, researchers, and regulators real-time water quality intelligence across every waterbody in the country.
           </p>
-          <div className="mt-10 flex flex-wrap justify-center gap-4">
-            <a href="mailto:doug@project-pearl.org" className="group inline-flex items-center gap-3 px-8 py-4 text-base font-semibold text-slate-900 bg-white rounded-full hover:bg-slate-100 transition-all shadow-2xl shadow-black/20">
+          <div className="mt-8 flex flex-wrap justify-center gap-4">
+            <a
+              href="mailto:doug@project-pearl.org?subject=PEARL Demo Request"
+              className="group inline-flex items-center gap-3 px-8 py-4 text-base font-semibold text-white bg-slate-900 rounded-full hover:bg-slate-800 transition-all shadow-lg"
+            >
               Request a Demo <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </a>
-            <a href="/" className="inline-flex items-center gap-2 px-8 py-4 text-base font-medium text-white/90 border border-white/20 rounded-full hover:bg-white/10 transition-all backdrop-blur-sm">
-              Learn More
-            </a>
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 px-8 py-4 text-base font-medium text-slate-600 border border-slate-300 rounded-full hover:bg-slate-50 transition-all"
+            >
+              Back to Home
+            </Link>
           </div>
         </div>
       </section>
 
       {/* ═══ FOOTER ═══ */}
-      <footer className="py-12 bg-slate-950 border-t border-white/[0.06]">
+      <footer className="py-10 bg-slate-50 border-t border-slate-200">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-6 text-sm text-slate-500">
-              <a href="/" className="hover:text-white transition-colors">Home</a>
-              <a href="/methodology" className="hover:text-white transition-colors">Methodology</a>
-              <a href="mailto:doug@project-pearl.org" className="hover:text-white transition-colors">Contact</a>
+              <Link href="/" className="hover:text-slate-900 transition-colors">Home</Link>
+              <Link href="/treatment" className="hover:text-slate-900 transition-colors">Our Technology</Link>
+              <Link href="/story" className="hover:text-slate-900 transition-colors">Our Story</Link>
             </div>
-            <p className="text-xs text-slate-600">&copy; {new Date().getFullYear()} Local Seafood Projects Inc. All rights reserved.</p>
+            <p className="text-xs text-slate-400">&copy; {new Date().getFullYear()} PEARL. All rights reserved.</p>
           </div>
-          <p className="text-center mt-4 text-[11px] text-slate-700">
+          <p className="text-center mt-4 text-[11px] text-slate-400">
             Data sourced from EPA ATTAINS. Not affiliated with the U.S. Environmental Protection Agency.
           </p>
         </div>

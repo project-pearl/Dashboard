@@ -19,6 +19,7 @@ import {
   Sun,
   Thermometer,
 } from 'lucide-react';
+import { NwisGwPanel } from '@/components/NwisGwPanel';
 
 const NUTRIENT_DATA = [
   { nutrient: 'Total Nitrogen', load: 12450, unit: 'lbs/yr', tmdl: 18000, pct: 69, trend: -5.2 },
@@ -62,7 +63,9 @@ export default function AgriculturePage() {
 
   return (
     <div className="min-h-full">
-      <HeroBanner role="agriculture" />
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <HeroBanner role="agriculture" />
+      </div>
 
       <div className="px-4 sm:px-6 lg:px-8 py-6 space-y-6 max-w-[1600px] mx-auto">
         <KPIStrip cards={kpiCards} />
@@ -214,6 +217,9 @@ export default function AgriculturePage() {
             </p>
           </div>
         </DashboardSection>
+
+        {/* Groundwater Monitoring */}
+        <NwisGwPanel compactMode={false} />
       </div>
     </div>
   );

@@ -11,6 +11,18 @@
     {
       "path": "/api/cron/rebuild-wqp",
       "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-icis",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-sdwis",
+      "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-nwis-gw",
+      "schedule": "0 8 * * *"
     }
   ]
 }

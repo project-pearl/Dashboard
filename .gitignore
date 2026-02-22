@@ -3,3 +3,11 @@
 .vercel
 .env*.local
 data/
+
+# Build artifacts & dev dumps
+tsc_out.txt
+tsc_err.txt
+tsc_errors.txt
+station-discovery.json
+nul
+pin-pipeline/__pycache__/

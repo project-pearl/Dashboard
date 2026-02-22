@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAttainsCache, getAttainsCacheSummary, getCacheStatus, triggerAttainsBuild } from '@/lib/attainsCache';
 import { getCedenCache, getCedenCacheStatus } from '@/lib/cedenCache';
 import { getWqpCache, getWqpCacheStatus } from '@/lib/wqpCache';
+import { getStateReport, getAllStateReports, getStateReportStatus } from '@/lib/stateReportCache';
 
 const WR_BASE = 'https://api.waterreporter.org';
 const CBP_BASE = 'https://datahub.chesapeakebay.net';
@@ -152,30 +153,7 @@ async function wqpResultsFetch(params: Record<string, any> = {}) {
 }
 
 // ─── USGS Samples Data API — discrete WQ with national coverage ─────────────
-// https://api.waterdata.usgs.gov/samples-data/results/narrow?mimeType=text/csv
-const USGS_SAMPLES_BASE = 'https://api.waterdata.usgs.gov/samples-data';
-
-async function usgsSamplesFetch(path: string, params: Record<string, string> = {}) {
-  const url = new URL(`${USGS_SAMPLES_BASE}${path}`);
-  for (const [k, v] of Object.entries(params)) {
-    if (v && v.trim() !== '') url.searchParams.set(k, v);
-  }
-  // Always CSV — JSON not supported for most profiles
-  url.searchParams.set('mimeType', 'text/csv');
-
-  console.log('[USGS-Samples]', url.toString());
-
-  const res = await fetch(url.toString(), {
-    next: { revalidate: 600 },
-  });
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    console.error(`[USGS-Samples] Error ${res.status}: ${body.slice(0, 300)}`);
-    return { error: `USGS Samples API error: ${res.status}`, detail: body.slice(0, 200) };
-  }
-  const text = await res.text();
-  return csvToJson(text);
-}
+// USGS discrete samples — use WQP (wqp-results action) instead
 
 // ─── CBIBS — Chesapeake Bay Interpretive Buoy System (real-time) ─────────────
 // Replaces MARACOOS ERDDAP (frozen at 2018). Real-time temp, salinity, conductivity.
@@ -825,35 +803,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ source: 'wqp', data, count: Array.isArray(data) ? data.length : 0 });
       }
 
-      // USGS Samples Data API (discrete WQ — national coverage)
-      // Example: ?action=usgs-samples&monitoringLocationIdentifier=USGS-01493112&usgsPCode=00300&activityStartDateLower=2023-01-01
-      // Example: ?action=usgs-samples&hydrologicUnit=02060005&usgsPCode=00300&activityStartDateLower=2023-01-01
-      // Example: ?action=usgs-samples&boundingBox=-76.2,39.1,-75.9,39.4&usgsPCode=00300
-      case 'usgs-samples': {
-        const params: Record<string, string> = {};
-        const passthrough = ['monitoringLocationIdentifier', 'usgsPCode', 'characteristicGroup',
-          'characteristic', 'activityStartDateLower', 'activityStartDateUpper',
-          'activityMediaName', 'hydrologicUnit', 'boundingBox', 'stateFips',
-          'countryFips', 'countyFips', 'siteTypeCode', 'pointLocationLatitude',
-          'pointLocationLongitude', 'pointLocationWithinMiles'];
-        for (const key of passthrough) {
-          const val = sp.get(key);
-          if (val) params[key] = val;
-        }
-        const data = await usgsSamplesFetch('/results/narrow', params);
-        if ('error' in data) return NextResponse.json({ source: 'usgs-samples', ...data }, { status: 502 });
-        return NextResponse.json({ source: 'usgs-samples', data, count: Array.isArray(data) ? data.length : 0 });
-      }
-
-      // USGS Samples summary for a station
-      // Example: ?action=usgs-samples-summary&monitoringLocationIdentifier=USGS-01493112
-      case 'usgs-samples-summary': {
-        const monLocId = sp.get('monitoringLocationIdentifier') || '';
-        if (!monLocId) return NextResponse.json({ error: 'monitoringLocationIdentifier required' }, { status: 400 });
-        const data = await usgsSamplesFetch(`/summary/${monLocId}`, {});
-        if ('error' in data) return NextResponse.json({ source: 'usgs-samples', ...data }, { status: 502 });
-        return NextResponse.json({ source: 'usgs-samples', data, count: Array.isArray(data) ? data.length : 0 });
-      }
+      // USGS samples available via WQP (wqp-results action)
 
       // ════════════════════════════════════════════════════════════════════════
       // MARACOOS ERDDAP — MD DNR CONTINUOUS MONITORING (Eyes on the Bay)
@@ -1085,6 +1035,38 @@ export async function GET(request: NextRequest) {
       case 'wqp-cache-status': {
         return NextResponse.json({ source: 'wqp-cache', ...getWqpCacheStatus() }, {
           headers: { 'Cache-Control': 'no-cache' },
+        });
+      }
+
+      // ════════════════════════════════════════════════════════════════════════
+      // STATE DATA REPORT CARD
+      // ════════════════════════════════════════════════════════════════════════
+
+      // Single state report
+      // Example: ?action=state-data-report&state=MD
+      case 'state-data-report': {
+        const state = sp.get('state')?.toUpperCase();
+        if (!state) {
+          return NextResponse.json({ error: 'Missing state parameter' }, { status: 400 });
+        }
+        const report = getStateReport(state);
+        if (!report) {
+          return NextResponse.json({ error: `No report for state ${state}`, status: getStateReportStatus() }, { status: 404 });
+        }
+        return NextResponse.json(report, {
+          headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=600' },
+        });
+      }
+
+      // All state reports
+      // Example: ?action=state-data-report-all
+      case 'state-data-report-all': {
+        const allReports = getAllStateReports();
+        if (!allReports) {
+          return NextResponse.json({ error: 'State reports not yet built', status: getStateReportStatus() }, { status: 404 });
+        }
+        return NextResponse.json(allReports, {
+          headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=600' },
         });
       }
 
@@ -2081,6 +2063,395 @@ export async function GET(request: NextRequest) {
       }
 
       // ════════════════════════════════════════════════════════════════════════
+      // ICIS — EPA NPDES permit compliance data (permits, violations, DMR,
+      // enforcement, inspections) via Envirofacts REST API + spatial cache
+      // ════════════════════════════════════════════════════════════════════════
+
+      case 'icis-permits': {
+        const state = (sp.get('state') || 'MD').toUpperCase();
+        const permit = sp.get('permit') || '';
+        const limit = sp.get('limit') || '100';
+        try {
+          const filter = permit
+            ? `NPDES_ID/${encodeURIComponent(permit)}`
+            : `STATE_ABBR/${state}`;
+          const url = `https://data.epa.gov/efservice/ICIS_PERMITS/${filter}/ROWS/0:${limit}/JSON`;
+          console.log('[ICIS-Permits]', url);
+          const res = await fetch(url, {
+            headers: { 'Accept': 'application/json' },
+            signal: AbortSignal.timeout(15_000),
+            next: { revalidate: 3600 },
+          });
+          if (!res.ok) {
+            return NextResponse.json({ source: 'icis-permits', error: `EPA error: ${res.status}` }, { status: 502 });
+          }
+          const data = await res.json();
+          return NextResponse.json({ source: 'icis-permits', state, permit: permit || undefined, count: data.length, data });
+        } catch (e: any) {
+          return NextResponse.json({ source: 'icis-permits', error: e.message }, { status: 502 });
+        }
+      }
+
+      case 'icis-violations': {
+        const state = (sp.get('state') || 'MD').toUpperCase();
+        const permit = sp.get('permit') || '';
+        const limit = sp.get('limit') || '100';
+        try {
+          const filter = permit
+            ? `NPDES_ID/${encodeURIComponent(permit)}`
+            : `STATE_ABBR/${state}`;
+          const url = `https://data.epa.gov/efservice/ICIS_VIOLATIONS/${filter}/ROWS/0:${limit}/JSON`;
+          console.log('[ICIS-Violations]', url);
+          const res = await fetch(url, {
+            headers: { 'Accept': 'application/json' },
+            signal: AbortSignal.timeout(15_000),
+            next: { revalidate: 3600 },
+          });
+          if (!res.ok) {
+            return NextResponse.json({ source: 'icis-violations', error: `EPA error: ${res.status}` }, { status: 502 });
+          }
+          const data = await res.json();
+          return NextResponse.json({ source: 'icis-violations', state, permit: permit || undefined, count: data.length, data });
+        } catch (e: any) {
+          return NextResponse.json({ source: 'icis-violations', error: e.message }, { status: 502 });
+        }
+      }
+
+      case 'icis-dmr': {
+        const state = (sp.get('state') || 'MD').toUpperCase();
+        const permit = sp.get('permit') || '';
+        const limit = sp.get('limit') || '100';
+        try {
+          const filter = permit
+            ? `NPDES_ID/${encodeURIComponent(permit)}`
+            : `STATE_ABBR/${state}`;
+          const url = `https://data.epa.gov/efservice/ICIS_DMR_MEASUREMENTS/${filter}/ROWS/0:${limit}/JSON`;
+          console.log('[ICIS-DMR]', url);
+          const res = await fetch(url, {
+            headers: { 'Accept': 'application/json' },
+            signal: AbortSignal.timeout(15_000),
+            next: { revalidate: 3600 },
+          });
+          if (!res.ok) {
+            return NextResponse.json({ source: 'icis-dmr', error: `EPA error: ${res.status}` }, { status: 502 });
+          }
+          const data = await res.json();
+          return NextResponse.json({ source: 'icis-dmr', state, permit: permit || undefined, count: data.length, data });
+        } catch (e: any) {
+          return NextResponse.json({ source: 'icis-dmr', error: e.message }, { status: 502 });
+        }
+      }
+
+      case 'icis-enforcement': {
+        const state = (sp.get('state') || 'MD').toUpperCase();
+        const limit = sp.get('limit') || '100';
+        try {
+          const url = `https://data.epa.gov/efservice/ICIS_ENFORCEMENT_ACTIONS/STATE_ABBR/${state}/ROWS/0:${limit}/JSON`;
+          console.log('[ICIS-Enforcement]', url);
+          const res = await fetch(url, {
+            headers: { 'Accept': 'application/json' },
+            signal: AbortSignal.timeout(15_000),
+            next: { revalidate: 3600 },
+          });
+          if (!res.ok) {
+            return NextResponse.json({ source: 'icis-enforcement', error: `EPA error: ${res.status}` }, { status: 502 });
+          }
+          const data = await res.json();
+          return NextResponse.json({ source: 'icis-enforcement', state, count: data.length, data });
+        } catch (e: any) {
+          return NextResponse.json({ source: 'icis-enforcement', error: e.message }, { status: 502 });
+        }
+      }
+
+      case 'icis-cached': {
+        const lat = parseFloat(sp.get('lat') || '');
+        const lng = parseFloat(sp.get('lng') || '');
+        if (isNaN(lat) || isNaN(lng)) {
+          return NextResponse.json({ error: 'lat and lng required' }, { status: 400 });
+        }
+        try {
+          const { getIcisCache } = await import('@/lib/icisCache');
+          const result = getIcisCache(lat, lng);
+          if (!result) {
+            return NextResponse.json({ source: 'icis-cached', message: 'No cached ICIS data for this location', data: null });
+          }
+          return NextResponse.json({ source: 'icis-cached', lat, lng, ...result });
+        } catch (e: any) {
+          return NextResponse.json({ source: 'icis-cached', error: e.message }, { status: 502 });
+        }
+      }
+
+      case 'icis-cache-status': {
+        try {
+          const { getIcisCacheStatus } = await import('@/lib/icisCache');
+          return NextResponse.json({ source: 'icis-cache-status', ...getIcisCacheStatus() });
+        } catch (e: any) {
+          return NextResponse.json({ source: 'icis-cache-status', error: e.message }, { status: 502 });
+        }
+      }
+
+      // ════════════════════════════════════════════════════════════════════════
+      // EPA SDWIS — Safe Drinking Water cached spatial data
+      // ════════════════════════════════════════════════════════════════════════
+
+      case 'sdwis-cached': {
+        const lat = parseFloat(sp.get('lat') || '');
+        const lng = parseFloat(sp.get('lng') || '');
+        if (isNaN(lat) || isNaN(lng)) {
+          return NextResponse.json({ error: 'lat and lng required' }, { status: 400 });
+        }
+        try {
+          const { getSdwisCache } = await import('@/lib/sdwisCache');
+          const result = getSdwisCache(lat, lng);
+          if (!result) {
+            return NextResponse.json({ source: 'sdwis-cached', message: 'No cached SDWIS data for this location', data: null });
+          }
+          return NextResponse.json({ source: 'sdwis-cached', lat, lng, ...result });
+        } catch (e: any) {
+          return NextResponse.json({ source: 'sdwis-cached', error: e.message }, { status: 502 });
+        }
+      }
+
+      case 'sdwis-cache-status': {
+        try {
+          const { getSdwisCacheStatus } = await import('@/lib/sdwisCache');
+          return NextResponse.json({ source: 'sdwis-cache-status', ...getSdwisCacheStatus() });
+        } catch (e: any) {
+          return NextResponse.json({ source: 'sdwis-cache-status', error: e.message }, { status: 502 });
+        }
+      }
+
+      // ════════════════════════════════════════════════════════════════════════
+      // USGS NWIS Groundwater — cached spatial data + live lookups
+      // ════════════════════════════════════════════════════════════════════════
+
+      case 'nwis-gw-cached': {
+        const lat = parseFloat(sp.get('lat') || '');
+        const lng = parseFloat(sp.get('lng') || '');
+        if (isNaN(lat) || isNaN(lng)) {
+          return NextResponse.json({ error: 'lat and lng required' }, { status: 400 });
+        }
+        try {
+          const { getNwisGwCache } = await import('@/lib/nwisGwCache');
+          const result = getNwisGwCache(lat, lng);
+          if (!result) {
+            return NextResponse.json({ source: 'nwis-gw-cached', message: 'No cached GW data for this location', data: null });
+          }
+          return NextResponse.json({ source: 'nwis-gw-cached', lat, lng, ...result });
+        } catch (e: any) {
+          return NextResponse.json({ source: 'nwis-gw-cached', error: e.message }, { status: 502 });
+        }
+      }
+
+      case 'nwis-gw-cache-status': {
+        try {
+          const { getNwisGwCacheStatus } = await import('@/lib/nwisGwCache');
+          return NextResponse.json({ source: 'nwis-gw-cache-status', ...getNwisGwCacheStatus() });
+        } catch (e: any) {
+          return NextResponse.json({ source: 'nwis-gw-cache-status', error: e.message }, { status: 502 });
+        }
+      }
+
+      // Live: list groundwater sites for a state
+      // Example: ?action=nwis-gw-sites&state=MD
+      case 'nwis-gw-sites': {
+        const state = (sp.get('state') || '').toUpperCase();
+        if (!state) {
+          return NextResponse.json({ error: 'state required' }, { status: 400 });
+        }
+        try {
+          const url = `https://waterservices.usgs.gov/nwis/gwlevels/?format=json&stateCd=${state}&period=P30D&siteStatus=active`;
+          const res = await fetch(url, {
+            headers: { 'Accept': 'application/json' },
+            signal: AbortSignal.timeout(30_000),
+          });
+          if (!res.ok) {
+            return NextResponse.json({ source: 'nwis-gw-sites', error: `USGS HTTP ${res.status}` }, { status: 502 });
+          }
+          const json = await res.json();
+          const timeSeries = json?.value?.timeSeries || [];
+          const seen = new Set<string>();
+          const sites = timeSeries
+            .map((ts: any) => {
+              const src = ts.sourceInfo;
+              if (!src) return null;
+              const code = src.siteCode?.[0]?.value || '';
+              if (!code || seen.has(code)) return null;
+              seen.add(code);
+              const geo = src.geoLocation?.geogLocation;
+              return {
+                siteNumber: code,
+                siteName: src.siteName || '',
+                lat: parseFloat(geo?.latitude || '0'),
+                lng: parseFloat(geo?.longitude || '0'),
+              };
+            })
+            .filter(Boolean);
+          return NextResponse.json({ source: 'nwis-gw-sites', state, count: sites.length, data: sites });
+        } catch (e: any) {
+          return NextResponse.json({ source: 'nwis-gw-sites', error: e.message }, { status: 502 });
+        }
+      }
+
+      // Live: discrete levels for a specific well
+      // Example: ?action=nwis-gw-levels&siteNumber=392105077123401&period=P90D
+      case 'nwis-gw-levels': {
+        const siteNumber = sp.get('siteNumber') || sp.get('site') || '';
+        const period = sp.get('period') || 'P90D';
+        if (!siteNumber) {
+          return NextResponse.json({ error: 'siteNumber required' }, { status: 400 });
+        }
+        try {
+          const url = `https://waterservices.usgs.gov/nwis/gwlevels/?format=json&sites=${siteNumber}&period=${period}`;
+          const res = await fetch(url, {
+            headers: { 'Accept': 'application/json' },
+            signal: AbortSignal.timeout(15_000),
+          });
+          if (!res.ok) {
+            return NextResponse.json({ source: 'nwis-gw-levels', error: `USGS HTTP ${res.status}` }, { status: 502 });
+          }
+          const json = await res.json();
+          const timeSeries = json?.value?.timeSeries || [];
+          const levels: any[] = [];
+          for (const ts of timeSeries) {
+            const variable = ts.variable;
+            const values = ts.values?.[0]?.value || [];
+            for (const v of values) {
+              const val = parseFloat(v.value);
+              if (isNaN(val) || val === (variable?.noDataValue ?? -999999)) continue;
+              levels.push({
+                dateTime: v.dateTime,
+                value: Math.round(val * 100) / 100,
+                parameterCd: variable?.variableCode?.[0]?.value || '',
+                parameterName: variable?.variableName || '',
+                unit: variable?.unit?.unitCode || 'ft',
+                qualifier: v.qualifiers || '',
+              });
+            }
+          }
+          return NextResponse.json({ source: 'nwis-gw-levels', siteNumber, count: levels.length, data: levels });
+        } catch (e: any) {
+          return NextResponse.json({ source: 'nwis-gw-levels', error: e.message }, { status: 502 });
+        }
+      }
+
+      // Live: latest real-time IV reading for a well
+      // Example: ?action=nwis-gw-realtime&siteNumber=392105077123401
+      case 'nwis-gw-realtime': {
+        const siteNumber = sp.get('siteNumber') || sp.get('site') || '';
+        if (!siteNumber) {
+          return NextResponse.json({ error: 'siteNumber required' }, { status: 400 });
+        }
+        try {
+          const url = `https://waterservices.usgs.gov/nwis/iv/?format=json&sites=${siteNumber}&parameterCd=72019,62610,62611&period=P1D`;
+          const res = await fetch(url, {
+            headers: { 'Accept': 'application/json' },
+            signal: AbortSignal.timeout(15_000),
+          });
+          if (!res.ok) {
+            return NextResponse.json({ source: 'nwis-gw-realtime', error: `USGS HTTP ${res.status}` }, { status: 502 });
+          }
+          const json = await res.json();
+          const timeSeries = json?.value?.timeSeries || [];
+          const readings: any[] = [];
+          for (const ts of timeSeries) {
+            const variable = ts.variable;
+            const values = ts.values?.[0]?.value || [];
+            if (values.length > 0) {
+              const latest = values[values.length - 1];
+              const val = parseFloat(latest.value);
+              if (!isNaN(val) && val !== (variable?.noDataValue ?? -999999)) {
+                readings.push({
+                  dateTime: latest.dateTime,
+                  value: Math.round(val * 100) / 100,
+                  parameterCd: variable?.variableCode?.[0]?.value || '',
+                  parameterName: variable?.variableName || '',
+                  unit: variable?.unit?.unitCode || 'ft',
+                });
+              }
+            }
+          }
+          return NextResponse.json({ source: 'nwis-gw-realtime', siteNumber, data: readings });
+        } catch (e: any) {
+          return NextResponse.json({ source: 'nwis-gw-realtime', error: e.message }, { status: 502 });
+        }
+      }
+
+      // ════════════════════════════════════════════════════════════════════════
+      // EPA FRS — WWTP Facility Registry (locations, capacities, permit IDs)
+      // ════════════════════════════════════════════════════════════════════════
+
+      // Example: ?action=frs-wwtps&state=MD&limit=500
+      case 'frs-wwtps': {
+        const state = (sp.get('state') || '').toUpperCase();
+        const limit = sp.get('limit') || '500';
+        try {
+          const filter = state
+            ? `STATE_CODE/${state}/PGM_SYS_ACRNM/NPDES`
+            : 'PGM_SYS_ACRNM/NPDES';
+          const url = `https://data.epa.gov/efservice/FRS_PROGRAM_FACILITY/${filter}/ROWS/0:${limit}/JSON`;
+          console.log('[FRS-WWTPs]', url);
+          const res = await fetch(url, {
+            headers: { 'Accept': 'application/json' },
+            signal: AbortSignal.timeout(30_000),
+            next: { revalidate: 86400 },
+          });
+          if (!res.ok) {
+            return NextResponse.json({ source: 'frs-wwtps', error: `EPA error: ${res.status}` }, { status: 502 });
+          }
+          const data = await res.json();
+          return NextResponse.json({ source: 'frs-wwtps', state: state || 'ALL', count: data.length, data });
+        } catch (e: any) {
+          return NextResponse.json({ source: 'frs-wwtps', error: e.message }, { status: 502 });
+        }
+      }
+
+      // ════════════════════════════════════════════════════════════════════════
+      // CDC NWSS — Wastewater Pathogen Surveillance (COVID, RSV, Influenza)
+      // ════════════════════════════════════════════════════════════════════════
+
+      // Example: ?action=cdc-nwss&state=MD&limit=1000
+      // Example: ?action=cdc-nwss&limit=5000  (national)
+      case 'cdc-nwss': {
+        const stateAbbr = (sp.get('state') || '').toUpperCase();
+        const limit = sp.get('limit') || '1000';
+        // CDC NWSS uses full state names (e.g. "Maryland") not abbreviations
+        const ABBR_TO_NAME: Record<string, string> = {
+          AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',
+          CT:'Connecticut',DE:'Delaware',DC:'District of Columbia',FL:'Florida',GA:'Georgia',
+          HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',
+          LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',
+          MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',
+          NJ:'New Jersey',NM:'New Mexico',NY:'New York',NC:'North Carolina',ND:'North Dakota',
+          OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',
+          SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',
+          WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming',
+        };
+        try {
+          let url = `https://data.cdc.gov/resource/2ew6-ywp6.json?$limit=${encodeURIComponent(limit)}&$order=${encodeURIComponent('date_end DESC')}`;
+          if (stateAbbr) {
+            const fullName = ABBR_TO_NAME[stateAbbr] || stateAbbr;
+            // Socrata SoQL needs %27 for single quotes in $where clauses
+            url += `&$where=reporting_jurisdiction%3D%27${encodeURIComponent(fullName)}%27`;
+          }
+          console.log('[CDC-NWSS]', url);
+          const res = await fetch(url, {
+            headers: { 'Accept': 'application/json' },
+            signal: AbortSignal.timeout(30_000),
+            cache: 'no-store',
+          });
+          if (!res.ok) {
+            const errText = await res.text().catch(() => '');
+            return NextResponse.json({ source: 'cdc-nwss', error: `CDC error: ${res.status}`, detail: errText.slice(0, 200), url }, { status: 502 });
+          }
+          const data = await res.json();
+          return NextResponse.json({ source: 'cdc-nwss', state: stateAbbr || 'ALL', count: data.length, debugUrl: url, data });
+        } catch (e: any) {
+          return NextResponse.json({ source: 'cdc-nwss', error: e.message }, { status: 502 });
+        }
+      }
+
+      // ════════════════════════════════════════════════════════════════════════
       // State Portal — routes to state-specific adapters
       // Example: ?action=state-portal&state=MD&lat=39.27&lng=-76.58
       // ════════════════════════════════════════════════════════════════════════
@@ -2098,6 +2469,13 @@ export async function GET(request: NextRequest) {
             lat: lat ? parseFloat(lat) : undefined,
             lng: lng ? parseFloat(lng) : undefined,
           });
+          // Non-CA states fall through to WQP — return empty with adapter hint
+          if (data.adapter === 'wqp-fallthrough') {
+            return NextResponse.json({
+              source: 'state-portal', state, data: [], adapter: 'wqp-fallthrough',
+              hint: 'Use ?action=wqp-results for non-CA states',
+            });
+          }
           return NextResponse.json({ source: 'state-portal', state, ...data });
         } catch (e: any) {
           return NextResponse.json({ source: 'state-portal', error: e.message, data: [] }, { status: 502 });
@@ -2252,6 +2630,9 @@ export async function GET(request: NextRequest) {
               noaaCoops: ['coops-latest', 'coops-product', 'coops-stations'],
               mmw: ['mmw-sites', 'mmw-latest'],
               envirofacts: ['envirofacts-sdwis', 'envirofacts-tri', 'envirofacts-pcs'],
+              icis: ['icis-permits', 'icis-violations', 'icis-dmr', 'icis-enforcement', 'icis-cached', 'icis-cache-status'],
+              nwisGw: ['nwis-gw-cached', 'nwis-gw-cache-status', 'nwis-gw-sites', 'nwis-gw-levels', 'nwis-gw-realtime'],
+              sdwis: ['sdwis-cached', 'sdwis-cache-status'],
               statePortal: ['state-portal'],
               hydroshare: ['hydroshare-search'],
               wqpStations: ['wqp-stations'],

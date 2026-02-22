@@ -10,6 +10,7 @@ import {
   gridKey,
   type WqpRecord,
 } from '@/lib/wqpCache';
+import { buildStateReports } from '@/lib/stateReportCache';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -151,6 +152,7 @@ async function fetchState(stateAbbr: string, fips: string): Promise<WqpRecord[]>
       org: row.OrganizationFormalName || row['Organization Formal Name'] || '',
       lat: Math.round(lat * 100000) / 100000,
       lng: Math.round(lng * 100000) / 100000,
+      state: stateAbbr,
     });
   }
 
@@ -236,6 +238,16 @@ export async function GET(request: NextRequest) {
     };
 
     setWqpCache(cacheData);
+
+    // Build state-level aggregation reports (non-fatal)
+    let stateReportCount = 0;
+    try {
+      const stateReports = buildStateReports();
+      stateReportCount = stateReports._meta.stateCount;
+      console.log(`[State Reports] Built ${stateReportCount} state reports`);
+    } catch (e) {
+      console.warn('[State Reports] Build failed (non-fatal):', e instanceof Error ? e.message : e);
+    }
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[WQP Cron] Build complete in ${elapsed}s — ${allRecords.length} records, ${Object.keys(grid).length} cells`);

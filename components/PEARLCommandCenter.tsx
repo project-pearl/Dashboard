@@ -21,10 +21,11 @@ import {
   RefreshCw, Download, Send, Plus, Minus, Info, Printer
 } from 'lucide-react';
 import { useAuth } from '@/lib/authContext';
+import { UserManagementPanel } from './UserManagementPanel';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type ViewLens = 'operations' | 'proposals';
+type ViewLens = 'operations' | 'proposals' | 'users';
 
 type DeploymentStatus = 'active' | 'maintenance' | 'offline' | 'staging' | 'decommissioned';
 type AlertSeverity = 'critical' | 'warning' | 'info' | 'ok';
@@ -448,9 +449,17 @@ function stageLabel(s: Prospect['stage']): string {
 
 export function PEARLCommandCenter(props: Props) {
   const { onClose } = props;
-  const { logout, user } = useAuth();
+  const { logout, user, isAdmin, listPendingUsers } = useAuth();
 
   const [viewLens, setViewLens] = useState<ViewLens>('operations');
+  const [pendingUserCount, setPendingUserCount] = useState(0);
+
+  // Fetch pending count on mount for admin users
+  useEffect(() => {
+    if (isAdmin) {
+      listPendingUsers().then(p => setPendingUserCount(p.length)).catch(() => {});
+    }
+  }, [isAdmin, listPendingUsers]);
   const [deployments] = useState<Deployment[]>(() => generateDeployments());
   const [prospects] = useState<Prospect[]>(() => generateProspects());
   const [expandedDeployment, setExpandedDeployment] = useState<string | null>('dep-milton-fl-001');
@@ -500,17 +509,26 @@ export function PEARLCommandCenter(props: Props) {
         <HeroBanner role="pearl" onDoubleClick={() => props.onToggleDevMode?.()}>
               {/* Lens Switcher */}
               <div className="flex rounded-lg border border-slate-200 overflow-hidden">
-                {(['operations', 'proposals'] as ViewLens[]).map(lens => (
+                {([
+                  { lens: 'operations' as ViewLens, label: '⚙ Operations', badge: 0 },
+                  { lens: 'proposals' as ViewLens, label: '📋 Proposals', badge: 0 },
+                  ...(isAdmin ? [{ lens: 'users' as ViewLens, label: '👥 Users', badge: pendingUserCount }] : []),
+                ]).map(({ lens, label, badge }) => (
                   <button
                     key={lens}
                     onClick={() => setViewLens(lens)}
-                    className={`px-3 py-1.5 text-xs font-semibold transition-all ${
+                    className={`px-3 py-1.5 text-xs font-semibold transition-all relative ${
                       viewLens === lens
                         ? 'bg-slate-900 text-white'
                         : 'bg-white text-slate-500 hover:bg-slate-50'
                     }`}
                   >
-                    {lens === 'operations' ? '⚙ Operations' : '📋 Proposals'}
+                    {label}
+                    {badge > 0 && (
+                      <span className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-amber-500 text-white text-[9px] font-bold">
+                        {badge}
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -1173,6 +1191,14 @@ export function PEARLCommandCenter(props: Props) {
               })}
             </div>
           </>
+        )}
+
+        {/* ════════════════════════════════════════════════════════════ */}
+        {/* ── USERS LENS (admin only) ───────────────────────────────── */}
+        {/* ════════════════════════════════════════════════════════════ */}
+
+        {viewLens === 'users' && isAdmin && (
+          <UserManagementPanel onRefreshPendingCount={setPendingUserCount} />
         )}
 
         {/* ── FOOTER ── */}

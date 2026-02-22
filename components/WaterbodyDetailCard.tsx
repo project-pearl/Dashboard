@@ -102,6 +102,9 @@ export interface WaterbodyDetailCardProps {
   // Data source config (keyed by source ID → display name)
   dataSources?: Record<string, { name: string }>;
 
+  // Coordinates
+  coordinates?: { lat: number; lon: number } | null;
+
   // Callbacks
   onToast?: (msg: string) => void;
 }
@@ -116,6 +119,7 @@ export function WaterbodyDetailCard({
   ecoScore, ecoData,
   overlay, stSummary,
   stateAgency: agency,
+  coordinates,
   dataSources = {},
   onToast,
 }: WaterbodyDetailCardProps) {
@@ -234,6 +238,12 @@ export function WaterbodyDetailCard({
             </CardTitle>
             <CardDescription className="text-xs mt-0.5 flex items-center gap-2 flex-wrap">
               {stateAbbr && <span>{stateName || stateAbbr}</span>}
+              {coordinates && (
+                <>
+                  <span>·</span>
+                  <span className="font-mono text-slate-400">{coordinates.lat.toFixed(4)}, {coordinates.lon.toFixed(4)}</span>
+                </>
+              )}
               {waterData && (
                 <>
                   <span>·</span>

@@ -62,7 +62,9 @@ export default function InfrastructurePage() {
 
   return (
     <div className="min-h-full">
-      <HeroBanner role="infrastructure" />
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <HeroBanner role="infrastructure" />
+      </div>
 
       <div className="px-4 sm:px-6 lg:px-8 py-6 space-y-6 max-w-[1600px] mx-auto">
         <KPIStrip cards={kpiCards} />

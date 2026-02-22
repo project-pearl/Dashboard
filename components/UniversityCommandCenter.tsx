@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { useLensParam } from '@/lib/useLensParam';
 import { CircleMarker, Tooltip } from 'react-leaflet';
 import HeroBanner from './HeroBanner';
 import { getStatesGeoJSON, geoToAbbr, STATE_GEO_LEAFLET, FIPS_TO_ABBR as _FIPS, STATE_NAMES as _SN } from '@/lib/leafletMapUtils';
@@ -227,7 +228,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
   const { user, logout } = useAuth();
 
   // ── Lens switching ──
-  const [activeLens, setActiveLens] = useState<LensId>(defaultLens || 'data-analysis');
+  const [activeLens, setActiveLens] = useLensParam<LensId>(defaultLens || 'data-analysis');
   const isFieldStudy = activeLens === 'field-study';
   const isPublication = activeLens === 'publication';
   const showInLens = (ids: LensId[]) => ids.includes(activeLens);
@@ -251,7 +252,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
   // (wbMarkers defined after regionData below for ATTAINS-merged data)
 
   // ── ATTAINS bulk for this state ──
-  const [attainsBulk, setAttainsBulk] = useState<Array<{ name: string; category: string; alertLevel: AlertLevel; causes: string[]; cycle: string }>>([]);
+  const [attainsBulk, setAttainsBulk] = useState<Array<{ id: string; name: string; category: string; alertLevel: AlertLevel; causes: string[]; cycle: string; lat?: number | null; lon?: number | null }>>([]);
   const [attainsBulkLoaded, setAttainsBulkLoaded] = useState(false);
 
   // Merge ATTAINS into region data
@@ -300,11 +301,28 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
     return merged;
   }, [baseRegions, attainsBulk, stateAbbr]);
 
-  // Waterbody marker coordinates from regionsConfig + centroid fallback
+  // Waterbody marker coordinates — 3-priority resolution (ATTAINS centroid → regionsConfig → name-based)
+  const attainsCoordMap = useMemo(() => {
+    const m = new Map<string, { lat: number; lon: number }>();
+    for (const a of attainsBulk) {
+      if (a.lat != null && a.lon != null && a.id) m.set(a.id, { lat: a.lat, lon: a.lon });
+      if (a.lat != null && a.lon != null && a.name) m.set(`name:${a.name.toLowerCase().trim()}`, { lat: a.lat, lon: a.lon });
+    }
+    return m;
+  }, [attainsBulk]);
+
   const wbMarkers = useMemo(() => {
     const resolved: { id: string; name: string; lat: number; lon: number; alertLevel: AlertLevel; status: string; dataSourceCount: number }[] = [];
     for (const r of regionData) {
-      // Priority 1: regionsConfig
+      // Priority 1: ATTAINS real centroid
+      const byId = attainsCoordMap.get(r.id);
+      const byName = !byId ? attainsCoordMap.get(`name:${r.name.toLowerCase().trim()}`) : null;
+      const attainsCoord = byId || byName;
+      if (attainsCoord) {
+        resolved.push({ id: r.id, name: r.name, lat: attainsCoord.lat, lon: attainsCoord.lon, alertLevel: r.alertLevel, status: r.status, dataSourceCount: r.dataSourceCount });
+        continue;
+      }
+      // Priority 2: regionsConfig
       const cfg = getRegionById(r.id) as any;
       if (cfg) {
         const lat = cfg.lat ?? cfg.latitude ?? null;
@@ -314,14 +332,14 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
           continue;
         }
       }
-      // Priority 2: name-based coordinate resolver
+      // Priority 3: name-based coordinate resolver (fallback)
       const approx = resolveWaterbodyCoordinates(r.name, stateAbbr);
       if (approx) {
         resolved.push({ id: r.id, name: r.name, lat: approx.lat, lon: approx.lon, alertLevel: r.alertLevel, status: r.status, dataSourceCount: r.dataSourceCount });
       }
     }
     return resolved;
-  }, [regionData, stateAbbr]);
+  }, [regionData, stateAbbr, attainsCoordMap]);
 
   // Fetch ATTAINS bulk from cache for this state
   useEffect(() => {
@@ -340,6 +358,8 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
           alertLevel: (wb.alertLevel || 'none') as AlertLevel,
           causes: wb.causes || [],
           cycle: '',
+          lat: wb.lat ?? null,
+          lon: wb.lon ?? null,
         }));
         if (!cancelled) {
           setAttainsBulk(waterbodies);

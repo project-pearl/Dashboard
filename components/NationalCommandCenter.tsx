@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useLensParam } from '@/lib/useLensParam';
 import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { feature } from 'topojson-client';
@@ -24,6 +25,9 @@ import { useWaterData, DATA_SOURCES } from '@/lib/useWaterData';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
+import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
+import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
+import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 
@@ -711,7 +715,7 @@ export function NationalCommandCenter(props: Props) {
   const router = useRouter();
 
   // ── View Lens: controls layout composition ──
-  const [viewLens, setViewLens] = useState<ViewLens>(federalMode ? 'compliance' : 'full');
+  const [viewLens, setViewLens] = useLensParam<ViewLens>(federalMode ? 'compliance' : 'full');
   const lens = LENS_CONFIG[viewLens];
 
   // ── ATTAINS Bulk State Assessment Data ──
@@ -1429,10 +1433,14 @@ export function NationalCommandCenter(props: Props) {
         .slice(0, 10)
         .map(([cause, count]) => ({ cause, count }));
 
+      // Real waterbody universe = max of our registry vs ATTAINS total for honest coverage
+      const attainsTotal = stateAttains.length;
+      const realWaterbodyCount = Math.max(regions.length, attainsTotal);
+
       return {
         abbr, name: STATE_ABBR_TO_NAME[abbr],
         high, medium, low, none, total: totalAlerts,
-        waterbodies: regions.length,
+        waterbodies: realWaterbodyCount,
         assessed: assessedCount,
         monitored: monitored.length,
         unmonitored: unmonitored.length,
@@ -5001,6 +5009,33 @@ export function NationalCommandCenter(props: Props) {
         </>
 
         </>); {/* end statebystatesummary */}
+
+        case 'icis': return DS(
+        <div id="section-icis">
+          <ICISCompliancePanel
+            state={selectedState}
+            compactMode={false}
+          />
+        </div>
+      );
+
+        case 'sdwis': return DS(
+        <div id="section-sdwis">
+          <SDWISCompliancePanel
+            state={selectedState}
+            compactMode={false}
+          />
+        </div>
+      );
+
+        case 'groundwater': return DS(
+        <div id="section-groundwater">
+          <NwisGwPanel
+            state={selectedState}
+            compactMode={false}
+          />
+        </div>
+      );
 
         case 'sla': return DS(<>
         {/* Feature 11: SLA/Compliance Tracking — lens controlled */}

@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Info, LogOut, Printer, BookOpen } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getRegionById } from '@/lib/regionsConfig';
+import { resolveWaterbodyCoordinates } from '@/lib/waterbodyCentroids';
 import { REGION_META, getWaterbodyDataSources } from '@/lib/useWaterData';
 import { useWaterData, DATA_SOURCES } from '@/lib/useWaterData';
 import { computeRestorationPlan, resolveAttainsCategory, mergeAttainsCauses, COST_PER_UNIT_YEAR } from '@/lib/restorationEngine';
@@ -240,20 +241,8 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
 
   const leafletGeo = STATE_GEO_LEAFLET[stateAbbr] || { center: [39.8, -98.5] as [number, number], zoom: 4 };
 
-  // Waterbody marker coordinates from regionsConfig
-  const wbMarkers = useMemo(() => {
-    return baseRegions.map(r => {
-      const cfg = getRegionById(r.id) as any;
-      if (!cfg) return null;
-      const lat = cfg.lat ?? cfg.latitude ?? null;
-      const lon = cfg.lon ?? cfg.lng ?? cfg.longitude ?? null;
-      if (lat == null || lon == null) return null;
-      return { id: r.id, name: r.name, lat, lon, alertLevel: r.alertLevel, status: r.status, dataSourceCount: r.dataSourceCount };
-    }).filter(Boolean) as { id: string; name: string; lat: number; lon: number; alertLevel: AlertLevel; status: string; dataSourceCount: number }[];
-  }, [baseRegions]);
-
   // ── ATTAINS bulk for this state ──
-  const [attainsBulk, setAttainsBulk] = useState<Array<{ name: string; category: string; alertLevel: AlertLevel; causes: string[]; cycle: string }>>([]);
+  const [attainsBulk, setAttainsBulk] = useState<Array<{ id: string; name: string; category: string; alertLevel: AlertLevel; causes: string[]; cycle: string; lat?: number | null; lon?: number | null }>>([]);
   const [attainsBulkLoaded, setAttainsBulkLoaded] = useState(false);
 
   // Merge ATTAINS into region data
@@ -302,6 +291,43 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
     return merged;
   }, [baseRegions, attainsBulk, stateAbbr]);
 
+  // Waterbody marker coordinates — 3-priority resolution (ATTAINS centroid → regionsConfig → name-based)
+  const attainsCoordMap = useMemo(() => {
+    const m = new Map<string, { lat: number; lon: number }>();
+    for (const a of attainsBulk) {
+      if (a.lat != null && a.lon != null && a.id) m.set(a.id, { lat: a.lat, lon: a.lon });
+      if (a.lat != null && a.lon != null && a.name) m.set(`name:${a.name.toLowerCase().trim()}`, { lat: a.lat, lon: a.lon });
+    }
+    return m;
+  }, [attainsBulk]);
+
+  const wbMarkers = useMemo(() => {
+    const resolved: { id: string; name: string; lat: number; lon: number; alertLevel: AlertLevel; status: string; dataSourceCount: number }[] = [];
+    for (const r of regionData) {
+      const byId = attainsCoordMap.get(r.id);
+      const byName = !byId ? attainsCoordMap.get(`name:${r.name.toLowerCase().trim()}`) : null;
+      const attainsCoord = byId || byName;
+      if (attainsCoord) {
+        resolved.push({ id: r.id, name: r.name, lat: attainsCoord.lat, lon: attainsCoord.lon, alertLevel: r.alertLevel, status: r.status, dataSourceCount: r.dataSourceCount });
+        continue;
+      }
+      const cfg = getRegionById(r.id) as any;
+      if (cfg) {
+        const lat = cfg.lat ?? cfg.latitude ?? null;
+        const lon = cfg.lon ?? cfg.lng ?? cfg.longitude ?? null;
+        if (lat != null && lon != null) {
+          resolved.push({ id: r.id, name: r.name, lat, lon, alertLevel: r.alertLevel, status: r.status, dataSourceCount: r.dataSourceCount });
+          continue;
+        }
+      }
+      const approx = resolveWaterbodyCoordinates(r.name, stateAbbr);
+      if (approx) {
+        resolved.push({ id: r.id, name: r.name, lat: approx.lat, lon: approx.lon, alertLevel: r.alertLevel, status: r.status, dataSourceCount: r.dataSourceCount });
+      }
+    }
+    return resolved;
+  }, [regionData, stateAbbr, attainsCoordMap]);
+
   // Fetch ATTAINS bulk from cache for this state
   useEffect(() => {
     let cancelled = false;
@@ -319,6 +345,8 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
           alertLevel: (wb.alertLevel || 'none') as AlertLevel,
           causes: wb.causes || [],
           cycle: '',
+          lat: wb.lat ?? null,
+          lon: wb.lon ?? null,
         }));
         if (!cancelled) {
           setAttainsBulk(waterbodies);

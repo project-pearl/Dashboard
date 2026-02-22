@@ -24,6 +24,8 @@ export interface CachedWaterbody {
   tmdlStatus: 'needed' | 'completed' | 'alternative' | 'not-pollutant' | 'na';
   causes: string[];
   causeCount: number;
+  lat?: number | null;
+  lon?: number | null;
 }
 
 export interface StateSummary {
@@ -218,7 +220,9 @@ async function fetchViaGIS(stateCode: string): Promise<StateSummary | null> {
         outFields: `assessmentunitidentifier,assessmentunitname,ircategory,${causeOutFields}`,
         resultRecordCount: String(PAGE),
         resultOffset: String(offset),
-        returnGeometry: 'false',
+        returnGeometry: 'true',
+        returnCentroid: 'true',
+        outSR: '4326',
       });
       const features = data.features || [];
       for (const f of features) {
@@ -235,6 +239,20 @@ async function fetchViaGIS(stateCode: string): Promise<StateSummary | null> {
         if (cat === '4B' || cat === '4b') tmdlStatus = 'alternative';
         else if (cat === '4C' || cat === '4c') tmdlStatus = 'not-pollutant';
 
+        // Extract centroid from geometry
+        const centroid = f.centroid || f.geometry?.centroid;
+        const geom = f.geometry;
+        let lat: number | null = null;
+        let lon: number | null = null;
+        if (centroid) {
+          lat = centroid.y ?? centroid.lat ?? null;
+          lon = centroid.x ?? centroid.lon ?? centroid.lng ?? null;
+        } else if (geom) {
+          // Point geometry or ring centroid fallback
+          if (geom.y != null && geom.x != null) { lat = geom.y; lon = geom.x; }
+          else if (geom.points?.[0]) { lat = geom.points[0][1]; lon = geom.points[0][0]; }
+        }
+
         waterbodies.push({
           id: a.assessmentunitidentifier || '',
           name: a.assessmentunitname || a.assessmentunitidentifier || '',
@@ -243,6 +261,8 @@ async function fetchViaGIS(stateCode: string): Promise<StateSummary | null> {
           tmdlStatus,
           causes,
           causeCount: causes.length,
+          lat,
+          lon,
         });
       }
       offset += PAGE;
@@ -317,10 +337,11 @@ async function fetchAttainsState(stateCode: string, timeoutMs = FETCH_TIMEOUT_MS
     let high = 0, medium = 0, low = 0, none = 0;
     let tmdlNeeded = 0, tmdlCompleted = 0, tmdlAlternative = 0;
 
-    // ── Fetch assessment unit NAMES from separate endpoint ──
-    // The assessments endpoint doesn't include waterbody names,
+    // ── Fetch assessment unit NAMES + LOCATIONS from separate endpoint ──
+    // The assessments endpoint doesn't include waterbody names or coordinates,
     // so we fetch them from the assessmentUnits endpoint and join by ID
     const nameMap = new Map<string, string>();
+    const locMap = new Map<string, { lat: number; lon: number }>();
     try {
       const auUrl = new URL(`${ATTAINS_BASE}/assessmentUnits`);
       auUrl.searchParams.set('stateCode', stateCode);
@@ -337,9 +358,15 @@ async function fetchAttainsState(stateCode: string, timeoutMs = FETCH_TIMEOUT_MS
             const uid = (unit?.assessmentUnitIdentifier || '').trim();
             const uname = (unit?.assessmentUnitName || '').trim();
             if (uid && uname) nameMap.set(uid, uname);
+            // Extract location if available
+            const lat = unit?.locationDescriptionLatitude ?? unit?.latitude ?? null;
+            const lon = unit?.locationDescriptionLongitude ?? unit?.longitude ?? null;
+            if (uid && lat != null && lon != null && !isNaN(lat) && !isNaN(lon)) {
+              locMap.set(uid, { lat: Number(lat), lon: Number(lon) });
+            }
           }
         }
-        console.log(`[ATTAINS Cache] ${stateCode}: resolved ${nameMap.size} assessment unit names`);
+        console.log(`[ATTAINS Cache] ${stateCode}: resolved ${nameMap.size} names, ${locMap.size} locations`);
       }
     } catch (e: any) {
       console.warn(`[ATTAINS Cache] ${stateCode}: name lookup failed (${e.message}) — using IDs as fallback`);
@@ -402,6 +429,7 @@ async function fetchAttainsState(stateCode: string, timeoutMs = FETCH_TIMEOUT_MS
         none++;
       }
 
+      const loc = locMap.get(auId);
       return {
         id: auId,
         name: auName,
@@ -410,6 +438,8 @@ async function fetchAttainsState(stateCode: string, timeoutMs = FETCH_TIMEOUT_MS
         tmdlStatus,
         causes: [...causesSet],
         causeCount: causesSet.size,
+        lat: loc?.lat ?? null,
+        lon: loc?.lon ?? null,
       };
     });
 

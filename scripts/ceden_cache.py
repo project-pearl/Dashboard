@@ -87,6 +87,13 @@ def grid_key(lat: float, lng: float) -> str:
     return f"{glat}_{glng}"
 
 
+def safe_str(val, default: str = "") -> str:
+    """Return str(val), or default if val is NaN/None."""
+    if val is None or (isinstance(val, float) and math.isnan(val)):
+        return default
+    return str(val)
+
+
 def ckan_sql(sql: str) -> list[dict]:
     """Execute a CKAN SQL query and return records."""
     resp = requests.get(CKAN_BASE, params={"sql": sql}, timeout=60)
@@ -234,10 +241,10 @@ def build_cache():
                     "key": row["pearl_key"],
                     "analyte": row["Analyte"],
                     "val": round(float(row["Result"]), 4) if pd.notna(row["Result"]) else None,
-                    "unit": row["Unit"],
+                    "unit": safe_str(row.get("Unit", "")),
                     "lat": round(float(row["Latitude"]), 5),
                     "lng": round(float(row["Longitude"]), 5),
-                    "agency": row.get("SampleAgency", ""),
+                    "agency": safe_str(row.get("SampleAgency", "")),
                 })
 
     # Toxicity by grid cell
@@ -249,12 +256,12 @@ def build_cache():
                     "stn": row["StationCode"],
                     "name": row["StationName"],
                     "date": str(row["SampleDate"])[:10] if pd.notna(row["SampleDate"]) else None,
-                    "organism": row.get("OrganismName", ""),
-                    "analyte": row.get("Analyte", ""),
+                    "organism": safe_str(row.get("OrganismName", "")),
+                    "analyte": safe_str(row.get("Analyte", "")),
                     "val": round(float(row["Result"]), 4) if pd.notna(row["Result"]) else None,
                     "mean": round(float(row["Mean"]), 4) if pd.notna(row["Mean"]) else None,
-                    "unit": row.get("Unit", ""),
-                    "sig": row.get("SigEffectCode", ""),
+                    "unit": safe_str(row.get("Unit", "")),
+                    "sig": safe_str(row.get("SigEffectCode", "")),
                     "lat": round(float(row["Latitude"]), 5),
                     "lng": round(float(row["Longitude"]), 5),
                 })

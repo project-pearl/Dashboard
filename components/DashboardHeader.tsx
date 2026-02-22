@@ -17,7 +17,7 @@ const ROUTE_LABELS: Record<string, string> = {
   infrastructure: 'Infrastructure',
   insurance: 'Insurance & Risk',
   agriculture: 'Agriculture',
-  samplechain: 'SampleChain LIMS',
+  shuck: 'SHUCK LIMS',
 };
 
 const ROUTE_ACCENTS: Record<string, string> = {
@@ -32,7 +32,7 @@ const ROUTE_ACCENTS: Record<string, string> = {
   infrastructure: 'text-slate-600',
   insurance: 'text-indigo-600',
   agriculture: 'text-lime-600',
-  samplechain: 'text-teal-600',
+  shuck: 'text-teal-600',
 };
 
 export function DashboardHeader() {

@@ -10,30 +10,7 @@ import {
   Waves, Lock, Mail, User, Building2, MapPin, ArrowRight, AlertTriangle,
   CheckCircle, Clock, Shield, GraduationCap, Users, Globe, ChevronDown,
 } from 'lucide-react';
-
-// ─── Jurisdiction options (MD only for now — expand per state) ────────────
-
-const MD_JURISDICTIONS: { key: string; label: string; permit: string }[] = [
-  { key: 'anne_arundel_county', label: 'Anne Arundel County', permit: 'MDR068144' },
-  { key: 'baltimore_county', label: 'Baltimore County', permit: 'MDR068246' },
-  { key: 'baltimore_city', label: 'Baltimore City', permit: 'MDR068322' },
-  { key: 'howard_county', label: 'Howard County', permit: 'MDR068365' },
-  { key: 'montgomery_county', label: 'Montgomery County', permit: 'MDR068399' },
-  { key: 'prince_georges_county', label: "Prince George's County", permit: 'MDR068284' },
-  { key: 'harford_county', label: 'Harford County', permit: 'MDR068411' },
-  { key: 'charles_county', label: 'Charles County', permit: 'MDR068438' },
-  { key: 'frederick_county', label: 'Frederick County', permit: 'MDR068446' },
-  { key: 'carroll_county', label: 'Carroll County', permit: 'MDR068454' },
-  { key: 'cecil_county', label: 'Cecil County', permit: 'MDR068462' },
-  { key: 'queen_annes_county', label: "Queen Anne's County", permit: 'MDR068471' },
-  { key: 'kent_county', label: 'Kent County', permit: 'MDR068489' },
-  { key: 'talbot_county', label: 'Talbot County', permit: 'MDR068497' },
-  { key: 'dorchester_county', label: 'Dorchester County', permit: 'MDR068501' },
-  { key: 'wicomico_county', label: 'Wicomico County', permit: 'MDR068519' },
-  { key: 'washington_county', label: 'Washington County', permit: 'MDR068527' },
-  { key: 'calvert_county', label: 'Calvert County', permit: 'MDR068535' },
-  { key: 'st_marys_county', label: "St. Mary's County", permit: 'MDR068543' },
-];
+import { MD_JURISDICTIONS, STATES } from '@/lib/jurisdictions';
 
 const ROLE_META: Record<UserRole, { icon: typeof Shield; label: string; desc: string; tier: 'explorer' | 'operator' }> = {
   K12:        { icon: Users,          label: 'K-12 Educator',         desc: 'Classroom tools & educational content',                       tier: 'explorer' },
@@ -47,12 +24,6 @@ const ROLE_META: Record<UserRole, { icon: typeof Shield; label: string; desc: st
   Temp:       { icon: Shield,         label: 'Temp (Breakpoint)',     desc: 'Breakpoint Revenue Group dashboard',                          tier: 'explorer' },
   Pearl:      { icon: Shield,         label: 'PEARL Admin',           desc: 'Internal PEARL operations dashboard',                         tier: 'operator' },
 };
-
-const STATES = [
-  { abbr: 'MD', name: 'Maryland' }, { abbr: 'VA', name: 'Virginia' }, { abbr: 'PA', name: 'Pennsylvania' },
-  { abbr: 'DC', name: 'Washington DC' }, { abbr: 'NY', name: 'New York' }, { abbr: 'WV', name: 'West Virginia' },
-  { abbr: 'DE', name: 'Delaware' },
-];
 
 // ─── Component ──────────────────────────────────────────────────────────────
 

@@ -8,14 +8,14 @@ import { useState, useEffect, useCallback } from 'react';
 // ─── Direct BWB Station Mapping ──────────────────────────────────────────────
 // Maps PEARL region IDs to known Blue Water Baltimore station + dataset IDs
 // This avoids the "nearest station" lookup and goes straight to parameters
-interface BWBStation {
+export interface BWBStation {
   datasetId: number;
   stationId: number;
   stationName: string;
   lastSampled: string;
 }
 
-const BWB_STATION_MAP: Record<string, BWBStation> = {
+export const BWB_STATION_MAP: Record<string, BWBStation> = {
   // Baltimore Harbor & Patapsco
   maryland_middle_branch:   { datasetId: 860, stationId: 8756, stationName: 'Middle Branch A', lastSampled: '2025-11-13' },
   maryland_inner_harbor:    { datasetId: 860, stationId: 8789, stationName: 'Dragon Boats', lastSampled: '2025-11-13' },
@@ -37,7 +37,7 @@ const BWB_STATION_MAP: Record<string, BWBStation> = {
 };
 
 // ─── WR normalized_name → PEARL dashboard parameter key ────────────────────
-const WR_TO_PEARL_PARAM: Record<string, string> = {
+export const WR_TO_PEARL_PARAM: Record<string, string> = {
   'dissolved_oxygen_mg_l':            'DO',
   'total_nitrogen_mg_l':              'TN',
   'total_phosphorus_mg_l':            'TP',
@@ -184,4 +184,47 @@ export function hasBWBData(regionId: string): boolean {
 // ─── Helper: Get all mapped region IDs ───────────────────────────────────────
 export function getBWBRegionIds(): string[] {
   return Object.keys(BWB_STATION_MAP);
+}
+
+// ─── BWB station lat/lng for proximity matching ─────────────────────────────
+// Approximate coordinates for each BWB monitoring station
+const BWB_STATION_COORDS: Record<string, { lat: number; lng: number }> = {
+  maryland_middle_branch:  { lat: 39.267, lng: -76.623 },
+  maryland_inner_harbor:   { lat: 39.282, lng: -76.608 },
+  maryland_jones_falls:    { lat: 39.286, lng: -76.608 },
+  maryland_gwynns_falls:   { lat: 39.262, lng: -76.633 },
+  maryland_bear_creek:     { lat: 39.258, lng: -76.537 },
+  maryland_curtis_bay:     { lat: 39.218, lng: -76.575 },
+  maryland_patapsco_river: { lat: 39.238, lng: -76.585 },
+  maryland_stony_creek:    { lat: 39.198, lng: -76.546 },
+  maryland_back_river:     { lat: 39.306, lng: -76.478 },
+  maryland_canton:         { lat: 39.279, lng: -76.578 },
+  maryland_ferry_bar:      { lat: 39.265, lng: -76.617 },
+  maryland_ft_mchenry:     { lat: 39.263, lng: -76.582 },
+  maryland_curtis_creek:   { lat: 39.208, lng: -76.565 },
+  maryland_bodkin_creek:   { lat: 39.132, lng: -76.437 },
+  maryland_rock_creek:     { lat: 39.200, lng: -76.547 },
+  maryland_masonville:     { lat: 39.248, lng: -76.592 },
+};
+
+/** Find the nearest BWB station within maxDistDeg (~0.15° ≈ 17km) of a lat/lng */
+export function findNearestBwbStation(
+  lat: number,
+  lng: number,
+  maxDistDeg = 0.15
+): { regionId: string; station: BWBStation } | null {
+  let bestDist = Infinity;
+  let bestId: string | null = null;
+
+  for (const [regionId, coords] of Object.entries(BWB_STATION_COORDS)) {
+    const dist = Math.sqrt((lat - coords.lat) ** 2 + (lng - coords.lng) ** 2);
+    if (dist < bestDist && dist <= maxDistDeg) {
+      bestDist = dist;
+      bestId = regionId;
+    }
+  }
+
+  if (!bestId) return null;
+  const station = BWB_STATION_MAP[bestId];
+  return station ? { regionId: bestId, station } : null;
 }

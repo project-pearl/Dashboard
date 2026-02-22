@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import AuthGuard from '@/components/AuthGuard';
 import { DashboardSidebar } from '@/components/DashboardSidebar';
 import { DashboardHeader } from '@/components/DashboardHeader';
@@ -10,7 +10,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <AuthGuard>
       <div className="flex h-screen bg-slate-50 overflow-hidden">
         {/* Sidebar */}
-        <DashboardSidebar />
+        <Suspense fallback={<div className="w-64 bg-white border-r border-slate-200 flex-shrink-0" />}>
+          <DashboardSidebar />
+        </Suspense>
 
         {/* Main content area */}
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">

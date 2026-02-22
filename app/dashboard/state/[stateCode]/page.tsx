@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,5 +14,9 @@ export default function StatePage() {
   const params = useParams();
   const stateCode = (params.stateCode as string)?.toUpperCase() || 'MD';
 
-  return <StateCommandCenter stateAbbr={stateCode} />;
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><Skeleton className="w-full h-[400px]" /></div>}>
+      <StateCommandCenter stateAbbr={stateCode} />
+    </Suspense>
+  );
 }

@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/authContext';
 import { canAccessRoute } from '@/lib/roleRoutes';
+import { getLensesForHref, type LensDef } from '@/lib/lensRegistry';
 import {
   Building2,
   Map,
@@ -21,6 +22,7 @@ import {
   Landmark,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Home,
   Settings,
   Menu,
@@ -68,7 +70,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     title: 'Science',
     items: [
-      { label: 'SampleChain', href: '/dashboard/samplechain', icon: FlaskConical, accent: 'text-teal-700', accentBg: 'bg-teal-50 border-teal-200' },
+      { label: 'SHUCK', href: '/dashboard/shuck', icon: FlaskConical, accent: 'text-teal-700', accentBg: 'bg-teal-50 border-teal-200' },
       { label: 'University', href: '/dashboard/university', icon: GraduationCap, accent: 'text-violet-700', accentBg: 'bg-violet-50 border-violet-200' },
     ],
   },
@@ -88,9 +90,12 @@ const NAV_GROUPS: NavGroup[] = [
 
 export function DashboardSidebar() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentLensParam = searchParams.get('lens');
   const { user } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [expandedRoles, setExpandedRoles] = useState<Set<string>>(new Set());
 
   // Filter nav groups to only show links the user's role can access
   const filteredGroups = useMemo(() => {
@@ -103,21 +108,166 @@ export function DashboardSidebar() {
       .filter((group) => group.items.length > 0);
   }, [user]);
 
-  const isActive = (href: string) => {
+  const isActive = useCallback((href: string) => {
     if (href === '/dashboard/federal') return pathname === '/dashboard/federal';
     return pathname.startsWith(href.replace('/default', '').replace('/MD', ''));
+  }, [pathname]);
+
+  // Auto-expand the currently active role on mount and route change
+  useEffect(() => {
+    for (const group of filteredGroups) {
+      for (const item of group.items) {
+        if (isActive(item.href) && getLensesForHref(item.href)) {
+          setExpandedRoles((prev) => {
+            if (prev.has(item.href)) return prev;
+            const next = new Set(prev);
+            next.add(item.href);
+            return next;
+          });
+        }
+      }
+    }
+  }, [pathname, filteredGroups, isActive]);
+
+  const toggleExpanded = (href: string) => {
+    setExpandedRoles((prev) => {
+      const next = new Set(prev);
+      if (next.has(href)) next.delete(href);
+      else next.add(href);
+      return next;
+    });
+  };
+
+  const isLensActive = (itemHref: string, lensId: string) => {
+    return isActive(itemHref) && currentLensParam === lensId;
+  };
+
+  // Render a single nav item — either flat link or expandable tree node
+  const renderNavItem = (item: NavItem) => {
+    const Icon = item.icon;
+    const active = isActive(item.href);
+    const lenses = getLensesForHref(item.href);
+
+    // No lenses → flat link (unchanged)
+    if (!lenses) {
+      return (
+        <Link
+          key={item.href}
+          href={item.href}
+          onClick={() => setMobileOpen(false)}
+          title={collapsed ? item.label : undefined}
+          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
+            active
+              ? `${item.accentBg} ${item.accent} font-semibold border shadow-sm`
+              : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+          }`}
+        >
+          <Icon className={`w-4 h-4 flex-shrink-0 ${active ? item.accent : 'text-slate-400'}`} />
+          {!collapsed && <span className="truncate">{item.label}</span>}
+        </Link>
+      );
+    }
+
+    const isExpanded = expandedRoles.has(item.href);
+
+    // Collapsed mode → icon with flyout popover on hover
+    if (collapsed) {
+      return (
+        <div key={item.href} className="relative group">
+          <Link
+            href={item.href}
+            title={item.label}
+            className={`flex items-center justify-center px-3 py-2 rounded-lg text-sm transition-all ${
+              active
+                ? `${item.accentBg} ${item.accent} font-semibold border shadow-sm`
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+            }`}
+          >
+            <Icon className={`w-4 h-4 flex-shrink-0 ${active ? item.accent : 'text-slate-400'}`} />
+          </Link>
+          {/* Flyout popover on hover */}
+          <div className="hidden group-hover:block absolute left-full top-0 ml-2 z-50 min-w-[160px] bg-white border border-slate-200 rounded-lg shadow-lg py-1.5">
+            <div className="px-3 py-1.5 text-xs font-semibold text-slate-700 border-b border-slate-100">
+              {item.label}
+            </div>
+            {lenses.map((lens) => (
+              <Link
+                key={lens.id}
+                href={`${item.href}?lens=${lens.id}`}
+                onClick={() => setMobileOpen(false)}
+                className={`block px-3 py-1.5 text-xs transition-colors ${
+                  isLensActive(item.href, lens.id)
+                    ? `${item.accent} font-semibold bg-slate-50`
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+              >
+                {lens.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // Expanded mode → tree node with chevron + sub-items
+    return (
+      <div key={item.href}>
+        {/* Parent row */}
+        <div className={`flex items-center rounded-lg text-sm transition-all ${
+          active
+            ? `${item.accentBg} ${item.accent} font-semibold border shadow-sm`
+            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+        }`}>
+          <Link
+            href={item.href}
+            onClick={() => setMobileOpen(false)}
+            className="flex items-center gap-3 px-3 py-2 flex-1 min-w-0"
+          >
+            <Icon className={`w-4 h-4 flex-shrink-0 ${active ? item.accent : 'text-slate-400'}`} />
+            <span className="truncate">{item.label}</span>
+          </Link>
+          <button
+            onClick={() => toggleExpanded(item.href)}
+            className="px-2 py-2 flex-shrink-0 hover:bg-black/5 rounded-r-lg transition-colors"
+            aria-label={isExpanded ? `Collapse ${item.label}` : `Expand ${item.label}`}
+          >
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isExpanded ? '' : '-rotate-90'}`} />
+          </button>
+        </div>
+        {/* Sub-items */}
+        {isExpanded && (
+          <div className="ml-4 pl-3 border-l border-slate-200 mt-0.5 space-y-0.5">
+            {lenses.map((lens) => {
+              const lensActive = isLensActive(item.href, lens.id);
+              return (
+                <Link
+                  key={lens.id}
+                  href={`${item.href}?lens=${lens.id}`}
+                  onClick={() => setMobileOpen(false)}
+                  className={`block px-3 py-1.5 rounded-md text-xs transition-all ${
+                    lensActive
+                      ? `${item.accent} font-semibold bg-slate-50`
+                      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                  }`}
+                >
+                  {lens.label}
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
   };
 
   const sidebar = (
     <div className={`flex flex-col h-full bg-white border-r border-slate-200 transition-all duration-300 ${collapsed ? 'w-16' : 'w-64'}`}>
       {/* Logo */}
-      <div className="p-4 flex items-center gap-3 border-b border-slate-200">
-        <Image src="/Pearl-Logo-alt.png" alt="PEARL" width={32} height={32} className="rounded-lg flex-shrink-0" />
-        {!collapsed && (
-          <div className="min-w-0">
-            <div className="text-sm font-bold text-slate-900 truncate">PEARL</div>
-            <div className="text-[10px] text-slate-400 truncate">Intelligence Network</div>
-          </div>
+      <div className="p-4 flex items-center justify-center border-b border-slate-200">
+        {collapsed ? (
+          <Image src="/Pearl-Logo-alt.png" alt="PEARL" width={32} height={32} className="rounded-lg flex-shrink-0" />
+        ) : (
+          <Image src="/Logo_Pearl_as_Headline.JPG" alt="PEARL" width={180} height={40} className="object-contain" />
         )}
       </div>
 
@@ -144,26 +294,7 @@ export function DashboardSidebar() {
               </div>
             )}
             <div className="space-y-0.5">
-              {group.items.map((item) => {
-                const Icon = item.icon;
-                const active = isActive(item.href);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setMobileOpen(false)}
-                    title={collapsed ? item.label : undefined}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
-                      active
-                        ? `${item.accentBg} ${item.accent} font-semibold border shadow-sm`
-                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                    }`}
-                  >
-                    <Icon className={`w-4 h-4 flex-shrink-0 ${active ? item.accent : 'text-slate-400'}`} />
-                    {!collapsed && <span className="truncate">{item.label}</span>}
-                  </Link>
-                );
-              })}
+              {group.items.map((item) => renderNavItem(item))}
             </div>
           </div>
         ))}

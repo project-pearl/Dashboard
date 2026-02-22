@@ -195,6 +195,305 @@ def fetch_sdwis(state_cd, dry_run=False):
         return None
 
 
+def fetch_icis_npdes(state_cd, dry_run=False):
+    """Fetch EPA ICIS-NPDES permits for a state."""
+    tables = ["ICIS_PERMITS", "ICIS_VIOLATIONS", "ICIS_INSPECTIONS", "ICIS_ENFORCEMENT_ACTIONS"]
+    all_rows = []
+    for table in tables:
+        url = f"https://data.epa.gov/efservice/{table}/STATE_CODE/{state_cd}/rows/0:10000/JSON"
+        if dry_run:
+            print(f"  [DRY RUN] icis_npdes ({state_cd}/{table}): would fetch")
+            print(f"            {url[:120]}...")
+            continue
+        print(f"  Fetching ICIS {table} for {state_cd}...")
+        try:
+            r = requests.get(url, timeout=120)
+            r.raise_for_status()
+            data = r.json()
+            for row in data:
+                row["_table"] = table
+            all_rows.extend(data)
+            print(f"    ✅ {table} {state_cd}: {len(data):,} records")
+        except Exception as e:
+            print(f"    ❌ {table} {state_cd}: {str(e)[:100]}")
+        time.sleep(1)  # 1s between EPA requests
+
+    if dry_run:
+        return None
+    if not all_rows:
+        return None
+    return pd.DataFrame(all_rows)
+
+
+def fetch_icis_dmr(state_cd, dry_run=False):
+    """Fetch EPA ICIS DMR measurements for a state. VERY large — filtered by state."""
+    url = f"https://data.epa.gov/efservice/ICIS_DMR_MEASUREMENTS/STATE_CODE/{state_cd}/rows/0:10000/JSON"
+    if dry_run:
+        print(f"  [DRY RUN] icis_dmr ({state_cd}): would fetch")
+        print(f"            {url[:120]}...")
+        return None
+    print(f"  Fetching ICIS DMR {state_cd}...")
+    try:
+        r = requests.get(url, timeout=180)
+        r.raise_for_status()
+        data = r.json()
+        df = pd.DataFrame(data)
+        print(f"    ✅ DMR {state_cd}: {len(df):,} measurements")
+        return df
+    except Exception as e:
+        print(f"    ❌ DMR {state_cd}: {str(e)[:100]}")
+        return None
+
+
+def fetch_echo_facilities(state_cd, dry_run=False):
+    """Fetch EPA ECHO CWA facility compliance data for a state."""
+    url = f"https://echodata.epa.gov/echo/cwa_rest_services.get_facilities?output=JSON&p_st={state_cd}&responseset=10000"
+    if dry_run:
+        print(f"  [DRY RUN] echo_facilities ({state_cd}): would fetch")
+        print(f"            {url[:120]}...")
+        return None
+    print(f"  Fetching ECHO facilities {state_cd}...")
+    try:
+        r = requests.get(url, timeout=120)
+        r.raise_for_status()
+        data = r.json()
+        facilities = data.get("Results", {}).get("Facilities", [])
+        if not facilities:
+            print(f"    ⚠ ECHO facilities {state_cd}: no facilities returned")
+            return None
+        df = pd.DataFrame(facilities)
+        print(f"    ✅ ECHO facilities {state_cd}: {len(df):,} facilities")
+        return df
+    except Exception as e:
+        print(f"    ❌ ECHO facilities {state_cd}: {str(e)[:100]}")
+        return None
+
+
+def fetch_echo_violations(state_cd, dry_run=False):
+    """Fetch EPA ECHO CWA facilities in violation for a state."""
+    url = f"https://echodata.epa.gov/echo/cwa_rest_services.get_facilities?output=JSON&p_st={state_cd}&p_qiv=Y&responseset=10000"
+    if dry_run:
+        print(f"  [DRY RUN] echo_violations ({state_cd}): would fetch")
+        print(f"            {url[:120]}...")
+        return None
+    print(f"  Fetching ECHO violations {state_cd}...")
+    try:
+        r = requests.get(url, timeout=120)
+        r.raise_for_status()
+        data = r.json()
+        facilities = data.get("Results", {}).get("Facilities", [])
+        if not facilities:
+            print(f"    ⚠ ECHO violations {state_cd}: no violators (or empty response)")
+            return None
+        df = pd.DataFrame(facilities)
+        print(f"    ✅ ECHO violations {state_cd}: {len(df):,} facilities in violation")
+        return df
+    except Exception as e:
+        print(f"    ❌ ECHO violations {state_cd}: {str(e)[:100]}")
+        return None
+
+
+def fetch_frs_wwtps(dry_run=False):
+    """Fetch EPA FRS WWTP locations (nationwide — no state filter)."""
+    url = "https://data.epa.gov/efservice/FRS_PROGRAM_FACILITY/PGM_SYS_ACRNM/NPDES/rows/0:10000/JSON"
+    if dry_run:
+        print(f"  [DRY RUN] frs_wwtps: would fetch")
+        print(f"            {url[:120]}...")
+        return None
+    print(f"  Fetching FRS WWTPs...")
+    try:
+        r = requests.get(url, timeout=120)
+        r.raise_for_status()
+        data = r.json()
+        df = pd.DataFrame(data)
+        print(f"    ✅ FRS WWTPs: {len(df):,} facilities")
+        return df
+    except Exception as e:
+        print(f"    ❌ FRS WWTPs: {str(e)[:100]}")
+        return None
+
+
+def fetch_pfas_ucmr(dry_run=False):
+    """Fetch EPA UCMR PFAS screening data (nationwide)."""
+    url = "https://data.epa.gov/efservice/UCMR4_ALL/rows/0:10000/JSON"
+    if dry_run:
+        print(f"  [DRY RUN] pfas_ucmr: would fetch")
+        print(f"            {url[:120]}...")
+        return None
+    print(f"  Fetching UCMR PFAS data...")
+    try:
+        r = requests.get(url, timeout=120)
+        r.raise_for_status()
+        data = r.json()
+        df = pd.DataFrame(data)
+        print(f"    ✅ UCMR PFAS: {len(df):,} results")
+        return df
+    except Exception as e:
+        print(f"    ❌ UCMR PFAS: {str(e)[:100]}")
+        return None
+
+
+def fetch_cdc_nwss(dry_run=False):
+    """Fetch CDC NWSS wastewater surveillance data."""
+    url = "https://data.cdc.gov/resource/2ew6-ywp6.json?$limit=50000&$order=date_end%20DESC"
+    if dry_run:
+        print(f"  [DRY RUN] cdc_nwss: would fetch")
+        print(f"            {url[:120]}...")
+        return None
+    print(f"  Fetching CDC NWSS wastewater surveillance...")
+    try:
+        r = requests.get(url, timeout=120)
+        r.raise_for_status()
+        data = r.json()
+        df = pd.DataFrame(data)
+        print(f"    ✅ CDC NWSS: {len(df):,} records")
+        return df
+    except Exception as e:
+        print(f"    ❌ CDC NWSS: {str(e)[:100]}")
+        return None
+
+
+def fetch_nps_wq(dry_run=False):
+    """Fetch National Park Service water quality data via WQP."""
+    url = "https://www.waterqualitydata.us/data/Result/search?organization=NPSTORET&mimeType=json&zip=no&sorted=no"
+    if dry_run:
+        print(f"  [DRY RUN] nps_wq: would fetch")
+        print(f"            {url[:120]}...")
+        return None
+    print(f"  Fetching NPS water quality via WQP...")
+    try:
+        r = requests.get(url, timeout=300, stream=True)
+        r.raise_for_status()
+        data = r.json()
+        df = pd.DataFrame(data)
+        print(f"    ✅ NPS WQ: {len(df):,} results")
+        return df
+    except Exception as e:
+        print(f"    ❌ NPS WQ: {str(e)[:100]}")
+        return None
+
+
+def fetch_datagov_wq(dry_run=False):
+    """Fetch Data.gov water quality catalog metadata."""
+    url = "https://catalog.data.gov/api/3/action/package_search?fq=tags:water-quality&rows=200"
+    if dry_run:
+        print(f"  [DRY RUN] datagov_wq: would fetch catalog metadata")
+        print(f"            {url[:120]}...")
+        return None
+    print(f"  Fetching Data.gov WQ catalog...")
+    try:
+        r = requests.get(url, timeout=60)
+        r.raise_for_status()
+        data = r.json()
+        results = data.get("result", {}).get("results", [])
+        if not results:
+            print(f"    ⚠ Data.gov: no catalog results")
+            return None
+        df = pd.DataFrame(results)
+        print(f"    ✅ Data.gov catalog: {len(df):,} datasets found")
+        return df
+    except Exception as e:
+        print(f"    ❌ Data.gov catalog: {str(e)[:100]}")
+        return None
+
+
+def fetch_nasa_cmr(dry_run=False):
+    """Fetch NASA CMR satellite dataset catalog metadata."""
+    url = "https://cmr.earthdata.nasa.gov/search/collections.json?keyword=water+quality&page_size=50"
+    if dry_run:
+        print(f"  [DRY RUN] nasa_cmr: would fetch catalog metadata")
+        print(f"            {url[:120]}...")
+        return None
+    print(f"  Fetching NASA CMR catalog...")
+    try:
+        r = requests.get(url, timeout=60)
+        r.raise_for_status()
+        data = r.json()
+        entries = data.get("feed", {}).get("entry", [])
+        if not entries:
+            print(f"    ⚠ NASA CMR: no collections found")
+            return None
+        df = pd.DataFrame(entries)
+        print(f"    ✅ NASA CMR catalog: {len(df):,} collections found")
+        return df
+    except Exception as e:
+        print(f"    ❌ NASA CMR: {str(e)[:100]}")
+        return None
+
+
+def fetch_socrata_state(source_id, base_url, dry_run=False):
+    """Fetch Socrata-based state open data. Generic handler for NY, NJ, PA, VA."""
+    url = f"{base_url}?$limit=10000&$order=:id"
+    if dry_run:
+        print(f"  [DRY RUN] {source_id}: would fetch")
+        print(f"            {url[:120]}...")
+        return None
+    print(f"  Fetching {source_id}...")
+    try:
+        r = requests.get(url, timeout=120)
+        r.raise_for_status()
+        data = r.json()
+        df = pd.DataFrame(data)
+        print(f"    ✅ {source_id}: {len(df):,} records")
+        return df
+    except Exception as e:
+        print(f"    ❌ {source_id}: {str(e)[:100]}")
+        return None
+
+
+# Socrata base URLs for state open data portals
+STATE_SOCRATA_URLS = {
+    "state_ny": "https://data.ny.gov/resource/4k4g-s9hz.json",
+    "state_nj": "https://data.nj.gov/resource/6khm-yny7.json",
+    "state_pa": "https://data.pa.gov/resource/3brs-52mh.json",
+    "state_va": "https://data.virginia.gov/resource/7rig-bfxy.json",
+}
+
+# ── FETCHER_MAP ──
+# Maps source IDs to (handler_fn, needs_state, needs_start_date)
+# needs_state: True if handler takes state_cd as first arg
+# needs_start_date: True if handler takes start_date arg
+FETCHER_MAP = {
+    "usgs-nwis":        (fetch_usgs_nwis,       True,  True),
+    "epa-sdwis":        (fetch_sdwis,            True,  False),
+    "icis_npdes":       (fetch_icis_npdes,       True,  False),
+    "icis_dmr":         (fetch_icis_dmr,         True,  False),
+    "echo_facilities":  (fetch_echo_facilities,  True,  False),
+    "echo_violations":  (fetch_echo_violations,  True,  False),
+    "frs_wwtps":        (fetch_frs_wwtps,        False, False),
+    "pfas_ucmr":        (fetch_pfas_ucmr,        False, False),
+    "cdc_nwss":         (fetch_cdc_nwss,         False, False),
+    "nps_wq":           (fetch_nps_wq,           False, False),
+    "datagov_wq":       (fetch_datagov_wq,       False, False),
+    "nasa_cmr":         (fetch_nasa_cmr,         False, False),
+    # State Socrata sources use the generic handler
+    "state_ny":         (None,                   False, False),  # dispatched via STATE_SOCRATA_URLS
+    "state_nj":         (None,                   False, False),
+    "state_pa":         (None,                   False, False),
+    "state_va":         (None,                   False, False),
+}
+
+
+def dispatch_fetch(sid, state_cd=None, start_date=None, dry_run=False):
+    """Dispatch a fetch call by source ID using FETCHER_MAP. Returns DataFrame or None."""
+    # Handle state Socrata sources via generic handler
+    if sid in STATE_SOCRATA_URLS:
+        return fetch_socrata_state(sid, STATE_SOCRATA_URLS[sid], dry_run=dry_run)
+
+    entry = FETCHER_MAP.get(sid)
+    if not entry:
+        print(f"  ⚠ No fetcher registered for {sid}")
+        return None
+
+    fn, needs_state, needs_start_date = entry
+    args = []
+    if needs_state:
+        args.append(state_cd or "MD")
+    if needs_start_date:
+        args.append(start_date)
+    return fn(*args, dry_run=dry_run)
+
+
 def save_csv(df, name):
     """Save DataFrame to output/ directory."""
     if df is None or df.empty:
@@ -255,9 +554,10 @@ def pick_next_batch(reg, batch_size):
 
 def main():
     parser = argparse.ArgumentParser(description="PIN Data Fetcher")
-    parser.add_argument("--segment", choices=["federal", "state", "noaa"], help="Fetch only this segment")
+    parser.add_argument("--segment", choices=["federal", "state", "noaa", "supplemental"], help="Fetch only this segment")
     parser.add_argument("--all-states", action="store_true", help="Fetch WQP for all 56 states/territories")
     parser.add_argument("--states", help="Comma-separated state abbreviations (e.g., MD,FL,CA)")
+    parser.add_argument("--state", help="Single state abbreviation for --source (e.g., MD)")
     parser.add_argument("--source", help="Fetch a single source by ID")
     parser.add_argument("--next-batch", type=int, metavar="N", help="Scheduler mode: fetch next N unfetched/oldest sources")
     parser.add_argument("--from", dest="start_date", default="2024-01-01", help="Start date YYYY-MM-DD (default: 2024-01-01)")
@@ -288,24 +588,24 @@ def main():
                 src = info
                 sid = src["id"]
                 print(f"  [{src_type}] {sid}")
-                if sid == "usgs-nwis":
-                    # Fetch NWIS for all states that need it — one per batch slot
-                    # For now, do all 50 states as NWIS is fast
+
+                entry = FETCHER_MAP.get(sid)
+                if entry and entry[1]:
+                    # State-level source: iterate all states
                     for st_abbr in sorted(reg["wqp_states"].keys()):
-                        df = fetch_usgs_nwis(st_abbr, start_date, dry_run=args.dry_run)
+                        df = dispatch_fetch(sid, state_cd=st_abbr, start_date=start_date, dry_run=args.dry_run)
                         if df is not None:
-                            save_csv(df, f"usgs-nwis-{st_abbr}")
+                            save_csv(df, f"{sid}-{st_abbr}")
                             fetched += 1
                         time.sleep(DELAY_BETWEEN_PULLS)
                     src["last_fetch"] = datetime.utcnow().isoformat() + "Z"
                     src["last_success"] = src["last_fetch"]
-                elif sid == "epa-sdwis":
-                    for st_abbr in sorted(reg["wqp_states"].keys()):
-                        df = fetch_sdwis(st_abbr, dry_run=args.dry_run)
-                        if df is not None:
-                            save_csv(df, f"sdwis-{st_abbr}")
-                            fetched += 1
-                        time.sleep(DELAY_BETWEEN_PULLS)
+                elif sid in FETCHER_MAP or sid in STATE_SOCRATA_URLS:
+                    # Non-state source (nationwide or catalog)
+                    df = dispatch_fetch(sid, start_date=start_date, dry_run=args.dry_run)
+                    if df is not None:
+                        save_csv(df, sid)
+                        fetched += 1
                     src["last_fetch"] = datetime.utcnow().isoformat() + "Z"
                     src["last_success"] = src["last_fetch"]
 
@@ -331,13 +631,51 @@ def main():
         print()
         return
 
-    # ── Federal sources ──
-    if args.segment in (None, "federal") or args.source:
-        federal = [s for s in reg["sources"] if s["type"] == "federal"]
-        if args.source:
-            federal = [s for s in federal if s["id"] == args.source]
+    # ── Source-by-ID mode ──
+    if args.source:
+        src_list = [s for s in reg["sources"] if s["id"] == args.source]
+        if not src_list:
+            print(f"  ❌ Unknown source: {args.source}")
+            print(f"     Available: {', '.join(s['id'] for s in reg['sources'])}")
+            save_registry(reg)
+            return
+        src = src_list[0]
+        sid = src["id"]
+        state_cd = args.state or "MD"
 
-        for src in sorted(federal, key=lambda s: s["priority"]):
+        if src["status"] == "dead":
+            print(f"  ⏭  {sid}  DEAD — skipping (error_count={src['error_count']})")
+            skipped += 1
+        elif sid == "wqp-portal":
+            print(f"  ⏭  wqp-portal: use --states or --all-states instead")
+        elif sid == "epa-attains":
+            print(f"  ⏭  epa-attains: already cached (51/51 states in lib/attainsCache.ts)")
+            skipped += 1
+        elif sid in FETCHER_MAP or sid in STATE_SOCRATA_URLS:
+            df = dispatch_fetch(sid, state_cd=state_cd, start_date=start_date, dry_run=args.dry_run)
+            if df is not None:
+                csv_name = f"{sid}-{state_cd}" if FETCHER_MAP.get(sid, (None, False, False))[1] else sid
+                save_csv(df, csv_name)
+                src["last_fetch"] = datetime.utcnow().isoformat() + "Z"
+                src["last_success"] = src["last_fetch"]
+                src["error_count"] = 0
+                fetched += 1
+            elif not args.dry_run:
+                src["error_count"] = src.get("error_count", 0) + 1
+        else:
+            print(f"  ⚠ No fetcher implemented for {sid}")
+
+        save_registry(reg)
+        print(f"\n  {'='*50}")
+        print(f"  Fetched: {fetched}  |  Skipped: {skipped}  |  Output dir: {OUTPUT}\n")
+        return
+
+    # ── Segment mode: federal, state, noaa, supplemental ──
+    if args.segment:
+        segment_sources = [s for s in reg["sources"] if s["type"] == args.segment]
+        state_cd = args.state or "MD"
+
+        for src in sorted(segment_sources, key=lambda s: s["priority"]):
             if src["status"] == "dead":
                 print(f"  ⏭  {src['id']:30s}  DEAD — skipping (error_count={src['error_count']})")
                 skipped += 1
@@ -346,22 +684,24 @@ def main():
             sid = src["id"]
             if sid == "wqp-portal":
                 continue
-            elif sid == "usgs-nwis":
-                df = fetch_usgs_nwis("MD", start_date, dry_run=args.dry_run)
-                if df is not None:
-                    save_csv(df, "usgs-nwis-MD")
-                    src["last_fetch"] = datetime.utcnow().isoformat() + "Z"
-                    src["last_success"] = src["last_fetch"]
-                    fetched += 1
-            elif sid == "epa-sdwis":
-                df = fetch_sdwis("MD", dry_run=args.dry_run)
-                if df is not None:
-                    save_csv(df, "sdwis-MD")
-                    src["last_fetch"] = datetime.utcnow().isoformat() + "Z"
-                    src["last_success"] = src["last_fetch"]
-                    fetched += 1
             elif sid == "epa-attains":
                 print(f"  ⏭  epa-attains                     Already cached (51/51 states in lib/attainsCache.ts)")
+                skipped += 1
+                continue
+
+            if sid in FETCHER_MAP or sid in STATE_SOCRATA_URLS:
+                df = dispatch_fetch(sid, state_cd=state_cd, start_date=start_date, dry_run=args.dry_run)
+                if df is not None:
+                    csv_name = f"{sid}-{state_cd}" if FETCHER_MAP.get(sid, (None, False, False))[1] else sid
+                    save_csv(df, csv_name)
+                    src["last_fetch"] = datetime.utcnow().isoformat() + "Z"
+                    src["last_success"] = src["last_fetch"]
+                    src["error_count"] = 0
+                    fetched += 1
+                elif not args.dry_run:
+                    src["error_count"] = src.get("error_count", 0) + 1
+            else:
+                print(f"  ⚠ No fetcher for {sid} — skipping")
                 skipped += 1
 
             time.sleep(DELAY_BETWEEN_PULLS)

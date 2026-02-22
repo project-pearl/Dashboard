@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getAttainsCacheSummary } from '@/lib/attainsCache';
 import { getWqpCacheStatus } from '@/lib/wqpCache';
 import { getCedenCacheStatus } from '@/lib/cedenCache';
+import { getIcisCacheStatus } from '@/lib/icisCache';
+import { getNwisGwCacheStatus } from '@/lib/nwisGwCache';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -162,6 +164,20 @@ export async function GET() {
       `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/water-data?action=state-portal&state=MD&limit=1`,
       10_000,
     ),
+    // Source 14: EPA ICIS (NPDES compliance)
+    check(
+      'ICIS',
+      'EPA ICIS Compliance',
+      'https://data.epa.gov/efservice/ICIS_PERMITS/STATE_ABBR/MD/ROWS/0:0/JSON',
+      8_000,
+    ),
+    // Source 15: USGS NWIS Groundwater
+    check(
+      'USGS_GW',
+      'USGS Groundwater',
+      'https://waterservices.usgs.gov/nwis/gwlevels/?format=json&stateCd=MD&period=P7D&siteStatus=active',
+      10_000,
+    ),
   ]);
 
   const sources: SourceHealthEntry[] = [];
@@ -185,11 +201,23 @@ export async function GET() {
   const cedenChem = cedenStatus.loaded ? (cedenStatus as { chemistryRecords: number }).chemistryRecords : 0;
   const cedenTox = cedenStatus.loaded ? (cedenStatus as { toxicityRecords: number }).toxicityRecords : 0;
 
+  const icisStatus = getIcisCacheStatus();
+  const icisPermits = icisStatus.loaded ? (icisStatus as { permitCount: number }).permitCount : 0;
+  const icisViolations = icisStatus.loaded ? (icisStatus as { violationCount: number }).violationCount : 0;
+  const icisDmr = icisStatus.loaded ? (icisStatus as { dmrCount: number }).dmrCount : 0;
+  const icisEnforcement = icisStatus.loaded ? (icisStatus as { enforcementCount: number }).enforcementCount : 0;
+
+  const nwisGwStatus = getNwisGwCacheStatus();
+  const nwisGwSites = nwisGwStatus.loaded ? (nwisGwStatus as { siteCount: number }).siteCount : 0;
+  const nwisGwLevels = nwisGwStatus.loaded ? (nwisGwStatus as { levelCount: number }).levelCount : 0;
+
   const datapoints = {
     attains: { states: attainsStates.length, waterbodies: attainsWaterbodies, assessments: attainsAssessments },
     wqp: { records: wqpRecords, states: wqpStates },
     ceden: { chemistry: cedenChem, toxicity: cedenTox },
-    total: attainsWaterbodies + wqpRecords + cedenChem + cedenTox,
+    icis: { permits: icisPermits, violations: icisViolations, dmr: icisDmr, enforcement: icisEnforcement },
+    nwisGw: { sites: nwisGwSites, levels: nwisGwLevels },
+    total: attainsWaterbodies + wqpRecords + cedenChem + cedenTox + icisPermits + icisViolations + icisDmr + icisEnforcement + nwisGwSites + nwisGwLevels,
   };
 
   return NextResponse.json(

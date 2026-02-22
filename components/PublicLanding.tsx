@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import PublicHeader from '@/components/PublicHeader';
 
 // ─── Animated counter ───────────────────────────────────────────────────────
 
@@ -182,24 +183,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
       <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
       {/* ═══ NAVBAR ═══ */}
-      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-white border-b border-slate-200/50">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Image src="/Pearl-Header.png" alt="Project PEARL" width={160} height={44} className="object-contain" priority />
-            <div className="hidden md:flex items-center gap-8 text-[13px] font-semibold tracking-wide uppercase text-slate-500">
-              <a href="#platform" className="hover:text-slate-900 transition-colors">Platform</a>
-              <a href="#data" className="hover:text-slate-900 transition-colors">Data Sources</a>
-              <a href="#stakeholders" className="hover:text-slate-900 transition-colors">Who It&#39;s For</a>
-              <a href="#technology" className="hover:text-slate-900 transition-colors">Technology</a>
-              <Link href="/treatment" className="hover:text-slate-900 transition-colors">Our Technology</Link>
-              <Link href="/story" className="hover:text-slate-900 transition-colors">Our Story</Link>
-            </div>
-            <button onClick={onSignIn} className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white rounded-full bg-slate-900 hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20">
-              Sign In <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </div>
-      </nav>
+      <PublicHeader />
 
       {/* ═══ HERO ═══ */}
       <section className="relative min-h-[92vh] flex items-end overflow-hidden">

@@ -109,10 +109,10 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
       'Nutrient tracking, irrigation optimization, and conservation credit management for sustainable agriculture.',
     accentColor: 'text-lime-400',
   },
-  samplechain: {
+  shuck: {
     image: '/images/heroes/Research.png',
     subtitle: 'PEARL Intelligence Network',
-    headline: 'SampleChain LIMS',
+    headline: 'SHUCK LIMS',
     description:
       'Full-spectrum laboratory information management — sample intake, QA/QC, methods, and chain of custody.',
     accentColor: 'text-teal-400',

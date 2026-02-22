@@ -21,6 +21,8 @@ export interface DatapointSummary {
   attains: { states: number; waterbodies: number; assessments: number };
   wqp: { records: number; states: number };
   ceden: { chemistry: number; toxicity: number };
+  icis: { permits: number; violations: number; dmr: number; enforcement: number };
+  nwisGw: { sites: number; levels: number };
   total: number;
 }
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
-import { CircleMarker, Tooltip } from 'react-leaflet';
+import { CircleMarker, Tooltip, GeoJSON } from 'react-leaflet';
 import HeroBanner from './HeroBanner';
 import { getStatesGeoJSON, geoToAbbr, STATE_GEO_LEAFLET, FIPS_TO_ABBR as _FIPS, STATE_NAMES as _SN } from '@/lib/leafletMapUtils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -25,6 +25,10 @@ import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { resolveWaterbodyCoordinates } from '@/lib/waterbodyCentroids';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
+import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
+import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
+import BoundaryAlertsDashboard from '@/components/BoundaryAlertsDashboard';
+import { EXAMPLE_ALERTS } from '@/lib/example-data';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import dynamic from 'next/dynamic';
@@ -396,7 +400,7 @@ const WATERBODY_COORDS: Record<string, { lat: number; lon: number }> = {
   maryland_sligo_creek:       { lat: 39.02, lon: -77.00 },
   maryland_anacostia:         { lat: 38.88, lon: -76.94 },
   maryland_anacostia_river:   { lat: 38.88, lon: -76.94 },
-  maryland_bush_river:        { lat: 39.47, lon: -76.28 },
+  maryland_bush_river:        { lat: 39.38, lon: -76.13 },
   maryland_mattawoman:        { lat: 38.58, lon: -77.02 },
   maryland_mattawoman_creek:  { lat: 38.58, lon: -77.02 },
   maryland_monocacy:          { lat: 39.40, lon: -77.35 },
@@ -475,10 +479,20 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
     catch { return null; }
   }, []);
 
+  // Filter GeoJSON to only the current state for outline rendering
+  const stateOutlineGeo = useMemo(() => {
+    if (!geoData) return null;
+    const filtered = {
+      ...geoData,
+      features: geoData.features.filter((f: any) => geoToAbbr(f) === stateAbbr),
+    };
+    return filtered.features.length > 0 ? filtered : null;
+  }, [geoData, stateAbbr]);
+
   const leafletGeo = STATE_GEO_LEAFLET[stateAbbr] || { center: [39.8, -98.5] as [number, number], zoom: 4 };
 
   // ── ATTAINS bulk for this state ──
-  const [attainsBulk, setAttainsBulk] = useState<Array<{ id: string; name: string; category: string; alertLevel: AlertLevel; causes: string[]; cycle: string }>>([]);
+  const [attainsBulk, setAttainsBulk] = useState<Array<{ id: string; name: string; category: string; alertLevel: AlertLevel; causes: string[]; cycle: string; lat?: number | null; lon?: number | null }>>([]);
   const [attainsBulkLoaded, setAttainsBulkLoaded] = useState(false);
 
   // Merge ATTAINS into region data
@@ -531,16 +545,33 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
   // ── Jurisdiction-scoped region data (MS4 permit filter) ──
   // ── Resolve coordinates for ALL region data (not just scoped) ──
   // This lets us geo-assign waterbodies to jurisdictions
+  const attainsCoordMap = useMemo(() => {
+    const m = new Map<string, { lat: number; lon: number }>();
+    for (const a of attainsBulk) {
+      if (a.lat != null && a.lon != null && a.id) m.set(a.id, { lat: a.lat, lon: a.lon });
+      if (a.lat != null && a.lon != null && a.name) m.set(`name:${a.name.toLowerCase().trim()}`, { lat: a.lat, lon: a.lon });
+    }
+    return m;
+  }, [attainsBulk]);
+
   const allWbCoords = useMemo(() => {
     const resolved: Array<{ id: string; name: string; lat: number; lon: number; alertLevel: AlertLevel; status: string; dataSourceCount: number; regionIdx: number }> = [];
     regionData.forEach((r, idx) => {
-      // Priority 1: precise jurisdiction waterbody coordinates
+      // Priority 1: ATTAINS real centroid
+      const byId = attainsCoordMap.get(r.id);
+      const byName = !byId ? attainsCoordMap.get(`name:${r.name.toLowerCase().trim()}`) : null;
+      const attainsCoord = byId || byName;
+      if (attainsCoord) {
+        resolved.push({ id: r.id, name: r.name, lat: attainsCoord.lat, lon: attainsCoord.lon, alertLevel: r.alertLevel, status: r.status, dataSourceCount: r.dataSourceCount, regionIdx: idx });
+        return;
+      }
+      // Priority 2: precise jurisdiction waterbody coordinates
       const precise = WATERBODY_COORDS[r.id];
       if (precise) {
         resolved.push({ id: r.id, name: r.name, lat: precise.lat, lon: precise.lon, alertLevel: r.alertLevel, status: r.status, dataSourceCount: r.dataSourceCount, regionIdx: idx });
         return;
       }
-      // Priority 2: regionsConfig
+      // Priority 3: regionsConfig
       const cfg = getRegionById(r.id) as any;
       if (cfg) {
         const lat = cfg.lat ?? cfg.latitude ?? null;
@@ -550,14 +581,14 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
           return;
         }
       }
-      // Priority 3: name-based coordinate resolver
+      // Priority 4: name-based coordinate resolver
       const approx = resolveWaterbodyCoordinates(r.name, stateAbbr);
       if (approx) {
         resolved.push({ id: r.id, name: r.name, lat: approx.lat, lon: approx.lon, alertLevel: r.alertLevel, status: r.status, dataSourceCount: r.dataSourceCount, regionIdx: idx });
       }
     });
     return resolved;
-  }, [regionData, stateAbbr]);
+  }, [regionData, stateAbbr, attainsCoordMap]);
 
   // ── Geo-assign ALL waterbodies to nearest jurisdiction ──
   // Hand-coded waterbodies are "primary" (always assigned). All others get nearest-center matching.
@@ -709,6 +740,8 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
           alertLevel: (wb.alertLevel || 'none') as AlertLevel,
           causes: wb.causes || [],
           cycle: '',
+          lat: wb.lat ?? null,
+          lon: wb.lon ?? null,
         }));
         if (!cancelled) {
           setAttainsBulk(waterbodies);
@@ -811,6 +844,15 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
   const [stateSummaryCache, setStateSummaryCache] = useState<Record<string, {
     loading: boolean; impairedPct: number; totalAssessed: number;
   }>>({});
+
+  // Boundary alerts state (seeded with example data for now)
+  const [boundaryAlerts, setBoundaryAlerts] = useState(() => EXAMPLE_ALERTS);
+  const handleAlertStatusChange = (alertId: string, status: import('@/lib/types').AlertStatus) => {
+    setBoundaryAlerts(prev => prev.map(a => a.id === alertId ? { ...a, status } : a));
+  };
+  const handleAlertAddNote = (alertId: string, note: string) => {
+    setBoundaryAlerts(prev => prev.map(a => a.id === alertId ? { ...a, notes: [...a.notes, note] } : a));
+  };
 
   // Fetch per-waterbody ATTAINS when detail opens
   useEffect(() => {
@@ -1577,6 +1619,22 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
                   </div>
                   <div className="h-[480px] w-full relative">
                     <LeafletMapShell center={leafletGeo.center} zoom={leafletGeo.zoom} maxZoom={12} height="100%" mapKey={stateAbbr}>
+                      {/* State outline */}
+                      {stateOutlineGeo && (
+                        <GeoJSON
+                          key={`outline-${stateAbbr}`}
+                          data={stateOutlineGeo}
+                          style={() => ({
+                            fillColor: '#e2e8f0',
+                            fillOpacity: 0.15,
+                            color: '#94a3b8',
+                            weight: 2,
+                          })}
+                          onEachFeature={(_feature, layer) => {
+                            layer.bindTooltip(stateName, { sticky: true });
+                          }}
+                        />
+                      )}
                       {/* Waterbody markers — color driven by overlay */}
                       {wbMarkers.map(wb => {
                         const isActive = wb.id === activeDetailId;
@@ -1595,7 +1653,7 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
                             }}
                             eventHandlers={{ click: () => setActiveDetailId(isActive ? null : wb.id) }}
                           >
-                            {isActive && <Tooltip permanent direction="top" offset={[0, -8]}>{wb.name}</Tooltip>}
+                            <Tooltip direction="top" offset={[0, -6]} sticky>{wb.name}</Tooltip>
                           </CircleMarker>
                         );
                       })}
@@ -1832,6 +1890,7 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
               const regionConfig = getRegionById(activeDetailId);
               const regionName = regionConfig?.name || nccRegion?.name || activeDetailId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
               const bulkMatch = resolveBulkAttains(regionName);
+              const wbCoords = wbMarkers.find(w => w.id === activeDetailId);
 
               return (
                 <WaterbodyDetailCard
@@ -1841,6 +1900,7 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
                   alertLevel={nccRegion?.alertLevel || 'none'}
                   activeAlerts={nccRegion?.activeAlerts ?? 0}
                   lastUpdatedISO={nccRegion?.lastUpdatedISO}
+                  coordinates={wbCoords ? { lat: wbCoords.lat, lon: wbCoords.lon } : null}
                   waterData={waterData}
                   waterLoading={waterLoading}
                   hasRealData={hasRealData}
@@ -2826,6 +2886,25 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
           </div>
         );
 
+            case 'icis': return DS(
+        <div id="section-icis">
+          <ICISCompliancePanel
+            state={stateAbbr}
+            permitNumber={jurisdictionMeta?.permit}
+            compactMode={!!collapsedSections['icis']}
+          />
+        </div>
+      );
+
+            case 'sdwis': return DS(
+        <div id="section-sdwis">
+          <SDWISCompliancePanel
+            state={stateAbbr}
+            compactMode={!!collapsedSections['sdwis']}
+          />
+        </div>
+      );
+
             case 'fineavoidance': return DS((() => {
         if (!activeDetailId || !regionMockData || !displayData) return null;
         return (
@@ -2850,6 +2929,17 @@ export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, o
             </div>
         );
         })());
+
+            case 'boundaryalerts': return DS(
+        <div id="section-boundaryalerts">
+          <BoundaryAlertsDashboard
+            alerts={boundaryAlerts}
+            permitteeName={jurisdictionMeta?.name || 'Your Jurisdiction'}
+            onStatusChange={handleAlertStatusChange}
+            onAddNote={handleAlertAddNote}
+          />
+        </div>
+      );
 
             case 'mdeexport': return DS((() => {
         if (!activeDetailId || !regionMockData || !displayData) return null;

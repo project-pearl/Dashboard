@@ -5,6 +5,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { useLensParam } from '@/lib/useLensParam';
 import { CircleMarker, Tooltip } from 'react-leaflet';
 import HeroBanner from './HeroBanner';
 import dynamic from 'next/dynamic';
@@ -35,6 +36,7 @@ import { BrandedPDFGenerator } from '@/lib/brandedPdfGenerator';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
+import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 
@@ -376,7 +378,7 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
   const router = useRouter();
 
   // ── View Lens ──
-  const [viewLens, setViewLens] = useState<ESGLens>('overview');
+  const [viewLens, setViewLens] = useLensParam<ESGLens>('overview');
   const lens = LENS_CONFIG[viewLens];
   const [showLensDropdown, setShowLensDropdown] = useState(false);
   const [showAccountPanel, setShowAccountPanel] = useState(false);
@@ -2082,6 +2084,15 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
           </div>
         )}
         </>
+            );
+
+            case 'groundwater': return DS(
+        <div id="section-groundwater">
+          <NwisGwPanel
+            state={focusedState !== 'US' ? focusedState : undefined}
+            compactMode={false}
+          />
+        </div>
             );
 
             case 'disclaimer': return DS(

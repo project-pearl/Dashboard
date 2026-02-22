@@ -1,6 +1,6 @@
 // lib/statePortalAdapters.ts
-// Adapter pattern for querying state open data portals
-// All 51 US states + DC via WQP STORET, California gets special CEDEN adapter
+// State-specific data adapters. Only California has a unique adapter (CEDEN/CKAN).
+// All other states use WQP directly via the wqp-results action — no redundant re-query needed.
 
 interface StatePortalQuery {
   lat?: number;
@@ -30,7 +30,7 @@ interface StatePortalAdapter {
   fetch(query: StatePortalQuery): Promise<StatePortalResponse>;
 }
 
-// ─── CSV Parser (minimal) ───────────────────────────────────────────────────
+// ─── CSV Parser (minimal, used by CA CKAN fallback) ─────────────────────────
 function csvToRows(csv: string): Record<string, string>[] {
   const lines = csv.trim().split('\n');
   if (lines.length < 2) return [];
@@ -65,63 +65,6 @@ function parseLine(line: string): string[] {
   }
   result.push(current.trim());
   return result;
-}
-
-// ─── WQP Factory — generates adapter for any state via WQP STORET ──────────
-function makeWqpAdapter(stateAbbr: string, fips: string, displayName: string): StatePortalAdapter {
-  return {
-    state: stateAbbr,
-    name: `${displayName} (via WQP)`,
-    async fetch(query) {
-      const results: StatePortalResult[] = [];
-      try {
-        const eighteenMonthsAgo = new Date();
-        eighteenMonthsAgo.setMonth(eighteenMonthsAgo.getMonth() - 18);
-        const startDate = eighteenMonthsAgo.toISOString().split('T')[0];
-
-        const url = new URL('https://www.waterqualitydata.us/wqx3/Result/search');
-        url.searchParams.set('statecode', `US:${fips}`);
-        url.searchParams.set('providers', 'STORET');
-        url.searchParams.set('startDateLo', startDate);
-        url.searchParams.set('dataProfile', 'narrow');
-        url.searchParams.set('mimeType', 'csv');
-        url.searchParams.set('sampleMedia', 'Water');
-
-        if (query.lat && query.lng) {
-          url.searchParams.set('lat', String(query.lat));
-          url.searchParams.set('long', String(query.lng));
-          url.searchParams.set('within', '15');
-        }
-
-        const res = await fetch(url.toString(), {
-          signal: AbortSignal.timeout(20_000),
-          redirect: 'follow',
-        });
-
-        if (res.ok) {
-          const text = await res.text();
-          const rows = csvToRows(text);
-          for (const row of rows.slice(0, 20)) {
-            const param = row.CharacteristicName || row['Characteristic Name'] || '';
-            const val = row.ResultMeasureValue || row['ResultMeasure/MeasureValue'] || row['Result Value'] || '';
-            if (param && val) {
-              results.push({
-                parameter: param,
-                value: val,
-                unit: row['ResultMeasure/MeasureUnitCode'] || row.ResultMeasure_MeasureUnitCode || '',
-                station_name: row.MonitoringLocationName || row['Monitoring Location Name'] || `${stateAbbr} Station`,
-                date: row.ActivityStartDate || row['Activity Start Date'] || '',
-                source_url: 'https://www.waterqualitydata.us',
-              });
-            }
-          }
-        }
-      } catch (e: any) {
-        return { data: results, adapter: `${stateAbbr.toLowerCase()}-wqp`, error: e.message };
-      }
-      return { data: results, adapter: `${stateAbbr.toLowerCase()}-wqp` };
-    },
-  };
 }
 
 // ─── California — CEDEN/DWR water quality via data.ca.gov (CKAN) ────────────
@@ -212,51 +155,32 @@ const californiaAdapter: StatePortalAdapter = {
   },
 };
 
-// ─── All 51 US States + DC ──────────────────────────────────────────────────
-// [abbreviation, FIPS code, display name]
-const STATE_LIST: [string, string, string][] = [
-  ['AL','01','Alabama'],['AK','02','Alaska'],['AZ','04','Arizona'],['AR','05','Arkansas'],
-  ['CO','08','Colorado'],['CT','09','Connecticut'],['DE','10','Delaware'],['DC','11','District of Columbia'],
-  ['FL','12','Florida'],['GA','13','Georgia'],['HI','15','Hawaii'],['ID','16','Idaho'],
-  ['IL','17','Illinois'],['IN','18','Indiana'],['IA','19','Iowa'],['KS','20','Kansas'],
-  ['KY','21','Kentucky'],['LA','22','Louisiana'],['ME','23','Maine'],['MD','24','Maryland'],
-  ['MA','25','Massachusetts'],['MI','26','Michigan'],['MN','27','Minnesota'],['MS','28','Mississippi'],
-  ['MO','29','Missouri'],['MT','30','Montana'],['NE','31','Nebraska'],['NV','32','Nevada'],
-  ['NH','33','New Hampshire'],['NJ','34','New Jersey'],['NM','35','New Mexico'],['NY','36','New York'],
-  ['NC','37','North Carolina'],['ND','38','North Dakota'],['OH','39','Ohio'],['OK','40','Oklahoma'],
-  ['OR','41','Oregon'],['PA','42','Pennsylvania'],['RI','44','Rhode Island'],['SC','45','South Carolina'],
-  ['SD','46','South Dakota'],['TN','47','Tennessee'],['TX','48','Texas'],['UT','49','Utah'],
-  ['VT','50','Vermont'],['VA','51','Virginia'],['WA','53','Washington'],['WV','54','West Virginia'],
-  ['WI','55','Wisconsin'],['WY','56','Wyoming'],
-];
-
 // ─── Adapter Registry ───────────────────────────────────────────────────────
+// Only CA has a unique adapter. All other states use WQP directly.
 
-const ADAPTERS: Record<string, StatePortalAdapter> = {};
-
-// California gets the special CEDEN adapter
-ADAPTERS['CA'] = californiaAdapter;
-
-// All other states get the WQP factory adapter
-for (const [abbr, fips, name] of STATE_LIST) {
-  if (abbr === 'CA') continue; // Already set above
-  ADAPTERS[abbr] = makeWqpAdapter(abbr, fips, name);
+/** Get the state adapter if one exists (only CA has a unique adapter) */
+export function getStateAdapter(state: string): StatePortalAdapter | null {
+  const s = state.toUpperCase();
+  if (s === 'CA') return californiaAdapter;
+  // Non-CA states use WQP directly via the wqp-results action
+  return null;
 }
 
 export function getAvailableStates(): string[] {
-  return Object.keys(ADAPTERS);
+  return ['CA'];
 }
 
 export async function fetchStatePortalData(
   state: string,
   query: StatePortalQuery
 ): Promise<StatePortalResponse> {
-  const adapter = ADAPTERS[state.toUpperCase()];
+  const adapter = getStateAdapter(state);
   if (!adapter) {
+    // Non-CA states: return empty with a note to use WQP directly
     return {
       data: [],
-      adapter: 'none',
-      error: `No adapter configured for state: ${state}. Available: ${Object.keys(ADAPTERS).join(', ')}`,
+      adapter: 'wqp-fallthrough',
+      error: undefined,
     };
   }
   return adapter.fetch(query);

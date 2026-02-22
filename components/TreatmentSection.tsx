@@ -3,15 +3,17 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import PublicHeader from "@/components/PublicHeader";
 
 const TreatmentSection: React.FC = () => {
   return (
     <section className="min-h-screen bg-gradient-to-b from-stone-50 via-white to-stone-50">
+      <PublicHeader />
 
       {/* ══════════════════════════════════════════════════════════════════════
           HERO
           ══════════════════════════════════════════════════════════════════════ */}
-      <div className="max-w-5xl mx-auto px-6 pt-12 md:pt-16 pb-8">
+      <div className="max-w-5xl mx-auto px-6 pt-24 md:pt-28 pb-8">
         <div className="text-center mb-8">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700/80 mb-3">
             Treatment Technology

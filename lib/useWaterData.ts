@@ -1,9 +1,15 @@
 // lib/useWaterData.ts
 // Unified React hook — fetches real water quality data from multiple sources
-// Priority: USGS IV → BWB → ERDDAP → MMW → NOAA → USGS Samples → USGS DV → WQP → STATE → EPA_EF → Reference → Mock
+// Priority: USGS IV → BWB → ERDDAP → MMW → NOAA → USGS DV → WQP → STATE → EPA_EF → Reference → Mock
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import {
+  BWB_STATION_MAP,
+  WR_TO_PEARL_PARAM,
+  findNearestBwbStation,
+  type BWBStation,
+} from './useWaterReporter';
 
 // ─── Station Registry (lazy-loaded at runtime to avoid 5.9MB bundle) ────────
 // Contains 12,000+ confirmed monitoring stations across all 51 states
@@ -203,31 +209,7 @@ export const DATA_SOURCES: Record<DataSourceId, DataSourceInfo> = {
   },
 };
 
-// ─── BWB Station Mapping (known Baltimore stations) ─────────────────────────
-interface BWBStation {
-  datasetId: number;
-  stationId: number;
-  stationName: string;
-  lastSampled: string;
-}
-
-const BWB_STATION_MAP: Record<string, BWBStation> = {
-  maryland_middle_branch:   { datasetId: 860, stationId: 8756, stationName: 'Middle Branch A', lastSampled: '2025-11-13' },
-  maryland_inner_harbor:    { datasetId: 860, stationId: 8789, stationName: 'Dragon Boats', lastSampled: '2025-11-13' },
-  maryland_jones_falls:     { datasetId: 860, stationId: 8751, stationName: 'Jones Falls Outlet', lastSampled: '2025-11-13' },
-  maryland_gwynns_falls:    { datasetId: 860, stationId: 8787, stationName: 'Lower Gwynns Falls G', lastSampled: '2026-01-14' },
-  maryland_bear_creek:      { datasetId: 860, stationId: 8744, stationName: 'Bear Creek', lastSampled: '2025-10-07' },
-  maryland_curtis_bay:      { datasetId: 860, stationId: 8745, stationName: 'Curtis Bay', lastSampled: '2025-10-07' },
-  maryland_patapsco_river:  { datasetId: 860, stationId: 8747, stationName: 'Mainstem B', lastSampled: '2025-10-07' },
-  maryland_stony_creek:     { datasetId: 860, stationId: 8741, stationName: 'Stoney Creek', lastSampled: '2025-10-07' },
-  maryland_back_river:      { datasetId: 860, stationId: 32693, stationName: 'Back River Mainstem A', lastSampled: '2023-08-31' },
-  maryland_canton:          { datasetId: 860, stationId: 8754, stationName: 'Canton Park', lastSampled: '2025-11-13' },
-  maryland_ferry_bar:       { datasetId: 860, stationId: 8758, stationName: 'Ferry Bar Park', lastSampled: '2025-11-13' },
-  maryland_ft_mchenry:      { datasetId: 860, stationId: 8755, stationName: 'Ft. McHenry Channel', lastSampled: '2025-09-03' },
-  maryland_curtis_creek:    { datasetId: 860, stationId: 8760, stationName: 'Curtis Creek', lastSampled: '2025-10-07' },
-  maryland_bodkin_creek:    { datasetId: 860, stationId: 8761, stationName: 'Bodkin Creek', lastSampled: '2025-08-27' },
-  maryland_rock_creek:      { datasetId: 860, stationId: 8740, stationName: 'Rock Creek', lastSampled: '2025-10-07' },
-};
+// BWB Station Mapping imported from lib/useWaterReporter.ts (canonical source)
 
 // ─── USGS Site Map — merged from registry + hand-verified legacy entries ─────
 // Registry provides 1,200+ auto-discovered sites; legacy entries preserved for
@@ -953,20 +935,7 @@ export function getReferenceData(regionId: string): ReferenceEntry | null {
   return REFERENCE_DATA[regionId] || null;
 }
 
-// ─── Parameter mapping (WR normalized_name → PEARL key) ─────────────────────
-const WR_TO_PEARL: Record<string, string> = {
-  'dissolved_oxygen_mg_l': 'DO',
-  'total_nitrogen_mg_l': 'TN',
-  'total_phosphorus_mg_l': 'TP',
-  'turbidity_ntu': 'turbidity',
-  'salinity_ppt': 'salinity',
-  'enterococcus_bacteria_mpn_100ml': 'bacteria',
-  'temperature_c': 'temperature',
-  'ph_su': 'pH',
-  'secchi_depth_m': 'secchiDepth',
-  'lab_chlorophyll_ug_l': 'chlorophyll',
-  'specific_conductance_us_cm': 'conductivity',
-};
+// WR parameter mapping imported from lib/useWaterReporter.ts as WR_TO_PEARL_PARAM
 
 // WQP characteristicName → PEARL key
 const WQP_TO_PEARL: Record<string, string> = {
@@ -1097,7 +1066,15 @@ export function useWaterData(regionId: string | null): UseWaterDataResult {
   const refetch = useCallback(() => setFetchTrigger(t => t + 1), []);
 
   const regionMeta = regionId ? REGION_META[regionId] : null;
-  const bwbStation = regionId ? BWB_STATION_MAP[regionId] : null;
+  // BWB: exact match first, then proximity-based (~17km) for Baltimore-area waterbodies
+  const bwbStation = useMemo(() => {
+    if (!regionId) return null;
+    const exact = BWB_STATION_MAP[regionId];
+    if (exact) return exact;
+    if (!regionMeta) return null;
+    const nearest = findNearestBwbStation(regionMeta.lat, regionMeta.lng);
+    return nearest?.station ?? null;
+  }, [regionId, regionMeta]);
 
   useEffect(() => {
     if (!regionId || !regionMeta) {
@@ -1201,7 +1178,7 @@ export function useWaterData(regionId: string | null): UseWaterDataResult {
             const features = data.features || [];
             let count = 0;
             for (const p of features) {
-              const pearlKey = WR_TO_PEARL[p.normalized_name];
+              const pearlKey = WR_TO_PEARL_PARAM[p.normalized_name];
               if (pearlKey && p.newest_value != null) {
                 allParams[pearlKey] = {
                   pearlKey,
@@ -2445,7 +2422,12 @@ const COOPS_REGION_IDS = new Set([
 export function getWaterbodyDataSources(regionId: string): string[] {
   const sources: string[] = [];
   if (USGS_SITE_MAP[regionId]) sources.push('USGS');
-  if (BWB_STATION_MAP[regionId]) sources.push('BWB');
+  if (BWB_STATION_MAP[regionId]) {
+    sources.push('BWB');
+  } else {
+    const meta = REGION_META[regionId];
+    if (meta && findNearestBwbStation(meta.lat, meta.lng)) sources.push('BWB');
+  }
   if (ERDDAP_REGION_IDS.has(regionId)) sources.push('ERDDAP');
   if (COOPS_REGION_IDS.has(regionId)) sources.push('NOAA');
   // Registry-discovered sources (WQP etc)

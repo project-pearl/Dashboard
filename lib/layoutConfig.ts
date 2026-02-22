@@ -18,7 +18,7 @@ export interface SectionDefinition {
 }
 
 export type CCKey = 'K12' | 'State' | 'MS4' | 'ESG' | 'NGO' | 'University' | 'NCC'
-  | 'Utility' | 'Infrastructure' | 'Insurance' | 'Agriculture' | 'SampleChain';
+  | 'Utility' | 'Infrastructure' | 'Insurance' | 'Agriculture' | 'SHUCK';
 
 // ─── Default Section Orders ────────────────────────────────────────────────
 
@@ -43,15 +43,19 @@ export const DEFAULT_SECTIONS: Record<CCKey, SectionDefinition[]> = {
 
   State: [
     { id: 'regprofile',  label: 'Water Health Dashboard',       order: 0,  visible: true, defaultExpanded: true },
-    { id: 'insights',    label: 'AI Insights Engine',           order: 1,  visible: true, defaultExpanded: true },
-    { id: 'alertfeed',   label: 'Statewide Alert Feed',         order: 2,  visible: true, defaultExpanded: false },
-    { id: 'map-grid',    label: 'Map & Waterbody List',         order: 3,  visible: true, defaultExpanded: true, compound: true },
-    { id: 'detail',      label: 'Waterbody Detail',             order: 4,  visible: true, defaultExpanded: true },
-    { id: 'top10',       label: 'Top 5 Worsening / Improving',  order: 5,  visible: true, defaultExpanded: false },
-    { id: 'ms4jurisdictions', label: 'MS4 Jurisdictions',       order: 6,  visible: true, defaultExpanded: true },
-    { id: 'exporthub',   label: 'Data Export Hub',              order: 7,  visible: true, defaultExpanded: true },
-    { id: 'grants',      label: 'Grant Opportunities',          order: 8,  visible: true, defaultExpanded: true },
-    { id: 'disclaimer',  label: 'Platform Disclaimer',          order: 9,  visible: true, defaultExpanded: true },
+    { id: 'datareport',  label: 'Data Report Card',             order: 1,  visible: true, defaultExpanded: true },
+    { id: 'insights',    label: 'AI Insights Engine',           order: 2,  visible: true, defaultExpanded: true },
+    { id: 'alertfeed',   label: 'Statewide Alert Feed',         order: 3,  visible: true, defaultExpanded: false },
+    { id: 'map-grid',    label: 'Map & Waterbody List',         order: 4,  visible: true, defaultExpanded: true, compound: true },
+    { id: 'detail',      label: 'Waterbody Detail',             order: 5,  visible: true, defaultExpanded: true },
+    { id: 'top10',       label: 'Top 5 Worsening / Improving',  order: 6,  visible: true, defaultExpanded: false },
+    { id: 'ms4jurisdictions', label: 'MS4 Jurisdictions',       order: 7,  visible: true, defaultExpanded: true },
+    { id: 'icis',        label: 'NPDES Compliance & Enforcement', order: 8, visible: true, defaultExpanded: false },
+    { id: 'sdwis',       label: 'Drinking Water (SDWIS)',       order: 9, visible: true, defaultExpanded: false },
+    { id: 'groundwater', label: 'Groundwater Monitoring (NWIS)', order: 10, visible: true, defaultExpanded: false },
+    { id: 'exporthub',   label: 'Data Export Hub',              order: 11, visible: true, defaultExpanded: true },
+    { id: 'grants',      label: 'Grant Opportunities',          order: 12, visible: true, defaultExpanded: true },
+    { id: 'disclaimer',  label: 'Platform Disclaimer',          order: 13, visible: true, defaultExpanded: true },
   ],
 
   MS4: [
@@ -61,17 +65,20 @@ export const DEFAULT_SECTIONS: Record<CCKey, SectionDefinition[]> = {
     { id: 'alertfeed',      label: 'Alert Feed',                    order: 3,  visible: true, defaultExpanded: false },
     { id: 'map-grid',       label: 'Map & Waterbody List',          order: 4,  visible: true, defaultExpanded: true, compound: true },
     { id: 'detail',         label: 'Waterbody Detail',              order: 5,  visible: true, defaultExpanded: true },
-    { id: 'fineavoidance',  label: 'Fine Avoidance Calculator',     order: 6,  visible: true, defaultExpanded: true },
-    { id: 'mdeexport',      label: 'MDE Annual Reporting',          order: 7,  visible: true, defaultExpanded: true },
-    { id: 'tmdl',           label: 'TMDL Compliance',               order: 8,  visible: true, defaultExpanded: true },
-    { id: 'nutrientcredits', label: 'Nutrient Credit Tracking',     order: 9,  visible: true, defaultExpanded: true },
-    { id: 'stormsim',       label: 'Storm Event Simulations',       order: 10, visible: true, defaultExpanded: true },
-    { id: 'economics',      label: 'Compliance Economics',          order: 11, visible: true, defaultExpanded: true },
-    { id: 'top10',          label: 'Top 10 Priority Waterbodies',   order: 12, visible: true, defaultExpanded: false },
-    { id: 'exporthub',      label: 'Data Export Hub',               order: 13, visible: true, defaultExpanded: true },
-    { id: 'grants',         label: 'Grant Opportunities',           order: 14, visible: true, defaultExpanded: true },
-    { id: 'provenance',     label: 'Data Provenance & Chain of Custody', order: 15, visible: true, defaultExpanded: true },
-    { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 16, visible: true, defaultExpanded: true },
+    { id: 'icis',           label: 'NPDES Compliance & Enforcement', order: 6,  visible: true, defaultExpanded: false },
+    { id: 'sdwis',          label: 'Drinking Water (SDWIS)',        order: 7,  visible: true, defaultExpanded: false },
+    { id: 'fineavoidance',  label: 'Fine Avoidance Calculator',     order: 8,  visible: true, defaultExpanded: true },
+    { id: 'boundaryalerts', label: 'Watershed Boundary Alerts',    order: 9,  visible: true, defaultExpanded: false },
+    { id: 'mdeexport',      label: 'MDE Annual Reporting',          order: 10, visible: true, defaultExpanded: true },
+    { id: 'tmdl',           label: 'TMDL Compliance',               order: 11, visible: true, defaultExpanded: true },
+    { id: 'nutrientcredits', label: 'Nutrient Credit Tracking',     order: 12, visible: true, defaultExpanded: true },
+    { id: 'stormsim',       label: 'Storm Event Simulations',       order: 13, visible: true, defaultExpanded: true },
+    { id: 'economics',      label: 'Compliance Economics',          order: 14, visible: true, defaultExpanded: true },
+    { id: 'top10',          label: 'Top 10 Priority Waterbodies',   order: 15, visible: true, defaultExpanded: false },
+    { id: 'exporthub',      label: 'Data Export Hub',               order: 16, visible: true, defaultExpanded: true },
+    { id: 'grants',         label: 'Grant Opportunities',           order: 17, visible: true, defaultExpanded: true },
+    { id: 'provenance',     label: 'Data Provenance & Chain of Custody', order: 18, visible: true, defaultExpanded: true },
+    { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 19, visible: true, defaultExpanded: true },
   ],
 
   ESG: [
@@ -89,8 +96,9 @@ export const DEFAULT_SECTIONS: Record<CCKey, SectionDefinition[]> = {
     { id: 'benchmark',      label: 'Benchmarking',                  order: 11, visible: true, defaultExpanded: true },
     { id: 'compliance',     label: 'Regulatory Compliance',         order: 12, visible: true, defaultExpanded: true },
     { id: 'brand',          label: 'Brand & Reputation',            order: 13, visible: true, defaultExpanded: true },
-    { id: 'grants',         label: 'Grant Opportunities',           order: 14, visible: true, defaultExpanded: true },
-    { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 15, visible: true, defaultExpanded: true },
+    { id: 'groundwater',    label: 'Groundwater & Aquifer Risk',    order: 14, visible: true, defaultExpanded: false },
+    { id: 'grants',         label: 'Grant Opportunities',           order: 15, visible: true, defaultExpanded: true },
+    { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 16, visible: true, defaultExpanded: true },
   ],
 
   NGO: [
@@ -136,8 +144,11 @@ export const DEFAULT_SECTIONS: Record<CCKey, SectionDefinition[]> = {
     { id: 'situation',          label: 'Situation Summary',           order: 7,  visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'top10',              label: 'Top 10 Worsening / Improving', order: 8, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'statebystatesummary', label: 'State-by-State Table',       order: 9,  visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'sla',                label: 'SLA Compliance',              order: 10, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'disclaimer',         label: 'Platform Disclaimer',         order: 11, visible: true, defaultExpanded: true },
+    { id: 'icis',               label: 'NPDES National Enforcement',  order: 10, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'sdwis',              label: 'Drinking Water (SDWIS)',      order: 11, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'groundwater',        label: 'Groundwater Monitoring',      order: 12, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'sla',                label: 'SLA Compliance',              order: 13, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'disclaimer',         label: 'Platform Disclaimer',         order: 14, visible: true, defaultExpanded: true },
   ],
 
   Utility: [
@@ -169,8 +180,9 @@ export const DEFAULT_SECTIONS: Record<CCKey, SectionDefinition[]> = {
     { id: 'propertyvalue',  label: 'Property Value Impact',         order: 3,  visible: true, defaultExpanded: true },
     { id: 'regulatory',     label: 'Regulatory Exposure',           order: 4,  visible: true, defaultExpanded: true },
     { id: 'claims',         label: 'Claims Intelligence',           order: 5,  visible: true, defaultExpanded: true },
-    { id: 'underwriting',   label: 'Underwriting Tools',            order: 6,  visible: true, defaultExpanded: false },
-    { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 7,  visible: true, defaultExpanded: true },
+    { id: 'groundwater',   label: 'Groundwater & Subsidence Risk',  order: 6,  visible: true, defaultExpanded: false },
+    { id: 'underwriting',   label: 'Underwriting Tools',            order: 7,  visible: true, defaultExpanded: false },
+    { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 8,  visible: true, defaultExpanded: true },
   ],
 
   Agriculture: [
@@ -180,11 +192,12 @@ export const DEFAULT_SECTIONS: Record<CCKey, SectionDefinition[]> = {
     { id: 'credits',        label: 'Nutrient Credit Trading',       order: 3,  visible: true, defaultExpanded: true },
     { id: 'bmp',            label: 'BMP Inventory',                  order: 4,  visible: true, defaultExpanded: true },
     { id: 'soilhealth',     label: 'Soil & Water Conservation',     order: 5,  visible: true, defaultExpanded: true },
-    { id: 'conservation',   label: 'Conservation Programs',         order: 6,  visible: true, defaultExpanded: false },
-    { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 7,  visible: true, defaultExpanded: true },
+    { id: 'groundwater',   label: 'Groundwater Monitoring',         order: 6,  visible: true, defaultExpanded: true },
+    { id: 'conservation',   label: 'Conservation Programs',         order: 7,  visible: true, defaultExpanded: false },
+    { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 8,  visible: true, defaultExpanded: true },
   ],
 
-  SampleChain: [
+  SHUCK: [
     { id: 'intake',         label: 'Sample Intake Queue',           order: 0,  visible: true, defaultExpanded: true },
     { id: 'qaqc',           label: 'QA/QC Dashboard',               order: 1,  visible: true, defaultExpanded: true },
     { id: 'methods',        label: 'Method Registry',               order: 2,  visible: true, defaultExpanded: true },

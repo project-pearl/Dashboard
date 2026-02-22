@@ -6,6 +6,18 @@
 
 .leaflet-control-zoom { display: none !important; }
 
+.leaflet-label-tooltip {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #334155;
+  padding: 0 !important;
+  white-space: nowrap;
+}
+.leaflet-label-tooltip::before {
+  display: none !important;
+}
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;

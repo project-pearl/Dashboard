@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { useLensParam } from '@/lib/useLensParam';
 import { CircleMarker, Tooltip } from 'react-leaflet';
 import HeroBanner from './HeroBanner';
 import dynamic from 'next/dynamic';
@@ -30,8 +31,13 @@ import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { resolveWaterbodyCoordinates } from '@/lib/waterbodyCentroids';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
+import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
+import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
+import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
+import { useStateReport } from '@/lib/useStateReport';
+import { StateDataReportCard } from '@/components/StateDataReportCard';
 
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
@@ -269,11 +275,14 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
   const router = useRouter();
 
   // ── View Lens ──
-  const [viewLens, setViewLens] = useState<ViewLens>('compliance');
+  const [viewLens, setViewLens] = useLensParam<ViewLens>('compliance');
   const lens = LENS_CONFIG[viewLens];
   const [showViewDropdown, setShowViewDropdown] = useState(false);
   const [showAccountPanel, setShowAccountPanel] = useState(false);
   const [overlay, setOverlay] = useState<OverlayId>('risk');
+
+  // ── State Data Report Card ──
+  const { report: stateReport, isLoading: stateReportLoading } = useStateReport(stateAbbr);
 
   // ── State-filtered region data ──
   const baseRegions = useMemo(() => generateStateRegionData(stateAbbr), [stateAbbr]);
@@ -287,7 +296,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
   const leafletGeo = STATE_GEO_LEAFLET[stateAbbr] || { center: [39.8, -98.5] as [number, number], zoom: 4 };
 
   // ── ATTAINS bulk for this state ──
-  const [attainsBulk, setAttainsBulk] = useState<Array<{ name: string; category: string; alertLevel: AlertLevel; causes: string[]; cycle: string }>>([]);
+  const [attainsBulk, setAttainsBulk] = useState<Array<{ id: string; name: string; category: string; alertLevel: AlertLevel; causes: string[]; cycle: string; lat?: number | null; lon?: number | null }>>([]);
   const [attainsBulkLoaded, setAttainsBulkLoaded] = useState(false);
 
   // Merge ATTAINS into region data
@@ -336,11 +345,31 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
     return merged;
   }, [baseRegions, attainsBulk, stateAbbr]);
 
-  // Waterbody marker coordinates — 2-priority resolution (regionsConfig → name-based centroid)
+  // Waterbody marker coordinates — 3-priority resolution (ATTAINS centroid → regionsConfig → name-based)
+  const attainsCoordMap = useMemo(() => {
+    const m = new Map<string, { lat: number; lon: number }>();
+    for (const a of attainsBulk) {
+      if (a.lat != null && a.lon != null && a.id) m.set(a.id, { lat: a.lat, lon: a.lon });
+      // Also index by normalized name for fuzzy matching
+      if (a.lat != null && a.lon != null && a.name) {
+        m.set(`name:${a.name.toLowerCase().trim()}`, { lat: a.lat, lon: a.lon });
+      }
+    }
+    return m;
+  }, [attainsBulk]);
+
   const wbMarkers = useMemo(() => {
     const resolved: { id: string; name: string; lat: number; lon: number; alertLevel: AlertLevel; status: string; dataSourceCount: number }[] = [];
     for (const r of regionData) {
-      // Priority 1: regionsConfig
+      // Priority 1: ATTAINS real centroid (by ID or name)
+      const byId = attainsCoordMap.get(r.id);
+      const byName = !byId ? attainsCoordMap.get(`name:${r.name.toLowerCase().trim()}`) : null;
+      const attainsCoord = byId || byName;
+      if (attainsCoord) {
+        resolved.push({ id: r.id, name: r.name, lat: attainsCoord.lat, lon: attainsCoord.lon, alertLevel: r.alertLevel, status: r.status, dataSourceCount: r.dataSourceCount });
+        continue;
+      }
+      // Priority 2: regionsConfig
       const cfg = getRegionById(r.id) as any;
       if (cfg) {
         const lat = cfg.lat ?? cfg.latitude ?? null;
@@ -350,14 +379,14 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
           continue;
         }
       }
-      // Priority 2: name-based coordinate resolver
+      // Priority 3: name-based coordinate resolver (fallback)
       const approx = resolveWaterbodyCoordinates(r.name, stateAbbr);
       if (approx) {
         resolved.push({ id: r.id, name: r.name, lat: approx.lat, lon: approx.lon, alertLevel: r.alertLevel, status: r.status, dataSourceCount: r.dataSourceCount });
       }
     }
     return resolved;
-  }, [regionData, stateAbbr]);
+  }, [regionData, stateAbbr, attainsCoordMap]);
 
   // Fetch ATTAINS bulk from cache for this state
   useEffect(() => {
@@ -377,6 +406,8 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
           alertLevel: (wb.alertLevel || 'none') as AlertLevel,
           causes: wb.causes || [],
           cycle: '',
+          lat: wb.lat ?? null,
+          lon: wb.lon ?? null,
         }));
         if (!cancelled) {
           setAttainsBulk(waterbodies);
@@ -854,6 +885,38 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
           );
         })());
 
+            case 'datareport': return DS(
+              <div id="section-datareport" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                <button onClick={() => onToggleCollapse('datareport')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <BarChart3 size={15} className="text-cyan-600" />
+                    <span className="text-sm font-bold text-slate-800">Data Report Card</span>
+                    {stateReport && (
+                      <span className={`ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold border ${
+                        stateReport.aiReadinessGrade === 'A' || stateReport.aiReadinessGrade === 'B' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                        stateReport.aiReadinessGrade === 'C' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                        'bg-red-50 text-red-700 border-red-200'
+                      }`}>AI Ready: {stateReport.aiReadinessGrade}</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    {isSectionOpen('datareport') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+                  </div>
+                </button>
+                {isSectionOpen('datareport') && (
+                  <div className="px-4 pb-4 pt-2">
+                    {stateReportLoading ? (
+                      <div className="text-xs text-slate-400 text-center py-6">Loading data report...</div>
+                    ) : stateReport ? (
+                      <StateDataReportCard report={stateReport} />
+                    ) : (
+                      <div className="text-xs text-slate-400 text-center py-6">Data report not yet built. Run the WQP cron to generate.</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+
             case 'alertfeed': return DS((() => {
           const alertRegions = regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium');
           if (alertRegions.length === 0) return null;
@@ -1230,6 +1293,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
               const regionConfig = getRegionById(activeDetailId);
               const regionName = regionConfig?.name || nccRegion?.name || activeDetailId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
               const bulkMatch = resolveBulkAttains(regionName);
+              const wbCoords = wbMarkers.find(w => w.id === activeDetailId);
 
               return (
                 <WaterbodyDetailCard
@@ -1239,6 +1303,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
                   alertLevel={nccRegion?.alertLevel || 'none'}
                   activeAlerts={nccRegion?.activeAlerts ?? 0}
                   lastUpdatedISO={nccRegion?.lastUpdatedISO}
+                  coordinates={wbCoords ? { lat: wbCoords.lat, lon: wbCoords.lon } : null}
                   waterData={waterData}
                   waterLoading={waterLoading}
                   hasRealData={hasRealData}
@@ -2646,6 +2711,33 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
           </Card>
         )}
             </>);
+
+            case 'icis': return DS(
+        <div id="section-icis">
+          <ICISCompliancePanel
+            state={stateAbbr}
+            compactMode={false}
+          />
+        </div>
+      );
+
+            case 'sdwis': return DS(
+        <div id="section-sdwis">
+          <SDWISCompliancePanel
+            state={stateAbbr}
+            compactMode={false}
+          />
+        </div>
+      );
+
+            case 'groundwater': return DS(
+        <div id="section-groundwater">
+          <NwisGwPanel
+            state={stateAbbr}
+            compactMode={false}
+          />
+        </div>
+      );
 
             case 'exporthub': return DS(
         <div id="section-exporthub" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
