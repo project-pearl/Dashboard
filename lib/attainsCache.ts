@@ -280,11 +280,12 @@ async function saveToStorage(): Promise<void> {
 
 // Try loading from storage/disk on first access (not module init)
 let _diskLoaded = false;
+let _warmPromise: Promise<void> | null = null;
+
 function ensureDiskLoaded() {
   if (!_diskLoaded) {
     _diskLoaded = true;
-    // Try to warm from Supabase Storage first; if not found, fall back to disk
-    loadFromStorage()
+    _warmPromise = loadFromStorage()
       .then((ok) => {
         if (!ok) loadFromDisk();
       })
@@ -292,6 +293,12 @@ function ensureDiskLoaded() {
         loadFromDisk();
       });
   }
+}
+
+/** Await this before reading cache to ensure storage data is loaded. */
+export async function ensureWarmed(): Promise<void> {
+  ensureDiskLoaded();
+  if (_warmPromise) await _warmPromise;
 }
 
 // ─── GIS MapServer fallback for huge states (e.g., PA has very large counts) ──
