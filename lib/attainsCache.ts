@@ -239,24 +239,38 @@ function ensureDiskLoaded() {
   }
 }
 
-// ─── Vercel Blob persistence (cross-instance) ────────────────────────────────
+// ─── Vercel Blob persistence (cross-instance via REST API) ───────────────────
 
 const BLOB_PATH = 'cache/attains-national.json';
+const BLOB_API = 'https://blob.vercel-storage.com';
 
 async function saveToBlob(): Promise<boolean> {
   try {
-    const { put } = await import('@vercel/blob');
+    const token = process.env.BLOB_READ_WRITE_TOKEN;
+    if (!token) {
+      console.warn('[ATTAINS Cache] Blob save skipped — no BLOB_READ_WRITE_TOKEN');
+      return false;
+    }
     const payload = JSON.stringify({
       meta: { lastBuilt: lastBuilt?.toISOString(), stateCount: loadedStates.size },
       states: cache,
     });
-    await put(BLOB_PATH, payload, {
-      access: 'public',
-      addRandomSuffix: false,
-      contentType: 'application/json',
+    const res = await fetch(`${BLOB_API}/${BLOB_PATH}`, {
+      method: 'PUT',
+      headers: {
+        'authorization': `Bearer ${token}`,
+        'x-api-version': '7',
+        'x-content-type': 'application/json',
+        'x-add-random-suffix': '0',
+      },
+      body: payload,
     });
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      throw new Error(`HTTP ${res.status}: ${body.slice(0, 200)}`);
+    }
     const sizeMB = (Buffer.byteLength(payload) / 1024 / 1024).toFixed(1);
-    console.log(`[ATTAINS Cache] Saved to Vercel Blob (${sizeMB}MB, ${loadedStates.size} states)`);
+    console.warn(`[ATTAINS Cache] Saved to Vercel Blob (${sizeMB}MB, ${loadedStates.size} states)`);
     return true;
   } catch (e: any) {
     console.warn(`[ATTAINS Cache] Blob save failed: ${e.message}`);
@@ -266,15 +280,42 @@ async function saveToBlob(): Promise<boolean> {
 
 async function loadFromBlob(): Promise<boolean> {
   try {
-    const { list } = await import('@vercel/blob');
-    const { blobs } = await list({ prefix: BLOB_PATH, limit: 1 });
-    if (blobs.length === 0) return false;
+    const token = process.env.BLOB_READ_WRITE_TOKEN;
+    if (!token) {
+      console.warn('[ATTAINS Cache] Blob load skipped — no BLOB_READ_WRITE_TOKEN');
+      return false;
+    }
 
-    const res = await fetch(blobs[0].downloadUrl);
-    if (!res.ok) return false;
+    // List blobs matching our path
+    const listRes = await fetch(
+      `${BLOB_API}?prefix=${encodeURIComponent(BLOB_PATH)}&limit=1`,
+      { headers: { 'authorization': `Bearer ${token}`, 'x-api-version': '7' } },
+    );
+    if (!listRes.ok) {
+      console.warn(`[ATTAINS Cache] Blob list failed: HTTP ${listRes.status}`);
+      return false;
+    }
+    const listData = await listRes.json();
+    const blobs = listData?.blobs || [];
+    if (blobs.length === 0) {
+      console.warn('[ATTAINS Cache] Blob list returned 0 blobs');
+      return false;
+    }
+
+    // Download the blob (public URL)
+    const downloadUrl = blobs[0].downloadUrl || blobs[0].url;
+    console.warn(`[ATTAINS Cache] Downloading blob from ${downloadUrl}`);
+    const res = await fetch(downloadUrl);
+    if (!res.ok) {
+      console.warn(`[ATTAINS Cache] Blob download failed: HTTP ${res.status}`);
+      return false;
+    }
 
     const data = await res.json();
-    if (!data?.states || !data?.meta) return false;
+    if (!data?.states || !data?.meta) {
+      console.warn('[ATTAINS Cache] Blob data missing states or meta');
+      return false;
+    }
 
     cache = data.states;
     const stateKeys = Object.keys(cache);
@@ -284,7 +325,7 @@ async function loadFromBlob(): Promise<boolean> {
       lastBuilt && Date.now() - lastBuilt.getTime() < CACHE_TTL_MS ? "ready" : "stale";
     _cacheSource = "blob";
 
-    console.log(
+    console.warn(
       `[ATTAINS Cache] Loaded from Vercel Blob (${stateKeys.length} states, built ${
         lastBuilt?.toISOString() || "unknown"
       })`
