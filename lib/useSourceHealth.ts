@@ -23,6 +23,7 @@ export interface DatapointSummary {
   ceden: { chemistry: number; toxicity: number };
   icis: { permits: number; violations: number; dmr: number; enforcement: number };
   nwisGw: { sites: number; levels: number };
+  sdwis: { systems: number; violations: number; enforcement: number };
   total: number;
 }
 

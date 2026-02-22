@@ -4,6 +4,7 @@ import { getWqpCacheStatus } from '@/lib/wqpCache';
 import { getCedenCacheStatus } from '@/lib/cedenCache';
 import { getIcisCacheStatus } from '@/lib/icisCache';
 import { getNwisGwCacheStatus } from '@/lib/nwisGwCache';
+import { getSdwisCacheStatus } from '@/lib/sdwisCache';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -178,6 +179,106 @@ export async function GET() {
       'https://waterservices.usgs.gov/nwis/gwlevels/?format=json&stateCd=MD&period=P7D&siteStatus=active',
       10_000,
     ),
+    // Source 16: EPA ATTAINS
+    check(
+      'ATTAINS',
+      'EPA ATTAINS',
+      'https://attains.epa.gov/attains-public/api/states',
+      8_000,
+    ),
+    // Source 17: EPA ICIS DMR
+    check(
+      'ICIS_DMR',
+      'EPA ICIS DMR',
+      'https://data.epa.gov/efservice/ICIS_DMR_MEASUREMENTS/STATE_CODE/MD/COUNT/JSON',
+      8_000,
+    ),
+    // Source 18: EPA ECHO Facilities
+    check(
+      'ECHO',
+      'EPA ECHO Facilities',
+      'https://echodata.epa.gov/echo/cwa_rest_services.get_facilities?output=JSON&p_st=MD&responseset=1',
+      8_000,
+    ),
+    // Source 19: EPA ECHO Violations
+    check(
+      'ECHO_V',
+      'EPA ECHO Violations',
+      'https://echodata.epa.gov/echo/cwa_rest_services.get_facilities?output=JSON&p_st=MD&p_qiv=Y&responseset=1',
+      8_000,
+    ),
+    // Source 20: EPA FRS WWTPs
+    check(
+      'FRS',
+      'EPA FRS WWTPs',
+      'https://data.epa.gov/efservice/FRS_PROGRAM_FACILITY/PGM_SYS_ACRNM/NPDES/COUNT/JSON',
+      8_000,
+    ),
+    // Source 21: EPA UCMR PFAS
+    check(
+      'PFAS',
+      'EPA UCMR PFAS',
+      'https://data.epa.gov/efservice/UCMR4_ALL/COUNT/JSON',
+      8_000,
+    ),
+    // Source 22: CDC Wastewater
+    check(
+      'CDC_NWSS',
+      'CDC Wastewater',
+      'https://data.cdc.gov/resource/2ew6-ywp6.json?$limit=1',
+      8_000,
+    ),
+    // Source 23: NPS Water Quality
+    check(
+      'NPS',
+      'NPS Water Quality',
+      'https://www.waterqualitydata.us/data/Result/search?organization=NPSTORET&mimeType=json&zip=no&sorted=no&startDateLo=01-01-2024',
+      10_000,
+    ),
+    // Source 24: NOAA Buoys
+    check(
+      'NOAA_NDBC',
+      'NOAA Buoys',
+      'https://www.ndbc.noaa.gov/data/realtime2/',
+      8_000,
+      'HEAD',
+    ),
+    // Source 25: FL DBHYDRO
+    check(
+      'FL_DBHYDRO',
+      'FL DBHYDRO',
+      'https://my.sfwmd.gov/dbhydroplsql/web_io.report_process',
+      8_000,
+      'HEAD',
+    ),
+    // Source 26: NY Open Data
+    check(
+      'STATE_NY',
+      'NY Open Data',
+      'https://data.ny.gov/resource/4k4g-s9hz.json?$limit=1',
+      8_000,
+    ),
+    // Source 27: NJ Open Data
+    check(
+      'STATE_NJ',
+      'NJ Open Data',
+      'https://data.nj.gov/resource/6khm-yny7.json?$limit=1',
+      8_000,
+    ),
+    // Source 28: PA Open Data
+    check(
+      'STATE_PA',
+      'PA Open Data',
+      'https://data.pa.gov/resource/3brs-52mh.json?$limit=1',
+      8_000,
+    ),
+    // Source 29: VA Open Data
+    check(
+      'STATE_VA',
+      'VA Open Data',
+      'https://data.virginia.gov/resource/7rig-bfxy.json?$limit=1',
+      8_000,
+    ),
   ]);
 
   const sources: SourceHealthEntry[] = [];
@@ -211,13 +312,19 @@ export async function GET() {
   const nwisGwSites = nwisGwStatus.loaded ? (nwisGwStatus as { siteCount: number }).siteCount : 0;
   const nwisGwLevels = nwisGwStatus.loaded ? (nwisGwStatus as { levelCount: number }).levelCount : 0;
 
+  const sdwisStatus = getSdwisCacheStatus();
+  const sdwisSystems = sdwisStatus.loaded ? (sdwisStatus as { systemCount: number }).systemCount : 0;
+  const sdwisViolations = sdwisStatus.loaded ? (sdwisStatus as { violationCount: number }).violationCount : 0;
+  const sdwisEnforcement = sdwisStatus.loaded ? (sdwisStatus as { enforcementCount: number }).enforcementCount : 0;
+
   const datapoints = {
     attains: { states: attainsStates.length, waterbodies: attainsWaterbodies, assessments: attainsAssessments },
     wqp: { records: wqpRecords, states: wqpStates },
     ceden: { chemistry: cedenChem, toxicity: cedenTox },
     icis: { permits: icisPermits, violations: icisViolations, dmr: icisDmr, enforcement: icisEnforcement },
     nwisGw: { sites: nwisGwSites, levels: nwisGwLevels },
-    total: attainsWaterbodies + wqpRecords + cedenChem + cedenTox + icisPermits + icisViolations + icisDmr + icisEnforcement + nwisGwSites + nwisGwLevels,
+    sdwis: { systems: sdwisSystems, violations: sdwisViolations, enforcement: sdwisEnforcement },
+    total: attainsWaterbodies + wqpRecords + cedenChem + cedenTox + icisPermits + icisViolations + icisDmr + icisEnforcement + nwisGwSites + nwisGwLevels + sdwisSystems + sdwisViolations + sdwisEnforcement,
   };
 
   return NextResponse.json(

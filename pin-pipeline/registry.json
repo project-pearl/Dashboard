@@ -62,7 +62,7 @@
     {
       "id": "epa-attains",
       "name": "EPA ATTAINS (Assessment & TMDL Tracking)",
-      "health_id": null,
+      "health_id": "ATTAINS",
       "type": "federal",
       "url": "https://attains.epa.gov/attains-public/api/assessments?state_code=MD&reporting_cycle=2022",
       "probe_url": "https://attains.epa.gov/attains-public/api/states",
@@ -101,7 +101,7 @@
     {
       "id": "fl-dbhydro",
       "name": "FL DBHYDRO (South Florida Water Management)",
-      "health_id": null,
+      "health_id": "FL_DBHYDRO",
       "type": "state",
       "url": "https://my.sfwmd.gov/dbhydroplsql/web_io.report_process",
       "probe_url": "https://my.sfwmd.gov/dbhydroplsql/web_io.report_process",
@@ -176,7 +176,7 @@
     {
       "id": "noaa-ndbc",
       "name": "NOAA NDBC (National Data Buoy Center)",
-      "health_id": null,
+      "health_id": "NOAA_NDBC",
       "type": "noaa",
       "url": "https://www.ndbc.noaa.gov/data/realtime2/",
       "probe_url": "https://www.ndbc.noaa.gov/data/realtime2/",
@@ -215,7 +215,7 @@
     {
       "id": "icis_npdes",
       "name": "EPA ICIS-NPDES (Discharge Permits, Violations, Inspections)",
-      "health_id": null,
+      "health_id": "ICIS",
       "type": "federal",
       "url": "https://data.epa.gov/efservice/ICIS_PERMITS/STATE_CODE/MD/rows/0:10000/JSON",
       "probe_url": "https://data.epa.gov/efservice/ICIS_PERMITS/STATE_CODE/MD/COUNT/JSON",
@@ -233,7 +233,7 @@
     {
       "id": "icis_dmr",
       "name": "EPA ICIS DMR (Discharge Monitoring Reports)",
-      "health_id": null,
+      "health_id": "ICIS_DMR",
       "type": "federal",
       "url": "https://data.epa.gov/efservice/ICIS_DMR_MEASUREMENTS/STATE_CODE/MD/rows/0:10000/JSON",
       "probe_url": "https://data.epa.gov/efservice/ICIS_DMR_MEASUREMENTS/STATE_CODE/MD/COUNT/JSON",
@@ -251,7 +251,7 @@
     {
       "id": "echo_facilities",
       "name": "EPA ECHO (CWA Facility Compliance)",
-      "health_id": null,
+      "health_id": "ECHO",
       "type": "federal",
       "url": "https://echodata.epa.gov/echo/cwa_rest_services.get_facilities?output=JSON&p_st=MD",
       "probe_url": "https://echodata.epa.gov/echo/cwa_rest_services.get_facilities?output=JSON&p_st=MD&responseset=1",
@@ -269,7 +269,7 @@
     {
       "id": "echo_violations",
       "name": "EPA ECHO (CWA Facilities in Violation)",
-      "health_id": null,
+      "health_id": "ECHO_V",
       "type": "federal",
       "url": "https://echodata.epa.gov/echo/cwa_rest_services.get_facilities?output=JSON&p_st=MD&p_qiv=Y",
       "probe_url": "https://echodata.epa.gov/echo/cwa_rest_services.get_facilities?output=JSON&p_st=MD&p_qiv=Y&responseset=1",
@@ -287,7 +287,7 @@
     {
       "id": "frs_wwtps",
       "name": "EPA FRS (WWTP Locations & Capacities)",
-      "health_id": null,
+      "health_id": "FRS",
       "type": "federal",
       "url": "https://data.epa.gov/efservice/FRS_PROGRAM_FACILITY/PGM_SYS_ACRNM/NPDES/rows/0:10000/JSON",
       "probe_url": "https://data.epa.gov/efservice/FRS_PROGRAM_FACILITY/PGM_SYS_ACRNM/NPDES/COUNT/JSON",
@@ -305,7 +305,7 @@
     {
       "id": "pfas_ucmr",
       "name": "EPA UCMR (PFAS Screening Data)",
-      "health_id": null,
+      "health_id": "PFAS",
       "type": "federal",
       "url": "https://data.epa.gov/efservice/UCMR4_ALL/rows/0:10000/JSON",
       "probe_url": "https://data.epa.gov/efservice/UCMR4_ALL/COUNT/JSON",
@@ -323,7 +323,7 @@
     {
       "id": "cdc_nwss",
       "name": "CDC NWSS (Wastewater Surveillance)",
-      "health_id": null,
+      "health_id": "CDC_NWSS",
       "type": "federal",
       "url": "https://data.cdc.gov/resource/2ew6-ywp6.json?$limit=50000&$order=date_end DESC",
       "probe_url": "https://data.cdc.gov/resource/2ew6-ywp6.json?$limit=1",
@@ -341,7 +341,7 @@
     {
       "id": "nps_wq",
       "name": "National Park Service Water Quality (via WQP)",
-      "health_id": null,
+      "health_id": "NPS",
       "type": "federal",
       "url": "https://www.waterqualitydata.us/data/Result/search?organization=NPSTORET&mimeType=json",
       "probe_url": "https://www.waterqualitydata.us/data/Result/search?organization=NPSTORET&mimeType=json&zip=no&sorted=no&startDateLo=01-01-2024",
@@ -395,7 +395,7 @@
     {
       "id": "state_ny",
       "name": "NY Open Data (Water Quality)",
-      "health_id": null,
+      "health_id": "STATE_NY",
       "type": "state",
       "url": "https://data.ny.gov/resource/4k4g-s9hz.json?$limit=10000",
       "probe_url": "https://data.ny.gov/resource/4k4g-s9hz.json?$limit=1",
@@ -413,7 +413,7 @@
     {
       "id": "state_nj",
       "name": "NJ Open Data (Water Quality)",
-      "health_id": null,
+      "health_id": "STATE_NJ",
       "type": "state",
       "url": "https://data.nj.gov/resource/6khm-yny7.json?$limit=10000",
       "probe_url": "https://data.nj.gov/resource/6khm-yny7.json?$limit=1",
@@ -431,7 +431,7 @@
     {
       "id": "state_pa",
       "name": "PA Open Data (Water Quality)",
-      "health_id": null,
+      "health_id": "STATE_PA",
       "type": "state",
       "url": "https://data.pa.gov/resource/3brs-52mh.json?$limit=10000",
       "probe_url": "https://data.pa.gov/resource/3brs-52mh.json?$limit=1",
@@ -449,7 +449,7 @@
     {
       "id": "state_va",
       "name": "VA Open Data (Water Quality)",
-      "health_id": null,
+      "health_id": "STATE_VA",
       "type": "state",
       "url": "https://data.virginia.gov/resource/7rig-bfxy.json?$limit=10000",
       "probe_url": "https://data.virginia.gov/resource/7rig-bfxy.json?$limit=1",
@@ -553,6 +553,24 @@
       "staleness_days": null,
       "record_estimate": "10K+ datasets",
       "notes": "Hydrologic dataset repository from CUAHSI research network. Searchable by keyword, subject, and location."
+    },
+    {
+      "id": "usgs-nwis-gw",
+      "name": "USGS NWIS Groundwater Levels",
+      "health_id": "USGS_GW",
+      "type": "federal",
+      "url": "https://waterservices.usgs.gov/nwis/gwlevels/?format=json&stateCd=MD&period=P7D&siteStatus=active",
+      "probe_url": "https://waterservices.usgs.gov/nwis/gwlevels/?format=json&stateCd=MD&period=P7D&siteStatus=active",
+      "format": "json",
+      "status": "live",
+      "priority": 2,
+      "last_fetch": null,
+      "last_success": null,
+      "last_checked": null,
+      "error_count": 0,
+      "staleness_days": null,
+      "record_estimate": "850K+ sites",
+      "notes": "USGS groundwater level measurements. Real-time and historical. Same NWIS service as IV/DV but for gwlevels endpoint."
     }
   ],
   "wqp_states": {
