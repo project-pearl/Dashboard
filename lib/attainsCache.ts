@@ -3,9 +3,7 @@
 // - Fetches all 51 states in background via cron (time-budgeted)
 // - Serves instantly on subsequent requests
 // - ATTAINS updates ~biannually — this cache uses a long TTL
-// - Persists to Supabase Storage (shared across instances) and local disk (per-instance)
-
-import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+// - Persists to local disk (.cache/) for cold-start recovery
 
 // ─── Config ────────────────────────────────────────────────────────────────────
 
@@ -21,9 +19,6 @@ const BATCH_DELAY_MS = 3000;
 const FETCH_TIMEOUT_MS = 300_000; // 5 min per fetch — large states (CA, TX, NY) need time
 const RETRY_TIMEOUT_MS = 480_000; // 8 min on retry pass
 const RETRY_DELAY_MS = 5000; // 5s between retries
-
-const STORAGE_BUCKET = "pin-cache";
-const STORAGE_KEY = "attains/states.json";
 
 // Cap per state in memory: keep all impaired, sample healthy up to this count
 const MAX_PER_STATE = 2000;
@@ -234,84 +229,13 @@ function saveToDisk(): void {
   }
 }
 
-// ─── Supabase Storage persistence (shared across instances) ────────────────────
-
-async function loadFromStorage(): Promise<boolean> {
-  try {
-    console.log(`[ATTAINS Cache] Attempting storage load from ${STORAGE_BUCKET}/${STORAGE_KEY}...`);
-    const { data, error } = await getSupabaseAdmin().storage
-      .from(STORAGE_BUCKET)
-      .download(STORAGE_KEY);
-    if (error) {
-      console.warn(`[ATTAINS Cache] Storage download error: ${error.message}`);
-      return false;
-    }
-    if (!data) {
-      console.warn(`[ATTAINS Cache] Storage download returned no data`);
-      return false;
-    }
-
-    const txt = await data.text();
-    const parsed = JSON.parse(txt);
-    if (!parsed?.states || !parsed?.meta) {
-      console.warn(`[ATTAINS Cache] Storage data missing states or meta`);
-      return false;
-    }
-
-    cache = parsed.states;
-    const stateKeys = Object.keys(cache);
-    loadedStates = new Set(stateKeys);
-    lastBuilt = parsed.meta.lastBuilt ? new Date(parsed.meta.lastBuilt) : null;
-    buildStatus =
-      lastBuilt && Date.now() - lastBuilt.getTime() < CACHE_TTL_MS ? "ready" : "stale";
-    _cacheSource = "storage";
-
-    console.log(`[ATTAINS Cache] Loaded from storage (${stateKeys.length} states)`);
-    return true;
-  } catch (e: any) {
-    console.error(`[ATTAINS Cache] Storage load exception: ${e.message}`);
-    return false;
-  }
-}
-
-async function saveToStorage(): Promise<void> {
-  try {
-    const payload = JSON.stringify({
-      meta: { lastBuilt: lastBuilt?.toISOString(), stateCount: loadedStates.size },
-      states: cache,
-    });
-    await getSupabaseAdmin().storage.from(STORAGE_BUCKET).upload(STORAGE_KEY, Buffer.from(payload), {
-      contentType: "application/json",
-      upsert: true,
-    });
-    console.log(`[ATTAINS Cache] Saved to storage (${loadedStates.size} states)`);
-  } catch (e: any) {
-    console.warn(`[ATTAINS Cache] Storage save failed: ${e.message}`);
-  }
-}
-
-// Try loading from storage/disk on first access (not module init)
+// Try loading from disk on first access (not module init)
 let _diskLoaded = false;
-let _warmPromise: Promise<void> | null = null;
 
 function ensureDiskLoaded() {
   if (!_diskLoaded) {
     _diskLoaded = true;
-    _warmPromise = loadFromStorage()
-      .then((ok) => {
-        if (!ok) loadFromDisk();
-      })
-      .catch(() => {
-        loadFromDisk();
-      });
-  }
-}
-
-/** Await this before reading cache to ensure storage data is loaded. */
-export async function ensureWarmed(): Promise<void> {
-  if (loadedStates.size === 0) {
-    const ok = await loadFromStorage();
-    if (!ok) loadFromDisk();
+    loadFromDisk();
   }
 }
 
@@ -876,7 +800,6 @@ export async function buildAttainsChunk(timeBudgetMs: number): Promise<{
   let savedToDisk = false;
   if (processed.length > 0) {
     saveToDisk();
-    await saveToStorage();
     savedToDisk = true;
   }
 
@@ -982,9 +905,8 @@ async function buildCache(): Promise<void> {
     }${stillMissing.length > 0 ? ` | MISSING: ${stillMissing.join(", ")}` : ""}`
   );
 
-  // Persist (disk + storage)
+  // Persist to disk
   saveToDisk();
-  await saveToStorage();
 }
 
 // ─── Public API ────────────────────────────────────────────────────────────────

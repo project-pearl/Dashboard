@@ -4,7 +4,7 @@
 
 import { NextResponse } from 'next/server';
 import { getWqpCacheStatus } from '@/lib/wqpCache';
-import { getCacheStatus as getAttainsCacheStatus, ensureWarmed as warmAttains } from '@/lib/attainsCache';
+import { getCacheStatus as getAttainsCacheStatus } from '@/lib/attainsCache';
 import { getCedenCacheStatus } from '@/lib/cedenCache';
 import { getIcisCacheStatus } from '@/lib/icisCache';
 import { getSdwisCacheStatus } from '@/lib/sdwisCache';
@@ -25,7 +25,6 @@ function staleness(built: string | null | undefined): { stale: boolean; ageHours
 }
 
 export async function GET() {
-  await warmAttains();
   const wqp = getWqpCacheStatus();
   const attains = getAttainsCacheStatus();
   const ceden = getCedenCacheStatus();
