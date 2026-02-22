@@ -309,8 +309,10 @@ function ensureDiskLoaded() {
 
 /** Await this before reading cache to ensure storage data is loaded. */
 export async function ensureWarmed(): Promise<void> {
-  ensureDiskLoaded();
-  if (_warmPromise) await _warmPromise;
+  if (loadedStates.size === 0) {
+    const ok = await loadFromStorage();
+    if (!ok) loadFromDisk();
+  }
 }
 
 // ─── GIS MapServer fallback for huge states (e.g., PA has very large counts) ──
