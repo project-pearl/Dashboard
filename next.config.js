@@ -12,6 +12,9 @@ const nextConfig = {
       exclude: ['warn'],
     },
   },
+  experimental: {
+    serverComponentsExternalPackages: ['@vercel/blob'],
+  },
 };
 
 module.exports = nextConfig;
