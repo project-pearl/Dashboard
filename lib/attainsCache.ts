@@ -3,7 +3,9 @@
 // - Fetches all 51 states in background via cron (time-budgeted)
 // - Serves instantly on subsequent requests
 // - ATTAINS updates ~biannually — this cache uses a long TTL
-// - Persists to local disk (.cache/) for cold-start recovery
+// - Persists to local disk (.cache/) + Vercel Blob (cross-instance)
+
+import { put, list } from '@vercel/blob';
 
 // ─── Config ────────────────────────────────────────────────────────────────────
 
@@ -156,7 +158,7 @@ let buildStatus: "cold" | "building" | "ready" | "stale" = "cold";
 let lastBuilt: Date | null = null;
 let buildStarted: Date | null = null;
 let buildPromise: Promise<void> | null = null;
-let _cacheSource: "disk" | "storage" | "memory (self-build)" | "memory (cron)" | null =
+let _cacheSource: "disk" | "blob" | "memory (self-build)" | "memory (cron)" | null =
   null;
 
 // ─── Portable timeout helper ───────────────────────────────────────────────────
@@ -237,6 +239,75 @@ function ensureDiskLoaded() {
     _diskLoaded = true;
     loadFromDisk();
   }
+}
+
+// ─── Vercel Blob persistence (cross-instance) ────────────────────────────────
+
+const BLOB_PATH = 'cache/attains-national.json';
+
+async function saveToBlob(): Promise<boolean> {
+  try {
+    const payload = JSON.stringify({
+      meta: { lastBuilt: lastBuilt?.toISOString(), stateCount: loadedStates.size },
+      states: cache,
+    });
+    await put(BLOB_PATH, payload, {
+      access: 'public',
+      addRandomSuffix: false,
+      contentType: 'application/json',
+    });
+    const sizeMB = (Buffer.byteLength(payload) / 1024 / 1024).toFixed(1);
+    console.log(`[ATTAINS Cache] Saved to Vercel Blob (${sizeMB}MB, ${loadedStates.size} states)`);
+    return true;
+  } catch (e: any) {
+    console.warn(`[ATTAINS Cache] Blob save failed: ${e.message}`);
+    return false;
+  }
+}
+
+async function loadFromBlob(): Promise<boolean> {
+  try {
+    const { blobs } = await list({ prefix: BLOB_PATH, limit: 1 });
+    if (blobs.length === 0) return false;
+
+    const res = await fetch(blobs[0].downloadUrl);
+    if (!res.ok) return false;
+
+    const data = await res.json();
+    if (!data?.states || !data?.meta) return false;
+
+    cache = data.states;
+    const stateKeys = Object.keys(cache);
+    loadedStates = new Set(stateKeys);
+    lastBuilt = data.meta.lastBuilt ? new Date(data.meta.lastBuilt) : null;
+    buildStatus =
+      lastBuilt && Date.now() - lastBuilt.getTime() < CACHE_TTL_MS ? "ready" : "stale";
+    _cacheSource = "blob";
+
+    console.log(
+      `[ATTAINS Cache] Loaded from Vercel Blob (${stateKeys.length} states, built ${
+        lastBuilt?.toISOString() || "unknown"
+      })`
+    );
+    return true;
+  } catch (e: any) {
+    console.warn(`[ATTAINS Cache] Blob load failed: ${e.message}`);
+    return false;
+  }
+}
+
+let _blobChecked = false;
+
+/**
+ * Async warm-up: tries disk first (sync), then Vercel Blob if cache is still empty.
+ * Call this at the start of ATTAINS data-serving routes.
+ */
+export async function ensureWarmed(): Promise<void> {
+  ensureDiskLoaded();
+  if (loadedStates.size > 0) return;
+  if (_blobChecked) return;
+  _blobChecked = true;
+  await loadFromBlob();
 }
 
 // ─── GIS MapServer fallback for huge states (e.g., PA has very large counts) ──
@@ -722,6 +793,7 @@ export async function buildAttainsChunk(timeBudgetMs: number): Promise<{
   alreadyCached: number;
   totalStates: number;
   savedToDisk: boolean;
+  savedToBlob: boolean;
 }> {
   ensureDiskLoaded();
 
@@ -746,6 +818,7 @@ export async function buildAttainsChunk(timeBudgetMs: number): Promise<{
       alreadyCached,
       totalStates: ALL_STATES.length,
       savedToDisk: false,
+      savedToBlob: false,
     };
   }
 
@@ -796,11 +869,13 @@ export async function buildAttainsChunk(timeBudgetMs: number): Promise<{
     _cacheSource = "memory (cron)";
   }
 
-  // Save progress (disk + storage)
+  // Save progress (disk + Vercel Blob for cross-instance persistence)
   let savedToDisk = false;
+  let savedToBlob = false;
   if (processed.length > 0) {
     saveToDisk();
     savedToDisk = true;
+    savedToBlob = await saveToBlob();
   }
 
   const elapsed = ((Date.now() - cronStart) / 1000).toFixed(1);
@@ -809,10 +884,10 @@ export async function buildAttainsChunk(timeBudgetMs: number): Promise<{
     `[ATTAINS Cron] Chunk complete in ${elapsed}s — ${processed.length} new, ${failed.length} failed, ` +
       `${loadedStates.size}/${ALL_STATES.length} total${
         stillMissing.length > 0 ? ` | remaining: ${stillMissing.join(", ")}` : ""
-      }`
+      }${savedToBlob ? " | blob saved" : ""}`
   );
 
-  return { processed, failed, alreadyCached, totalStates: ALL_STATES.length, savedToDisk };
+  return { processed, failed, alreadyCached, totalStates: ALL_STATES.length, savedToDisk, savedToBlob };
 }
 
 async function buildCache(): Promise<void> {

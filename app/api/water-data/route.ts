@@ -2,7 +2,7 @@
 // Unified server-side proxy for multiple water quality data sources
 // Sources: Water Reporter (BWB), Chesapeake Bay Program DataHub, USGS (IV, Samples, Daily), MARACOOS ERDDAP (MD DNR)
 import { NextRequest, NextResponse } from 'next/server';
-import { getAttainsCache, getAttainsCacheSummary, getCacheStatus, triggerAttainsBuild } from '@/lib/attainsCache';
+import { getAttainsCache, getAttainsCacheSummary, getCacheStatus, triggerAttainsBuild, ensureWarmed as warmAttains } from '@/lib/attainsCache';
 import { getCedenCache, getCedenCacheStatus } from '@/lib/cedenCache';
 import { getWqpCache, getWqpCacheStatus } from '@/lib/wqpCache';
 import { getStateReport, getAllStateReports, getStateReportStatus } from '@/lib/stateReportCache';
@@ -1357,6 +1357,7 @@ export async function GET(request: NextRequest) {
       // Full cache with waterbody arrays — READ ONLY, does NOT trigger build
       // Example: ?action=attains-national-cache
       case 'attains-national-cache': {
+        await warmAttains();
         const data = getAttainsCache();
         return NextResponse.json(data, {
           headers: {
@@ -1387,6 +1388,7 @@ export async function GET(request: NextRequest) {
       // Lightweight status check — for polling during build (no waterbody data)
       // Example: ?action=attains-national-status
       case 'attains-national-status': {
+        await warmAttains();
         const status = getCacheStatus();
         return NextResponse.json(status, {
           headers: {
@@ -1398,6 +1400,7 @@ export async function GET(request: NextRequest) {
       // Summary with counts per state but no waterbody arrays (~5KB vs ~2MB)
       // Example: ?action=attains-national-summary
       case 'attains-national-summary': {
+        await warmAttains();
         const summary = getAttainsCacheSummary();
         return NextResponse.json(summary, {
           headers: {

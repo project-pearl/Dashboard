@@ -60,6 +60,7 @@ export async function GET(request: NextRequest) {
       totalStates: result.totalStates,
       remaining: result.totalStates - result.alreadyCached - result.processed.length,
       savedToDisk: result.savedToDisk,
+      savedToBlob: result.savedToBlob,
       cache: getCacheStatus(),
     });
   } catch (err: any) {
