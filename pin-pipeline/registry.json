@@ -1,7 +1,7 @@
 {
   "meta": {
     "version": "1.0",
-    "updated": "2026-02-22T03:38:01.922992Z",
+    "updated": "2026-02-22T09:09:14.055194Z",
     "description": "PIN (PEARL Intelligence Network) \u00e2\u20ac\u201d central source registry. Tracks every US water data endpoint with status, priority, staleness, and error history."
   },
   "sources": [
@@ -17,7 +17,7 @@
       "priority": 1,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
+      "last_checked": "2026-02-22T09:04:30.637555Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "430M+",
@@ -35,7 +35,7 @@
       "priority": 1,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
+      "last_checked": "2026-02-22T09:04:31.498752Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "1.9M sites",
@@ -53,7 +53,7 @@
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
+      "last_checked": "2026-02-22T09:04:32.007395Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "1.9M sites",
@@ -70,12 +70,12 @@
         "https://gispub.epa.gov/arcgis/rest/services/OW/ATTAINS_Assessment/MapServer/1/query?where=state='MD'&outFields=*&returnCountOnly=true&f=json"
       ],
       "format": "json",
-      "status": "live",
+      "status": "dead",
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
-      "error_count": 0,
+      "last_checked": "2026-02-22T09:04:32.779746Z",
+      "error_count": 1,
       "staleness_days": null,
       "record_estimate": "565K assessment units",
       "notes": "Already cached in lib/attainsCache.ts (51/51 states). GIS MapServer fallback for large states (PA 216K+). REST API times out for states >50K assessments."
@@ -88,12 +88,12 @@
       "url": "https://data.epa.gov/efservice/WATER_SYSTEM/STATE_CODE/MD/JSON",
       "probe_url": "https://data.epa.gov/efservice/WATER_SYSTEM/STATE_CODE/MD/COUNT/JSON",
       "format": "json",
-      "status": "live",
+      "status": "dead",
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
-      "error_count": 0,
+      "last_checked": "2026-02-22T09:04:33.768326Z",
+      "error_count": 1,
       "staleness_days": null,
       "record_estimate": "150K+ systems",
       "notes": "Drinking water systems, violations, enforcement. Supports Envirofacts REST. Paginated via /ROWS/{start}:{end}."
@@ -106,12 +106,12 @@
       "url": "https://my.sfwmd.gov/dbhydroplsql/web_io.report_process",
       "probe_url": "https://my.sfwmd.gov/dbhydroplsql/web_io.report_process",
       "format": "csv",
-      "status": "planned",
+      "status": "dead",
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
-      "error_count": 0,
+      "last_checked": "2026-02-22T09:04:34.242184Z",
+      "error_count": 1,
       "staleness_days": null,
       "record_estimate": "35M+",
       "notes": "No auth required. South Florida only (Everglades, Lake Okeechobee, coastal). POST requests with station/date parameters."
@@ -127,12 +127,12 @@
         "https://ceden.waterboards.ca.gov/AdvancedQueryTool"
       ],
       "format": "json",
-      "status": "live",
+      "status": "degraded",
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
-      "error_count": 0,
+      "last_checked": "2026-02-22T09:04:35.029173Z",
+      "error_count": 1,
       "staleness_days": null,
       "record_estimate": "10M+ chemistry results",
       "notes": "Open Data Portal is public (CKAN API). Direct CEDEN API (Advanced Query Tool) requires credentials from waterdata@waterboards.ca.gov. Using Open Data Portal for now."
@@ -149,7 +149,7 @@
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
+      "last_checked": "2026-02-22T09:04:35.702365Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "20M+",
@@ -163,12 +163,12 @@
       "url": "https://www80.tceq.texas.gov/SwqmisWeb/public/crpwq.htm",
       "probe_url": "https://www80.tceq.texas.gov/SwqmisWeb/public/crpwq.htm",
       "format": "csv",
-      "status": "planned",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
-      "error_count": 0,
+      "last_checked": "2026-02-22T09:04:36.288570Z",
+      "error_count": 1,
       "staleness_days": null,
       "record_estimate": "unknown",
       "notes": "SWQMIS web interface. Direct API endpoints not yet mapped. Currently using WQP for TX data."
@@ -184,11 +184,11 @@
         "https://coastwatch.pfeg.noaa.gov/erddap/tabledap/cwwcNDBCMet.json?station%2Clatitude%2Clongitude%2Ctime%2Cwtmp%2Cwvht&time%3E=2024-01-01T00:00:00Z&orderBy(%22time%22)"
       ],
       "format": "csv",
-      "status": "planned",
+      "status": "live",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
+      "last_checked": "2026-02-22T09:04:36.746121Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "1,300+ buoys",
@@ -206,7 +206,7 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
+      "last_checked": "2026-02-22T09:04:37.441017Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "29 reserves",
@@ -220,12 +220,12 @@
       "url": "https://data.epa.gov/efservice/ICIS_PERMITS/STATE_CODE/MD/rows/0:10000/JSON",
       "probe_url": "https://data.epa.gov/efservice/ICIS_PERMITS/STATE_CODE/MD/COUNT/JSON",
       "format": "json",
-      "status": "live",
+      "status": "dead",
       "priority": 1,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
-      "error_count": 0,
+      "last_checked": "2026-02-22T09:04:38.356770Z",
+      "error_count": 1,
       "staleness_days": null,
       "record_estimate": "400K+ facilities",
       "notes": "Every NPDES discharge permit, violation, and inspection in the US. Tables: ICIS_PERMITS, ICIS_VIOLATIONS, ICIS_INSPECTIONS, ICIS_ENFORCEMENT_ACTIONS. Envirofacts REST, no auth. Always filter by STATE_CODE."
@@ -238,12 +238,12 @@
       "url": "https://data.epa.gov/efservice/ICIS_DMR_MEASUREMENTS/STATE_CODE/MD/rows/0:10000/JSON",
       "probe_url": "https://data.epa.gov/efservice/ICIS_DMR_MEASUREMENTS/STATE_CODE/MD/COUNT/JSON",
       "format": "json",
-      "status": "live",
+      "status": "dead",
       "priority": 1,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
-      "error_count": 0,
+      "last_checked": "2026-02-22T09:04:39.133791Z",
+      "error_count": 1,
       "staleness_days": null,
       "record_estimate": "100M+",
       "notes": "Actual discharge monitoring data \u00e2\u20ac\u201d BOD, TSS, ammonia, phosphorus, E. coli, flow. VERY large \u00e2\u20ac\u201d always filter by STATE_CODE. Envirofacts REST, no auth."
@@ -260,7 +260,7 @@
       "priority": 1,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
+      "last_checked": "2026-02-22T09:04:40.000264Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "800K+ facilities",
@@ -278,7 +278,7 @@
       "priority": 1,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
+      "last_checked": "2026-02-22T09:04:40.791712Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "varies",
@@ -292,12 +292,12 @@
       "url": "https://data.epa.gov/efservice/FRS_PROGRAM_FACILITY/PGM_SYS_ACRNM/NPDES/rows/0:10000/JSON",
       "probe_url": "https://data.epa.gov/efservice/FRS_PROGRAM_FACILITY/PGM_SYS_ACRNM/NPDES/COUNT/JSON",
       "format": "json",
-      "status": "live",
+      "status": "dead",
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
-      "error_count": 0,
+      "last_checked": "2026-02-22T09:04:41.734174Z",
+      "error_count": 1,
       "staleness_days": null,
       "record_estimate": "400K+",
       "notes": "Facility Registry Service \u00e2\u20ac\u201d WWTP locations, capacities, permit numbers. Filtered by PGM_SYS_ACRNM=NPDES. Envirofacts REST, no auth."
@@ -310,12 +310,12 @@
       "url": "https://data.epa.gov/efservice/UCMR4_ALL/rows/0:10000/JSON",
       "probe_url": "https://data.epa.gov/efservice/UCMR4_ALL/COUNT/JSON",
       "format": "json",
-      "status": "live",
+      "status": "dead",
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
-      "error_count": 0,
+      "last_checked": "2026-02-22T09:04:42.649981Z",
+      "error_count": 1,
       "staleness_days": null,
       "record_estimate": "2M+",
       "notes": "PFAS screening results from Unregulated Contaminant Monitoring Rule (UCMR4). Nationwide \u00e2\u20ac\u201d no state filter needed for initial pull. Envirofacts REST, no auth."
@@ -332,7 +332,7 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
+      "last_checked": "2026-02-22T09:04:43.429604Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "500K+",
@@ -346,12 +346,12 @@
       "url": "https://www.waterqualitydata.us/data/Result/search?organization=NPSTORET&mimeType=json",
       "probe_url": "https://www.waterqualitydata.us/data/Result/search?organization=NPSTORET&mimeType=json&zip=no&sorted=no&startDateLo=01-01-2024",
       "format": "json",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
-      "error_count": 0,
+      "last_checked": "2026-02-22T09:04:43.792968Z",
+      "error_count": 1,
       "staleness_days": null,
       "record_estimate": "5M+",
       "notes": "National Park Service WQ data via Water Quality Portal. Organization=NPSTORET. No auth."
@@ -368,7 +368,7 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
+      "last_checked": "2026-02-22T09:04:44.508534Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "catalog",
@@ -386,7 +386,7 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
+      "last_checked": "2026-02-22T09:04:45.011837Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "catalog",
@@ -400,12 +400,12 @@
       "url": "https://data.ny.gov/resource/4k4g-s9hz.json?$limit=10000",
       "probe_url": "https://data.ny.gov/resource/4k4g-s9hz.json?$limit=1",
       "format": "json",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
-      "error_count": 0,
+      "last_checked": "2026-02-22T09:04:45.803010Z",
+      "error_count": 1,
       "staleness_days": null,
       "record_estimate": "unknown",
       "notes": "New York Open Data portal. Socrata API, no auth."
@@ -418,12 +418,12 @@
       "url": "https://data.nj.gov/resource/6khm-yny7.json?$limit=10000",
       "probe_url": "https://data.nj.gov/resource/6khm-yny7.json?$limit=1",
       "format": "json",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
-      "error_count": 0,
+      "last_checked": "2026-02-22T09:04:46.499943Z",
+      "error_count": 1,
       "staleness_days": null,
       "record_estimate": "unknown",
       "notes": "New Jersey Open Data portal. Socrata API, no auth."
@@ -436,12 +436,12 @@
       "url": "https://data.pa.gov/resource/3brs-52mh.json?$limit=10000",
       "probe_url": "https://data.pa.gov/resource/3brs-52mh.json?$limit=1",
       "format": "json",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
-      "error_count": 0,
+      "last_checked": "2026-02-22T09:04:47.332217Z",
+      "error_count": 1,
       "staleness_days": null,
       "record_estimate": "unknown",
       "notes": "Pennsylvania Open Data portal. Socrata API, no auth."
@@ -454,12 +454,12 @@
       "url": "https://data.virginia.gov/resource/7rig-bfxy.json?$limit=10000",
       "probe_url": "https://data.virginia.gov/resource/7rig-bfxy.json?$limit=1",
       "format": "json",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
-      "error_count": 0,
+      "last_checked": "2026-02-22T09:04:48.199923Z",
+      "error_count": 1,
       "staleness_days": null,
       "record_estimate": "unknown",
       "notes": "Virginia Open Data portal. Socrata API, no auth."
@@ -472,12 +472,12 @@
       "url": "https://waterreporter.org/api/v2/parameters/?dataset_id=860",
       "probe_url": "https://waterreporter.org/api/v2/parameters/?dataset_id=860&station_id=8756",
       "format": "json",
-      "status": "live",
+      "status": "dead",
       "priority": 1,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
-      "error_count": 0,
+      "last_checked": "2026-02-22T09:04:48.586463Z",
+      "error_count": 1,
       "staleness_days": null,
       "record_estimate": "17 stations",
       "notes": "Community-based water quality monitoring in Baltimore Harbor watershed. DO, TN, TP, turbidity, bacteria, temperature. Via Water Reporter API v2."
@@ -490,12 +490,12 @@
       "url": "https://erddap.maracoos.org/erddap/tabledap/allDatasets.json",
       "probe_url": "https://erddap.maracoos.org/erddap/tabledap/allDatasets.json?page=1&itemsPerPage=1",
       "format": "json",
-      "status": "live",
+      "status": "degraded",
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
-      "error_count": 0,
+      "last_checked": "2026-02-22T09:04:51.204063Z",
+      "error_count": 1,
       "staleness_days": null,
       "record_estimate": "continuous",
       "notes": "MD DNR continuous tidal water quality monitoring (15-min intervals). Replaced by CBIBS for real-time but ERDDAP still serves historical."
@@ -508,12 +508,12 @@
       "url": "https://monitormywatershed.org/api/v1/",
       "probe_url": "https://monitormywatershed.org/api/v1/",
       "format": "json",
-      "status": "live",
+      "status": "degraded",
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
-      "error_count": 0,
+      "last_checked": "2026-02-22T09:04:51.887497Z",
+      "error_count": 1,
       "staleness_days": null,
       "record_estimate": "500+ sensors",
       "notes": "Citizen science sensor data from the EnviroDIY/Stroud Research Center network. Real-time DO, temperature, conductivity, turbidity."
@@ -530,7 +530,7 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
+      "last_checked": "2026-02-22T09:04:52.352412Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "satellite",
@@ -548,7 +548,7 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
+      "last_checked": "2026-02-22T09:04:53.187263Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "10K+ datasets",
@@ -566,7 +566,7 @@
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": null,
+      "last_checked": "2026-02-22T09:04:55.079787Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "850K+ sites",
@@ -577,65 +577,72 @@
     "AL": {
       "fips": "01",
       "name": "Alabama",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:05:05.949571Z"
     },
     "AK": {
       "fips": "02",
       "name": "Alaska",
-      "status": "live",
+      "status": "degraded",
       "priority": 4,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:05:00.415857Z"
     },
     "AZ": {
       "fips": "04",
       "name": "Arizona",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:05:17.554875Z"
     },
     "AR": {
       "fips": "05",
       "name": "Arkansas",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:05:11.486890Z"
     },
     "CA": {
       "fips": "06",
       "name": "California",
-      "status": "live",
+      "status": "degraded",
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:05:23.088966Z"
     },
     "CO": {
       "fips": "08",
       "name": "Colorado",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:05:28.622162Z"
     },
     "CT": {
       "fips": "09",
       "name": "Connecticut",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:05:34.157904Z"
     },
     "DE": {
       "fips": "10",
@@ -644,7 +651,8 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 0,
+      "last_checked": "2026-02-22T09:05:35.292720Z"
     },
     "DC": {
       "fips": "11",
@@ -653,25 +661,28 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 0,
+      "last_checked": "2026-02-22T09:05:34.755695Z"
     },
     "FL": {
       "fips": "12",
       "name": "Florida",
-      "status": "live",
+      "status": "degraded",
       "priority": 1,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:05:40.826861Z"
     },
     "GA": {
       "fips": "13",
       "name": "Georgia",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:05:46.358910Z"
     },
     "HI": {
       "fips": "15",
@@ -680,70 +691,78 @@
       "priority": 4,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 0,
+      "last_checked": "2026-02-22T09:05:47.431102Z"
     },
     "ID": {
       "fips": "16",
       "name": "Idaho",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:05:58.498010Z"
     },
     "IL": {
       "fips": "17",
       "name": "Illinois",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:06:04.035484Z"
     },
     "IN": {
       "fips": "18",
       "name": "Indiana",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:06:09.571792Z"
     },
     "IA": {
       "fips": "19",
       "name": "Iowa",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:05:52.964617Z"
     },
     "KS": {
       "fips": "20",
       "name": "Kansas",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:06:15.104770Z"
     },
     "KY": {
       "fips": "21",
       "name": "Kentucky",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:06:20.637769Z"
     },
     "LA": {
       "fips": "22",
       "name": "Louisiana",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:06:26.171253Z"
     },
     "ME": {
       "fips": "23",
@@ -752,7 +771,8 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 0,
+      "last_checked": "2026-02-22T09:06:32.774616Z"
     },
     "MD": {
       "fips": "24",
@@ -761,79 +781,88 @@
       "priority": 1,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 0,
+      "last_checked": "2026-02-22T09:06:32.241561Z"
     },
     "MA": {
       "fips": "25",
       "name": "Massachusetts",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:06:31.704183Z"
     },
     "MI": {
       "fips": "26",
       "name": "Michigan",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:06:38.307073Z"
     },
     "MN": {
       "fips": "27",
       "name": "Minnesota",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:06:43.866987Z"
     },
     "MS": {
       "fips": "28",
       "name": "Mississippi",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:06:55.472032Z"
     },
     "MO": {
       "fips": "29",
       "name": "Missouri",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:06:49.401615Z"
     },
     "MT": {
       "fips": "30",
       "name": "Montana",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:07:01.006653Z"
     },
     "NE": {
       "fips": "31",
       "name": "Nebraska",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:07:17.608486Z"
     },
     "NV": {
       "fips": "32",
       "name": "Nevada",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:07:34.743226Z"
     },
     "NH": {
       "fips": "33",
@@ -842,88 +871,98 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 0,
+      "last_checked": "2026-02-22T09:07:18.143605Z"
     },
     "NJ": {
       "fips": "34",
       "name": "New Jersey",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:07:23.676805Z"
     },
     "NM": {
       "fips": "35",
       "name": "New Mexico",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:07:29.206695Z"
     },
     "NY": {
       "fips": "36",
       "name": "New York",
-      "status": "live",
+      "status": "degraded",
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:07:40.276492Z"
     },
     "NC": {
       "fips": "37",
       "name": "North Carolina",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:07:06.542916Z"
     },
     "ND": {
       "fips": "38",
       "name": "North Dakota",
-      "status": "live",
+      "status": "degraded",
       "priority": 4,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:07:12.076440Z"
     },
     "OH": {
       "fips": "39",
       "name": "Ohio",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:07:45.827960Z"
     },
     "OK": {
       "fips": "40",
       "name": "Oklahoma",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:07:51.360952Z"
     },
     "OR": {
       "fips": "41",
       "name": "Oregon",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:07:56.894278Z"
     },
     "PA": {
       "fips": "42",
       "name": "Pennsylvania",
-      "status": "live",
+      "status": "degraded",
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:08:02.433805Z"
     },
     "RI": {
       "fips": "44",
@@ -932,52 +971,58 @@
       "priority": 4,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 0,
+      "last_checked": "2026-02-22T09:08:08.502652Z"
     },
     "SC": {
       "fips": "45",
       "name": "South Carolina",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:08:14.036426Z"
     },
     "SD": {
       "fips": "46",
       "name": "South Dakota",
-      "status": "live",
+      "status": "degraded",
       "priority": 4,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:08:19.570928Z"
     },
     "TN": {
       "fips": "47",
       "name": "Tennessee",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:08:25.104765Z"
     },
     "TX": {
       "fips": "48",
       "name": "Texas",
-      "status": "live",
+      "status": "degraded",
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:08:30.636975Z"
     },
     "UT": {
       "fips": "49",
       "name": "Utah",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:08:36.175021Z"
     },
     "VT": {
       "fips": "50",
@@ -986,52 +1031,58 @@
       "priority": 4,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 0,
+      "last_checked": "2026-02-22T09:08:42.796483Z"
     },
     "VA": {
       "fips": "51",
       "name": "Virginia",
-      "status": "live",
+      "status": "degraded",
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:08:41.707653Z"
     },
     "WA": {
       "fips": "53",
       "name": "Washington",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:08:48.329440Z"
     },
     "WV": {
       "fips": "54",
       "name": "West Virginia",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:08:59.391756Z"
     },
     "WI": {
       "fips": "55",
       "name": "Wisconsin",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:08:53.858843Z"
     },
     "WY": {
       "fips": "56",
       "name": "Wyoming",
-      "status": "live",
+      "status": "degraded",
       "priority": 4,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:09:04.928379Z"
     },
     "AS": {
       "fips": "60",
@@ -1040,7 +1091,8 @@
       "priority": 5,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 0,
+      "last_checked": "2026-02-22T09:05:12.020665Z"
     },
     "GU": {
       "fips": "66",
@@ -1049,7 +1101,8 @@
       "priority": 5,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 0,
+      "last_checked": "2026-02-22T09:05:46.894141Z"
     },
     "MP": {
       "fips": "69",
@@ -1058,16 +1111,18 @@
       "priority": 5,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 0,
+      "last_checked": "2026-02-22T09:06:49.939283Z"
     },
     "PR": {
       "fips": "72",
       "name": "Puerto Rico",
-      "status": "live",
+      "status": "degraded",
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 1,
+      "last_checked": "2026-02-22T09:08:07.967984Z"
     },
     "VI": {
       "fips": "78",
@@ -1076,7 +1131,8 @@
       "priority": 4,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0
+      "error_count": 0,
+      "last_checked": "2026-02-22T09:08:42.261773Z"
     }
   }
 }
