@@ -238,14 +238,25 @@ function saveToDisk(): void {
 
 async function loadFromStorage(): Promise<boolean> {
   try {
+    console.log(`[ATTAINS Cache] Attempting storage load from ${STORAGE_BUCKET}/${STORAGE_KEY}...`);
     const { data, error } = await supabaseAdmin.storage
       .from(STORAGE_BUCKET)
       .download(STORAGE_KEY);
-    if (error || !data) return false;
+    if (error) {
+      console.warn(`[ATTAINS Cache] Storage download error: ${error.message}`);
+      return false;
+    }
+    if (!data) {
+      console.warn(`[ATTAINS Cache] Storage download returned no data`);
+      return false;
+    }
 
     const txt = await data.text();
     const parsed = JSON.parse(txt);
-    if (!parsed?.states || !parsed?.meta) return false;
+    if (!parsed?.states || !parsed?.meta) {
+      console.warn(`[ATTAINS Cache] Storage data missing states or meta`);
+      return false;
+    }
 
     cache = parsed.states;
     const stateKeys = Object.keys(cache);
@@ -257,7 +268,8 @@ async function loadFromStorage(): Promise<boolean> {
 
     console.log(`[ATTAINS Cache] Loaded from storage (${stateKeys.length} states)`);
     return true;
-  } catch {
+  } catch (e: any) {
+    console.error(`[ATTAINS Cache] Storage load exception: ${e.message}`);
     return false;
   }
 }
