@@ -184,9 +184,19 @@ export function setWqpCache(data: WqpCacheData): void {
  * Check if a build is in progress.
  */
 let _buildInProgress = false;
-export function isWqpBuildInProgress(): boolean { return _buildInProgress; }
+let _buildStartedAt = 0;
+const BUILD_LOCK_TIMEOUT_MS = 12 * 60 * 1000; // 12 min — auto-clear stale locks
+export function isWqpBuildInProgress(): boolean {
+  if (_buildInProgress && _buildStartedAt > 0 && Date.now() - _buildStartedAt > BUILD_LOCK_TIMEOUT_MS) {
+    console.warn('[WQP Cache] Auto-clearing stale build lock (>12 min)');
+    _buildInProgress = false;
+    _buildStartedAt = 0;
+  }
+  return _buildInProgress;
+}
 export function setWqpBuildInProgress(v: boolean): void {
   _buildInProgress = v;
+  _buildStartedAt = v ? Date.now() : 0;
   if (v) buildStatus = 'building';
 }
 

@@ -67,3 +67,15 @@ export function getStateIRIndexMeta(): { generated: string; total: number } | nu
   if (!index) return null;
   return { generated: index.generated, total: index.total_jurisdictions };
 }
+
+export function getStateIRCacheStatus() {
+  const index = loadIndex();
+  if (!index) return { loaded: false, source: null as string | null };
+  return {
+    loaded: true,
+    source: 'static file',
+    generated: index.generated,
+    totalJurisdictions: index.total_jurisdictions,
+    confirmedStates: index.states.filter(s => s.status === 'confirmed').length,
+  };
+}

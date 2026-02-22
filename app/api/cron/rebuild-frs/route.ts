@@ -18,11 +18,7 @@ const EF_BASE = 'https://data.epa.gov/efservice';
 const STATE_DELAY_MS = 2000;
 const PAGE_SIZE = 5000;
 
-// Priority states — same list as other caches
-const PRIORITY_STATES = [
-  'MD', 'VA', 'DC', 'PA', 'DE', 'FL', 'WV', 'CA', 'TX', 'NY',
-  'NJ', 'OH', 'NC', 'MA', 'GA', 'IL', 'MI', 'WA', 'OR',
-];
+import { PRIORITY_STATES } from '@/lib/constants';
 
 // ── Paginated fetch helper ──────────────────────────────────────────────────
 
@@ -159,6 +155,26 @@ export async function GET(request: NextRequest) {
 
       // Rate limit delay between states
       await delay(STATE_DELAY_MS);
+    }
+
+    // ── Retry failed states ───────────────────────────────────────────────
+    const failedStates = PRIORITY_STATES.filter(s => !processedStates.includes(s));
+    if (failedStates.length > 0) {
+      console.log(`[FRS Cron] Retrying ${failedStates.length} failed states...`);
+      for (const stateAbbr of failedStates) {
+        await delay(5000);
+        try {
+          const facilities = await fetchTable('FRS_FACILITY_SITE', 'STATE_CODE', stateAbbr, transformFacility);
+          const facMap = new Map<string, FrsFacility>();
+          for (const f of facilities) if (!facMap.has(f.registryId)) facMap.set(f.registryId, f);
+          allFacilities.push(...facMap.values());
+          processedStates.push(stateAbbr);
+          stateResults[stateAbbr] = { facilities: facMap.size };
+          console.log(`[FRS Cron] ${stateAbbr}: RETRY OK`);
+        } catch (e) {
+          console.warn(`[FRS Cron] ${stateAbbr}: RETRY FAILED — ${e instanceof Error ? e.message : e}`);
+        }
+      }
     }
 
     // ── Build Grid Index ───────────────────────────────────────────────────

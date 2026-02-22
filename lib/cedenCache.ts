@@ -1,16 +1,10 @@
 /**
  * CEDEN Cache — Server-side spatial cache for California water quality data.
  *
- * Two data paths:
- * 1. File-based: reads data/ceden-cache.json (built by scripts/ceden_cache.py)
- * 2. In-memory: populated by /api/cron/rebuild-ceden route (works on Vercel)
- *
- * In-memory cache takes priority when available. File cache is the fallback.
+ * Populated by /api/cron/rebuild-ceden route.
+ * Persists to disk so cache survives Vercel cold starts.
  * Grid resolution: 0.1° (~11km). Lookup checks target cell + 8 neighbors.
  */
-
-import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -70,41 +64,81 @@ export interface CedenLookupResult {
 // ── Cache Singleton ──────────────────────────────────────────────────────────
 
 const GRID_RES = 0.1;
-const CACHE_PATH = join(process.cwd(), 'data', 'ceden-cache.json');
+const CACHE_TTL_MS = 48 * 60 * 60 * 1000;
 
-// In-memory cache (populated by cron route — takes priority)
 let _memCache: CedenCacheData | null = null;
+let _cacheSource: 'disk' | 'memory (cron)' | null = null;
 
-// File-based cache (fallback)
-let _fileCache: CedenCacheData | null = null;
-let _fileLoadAttempted = false;
+// ── Disk Persistence ────────────────────────────────────────────────────────
 
-function loadFileCache(): CedenCacheData | null {
-  if (_fileCache) return _fileCache;
-  if (_fileLoadAttempted) return null;
-  _fileLoadAttempted = true;
-
+function loadFromDisk(): boolean {
   try {
-    if (!existsSync(CACHE_PATH)) {
-      console.warn(`[CEDEN Cache] File not found: ${CACHE_PATH}`);
-      return null;
-    }
-    const raw = readFileSync(CACHE_PATH, 'utf-8');
-    _fileCache = JSON.parse(raw) as CedenCacheData;
-    const meta = _fileCache._meta;
+    if (typeof process === 'undefined') return false;
+    const fs = require('fs');
+    const path = require('path');
+    const file = path.join(process.cwd(), '.cache', 'ceden-data.json');
+    if (!fs.existsSync(file)) return false;
+    const raw = fs.readFileSync(file, 'utf-8');
+    const data = JSON.parse(raw);
+    if (!data?.meta || !data?.grid) return false;
+
+    _memCache = {
+      _meta: {
+        built: data.meta.built,
+        chemistry_records: data.meta.chemistry_records || 0,
+        toxicity_records: data.meta.toxicity_records || 0,
+        grid_resolution: data.meta.grid_resolution || GRID_RES,
+        chemistry_stations: data.meta.chemistry_stations || 0,
+        toxicity_stations: data.meta.toxicity_stations || 0,
+      },
+      grid: data.grid,
+    };
+    _cacheSource = 'disk';
+
     console.log(
-      `[CEDEN Cache] File loaded: ${meta.chemistry_records} chem + ${meta.toxicity_records} tox, ` +
-      `${Object.keys(_fileCache.grid).length} cells, built ${meta.built}`
+      `[CEDEN Cache] Loaded from disk (${_memCache._meta.chemistry_records} chem + ` +
+      `${_memCache._meta.toxicity_records} tox, ${Object.keys(_memCache.grid).length} cells, ` +
+      `built ${data.meta.built || 'unknown'})`
     );
-    return _fileCache;
-  } catch (e) {
-    console.warn(`[CEDEN Cache] File load failed:`, e instanceof Error ? e.message : e);
-    return null;
+    return true;
+  } catch {
+    return false;
   }
 }
 
-function getCache(): CedenCacheData | null {
-  return _memCache || loadFileCache();
+function saveToDisk(): void {
+  try {
+    if (typeof process === 'undefined' || !_memCache) return;
+    const fs = require('fs');
+    const path = require('path');
+    const dir = path.join(process.cwd(), '.cache');
+    const file = path.join(dir, 'ceden-data.json');
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const payload = JSON.stringify({
+      meta: {
+        built: _memCache._meta.built,
+        chemistry_records: _memCache._meta.chemistry_records,
+        toxicity_records: _memCache._meta.toxicity_records,
+        grid_resolution: _memCache._meta.grid_resolution,
+        chemistry_stations: _memCache._meta.chemistry_stations,
+        toxicity_stations: _memCache._meta.toxicity_stations,
+      },
+      grid: _memCache.grid,
+    });
+    fs.writeFileSync(file, payload, 'utf-8');
+    const sizeMB = (Buffer.byteLength(payload) / 1024 / 1024).toFixed(1);
+    console.log(`[CEDEN Cache] Saved to disk (${sizeMB}MB)`);
+  } catch {
+    // Disk save is optional — fail silently
+  }
+}
+
+let _diskLoaded = false;
+function ensureDiskLoaded() {
+  if (!_diskLoaded) {
+    _diskLoaded = true;
+    loadFromDisk();
+  }
 }
 
 // ── Grid Key ─────────────────────────────────────────────────────────────────
@@ -121,8 +155,8 @@ export function gridKey(lat: number, lng: number): string {
  * Look up cached CEDEN data near a lat/lng. Checks target cell + 8 neighbors.
  */
 export function getCedenCache(lat: number, lng: number): CedenLookupResult | null {
-  const cache = getCache();
-  if (!cache) return null;
+  ensureDiskLoaded();
+  if (!_memCache) return null;
 
   const chemistry: ChemRecord[] = [];
   const toxicity: ToxRecord[] = [];
@@ -130,7 +164,7 @@ export function getCedenCache(lat: number, lng: number): CedenLookupResult | nul
   for (let dlat = -1; dlat <= 1; dlat++) {
     for (let dlng = -1; dlng <= 1; dlng++) {
       const key = gridKey(lat + dlat * GRID_RES, lng + dlng * GRID_RES);
-      const cell = cache.grid[key];
+      const cell = _memCache.grid[key];
       if (cell) {
         chemistry.push(...cell.chemistry);
         toxicity.push(...cell.toxicity);
@@ -140,7 +174,7 @@ export function getCedenCache(lat: number, lng: number): CedenLookupResult | nul
 
   if (chemistry.length === 0 && toxicity.length === 0) return null;
 
-  return { chemistry, toxicity, cacheBuilt: cache._meta.built, fromCache: true };
+  return { chemistry, toxicity, cacheBuilt: _memCache._meta.built, fromCache: true };
 }
 
 /**
@@ -148,33 +182,47 @@ export function getCedenCache(lat: number, lng: number): CedenLookupResult | nul
  */
 export function setCedenCache(data: CedenCacheData): void {
   _memCache = data;
+  _cacheSource = 'memory (cron)';
   console.log(
     `[CEDEN Cache] In-memory updated: ${data._meta.chemistry_records} chem + ${data._meta.toxicity_records} tox, ` +
     `${Object.keys(data.grid).length} cells`
   );
+  saveToDisk();
 }
 
 /**
  * Check if a build is in progress.
  */
 let _buildInProgress = false;
-export function isCedenBuildInProgress(): boolean { return _buildInProgress; }
-export function setCedenBuildInProgress(v: boolean): void { _buildInProgress = v; }
+let _buildStartedAt = 0;
+const BUILD_LOCK_TIMEOUT_MS = 12 * 60 * 1000;
+export function isCedenBuildInProgress(): boolean {
+  if (_buildInProgress && _buildStartedAt > 0 && Date.now() - _buildStartedAt > BUILD_LOCK_TIMEOUT_MS) {
+    console.warn('[CEDEN Cache] Auto-clearing stale build lock (>12 min)');
+    _buildInProgress = false;
+    _buildStartedAt = 0;
+  }
+  return _buildInProgress;
+}
+export function setCedenBuildInProgress(v: boolean): void {
+  _buildInProgress = v;
+  _buildStartedAt = v ? Date.now() : 0;
+}
 
 /**
  * Get cache metadata (for status/debug endpoints).
  */
 export function getCedenCacheStatus() {
-  const cache = getCache();
-  if (!cache) return { loaded: false, source: null as string | null };
+  ensureDiskLoaded();
+  if (!_memCache) return { loaded: false, source: null as string | null };
   return {
     loaded: true,
-    source: _memCache ? 'memory (cron)' : 'file (python)',
-    built: cache._meta.built,
-    gridCells: Object.keys(cache.grid).length,
-    chemistryRecords: cache._meta.chemistry_records,
-    toxicityRecords: cache._meta.toxicity_records,
-    chemistryStations: cache._meta.chemistry_stations,
-    toxicityStations: cache._meta.toxicity_stations,
+    source: _cacheSource || 'memory (cron)',
+    built: _memCache._meta.built,
+    gridCells: Object.keys(_memCache.grid).length,
+    chemistryRecords: _memCache._meta.chemistry_records,
+    toxicityRecords: _memCache._meta.toxicity_records,
+    chemistryStations: _memCache._meta.chemistry_stations,
+    toxicityStations: _memCache._meta.toxicity_stations,
   };
 }

@@ -18,11 +18,7 @@ const ECHO_BASE = 'https://echodata.epa.gov/echo/cwa_rest_services.get_facilitie
 const STATE_DELAY_MS = 2000;
 const PAGE_SIZE = 1000; // ECHO max responseset size
 
-// Priority states — same list as other caches
-const PRIORITY_STATES = [
-  'MD', 'VA', 'DC', 'PA', 'DE', 'FL', 'WV', 'CA', 'TX', 'NY',
-  'NJ', 'OH', 'NC', 'MA', 'GA', 'IL', 'MI', 'WA', 'OR',
-];
+import { PRIORITY_STATES } from '@/lib/constants';
 
 // ── ECHO fetch helpers ──────────────────────────────────────────────────────
 
@@ -202,6 +198,32 @@ export async function GET(request: NextRequest) {
 
       // Rate limit delay between states
       await delay(STATE_DELAY_MS);
+    }
+
+    // ── Retry failed states ───────────────────────────────────────────────
+    const failedStates = PRIORITY_STATES.filter(s => !processedStates.includes(s));
+    if (failedStates.length > 0) {
+      console.log(`[ECHO Cron] Retrying ${failedStates.length} failed states...`);
+      for (const stateAbbr of failedStates) {
+        await delay(5000);
+        try {
+          const facilities = await fetchEchoFacilities(stateAbbr);
+          const violations = await fetchEchoViolations(stateAbbr);
+
+          const facMap = new Map<string, EchoFacility>();
+          for (const f of facilities) if (!facMap.has(f.registryId)) facMap.set(f.registryId, f);
+          const violMap = new Map<string, EchoViolation>();
+          for (const v of violations) if (!violMap.has(v.registryId)) violMap.set(v.registryId, v);
+
+          allFacilities.push(...facMap.values());
+          allViolations.push(...violMap.values());
+          processedStates.push(stateAbbr);
+          stateResults[stateAbbr] = { facilities: facMap.size, violations: violMap.size };
+          console.log(`[ECHO Cron] ${stateAbbr}: RETRY OK`);
+        } catch (e) {
+          console.warn(`[ECHO Cron] ${stateAbbr}: RETRY FAILED — ${e instanceof Error ? e.message : e}`);
+        }
+      }
     }
 
     // ── Build Grid Index ───────────────────────────────────────────────────

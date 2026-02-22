@@ -16,16 +16,11 @@ import {
 
 const NWIS_BASE = 'https://waterservices.usgs.gov/nwis';
 const STATE_DELAY_MS = 2000;
-const ENDPOINT_DELAY_MS = 500;
 
 // GW parameter codes: depth-to-water, GW level NGVD29, GW level NAVD88
 const GW_PARAMS = '72019,62610,62611';
 
-// Priority states — same list as WQP/ICIS/SDWIS cache
-const PRIORITY_STATES = [
-  'MD', 'VA', 'DC', 'PA', 'DE', 'FL', 'WV', 'CA', 'TX', 'NY',
-  'NJ', 'OH', 'NC', 'MA', 'GA', 'IL', 'MI', 'WA', 'OR',
-];
+import { PRIORITY_STATES } from '@/lib/constants';
 
 // USGS state code mapping (FIPS)
 const STATE_TO_FIPS: Record<string, string> = {
@@ -249,61 +244,45 @@ export async function GET(request: NextRequest) {
         let stateLevels: NwisGwLevel[] = [];
         let dvLevels: NwisGwLevel[] = [];
 
-        // 1. Fetch discrete groundwater levels (gwlevels endpoint, past 365 days)
-        try {
-          const gwUrl = `${NWIS_BASE}/gwlevels/?format=json&stateCd=${stateAbbr}&period=P365D&siteStatus=active`;
-          const gwRes = await fetch(gwUrl, {
-            headers: { 'Accept': 'application/json' },
-            signal: AbortSignal.timeout(45_000),
-          });
-          if (gwRes.ok) {
-            const gwJson = await gwRes.json();
-            const parsed = parseNwisResponse(gwJson, stateAbbr, false);
-            for (const s of parsed.sites) siteMap.set(s.siteNumber, s);
-            stateLevels.push(...parsed.levels);
-          }
-        } catch (e) {
-          console.warn(`[NWIS-GW Cron] ${stateAbbr} gwlevels: ${e instanceof Error ? e.message : e}`);
-        }
-        await delay(ENDPOINT_DELAY_MS);
+        // Fetch all 3 endpoints in parallel
+        const gwUrl = `${NWIS_BASE}/gwlevels/?format=json&stateCd=${stateAbbr}&period=P365D&siteStatus=active`;
+        const ivUrl = `${NWIS_BASE}/iv/?format=json&stateCd=${stateAbbr}&parameterCd=${GW_PARAMS}&siteType=GW&period=P7D&siteStatus=active`;
+        const dvUrl = `${NWIS_BASE}/dv/?format=json&stateCd=${stateAbbr}&parameterCd=${GW_PARAMS}&siteType=GW&period=P90D&siteStatus=active`;
 
-        // 2. Fetch real-time IV groundwater (past 7 days)
-        try {
-          const ivUrl = `${NWIS_BASE}/iv/?format=json&stateCd=${stateAbbr}&parameterCd=${GW_PARAMS}&siteType=GW&period=P7D&siteStatus=active`;
-          const ivRes = await fetch(ivUrl, {
-            headers: { 'Accept': 'application/json' },
-            signal: AbortSignal.timeout(45_000),
-          });
-          if (ivRes.ok) {
-            const ivJson = await ivRes.json();
-            const parsed = parseNwisResponse(ivJson, stateAbbr, true);
-            for (const s of parsed.sites) {
-              if (!siteMap.has(s.siteNumber)) siteMap.set(s.siteNumber, s);
-            }
-            stateLevels.push(...parsed.levels);
-          }
-        } catch (e) {
-          console.warn(`[NWIS-GW Cron] ${stateAbbr} iv-gw: ${e instanceof Error ? e.message : e}`);
-        }
-        await delay(ENDPOINT_DELAY_MS);
+        const fetchOpts = { headers: { 'Accept': 'application/json' }, signal: AbortSignal.timeout(45_000) };
 
-        // 3. Fetch daily values for trend computation (past 90 days)
-        try {
-          const dvUrl = `${NWIS_BASE}/dv/?format=json&stateCd=${stateAbbr}&parameterCd=${GW_PARAMS}&siteType=GW&period=P90D&siteStatus=active`;
-          const dvRes = await fetch(dvUrl, {
-            headers: { 'Accept': 'application/json' },
-            signal: AbortSignal.timeout(45_000),
-          });
-          if (dvRes.ok) {
-            const dvJson = await dvRes.json();
-            const parsed = parseNwisResponse(dvJson, stateAbbr, false);
-            for (const s of parsed.sites) {
-              if (!siteMap.has(s.siteNumber)) siteMap.set(s.siteNumber, s);
-            }
-            dvLevels = parsed.levels;
+        const [gwResult, ivResult, dvResult] = await Promise.allSettled([
+          fetch(gwUrl, fetchOpts).then(r => r.ok ? r.json() : null).catch(() => null),
+          fetch(ivUrl, fetchOpts).then(r => r.ok ? r.json() : null).catch(() => null),
+          fetch(dvUrl, fetchOpts).then(r => r.ok ? r.json() : null).catch(() => null),
+        ]);
+
+        // Process gwlevels
+        const gwJson = gwResult.status === 'fulfilled' ? gwResult.value : null;
+        if (gwJson) {
+          const parsed = parseNwisResponse(gwJson, stateAbbr, false);
+          for (const s of parsed.sites) siteMap.set(s.siteNumber, s);
+          stateLevels.push(...parsed.levels);
+        }
+
+        // Process IV
+        const ivJson = ivResult.status === 'fulfilled' ? ivResult.value : null;
+        if (ivJson) {
+          const parsed = parseNwisResponse(ivJson, stateAbbr, true);
+          for (const s of parsed.sites) {
+            if (!siteMap.has(s.siteNumber)) siteMap.set(s.siteNumber, s);
           }
-        } catch (e) {
-          console.warn(`[NWIS-GW Cron] ${stateAbbr} dv-gw: ${e instanceof Error ? e.message : e}`);
+          stateLevels.push(...parsed.levels);
+        }
+
+        // Process DV
+        const dvJson = dvResult.status === 'fulfilled' ? dvResult.value : null;
+        if (dvJson) {
+          const parsed = parseNwisResponse(dvJson, stateAbbr, false);
+          for (const s of parsed.sites) {
+            if (!siteMap.has(s.siteNumber)) siteMap.set(s.siteNumber, s);
+          }
+          dvLevels = parsed.levels;
         }
 
         // Deduplicate sites
@@ -355,6 +334,55 @@ export async function GET(request: NextRequest) {
 
       // Rate limit delay between states
       await delay(STATE_DELAY_MS);
+    }
+
+    // ── Retry failed states ───────────────────────────────────────────────
+    const failedStates = PRIORITY_STATES.filter(s => !processedStates.includes(s));
+    if (failedStates.length > 0) {
+      console.log(`[NWIS-GW Cron] Retrying ${failedStates.length} failed states...`);
+      for (const stateAbbr of failedStates) {
+        await delay(5000);
+        try {
+          const retryOpts = { headers: { 'Accept': 'application/json' }, signal: AbortSignal.timeout(60_000) };
+          const gwUrl = `${NWIS_BASE}/gwlevels/?format=json&stateCd=${stateAbbr}&period=P365D&siteStatus=active`;
+          const ivUrl = `${NWIS_BASE}/iv/?format=json&stateCd=${stateAbbr}&parameterCd=${GW_PARAMS}&siteType=GW&period=P7D&siteStatus=active`;
+          const dvUrl = `${NWIS_BASE}/dv/?format=json&stateCd=${stateAbbr}&parameterCd=${GW_PARAMS}&siteType=GW&period=P90D&siteStatus=active`;
+
+          const [gwR, ivR, dvR] = await Promise.allSettled([
+            fetch(gwUrl, retryOpts).then(r => r.ok ? r.json() : null).catch(() => null),
+            fetch(ivUrl, retryOpts).then(r => r.ok ? r.json() : null).catch(() => null),
+            fetch(dvUrl, retryOpts).then(r => r.ok ? r.json() : null).catch(() => null),
+          ]);
+
+          const retrySiteMap = new Map<string, NwisGwSite>();
+          const retryLevels: NwisGwLevel[] = [];
+          if (gwR.status === 'fulfilled' && gwR.value) {
+            const p = parseNwisResponse(gwR.value, stateAbbr, false);
+            for (const s of p.sites) retrySiteMap.set(s.siteNumber, s);
+            retryLevels.push(...p.levels);
+          }
+          if (ivR.status === 'fulfilled' && ivR.value) {
+            const p = parseNwisResponse(ivR.value, stateAbbr, true);
+            for (const s of p.sites) if (!retrySiteMap.has(s.siteNumber)) retrySiteMap.set(s.siteNumber, s);
+            retryLevels.push(...p.levels);
+          }
+          let retryDvLevels: NwisGwLevel[] = [];
+          if (dvR.status === 'fulfilled' && dvR.value) {
+            const p = parseNwisResponse(dvR.value, stateAbbr, false);
+            for (const s of p.sites) if (!retrySiteMap.has(s.siteNumber)) retrySiteMap.set(s.siteNumber, s);
+            retryDvLevels = p.levels;
+          }
+
+          allSites.push(...retrySiteMap.values());
+          allLevels.push(...retryLevels);
+          allTrends.push(...computeTrends(retrySiteMap, retryDvLevels));
+          processedStates.push(stateAbbr);
+          stateResults[stateAbbr] = { sites: retrySiteMap.size, levels: retryLevels.length, trends: 0 };
+          console.log(`[NWIS-GW Cron] ${stateAbbr}: RETRY OK`);
+        } catch (e) {
+          console.warn(`[NWIS-GW Cron] ${stateAbbr}: RETRY FAILED — ${e instanceof Error ? e.message : e}`);
+        }
+      }
     }
 
     // ── Build Grid Index ───────────────────────────────────────────────────

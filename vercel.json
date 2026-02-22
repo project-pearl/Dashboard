@@ -13,6 +13,10 @@
       "schedule": "0 5 * * *"
     },
     {
+      "path": "/api/cron/rebuild-state-reports",
+      "schedule": "30 5 * * *"
+    },
+    {
       "path": "/api/cron/rebuild-icis",
       "schedule": "0 6 * * *"
     },

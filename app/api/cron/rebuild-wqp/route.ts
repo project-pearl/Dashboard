@@ -10,20 +10,13 @@ import {
   gridKey,
   type WqpRecord,
 } from '@/lib/wqpCache';
-import { buildStateReports } from '@/lib/stateReportCache';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
 const WQP_BASE = 'https://www.waterqualitydata.us/wqx3/Result/search';
 const STATE_DELAY_MS = 2000;  // Delay between states to respect WQP rate limits
 
-// Priority states — same list as ATTAINS cache
-const PRIORITY_STATES: [string, string][] = [
-  ['MD', '24'], ['VA', '51'], ['DC', '11'], ['PA', '42'], ['DE', '10'],
-  ['FL', '12'], ['WV', '54'], ['CA', '06'], ['TX', '48'], ['NY', '36'],
-  ['NJ', '34'], ['OH', '39'], ['NC', '37'], ['MA', '25'], ['GA', '13'],
-  ['IL', '17'], ['MI', '26'], ['WA', '53'], ['OR', '41'],
-];
+import { PRIORITY_STATES_WITH_FIPS } from '@/lib/constants';
 
 // Top characteristics to fetch (maps to PEARL keys)
 const CHARACTERISTICS = [
@@ -186,7 +179,7 @@ export async function GET(request: NextRequest) {
     const allRecords: WqpRecord[] = [];
     const processedStates: string[] = [];
 
-    for (const [abbr, fips] of PRIORITY_STATES) {
+    for (const [abbr, fips] of PRIORITY_STATES_WITH_FIPS) {
       try {
         console.log(`[WQP Cron] Fetching ${abbr} (FIPS ${fips})...`);
         const records = await fetchState(abbr, fips);
@@ -238,16 +231,6 @@ export async function GET(request: NextRequest) {
     };
 
     setWqpCache(cacheData);
-
-    // Build state-level aggregation reports (non-fatal)
-    let stateReportCount = 0;
-    try {
-      const stateReports = buildStateReports();
-      stateReportCount = stateReports._meta.stateCount;
-      console.log(`[State Reports] Built ${stateReportCount} state reports`);
-    } catch (e) {
-      console.warn('[State Reports] Build failed (non-fatal):', e instanceof Error ? e.message : e);
-    }
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[WQP Cron] Build complete in ${elapsed}s — ${allRecords.length} records, ${Object.keys(grid).length} cells`);

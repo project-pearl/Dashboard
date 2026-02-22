@@ -4,8 +4,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAttainsCacheSummary } from '@/lib/attainsCache';
 import {
-  setInsights, setBuildInProgress, setLastFullBuild,
+  setInsights, getInsights, setBuildInProgress, setLastFullBuild,
   isBuildInProgress, getCacheStatus as getInsightsCacheStatus,
+  hashSignals,
   type CacheEntry, type CachedInsight,
 } from '@/lib/insightsCache';
 
@@ -106,6 +107,29 @@ function parseInsights(rawText: string): CachedInsight[] {
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+// ─── Concurrency semaphore ──────────────────────────────────────────────────
+
+const CONCURRENCY = 4; // Process 4 states concurrently
+
+async function withSemaphore<T>(
+  semaphore: { count: number },
+  fn: () => Promise<T>,
+): Promise<T> {
+  while (semaphore.count <= 0) {
+    await sleep(50);
+  }
+  semaphore.count--;
+  try {
+    return await fn();
+  } finally {
+    semaphore.count++;
+  }
+}
+
+// ─── Delta detection — max age before forced regeneration ───────────────────
+
+const MAX_ENTRY_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
+
 // ─── GET Handler (invoked by Vercel Cron) ────────────────────────────────────
 
 export async function GET(request: NextRequest) {
@@ -156,79 +180,114 @@ export async function GET(request: NextRequest) {
   console.log(`[Cron/Insights] Starting build — ${loadedStates.length} states × ${ALL_ROLES.length} roles = ${loadedStates.length * ALL_ROLES.length} combos`);
   setBuildInProgress(true);
 
-  const results = { generated: 0, failed: 0, skipped: 0, errors: [] as string[] };
+  const results = { generated: 0, failed: 0, skipped: 0, deltaSkipped: 0, errors: [] as string[] };
   const startTime = Date.now();
+  const semaphore = { count: CONCURRENCY };
 
   try {
-    for (const stateAbbr of loadedStates) {
-      const stateData = states[stateAbbr];
-      if (!stateData || stateData.total === 0) {
-        results.skipped += ALL_ROLES.length;
-        continue;
-      }
+    // Process states concurrently using semaphore
+    const statePromises = loadedStates.map(stateAbbr =>
+      withSemaphore(semaphore, async () => {
+        const stateData = states[stateAbbr];
+        if (!stateData || stateData.total === 0) {
+          results.skipped += ALL_ROLES.length;
+          return;
+        }
 
-      // Build region summary matching AIInsightsEngine format
-      const regionSummary = {
-        totalWaterbodies: stateData.total,
-        highAlert: stateData.high,
-        mediumAlert: stateData.medium,
-        lowAlert: stateData.low,
-        topCauses: stateData.topCauses?.slice(0, 10) || [],
-      };
+        // Build region summary matching AIInsightsEngine format
+        const regionSummary = {
+          totalWaterbodies: stateData.total,
+          highAlert: stateData.high,
+          mediumAlert: stateData.medium,
+          lowAlert: stateData.low,
+          topCauses: stateData.topCauses?.slice(0, 10) || [],
+        };
 
-      for (const role of ALL_ROLES) {
-        try {
-          const userMessage = JSON.stringify({
-            role,
-            state: stateAbbr,
-            selectedWaterbody: null,
-            regionSummary,
-          });
+        // Compute signals hash for delta detection
+        const signals = [
+          { type: 'summary', severity: 'info', title: `${stateData.total} waterbodies` },
+          { type: 'summary', severity: stateData.high > 0 ? 'critical' : 'info', title: `${stateData.high} high alert` },
+          ...(stateData.topCauses || []).map((c: string) => ({ type: 'cause', severity: 'info', title: c })),
+        ];
+        const currentHash = hashSignals(signals);
 
-          const systemPrompt = buildSystemPrompt(role);
-          const rawText = await callLLM(systemPrompt, userMessage);
-          const insights = parseInsights(rawText);
+        for (const role of ALL_ROLES) {
+          try {
+            // Delta detection: skip if hash matches and entry is fresh
+            const existing = getInsights(stateAbbr, role);
+            if (existing && existing.signalsHash === currentHash) {
+              const entryAge = Date.now() - new Date(existing.generatedAt).getTime();
+              if (entryAge < MAX_ENTRY_AGE_MS) {
+                results.deltaSkipped++;
+                continue;
+              }
+            }
 
-          if (insights.length === 0) {
+            const userMessage = JSON.stringify({
+              role,
+              state: stateAbbr,
+              selectedWaterbody: null,
+              regionSummary,
+            });
+
+            const systemPrompt = buildSystemPrompt(role);
+
+            // Exponential backoff on rate limits
+            let rawText = '';
+            let backoffMs = 2000;
+            for (let attempt = 0; attempt < 3; attempt++) {
+              try {
+                rawText = await callLLM(systemPrompt, userMessage);
+                break;
+              } catch (retryErr: any) {
+                if (retryErr.message?.includes('429') && attempt < 2) {
+                  console.warn(`[Cron/Insights] Rate limited on ${stateAbbr}:${role} — backing off ${backoffMs / 1000}s`);
+                  await sleep(backoffMs);
+                  backoffMs *= 2;
+                  continue;
+                }
+                throw retryErr;
+              }
+            }
+
+            const insights = parseInsights(rawText);
+
+            if (insights.length === 0) {
+              results.failed++;
+              results.errors.push(`${stateAbbr}:${role} — no valid insights parsed`);
+              continue;
+            }
+
+            const entry: CacheEntry = {
+              insights,
+              generatedAt: new Date().toISOString(),
+              signalsHash: currentHash,
+              provider,
+            };
+
+            setInsights(stateAbbr, role, entry);
+            results.generated++;
+
+            // Small throttle between calls within a state
+            await sleep(100);
+          } catch (err: any) {
             results.failed++;
-            results.errors.push(`${stateAbbr}:${role} — no valid insights parsed`);
-            continue;
-          }
-
-          const entry: CacheEntry = {
-            insights,
-            generatedAt: new Date().toISOString(),
-            signalsHash: '',
-            provider,
-          };
-
-          setInsights(stateAbbr, role, entry);
-          results.generated++;
-
-          // Throttle: ~200ms between calls to avoid rate limits
-          await sleep(200);
-        } catch (err: any) {
-          results.failed++;
-          const msg = `${stateAbbr}:${role} — ${err.message?.slice(0, 100) || 'unknown error'}`;
-          results.errors.push(msg);
-          console.error(`[Cron/Insights] ${msg}`);
-
-          // On rate limit, back off longer
-          if (err.message?.includes('429')) {
-            console.warn('[Cron/Insights] Rate limited — backing off 30s');
-            await sleep(30_000);
+            const msg = `${stateAbbr}:${role} — ${err.message?.slice(0, 100) || 'unknown error'}`;
+            results.errors.push(msg);
+            console.error(`[Cron/Insights] ${msg}`);
           }
         }
-      }
-    }
+      })
+    );
 
+    await Promise.all(statePromises);
     setLastFullBuild(new Date().toISOString());
   } finally {
     setBuildInProgress(false);
   }
 
   const durationSec = ((Date.now() - startTime) / 1000).toFixed(1);
-  console.log(`[Cron/Insights] Build complete in ${durationSec}s — ${results.generated} generated, ${results.failed} failed, ${results.skipped} skipped`);
+  console.log(`[Cron/Insights] Build complete in ${durationSec}s — ${results.generated} generated, ${results.deltaSkipped} delta-skipped, ${results.failed} failed, ${results.skipped} skipped`);
 
   return NextResponse.json({
     status: 'complete',

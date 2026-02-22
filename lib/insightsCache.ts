@@ -26,6 +26,84 @@ type CacheKey = string; // format: "STATE:ROLE" e.g. "MD:MS4"
 const cache = new Map<CacheKey, CacheEntry>();
 let lastFullBuild: string | null = null;
 let buildInProgress = false;
+let _buildStartedAt = 0;
+const BUILD_LOCK_TIMEOUT_MS = 12 * 60 * 1000; // 12 min — auto-clear stale locks
+
+// ─── Disk Persistence (debounced — max once per 10s) ────────────────────────
+
+let _diskLoaded = false;
+let _savePending = false;
+let _lastSaveTime = 0;
+const SAVE_DEBOUNCE_MS = 10_000;
+
+function loadFromDisk(): boolean {
+  try {
+    if (typeof process === 'undefined') return false;
+    const fs = require('fs');
+    const path = require('path');
+    const file = path.join(process.cwd(), '.cache', 'ai-insights.json');
+    if (!fs.existsSync(file)) return false;
+    const raw = fs.readFileSync(file, 'utf-8');
+    const data = JSON.parse(raw);
+    if (!data?.entries || !Array.isArray(data.entries)) return false;
+
+    cache.clear();
+    for (const [key, entry] of data.entries) {
+      cache.set(key, entry);
+    }
+    lastFullBuild = data.lastFullBuild || null;
+
+    console.log(
+      `[Insights Cache] Loaded from disk (${cache.size} entries, ` +
+      `last build ${lastFullBuild || 'unknown'})`
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function saveToDisk(): void {
+  try {
+    if (typeof process === 'undefined' || cache.size === 0) return;
+    const fs = require('fs');
+    const path = require('path');
+    const dir = path.join(process.cwd(), '.cache');
+    const file = path.join(dir, 'ai-insights.json');
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const payload = JSON.stringify({
+      lastFullBuild,
+      entries: Array.from(cache.entries()),
+    });
+    fs.writeFileSync(file, payload, 'utf-8');
+    const sizeMB = (Buffer.byteLength(payload) / 1024 / 1024).toFixed(1);
+    console.log(`[Insights Cache] Saved to disk (${sizeMB}MB, ${cache.size} entries)`);
+  } catch {
+    // Disk save is optional — fail silently
+  }
+}
+
+function debouncedSaveToDisk(): void {
+  const now = Date.now();
+  if (now - _lastSaveTime >= SAVE_DEBOUNCE_MS) {
+    _lastSaveTime = now;
+    saveToDisk();
+  } else if (!_savePending) {
+    _savePending = true;
+    setTimeout(() => {
+      _savePending = false;
+      _lastSaveTime = Date.now();
+      saveToDisk();
+    }, SAVE_DEBOUNCE_MS - (now - _lastSaveTime));
+  }
+}
+
+function ensureDiskLoaded() {
+  if (!_diskLoaded) {
+    _diskLoaded = true;
+    loadFromDisk();
+  }
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -48,6 +126,7 @@ export function hashSignals(signals: any[]): string {
 // ─── Public API ──────────────────────────────────────────────────────────────
 
 export function getInsights(state: string, role: string): CacheEntry | null {
+  ensureDiskLoaded();
   const entry = cache.get(getCacheKey(state, role));
   if (!entry) return null;
 
@@ -60,18 +139,26 @@ export function getInsights(state: string, role: string): CacheEntry | null {
 
 export function setInsights(state: string, role: string, entry: CacheEntry): void {
   cache.set(getCacheKey(state, role), entry);
+  debouncedSaveToDisk();
 }
 
 export function isBuildInProgress(): boolean {
+  if (buildInProgress && _buildStartedAt > 0 && Date.now() - _buildStartedAt > BUILD_LOCK_TIMEOUT_MS) {
+    console.warn('[Insights Cache] Auto-clearing stale build lock (>12 min)');
+    buildInProgress = false;
+    _buildStartedAt = 0;
+  }
   return buildInProgress;
 }
 
 export function setBuildInProgress(v: boolean): void {
   buildInProgress = v;
+  _buildStartedAt = v ? Date.now() : 0;
 }
 
 export function setLastFullBuild(timestamp: string): void {
   lastFullBuild = timestamp;
+  saveToDisk(); // Force immediate save at end of build
 }
 
 export function getCacheStatus(): {
@@ -80,6 +167,7 @@ export function getCacheStatus(): {
   lastFullBuild: string | null;
   states: string[];
 } {
+  ensureDiskLoaded();
   const states = new Set<string>();
   for (const key of cache.keys()) {
     states.add(key.split(':')[0]);

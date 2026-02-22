@@ -78,8 +78,81 @@ export interface NwisGwLookupResult {
 // ── Cache Singleton ──────────────────────────────────────────────────────────
 
 const GRID_RES = 0.1;
+const CACHE_TTL_MS = 48 * 60 * 60 * 1000;
 
 let _memCache: NwisGwCacheData | null = null;
+let _cacheSource: 'disk' | 'memory (cron)' | null = null;
+
+// ── Disk Persistence ────────────────────────────────────────────────────────
+
+function loadFromDisk(): boolean {
+  try {
+    if (typeof process === 'undefined') return false;
+    const fs = require('fs');
+    const path = require('path');
+    const file = path.join(process.cwd(), '.cache', 'nwis-gw-priority-states.json');
+    if (!fs.existsSync(file)) return false;
+    const raw = fs.readFileSync(file, 'utf-8');
+    const data = JSON.parse(raw);
+    if (!data?.meta || !data?.grid) return false;
+
+    _memCache = {
+      _meta: {
+        built: data.meta.built,
+        siteCount: data.meta.siteCount || 0,
+        levelCount: data.meta.levelCount || 0,
+        trendCount: data.meta.trendCount || 0,
+        statesProcessed: data.meta.statesProcessed || [],
+        gridCells: data.meta.gridCells || Object.keys(data.grid).length,
+      },
+      grid: data.grid,
+    };
+    _cacheSource = 'disk';
+
+    console.log(
+      `[NWIS-GW Cache] Loaded from disk (${_memCache._meta.siteCount} sites, ` +
+      `${Object.keys(_memCache.grid).length} cells, built ${data.meta.built || 'unknown'})`
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function saveToDisk(): void {
+  try {
+    if (typeof process === 'undefined' || !_memCache) return;
+    const fs = require('fs');
+    const path = require('path');
+    const dir = path.join(process.cwd(), '.cache');
+    const file = path.join(dir, 'nwis-gw-priority-states.json');
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const payload = JSON.stringify({
+      meta: {
+        built: _memCache._meta.built,
+        siteCount: _memCache._meta.siteCount,
+        levelCount: _memCache._meta.levelCount,
+        trendCount: _memCache._meta.trendCount,
+        statesProcessed: _memCache._meta.statesProcessed,
+        gridCells: Object.keys(_memCache.grid).length,
+      },
+      grid: _memCache.grid,
+    });
+    fs.writeFileSync(file, payload, 'utf-8');
+    const sizeMB = (Buffer.byteLength(payload) / 1024 / 1024).toFixed(1);
+    console.log(`[NWIS-GW Cache] Saved to disk (${sizeMB}MB, ${_memCache._meta.statesProcessed.length} states)`);
+  } catch {
+    // Disk save is optional — fail silently
+  }
+}
+
+let _diskLoaded = false;
+function ensureDiskLoaded() {
+  if (!_diskLoaded) {
+    _diskLoaded = true;
+    loadFromDisk();
+  }
+}
 
 // ── Grid Key ─────────────────────────────────────────────────────────────────
 
@@ -95,6 +168,7 @@ export function gridKey(lat: number, lng: number): string {
  * Look up cached NWIS groundwater data near a lat/lng. Checks target cell + 8 neighbors.
  */
 export function getNwisGwCache(lat: number, lng: number): NwisGwLookupResult | null {
+  ensureDiskLoaded();
   if (!_memCache) return null;
 
   const sites: NwisGwSite[] = [];
@@ -132,28 +206,43 @@ export function getNwisGwCache(lat: number, lng: number): NwisGwLookupResult | n
  */
 export function setNwisGwCache(data: NwisGwCacheData): void {
   _memCache = data;
+  _cacheSource = 'memory (cron)';
   const m = data._meta;
   console.log(
     `[NWIS-GW Cache] In-memory updated: ${m.siteCount} sites, ${m.levelCount} levels, ` +
     `${m.trendCount} trends, ${m.gridCells} cells, ${m.statesProcessed.length} states`
   );
+  saveToDisk();
 }
 
 /**
  * Check if a build is in progress.
  */
 let _buildInProgress = false;
-export function isNwisGwBuildInProgress(): boolean { return _buildInProgress; }
-export function setNwisGwBuildInProgress(v: boolean): void { _buildInProgress = v; }
+let _buildStartedAt = 0;
+const BUILD_LOCK_TIMEOUT_MS = 12 * 60 * 1000;
+export function isNwisGwBuildInProgress(): boolean {
+  if (_buildInProgress && _buildStartedAt > 0 && Date.now() - _buildStartedAt > BUILD_LOCK_TIMEOUT_MS) {
+    console.warn('[NWIS-GW Cache] Auto-clearing stale build lock (>12 min)');
+    _buildInProgress = false;
+    _buildStartedAt = 0;
+  }
+  return _buildInProgress;
+}
+export function setNwisGwBuildInProgress(v: boolean): void {
+  _buildInProgress = v;
+  _buildStartedAt = v ? Date.now() : 0;
+}
 
 /**
  * Get cache metadata (for status/debug endpoints).
  */
 export function getNwisGwCacheStatus() {
+  ensureDiskLoaded();
   if (!_memCache) return { loaded: false, source: null as string | null };
   return {
     loaded: true,
-    source: 'memory (cron)',
+    source: _cacheSource || 'memory (cron)',
     built: _memCache._meta.built,
     gridCells: _memCache._meta.gridCells,
     siteCount: _memCache._meta.siteCount,

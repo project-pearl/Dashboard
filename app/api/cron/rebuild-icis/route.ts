@@ -17,14 +17,9 @@ import {
 
 const EF_BASE = 'https://data.epa.gov/efservice';
 const STATE_DELAY_MS = 2000;
-const TABLE_DELAY_MS = 500;
 const PAGE_SIZE = 5000;
 
-// Priority states — same list as WQP cache
-const PRIORITY_STATES = [
-  'MD', 'VA', 'DC', 'PA', 'DE', 'FL', 'WV', 'CA', 'TX', 'NY',
-  'NJ', 'OH', 'NC', 'MA', 'GA', 'IL', 'MI', 'WA', 'OR',
-];
+import { PRIORITY_STATES } from '@/lib/constants';
 
 // DMR parameter description → PEARL key mapping
 const DMR_PARAM_TO_PEARL: Record<string, string> = {
@@ -262,20 +257,14 @@ export async function GET(request: NextRequest) {
       try {
         console.log(`[ICIS Cron] Fetching ${stateAbbr}...`);
 
-        // Fetch all 5 tables for this state
-        const permits = await fetchTable('ICIS_PERMITS', 'STATE_ABBR', stateAbbr, transformPermit);
-        await delay(TABLE_DELAY_MS);
-
-        const violations = await fetchTable('ICIS_VIOLATIONS', 'STATE_ABBR', stateAbbr, transformViolation);
-        await delay(TABLE_DELAY_MS);
-
-        const dmr = await fetchTable('ICIS_DMR_MEASUREMENTS', 'STATE_ABBR', stateAbbr, transformDmr);
-        await delay(TABLE_DELAY_MS);
-
-        const enforcement = await fetchTable('ICIS_ENFORCEMENT_ACTIONS', 'STATE_ABBR', stateAbbr, transformEnforcement);
-        await delay(TABLE_DELAY_MS);
-
-        const inspections = await fetchTable('ICIS_INSPECTIONS', 'STATE_ABBR', stateAbbr, transformInspection);
+        // Fetch all 5 tables in parallel for this state
+        const [permits, violations, dmr, enforcement, inspections] = await Promise.all([
+          fetchTable('ICIS_PERMITS', 'STATE_ABBR', stateAbbr, transformPermit),
+          fetchTable('ICIS_VIOLATIONS', 'STATE_ABBR', stateAbbr, transformViolation),
+          fetchTable('ICIS_DMR_MEASUREMENTS', 'STATE_ABBR', stateAbbr, transformDmr),
+          fetchTable('ICIS_ENFORCEMENT_ACTIONS', 'STATE_ABBR', stateAbbr, transformEnforcement),
+          fetchTable('ICIS_INSPECTIONS', 'STATE_ABBR', stateAbbr, transformInspection),
+        ]);
 
         // Deduplicate permits by permit number
         const permitMap = new Map<string, IcisPermit>();
@@ -342,6 +331,42 @@ export async function GET(request: NextRequest) {
 
       // Rate limit delay between states
       await delay(STATE_DELAY_MS);
+    }
+
+    // ── Retry failed states ───────────────────────────────────────────────
+    const failedStates = PRIORITY_STATES.filter(
+      s => !processedStates.includes(s)
+    );
+    if (failedStates.length > 0) {
+      console.log(`[ICIS Cron] Retrying ${failedStates.length} failed states...`);
+      for (const stateAbbr of failedStates) {
+        await delay(5000);
+        try {
+          const [permits, violations, dmr, enforcement, inspections] = await Promise.all([
+            fetchTable('ICIS_PERMITS', 'STATE_ABBR', stateAbbr, transformPermit),
+            fetchTable('ICIS_VIOLATIONS', 'STATE_ABBR', stateAbbr, transformViolation),
+            fetchTable('ICIS_DMR_MEASUREMENTS', 'STATE_ABBR', stateAbbr, transformDmr),
+            fetchTable('ICIS_ENFORCEMENT_ACTIONS', 'STATE_ABBR', stateAbbr, transformEnforcement),
+            fetchTable('ICIS_INSPECTIONS', 'STATE_ABBR', stateAbbr, transformInspection),
+          ]);
+
+          allPermits.push(...permits);
+          allViolations.push(...violations);
+          allDmr.push(...dmr);
+          allEnforcement.push(...enforcement);
+          allInspections.push(...inspections);
+          processedStates.push(stateAbbr);
+
+          stateResults[stateAbbr] = {
+            permits: permits.length, violations: violations.length,
+            dmr: dmr.length, enforcement: enforcement.length,
+            inspections: inspections.length,
+          };
+          console.log(`[ICIS Cron] ${stateAbbr}: RETRY OK`);
+        } catch (e) {
+          console.warn(`[ICIS Cron] ${stateAbbr}: RETRY FAILED — ${e instanceof Error ? e.message : e}`);
+        }
+      }
     }
 
     // ── Build Grid Index ───────────────────────────────────────────────────

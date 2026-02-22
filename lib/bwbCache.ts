@@ -54,8 +54,79 @@ export interface BwbLookupResult {
 // ── Cache Singleton ──────────────────────────────────────────────────────────
 
 const GRID_RES = 0.1;
+const CACHE_TTL_MS = 48 * 60 * 60 * 1000; // 48 hours — buffer past daily cron
 
 let _memCache: BwbCacheData | null = null;
+let _cacheSource: 'disk' | 'memory (cron)' | null = null;
+
+// ── Disk Persistence ────────────────────────────────────────────────────────
+
+function loadFromDisk(): boolean {
+  try {
+    if (typeof process === 'undefined') return false;
+    const fs = require('fs');
+    const path = require('path');
+    const file = path.join(process.cwd(), '.cache', 'bwb-stations.json');
+    if (!fs.existsSync(file)) return false;
+    const raw = fs.readFileSync(file, 'utf-8');
+    const data = JSON.parse(raw);
+    if (!data?.meta || !data?.grid) return false;
+
+    _memCache = {
+      _meta: {
+        built: data.meta.built,
+        stationCount: data.meta.stationCount || 0,
+        parameterReadings: data.meta.parameterReadings || 0,
+        datasetsScanned: data.meta.datasetsScanned || 0,
+        gridCells: data.meta.gridCells || Object.keys(data.grid).length,
+      },
+      grid: data.grid,
+    };
+    _cacheSource = 'disk';
+
+    console.log(
+      `[BWB Cache] Loaded from disk (${_memCache._meta.stationCount} stations, ` +
+      `${Object.keys(_memCache.grid).length} cells, built ${data.meta.built || 'unknown'})`
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function saveToDisk(): void {
+  try {
+    if (typeof process === 'undefined' || !_memCache) return;
+    const fs = require('fs');
+    const path = require('path');
+    const dir = path.join(process.cwd(), '.cache');
+    const file = path.join(dir, 'bwb-stations.json');
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const payload = JSON.stringify({
+      meta: {
+        built: _memCache._meta.built,
+        stationCount: _memCache._meta.stationCount,
+        parameterReadings: _memCache._meta.parameterReadings,
+        datasetsScanned: _memCache._meta.datasetsScanned,
+        gridCells: Object.keys(_memCache.grid).length,
+      },
+      grid: _memCache.grid,
+    });
+    fs.writeFileSync(file, payload, 'utf-8');
+    const sizeMB = (Buffer.byteLength(payload) / 1024 / 1024).toFixed(1);
+    console.log(`[BWB Cache] Saved to disk (${sizeMB}MB, ${_memCache._meta.stationCount} stations)`);
+  } catch {
+    // Disk save is optional — fail silently
+  }
+}
+
+let _diskLoaded = false;
+function ensureDiskLoaded() {
+  if (!_diskLoaded) {
+    _diskLoaded = true;
+    loadFromDisk();
+  }
+}
 
 // ── Grid Key ─────────────────────────────────────────────────────────────────
 
@@ -71,6 +142,7 @@ export function gridKey(lat: number, lng: number): string {
  * Look up cached BWB data near a lat/lng. Checks target cell + 8 neighbors.
  */
 export function getBwbCache(lat: number, lng: number): BwbLookupResult | null {
+  ensureDiskLoaded();
   if (!_memCache) return null;
 
   const stations: BwbStation[] = [];
@@ -99,28 +171,43 @@ export function getBwbCache(lat: number, lng: number): BwbLookupResult | null {
  */
 export function setBwbCache(data: BwbCacheData): void {
   _memCache = data;
+  _cacheSource = 'memory (cron)';
   const m = data._meta;
   console.log(
     `[BWB Cache] In-memory updated: ${m.stationCount} stations, ${m.parameterReadings} readings, ` +
     `${m.datasetsScanned} datasets, ${m.gridCells} cells`
   );
+  saveToDisk();
 }
 
 /**
  * Check if a build is in progress.
  */
 let _buildInProgress = false;
-export function isBwbBuildInProgress(): boolean { return _buildInProgress; }
-export function setBwbBuildInProgress(v: boolean): void { _buildInProgress = v; }
+let _buildStartedAt = 0;
+const BUILD_LOCK_TIMEOUT_MS = 12 * 60 * 1000; // 12 min — auto-clear stale locks
+export function isBwbBuildInProgress(): boolean {
+  if (_buildInProgress && _buildStartedAt > 0 && Date.now() - _buildStartedAt > BUILD_LOCK_TIMEOUT_MS) {
+    console.warn('[BWB Cache] Auto-clearing stale build lock (>12 min)');
+    _buildInProgress = false;
+    _buildStartedAt = 0;
+  }
+  return _buildInProgress;
+}
+export function setBwbBuildInProgress(v: boolean): void {
+  _buildInProgress = v;
+  _buildStartedAt = v ? Date.now() : 0;
+}
 
 /**
  * Get cache metadata (for status/debug endpoints).
  */
 export function getBwbCacheStatus() {
+  ensureDiskLoaded();
   if (!_memCache) return { loaded: false, source: null as string | null };
   return {
     loaded: true,
-    source: 'memory (cron)',
+    source: _cacheSource || 'memory (cron)',
     built: _memCache._meta.built,
     gridCells: _memCache._meta.gridCells,
     stationCount: _memCache._meta.stationCount,

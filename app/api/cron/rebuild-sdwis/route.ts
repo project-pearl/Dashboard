@@ -16,14 +16,9 @@ import {
 
 const EF_BASE = 'https://data.epa.gov/efservice';
 const STATE_DELAY_MS = 2000;
-const TABLE_DELAY_MS = 500;
 const PAGE_SIZE = 5000;
 
-// Priority states — same list as WQP/ICIS cache
-const PRIORITY_STATES = [
-  'MD', 'VA', 'DC', 'PA', 'DE', 'FL', 'WV', 'CA', 'TX', 'NY',
-  'NJ', 'OH', 'NC', 'MA', 'GA', 'IL', 'MI', 'WA', 'OR',
-];
+import { PRIORITY_STATES } from '@/lib/constants';
 
 // ── Paginated fetch helper ──────────────────────────────────────────────────
 
@@ -171,14 +166,13 @@ export async function GET(request: NextRequest) {
       try {
         console.log(`[SDWIS Cron] Fetching ${stateAbbr}...`);
 
-        // Fetch all 3 tables for this state
+        // Fetch systems first (needed for coordinate lookup), then violations + enforcement in parallel
         const systems = await fetchTable('WATER_SYSTEM', 'STATE_CODE', stateAbbr, transformSystem);
-        await delay(TABLE_DELAY_MS);
 
-        const violations = await fetchTable('VIOLATION', 'PRIMACY_AGENCY_CODE', stateAbbr, transformViolation);
-        await delay(TABLE_DELAY_MS);
-
-        const enforcement = await fetchTable('ENFORCEMENT_ACTION', 'STATE_CODE', stateAbbr, transformEnforcement);
+        const [violations, enforcement] = await Promise.all([
+          fetchTable('VIOLATION', 'PRIMACY_AGENCY_CODE', stateAbbr, transformViolation),
+          fetchTable('ENFORCEMENT_ACTION', 'STATE_CODE', stateAbbr, transformEnforcement),
+        ]);
 
         // Deduplicate systems by PWSID
         const systemMap = new Map<string, SdwisSystem>();
@@ -246,6 +240,40 @@ export async function GET(request: NextRequest) {
 
       // Rate limit delay between states
       await delay(STATE_DELAY_MS);
+    }
+
+    // ── Retry failed states ───────────────────────────────────────────────
+    const failedStates = PRIORITY_STATES.filter(s => !processedStates.includes(s));
+    if (failedStates.length > 0) {
+      console.log(`[SDWIS Cron] Retrying ${failedStates.length} failed states...`);
+      for (const stateAbbr of failedStates) {
+        await delay(5000);
+        try {
+          const systems = await fetchTable('WATER_SYSTEM', 'STATE_CODE', stateAbbr, transformSystem);
+          const [violations, enforcement] = await Promise.all([
+            fetchTable('VIOLATION', 'PRIMACY_AGENCY_CODE', stateAbbr, transformViolation),
+            fetchTable('ENFORCEMENT_ACTION', 'STATE_CODE', stateAbbr, transformEnforcement),
+          ]);
+
+          // Build PWSID lookup and assign coords
+          const systemMap = new Map<string, SdwisSystem>();
+          for (const s of systems) { if (!systemMap.has(s.pwsid)) systemMap.set(s.pwsid, s); }
+          const pwsidCoords = new Map<string, { lat: number; lng: number }>();
+          for (const s of systemMap.values()) pwsidCoords.set(s.pwsid, { lat: s.lat, lng: s.lng });
+          for (const v of violations) { const c = pwsidCoords.get(v.pwsid); if (c) { v.lat = c.lat; v.lng = c.lng; } }
+          for (const e of enforcement) { const c = pwsidCoords.get(e.pwsid); if (c) { e.lat = c.lat; e.lng = c.lng; } }
+
+          allSystems.push(...systemMap.values());
+          allViolations.push(...violations.filter(v => v.lat !== 0));
+          allEnforcement.push(...enforcement.filter(e => e.lat !== 0));
+          processedStates.push(stateAbbr);
+
+          stateResults[stateAbbr] = { systems: systemMap.size, violations: violations.length, enforcement: enforcement.length };
+          console.log(`[SDWIS Cron] ${stateAbbr}: RETRY OK`);
+        } catch (e) {
+          console.warn(`[SDWIS Cron] ${stateAbbr}: RETRY FAILED — ${e instanceof Error ? e.message : e}`);
+        }
+      }
     }
 
     // ── Build Grid Index ───────────────────────────────────────────────────
