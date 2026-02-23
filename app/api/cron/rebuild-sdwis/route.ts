@@ -1,7 +1,7 @@
 // app/api/cron/rebuild-sdwis/route.ts
 // Cron endpoint — fetches EPA SDWIS drinking water data (systems, violations,
-// enforcement) for priority states, deduplicates, and populates the in-memory
-// spatial cache for instant lookups.
+// enforcement) for priority states, geocodes via ZIP centroids, and populates
+// the in-memory spatial cache for instant lookups.
 // Schedule: daily via Vercel cron (7 AM UTC) or manual trigger.
 
 export const maxDuration = 300;
@@ -18,7 +18,12 @@ import {
 
 const EF_BASE = 'https://data.epa.gov/efservice';
 const PAGE_SIZE = 5000;
-const CONCURRENCY = 3; // Parallel state fetches (respects EPA rate limits)
+const CONCURRENCY = 3;
+
+// ZIP geocoding (same pattern as PFAS cron)
+const ZIP_API_BASE = 'https://api.zippopotam.us/us';
+const ZIP_BATCH_SIZE = 20;
+const ZIP_DELAY_MS = 200;
 
 import { PRIORITY_STATES } from '@/lib/constants';
 
@@ -76,70 +81,128 @@ async function fetchTable<T>(
 
 // ── Row transforms ──────────────────────────────────────────────────────────
 
-function transformSystem(row: Record<string, any>): SdwisSystem | null {
-  const lat = parseFloat(row.LATITUDE_DD || '');
-  const lng = parseFloat(row.LONGITUDE_DD || '');
-  if (isNaN(lat) || isNaN(lng) || lat <= 0) return null;
+// Intermediate type: system with ZIP but no lat/lng yet
+interface RawSystem {
+  pwsid: string;
+  name: string;
+  type: string;
+  population: number;
+  sourceWater: string;
+  state: string;
+  zip: string;
+}
+
+function transformSystemRaw(row: Record<string, any>): RawSystem | null {
+  const pwsid = row.pwsid || row.PWSID || row.pws_id || '';
+  if (!pwsid) return null;
+
+  // Clean ZIP: take first 5 digits
+  const rawZip = row.zip_code || row.ZIP_CODE || '';
+  const zip = rawZip.replace(/\s/g, '').substring(0, 5);
 
   return {
-    pwsid: row.PWSID || row.PWS_ID || '',
-    name: row.PWS_NAME || '',
-    type: row.PWS_TYPE_CODE || '',
-    population: parseInt(row.POPULATION_SERVED_COUNT || '0', 10) || 0,
-    sourceWater: row.PRIMARY_SOURCE_CODE || row.SOURCE_WATER_TYPE || '',
-    state: row.STATE_CODE || row.PRIMACY_AGENCY_CODE || '',
-    lat: Math.round(lat * 100000) / 100000,
-    lng: Math.round(lng * 100000) / 100000,
+    pwsid,
+    name: row.pws_name || row.PWS_NAME || '',
+    type: row.pws_type_code || row.PWS_TYPE_CODE || '',
+    population: parseInt(row.population_served_count || row.POPULATION_SERVED_COUNT || '0', 10) || 0,
+    sourceWater: row.primary_source_code || row.PRIMARY_SOURCE_CODE || '',
+    state: row.state_code || row.STATE_CODE || row.primacy_agency_code || row.PRIMACY_AGENCY_CODE || '',
+    zip,
   };
 }
 
 function transformViolation(row: Record<string, any>): SdwisViolation | null {
-  // Violations don't have direct lat/lng — we'll match via PWSID later
-  // For now, return with 0,0 and filter during grid indexing
-  const pwsid = row.PWSID || row.PWS_ID || '';
+  const pwsid = row.pwsid || row.PWSID || row.pws_id || '';
   if (!pwsid) return null;
 
-  const isMajor = row.IS_MAJOR_VIOL_IND === 'Y' || row.SEVERITY_IND_CNT === 'Y';
-  const isHealthBased = row.IS_HEALTH_BASED_IND === 'Y' ||
-    (row.CONTAMINANT_CODE && ['1040', '1041', '2950', '2456', '3100', '3014'].includes(row.CONTAMINANT_CODE));
+  const isMajor = (row.is_major_viol_ind || row.IS_MAJOR_VIOL_IND) === 'Y';
+  const isHealthBased = (row.is_health_based_ind || row.IS_HEALTH_BASED_IND) === 'Y';
 
   return {
     pwsid,
-    code: row.VIOLATION_CODE || row.VIOLATION_TYPE_CODE || '',
-    contaminant: row.CONTAMINANT_NAME || row.CONTAMINANT_CODE || '',
-    rule: row.RULE_NAME || row.RULE_CODE || '',
+    code: row.violation_code || row.VIOLATION_CODE || row.violation_type_code || '',
+    contaminant: row.contaminant_name || row.CONTAMINANT_NAME || row.contaminant_code || '',
+    rule: row.rule_name || row.RULE_NAME || row.rule_code || '',
     isMajor,
     isHealthBased,
-    compliancePeriod: row.COMPL_PER_BEGIN_DATE || row.COMPLIANCE_PERIOD || '',
+    compliancePeriod: row.compl_per_begin_date || row.COMPL_PER_BEGIN_DATE || '',
     lat: 0,
     lng: 0,
   };
 }
 
 function transformEnforcement(row: Record<string, any>): SdwisEnforcement | null {
-  const pwsid = row.PWSID || row.PWS_ID || '';
+  const pwsid = row.pwsid || row.PWSID || row.pws_id || '';
   if (!pwsid) return null;
 
   return {
     pwsid,
-    actionType: row.ENFORCEMENT_ACTION_TYPE || row.ENF_ACTION_TYPE_CODE || '',
-    date: row.ENFORCEMENT_DATE || row.ENF_ACTION_DATE || '',
+    actionType: row.enforcement_action_type || row.ENFORCEMENT_ACTION_TYPE || row.enf_action_type_code || '',
+    date: row.enforcement_date || row.ENFORCEMENT_DATE || row.enf_action_date || '',
     lat: 0,
     lng: 0,
   };
 }
 
+// ── ZIP Geocoding ────────────────────────────────────────────────────────────
+
+function delay(ms: number): Promise<void> {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+async function geocodeZips(
+  zips: string[],
+): Promise<Map<string, { lat: number; lng: number }>> {
+  const coordMap = new Map<string, { lat: number; lng: number }>();
+  const uniqueZips = [...new Set(zips.filter(z => z.length === 5 && /^\d{5}$/.test(z)))];
+  console.log(`[SDWIS Cron] Geocoding ${uniqueZips.length} unique ZIP codes...`);
+
+  for (let i = 0; i < uniqueZips.length; i += ZIP_BATCH_SIZE) {
+    const batch = uniqueZips.slice(i, i + ZIP_BATCH_SIZE);
+    const results = await Promise.allSettled(
+      batch.map(async (zip) => {
+        try {
+          const res = await fetch(`${ZIP_API_BASE}/${zip}`, {
+            signal: AbortSignal.timeout(5_000),
+          });
+          if (!res.ok) return null;
+          const data = await res.json();
+          const place = data?.places?.[0];
+          if (!place) return null;
+          const lat = parseFloat(place.latitude);
+          const lng = parseFloat(place.longitude);
+          if (isNaN(lat) || isNaN(lng)) return null;
+          return { zip, lat, lng };
+        } catch {
+          return null;
+        }
+      }),
+    );
+
+    for (const r of results) {
+      if (r.status === 'fulfilled' && r.value) {
+        coordMap.set(r.value.zip, { lat: r.value.lat, lng: r.value.lng });
+      }
+    }
+
+    if (i + ZIP_BATCH_SIZE < uniqueZips.length) {
+      await delay(ZIP_DELAY_MS);
+    }
+  }
+
+  console.log(`[SDWIS Cron] Geocoded ${coordMap.size}/${uniqueZips.length} ZIP codes`);
+  return coordMap;
+}
+
 // ── GET Handler ──────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
-  // Auth check
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
   if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Prevent concurrent builds
   if (isSdwisBuildInProgress()) {
     return NextResponse.json({
       status: 'skipped',
@@ -153,102 +216,129 @@ export async function GET(request: NextRequest) {
   const stateResults: Record<string, Record<string, number>> = {};
 
   try {
-    const allSystems: SdwisSystem[] = [];
+    const rawSystems: RawSystem[] = [];
     const allViolations: SdwisViolation[] = [];
     const allEnforcement: SdwisEnforcement[] = [];
     const processedStates: string[] = [];
 
-    // Semaphore-based parallel fetching (CONCURRENCY states at a time)
+    // ── Phase 1: Fetch all states in parallel ─────────────────────────────
     const queue = [...PRIORITY_STATES];
     let running = 0;
-    let idx = 0;
-
-    async function processState(stateAbbr: string): Promise<void> {
-      try {
-        console.log(`[SDWIS Cron] Fetching ${stateAbbr}...`);
-
-        // Fetch systems first (needed for coordinate lookup), then violations + enforcement in parallel
-        const systems = await fetchTable('WATER_SYSTEM', 'STATE_CODE', stateAbbr, transformSystem);
-
-        // Use allSettled — enforcement table returns HTTP 500 for some states
-        const [violResult, enfResult] = await Promise.allSettled([
-          fetchTable('VIOLATION', 'PRIMACY_AGENCY_CODE', stateAbbr, transformViolation),
-          fetchTable('ENFORCEMENT_ACTION', 'STATE_CODE', stateAbbr, transformEnforcement),
-        ]);
-        const violations = violResult.status === 'fulfilled' ? violResult.value : [];
-        const enforcement = enfResult.status === 'fulfilled' ? enfResult.value : [];
-
-        // Deduplicate systems by PWSID
-        const systemMap = new Map<string, SdwisSystem>();
-        for (const s of systems) {
-          if (!systemMap.has(s.pwsid)) systemMap.set(s.pwsid, s);
-        }
-        const dedupedSystems = Array.from(systemMap.values());
-
-        // Build PWSID → lat/lng lookup from systems for violations/enforcement
-        const pwsidCoords = new Map<string, { lat: number; lng: number }>();
-        for (const s of dedupedSystems) {
-          pwsidCoords.set(s.pwsid, { lat: s.lat, lng: s.lng });
-        }
-
-        // Deduplicate violations by PWSID|code|compliancePeriod
-        const violationMap = new Map<string, SdwisViolation>();
-        for (const v of violations) {
-          const key = `${v.pwsid}|${v.code}|${v.compliancePeriod}`;
-          if (!violationMap.has(key)) {
-            const coords = pwsidCoords.get(v.pwsid);
-            if (coords) { v.lat = coords.lat; v.lng = coords.lng; }
-            violationMap.set(key, v);
-          }
-        }
-        const dedupedViolations = Array.from(violationMap.values()).filter(v => v.lat !== 0);
-
-        // Deduplicate enforcement by PWSID|actionType|date
-        const enfMap = new Map<string, SdwisEnforcement>();
-        for (const e of enforcement) {
-          const key = `${e.pwsid}|${e.actionType}|${e.date}`;
-          if (!enfMap.has(key)) {
-            const coords = pwsidCoords.get(e.pwsid);
-            if (coords) { e.lat = coords.lat; e.lng = coords.lng; }
-            enfMap.set(key, e);
-          }
-        }
-        const dedupedEnforcement = Array.from(enfMap.values()).filter(e => e.lat !== 0);
-
-        allSystems.push(...dedupedSystems);
-        allViolations.push(...dedupedViolations);
-        allEnforcement.push(...dedupedEnforcement);
-        processedStates.push(stateAbbr);
-
-        stateResults[stateAbbr] = {
-          systems: dedupedSystems.length,
-          violations: dedupedViolations.length,
-          enforcement: dedupedEnforcement.length,
-        };
-
-        console.log(
-          `[SDWIS Cron] ${stateAbbr}: ${dedupedSystems.length} systems, ` +
-          `${dedupedViolations.length} violations, ${dedupedEnforcement.length} enforcement`
-        );
-      } catch (e) {
-        console.warn(`[SDWIS Cron] ${stateAbbr} failed:`, e instanceof Error ? e.message : e);
-        stateResults[stateAbbr] = { systems: 0, violations: 0, enforcement: 0 };
-      }
-    }
+    let qIdx = 0;
 
     await new Promise<void>((resolve) => {
       function next() {
-        if (idx >= queue.length && running === 0) return resolve();
-        while (running < CONCURRENCY && idx < queue.length) {
-          const st = queue[idx++];
+        if (qIdx >= queue.length && running === 0) return resolve();
+        while (running < CONCURRENCY && qIdx < queue.length) {
+          const stateAbbr = queue[qIdx++];
           running++;
-          processState(st).finally(() => { running--; next(); });
+          (async () => {
+            try {
+              console.log(`[SDWIS Cron] Fetching ${stateAbbr}...`);
+
+              const systems = await fetchTable('WATER_SYSTEM', 'STATE_CODE', stateAbbr, transformSystemRaw);
+
+              // Use allSettled — enforcement returns HTTP 500 for some states
+              const [violResult, enfResult] = await Promise.allSettled([
+                fetchTable('VIOLATION', 'PRIMACY_AGENCY_CODE', stateAbbr, transformViolation),
+                fetchTable('ENFORCEMENT_ACTION', 'STATE_CODE', stateAbbr, transformEnforcement),
+              ]);
+              const violations = violResult.status === 'fulfilled' ? violResult.value : [];
+              const enforcement = enfResult.status === 'fulfilled' ? enfResult.value : [];
+
+              // Deduplicate systems by PWSID
+              const systemMap = new Map<string, RawSystem>();
+              for (const s of systems) {
+                if (!systemMap.has(s.pwsid)) systemMap.set(s.pwsid, s);
+              }
+
+              rawSystems.push(...systemMap.values());
+              allViolations.push(...violations);
+              allEnforcement.push(...enforcement);
+              processedStates.push(stateAbbr);
+
+              stateResults[stateAbbr] = {
+                systems: systemMap.size,
+                violations: violations.length,
+                enforcement: enforcement.length,
+              };
+
+              console.log(
+                `[SDWIS Cron] ${stateAbbr}: ${systemMap.size} systems, ` +
+                `${violations.length} violations, ${enforcement.length} enforcement`
+              );
+            } catch (e) {
+              console.warn(`[SDWIS Cron] ${stateAbbr} failed:`, e instanceof Error ? e.message : e);
+              stateResults[stateAbbr] = { systems: 0, violations: 0, enforcement: 0 };
+            } finally {
+              running--;
+              next();
+            }
+          })();
         }
       }
       next();
     });
 
-    // ── Build Grid Index ───────────────────────────────────────────────────
+    if (rawSystems.length === 0) {
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      console.warn(`[SDWIS Cron] 0 systems fetched in ${elapsed}s — skipping cache save`);
+      return NextResponse.json({ status: 'empty', duration: `${elapsed}s`, cache: getSdwisCacheStatus() });
+    }
+
+    // ── Phase 2: Geocode systems via ZIP centroids ────────────────────────
+    const allZips = rawSystems.map(s => s.zip).filter(Boolean);
+    const zipCoords = await geocodeZips(allZips);
+
+    // Convert raw systems to geocoded SdwisSystem
+    const allSystems: SdwisSystem[] = [];
+    const pwsidCoords = new Map<string, { lat: number; lng: number }>();
+
+    for (const raw of rawSystems) {
+      const coords = zipCoords.get(raw.zip);
+      if (!coords) continue; // Skip systems we couldn't geocode
+
+      const system: SdwisSystem = {
+        pwsid: raw.pwsid,
+        name: raw.name,
+        type: raw.type,
+        population: raw.population,
+        sourceWater: raw.sourceWater,
+        state: raw.state,
+        lat: Math.round(coords.lat * 100000) / 100000,
+        lng: Math.round(coords.lng * 100000) / 100000,
+      };
+
+      allSystems.push(system);
+      pwsidCoords.set(raw.pwsid, coords);
+    }
+
+    console.log(`[SDWIS Cron] Geocoded ${allSystems.length}/${rawSystems.length} systems`);
+
+    // ── Phase 3: Assign coords to violations/enforcement and deduplicate ──
+    const violationMap = new Map<string, SdwisViolation>();
+    for (const v of allViolations) {
+      const key = `${v.pwsid}|${v.code}|${v.compliancePeriod}`;
+      if (!violationMap.has(key)) {
+        const coords = pwsidCoords.get(v.pwsid);
+        if (coords) { v.lat = coords.lat; v.lng = coords.lng; }
+        violationMap.set(key, v);
+      }
+    }
+    const geocodedViolations = Array.from(violationMap.values()).filter(v => v.lat !== 0);
+
+    const enfMap = new Map<string, SdwisEnforcement>();
+    for (const e of allEnforcement) {
+      const key = `${e.pwsid}|${e.actionType}|${e.date}`;
+      if (!enfMap.has(key)) {
+        const coords = pwsidCoords.get(e.pwsid);
+        if (coords) { e.lat = coords.lat; e.lng = coords.lng; }
+        enfMap.set(key, e);
+      }
+    }
+    const geocodedEnforcement = Array.from(enfMap.values()).filter(e => e.lat !== 0);
+
+    // ── Phase 4: Build Grid Index ─────────────────────────────────────────
     const grid: Record<string, {
       systems: SdwisSystem[];
       violations: SdwisViolation[];
@@ -266,24 +356,23 @@ export async function GET(request: NextRequest) {
       if (!grid[key]) grid[key] = emptyCell();
       grid[key].systems.push(s);
     }
-    for (const v of allViolations) {
+    for (const v of geocodedViolations) {
       const key = gridKey(v.lat, v.lng);
       if (!grid[key]) grid[key] = emptyCell();
       grid[key].violations.push(v);
     }
-    for (const e of allEnforcement) {
+    for (const e of geocodedEnforcement) {
       const key = gridKey(e.lat, e.lng);
       if (!grid[key]) grid[key] = emptyCell();
       grid[key].enforcement.push(e);
     }
 
-    // ── Store in memory ────────────────────────────────────────────────────
     const cacheData = {
       _meta: {
         built: new Date().toISOString(),
         systemCount: allSystems.length,
-        violationCount: allViolations.length,
-        enforcementCount: allEnforcement.length,
+        violationCount: geocodedViolations.length,
+        enforcementCount: geocodedEnforcement.length,
         statesProcessed: processedStates,
         gridCells: Object.keys(grid).length,
       },
@@ -292,7 +381,7 @@ export async function GET(request: NextRequest) {
 
     if (allSystems.length === 0) {
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-      console.warn(`[SDWIS Cron] 0 systems fetched in ${elapsed}s — skipping cache save`);
+      console.warn(`[SDWIS Cron] 0 geocoded systems — skipping cache save`);
       return NextResponse.json({ status: 'empty', duration: `${elapsed}s`, cache: getSdwisCacheStatus() });
     }
 
@@ -301,18 +390,19 @@ export async function GET(request: NextRequest) {
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(
       `[SDWIS Cron] Build complete in ${elapsed}s — ` +
-      `${allSystems.length} systems, ${allViolations.length} violations, ` +
-      `${allEnforcement.length} enforcement, ${Object.keys(grid).length} cells`
+      `${allSystems.length} systems, ${geocodedViolations.length} violations, ` +
+      `${geocodedEnforcement.length} enforcement, ${Object.keys(grid).length} cells`
     );
 
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
       systems: allSystems.length,
-      violations: allViolations.length,
-      enforcement: allEnforcement.length,
+      violations: geocodedViolations.length,
+      enforcement: geocodedEnforcement.length,
       gridCells: Object.keys(grid).length,
       statesProcessed: processedStates.length,
+      geocodedZips: zipCoords.size,
       states: stateResults,
       cache: getSdwisCacheStatus(),
     });
