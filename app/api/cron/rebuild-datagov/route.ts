@@ -145,6 +145,12 @@ export async function GET(request: NextRequest) {
       datasets,
     };
 
+    if (datasets.length === 0) {
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      console.warn(`[Data.gov Cron] 0 datasets in ${elapsed}s — skipping cache save`);
+      return NextResponse.json({ status: 'empty', duration: `${elapsed}s`, cache: getDataGovCacheStatus() });
+    }
+
     await setDataGovCache(cacheData);
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);

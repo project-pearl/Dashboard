@@ -229,6 +229,12 @@ export async function GET(request: NextRequest) {
       states,
     };
 
+    if (totalRecords === 0) {
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      console.warn(`[CDC NWSS Cron] 0 records in ${elapsed}s — skipping cache save`);
+      return NextResponse.json({ status: 'empty', duration: `${elapsed}s`, cache: getCdcNwssCacheStatus() });
+    }
+
     await setCdcNwssCache(cacheData);
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);

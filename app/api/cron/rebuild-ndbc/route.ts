@@ -294,6 +294,12 @@ export async function GET(request: NextRequest) {
       grid,
     };
 
+    if (stationCount === 0) {
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      console.warn(`[NDBC Cron] 0 stations in ${elapsed}s — skipping cache save`);
+      return NextResponse.json({ status: 'empty', duration: `${elapsed}s`, cache: getNdbcCacheStatus() });
+    }
+
     await setNdbcCache(cacheData);
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);

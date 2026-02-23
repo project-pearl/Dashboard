@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+export const dynamic = 'force-dynamic';
 import { getAttainsCacheSummary, ensureWarmed as warmAttains } from '@/lib/attainsCache';
 import { getWqpCacheStatus, ensureWarmed as warmWqp } from '@/lib/wqpCache';
 import { getCedenCacheStatus, ensureWarmed as warmCeden } from '@/lib/cedenCache';

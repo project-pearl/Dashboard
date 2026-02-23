@@ -2,6 +2,7 @@
 // Unified cache status endpoint — returns last-built timestamps, record counts,
 // and staleness flags for all 12 cache modules.
 
+export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
 
 import { NextResponse } from 'next/server';

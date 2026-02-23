@@ -430,6 +430,12 @@ export async function GET(request: NextRequest) {
       grid,
     };
 
+    if (allSites.length === 0) {
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      console.warn(`[NWIS-GW Cron] 0 sites fetched in ${elapsed}s — skipping cache save`);
+      return NextResponse.json({ status: 'empty', duration: `${elapsed}s`, cache: getNwisGwCacheStatus() });
+    }
+
     await setNwisGwCache(cacheData);
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);

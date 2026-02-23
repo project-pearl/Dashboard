@@ -320,6 +320,12 @@ export async function GET(request: NextRequest) {
       grid,
     };
 
+    if (allSystems.length === 0) {
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      console.warn(`[SDWIS Cron] 0 systems fetched in ${elapsed}s — skipping cache save`);
+      return NextResponse.json({ status: 'empty', duration: `${elapsed}s`, cache: getSdwisCacheStatus() });
+    }
+
     await setSdwisCache(cacheData);
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);

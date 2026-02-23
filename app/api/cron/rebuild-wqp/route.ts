@@ -229,6 +229,20 @@ export async function GET(request: NextRequest) {
       next();
     });
 
+    // ── Guard: don't overwrite good blob data with empty results ──────────
+    if (allRecords.length === 0) {
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      console.warn(`[WQP Cron] 0 records fetched in ${elapsed}s — skipping cache save to preserve existing data`);
+      return NextResponse.json({
+        status: 'empty',
+        duration: `${elapsed}s`,
+        totalRecords: 0,
+        statesProcessed: processedStates.length,
+        states: stateResults,
+        cache: getWqpCacheStatus(),
+      });
+    }
+
     // ── Build Grid Index ───────────────────────────────────────────────────
     const grid: Record<string, { records: WqpRecord[] }> = {};
 

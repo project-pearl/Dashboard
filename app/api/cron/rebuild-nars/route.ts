@@ -250,6 +250,12 @@ export async function GET(request: NextRequest) {
       grid,
     };
 
+    if (allSites.length === 0) {
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      console.warn(`[NARS Cron] 0 sites in ${elapsed}s — skipping cache save`);
+      return NextResponse.json({ status: 'empty', duration: `${elapsed}s`, cache: getNarsCacheStatus() });
+    }
+
     await setNarsCache(cacheData);
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);

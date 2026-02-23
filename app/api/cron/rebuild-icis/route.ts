@@ -431,6 +431,12 @@ export async function GET(request: NextRequest) {
       grid,
     };
 
+    if (allPermits.length === 0) {
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      console.warn(`[ICIS Cron] 0 permits fetched in ${elapsed}s — skipping cache save`);
+      return NextResponse.json({ status: 'empty', duration: `${elapsed}s`, cache: getIcisCacheStatus() });
+    }
+
     await setIcisCache(cacheData);
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);

@@ -212,6 +212,12 @@ export async function GET(request: NextRequest) {
       grid,
     };
 
+    if (chemSeen.size === 0 && toxSeen.size === 0) {
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      console.warn(`[CEDEN Cron] 0 records fetched in ${elapsed}s — skipping cache save`);
+      return NextResponse.json({ status: 'empty', duration: `${elapsed}s`, cache: getCedenCacheStatus() });
+    }
+
     await setCedenCache(cacheData);
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
