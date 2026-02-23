@@ -1,7 +1,7 @@
 // app/api/cron/rebuild-sdwis/route.ts
-// Cron endpoint — fetches EPA SDWIS drinking water data (systems, violations,
-// enforcement) for priority states, geocodes via ZIP centroids, and populates
-// the in-memory spatial cache for instant lookups.
+// Cron endpoint — fetches EPA SDWIS Community Water Systems (CWS) for
+// priority states, resolves coordinates via bundled ZIP centroids,
+// and populates the spatial cache for instant lookups.
 // Schedule: daily via Vercel cron (7 AM UTC) or manual trigger.
 
 export const maxDuration = 300;
@@ -18,6 +18,7 @@ import {
 
 const EF_BASE = 'https://data.epa.gov/efservice';
 const PAGE_SIZE = 5000;
+const MAX_PAGES = 3; // Safety cap: 15k records max per table per state
 const CONCURRENCY = 5;
 
 import { PRIORITY_STATES } from '@/lib/constants';
@@ -26,24 +27,24 @@ import zipCentroids from '@/lib/zipCentroids.json';
 // ── Paginated fetch helper ──────────────────────────────────────────────────
 
 async function fetchTable<T>(
-  table: string,
-  stateFilter: string,
-  stateAbbr: string,
+  url: string,
+  label: string,
   transform: (row: Record<string, any>) => T | null,
 ): Promise<T[]> {
   const results: T[] = [];
   let offset = 0;
+  let pages = 0;
 
-  while (true) {
-    const url = `${EF_BASE}/${table}/${stateFilter}/${stateAbbr}/ROWS/${offset}:${offset + PAGE_SIZE - 1}/JSON`;
+  while (pages < MAX_PAGES) {
+    const pageUrl = `${url}/ROWS/${offset}:${offset + PAGE_SIZE - 1}/JSON`;
     try {
-      const res = await fetch(url, {
+      const res = await fetch(pageUrl, {
         headers: { 'Accept': 'application/json' },
         signal: AbortSignal.timeout(30_000),
       });
 
       if (!res.ok) {
-        console.warn(`[SDWIS Cron] ${table} ${stateAbbr}: HTTP ${res.status}`);
+        console.warn(`[SDWIS Cron] ${label}: HTTP ${res.status}`);
         break;
       }
 
@@ -64,10 +65,11 @@ async function fetchTable<T>(
         if (item !== null) results.push(item);
       }
 
+      pages++;
       if (data.length < PAGE_SIZE) break;
       offset += PAGE_SIZE;
     } catch (e) {
-      console.warn(`[SDWIS Cron] ${table} ${stateAbbr} page ${offset}: ${e instanceof Error ? e.message : e}`);
+      console.warn(`[SDWIS Cron] ${label} page ${pages}: ${e instanceof Error ? e.message : e}`);
       break;
     }
   }
@@ -77,7 +79,6 @@ async function fetchTable<T>(
 
 // ── Row transforms ──────────────────────────────────────────────────────────
 
-// Intermediate type: system with ZIP but no lat/lng yet
 interface RawSystem {
   pwsid: string;
   name: string;
@@ -92,8 +93,7 @@ function transformSystemRaw(row: Record<string, any>): RawSystem | null {
   const pwsid = row.pwsid || row.PWSID || row.pws_id || '';
   if (!pwsid) return null;
 
-  // Clean ZIP: take first 5 digits
-  const rawZip = row.zip_code || row.ZIP_CODE || '';
+  const rawZip = String(row.zip_code || row.ZIP_CODE || '');
   const zip = rawZip.replace(/\s/g, '').substring(0, 5);
 
   return {
@@ -111,16 +111,13 @@ function transformViolation(row: Record<string, any>): SdwisViolation | null {
   const pwsid = row.pwsid || row.PWSID || row.pws_id || '';
   if (!pwsid) return null;
 
-  const isMajor = (row.is_major_viol_ind || row.IS_MAJOR_VIOL_IND) === 'Y';
-  const isHealthBased = (row.is_health_based_ind || row.IS_HEALTH_BASED_IND) === 'Y';
-
   return {
     pwsid,
     code: row.violation_code || row.VIOLATION_CODE || row.violation_type_code || '',
     contaminant: row.contaminant_name || row.CONTAMINANT_NAME || row.contaminant_code || '',
     rule: row.rule_name || row.RULE_NAME || row.rule_code || '',
-    isMajor,
-    isHealthBased,
+    isMajor: (row.is_major_viol_ind || row.IS_MAJOR_VIOL_IND) === 'Y',
+    isHealthBased: (row.is_health_based_ind || row.IS_HEALTH_BASED_IND) === 'Y',
     compliancePeriod: row.compl_per_begin_date || row.COMPL_PER_BEGIN_DATE || '',
     lat: 0,
     lng: 0,
@@ -188,7 +185,9 @@ export async function GET(request: NextRequest) {
     const allEnforcement: SdwisEnforcement[] = [];
     const processedStates: string[] = [];
 
-    // ── Phase 1: Fetch all states in parallel ─────────────────────────────
+    // ── Phase 1: Fetch CWS systems + violations for all states ──────────
+    // Filter to CWS (Community Water Systems) — covers 95%+ of population
+    // and reduces record count by ~85% vs all system types.
     const queue = [...PRIORITY_STATES];
     let running = 0;
     let qIdx = 0;
@@ -201,14 +200,24 @@ export async function GET(request: NextRequest) {
           running++;
           (async () => {
             try {
-              console.log(`[SDWIS Cron] Fetching ${stateAbbr}...`);
+              console.log(`[SDWIS Cron] Fetching ${stateAbbr} CWS...`);
 
-              const systems = await fetchTable('WATER_SYSTEM', 'STATE_CODE', stateAbbr, transformSystemRaw);
+              // Fetch CWS systems only (compound filter: STATE_CODE + PWS_TYPE_CODE)
+              const systemUrl = `${EF_BASE}/WATER_SYSTEM/STATE_CODE/${stateAbbr}/PWS_TYPE_CODE/CWS`;
+              const systems = await fetchTable(systemUrl, `systems/${stateAbbr}`, transformSystemRaw);
 
-              // Use allSettled — enforcement returns HTTP 500 for some states
+              // Violations + enforcement in parallel (allSettled — enf returns 500 for some states)
               const [violResult, enfResult] = await Promise.allSettled([
-                fetchTable('VIOLATION', 'PRIMACY_AGENCY_CODE', stateAbbr, transformViolation),
-                fetchTable('ENFORCEMENT_ACTION', 'STATE_CODE', stateAbbr, transformEnforcement),
+                fetchTable(
+                  `${EF_BASE}/VIOLATION/PRIMACY_AGENCY_CODE/${stateAbbr}`,
+                  `violations/${stateAbbr}`,
+                  transformViolation,
+                ),
+                fetchTable(
+                  `${EF_BASE}/ENFORCEMENT_ACTION/STATE_CODE/${stateAbbr}`,
+                  `enforcement/${stateAbbr}`,
+                  transformEnforcement,
+                ),
               ]);
               const violations = violResult.status === 'fulfilled' ? violResult.value : [];
               const enforcement = enfResult.status === 'fulfilled' ? enfResult.value : [];
@@ -257,15 +266,14 @@ export async function GET(request: NextRequest) {
     const allZips = rawSystems.map(s => s.zip).filter(Boolean);
     const zipCoords = lookupZips(allZips);
 
-    // Convert raw systems to geocoded SdwisSystem
     const allSystems: SdwisSystem[] = [];
     const pwsidCoords = new Map<string, { lat: number; lng: number }>();
 
     for (const raw of rawSystems) {
       const coords = zipCoords.get(raw.zip);
-      if (!coords) continue; // Skip systems we couldn't geocode
+      if (!coords) continue;
 
-      const system: SdwisSystem = {
+      allSystems.push({
         pwsid: raw.pwsid,
         name: raw.name,
         type: raw.type,
@@ -274,9 +282,7 @@ export async function GET(request: NextRequest) {
         state: raw.state,
         lat: Math.round(coords.lat * 100000) / 100000,
         lng: Math.round(coords.lng * 100000) / 100000,
-      };
-
-      allSystems.push(system);
+      });
       pwsidCoords.set(raw.pwsid, coords);
     }
 
