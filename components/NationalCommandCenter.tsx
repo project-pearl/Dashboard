@@ -78,9 +78,9 @@ const LENS_CONFIG: Record<ViewLens, {
     defaultOverlay: 'hotspots',
     showTopStrip: false, showPriorityQueue: false, showCoverageGaps: false,
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: true,
-    showHotspots: true, showSituationSummary: false, showTimeRange: false,
+    showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['aiinsights', 'resolution-planner', 'top10', 'disclaimer']),
+    sections: new Set(['ai-water-intelligence', 'national-briefing', 'resolution-planner', 'disclaimer']),
   },
   compliance: {
     label: 'Compliance',
@@ -110,7 +110,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: true, showNationalImpact: true, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['usmap', 'networkhealth', 'nationalimpact', 'groundwater', 'disclaimer']),
+    sections: new Set(['networkhealth', 'nationalimpact', 'groundwater', 'disclaimer']),
   },
   monitoring: {
     label: 'Monitoring',
@@ -2148,7 +2148,7 @@ export function NationalCommandCenter(props: Props) {
         {({ sections, isEditMode, onToggleVisibility, onToggleCollapse, collapsedSections }) => {
           const isSectionOpen = (id: string) => !collapsedSections[id];
           return (<>
-          <div className={`space-y-6 ${isEditMode ? 'pl-12' : ''}`}>
+          <div className={`space-y-8 ${isEditMode ? 'pl-12' : ''}`}>
 
         {sections.filter(s => {
           // In edit mode, show all sections for drag-and-drop
@@ -4210,8 +4210,8 @@ export function NationalCommandCenter(props: Props) {
 
         </>); {/* end impairmentprofile */}
 
-        case 'aiinsights': return DS(<>
-        {/* ── National AI Water Intelligence — Claude-powered, ATTAINS-fed ── */}
+        case 'ai-water-intelligence': return DS(<>
+        {/* ── AI Water Intelligence — Claude-powered, ATTAINS-fed ── */}
         {lens.showAIInsights && (
           <AIInsightsEngine
             key={`national-${attainsAggregation.totalAssessed}`}
@@ -4221,8 +4221,71 @@ export function NationalCommandCenter(props: Props) {
             nationalData={nationalAIData}
           />
         )}
+        </>); {/* end ai-water-intelligence */}
 
-        {/* ── AI-Powered National Intelligence — lens controlled, data-driven ── */}
+        case 'national-briefing': return DS(<>
+        {/* ── National Intelligence Briefing — data-driven insights ── */}
+        {lens.showAIInsights && aiInsights.length > 0 && (
+          <Card id="section-national-briefing" className="border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-white">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  🤖 National Intelligence Briefing
+                  <span className="text-[10px] font-normal text-slate-400 ml-1">
+                    {aiInsights.length} findings from {attainsAggregation.totalAssessed.toLocaleString()} ATTAINS records
+                  </span>
+                </CardTitle>
+                <BrandedPrintBtn sectionId="national-briefing" title="National Intelligence Briefing" />
+              </div>
+              <CardDescription>AI analysis of EPA ATTAINS data, TMDL gaps, impairment causes, and deployment opportunities</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {aiInsights.map((insight, idx) => {
+                  const bgColor = insight.type === 'urgent' ? 'bg-red-50 border-red-300' :
+                                 insight.type === 'warning' ? 'bg-orange-50 border-orange-300' :
+                                 insight.type === 'success' ? 'bg-green-50 border-green-300' :
+                                 'bg-blue-50 border-blue-300';
+                  const textColor = insight.type === 'urgent' ? 'text-red-700' :
+                                   insight.type === 'warning' ? 'text-orange-700' :
+                                   insight.type === 'success' ? 'text-green-700' :
+                                   'text-blue-700';
+                  const icon = insight.type === 'urgent' ? '🚨' :
+                              insight.type === 'warning' ? '⚠️' :
+                              insight.type === 'success' ? '✅' : 'ℹ️';
+                  return (
+                    <div key={idx} className={`p-3 rounded-lg border ${bgColor}`}>
+                      <div className="flex items-start gap-2">
+                        <span className="text-lg flex-shrink-0">{icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className={`font-semibold text-sm ${textColor} mb-1`}>{insight.title}</div>
+                          <div className="text-xs text-slate-700 leading-relaxed">{insight.detail}</div>
+                          {insight.action && (
+                            <Button size="sm" variant="outline" className="mt-2 h-7 text-xs">{insight.action}</Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        </>); {/* end national-briefing */}
+
+        case 'aiinsights': return DS(<>
+        {/* ── Combined AI Insights (legacy — used by non-briefing lenses) ── */}
+        {lens.showAIInsights && (
+          <AIInsightsEngine
+            key={`national-${attainsAggregation.totalAssessed}`}
+            role="Federal"
+            stateAbbr="US"
+            regionData={regionData as any}
+            nationalData={nationalAIData}
+          />
+        )}
         {lens.showAIInsights && aiInsights.length > 0 && (
           <Card id="section-aiinsights" className="border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-white">
             <CardHeader className="pb-3">
@@ -4270,7 +4333,6 @@ export function NationalCommandCenter(props: Props) {
             </CardContent>
           </Card>
         )}
-
         </>); {/* end aiinsights */}
 
         case 'networkhealth': return DS(<>
