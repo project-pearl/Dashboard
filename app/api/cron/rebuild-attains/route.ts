@@ -1,8 +1,8 @@
 // app/api/cron/rebuild-attains/route.ts
 // Cron endpoint — fetches ATTAINS assessment data in time-budgeted chunks.
 // Each invocation processes as many states as it can within 4 minutes,
-// saves progress to disk, and picks up remaining states on the next run.
-// Schedule: every 3 hours — fills all 51 states within ~1 day, then no-ops.
+// saves progress to disk, then SELF-CHAINS: fires the next chunk immediately
+// so one cron trigger cascades through all 51 states without waiting 3 hours.
 
 import { NextRequest, NextResponse } from 'next/server';
 import {
@@ -15,6 +15,24 @@ import {
 export const maxDuration = 300;
 
 const TIME_BUDGET_MS = 230_000; // ~4 minutes — leave 70s margin for blob load + save + response
+
+/**
+ * Fire-and-forget: trigger the next chunk without waiting for it.
+ * Uses the deployment's own URL so it works on both preview and production.
+ */
+function triggerNextChunk(cronSecret: string | undefined) {
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_ORIGIN ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null);
+  if (!baseUrl) return;
+
+  const url = `${baseUrl}/api/cron/rebuild-attains`;
+  const headers: Record<string, string> = {};
+  if (cronSecret) headers['authorization'] = `Bearer ${cronSecret}`;
+
+  // Fire and forget — don't await, don't let failures propagate
+  fetch(url, { headers }).catch(() => {});
+}
 
 export async function GET(request: NextRequest) {
   // Auth check
@@ -52,6 +70,12 @@ export async function GET(request: NextRequest) {
     const result = await buildAttainsChunk(TIME_BUDGET_MS);
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+    const remaining = result.totalStates - result.alreadyCached - result.processed.length;
+
+    // Self-chain: if there are still states remaining, trigger the next chunk
+    if (remaining > 0) {
+      triggerNextChunk(cronSecret);
+    }
 
     return NextResponse.json({
       status: 'complete',
@@ -61,7 +85,8 @@ export async function GET(request: NextRequest) {
       alreadyCached: result.alreadyCached,
       nowCached: result.alreadyCached + result.processed.length,
       totalStates: result.totalStates,
-      remaining: result.totalStates - result.alreadyCached - result.processed.length,
+      remaining,
+      selfChained: remaining > 0,
       savedToDisk: result.savedToDisk,
       savedToBlob: result.savedToBlob,
       cache: getCacheStatus(),
