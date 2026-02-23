@@ -17,8 +17,8 @@ import {
 // ── Config ───────────────────────────────────────────────────────────────────
 
 const EF_BASE = 'https://data.epa.gov/efservice';
-const STATE_DELAY_MS = 2000;
 const PAGE_SIZE = 5000;
+const CONCURRENCY = 3; // Parallel state fetches (respects EPA rate limits)
 
 import { PRIORITY_STATES } from '@/lib/constants';
 
@@ -129,12 +129,6 @@ function transformEnforcement(row: Record<string, any>): SdwisEnforcement | null
   };
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-function delay(ms: number): Promise<void> {
-  return new Promise(r => setTimeout(r, ms));
-}
-
 // ── GET Handler ──────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
@@ -164,7 +158,12 @@ export async function GET(request: NextRequest) {
     const allEnforcement: SdwisEnforcement[] = [];
     const processedStates: string[] = [];
 
-    for (const stateAbbr of PRIORITY_STATES) {
+    // Semaphore-based parallel fetching (CONCURRENCY states at a time)
+    const queue = [...PRIORITY_STATES];
+    let running = 0;
+    let idx = 0;
+
+    async function processState(stateAbbr: string): Promise<void> {
       try {
         console.log(`[SDWIS Cron] Fetching ${stateAbbr}...`);
 
@@ -194,12 +193,8 @@ export async function GET(request: NextRequest) {
         for (const v of violations) {
           const key = `${v.pwsid}|${v.code}|${v.compliancePeriod}`;
           if (!violationMap.has(key)) {
-            // Assign coordinates from system lookup
             const coords = pwsidCoords.get(v.pwsid);
-            if (coords) {
-              v.lat = coords.lat;
-              v.lng = coords.lng;
-            }
+            if (coords) { v.lat = coords.lat; v.lng = coords.lng; }
             violationMap.set(key, v);
           }
         }
@@ -211,10 +206,7 @@ export async function GET(request: NextRequest) {
           const key = `${e.pwsid}|${e.actionType}|${e.date}`;
           if (!enfMap.has(key)) {
             const coords = pwsidCoords.get(e.pwsid);
-            if (coords) {
-              e.lat = coords.lat;
-              e.lng = coords.lng;
-            }
+            if (coords) { e.lat = coords.lat; e.lng = coords.lng; }
             enfMap.set(key, e);
           }
         }
@@ -239,44 +231,19 @@ export async function GET(request: NextRequest) {
         console.warn(`[SDWIS Cron] ${stateAbbr} failed:`, e instanceof Error ? e.message : e);
         stateResults[stateAbbr] = { systems: 0, violations: 0, enforcement: 0 };
       }
-
-      // Rate limit delay between states
-      await delay(STATE_DELAY_MS);
     }
 
-    // ── Retry failed states ───────────────────────────────────────────────
-    const failedStates = PRIORITY_STATES.filter(s => !processedStates.includes(s));
-    if (failedStates.length > 0) {
-      console.log(`[SDWIS Cron] Retrying ${failedStates.length} failed states...`);
-      for (const stateAbbr of failedStates) {
-        await delay(5000);
-        try {
-          const systems = await fetchTable('WATER_SYSTEM', 'STATE_CODE', stateAbbr, transformSystem);
-          const [violations, enforcement] = await Promise.all([
-            fetchTable('VIOLATION', 'PRIMACY_AGENCY_CODE', stateAbbr, transformViolation),
-            fetchTable('ENFORCEMENT_ACTION', 'STATE_CODE', stateAbbr, transformEnforcement),
-          ]);
-
-          // Build PWSID lookup and assign coords
-          const systemMap = new Map<string, SdwisSystem>();
-          for (const s of systems) { if (!systemMap.has(s.pwsid)) systemMap.set(s.pwsid, s); }
-          const pwsidCoords = new Map<string, { lat: number; lng: number }>();
-          for (const s of systemMap.values()) pwsidCoords.set(s.pwsid, { lat: s.lat, lng: s.lng });
-          for (const v of violations) { const c = pwsidCoords.get(v.pwsid); if (c) { v.lat = c.lat; v.lng = c.lng; } }
-          for (const e of enforcement) { const c = pwsidCoords.get(e.pwsid); if (c) { e.lat = c.lat; e.lng = c.lng; } }
-
-          allSystems.push(...systemMap.values());
-          allViolations.push(...violations.filter(v => v.lat !== 0));
-          allEnforcement.push(...enforcement.filter(e => e.lat !== 0));
-          processedStates.push(stateAbbr);
-
-          stateResults[stateAbbr] = { systems: systemMap.size, violations: violations.length, enforcement: enforcement.length };
-          console.log(`[SDWIS Cron] ${stateAbbr}: RETRY OK`);
-        } catch (e) {
-          console.warn(`[SDWIS Cron] ${stateAbbr}: RETRY FAILED — ${e instanceof Error ? e.message : e}`);
+    await new Promise<void>((resolve) => {
+      function next() {
+        if (idx >= queue.length && running === 0) return resolve();
+        while (running < CONCURRENCY && idx < queue.length) {
+          const st = queue[idx++];
+          running++;
+          processState(st).finally(() => { running--; next(); });
         }
       }
-    }
+      next();
+    });
 
     // ── Build Grid Index ───────────────────────────────────────────────────
     const grid: Record<string, {

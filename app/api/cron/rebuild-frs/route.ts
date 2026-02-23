@@ -17,8 +17,8 @@ import {
 // ── Config ───────────────────────────────────────────────────────────────────
 
 const EF_BASE = 'https://data.epa.gov/efservice';
-const STATE_DELAY_MS = 2000;
 const PAGE_SIZE = 5000;
+const CONCURRENCY = 3;
 
 import { PRIORITY_STATES } from '@/lib/constants';
 
@@ -93,12 +93,6 @@ function transformFacility(row: Record<string, any>): FrsFacility | null {
   };
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-function delay(ms: number): Promise<void> {
-  return new Promise(r => setTimeout(r, ms));
-}
-
 // ── GET Handler ──────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
@@ -126,58 +120,46 @@ export async function GET(request: NextRequest) {
     const allFacilities: FrsFacility[] = [];
     const processedStates: string[] = [];
 
-    for (const stateAbbr of PRIORITY_STATES) {
-      try {
-        console.log(`[FRS Cron] Fetching ${stateAbbr}...`);
+    // Semaphore-based parallel fetching
+    const queue = [...PRIORITY_STATES];
+    let running = 0;
+    let idx = 0;
 
-        // Use FRS_FACILITY_SITE which has LATITUDE83/LONGITUDE83
-        const facilities = await fetchTable(
-          'FRS_FACILITY_SITE', 'STATE_CODE', stateAbbr, transformFacility,
-        );
+    await new Promise<void>((resolve) => {
+      function next() {
+        if (idx >= queue.length && running === 0) return resolve();
+        while (running < CONCURRENCY && idx < queue.length) {
+          const stateAbbr = queue[idx++];
+          running++;
+          (async () => {
+            try {
+              console.log(`[FRS Cron] Fetching ${stateAbbr}...`);
+              const facilities = await fetchTable(
+                'FRS_FACILITY_SITE', 'STATE_CODE', stateAbbr, transformFacility,
+              );
 
-        // Deduplicate facilities by registryId
-        const facMap = new Map<string, FrsFacility>();
-        for (const f of facilities) {
-          if (!facMap.has(f.registryId)) facMap.set(f.registryId, f);
-        }
-        const dedupedFacilities = Array.from(facMap.values());
+              const facMap = new Map<string, FrsFacility>();
+              for (const f of facilities) {
+                if (!facMap.has(f.registryId)) facMap.set(f.registryId, f);
+              }
+              const dedupedFacilities = Array.from(facMap.values());
 
-        allFacilities.push(...dedupedFacilities);
-        processedStates.push(stateAbbr);
-
-        stateResults[stateAbbr] = {
-          facilities: dedupedFacilities.length,
-        };
-
-        console.log(`[FRS Cron] ${stateAbbr}: ${dedupedFacilities.length} facilities`);
-      } catch (e) {
-        console.warn(`[FRS Cron] ${stateAbbr} failed:`, e instanceof Error ? e.message : e);
-        stateResults[stateAbbr] = { facilities: 0 };
-      }
-
-      // Rate limit delay between states
-      await delay(STATE_DELAY_MS);
-    }
-
-    // ── Retry failed states ───────────────────────────────────────────────
-    const failedStates = PRIORITY_STATES.filter(s => !processedStates.includes(s));
-    if (failedStates.length > 0) {
-      console.log(`[FRS Cron] Retrying ${failedStates.length} failed states...`);
-      for (const stateAbbr of failedStates) {
-        await delay(5000);
-        try {
-          const facilities = await fetchTable('FRS_FACILITY_SITE', 'STATE_CODE', stateAbbr, transformFacility);
-          const facMap = new Map<string, FrsFacility>();
-          for (const f of facilities) if (!facMap.has(f.registryId)) facMap.set(f.registryId, f);
-          allFacilities.push(...facMap.values());
-          processedStates.push(stateAbbr);
-          stateResults[stateAbbr] = { facilities: facMap.size };
-          console.log(`[FRS Cron] ${stateAbbr}: RETRY OK`);
-        } catch (e) {
-          console.warn(`[FRS Cron] ${stateAbbr}: RETRY FAILED — ${e instanceof Error ? e.message : e}`);
+              allFacilities.push(...dedupedFacilities);
+              processedStates.push(stateAbbr);
+              stateResults[stateAbbr] = { facilities: dedupedFacilities.length };
+              console.log(`[FRS Cron] ${stateAbbr}: ${dedupedFacilities.length} facilities`);
+            } catch (e) {
+              console.warn(`[FRS Cron] ${stateAbbr} failed:`, e instanceof Error ? e.message : e);
+              stateResults[stateAbbr] = { facilities: 0 };
+            } finally {
+              running--;
+              next();
+            }
+          })();
         }
       }
-    }
+      next();
+    });
 
     // ── Build Grid Index ───────────────────────────────────────────────────
     const grid: Record<string, { facilities: FrsFacility[] }> = {};

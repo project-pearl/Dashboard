@@ -111,30 +111,25 @@ export async function GET(request: NextRequest) {
             if (name) locationNames.add(name);
           }
 
-          // Fetch location details in batches
+          // Fetch location details individually (batch endpoint unreliable)
           const locations: UsaceLocation[] = [];
-          const nameArray = [...locationNames];
+          const nameArray = [...locationNames].slice(0, 50); // Cap per office
 
-          for (let j = 0; j < nameArray.length; j += 10) {
-            const nameBatch = nameArray.slice(j, j + 10);
-            const nameParam = nameBatch.join('|');
-
-            const locData = await cwmsFetch<any>(
-              `/locations?office=${office}&names=${encodeURIComponent(nameParam)}&format=json`
+          for (const locName of nameArray) {
+            const loc = await cwmsFetch<any>(
+              `/locations/${encodeURIComponent(locName)}?office=${office}`
             );
 
-            if (locData?.locations?.entries) {
-              for (const loc of locData.locations.entries) {
-                const lat = loc.geolocation?.latitude || loc.latitude;
-                const lng = loc.geolocation?.longitude || loc.longitude;
-                if (!lat || !lng) continue;
-
+            if (loc) {
+              const lat = loc.latitude;
+              const lng = loc.longitude;
+              if (lat && lng) {
                 locations.push({
-                  name: loc.name || '',
+                  name: loc.name || locName,
                   office,
                   lat,
                   lng,
-                  type: loc['location-kind'] || loc.kind || '',
+                  type: loc['location-kind'] || loc['location-type'] || '',
                   nearestCity: loc['nearest-city'] || '',
                   state: loc['state-initial'] || '',
                   waterTemp: null,
@@ -145,7 +140,7 @@ export async function GET(request: NextRequest) {
               }
             }
 
-            await delay(200);
+            await delay(100);
           }
 
           return { office, locations };
