@@ -21,10 +21,10 @@ export const maxDuration = 300;
 // UCMR5 occurrence data (tab-delimited text inside ZIP)
 const UCMR5_ZIP_URL = 'https://www.epa.gov/system/files/other-files/2023-08/ucmr5-occurrence-data.zip';
 
-// Envirofacts for geocoding PWSIDs → lat/lng
-const EF_BASE = 'https://data.epa.gov/efservice';
-const GEO_BATCH_SIZE = 50; // PWSIDs per Envirofacts request
-const GEO_DELAY_MS = 500;
+// ZIP code centroid lookup for geocoding PWSIDs → lat/lng
+const ZIP_API_BASE = 'https://api.zippopotam.us/us';
+const ZIP_BATCH_SIZE = 20;  // Concurrent ZIP code lookups
+const ZIP_DELAY_MS = 200;   // Delay between batches
 
 // PFAS analytes in UCMR5 (all 29 PFAS + lithium — we filter to PFAS only)
 const PFAS_KEYWORDS = [
@@ -60,7 +60,7 @@ interface Ucmr5Row {
   sampleDate: string;
 }
 
-async function fetchAndParseUcmr5(): Promise<Ucmr5Row[]> {
+async function fetchAndParseUcmr5(): Promise<{ rows: Ucmr5Row[]; pwsidToZip: Map<string, string> }> {
   console.log(`[PFAS Cron] Downloading UCMR5 occurrence data...`);
 
   const res = await fetch(UCMR5_ZIP_URL, {
@@ -146,7 +146,30 @@ async function fetchAndParseUcmr5(): Promise<Ucmr5Row[]> {
   }
 
   console.log(`[PFAS Cron] Parsed ${rows.length} PFAS rows from ${lines.length - 1} total rows`);
-  return rows;
+
+  // Parse UCMR5_ZIPCodes.txt for PWSID → ZIP code mapping
+  const pwsidToZip = new Map<string, string>();
+  const zipFile = allFiles.find(f => /zipcodes/i.test(f) && f.endsWith('.txt'));
+  if (zipFile) {
+    const zipContent = await zip.files[zipFile].async('string');
+    const zipLines = zipContent.split('\n');
+    if (zipLines.length > 1) {
+      const zipHeaders = zipLines[0].split('\t').map(h => h.trim().replace(/"/g, ''));
+      const zpwsidCol = zipHeaders.findIndex(h => /pwsid/i.test(h));
+      const zzipCol = zipHeaders.findIndex(h => /zip/i.test(h));
+      if (zpwsidCol >= 0 && zzipCol >= 0) {
+        for (let i = 1; i < zipLines.length; i++) {
+          const parts = zipLines[i].split('\t').map(c => c.trim().replace(/"/g, ''));
+          const id = parts[zpwsidCol] || '';
+          const zc = (parts[zzipCol] || '').replace(/-.*/, '').substring(0, 5);
+          if (id && zc && /^\d{5}$/.test(zc)) pwsidToZip.set(id, zc);
+        }
+      }
+    }
+    console.log(`[PFAS Cron] Loaded ${pwsidToZip.size} PWSID → ZIP code mappings`);
+  }
+
+  return { rows, pwsidToZip };
 }
 
 // ── JSZip dynamic import ────────────────────────────────────────────────────
@@ -164,59 +187,69 @@ async function importJSZip(): Promise<any> {
   }
 }
 
-// ── Geocode PWSIDs via Envirofacts WATER_SYSTEM_FACILITY ─────────────────────
+// ── Geocode PWSIDs via ZIP code centroids ────────────────────────────────────
 
-async function geocodePwsids(pwsids: string[]): Promise<Map<string, { lat: number; lng: number }>> {
+async function geocodePwsids(
+  pwsidToZip: Map<string, string>,
+): Promise<Map<string, { lat: number; lng: number }>> {
   const coordMap = new Map<string, { lat: number; lng: number }>();
-  const unique = [...new Set(pwsids)];
 
-  console.log(`[PFAS Cron] Geocoding ${unique.length} unique PWSIDs...`);
+  // Collect unique ZIP codes
+  const uniqueZips = [...new Set(pwsidToZip.values())];
+  console.log(`[PFAS Cron] Geocoding ${uniqueZips.length} unique ZIP codes...`);
 
-  // Batch by state prefix (first 2 chars of PWSID) for more efficient queries
-  const byState = new Map<string, string[]>();
-  for (const id of unique) {
-    const st = id.substring(0, 2);
-    const arr = byState.get(st) || [];
-    arr.push(id);
-    byState.set(st, arr);
-  }
+  // Batch fetch ZIP centroids from Zippopotam.us
+  const zipCoords = new Map<string, { lat: number; lng: number }>();
+  let fetched = 0;
 
-  let geocoded = 0;
-  for (const [state, ids] of byState) {
-    // Fetch all facilities for this state in one shot
-    try {
-      const url = `${EF_BASE}/WATER_SYSTEM_FACILITY/STATE_CODE/${state}/ROWS/0:9999/JSON`;
-      const res = await fetch(url, {
-        headers: { 'Accept': 'application/json' },
-        signal: AbortSignal.timeout(30_000),
-      });
-
-      if (!res.ok) continue;
-      const data = await res.json();
-      if (!Array.isArray(data)) continue;
-
-      const idSet = new Set(ids);
-      for (const row of data) {
-        const pwsid = row.PWSID || row.PWS_ID || '';
-        if (!idSet.has(pwsid)) continue;
-
-        const lat = parseFloat(row.LATITUDE_MEASURE || row.LATITUDE || '');
-        const lng = parseFloat(row.LONGITUDE_MEASURE || row.LONGITUDE || '');
-        if (!isNaN(lat) && !isNaN(lng) && lat !== 0) {
-          coordMap.set(pwsid, {
-            lat: Math.round(lat * 100000) / 100000,
-            lng: Math.round(lng * 100000) / 100000,
+  for (let i = 0; i < uniqueZips.length; i += ZIP_BATCH_SIZE) {
+    const batch = uniqueZips.slice(i, i + ZIP_BATCH_SIZE);
+    const results = await Promise.allSettled(
+      batch.map(async (zip) => {
+        try {
+          const res = await fetch(`${ZIP_API_BASE}/${zip}`, {
+            signal: AbortSignal.timeout(5_000),
           });
-          geocoded++;
+          if (!res.ok) return null;
+          const data = await res.json();
+          const place = data?.places?.[0];
+          if (!place) return null;
+          const lat = parseFloat(place.latitude);
+          const lng = parseFloat(place.longitude);
+          if (isNaN(lat) || isNaN(lng)) return null;
+          return { zip, lat, lng };
+        } catch {
+          return null;
         }
+      }),
+    );
+
+    for (const r of results) {
+      if (r.status === 'fulfilled' && r.value) {
+        zipCoords.set(r.value.zip, { lat: r.value.lat, lng: r.value.lng });
+        fetched++;
       }
-    } catch {
-      // Skip state on error — we'll have partial geocoding
     }
-    await delay(GEO_DELAY_MS);
+
+    if (i + ZIP_BATCH_SIZE < uniqueZips.length) {
+      await delay(ZIP_DELAY_MS);
+    }
   }
 
-  console.log(`[PFAS Cron] Geocoded ${geocoded}/${unique.length} PWSIDs`);
+  console.log(`[PFAS Cron] Resolved ${fetched}/${uniqueZips.length} ZIP codes`);
+
+  // Map PWSIDs to coordinates via their ZIP codes
+  for (const [pwsid, zip] of pwsidToZip) {
+    const coords = zipCoords.get(zip);
+    if (coords) {
+      coordMap.set(pwsid, {
+        lat: Math.round(coords.lat * 100000) / 100000,
+        lng: Math.round(coords.lng * 100000) / 100000,
+      });
+    }
+  }
+
+  console.log(`[PFAS Cron] Geocoded ${coordMap.size}/${pwsidToZip.size} PWSIDs`);
   return coordMap;
 }
 
@@ -243,8 +276,8 @@ export async function GET(request: NextRequest) {
   const startTime = Date.now();
 
   try {
-    // Step 1: Download and parse UCMR5 occurrence data
-    const rows = await fetchAndParseUcmr5();
+    // Step 1: Download and parse UCMR5 occurrence data + ZIP code mapping
+    const { rows, pwsidToZip } = await fetchAndParseUcmr5();
 
     if (rows.length === 0) {
       console.warn('[PFAS Cron] No PFAS rows found in UCMR5 data');
@@ -265,9 +298,8 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Step 2: Geocode PWSIDs
-    const allPwsids = rows.map(r => r.pwsid).filter(Boolean);
-    const coordMap = await geocodePwsids(allPwsids);
+    // Step 2: Geocode PWSIDs via ZIP code centroids
+    const coordMap = await geocodePwsids(pwsidToZip);
 
     // Step 3: Transform to PfasResult with coordinates
     const results: PfasResult[] = [];
