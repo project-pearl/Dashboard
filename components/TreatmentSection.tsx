@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import PublicHeader from "@/components/PublicHeader";
+import SystemArchitecture from "@/components/SystemArchitecture";
 
 /* ═══════════════════════════════════════════════════════════════════════
    HOOKS
@@ -446,86 +447,9 @@ const TreatmentSection: React.FC = () => {
       </div>
 
       {/* ════════════════════════════════════════════════════════════════
-          SYSTEM ARCHITECTURE — Dark section
+          SYSTEM ARCHITECTURE — Standalone component
           ════════════════════════════════════════════════════════════════ */}
-      <div className="bg-slate-950 text-white">
-        <div className="max-w-5xl mx-auto px-8 py-28 md:py-36">
-          <FadeIn>
-            <div className="text-center mb-16">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-emerald-400 mb-4">
-                System Architecture
-              </p>
-              <h2 className="text-3xl md:text-5xl font-bold leading-tight mb-5">
-                Diagnose and treat.{" "}
-                <span className="text-slate-500">One platform.</span>
-              </h2>
-              <p className="text-slate-400 max-w-xl mx-auto text-lg">
-                The only integrated system that identifies where waterways are failing and deploys
-                physical infrastructure to fix them.
-              </p>
-            </div>
-          </FadeIn>
-
-          <div className="space-y-4">
-            {/* PIN Layer */}
-            <FadeIn>
-              <div className="group relative bg-white/[0.04] backdrop-blur-sm rounded-2xl p-8 md:p-10 ring-1 ring-white/10 hover:ring-sky-500/30 transition-all duration-500">
-                <div className="absolute top-0 left-10 right-10 h-px bg-gradient-to-r from-transparent via-sky-500/40 to-transparent" />
-                <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
-                  <div className="flex items-center gap-4">
-                    <span className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center text-sm font-bold ring-1 ring-sky-500/20">01</span>
-                    <h3 className="text-xl font-bold">PIN — The Diagnostic Layer</h3>
-                  </div>
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.2em] px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20">
-                    Operational
-                  </span>
-                </div>
-                <p className="text-[15px] text-slate-400 leading-relaxed mb-6">
-                  The PEARL Intelligence Network monitors surface water quality across all 50 states.
-                  565,000+ assessment points. Real-time federal data from USGS, EPA, NOAA, and state
-                  agencies. Role-based dashboards for municipalities, regulators, researchers, and educators.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {["50-state coverage", "15-min data resolution", "AI-powered analysis", "Compliance automation", "Cross-jurisdictional benchmarking"].map((t, i) => (
-                    <span key={i} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-sky-500/10 text-sky-300 ring-1 ring-sky-500/20">{t}</span>
-                  ))}
-                </div>
-              </div>
-            </FadeIn>
-
-            {/* Connector */}
-            <div className="flex justify-center">
-              <div className="w-px h-10 bg-gradient-to-b from-sky-500/60 to-emerald-500/60" />
-            </div>
-
-            {/* PEARL Layer */}
-            <FadeIn>
-              <div className="group relative bg-white/[0.04] backdrop-blur-sm rounded-2xl p-8 md:p-10 ring-1 ring-white/10 hover:ring-emerald-500/30 transition-all duration-500">
-                <div className="absolute top-0 left-10 right-10 h-px bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent" />
-                <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
-                  <div className="flex items-center gap-4">
-                    <span className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-sm font-bold ring-1 ring-emerald-500/20">02</span>
-                    <h3 className="text-xl font-bold">PEARL — The Treatment Layer</h3>
-                  </div>
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.2em] px-4 py-1.5 rounded-full bg-amber-500/10 text-amber-400 ring-1 ring-amber-500/20">
-                    Pilot Validated
-                  </span>
-                </div>
-                <p className="text-[15px] text-slate-400 leading-relaxed mb-6">
-                  Modular biofiltration and mechanical treatment deployed at the shoreline. Oyster
-                  raceways and progressive mesh screens intercept what land-based BMPs miss. Each
-                  unit generates high-frequency treatment data that feeds back into PIN.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {["Oyster biofiltration", "3-stage mechanical filtration", "88–95% TSS removal", "Mobile + fixed deployment", "Watershed-scalable"].map((t, i) => (
-                    <span key={i} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/20">{t}</span>
-                  ))}
-                </div>
-              </div>
-            </FadeIn>
-          </div>
-        </div>
-      </div>
+      <SystemArchitecture />
 
       {/* ════════════════════════════════════════════════════════════════
           WHY THIS MATTERS — Emotional close
