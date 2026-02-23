@@ -34,6 +34,7 @@ import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
+import { GrantOpportunityMatcher } from './GrantOpportunityMatcher';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -79,7 +80,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: true,
     showHotspots: true, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['aiinsights', 'waterbody-card', 'resolution-planner', 'top10', 'disclaimer']),
+    sections: new Set(['aiinsights', 'resolution-planner', 'top10', 'disclaimer']),
   },
   compliance: {
     label: 'Compliance',
@@ -1407,6 +1408,7 @@ export function NationalCommandCenter(props: Props) {
   // showAccountPanel and showViewDropdown removed — account is in DashboardHeader, lens is in sidebar
   const [showRestorationCard, setShowRestorationCard] = useState(false);
   const [showCostPanel, setShowCostPanel] = useState(false);
+  const [showGrantMatcher, setShowGrantMatcher] = useState(false);
   const displayedRegions = showAllWaterbodies ? filteredStateRegions : filteredStateRegions.slice(0, DISPLAY_LIMIT);
 
   // Auto-select top priority waterbody when state changes
@@ -2625,55 +2627,107 @@ export function NationalCommandCenter(props: Props) {
           );
         })()}
 
-        {/* ── WATERBODY DETAIL — Shows below map, auto-selected (hidden in monitoring lens) ────── */}
-        {viewLens !== 'monitoring' && activeDetailId && (() => {
-          const nccRegion = regionData.find(r => r.id === activeDetailId);
-          const regionConfig = getRegionById(activeDetailId);
-          const regionName = regionConfig?.name || nccRegion?.name || activeDetailId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-          const stateAbbr = nccRegion?.state || '';
-
-          // Resolve bulk ATTAINS for this waterbody
-          const bulkAttainsResolved = (() => {
-            const stateData = attainsBulk[stateAbbr];
-            if (!stateData) return null;
-            const matches = matchAttainsToRegistry(regionName, stateAbbr);
-            const matchId = matches.find(id => id === activeDetailId);
-            if (!matchId) {
-              const normName = regionName.toLowerCase().replace(/,.*$/, '').trim();
-              return stateData.find(a => {
-                const aN = a.name.toLowerCase().trim();
-                return aN.includes(normName) || normName.includes(aN);
-              }) || null;
-            }
-            return stateData.find(a => {
-              const matched = matchAttainsToRegistry(a.name, stateAbbr);
-              return matched.includes(activeDetailId!);
-            }) || null;
-          })();
-
+        {/* ── STATE WATERBODY INSPECTOR — tied to selectedState from map ────── */}
+        {viewLens !== 'monitoring' && (() => {
+          const wbRow = stateRollup.find(r => r.abbr === selectedState);
+          const wbRegion = getEpaRegionForState(selectedState);
           return (
-            <WaterbodyDetailCard
-              regionName={regionName}
-              stateAbbr={stateAbbr}
-              stateName={STATE_ABBR_TO_NAME[stateAbbr] || stateAbbr}
-              alertLevel={nccRegion?.alertLevel || 'none'}
-              activeAlerts={nccRegion?.activeAlerts ?? 0}
-              lastUpdatedISO={nccRegion?.lastUpdatedISO}
-              waterData={waterData}
-              waterLoading={waterLoading}
-              hasRealData={hasRealData}
-              attainsPerWb={attainsCache[activeDetailId]}
-              attainsBulk={bulkAttainsResolved}
-              ejData={ejCache[activeDetailId]}
-              ejDetail={getEJData(stateAbbr)}
-              ecoScore={overlayByState.get(stateAbbr)?.wildlife ?? 0}
-              ecoData={getEcoData(stateAbbr)}
-              overlay={overlayByState.get(stateAbbr)}
-              stSummary={stateSummaryCache[stateAbbr]}
-              stateAgency={STATE_AGENCIES[stateAbbr]}
-              dataSources={DATA_SOURCES}
-              onToast={(msg) => { setToastMsg(msg); setTimeout(() => setToastMsg(null), 2500); }}
-            />
+            <Card className="border-2 border-sky-200 bg-gradient-to-br from-sky-50 to-white">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">State Waterbody Inspector</CardTitle>
+                  <BrandedPrintBtn sectionId="waterbody-inspector-inline" title="State Waterbody Inspector" />
+                </div>
+                <CardDescription>
+                  {wbRow ? `${wbRow.name} (${wbRow.abbr}) — EPA Region ${wbRegion}` : 'Select a state from the map above'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {!wbRow || !wbRow.canGradeState ? (
+                  <p className="text-sm text-slate-500 italic">
+                    {wbRow ? `Insufficient data available for ${wbRow.name} to generate a waterbody assessment.` : 'Select a state from the map above to inspect its waterbody profile.'}
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <span className={`inline-flex items-center justify-center w-10 h-10 rounded-full text-sm font-bold border ${wbRow.grade.bg} ${wbRow.grade.color}`}>
+                        {wbRow.grade.letter}
+                      </span>
+                      <div>
+                        <p className="text-sm font-semibold text-slate-800">{wbRow.name}</p>
+                        <p className="text-xs text-slate-500">Score: {wbRow.score}/100 · Data: {wbRow.dataSource === 'per-waterbody' ? 'Per-Waterbody Assessment' : 'ATTAINS Bulk'} · EPA Region {wbRegion}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      {[
+                        { label: 'Total Waterbodies', value: wbRow.waterbodies.toLocaleString(), color: 'text-sky-700 bg-sky-50 border-sky-200' },
+                        { label: 'Assessed', value: wbRow.assessed.toLocaleString(), color: 'text-blue-700 bg-blue-50 border-blue-200' },
+                        { label: 'Total Impaired', value: wbRow.totalImpaired.toLocaleString(), color: 'text-amber-700 bg-amber-50 border-amber-200' },
+                        { label: 'Cat 5 (Needs TMDL)', value: wbRow.cat5.toLocaleString(), color: 'text-red-700 bg-red-50 border-red-200' },
+                      ].map(s => (
+                        <div key={s.label} className={`rounded-lg border p-2 text-center ${s.color}`}>
+                          <p className="text-lg font-bold">{s.value}</p>
+                          <p className="text-[10px] leading-tight">{s.label}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">Impairment Categories</h4>
+                      <div className="grid grid-cols-4 gap-2">
+                        {[
+                          { label: 'Cat 5 — Needs TMDL', value: wbRow.cat5, color: 'bg-red-100 text-red-800 border-red-200' },
+                          { label: 'Cat 4A — TMDL Done', value: wbRow.cat4a, color: 'bg-orange-100 text-orange-800 border-orange-200' },
+                          { label: 'Cat 4B — Other Control', value: wbRow.cat4b, color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+                          { label: 'Cat 4C — Not Pollutant', value: wbRow.cat4c, color: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+                        ].map(c => (
+                          <div key={c.label} className={`rounded border p-2 text-center ${c.color}`}>
+                            <p className="text-base font-bold">{c.value.toLocaleString()}</p>
+                            <p className="text-[9px] leading-tight">{c.label}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    {wbRow.topCauses.length > 0 && (
+                      <div>
+                        <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">Top Impairment Causes</h4>
+                        <div className="space-y-1">
+                          {wbRow.topCauses.slice(0, 8).map((tc, i) => (
+                            <div key={tc.cause} className="flex items-center gap-2 text-xs">
+                              <span className="text-slate-400 w-4 text-right">{i + 1}.</span>
+                              <span className="flex-1 text-slate-700">{tc.cause}</span>
+                              <span className="font-mono text-slate-500">{tc.count.toLocaleString()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <div>
+                      <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">Monitoring Coverage</h4>
+                      <div className="grid grid-cols-3 gap-2 text-xs">
+                        <div className="bg-green-50 border border-green-200 rounded p-2 text-center">
+                          <p className="text-sm font-bold text-green-700">{wbRow.monitored.toLocaleString()}</p>
+                          <p className="text-green-600">Monitored</p>
+                        </div>
+                        <div className="bg-blue-50 border border-blue-200 rounded p-2 text-center">
+                          <p className="text-sm font-bold text-blue-700">{wbRow.assessed.toLocaleString()}</p>
+                          <p className="text-blue-600">Assessed</p>
+                        </div>
+                        <div className="bg-slate-50 border border-slate-200 rounded p-2 text-center">
+                          <p className="text-sm font-bold text-slate-700">{wbRow.unmonitored.toLocaleString()}</p>
+                          <p className="text-slate-600">Unmonitored</p>
+                        </div>
+                      </div>
+                      {wbRow.waterbodies > 0 && (
+                        <div className="mt-2 h-2 rounded-full bg-slate-200 overflow-hidden flex">
+                          <div className="bg-green-500 h-full" style={{ width: `${(wbRow.monitored / wbRow.waterbodies * 100).toFixed(1)}%` }} />
+                          <div className="bg-blue-400 h-full" style={{ width: `${(wbRow.assessed / wbRow.waterbodies * 100).toFixed(1)}%` }} />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           );
         })()}
 
@@ -5584,12 +5638,28 @@ export function NationalCommandCenter(props: Props) {
             <div className="border border-blue-200 bg-blue-50 rounded-lg p-4">
               <h3 className="text-sm font-semibold text-blue-800 mb-2">Impairment-to-Grant Matching</h3>
               <p className="text-xs text-blue-700 leading-relaxed mb-3">
-                PIN can match your state&apos;s top impairments to eligible federal funding programs. Connect Category 5 waterbodies to 319(h) grants, PFAS detections to DWSRF emerging contaminant set-asides, and infrastructure needs to WIFIA/BIL funding.
+                Match your state&apos;s top impairments to eligible federal funding programs. Connect Category 5 waterbodies to 319(h) grants, PFAS detections to DWSRF emerging contaminant set-asides, and infrastructure needs to WIFIA/BIL funding.
               </p>
-              <Button variant="outline" size="sm" className="text-xs border-blue-300 text-blue-700 hover:bg-blue-100">
-                Run Grant Matching Analysis
+              <Button
+                variant={showGrantMatcher ? 'default' : 'outline'}
+                size="sm"
+                className="text-xs border-blue-300 text-blue-700 hover:bg-blue-100"
+                onClick={() => setShowGrantMatcher(prev => !prev)}
+              >
+                {showGrantMatcher ? 'Hide Grant Analysis' : 'Run Grant Matching Analysis'}
               </Button>
             </div>
+
+            {/* Grant Matching Results */}
+            {showGrantMatcher && (
+              <GrantOpportunityMatcher
+                regionId={selectedState.toLowerCase()}
+                removalEfficiencies={{ TSS: 90, TN: 45, TP: 55, bacteria: 85, DO: 30 }}
+                alertsCount={nationalStats.totalAlerts}
+                userRole="Federal"
+                stateAbbr={selectedState}
+              />
+            )}
           </CardContent>
         </Card>
         </>);

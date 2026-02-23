@@ -23,7 +23,6 @@ const PARAM_DISPLAY: Record<string, { label: string; unit: string; target?: stri
   TP: { label: 'Total Phosphorus', unit: 'mg/L', target: '<0.1', good: v => v < 0.1 },
   conductivity: { label: 'Conductivity', unit: 'µS/cm' },
   salinity: { label: 'Salinity', unit: 'PSU' },
-  discharge: { label: 'Discharge', unit: 'cfs' },
   DO_pct: { label: 'DO Saturation', unit: '%', target: '≥60%', good: v => v >= 60 },
   bacteria: { label: 'Bacteria', unit: 'MPN/100mL', target: '<235', good: v => v < 235 },
   chlorophyll: { label: 'Chlorophyll-a', unit: 'µg/L', target: '<20', good: v => v < 20 },
@@ -31,7 +30,10 @@ const PARAM_DISPLAY: Record<string, { label: string; unit: string; target?: stri
   secchi: { label: 'Secchi Depth', unit: 'Meters' },
 };
 
-const PARAM_ORDER = ['DO', 'temperature', 'pH', 'turbidity', 'TSS', 'TN', 'TP', 'conductivity', 'salinity', 'discharge', 'bacteria', 'chlorophyll', 'DO_pct', 'gage_height', 'secchi'];
+const PARAM_ORDER = ['DO', 'temperature', 'pH', 'turbidity', 'TSS', 'TN', 'TP', 'conductivity', 'salinity', 'bacteria', 'chlorophyll', 'DO_pct', 'gage_height', 'secchi'];
+
+// Parameters excluded from display (raw field/operational data, not water quality indicators)
+const EXCLUDED_PARAMS = new Set(['discharge', 'nitrate', 'nitrite', 'nitrate_nitrite', 'TKN', 'NITRATE', 'NITRITE', 'Nitrate', 'Nitrite']);
 
 const SOURCE_COLOR: Record<string, string> = {
   USGS: 'bg-green-100 text-green-800',
@@ -288,10 +290,10 @@ export function WaterbodyDetailCard({
           </div>
         )}
 
-        {/* Parameter grid — fixed order, all slots shown */}
+        {/* Parameter grid — fixed order, all slots shown, excludes operational params */}
         {!waterLoading && (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 mb-3">
-            {PARAM_ORDER.concat(Object.keys(params).filter(k => !PARAM_ORDER.includes(k))).map(key => {
+            {PARAM_ORDER.concat(Object.keys(params).filter(k => !PARAM_ORDER.includes(k))).filter(k => !EXCLUDED_PARAMS.has(k)).map(key => {
               const p = params[key];
               const display = PARAM_DISPLAY[key] || { label: key, unit: '' };
 
@@ -423,9 +425,11 @@ export function WaterbodyDetailCard({
                 {(() => {
                   const allTs: Record<string, string | null | undefined> = {};
                   for (const [k, p] of Object.entries(params)) {
-                    allTs[k] = (p as any).lastSampled ?? null;
+                    if (!EXCLUDED_PARAMS.has(k)) allTs[k] = (p as any).lastSampled ?? null;
                   }
-                  const fresh = computeFreshnessScore(allTs, TOTAL_DISPLAY_PARAMS);
+                  // Total = number of non-excluded param slots displayed in grid
+                  const displayedSlotCount = PARAM_ORDER.concat(Object.keys(params).filter(k => !PARAM_ORDER.includes(k))).filter(k => !EXCLUDED_PARAMS.has(k)).length;
+                  const fresh = computeFreshnessScore(allTs, displayedSlotCount);
                   return (
                     <div className={`rounded-lg border-2 ${
                       fresh.score >= 70 ? 'border-green-200 bg-green-50'
@@ -476,7 +480,7 @@ export function WaterbodyDetailCard({
 
               {/* Sources row */}
               <div className="flex items-center justify-end gap-2 text-[10px] text-slate-400 pt-1">
-                <span>Sources: {attainsIsLive ? '✅ ATTAINS' : '⚠ Mock 303(d)'} · {ejIsLive ? '✅ EJScreen' : '✅ Census/SDWIS'} · PEARL monitoring</span>
+                <span>Sources: {attainsIsLive ? '✅ ATTAINS' : '⚠ Mock 303(d)'} · {ejIsLive ? '✅ EJScreen' : '✅ Census/SDWIS'} · ALIA monitoring</span>
               </div>
 
               {/* Regulatory Context */}
@@ -559,12 +563,12 @@ export function WaterbodyDetailCard({
                       conditions with {alerts} active alert{alerts !== 1 ? 's' : ''}.
                       {ejScore >= 60 ? ` EJ vulnerability is elevated (${ejScore}/100), indicating disproportionate community health risk.` : ''}
                       {ecoScore >= 60 ? ` Ecological sensitivity is high (${ecoScore}/100), with critical habitat or species concerns.` : ''}
-                      {' '}PEARL's multi-stage biofiltration system could address MS4 compliance requirements under the{' '}
+                      {' '}ALIA's multi-stage biofiltration system could address MS4 compliance requirements under the{' '}
                       {agency.ms4Program} permit while providing measurable water quality improvements and aquatic restoration co-benefits.
                     </div>
                     <button
                       onClick={() => {
-                        const text = `${regionName} in ${stateName || stateAbbr} currently shows ${levelToLabel(level).toLowerCase()} conditions with ${alerts} active alert${alerts !== 1 ? 's' : ''}. PEARL's multi-stage biofiltration system could address MS4 compliance requirements under the ${agency.ms4Program} permit while providing measurable water quality improvements and aquatic restoration co-benefits.`;
+                        const text = `${regionName} in ${stateName || stateAbbr} currently shows ${levelToLabel(level).toLowerCase()} conditions with ${alerts} active alert${alerts !== 1 ? 's' : ''}. ALIA's multi-stage biofiltration system could address MS4 compliance requirements under the ${agency.ms4Program} permit while providing measurable water quality improvements and aquatic restoration co-benefits.`;
                         navigator.clipboard.writeText(text).then(() => {
                           onToast?.('Outreach summary copied to clipboard');
                         });
@@ -606,7 +610,7 @@ export function WaterbodyDetailCard({
                   This assessment is informational and derived from public sources. It is not an official EPA, state, or federal determination.
                 </div>
                 <div className="text-[11px] text-slate-500 space-y-0.5">
-                  <div>• <span className="font-medium">Alert level & active alerts</span> — PEARL NCC regional monitoring database (aggregated from USGS NWIS, Water Quality Portal, NOAA CO-OPS, and other public feeds)</div>
+                  <div>• <span className="font-medium">Alert level & active alerts</span> — ALIA NCC regional monitoring database (aggregated from USGS NWIS, Water Quality Portal, NOAA CO-OPS, and other public feeds)</div>
                   <div>• <span className="font-medium">EJ vulnerability index</span> — {ejIsLive
                     ? <span className="text-green-600 font-medium">EPA EJScreen API (live lookup)</span>
                     : <>Composite derived from <a href="https://data.census.gov" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Census ACS</a> + EPA SDWIS state-level indicators</>
@@ -626,7 +630,7 @@ export function WaterbodyDetailCard({
                 <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mt-2">Important Notes</div>
                 <div className="text-[10px] text-slate-400 space-y-0.5">
                   <div>• This card is read-only at the national level. Corrections, updates, and official designations flow through state agency review processes.</div>
-                  <div>• PEARL does not perform primary data collection or regulatory assessments. All grades, alerts, and indices are automated interpretations of publicly available data and should not be used as substitutes for official agency reports or compliance decisions.</div>
+                  <div>• ALIA does not perform primary data collection or regulatory assessments. All grades, alerts, and indices are automated interpretations of publicly available data and should not be used as substitutes for official agency reports or compliance decisions.</div>
                 </div>
               </div>
             </div>
