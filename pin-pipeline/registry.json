@@ -1,7 +1,7 @@
 {
   "meta": {
     "version": "1.0",
-    "updated": "2026-02-23T14:36:25.091925Z",
+    "updated": "2026-02-23T18:45:23.552696Z",
     "description": "PIN (PEARL Intelligence Network) \u00e2\u20ac\u201d central source registry. Tracks every US water data endpoint with status, priority, staleness, and error history."
   },
   "sources": [
@@ -13,18 +13,18 @@
       "url": "https://www.waterqualitydata.us/data/Result/search?statecode=US:24&characteristicName=Dissolved%20oxygen%20(DO)&startDateLo=01-01-2024&mimeType=csv&sorted=no&zip=no",
       "probe_url": "https://www.waterqualitydata.us/data/Result/search?statecode=US:24&characteristicName=pH&startDateLo=01-01-2025&mimeType=csv&sorted=no&zip=no",
       "format": "csv",
-      "status": "degraded",
+      "status": "live",
       "priority": 1,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:31.556718Z",
-      "error_count": 3,
+      "last_checked": "2026-02-23T18:40:49.435276Z",
+      "error_count": 0,
       "staleness_days": null,
       "record_estimate": "430M+",
       "notes": "Primary discrete sample source. Aggregates USGS, EPA, USDA, tribal, and state lab data. Use statecode=US:{fips} for per-state pulls.",
-      "backoff_minutes": 15,
-      "first_failure": "2026-02-23T05:45:06.724949Z",
-      "next_check_after": "2026-02-23T14:46:31.556749Z"
+      "backoff_minutes": 5,
+      "first_failure": null,
+      "next_check_after": "2026-02-23T18:45:49.435282Z"
     },
     {
       "id": "usgs-nwis-iv",
@@ -38,14 +38,14 @@
       "priority": 1,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:32.415011Z",
+      "last_checked": "2026-02-23T18:40:50.209496Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "1.9M sites",
       "notes": "Real-time 15-minute sensor data. parameterCd: 00300=DO, 00010=Temp, 00400=pH, 00095=Conductivity, 00060=Discharge, 00065=Gage height, 63680=Turbidity",
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-02-23T14:36:32.415018Z"
+      "next_check_after": "2026-02-23T18:45:50.209504Z"
     },
     {
       "id": "usgs-nwis-dv",
@@ -59,14 +59,14 @@
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:33.172650Z",
+      "last_checked": "2026-02-23T18:40:50.938941Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "1.9M sites",
       "notes": "Daily aggregated values (min/max/mean). Same sites as IV but with daily statistics.",
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-02-23T14:36:33.172657Z"
+      "next_check_after": "2026-02-23T18:45:50.938949Z"
     },
     {
       "id": "epa-attains",
@@ -83,14 +83,14 @@
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:33.913478Z",
-      "error_count": 6,
+      "last_checked": "2026-02-23T18:40:51.608033Z",
+      "error_count": 7,
       "staleness_days": null,
       "record_estimate": "565K assessment units",
       "notes": "Already cached in lib/attainsCache.ts (51/51 states). GIS MapServer fallback for large states (PA 216K+). REST API times out for states >50K assessments.",
       "first_failure": "2026-02-22T21:54:18.966083Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:31:33.913501Z"
+      "next_check_after": "2026-02-23T19:40:51.608055Z"
     },
     {
       "id": "epa-sdwis",
@@ -104,14 +104,14 @@
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:34.833421Z",
-      "error_count": 6,
+      "last_checked": "2026-02-23T18:40:52.778373Z",
+      "error_count": 7,
       "staleness_days": null,
       "record_estimate": "150K+ systems",
       "notes": "Drinking water systems, violations, enforcement. Supports Envirofacts REST. Paginated via /ROWS/{start}:{end}.",
       "first_failure": "2026-02-22T21:54:19.895438Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:31:34.833443Z"
+      "next_check_after": "2026-02-23T19:40:52.778398Z"
     },
     {
       "id": "fl-dbhydro",
@@ -125,14 +125,14 @@
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:35.316542Z",
-      "error_count": 6,
+      "last_checked": "2026-02-23T18:40:53.248846Z",
+      "error_count": 7,
       "staleness_days": null,
       "record_estimate": "35M+",
       "notes": "No auth required. South Florida only (Everglades, Lake Okeechobee, coastal). POST requests with station/date parameters.",
       "first_failure": "2026-02-22T21:54:20.360941Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:31:35.316564Z"
+      "next_check_after": "2026-02-23T19:40:53.248866Z"
     },
     {
       "id": "ca-ceden",
@@ -149,14 +149,14 @@
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:36.078885Z",
-      "error_count": 6,
+      "last_checked": "2026-02-23T18:40:53.928792Z",
+      "error_count": 7,
       "staleness_days": null,
       "record_estimate": "10M+ chemistry results",
       "notes": "Open Data Portal is public (CKAN API). Direct CEDEN API (Advanced Query Tool) requires credentials from waterdata@waterboards.ca.gov. Using Open Data Portal for now.",
       "first_failure": "2026-02-22T21:54:20.855808Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:31:36.078908Z"
+      "next_check_after": "2026-02-23T19:40:53.928817Z"
     },
     {
       "id": "cbp-datahub",
@@ -170,14 +170,14 @@
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:36.773256Z",
+      "last_checked": "2026-02-23T18:40:54.759538Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "20M+",
       "notes": "Chesapeake Bay watershed: MD, VA, PA, DE, WV, DC, NY. Endpoints: WaterQuality, LivingResources, Fluorescence, PointSource, Toxics.",
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-02-23T14:36:36.773266Z"
+      "next_check_after": "2026-02-23T18:45:54.759549Z"
     },
     {
       "id": "tx-tceq",
@@ -191,14 +191,14 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:37.318058Z",
-      "error_count": 6,
+      "last_checked": "2026-02-23T18:40:55.424569Z",
+      "error_count": 7,
       "staleness_days": null,
       "record_estimate": "unknown",
       "notes": "SWQMIS web interface. Direct API endpoints not yet mapped. Currently using WQP for TX data.",
       "first_failure": "2026-02-22T21:54:22.126364Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:31:37.318083Z"
+      "next_check_after": "2026-02-23T19:40:55.424592Z"
     },
     {
       "id": "noaa-ndbc",
@@ -215,14 +215,14 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:37.991695Z",
+      "last_checked": "2026-02-23T18:40:56.122021Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "1,300+ buoys",
       "notes": "Buoy data: water temp, wave height, wind. Real-time files at /data/realtime2/{station}.txt. ERDDAP mirror available.",
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-02-23T14:36:37.991704Z"
+      "next_check_after": "2026-02-23T18:45:56.122030Z"
     },
     {
       "id": "noaa-nerrs",
@@ -236,14 +236,14 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:38.674107Z",
+      "last_checked": "2026-02-23T18:40:56.817216Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "29 reserves",
       "notes": "SWMP (System-Wide Monitoring Program). Real-time water quality at estuarine reserves. Also available via CDMO: https://cdmo.baruch.sc.edu/",
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-02-23T14:36:38.674117Z"
+      "next_check_after": "2026-02-23T18:45:56.817224Z"
     },
     {
       "id": "icis_npdes",
@@ -257,14 +257,14 @@
       "priority": 1,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:39.601153Z",
-      "error_count": 6,
+      "last_checked": "2026-02-23T18:40:57.689548Z",
+      "error_count": 7,
       "staleness_days": null,
       "record_estimate": "400K+ facilities",
       "notes": "Every NPDES discharge permit, violation, and inspection in the US. Tables: ICIS_PERMITS, ICIS_VIOLATIONS, ICIS_INSPECTIONS, ICIS_ENFORCEMENT_ACTIONS. Envirofacts REST, no auth. Always filter by STATE_CODE.",
       "first_failure": "2026-02-22T21:54:24.417154Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:31:39.601177Z"
+      "next_check_after": "2026-02-23T19:40:57.689571Z"
     },
     {
       "id": "icis_dmr",
@@ -278,14 +278,14 @@
       "priority": 1,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:40.276546Z",
-      "error_count": 6,
+      "last_checked": "2026-02-23T18:40:58.558749Z",
+      "error_count": 7,
       "staleness_days": null,
       "record_estimate": "100M+",
       "notes": "Actual discharge monitoring data \u00e2\u20ac\u201d BOD, TSS, ammonia, phosphorus, E. coli, flow. VERY large \u00e2\u20ac\u201d always filter by STATE_CODE. Envirofacts REST, no auth.",
       "first_failure": "2026-02-22T21:54:25.325048Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:31:40.276572Z"
+      "next_check_after": "2026-02-23T19:40:58.558771Z"
     },
     {
       "id": "echo_facilities",
@@ -299,14 +299,14 @@
       "priority": 1,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:41.129262Z",
+      "last_checked": "2026-02-23T18:40:59.486038Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "800K+ facilities",
       "notes": "CWA facility compliance data from ECHO. No auth. Query params: p_st for state, responseset for limit.",
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-02-23T14:36:41.129272Z"
+      "next_check_after": "2026-02-23T18:45:59.486047Z"
     },
     {
       "id": "echo_violations",
@@ -320,14 +320,14 @@
       "priority": 1,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:41.890227Z",
+      "last_checked": "2026-02-23T18:41:00.292258Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "varies",
       "notes": "Facilities currently in violation under CWA. p_qiv=Y filters to violators only. No auth.",
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-02-23T14:36:41.890235Z"
+      "next_check_after": "2026-02-23T18:46:00.292266Z"
     },
     {
       "id": "frs_wwtps",
@@ -341,14 +341,14 @@
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:42.577956Z",
-      "error_count": 6,
+      "last_checked": "2026-02-23T18:41:02.551402Z",
+      "error_count": 7,
       "staleness_days": null,
       "record_estimate": "400K+",
       "notes": "Facility Registry Service \u00e2\u20ac\u201d WWTP locations, capacities, permit numbers. Filtered by PGM_SYS_ACRNM=NPDES. Envirofacts REST, no auth.",
       "first_failure": "2026-02-22T21:54:27.677836Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:31:42.577980Z"
+      "next_check_after": "2026-02-23T19:41:02.551429Z"
     },
     {
       "id": "pfas_ucmr",
@@ -362,14 +362,14 @@
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:43.270702Z",
-      "error_count": 6,
+      "last_checked": "2026-02-23T18:41:03.421121Z",
+      "error_count": 7,
       "staleness_days": null,
       "record_estimate": "2M+",
       "notes": "PFAS screening results from Unregulated Contaminant Monitoring Rule (UCMR4). Nationwide \u00e2\u20ac\u201d no state filter needed for initial pull. Envirofacts REST, no auth.",
       "first_failure": "2026-02-22T21:54:28.360506Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:31:43.270724Z"
+      "next_check_after": "2026-02-23T19:41:03.421143Z"
     },
     {
       "id": "cdc_nwss",
@@ -383,14 +383,14 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:44.106221Z",
+      "last_checked": "2026-02-23T18:41:04.367256Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "500K+",
       "notes": "Pathogen concentrations (COVID, RSV, influenza) from wastewater treatment plants. Socrata API, no auth. $order by date_end DESC.",
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-02-23T14:36:44.106230Z"
+      "next_check_after": "2026-02-23T18:46:04.367267Z"
     },
     {
       "id": "nps_wq",
@@ -404,14 +404,14 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:44.512557Z",
-      "error_count": 6,
+      "last_checked": "2026-02-23T18:41:04.769243Z",
+      "error_count": 7,
       "staleness_days": null,
       "record_estimate": "5M+",
       "notes": "National Park Service WQ data via Water Quality Portal. Organization=NPSTORET. No auth.",
       "first_failure": "2026-02-22T21:54:29.586644Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:31:44.512580Z"
+      "next_check_after": "2026-02-23T19:41:04.769265Z"
     },
     {
       "id": "datagov_wq",
@@ -425,14 +425,14 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:45.144689Z",
+      "last_checked": "2026-02-23T18:41:05.535742Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "catalog",
       "notes": "Meta-catalog discovery \u00e2\u20ac\u201d returns dataset metadata, not raw data. Useful for finding new sources. CKAN API, no auth.",
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-02-23T14:36:45.144698Z"
+      "next_check_after": "2026-02-23T18:46:05.535754Z"
     },
     {
       "id": "nasa_cmr",
@@ -446,14 +446,14 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:45.626041Z",
+      "last_checked": "2026-02-23T18:41:06.038593Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "catalog",
       "notes": "Satellite dataset discovery \u00e2\u20ac\u201d returns collection metadata. Useful for remote-sensing water quality sources. CMR API, no auth.",
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-02-23T14:36:45.626051Z"
+      "next_check_after": "2026-02-23T18:46:06.038600Z"
     },
     {
       "id": "state_ny",
@@ -467,14 +467,14 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:46.445920Z",
-      "error_count": 6,
+      "last_checked": "2026-02-23T18:41:06.776144Z",
+      "error_count": 7,
       "staleness_days": null,
       "record_estimate": "unknown",
       "notes": "New York Open Data portal. Socrata API, no auth.",
       "first_failure": "2026-02-22T21:54:31.514365Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:31:46.445945Z"
+      "next_check_after": "2026-02-23T19:41:06.776166Z"
     },
     {
       "id": "state_nj",
@@ -488,14 +488,14 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:46.966986Z",
-      "error_count": 6,
+      "last_checked": "2026-02-23T18:41:07.488120Z",
+      "error_count": 7,
       "staleness_days": null,
       "record_estimate": "unknown",
       "notes": "New Jersey Open Data portal. Socrata API, no auth.",
       "first_failure": "2026-02-22T21:54:32.302360Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:31:46.967008Z"
+      "next_check_after": "2026-02-23T19:41:07.488143Z"
     },
     {
       "id": "state_pa",
@@ -509,14 +509,14 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:47.766030Z",
-      "error_count": 6,
+      "last_checked": "2026-02-23T18:41:08.223503Z",
+      "error_count": 7,
       "staleness_days": null,
       "record_estimate": "unknown",
       "notes": "Pennsylvania Open Data portal. Socrata API, no auth.",
       "first_failure": "2026-02-22T21:54:33.123150Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:31:47.766052Z"
+      "next_check_after": "2026-02-23T19:41:08.223526Z"
     },
     {
       "id": "state_va",
@@ -530,14 +530,14 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:48.615079Z",
-      "error_count": 6,
+      "last_checked": "2026-02-23T18:41:09.051596Z",
+      "error_count": 7,
       "staleness_days": null,
       "record_estimate": "unknown",
       "notes": "Virginia Open Data portal. Socrata API, no auth.",
       "first_failure": "2026-02-22T21:54:34.030855Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:31:48.615100Z"
+      "next_check_after": "2026-02-23T19:41:09.051619Z"
     },
     {
       "id": "bwb",
@@ -551,14 +551,14 @@
       "priority": 1,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:48.962283Z",
-      "error_count": 6,
+      "last_checked": "2026-02-23T18:41:09.500125Z",
+      "error_count": 7,
       "staleness_days": null,
       "record_estimate": "17 stations",
       "notes": "Community-based water quality monitoring in Baltimore Harbor watershed. DO, TN, TP, turbidity, bacteria, temperature. Via Water Reporter API v2.",
       "first_failure": "2026-02-22T21:54:34.372043Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:31:48.962302Z"
+      "next_check_after": "2026-02-23T19:41:09.500145Z"
     },
     {
       "id": "erddap-maracoos",
@@ -572,14 +572,14 @@
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:51.563839Z",
-      "error_count": 6,
+      "last_checked": "2026-02-23T18:41:12.084124Z",
+      "error_count": 7,
       "staleness_days": null,
       "record_estimate": "continuous",
       "notes": "MD DNR continuous tidal water quality monitoring (15-min intervals). Replaced by CBIBS for real-time but ERDDAP still serves historical.",
       "first_failure": "2026-02-22T21:54:36.983674Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:31:51.563861Z"
+      "next_check_after": "2026-02-23T19:41:12.084146Z"
     },
     {
       "id": "mmw",
@@ -593,14 +593,14 @@
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:52.093543Z",
-      "error_count": 6,
+      "last_checked": "2026-02-23T18:41:12.709740Z",
+      "error_count": 7,
       "staleness_days": null,
       "record_estimate": "500+ sensors",
       "notes": "Citizen science sensor data from the EnviroDIY/Stroud Research Center network. Real-time DO, temperature, conductivity, turbidity.",
       "first_failure": "2026-02-22T21:54:37.500986Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:31:52.093565Z"
+      "next_check_after": "2026-02-23T19:41:12.709762Z"
     },
     {
       "id": "nasa-stream",
@@ -614,14 +614,14 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:52.546958Z",
+      "last_checked": "2026-02-23T18:41:13.176149Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "satellite",
       "notes": "Satellite-derived chlorophyll-a, turbidity, and Secchi depth estimates from Landsat/Sentinel.",
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-02-23T14:36:52.546966Z"
+      "next_check_after": "2026-02-23T18:46:13.176159Z"
     },
     {
       "id": "hydroshare",
@@ -635,14 +635,14 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:53.192871Z",
+      "last_checked": "2026-02-23T18:41:13.839258Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "10K+ datasets",
       "notes": "Hydrologic dataset repository from CUAHSI research network. Searchable by keyword, subject, and location.",
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-02-23T14:36:53.192880Z"
+      "next_check_after": "2026-02-23T18:46:13.839268Z"
     },
     {
       "id": "usgs-nwis-gw",
@@ -656,14 +656,14 @@
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-02-23T14:31:55.004192Z",
+      "last_checked": "2026-02-23T18:41:14.859441Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "850K+ sites",
       "notes": "USGS groundwater level measurements. Real-time and historical. Same NWIS service as IV/DV but for gwlevels endpoint.",
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-02-23T14:36:55.004199Z"
+      "next_check_after": "2026-02-23T18:46:14.859447Z"
     }
   ],
   "wqp_states": {
@@ -674,11 +674,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 3,
-      "backoff_minutes": 15,
+      "error_count": 4,
+      "backoff_minutes": 60,
       "first_failure": "2026-02-23T05:45:38.233178Z",
-      "next_check_after": "2026-02-23T14:47:05.877144Z",
-      "last_checked": "2026-02-23T14:32:05.877118Z"
+      "next_check_after": "2026-02-23T19:41:25.728657Z",
+      "last_checked": "2026-02-23T18:41:25.728627Z"
     },
     "AK": {
       "fips": "02",
@@ -687,11 +687,11 @@
       "priority": 4,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 5,
+      "error_count": 6,
       "backoff_minutes": 60,
       "first_failure": "2026-02-22T22:59:40.707640Z",
-      "next_check_after": "2026-02-23T15:32:00.339294Z",
-      "last_checked": "2026-02-23T14:32:00.339264Z"
+      "next_check_after": "2026-02-23T19:41:20.194040Z",
+      "last_checked": "2026-02-23T18:41:20.194009Z"
     },
     "AZ": {
       "fips": "04",
@@ -700,11 +700,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 5,
+      "error_count": 6,
       "backoff_minutes": 60,
       "first_failure": "2026-02-22T22:59:55.740407Z",
-      "next_check_after": "2026-02-23T15:32:17.828627Z",
-      "last_checked": "2026-02-23T14:32:17.828599Z"
+      "next_check_after": "2026-02-23T19:41:37.336031Z",
+      "last_checked": "2026-02-23T18:41:37.336003Z"
     },
     "AR": {
       "fips": "05",
@@ -713,11 +713,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:54:50.857703Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:32:11.412824Z",
-      "last_checked": "2026-02-23T14:32:11.412762Z"
+      "next_check_after": "2026-02-23T19:41:31.265977Z",
+      "last_checked": "2026-02-23T18:41:31.265949Z"
     },
     "CA": {
       "fips": "06",
@@ -726,11 +726,11 @@
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:55:01.433945Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:32:23.362298Z",
-      "last_checked": "2026-02-23T14:32:23.362270Z"
+      "next_check_after": "2026-02-23T19:41:42.869480Z",
+      "last_checked": "2026-02-23T18:41:42.869451Z"
     },
     "CO": {
       "fips": "08",
@@ -739,11 +739,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:55:06.968542Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:32:28.898525Z",
-      "last_checked": "2026-02-23T14:32:28.898497Z"
+      "next_check_after": "2026-02-23T19:41:48.400724Z",
+      "last_checked": "2026-02-23T18:41:48.400695Z"
     },
     "CT": {
       "fips": "09",
@@ -755,8 +755,8 @@
       "error_count": 0,
       "first_failure": null,
       "backoff_minutes": 5,
-      "next_check_after": "2026-02-23T14:37:31.351410Z",
-      "last_checked": "2026-02-23T14:32:31.351401Z"
+      "next_check_after": "2026-02-23T18:46:48.936569Z",
+      "last_checked": "2026-02-23T18:41:48.936563Z"
     },
     "DE": {
       "fips": "10",
@@ -768,8 +768,8 @@
       "error_count": 0,
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-02-23T14:37:35.528026Z",
-      "last_checked": "2026-02-23T14:32:35.528017Z"
+      "next_check_after": "2026-02-23T18:46:50.016798Z",
+      "last_checked": "2026-02-23T18:41:50.016793Z"
     },
     "DC": {
       "fips": "11",
@@ -781,8 +781,8 @@
       "error_count": 0,
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-02-23T14:37:32.736889Z",
-      "last_checked": "2026-02-23T14:32:32.736880Z"
+      "next_check_after": "2026-02-23T18:46:49.484263Z",
+      "last_checked": "2026-02-23T18:41:49.484256Z"
     },
     "FL": {
       "fips": "12",
@@ -791,11 +791,11 @@
       "priority": 1,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:55:22.329444Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:32:41.064154Z",
-      "last_checked": "2026-02-23T14:32:41.064126Z"
+      "next_check_after": "2026-02-23T19:41:55.554470Z",
+      "last_checked": "2026-02-23T18:41:55.554445Z"
     },
     "GA": {
       "fips": "13",
@@ -804,11 +804,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:55:27.863118Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:32:46.597216Z",
-      "last_checked": "2026-02-23T14:32:46.597187Z"
+      "next_check_after": "2026-02-23T19:42:01.088749Z",
+      "last_checked": "2026-02-23T18:42:01.088719Z"
     },
     "HI": {
       "fips": "15",
@@ -820,8 +820,8 @@
       "error_count": 0,
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-02-23T14:37:48.632161Z",
-      "last_checked": "2026-02-23T14:32:48.632153Z"
+      "next_check_after": "2026-02-23T18:47:02.154786Z",
+      "last_checked": "2026-02-23T18:42:02.154781Z"
     },
     "ID": {
       "fips": "16",
@@ -830,11 +830,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:55:43.993721Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:32:59.699033Z",
-      "last_checked": "2026-02-23T14:32:59.699003Z"
+      "next_check_after": "2026-02-23T19:42:13.224130Z",
+      "last_checked": "2026-02-23T18:42:13.224095Z"
     },
     "IL": {
       "fips": "17",
@@ -843,11 +843,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:55:49.528214Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:33:05.232203Z",
-      "last_checked": "2026-02-23T14:33:05.232170Z"
+      "next_check_after": "2026-02-23T19:42:18.760698Z",
+      "last_checked": "2026-02-23T18:42:18.760669Z"
     },
     "IN": {
       "fips": "18",
@@ -856,11 +856,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:55:55.062111Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:33:10.771238Z",
-      "last_checked": "2026-02-23T14:33:10.771210Z"
+      "next_check_after": "2026-02-23T19:42:24.293728Z",
+      "last_checked": "2026-02-23T18:42:24.293701Z"
     },
     "IA": {
       "fips": "19",
@@ -869,11 +869,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:55:38.460235Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:32:54.165649Z",
-      "last_checked": "2026-02-23T14:32:54.165625Z"
+      "next_check_after": "2026-02-23T19:42:07.691032Z",
+      "last_checked": "2026-02-23T18:42:07.691000Z"
     },
     "KS": {
       "fips": "20",
@@ -882,11 +882,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:56:00.595879Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:33:16.305869Z",
-      "last_checked": "2026-02-23T14:33:16.305841Z"
+      "next_check_after": "2026-02-23T19:42:29.831448Z",
+      "last_checked": "2026-02-23T18:42:29.831419Z"
     },
     "KY": {
       "fips": "21",
@@ -895,11 +895,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:56:06.133718Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:33:21.839434Z",
-      "last_checked": "2026-02-23T14:33:21.839405Z"
+      "next_check_after": "2026-02-23T19:42:35.367029Z",
+      "last_checked": "2026-02-23T18:42:35.366994Z"
     },
     "LA": {
       "fips": "22",
@@ -908,11 +908,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:56:11.665578Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:33:27.372478Z",
-      "last_checked": "2026-02-23T14:33:27.372449Z"
+      "next_check_after": "2026-02-23T19:42:40.900335Z",
+      "last_checked": "2026-02-23T18:42:40.900297Z"
     },
     "ME": {
       "fips": "23",
@@ -924,8 +924,8 @@
       "error_count": 0,
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-02-23T14:38:38.712382Z",
-      "last_checked": "2026-02-23T14:33:38.712373Z"
+      "next_check_after": "2026-02-23T18:47:47.500832Z",
+      "last_checked": "2026-02-23T18:42:47.500827Z"
     },
     "MD": {
       "fips": "24",
@@ -937,8 +937,8 @@
       "error_count": 0,
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-02-23T14:38:35.237480Z",
-      "last_checked": "2026-02-23T14:33:35.237471Z"
+      "next_check_after": "2026-02-23T18:47:46.967296Z",
+      "last_checked": "2026-02-23T18:42:46.967290Z"
     },
     "MA": {
       "fips": "25",
@@ -947,11 +947,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:56:17.200229Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:33:32.905607Z",
-      "last_checked": "2026-02-23T14:33:32.905578Z"
+      "next_check_after": "2026-02-23T19:42:46.435138Z",
+      "last_checked": "2026-02-23T18:42:46.435110Z"
     },
     "MI": {
       "fips": "26",
@@ -960,11 +960,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:56:28.469714Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:33:44.245646Z",
-      "last_checked": "2026-02-23T14:33:44.245616Z"
+      "next_check_after": "2026-02-23T19:42:53.034431Z",
+      "last_checked": "2026-02-23T18:42:53.034400Z"
     },
     "MN": {
       "fips": "27",
@@ -973,11 +973,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:56:34.003525Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:33:49.778172Z",
-      "last_checked": "2026-02-23T14:33:49.778144Z"
+      "next_check_after": "2026-02-23T19:42:58.586617Z",
+      "last_checked": "2026-02-23T18:42:58.586579Z"
     },
     "MS": {
       "fips": "28",
@@ -986,11 +986,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:56:46.014642Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:34:01.769576Z",
-      "last_checked": "2026-02-23T14:34:01.769547Z"
+      "next_check_after": "2026-02-23T19:43:10.191901Z",
+      "last_checked": "2026-02-23T18:43:10.191870Z"
     },
     "MO": {
       "fips": "29",
@@ -999,11 +999,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:56:39.540323Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:33:55.311385Z",
-      "last_checked": "2026-02-23T14:33:55.311355Z"
+      "next_check_after": "2026-02-23T19:43:04.122252Z",
+      "last_checked": "2026-02-23T18:43:04.122224Z"
     },
     "MT": {
       "fips": "30",
@@ -1012,11 +1012,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:56:51.547954Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:34:07.303122Z",
-      "last_checked": "2026-02-23T14:34:07.303093Z"
+      "next_check_after": "2026-02-23T19:43:15.725140Z",
+      "last_checked": "2026-02-23T18:43:15.725110Z"
     },
     "NE": {
       "fips": "31",
@@ -1025,11 +1025,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:57:08.151276Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:34:23.906485Z",
-      "last_checked": "2026-02-23T14:34:23.906455Z"
+      "next_check_after": "2026-02-23T19:43:32.332761Z",
+      "last_checked": "2026-02-23T18:43:32.332733Z"
     },
     "NV": {
       "fips": "32",
@@ -1038,11 +1038,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:57:28.084648Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:34:43.879919Z",
-      "last_checked": "2026-02-23T14:34:43.879890Z"
+      "next_check_after": "2026-02-23T19:43:49.465508Z",
+      "last_checked": "2026-02-23T18:43:49.465476Z"
     },
     "NH": {
       "fips": "33",
@@ -1054,8 +1054,8 @@
       "error_count": 0,
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-02-23T14:39:27.248379Z",
-      "last_checked": "2026-02-23T14:34:27.248369Z"
+      "next_check_after": "2026-02-23T18:48:32.865480Z",
+      "last_checked": "2026-02-23T18:43:32.865473Z"
     },
     "NJ": {
       "fips": "34",
@@ -1064,11 +1064,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 2,
+      "error_count": 3,
       "first_failure": "2026-02-23T08:11:00.919759Z",
       "backoff_minutes": 15,
-      "next_check_after": "2026-02-23T14:49:32.778177Z",
-      "last_checked": "2026-02-23T14:34:32.778149Z"
+      "next_check_after": "2026-02-23T18:58:38.398824Z",
+      "last_checked": "2026-02-23T18:43:38.398788Z"
     },
     "NM": {
       "fips": "35",
@@ -1077,11 +1077,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 2,
+      "error_count": 3,
       "first_failure": "2026-02-23T08:11:06.455188Z",
       "backoff_minutes": 15,
-      "next_check_after": "2026-02-23T14:49:38.311559Z",
-      "last_checked": "2026-02-23T14:34:38.311531Z"
+      "next_check_after": "2026-02-23T18:58:43.932467Z",
+      "last_checked": "2026-02-23T18:43:43.932436Z"
     },
     "NY": {
       "fips": "36",
@@ -1090,11 +1090,11 @@
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:57:33.617879Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:34:49.415186Z",
-      "last_checked": "2026-02-23T14:34:49.415157Z"
+      "next_check_after": "2026-02-23T19:43:55.001107Z",
+      "last_checked": "2026-02-23T18:43:55.001057Z"
     },
     "NC": {
       "fips": "37",
@@ -1103,11 +1103,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:56:57.079911Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:34:12.840324Z",
-      "last_checked": "2026-02-23T14:34:12.840296Z"
+      "next_check_after": "2026-02-23T19:43:21.258648Z",
+      "last_checked": "2026-02-23T18:43:21.258616Z"
     },
     "ND": {
       "fips": "38",
@@ -1116,11 +1116,11 @@
       "priority": 4,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:57:02.614045Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:34:18.373210Z",
-      "last_checked": "2026-02-23T14:34:18.373181Z"
+      "next_check_after": "2026-02-23T19:43:26.797266Z",
+      "last_checked": "2026-02-23T18:43:26.797236Z"
     },
     "OH": {
       "fips": "39",
@@ -1129,11 +1129,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:57:39.151815Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:34:54.948471Z",
-      "last_checked": "2026-02-23T14:34:54.948442Z"
+      "next_check_after": "2026-02-23T19:44:00.554753Z",
+      "last_checked": "2026-02-23T18:44:00.554723Z"
     },
     "OK": {
       "fips": "40",
@@ -1142,11 +1142,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:57:44.689399Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:35:00.481826Z",
-      "last_checked": "2026-02-23T14:35:00.481796Z"
+      "next_check_after": "2026-02-23T19:44:06.093118Z",
+      "last_checked": "2026-02-23T18:44:06.093044Z"
     },
     "OR": {
       "fips": "41",
@@ -1155,11 +1155,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:57:50.223046Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:35:06.014826Z",
-      "last_checked": "2026-02-23T14:35:06.014761Z"
+      "next_check_after": "2026-02-23T19:44:11.626780Z",
+      "last_checked": "2026-02-23T18:44:11.626750Z"
     },
     "PA": {
       "fips": "42",
@@ -1168,11 +1168,11 @@
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:57:55.756890Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:35:11.553861Z",
-      "last_checked": "2026-02-23T14:35:11.553834Z"
+      "next_check_after": "2026-02-23T19:44:17.159987Z",
+      "last_checked": "2026-02-23T18:44:17.159954Z"
     },
     "RI": {
       "fips": "44",
@@ -1184,8 +1184,8 @@
       "error_count": 0,
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-02-23T14:40:20.187339Z",
-      "last_checked": "2026-02-23T14:35:20.187330Z"
+      "next_check_after": "2026-02-23T18:49:23.232448Z",
+      "last_checked": "2026-02-23T18:44:23.232441Z"
     },
     "SC": {
       "fips": "45",
@@ -1194,11 +1194,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:58:09.771551Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:35:25.720330Z",
-      "last_checked": "2026-02-23T14:35:25.720301Z"
+      "next_check_after": "2026-02-23T19:44:28.765762Z",
+      "last_checked": "2026-02-23T18:44:28.765733Z"
     },
     "SD": {
       "fips": "46",
@@ -1207,11 +1207,11 @@
       "priority": 4,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:58:15.311151Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:35:31.252644Z",
-      "last_checked": "2026-02-23T14:35:31.252615Z"
+      "next_check_after": "2026-02-23T19:44:34.298198Z",
+      "last_checked": "2026-02-23T18:44:34.298161Z"
     },
     "TN": {
       "fips": "47",
@@ -1220,11 +1220,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:58:20.843325Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:35:36.785712Z",
-      "last_checked": "2026-02-23T14:35:36.785683Z"
+      "next_check_after": "2026-02-23T19:44:39.831940Z",
+      "last_checked": "2026-02-23T18:44:39.831910Z"
     },
     "TX": {
       "fips": "48",
@@ -1233,11 +1233,11 @@
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:58:26.376644Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:35:42.318641Z",
-      "last_checked": "2026-02-23T14:35:42.318612Z"
+      "next_check_after": "2026-02-23T19:44:45.365921Z",
+      "last_checked": "2026-02-23T18:44:45.365890Z"
     },
     "UT": {
       "fips": "49",
@@ -1249,8 +1249,8 @@
       "error_count": 0,
       "first_failure": null,
       "backoff_minutes": 5,
-      "next_check_after": "2026-02-23T14:40:45.086567Z",
-      "last_checked": "2026-02-23T14:35:45.086557Z"
+      "next_check_after": "2026-02-23T18:49:45.899817Z",
+      "last_checked": "2026-02-23T18:44:45.899812Z"
     },
     "VT": {
       "fips": "50",
@@ -1262,8 +1262,8 @@
       "error_count": 0,
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-02-23T14:40:54.024048Z",
-      "last_checked": "2026-02-23T14:35:54.024039Z"
+      "next_check_after": "2026-02-23T18:49:52.507805Z",
+      "last_checked": "2026-02-23T18:44:52.507798Z"
     },
     "VA": {
       "fips": "51",
@@ -1272,11 +1272,11 @@
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 3,
+      "error_count": 4,
       "first_failure": "2026-02-23T05:49:28.917386Z",
-      "backoff_minutes": 15,
-      "next_check_after": "2026-02-23T14:50:50.619409Z",
-      "last_checked": "2026-02-23T14:35:50.619380Z"
+      "backoff_minutes": 60,
+      "next_check_after": "2026-02-23T19:44:51.435231Z",
+      "last_checked": "2026-02-23T18:44:51.435192Z"
     },
     "WA": {
       "fips": "53",
@@ -1285,11 +1285,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:58:46.384997Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:35:59.557700Z",
-      "last_checked": "2026-02-23T14:35:59.557672Z"
+      "next_check_after": "2026-02-23T19:44:58.040989Z",
+      "last_checked": "2026-02-23T18:44:58.040959Z"
     },
     "WV": {
       "fips": "54",
@@ -1298,11 +1298,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 4,
+      "error_count": 5,
       "first_failure": "2026-02-23T00:01:04.933388Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:36:10.622947Z",
-      "last_checked": "2026-02-23T14:36:10.622919Z"
+      "next_check_after": "2026-02-23T19:45:09.117477Z",
+      "last_checked": "2026-02-23T18:45:09.117446Z"
     },
     "WI": {
       "fips": "55",
@@ -1311,11 +1311,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:58:51.917015Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:36:05.090184Z",
-      "last_checked": "2026-02-23T14:36:05.090153Z"
+      "next_check_after": "2026-02-23T19:45:03.583288Z",
+      "last_checked": "2026-02-23T18:45:03.583257Z"
     },
     "WY": {
       "fips": "56",
@@ -1324,11 +1324,11 @@
       "priority": 4,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 4,
+      "error_count": 5,
       "first_failure": "2026-02-23T00:01:10.467636Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:36:16.155245Z",
-      "last_checked": "2026-02-23T14:36:16.155218Z"
+      "next_check_after": "2026-02-23T19:45:14.652664Z",
+      "last_checked": "2026-02-23T18:45:14.652633Z"
     },
     "AS": {
       "fips": "60",
@@ -1340,8 +1340,8 @@
       "error_count": 0,
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-02-23T14:37:12.299522Z",
-      "last_checked": "2026-02-23T14:32:12.299513Z"
+      "next_check_after": "2026-02-23T18:46:31.800603Z",
+      "last_checked": "2026-02-23T18:41:31.800596Z"
     },
     "GU": {
       "fips": "66",
@@ -1353,8 +1353,8 @@
       "error_count": 0,
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-02-23T14:37:47.601484Z",
-      "last_checked": "2026-02-23T14:32:47.601474Z"
+      "next_check_after": "2026-02-23T18:47:01.621900Z",
+      "last_checked": "2026-02-23T18:42:01.621894Z"
     },
     "MP": {
       "fips": "69",
@@ -1366,8 +1366,8 @@
       "error_count": 0,
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-02-23T14:38:56.236544Z",
-      "last_checked": "2026-02-23T14:33:56.236535Z"
+      "next_check_after": "2026-02-23T18:48:04.657565Z",
+      "last_checked": "2026-02-23T18:43:04.657559Z"
     },
     "PR": {
       "fips": "72",
@@ -1376,11 +1376,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 6,
+      "error_count": 7,
       "first_failure": "2026-02-22T21:58:01.290112Z",
       "backoff_minutes": 60,
-      "next_check_after": "2026-02-23T15:35:17.089635Z",
-      "last_checked": "2026-02-23T14:35:17.089606Z"
+      "next_check_after": "2026-02-23T19:44:22.692897Z",
+      "last_checked": "2026-02-23T18:44:22.692866Z"
     },
     "VI": {
       "fips": "78",
@@ -1392,8 +1392,8 @@
       "error_count": 0,
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-02-23T14:40:51.748644Z",
-      "last_checked": "2026-02-23T14:35:51.748634Z"
+      "next_check_after": "2026-02-23T18:49:51.974513Z",
+      "last_checked": "2026-02-23T18:44:51.974507Z"
     }
   }
 }
