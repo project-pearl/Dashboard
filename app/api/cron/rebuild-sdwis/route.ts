@@ -18,14 +18,10 @@ import {
 
 const EF_BASE = 'https://data.epa.gov/efservice';
 const PAGE_SIZE = 5000;
-const CONCURRENCY = 3;
-
-// ZIP geocoding (same pattern as PFAS cron)
-const ZIP_API_BASE = 'https://api.zippopotam.us/us';
-const ZIP_BATCH_SIZE = 20;
-const ZIP_DELAY_MS = 200;
+const CONCURRENCY = 5;
 
 import { PRIORITY_STATES } from '@/lib/constants';
+import zipCentroids from '@/lib/zipCentroids.json';
 
 // ── Paginated fetch helper ──────────────────────────────────────────────────
 
@@ -144,53 +140,24 @@ function transformEnforcement(row: Record<string, any>): SdwisEnforcement | null
   };
 }
 
-// ── ZIP Geocoding ────────────────────────────────────────────────────────────
+// ── ZIP Centroid Lookup (bundled — no API calls needed) ──────────────────────
 
-function delay(ms: number): Promise<void> {
-  return new Promise(r => setTimeout(r, ms));
-}
+const ZIP_LOOKUP = zipCentroids as Record<string, [number, number]>;
 
-async function geocodeZips(
+function lookupZips(
   zips: string[],
-): Promise<Map<string, { lat: number; lng: number }>> {
+): Map<string, { lat: number; lng: number }> {
   const coordMap = new Map<string, { lat: number; lng: number }>();
   const uniqueZips = [...new Set(zips.filter(z => z.length === 5 && /^\d{5}$/.test(z)))];
-  console.log(`[SDWIS Cron] Geocoding ${uniqueZips.length} unique ZIP codes...`);
 
-  for (let i = 0; i < uniqueZips.length; i += ZIP_BATCH_SIZE) {
-    const batch = uniqueZips.slice(i, i + ZIP_BATCH_SIZE);
-    const results = await Promise.allSettled(
-      batch.map(async (zip) => {
-        try {
-          const res = await fetch(`${ZIP_API_BASE}/${zip}`, {
-            signal: AbortSignal.timeout(5_000),
-          });
-          if (!res.ok) return null;
-          const data = await res.json();
-          const place = data?.places?.[0];
-          if (!place) return null;
-          const lat = parseFloat(place.latitude);
-          const lng = parseFloat(place.longitude);
-          if (isNaN(lat) || isNaN(lng)) return null;
-          return { zip, lat, lng };
-        } catch {
-          return null;
-        }
-      }),
-    );
-
-    for (const r of results) {
-      if (r.status === 'fulfilled' && r.value) {
-        coordMap.set(r.value.zip, { lat: r.value.lat, lng: r.value.lng });
-      }
-    }
-
-    if (i + ZIP_BATCH_SIZE < uniqueZips.length) {
-      await delay(ZIP_DELAY_MS);
+  for (const zip of uniqueZips) {
+    const coords = ZIP_LOOKUP[zip];
+    if (coords) {
+      coordMap.set(zip, { lat: coords[0], lng: coords[1] });
     }
   }
 
-  console.log(`[SDWIS Cron] Geocoded ${coordMap.size}/${uniqueZips.length} ZIP codes`);
+  console.log(`[SDWIS Cron] ZIP lookup: ${coordMap.size}/${uniqueZips.length} resolved`);
   return coordMap;
 }
 
@@ -286,9 +253,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ status: 'empty', duration: `${elapsed}s`, cache: getSdwisCacheStatus() });
     }
 
-    // ── Phase 2: Geocode systems via ZIP centroids ────────────────────────
+    // ── Phase 2: Resolve system coordinates via bundled ZIP centroids ────
     const allZips = rawSystems.map(s => s.zip).filter(Boolean);
-    const zipCoords = await geocodeZips(allZips);
+    const zipCoords = lookupZips(allZips);
 
     // Convert raw systems to geocoded SdwisSystem
     const allSystems: SdwisSystem[] = [];
