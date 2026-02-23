@@ -95,7 +95,11 @@ function csvToRows(csv: string): Record<string, string>[] {
 async function fetchState(stateAbbr: string, fips: string): Promise<WqpRecord[]> {
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-  const startDate = sixMonthsAgo.toISOString().split('T')[0];
+  // WQP requires MM-dd-yyyy format (not ISO yyyy-MM-dd)
+  const mm = String(sixMonthsAgo.getMonth() + 1).padStart(2, '0');
+  const dd = String(sixMonthsAgo.getDate()).padStart(2, '0');
+  const yyyy = sixMonthsAgo.getFullYear();
+  const startDate = `${mm}-${dd}-${yyyy}`;
 
   const url = new URL(WQP_BASE);
   url.searchParams.set('statecode', `US:${fips}`);
@@ -103,12 +107,12 @@ async function fetchState(stateAbbr: string, fips: string): Promise<WqpRecord[]>
   url.searchParams.set('startDateLo', startDate);
   url.searchParams.set('sampleMedia', 'Water');
   url.searchParams.set('providers', 'STORET');   // State/tribal data only — USGS covered by Source 4
-  url.searchParams.set('dataProfile', 'narrowResult');
+  url.searchParams.set('dataProfile', 'resultPhysChem');
   url.searchParams.set('mimeType', 'csv');
   url.searchParams.set('sorted', 'no');           // Faster query
 
   const res = await fetch(url.toString(), {
-    signal: AbortSignal.timeout(90_000),  // WQP state queries can be very slow
+    signal: AbortSignal.timeout(120_000),  // resultPhysChem is larger — allow 2 min
     redirect: 'follow',
   });
 
@@ -126,12 +130,12 @@ async function fetchState(stateAbbr: string, fips: string): Promise<WqpRecord[]>
     const pearlKey = CHAR_TO_PEARL[charName];
     if (!pearlKey) continue;
 
-    const rawValue = row.ResultMeasureValue || row['ResultMeasure/MeasureValue'] || row['Result Value'] || '';
+    const rawValue = row.ResultMeasureValue || row['ResultMeasure/MeasureValue'] || '';
     const val = parseFloat(rawValue);
     if (isNaN(val)) continue;
 
-    const lat = parseFloat(row['Monitoring Location Latitude'] || row.MonitoringLocationLatitude || row.LatitudeMeasure || '');
-    const lng = parseFloat(row['Monitoring Location Longitude'] || row.MonitoringLocationLongitude || row.LongitudeMeasure || '');
+    const lat = parseFloat(row['ActivityLocation/LatitudeMeasure'] || row['Monitoring Location Latitude'] || row.LatitudeMeasure || '');
+    const lng = parseFloat(row['ActivityLocation/LongitudeMeasure'] || row['Monitoring Location Longitude'] || row.LongitudeMeasure || '');
     if (isNaN(lat) || isNaN(lng) || lat <= 0) continue;
 
     records.push({
