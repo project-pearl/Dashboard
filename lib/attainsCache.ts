@@ -11,7 +11,7 @@ const ATTAINS_BASE = "https://attains.epa.gov/attains-public/api";
 const ATTAINS_GIS =
   "https://gispub.epa.gov/arcgis/rest/services/OW/ATTAINS_Assessment/MapServer/1/query";
 
-const LARGE_STATE_THRESHOLD = 50_000; // States with >50k assessments use GIS fallback
+const LARGE_STATE_THRESHOLD = 5_000; // States with >5k assessments use GIS fallback (faster, paginated)
 const CACHE_TTL_MS = 90 * 24 * 60 * 60 * 1000; // 90 days — ATTAINS updates biannually
 const BATCH_SIZE = 2;
 const BATCH_DELAY_MS = 3000;
