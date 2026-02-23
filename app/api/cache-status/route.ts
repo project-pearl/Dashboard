@@ -33,13 +33,15 @@ function staleness(built: string | null | undefined): { stale: boolean; ageHours
 }
 
 export async function GET() {
-  // Warm all caches from blob storage in parallel (cold-start recovery)
-  await Promise.all([
-    warmWqp(), warmAttains(), warmCeden(), warmIcis(), warmSdwis(),
-    warmNwisGw(), warmEcho(), warmFrs(), warmPfas(), warmInsights(),
-    warmStateReports(), warmBwb(), warmCdcNwss(), warmNdbc(),
-    warmNasaCmr(), warmNars(), warmDataGov(), warmUsace(),
-  ]);
+  // Warm caches from blob storage in batches of 6 (avoid overwhelming network)
+  const warmBatches = [
+    [warmWqp, warmAttains, warmCeden, warmIcis, warmSdwis, warmNwisGw],
+    [warmEcho, warmFrs, warmPfas, warmInsights, warmStateReports, warmBwb],
+    [warmCdcNwss, warmNdbc, warmNasaCmr, warmNars, warmDataGov, warmUsace],
+  ];
+  for (const batch of warmBatches) {
+    await Promise.allSettled(batch.map(fn => fn()));
+  }
 
   const wqp = getWqpCacheStatus();
   const attains = getAttainsCacheStatus();
