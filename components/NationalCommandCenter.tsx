@@ -24,6 +24,8 @@ import { useAuth } from '@/lib/authContext';
 import { useWaterData, DATA_SOURCES } from '@/lib/useWaterData';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
+import StateWaterbodyCard from '@/components/StateWaterbodyCard';
+import ResolutionPlanner from '@/components/ResolutionPlanner';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
 import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
@@ -75,7 +77,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: true,
     showHotspots: true, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['aiinsights', 'top10', 'disclaimer']),
+    sections: new Set(['aiinsights', 'waterbody-card', 'resolution-planner', 'top10', 'disclaimer']),
   },
   compliance: {
     label: 'Compliance',
@@ -5538,6 +5540,38 @@ export function NationalCommandCenter(props: Props) {
                 Run Grant Matching Analysis
               </Button>
             </div>
+          </CardContent>
+        </Card>
+        </>);
+
+        case 'waterbody-card': return DS(<>
+        {/* ── State Waterbody Card — Federal oversight view of individual waterbodies ── */}
+        <Card id="section-waterbody-card" className="border-2 border-sky-200 bg-gradient-to-br from-sky-50 to-white">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              State Waterbody Inspector
+              <span className="text-[10px] font-normal text-slate-400 ml-1">Federal oversight view</span>
+            </CardTitle>
+            <CardDescription>Select a waterbody from the map or state table to view federal-level regulatory status, cross-domain compliance, trends, and data gaps</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-slate-500 italic">Select a waterbody from the map above to inspect its federal regulatory profile.</p>
+          </CardContent>
+        </Card>
+        </>);
+
+        case 'resolution-planner': return DS(<>
+        {/* ── Resolution Planner — AI-powered action planning ── */}
+        <Card id="section-resolution-planner" className="border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-white">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              AI Resolution Planner
+              <span className="text-[10px] font-normal text-slate-400 ml-1">One-click + conversational refine</span>
+            </CardTitle>
+            <CardDescription>Generate role-specific resolution plans for impaired waterbodies. Plans include situation assessment, phased actions, co-benefits, cost estimates, and grant opportunities.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-slate-500 italic">Select a waterbody to generate an AI-powered resolution plan tailored to your federal role.</p>
           </CardContent>
         </Card>
         </>);

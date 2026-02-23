@@ -158,7 +158,9 @@ export const DEFAULT_SECTIONS: Record<CCKey, SectionDefinition[]> = {
     { id: 'contaminants-tracker', label: 'Emerging Contaminants',     order: 21, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'interagency-hub',    label: 'Cross-Agency Coordination',   order: 22, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'funding-landscape',  label: 'Funding & Grant Landscape',   order: 23, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'disclaimer',         label: 'Platform Disclaimer',         order: 24, visible: true, defaultExpanded: true },
+    { id: 'waterbody-card',    label: 'State Waterbody Card',        order: 24, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'resolution-planner', label: 'Resolution Planner',         order: 25, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'disclaimer',         label: 'Platform Disclaimer',         order: 26, visible: true, defaultExpanded: true },
   ],
 
   Utility: [
