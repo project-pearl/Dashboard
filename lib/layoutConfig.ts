@@ -17,8 +17,8 @@ export interface SectionDefinition {
   lensControlled?: boolean; // NCC only — visibility driven by ViewLens
 }
 
-export type CCKey = 'K12' | 'State' | 'MS4' | 'ESG' | 'NGO' | 'University' | 'NCC'
-  | 'Utility' | 'Infrastructure' | 'Insurance' | 'Agriculture' | 'SHUCK';
+export type CCKey = 'K12' | 'State' | 'MS4' | 'Sustainability' | 'NGO' | 'University' | 'NCC'
+  | 'Utility' | 'Infrastructure' | 'Insurance' | 'Agriculture' | 'AQUA-LO';
 
 // ─── Default Section Orders ────────────────────────────────────────────────
 
@@ -81,15 +81,15 @@ export const DEFAULT_SECTIONS: Record<CCKey, SectionDefinition[]> = {
     { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 19, visible: true, defaultExpanded: true },
   ],
 
-  ESG: [
-    { id: 'summary',        label: 'ESG Summary',                   order: 0,  visible: true, defaultExpanded: true },
+  Sustainability: [
+    { id: 'summary',        label: 'Sustainability Summary',        order: 0,  visible: true, defaultExpanded: true },
     { id: 'kpis',           label: 'KPI Cards',                     order: 1,  visible: true, defaultExpanded: true },
     { id: 'map-grid',       label: 'Map & Facility List',           order: 2,  visible: true, defaultExpanded: true, compound: true },
     { id: 'insights',       label: 'AI Insights Engine',            order: 3,  visible: true, defaultExpanded: true },
     { id: 'impact',         label: 'Environmental Impact',          order: 4,  visible: true, defaultExpanded: true },
     { id: 'chesbay',        label: 'Chesapeake Bay Watershed',      order: 5,  visible: true, defaultExpanded: true },
     { id: 'sustainability', label: 'Corporate Sustainability',      order: 6,  visible: true, defaultExpanded: true },
-    { id: 'disclosure',     label: 'ESG Disclosure',                order: 7,  visible: true, defaultExpanded: true },
+    { id: 'disclosure',     label: 'Sustainability Disclosure',     order: 7,  visible: true, defaultExpanded: true },
     { id: 'supplychain',    label: 'Supply Chain Analysis',         order: 8,  visible: true, defaultExpanded: true },
     { id: 'economic',       label: 'Economic Performance',          order: 9,  visible: true, defaultExpanded: true },
     { id: 'shareholder',    label: 'Shareholder Engagement',        order: 10, visible: true, defaultExpanded: true },
@@ -134,33 +134,35 @@ export const DEFAULT_SECTIONS: Record<CCKey, SectionDefinition[]> = {
   ],
 
   NCC: [
-    { id: 'usmap',              label: 'US Map',                      order: 0,  visible: true, defaultExpanded: true, compound: true },
+    { id: 'usmap',              label: 'US Map',                      order: 0,  visible: true, defaultExpanded: true, compound: true, lensControlled: true },
     { id: 'impairmentprofile',  label: 'Impairment Profile',          order: 1,  visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'aiinsights',         label: 'AI Insights',                 order: 2,  visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'networkhealth',      label: 'Network Health Score',        order: 3,  visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'nationalimpact',     label: 'National Impact Counter',     order: 4,  visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'priorityqueue',      label: 'Priority Action Queue',       order: 5,  visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'coveragegaps',       label: 'Coverage Gaps',               order: 6,  visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'situation',          label: 'Situation Summary',           order: 7,  visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'top10',              label: 'Top 10 Worsening / Improving', order: 8, visible: true, defaultExpanded: false, lensControlled: true },
-    { id: 'statebystatesummary', label: 'State-by-State Table',       order: 9,  visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'icis',               label: 'NPDES National Enforcement',  order: 10, visible: true, defaultExpanded: false, lensControlled: true },
-    { id: 'sdwis',              label: 'Drinking Water (SDWIS)',      order: 11, visible: true, defaultExpanded: false, lensControlled: true },
-    { id: 'groundwater',        label: 'Groundwater Monitoring',      order: 12, visible: true, defaultExpanded: false, lensControlled: true },
-    { id: 'sla',                label: 'SLA Compliance',              order: 13, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'scorecard-kpis',     label: 'Scorecard KPIs',              order: 14, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'scorecard-grades',   label: 'State Grades',                order: 15, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'scorecard-rankings', label: 'Top / Bottom States',         order: 16, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'scorecard-trends',   label: 'Trend Cards',                 order: 17, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'reports-hub',        label: 'Federal Reports',             order: 18, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'trends-dashboard',   label: 'Trends & Projections',        order: 19, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'policy-tracker',     label: 'Policy & Regulatory Tracker', order: 20, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'contaminants-tracker', label: 'Emerging Contaminants',     order: 21, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'interagency-hub',    label: 'Cross-Agency Coordination',   order: 22, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'funding-landscape',  label: 'Funding & Grant Landscape',   order: 23, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'waterbody-card',    label: 'State Waterbody Card',        order: 24, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'resolution-planner', label: 'Resolution Planner',         order: 25, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'disclaimer',         label: 'Platform Disclaimer',         order: 26, visible: true, defaultExpanded: true },
+    { id: 'ai-water-intelligence', label: 'AI Water Intelligence',     order: 2,  visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'national-briefing',  label: 'National Intelligence Briefing', order: 3, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'aiinsights',         label: 'AI Insights (Combined)',       order: 4,  visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'networkhealth',      label: 'Network Health Score',        order: 5,  visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'nationalimpact',     label: 'National Impact Counter',     order: 6,  visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'priorityqueue',      label: 'Priority Action Queue',       order: 7,  visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'coveragegaps',       label: 'Coverage Gaps',               order: 8,  visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'situation',          label: 'Situation Summary',           order: 9,  visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'top10',              label: 'Top 10 Worsening / Improving', order: 10, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'statebystatesummary', label: 'State-by-State Table',       order: 11, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'icis',               label: 'NPDES National Enforcement',  order: 12, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'sdwis',              label: 'Drinking Water (SDWIS)',      order: 13, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'groundwater',        label: 'Groundwater Monitoring',      order: 14, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'sla',                label: 'SLA Compliance',              order: 15, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'scorecard-kpis',     label: 'Scorecard KPIs',              order: 16, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'scorecard-grades',   label: 'State Grades',                order: 17, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'scorecard-rankings', label: 'Top / Bottom States',         order: 18, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'scorecard-trends',   label: 'Trend Cards',                 order: 19, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'reports-hub',        label: 'Federal Reports',             order: 20, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'trends-dashboard',   label: 'Trends & Projections',        order: 21, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'policy-tracker',     label: 'Policy & Regulatory Tracker', order: 22, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'contaminants-tracker', label: 'Emerging Contaminants',     order: 23, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'interagency-hub',    label: 'Cross-Agency Coordination',   order: 24, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'funding-landscape',  label: 'Funding & Grant Landscape',   order: 25, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'waterbody-card',    label: 'State Waterbody Card',        order: 26, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'resolution-planner', label: 'Resolution Planner',         order: 27, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'disclaimer',         label: 'Platform Disclaimer',         order: 28, visible: true, defaultExpanded: true, lensControlled: true },
   ],
 
   Utility: [
@@ -209,7 +211,7 @@ export const DEFAULT_SECTIONS: Record<CCKey, SectionDefinition[]> = {
     { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 8,  visible: true, defaultExpanded: true },
   ],
 
-  SHUCK: [
+  'AQUA-LO': [
     { id: 'intake',         label: 'Sample Intake Queue',           order: 0,  visible: true, defaultExpanded: true },
     { id: 'qaqc',           label: 'QA/QC Dashboard',               order: 1,  visible: true, defaultExpanded: true },
     { id: 'methods',        label: 'Method Registry',               order: 2,  visible: true, defaultExpanded: true },
