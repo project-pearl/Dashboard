@@ -16,7 +16,7 @@ const CACHE_TTL_MS = 90 * 24 * 60 * 60 * 1000; // 90 days — ATTAINS updates bi
 const BATCH_SIZE = 2;
 const BATCH_DELAY_MS = 3000;
 
-const FETCH_TIMEOUT_MS = 90_000; // 90s per fetch — must fit within 300s function limit
+const FETCH_TIMEOUT_MS = 45_000; // 45s per fetch — fail fast, defer slow states
 const RETRY_TIMEOUT_MS = 480_000; // 8 min on retry pass
 const RETRY_DELAY_MS = 5000; // 5s between retries
 
@@ -877,8 +877,11 @@ export async function buildAttainsChunk(timeBudgetMs: number, deferredStates: st
 
   const processed: string[] = [];
   const failed: string[] = [];
+  const CONCURRENCY = 2; // Fetch 2 states in parallel to maximize throughput
 
-  for (const st of toFetch) {
+  // Process states in pairs for better throughput
+  let i = 0;
+  while (i < toFetch.length) {
     // Check time budget — leave 30s for save + response
     if (Date.now() > deadline - 30_000) {
       console.log(
@@ -887,9 +890,19 @@ export async function buildAttainsChunk(timeBudgetMs: number, deferredStates: st
       break;
     }
 
-    try {
-      const result = await fetchAttainsState(st);
-      if (result) {
+    const batch = toFetch.slice(i, i + CONCURRENCY);
+    i += batch.length;
+
+    const results = await Promise.allSettled(
+      batch.map(async (st) => {
+        const result = await fetchAttainsState(st);
+        return { st, result };
+      })
+    );
+
+    for (const r of results) {
+      if (r.status === 'fulfilled' && r.value.result) {
+        const { st, result } = r.value;
         cache[st] = result;
         loadedStates.add(st);
         processed.push(st);
@@ -897,15 +910,14 @@ export async function buildAttainsChunk(timeBudgetMs: number, deferredStates: st
           `[ATTAINS Cron] ${st}: ${result.stored} waterbodies (${loadedStates.size}/${ALL_STATES.length})`
         );
       } else {
+        const st = r.status === 'fulfilled' ? r.value.st : batch[results.indexOf(r)];
         failed.push(st);
-        console.warn(`[ATTAINS Cron] ${st}: null result`);
+        const reason = r.status === 'rejected' ? r.reason?.message : 'null result';
+        console.warn(`[ATTAINS Cron] ${st}: FAILED (${reason})`);
       }
-    } catch (e: any) {
-      failed.push(st);
-      console.warn(`[ATTAINS Cron] ${st}: FAILED (${e.message})`);
     }
 
-    // Small delay between states
+    // Small delay between batches
     if (Date.now() < deadline - 35_000) {
       await new Promise((r) => setTimeout(r, 1000));
     }
