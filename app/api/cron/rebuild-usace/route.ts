@@ -3,6 +3,8 @@
 // and recent water temperature data from CWMS Data API.
 // Schedule: daily via Vercel cron (4 PM UTC) or manual trigger.
 
+export const maxDuration = 120;
+
 import { NextRequest, NextResponse } from 'next/server';
 import {
   setUsaceCache, getUsaceCacheStatus,

@@ -3,6 +3,8 @@
 // Queries collection metadata + granule counts for key WQ collections.
 // Schedule: daily via Vercel cron (3 PM UTC) or manual trigger.
 
+export const maxDuration = 120;
+
 import { NextRequest, NextResponse } from 'next/server';
 import {
   setNasaCmrCache, getNasaCmrCacheStatus,

@@ -4,6 +4,8 @@
 // in-memory spatial cache for instant lookups.
 // Schedule: daily via Vercel cron (10 AM UTC) or manual trigger.
 
+export const maxDuration = 300;
+
 import { NextRequest, NextResponse } from 'next/server';
 import {
   setFrsCache, getFrsCacheStatus,

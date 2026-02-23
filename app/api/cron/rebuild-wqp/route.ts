@@ -11,10 +11,13 @@ import {
   type WqpRecord,
 } from '@/lib/wqpCache';
 
+// Allow up to 5 minutes on Vercel Pro
+export const maxDuration = 300;
+
 // ── Config ───────────────────────────────────────────────────────────────────
 
 const WQP_BASE = 'https://www.waterqualitydata.us/data/Result/search';
-const STATE_DELAY_MS = 2000;  // Delay between states to respect WQP rate limits
+const CONCURRENCY = 4;  // Parallel state fetches (respects WQP rate limits)
 
 import { PRIORITY_STATES_WITH_FIPS } from '@/lib/constants';
 
@@ -183,36 +186,48 @@ export async function GET(request: NextRequest) {
     const allRecords: WqpRecord[] = [];
     const processedStates: string[] = [];
 
-    for (const [abbr, fips] of PRIORITY_STATES_WITH_FIPS) {
-      try {
-        console.log(`[WQP Cron] Fetching ${abbr} (FIPS ${fips})...`);
-        const records = await fetchState(abbr, fips);
-        const rawCount = records.length;
+    // Semaphore-based concurrency to respect WQP rate limits
+    const queue = [...PRIORITY_STATES_WITH_FIPS];
+    let running = 0;
+    let idx = 0;
 
-        // Deduplicate: keep latest per station + PEARL key
-        const seen = new Map<string, WqpRecord>();
-        // Sort by date descending so first seen = most recent
-        records.sort((a, b) => b.date.localeCompare(a.date));
-        for (const rec of records) {
-          const dedupeKey = `${rec.stn}|${rec.key}`;
-          if (!seen.has(dedupeKey)) {
-            seen.set(dedupeKey, rec);
-          }
+    await new Promise<void>((resolve) => {
+      function next() {
+        if (idx >= queue.length && running === 0) return resolve();
+        while (running < CONCURRENCY && idx < queue.length) {
+          const [abbr, fips] = queue[idx++];
+          running++;
+          (async () => {
+            try {
+              console.log(`[WQP Cron] Fetching ${abbr} (FIPS ${fips})...`);
+              const records = await fetchState(abbr, fips);
+              const rawCount = records.length;
+
+              // Deduplicate: keep latest per station + PEARL key
+              const seen = new Map<string, WqpRecord>();
+              records.sort((a, b) => b.date.localeCompare(a.date));
+              for (const rec of records) {
+                const dedupeKey = `${rec.stn}|${rec.key}`;
+                if (!seen.has(dedupeKey)) seen.set(dedupeKey, rec);
+              }
+
+              const deduplicated = Array.from(seen.values());
+              for (const r of deduplicated) allRecords.push(r);
+              processedStates.push(abbr);
+              stateResults[abbr] = { raw: rawCount, deduplicated: deduplicated.length };
+              console.log(`[WQP Cron] ${abbr}: ${rawCount} raw → ${deduplicated.length} deduplicated`);
+            } catch (e) {
+              console.warn(`[WQP Cron] ${abbr} failed:`, e instanceof Error ? e.message : e);
+              stateResults[abbr] = { raw: 0, deduplicated: 0 };
+            } finally {
+              running--;
+              next();
+            }
+          })();
         }
-
-        const deduplicated = Array.from(seen.values());
-        allRecords.push(...deduplicated);
-        processedStates.push(abbr);
-        stateResults[abbr] = { raw: rawCount, deduplicated: deduplicated.length };
-        console.log(`[WQP Cron] ${abbr}: ${rawCount} raw → ${deduplicated.length} deduplicated`);
-      } catch (e) {
-        console.warn(`[WQP Cron] ${abbr} failed:`, e instanceof Error ? e.message : e);
-        stateResults[abbr] = { raw: 0, deduplicated: 0 };
       }
-
-      // Rate limit delay between states
-      await new Promise(r => setTimeout(r, STATE_DELAY_MS));
-    }
+      next();
+    });
 
     // ── Build Grid Index ───────────────────────────────────────────────────
     const grid: Record<string, { records: WqpRecord[] }> = {};

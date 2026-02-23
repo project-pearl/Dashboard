@@ -1,6 +1,9 @@
 // app/api/cron/generate-insights/route.ts
 // Vercel Cron — runs every 6 hours to pre-generate AI insights for all state/role combos.
 // Populates the in-memory insightsCache so user requests are served instantly.
+
+export const maxDuration = 300;
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getAttainsCacheSummary } from '@/lib/attainsCache';
 import {

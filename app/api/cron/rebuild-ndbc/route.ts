@@ -4,6 +4,8 @@
 // observations. For WQ-flagged stations, fetches .ocean files for DO, pH, etc.
 // Schedule: daily via Vercel cron (2 PM UTC) or manual trigger.
 
+export const maxDuration = 120;
+
 import { NextRequest, NextResponse } from 'next/server';
 import {
   setNdbcCache, getNdbcCacheStatus,

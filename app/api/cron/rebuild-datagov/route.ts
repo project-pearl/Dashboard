@@ -3,6 +3,8 @@
 // Searches for WQ-related datasets and caches metadata (titles, orgs, formats, URLs).
 // Schedule: weekly via Vercel cron (Sunday 5 AM UTC) or manual trigger.
 
+export const maxDuration = 120;
+
 import { NextRequest, NextResponse } from 'next/server';
 import {
   setDataGovCache, getDataGovCacheStatus,

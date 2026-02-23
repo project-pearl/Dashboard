@@ -3,6 +3,8 @@
 // and populates the in-memory cache for instant lookups.
 // Schedule: daily via Vercel cron or external trigger.
 
+export const maxDuration = 300;
+
 import { NextRequest, NextResponse } from 'next/server';
 import {
   setCedenCache, getCedenCacheStatus,

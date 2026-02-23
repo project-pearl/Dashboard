@@ -4,6 +4,8 @@
 // Parses CSV, joins site info with water chemistry, and builds spatial grid cache.
 // Schedule: weekly via Vercel cron (Sunday 4 AM UTC) or manual trigger.
 
+export const maxDuration = 300;
+
 import { NextRequest, NextResponse } from 'next/server';
 import {
   setNarsCache, getNarsCacheStatus,

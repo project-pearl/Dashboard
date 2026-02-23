@@ -4,6 +4,8 @@
 // cache so the dashboard has data even when the API goes down.
 // Schedule: daily via Vercel cron (12 PM UTC) or manual trigger.
 
+export const maxDuration = 120;
+
 import { NextRequest, NextResponse } from 'next/server';
 import {
   setBwbCache, getBwbCacheStatus,

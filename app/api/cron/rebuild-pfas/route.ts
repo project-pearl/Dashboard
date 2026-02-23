@@ -13,6 +13,9 @@ import {
   type PfasResult,
 } from '@/lib/pfasCache';
 
+// Allow up to 5 minutes on Vercel Pro
+export const maxDuration = 300;
+
 // ── Config ───────────────────────────────────────────────────────────────────
 
 // UCMR5 occurrence data (tab-delimited text inside ZIP)

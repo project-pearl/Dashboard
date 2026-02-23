@@ -4,6 +4,8 @@
 // the in-memory spatial cache for instant lookups.
 // Schedule: daily via Vercel cron (6 AM UTC) or manual trigger.
 
+export const maxDuration = 300;
+
 import { NextRequest, NextResponse } from 'next/server';
 import {
   setIcisCache, getIcisCacheStatus,

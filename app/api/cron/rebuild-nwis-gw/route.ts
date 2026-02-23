@@ -12,6 +12,9 @@ import {
   type NwisGwSite, type NwisGwLevel, type NwisGwTrend,
 } from '@/lib/nwisGwCache';
 
+// Allow up to 5 minutes on Vercel Pro
+export const maxDuration = 300;
+
 // ── Config ───────────────────────────────────────────────────────────────────
 
 const NWIS_BASE = 'https://waterservices.usgs.gov/nwis';

@@ -3,6 +3,8 @@
 // and station registry data. Runs after WQP cron completes.
 // Schedule: daily via Vercel cron (5:30 AM UTC) or manual trigger.
 
+export const maxDuration = 300;
+
 import { NextRequest, NextResponse } from 'next/server';
 import { buildStateReports } from '@/lib/stateReportCache';
 

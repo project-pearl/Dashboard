@@ -4,6 +4,8 @@
 // spatial cache for instant lookups.
 // Schedule: daily via Vercel cron (7 AM UTC) or manual trigger.
 
+export const maxDuration = 300;
+
 import { NextRequest, NextResponse } from 'next/server';
 import {
   setSdwisCache, getSdwisCacheStatus,

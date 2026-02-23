@@ -4,6 +4,8 @@
 // Data includes pathogen surveillance at wastewater treatment plants.
 // Schedule: daily via Vercel cron (1 PM UTC) or manual trigger.
 
+export const maxDuration = 300;
+
 import { NextRequest, NextResponse } from 'next/server';
 import {
   setCdcNwssCache, getCdcNwssCacheStatus,
