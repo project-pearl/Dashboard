@@ -25,7 +25,8 @@ import { useWaterData, DATA_SOURCES } from '@/lib/useWaterData';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import StateWaterbodyCard from '@/components/StateWaterbodyCard';
-import ResolutionPlanner from '@/components/ResolutionPlanner';
+import ResolutionPlanner, { type ScopeContext } from '@/components/ResolutionPlanner';
+import { EPA_REGIONS, getEpaRegionForState } from '@/lib/epa-regions';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
 import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
@@ -1733,6 +1734,36 @@ export function NationalCommandCenter(props: Props) {
       .map(s => ({ abbr: s.abbr, name: s.name, cat5: s.cat5, totalImpaired: s.totalImpaired, topCauses: s.topCauses }));
     return { ...attainsAggregation, worstStates };
   }, [attainsAggregation, stateRollup]);
+
+  // ── Resolution Planner scope context (national default) ──
+  const resolutionPlannerScope = useMemo((): ScopeContext => {
+    const gradedStates = stateRollup.filter(s => s.canGradeState);
+    const avgScore = gradedStates.length > 0
+      ? Math.round(gradedStates.reduce((s, r) => s + r.score, 0) / gradedStates.length)
+      : -1;
+    const highAlertStates = stateRollup.filter(s => s.high > 0).length;
+    const totalImpaired = stateRollup.reduce((s, r) => s + r.totalImpaired, 0);
+    const totalWaterbodies = stateRollup.reduce((s, r) => s + r.waterbodies, 0);
+
+    const worstStates = [...stateRollup]
+      .filter(s => s.canGradeState)
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 10)
+      .map(s => ({ abbr: s.abbr, score: s.score, impaired: s.totalImpaired }));
+
+    return {
+      scope: 'national',
+      data: {
+        totalStates: stateRollup.length,
+        totalWaterbodies,
+        totalImpaired,
+        averageScore: avgScore,
+        highAlertStates,
+        topCauses: attainsAggregation.topCauses.slice(0, 15),
+        worstStates,
+      },
+    };
+  }, [stateRollup, attainsAggregation]);
 
   const [showStateTable, setShowStateTable] = useState(false);
   const [showHotspotsSection, setShowHotspotsSection] = useState(false);
@@ -5562,18 +5593,12 @@ export function NationalCommandCenter(props: Props) {
 
         case 'resolution-planner': return DS(<>
         {/* ── Resolution Planner — AI-powered action planning ── */}
-        <Card id="section-resolution-planner" className="border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-white">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              AI Resolution Planner
-              <span className="text-[10px] font-normal text-slate-400 ml-1">One-click + conversational refine</span>
-            </CardTitle>
-            <CardDescription>Generate role-specific resolution plans for impaired waterbodies. Plans include situation assessment, phased actions, co-benefits, cost estimates, and grant opportunities.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-slate-500 italic">Select a waterbody to generate an AI-powered resolution plan tailored to your federal role.</p>
-          </CardContent>
-        </Card>
+        <div id="section-resolution-planner">
+          <ResolutionPlanner
+            scopeContext={resolutionPlannerScope}
+            userRole="federal"
+          />
+        </div>
         </>);
 
         case 'disclaimer': return DS(

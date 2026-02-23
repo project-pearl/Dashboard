@@ -1,9 +1,9 @@
 // =============================================================
-// Resolution Planner v4 — One-Click + Conversational Refine
+// Resolution Planner v5 — Scope-Driven (National / Region / State)
 // PEARL Intelligence Network (PIN)
 //
 // No wizard. No checkboxes. One click generates a plan based on
-// the user's role and the waterbody's data. Refine iteratively
+// the user's role and the current scope level. Refine iteratively
 // with natural language prompts.
 // =============================================================
 
@@ -15,45 +15,51 @@ import { useState, useCallback, useRef, useEffect } from "react";
 
 export type UserRole = "federal" | "state" | "ms4" | "ms4_utility" | "corporate" | "university" | "ngo" | "k12" | "infrastructure" | "admin";
 
-export interface WaterbodyContext {
-  name: string;
-  assessmentUnitId: string;
-  state: string;
-  grade: string;
-  severity: string;
-  category: string;
-  listing303d: boolean;
-  tmdlEstablished: boolean;
-  tmdlPollutants: string[];
-  cwaAuthority: string;
-  parametersExceeding: { name: string; value: number; threshold: number; unit: string }[];
-  ms4Permits: { permitteeName: string; phase: string }[];
-  npdesDischargers: { facilityName: string; majorMinor: string; status: string }[];
-  drinkingWaterSystems: number;
-  populationServed: number;
-  activeViolations: number;
-  sdwisViolations: number;
-  ejIndex: number;
-  ecologicalSensitivity: number;
-  trendDirection: string;
-  dataGaps: string[];
-  watershed: string;
-  huc12: string;
-  epaRegion: number;
-  // Data provenance — deterministic, from the platform's caches
-  dataSources: DataSource[];
+export type PlannerScope = 'national' | 'region' | 'state';
+
+export interface NationalContext {
+  totalStates: number;
+  totalWaterbodies: number;
+  totalImpaired: number;
+  averageScore: number;
+  highAlertStates: number;
+  topCauses: { cause: string; count: number }[];
+  worstStates: { abbr: string; score: number; impaired: number }[];
 }
 
-export interface DataSource {
-  name: string;       // e.g. "EPA ATTAINS"
-  dataset: string;    // e.g. "Integrated Report Assessment Units"
-  lastUpdated: string; // ISO date
-  recordCount: number;
+export interface RegionContext {
+  regionId: number;
+  regionName: string;
+  hq: string;
+  states: string[];
+  totalWaterbodies: number;
+  totalImpaired: number;
+  averageScore: number;
+  topCauses: { cause: string; count: number }[];
+  stateBreakdown: { abbr: string; score: number; impaired: number }[];
 }
+
+export interface StateContext {
+  abbr: string;
+  name: string;
+  epaRegion: number;
+  totalWaterbodies: number;
+  assessed: number;
+  impaired: number;
+  score: number;
+  grade: string;
+  cat5: number; cat4a: number; cat4b: number; cat4c: number;
+  topCauses: { cause: string; count: number }[];
+}
+
+export type ScopeContext =
+  | { scope: 'national'; data: NationalContext }
+  | { scope: 'region';   data: RegionContext }
+  | { scope: 'state';    data: StateContext };
 
 export interface ResolutionPlan {
   generatedAt: string;
-  waterbody: string;
+  scopeLabel: string;
   role: UserRole;
   revision: number;
   sections: PlanSections;
@@ -147,29 +153,66 @@ const ROLE_CONTEXT: Record<UserRole, {
   },
 };
 
-// ── Deterministic Source Attribution ──
-// Sources come from the data layer, NOT from AI
+// ── Scope Helpers ──
 
-function buildSourceAttribution(wb: WaterbodyContext): string {
-  if (wb.dataSources.length === 0) {
-    return "Data sources: Unable to determine — verify with primary agency data.";
+function getScopeLabel(ctx: ScopeContext): string {
+  switch (ctx.scope) {
+    case 'national': return 'National Water Quality';
+    case 'region':   return `EPA Region ${ctx.data.regionId} — ${ctx.data.hq}`;
+    case 'state':    return `${ctx.data.name} (${ctx.data.abbr})`;
   }
-  return wb.dataSources
-    .map(ds => `${ds.name} (${ds.dataset}, ${ds.recordCount.toLocaleString()} records, updated ${new Date(ds.lastUpdated).toLocaleDateString()})`)
-    .join(" · ");
 }
 
-function SourceBanner({ dataSources }: { dataSources: DataSource[] }) {
-  if (dataSources.length === 0) return null;
+function getScopeSubtitle(ctx: ScopeContext): string {
+  switch (ctx.scope) {
+    case 'national': return `${ctx.data.totalStates} states · ${ctx.data.totalWaterbodies.toLocaleString()} waterbodies · ${ctx.data.totalImpaired.toLocaleString()} impaired`;
+    case 'region':   return `${ctx.data.states.join(', ')} · ${ctx.data.totalWaterbodies.toLocaleString()} waterbodies · ${ctx.data.totalImpaired.toLocaleString()} impaired`;
+    case 'state':    return `EPA Region ${ctx.data.epaRegion} · ${ctx.data.totalWaterbodies.toLocaleString()} waterbodies · Grade ${ctx.data.grade}`;
+  }
+}
+
+// ── Scope Summary Badge ──
+
+function ScopeSummaryBadge({ scopeContext }: { scopeContext: ScopeContext }) {
+  const { scope, data } = scopeContext;
+
+  const stats: { label: string; value: string }[] = [];
+  if (scope === 'national') {
+    const d = data as NationalContext;
+    stats.push(
+      { label: 'States', value: String(d.totalStates) },
+      { label: 'Waterbodies', value: d.totalWaterbodies.toLocaleString() },
+      { label: 'Impaired', value: d.totalImpaired.toLocaleString() },
+      { label: 'High-Alert States', value: String(d.highAlertStates) },
+    );
+  } else if (scope === 'region') {
+    const d = data as RegionContext;
+    stats.push(
+      { label: 'States', value: String(d.states.length) },
+      { label: 'Waterbodies', value: d.totalWaterbodies.toLocaleString() },
+      { label: 'Impaired', value: d.totalImpaired.toLocaleString() },
+      { label: 'Avg Score', value: d.averageScore >= 0 ? String(d.averageScore) : 'N/A' },
+    );
+  } else {
+    const d = data as StateContext;
+    stats.push(
+      { label: 'Waterbodies', value: d.totalWaterbodies.toLocaleString() },
+      { label: 'Assessed', value: d.assessed.toLocaleString() },
+      { label: 'Impaired', value: d.impaired.toLocaleString() },
+      { label: 'Grade', value: d.grade },
+    );
+  }
+
   return (
     <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 mb-4">
-      <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Data Sources Informing This Plan</p>
-      <div className="flex flex-wrap gap-2">
-        {dataSources.map((ds, i) => (
-          <span key={i} className="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-gray-200 rounded-full text-xs text-gray-600">
-            <span className="w-1.5 h-1.5 bg-green-400 rounded-full" />
-            <span className="font-medium">{ds.name}</span>
-            <span className="text-gray-400">· {ds.recordCount.toLocaleString()} records · {new Date(ds.lastUpdated).toLocaleDateString()}</span>
+      <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+        {scope === 'national' ? 'National' : scope === 'region' ? 'Regional' : 'State'} Scope
+      </p>
+      <div className="flex flex-wrap gap-3">
+        {stats.map((s, i) => (
+          <span key={i} className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-gray-200 rounded-full text-xs text-gray-600">
+            <span className="font-medium text-gray-800">{s.value}</span>
+            <span className="text-gray-400">{s.label}</span>
           </span>
         ))}
       </div>
@@ -177,48 +220,14 @@ function SourceBanner({ dataSources }: { dataSources: DataSource[] }) {
   );
 }
 
-// ── Initial Prompt ──
+// ── Scope-Specific Prompt Builders ──
 
-function buildInitialPrompt(wb: WaterbodyContext, role: UserRole): string {
-  const rc = ROLE_CONTEXT[role];
-
-  return `You are a senior water quality engineer generating a Resolution Plan.
-
-YOUR AUDIENCE: ${rc.label} role with authority over: ${rc.authority}
-
-WATERBODY: ${wb.name} | ${wb.assessmentUnitId} | ${wb.state} | EPA Region ${wb.epaRegion}
-Watershed: ${wb.watershed} (HUC-12: ${wb.huc12})
-Grade: ${wb.grade} | Severity: ${wb.severity} | Trend: ${wb.trendDirection}
-303(d): ${wb.listing303d ? "Listed" : "Not listed"} | Category: ${wb.category}
-TMDL: ${wb.tmdlEstablished ? `Established (${wb.tmdlPollutants.join(", ")})` : "Needed — Not Established"}
-CWA: ${wb.cwaAuthority}
-EJ Index: ${wb.ejIndex}/100 | Ecological Sensitivity: ${wb.ecologicalSensitivity}/100
-
-EXCEEDANCES:
-${wb.parametersExceeding.map(p => `- ${p.name}: ${p.value} ${p.unit} (limit: ${p.threshold})`).join("\n") || "None recorded"}
-
-JURISDICTION:
-MS4: ${wb.ms4Permits.map(p => `${p.permitteeName} (Phase ${p.phase})`).join(", ") || "None"}
-NPDES: ${wb.npdesDischargers.map(d => `${d.facilityName} (${d.majorMinor}, ${d.status})`).join(", ") || "None"}
-DW Systems: ${wb.drinkingWaterSystems} serving ${wb.populationServed.toLocaleString()} | DW Violations: ${wb.sdwisViolations}
-Compliance Violations: ${wb.activeViolations}
-
-DATA GAPS: ${wb.dataGaps.length > 0 ? wb.dataGaps.join("; ") : "None identified"}
-
-VERIFIED DATA SOURCES: ${buildSourceAttribution(wb)}
-
-PLAN FOCUS: ${rc.planFocus}
-
-Generate a comprehensive Resolution Plan. Determine the appropriate resource level, timeline, solutions, and agencies based on the severity of the data above and the user's role/authority. Be specific and actionable. Use regulatory language appropriate for ${rc.label} briefings.
-
-IMPORTANT: Do not fabricate data sources. The verified sources are listed above. Reference them when citing data, but do not invent additional sources.
-
-Respond ONLY with valid JSON, no markdown, no backticks:
+const JSON_SCHEMA_INSTRUCTION = `Respond ONLY with valid JSON, no markdown, no backticks:
 {
-  "situationAssessment": "2-3 paragraphs: what is wrong, how bad, who is affected, why this demands attention now. Reference specific parameter values and violations from the data.",
-  "rootCauses": "What is causing the impairment. Cite specific dischargers, land use patterns, infrastructure failures from the data above.",
-  "stakeholders": "Who must be involved. For each: name/office, their authority, and the specific action they should take. Tailored to ${rc.label} role perspective.",
-  "actionsImmediate": ["0-30 day actions appropriate to ${rc.label} authority"],
+  "situationAssessment": "2-3 paragraphs: what is wrong, how bad, who is affected, why this demands attention now.",
+  "rootCauses": "What is causing the impairments. Cite specific patterns, regions, infrastructure failures from the data.",
+  "stakeholders": "Who must be involved. For each: name/office, their authority, and the specific action they should take.",
+  "actionsImmediate": ["0-30 day actions appropriate to the role's authority"],
   "actionsShortTerm": ["1-6 month actions"],
   "actionsLongTerm": ["6+ month actions"],
   "coBenefits": [
@@ -231,33 +240,127 @@ Respond ONLY with valid JSON, no markdown, no backticks:
       "stormwater": "impact on stormwater management"
     }
   ],
-  "costRange": "Planning-level cost estimates by action tier. Use ranges. Reference comparable projects.",
-  "regulatoryPath": "Regulatory framework, enforcement options, compliance timeline. Mapped to ${rc.label} authority.",
+  "costRange": "Planning-level cost estimates by action tier. Use ranges. Reference comparable programs.",
+  "regulatoryPath": "Regulatory framework, enforcement options, compliance timeline.",
   "grantOpportunities": "Specific federal and state programs: name, typical range, eligibility, next deadline if known.",
-  "projectedOutcomes": "What improves and by when if this plan is executed. Quantify: parameter reductions, populations protected, compliance milestones."
+  "projectedOutcomes": "What improves and by when if this plan is executed. Quantify where possible."
 }`;
+
+function buildNationalPrompt(ctx: NationalContext, role: UserRole): string {
+  const rc = ROLE_CONTEXT[role];
+  const worstList = ctx.worstStates.map(s => `${s.abbr} (score: ${s.score}, impaired: ${s.impaired.toLocaleString()})`).join(', ');
+  const causeList = ctx.topCauses.slice(0, 10).map(c => `${c.cause} (${c.count.toLocaleString()})`).join(', ');
+
+  return `You are a senior water quality engineer generating a National Resolution Plan.
+
+YOUR AUDIENCE: ${rc.label} role with authority over: ${rc.authority}
+
+NATIONAL OVERVIEW:
+- ${ctx.totalStates} states reporting
+- ${ctx.totalWaterbodies.toLocaleString()} total waterbodies tracked
+- ${ctx.totalImpaired.toLocaleString()} impaired waterbodies (Cat 4 + Cat 5)
+- ${ctx.highAlertStates} states with high alert levels
+- Average national score: ${ctx.averageScore >= 0 ? ctx.averageScore : 'Insufficient data'}
+
+WORST-PERFORMING STATES: ${worstList || 'No state data available'}
+
+TOP CAUSES OF IMPAIRMENT: ${causeList || 'No cause data available'}
+
+PLAN FOCUS: ${rc.planFocus}
+
+Generate a comprehensive National Resolution Plan. This is a strategic, nationwide plan — identify systemic issues, interstate patterns, regional disparities, and national-level actions. Be specific and actionable. Use regulatory language appropriate for ${rc.label} briefings.
+
+IMPORTANT: Base your analysis only on the data provided above. Do not fabricate statistics.
+
+${JSON_SCHEMA_INSTRUCTION}`;
 }
 
-// ── Refine Prompt ──
+function buildRegionPrompt(ctx: RegionContext, role: UserRole): string {
+  const rc = ROLE_CONTEXT[role];
+  const stateList = ctx.stateBreakdown.map(s => `${s.abbr} (score: ${s.score}, impaired: ${s.impaired.toLocaleString()})`).join(', ');
+  const causeList = ctx.topCauses.slice(0, 10).map(c => `${c.cause} (${c.count.toLocaleString()})`).join(', ');
+
+  return `You are a senior water quality engineer generating a Regional Resolution Plan.
+
+YOUR AUDIENCE: ${rc.label} role with authority over: ${rc.authority}
+
+EPA ${ctx.regionName.toUpperCase()} (HQ: ${ctx.hq}):
+- Covers states: ${ctx.states.join(', ')}
+- ${ctx.totalWaterbodies.toLocaleString()} total waterbodies tracked
+- ${ctx.totalImpaired.toLocaleString()} impaired waterbodies (Cat 4 + Cat 5)
+- Average regional score: ${ctx.averageScore >= 0 ? ctx.averageScore : 'Insufficient data'}
+
+STATE BREAKDOWN: ${stateList || 'No state data available'}
+
+TOP CAUSES OF IMPAIRMENT: ${causeList || 'No cause data available'}
+
+PLAN FOCUS: ${rc.planFocus}
+
+Generate a comprehensive Regional Resolution Plan for EPA ${ctx.regionName}. Focus on intra-regional coordination, state-to-state disparities, shared watershed issues, and region-specific regulatory actions. Be specific and actionable.
+
+IMPORTANT: Base your analysis only on the data provided above. Do not fabricate statistics.
+
+${JSON_SCHEMA_INSTRUCTION}`;
+}
+
+function buildStatePrompt(ctx: StateContext, role: UserRole): string {
+  const rc = ROLE_CONTEXT[role];
+  const causeList = ctx.topCauses.slice(0, 10).map(c => `${c.cause} (${c.count.toLocaleString()})`).join(', ');
+
+  return `You are a senior water quality engineer generating a State Resolution Plan.
+
+YOUR AUDIENCE: ${rc.label} role with authority over: ${rc.authority}
+
+STATE: ${ctx.name} (${ctx.abbr}) — EPA Region ${ctx.epaRegion}
+- ${ctx.totalWaterbodies.toLocaleString()} total waterbodies
+- ${ctx.assessed.toLocaleString()} assessed
+- ${ctx.impaired.toLocaleString()} impaired (Cat 4 + Cat 5)
+- Score: ${ctx.score >= 0 ? ctx.score : 'N/A'} | Grade: ${ctx.grade}
+- Category 5 (needs TMDL): ${ctx.cat5.toLocaleString()}
+- Category 4a (TMDL established): ${ctx.cat4a.toLocaleString()}
+- Category 4b (alternative controls): ${ctx.cat4b.toLocaleString()}
+- Category 4c (pollution not caused by pollutant): ${ctx.cat4c.toLocaleString()}
+
+TOP CAUSES OF IMPAIRMENT: ${causeList || 'No cause data available'}
+
+PLAN FOCUS: ${rc.planFocus}
+
+Generate a comprehensive State Resolution Plan for ${ctx.name}. Focus on state-specific regulatory actions, priority waterbodies, TMDL development, permit conditions, and coordination with EPA Region ${ctx.epaRegion}. Be specific and actionable.
+
+IMPORTANT: Base your analysis only on the data provided above. Do not fabricate statistics.
+
+${JSON_SCHEMA_INSTRUCTION}`;
+}
+
+// ── Scope-Aware Initial Prompt Router ──
+
+function buildInitialPrompt(ctx: ScopeContext, role: UserRole): string {
+  switch (ctx.scope) {
+    case 'national': return buildNationalPrompt(ctx.data, role);
+    case 'region':   return buildRegionPrompt(ctx.data, role);
+    case 'state':    return buildStatePrompt(ctx.data, role);
+  }
+}
+
+// ── Scope-Aware Refine Prompt ──
 
 function buildRefinePrompt(
-  wb: WaterbodyContext,
+  ctx: ScopeContext,
   role: UserRole,
   currentPlan: PlanSections,
   refinement: string
 ): string {
-  return `You previously generated a Resolution Plan for ${wb.name} (${wb.state}) for a ${ROLE_CONTEXT[role].label} user.
+  const scopeLabel = getScopeLabel(ctx);
+  return `You previously generated a Resolution Plan for ${scopeLabel} for a ${ROLE_CONTEXT[role].label} user.
 
 CURRENT PLAN (summarized):
-- Situation: ${currentPlan.situationAssessment.slice(0, 200)}...
+- Situation: ${currentPlan.situationAssessment.slice(0, 300)}...
 - Actions: ${currentPlan.actionsImmediate.length} immediate, ${currentPlan.actionsShortTerm.length} short-term, ${currentPlan.actionsLongTerm.length} long-term
 - Solutions with co-benefits: ${currentPlan.coBenefits.map(c => c.solution).join(", ")}
 
 USER REFINEMENT REQUEST: "${refinement}"
 
-VERIFIED DATA SOURCES: ${buildSourceAttribution(wb)}
-
-Revise the plan according to the user's request. Return the COMPLETE updated plan in the same JSON structure. Do not fabricate data sources.
+Revise the plan according to the user's request. Return the COMPLETE updated plan in the same JSON structure. Do not fabricate data sources or statistics.
 
 Respond ONLY with valid JSON, same structure as before:
 {
@@ -321,12 +424,12 @@ function CoBenefitsMatrix({ benefits }: { benefits: CoBenefit[] }) {
 // ── Main Component ──
 
 export interface ResolutionPlannerProps {
-  waterbody: WaterbodyContext;
+  scopeContext: ScopeContext;
   userRole: UserRole;
   onClose?: () => void;
 }
 
-export default function ResolutionPlanner({ waterbody, userRole, onClose }: ResolutionPlannerProps) {
+export default function ResolutionPlanner({ scopeContext, userRole, onClose }: ResolutionPlannerProps) {
   const [plan, setPlan] = useState<ResolutionPlan | null>(null);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -344,6 +447,8 @@ export default function ResolutionPlanner({ waterbody, userRole, onClose }: Reso
   }, [history]);
 
   const roleCtx = ROLE_CONTEXT[userRole];
+  const scopeLabel = getScopeLabel(scopeContext);
+  const scopeSubtitle = getScopeSubtitle(scopeContext);
 
   // ── Generate Initial Plan ──
   const generatePlan = useCallback(async () => {
@@ -357,7 +462,7 @@ export default function ResolutionPlanner({ waterbody, userRole, onClose }: Reso
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prompt: buildInitialPrompt(waterbody, userRole),
+          prompt: buildInitialPrompt(scopeContext, userRole),
         }),
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
@@ -367,7 +472,7 @@ export default function ResolutionPlanner({ waterbody, userRole, onClose }: Reso
       const sections = JSON.parse(text.replace(/```json|```/g, "").trim());
       setPlan({
         generatedAt: new Date().toISOString(),
-        waterbody: waterbody.name,
+        scopeLabel,
         role: userRole,
         revision: 1,
         sections,
@@ -377,7 +482,7 @@ export default function ResolutionPlanner({ waterbody, userRole, onClose }: Reso
     } finally {
       setGenerating(false);
     }
-  }, [waterbody, userRole]);
+  }, [scopeContext, userRole, scopeLabel]);
 
   // ── Refine Plan ──
   const refinePlan = useCallback(async () => {
@@ -397,7 +502,7 @@ export default function ResolutionPlanner({ waterbody, userRole, onClose }: Reso
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prompt: buildRefinePrompt(waterbody, userRole, plan.sections, userMsg),
+          prompt: buildRefinePrompt(scopeContext, userRole, plan.sections, userMsg),
         }),
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
@@ -426,7 +531,25 @@ export default function ResolutionPlanner({ waterbody, userRole, onClose }: Reso
       setRefining(false);
       refineRef.current?.focus();
     }
-  }, [refineInput, plan, waterbody, userRole]);
+  }, [refineInput, plan, scopeContext, userRole]);
+
+  // ── What-will-be-analyzed description ──
+  const analysisDescription = (() => {
+    switch (scopeContext.scope) {
+      case 'national': {
+        const d = scopeContext.data;
+        return `A national resolution plan tailored to your ${roleCtx.label} role, analyzing ${d.totalStates} states with ${d.totalImpaired.toLocaleString()} impaired waterbodies. The plan will identify systemic issues, interstate patterns, and national-level actions including situation assessment, root cause analysis, stakeholder mapping, phased actions, co-benefits, cost estimates, regulatory pathway, and grant opportunities.`;
+      }
+      case 'region': {
+        const d = scopeContext.data;
+        return `A regional resolution plan for EPA ${d.regionName} (HQ: ${d.hq}), covering ${d.states.join(', ')}. Analyzing ${d.totalImpaired.toLocaleString()} impaired waterbodies across ${d.states.length} states. The plan will address intra-regional coordination, shared watershed issues, and region-specific regulatory actions.`;
+      }
+      case 'state': {
+        const d = scopeContext.data;
+        return `A state resolution plan for ${d.name} (${d.abbr}), EPA Region ${d.epaRegion}. Analyzing ${d.impaired.toLocaleString()} impaired waterbodies (Cat 5: ${d.cat5.toLocaleString()}, Cat 4a: ${d.cat4a.toLocaleString()}, Cat 4b: ${d.cat4b.toLocaleString()}) out of ${d.assessed.toLocaleString()} assessed. The plan will include state-specific regulatory actions, priority waterbodies, and TMDL development timelines.`;
+      }
+    }
+  })();
 
   // ── Pre-generation State ──
   if (!plan && !generating) {
@@ -436,26 +559,19 @@ export default function ResolutionPlanner({ waterbody, userRole, onClose }: Reso
           <div className="flex justify-between items-start">
             <div>
               <p className="text-blue-200 text-xs uppercase tracking-wide font-medium">Resolution Planner</p>
-              <h2 className="text-xl font-bold mt-1">{waterbody.name}</h2>
-              <p className="text-blue-200 text-sm">
-                {waterbody.state} · {waterbody.assessmentUnitId} · {waterbody.severity} · Grade {waterbody.grade}
-              </p>
+              <h2 className="text-xl font-bold mt-1">{scopeLabel}</h2>
+              <p className="text-blue-200 text-sm">{scopeSubtitle}</p>
             </div>
-            {onClose && <button onClick={onClose} className="text-blue-200 hover:text-white">✕</button>}
+            {onClose && <button onClick={onClose} className="text-blue-200 hover:text-white">&#x2715;</button>}
           </div>
         </div>
 
         <div className="p-6">
-          <SourceBanner dataSources={waterbody.dataSources} />
+          <ScopeSummaryBadge scopeContext={scopeContext} />
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-5 mb-5">
             <h3 className="text-sm font-bold text-blue-900 mb-2">What this will generate</h3>
-            <p className="text-sm text-blue-800 leading-relaxed">
-              A resolution plan tailored to your <span className="font-bold">{roleCtx.label}</span> role, based on {waterbody.dataSources.length} verified data sources
-              and {waterbody.parametersExceeding.length} parameter exceedance{waterbody.parametersExceeding.length !== 1 ? "s" : ""} recorded
-              for {waterbody.name}. The plan will include situation assessment, root cause analysis, stakeholder mapping,
-              phased actions, co-benefits across all five water domains, cost estimates, regulatory pathway, and grant opportunities.
-            </p>
+            <p className="text-sm text-blue-800 leading-relaxed">{analysisDescription}</p>
           </div>
 
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-5 text-xs text-gray-600">
@@ -463,8 +579,8 @@ export default function ResolutionPlanner({ waterbody, userRole, onClose }: Reso
             <div className="grid grid-cols-2 gap-2 mt-2">
               <span className="px-2 py-1 bg-white rounded border border-gray-200">&quot;Focus more on environmental justice&quot;</span>
               <span className="px-2 py-1 bg-white rounded border border-gray-200">&quot;What if we double the budget?&quot;</span>
-              <span className="px-2 py-1 bg-white rounded border border-gray-200">&quot;Remove USACE, add FEMA involvement&quot;</span>
-              <span className="px-2 py-1 bg-white rounded border border-gray-200">&quot;Add living shorelines as a solution&quot;</span>
+              <span className="px-2 py-1 bg-white rounded border border-gray-200">&quot;Prioritize Cat 5 waterbodies&quot;</span>
+              <span className="px-2 py-1 bg-white rounded border border-gray-200">&quot;Add green infrastructure solutions&quot;</span>
               <span className="px-2 py-1 bg-white rounded border border-gray-200">&quot;Make this emergency-level urgency&quot;</span>
               <span className="px-2 py-1 bg-white rounded border border-gray-200">&quot;Expand the groundwater section&quot;</span>
             </div>
@@ -489,15 +605,13 @@ export default function ResolutionPlanner({ waterbody, userRole, onClose }: Reso
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
         <div className="bg-gradient-to-r from-blue-900 to-blue-700 px-6 py-5 text-white">
           <p className="text-blue-200 text-xs uppercase tracking-wide font-medium">Resolution Planner</p>
-          <h2 className="text-xl font-bold mt-1">{waterbody.name}</h2>
+          <h2 className="text-xl font-bold mt-1">{scopeLabel}</h2>
         </div>
         <div className="p-12 text-center">
           <div className="inline-block w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4" />
-          <p className="text-sm font-semibold text-gray-700">Analyzing {waterbody.dataSources.length} data sources...</p>
+          <p className="text-sm font-semibold text-gray-700">Analyzing {scopeContext.scope}-level data...</p>
           <p className="text-xs text-gray-400 mt-2">
-            Generating {roleCtx.label}-specific resolution plan for {waterbody.name}.
-            Assessing {waterbody.parametersExceeding.length} exceedances across {waterbody.ms4Permits.length + waterbody.npdesDischargers.length} permits.
-            This takes 30-60 seconds.
+            Generating {roleCtx.label}-specific resolution plan for {scopeLabel}. This takes 30-60 seconds.
           </p>
         </div>
       </div>
@@ -514,7 +628,7 @@ export default function ResolutionPlanner({ waterbody, userRole, onClose }: Reso
             <p className="text-blue-200 text-xs uppercase tracking-wide font-medium">
               Resolution Plan · {roleCtx.label} · Revision {plan!.revision}
             </p>
-            <h2 className="text-xl font-bold mt-1">{plan!.waterbody}</h2>
+            <h2 className="text-xl font-bold mt-1">{plan!.scopeLabel}</h2>
             <p className="text-blue-200 text-sm">{new Date(plan!.generatedAt).toLocaleString()}</p>
           </div>
           <div className="flex gap-2 print:hidden">
@@ -528,7 +642,7 @@ export default function ResolutionPlanner({ waterbody, userRole, onClose }: Reso
       {/* Scrollable Plan Content */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6 print:overflow-visible">
 
-        <SourceBanner dataSources={waterbody.dataSources} />
+        <ScopeSummaryBadge scopeContext={scopeContext} />
 
         <section>
           <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">Situation Assessment</h3>
