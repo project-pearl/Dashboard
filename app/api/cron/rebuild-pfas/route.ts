@@ -83,19 +83,18 @@ async function fetchAndParseUcmr5(): Promise<Ucmr5Row[]> {
   }
 
   const zip = await JSZip.loadAsync(buffer);
-  const txtFiles = Object.keys(zip.files).filter(f =>
-    f.toLowerCase().includes('ucmr5') && (f.endsWith('.txt') || f.endsWith('.tsv'))
-  );
+  const allFiles = Object.keys(zip.files);
+  console.log(`[PFAS Cron] ZIP contains: ${allFiles.join(', ')}`);
 
-  if (txtFiles.length === 0) {
-    // Try any txt file
-    const anyTxt = Object.keys(zip.files).filter(f => f.endsWith('.txt') || f.endsWith('.tsv'));
-    if (anyTxt.length === 0) throw new Error('No TXT/TSV files found in UCMR5 ZIP');
-    txtFiles.push(anyTxt[0]);
-  }
+  // Target the main occurrence file specifically (UCMR5_All.txt, ~295MB uncompressed)
+  const targetFile = allFiles.find(f => /ucmr5[_-]?all/i.test(f))
+    || allFiles.find(f => f.toLowerCase().includes('ucmr5') && !f.toLowerCase().includes('addtl') && !f.toLowerCase().includes('zip') && !f.toLowerCase().includes('summary') && !f.toLowerCase().includes('instruction') && f.endsWith('.txt'))
+    || allFiles.find(f => f.endsWith('.txt') || f.endsWith('.tsv'));
 
-  console.log(`[PFAS Cron] Parsing ${txtFiles[0]}...`);
-  const content = await zip.files[txtFiles[0]].async('string');
+  if (!targetFile) throw new Error('No occurrence data file found in UCMR5 ZIP');
+
+  console.log(`[PFAS Cron] Parsing ${targetFile}...`);
+  const content = await zip.files[targetFile].async('string');
   const lines = content.split('\n');
 
   if (lines.length < 2) throw new Error('UCMR5 file is empty');
@@ -133,10 +132,12 @@ async function fetchAndParseUcmr5(): Promise<Ucmr5Row[]> {
     const sign = signCol >= 0 ? cols[signCol] : '';
     const detected = sign !== '<' && resultValue !== null && !isNaN(resultValue) && resultValue > 0;
 
+    const pwsid = cols[pwsidCol] || '';
     rows.push({
-      pwsid: cols[pwsidCol] || '',
+      pwsid,
       pwsName: nameCol >= 0 ? cols[nameCol] || '' : '',
-      state: stateCol >= 0 ? cols[stateCol] || '' : '',
+      // State column has FIPS code; use PWSID prefix for 2-letter abbreviation
+      state: pwsid.substring(0, 2),
       contaminant,
       resultValue: resultValue !== null && !isNaN(resultValue) ? Math.round(resultValue * 10000) / 10000 : null,
       detected,
