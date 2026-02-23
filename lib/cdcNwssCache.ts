@@ -167,7 +167,7 @@ export function getCdcNwssAllStates(): Record<string, CdcNwssStateData> | null {
 /**
  * Replace the in-memory cache (called by cron route after fetching fresh data).
  */
-export function setCdcNwssCache(data: CdcNwssCacheData): void {
+export async function setCdcNwssCache(data: CdcNwssCacheData): Promise<void> {
   _memCache = data;
   _cacheSource = 'memory (cron)';
   const m = data._meta;
@@ -176,7 +176,7 @@ export function setCdcNwssCache(data: CdcNwssCacheData): void {
     `${m.stateCount} states, ${m.countyCount} counties`
   );
   saveToDisk();
-  saveCacheToBlob('cache/cdc-nwss.json', { meta: data._meta, states: data.states });
+  await saveCacheToBlob('cache/cdc-nwss.json', { meta: data._meta, states: data.states });
 }
 
 // ── Build Lock ───────────────────────────────────────────────────────────────

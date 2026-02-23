@@ -196,7 +196,7 @@ export function getCedenCache(lat: number, lng: number): CedenLookupResult | nul
 /**
  * Replace the in-memory cache (called by cron route after fetching fresh data).
  */
-export function setCedenCache(data: CedenCacheData): void {
+export async function setCedenCache(data: CedenCacheData): Promise<void> {
   _memCache = data;
   _cacheSource = 'memory (cron)';
   console.log(
@@ -204,7 +204,7 @@ export function setCedenCache(data: CedenCacheData): void {
     `${Object.keys(data.grid).length} cells`
   );
   saveToDisk();
-  saveCacheToBlob('cache/ceden.json', { meta: data._meta, grid: data.grid });
+  await saveCacheToBlob('cache/ceden.json', { meta: data._meta, grid: data.grid });
 }
 
 /**

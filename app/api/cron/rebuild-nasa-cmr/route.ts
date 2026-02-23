@@ -144,7 +144,7 @@ export async function GET(request: NextRequest) {
       collections,
     };
 
-    setNasaCmrCache(cacheData);
+    await setNasaCmrCache(cacheData);
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[NASA CMR Cron] Built in ${elapsed}s — ${collections.length} collections, ${totalGranules} granules`);

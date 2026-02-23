@@ -312,7 +312,7 @@ export async function GET(request: NextRequest) {
 
     if (rows.length === 0) {
       console.warn('[PFAS Cron] No PFAS rows found in UCMR5 data');
-      setPfasCache({
+      await setPfasCache({
         _meta: {
           built: new Date().toISOString(),
           resultCount: 0,
@@ -377,7 +377,7 @@ export async function GET(request: NextRequest) {
       grid,
     };
 
-    setPfasCache(cacheData);
+    await setPfasCache(cacheData);
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     const geocodeRate = results.length > 0

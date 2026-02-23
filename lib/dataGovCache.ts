@@ -98,12 +98,12 @@ export function getDataGovDatasets(): DataGovDataset[] | null {
   return _memCache?.datasets || null;
 }
 
-export function setDataGovCache(data: DataGovCacheData): void {
+export async function setDataGovCache(data: DataGovCacheData): Promise<void> {
   _memCache = data;
   _cacheSource = 'memory (cron)';
   console.log(`[Data.gov Cache] Updated: ${data._meta.datasetCount} datasets`);
   saveToDisk();
-  saveCacheToBlob('cache/datagov.json', { meta: data._meta, datasets: data.datasets });
+  await saveCacheToBlob('cache/datagov.json', { meta: data._meta, datasets: data.datasets });
 }
 
 // ── Build Lock ───────────────────────────────────────────────────────────────

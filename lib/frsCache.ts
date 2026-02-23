@@ -175,7 +175,7 @@ export function getFrsCache(lat: number, lng: number): FrsLookupResult | null {
 /**
  * Replace the in-memory cache (called by cron route after fetching fresh data).
  */
-export function setFrsCache(data: FrsCacheData): void {
+export async function setFrsCache(data: FrsCacheData): Promise<void> {
   _memCache = data;
   _cacheSource = 'memory (cron)';
   const m = data._meta;
@@ -184,7 +184,7 @@ export function setFrsCache(data: FrsCacheData): void {
     `${m.gridCells} cells, ${m.statesProcessed.length} states`
   );
   saveToDisk();
-  saveCacheToBlob('cache/frs.json', { meta: data._meta, grid: data.grid });
+  await saveCacheToBlob('cache/frs.json', { meta: data._meta, grid: data.grid });
 }
 
 /**

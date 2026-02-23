@@ -195,7 +195,7 @@ export function getEchoCache(lat: number, lng: number): EchoLookupResult | null 
 /**
  * Replace the in-memory cache (called by cron route after fetching fresh data).
  */
-export function setEchoCache(data: EchoCacheData): void {
+export async function setEchoCache(data: EchoCacheData): Promise<void> {
   _memCache = data;
   _cacheSource = 'memory (cron)';
   const m = data._meta;
@@ -204,7 +204,7 @@ export function setEchoCache(data: EchoCacheData): void {
     `${m.gridCells} cells, ${m.statesProcessed.length} states`
   );
   saveToDisk();
-  saveCacheToBlob('cache/echo.json', { meta: data._meta, grid: data.grid });
+  await saveCacheToBlob('cache/echo.json', { meta: data._meta, grid: data.grid });
 }
 
 /**

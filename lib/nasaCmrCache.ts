@@ -108,12 +108,12 @@ export function getNasaCmrByCategory(category: string): NasaCmrCollection[] {
   return _memCache.collections.filter(c => c.category === category);
 }
 
-export function setNasaCmrCache(data: NasaCmrCacheData): void {
+export async function setNasaCmrCache(data: NasaCmrCacheData): Promise<void> {
   _memCache = data;
   _cacheSource = 'memory (cron)';
   console.log(`[NASA CMR Cache] Updated: ${data._meta.collectionCount} collections, ${data._meta.totalGranules} granules`);
   saveToDisk();
-  saveCacheToBlob('cache/nasa-cmr.json', { meta: data._meta, collections: data.collections });
+  await saveCacheToBlob('cache/nasa-cmr.json', { meta: data._meta, collections: data.collections });
 }
 
 // ── Build Lock ───────────────────────────────────────────────────────────────

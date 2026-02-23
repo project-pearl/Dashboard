@@ -143,12 +143,12 @@ export function getNarsCache(lat: number, lng: number): NarsLookupResult | null 
   return { sites, cacheBuilt: _memCache._meta.built, fromCache: true };
 }
 
-export function setNarsCache(data: NarsCacheData): void {
+export async function setNarsCache(data: NarsCacheData): Promise<void> {
   _memCache = data;
   _cacheSource = 'memory (cron)';
   console.log(`[NARS Cache] Updated: ${data._meta.siteCount} sites, ${data._meta.gridCells} cells`);
   saveToDisk();
-  saveCacheToBlob('cache/nars.json', { meta: data._meta, grid: data.grid });
+  await saveCacheToBlob('cache/nars.json', { meta: data._meta, grid: data.grid });
 }
 
 // ── Build Lock ───────────────────────────────────────────────────────────────

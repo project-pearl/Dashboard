@@ -255,7 +255,7 @@ export function getIcisCache(lat: number, lng: number): IcisLookupResult | null 
 /**
  * Replace the in-memory cache (called by cron route after fetching fresh data).
  */
-export function setIcisCache(data: IcisCacheData): void {
+export async function setIcisCache(data: IcisCacheData): Promise<void> {
   _memCache = data;
   _cacheSource = 'memory (cron)';
   const m = data._meta;
@@ -265,7 +265,7 @@ export function setIcisCache(data: IcisCacheData): void {
     `${m.gridCells} cells, ${m.statesProcessed.length} states`
   );
   saveToDisk();
-  saveCacheToBlob('cache/icis.json', { meta: data._meta, grid: data.grid });
+  await saveCacheToBlob('cache/icis.json', { meta: data._meta, grid: data.grid });
 }
 
 /**

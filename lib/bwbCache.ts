@@ -185,7 +185,7 @@ export function getBwbCache(lat: number, lng: number): BwbLookupResult | null {
 /**
  * Replace the in-memory cache (called by cron route after fetching fresh data).
  */
-export function setBwbCache(data: BwbCacheData): void {
+export async function setBwbCache(data: BwbCacheData): Promise<void> {
   _memCache = data;
   _cacheSource = 'memory (cron)';
   const m = data._meta;
@@ -194,7 +194,7 @@ export function setBwbCache(data: BwbCacheData): void {
     `${m.datasetsScanned} datasets, ${m.gridCells} cells`
   );
   saveToDisk();
-  saveCacheToBlob('cache/bwb.json', { meta: data._meta, grid: data.grid });
+  await saveCacheToBlob('cache/bwb.json', { meta: data._meta, grid: data.grid });
 }
 
 /**

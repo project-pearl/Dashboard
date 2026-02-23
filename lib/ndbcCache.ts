@@ -177,7 +177,7 @@ export function getNdbcCache(lat: number, lng: number): NdbcLookupResult | null 
   return { stations, cacheBuilt: _memCache._meta.built, fromCache: true };
 }
 
-export function setNdbcCache(data: NdbcCacheData): void {
+export async function setNdbcCache(data: NdbcCacheData): Promise<void> {
   _memCache = data;
   _cacheSource = 'memory (cron)';
   console.log(
@@ -185,7 +185,7 @@ export function setNdbcCache(data: NdbcCacheData): void {
     `${data._meta.wqStationCount} WQ, ${data._meta.gridCells} cells`
   );
   saveToDisk();
-  saveCacheToBlob('cache/ndbc.json', { meta: data._meta, grid: data.grid });
+  await saveCacheToBlob('cache/ndbc.json', { meta: data._meta, grid: data.grid });
 }
 
 // ── Build Lock ───────────────────────────────────────────────────────────────

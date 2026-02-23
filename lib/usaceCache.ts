@@ -133,12 +133,12 @@ export function getUsaceCache(lat: number, lng: number): UsaceLookupResult | nul
   return { locations, cacheBuilt: _memCache._meta.built, fromCache: true };
 }
 
-export function setUsaceCache(data: UsaceCacheData): void {
+export async function setUsaceCache(data: UsaceCacheData): Promise<void> {
   _memCache = data;
   _cacheSource = 'memory (cron)';
   console.log(`[USACE Cache] Updated: ${data._meta.locationCount} locations, ${data._meta.gridCells} cells`);
   saveToDisk();
-  saveCacheToBlob('cache/usace.json', { meta: data._meta, grid: data.grid });
+  await saveCacheToBlob('cache/usace.json', { meta: data._meta, grid: data.grid });
 }
 
 // ── Build Lock ───────────────────────────────────────────────────────────────

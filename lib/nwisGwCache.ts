@@ -220,7 +220,7 @@ export function getNwisGwCache(lat: number, lng: number): NwisGwLookupResult | n
 /**
  * Replace the in-memory cache (called by cron route after fetching fresh data).
  */
-export function setNwisGwCache(data: NwisGwCacheData): void {
+export async function setNwisGwCache(data: NwisGwCacheData): Promise<void> {
   _memCache = data;
   _cacheSource = 'memory (cron)';
   const m = data._meta;
@@ -229,7 +229,7 @@ export function setNwisGwCache(data: NwisGwCacheData): void {
     `${m.trendCount} trends, ${m.gridCells} cells, ${m.statesProcessed.length} states`
   );
   saveToDisk();
-  saveCacheToBlob('cache/nwis-gw.json', { meta: data._meta, grid: data.grid });
+  await saveCacheToBlob('cache/nwis-gw.json', { meta: data._meta, grid: data.grid });
 }
 
 /**

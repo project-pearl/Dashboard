@@ -199,7 +199,7 @@ export async function GET(request: NextRequest) {
       grid,
     };
 
-    setFrsCache(cacheData);
+    await setFrsCache(cacheData);
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(

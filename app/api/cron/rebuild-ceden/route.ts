@@ -212,7 +212,7 @@ export async function GET(request: NextRequest) {
       grid,
     };
 
-    setCedenCache(cacheData);
+    await setCedenCache(cacheData);
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[CEDEN Cron] Build complete in ${elapsed}s`);

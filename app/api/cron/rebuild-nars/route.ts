@@ -250,7 +250,7 @@ export async function GET(request: NextRequest) {
       grid,
     };
 
-    setNarsCache(cacheData);
+    await setNarsCache(cacheData);
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[NARS Cron] Built in ${elapsed}s — ${allSites.length} sites, ${Object.keys(grid).length} cells`);

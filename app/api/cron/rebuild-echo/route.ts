@@ -262,7 +262,7 @@ export async function GET(request: NextRequest) {
       grid,
     };
 
-    setEchoCache(cacheData);
+    await setEchoCache(cacheData);
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(

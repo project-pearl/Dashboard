@@ -213,7 +213,7 @@ export function getSdwisCache(lat: number, lng: number): SdwisLookupResult | nul
 /**
  * Replace the in-memory cache (called by cron route after fetching fresh data).
  */
-export function setSdwisCache(data: SdwisCacheData): void {
+export async function setSdwisCache(data: SdwisCacheData): Promise<void> {
   _memCache = data;
   _cacheSource = 'memory (cron)';
   const m = data._meta;
@@ -222,7 +222,7 @@ export function setSdwisCache(data: SdwisCacheData): void {
     `${m.enforcementCount} enforcement, ${m.gridCells} cells, ${m.statesProcessed.length} states`
   );
   saveToDisk();
-  saveCacheToBlob('cache/sdwis.json', { meta: data._meta, grid: data.grid });
+  await saveCacheToBlob('cache/sdwis.json', { meta: data._meta, grid: data.grid });
 }
 
 /**

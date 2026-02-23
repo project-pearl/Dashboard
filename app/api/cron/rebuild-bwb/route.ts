@@ -222,7 +222,7 @@ export async function GET(request: NextRequest) {
       grid,
     };
 
-    setBwbCache(cacheData);
+    await setBwbCache(cacheData);
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(

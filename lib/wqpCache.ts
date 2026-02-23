@@ -187,7 +187,7 @@ export function getWqpCache(lat: number, lng: number): WqpLookupResult | null {
  * Replace the in-memory cache (called by cron route after fetching fresh data).
  * Also persists to disk for cold-start recovery.
  */
-export function setWqpCache(data: WqpCacheData): void {
+export async function setWqpCache(data: WqpCacheData): Promise<void> {
   _memCache = data;
   _cacheSource = 'memory (cron)';
   buildStatus = 'ready';
@@ -196,7 +196,7 @@ export function setWqpCache(data: WqpCacheData): void {
     `${Object.keys(data.grid).length} cells, ${data._meta.statesProcessed.length} states`
   );
   saveToDisk();
-  saveCacheToBlob('cache/wqp.json', { meta: data._meta, grid: data.grid });
+  await saveCacheToBlob('cache/wqp.json', { meta: data._meta, grid: data.grid });
 }
 
 /**

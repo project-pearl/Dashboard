@@ -217,7 +217,7 @@ export async function GET(request: NextRequest) {
       grid,
     };
 
-    setUsaceCache(cacheData);
+    await setUsaceCache(cacheData);
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[USACE Cron] Built in ${elapsed}s — ${allLocations.length} locations, ${Object.keys(grid).length} cells`);

@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
       datasets,
     };
 
-    setDataGovCache(cacheData);
+    await setDataGovCache(cacheData);
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[Data.gov Cron] Built in ${elapsed}s — ${datasets.length} datasets`);

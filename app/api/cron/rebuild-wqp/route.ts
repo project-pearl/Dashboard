@@ -249,7 +249,7 @@ export async function GET(request: NextRequest) {
       grid,
     };
 
-    setWqpCache(cacheData);
+    await setWqpCache(cacheData);
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[WQP Cron] Build complete in ${elapsed}s — ${allRecords.length} records, ${Object.keys(grid).length} cells`);

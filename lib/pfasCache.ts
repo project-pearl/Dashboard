@@ -176,7 +176,7 @@ export function getPfasCache(lat: number, lng: number): PfasLookupResult | null 
 /**
  * Replace the in-memory cache (called by cron route after fetching fresh data).
  */
-export function setPfasCache(data: PfasCacheData): void {
+export async function setPfasCache(data: PfasCacheData): Promise<void> {
   _memCache = data;
   _cacheSource = 'memory (cron)';
   const m = data._meta;
@@ -185,7 +185,7 @@ export function setPfasCache(data: PfasCacheData): void {
     `${m.gridCells} cells, table=${m.tableName || 'none'}`
   );
   saveToDisk();
-  saveCacheToBlob('cache/pfas.json', { meta: data._meta, grid: data.grid });
+  await saveCacheToBlob('cache/pfas.json', { meta: data._meta, grid: data.grid });
 }
 
 /**
