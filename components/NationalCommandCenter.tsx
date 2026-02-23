@@ -54,7 +54,7 @@ const LENS_CONFIG: Record<ViewLens, {
   showAIInsights: boolean;     // AI narrative cards
   showHotspots: boolean;       // Top 10 worsening/improving
   showSituationSummary: boolean; // 7-tile national summary
-  showTimeRange: boolean;      // Time range + PEARL impact toggle
+  showTimeRange: boolean;      // Time range + ALIA impact toggle
   showSLA: boolean;            // SLA compliance tracking
   showRestorationPlan: boolean; // Restoration plan card
   collapseStateTable: boolean; // Collapse behind button vs full
@@ -119,7 +119,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: true, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: true, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['impairmentprofile', 'coveragegaps', 'networkhealth', 'sla', 'disclaimer']),
+    sections: new Set(['usmap', 'networkhealth', 'impairmentprofile', 'coveragegaps', 'sla', 'disclaimer']),
   },
   trends: {
     label: 'Trends & Projections',
@@ -510,12 +510,12 @@ const DEPLOYMENT_START = new Date('2025-01-09'); // Milton FL pilot launch
 
 const OVERLAYS: { id: OverlayId; label: string; description: string; icon: any }[] = [
   { id: 'hotspots', label: 'Water Quality Risk', description: 'Impairment severity from EPA 303(d) and state assessments', icon: Droplets },
-  { id: 'ms4', label: 'MS4 Jurisdictions', description: 'Municipal Separate Storm Sewer System permit holders — potential PEARL deployment targets', icon: Building2 },
+  { id: 'ms4', label: 'MS4 Jurisdictions', description: 'Municipal Separate Storm Sewer System permit holders — potential ALIA deployment targets', icon: Building2 },
   { id: 'ej', label: 'EJ Vulnerability', description: 'Census ACS demographics + EPA drinking water violations — community environmental burden', icon: Users },
   { id: 'economy', label: 'Compliance Cost', description: 'Estimated annual MS4 stormwater compliance cost burden', icon: DollarSign },
   { id: 'wildlife', label: 'Ecological Sensitivity', description: 'USFWS ESA-listed threatened & endangered species density (aquatic-weighted)', icon: Leaf },
   { id: 'trend', label: 'Trends', description: 'Water quality change vs prior assessment period', icon: TrendingUp },
-  { id: 'coverage', label: 'Monitoring Coverage', description: 'PEARL deployment and monitoring network gaps', icon: BarChart3 },
+  { id: 'coverage', label: 'Monitoring Coverage', description: 'ALIA deployment and monitoring network gaps', icon: BarChart3 },
 ];
 
 // ─── MS4 Jurisdiction Data (EPA NPDES universe, est. 2024) ──────────────────
@@ -640,7 +640,7 @@ function generateRegionData(): RegionRow[] {
     // Delaware
     delaware_christina:        { alertLevel: 'high',   activeAlerts: 4 },
     delaware_brandywine:       { alertLevel: 'medium', activeAlerts: 3 },
-    // Florida — PEARL pilot
+    // Florida — ALIA pilot
     florida_escambia:          { alertLevel: 'high',   activeAlerts: 4 },
     florida_tampa_bay:         { alertLevel: 'high',   activeAlerts: 5 },
     florida_charlotte_harbor:  { alertLevel: 'high',   activeAlerts: 4 },
@@ -1656,7 +1656,7 @@ export function NationalCommandCenter(props: Props) {
       .slice(0, 20)
       .map(([cause, count]) => ({ cause, count }));
 
-    // PEARL-addressable causes (sediment, nutrients, bacteria, turbidity, DO, metals from stormwater)
+    // ALIA-addressable causes (sediment, nutrients, bacteria, turbidity, DO, metals from stormwater)
     const PEARL_ADDRESSABLE = ['sediment', 'silt', 'tss', 'suspended solid', 'turbidity',
       'nutrient', 'nitrogen', 'phosphor', 'ammonia', 'nitrate', 'nitrite',
       'bacteria', 'e. coli', 'e.coli', 'enterococ', 'fecal', 'coliform', 'pathogen',
@@ -1871,7 +1871,7 @@ export function NationalCommandCenter(props: Props) {
       insights.push({
         type: 'urgent',
         title: 'Potomac–Chesapeake: Largest water quality crisis in U.S. regulatory history',
-        detail: `The Chesapeake Bay TMDL — the largest and most complex ever issued by EPA — covers MD, VA, DC, and 4 other states. ${chesapeakeCat5.toLocaleString()} waterbodies in MD/VA/DC alone are Cat 5 (no approved TMDL). The Potomac River basin carries the heaviest nutrient and sediment loads feeding the Bay's dead zones. Decades of nitrogen, phosphorus, and sediment from agriculture, urban runoff, and wastewater have driven chronic hypoxia, SAV loss, and fisheries collapse. This watershed represents the single largest opportunity for PEARL deployment at scale.`,
+        detail: `The Chesapeake Bay TMDL — the largest and most complex ever issued by EPA — covers MD, VA, DC, and 4 other states. ${chesapeakeCat5.toLocaleString()} waterbodies in MD/VA/DC alone are Cat 5 (no approved TMDL). The Potomac River basin carries the heaviest nutrient and sediment loads feeding the Bay's dead zones. Decades of nitrogen, phosphorus, and sediment from agriculture, urban runoff, and wastewater have driven chronic hypoxia, SAV loss, and fisheries collapse. This watershed represents the single largest opportunity for ALIA deployment at scale.`,
         action: 'View Chesapeake deployment plan'
       });
     }
@@ -1886,12 +1886,12 @@ export function NationalCommandCenter(props: Props) {
       });
     }
 
-    // ── INSIGHT 3: PEARL addressability — what % of national impairments we can treat ──
+    // ── INSIGHT 3: ALIA addressability — what % of national impairments we can treat ──
     if (agg.addressablePct > 0) {
       insights.push({
         type: 'success',
-        title: `${agg.addressablePct}% of impairment causes nationally are PEARL-addressable`,
-        detail: `Of ${agg.totalCauseInstances.toLocaleString()} cause-instances across all impaired waterbodies, ${agg.addressableCount.toLocaleString()} involve sediment, nutrients, bacteria, dissolved oxygen, or stormwater metals — pollutants that PEARL's mechanical + oyster biofiltration system directly targets. The remaining ${100 - agg.addressablePct}% include mercury, PCBs, PFAS, and legacy contaminants requiring specialized treatment. ${agg.topCauses.length > 0 ? `Top national causes: ${agg.topCauses.slice(0, 5).map(c => c.cause).join(', ')}.` : ''}`,
+        title: `${agg.addressablePct}% of impairment causes nationally are ALIA-addressable`,
+        detail: `Of ${agg.totalCauseInstances.toLocaleString()} cause-instances across all impaired waterbodies, ${agg.addressableCount.toLocaleString()} involve sediment, nutrients, bacteria, dissolved oxygen, or stormwater metals — pollutants that ALIA's mechanical + oyster biofiltration system directly targets. The remaining ${100 - agg.addressablePct}% include mercury, PCBs, PFAS, and legacy contaminants requiring specialized treatment. ${agg.topCauses.length > 0 ? `Top national causes: ${agg.topCauses.slice(0, 5).map(c => c.cause).join(', ')}.` : ''}`,
         action: 'View addressable market'
       });
     }
@@ -1902,7 +1902,7 @@ export function NationalCommandCenter(props: Props) {
       insights.push({
         type: 'info',
         title: `Top impairment causes: ${top3.map(c => c.cause).join(', ')}`,
-        detail: `Across ${agg.totalImpaired.toLocaleString()} impaired waterbodies, ${top3[0].cause} appears ${top3[0].count.toLocaleString()} times, followed by ${top3[1].cause} (${top3[1].count.toLocaleString()}) and ${top3[2].cause} (${top3[2].count.toLocaleString()}). These patterns guide PEARL configuration — high-nutrient watersheds prioritize oyster biofiltration, high-sediment areas lead with mechanical filtration, and bacterial hotspots get UV treatment stages.`,
+        detail: `Across ${agg.totalImpaired.toLocaleString()} impaired waterbodies, ${top3[0].cause} appears ${top3[0].count.toLocaleString()} times, followed by ${top3[1].cause} (${top3[1].count.toLocaleString()}) and ${top3[2].cause} (${top3[2].count.toLocaleString()}). These patterns guide ALIA configuration — high-nutrient watersheds prioritize oyster biofiltration, high-sediment areas lead with mechanical filtration, and bacterial hotspots get UV treatment stages.`,
       });
     }
 
@@ -1915,7 +1915,7 @@ export function NationalCommandCenter(props: Props) {
       insights.push({
         type: 'warning',
         title: `Highest Cat 5 concentrations: ${worstStates.map(s => `${s.name} (${s.cat5})`).join(', ')}`,
-        detail: `These states carry the greatest density of impaired waterbodies without approved TMDLs. They face the most regulatory pressure and represent the highest-value deployment targets for PEARL. Maryland's Chesapeake Bay TMDL obligations make it uniquely positioned — the state must demonstrate pollution reduction to meet EPA milestones or face federal backstop measures.`,
+        detail: `These states carry the greatest density of impaired waterbodies without approved TMDLs. They face the most regulatory pressure and represent the highest-value deployment targets for ALIA. Maryland's Chesapeake Bay TMDL obligations make it uniquely positioned — the state must demonstrate pollution reduction to meet EPA milestones or face federal backstop measures.`,
         action: 'View state breakdown'
       });
     }
@@ -1925,7 +1925,7 @@ export function NationalCommandCenter(props: Props) {
       insights.push({
         type: 'info',
         title: `${unmonitored.toLocaleString()} waterbodies lack monitoring data`,
-        detail: `Of ${totalWB.toLocaleString()} tracked waterbodies, ${unmonitored.toLocaleString()} have no mapped data sources. ${ungradedStates} states cannot be graded. PEARL deployment creates real-time sensor networks in data-blind freshwater systems where USGS gauges are sparse and ATTAINS listings are stale.`,
+        detail: `Of ${totalWB.toLocaleString()} tracked waterbodies, ${unmonitored.toLocaleString()} have no mapped data sources. ${ungradedStates} states cannot be graded. ALIA deployment creates real-time sensor networks in data-blind freshwater systems where USGS gauges are sparse and ATTAINS listings are stale.`,
         action: 'View data gaps'
       });
     }
@@ -1939,8 +1939,8 @@ export function NationalCommandCenter(props: Props) {
         .slice(0, 5);
       insights.push({
         type: 'info',
-        title: `${totalMS4.toLocaleString()} MS4 jurisdictions nationwide — PEARL compliance market`,
-        detail: `Top markets: ${topMS4States.map(s => `${STATE_ABBR_TO_NAME[s.abbr]} (${s.total})`).join(', ')}. Every MS4 must meet NPDES stormwater discharge requirements. PEARL provides verifiable TSS, nutrient, and bacteria reduction data for permit compliance documentation.`,
+        title: `${totalMS4.toLocaleString()} MS4 jurisdictions nationwide — ALIA compliance market`,
+        detail: `Top markets: ${topMS4States.map(s => `${STATE_ABBR_TO_NAME[s.abbr]} (${s.total})`).join(', ')}. Every MS4 must meet NPDES stormwater discharge requirements. ALIA provides verifiable TSS, nutrient, and bacteria reduction data for permit compliance documentation.`,
         action: 'View market analysis'
       });
     }
@@ -1964,7 +1964,7 @@ export function NationalCommandCenter(props: Props) {
         insights.push({
           type: 'warning',
           title: 'Environmental justice communities with elevated pollution burden',
-          detail: `Communities in ${ejHighRisk.map(([abbr]) => STATE_ABBR_TO_NAME[abbr]).join(', ')} face disproportionate water quality impacts. Federal infrastructure funding (BIL, SRF) increasingly requires EJ targeting — PEARL deployments in these areas qualify for priority funding.`,
+          detail: `Communities in ${ejHighRisk.map(([abbr]) => STATE_ABBR_TO_NAME[abbr]).join(', ')} face disproportionate water quality impacts. Federal infrastructure funding (BIL, SRF) increasingly requires EJ targeting — ALIA deployments in these areas qualify for priority funding.`,
           action: 'Generate EJ report'
         });
       }
@@ -2207,7 +2207,7 @@ export function NationalCommandCenter(props: Props) {
               ) : (
                 <div className="w-full overflow-hidden rounded-lg border border-slate-200 bg-white">
                   <div className="p-2 text-xs text-slate-500 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-                    <span>Selected: {selectedState} ({STATE_ABBR_TO_NAME[selectedState] || 'Unknown'}) · 50 states + DC</span>
+                    <span>Click a state to select · 50 states + DC</span>
                     <button onClick={() => mapRef.current?.setView(US_CENTER, US_ZOOM)}
                       className="text-xs text-blue-600 hover:text-blue-800 hover:underline">
                       Back to National View
@@ -2320,7 +2320,7 @@ export function NationalCommandCenter(props: Props) {
                         <span className="text-slate-500 font-medium self-center mr-1">Monitoring Network:</span>
                         <Badge variant="secondary" className="bg-gray-200 text-gray-700">No Coverage</Badge>
                         <Badge className="bg-yellow-400 text-yellow-900">Ambient Only</Badge>
-                        <Badge className="bg-green-500 text-white">PEARL Deployed</Badge>
+                        <Badge className="bg-green-500 text-white">ALIA Deployed</Badge>
                         <Badge className="bg-green-800 text-white">Full Coverage</Badge>
                       </>
                     )}
@@ -2337,7 +2337,15 @@ export function NationalCommandCenter(props: Props) {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <MapPin size={18} />
-                    <span>{STATE_ABBR_TO_NAME[selectedState] ?? selectedState}</span>
+                    <select
+                      value={selectedState}
+                      onChange={(e) => { setSelectedState(e.target.value); setWaterbodySearch(''); setWaterbodyFilter('all'); setShowAllWaterbodies(false); }}
+                      className="px-2 py-1 rounded-md border border-slate-300 text-sm font-semibold bg-white cursor-pointer hover:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-300"
+                    >
+                      {Object.entries(STATE_ABBR_TO_NAME).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
+                        <option key={abbr} value={abbr}>{name} ({abbr})</option>
+                      ))}
+                    </select>
                   </CardTitle>
                   <CardDescription>Waterbody monitoring summary</CardDescription>
                 </div>
@@ -2379,7 +2387,7 @@ export function NationalCommandCenter(props: Props) {
                         <div className="absolute right-0 top-full mt-2 w-80 z-50 rounded-lg border border-slate-200 bg-white shadow-xl p-4 text-xs text-slate-600 space-y-2"
                           onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-between mb-1">
-                            <span className="font-semibold text-slate-800 text-sm">PEARL Grading Methodology</span>
+                            <span className="font-semibold text-slate-800 text-sm">ALIA Grading Methodology</span>
                             <button onClick={() => setShowMethodology(false)} className="p-0.5 hover:bg-slate-100 rounded">
                               <X size={14} />
                             </button>
@@ -2546,11 +2554,13 @@ export function NationalCommandCenter(props: Props) {
 
         </div>
 
-        {/* ── AI INSIGHTS ── */}
-        <AIInsightsEngine key={selectedState} role="Federal" stateAbbr={selectedState} regionData={selectedStateRegions as any} />
+        {/* ── AI INSIGHTS — hidden in monitoring lens ── */}
+        {viewLens !== 'monitoring' && (
+          <AIInsightsEngine key={selectedState} role="Federal" stateAbbr={selectedState} regionData={selectedStateRegions as any} />
+        )}
 
-        {/* ── MS4 & REGULATORY PROFILE — Full-width bar below map ────── */}
-        {(() => {
+        {/* ── MS4 & REGULATORY PROFILE — Full-width bar below map (hidden in monitoring lens) ────── */}
+        {viewLens !== 'monitoring' && (() => {
           const ms4 = MS4_JURISDICTIONS[selectedState];
           const ov = overlayByState.get(selectedState);
           if (!ms4 && !ov) return null;
@@ -2615,8 +2625,8 @@ export function NationalCommandCenter(props: Props) {
           );
         })()}
 
-        {/* ── WATERBODY DETAIL — Shows below map, auto-selected ────── */}
-        {activeDetailId && (() => {
+        {/* ── WATERBODY DETAIL — Shows below map, auto-selected (hidden in monitoring lens) ────── */}
+        {viewLens !== 'monitoring' && activeDetailId && (() => {
           const nccRegion = regionData.find(r => r.id === activeDetailId);
           const regionConfig = getRegionById(activeDetailId);
           const regionName = regionConfig?.name || nccRegion?.name || activeDetailId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -2751,7 +2761,7 @@ export function NationalCommandCenter(props: Props) {
                     </div>
                     <div className="text-xs text-green-600 mt-0.5">
                       This waterbody is currently attaining designated uses with no Category 4/5 impairments or parameter exceedances detected.
-                      PEARL monitoring recommended for early warning and baseline documentation.
+                      ALIA monitoring recommended for early warning and baseline documentation.
                     </div>
                   </div>
                 </div>
@@ -2929,25 +2939,25 @@ export function NationalCommandCenter(props: Props) {
                                 <div>→ Upstream BMPs and source control</div>
                                 <div>→ Nature-based restoration for long-term recovery</div>
                                 <div>→ Community programs for compliance and stewardship</div>
-                                <div>→ <span className="font-semibold">PEARL for immediate treatment and real-time verification</span></div>
+                                <div>→ <span className="font-semibold">ALIA for immediate treatment and real-time verification</span></div>
                               </div>
                             </div>
                           </div>
 
-                          {/* Why PEARL First */}
+                          {/* Why ALIA First */}
                           <div className="rounded-md bg-cyan-50 border-2 border-cyan-300 p-3">
-                            <div className="text-[10px] font-bold text-cyan-800 uppercase tracking-wider mb-1.5">Why PEARL First</div>
+                            <div className="text-[10px] font-bold text-cyan-800 uppercase tracking-wider mb-1.5">Why ALIA First</div>
                             <div className="space-y-1.5 text-xs text-cyan-900 leading-relaxed">
                               {dataAgeDays !== null && dataAgeDays > 30 && (
-                                <div><span className="font-semibold text-red-700">Data is {dataAgeDays} days old.</span> PEARL restores continuous, compliance-grade monitoring.</div>
+                                <div><span className="font-semibold text-red-700">Data is {dataAgeDays} days old.</span> ALIA restores continuous, compliance-grade monitoring.</div>
                               )}
                               {treatmentPriorities.length > 0 && treatmentPriorities[0].urgency === 'immediate' && (
-                                <div><span className="font-semibold text-red-700">{treatmentPriorities[0].driver.charAt(0).toUpperCase() + treatmentPriorities[0].driver.slice(1).split('(')[0].trim()}.</span> PEARL provides immediate treatment.</div>
+                                <div><span className="font-semibold text-red-700">{treatmentPriorities[0].driver.charAt(0).toUpperCase() + treatmentPriorities[0].driver.slice(1).split('(')[0].trim()}.</span> ALIA provides immediate treatment.</div>
                               )}
                               {treatmentPriorities.length > 0 && treatmentPriorities[0].urgency !== 'immediate' && (
-                                <div><span className="font-semibold">{hasBacteria ? 'Pathogen risk is elevated' : hasNutrients ? 'Nutrient loading is degrading habitat' : hasSediment ? 'Sediment is impairing aquatic life' : 'Conditions are deteriorating'}.</span> PEARL begins treatment immediately.</div>
+                                <div><span className="font-semibold">{hasBacteria ? 'Pathogen risk is elevated' : hasNutrients ? 'Nutrient loading is degrading habitat' : hasSediment ? 'Sediment is impairing aquatic life' : 'Conditions are deteriorating'}.</span> ALIA begins treatment immediately.</div>
                               )}
-                              <div><span className="font-semibold">Long-term restoration takes years.</span> PEARL delivers measurable results in weeks.</div>
+                              <div><span className="font-semibold">Long-term restoration takes years.</span> ALIA delivers measurable results in weeks.</div>
                             </div>
                           </div>
                         </div>
@@ -2955,7 +2965,7 @@ export function NationalCommandCenter(props: Props) {
                         {/* Action line */}
                         <div className="rounded-md bg-cyan-700 text-white px-4 py-2.5">
                           <div className="text-xs font-semibold">
-                            Recommended next step: Deploy {isPhasedDeployment ? `Phase 1 (${phase1Units} unit${phase1Units > 1 ? 's' : ''}, ${phase1GPM} GPM)` : `${totalUnits} PEARL unit${totalUnits > 1 ? 's' : ''}`} at {regionName} and begin continuous monitoring within 30 days.
+                            Recommended next step: Deploy {isPhasedDeployment ? `Phase 1 (${phase1Units} unit${phase1Units > 1 ? 's' : ''}, ${phase1GPM} GPM)` : `${totalUnits} ALIA unit${totalUnits > 1 ? 's' : ''}`} at {regionName} and begin continuous monitoring within 30 days.
                           </div>
                           <div className="text-[10px] text-cyan-200 mt-1">
                             Typical deployment: 30-60 days. Pilot generates continuous data and measurable reductions within the first operating cycle.
@@ -2965,7 +2975,7 @@ export function NationalCommandCenter(props: Props) {
                     );
                   })()}
 
-                  {/* ═══ IMPAIRMENT CLASSIFICATION — What PEARL Can/Can't Address ═══ */}
+                  {/* ═══ IMPAIRMENT CLASSIFICATION — What ALIA Can/Can't Address ═══ */}
                   {impairmentClassification.length > 0 && (
                     <div className="rounded-lg border-2 border-slate-300 bg-white p-3 space-y-2">
                       <div className="flex items-center justify-between">
@@ -2978,7 +2988,7 @@ export function NationalCommandCenter(props: Props) {
                             addressabilityPct >= 50 ? 'bg-amber-200 text-amber-800' :
                             'bg-red-200 text-red-800'
                           }`}>
-                            PEARL addresses {pearlAddressable} of {totalClassified} impairment{totalClassified !== 1 ? 's' : ''} ({addressabilityPct}%)
+                            ALIA addresses {pearlAddressable} of {totalClassified} impairment{totalClassified !== 1 ? 's' : ''} ({addressabilityPct}%)
                           </span>
                         </div>
                       </div>
@@ -2986,7 +2996,7 @@ export function NationalCommandCenter(props: Props) {
                       <div className="space-y-1">
                         {/* Tier 1 */}
                         {impairmentClassification.filter(i => i.tier === 1).length > 0 && (
-                          <div className="text-[10px] font-bold text-green-700 uppercase tracking-wider mt-1">Tier 1 — PEARL Primary Target</div>
+                          <div className="text-[10px] font-bold text-green-700 uppercase tracking-wider mt-1">Tier 1 — ALIA Primary Target</div>
                         )}
                         {impairmentClassification.filter(i => i.tier === 1).map((item, i) => (
                           <div key={`t1-${i}`} className="flex items-start gap-2 text-xs py-1 px-2 rounded bg-green-50 border border-green-100">
@@ -3000,7 +3010,7 @@ export function NationalCommandCenter(props: Props) {
 
                         {/* Tier 2 */}
                         {impairmentClassification.filter(i => i.tier === 2).length > 0 && (
-                          <div className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mt-2">Tier 2 — PEARL Contributes / Planned</div>
+                          <div className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mt-2">Tier 2 — ALIA Contributes / Planned</div>
                         )}
                         {impairmentClassification.filter(i => i.tier === 2).map((item, i) => (
                           <div key={`t2-${i}`} className="flex items-start gap-2 text-xs py-1 px-2 rounded bg-amber-50 border border-amber-100">
@@ -3014,7 +3024,7 @@ export function NationalCommandCenter(props: Props) {
 
                         {/* Tier 3 */}
                         {impairmentClassification.filter(i => i.tier === 3).length > 0 && (
-                          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-2">Tier 3 — Outside PEARL Scope</div>
+                          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-2">Tier 3 — Outside ALIA Scope</div>
                         )}
                         {impairmentClassification.filter(i => i.tier === 3).map((item, i) => (
                           <div key={`t3-${i}`} className="flex items-start gap-2 text-xs py-1 px-2 rounded bg-slate-50 border border-slate-200">
@@ -3028,12 +3038,12 @@ export function NationalCommandCenter(props: Props) {
                       </div>
 
                       <div className="text-[9px] text-slate-400 pt-1 border-t border-slate-100">
-                        Classification based on EPA ATTAINS impairment causes and PEARL treatment train capabilities. Tier 1: directly treated. Tier 2: indirect benefit or planned module. Tier 3: requires different intervention.
+                        Classification based on EPA ATTAINS impairment causes and ALIA treatment train capabilities. Tier 1: directly treated. Tier 2: indirect benefit or planned module. Tier 3: requires different intervention.
                       </div>
                     </div>
                   )}
 
-                  {/* ═══ PEARL — IMMEDIATE IMPACT LAYER (elevated, shown first) ═══ */}
+                  {/* ═══ ALIA — IMMEDIATE IMPACT LAYER (elevated, shown first) ═══ */}
                   {(() => {
                     const pearlCat = categories.find(c => c.id === 'pearl');
                     if (!pearlCat) return null;
@@ -3053,9 +3063,9 @@ export function NationalCommandCenter(props: Props) {
                           </div>
                         </div>
 
-                        {/* Why PEARL here — dynamic evidence box */}
+                        {/* Why ALIA here — dynamic evidence box */}
                         <div className="rounded-md border border-cyan-300 bg-white p-3 space-y-2">
-                          <div className="text-[10px] font-bold text-cyan-800 uppercase tracking-wider">Why PEARL at this site</div>
+                          <div className="text-[10px] font-bold text-cyan-800 uppercase tracking-wider">Why ALIA at this site</div>
                           <div className="space-y-1.5">
                             {whyBullets.map((b, i) => (
                               <div key={i} className="flex items-start gap-2">
@@ -3069,7 +3079,7 @@ export function NationalCommandCenter(props: Props) {
                           </div>
                         </div>
 
-                        {/* PEARL modules */}
+                        {/* ALIA modules */}
                         <div className="space-y-1">
                           {[...warranted, ...accelerators].map((t) => (
                             <div key={t.id} className={`rounded-md border p-2 ${t.color}`}>
@@ -3080,7 +3090,7 @@ export function NationalCommandCenter(props: Props) {
                                     <span className="text-xs font-semibold">{t.label}</span>
                                     <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase ${
                                       t.status === 'warranted' ? 'bg-red-200 text-red-800' : 'bg-cyan-200 text-cyan-800'
-                                    }`}>{t.status === 'warranted' ? 'WARRANTED' : 'PEARL'}</span>
+                                    }`}>{t.status === 'warranted' ? 'WARRANTED' : 'ALIA'}</span>
                                   </div>
                                   <div className="text-[10px] mt-0.5 leading-relaxed opacity-90">{t.detail}</div>
                                 </div>
@@ -3126,7 +3136,7 @@ export function NationalCommandCenter(props: Props) {
 
                         {/* ═══ DEPLOYMENT ROADMAP ═══ */}
                         {isPhasedDeployment && (() => {
-                          // Each quad targets a ranked critical zone. Every PEARL unit treats AND monitors.
+                          // Each quad targets a ranked critical zone. Every ALIA unit treats AND monitors.
                           // Monitoring continuity & verification is universal -- not unique to any single phase.
                           type PhaseInfo = { phase: string; quads: number; units: number; gpm: number; cost: number; mission: string; placement: string; why: string; trigger: string; color: string; bgColor: string };
                           const phases: PhaseInfo[] = [];
@@ -3281,9 +3291,9 @@ export function NationalCommandCenter(props: Props) {
                         <div className="flex flex-wrap gap-2">
                           <button
                             onClick={() => {
-                              const subject = encodeURIComponent(`PEARL Pilot Deployment Request — ${regionName}, ${stateAbbr}`);
+                              const subject = encodeURIComponent(`ALIA Pilot Deployment Request — ${regionName}, ${stateAbbr}`);
                               const body = encodeURIComponent(
-                                `PEARL Pilot Deployment Request\n` +
+                                `ALIA Pilot Deployment Request\n` +
                                 `${'='.repeat(40)}\n\n` +
                                 `Site: ${regionName}\n` +
                                 `State: ${STATE_ABBR_TO_NAME[stateAbbr] || stateAbbr}\n` +
@@ -3306,7 +3316,7 @@ export function NationalCommandCenter(props: Props) {
                             }}
                             className="flex-1 min-w-[140px] bg-cyan-700 hover:bg-cyan-800 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition-colors shadow-sm"
                           >
-                            🚀 Deploy PEARL Pilot Here
+                            🚀 Deploy ALIA Pilot Here
                           </button>
                           <button
                             onClick={async () => {
@@ -3343,13 +3353,13 @@ export function NationalCommandCenter(props: Props) {
                                 const catTitleMap: Record<string, string> = {
                                   source: 'SOURCE CONTROL -- Upstream BMPs',
                                   nature: 'NATURE-BASED SOLUTIONS',
-                                  pearl: 'PEARL -- Treatment Accelerator',
+                                  pearl: 'ALIA -- Treatment Accelerator',
                                   community: 'COMMUNITY ENGAGEMENT & STEWARDSHIP',
                                   regulatory: 'REGULATORY & PLANNING',
                                 };
 
                                 // Title
-                                pdf.addTitle('PEARL Deployment Plan');
+                                pdf.addTitle('ALIA Deployment Plan');
                                 pdf.addText(clean(`${regionName}, ${STATE_ABBR_TO_NAME[stateAbbr] || stateAbbr}`), { bold: true, fontSize: 12 });
                                 pdf.addText(`Generated ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, { fontSize: 9 });
                                 pdf.addSpacer(5);
@@ -3383,7 +3393,7 @@ export function NationalCommandCenter(props: Props) {
                                 pdf.addSpacer(3);
 
                                 pdf.addText('RECOMMENDED ACTION', { bold: true });
-                                pdf.addText(clean(`Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} unit${phase1Units > 1 ? 's' : ''}, ${phase1GPM} GPM)` : `${totalUnits} PEARL unit${totalUnits > 1 ? 's' : ''}`} at ${regionName} and begin continuous monitoring within 30 days.`), { indent: 5, bold: true });
+                                pdf.addText(clean(`Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} unit${phase1Units > 1 ? 's' : ''}, ${phase1GPM} GPM)` : `${totalUnits} ALIA unit${totalUnits > 1 ? 's' : ''}`} at ${regionName} and begin continuous monitoring within 30 days.`), { indent: 5, bold: true });
                                 pdf.addText('Typical deployment: 30-60 days. Pilot generates continuous data and measurable reductions within the first operating cycle.', { indent: 5, fontSize: 9 });
                                 pdf.addSpacer(5);
 
@@ -3430,8 +3440,8 @@ export function NationalCommandCenter(props: Props) {
                                   pdf.addSpacer(3);
                                 }
 
-                                // Why PEARL at this site
-                                pdf.addSubtitle('Why PEARL at This Site');
+                                // Why ALIA at this site
+                                pdf.addSubtitle('Why ALIA at This Site');
                                 pdf.addDivider();
                                 for (const b of whyBullets) {
                                   pdf.addText(clean(`- ${b.problem}`), { indent: 5, bold: true });
@@ -3439,8 +3449,8 @@ export function NationalCommandCenter(props: Props) {
                                 }
                                 pdf.addSpacer(3);
 
-                                // PEARL Configuration
-                                pdf.addSubtitle(`PEARL Configuration: ${pearlModel}`);
+                                // ALIA Configuration
+                                pdf.addSubtitle(`ALIA Configuration: ${pearlModel}`);
                                 pdf.addDivider();
                                 pdf.addText(`System Type: ${waterType === 'brackish' ? 'Oyster (C. virginica)' : 'Freshwater Mussel'} Biofiltration`, { indent: 5 });
                                 const pearlCatMods = categories.find(c => c.id === 'pearl');
@@ -3460,7 +3470,7 @@ export function NationalCommandCenter(props: Props) {
                                   [
                                     ['Sizing Method', 'Severity-driven treatment need assessment'],
                                     ['Site Severity Score', `${prelimSeverity}/100 (${siteSeverityLabel})`],
-                                    ['Unit Capacity', '50 GPM per PEARL unit (4 units per quad)'],
+                                    ['Unit Capacity', '50 GPM per ALIA unit (4 units per quad)'],
                                     ['Waterbody Size', `~${estimatedAcres} acres (${acresSource})`],
                                     ['Deployment Size', `${totalQuads} quad${totalQuads > 1 ? 's' : ''} (${totalUnits} units, ${fullGPM} GPM)`],
                                     ...(isPhasedDeployment ? [
@@ -3588,10 +3598,10 @@ export function NationalCommandCenter(props: Props) {
 
                                 // Impairment Classification
                                 if (impairmentClassification.length > 0) {
-                                  pdf.addSubtitle(`Impairment Classification — PEARL addresses ${pearlAddressable} of ${totalClassified} (${addressabilityPct}%)`);
+                                  pdf.addSubtitle(`Impairment Classification — ALIA addresses ${pearlAddressable} of ${totalClassified} (${addressabilityPct}%)`);
                                   pdf.addDivider();
                                   pdf.addTable(
-                                    ['Cause', 'Tier', 'PEARL Action'],
+                                    ['Cause', 'Tier', 'ALIA Action'],
                                     impairmentClassification.map(item => [
                                       clean(item.cause),
                                       item.tier === 1 ? 'T1 — Primary Target' : item.tier === 2 ? 'T2 — Contributes/Planned' : 'T3 — Outside Scope',
@@ -3615,7 +3625,7 @@ export function NationalCommandCenter(props: Props) {
                                 // Full Restoration Plan
                                 pdf.addSubtitle('Full Restoration Plan');
                                 pdf.addDivider();
-                                pdf.addText(`This plan combines ${totalBMPs} conventional BMPs and nature-based solutions with PEARL accelerated treatment.`);
+                                pdf.addText(`This plan combines ${totalBMPs} conventional BMPs and nature-based solutions with ALIA accelerated treatment.`);
                                 pdf.addSpacer(3);
 
                                 for (const cat of categories.filter(c => c.id !== 'pearl')) {
@@ -3634,7 +3644,7 @@ export function NationalCommandCenter(props: Props) {
                                 // Next Steps
                                 pdf.addSubtitle('Recommended Next Steps');
                                 pdf.addDivider();
-                                pdf.addText(clean(`1. Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} PEARL units, ${phase1GPM} GPM) at highest-priority inflow zone${phase1Quads > 1 ? 's' : ''}` : `${totalUnits} PEARL unit${totalUnits > 1 ? 's' : ''}`} within 30 days.`), { indent: 5 });
+                                pdf.addText(clean(`1. Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} ALIA units, ${phase1GPM} GPM) at highest-priority inflow zone${phase1Quads > 1 ? 's' : ''}` : `${totalUnits} ALIA unit${totalUnits > 1 ? 's' : ''}`} within 30 days.`), { indent: 5 });
                                 pdf.addText('2. Begin continuous water quality monitoring (15-min intervals, telemetered).', { indent: 5 });
                                 pdf.addText('3. Use 90-day baseline dataset to calibrate treatment priorities and validate severity assessment.', { indent: 5 });
                                 if (isPhasedDeployment) {
@@ -3673,7 +3683,7 @@ export function NationalCommandCenter(props: Props) {
                           const fmt = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
 
                           // ═══ COMPLIANCE SAVINGS MODEL ═══
-                          // Framed as: "How much existing compliance cost can PEARL replace or compress?"
+                          // Framed as: "How much existing compliance cost can ALIA replace or compress?"
                           // NOT fines avoided. This is reduced spend on monitoring, reporting, and BMP execution.
                           // Partial displacement assumptions — conservative, defensible for city procurement.
 
@@ -3692,17 +3702,17 @@ export function NationalCommandCenter(props: Props) {
                           const tradTotalHigh = (tradMonitoringHigh + tradBMPHigh + tradConsultingHigh) * totalQuads;
 
                           // ── Bucket 1: Monitoring & Reporting Efficiency ──
-                          // PEARL replaces 50-75% of fixed monitoring station cost
+                          // ALIA replaces 50-75% of fixed monitoring station cost
                           const monStationSavingsLow = Math.round(0.50 * tradMonitoringLow * totalQuads);
                           const monStationSavingsHigh = Math.round(0.75 * tradMonitoringHigh * totalQuads);
-                          // PEARL replaces 40-60% of consulting, lab, and reporting
+                          // ALIA replaces 40-60% of consulting, lab, and reporting
                           const consultSavingsLow = Math.round(0.40 * tradConsultingLow * totalQuads);
                           const consultSavingsHigh = Math.round(0.60 * tradConsultingHigh * totalQuads);
                           const bucket1Low = monStationSavingsLow + consultSavingsLow;
                           const bucket1High = monStationSavingsHigh + consultSavingsHigh;
 
                           // ── Bucket 2: BMP Execution Efficiency ──
-                          // PEARL data improves targeting, reduces rework and mis-targeted spend
+                          // ALIA data improves targeting, reduces rework and mis-targeted spend
                           // Conservative: 5-10% of amortized BMP program
                           const bucket2Low = Math.round(0.05 * tradBMPLow * totalQuads);
                           const bucket2High = Math.round(0.10 * tradBMPHigh * totalQuads);
@@ -3714,7 +3724,7 @@ export function NationalCommandCenter(props: Props) {
                           const compSavingsLowRound = Math.round(compSavingsLow / 10000) * 10000;
                           const compSavingsHighRound = Math.round(compSavingsHigh / 10000) * 10000;
 
-                          // ── What this means relative to PEARL cost ──
+                          // ── What this means relative to ALIA cost ──
                           const offsetPctLow = Math.round((compSavingsLowRound / fullAnnual) * 100);
                           const offsetPctHigh = Math.round((compSavingsHighRound / fullAnnual) * 100);
 
@@ -3730,14 +3740,14 @@ export function NationalCommandCenter(props: Props) {
 
                           return (
                             <div className="rounded-lg border-2 border-green-300 bg-gradient-to-br from-green-50 to-emerald-50 p-3 space-y-3">
-                              <div className="text-[10px] font-bold text-green-800 uppercase tracking-wider">PEARL Economics -- {regionName}</div>
+                              <div className="text-[10px] font-bold text-green-800 uppercase tracking-wider">ALIA Economics -- {regionName}</div>
 
                               {/* Unit pricing */}
                               <div className="space-y-1">
-                                <div className="text-[10px] font-bold text-slate-600 uppercase">PEARL Unit Pricing</div>
+                                <div className="text-[10px] font-bold text-slate-600 uppercase">ALIA Unit Pricing</div>
                                 <div className="rounded-md bg-white border border-slate-200 overflow-hidden">
                                   <div className="grid grid-cols-[1fr_auto] text-[11px]">
-                                    <div className="px-2 py-1.5 bg-slate-100 font-semibold border-b border-slate-200">PEARL Unit (50 GPM)</div>
+                                    <div className="px-2 py-1.5 bg-slate-100 font-semibold border-b border-slate-200">ALIA Unit (50 GPM)</div>
                                     <div className="px-2 py-1.5 bg-slate-100 font-bold text-right border-b border-slate-200">{fmt(unitCost)}/unit/year</div>
                                     <div className="px-2 py-1.5 border-b border-slate-100 text-[10px] text-slate-500" style={{ gridColumn: '1 / -1' }}>
                                       All-inclusive: hardware, deployment, calibration, continuous monitoring, dashboards, automated reporting, maintenance, and support
@@ -3821,7 +3831,7 @@ export function NationalCommandCenter(props: Props) {
                                     <div className="px-2 py-1.5 bg-slate-200 font-bold text-slate-700 text-right">{fmt(tradTotalLow)} -- {fmt(tradTotalHigh)}/yr</div>
                                   </div>
                                 </div>
-                                <div className="text-[9px] text-slate-500 px-1">These are costs Baltimore already pays or would pay to achieve equivalent compliance coverage. PEARL does not eliminate all of these -- it partially displaces and compresses them.</div>
+                                <div className="text-[9px] text-slate-500 px-1">These are costs Baltimore already pays or would pay to achieve equivalent compliance coverage. ALIA does not eliminate all of these -- it partially displaces and compresses them.</div>
                               </div>
 
                               {/* Compliance cost savings */}
@@ -3851,7 +3861,7 @@ export function NationalCommandCenter(props: Props) {
                                 <div className="rounded-md bg-green-100 border border-green-200 text-center py-2">
                                   <div className="text-[9px] text-green-600">Compliance Savings Offset</div>
                                   <div className="text-lg font-bold text-green-700">{offsetPctLow}% -- {offsetPctHigh}%</div>
-                                  <div className="text-[9px] text-green-500">of PEARL cost offset by reduced compliance spend</div>
+                                  <div className="text-[9px] text-green-500">of ALIA cost offset by reduced compliance spend</div>
                                 </div>
                                 <div className="rounded-md bg-cyan-100 border border-cyan-200 text-center py-2">
                                   <div className="text-[9px] text-cyan-600">Time to Compliance Data</div>
@@ -3873,7 +3883,7 @@ export function NationalCommandCenter(props: Props) {
                                     <div className="px-2 py-1.5 bg-green-200 font-bold text-green-900 text-right">{fmt(effectiveCostLow)} -- {fmt(effectiveCostHigh)}/yr</div>
                                   </div>
                                 </div>
-                                <div className="text-[9px] text-slate-500 px-1">Effective net cost = PEARL annual cost minus grant funding minus compliance savings. This is the incremental budget impact for capabilities that would otherwise require {totalQuads} separate monitoring, treatment, and consulting contracts.</div>
+                                <div className="text-[9px] text-slate-500 px-1">Effective net cost = ALIA annual cost minus grant funding minus compliance savings. This is the incremental budget impact for capabilities that would otherwise require {totalQuads} separate monitoring, treatment, and consulting contracts.</div>
                               </div>
 
                               {/* Grant alignment */}
@@ -3908,7 +3918,7 @@ export function NationalCommandCenter(props: Props) {
                   {/* ═══ SUPPORTING LAYERS (source, nature, community, regulatory) ═══ */}
                   <div className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold px-1 pt-1">Supporting Restoration Layers</div>
                   <div className="text-[11px] text-slate-500 px-1 -mt-2">
-                    PEARL accelerates results. These layers provide the long-term foundation.
+                    ALIA accelerates results. These layers provide the long-term foundation.
                   </div>
 
                   {categories.filter(cat => cat.id !== 'pearl').map((cat) => {
@@ -3997,7 +4007,7 @@ export function NationalCommandCenter(props: Props) {
                       </div>
                     </div>
                     <div className="text-[10px] text-slate-400 mt-2 border-t border-slate-100 pt-1.5">
-                      Sizing derived from {isMD ? 'MD DNR Shallow Water Monitoring thresholds: DO (5.0/3.2 mg/L), chlorophyll (15/50/100 ug/L), turbidity (7 FNU)' : 'EPA National Recommended Water Quality Criteria: DO (5.0/4.0 mg/L), chlorophyll (20/40/60 ug/L), turbidity (10/25 FNU)'}, EPA ATTAINS category. PEARL is the data backbone -- it measures, verifies, and optimizes every restoration layer from day one.
+                      Sizing derived from {isMD ? 'MD DNR Shallow Water Monitoring thresholds: DO (5.0/3.2 mg/L), chlorophyll (15/50/100 ug/L), turbidity (7 FNU)' : 'EPA National Recommended Water Quality Criteria: DO (5.0/4.0 mg/L), chlorophyll (20/40/60 ug/L), turbidity (10/25 FNU)'}, EPA ATTAINS category. ALIA is the data backbone -- it measures, verifies, and optimizes every restoration layer from day one.
                     </div>
                   </div>
                 </CardContent>
@@ -4115,9 +4125,9 @@ export function NationalCommandCenter(props: Props) {
                   </div>
                 </div>
 
-                {/* Column 3: PEARL Addressability */}
+                {/* Column 3: ALIA Addressability */}
                 <div>
-                  <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">PEARL Addressability</div>
+                  <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">ALIA Addressability</div>
                   <div className="text-center py-3">
                     <div className="inline-flex items-center justify-center w-24 h-24 rounded-full border-4 border-emerald-200 bg-emerald-50">
                       <div>
@@ -4128,7 +4138,7 @@ export function NationalCommandCenter(props: Props) {
                   </div>
                   <div className="text-[10px] text-slate-500 text-center mb-3">
                     <span className="font-bold text-emerald-700">{attainsAggregation.addressableCount.toLocaleString()}</span> of{' '}
-                    <span className="font-bold">{attainsAggregation.totalCauseInstances.toLocaleString()}</span> cause-instances treatable by PEARL
+                    <span className="font-bold">{attainsAggregation.totalCauseInstances.toLocaleString()}</span> cause-instances treatable by ALIA
                   </div>
                   <div className="space-y-1 text-[9px] text-slate-500">
                     <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" /> Sediment / TSS / Turbidity</div>
@@ -4364,10 +4374,10 @@ export function NationalCommandCenter(props: Props) {
             <div className="flex items-center justify-between flex-wrap gap-2">
               <CardTitle className="text-base flex items-center gap-2">
                 <Droplets className="h-5 w-5 text-cyan-600" />
-                National Impact — All PEARL Deployments
+                National Impact — All ALIA Deployments
               </CardTitle>
               <div className="flex items-center gap-1">
-                <BrandedPrintBtn sectionId="nationalimpact" title="National Impact — All PEARL Deployments" />
+                <BrandedPrintBtn sectionId="nationalimpact" title="National Impact — All ALIA Deployments" />
                 <Button
                   size="sm"
                   variant={impactPeriod === 'all' ? 'default' : 'outline'}
@@ -4450,7 +4460,7 @@ export function NationalCommandCenter(props: Props) {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
                     <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500" />
                   </span>
-                  <span className="text-xs text-slate-500">Updating live from deployed PEARL systems</span>
+                  <span className="text-xs text-slate-500">Updating live from deployed ALIA systems</span>
                 </>
               ) : (
                 <>
@@ -4535,7 +4545,16 @@ export function NationalCommandCenter(props: Props) {
                     </CardTitle>
                     <CardDescription className="text-xs">States ranked by monitoring gaps and severity burden</CardDescription>
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex items-center gap-1">
+                    <select
+                      value={selectedState}
+                      onChange={(e) => { setSelectedState(e.target.value); setWaterbodyFilter('all'); }}
+                      className="px-2 py-1 rounded-md border border-slate-300 text-[10px] bg-white cursor-pointer hover:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-300 mr-1"
+                    >
+                      {Object.entries(STATE_ABBR_TO_NAME).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
+                        <option key={abbr} value={abbr}>{abbr} — {name}</option>
+                      ))}
+                    </select>
                     <BrandedPrintBtn sectionId="coveragegaps" title="State Coverage Gaps" />
                     <Button size="sm" variant={!showImpact ? 'default' : 'outline'} onClick={() => setShowImpact(false)} className="h-6 text-[10px] px-2">By Coverage</Button>
                     <Button size="sm" variant={showImpact ? 'default' : 'outline'} onClick={() => setShowImpact(true)} className="h-6 text-[10px] px-2">By Severity</Button>
@@ -4591,7 +4610,7 @@ export function NationalCommandCenter(props: Props) {
         </>); {/* end coveragegaps */}
 
         case 'situation': return DS(<>
-        {/* Time Range + PEARL Impact Toggle — lens controlled */}
+        {/* Time Range + ALIA Impact Toggle — lens controlled */}
         {lens.showTimeRange && (
         <div className="flex flex-wrap items-center gap-3 p-3 rounded-lg border border-slate-200 bg-white">
           <div className="flex items-center gap-2">
@@ -4619,12 +4638,12 @@ export function NationalCommandCenter(props: Props) {
             onClick={() => setShowImpact(!showImpact)}
             className={`h-8 ${showImpact ? 'bg-green-600 hover:bg-green-700' : ''}`}
           >
-            {showImpact ? '✓ Showing PEARL Impact' : 'Show PEARL Impact'}
+            {showImpact ? '✓ Showing ALIA Impact' : 'Show ALIA Impact'}
           </Button>
 
           {showImpact && (
             <div className="flex-1 text-xs text-green-700 font-medium">
-              Map shows improvement in PEARL-deployed states (MD, FL) vs ambient baseline
+              Map shows improvement in ALIA-deployed states (MD, FL) vs ambient baseline
             </div>
           )}
         </div>
@@ -4875,7 +4894,7 @@ export function NationalCommandCenter(props: Props) {
                   size="sm"
                   variant="outline"
                   onClick={() => {
-                    setToastMsg('EJ Impact Report coming in the next release — will include community vulnerability scores, water quality overlap analysis, and PEARL deployment priorities.');
+                    setToastMsg('EJ Impact Report coming in the next release — will include community vulnerability scores, water quality overlap analysis, and ALIA deployment priorities.');
                     setTimeout(() => setToastMsg(null), 5000);
                   }}
                   className="h-7 text-xs"
@@ -4952,6 +4971,20 @@ export function NationalCommandCenter(props: Props) {
 
         case 'icis': return DS(
         <div id="section-icis">
+          {!lens.sections?.has('usmap') && (
+            <div className="flex items-center gap-2 mb-3 px-1">
+              <span className="text-xs font-medium text-slate-500">State:</span>
+              <select
+                value={selectedState}
+                onChange={(e) => setSelectedState(e.target.value)}
+                className="px-2 py-1 rounded-md border border-slate-300 text-xs bg-white cursor-pointer hover:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-300"
+              >
+                {Object.entries(STATE_ABBR_TO_NAME).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
+                  <option key={abbr} value={abbr}>{name} ({abbr})</option>
+                ))}
+              </select>
+            </div>
+          )}
           <ICISCompliancePanel
             state={selectedState}
             compactMode={false}
@@ -4961,6 +4994,20 @@ export function NationalCommandCenter(props: Props) {
 
         case 'sdwis': return DS(
         <div id="section-sdwis">
+          {!lens.sections?.has('usmap') && (
+            <div className="flex items-center gap-2 mb-3 px-1">
+              <span className="text-xs font-medium text-slate-500">State:</span>
+              <select
+                value={selectedState}
+                onChange={(e) => setSelectedState(e.target.value)}
+                className="px-2 py-1 rounded-md border border-slate-300 text-xs bg-white cursor-pointer hover:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-300"
+              >
+                {Object.entries(STATE_ABBR_TO_NAME).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
+                  <option key={abbr} value={abbr}>{name} ({abbr})</option>
+                ))}
+              </select>
+            </div>
+          )}
           <SDWISCompliancePanel
             state={selectedState}
             compactMode={false}
@@ -4970,6 +5017,20 @@ export function NationalCommandCenter(props: Props) {
 
         case 'groundwater': return DS(
         <div id="section-groundwater">
+          {!lens.sections?.has('usmap') && (
+            <div className="flex items-center gap-2 mb-3 px-1">
+              <span className="text-xs font-medium text-slate-500">State:</span>
+              <select
+                value={selectedState}
+                onChange={(e) => setSelectedState(e.target.value)}
+                className="px-2 py-1 rounded-md border border-slate-300 text-xs bg-white cursor-pointer hover:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-300"
+              >
+                {Object.entries(STATE_ABBR_TO_NAME).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
+                  <option key={abbr} value={abbr}>{name} ({abbr})</option>
+                ))}
+              </select>
+            </div>
+          )}
           <NwisGwPanel
             state={selectedState}
             compactMode={false}
@@ -5543,12 +5604,20 @@ export function NationalCommandCenter(props: Props) {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CardTitle className="text-lg">State Waterbody Inspector</CardTitle>
-                <span className="text-[10px] font-normal text-slate-400">Federal oversight view</span>
+                <select
+                  value={selectedState}
+                  onChange={(e) => setSelectedState(e.target.value)}
+                  className="px-2 py-1 rounded-md border border-slate-300 text-xs bg-white cursor-pointer hover:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-300"
+                >
+                  {Object.entries(STATE_ABBR_TO_NAME).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
+                    <option key={abbr} value={abbr}>{name} ({abbr})</option>
+                  ))}
+                </select>
               </div>
               <BrandedPrintBtn sectionId="waterbody-card" title="State Waterbody Inspector" />
             </div>
             <CardDescription>
-              {wbRow ? `${wbRow.name} (${wbRow.abbr}) — EPA Region ${wbRegion}` : 'Select a state from the map or table above'}
+              {wbRow ? `${wbRow.name} (${wbRow.abbr}) — EPA Region ${wbRegion}` : 'Select a state using the dropdown above'}
             </CardDescription>
           </CardHeader>
           <CardContent>
