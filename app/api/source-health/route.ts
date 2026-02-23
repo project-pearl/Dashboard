@@ -9,6 +9,12 @@ import { getEchoCacheStatus, ensureWarmed as warmEcho } from '@/lib/echoCache';
 import { getFrsCacheStatus, ensureWarmed as warmFrs } from '@/lib/frsCache';
 import { getPfasCacheStatus, ensureWarmed as warmPfas } from '@/lib/pfasCache';
 import { getBwbCacheStatus, ensureWarmed as warmBwb } from '@/lib/bwbCache';
+import { getCdcNwssCacheStatus, ensureWarmed as warmCdcNwss } from '@/lib/cdcNwssCache';
+import { getNdbcCacheStatus, ensureWarmed as warmNdbc } from '@/lib/ndbcCache';
+import { getNasaCmrCacheStatus, ensureWarmed as warmNasaCmr } from '@/lib/nasaCmrCache';
+import { getNarsCacheStatus, ensureWarmed as warmNars } from '@/lib/narsCache';
+import { getDataGovCacheStatus, ensureWarmed as warmDataGov } from '@/lib/dataGovCache';
+import { getUsaceCacheStatus, ensureWarmed as warmUsace } from '@/lib/usaceCache';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -68,6 +74,7 @@ export async function GET() {
   await Promise.all([
     warmAttains(), warmWqp(), warmCeden(), warmIcis(), warmSdwis(),
     warmNwisGw(), warmEcho(), warmFrs(), warmPfas(), warmBwb(),
+    warmCdcNwss(), warmNdbc(), warmNasaCmr(), warmNars(), warmDataGov(), warmUsace(),
   ]);
 
   const bwbToken = process.env.WATER_REPORTER_API_KEY || '';
@@ -290,6 +297,42 @@ export async function GET() {
       'https://gisdata.deq.virginia.gov/arcgis/rest/services/public/EDMA/MapServer/2/query?where=1%3D1&returnCountOnly=true&f=json',
       10_000,
     ),
+    // Source 30: NASA CMR (satellite dataset catalog)
+    check(
+      'NASA_CMR',
+      'NASA Earthdata CMR',
+      'https://cmr.earthdata.nasa.gov/search/collections.json?keyword=chlorophyll&has_granules=true&page_size=1',
+      8_000,
+    ),
+    // Source 31: EPA NARS (national aquatic resource surveys — static CSV files)
+    check(
+      'EPA_NARS',
+      'EPA NARS Surveys',
+      'https://www.epa.gov/national-aquatic-resource-surveys/data-national-aquatic-resource-surveys',
+      8_000,
+      'HEAD',
+    ),
+    // Source 32: Data.gov CKAN (US open data catalog)
+    check(
+      'DATAGOV',
+      'Data.gov Catalog',
+      'https://catalog.data.gov/api/3/action/package_search?q=water+quality&rows=1',
+      8_000,
+    ),
+    // Source 33: USACE CWMS (Army Corps reservoirs)
+    check(
+      'USACE',
+      'USACE Reservoirs',
+      'https://cwms-data.usace.army.mil/cwms-data/offices?format=json',
+      8_000,
+    ),
+    // Source 34: USGS NLDI (hydrologic network navigation)
+    check(
+      'USGS_NLDI',
+      'USGS NLDI',
+      'https://api.water.usgs.gov/nldi/linked-data',
+      8_000,
+    ),
   ]);
 
   const sources: SourceHealthEntry[] = [];
@@ -342,6 +385,24 @@ export async function GET() {
   const bwbStations = bwbStatus.loaded ? (bwbStatus as { stationCount: number }).stationCount : 0;
   const bwbReadings = bwbStatus.loaded ? (bwbStatus as { parameterReadings: number }).parameterReadings : 0;
 
+  const cdcNwssStatus = getCdcNwssCacheStatus();
+  const cdcNwssRecords = cdcNwssStatus.loaded ? (cdcNwssStatus as { recordCount: number }).recordCount : 0;
+
+  const ndbcStatus = getNdbcCacheStatus();
+  const ndbcStations = ndbcStatus.loaded ? (ndbcStatus as { stationCount: number }).stationCount : 0;
+
+  const nasaCmrStatus = getNasaCmrCacheStatus();
+  const nasaCmrCollections = nasaCmrStatus.loaded ? (nasaCmrStatus as { collectionCount: number }).collectionCount : 0;
+
+  const narsStatus = getNarsCacheStatus();
+  const narsSites = narsStatus.loaded ? (narsStatus as { siteCount: number }).siteCount : 0;
+
+  const dataGovStatus = getDataGovCacheStatus();
+  const dataGovDatasets = dataGovStatus.loaded ? (dataGovStatus as { datasetCount: number }).datasetCount : 0;
+
+  const usaceStatus = getUsaceCacheStatus();
+  const usaceLocations = usaceStatus.loaded ? (usaceStatus as { locationCount: number }).locationCount : 0;
+
   const datapoints = {
     attains: { states: attainsStates.length, waterbodies: attainsWaterbodies, assessments: attainsAssessments },
     wqp: { records: wqpRecords, states: wqpStates },
@@ -353,7 +414,13 @@ export async function GET() {
     frs: { facilities: frsFacilities },
     pfas: { results: pfasResults },
     bwb: { stations: bwbStations, readings: bwbReadings },
-    total: attainsWaterbodies + wqpRecords + cedenChem + cedenTox + icisPermits + icisViolations + icisDmr + icisEnforcement + nwisGwSites + nwisGwLevels + sdwisSystems + sdwisViolations + sdwisEnforcement + echoFacilities + echoViolations + frsFacilities + pfasResults + bwbStations + bwbReadings,
+    cdcNwss: { records: cdcNwssRecords },
+    ndbc: { stations: ndbcStations },
+    nasaCmr: { collections: nasaCmrCollections },
+    nars: { sites: narsSites },
+    dataGov: { datasets: dataGovDatasets },
+    usace: { locations: usaceLocations },
+    total: attainsWaterbodies + wqpRecords + cedenChem + cedenTox + icisPermits + icisViolations + icisDmr + icisEnforcement + nwisGwSites + nwisGwLevels + sdwisSystems + sdwisViolations + sdwisEnforcement + echoFacilities + echoViolations + frsFacilities + pfasResults + bwbStations + bwbReadings + cdcNwssRecords + ndbcStations + narsSites + usaceLocations,
   };
 
   return NextResponse.json(

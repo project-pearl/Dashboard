@@ -15,6 +15,12 @@ import { getPfasCacheStatus, ensureWarmed as warmPfas } from '@/lib/pfasCache';
 import { getCacheStatus as getInsightsCacheStatus, ensureWarmed as warmInsights } from '@/lib/insightsCache';
 import { getStateReportStatus, ensureWarmed as warmStateReports } from '@/lib/stateReportCache';
 import { getBwbCacheStatus, ensureWarmed as warmBwb } from '@/lib/bwbCache';
+import { getCdcNwssCacheStatus, ensureWarmed as warmCdcNwss } from '@/lib/cdcNwssCache';
+import { getNdbcCacheStatus, ensureWarmed as warmNdbc } from '@/lib/ndbcCache';
+import { getNasaCmrCacheStatus, ensureWarmed as warmNasaCmr } from '@/lib/nasaCmrCache';
+import { getNarsCacheStatus, ensureWarmed as warmNars } from '@/lib/narsCache';
+import { getDataGovCacheStatus, ensureWarmed as warmDataGov } from '@/lib/dataGovCache';
+import { getUsaceCacheStatus, ensureWarmed as warmUsace } from '@/lib/usaceCache';
 import { getStateIRCacheStatus } from '@/lib/stateIRCache';
 
 function staleness(built: string | null | undefined): { stale: boolean; ageHours: number | null } {
@@ -29,7 +35,8 @@ export async function GET() {
   await Promise.all([
     warmWqp(), warmAttains(), warmCeden(), warmIcis(), warmSdwis(),
     warmNwisGw(), warmEcho(), warmFrs(), warmPfas(), warmInsights(),
-    warmStateReports(), warmBwb(),
+    warmStateReports(), warmBwb(), warmCdcNwss(), warmNdbc(),
+    warmNasaCmr(), warmNars(), warmDataGov(), warmUsace(),
   ]);
 
   const wqp = getWqpCacheStatus();
@@ -44,6 +51,12 @@ export async function GET() {
   const insights = getInsightsCacheStatus();
   const stateReports = getStateReportStatus();
   const bwb = getBwbCacheStatus();
+  const cdcNwss = getCdcNwssCacheStatus();
+  const ndbc = getNdbcCacheStatus();
+  const nasaCmr = getNasaCmrCacheStatus();
+  const nars = getNarsCacheStatus();
+  const dataGov = getDataGovCacheStatus();
+  const usace = getUsaceCacheStatus();
   const stateIR = getStateIRCacheStatus();
 
   const caches = {
@@ -98,6 +111,30 @@ export async function GET() {
     bwb: {
       ...bwb,
       ...staleness(bwb.loaded ? (bwb as any).built : null),
+    },
+    cdcNwss: {
+      ...cdcNwss,
+      ...staleness(cdcNwss.loaded ? (cdcNwss as any).built : null),
+    },
+    ndbc: {
+      ...ndbc,
+      ...staleness(ndbc.loaded ? (ndbc as any).built : null),
+    },
+    nasaCmr: {
+      ...nasaCmr,
+      ...staleness(nasaCmr.loaded ? (nasaCmr as any).built : null),
+    },
+    nars: {
+      ...nars,
+      ...staleness(nars.loaded ? (nars as any).built : null),
+    },
+    dataGov: {
+      ...dataGov,
+      ...staleness(dataGov.loaded ? (dataGov as any).built : null),
+    },
+    usace: {
+      ...usace,
+      ...staleness(usace.loaded ? (usace as any).built : null),
     },
     stateIR: {
       ...stateIR,

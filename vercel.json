@@ -45,6 +45,30 @@
       "schedule": "0 12 * * *"
     },
     {
+      "path": "/api/cron/rebuild-cdc-nwss",
+      "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-ndbc",
+      "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-nasa-cmr",
+      "schedule": "0 15 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-nars",
+      "schedule": "0 16 * * 0"
+    },
+    {
+      "path": "/api/cron/rebuild-datagov",
+      "schedule": "0 17 * * 0"
+    },
+    {
+      "path": "/api/cron/rebuild-usace",
+      "schedule": "0 16 * * *"
+    },
+    {
       "path": "/api/cron/rebuild-attains",
       "schedule": "30 * * * *"
     }
