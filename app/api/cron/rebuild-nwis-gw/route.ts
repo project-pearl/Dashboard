@@ -312,9 +312,9 @@ export async function GET(request: NextRequest) {
         // Compute trends from DV data
         const stateTrends = computeTrends(siteMap, dvLevels);
 
-        allSites.push(...dedupedSites);
-        allLevels.push(...cappedLevels);
-        allTrends.push(...stateTrends);
+        for (const s of dedupedSites) allSites.push(s);
+        for (const l of cappedLevels) allLevels.push(l);
+        for (const t of stateTrends) allTrends.push(t);
         processedStates.push(stateAbbr);
 
         stateResults[stateAbbr] = {
@@ -373,9 +373,9 @@ export async function GET(request: NextRequest) {
             retryDvLevels = p.levels;
           }
 
-          allSites.push(...retrySiteMap.values());
-          allLevels.push(...retryLevels);
-          allTrends.push(...computeTrends(retrySiteMap, retryDvLevels));
+          for (const s of retrySiteMap.values()) allSites.push(s);
+          for (const l of retryLevels) allLevels.push(l);
+          for (const t of computeTrends(retrySiteMap, retryDvLevels)) allTrends.push(t);
           processedStates.push(stateAbbr);
           stateResults[stateAbbr] = { sites: retrySiteMap.size, levels: retryLevels.length, trends: 0 };
           console.log(`[NWIS-GW Cron] ${stateAbbr}: RETRY OK`);

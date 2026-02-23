@@ -17,6 +17,7 @@ const BATCH_SIZE = 2;
 const BATCH_DELAY_MS = 3000;
 
 const FETCH_TIMEOUT_MS = 45_000; // 45s per fetch — fail fast, defer slow states
+const GIS_QUERY_TIMEOUT_MS = 120_000; // 120s per GIS query — CA/TX need more time
 const RETRY_TIMEOUT_MS = 480_000; // 8 min on retry pass
 const RETRY_DELAY_MS = 5000; // 5s between retries
 
@@ -377,7 +378,7 @@ async function gisQuery(params: Record<string, string>): Promise<any> {
   const url = new URL(ATTAINS_GIS);
   url.searchParams.set("f", "json");
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
-  const res = await fetch(url.toString(), { signal: withTimeout(60_000) });
+  const res = await fetch(url.toString(), { signal: withTimeout(GIS_QUERY_TIMEOUT_MS) });
   if (!res.ok) throw new Error(`GIS HTTP ${res.status}`);
   return res.json();
 }

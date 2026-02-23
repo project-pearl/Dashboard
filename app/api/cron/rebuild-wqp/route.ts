@@ -13,7 +13,7 @@ import {
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
-const WQP_BASE = 'https://www.waterqualitydata.us/wqx3/Result/search';
+const WQP_BASE = 'https://www.waterqualitydata.us/data/Result/search';
 const STATE_DELAY_MS = 2000;  // Delay between states to respect WQP rate limits
 
 import { PRIORITY_STATES_WITH_FIPS } from '@/lib/constants';
@@ -103,7 +103,7 @@ async function fetchState(stateAbbr: string, fips: string): Promise<WqpRecord[]>
   url.searchParams.set('startDateLo', startDate);
   url.searchParams.set('sampleMedia', 'Water');
   url.searchParams.set('providers', 'STORET');   // State/tribal data only — USGS covered by Source 4
-  url.searchParams.set('dataProfile', 'narrow');
+  url.searchParams.set('dataProfile', 'narrowResult');
   url.searchParams.set('mimeType', 'csv');
   url.searchParams.set('sorted', 'no');           // Faster query
 
