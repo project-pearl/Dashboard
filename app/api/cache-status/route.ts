@@ -2,6 +2,8 @@
 // Unified cache status endpoint — returns last-built timestamps, record counts,
 // and staleness flags for all 12 cache modules.
 
+export const maxDuration = 120;
+
 import { NextResponse } from 'next/server';
 import { getWqpCacheStatus, ensureWarmed as warmWqp } from '@/lib/wqpCache';
 import { getCacheStatus as getAttainsCacheStatus, ensureWarmed as warmAttains } from '@/lib/attainsCache';
