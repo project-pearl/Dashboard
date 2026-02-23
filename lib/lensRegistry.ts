@@ -11,12 +11,17 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
   '/dashboard/federal': [
     { id: 'overview', label: 'Overview' },
     { id: 'briefing', label: 'AI Briefing' },
+    { id: 'trends', label: 'Trends & Projections' },
+    { id: 'policy', label: 'Policy Tracker' },
     { id: 'compliance', label: 'Compliance' },
     { id: 'water-quality', label: 'Water Quality' },
     { id: 'infrastructure', label: 'Infrastructure' },
     { id: 'monitoring', label: 'Monitoring' },
+    { id: 'contaminants', label: 'Emerging Contaminants' },
     { id: 'scorecard', label: 'Scorecard' },
     { id: 'reports', label: 'Reports' },
+    { id: 'interagency', label: 'Cross-Agency' },
+    { id: 'funding', label: 'Funding & Grants' },
   ],
   '/dashboard/state': [
     { id: 'compliance', label: 'Compliance' },

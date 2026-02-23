@@ -34,6 +34,11 @@ import {
   Activity,
   FileText,
   Trophy,
+  TrendingUp,
+  Scale,
+  Biohazard,
+  Network,
+  Banknote,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -45,8 +50,13 @@ const LENS_ICONS: Record<string, LucideIcon> = {
   'water-quality': Waves,
   infrastructure: Building2,
   monitoring: Activity,
+  trends: TrendingUp,
+  policy: Scale,
+  contaminants: Biohazard,
   scorecard: Trophy,
   reports: FileText,
+  interagency: Network,
+  funding: Banknote,
   // Fallbacks for other roles' lenses
   full: LayoutDashboard,
   coverage: Activity,

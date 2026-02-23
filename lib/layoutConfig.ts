@@ -148,7 +148,17 @@ export const DEFAULT_SECTIONS: Record<CCKey, SectionDefinition[]> = {
     { id: 'sdwis',              label: 'Drinking Water (SDWIS)',      order: 11, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'groundwater',        label: 'Groundwater Monitoring',      order: 12, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'sla',                label: 'SLA Compliance',              order: 13, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'disclaimer',         label: 'Platform Disclaimer',         order: 14, visible: true, defaultExpanded: true },
+    { id: 'scorecard-kpis',     label: 'Scorecard KPIs',              order: 14, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'scorecard-grades',   label: 'State Grades',                order: 15, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'scorecard-rankings', label: 'Top / Bottom States',         order: 16, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'scorecard-trends',   label: 'Trend Cards',                 order: 17, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'reports-hub',        label: 'Federal Reports',             order: 18, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'trends-dashboard',   label: 'Trends & Projections',        order: 19, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'policy-tracker',     label: 'Policy & Regulatory Tracker', order: 20, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'contaminants-tracker', label: 'Emerging Contaminants',     order: 21, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'interagency-hub',    label: 'Cross-Agency Coordination',   order: 22, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'funding-landscape',  label: 'Funding & Grant Landscape',   order: 23, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'disclaimer',         label: 'Platform Disclaimer',         order: 24, visible: true, defaultExpanded: true },
   ],
 
   Utility: [
