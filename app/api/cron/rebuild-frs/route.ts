@@ -18,6 +18,7 @@ import {
 
 const EF_BASE = 'https://data.epa.gov/efservice';
 const PAGE_SIZE = 5000;
+const MAX_PAGES_PER_STATE = 1; // Cap at 5000 facilities per state (API crashes on huge states)
 const CONCURRENCY = 3;
 
 import { PRIORITY_STATES } from '@/lib/constants';
@@ -65,6 +66,7 @@ async function fetchTable<T>(
 
       if (data.length < PAGE_SIZE) break;
       offset += PAGE_SIZE;
+      if (offset >= PAGE_SIZE * MAX_PAGES_PER_STATE) break; // Cap pagination
     } catch (e) {
       console.warn(`[FRS Cron] ${table} ${stateAbbr} page ${offset}: ${e instanceof Error ? e.message : e}`);
       break;

@@ -170,10 +170,13 @@ export async function GET(request: NextRequest) {
         // Fetch systems first (needed for coordinate lookup), then violations + enforcement in parallel
         const systems = await fetchTable('WATER_SYSTEM', 'STATE_CODE', stateAbbr, transformSystem);
 
-        const [violations, enforcement] = await Promise.all([
+        // Use allSettled — enforcement table returns HTTP 500 for some states
+        const [violResult, enfResult] = await Promise.allSettled([
           fetchTable('VIOLATION', 'PRIMACY_AGENCY_CODE', stateAbbr, transformViolation),
           fetchTable('ENFORCEMENT_ACTION', 'STATE_CODE', stateAbbr, transformEnforcement),
         ]);
+        const violations = violResult.status === 'fulfilled' ? violResult.value : [];
+        const enforcement = enfResult.status === 'fulfilled' ? enfResult.value : [];
 
         // Deduplicate systems by PWSID
         const systemMap = new Map<string, SdwisSystem>();
