@@ -21,10 +21,10 @@ const TIME_BUDGET_MS = 230_000; // ~4 minutes — leave 70s margin for blob load
 const MAX_CHAIN_DEPTH = 20; // Safety: stop self-chaining after 20 hops
 
 /**
- * Fire-and-forget: trigger the next chunk without waiting for it.
- * Passes deferred (failed) states and chain depth via query params.
+ * Trigger the next chunk — sends the request and waits just long enough (5s)
+ * for Vercel's edge to accept it, then aborts so we don't wait for the full chunk.
  */
-function triggerNextChunk(cronSecret: string | undefined, deferred: string[], depth: number) {
+async function triggerNextChunk(cronSecret: string | undefined, deferred: string[], depth: number) {
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_ORIGIN ||
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null);
@@ -37,7 +37,16 @@ function triggerNextChunk(cronSecret: string | undefined, deferred: string[], de
   const headers: Record<string, string> = {};
   if (cronSecret) headers['authorization'] = `Bearer ${cronSecret}`;
 
-  fetch(url, { headers }).catch(() => {});
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), 5000); // 5s is enough for edge to accept
+  try {
+    await fetch(url, { headers, signal: ac.signal });
+  } catch {
+    // AbortError is expected — means request was sent and we moved on
+  } finally {
+    clearTimeout(timer);
+  }
+  console.log(`[ATTAINS Chain] Triggered depth=${depth + 1}`);
 }
 
 export async function GET(request: NextRequest) {
@@ -97,9 +106,10 @@ export async function GET(request: NextRequest) {
     const newDeferred = [...new Set([...deferred, ...result.failed])];
 
     // Self-chain: if there are still states remaining, trigger the next chunk
+    // Must await to keep function alive until the request reaches Vercel's edge
     const willChain = remaining > 0;
     if (willChain) {
-      triggerNextChunk(cronSecret, newDeferred, depth);
+      await triggerNextChunk(cronSecret, newDeferred, depth);
     }
 
     return NextResponse.json({
