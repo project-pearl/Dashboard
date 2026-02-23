@@ -14,7 +14,8 @@ const LeafletMapShell = dynamic(
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, AlertCircle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Building2, Info, LogOut, Printer } from 'lucide-react';
+import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, AlertCircle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Building2, Info, LogOut } from 'lucide-react';
+import { BrandedPrintBtn } from '@/lib/brandedPrint';
 import { useRouter } from 'next/navigation';
 import { getRegionById } from '@/lib/regionsConfig';
 import { REGION_META, getWaterbodyDataSources } from '@/lib/useWaterData';
@@ -429,37 +430,6 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
   const [alertFeedMinimized, setAlertFeedMinimized] = useState(true);
 
 
-  // Print a single card section by its DOM id
-  const printSection = (sectionId: string, title: string) => {
-    const el = document.getElementById(`section-${sectionId}`);
-    if (!el) return;
-    const win = window.open('', '_blank', 'width=900,height=700');
-    if (!win) return;
-    win.document.write(`<!DOCTYPE html><html><head><title>${title} — PEARL Intelligence Network — ${stateName} Command Center</title>
-      <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 24px; color: #1e293b; }
-        .print-header { border-bottom: 2px solid #3b82f6; padding-bottom: 12px; margin-bottom: 16px; }
-        .print-header h1 { font-size: 16px; font-weight: 700; color: #1e3a5f; }
-        .print-header p { font-size: 11px; color: #64748b; margin-top: 4px; }
-        .print-content { font-size: 13px; line-height: 1.5; }
-        .print-content table { width: 100%; border-collapse: collapse; margin: 8px 0; }
-        .print-content th, .print-content td { border: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; font-size: 12px; }
-        .print-content th { background: #f8fafc; font-weight: 600; }
-        canvas, svg { max-width: 100%; }
-        button, [role="button"] { display: none !important; }
-        @media print { body { padding: 0; } }
-      </style>
-    </head><body>
-      <div class="print-header">
-        <h1>🦪 ${title}</h1>
-        <p>${stateName} · Printed ${new Date().toLocaleDateString()} · Project PEARL</p>
-      </div>
-      <div class="print-content">${el.innerHTML}</div>
-    </body></html>`);
-    win.document.close();
-    setTimeout(() => { win.print(); }, 400);
-  };
   const { waterData, isLoading: waterLoading, hasRealData } = useWaterData(activeDetailId);
 
   // ── Mock data bridge: supplies removalEfficiencies, stormEvents, displayData to child components ──
@@ -831,9 +801,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
                   <span className="text-sm font-bold text-slate-800">{stateName} — MS4 & Regulatory Profile</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                <span onClick={(e) => { e.stopPropagation(); printSection('regprofile', 'MS4 & Regulatory Profile'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                  <Printer className="h-3.5 w-3.5 text-slate-400" />
-                </span>
+                <BrandedPrintBtn sectionId="regprofile" title="MS4 & Regulatory Profile" />
                 {isSectionOpen('regprofile') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
               </div>
               </button>
@@ -2324,9 +2292,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
                         <span className={`px-2 py-0.5 rounded-full text-xs font-bold text-white ${scoreBg}`}>State {ejScore}/100</span>
                       )}
                       <div className="flex items-center gap-1.5">
-                <span onClick={(e) => { e.stopPropagation(); printSection('ej', 'Environmental Justice'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                  <Printer className="h-3.5 w-3.5 text-slate-400" />
-                </span>
+                <BrandedPrintBtn sectionId="ej" title="Environmental Justice" />
                 {isSectionOpen('ej') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
               </div>
                     </div>
@@ -2425,9 +2391,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
           <button onClick={() => onToggleCollapse('top10')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
             <span className="text-sm font-bold text-slate-800">🔥 Top 5 Worsening / Improving Waterbodies</span>
             <div className="flex items-center gap-1.5">
-                <span onClick={(e) => { e.stopPropagation(); printSection('top10', 'Top 5 Worsening / Improving'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                  <Printer className="h-3.5 w-3.5 text-slate-400" />
-                </span>
+                <BrandedPrintBtn sectionId="top10" title="Top 5 Worsening / Improving" />
                 {isSectionOpen('top10') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
               </div>
           </button>
@@ -2463,13 +2427,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
                     </div>
                     <div className="flex items-center gap-1.5">
                       <Badge variant="destructive" className="text-xs animate-pulse">CRITICAL</Badge>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); printSection('potomac', 'Potomac River Crisis'); }}
-                        className="p-0.5 text-red-400 hover:text-red-600 transition-colors"
-                        title="Print this section"
-                      >
-                        <Printer className="h-3.5 w-3.5" />
-                      </button>
+                      <BrandedPrintBtn sectionId="potomac" title="Potomac River Crisis" />
                       <button
                         onClick={(e) => { e.stopPropagation(); onToggleCollapse('potomac'); }}
                         className="p-0.5 text-red-400 hover:text-red-600 transition-colors"
@@ -2611,9 +2569,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
                 </CardTitle>
                 {expandedSections.ms4 ? (
                   <div className="flex items-center gap-1.5">
-                    <span onClick={(e) => { e.stopPropagation(); printSection('ms4jurisdictions', 'MS4 Jurisdictions'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                      <Printer className="h-3.5 w-3.5 text-slate-400" />
-                    </span>
+                    <BrandedPrintBtn sectionId="ms4jurisdictions" title="MS4 Jurisdictions" />
                     <Minus className="h-4 w-4 text-slate-400" />
                   </div>
                 ) : <ChevronDown className="h-4 w-4 text-slate-400" />}
@@ -2744,9 +2700,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
           <button onClick={() => onToggleCollapse('exporthub')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
             <span className="text-sm font-bold text-slate-800">📦 Data Export Hub</span>
             <div className="flex items-center gap-1.5">
-              <span onClick={(e) => { e.stopPropagation(); printSection('exporthub', 'Data Export Hub'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                <Printer className="h-3.5 w-3.5 text-slate-400" />
-              </span>
+              <BrandedPrintBtn sectionId="exporthub" title="Data Export Hub" />
               {isSectionOpen('exporthub') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
             </div>
           </button>
@@ -2764,9 +2718,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
             <button onClick={() => onToggleCollapse('grants')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
               <span className="text-sm font-bold text-slate-800">💰 Grant Opportunities — {stateName}</span>
               <div className="flex items-center gap-1.5">
-                <span onClick={(e) => { e.stopPropagation(); printSection('grants', 'Grant Opportunities'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                  <Printer className="h-3.5 w-3.5 text-slate-400" />
-                </span>
+                <BrandedPrintBtn sectionId="grants" title="Grant Opportunities" />
                 {isSectionOpen('grants') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
               </div>
             </button>

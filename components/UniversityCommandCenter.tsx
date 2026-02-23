@@ -8,7 +8,8 @@ import { getStatesGeoJSON, geoToAbbr, STATE_GEO_LEAFLET, FIPS_TO_ABBR as _FIPS, 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Info, LogOut, Printer, Microscope } from 'lucide-react';
+import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Info, LogOut, Microscope } from 'lucide-react';
+import { BrandedPrintBtn } from '@/lib/brandedPrint';
 import { getRegionById } from '@/lib/regionsConfig';
 import { resolveWaterbodyCoordinates } from '@/lib/waterbodyCentroids';
 import { REGION_META, getWaterbodyDataSources } from '@/lib/useWaterData';
@@ -380,37 +381,6 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
   const [showCostPanel, setShowCostPanel] = useState(false);
   const [alertFeedMinimized, setAlertFeedMinimized] = useState(true);
 
-  // Print a single card section by its DOM id
-  const printSection = (sectionId: string, title: string) => {
-    const el = document.getElementById(`section-${sectionId}`);
-    if (!el) return;
-    const win = window.open('', '_blank', 'width=900,height=700');
-    if (!win) return;
-    win.document.write(`<!DOCTYPE html><html><head><title>${title} — PEARL Intelligence Network — ${stateName} Research Command Center</title>
-      <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 24px; color: #1e293b; }
-        .print-header { border-bottom: 2px solid #3b82f6; padding-bottom: 12px; margin-bottom: 16px; }
-        .print-header h1 { font-size: 16px; font-weight: 700; color: #1e3a5f; }
-        .print-header p { font-size: 11px; color: #64748b; margin-top: 4px; }
-        .print-content { font-size: 13px; line-height: 1.5; }
-        .print-content table { width: 100%; border-collapse: collapse; margin: 8px 0; }
-        .print-content th, .print-content td { border: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; font-size: 12px; }
-        .print-content th { background: #f8fafc; font-weight: 600; }
-        canvas, svg { max-width: 100%; }
-        button, [role="button"] { display: none !important; }
-        @media print { body { padding: 0; } }
-      </style>
-    </head><body>
-      <div class="print-header">
-        <h1>🦪 ${title}</h1>
-        <p>PEARL Intelligence Network — ${stateName} Research Command Center · Printed ${new Date().toLocaleDateString()} · Project PEARL</p>
-      </div>
-      <div class="print-content">${el.innerHTML}</div>
-    </body></html>`);
-    win.document.close();
-    setTimeout(() => { win.print(); }, 400);
-  };
   const { waterData, isLoading: waterLoading, hasRealData } = useWaterData(activeDetailId);
 
   // ── Mock data bridge: supplies removalEfficiencies, stormEvents, displayData to child components ──
@@ -729,9 +699,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
                   <span className="text-sm font-bold text-violet-900">{stateName} — Data Sources &amp; Research Context</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                <span onClick={(e) => { e.stopPropagation(); printSection('regprofile', 'Data Sources & Research Context'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                  <Printer className="h-3.5 w-3.5 text-slate-400" />
-                </span>
+                <BrandedPrintBtn sectionId="regprofile" title="Data Sources & Research Context" />
                 {isSectionOpen('regprofile') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
               </div>
               </button>
@@ -2188,9 +2156,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
           <button onClick={() => onToggleCollapse('top10')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
             <span className="text-sm font-bold text-slate-800">🔥 Top 5 Worsening / Improving Waterbodies</span>
             <div className="flex items-center gap-1.5">
-                <span onClick={(e) => { e.stopPropagation(); printSection('top10', 'Top 5 Worsening / Improving'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                  <Printer className="h-3.5 w-3.5 text-slate-400" />
-                </span>
+                <BrandedPrintBtn sectionId="top10" title="Top 5 Worsening / Improving" />
                 {isSectionOpen('top10') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
               </div>
           </button>
@@ -2226,13 +2192,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
                     </div>
                     <div className="flex items-center gap-1.5">
                       <Badge variant="destructive" className="text-xs animate-pulse">CRITICAL</Badge>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); printSection('potomac', 'Potomac River Crisis'); }}
-                        className="p-0.5 text-red-400 hover:text-red-600 transition-colors"
-                        title="Print this section"
-                      >
-                        <Printer className="h-3.5 w-3.5" />
-                      </button>
+                      <BrandedPrintBtn sectionId="potomac" title="Potomac River Crisis" />
                       <button
                         onClick={(e) => { e.stopPropagation(); onToggleCollapse('potomac'); }}
                         className="p-0.5 text-red-400 hover:text-red-600 transition-colors"
@@ -2371,9 +2331,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
               </CardTitle>
               {expandedSections.research ? (
                 <div className="flex items-center gap-1.5">
-                  <span onClick={(e) => { e.stopPropagation(); printSection('research', 'Research Collaboration Hub'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                    <Printer className="h-3.5 w-3.5 text-slate-400" />
-                  </span>
+                  <BrandedPrintBtn sectionId="research" title="Research Collaboration Hub" />
                   <Minus className="h-4 w-4 text-slate-400" />
                 </div>
               ) : <ChevronDown className="h-4 w-4 text-slate-400" />}
@@ -2415,9 +2373,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
           <button onClick={() => onToggleCollapse('manuscript')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
             <span className="text-sm font-bold text-violet-900">📝 Manuscript & Publication Tools</span>
             <div className="flex items-center gap-1.5">
-              <span onClick={(e) => { e.stopPropagation(); printSection('manuscript', 'Manuscript & Publication Tools'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                <Printer className="h-3.5 w-3.5 text-slate-400" />
-              </span>
+              <BrandedPrintBtn sectionId="manuscript" title="Manuscript & Publication Tools" />
               {isSectionOpen('manuscript') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
             </div>
           </button>
@@ -2449,9 +2405,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
           <button onClick={() => onToggleCollapse('academic')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
             <span className="text-sm font-bold text-violet-900">{userRole === 'College' ? '🎓 Undergrad Tools & Learning Resources' : '🎓 Academic & Teaching Resources'}</span>
             <div className="flex items-center gap-1.5">
-              <span onClick={(e) => { e.stopPropagation(); printSection('academic', 'Academic Tools'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                <Printer className="h-3.5 w-3.5 text-slate-400" />
-              </span>
+              <BrandedPrintBtn sectionId="academic" title="Academic Tools" />
               {isSectionOpen('academic') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
             </div>
           </button>
@@ -2469,9 +2423,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
           <button onClick={() => onToggleCollapse('methodology')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
             <span className="text-sm font-bold text-violet-900">🛡️ Data Integrity, QA/QC & Methodology</span>
             <div className="flex items-center gap-1.5">
-              <span onClick={(e) => { e.stopPropagation(); printSection('methodology', 'Data Integrity & Methodology'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                <Printer className="h-3.5 w-3.5 text-slate-400" />
-              </span>
+              <BrandedPrintBtn sectionId="methodology" title="Data Integrity & Methodology" />
               {isSectionOpen('methodology') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
             </div>
           </button>
@@ -2510,9 +2462,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
           <button onClick={() => onToggleCollapse('datasets')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
             <span className="text-sm font-bold text-violet-900">📦 Dataset Catalog & Research Export</span>
             <div className="flex items-center gap-1.5">
-              <span onClick={(e) => { e.stopPropagation(); printSection('datasets', 'Dataset Catalog & Research Export'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                <Printer className="h-3.5 w-3.5 text-slate-400" />
-              </span>
+              <BrandedPrintBtn sectionId="datasets" title="Dataset Catalog & Research Export" />
               {isSectionOpen('datasets') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
             </div>
           </button>
@@ -2559,9 +2509,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
           <button onClick={() => onToggleCollapse('exporthub')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
             <span className="text-sm font-bold text-violet-900">📦 Data Export Hub</span>
             <div className="flex items-center gap-1.5">
-              <span onClick={(e) => { e.stopPropagation(); printSection('exporthub', 'Data Export Hub'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                <Printer className="h-3.5 w-3.5 text-slate-400" />
-              </span>
+              <BrandedPrintBtn sectionId="exporthub" title="Data Export Hub" />
               {isSectionOpen('exporthub') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
             </div>
           </button>
@@ -2579,9 +2527,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
             <button onClick={() => onToggleCollapse('grants')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
               <span className="text-sm font-bold text-violet-900">🎓 Research Funding Opportunities — {stateName}</span>
               <div className="flex items-center gap-1.5">
-                <span onClick={(e) => { e.stopPropagation(); printSection('grants', 'Research Funding Opportunities'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                  <Printer className="h-3.5 w-3.5 text-slate-400" />
-                </span>
+                <BrandedPrintBtn sectionId="grants" title="Research Funding Opportunities" />
                 {isSectionOpen('grants') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
               </div>
             </button>

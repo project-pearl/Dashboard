@@ -10,6 +10,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import { BrandedPDFGenerator } from '@/lib/brandedPdfGenerator';
 
 // ── Types ──
 
@@ -632,7 +633,56 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose }: R
             <p className="text-blue-200 text-sm">{new Date(plan!.generatedAt).toLocaleString()}</p>
           </div>
           <div className="flex gap-2 print:hidden">
-            <button onClick={() => window.print()} className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded text-sm">Print</button>
+            <button onClick={async () => {
+              if (!plan) return;
+              const pdf = new BrandedPDFGenerator();
+              await pdf.loadLogo();
+              pdf.initialize();
+              pdf.addTitle(`Resolution Plan — ${plan.scopeLabel}`);
+              pdf.addMetadata('Role', roleCtx.label);
+              pdf.addMetadata('Revision', String(plan.revision));
+              pdf.addMetadata('Generated', new Date(plan.generatedAt).toLocaleString());
+              pdf.addSpacer(5);
+              pdf.addSubtitle('Situation Assessment');
+              pdf.addText(plan.sections.situationAssessment);
+              pdf.addSpacer(3);
+              pdf.addSubtitle('Root Causes');
+              pdf.addText(plan.sections.rootCauses);
+              pdf.addSpacer(3);
+              pdf.addSubtitle('Stakeholders & Responsibilities');
+              pdf.addText(plan.sections.stakeholders);
+              pdf.addSpacer(3);
+              pdf.addSubtitle('Recommended Actions — Immediate (0-30 days)');
+              plan.sections.actionsImmediate.forEach((a, i) => pdf.addText(`${i + 1}. ${a}`, { indent: 2 }));
+              pdf.addSpacer(2);
+              pdf.addSubtitle('Recommended Actions — Short-Term (1-6 months)');
+              plan.sections.actionsShortTerm.forEach((a, i) => pdf.addText(`${i + 1}. ${a}`, { indent: 2 }));
+              pdf.addSpacer(2);
+              pdf.addSubtitle('Recommended Actions — Long-Term (6+ months)');
+              plan.sections.actionsLongTerm.forEach((a, i) => pdf.addText(`${i + 1}. ${a}`, { indent: 2 }));
+              pdf.addSpacer(3);
+              if (plan.sections.coBenefits.length > 0) {
+                pdf.addSubtitle('Co-Benefits Across Water Domains');
+                pdf.addTable(
+                  ['Solution', 'Surface Water', 'Drinking Water', 'Wastewater', 'Groundwater', 'Stormwater'],
+                  plan.sections.coBenefits.map(b => [b.solution, b.surfaceWater || '—', b.drinkingWater || '—', b.wastewater || '—', b.groundwater || '—', b.stormwater || '—'])
+                );
+              }
+              pdf.addSubtitle('Cost Range');
+              pdf.addText(plan.sections.costRange);
+              pdf.addSpacer(3);
+              pdf.addSubtitle('Regulatory Pathway');
+              pdf.addText(plan.sections.regulatoryPath);
+              pdf.addSpacer(3);
+              pdf.addSubtitle('Grant & Funding Opportunities');
+              pdf.addText(plan.sections.grantOpportunities);
+              pdf.addSpacer(3);
+              pdf.addSubtitle('Projected Outcomes');
+              pdf.addText(plan.sections.projectedOutcomes);
+              const safeLabel = plan.scopeLabel.replace(/[^a-zA-Z0-9]/g, '_');
+              const dateStr = new Date().toISOString().slice(0, 10);
+              pdf.download(`PEARL_Resolution_Plan_${safeLabel}_${dateStr}.pdf`);
+            }} className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded text-sm">Export PDF</button>
             <button onClick={() => { setPlan(null); setHistory([]); }} className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded text-sm">New Plan</button>
             {onClose && <button onClick={onClose} className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded text-sm">Close</button>}
           </div>

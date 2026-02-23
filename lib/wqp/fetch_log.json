@@ -1,0 +1,126 @@
+{
+  "pipeline": "wqp_region3",
+  "runAt": "2026-02-23T12:51:22.528791+00:00Z",
+  "durationSeconds": 1534.1,
+  "stateResults": [
+    {
+      "stateCode": "DE",
+      "stateName": "Delaware",
+      "startedAt": "2026-02-23T12:25:48.442783+00:00Z",
+      "stationsFound": 2424,
+      "observationsFetched": 59404,
+      "exceedancesFound": 6181,
+      "errors": [
+        "No results for 2026"
+      ],
+      "yearsFetched": [
+        2022,
+        2023,
+        2024,
+        2025
+      ],
+      "durationMs": 114953,
+      "completedAt": "2026-02-23T12:27:43.396149+00:00Z"
+    },
+    {
+      "stateCode": "DC",
+      "stateName": "District of Columbia",
+      "startedAt": "2026-02-23T12:27:43.411683+00:00Z",
+      "stationsFound": 374,
+      "observationsFetched": 19753,
+      "exceedancesFound": 1914,
+      "errors": [
+        "No results for 2026"
+      ],
+      "yearsFetched": [
+        2022,
+        2023,
+        2024,
+        2025
+      ],
+      "durationMs": 35416,
+      "completedAt": "2026-02-23T12:28:18.827935+00:00Z"
+    },
+    {
+      "stateCode": "MD",
+      "stateName": "Maryland",
+      "startedAt": "2026-02-23T12:28:18.831084+00:00Z",
+      "stationsFound": 13914,
+      "observationsFetched": 316111,
+      "exceedancesFound": 13118,
+      "errors": [
+        "No results for 2026"
+      ],
+      "yearsFetched": [
+        2022,
+        2023,
+        2024,
+        2025
+      ],
+      "durationMs": 472310,
+      "completedAt": "2026-02-23T12:36:11.141204+00:00Z"
+    },
+    {
+      "stateCode": "PA",
+      "stateName": "Pennsylvania",
+      "startedAt": "2026-02-23T12:36:11.257917+00:00Z",
+      "stationsFound": 22428,
+      "observationsFetched": 141169,
+      "exceedancesFound": 12057,
+      "errors": [
+        "No results for 2026"
+      ],
+      "yearsFetched": [
+        2022,
+        2023,
+        2024,
+        2025
+      ],
+      "durationMs": 316101,
+      "completedAt": "2026-02-23T12:41:27.359679+00:00Z"
+    },
+    {
+      "stateCode": "VA",
+      "stateName": "Virginia",
+      "startedAt": "2026-02-23T12:41:27.429094+00:00Z",
+      "stationsFound": 25194,
+      "observationsFetched": 651499,
+      "exceedancesFound": 48004,
+      "errors": [],
+      "yearsFetched": [
+        2022,
+        2023,
+        2024,
+        2025,
+        2026
+      ],
+      "durationMs": 499205,
+      "completedAt": "2026-02-23T12:49:46.634611+00:00Z"
+    },
+    {
+      "stateCode": "WV",
+      "stateName": "West Virginia",
+      "startedAt": "2026-02-23T12:49:46.858860+00:00Z",
+      "stationsFound": 12129,
+      "observationsFetched": 30299,
+      "exceedancesFound": 1344,
+      "errors": [
+        "No results for 2026"
+      ],
+      "yearsFetched": [
+        2022,
+        2023,
+        2024,
+        2025
+      ],
+      "durationMs": 95651,
+      "completedAt": "2026-02-23T12:51:22.510067+00:00Z"
+    }
+  ],
+  "totals": {
+    "stations": 76463,
+    "observations": 1218235,
+    "exceedances": 82618,
+    "errors": 5
+  }
+}

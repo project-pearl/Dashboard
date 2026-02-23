@@ -8,7 +8,8 @@ import { getStatesGeoJSON, geoToAbbr, STATE_GEO_LEAFLET, FIPS_TO_ABBR as _FIPS, 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Info, LogOut, Printer, BookOpen } from 'lucide-react';
+import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Info, LogOut, BookOpen } from 'lucide-react';
+import { BrandedPrintBtn } from '@/lib/brandedPrint';
 import { useRouter } from 'next/navigation';
 import { getRegionById } from '@/lib/regionsConfig';
 import { resolveWaterbodyCoordinates } from '@/lib/waterbodyCentroids';
@@ -367,37 +368,6 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
   const [showCostPanel, setShowCostPanel] = useState(false);
   const [alertFeedMinimized, setAlertFeedMinimized] = useState(true);
 
-  // Print a single card section by its DOM id
-  const printSection = (sectionId: string, title: string) => {
-    const el = document.getElementById(`section-${sectionId}`);
-    if (!el) return;
-    const win = window.open('', '_blank', 'width=900,height=700');
-    if (!win) return;
-    win.document.write(`<!DOCTYPE html><html><head><title>${title} — ${stateName} PEARL Explorer</title>
-      <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 24px; color: #1e293b; }
-        .print-header { border-bottom: 2px solid #3b82f6; padding-bottom: 12px; margin-bottom: 16px; }
-        .print-header h1 { font-size: 16px; font-weight: 700; color: #1e3a5f; }
-        .print-header p { font-size: 11px; color: #64748b; margin-top: 4px; }
-        .print-content { font-size: 13px; line-height: 1.5; }
-        .print-content table { width: 100%; border-collapse: collapse; margin: 8px 0; }
-        .print-content th, .print-content td { border: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; font-size: 12px; }
-        .print-content th { background: #f8fafc; font-weight: 600; }
-        canvas, svg { max-width: 100%; }
-        button, [role="button"] { display: none !important; }
-        @media print { body { padding: 0; } }
-      </style>
-    </head><body>
-      <div class="print-header">
-        <h1>🦪 ${title}</h1>
-        <p>${stateName} PEARL Explorer · Printed ${new Date().toLocaleDateString()} · Project PEARL</p>
-      </div>
-      <div class="print-content">${el.innerHTML}</div>
-    </body></html>`);
-    win.document.close();
-    setTimeout(() => { win.print(); }, 400);
-  };
   const { waterData, isLoading: waterLoading, hasRealData } = useWaterData(activeDetailId);
 
   // ── Mock data bridge: supplies removalEfficiencies, stormEvents, displayData to child components ──
@@ -723,9 +693,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                   <span className="text-sm font-bold text-slate-800">{stateName} — Water Health Dashboard</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                <span onClick={(e) => { e.stopPropagation(); printSection('regprofile', 'Water Health Dashboard'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                  <Printer className="h-3.5 w-3.5 text-slate-400" />
-                </span>
+                <BrandedPrintBtn sectionId="regprofile" title="Water Health Dashboard" />
                 {isSectionOpen('regprofile') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
               </div>
               </button>
@@ -2452,9 +2420,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                         <span className={`px-2 py-0.5 rounded-full text-xs font-bold text-white ${scoreBg}`}>State {ejScore}/100</span>
                       )}
                       <div className="flex items-center gap-1.5">
-                <span onClick={(e) => { e.stopPropagation(); printSection('ej', 'Environmental Justice'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                  <Printer className="h-3.5 w-3.5 text-slate-400" />
-                </span>
+                <BrandedPrintBtn sectionId="ej" title="Environmental Justice" />
                 {isSectionOpen('ej') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
               </div>
                     </div>
@@ -2555,9 +2521,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
           <button onClick={() => onToggleCollapse('top10')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
             <span className="text-sm font-bold text-slate-800">🔥 Top 5 Worsening / Improving Waterbodies</span>
             <div className="flex items-center gap-1.5">
-                <span onClick={(e) => { e.stopPropagation(); printSection('top10', 'Top 5 Worsening / Improving'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                  <Printer className="h-3.5 w-3.5 text-slate-400" />
-                </span>
+                <BrandedPrintBtn sectionId="top10" title="Top 5 Worsening / Improving" />
                 {isSectionOpen('top10') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
               </div>
           </button>
@@ -2593,13 +2557,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                     </div>
                     <div className="flex items-center gap-1.5">
                       <Badge variant="destructive" className="text-xs animate-pulse">CRITICAL</Badge>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); printSection('potomac', 'Potomac River Crisis'); }}
-                        className="p-0.5 text-red-400 hover:text-red-600 transition-colors"
-                        title="Print this section"
-                      >
-                        <Printer className="h-3.5 w-3.5" />
-                      </button>
+                      <BrandedPrintBtn sectionId="potomac" title="Potomac River Crisis" />
                       <button
                         onClick={(e) => { e.stopPropagation(); onToggleCollapse('potomac'); }}
                         className="p-0.5 text-red-400 hover:text-red-600 transition-colors"
@@ -2736,9 +2694,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
               <span className="text-sm font-bold text-cyan-800">Student Learning Mode 🌊</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span onClick={(e) => { e.stopPropagation(); printSection('learning', 'Student Learning Mode'); }} className="p-1 hover:bg-cyan-200 rounded transition-colors" title="Print this section">
-                <Printer className="h-3.5 w-3.5 text-cyan-400" />
-              </span>
+              <BrandedPrintBtn sectionId="learning" title="Student Learning Mode" />
               {isSectionOpen('learning') ? <Minus className="h-4 w-4 text-cyan-400" /> : <ChevronDown className="h-4 w-4 text-cyan-400" />}
             </div>
           </button>
@@ -2772,9 +2728,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
           <button onClick={() => onToggleCollapse('projects')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-cyan-100/50 transition-colors">
             <span className="text-sm font-bold text-cyan-800">🌟 Science Fair & STEM Project Ideas</span>
             <div className="flex items-center gap-1.5">
-              <span onClick={(e) => { e.stopPropagation(); printSection('projects', 'Science Fair & STEM Project Ideas'); }} className="p-1 hover:bg-cyan-200 rounded transition-colors" title="Print this section">
-                <Printer className="h-3.5 w-3.5 text-cyan-400" />
-              </span>
+              <BrandedPrintBtn sectionId="projects" title="Science Fair & STEM Project Ideas" />
               {isSectionOpen('projects') ? <Minus className="h-4 w-4 text-cyan-400" /> : <ChevronDown className="h-4 w-4 text-cyan-400" />}
             </div>
           </button>
@@ -2824,9 +2778,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
           <button onClick={() => onToggleCollapse('fieldreport')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
             <span className="text-sm font-bold text-slate-800">📋 Field Report & Data Export</span>
             <div className="flex items-center gap-1.5">
-              <span onClick={(e) => { e.stopPropagation(); printSection('fieldreport', 'Field Report & Data Export'); }} className="p-1 hover:bg-slate-200 rounded transition-colors" title="Print this section">
-                <Printer className="h-3.5 w-3.5 text-slate-400" />
-              </span>
+              <BrandedPrintBtn sectionId="fieldreport" title="Field Report & Data Export" />
               {isSectionOpen('fieldreport') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
             </div>
           </button>
@@ -2861,9 +2813,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
           <button onClick={() => onToggleCollapse('eduhub')} className="w-full flex items-center justify-between px-4 py-3 bg-cyan-50 hover:bg-cyan-100 transition-colors">
             <span className="text-sm font-bold text-cyan-800">🏫 K-12 Educational Hub</span>
             <div className="flex items-center gap-1.5">
-              <span onClick={(e) => { e.stopPropagation(); printSection('eduhub', 'K-12 Educational Hub'); }} className="p-1 hover:bg-cyan-200 rounded transition-colors" title="Print this section">
-                <Printer className="h-3.5 w-3.5 text-cyan-400" />
-              </span>
+              <BrandedPrintBtn sectionId="eduhub" title="K-12 Educational Hub" />
               {isSectionOpen('eduhub') ? <Minus className="h-4 w-4 text-cyan-400" /> : <ChevronDown className="h-4 w-4 text-cyan-400" />}
             </div>
           </button>
@@ -2903,9 +2853,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
             <button onClick={() => onToggleCollapse('teacher')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-purple-100/50 transition-colors">
               <span className="text-sm font-bold text-purple-800">👩‍🏫 Teacher Resources & Curriculum Tools</span>
               <div className="flex items-center gap-1.5">
-                <span onClick={(e) => { e.stopPropagation(); printSection('teacher', 'Teacher Resources & Curriculum Tools'); }} className="p-1 hover:bg-purple-200 rounded transition-colors" title="Print this section">
-                  <Printer className="h-3.5 w-3.5 text-purple-400" />
-                </span>
+                <BrandedPrintBtn sectionId="teacher" title="Teacher Resources & Curriculum Tools" />
                 {isSectionOpen('teacher') ? <Minus className="h-4 w-4 text-purple-400" /> : <ChevronDown className="h-4 w-4 text-purple-400" />}
               </div>
             </button>
@@ -2944,7 +2892,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
             <button onClick={() => onToggleCollapse('grants')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
               <span className="text-sm font-bold text-slate-800">💰 K-12 Education Grant Opportunities — {stateName}</span>
               <div className="flex items-center gap-1">
-                {isSectionOpen('grants') && <span onClick={(e) => { e.stopPropagation(); printSection('grants', `K-12 Education Grants — ${stateName}`); }} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors" title="Print section"><Printer className="h-3.5 w-3.5" /></span>}
+                {isSectionOpen('grants') && <BrandedPrintBtn sectionId="grants" title={`K-12 Education Grants — ${stateName}`} />}
                 {isSectionOpen('grants') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
               </div>
             </button>

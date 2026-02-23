@@ -10,7 +10,8 @@ import statesTopo from 'us-atlas/states-10m.json';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, AlertTriangle, AlertCircle, CheckCircle, MapPin, Droplets, Leaf, DollarSign, Users, TrendingUp, BarChart3, Gauge, Shield, LogOut, Building2, Info, ChevronDown, Minus, Printer } from 'lucide-react';
+import { X, AlertTriangle, AlertCircle, CheckCircle, MapPin, Droplets, Leaf, DollarSign, Users, TrendingUp, BarChart3, Gauge, Shield, LogOut, Building2, Info, ChevronDown, Minus } from 'lucide-react';
+import { brandedPrintSection, BrandedPrintBtn } from '@/lib/brandedPrint';
 import { useRouter } from 'next/navigation';
 import { getRegionById } from '@/lib/regionsConfig';
 import HeroBanner from './HeroBanner';
@@ -2113,49 +2114,6 @@ export function NationalCommandCenter(props: Props) {
     return n.toLocaleString();
   };
 
-  // Print a single card section by its DOM id
-  const printSection = (sectionId: string, title: string) => {
-    const el = document.getElementById(`section-${sectionId}`);
-    if (!el) return;
-    const win = window.open('', '_blank', 'width=900,height=700');
-    if (!win) return;
-    win.document.write(`<!DOCTYPE html><html><head><title>${title} — PEARL Intelligence Network — National Command Center</title>
-      <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 24px; color: #1e293b; }
-        .print-header { border-bottom: 2px solid #1e3a5f; padding-bottom: 12px; margin-bottom: 16px; }
-        .print-header h1 { font-size: 16px; font-weight: 700; color: #1e3a5f; }
-        .print-header p { font-size: 11px; color: #64748b; margin-top: 4px; }
-        .print-content { font-size: 13px; line-height: 1.5; }
-        .print-content table { width: 100%; border-collapse: collapse; margin: 8px 0; }
-        .print-content th, .print-content td { border: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; font-size: 12px; }
-        .print-content th { background: #f8fafc; font-weight: 600; }
-        canvas, svg { max-width: 100%; }
-        button, [role="button"] { display: none !important; }
-        @media print { body { padding: 0; } }
-      </style>
-    </head><body>
-      <div class="print-header">
-        <h1>🦪 ${title}</h1>
-        <p>PEARL Intelligence Network — National Command Center · Printed ${new Date().toLocaleDateString()} · Project PEARL</p>
-      </div>
-      <div class="print-content">${el.innerHTML}</div>
-    </body></html>`);
-    win.document.close();
-    setTimeout(() => { win.print(); }, 400);
-  };
-
-  // Print button component for Card headers
-  const PrintBtn = ({ sectionId, title }: { sectionId: string; title: string }) => (
-    <button
-      onClick={(e) => { e.stopPropagation(); printSection(sectionId, title); }}
-      className="p-1 hover:bg-slate-200 rounded transition-colors"
-      title="Print this section"
-    >
-      <Printer className="h-3.5 w-3.5 text-slate-400" />
-    </button>
-  );
-
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-cyan-50">
       <div className="mx-auto max-w-7xl p-4 space-y-6">
@@ -2216,7 +2174,7 @@ export function NationalCommandCenter(props: Props) {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>United States Monitoring Network</CardTitle>
-                <PrintBtn sectionId="usmap" title="United States Monitoring Network" />
+                <BrandedPrintBtn sectionId="usmap" title="United States Monitoring Network" />
               </div>
               <CardDescription>
                 Real state outlines. Colors reflect data based on selected overlay.
@@ -4101,7 +4059,7 @@ export function NationalCommandCenter(props: Props) {
                     {attainsAggregation.totalAssessed.toLocaleString()} waterbodies from EPA ATTAINS
                   </span>
                 </CardTitle>
-                <PrintBtn sectionId="impairmentprofile" title="Impairment Profile" />
+                <BrandedPrintBtn sectionId="impairmentprofile" title="Impairment Profile" />
               </div>
             </CardHeader>
             <CardContent>
@@ -4211,7 +4169,7 @@ export function NationalCommandCenter(props: Props) {
                     {aiInsights.length} findings from {attainsAggregation.totalAssessed.toLocaleString()} ATTAINS records
                   </span>
                 </CardTitle>
-                <PrintBtn sectionId="aiinsights" title="National Intelligence Briefing" />
+                <BrandedPrintBtn sectionId="aiinsights" title="National Intelligence Briefing" />
               </div>
               <CardDescription>AI analysis of EPA ATTAINS data, TMDL gaps, impairment causes, and deployment opportunities</CardDescription>
             </CardHeader>
@@ -4268,7 +4226,7 @@ export function NationalCommandCenter(props: Props) {
                   ({networkHealth.gradedStateCount ?? 0} of {networkHealth.stateCount} states graded)
                 </span>
               </CardTitle>
-              <PrintBtn sectionId="networkhealth" title="Network Health Score" />
+              <BrandedPrintBtn sectionId="networkhealth" title="Network Health Score" />
             </div>
           </CardHeader>
           <CardContent className="space-y-0">
@@ -4409,7 +4367,7 @@ export function NationalCommandCenter(props: Props) {
                 National Impact — All PEARL Deployments
               </CardTitle>
               <div className="flex items-center gap-1">
-                <PrintBtn sectionId="nationalimpact" title="National Impact — All PEARL Deployments" />
+                <BrandedPrintBtn sectionId="nationalimpact" title="National Impact — All PEARL Deployments" />
                 <Button
                   size="sm"
                   variant={impactPeriod === 'all' ? 'default' : 'outline'}
@@ -4517,7 +4475,7 @@ export function NationalCommandCenter(props: Props) {
                     <AlertTriangle size={16} className="text-red-600" />
                     Priority Queue
                   </CardTitle>
-                  <PrintBtn sectionId="priorityqueue" title="Priority Queue" />
+                  <BrandedPrintBtn sectionId="priorityqueue" title="Priority Queue" />
                 </div>
                 <CardDescription className="text-xs">Top waterbodies by composite priority score (Cat 5 + No TMDL + EJ + data gaps)</CardDescription>
               </CardHeader>
@@ -4578,7 +4536,7 @@ export function NationalCommandCenter(props: Props) {
                     <CardDescription className="text-xs">States ranked by monitoring gaps and severity burden</CardDescription>
                   </div>
                   <div className="flex gap-1">
-                    <PrintBtn sectionId="coveragegaps" title="State Coverage Gaps" />
+                    <BrandedPrintBtn sectionId="coveragegaps" title="State Coverage Gaps" />
                     <Button size="sm" variant={!showImpact ? 'default' : 'outline'} onClick={() => setShowImpact(false)} className="h-6 text-[10px] px-2">By Coverage</Button>
                     <Button size="sm" variant={showImpact ? 'default' : 'outline'} onClick={() => setShowImpact(true)} className="h-6 text-[10px] px-2">By Severity</Button>
                   </div>
@@ -4679,7 +4637,7 @@ export function NationalCommandCenter(props: Props) {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">National Situation Summary</CardTitle>
-              <PrintBtn sectionId="situation" title="National Situation Summary" />
+              <BrandedPrintBtn sectionId="situation" title="National Situation Summary" />
             </div>
             <CardDescription>Real-time monitoring network status</CardDescription>
           </CardHeader>
@@ -4739,7 +4697,7 @@ export function NationalCommandCenter(props: Props) {
                   <AlertTriangle className="h-5 w-5 text-red-600" />
                   Top 10 Worsening
                 </CardTitle>
-                <PrintBtn sectionId="worsening" title="Top 10 Worsening" />
+                <BrandedPrintBtn sectionId="worsening" title="Top 10 Worsening" />
               </div>
               <CardDescription>Highest priority intervention areas</CardDescription>
             </CardHeader>
@@ -4783,7 +4741,7 @@ export function NationalCommandCenter(props: Props) {
                   <CheckCircle className="h-5 w-5 text-green-600" />
                   {'Top 10 Improving'}
                 </CardTitle>
-                <PrintBtn sectionId="improving" title="Top 10 Improving" />
+                <BrandedPrintBtn sectionId="improving" title="Top 10 Improving" />
               </div>
               <CardDescription>
                 {'Success stories and best performers'}
@@ -4842,7 +4800,7 @@ export function NationalCommandCenter(props: Props) {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>State-by-State Summary</CardTitle>
-              <PrintBtn sectionId="statebystatesummary" title="State-by-State Summary" />
+              <BrandedPrintBtn sectionId="statebystatesummary" title="State-by-State Summary" />
             </div>
             <CardDescription>Click any state to view its waterbodies on the map above</CardDescription>
           </CardHeader>
@@ -5029,7 +4987,7 @@ export function NationalCommandCenter(props: Props) {
                   ⏰ SLA Compliance Tracking
                 </CardTitle>
                 <div className="flex items-center gap-2">
-                  <PrintBtn sectionId="sla" title="SLA Compliance Tracking" />
+                  <BrandedPrintBtn sectionId="sla" title="SLA Compliance Tracking" />
                   <Button
                     size="sm"
                     variant="outline"
@@ -5575,21 +5533,134 @@ export function NationalCommandCenter(props: Props) {
         </Card>
         </>);
 
-        case 'waterbody-card': return DS(<>
-        {/* ── State Waterbody Card — Federal oversight view of individual waterbodies ── */}
+        case 'waterbody-card': {
+          const wbRow = stateRollup.find(r => r.abbr === selectedState);
+          const wbRegion = getEpaRegionForState(selectedState);
+          return DS(<>
+        {/* ── State Waterbody Inspector — Federal oversight of selected state ── */}
         <Card id="section-waterbody-card" className="border-2 border-sky-200 bg-gradient-to-br from-sky-50 to-white">
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              State Waterbody Inspector
-              <span className="text-[10px] font-normal text-slate-400 ml-1">Federal oversight view</span>
-            </CardTitle>
-            <CardDescription>Select a waterbody from the map or state table to view federal-level regulatory status, cross-domain compliance, trends, and data gaps</CardDescription>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-lg">State Waterbody Inspector</CardTitle>
+                <span className="text-[10px] font-normal text-slate-400">Federal oversight view</span>
+              </div>
+              <BrandedPrintBtn sectionId="waterbody-card" title="State Waterbody Inspector" />
+            </div>
+            <CardDescription>
+              {wbRow ? `${wbRow.name} (${wbRow.abbr}) — EPA Region ${wbRegion}` : 'Select a state from the map or table above'}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-slate-500 italic">Select a waterbody from the map above to inspect its federal regulatory profile.</p>
+            {!wbRow || !wbRow.canGradeState ? (
+              <p className="text-sm text-slate-500 italic">
+                {wbRow ? `Insufficient data available for ${wbRow.name} to generate a waterbody assessment.` : 'Select a state from the map or table above to inspect its waterbody profile.'}
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {/* Grade + Data Source */}
+                <div className="flex items-center gap-3">
+                  <span className={`inline-flex items-center justify-center w-10 h-10 rounded-full text-sm font-bold border ${wbRow.grade.bg} ${wbRow.grade.color}`}>
+                    {wbRow.grade.letter}
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">{wbRow.name}</p>
+                    <p className="text-xs text-slate-500">Score: {wbRow.score}/100 · Data: {wbRow.dataSource === 'per-waterbody' ? 'Per-Waterbody Assessment' : 'ATTAINS Bulk'} · EPA Region {wbRegion}</p>
+                  </div>
+                </div>
+
+                {/* 4-stat summary row */}
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { label: 'Total Waterbodies', value: wbRow.waterbodies.toLocaleString(), color: 'text-sky-700 bg-sky-50 border-sky-200' },
+                    { label: 'Assessed', value: wbRow.assessed.toLocaleString(), color: 'text-blue-700 bg-blue-50 border-blue-200' },
+                    { label: 'Total Impaired', value: wbRow.totalImpaired.toLocaleString(), color: 'text-amber-700 bg-amber-50 border-amber-200' },
+                    { label: 'Cat 5 (Needs TMDL)', value: wbRow.cat5.toLocaleString(), color: 'text-red-700 bg-red-50 border-red-200' },
+                  ].map(s => (
+                    <div key={s.label} className={`rounded-lg border p-2 text-center ${s.color}`}>
+                      <p className="text-lg font-bold">{s.value}</p>
+                      <p className="text-[10px] leading-tight">{s.label}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* ATTAINS Impairment Categories */}
+                <div>
+                  <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">Impairment Categories</h4>
+                  <div className="grid grid-cols-4 gap-2">
+                    {[
+                      { label: 'Cat 5 — Needs TMDL', value: wbRow.cat5, color: 'bg-red-100 text-red-800 border-red-200' },
+                      { label: 'Cat 4A — TMDL Done', value: wbRow.cat4a, color: 'bg-orange-100 text-orange-800 border-orange-200' },
+                      { label: 'Cat 4B — Other Control', value: wbRow.cat4b, color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+                      { label: 'Cat 4C — Not Pollutant', value: wbRow.cat4c, color: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+                    ].map(c => (
+                      <div key={c.label} className={`rounded border p-2 text-center ${c.color}`}>
+                        <p className="text-base font-bold">{c.value.toLocaleString()}</p>
+                        <p className="text-[9px] leading-tight">{c.label}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Top Causes */}
+                {wbRow.topCauses.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">Top Impairment Causes</h4>
+                    <div className="space-y-1">
+                      {wbRow.topCauses.slice(0, 8).map((tc, i) => (
+                        <div key={tc.cause} className="flex items-center gap-2 text-xs">
+                          <span className="text-slate-400 w-4 text-right">{i + 1}.</span>
+                          <span className="flex-1 text-slate-700">{tc.cause}</span>
+                          <span className="font-mono text-slate-500">{tc.count.toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Monitoring Coverage */}
+                <div>
+                  <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">Monitoring Coverage</h4>
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    <div className="bg-green-50 border border-green-200 rounded p-2 text-center">
+                      <p className="text-sm font-bold text-green-700">{wbRow.monitored.toLocaleString()}</p>
+                      <p className="text-green-600">Monitored</p>
+                    </div>
+                    <div className="bg-blue-50 border border-blue-200 rounded p-2 text-center">
+                      <p className="text-sm font-bold text-blue-700">{wbRow.assessed.toLocaleString()}</p>
+                      <p className="text-blue-600">Assessed</p>
+                    </div>
+                    <div className="bg-slate-50 border border-slate-200 rounded p-2 text-center">
+                      <p className="text-sm font-bold text-slate-700">{wbRow.unmonitored.toLocaleString()}</p>
+                      <p className="text-slate-600">Unmonitored</p>
+                    </div>
+                  </div>
+                  {wbRow.waterbodies > 0 && (
+                    <div className="mt-2 h-2 rounded-full bg-slate-200 overflow-hidden flex">
+                      <div className="bg-green-500 h-full" style={{ width: `${(wbRow.monitored / wbRow.waterbodies * 100).toFixed(1)}%` }} />
+                      <div className="bg-blue-400 h-full" style={{ width: `${(wbRow.assessed / wbRow.waterbodies * 100).toFixed(1)}%` }} />
+                    </div>
+                  )}
+                </div>
+
+                {/* Alert Distribution */}
+                {wbRow.total > 0 && (
+                  <div>
+                    <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">Active Alerts</h4>
+                    <div className="flex gap-2 text-xs">
+                      {wbRow.high > 0 && <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-medium">{wbRow.high} High</span>}
+                      {wbRow.medium > 0 && <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">{wbRow.medium} Medium</span>}
+                      {wbRow.low > 0 && <span className="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 font-medium">{wbRow.low} Low</span>}
+                      {wbRow.none > 0 && <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">{wbRow.none} Clear</span>}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
         </>);
+        }
 
         case 'resolution-planner': return DS(<>
         {/* ── Resolution Planner — AI-powered action planning ── */}
