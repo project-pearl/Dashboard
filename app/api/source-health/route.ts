@@ -122,7 +122,7 @@ export async function GET() {
     check(
       'ERDDAP',
       'MD DNR (ERDDAP)',
-      'https://erddap.maracoos.org/erddap/tabledap/allDatasets.json?page=1&itemsPerPage=1',
+      'https://erddap.maracoos.org/erddap/info/index.json?page=1&itemsPerPage=1',
       8_000,
     ),
     // Source 7: NOAA CO-OPS
@@ -132,11 +132,11 @@ export async function GET() {
       'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?station=8574680&product=water_temperature&date=latest&units=metric&time_zone=gmt&format=json&application=pearl_platform',
       8_000,
     ),
-    // Source 8: Monitor My Watershed
+    // Source 8: Monitor My Watershed (no /api/v1/ — use organizations endpoint)
     check(
       'MMW',
       'Monitor My Watershed',
-      'https://monitormywatershed.org/api/v1/sites/?limit=1',
+      'https://monitormywatershed.org/api/organizations/',
       10_000,
     ),
     // Source 9: EPA Envirofacts
@@ -179,7 +179,7 @@ export async function GET() {
     check(
       'ICIS',
       'EPA ICIS Compliance',
-      'https://data.epa.gov/efservice/ICIS_PERMITS/STATE_ABBR/MD/ROWS/0:0/JSON',
+      'https://data.epa.gov/efservice/ICIS_PERMIT/STATE_ABBR/MD/ROWS/0:0/JSON',
       8_000,
     ),
     // Source 15: USGS NWIS Groundwater
@@ -200,8 +200,8 @@ export async function GET() {
     check(
       'ICIS_DMR',
       'EPA ICIS DMR',
-      'https://data.epa.gov/efservice/ICIS_DMR_MEASUREMENTS/STATE_CODE/MD/COUNT/JSON',
-      8_000,
+      'https://data.epa.gov/efservice/ICIS_DMR/STATE_ABBR/MD/ROWS/0:0/JSON',
+      10_000,
     ),
     // Source 18: EPA ECHO Facilities
     check(
@@ -224,12 +224,13 @@ export async function GET() {
       'https://data.epa.gov/efservice/FRS_PROGRAM_FACILITY/PGM_SYS_ACRNM/NPDES/COUNT/JSON',
       8_000,
     ),
-    // Source 21: EPA UCMR PFAS
+    // Source 21: EPA PFAS (UCMR tables removed from Envirofacts; using ECHO tools as proxy)
     check(
       'PFAS',
-      'EPA UCMR PFAS',
-      'https://data.epa.gov/efservice/UCMR4_ALL/COUNT/JSON',
+      'EPA PFAS Data',
+      'https://echo.epa.gov/trends/pfas-tools',
       8_000,
+      'HEAD',
     ),
     // Source 22: CDC Wastewater
     check(
@@ -238,12 +239,12 @@ export async function GET() {
       'https://data.cdc.gov/resource/2ew6-ywp6.json?$limit=1',
       8_000,
     ),
-    // Source 23: NPS Water Quality
+    // Source 23: NPS Water Quality (org code changed: NPSTORET → 11NPSWRD_WQX)
     check(
       'NPS',
       'NPS Water Quality',
-      'https://www.waterqualitydata.us/data/Result/search?organization=NPSTORET&mimeType=json&zip=no&sorted=no&startDateLo=01-01-2024',
-      10_000,
+      'https://www.waterqualitydata.us/data/Result/search?organization=11NPSWRD_WQX&mimeType=csv&zip=no&sorted=no&startDateLo=01-01-2025&startDateHi=02-01-2025',
+      15_000,
     ),
     // Source 24: NOAA Buoys
     check(
@@ -253,41 +254,41 @@ export async function GET() {
       8_000,
       'HEAD',
     ),
-    // Source 25: FL DBHYDRO
+    // Source 25: FL DBHYDRO (old API decommissioned; new UI at insights.sfwmd.gov)
     check(
       'FL_DBHYDRO',
       'FL DBHYDRO',
-      'https://my.sfwmd.gov/dbhydroplsql/web_io.report_process',
+      'https://insights.sfwmd.gov/',
       8_000,
       'HEAD',
     ),
-    // Source 26: NY Open Data
+    // Source 26: NY Open Data (Beach Water Testing: Beginning 2015)
     check(
       'STATE_NY',
       'NY Open Data',
-      'https://data.ny.gov/resource/4k4g-s9hz.json?$limit=1',
+      'https://data.ny.gov/resource/wwwd-za77.json?$limit=1',
       8_000,
     ),
-    // Source 27: NJ Open Data
+    // Source 27: NJ DEP (ArcGIS — no Socrata WQ data exists)
     check(
       'STATE_NJ',
-      'NJ Open Data',
-      'https://data.nj.gov/resource/6khm-yny7.json?$limit=1',
-      8_000,
+      'NJ DEP Monitoring',
+      'https://mapsdep.nj.gov/arcgis/rest/services/Features/Environmental_mon_water/MapServer/8/query?where=1%3D1&returnCountOnly=true&f=json',
+      10_000,
     ),
-    // Source 28: PA Open Data
+    // Source 28: PA Open Data (Federated Water Quality Monitoring 1998-Current)
     check(
       'STATE_PA',
       'PA Open Data',
-      'https://data.pa.gov/resource/3brs-52mh.json?$limit=1',
+      'https://data.pa.gov/resource/vna2-gb3x.json?$limit=1',
       8_000,
     ),
-    // Source 29: VA Open Data
+    // Source 29: VA DEQ (ArcGIS — VA uses CKAN, not Socrata)
     check(
       'STATE_VA',
-      'VA Open Data',
-      'https://data.virginia.gov/resource/7rig-bfxy.json?$limit=1',
-      8_000,
+      'VA DEQ Monitoring',
+      'https://gisdata.deq.virginia.gov/arcgis/rest/services/public/EDMA/MapServer/2/query?where=1%3D1&returnCountOnly=true&f=json',
+      10_000,
     ),
   ]);
 

@@ -259,11 +259,13 @@ export async function GET(request: NextRequest) {
 
         // Fetch all 5 tables in parallel for this state
         const [permits, violations, dmr, enforcement, inspections] = await Promise.all([
-          fetchTable('ICIS_PERMITS', 'STATE_ABBR', stateAbbr, transformPermit),
-          fetchTable('ICIS_VIOLATIONS', 'STATE_ABBR', stateAbbr, transformViolation),
-          fetchTable('ICIS_DMR_MEASUREMENTS', 'STATE_ABBR', stateAbbr, transformDmr),
-          fetchTable('ICIS_ENFORCEMENT_ACTIONS', 'STATE_ABBR', stateAbbr, transformEnforcement),
-          fetchTable('ICIS_INSPECTIONS', 'STATE_ABBR', stateAbbr, transformInspection),
+          fetchTable('ICIS_PERMIT', 'STATE_ABBR', stateAbbr, transformPermit),
+          // ICIS_VIOLATIONS table removed from Envirofacts — violations via ECHO API
+          Promise.resolve([]) as Promise<IcisViolation[]>,
+          fetchTable('ICIS_DMR', 'STATE_ABBR', stateAbbr, transformDmr),
+          fetchTable('ICIS_ENFORCEMENT', 'STATE_ABBR', stateAbbr, transformEnforcement),
+          // ICIS_INSPECTIONS table removed from Envirofacts
+          Promise.resolve([]) as Promise<IcisInspection[]>,
         ]);
 
         // Deduplicate permits by permit number
@@ -343,11 +345,11 @@ export async function GET(request: NextRequest) {
         await delay(5000);
         try {
           const [permits, violations, dmr, enforcement, inspections] = await Promise.all([
-            fetchTable('ICIS_PERMITS', 'STATE_ABBR', stateAbbr, transformPermit),
-            fetchTable('ICIS_VIOLATIONS', 'STATE_ABBR', stateAbbr, transformViolation),
-            fetchTable('ICIS_DMR_MEASUREMENTS', 'STATE_ABBR', stateAbbr, transformDmr),
-            fetchTable('ICIS_ENFORCEMENT_ACTIONS', 'STATE_ABBR', stateAbbr, transformEnforcement),
-            fetchTable('ICIS_INSPECTIONS', 'STATE_ABBR', stateAbbr, transformInspection),
+            fetchTable('ICIS_PERMIT', 'STATE_ABBR', stateAbbr, transformPermit),
+            Promise.resolve([]) as Promise<IcisViolation[]>,
+            fetchTable('ICIS_DMR', 'STATE_ABBR', stateAbbr, transformDmr),
+            fetchTable('ICIS_ENFORCEMENT', 'STATE_ABBR', stateAbbr, transformEnforcement),
+            Promise.resolve([]) as Promise<IcisInspection[]>,
           ]);
 
           allPermits.push(...permits);
