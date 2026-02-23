@@ -3,6 +3,9 @@
 // Each invocation processes as many states as it can within 4 minutes,
 // saves progress to disk, then SELF-CHAINS: fires the next chunk immediately
 // so one cron trigger cascades through all 51 states without waiting 3 hours.
+//
+// Failed states are passed via ?defer=VA,FL,WV to the next chunk so they get
+// pushed to the end of the queue instead of blocking progress.
 
 import { NextRequest, NextResponse } from 'next/server';
 import {
@@ -15,22 +18,25 @@ import {
 export const maxDuration = 300;
 
 const TIME_BUDGET_MS = 230_000; // ~4 minutes — leave 70s margin for blob load + save + response
+const MAX_CHAIN_DEPTH = 20; // Safety: stop self-chaining after 20 hops
 
 /**
  * Fire-and-forget: trigger the next chunk without waiting for it.
- * Uses the deployment's own URL so it works on both preview and production.
+ * Passes deferred (failed) states and chain depth via query params.
  */
-function triggerNextChunk(cronSecret: string | undefined) {
+function triggerNextChunk(cronSecret: string | undefined, deferred: string[], depth: number) {
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_ORIGIN ||
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null);
   if (!baseUrl) return;
 
-  const url = `${baseUrl}/api/cron/rebuild-attains`;
+  const params = new URLSearchParams();
+  if (deferred.length > 0) params.set('defer', deferred.join(','));
+  params.set('depth', String(depth + 1));
+  const url = `${baseUrl}/api/cron/rebuild-attains?${params}`;
   const headers: Record<string, string> = {};
   if (cronSecret) headers['authorization'] = `Bearer ${cronSecret}`;
 
-  // Fire and forget — don't await, don't let failures propagate
   fetch(url, { headers }).catch(() => {});
 }
 
@@ -41,6 +47,11 @@ export async function GET(request: NextRequest) {
   if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  // Parse chain params
+  const deferParam = request.nextUrl.searchParams.get('defer') || '';
+  const deferred = deferParam ? deferParam.split(',').filter(Boolean) : [];
+  const depth = parseInt(request.nextUrl.searchParams.get('depth') || '0', 10);
 
   // Load accumulated state from blob so we know what's already built
   await ensureWarmed();
@@ -64,29 +75,45 @@ export async function GET(request: NextRequest) {
     });
   }
 
+  // Safety: stop infinite chains
+  if (depth >= MAX_CHAIN_DEPTH) {
+    return NextResponse.json({
+      status: 'chain-limit',
+      reason: `Reached max chain depth (${MAX_CHAIN_DEPTH})`,
+      depth,
+      cache: status,
+    });
+  }
+
   const startTime = Date.now();
 
   try {
-    const result = await buildAttainsChunk(TIME_BUDGET_MS);
+    const result = await buildAttainsChunk(TIME_BUDGET_MS, deferred);
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     const remaining = result.totalStates - result.alreadyCached - result.processed.length;
 
+    // Accumulate deferred states: previously deferred + newly failed
+    const newDeferred = [...new Set([...deferred, ...result.failed])];
+
     // Self-chain: if there are still states remaining, trigger the next chunk
-    if (remaining > 0) {
-      triggerNextChunk(cronSecret);
+    const willChain = remaining > 0;
+    if (willChain) {
+      triggerNextChunk(cronSecret, newDeferred, depth);
     }
 
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
+      depth,
       statesProcessed: result.processed,
       statesFailed: result.failed,
+      deferred: newDeferred,
       alreadyCached: result.alreadyCached,
       nowCached: result.alreadyCached + result.processed.length,
       totalStates: result.totalStates,
       remaining,
-      selfChained: remaining > 0,
+      selfChained: willChain,
       savedToDisk: result.savedToDisk,
       savedToBlob: result.savedToBlob,
       cache: getCacheStatus(),

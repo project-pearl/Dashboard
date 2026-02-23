@@ -827,8 +827,10 @@ export async function triggerAttainsBuild(): Promise<void> {
  * Time-budgeted build — processes as many states as possible within the
  * given time budget, saves progress, and returns what was done.
  * Designed for Vercel cron (maxDuration 300s).
+ *
+ * @param deferredStates — states that failed in previous chunks; pushed to end of queue
  */
-export async function buildAttainsChunk(timeBudgetMs: number): Promise<{
+export async function buildAttainsChunk(timeBudgetMs: number, deferredStates: string[] = []): Promise<{
   processed: string[];
   failed: string[];
   alreadyCached: number;
@@ -842,8 +844,14 @@ export async function buildAttainsChunk(timeBudgetMs: number): Promise<{
   const cronStart = Date.now();
   const deadline = cronStart + timeBudgetMs;
 
+  const deferSet = new Set(deferredStates);
   const remaining = ALL_STATES.filter((s) => !PRIORITY.includes(s));
-  const loadOrder = [...PRIORITY.filter((s) => ALL_STATES.includes(s)), ...remaining];
+  const baseOrder = [...PRIORITY.filter((s) => ALL_STATES.includes(s)), ...remaining];
+  // Move deferred (previously failed) states to the end so they don't block progress
+  const loadOrder = [
+    ...baseOrder.filter((s) => !deferSet.has(s)),
+    ...baseOrder.filter((s) => deferSet.has(s)),
+  ];
   const toFetch = loadOrder.filter((s) => !loadedStates.has(s));
   const alreadyCached = loadedStates.size;
 
