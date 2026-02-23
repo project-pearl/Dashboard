@@ -93,59 +93,99 @@ async function fetchAndParseUcmr5(): Promise<{ rows: Ucmr5Row[]; pwsidToZip: Map
 
   if (!targetFile) throw new Error('No occurrence data file found in UCMR5 ZIP');
 
-  console.log(`[PFAS Cron] Parsing ${targetFile}...`);
-  const content = await zip.files[targetFile].async('string');
-  const lines = content.split('\n');
+  console.log(`[PFAS Cron] Stream-parsing ${targetFile}...`);
 
-  if (lines.length < 2) throw new Error('UCMR5 file is empty');
-
-  // Parse header (tab-delimited)
-  const headers = lines[0].split('\t').map(h => h.trim().replace(/"/g, ''));
-  const colMap: Record<string, number> = {};
-  headers.forEach((h, i) => { colMap[h] = i; });
-
-  // Expected columns: PWSID, PWSName, State, Contaminant, AnalyticalResultValue,
-  // AnalyticalResultsSign, CollectionDate, MRL, Units
-  const pwsidCol = colMap['PWSID'] ?? colMap['PWSId'] ?? -1;
-  const nameCol = colMap['PWSName'] ?? colMap['PWS Name'] ?? -1;
-  const stateCol = colMap['State'] ?? colMap['STATE'] ?? -1;
-  const contCol = colMap['Contaminant'] ?? colMap['CONTAMINANT'] ?? -1;
-  const valCol = colMap['AnalyticalResultValue'] ?? colMap['Analytical Result Value'] ?? -1;
-  const signCol = colMap['AnalyticalResultsSign'] ?? colMap['AnalyticalResultSign'] ?? -1;
-  const dateCol = colMap['CollectionDate'] ?? colMap['Collection Date'] ?? -1;
-
-  if (pwsidCol === -1 || contCol === -1) {
-    throw new Error(`UCMR5 column mapping failed. Headers: ${headers.slice(0, 10).join(', ')}`);
-  }
-
+  // Stream-parse the large file (~295 MB) line by line to avoid OOM.
+  // JSZip nodeStream returns a Node ReadableStream; we buffer lines manually.
   const rows: Ucmr5Row[] = [];
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
-    const cols = line.split('\t').map(c => c.trim().replace(/"/g, ''));
+  let totalLines = 0;
 
-    const contaminant = cols[contCol] || '';
-    if (!isPfasContaminant(contaminant)) continue;
+  let pwsidCol = -1, nameCol = -1, contCol = -1, valCol = -1, signCol = -1, dateCol = -1;
+  let headerParsed = false;
+  let remainder = '';
 
-    const valStr = valCol >= 0 ? cols[valCol] : '';
-    const resultValue = valStr ? parseFloat(valStr) : null;
-    const sign = signCol >= 0 ? cols[signCol] : '';
-    const detected = sign !== '<' && resultValue !== null && !isNaN(resultValue) && resultValue > 0;
+  await new Promise<void>((resolve, reject) => {
+    const stream = zip.files[targetFile].nodeStream('nodebuffer');
+    stream.on('data', (chunk: Buffer) => {
+      const text = remainder + chunk.toString('utf8');
+      const lines = text.split('\n');
+      remainder = lines.pop() || ''; // Last partial line
 
-    const pwsid = cols[pwsidCol] || '';
-    rows.push({
-      pwsid,
-      pwsName: nameCol >= 0 ? cols[nameCol] || '' : '',
-      // State column has FIPS code; use PWSID prefix for 2-letter abbreviation
-      state: pwsid.substring(0, 2),
-      contaminant,
-      resultValue: resultValue !== null && !isNaN(resultValue) ? Math.round(resultValue * 10000) / 10000 : null,
-      detected,
-      sampleDate: dateCol >= 0 ? cols[dateCol] || '' : '',
+      for (const rawLine of lines) {
+        const line = rawLine.trim();
+        if (!line) continue;
+
+        if (!headerParsed) {
+          const headers = line.split('\t').map(h => h.trim().replace(/"/g, ''));
+          const colMap: Record<string, number> = {};
+          headers.forEach((h, i) => { colMap[h] = i; });
+
+          pwsidCol = colMap['PWSID'] ?? colMap['PWSId'] ?? -1;
+          nameCol = colMap['PWSName'] ?? colMap['PWS Name'] ?? -1;
+          contCol = colMap['Contaminant'] ?? colMap['CONTAMINANT'] ?? -1;
+          valCol = colMap['AnalyticalResultValue'] ?? colMap['Analytical Result Value'] ?? -1;
+          signCol = colMap['AnalyticalResultsSign'] ?? colMap['AnalyticalResultSign'] ?? -1;
+          dateCol = colMap['CollectionDate'] ?? colMap['Collection Date'] ?? -1;
+
+          if (pwsidCol === -1 || contCol === -1) {
+            stream.destroy();
+            return reject(new Error(`UCMR5 column mapping failed. Headers: ${headers.slice(0, 10).join(', ')}`));
+          }
+          headerParsed = true;
+          continue;
+        }
+
+        totalLines++;
+        const cols = line.split('\t').map(c => c.trim().replace(/"/g, ''));
+        const contaminant = cols[contCol] || '';
+        if (!isPfasContaminant(contaminant)) continue;
+
+        const valStr = valCol >= 0 ? cols[valCol] : '';
+        const resultValue = valStr ? parseFloat(valStr) : null;
+        const sign = signCol >= 0 ? cols[signCol] : '';
+        const detected = sign !== '<' && resultValue !== null && !isNaN(resultValue) && resultValue > 0;
+
+        const pwsid = cols[pwsidCol] || '';
+        rows.push({
+          pwsid,
+          pwsName: nameCol >= 0 ? cols[nameCol] || '' : '',
+          state: pwsid.substring(0, 2),
+          contaminant,
+          resultValue: resultValue !== null && !isNaN(resultValue) ? Math.round(resultValue * 10000) / 10000 : null,
+          detected,
+          sampleDate: dateCol >= 0 ? cols[dateCol] || '' : '',
+        });
+      }
     });
-  }
+    stream.on('end', () => {
+      // Process any final line in remainder
+      if (remainder.trim() && headerParsed) {
+        totalLines++;
+        const cols = remainder.trim().split('\t').map(c => c.trim().replace(/"/g, ''));
+        const contaminant = cols[contCol] || '';
+        if (isPfasContaminant(contaminant)) {
+          const valStr = valCol >= 0 ? cols[valCol] : '';
+          const resultValue = valStr ? parseFloat(valStr) : null;
+          const sign = signCol >= 0 ? cols[signCol] : '';
+          const detected = sign !== '<' && resultValue !== null && !isNaN(resultValue) && resultValue > 0;
+          const pwsid = cols[pwsidCol] || '';
+          rows.push({
+            pwsid,
+            pwsName: nameCol >= 0 ? cols[nameCol] || '' : '',
+            state: pwsid.substring(0, 2),
+            contaminant,
+            resultValue: resultValue !== null && !isNaN(resultValue) ? Math.round(resultValue * 10000) / 10000 : null,
+            detected,
+            sampleDate: dateCol >= 0 ? cols[dateCol] || '' : '',
+          });
+        }
+      }
+      resolve();
+    });
+    stream.on('error', reject);
+  });
 
-  console.log(`[PFAS Cron] Parsed ${rows.length} PFAS rows from ${lines.length - 1} total rows`);
+  console.log(`[PFAS Cron] Parsed ${rows.length} PFAS rows from ${totalLines} total rows`);
 
   // Parse UCMR5_ZIPCodes.txt for PWSID → ZIP code mapping
   const pwsidToZip = new Map<string, string>();
