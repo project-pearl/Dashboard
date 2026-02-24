@@ -1017,5 +1017,13 @@ export default function FederalResolutionPlanner({ userTier, userId, stateRollup
     );
   }
 
-  return null;
+  // Fallback — if view state is somehow invalid, reset to scope
+  return (
+    <div className="max-w-5xl mx-auto py-8 text-center">
+      <p className="text-sm text-gray-500 mb-4">Loading Federal Resolution Planner...</p>
+      <button onClick={() => setView("scope")} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+        Open Planner
+      </button>
+    </div>
+  );
 }
