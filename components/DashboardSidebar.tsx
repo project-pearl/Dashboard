@@ -39,6 +39,8 @@ import {
   Biohazard,
   Network,
   Banknote,
+  Crown,
+  Zap,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -103,7 +105,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     title: 'Industry',
     items: [
-      { label: 'Corporate ESG', href: '/dashboard/esg', icon: Factory, accent: 'text-emerald-700', accentBg: 'bg-emerald-50 border-emerald-200' },
+      { label: 'Sustainability', href: '/dashboard/esg', icon: Factory, accent: 'text-emerald-700', accentBg: 'bg-emerald-50 border-emerald-200' },
       { label: 'Insurance', href: '/dashboard/insurance', icon: Shield, accent: 'text-indigo-700', accentBg: 'bg-indigo-50 border-indigo-200' },
       { label: 'Agriculture', href: '/dashboard/agriculture', icon: Sprout, accent: 'text-lime-700', accentBg: 'bg-lime-50 border-lime-200' },
     ],
@@ -111,7 +113,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     title: 'Science',
     items: [
-      { label: 'SHUCK', href: '/dashboard/shuck', icon: FlaskConical, accent: 'text-teal-700', accentBg: 'bg-teal-50 border-teal-200' },
+      { label: 'AQUA-LO', href: '/dashboard/aqua-lo', icon: FlaskConical, accent: 'text-teal-700', accentBg: 'bg-teal-50 border-teal-200' },
       { label: 'University', href: '/dashboard/university', icon: GraduationCap, accent: 'text-violet-700', accentBg: 'bg-violet-50 border-violet-200' },
     ],
   },
@@ -374,6 +376,43 @@ export function DashboardSidebar() {
           ))
         )}
       </nav>
+
+      {/* Admin section — Pearl / admin users only */}
+      {user && (user.role === 'Pearl' || user.isAdmin) && (
+        <div className="border-t border-slate-200 px-2 py-3 space-y-0.5">
+          {!collapsed && (
+            <div className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Admin
+            </div>
+          )}
+          <Link
+            href="/dashboard/admin"
+            onClick={() => setMobileOpen(false)}
+            title={collapsed ? 'Pearl Admin Center' : undefined}
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
+              pathname === '/dashboard/admin'
+                ? 'bg-purple-50 border-purple-200 text-purple-700 font-semibold border shadow-sm'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+            }`}
+          >
+            <Crown className={`w-4 h-4 flex-shrink-0 ${pathname === '/dashboard/admin' ? 'text-purple-700' : 'text-slate-400'}`} />
+            {!collapsed && <span className="truncate">Pearl Admin Center</span>}
+          </Link>
+          <Link
+            href="/dashboard/breakpoint"
+            onClick={() => setMobileOpen(false)}
+            title={collapsed ? 'Breakpoint' : undefined}
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
+              pathname === '/dashboard/breakpoint'
+                ? 'bg-orange-50 border-orange-200 text-orange-700 font-semibold border shadow-sm'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+            }`}
+          >
+            <Zap className={`w-4 h-4 flex-shrink-0 ${pathname === '/dashboard/breakpoint' ? 'text-orange-700' : 'text-slate-400'}`} />
+            {!collapsed && <span className="truncate">Breakpoint</span>}
+          </Link>
+        </div>
+      )}
 
       {/* Bottom section */}
       <div className="border-t border-slate-200 p-3 space-y-2">
