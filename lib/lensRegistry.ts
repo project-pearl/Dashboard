@@ -11,6 +11,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
   '/dashboard/federal': [
     { id: 'overview', label: 'Overview' },
     { id: 'briefing', label: 'AI Briefing' },
+    { id: 'planner', label: 'Resolution Planner' },
     { id: 'trends', label: 'Trends & Projections' },
     { id: 'policy', label: 'Policy Tracker' },
     { id: 'compliance', label: 'Compliance' },
