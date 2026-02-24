@@ -80,18 +80,40 @@ const OurStorySection: React.FC = () => {
           </p>
         </div>
 
-        {/* ── First Pilot Results ── */}
+        {/* ── Case Study: Milton, FL Pilot ── */}
         <div className="mb-16">
-          <div className="text-center mb-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-teal-600 mb-2">
-              January 2025 &mdash; Milton, Florida
-            </p>
+          <div className="text-center mb-10">
+            <span className="inline-block px-3 py-1 rounded-full bg-teal-100 text-teal-700 text-xs font-bold uppercase tracking-wider mb-3">
+              Case Study
+            </span>
             <h2 className="text-2xl md:text-3xl font-bold text-slate-800 mb-2">
-              The First Pilot
+              Milton, Florida &mdash; Blackwater River Watershed
             </h2>
-            <p className="text-slate-500 text-sm max-w-xl mx-auto">
-              Blackwater River watershed &middot; Real stormwater runoff &middot; 7-day continuous deployment &middot; Independent lab verification
+            <p className="text-slate-500 text-sm">
+              January 2025 &middot; 7-day continuous deployment &middot; Independent lab verification
             </p>
+          </div>
+
+          {/* Problem → Solution → Result structure */}
+          <div className="grid md:grid-cols-3 gap-5 mb-10">
+            <div className="p-6 rounded-xl bg-red-50 border border-red-200">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-red-600 mb-3">The Problem</h3>
+              <p className="text-sm text-slate-700 leading-relaxed">
+                Stormwater runoff carrying high sediment loads and bacteria into the Blackwater River watershed &mdash; a system already under stress. No in-water treatment existed between pollution sources and receiving waters.
+              </p>
+            </div>
+            <div className="p-6 rounded-xl bg-blue-50 border border-blue-200">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-blue-600 mb-3">The Solution</h3>
+              <p className="text-sm text-slate-700 leading-relaxed">
+                Deployed ALIA &mdash; a modular, chemical-free treatment platform combining engineered media filtration with biological processes. Continuous 7-day operation treating real stormwater runoff in field conditions.
+              </p>
+            </div>
+            <div className="p-6 rounded-xl bg-emerald-50 border border-emerald-200">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-600 mb-3">The Result</h3>
+              <p className="text-sm text-slate-700 leading-relaxed">
+                88&ndash;95% TSS removal and 93.8% E. coli reduction &mdash; with zero chemicals. The bacteria reduction was unplanned; the system was designed for sediment. Lab-verified by independent analysis.
+              </p>
+            </div>
           </div>
 
           {/* Metric cards */}
@@ -120,12 +142,19 @@ const OurStorySection: React.FC = () => {
             />
           </div>
 
-          <p className="text-center text-sm text-slate-500 mt-5 max-w-2xl mx-auto leading-relaxed">
-            The E. coli reduction was unplanned. The system was designed for sediment.
-            The fact that it knocked bacteria below detection limits showed us what an
-            integrated biological and mechanical approach can do in real conditions.
-            That moment turned a prototype into a mission.
-          </p>
+          {/* Key takeaway */}
+          <div className="mt-8 p-5 rounded-xl bg-slate-50 border border-slate-200">
+            <p className="text-sm text-slate-600 leading-relaxed text-center">
+              <span className="font-semibold text-slate-800">Key Takeaway:</span> A nature-inspired mechanical system achieved lab-grade bacteria reduction without targeting bacteria directly &mdash; demonstrating that integrated biological and mechanical filtration outperforms single-mechanism approaches in real stormwater conditions.
+            </p>
+          </div>
+
+          {/* Contact */}
+          <div className="mt-6 text-center">
+            <p className="text-xs text-slate-400">
+              For pilot data, lab reports, or deployment inquiries: <a href="mailto:doug@project-pearl.org" className="text-teal-600 hover:underline font-medium">doug@project-pearl.org</a>
+            </p>
+          </div>
         </div>
 
         {/* ── Divider ── */}

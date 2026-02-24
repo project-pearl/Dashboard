@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import PublicHeader from '@/components/PublicHeader';
@@ -12,7 +12,7 @@ import {
 import { getEpaRegionForState, EPA_REGIONS } from '@/lib/epa-regions';
 import {
   ArrowRight, ChevronDown, Building2, ExternalLink, Phone, Users,
-  Droplets, ShieldCheck, FileText, BookOpen,
+  Droplets, ShieldCheck, FileText, BookOpen, Download, Search,
 } from 'lucide-react';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -218,6 +218,7 @@ export default function WaterQualityExplorer() {
   const [nationalCache, setNationalCache] = useState<CacheResponse | null>(null);
   const [cacheLoading, setCacheLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [wbSearch, setWbSearch] = useState('');
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -265,6 +266,55 @@ export default function WaterQualityExplorer() {
     const attaining = wbs.find(w => w.alertLevel === 'none') || null;
     return { attaining };
   }, [stateData]);
+
+  /* ═══ WATERBODY SEARCH ═══ */
+  const searchResults = useMemo(() => {
+    if (!wbSearch.trim() || !stateData?.waterbodies) return [];
+    const q = wbSearch.toLowerCase().trim();
+    return stateData.waterbodies
+      .filter(wb => (wb.name || wb.id).toLowerCase().includes(q))
+      .slice(0, 20);
+  }, [wbSearch, stateData]);
+
+  /* ═══ GEOJSON EXPORT ═══ */
+  const exportGeoJSON = useCallback(() => {
+    if (!stateData?.waterbodies || !selectedState) return;
+    const features = stateData.waterbodies.map(wb => ({
+      type: 'Feature' as const,
+      properties: {
+        id: wb.id,
+        name: wb.name,
+        category: wb.category,
+        alertLevel: wb.alertLevel,
+        tmdlStatus: wb.tmdlStatus,
+        causes: wb.causes,
+        causeCount: wb.causeCount,
+      },
+      geometry: null,
+    }));
+    const geojson = {
+      type: 'FeatureCollection',
+      metadata: {
+        state: STATE_NAMES[selectedState],
+        stateAbbr: selectedState,
+        total: stateData.total,
+        high: stateData.high,
+        medium: stateData.medium,
+        low: stateData.low,
+        none: stateData.none,
+        exportDate: new Date().toISOString(),
+        source: 'EPA ATTAINS via Project PEARL',
+      },
+      features,
+    };
+    const blob = new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/geo+json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `PEARL_${selectedState}_waterbodies.geojson`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [stateData, selectedState]);
 
   /* ═══ REPORT CARD ITEMS ═══ */
   const reportCardItems = useMemo((): ReportCardItem[] => {
@@ -512,13 +562,65 @@ export default function WaterQualityExplorer() {
               <p className="mt-2 text-slate-500">
                 {reportCardItems.length} key findings based on EPA assessment data
               </p>
-              <button
-                onClick={() => setSelectedState('')}
-                className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-600 text-sm hover:bg-slate-100 transition-all"
-              >
-                <ArrowRight className="h-3 w-3 rotate-180" /> Back to national view
-              </button>
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+                <button
+                  onClick={() => setSelectedState('')}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-600 text-sm hover:bg-slate-100 transition-all"
+                >
+                  <ArrowRight className="h-3 w-3 rotate-180" /> Back to national view
+                </button>
+                <button
+                  onClick={exportGeoJSON}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-600 text-sm hover:bg-slate-100 transition-all"
+                >
+                  <Download className="h-3 w-3" /> Export GeoJSON
+                </button>
+              </div>
             </div>
+
+            {/* Waterbody search */}
+            {stateData?.waterbodies && stateData.waterbodies.length > 0 && (
+              <div className="mb-6">
+                <div className="relative max-w-md mx-auto">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <input
+                    type="text"
+                    value={wbSearch}
+                    onChange={e => setWbSearch(e.target.value)}
+                    placeholder="Search waterbodies by name..."
+                    className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg bg-white border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 transition-all"
+                  />
+                </div>
+                {wbSearch.trim() && (
+                  <div className="mt-3 max-w-md mx-auto">
+                    {searchResults.length === 0 ? (
+                      <p className="text-sm text-slate-400 text-center py-2">No waterbodies found matching &ldquo;{wbSearch}&rdquo;</p>
+                    ) : (
+                      <div className="rounded-lg bg-white border border-slate-200 shadow-sm divide-y divide-slate-100 max-h-60 overflow-y-auto">
+                        {searchResults.map(wb => (
+                          <div key={wb.id} className="px-4 py-2.5 flex items-center justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-slate-800 truncate">{wb.name || wb.id}</p>
+                              <p className="text-[11px] text-slate-400">
+                                Category {wb.category} &middot; {wb.causeCount} pollutant{wb.causeCount !== 1 ? 's' : ''}
+                              </p>
+                            </div>
+                            <span className={`flex-shrink-0 w-2.5 h-2.5 rounded-full ${
+                              wb.alertLevel === 'high' ? 'bg-red-500' :
+                              wb.alertLevel === 'medium' ? 'bg-yellow-500' :
+                              wb.alertLevel === 'low' ? 'bg-blue-500' : 'bg-green-500'
+                            }`} />
+                          </div>
+                        ))}
+                        {searchResults.length === 20 && (
+                          <p className="px-4 py-2 text-[11px] text-slate-400 text-center">Showing first 20 results — refine your search for more</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="space-y-3">
               {reportCardItems.map((item, i) => {

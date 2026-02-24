@@ -6,7 +6,7 @@ import {
   ArrowRight, BarChart3, Zap, Database, Building2,
   GraduationCap, Globe, Eye,
   Search, Waves, Beaker, Microscope, ShieldCheck, LineChart,
-  ChevronDown, ExternalLink,
+  ChevronDown, ExternalLink, FileText, Landmark, Factory, Leaf, HardHat, Settings, FlaskConical,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -197,37 +197,73 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
 
       {/* ═══ HERO ═══ */}
       <section className="relative min-h-[92vh] flex items-end overflow-hidden bg-slate-950">
-        {/* Abstract gradient background — no photo */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 opacity-40" style={{ backgroundImage: 'radial-gradient(circle at 15% 85%, rgba(6,182,212,.5) 0%, transparent 45%), radial-gradient(circle at 85% 15%, rgba(59,130,246,.4) 0%, transparent 40%), radial-gradient(circle at 50% 60%, rgba(20,184,166,.2) 0%, transparent 55%)' }} />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/30" />
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 pb-20 pt-32 w-full">
-          <div className={`max-w-3xl transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/10 mb-8">
-              <LivePulse />
-              <span className="text-xs font-semibold text-emerald-300 tracking-wide">Live data from 50 states</span>
+          <div className="grid lg:grid-cols-2 gap-12 items-end">
+            <div className={`transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+              <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/10 mb-8">
+                <LivePulse />
+                <span className="text-xs font-semibold text-emerald-300 tracking-wide">Live data from 50 states</span>
+              </div>
+
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-[1.08] tracking-tight" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+                Your water data is scattered across a dozen systems.
+              </h1>
+              <p className="mt-5 text-lg sm:text-xl text-slate-300 leading-relaxed max-w-2xl font-light">
+                Manual reporting. Siloed databases. Quarterly grab samples that miss everything between visits.
+                There&rsquo;s a better way &mdash; one platform that connects EPA datasets, live sensors, and
+                treatment verification into decision-ready intelligence.
+              </p>
+
+              <div className="mt-10 flex flex-wrap gap-4">
+                <button onClick={onSignIn} className="group inline-flex items-center gap-3 px-8 py-4 text-base font-semibold text-slate-900 bg-white rounded-full hover:bg-slate-100 transition-all shadow-2xl shadow-black/20">
+                  Explore the Platform <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </button>
+                <a href="#platform" className="inline-flex items-center gap-2 px-8 py-4 text-base font-medium text-white/90 border border-white/20 rounded-full hover:bg-white/10 transition-all backdrop-blur-sm">
+                  <Eye className="h-4 w-4" /> See How It Works
+                </a>
+              </div>
             </div>
 
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-[1.05] tracking-tight" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-              America&#39;s surface water<br />intelligence platform
-            </h1>
-            <p className="mt-3 text-sm font-semibold text-cyan-300/80 tracking-wide uppercase">PEARL Intelligence Network (PIN)</p>
-
-            <p className="mt-6 text-lg sm:text-xl text-slate-300 leading-relaxed max-w-2xl font-light">
-              Every river, lake, estuary, and coastline &mdash; continuously monitored, intelligently
-              analyzed, and transformed into decision-ready intelligence. One platform connecting
-              federal datasets, live sensors, and nature-based treatment to protect water resources at national scale.
-            </p>
-
-            <div className="mt-10 flex flex-wrap gap-4">
-              <button onClick={onSignIn} className="group inline-flex items-center gap-3 px-8 py-4 text-base font-semibold text-slate-900 bg-white rounded-full hover:bg-slate-100 transition-all shadow-2xl shadow-black/20">
-                Explore the Platform <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </button>
-              <a href="#platform" className="inline-flex items-center gap-2 px-8 py-4 text-base font-medium text-white/90 border border-white/20 rounded-full hover:bg-white/10 transition-all backdrop-blur-sm">
-                <Eye className="h-4 w-4" /> See How It Works
-              </a>
+            {/* Dashboard preview mockup */}
+            <div className={`hidden lg:block transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
+              <div className="rounded-xl bg-white/[0.07] backdrop-blur-sm border border-white/[0.12] p-5 shadow-2xl">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-400/60" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/60" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-400/60" />
+                  <span className="ml-2 text-[10px] text-white/30 font-mono">pinwater.org/dashboard</span>
+                </div>
+                <div className="grid grid-cols-3 gap-3 mb-3">
+                  <div className="rounded-lg bg-white/[0.06] border border-white/[0.08] p-3 text-center">
+                    <div className="text-xl font-bold text-cyan-400">565K+</div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">Monitoring Points</div>
+                  </div>
+                  <div className="rounded-lg bg-white/[0.06] border border-white/[0.08] p-3 text-center">
+                    <div className="text-xl font-bold text-emerald-400">50</div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">States Tracked</div>
+                  </div>
+                  <div className="rounded-lg bg-white/[0.06] border border-white/[0.08] p-3 text-center">
+                    <div className="text-xl font-bold text-amber-400">15min</div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">Data Resolution</div>
+                  </div>
+                </div>
+                <div className="rounded-lg bg-white/[0.04] border border-white/[0.06] p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                    <span className="text-[11px] text-white/60 font-medium">National Command Center</span>
+                  </div>
+                  <div className="flex gap-2">
+                    {['EPA ATTAINS', 'USGS NWIS', 'NOAA', 'WQP', 'EJScreen'].map(src => (
+                      <span key={src} className="text-[9px] px-2 py-0.5 rounded-full bg-white/[0.06] text-white/40 border border-white/[0.06]">{src}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -261,6 +297,36 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
               Request a Demo <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </a>
           </div>
+        </div>
+      </section>
+
+      {/* ═══ TRUST SIGNALS ═══ */}
+      <section className="py-10 bg-white border-b border-slate-100">
+        <div className="max-w-5xl mx-auto px-6 lg:px-8">
+          <p className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 mb-6">
+            Powered by Authoritative Federal Data
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
+            {[
+              { name: 'EPA', full: 'Environmental Protection Agency', datasets: 'ATTAINS + EJScreen' },
+              { name: 'USGS', full: 'U.S. Geological Survey', datasets: 'NWIS Real-Time Gauges' },
+              { name: 'NOAA', full: 'National Oceanic & Atmospheric Administration', datasets: 'CO-OPS + NDBC Buoys' },
+              { name: 'WQP', full: 'Water Quality Portal', datasets: 'Multi-Agency Monitoring' },
+            ].map(agency => (
+              <div key={agency.name} className="flex items-center gap-3 group">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center">
+                  <span className="text-xs font-black text-slate-600">{agency.name}</span>
+                </div>
+                <div className="hidden sm:block">
+                  <p className="text-xs font-semibold text-slate-700 leading-tight">{agency.full}</p>
+                  <p className="text-[10px] text-slate-400">{agency.datasets}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-center text-[11px] text-slate-400 mt-5">
+            430M+ federal datapoints aggregated &middot; 565,000+ assessment units &middot; Field validated in Milton, FL (Jan 2025)
+          </p>
         </div>
       </section>
 
@@ -417,6 +483,47 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
                   <div className={`mt-6 flex items-center gap-2 text-sm font-semibold ${track.accent} opacity-0 group-hover:opacity-100 transition-opacity`}>
                     Get started <ArrowRight className="h-3.5 w-3.5" />
                   </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ MODULAR ECOSYSTEM ═══ */}
+      <section className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <p className="text-xs font-bold tracking-[0.2em] uppercase text-cyan-600 mb-3">Modular Architecture</p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+              12 purpose-built command centers. 87 analytical lenses.
+            </h2>
+            <p className="mt-4 text-slate-500 leading-relaxed">
+              Every user gets a workspace designed for their role &mdash; from MS4 coordinators to federal analysts to K-12 teachers. Pick your center, choose your lenses, see exactly what matters to you.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {[
+              { icon: Landmark, name: 'National Command', desc: 'Federal-scale oversight across all 50 states', accent: 'bg-blue-50 border-blue-200 text-blue-700' },
+              { icon: Shield, name: 'State Command', desc: 'Statewide ATTAINS dashboards and TMDL tracking', accent: 'bg-indigo-50 border-indigo-200 text-indigo-700' },
+              { icon: Building2, name: 'MS4 Command', desc: 'Permit compliance, BMP performance, storm events', accent: 'bg-cyan-50 border-cyan-200 text-cyan-700' },
+              { icon: Factory, name: 'Utility Command', desc: 'Infrastructure monitoring and discharge tracking', accent: 'bg-teal-50 border-teal-200 text-teal-700' },
+              { icon: LineChart, name: 'ESG Command', desc: 'GRI 303 & SASB aligned water impact scoring', accent: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
+              { icon: Microscope, name: 'University Command', desc: 'Research tools, data export, and manuscript support', accent: 'bg-violet-50 border-violet-200 text-violet-700' },
+              { icon: Leaf, name: 'NGO Command', desc: 'Conservation impact tracking and grant matching', accent: 'bg-green-50 border-green-200 text-green-700' },
+              { icon: GraduationCap, name: 'K-12 Command', desc: 'NGSS-aligned lessons with real sensor data', accent: 'bg-amber-50 border-amber-200 text-amber-700' },
+              { icon: HardHat, name: 'Infrastructure', desc: 'Asset monitoring and capacity planning', accent: 'bg-orange-50 border-orange-200 text-orange-700' },
+              { icon: FlaskConical, name: 'AQUA-Lo LIMS', desc: 'Lab management from intake to audit-ready report', accent: 'bg-pink-50 border-pink-200 text-pink-700' },
+              { icon: Beaker, name: 'PEARL ALIA', desc: 'Treatment hardware monitoring and verification', accent: 'bg-rose-50 border-rose-200 text-rose-700' },
+              { icon: Settings, name: 'Admin Center', desc: 'User management, permissions, and system config', accent: 'bg-slate-50 border-slate-300 text-slate-700' },
+            ].map((center) => {
+              const Icon = center.icon;
+              const [bg, border, text] = center.accent.split(' ');
+              return (
+                <div key={center.name} className={`p-5 rounded-xl border ${bg} ${border} transition-all hover:shadow-md cursor-default`}>
+                  <Icon className={`h-5 w-5 ${text} mb-3`} />
+                  <h3 className="text-sm font-bold text-slate-900 mb-1">{center.name}</h3>
+                  <p className="text-xs text-slate-500 leading-relaxed">{center.desc}</p>
                 </div>
               );
             })}
