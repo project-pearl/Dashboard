@@ -37,6 +37,7 @@ import { DraggableSection } from './DraggableSection';
 import { GrantOpportunityMatcher } from './GrantOpportunityMatcher';
 import { GrantOutcomesCard } from './GrantOutcomesCard';
 import { EmergingContaminantsTracker } from './EmergingContaminantsTracker';
+import { PolicyTracker } from './PolicyTracker';
 import FederalResolutionPlanner from './FederalResolutionPlanner';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -5527,36 +5528,7 @@ export function NationalCommandCenter(props: Props) {
 
         case 'policy-tracker': return DS(<>
         {/* ── POLICY & REGULATORY TRACKER ── */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Policy & Regulatory Tracker</CardTitle>
-            <CardDescription>Active and proposed federal rules affecting water quality programs</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {[
-              { rule: 'PFAS National Primary Drinking Water Regulation', agency: 'EPA', status: 'Final Rule', date: 'Effective 2024', impact: 'Sets MCLs for 6 PFAS compounds. Affects 66,000+ public water systems.', severity: 'high', color: 'bg-red-50 border-red-200 text-red-700' },
-              { rule: 'Revised Definition of WOTUS', agency: 'EPA / Army Corps', status: 'Proposed Rule', date: 'Comment period open', impact: 'Redefines jurisdictional waters under CWA. Affects wetland permitting nationwide.', severity: 'high', color: 'bg-amber-50 border-amber-200 text-amber-700' },
-              { rule: 'Lead and Copper Rule Improvements (LCRI)', agency: 'EPA', status: 'Final Rule', date: '2024', impact: 'Requires lead service line replacement within 10 years. Action level lowered to 10 ppb.', severity: 'medium', color: 'bg-blue-50 border-blue-200 text-blue-700' },
-              { rule: 'CWA Section 401 Certification Rule', agency: 'EPA', status: 'Final Rule', date: '2023', impact: 'Restores state/tribal authority over water quality certifications for federal permits.', severity: 'medium', color: 'bg-blue-50 border-blue-200 text-blue-700' },
-              { rule: 'Nutrient Pollution Numeric Criteria', agency: 'EPA', status: 'Guidance', date: 'Ongoing', impact: 'Recommending numeric nutrient criteria for states. Currently 22 states have adopted.', severity: 'low', color: 'bg-slate-50 border-slate-200 text-slate-600' },
-              { rule: 'Stormwater General Permit (MSGP) Reissuance', agency: 'EPA', status: 'Draft', date: '2025 expected', impact: 'Updates multi-sector general permit for industrial stormwater. New benchmark monitoring.', severity: 'medium', color: 'bg-blue-50 border-blue-200 text-blue-700' },
-            ].map(r => (
-              <div key={r.rule} className={`border rounded-lg p-4 ${r.color}`}>
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <h4 className="text-sm font-semibold text-slate-800">{r.rule}</h4>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="outline" className="text-[10px]">{r.agency}</Badge>
-                      <Badge variant="outline" className="text-[10px]">{r.status}</Badge>
-                      <span className="text-[10px] text-slate-500">{r.date}</span>
-                    </div>
-                    <p className="text-xs text-slate-600 mt-2 leading-relaxed">{r.impact}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+        <PolicyTracker />
         </>);
 
         case 'contaminants-tracker': return DS(<>
