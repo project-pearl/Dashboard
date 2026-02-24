@@ -167,7 +167,8 @@ export const DEFAULT_SECTIONS: Record<CCKey, SectionDefinition[]> = {
     { id: 'funding-gap',      label: 'Funding Gap Analysis',          order: 30, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'waterbody-card',    label: 'State Waterbody Card',        order: 31, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'resolution-planner', label: 'Resolution Planner',         order: 32, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'disclaimer',         label: 'Platform Disclaimer',         order: 33, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'federal-planner',    label: 'Federal Resolution Planner',  order: 33, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'disclaimer',         label: 'Platform Disclaimer',         order: 34, visible: true, defaultExpanded: true, lensControlled: true },
   ],
 
   Utility: [

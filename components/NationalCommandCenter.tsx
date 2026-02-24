@@ -37,12 +37,13 @@ import { DraggableSection } from './DraggableSection';
 import { GrantOpportunityMatcher } from './GrantOpportunityMatcher';
 import { GrantOutcomesCard } from './GrantOutcomesCard';
 import { EmergingContaminantsTracker } from './EmergingContaminantsTracker';
+import FederalResolutionPlanner from './FederalResolutionPlanner';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type AlertLevel = 'none' | 'low' | 'medium' | 'high';
 type OverlayId = 'hotspots' | 'ms4' | 'ej' | 'economy' | 'wildlife' | 'trend' | 'coverage';
-type ViewLens = 'overview' | 'briefing' | 'trends' | 'policy' | 'compliance' | 'water-quality' | 'infrastructure' | 'monitoring' | 'contaminants' | 'scorecard' | 'reports' | 'interagency' | 'funding';
+type ViewLens = 'overview' | 'briefing' | 'planner' | 'trends' | 'policy' | 'compliance' | 'water-quality' | 'infrastructure' | 'monitoring' | 'contaminants' | 'scorecard' | 'reports' | 'interagency' | 'funding';
 
 // ─── Lens Configuration: what each view shows/hides ────────────────────────────
 const LENS_CONFIG: Record<ViewLens, {
@@ -82,7 +83,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: true,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['ai-water-intelligence', 'national-briefing', 'resolution-planner', 'disclaimer']),
+    sections: new Set(['ai-water-intelligence', 'national-briefing', 'disclaimer']),
   },
   compliance: {
     label: 'Compliance',
@@ -193,6 +194,16 @@ const LENS_CONFIG: Record<ViewLens, {
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
     sections: new Set(['funding-landscape', 'funding-deadlines', 'funding-state', 'funding-matrix', 'grant-outcomes', 'funding-gap', 'disclaimer']),
+  },
+  planner: {
+    label: 'Resolution Planner',
+    description: 'Federal-scope resolution planning with before/after impact maps',
+    defaultOverlay: 'hotspots',
+    showTopStrip: false, showPriorityQueue: false, showCoverageGaps: false,
+    showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
+    showHotspots: false, showSituationSummary: false, showTimeRange: false,
+    showSLA: false, showRestorationPlan: false, collapseStateTable: true,
+    sections: new Set(['federal-planner', 'disclaimer']),
   },
 };
 
@@ -6279,6 +6290,12 @@ export function NationalCommandCenter(props: Props) {
             scopeContext={resolutionPlannerScope}
             userRole="federal"
           />
+        </div>
+        </>);
+
+        case 'federal-planner': return DS(<>
+        <div id="section-federal-planner">
+          <FederalResolutionPlanner userTier="federal" userId={user?.uid || ''} stateRollup={stateRollup} />
         </div>
         </>);
 

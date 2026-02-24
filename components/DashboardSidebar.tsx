@@ -41,6 +41,7 @@ import {
   Banknote,
   Crown,
   Zap,
+  ClipboardList,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -59,6 +60,7 @@ const LENS_ICONS: Record<string, LucideIcon> = {
   reports: FileText,
   interagency: Network,
   funding: Banknote,
+  planner: ClipboardList,
   // Fallbacks for other roles' lenses
   full: LayoutDashboard,
   coverage: Activity,
