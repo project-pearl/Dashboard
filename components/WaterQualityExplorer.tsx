@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import MissionQuote from './MissionQuote';
 import Image from 'next/image';
 import Link from 'next/link';
 import PublicHeader from '@/components/PublicHeader';
@@ -163,6 +164,35 @@ interface ReportCardItem {
   emoji?: string;
 }
 
+interface ReportCardFinding {
+  id: string;
+  category: string;
+  severity: 'critical' | 'warning' | 'info' | 'positive';
+  title: string;
+  detail: string;
+  metric?: string;
+  metricLabel?: string;
+  dataSource: string;
+}
+
+interface ReportCardStat {
+  label: string;
+  value: string;
+  subtext?: string;
+}
+
+interface ReportCardData {
+  stateName: string;
+  stateCode: string;
+  grade: string;
+  score: number;
+  severity: string;
+  reportingCycle: string;
+  lastUpdated: string;
+  findings: ReportCardFinding[];
+  stats: ReportCardStat[];
+}
+
 /* ═══ ANIMATED COUNTER ═══ */
 
 function Counter({ target, suffix = '', duration = 2000 }: {
@@ -219,6 +249,8 @@ export default function WaterQualityExplorer() {
   const [cacheLoading, setCacheLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [wbSearch, setWbSearch] = useState('');
+  const [reportCard, setReportCard] = useState<ReportCardData | null>(null);
+  const [reportCardLoading, setReportCardLoading] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -228,6 +260,16 @@ export default function WaterQualityExplorer() {
       .then(data => { setNationalCache(data); setCacheLoading(false); })
       .catch(() => setCacheLoading(false));
   }, []);
+
+  // Fetch enriched report card when a state is selected
+  useEffect(() => {
+    if (!selectedState) { setReportCard(null); return; }
+    setReportCardLoading(true);
+    fetch(`/api/water-data?action=state-assessment&state=${selectedState}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { setReportCard(data); setReportCardLoading(false); })
+      .catch(() => setReportCardLoading(false));
+  }, [selectedState]);
 
   const stateData = useMemo(() => {
     if (!selectedState || !nationalCache?.states?.[selectedState]) return null;
@@ -316,13 +358,26 @@ export default function WaterQualityExplorer() {
     URL.revokeObjectURL(url);
   }, [stateData, selectedState]);
 
-  /* ═══ REPORT CARD ITEMS ═══ */
+  /* ═══ REPORT CARD ITEMS (from enriched endpoint, fallback to ATTAINS-only) ═══ */
   const reportCardItems = useMemo((): ReportCardItem[] => {
+    // Use enriched report card findings if available
+    if (reportCard?.findings?.length) {
+      return reportCard.findings.map(f => ({
+        title: f.title,
+        description: f.detail,
+        status: f.severity === 'critical' ? 'red' as const
+             : f.severity === 'warning' ? 'yellow' as const
+             : f.severity === 'positive' ? 'green' as const
+             : 'blue' as const,
+        badge: f.metric,
+      }));
+    }
+
+    // Fallback: ATTAINS-only report card
     if (!stateData || !stateGrade) return [];
     const items: ReportCardItem[] = [];
     const abbr = selectedState;
 
-    // 1. Overall Grade
     const gradeStatus = stateGrade.letter.startsWith('A') || stateGrade.letter.startsWith('B')
       ? 'green' : stateGrade.letter.startsWith('C') ? 'yellow' : 'red';
     items.push({
@@ -336,7 +391,6 @@ export default function WaterQualityExplorer() {
       badge: stateGrade.letter,
     });
 
-    // 2. Waterbody Health
     const attainingPct = stateData.total > 0 ? (stateData.none / stateData.total) * 100 : 0;
     const healthStatus = attainingPct > 70 ? 'green' : attainingPct >= 40 ? 'yellow' : 'red';
     items.push({
@@ -349,7 +403,6 @@ export default function WaterQualityExplorer() {
       status: healthStatus,
     });
 
-    // 3. Pollution Cleanup Progress
     const totalTmdl = (stateData.tmdlCompleted || 0) + (stateData.tmdlAlternative || 0) + (stateData.tmdlNeeded || 0);
     if (totalTmdl > 0) {
       const tmdlDonePct = ((stateData.tmdlCompleted + stateData.tmdlAlternative) / totalTmdl) * 100;
@@ -365,7 +418,6 @@ export default function WaterQualityExplorer() {
       });
     }
 
-    // 4. Top Pollution Threat
     if (causeFrequency.length > 0) {
       const [topCause, topCount] = causeFrequency[0];
       const topPct = stateData.total > 0 ? (topCount / stateData.total) * 100 : 0;
@@ -379,7 +431,6 @@ export default function WaterQualityExplorer() {
       });
     }
 
-    // 5. Second Biggest Threat
     if (causeFrequency.length > 1) {
       const [cause2, count2] = causeFrequency[1];
       const pct2 = stateData.total > 0 ? (count2 / stateData.total) * 100 : 0;
@@ -393,7 +444,6 @@ export default function WaterQualityExplorer() {
       });
     }
 
-    // 6. Waters Needing Attention
     const highPct = stateData.total > 0 ? (stateData.high / stateData.total) * 100 : 0;
     const attentionStatus = highPct < 10 ? 'green' : highPct <= 25 ? 'yellow' : 'red';
     items.push({
@@ -406,7 +456,6 @@ export default function WaterQualityExplorer() {
       status: attentionStatus,
     });
 
-    // 7. Monitoring Coverage
     const coverageStatus = stateData.total > NATIONAL_MEDIAN_TOTAL * 1.2 ? 'green'
       : stateData.total >= NATIONAL_MEDIAN_TOTAL * 0.5 ? 'yellow' : 'red';
     items.push({
@@ -419,21 +468,14 @@ export default function WaterQualityExplorer() {
       status: coverageStatus,
     });
 
-    // 8. Key Current Challenge (conditional)
     const challenges = STATE_CHALLENGES[abbr];
     if (challenges?.length > 0) {
       const challenge = challenges[0];
       const dashParts = challenge.split(' — ');
-      const title = dashParts.length >= 2 ? dashParts[0].trim() : challenge.substring(0, 60);
       const desc = dashParts.length >= 2 ? dashParts.slice(1).join(' — ').trim() : challenge;
-      items.push({
-        title: 'Key Current Challenge',
-        description: desc || title,
-        status: 'yellow',
-      });
+      items.push({ title: 'Key Current Challenge', description: desc || challenge.substring(0, 60), status: 'yellow' });
     }
 
-    // 9. Bright Spot (conditional)
     if (spotlight?.attaining) {
       items.push({
         title: 'Bright Spot',
@@ -442,7 +484,6 @@ export default function WaterQualityExplorer() {
       });
     }
 
-    // 10. Regulatory Framework (conditional)
     const tmdlCtx = STATE_TMDL_CONTEXT[abbr];
     if (tmdlCtx) {
       items.push({
@@ -453,7 +494,7 @@ export default function WaterQualityExplorer() {
     }
 
     return items;
-  }, [stateData, stateGrade, selectedState, causeFrequency, spotlight]);
+  }, [reportCard, stateData, stateGrade, selectedState, causeFrequency, spotlight]);
 
   /* ═══ RENDER ═══ */
 
@@ -518,6 +559,9 @@ export default function WaterQualityExplorer() {
         </div>
       </section>
 
+      {/* ═══ EJ QUOTE CALLOUT ═══ */}
+      <MissionQuote role="public" variant="dark" />
+
       {/* ═══ NATIONAL STATS BAR (no state selected) ═══ */}
       {nationalStats && !selectedState && (
         <section className="py-12 bg-slate-50 border-b border-slate-200">
@@ -552,16 +596,33 @@ export default function WaterQualityExplorer() {
           <div className="max-w-4xl mx-auto px-6">
             <div className="text-center mb-10">
               <div className="inline-flex items-center gap-3 mb-4">
-                <div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl font-black text-white shadow-lg ${stateGrade.bg}`}>
-                  {stateGrade.letter}
-                </div>
+                {reportCard?.grade ? (
+                  <div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl font-black text-white shadow-lg ${scoreToGrade(reportCard.score).bg}`}>
+                    {reportCard.grade}
+                  </div>
+                ) : (
+                  <div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl font-black text-white shadow-lg ${stateGrade.bg}`}>
+                    {stateGrade.letter}
+                  </div>
+                )}
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
                 {STATE_NAMES[selectedState]} Water Quality Report Card
               </h2>
               <p className="mt-2 text-slate-500">
-                {reportCardItems.length} key findings based on EPA assessment data
+                {reportCardItems.length} key findings based on {reportCard ? 'multi-source EPA data' : 'EPA assessment data'}
               </p>
+              {reportCard?.stats && reportCard.stats.length > 0 && (
+                <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto">
+                  {reportCard.stats.slice(0, 8).map((stat, i) => (
+                    <div key={i} className="bg-white rounded-lg border border-slate-200 px-3 py-2.5 text-center">
+                      <p className="text-lg font-bold text-slate-900">{stat.value}</p>
+                      <p className="text-[11px] text-slate-500 font-medium">{stat.label}</p>
+                      {stat.subtext && <p className="text-[10px] text-slate-400">{stat.subtext}</p>}
+                    </div>
+                  ))}
+                </div>
+              )}
               <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
                 <button
                   onClick={() => setSelectedState('')}

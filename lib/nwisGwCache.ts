@@ -252,6 +252,20 @@ export function setNwisGwBuildInProgress(v: boolean): void {
 }
 
 /**
+ * Get all NWIS-GW sites across all grid cells (flat array).
+ * Used by stateAssessmentBuilder for state-level aggregation.
+ */
+export function getNwisGwAllSites(): NwisGwSite[] {
+  ensureDiskLoaded();
+  if (!_memCache) return [];
+  const all: NwisGwSite[] = [];
+  for (const cell of Object.values(_memCache.grid)) {
+    all.push(...cell.sites);
+  }
+  return all;
+}
+
+/**
  * Get cache metadata (for status/debug endpoints).
  */
 export function getNwisGwCacheStatus() {

@@ -208,6 +208,20 @@ export function setPfasBuildInProgress(v: boolean): void {
 }
 
 /**
+ * Get all PFAS results across all grid cells (flat array).
+ * Used by stateAssessmentBuilder for state-level aggregation.
+ */
+export function getPfasAllResults(): PfasResult[] {
+  ensureDiskLoaded();
+  if (!_memCache) return [];
+  const all: PfasResult[] = [];
+  for (const cell of Object.values(_memCache.grid)) {
+    all.push(...cell.results);
+  }
+  return all;
+}
+
+/**
  * Get cache metadata (for status/debug endpoints).
  */
 export function getPfasCacheStatus() {

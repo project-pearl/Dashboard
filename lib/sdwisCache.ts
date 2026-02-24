@@ -245,6 +245,24 @@ export function setSdwisBuildInProgress(v: boolean): void {
 }
 
 /**
+ * Get all SDWIS data across all grid cells (flat arrays).
+ * Used by stateAssessmentBuilder for state-level aggregation.
+ */
+export function getSdwisAllData(): { systems: SdwisSystem[]; violations: SdwisViolation[]; enforcement: SdwisEnforcement[] } {
+  ensureDiskLoaded();
+  if (!_memCache) return { systems: [], violations: [], enforcement: [] };
+  const systems: SdwisSystem[] = [];
+  const violations: SdwisViolation[] = [];
+  const enforcement: SdwisEnforcement[] = [];
+  for (const cell of Object.values(_memCache.grid)) {
+    systems.push(...cell.systems);
+    violations.push(...cell.violations);
+    enforcement.push(...cell.enforcement);
+  }
+  return { systems, violations, enforcement };
+}
+
+/**
  * Get cache metadata (for status/debug endpoints).
  */
 export function getSdwisCacheStatus() {

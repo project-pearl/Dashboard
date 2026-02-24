@@ -6,6 +6,8 @@ import { getAttainsCache, getAttainsCacheSummary, getCacheStatus, triggerAttains
 import { getCedenCache, getCedenCacheStatus, ensureWarmed as warmCeden } from '@/lib/cedenCache';
 import { getWqpCache, getWqpCacheStatus, ensureWarmed as warmWqp } from '@/lib/wqpCache';
 import { getStateReport, getAllStateReports, getStateReportStatus, ensureWarmed as warmStateReports } from '@/lib/stateReportCache';
+import { buildStateAssessmentData } from '@/lib/stateAssessmentBuilder';
+import { generateReportCard } from '@/lib/stateFindings';
 
 const WR_BASE = 'https://api.waterreporter.org';
 const CBP_BASE = 'https://datahub.chesapeakebay.net';
@@ -1072,6 +1074,24 @@ export async function GET(request: NextRequest) {
           return NextResponse.json({ error: 'State reports not yet built', status: getStateReportStatus() }, { status: 404 });
         }
         return NextResponse.json(allReports, {
+          headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=600' },
+        });
+      }
+
+      // ════════════════════════════════════════════════════════════════════════
+      // STATE ASSESSMENT (Report Card from all caches)
+      // ════════════════════════════════════════════════════════════════════════
+
+      // Aggregate all caches into a StateAssessmentData → ReportCard
+      // Example: ?action=state-assessment&state=MD
+      case 'state-assessment': {
+        const stateCode = sp.get('state');
+        if (!stateCode) {
+          return NextResponse.json({ error: 'state parameter required' }, { status: 400 });
+        }
+        const assessmentData = buildStateAssessmentData(stateCode);
+        const reportCard = generateReportCard(assessmentData);
+        return NextResponse.json(reportCard, {
           headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=600' },
         });
       }

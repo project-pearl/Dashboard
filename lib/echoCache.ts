@@ -227,6 +227,22 @@ export function setEchoBuildInProgress(v: boolean): void {
 }
 
 /**
+ * Get all ECHO data across all grid cells (flat arrays).
+ * Used by stateAssessmentBuilder for state-level aggregation.
+ */
+export function getEchoAllData(): { facilities: EchoFacility[]; violations: EchoViolation[] } {
+  ensureDiskLoaded();
+  if (!_memCache) return { facilities: [], violations: [] };
+  const facilities: EchoFacility[] = [];
+  const violations: EchoViolation[] = [];
+  for (const cell of Object.values(_memCache.grid)) {
+    facilities.push(...cell.facilities);
+    violations.push(...cell.violations);
+  }
+  return { facilities, violations };
+}
+
+/**
  * Get cache metadata (for status/debug endpoints).
  */
 export function getEchoCacheStatus() {
