@@ -223,45 +223,21 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
                 <button onClick={onSignIn} className="group inline-flex items-center gap-3 px-8 py-4 text-base font-semibold text-slate-900 bg-white rounded-full hover:bg-slate-100 transition-all shadow-2xl shadow-black/20">
                   Explore the Platform <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </button>
-                <a href="#intro-video" className="inline-flex items-center gap-2 px-8 py-4 text-base font-medium text-white/90 border border-white/20 rounded-full hover:bg-white/10 transition-all backdrop-blur-sm">
-                  <Eye className="h-4 w-4" /> See How It Works
+                <a href="#technology" className="inline-flex items-center gap-2 px-8 py-4 text-base font-medium text-white/90 border border-white/20 rounded-full hover:bg-white/10 transition-all backdrop-blur-sm">
+                  <Eye className="h-4 w-4" /> Learn More
                 </a>
               </div>
             </div>
 
-            {/* Dashboard preview mockup */}
-            <div className={`hidden lg:block transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
-              <div className="rounded-xl bg-white/[0.07] backdrop-blur-sm border border-white/[0.12] p-5 shadow-2xl">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-2.5 h-2.5 rounded-full bg-red-400/60" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/60" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-green-400/60" />
-                  <span className="ml-2 text-[10px] text-white/30 font-mono">pinwater.org/dashboard</span>
-                </div>
-                <div className="grid grid-cols-3 gap-3 mb-3">
-                  <div className="rounded-lg bg-white/[0.06] border border-white/[0.08] p-3 text-center">
-                    <div className="text-xl font-bold text-cyan-400">565K+</div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">Monitoring Points</div>
+            {/* Hero video */}
+            <div className={`transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
+              <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-900/80 border border-white/[0.12] shadow-2xl backdrop-blur-sm">
+                {/* Replace src with actual Synthesize / YouTube embed URL */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+                  <div className="w-20 h-20 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center cursor-pointer hover:bg-white/20 transition-colors">
+                    <Play className="h-8 w-8 text-white ml-1" />
                   </div>
-                  <div className="rounded-lg bg-white/[0.06] border border-white/[0.08] p-3 text-center">
-                    <div className="text-xl font-bold text-emerald-400">50</div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">States Tracked</div>
-                  </div>
-                  <div className="rounded-lg bg-white/[0.06] border border-white/[0.08] p-3 text-center">
-                    <div className="text-xl font-bold text-amber-400">15min</div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">Data Resolution</div>
-                  </div>
-                </div>
-                <div className="rounded-lg bg-white/[0.04] border border-white/[0.06] p-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-                    <span className="text-[11px] text-white/60 font-medium">National Command Center</span>
-                  </div>
-                  <div className="flex gap-2">
-                    {['EPA ATTAINS', 'USGS NWIS', 'NOAA', 'WQP', 'EJScreen'].map(src => (
-                      <span key={src} className="text-[9px] px-2 py-0.5 rounded-full bg-white/[0.06] text-white/40 border border-white/[0.06]">{src}</span>
-                    ))}
-                  </div>
+                  <p className="text-sm text-white/60 font-medium">Video coming soon</p>
                 </div>
               </div>
             </div>
@@ -327,27 +303,6 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
           <p className="text-center text-[11px] text-slate-400 mt-5">
             430M+ federal datapoints aggregated &middot; 565,000+ assessment units &middot; Field validated in Milton, FL (Jan 2025)
           </p>
-        </div>
-      </section>
-
-      {/* ═══ INTRO VIDEO ═══ */}
-      <section id="intro-video" className="relative py-20 bg-slate-50">
-        <div className="max-w-4xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <p className="text-xs font-bold tracking-[0.2em] uppercase text-cyan-600 mb-3">See It In Action</p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-              How ALIA Works
-            </h2>
-          </div>
-          {/* Video placeholder — replace src with Synthesize embed URL */}
-          <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-900 border border-slate-200 shadow-2xl">
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-              <div className="w-20 h-20 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
-                <Play className="h-8 w-8 text-white ml-1" />
-              </div>
-              <p className="text-sm text-white/60 font-medium">Video coming soon</p>
-            </div>
-          </div>
         </div>
       </section>
 
