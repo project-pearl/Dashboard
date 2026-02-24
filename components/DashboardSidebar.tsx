@@ -42,11 +42,33 @@ import {
   Crown,
   Zap,
   ClipboardList,
+  // Additional icons for expanded lens registries
+  RadioTower,
+  Wrench,
+  FileCheck,
+  AlertTriangle,
+  Bell,
+  Gauge,
+  HardHat,
+  DollarSign,
+  Download,
+  Users,
+  Heart,
+  Search,
+  Beaker,
+  MapPin,
+  BarChart3,
+  Hammer,
+  Clock,
+  Link2,
+  Layers,
+  TreePine,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 // Icons for lens items when rendered as top-level nav (single-role mode)
 const LENS_ICONS: Record<string, LucideIcon> = {
+  // ── Shared / Federal ───────────────────────────────────────────────────────
   overview: LayoutDashboard,
   briefing: Sparkles,
   compliance: ShieldCheck,
@@ -61,18 +83,73 @@ const LENS_ICONS: Record<string, LucideIcon> = {
   interagency: Network,
   funding: Banknote,
   planner: ClipboardList,
-  // Fallbacks for other roles' lenses
   full: LayoutDashboard,
+  // ── State ──────────────────────────────────────────────────────────────────
   coverage: Activity,
   programs: Landmark,
-  analysis: FlaskConical,
+  ms4oversight: CloudRain,
+  // ── MS4 ────────────────────────────────────────────────────────────────────
+  'permit-compliance': ShieldCheck,
+  'monitoring-stations': RadioTower,
+  'bmp-tracking': Wrench,
+  'annual-report': FileCheck,
+  'waterbody-status': Waves,
+  'upstream-alerts': AlertTriangle,
+  // ── Utility ────────────────────────────────────────────────────────────────
+  'source-water': Droplets,
+  treatment: Gauge,
+  distribution: Network,
+  sdwis: ShieldCheck,
+  'infrastructure-risk': AlertTriangle,
+  ccr: FileText,
+  alerts: Bell,
+  // ── Infrastructure ─────────────────────────────────────────────────────────
+  'asset-condition': Wrench,
+  'failure-risk': AlertTriangle,
+  capacity: BarChart3,
+  'discharge-permits': FileCheck,
+  'capital-projects': HardHat,
+  'regulatory-timeline': Clock,
+  // ── ESG / Sustainability ───────────────────────────────────────────────────
   disclosure: FileText,
   risk: Shield,
   impact: Leaf,
+  'discharge-compliance': ShieldCheck,
+  'supply-chain': Link2,
+  benchmarking: BarChart3,
+  // ── University ─────────────────────────────────────────────────────────────
   'data-analysis': FlaskConical,
+  'data-download': Download,
   'field-study': Map,
+  'student-projects': GraduationCap,
   publication: BookOpen,
-  ms4oversight: CloudRain,
+  'campus-water': Droplets,
+  // ── NGO ────────────────────────────────────────────────────────────────────
+  'watershed-health': Waves,
+  restoration: TreePine,
+  advocacy: Scale,
+  'community-alerts': Bell,
+  volunteer: Users,
+  'impact-reporting': FileText,
+  // ── K-12 ───────────────────────────────────────────────────────────────────
+  'my-watershed': MapPin,
+  explorer: Search,
+  'lesson-plans': BookOpen,
+  'class-projects': GraduationCap,
+  'data-collection': Beaker,
+  // ── Insurance ──────────────────────────────────────────────────────────────
+  'exposure-mapping': Map,
+  claims: DollarSign,
+  'flood-contamination': Layers,
+  'portfolio-risk': Shield,
+  'regulatory-changes': Scale,
+  // ── Agriculture ────────────────────────────────────────────────────────────
+  'nutrient-loading': FlaskConical,
+  runoff: CloudRain,
+  bmp: Wrench,
+  'watershed-impact': Waves,
+  'soil-groundwater': Sprout,
+  'conservation-funding': Banknote,
 };
 
 interface NavItem {
