@@ -15,7 +15,7 @@ export interface HeroBannerConfig {
 export const heroConfigs: Record<string, HeroBannerConfig> = {
   k12: {
     image: '/images/heroes/K12.png',
-    subtitle: 'PEARL Intelligence Network',
+    subtitle: 'PEARL ALIA',
     headline: 'Explore Your Watershed',
     description:
       'Hands-on water quality learning powered by real EPA data. Discover what\'s in your local waterways and why it matters.',
@@ -23,7 +23,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   state: {
     image: '/images/heroes/Aerial.png',
-    subtitle: 'PEARL Intelligence Network',
+    subtitle: 'PEARL ALIA',
     headline: 'Statewide Water Intelligence',
     description:
       'Comprehensive watershed monitoring, compliance tracking, and assessment analytics across every waterbody in your jurisdiction.',
@@ -31,7 +31,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   ms4: {
     image: '/images/heroes/MS4.png',
-    subtitle: 'PEARL Intelligence Network',
+    subtitle: 'PEARL ALIA',
     headline: 'Municipal Stormwater Compliance',
     description:
       'Track BMP performance, monitor outfall discharge, and streamline MS4 permit reporting with real-time water quality data.',
@@ -39,7 +39,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   esg: {
     image: '/images/heroes/Industrial.png',
-    subtitle: 'PEARL Intelligence Network',
+    subtitle: 'PEARL ALIA',
     headline: 'Water Risk & Sustainability Performance',
     description:
       'Quantify water risk exposure, benchmark facility performance, and generate audit-ready sustainability disclosures.',
@@ -47,7 +47,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   university: {
     image: '/images/heroes/Research.png',
-    subtitle: 'PEARL Intelligence Network',
+    subtitle: 'PEARL ALIA',
     headline: 'Water Quality Research Hub',
     description:
       'Access nationwide water quality datasets, publish findings, and collaborate across institutions with integrated research tools.',
@@ -55,7 +55,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   national: {
     image: '/images/heroes/NCC.png',
-    subtitle: 'PEARL Intelligence Network',
+    subtitle: 'PEARL ALIA',
     headline: 'National Command Center',
     description:
       'Real-time water quality intelligence across 565,000+ monitoring points in every state. Federal-scale oversight, watershed-level precision.',
@@ -63,7 +63,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   ngo: {
     image: '/oyster-restoration.png',
-    subtitle: 'PEARL Intelligence Network',
+    subtitle: 'PEARL ALIA',
     headline: 'Watershed Conservation Hub',
     description:
       'Advocacy-ready data, grant matching, and restoration intelligence to protect the waterways your community depends on.',
@@ -71,7 +71,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   pearl: {
     image: '/images/heroes/underwater-pearl.jpg',
-    subtitle: 'PEARL Intelligence Network',
+    subtitle: 'PEARL ALIA',
     headline: 'Pearl Command Center',
     description:
       'Deployment tracking, fleet performance, and field diagnostics across all active PEARL units.',
@@ -79,7 +79,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   utility: {
     image: '/images/heroes/Industrial.png',
-    subtitle: 'PEARL Intelligence Network',
+    subtitle: 'PEARL ALIA',
     headline: 'Municipal Water Utility',
     description:
       'Compliance monitoring, treatment optimization, and contaminant tracking for public water systems.',
@@ -87,7 +87,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   infrastructure: {
     image: '/images/heroes/MS4.png',
-    subtitle: 'PEARL Intelligence Network',
+    subtitle: 'PEARL ALIA',
     headline: 'Infrastructure Intelligence',
     description:
       'Capital project tracking, capacity analysis, and green infrastructure planning for resilient water systems.',
@@ -95,7 +95,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   insurance: {
     image: '/images/heroes/Aerial.png',
-    subtitle: 'PEARL Intelligence Network',
+    subtitle: 'PEARL ALIA',
     headline: 'Water Risk Intelligence',
     description:
       'Flood risk assessment, contamination analysis, and portfolio due diligence for informed underwriting decisions.',
@@ -103,7 +103,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   agriculture: {
     image: '/images/heroes/Aerial.png',
-    subtitle: 'PEARL Intelligence Network',
+    subtitle: 'PEARL ALIA',
     headline: 'Agricultural Water Management',
     description:
       'Nutrient tracking, irrigation optimization, and conservation credit management for sustainable agriculture.',
@@ -111,7 +111,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   'aqua-lo': {
     image: '/images/heroes/Research.png',
-    subtitle: 'PEARL Intelligence Network',
+    subtitle: 'PEARL ALIA',
     headline: 'AQUA-LO Laboratory',
     description:
       'Full-spectrum laboratory information management — sample intake, QA/QC, methods, and chain of custody.',
@@ -157,12 +157,17 @@ export default function HeroBanner({ role, className = '', children, onDoubleCli
         {/* Content */}
         <div className="absolute inset-0 flex flex-col justify-center px-6 sm:px-10 lg:px-14">
           {/* Subtitle label */}
-          <span
-            className={`inline-flex items-center gap-1.5 w-fit text-sm sm:text-base font-extrabold uppercase tracking-[0.18em] ${config.accentColor} mb-1.5 sm:mb-2 drop-shadow-[0_0_8px_currentColor]`}
-          >
-            <span className="inline-block w-2 h-2 rounded-full bg-current animate-pulse" />
-            {config.subtitle}
-          </span>
+          <div className="mb-1.5 sm:mb-2">
+            <span
+              className={`inline-flex items-center gap-1.5 w-fit text-sm sm:text-base font-extrabold uppercase tracking-[0.18em] ${config.accentColor} drop-shadow-[0_0_8px_currentColor]`}
+            >
+              <span className="inline-block w-2 h-2 rounded-full bg-current animate-pulse" />
+              {config.subtitle}
+            </span>
+            <p className="text-[10px] sm:text-xs text-white/50 tracking-widest uppercase ml-3.5 mt-0.5">
+              Aquatic Life Improvement Accelerator
+            </p>
+          </div>
 
           {/* Headline */}
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white leading-tight max-w-2xl">
