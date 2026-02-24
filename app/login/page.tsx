@@ -42,7 +42,7 @@ const ROLES: { value: UserRole; label: string }[] = [
   { value: 'MS4',        label: 'MS4 Operator' },
   { value: 'State',      label: 'State Agency' },
   { value: 'Federal',    label: 'Federal' },
-  { value: 'Corporate',  label: 'Corporate / ESG' },
+  { value: 'Corporate',  label: 'Sustainability' },
   { value: 'Researcher', label: 'Research / Academic' },
   { value: 'College',    label: 'Undergrad' },
   { value: 'K12',        label: 'K-12 Educator' },

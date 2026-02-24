@@ -67,7 +67,7 @@ function generateProvenanceRecord(
     'Temperature': 'ASTM D1498',
     'Flow Rate': 'USGS continuous discharge',
     'Water Quality Score': 'PEARL Composite (EPA QA/R-5)',
-    'ESG Score': 'PEARL ESG Framework v2.1',
+    'Sustainability Score': 'PEARL ESG Framework v2.1',
     'Compliance Score': 'EPA NPDES Method 40 CFR §122.26',
   };
 

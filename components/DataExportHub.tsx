@@ -107,7 +107,7 @@ Authorization: Bearer <api_key>`,
     method: 'GET',
     path: '/api/v1/treatment',
     label: 'Treatment Metrics',
-    description: 'PEARL unit treatment performance — TSS/TN/TP removal, gallons processed, efficiency',
+    description: 'ALIA unit treatment performance — TSS/TN/TP removal, gallons processed, efficiency',
     request: `GET /api/v1/treatment?site_id=back_river&period=2025-Q1
 Accept: application/json
 Authorization: Bearer <api_key>`,
@@ -292,7 +292,7 @@ export function DataExportHub({ context = 'ms4' }: Props) {
         >
           <span className={`text-xs font-bold ${accent.text} flex items-center gap-1.5`}>
             <BookOpen className="h-3.5 w-3.5" />
-            PEARL API Documentation
+            ALIA API Documentation
           </span>
           {showApiDocs ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
         </button>

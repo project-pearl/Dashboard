@@ -1166,9 +1166,9 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
 
               // Simple restoration summary
               const restorationSummary = level === 'high'
-                ? 'Scientists and engineers are working on cleanup plans. PEARL devices help filter the water using natural oyster and mussel power!'
+                ? 'Scientists and engineers are working on cleanup plans. ALIA devices help filter the water using natural oyster and mussel power!'
                 : level === 'medium'
-                ? 'This waterbody is being monitored closely. Rain gardens and PEARL filters are being considered to help clean it up.'
+                ? 'This waterbody is being monitored closely. Rain gardens and ALIA filters are being considered to help clean it up.'
                 : level === 'low'
                 ? 'This waterbody is mostly healthy but being watched. Planting trees along the shore and reducing fertilizer use can help.'
                 : 'This waterbody is healthy! Keeping it this way means protecting the land around it from pollution.';
@@ -1349,7 +1349,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                             {causes.some(c => c.toLowerCase().includes('nutrient') || c.toLowerCase().includes('nitrogen')) && (
                               <div>• <strong>NGSS LS2.B:</strong> Cycles of Matter — Nitrogen and phosphorus cycles, eutrophication</div>
                             )}
-                            <div>• <strong>NGSS ETS1.B:</strong> Developing Solutions — Engineering approaches to water quality (PEARL biofiltration)</div>
+                            <div>• <strong>NGSS ETS1.B:</strong> Developing Solutions — Engineering approaches to water quality (ALIA biofiltration)</div>
                             <div>• <strong>Common Core Math:</strong> Data analysis using real water quality measurements, graphing trends</div>
                           </div>
                         </div>
@@ -1578,9 +1578,9 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                         </div>
                       </div>
 
-                      {/* Why PEARL */}
+                      {/* Why ALIA */}
                       <div className="space-y-1.5">
-                        <div className="text-xs font-semibold text-slate-700 uppercase tracking-wide">Why PEARL at {regionName}</div>
+                        <div className="text-xs font-semibold text-slate-700 uppercase tracking-wide">Why ALIA at {regionName}</div>
                         {whyBullets.map((b, i) => (
                           <div key={i} className="flex items-start gap-2 text-xs">
                             <span className="flex-shrink-0 mt-0.5">{b.icon}</span>
@@ -1597,7 +1597,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                       {impairmentClassification.length > 0 && (
                         <div className="space-y-1">
                           <div className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
-                            Impairment Classification ({impairmentClassification.length} causes · {addressabilityPct}% PEARL-addressable)
+                            Impairment Classification ({impairmentClassification.length} causes · {addressabilityPct}% ALIA-addressable)
                           </div>
                           <div className="grid gap-1">
                             {impairmentClassification.map((imp, i) => (
@@ -1773,9 +1773,9 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                       <div className="flex flex-wrap gap-2">
                         <button
                           onClick={() => {
-                            const subject = encodeURIComponent(`PEARL Pilot Deployment Request — ${regionName}, ${stateAbbr}`);
+                            const subject = encodeURIComponent(`ALIA Pilot Deployment Request — ${regionName}, ${stateAbbr}`);
                             const body = encodeURIComponent(
-                              `PEARL Pilot Deployment Request\n` +
+                              `ALIA Pilot Deployment Request\n` +
                               `${'='.repeat(40)}\n\n` +
                               `Site: ${regionName}\n` +
                               `State: ${stateName}\n` +
@@ -1798,7 +1798,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                           }}
                           className="flex-1 min-w-[140px] bg-cyan-700 hover:bg-cyan-800 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition-colors shadow-sm"
                         >
-                          🚀 Deploy PEARL Pilot Here
+                          🚀 Deploy ALIA Pilot Here
                         </button>
                         <button
                           onClick={async () => {
@@ -1827,13 +1827,13 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                               const catTitleMap: Record<string, string> = {
                                 source: 'SOURCE CONTROL -- Upstream BMPs',
                                 nature: 'NATURE-BASED SOLUTIONS',
-                                pearl: 'PEARL -- Treatment Accelerator',
+                                pearl: 'ALIA -- Treatment Accelerator',
                                 community: 'COMMUNITY ENGAGEMENT & STEWARDSHIP',
                                 regulatory: 'REGULATORY & PLANNING',
                               };
 
                               // ─── Title ───
-                              pdf.addTitle('PEARL Deployment Plan');
+                              pdf.addTitle('ALIA Deployment Plan');
                               pdf.addText(clean(`${regionName}, ${stateName}`), { bold: true, fontSize: 12 });
                               pdf.addText(`Generated ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, { fontSize: 9 });
                               pdf.addSpacer(5);
@@ -1867,7 +1867,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                               pdf.addSpacer(3);
 
                               pdf.addText('RECOMMENDED ACTION', { bold: true });
-                              pdf.addText(clean(`Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} unit${phase1Units > 1 ? 's' : ''}, ${phase1GPM} GPM)` : `${totalUnits} PEARL unit${totalUnits > 1 ? 's' : ''}`} at ${regionName} and begin continuous monitoring within 30 days.`), { indent: 5, bold: true });
+                              pdf.addText(clean(`Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} unit${phase1Units > 1 ? 's' : ''}, ${phase1GPM} GPM)` : `${totalUnits} ALIA unit${totalUnits > 1 ? 's' : ''}`} at ${regionName} and begin continuous monitoring within 30 days.`), { indent: 5, bold: true });
                               pdf.addText('Typical deployment: 30-60 days. Pilot generates continuous data and measurable reductions within the first operating cycle.', { indent: 5, fontSize: 9 });
                               pdf.addSpacer(5);
 
@@ -1914,8 +1914,8 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                                 pdf.addSpacer(3);
                               }
 
-                              // ─── Why PEARL ───
-                              pdf.addSubtitle('Why PEARL at This Site');
+                              // ─── Why ALIA ───
+                              pdf.addSubtitle('Why ALIA at This Site');
                               pdf.addDivider();
                               for (const b of whyBullets) {
                                 pdf.addText(clean(`- ${b.problem}`), { indent: 5, bold: true });
@@ -1923,8 +1923,8 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                               }
                               pdf.addSpacer(3);
 
-                              // ─── PEARL Configuration ───
-                              pdf.addSubtitle(`PEARL Configuration: ${pearlModel}`);
+                              // ─── ALIA Configuration ───
+                              pdf.addSubtitle(`ALIA Configuration: ${pearlModel}`);
                               pdf.addDivider();
                               pdf.addText(`System Type: ${waterType === 'brackish' ? 'Oyster (C. virginica)' : 'Freshwater Mussel'} Biofiltration`, { indent: 5 });
                               const pearlCatMods = categories.find(c => c.id === 'pearl');
@@ -1944,7 +1944,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                                 [
                                   ['Sizing Method', 'Severity-driven treatment need assessment'],
                                   ['Site Severity Score', `${siteSeverityScore}/100 (${siteSeverityLabel})`],
-                                  ['Unit Capacity', '50 GPM per PEARL unit (4 units per quad)'],
+                                  ['Unit Capacity', '50 GPM per ALIA unit (4 units per quad)'],
                                   ['Waterbody Size', `~${estimatedAcres} acres (${acresSource})`],
                                   ['Deployment Size', `${totalQuads} quad${totalQuads > 1 ? 's' : ''} (${totalUnits} units, ${fullGPM} GPM)`],
                                   ...(isPhasedDeployment ? [
@@ -2073,10 +2073,10 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
 
                               // ─── Impairment Classification ───
                               if (impairmentClassification.length > 0) {
-                                pdf.addSubtitle(`Impairment Classification -- PEARL addresses ${pearlAddressable} of ${totalClassified} (${addressabilityPct}%)`);
+                                pdf.addSubtitle(`Impairment Classification -- ALIA addresses ${pearlAddressable} of ${totalClassified} (${addressabilityPct}%)`);
                                 pdf.addDivider();
                                 pdf.addTable(
-                                  ['Cause', 'Tier', 'PEARL Action'],
+                                  ['Cause', 'Tier', 'ALIA Action'],
                                   impairmentClassification.map((item: any) => [
                                     clean(item.cause),
                                     item.tier === 1 ? 'T1 -- Primary Target' : item.tier === 2 ? 'T2 -- Contributes/Planned' : 'T3 -- Outside Scope',
@@ -2102,7 +2102,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                               // ─── Full Restoration Plan ───
                               pdf.addSubtitle('Full Restoration Plan');
                               pdf.addDivider();
-                              pdf.addText(`This plan combines ${totalBMPs} conventional BMPs and nature-based solutions with PEARL accelerated treatment.`);
+                              pdf.addText(`This plan combines ${totalBMPs} conventional BMPs and nature-based solutions with ALIA accelerated treatment.`);
                               pdf.addSpacer(3);
 
                               for (const cat of categories.filter((c: any) => c.id !== 'pearl')) {
@@ -2121,7 +2121,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                               // ─── Recommended Next Steps ───
                               pdf.addSubtitle('Recommended Next Steps');
                               pdf.addDivider();
-                              pdf.addText(clean(`1. Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} PEARL units, ${phase1GPM} GPM) at highest-priority inflow zone${phase1Quads > 1 ? 's' : ''}` : `${totalUnits} PEARL unit${totalUnits > 1 ? 's' : ''}`} within 30 days.`), { indent: 5 });
+                              pdf.addText(clean(`1. Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} ALIA units, ${phase1GPM} GPM) at highest-priority inflow zone${phase1Quads > 1 ? 's' : ''}` : `${totalUnits} ALIA unit${totalUnits > 1 ? 's' : ''}`} within 30 days.`), { indent: 5 });
                               pdf.addText('2. Begin continuous water quality monitoring (15-min intervals, telemetered).', { indent: 5 });
                               pdf.addText('3. Use 90-day baseline dataset to calibrate treatment priorities and validate severity assessment.', { indent: 5 });
                               if (isPhasedDeployment) {
@@ -2182,14 +2182,14 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
 
                         return (
                           <div className="rounded-lg border-2 border-green-300 bg-gradient-to-br from-green-50 to-emerald-50 p-3 space-y-3">
-                            <div className="text-[10px] font-bold text-green-800 uppercase tracking-wider">PEARL Economics -- {regionName}</div>
+                            <div className="text-[10px] font-bold text-green-800 uppercase tracking-wider">ALIA Economics -- {regionName}</div>
 
                             {/* Unit pricing */}
                             <div className="space-y-1">
-                              <div className="text-[10px] font-bold text-slate-600 uppercase">PEARL Unit Pricing</div>
+                              <div className="text-[10px] font-bold text-slate-600 uppercase">ALIA Unit Pricing</div>
                               <div className="rounded-md bg-white border border-slate-200 overflow-hidden">
                                 <div className="grid grid-cols-[1fr_auto] text-[11px]">
-                                  <div className="px-2 py-1.5 bg-slate-100 font-semibold border-b border-slate-200">PEARL Unit (50 GPM)</div>
+                                  <div className="px-2 py-1.5 bg-slate-100 font-semibold border-b border-slate-200">ALIA Unit (50 GPM)</div>
                                   <div className="px-2 py-1.5 bg-slate-100 font-bold text-right border-b border-slate-200">{fmt(unitCost)}/unit/year</div>
                                   <div className="px-2 py-1.5 border-b border-slate-100 text-[10px] text-slate-500" style={{ gridColumn: '1 / -1' }}>
                                     All-inclusive: hardware, deployment, calibration, continuous monitoring, dashboards, automated reporting, maintenance, and support
@@ -2273,7 +2273,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                               <div className="rounded-md bg-green-100 border border-green-200 text-center py-2">
                                 <div className="text-[9px] text-green-600">Compliance Savings Offset</div>
                                 <div className="text-lg font-bold text-green-700">{offsetPctLow}% -- {offsetPctHigh}%</div>
-                                <div className="text-[9px] text-green-500">of PEARL cost offset by reduced spend</div>
+                                <div className="text-[9px] text-green-500">of ALIA cost offset by reduced spend</div>
                               </div>
                               <div className="rounded-md bg-cyan-100 border border-cyan-200 text-center py-2">
                                 <div className="text-[9px] text-cyan-600">Time to Compliance Data</div>
@@ -2330,13 +2330,13 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
             })()}
           </div>
 
-        {/* ── PEARL PILOT RESULTS — always visible, student mode only ── */}
+        {/* ── ALIA PILOT RESULTS — always visible, student mode only ── */}
         {!isTeacher && (
           <div className="my-8 rounded-2xl border-2 border-sky-200 bg-gradient-to-br from-sky-50 to-white shadow-lg p-6">
             <div className="flex items-center justify-center gap-4 mb-4">
               <div className="text-center">
                 <div className="text-lg font-bold text-sky-900">Real Results from Our First Pilot!</div>
-                <p className="text-sm text-sky-700 mt-1">PEARL cleaned real water in Milton, Florida using nature-inspired technology</p>
+                <p className="text-sm text-sky-700 mt-1">ALIA cleaned real water in Milton, Florida using nature-inspired technology</p>
               </div>
               <Image src="/Mascot.png" alt="PEARL Bubble Mascot" width={160} height={160} className="flex-shrink-0" />
             </div>
@@ -2593,7 +2593,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
                     <div>
                       <span className="font-bold">Federal Response:</span> President Trump directed FEMA coordination on Feb 17. Gov. Moore's office noted the federal government has been responsible for the Potomac Interceptor since the last century. Potomac Conservancy submitted a letter signed by 2,100+ community members demanding accountability from DC Water.
                     </div>
-                    {/* PEARL relevance */}
+                    {/* ALIA relevance */}
                     <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-2 text-cyan-900">
                       <span className="font-bold">🔬 PEARL Relevance:</span> This event demonstrates catastrophic infrastructure failure impact on receiving waters. PEARL's real-time monitoring capability would provide continuous E. coli, nutrient, and pathogen tracking during and after spill events — filling the gap that required UMD researchers and volunteer riverkeepers to manually sample. Continuous deployment at 6 DC Water monitoring sites would provide the 24/7 data regulators and the public need.
                     </div>
@@ -2703,7 +2703,7 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
               {activeDetailId && (
                 <div className="rounded-lg border-2 border-cyan-200 bg-white px-4 py-3">
                   <p className="text-sm font-semibold text-cyan-800">🌊 You are viewing live water quality data from <span className="font-bold">{regionData.find(r => r.id === activeDetailId)?.name || 'this waterbody'}</span>.</p>
-                  <p className="text-xs text-cyan-700 mt-1">These are real sensor readings. Scroll down to explore what the numbers mean, see how PEARL cleans the water, and export your field report.</p>
+                  <p className="text-xs text-cyan-700 mt-1">These are real sensor readings. Scroll down to explore what the numbers mean, see how ALIA cleans the water, and export your field report.</p>
                 </div>
               )}
               <p className="text-sm text-slate-700 leading-relaxed">
@@ -2737,11 +2737,11 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
               <div className="text-xs font-semibold text-cyan-700 mb-1">🔬 Science Fair Project Ideas — Use Real Water Quality Data</div>
               <div className="space-y-2">
                 {[
-                  { title: 'How Does a Rainstorm Change Water Quality?', desc: "Compare water quality before, during, and after storm events. Use PEARL's time controls to see pollutant spikes.", ngss: 'NGSS MS-ESS3-3', tool: 'Storm Events Tab' },
+                  { title: 'How Does a Rainstorm Change Water Quality?', desc: "Compare water quality before, during, and after storm events. Use ALIA's time controls to see pollutant spikes.", ngss: 'NGSS MS-ESS3-3', tool: 'Storm Events Tab' },
                   { title: 'Do Green Infrastructure Projects Clean Water?', desc: 'Test if rain gardens and bioswales reduce pollutants. Compare influent vs effluent data using % Removal mode.', ngss: 'NGSS MS-ETS1-1', tool: '% Removal Tab' },
                   { title: 'Which Pollutant Is Worst After a Storm?', desc: 'Rank pollutants by concentration increase during storms. Export CSV data and create charts for your poster.', ngss: 'NGSS MS-ESS3-4', tool: 'Export CSV' },
                   { title: 'Can We Predict Algal Blooms?', desc: 'Track nitrogen and phosphorus levels to predict when algae will grow. Use Trends Chart to find patterns.', ngss: 'NGSS MS-LS2-3', tool: 'Trends & Gauges' },
-                  { title: 'How Clean Is My Local Water?', desc: "Compare your region's water quality to EPA standards. Present findings with PEARL's gauges and scores.", ngss: 'NGSS HS-ESS3-4', tool: 'Regional Data' },
+                  { title: 'How Clean Is My Local Water?', desc: "Compare your region's water quality to EPA standards. Present findings with ALIA's gauges and scores.", ngss: 'NGSS HS-ESS3-4', tool: 'Regional Data' },
                 ].map(p => (
                   <div key={p.title} className="bg-white p-3 rounded-lg border border-cyan-200">
                     <h4 className="font-medium text-sm text-cyan-900 mb-1">{p.title}</h4>
@@ -2757,9 +2757,9 @@ export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, 
               <div className="text-xs font-semibold text-cyan-700 mt-3 mb-1">🎯 General STEM Ideas</div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {[
-                  { title: 'Build a Mini Biofilter', desc: 'Design a small-scale version of PEARL using oyster shells, sand, and gravel. Test how well it cleans dirty water.' },
+                  { title: 'Build a Mini Biofilter', desc: 'Design a small-scale version of ALIA using oyster shells, sand, and gravel. Test how well it cleans dirty water.' },
                   { title: 'Map Your Watershed', desc: 'Use the PEARL map to identify all waterbodies in your county. Create a poster showing how water flows from your school to the Bay.' },
-                  { title: 'Wildlife & Water Quality', desc: 'Research which animals are most affected by poor water quality. Connect species data to PEARL monitoring results.' },
+                  { title: 'Wildlife & Water Quality', desc: 'Research which animals are most affected by poor water quality. Connect species data to ALIA monitoring results.' },
                   { title: 'Environmental Justice Report', desc: 'Use the EJ data on this dashboard to investigate if pollution affects all communities equally.' },
                 ].map(p => (
                   <div key={p.title} className="bg-white p-3 rounded-lg border border-cyan-200">

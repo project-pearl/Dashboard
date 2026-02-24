@@ -1169,7 +1169,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
                   </div>
                   <div className="rounded-xl border border-violet-100 bg-white p-3 space-y-1">
                     <div className="text-xs font-bold text-violet-700">3. Analyze &amp; Compare</div>
-                    <p className="text-xs text-slate-600">Compare your readings to the PEARL dashboard data above. Calculate percent difference and discuss potential causes.</p>
+                    <p className="text-xs text-slate-600">Compare your readings to the ALIA dashboard data above. Calculate percent difference and discuss potential causes.</p>
                   </div>
                 </div>
                 <div className="text-xs text-violet-600 bg-violet-50 border border-violet-200 rounded-lg p-3">
@@ -1395,9 +1395,9 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
                         </div>
                       </div>
 
-                      {/* Why PEARL */}
+                      {/* Why ALIA */}
                       <div className="space-y-1.5">
-                        <div className="text-xs font-semibold text-slate-700 uppercase tracking-wide">Why PEARL at {regionName}</div>
+                        <div className="text-xs font-semibold text-slate-700 uppercase tracking-wide">Why ALIA at {regionName}</div>
                         {whyBullets.map((b, i) => (
                           <div key={i} className="flex items-start gap-2 text-xs">
                             <span className="flex-shrink-0 mt-0.5">{b.icon}</span>
@@ -1414,7 +1414,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
                       {impairmentClassification.length > 0 && (
                         <div className="space-y-1">
                           <div className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
-                            Impairment Classification ({impairmentClassification.length} causes · {addressabilityPct}% PEARL-addressable)
+                            Impairment Classification ({impairmentClassification.length} causes · {addressabilityPct}% ALIA-addressable)
                           </div>
                           <div className="grid gap-1">
                             {impairmentClassification.map((imp, i) => (
@@ -1589,9 +1589,9 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
                       <div className="flex flex-wrap gap-2">
                         <button
                           onClick={() => {
-                            const subject = encodeURIComponent(`PEARL Pilot Deployment Request — ${regionName}, ${stateAbbr}`);
+                            const subject = encodeURIComponent(`ALIA Pilot Deployment Request — ${regionName}, ${stateAbbr}`);
                             const body = encodeURIComponent(
-                              `PEARL Pilot Deployment Request\n` +
+                              `ALIA Pilot Deployment Request\n` +
                               `${'='.repeat(40)}\n\n` +
                               `Site: ${regionName}\n` +
                               `State: ${stateName}\n` +
@@ -1614,7 +1614,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
                           }}
                           className="flex-1 min-w-[140px] bg-cyan-700 hover:bg-cyan-800 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition-colors shadow-sm"
                         >
-                          🚀 Deploy PEARL Pilot Here
+                          🚀 Deploy ALIA Pilot Here
                         </button>
                         <button
                           onClick={async () => {
@@ -1643,13 +1643,13 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
                               const catTitleMap: Record<string, string> = {
                                 source: 'SOURCE CONTROL -- Upstream BMPs',
                                 nature: 'NATURE-BASED SOLUTIONS',
-                                pearl: 'PEARL -- Treatment Accelerator',
+                                pearl: 'ALIA -- Treatment Accelerator',
                                 community: 'COMMUNITY ENGAGEMENT & STEWARDSHIP',
                                 regulatory: 'REGULATORY & PLANNING',
                               };
 
                               // ─── Title ───
-                              pdf.addTitle('PEARL Deployment Plan');
+                              pdf.addTitle('ALIA Deployment Plan');
                               pdf.addText(clean(`${regionName}, ${stateName}`), { bold: true, fontSize: 12 });
                               pdf.addText(`Generated ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, { fontSize: 9 });
                               pdf.addSpacer(5);
@@ -1683,7 +1683,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
                               pdf.addSpacer(3);
 
                               pdf.addText('RECOMMENDED ACTION', { bold: true });
-                              pdf.addText(clean(`Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} unit${phase1Units > 1 ? 's' : ''}, ${phase1GPM} GPM)` : `${totalUnits} PEARL unit${totalUnits > 1 ? 's' : ''}`} at ${regionName} and begin continuous monitoring within 30 days.`), { indent: 5, bold: true });
+                              pdf.addText(clean(`Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} unit${phase1Units > 1 ? 's' : ''}, ${phase1GPM} GPM)` : `${totalUnits} ALIA unit${totalUnits > 1 ? 's' : ''}`} at ${regionName} and begin continuous monitoring within 30 days.`), { indent: 5, bold: true });
                               pdf.addText('Typical deployment: 30-60 days. Pilot generates continuous data and measurable reductions within the first operating cycle.', { indent: 5, fontSize: 9 });
                               pdf.addSpacer(5);
 
@@ -1730,8 +1730,8 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
                                 pdf.addSpacer(3);
                               }
 
-                              // ─── Why PEARL ───
-                              pdf.addSubtitle('Why PEARL at This Site');
+                              // ─── Why ALIA ───
+                              pdf.addSubtitle('Why ALIA at This Site');
                               pdf.addDivider();
                               for (const b of whyBullets) {
                                 pdf.addText(clean(`- ${b.problem}`), { indent: 5, bold: true });
@@ -1739,8 +1739,8 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
                               }
                               pdf.addSpacer(3);
 
-                              // ─── PEARL Configuration ───
-                              pdf.addSubtitle(`PEARL Configuration: ${pearlModel}`);
+                              // ─── ALIA Configuration ───
+                              pdf.addSubtitle(`ALIA Configuration: ${pearlModel}`);
                               pdf.addDivider();
                               pdf.addText(`System Type: ${waterType === 'brackish' ? 'Oyster (C. virginica)' : 'Freshwater Mussel'} Biofiltration`, { indent: 5 });
                               const pearlCatMods = categories.find(c => c.id === 'pearl');
@@ -1760,7 +1760,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
                                 [
                                   ['Sizing Method', 'Severity-driven treatment need assessment'],
                                   ['Site Severity Score', `${siteSeverityScore}/100 (${siteSeverityLabel})`],
-                                  ['Unit Capacity', '50 GPM per PEARL unit (4 units per quad)'],
+                                  ['Unit Capacity', '50 GPM per ALIA unit (4 units per quad)'],
                                   ['Waterbody Size', `~${estimatedAcres} acres (${acresSource})`],
                                   ['Deployment Size', `${totalQuads} quad${totalQuads > 1 ? 's' : ''} (${totalUnits} units, ${fullGPM} GPM)`],
                                   ...(isPhasedDeployment ? [
@@ -1888,10 +1888,10 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
 
                               // ─── Impairment Classification ───
                               if (impairmentClassification.length > 0) {
-                                pdf.addSubtitle(`Impairment Classification -- PEARL addresses ${pearlAddressable} of ${totalClassified} (${addressabilityPct}%)`);
+                                pdf.addSubtitle(`Impairment Classification -- ALIA addresses ${pearlAddressable} of ${totalClassified} (${addressabilityPct}%)`);
                                 pdf.addDivider();
                                 pdf.addTable(
-                                  ['Cause', 'Tier', 'PEARL Action'],
+                                  ['Cause', 'Tier', 'ALIA Action'],
                                   impairmentClassification.map((item: any) => [
                                     clean(item.cause),
                                     item.tier === 1 ? 'T1 -- Primary Target' : item.tier === 2 ? 'T2 -- Contributes/Planned' : 'T3 -- Outside Scope',
@@ -1917,7 +1917,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
                               // ─── Full Restoration Plan ───
                               pdf.addSubtitle('Full Restoration Plan');
                               pdf.addDivider();
-                              pdf.addText(`This plan combines ${totalBMPs} conventional BMPs and nature-based solutions with PEARL accelerated treatment.`);
+                              pdf.addText(`This plan combines ${totalBMPs} conventional BMPs and nature-based solutions with ALIA accelerated treatment.`);
                               pdf.addSpacer(3);
 
                               for (const cat of categories.filter((c: any) => c.id !== 'pearl')) {
@@ -1936,7 +1936,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
                               // ─── Recommended Next Steps ───
                               pdf.addSubtitle('Recommended Next Steps');
                               pdf.addDivider();
-                              pdf.addText(clean(`1. Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} PEARL units, ${phase1GPM} GPM) at highest-priority inflow zone${phase1Quads > 1 ? 's' : ''}` : `${totalUnits} PEARL unit${totalUnits > 1 ? 's' : ''}`} within 30 days.`), { indent: 5 });
+                              pdf.addText(clean(`1. Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} ALIA units, ${phase1GPM} GPM) at highest-priority inflow zone${phase1Quads > 1 ? 's' : ''}` : `${totalUnits} ALIA unit${totalUnits > 1 ? 's' : ''}`} within 30 days.`), { indent: 5 });
                               pdf.addText('2. Begin continuous water quality monitoring (15-min intervals, telemetered).', { indent: 5 });
                               pdf.addText('3. Use 90-day baseline dataset to calibrate treatment priorities and validate severity assessment.', { indent: 5 });
                               if (isPhasedDeployment) {
@@ -1997,14 +1997,14 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
 
                         return (
                           <div className="rounded-lg border-2 border-green-300 bg-gradient-to-br from-green-50 to-emerald-50 p-3 space-y-3">
-                            <div className="text-[10px] font-bold text-green-800 uppercase tracking-wider">PEARL Economics -- {regionName}</div>
+                            <div className="text-[10px] font-bold text-green-800 uppercase tracking-wider">ALIA Economics -- {regionName}</div>
 
                             {/* Unit pricing */}
                             <div className="space-y-1">
-                              <div className="text-[10px] font-bold text-slate-600 uppercase">PEARL Unit Pricing</div>
+                              <div className="text-[10px] font-bold text-slate-600 uppercase">ALIA Unit Pricing</div>
                               <div className="rounded-md bg-white border border-slate-200 overflow-hidden">
                                 <div className="grid grid-cols-[1fr_auto] text-[11px]">
-                                  <div className="px-2 py-1.5 bg-slate-100 font-semibold border-b border-slate-200">PEARL Unit (50 GPM)</div>
+                                  <div className="px-2 py-1.5 bg-slate-100 font-semibold border-b border-slate-200">ALIA Unit (50 GPM)</div>
                                   <div className="px-2 py-1.5 bg-slate-100 font-bold text-right border-b border-slate-200">{fmt(unitCost)}/unit/year</div>
                                   <div className="px-2 py-1.5 border-b border-slate-100 text-[10px] text-slate-500" style={{ gridColumn: '1 / -1' }}>
                                     All-inclusive: hardware, deployment, calibration, continuous monitoring, dashboards, automated reporting, maintenance, and support
@@ -2088,7 +2088,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
                               <div className="rounded-md bg-green-100 border border-green-200 text-center py-2">
                                 <div className="text-[9px] text-green-600">Compliance Savings Offset</div>
                                 <div className="text-lg font-bold text-green-700">{offsetPctLow}% -- {offsetPctHigh}%</div>
-                                <div className="text-[9px] text-green-500">of PEARL cost offset by reduced spend</div>
+                                <div className="text-[9px] text-green-500">of ALIA cost offset by reduced spend</div>
                               </div>
                               <div className="rounded-md bg-cyan-100 border border-cyan-200 text-center py-2">
                                 <div className="text-[9px] text-cyan-600">Time to Compliance Data</div>
@@ -2228,7 +2228,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
                     <div>
                       <span className="font-bold">Federal Response:</span> President Trump directed FEMA coordination on Feb 17. Gov. Moore's office noted the federal government has been responsible for the Potomac Interceptor since the last century. Potomac Conservancy submitted a letter signed by 2,100+ community members demanding accountability from DC Water.
                     </div>
-                    {/* PEARL relevance */}
+                    {/* ALIA relevance */}
                     <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-2 text-cyan-900">
                       <span className="font-bold">🔬 PEARL Relevance:</span> This event demonstrates catastrophic infrastructure failure impact on receiving waters. PEARL's real-time monitoring capability would provide continuous E. coli, nutrient, and pathogen tracking during and after spill events — filling the gap that required UMD researchers and volunteer riverkeepers to manually sample. Continuous deployment at 6 DC Water monitoring sites would provide the 24/7 data regulators and the public need.
                     </div>
@@ -2355,7 +2355,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
                 <div className="bg-white rounded-lg border border-blue-200 p-3 text-center">
                   <div className="text-2xl font-bold text-blue-600">—</div>
                   <div className="text-xs text-blue-700">Shared Datasets</div>
-                  <div className="text-[10px] text-slate-400 mt-0.5">PEARL + ATTAINS + WQP</div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">ALIA + ATTAINS + WQP</div>
                 </div>
               </div>
 
@@ -2382,7 +2382,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
               {/* Quick citation export */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="bg-white rounded-lg border border-slate-200 p-3">
-                  <div className="text-xs font-semibold text-slate-700 mb-1">📊 Data Citation (PEARL)</div>
+                  <div className="text-xs font-semibold text-slate-700 mb-1">📊 Data Citation (ALIA)</div>
                   <div className="text-[10px] text-slate-500 font-mono bg-slate-50 p-2 rounded">
                     Local Seafood Projects Inc. ({new Date().getFullYear()}). Project PEARL Water Quality Monitoring Data: {stateName}. Retrieved {new Date().toISOString().split('T')[0]} from pearl.localseafoodprojects.com
                   </div>
@@ -2472,7 +2472,7 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
               <div className="text-xs font-semibold text-slate-700 mb-1">Available Datasets — {stateName}</div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {[
-                  { name: 'PEARL Continuous Monitoring', source: 'PEARL Sensors', format: 'CSV / JSON API', freq: '15-min intervals', icon: '🦪' },
+                  { name: 'ALIA Continuous Monitoring', source: 'ALIA Sensors', format: 'CSV / JSON API', freq: '15-min intervals', icon: '🦪' },
                   { name: 'EPA ATTAINS Assessments', source: 'EPA', format: 'JSON API', freq: 'Biennial (IR cycle)', icon: '🏛️' },
                   { name: 'Water Quality Portal', source: 'USGS/EPA/USDA', format: 'CSV / WQX', freq: 'Varies by station', icon: '💧' },
                   { name: 'USGS NWIS Streamflow', source: 'USGS', format: 'RDB / JSON', freq: 'Real-time + daily', icon: '🌊' },

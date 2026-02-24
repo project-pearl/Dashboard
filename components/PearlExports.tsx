@@ -63,7 +63,7 @@ export function exportAIInsightsReport(data: any, regionName: string, userRole: 
     `Nutrient Loading: TN ${data?.parameters?.TN?.value?.toFixed(2)} mg/L, TP ${data?.parameters?.TP?.value?.toFixed(3)} mg/L\n` +
     `Sediment: TSS ${data?.parameters?.TSS?.value?.toFixed(1)} mg/L, Turbidity ${data?.parameters?.turbidity?.value?.toFixed(1)} NTU\n\n` +
     `RECOMMENDATIONS\n${'-'.repeat(40)}\n` +
-    `• Continue PEARL biofiltration monitoring at current deployment\n` +
+    `• Continue ALIA biofiltration monitoring at current deployment\n` +
     `• ${data?.parameters?.TN?.value > 1.0 ? 'Elevated nitrogen — consider upstream source investigation' : 'Nitrogen within acceptable range'}\n` +
     `• ${data?.parameters?.TSS?.value > 25 ? 'Elevated TSS — review storm event capture capacity' : 'TSS within target range'}\n` +
     `• Next recommended sampling window: ${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString()}\n` +
@@ -93,12 +93,12 @@ export function exportESGReport(data: any, removalEfficiencies: any, regionName:
     `  Governance Score:     ${govScore}/100\n` +
     `  Composite ESG:        ${Math.round((envScore + socialScore + govScore) / 3)}/100\n\n` +
     `ENVIRONMENTAL METRICS\n${'-'.repeat(40)}\n${formatParams(data)}\n\n` +
-    `PEARL REMOVAL PERFORMANCE\n${'-'.repeat(40)}\n${formatEfficiencies(removalEfficiencies)}\n\n` +
+    `ALIA REMOVAL PERFORMANCE\n${'-'.repeat(40)}\n${formatEfficiencies(removalEfficiencies)}\n\n` +
     `SOCIAL IMPACT\n${'-'.repeat(40)}\n` +
     `  Water quality improvement benefits downstream communities\n` +
     `  Nature-based infrastructure reduces chemical treatment dependency\n` +
     `  Oyster biofiltration supports marine ecosystem restoration\n` +
-    `  Educational outreach via PEARL K-12 and university programs\n\n` +
+    `  Educational outreach via ALIA K-12 and university programs\n\n` +
     `GOVERNANCE\n${'-'.repeat(40)}\n` +
     `  EPA QAPP-certified monitoring protocols\n` +
     `  Real-time 24/7 data transparency\n` +
@@ -115,14 +115,14 @@ export function exportBayImpactReport(data: any, removalEfficiencies: any, regio
   const report =
     header('CHESAPEAKE BAY IMPACT REPORT', regionName) +
     `BAY RESTORATION CONTRIBUTION\n${'-'.repeat(40)}\n` +
-    `PEARL system contribution to Chesapeake Bay TMDL targets:\n\n` +
+    `ALIA system contribution to Chesapeake Bay TMDL targets:\n\n` +
     `REMOVAL EFFICIENCIES\n${'-'.repeat(40)}\n${formatEfficiencies(removalEfficiencies)}\n\n` +
     `CURRENT READINGS\n${'-'.repeat(40)}\n${formatParams(data)}\n\n` +
     `CHESAPEAKE BAY TMDL CONTEXT\n${'-'.repeat(40)}\n` +
     `  Framework: Chesapeake Bay TMDL Phase III WIP\n` +
     `  Target: 2025 milestones for nitrogen, phosphorus, sediment\n` +
-    `  PEARL Role: Nature-based BMP supplementing grey infrastructure\n` +
-    `  Oyster Equivalent: PEARL biofiltration = ~2,500 adult oysters/unit\n\n` +
+    `  ALIA Role: Nature-based BMP supplementing grey infrastructure\n` +
+    `  Oyster Equivalent: ALIA biofiltration = ~2,500 adult oysters/unit\n\n` +
     `ECOSYSTEM BENEFITS\n${'-'.repeat(40)}\n` +
     `  • Nutrient reduction supports SAV habitat restoration\n` +
     `  • Sediment removal improves water clarity for bay grasses\n` +
@@ -141,7 +141,7 @@ export function exportEJReport(data: any, regionName: string, regionId: string) 
     `Region ID: ${regionId}\n\n` +
     `WATER QUALITY METRICS\n${'-'.repeat(40)}\n${formatParams(data)}\n\n` +
     `ENVIRONMENTAL JUSTICE ANALYSIS\n${'-'.repeat(40)}\n` +
-    `  PEARL deployments prioritize underserved communities disproportionately\n` +
+    `  ALIA deployments prioritize underserved communities disproportionately\n` +
     `  affected by water quality impairments. This deployment at ${regionName}\n` +
     `  addresses documented EPA 303(d) impairments with nature-based solutions.\n\n` +
     `COMMUNITY BENEFITS\n${'-'.repeat(40)}\n` +
@@ -176,7 +176,7 @@ export function exportForecastReport(data: any, regionName: string, userRole: st
     `  • Next storm event window: 48-72 hours (weather service data)\n` +
     `  • Recommended pre-storm sampling: 24 hours before projected rainfall\n` +
     `  • Post-storm monitoring: 48-hour intensive sampling recommended\n\n` +
-    `PEARL SYSTEM STATUS\n${'-'.repeat(40)}\n` +
+    `ALIA SYSTEM STATUS\n${'-'.repeat(40)}\n` +
     `  Sensor Network: Online (all channels reporting)\n` +
     `  Biofiltration: Active — oyster health nominal\n` +
     `  Mechanical Filtration: Operating within design parameters\n` +
@@ -197,7 +197,7 @@ export function exportROIReport(data: any, removalEfficiencies: any, regionName:
 
   const report =
     header('RETURN ON INVESTMENT ANALYSIS', regionName) +
-    `PEARL SYSTEM ECONOMICS\n${'-'.repeat(40)}\n` +
+    `ALIA SYSTEM ECONOMICS\n${'-'.repeat(40)}\n` +
     `  Estimated Annual Treatment Volume: ${(annualGallons / 1_000_000).toFixed(0)}M gallons\n` +
     `  TSS Removal Efficiency: ${tssEff.toFixed(1)}%\n` +
     `  TN Removal Efficiency: ${tnEff.toFixed(1)}%\n` +
@@ -207,7 +207,7 @@ export function exportROIReport(data: any, removalEfficiencies: any, regionName:
     `COST COMPARISON\n${'-'.repeat(40)}\n` +
     `  Traditional BMP (detention pond):    $180,000–$350,000/yr maintenance\n` +
     `  Chemical Treatment (alum/PAC):       $250,000–$500,000/yr\n` +
-    `  PEARL Biofiltration + Mechanical:    $85,000–$150,000/yr\n` +
+    `  ALIA Biofiltration + Mechanical:    $85,000–$150,000/yr\n` +
     `  Estimated Annual Savings:            $95,000–$350,000\n\n` +
     `REGULATORY VALUE\n${'-'.repeat(40)}\n` +
     `  MS4 permit compliance: Avoided fines $10,000–$37,500/day potential\n` +
@@ -233,9 +233,9 @@ export function exportPeerBenchmarkReport(data: any, regionName: string) {
     `  TP (mg/L)          ${(data?.parameters?.TP?.value || 0).toFixed(3).padStart(8)}      0.080           ${(data?.parameters?.TP?.value || 0) <= 0.08 ? 'Better' : 'Worse'} than avg\n` +
     `  TSS (mg/L)         ${(data?.parameters?.TSS?.value || 0).toFixed(1).padStart(8)}      22.0            ${(data?.parameters?.TSS?.value || 0) <= 22 ? 'Better' : 'Worse'} than avg\n` +
     `  Turbidity (NTU)    ${(data?.parameters?.turbidity?.value || 0).toFixed(1).padStart(8)}      12.0            ${(data?.parameters?.turbidity?.value || 0) <= 12 ? 'Better' : 'Worse'} than avg\n\n` +
-    `PEARL PERFORMANCE CONTEXT\n${'-'.repeat(40)}\n` +
+    `ALIA PERFORMANCE CONTEXT\n${'-'.repeat(40)}\n` +
     `  Sites outperforming national average in ≥4 parameters indicate\n` +
-    `  effective BMP deployment. PEARL targets continuous improvement\n` +
+    `  effective BMP deployment. ALIA targets continuous improvement\n` +
     `  across all parameters with emphasis on TMDL-listed impairments.\n` +
     PEARL_FOOTER(new Date().getFullYear());
 
@@ -247,7 +247,7 @@ export function exportPeerBenchmarkReport(data: any, regionName: string) {
 export function exportGrantReport(data: any, removalEfficiencies: any, regionName: string) {
   const report =
     header('GRANT APPLICATION SUPPORT DATA', regionName) +
-    `PEARL SYSTEM PERFORMANCE DATA FOR GRANT APPLICATIONS\n${'-'.repeat(40)}\n\n` +
+    `ALIA SYSTEM PERFORMANCE DATA FOR GRANT APPLICATIONS\n${'-'.repeat(40)}\n\n` +
     `CURRENT WATER QUALITY\n${'-'.repeat(40)}\n${formatParams(data)}\n\n` +
     `REMOVAL EFFICIENCIES\n${'-'.repeat(40)}\n${formatEfficiencies(removalEfficiencies)}\n\n` +
     `KEY METRICS FOR PROPOSALS\n${'-'.repeat(40)}\n` +
@@ -282,7 +282,7 @@ export function exportGrantReport(data: any, removalEfficiencies: any, regionNam
 export function exportK12FieldReport(data: any, regionName: string) {
   const report =
     header('K-12 FIELD INVESTIGATION REPORT', regionName) +
-    `🔬 STUDENT FIELD REPORT — PEARL Water Quality Investigation\n${'─'.repeat(50)}\n\n` +
+    `🔬 STUDENT FIELD REPORT — ALIA Water Quality Investigation\n${'─'.repeat(50)}\n\n` +
     `WHAT WE MEASURED\n${'-'.repeat(40)}\n` +
     Object.entries(data?.parameters || {})
       .map(([key, p]: [string, any]) => `  ${p.name}: ${p.value?.toFixed(2)} ${p.unit}`)
@@ -292,8 +292,8 @@ export function exportK12FieldReport(data: any, regionName: string) {
     `  Dissolved Oxygen (DO): ${(data?.parameters?.DO?.value || 0) >= 6 ? '✅ Fish and crabs can breathe easily!' : (data?.parameters?.DO?.value || 0) >= 4 ? '⚠️ Some animals might struggle' : '🚨 Danger zone — not enough oxygen'}\n` +
     `  Turbidity: ${(data?.parameters?.turbidity?.value || 0) <= 15 ? '✅ Water is pretty clear' : '⚠️ Water is cloudy — sediment in the water'}\n` +
     `  Nitrogen & Phosphorus: ${(data?.parameters?.TN?.value || 0) <= 1.0 ? '✅ Nutrient levels are healthy' : '⚠️ Extra nutrients can cause algae blooms'}\n\n` +
-    `HOW PEARL HELPS\n${'-'.repeat(40)}\n` +
-    `  🦪 Oysters inside the PEARL system filter water naturally!\n` +
+    `HOW ALIA HELPS\n${'-'.repeat(40)}\n` +
+    `  🦪 Oysters inside the ALIA system filter water naturally!\n` +
     `  🔧 Mechanical screens catch trash and large sediment\n` +
     `  📊 Sensors measure water quality every 15 minutes — 24/7!\n` +
     `  🌊 Together, they help clean our waterways and protect wildlife\n\n` +
@@ -312,9 +312,9 @@ export function exportK12FieldReport(data: any, regionName: string) {
 export function exportTeacherLessonData(data: any, removalEfficiencies: any, regionName: string) {
   const report =
     header('TEACHER RESOURCE — LESSON DATA PACKAGE', regionName) +
-    `📚 PEARL Educator Resource Pack\n${'─'.repeat(50)}\n\n` +
+    `📚 ALIA Educator Resource Pack\n${'─'.repeat(50)}\n\n` +
     `RAW DATA FOR CLASSROOM USE\n${'-'.repeat(40)}\n${formatParams(data)}\n\n` +
-    `PEARL SYSTEM PERFORMANCE\n${'-'.repeat(40)}\n${formatEfficiencies(removalEfficiencies)}\n\n` +
+    `ALIA SYSTEM PERFORMANCE\n${'-'.repeat(40)}\n${formatEfficiencies(removalEfficiencies)}\n\n` +
     `LESSON CONNECTIONS\n${'-'.repeat(40)}\n` +
     `  NGSS Standards Alignment:\n` +
     `    • MS-ESS3-3: Human impacts on Earth systems\n` +
@@ -327,10 +327,10 @@ export function exportTeacherLessonData(data: any, removalEfficiencies: any, reg
     `    • Statistical analysis: mean, median, standard deviation\n` +
     `    • Unit conversion: mg/L to parts per million\n\n` +
     `DISCUSSION PROMPTS\n${'-'.repeat(40)}\n` +
-    `  1. Compare PEARL removal efficiencies to traditional methods\n` +
+    `  1. Compare ALIA removal efficiencies to traditional methods\n` +
     `  2. Why is continuous monitoring better than quarterly grab sampling?\n` +
     `  3. How do oysters filter water? (Biology + Engineering connection)\n` +
-    `  4. Design challenge: How would you deploy PEARL in your local waterway?\n` +
+    `  4. Design challenge: How would you deploy ALIA in your local waterway?\n` +
     `  5. Data literacy: What story do these numbers tell about water health?\n` +
     PEARL_FOOTER(new Date().getFullYear());
 

@@ -40,7 +40,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   esg: {
     image: '/images/heroes/Industrial.png',
     subtitle: 'PEARL Intelligence Network',
-    headline: 'Water Risk & ESG Performance',
+    headline: 'Water Risk & Sustainability Performance',
     description:
       'Quantify water risk exposure, benchmark facility performance, and generate audit-ready sustainability disclosures.',
     accentColor: 'text-emerald-400',
@@ -109,10 +109,10 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
       'Nutrient tracking, irrigation optimization, and conservation credit management for sustainable agriculture.',
     accentColor: 'text-lime-400',
   },
-  shuck: {
+  'aqua-lo': {
     image: '/images/heroes/Research.png',
     subtitle: 'PEARL Intelligence Network',
-    headline: 'SHUCK LIMS',
+    headline: 'AQUA-LO Laboratory',
     description:
       'Full-spectrum laboratory information management — sample intake, QA/QC, methods, and chain of custody.',
     accentColor: 'text-teal-400',

@@ -99,7 +99,7 @@ const TreatmentSection: React.FC = () => {
         >
           <Image
             src="/Waterway Restoration.jpg"
-            alt="PEARL waterway restoration system deployed in a coastal environment"
+            alt="ALIA waterway restoration system deployed in a coastal environment"
             fill
             className="object-cover"
             priority
@@ -120,7 +120,7 @@ const TreatmentSection: React.FC = () => {
             </span>
           </h1>
           <p className="mt-6 text-lg md:text-xl text-white/70 max-w-2xl leading-relaxed">
-            PEARL systems deploy directly in the waterway — treating pollution at the source
+            ALIA systems deploy directly in the waterway — treating pollution at the source
             with oyster biofiltration and multi-stage mechanical filtration.
           </p>
 
@@ -153,7 +153,7 @@ const TreatmentSection: React.FC = () => {
                 spreads through shellfish beds and swimming areas.
               </p>
               <p>
-                PEARL was built to close that gap. We deploy treatment systems directly in the water,
+                ALIA was built to close that gap. We deploy treatment systems directly in the water,
                 at the point where pollution concentrates and ecosystems are most stressed.
               </p>
             </div>
@@ -165,7 +165,7 @@ const TreatmentSection: React.FC = () => {
               <div className="relative rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/5">
                 <Image
                   src="/Kidney.JPG"
-                  alt="PEARL acts as a kidney for waterways — filtering pollutants at the shoreline"
+                  alt="ALIA acts as a kidney for waterways — filtering pollutants at the shoreline"
                   width={700}
                   height={525}
                   className="w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
@@ -202,7 +202,7 @@ const TreatmentSection: React.FC = () => {
             <div className="rounded-2xl overflow-hidden ring-1 ring-white/10 shadow-2xl bg-white/5 backdrop-blur-sm">
               <Image
                 src="/Pearl-Flowtrain.png"
-                alt="PEARL Multi-Stage Active Filtration — 3 tanks: Pre-Treatment, Chemical Stage, Biological Stage"
+                alt="ALIA Multi-Stage Active Filtration — 3 tanks: Pre-Treatment, Chemical Stage, Biological Stage"
                 width={1400}
                 height={580}
                 className="w-full object-contain"
@@ -321,7 +321,7 @@ const TreatmentSection: React.FC = () => {
                 Built to Go Where the Problem Is
               </h2>
               <p className="text-slate-600 max-w-2xl mx-auto text-lg leading-relaxed">
-                PEARL systems are modular and relocatable. They can be deployed from a vessel in
+                ALIA systems are modular and relocatable. They can be deployed from a vessel in
                 tidal estuaries or mounted at fixed outfall points for permanent compliance.
               </p>
             </div>
@@ -331,7 +331,7 @@ const TreatmentSection: React.FC = () => {
             <div className="rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/5 bg-white mb-12">
               <Image
                 src="/Deployable.JPG"
-                alt="PEARL deployment configurations — vessel-mounted and fixed dockside"
+                alt="ALIA deployment configurations — vessel-mounted and fixed dockside"
                 width={1400}
                 height={640}
                 className="w-full object-contain"
@@ -403,7 +403,7 @@ const TreatmentSection: React.FC = () => {
             </h2>
             <div className="space-y-5 text-[17px] leading-[1.9] text-slate-600">
               <p>
-                Each PEARL system carries 8 monitoring points that capture influent and effluent
+                Each ALIA system carries 8 monitoring points that capture influent and effluent
                 data in real time — TSS, turbidity, nutrients, microplastics, and dissolved oxygen.
                 That data feeds directly into the PEARL Intelligence Network.
               </p>

@@ -1041,7 +1041,7 @@ export default function Home() {
                   <SelectItem value="Federal">🏛️ Federal Operator (EPA/NOAA/USDA)</SelectItem>
                   <SelectItem value="State">🏢 State Regulator (MDE, FL DEP)</SelectItem>
                   <SelectItem value="MS4">🏙️ MS4 Operator (Municipal)</SelectItem>
-                  <SelectItem value="Corporate">🏢 Corporate / ESG</SelectItem>
+                  <SelectItem value="Corporate">🏢 Sustainability</SelectItem>
                   <SelectItem value="Researcher">🔬 Principal Investigator</SelectItem>
                   <SelectItem value="College">🎓 Undergrad (Research)</SelectItem>
                   <SelectItem value="NGO">🌿 NGO / Nonprofit</SelectItem>
@@ -1412,7 +1412,7 @@ export default function Home() {
                   className={`gap-2 w-full sm:w-auto ${showESG ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'border-blue-600 text-blue-600 hover:bg-blue-50'}`}
                 >
                   <BarChart3 className="h-4 w-4" />
-                  <span className="sm:inline">ESG Impact</span>
+                  <span className="sm:inline">Sustainability Impact</span>
                 </Button>
               )}
 
@@ -2337,7 +2337,7 @@ export default function Home() {
 
           {/* ── LIVE ESG SCORE ─────────────────────────────────────────── */}
           {!showComparison && !showNutrientCredits && !showESG && !showManuscript && (userRole as string) === 'Corporate' && (
-            <CollapsibleSection id="esg-score" title="ESG Score Dashboard" icon="📊" collapsed={isCollapsed('esg-score')} onToggle={toggleSection}>
+            <CollapsibleSection id="esg-score" title="Sustainability Score Dashboard" icon="📊" collapsed={isCollapsed('esg-score')} onToggle={toggleSection}>
             {(() => {
             // Calculate ESG scores for Corporate dashboard
             const doScore = Math.min(100, (displayData.parameters.DO.value / 9) * 100);
@@ -2380,7 +2380,7 @@ export default function Home() {
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
                   >
                     <FileText className="h-3.5 w-3.5 text-blue-500" />
-                    Export ESG Report PDF
+                    Export Sustainability Report PDF
                   </button>
                 </div>
               </div>

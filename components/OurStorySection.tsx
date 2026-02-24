@@ -55,14 +55,14 @@ const OurStorySection: React.FC = () => {
             nearshore zone, where stress is highest and pollution concentrates. Yet our
             tools stop at the shoreline or far upstream. There was no practical system
             focused on cleaning that water in place. That gap is what pushed him to build
-            PEARL.
+            ALIA.
           </p>
 
           <p>
             The first pilot made it real. We measured what went in and what came out. We
             saw large drops in suspended solids and bacteria. That turned this from an
             idea into a commitment. Clean water gives ecosystems a fair chance. It gives
-            communities something to believe in. PEARL exists to put working systems in
+            communities something to believe in. ALIA exists to put working systems in
             the water, prove results with data, and help these places move from survival
             back to recovery.
           </p>

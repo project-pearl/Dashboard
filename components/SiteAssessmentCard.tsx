@@ -146,7 +146,7 @@ export default function SiteAssessmentCard({
 
   // Nutrient-driven bloom cycle
   if (bloomSeverity === 'severe' || bloomSeverity === 'significant') {
-    treatmentPriorities.push({ rank: 1, driver: `Algal bloom crisis (chlorophyll ${chlVal} ug/L, >${bloomSeverity === 'severe' ? chlSevere : chlSignificant} ${thresholdSourceShort} threshold)`, action: 'Nutrient interception via PEARL biofiltration + resin', urgency: 'immediate' });
+    treatmentPriorities.push({ rank: 1, driver: `Algal bloom crisis (chlorophyll ${chlVal} ug/L, >${bloomSeverity === 'severe' ? chlSevere : chlSignificant} ${thresholdSourceShort} threshold)`, action: 'Nutrient interception via ALIA biofiltration + resin', urgency: 'immediate' });
   } else if (nutrientSeverity === 'excessive') {
     treatmentPriorities.push({ rank: 1, driver: `Excessive nutrient loading (TN ${tnVal?.toFixed(2) ?? '?'}, TP ${tpVal?.toFixed(2) ?? '?'} mg/L)`, action: 'Nutrient removal to prevent bloom cycle', urgency: 'high' });
   } else if (bloomSeverity === 'bloom' || nutrientSeverity === 'elevated') {
@@ -276,7 +276,7 @@ export default function SiteAssessmentCard({
 
   // ═══ CATEGORY 3: PEARL ACCELERATOR ═══
   const pearlModules: TreatmentModule[] = [];
-  pearlModules.push({ id: 'pearl-core', label: waterType === 'brackish' ? 'PEARL — Oyster Biofiltration Unit' : 'PEARL — Mussel Biofiltration Unit',
+  pearlModules.push({ id: 'pearl-core', label: waterType === 'brackish' ? 'ALIA — Oyster Biofiltration Unit' : 'ALIA — Mussel Biofiltration Unit',
     icon: waterType === 'brackish' ? '🦪' : '🐚', status: isImpaired ? 'accelerator' : 'co-benefit',
     detail: waterType === 'brackish'
       ? 'Eastern oyster (C. virginica) biofiltration with real-time TSS, turbidity, and DO monitoring. Accelerates natural filtration with continuous performance data.'
@@ -317,7 +317,7 @@ export default function SiteAssessmentCard({
       detail: 'PCB contamination identified. Activated carbon adsorption stage required. May also address other organic contaminants.',
       color: 'bg-red-50 border-red-200 text-red-800' });
   }
-  categories.push({ id: 'pearl', title: 'PEARL — Treatment Accelerator', icon: '⚡', subtitle: 'Combines biological filtration + mechanical treatment + real-time data to accelerate restoration outcomes', modules: pearlModules, color: 'border-cyan-200 bg-cyan-50/30' });
+  categories.push({ id: 'pearl', title: 'ALIA — Treatment Accelerator', icon: '⚡', subtitle: 'Combines biological filtration + mechanical treatment + real-time data to accelerate restoration outcomes', modules: pearlModules, color: 'border-cyan-200 bg-cyan-50/30' });
 
   // ═══ CATEGORY 4: COMMUNITY & STEWARDSHIP ═══
   const community: TreatmentModule[] = [];
@@ -337,11 +337,11 @@ export default function SiteAssessmentCard({
   // ═══ CATEGORY 5: REGULATORY & PLANNING ═══
   const regulatory: TreatmentModule[] = [];
   if (tmdlStatus === 'needed') {
-    regulatory.push({ id: 'tmdl-dev', label: 'TMDL Development', icon: '📋', status: 'warranted', detail: 'Category 5 waterbody requires Total Maximum Daily Load establishment. PEARL monitoring data can support load allocation modeling and compliance tracking.', color: 'bg-red-50 border-red-200 text-red-800' });
+    regulatory.push({ id: 'tmdl-dev', label: 'TMDL Development', icon: '📋', status: 'warranted', detail: 'Category 5 waterbody requires Total Maximum Daily Load establishment. ALIA monitoring data can support load allocation modeling and compliance tracking.', color: 'bg-red-50 border-red-200 text-red-800' });
   }
   regulatory.push({ id: 'wip', label: 'Watershed Implementation Plan', icon: '🗺️', status: 'recommended', detail: 'Comprehensive plan identifying pollution sources, BMP locations, responsible parties, timelines, and funding. Required for many grant programs.', color: 'bg-indigo-50 border-indigo-200 text-indigo-800' });
-  regulatory.push({ id: 'ms4-credit', label: 'MS4 BMP Credit Documentation', icon: '📊', status: 'recommended', detail: 'Document all implemented BMPs and nature-based solutions for MS4 permit compliance credit. PEARL real-time data provides verifiable performance metrics.', color: 'bg-indigo-50 border-indigo-200 text-indigo-800' });
-  regulatory.push({ id: 'adaptive', label: 'Adaptive Management Plan', icon: '🔄', status: 'recommended', detail: 'Iterative monitoring → assessment → adjustment cycle. Use PEARL continuous data to evaluate BMP effectiveness and adjust treatment train over time.', color: 'bg-indigo-50 border-indigo-200 text-indigo-800' });
+  regulatory.push({ id: 'ms4-credit', label: 'MS4 BMP Credit Documentation', icon: '📊', status: 'recommended', detail: 'Document all implemented BMPs and nature-based solutions for MS4 permit compliance credit. ALIA real-time data provides verifiable performance metrics.', color: 'bg-indigo-50 border-indigo-200 text-indigo-800' });
+  regulatory.push({ id: 'adaptive', label: 'Adaptive Management Plan', icon: '🔄', status: 'recommended', detail: 'Iterative monitoring → assessment → adjustment cycle. Use ALIA continuous data to evaluate BMP effectiveness and adjust treatment train over time.', color: 'bg-indigo-50 border-indigo-200 text-indigo-800' });
   categories.push({ id: 'regulatory', title: 'Regulatory & Planning', icon: '📋', subtitle: 'Compliance pathways and planning frameworks', modules: regulatory, color: 'border-indigo-200 bg-indigo-50/30' });
 
   // ── Threat Assessment ──
@@ -354,10 +354,10 @@ export default function SiteAssessmentCard({
 
   // ── System summary ──
   const pearlMods = categories.find(c => c.id === 'pearl')?.modules || [];
-  const pearlModel = pearlMods.some(t => t.id === 'pearl-gac' || t.id === 'pearl-ac') ? 'PEARL-5X'
-    : pearlMods.some(t => t.id === 'pearl-resin-n' || t.id === 'pearl-resin-m') ? 'PEARL-3R'
-    : pearlMods.some(t => t.id === 'pearl-uv') ? 'PEARL-3B'
-    : 'PEARL-2S';
+  const pearlModel = pearlMods.some(t => t.id === 'pearl-gac' || t.id === 'pearl-ac') ? 'ALIA-5X'
+    : pearlMods.some(t => t.id === 'pearl-resin-n' || t.id === 'pearl-resin-m') ? 'ALIA-3R'
+    : pearlMods.some(t => t.id === 'pearl-uv') ? 'ALIA-3B'
+    : 'ALIA-2S';
   const totalBMPs = categories.filter(c => c.id !== 'pearl').reduce((n, c) => n + c.modules.filter(m => m.status === 'recommended' || m.status === 'warranted').length, 0);
   const compliancePathway = tmdlStatus === 'needed' ? 'TMDL development candidate'
     : tmdlStatus === 'completed' ? 'TMDL implementation — monitoring phase'
@@ -365,7 +365,7 @@ export default function SiteAssessmentCard({
     : isImpaired ? 'Impaired — restoration candidate' : 'Preventive deployment';
 
   // ── PEARL Unit Sizing & Cost Model ──
-  // 1 PEARL unit = 50 GPM standard, $200K/unit/year
+  // 1 ALIA unit = 50 GPM standard, $200K/unit/year
   // ═══ SEVERITY-DRIVEN SIZING MODEL ═══
   // Replaces acreage-only proxy with DNR-threshold treatment need assessment
   // Formula: Site severity determines base deployment, acreage provides scale modifier
@@ -497,37 +497,37 @@ export default function SiteAssessmentCard({
 
   // Bloom-driven DO crash cycle
   if ((bloomSeverity === 'severe' || bloomSeverity === 'significant') && (doSeverity === 'critical' || doSeverity === 'stressed')) {
-    whyBullets.push({ icon: '💀', problem: `Bloom-crash DO cycle: chlorophyll at ${chlVal} ug/L drives DO to ${doVal?.toFixed(1)} mg/L -- lethal to fish and shellfish (${thresholdSourceShort})`, solution: 'PEARL intercepts nutrients upstream of bloom formation, breaking the eutrophication cycle' });
+    whyBullets.push({ icon: '💀', problem: `Bloom-crash DO cycle: chlorophyll at ${chlVal} ug/L drives DO to ${doVal?.toFixed(1)} mg/L -- lethal to fish and shellfish (${thresholdSourceShort})`, solution: 'ALIA intercepts nutrients upstream of bloom formation, breaking the eutrophication cycle' });
   } else {
-    if (doSeverity === 'critical') whyBullets.push({ icon: '🔴', problem: `DO at ${doVal?.toFixed(1)} mg/L -- below ${doCritical} mg/L lethal threshold (${thresholdSourceShort})`, solution: 'PEARL biofiltration improves DO through nutrient removal and aeration' });
-    else if (doSeverity === 'stressed') whyBullets.push({ icon: '🟡', problem: `DO at ${doVal?.toFixed(1)} mg/L -- below ${doStressed} mg/L living resource criteria`, solution: 'PEARL treatment targets nutrient drivers of low DO' });
+    if (doSeverity === 'critical') whyBullets.push({ icon: '🔴', problem: `DO at ${doVal?.toFixed(1)} mg/L -- below ${doCritical} mg/L lethal threshold (${thresholdSourceShort})`, solution: 'ALIA biofiltration improves DO through nutrient removal and aeration' });
+    else if (doSeverity === 'stressed') whyBullets.push({ icon: '🟡', problem: `DO at ${doVal?.toFixed(1)} mg/L -- below ${doStressed} mg/L living resource criteria`, solution: 'ALIA treatment targets nutrient drivers of low DO' });
 
-    if (bloomSeverity === 'severe') whyBullets.push({ icon: '🟤', problem: `Severe algal bloom: chlorophyll at ${chlVal} ug/L (>${chlSevere} = severe per ${thresholdSourceShort})`, solution: 'PEARL nutrient removal starves bloom cycle at the source' });
+    if (bloomSeverity === 'severe') whyBullets.push({ icon: '🟤', problem: `Severe algal bloom: chlorophyll at ${chlVal} ug/L (>${chlSevere} = severe per ${thresholdSourceShort})`, solution: 'ALIA nutrient removal starves bloom cycle at the source' });
     else if (bloomSeverity === 'significant') whyBullets.push({ icon: '🟠', problem: `Significant bloom: chlorophyll at ${chlVal} ug/L (>${chlSignificant} ${thresholdSourceShort} threshold)`, solution: 'Biofiltration + ion exchange removes N and P driving blooms' });
-    else if (bloomSeverity === 'bloom') whyBullets.push({ icon: '🟡', problem: `Algal bloom detected: chlorophyll at ${chlVal} ug/L (>${chlBloom} ${thresholdSourceShort} threshold)`, solution: 'PEARL monitors bloom dynamics and reduces nutrient loading' });
+    else if (bloomSeverity === 'bloom') whyBullets.push({ icon: '🟡', problem: `Algal bloom detected: chlorophyll at ${chlVal} ug/L (>${chlBloom} ${thresholdSourceShort} threshold)`, solution: 'ALIA monitors bloom dynamics and reduces nutrient loading' });
   }
 
   if (nutrientSeverity === 'excessive' && bloomSeverity !== 'severe' && bloomSeverity !== 'significant') {
-    whyBullets.push({ icon: '🧪', problem: `Excessive nutrients: TN ${tnVal?.toFixed(2) ?? '?'} mg/L, TP ${tpVal?.toFixed(2) ?? '?'} mg/L -- eutrophication risk`, solution: 'PEARL biofiltration + resin removes N and P in real time' });
+    whyBullets.push({ icon: '🧪', problem: `Excessive nutrients: TN ${tnVal?.toFixed(2) ?? '?'} mg/L, TP ${tpVal?.toFixed(2) ?? '?'} mg/L -- eutrophication risk`, solution: 'ALIA biofiltration + resin removes N and P in real time' });
   } else if (hasNutrients && nutrientSeverity !== 'excessive') {
-    whyBullets.push({ icon: '🧪', problem: 'Nutrient impairment listed in ATTAINS -- eutrophication driver', solution: 'PEARL biofiltration + resin removes N and P in real time' });
+    whyBullets.push({ icon: '🧪', problem: 'Nutrient impairment listed in ATTAINS -- eutrophication driver', solution: 'ALIA biofiltration + resin removes N and P in real time' });
   }
 
-  if (turbiditySeverity === 'impaired') whyBullets.push({ icon: '🌫️', problem: `Turbidity at ${turbVal?.toFixed(1)} FNU -- exceeds ${turbImpaired} FNU ${isMD ? 'SAV habitat' : 'aquatic habitat'} threshold (${thresholdSourceShort})`, solution: 'PEARL 50um pre-screen + biofilt captures suspended solids, restoring water clarity' });
-  else if (turbiditySeverity === 'elevated') whyBullets.push({ icon: '🌫️', problem: `Turbidity at ${turbVal?.toFixed(1)} FNU -- exceeds ${turbElevated} FNU ${isMD ? 'SAV growth' : 'habitat'} threshold (${thresholdSourceShort})`, solution: 'PEARL 50um screening captures suspended solids' });
-  else if (hasSediment) whyBullets.push({ icon: '🌫️', problem: 'Sediment/turbidity impairment listed in ATTAINS', solution: 'PEARL 50um screening + biofilt captures suspended solids' });
+  if (turbiditySeverity === 'impaired') whyBullets.push({ icon: '🌫️', problem: `Turbidity at ${turbVal?.toFixed(1)} FNU -- exceeds ${turbImpaired} FNU ${isMD ? 'SAV habitat' : 'aquatic habitat'} threshold (${thresholdSourceShort})`, solution: 'ALIA 50um pre-screen + biofilt captures suspended solids, restoring water clarity' });
+  else if (turbiditySeverity === 'elevated') whyBullets.push({ icon: '🌫️', problem: `Turbidity at ${turbVal?.toFixed(1)} FNU -- exceeds ${turbElevated} FNU ${isMD ? 'SAV growth' : 'habitat'} threshold (${thresholdSourceShort})`, solution: 'ALIA 50um screening captures suspended solids' });
+  else if (hasSediment) whyBullets.push({ icon: '🌫️', problem: 'Sediment/turbidity impairment listed in ATTAINS', solution: 'ALIA 50um screening + biofilt captures suspended solids' });
 
-  if (bacteriaElevated) whyBullets.push({ icon: '🦠', problem: `Bacteria at ${Math.round(params.bacteria?.value ?? 0)} MPN/100mL — exceeds 235 MPN/100mL recreational standard`, solution: 'PEARL UV treatment stage provides immediate pathogen reduction' });
-  else if (hasBacteria) whyBullets.push({ icon: '🦠', problem: 'Pathogen impairment listed in ATTAINS', solution: 'PEARL provides pathogen treatment capacity' });
+  if (bacteriaElevated) whyBullets.push({ icon: '🦠', problem: `Bacteria at ${Math.round(params.bacteria?.value ?? 0)} MPN/100mL — exceeds 235 MPN/100mL recreational standard`, solution: 'ALIA UV treatment stage provides immediate pathogen reduction' });
+  else if (hasBacteria) whyBullets.push({ icon: '🦠', problem: 'Pathogen impairment listed in ATTAINS', solution: 'ALIA provides pathogen treatment capacity' });
 
   if (hasMetals) whyBullets.push({ icon: '⚙️', problem: 'Metal contamination in water column', solution: 'Chelating resin stage targets dissolved metals' });
 
-  if (dataAgeDays !== null && dataAgeDays > 365) whyBullets.push({ icon: '📡', problem: `No monitoring data in ${Math.round(dataAgeDays / 365)} year${dataAgeDays > 730 ? 's' : ''} — site is operating blind`, solution: 'PEARL restores continuous, compliance-grade monitoring immediately' });
-  else if (dataAgeDays !== null && dataAgeDays > 30) whyBullets.push({ icon: '📡', problem: `Data is ${dataAgeDays} days old — confidence is ${dataAgeDays > 90 ? 'low' : 'moderate'}`, solution: 'PEARL delivers continuous 15-min interval monitoring' });
+  if (dataAgeDays !== null && dataAgeDays > 365) whyBullets.push({ icon: '📡', problem: `No monitoring data in ${Math.round(dataAgeDays / 365)} year${dataAgeDays > 730 ? 's' : ''} — site is operating blind`, solution: 'ALIA restores continuous, compliance-grade monitoring immediately' });
+  else if (dataAgeDays !== null && dataAgeDays > 30) whyBullets.push({ icon: '📡', problem: `Data is ${dataAgeDays} days old — confidence is ${dataAgeDays > 90 ? 'low' : 'moderate'}`, solution: 'ALIA delivers continuous 15-min interval monitoring' });
 
-  if (tmdlStatus === 'needed') whyBullets.push({ icon: '📋', problem: 'No TMDL established — regulatory exposure is open', solution: 'PEARL data supports TMDL development and load allocation' });
+  if (tmdlStatus === 'needed') whyBullets.push({ icon: '📋', problem: 'No TMDL established — regulatory exposure is open', solution: 'ALIA data supports TMDL development and load allocation' });
 
-  if (whyBullets.length === 0) whyBullets.push({ icon: '🛡️', problem: 'Waterbody at risk without active monitoring', solution: 'PEARL provides early warning and baseline data' });
+  if (whyBullets.length === 0) whyBullets.push({ icon: '🛡️', problem: 'Waterbody at risk without active monitoring', solution: 'ALIA provides early warning and baseline data' });
 
   return (
     <Card className="border-2 border-cyan-300 shadow-md">
@@ -674,25 +674,25 @@ export default function SiteAssessmentCard({
                         <div>→ Upstream BMPs and source control</div>
                         <div>→ Nature-based restoration for long-term recovery</div>
                         <div>→ Community programs for compliance and stewardship</div>
-                        <div>→ <span className="font-semibold">PEARL for immediate treatment and real-time verification</span></div>
+                        <div>→ <span className="font-semibold">ALIA for immediate treatment and real-time verification</span></div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Why PEARL First */}
+                  {/* Why ALIA First */}
                   <div className="rounded-md bg-cyan-50 border-2 border-cyan-300 p-3">
-                    <div className="text-[10px] font-bold text-cyan-800 uppercase tracking-wider mb-1.5">Why PEARL First</div>
+                    <div className="text-[10px] font-bold text-cyan-800 uppercase tracking-wider mb-1.5">Why ALIA First</div>
                     <div className="space-y-1.5 text-xs text-cyan-900 leading-relaxed">
                       {dataAgeDays !== null && dataAgeDays > 30 && (
-                        <div><span className="font-semibold text-red-700">Data is {dataAgeDays} days old.</span> PEARL restores continuous, compliance-grade monitoring.</div>
+                        <div><span className="font-semibold text-red-700">Data is {dataAgeDays} days old.</span> ALIA restores continuous, compliance-grade monitoring.</div>
                       )}
                       {treatmentPriorities.length > 0 && treatmentPriorities[0].urgency === 'immediate' && (
-                        <div><span className="font-semibold text-red-700">{treatmentPriorities[0].driver.charAt(0).toUpperCase() + treatmentPriorities[0].driver.slice(1).split('(')[0].trim()}.</span> PEARL provides immediate treatment.</div>
+                        <div><span className="font-semibold text-red-700">{treatmentPriorities[0].driver.charAt(0).toUpperCase() + treatmentPriorities[0].driver.slice(1).split('(')[0].trim()}.</span> ALIA provides immediate treatment.</div>
                       )}
                       {treatmentPriorities.length > 0 && treatmentPriorities[0].urgency !== 'immediate' && (
-                        <div><span className="font-semibold">{hasBacteria ? 'Pathogen risk is elevated' : hasNutrients ? 'Nutrient loading is degrading habitat' : hasSediment ? 'Sediment is impairing aquatic life' : 'Conditions are deteriorating'}.</span> PEARL begins treatment immediately.</div>
+                        <div><span className="font-semibold">{hasBacteria ? 'Pathogen risk is elevated' : hasNutrients ? 'Nutrient loading is degrading habitat' : hasSediment ? 'Sediment is impairing aquatic life' : 'Conditions are deteriorating'}.</span> ALIA begins treatment immediately.</div>
                       )}
-                      <div><span className="font-semibold">Long-term restoration takes years.</span> PEARL delivers measurable results in weeks.</div>
+                      <div><span className="font-semibold">Long-term restoration takes years.</span> ALIA delivers measurable results in weeks.</div>
                     </div>
                   </div>
                 </div>
@@ -700,7 +700,7 @@ export default function SiteAssessmentCard({
                 {/* Action line */}
                 <div className="rounded-md bg-cyan-700 text-white px-4 py-2.5">
                   <div className="text-xs font-semibold">
-                    Recommended next step: Deploy {isPhasedDeployment ? `Phase 1 (${phase1Units} unit${phase1Units > 1 ? 's' : ''}, ${phase1GPM} GPM)` : `${totalUnits} PEARL unit${totalUnits > 1 ? 's' : ''}`} at {regionName} and begin continuous monitoring within 30 days.
+                    Recommended next step: Deploy {isPhasedDeployment ? `Phase 1 (${phase1Units} unit${phase1Units > 1 ? 's' : ''}, ${phase1GPM} GPM)` : `${totalUnits} ALIA unit${totalUnits > 1 ? 's' : ''}`} at {regionName} and begin continuous monitoring within 30 days.
                   </div>
                   <div className="text-[10px] text-cyan-200 mt-1">
                     Typical deployment: 30-60 days. Pilot generates continuous data and measurable reductions within the first operating cycle.
@@ -710,7 +710,7 @@ export default function SiteAssessmentCard({
             );
           })()}
 
-          {/* ═══ PEARL — IMMEDIATE IMPACT LAYER (elevated, shown first) ═══ */}
+          {/* ═══ ALIA — IMMEDIATE IMPACT LAYER (elevated, shown first) ═══ */}
           {(() => {
             const pearlCat = categories.find(c => c.id === 'pearl');
             if (!pearlCat) return null;
@@ -732,7 +732,7 @@ export default function SiteAssessmentCard({
 
                 {/* Why PEARL here — dynamic evidence box */}
                 <div className="rounded-md border border-cyan-300 bg-white p-3 space-y-2">
-                  <div className="text-[10px] font-bold text-cyan-800 uppercase tracking-wider">Why PEARL at this site</div>
+                  <div className="text-[10px] font-bold text-cyan-800 uppercase tracking-wider">Why ALIA at this site</div>
                   <div className="space-y-1.5">
                     {whyBullets.map((b, i) => (
                       <div key={i} className="flex items-start gap-2">
@@ -746,7 +746,7 @@ export default function SiteAssessmentCard({
                   </div>
                 </div>
 
-                {/* PEARL modules */}
+                {/* ALIA modules */}
                 <div className="space-y-1">
                   {[...warranted, ...accelerators].map((t) => (
                     <div key={t.id} className={`rounded-md border p-2 ${t.color}`}>
@@ -757,7 +757,7 @@ export default function SiteAssessmentCard({
                             <span className="text-xs font-semibold">{t.label}</span>
                             <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase ${
                               t.status === 'warranted' ? 'bg-red-200 text-red-800' : 'bg-cyan-200 text-cyan-800'
-                            }`}>{t.status === 'warranted' ? 'WARRANTED' : 'PEARL'}</span>
+                            }`}>{t.status === 'warranted' ? 'WARRANTED' : 'ALIA'}</span>
                           </div>
                           <div className="text-[10px] mt-0.5 leading-relaxed opacity-90">{t.detail}</div>
                         </div>
@@ -803,7 +803,7 @@ export default function SiteAssessmentCard({
 
                 {/* ═══ DEPLOYMENT ROADMAP ═══ */}
                 {isPhasedDeployment && (() => {
-                  // Each quad targets a ranked critical zone. Every PEARL unit treats AND monitors.
+                  // Each quad targets a ranked critical zone. Every ALIA unit treats AND monitors.
                   // Monitoring continuity & verification is universal -- not unique to any single phase.
                   type PhaseInfo = { phase: string; quads: number; units: number; gpm: number; cost: number; mission: string; placement: string; why: string; trigger: string; color: string; bgColor: string };
                   const phases: PhaseInfo[] = [];
@@ -958,9 +958,9 @@ export default function SiteAssessmentCard({
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => {
-                      const subject = encodeURIComponent(`PEARL Pilot Deployment Request — ${regionName}, ${stateAbbr}`);
+                      const subject = encodeURIComponent(`ALIA Pilot Deployment Request — ${regionName}, ${stateAbbr}`);
                       const body = encodeURIComponent(
-                        `PEARL Pilot Deployment Request\n` +
+                        `ALIA Pilot Deployment Request\n` +
                         `${'='.repeat(40)}\n\n` +
                         `Site: ${regionName}\n` +
                         `State: ${STATE_ABBR_TO_NAME[stateAbbr] || stateAbbr}\n` +
@@ -983,7 +983,7 @@ export default function SiteAssessmentCard({
                     }}
                     className="flex-1 min-w-[140px] bg-cyan-700 hover:bg-cyan-800 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition-colors shadow-sm"
                   >
-                    🚀 Deploy PEARL Pilot Here
+                    🚀 Deploy ALIA Pilot Here
                   </button>
                   <button
                     onClick={async () => {
@@ -1020,13 +1020,13 @@ export default function SiteAssessmentCard({
                         const catTitleMap: Record<string, string> = {
                           source: 'SOURCE CONTROL -- Upstream BMPs',
                           nature: 'NATURE-BASED SOLUTIONS',
-                          pearl: 'PEARL -- Treatment Accelerator',
+                          pearl: 'ALIA -- Treatment Accelerator',
                           community: 'COMMUNITY ENGAGEMENT & STEWARDSHIP',
                           regulatory: 'REGULATORY & PLANNING',
                         };
 
                         // Title
-                        pdf.addTitle('PEARL Deployment Plan');
+                        pdf.addTitle('ALIA Deployment Plan');
                         pdf.addText(clean(`${regionName}, ${STATE_ABBR_TO_NAME[stateAbbr] || stateAbbr}`), { bold: true, fontSize: 12 });
                         pdf.addText(`Generated ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, { fontSize: 9 });
                         pdf.addSpacer(5);
@@ -1060,7 +1060,7 @@ export default function SiteAssessmentCard({
                         pdf.addSpacer(3);
 
                         pdf.addText('RECOMMENDED ACTION', { bold: true });
-                        pdf.addText(clean(`Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} unit${phase1Units > 1 ? 's' : ''}, ${phase1GPM} GPM)` : `${totalUnits} PEARL unit${totalUnits > 1 ? 's' : ''}`} at ${regionName} and begin continuous monitoring within 30 days.`), { indent: 5, bold: true });
+                        pdf.addText(clean(`Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} unit${phase1Units > 1 ? 's' : ''}, ${phase1GPM} GPM)` : `${totalUnits} ALIA unit${totalUnits > 1 ? 's' : ''}`} at ${regionName} and begin continuous monitoring within 30 days.`), { indent: 5, bold: true });
                         pdf.addText('Typical deployment: 30-60 days. Pilot generates continuous data and measurable reductions within the first operating cycle.', { indent: 5, fontSize: 9 });
                         pdf.addSpacer(5);
 
@@ -1107,8 +1107,8 @@ export default function SiteAssessmentCard({
                           pdf.addSpacer(3);
                         }
 
-                        // Why PEARL at this site
-                        pdf.addSubtitle('Why PEARL at This Site');
+                        // Why ALIA at this site
+                        pdf.addSubtitle('Why ALIA at This Site');
                         pdf.addDivider();
                         for (const b of whyBullets) {
                           pdf.addText(clean(`- ${b.problem}`), { indent: 5, bold: true });
@@ -1116,8 +1116,8 @@ export default function SiteAssessmentCard({
                         }
                         pdf.addSpacer(3);
 
-                        // PEARL Configuration
-                        pdf.addSubtitle(`PEARL Configuration: ${pearlModel}`);
+                        // ALIA Configuration
+                        pdf.addSubtitle(`ALIA Configuration: ${pearlModel}`);
                         pdf.addDivider();
                         pdf.addText(`System Type: ${waterType === 'brackish' ? 'Oyster (C. virginica)' : 'Freshwater Mussel'} Biofiltration`, { indent: 5 });
                         const pearlCatMods = categories.find(c => c.id === 'pearl');
@@ -1137,7 +1137,7 @@ export default function SiteAssessmentCard({
                           [
                             ['Sizing Method', 'Severity-driven treatment need assessment'],
                             ['Site Severity Score', `${prelimSeverity}/100 (${siteSeverityLabel})`],
-                            ['Unit Capacity', '50 GPM per PEARL unit (4 units per quad)'],
+                            ['Unit Capacity', '50 GPM per ALIA unit (4 units per quad)'],
                             ['Waterbody Size', `~${estimatedAcres} acres (${acresSource})`],
                             ['Deployment Size', `${totalQuads} quad${totalQuads > 1 ? 's' : ''} (${totalUnits} units, ${fullGPM} GPM)`],
                             ...(isPhasedDeployment ? [
@@ -1276,7 +1276,7 @@ export default function SiteAssessmentCard({
                         // Full Restoration Plan
                         pdf.addSubtitle('Full Restoration Plan');
                         pdf.addDivider();
-                        pdf.addText(`This plan combines ${totalBMPs} conventional BMPs and nature-based solutions with PEARL accelerated treatment.`);
+                        pdf.addText(`This plan combines ${totalBMPs} conventional BMPs and nature-based solutions with ALIA accelerated treatment.`);
                         pdf.addSpacer(3);
 
                         for (const cat of categories.filter(c => c.id !== 'pearl')) {
@@ -1295,7 +1295,7 @@ export default function SiteAssessmentCard({
                         // Next Steps
                         pdf.addSubtitle('Recommended Next Steps');
                         pdf.addDivider();
-                        pdf.addText(clean(`1. Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} PEARL units, ${phase1GPM} GPM) at highest-priority inflow zone${phase1Quads > 1 ? 's' : ''}` : `${totalUnits} PEARL unit${totalUnits > 1 ? 's' : ''}`} within 30 days.`), { indent: 5 });
+                        pdf.addText(clean(`1. Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} ALIA units, ${phase1GPM} GPM) at highest-priority inflow zone${phase1Quads > 1 ? 's' : ''}` : `${totalUnits} ALIA unit${totalUnits > 1 ? 's' : ''}`} within 30 days.`), { indent: 5 });
                         pdf.addText('2. Begin continuous water quality monitoring (15-min intervals, telemetered).', { indent: 5 });
                         pdf.addText('3. Use 90-day baseline dataset to calibrate treatment priorities and validate severity assessment.', { indent: 5 });
                         if (isPhasedDeployment) {
@@ -1334,7 +1334,7 @@ export default function SiteAssessmentCard({
                   const fmt = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
 
                   // ═══ COMPLIANCE SAVINGS MODEL ═══
-                  // Framed as: "How much existing compliance cost can PEARL replace or compress?"
+                  // Framed as: "How much existing compliance cost can ALIA replace or compress?"
                   // NOT fines avoided. This is reduced spend on monitoring, reporting, and BMP execution.
                   // Partial displacement assumptions — conservative, defensible for city procurement.
 
@@ -1353,17 +1353,17 @@ export default function SiteAssessmentCard({
                   const tradTotalHigh = (tradMonitoringHigh + tradBMPHigh + tradConsultingHigh) * totalQuads;
 
                   // ── Bucket 1: Monitoring & Reporting Efficiency ──
-                  // PEARL replaces 50-75% of fixed monitoring station cost
+                  // ALIA replaces 50-75% of fixed monitoring station cost
                   const monStationSavingsLow = Math.round(0.50 * tradMonitoringLow * totalQuads);
                   const monStationSavingsHigh = Math.round(0.75 * tradMonitoringHigh * totalQuads);
-                  // PEARL replaces 40-60% of consulting, lab, and reporting
+                  // ALIA replaces 40-60% of consulting, lab, and reporting
                   const consultSavingsLow = Math.round(0.40 * tradConsultingLow * totalQuads);
                   const consultSavingsHigh = Math.round(0.60 * tradConsultingHigh * totalQuads);
                   const bucket1Low = monStationSavingsLow + consultSavingsLow;
                   const bucket1High = monStationSavingsHigh + consultSavingsHigh;
 
                   // ── Bucket 2: BMP Execution Efficiency ──
-                  // PEARL data improves targeting, reduces rework and mis-targeted spend
+                  // ALIA data improves targeting, reduces rework and mis-targeted spend
                   // Conservative: 5-10% of amortized BMP program
                   const bucket2Low = Math.round(0.05 * tradBMPLow * totalQuads);
                   const bucket2High = Math.round(0.10 * tradBMPHigh * totalQuads);
@@ -1375,7 +1375,7 @@ export default function SiteAssessmentCard({
                   const compSavingsLowRound = Math.round(compSavingsLow / 10000) * 10000;
                   const compSavingsHighRound = Math.round(compSavingsHigh / 10000) * 10000;
 
-                  // ── What this means relative to PEARL cost ──
+                  // ── What this means relative to ALIA cost ──
                   const offsetPctLow = Math.round((compSavingsLowRound / fullAnnual) * 100);
                   const offsetPctHigh = Math.round((compSavingsHighRound / fullAnnual) * 100);
 
@@ -1391,14 +1391,14 @@ export default function SiteAssessmentCard({
 
                   return (
                     <div className="rounded-lg border-2 border-green-300 bg-gradient-to-br from-green-50 to-emerald-50 p-3 space-y-3">
-                      <div className="text-[10px] font-bold text-green-800 uppercase tracking-wider">PEARL Economics -- {regionName}</div>
+                      <div className="text-[10px] font-bold text-green-800 uppercase tracking-wider">ALIA Economics -- {regionName}</div>
 
                       {/* Unit pricing */}
                       <div className="space-y-1">
-                        <div className="text-[10px] font-bold text-slate-600 uppercase">PEARL Unit Pricing</div>
+                        <div className="text-[10px] font-bold text-slate-600 uppercase">ALIA Unit Pricing</div>
                         <div className="rounded-md bg-white border border-slate-200 overflow-hidden">
                           <div className="grid grid-cols-[1fr_auto] text-[11px]">
-                            <div className="px-2 py-1.5 bg-slate-100 font-semibold border-b border-slate-200">PEARL Unit (50 GPM)</div>
+                            <div className="px-2 py-1.5 bg-slate-100 font-semibold border-b border-slate-200">ALIA Unit (50 GPM)</div>
                             <div className="px-2 py-1.5 bg-slate-100 font-bold text-right border-b border-slate-200">{fmt(unitCost)}/unit/year</div>
                             <div className="px-2 py-1.5 border-b border-slate-100 text-[10px] text-slate-500" style={{ gridColumn: '1 / -1' }}>
                               All-inclusive: hardware, deployment, calibration, continuous monitoring, dashboards, automated reporting, maintenance, and support
@@ -1482,7 +1482,7 @@ export default function SiteAssessmentCard({
                             <div className="px-2 py-1.5 bg-slate-200 font-bold text-slate-700 text-right">{fmt(tradTotalLow)} -- {fmt(tradTotalHigh)}/yr</div>
                           </div>
                         </div>
-                        <div className="text-[9px] text-slate-500 px-1">These are costs Baltimore already pays or would pay to achieve equivalent compliance coverage. PEARL does not eliminate all of these -- it partially displaces and compresses them.</div>
+                        <div className="text-[9px] text-slate-500 px-1">These are costs Baltimore already pays or would pay to achieve equivalent compliance coverage. ALIA does not eliminate all of these -- it partially displaces and compresses them.</div>
                       </div>
 
                       {/* Compliance cost savings */}
@@ -1512,7 +1512,7 @@ export default function SiteAssessmentCard({
                         <div className="rounded-md bg-green-100 border border-green-200 text-center py-2">
                           <div className="text-[9px] text-green-600">Compliance Savings Offset</div>
                           <div className="text-lg font-bold text-green-700">{offsetPctLow}% -- {offsetPctHigh}%</div>
-                          <div className="text-[9px] text-green-500">of PEARL cost offset by reduced compliance spend</div>
+                          <div className="text-[9px] text-green-500">of ALIA cost offset by reduced compliance spend</div>
                         </div>
                         <div className="rounded-md bg-cyan-100 border border-cyan-200 text-center py-2">
                           <div className="text-[9px] text-cyan-600">Time to Compliance Data</div>
@@ -1534,7 +1534,7 @@ export default function SiteAssessmentCard({
                             <div className="px-2 py-1.5 bg-green-200 font-bold text-green-900 text-right">{fmt(effectiveCostLow)} -- {fmt(effectiveCostHigh)}/yr</div>
                           </div>
                         </div>
-                        <div className="text-[9px] text-slate-500 px-1">Effective net cost = PEARL annual cost minus grant funding minus compliance savings. This is the incremental budget impact for capabilities that would otherwise require {totalQuads} separate monitoring, treatment, and consulting contracts.</div>
+                        <div className="text-[9px] text-slate-500 px-1">Effective net cost = ALIA annual cost minus grant funding minus compliance savings. This is the incremental budget impact for capabilities that would otherwise require {totalQuads} separate monitoring, treatment, and consulting contracts.</div>
                       </div>
 
                       {/* Grant alignment */}
@@ -1569,7 +1569,7 @@ export default function SiteAssessmentCard({
           {/* ═══ SUPPORTING LAYERS (source, nature, community, regulatory) ═══ */}
           <div className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold px-1 pt-1">Supporting Restoration Layers</div>
           <div className="text-[11px] text-slate-500 px-1 -mt-2">
-            PEARL accelerates results. These layers provide the long-term foundation.
+            ALIA accelerates results. These layers provide the long-term foundation.
           </div>
 
           {categories.filter(cat => cat.id !== 'pearl').map((cat) => {
@@ -1658,7 +1658,7 @@ export default function SiteAssessmentCard({
               </div>
             </div>
             <div className="text-[10px] text-slate-400 mt-2 border-t border-slate-100 pt-1.5">
-              Sizing derived from {isMD ? 'MD DNR Shallow Water Monitoring thresholds: DO (5.0/3.2 mg/L), chlorophyll (15/50/100 ug/L), turbidity (7 FNU)' : 'EPA National Recommended Water Quality Criteria: DO (5.0/4.0 mg/L), chlorophyll (20/40/60 ug/L), turbidity (10/25 FNU)'}, EPA ATTAINS category. PEARL is the data backbone -- it measures, verifies, and optimizes every restoration layer from day one.
+              Sizing derived from {isMD ? 'MD DNR Shallow Water Monitoring thresholds: DO (5.0/3.2 mg/L), chlorophyll (15/50/100 ug/L), turbidity (7 FNU)' : 'EPA National Recommended Water Quality Criteria: DO (5.0/4.0 mg/L), chlorophyll (20/40/60 ug/L), turbidity (10/25 FNU)'}, EPA ATTAINS category. ALIA is the data backbone -- it measures, verifies, and optimizes every restoration layer from day one.
             </div>
           </div>
         </CardContent>

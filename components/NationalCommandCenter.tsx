@@ -36,6 +36,7 @@ import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import { GrantOpportunityMatcher } from './GrantOpportunityMatcher';
 import { GrantOutcomesCard } from './GrantOutcomesCard';
+import { EmergingContaminantsTracker } from './EmergingContaminantsTracker';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -5549,53 +5550,7 @@ export function NationalCommandCenter(props: Props) {
 
         case 'contaminants-tracker': return DS(<>
         {/* ── EMERGING CONTAMINANTS TRACKER ── */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Emerging Contaminants Tracker</CardTitle>
-            <CardDescription>PFAS, microplastics, pharmaceuticals, and other unregulated contaminants</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Contaminant KPI Strip */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {[
-                { label: 'PFAS Detections', value: '2,847', sub: 'sites with confirmed PFAS', color: 'text-red-600' },
-                { label: 'States Affected', value: '49', sub: 'of 50 states reporting', color: 'text-amber-600' },
-                { label: 'Systems At Risk', value: '1,203', sub: 'PWS exceeding proposed MCLs', color: 'text-red-600' },
-                { label: 'New This Quarter', value: '+156', sub: 'newly identified sites', color: 'text-amber-600' },
-              ].map(k => (
-                <div key={k.label} className="rounded-xl border border-slate-200 bg-white p-4">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
-                  <div className={`text-2xl font-bold ${k.color} mt-1`}>{k.value}</div>
-                  <div className="text-[10px] text-slate-400 mt-1">{k.sub}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Contaminant Classes */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[
-                { name: 'PFAS (Per- & Polyfluoroalkyl)', status: 'MCL Finalized', urgency: 'Critical', detail: 'PFOA/PFOS at 4 ppt. GenX/PFHxS/PFNA/HFPO-DA regulated. Compliance deadline 2029.', states: '49 reporting', color: 'text-red-700', bg: 'border-red-200' },
-                { name: 'Microplastics', status: 'No Federal Standard', urgency: 'Emerging', detail: 'Found in 94% of sampled tap water. California first to monitor. No MCL proposed yet.', states: '12 monitoring', color: 'text-amber-700', bg: 'border-amber-200' },
-                { name: 'Pharmaceuticals & PCPs', status: 'No Federal Standard', urgency: 'Watch', detail: 'Endocrine disruptors, antibiotics, and hormones detected in 80% of streams tested.', states: '8 monitoring', color: 'text-blue-700', bg: 'border-blue-200' },
-                { name: '6PPD-quinone (Tire Chemical)', status: 'Under Study', urgency: 'Emerging', detail: 'Lethal to coho salmon at low concentrations. EPA toxicity review underway.', states: '5 monitoring', color: 'text-amber-700', bg: 'border-amber-200' },
-                { name: 'Cyanotoxins (HABs)', status: 'Health Advisory', urgency: 'High', detail: 'Microcystins and cylindrospermopsin. Health advisory at 0.3 µg/L. 21 states with recurring blooms.', states: '21 affected', color: 'text-red-700', bg: 'border-red-200' },
-                { name: 'Nanomaterials', status: 'No Federal Standard', urgency: 'Watch', detail: 'Titanium dioxide, silver nanoparticles in wastewater. Fate and transport poorly understood.', states: '3 researching', color: 'text-slate-600', bg: 'border-slate-200' },
-              ].map(c => (
-                <div key={c.name} className={`border rounded-lg p-4 ${c.bg}`}>
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-semibold text-slate-800">{c.name}</h4>
-                    <Badge variant="outline" className={`text-[10px] ${c.color}`}>{c.urgency}</Badge>
-                  </div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="outline" className="text-[10px]">{c.status}</Badge>
-                    <span className="text-[10px] text-slate-500">{c.states}</span>
-                  </div>
-                  <p className="text-xs text-slate-600 leading-relaxed">{c.detail}</p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <EmergingContaminantsTracker role="federal" selectedState={selectedState} />
         </>);
 
         case 'interagency-hub': return DS(<>

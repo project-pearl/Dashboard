@@ -20,7 +20,7 @@ const ROLE_META: Record<UserRole, { icon: typeof Shield; label: string; desc: st
   MS4:        { icon: Building2,      label: 'MS4 Compliance',        desc: 'Jurisdiction-specific compliance & reporting',                 tier: 'operator' },
   State:      { icon: Shield,         label: 'State Regulator',       desc: 'Statewide water quality intelligence',                        tier: 'operator' },
   Federal:    { icon: Shield,         label: 'Federal Agency',        desc: 'National monitoring & Bay-wide analytics',                    tier: 'operator' },
-  Corporate:  { icon: Building2,      label: 'Corporate / ESG',       desc: 'ESG compliance reporting & sustainability dashboards',         tier: 'operator' },
+  Corporate:  { icon: Building2,      label: 'Sustainability',        desc: 'Sustainability reporting & compliance dashboards',            tier: 'operator' },
   Temp:       { icon: Shield,         label: 'Temp (Breakpoint)',     desc: 'Breakpoint Revenue Group dashboard',                          tier: 'explorer' },
   Pearl:      { icon: Shield,         label: 'PEARL Admin',           desc: 'Internal PEARL operations dashboard',                         tier: 'operator' },
 };

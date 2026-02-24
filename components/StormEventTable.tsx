@@ -24,7 +24,7 @@ export function StormEventTable({ events, selectedEventId, onSelectEvent, event 
         </div>
         <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">{events.length} event{events.length !== 1 ? 's' : ''} recorded</span>
       </div>
-      <div className="text-xs text-slate-500 px-1">Select an event to view detailed influent/effluent data and PEARL treatment performance.</div>
+      <div className="text-xs text-slate-500 px-1">Select an event to view detailed influent/effluent data and ALIA treatment performance.</div>
       <div className="overflow-x-auto rounded-xl border-2 border-blue-200 shadow-sm">
         <table className="w-full text-sm">
           <thead>

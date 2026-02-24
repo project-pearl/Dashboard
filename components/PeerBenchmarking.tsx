@@ -313,7 +313,7 @@ function StatePeerBenchmarking({ removalEfficiencies, regionId }: { removalEffic
                     <div className="flex items-center gap-1">
                       <ChevronRight className="h-3 w-3 text-indigo-500 flex-shrink-0" />
                       <span>
-                        {r.key === 'TSS' && 'Focus: enhanced sediment BMPs, PEARL biofiltration, forebay maintenance'}
+                        {r.key === 'TSS' && 'Focus: enhanced sediment BMPs, ALIA biofiltration, forebay maintenance'}
                         {r.key === 'TN' && 'Focus: bioretention upgrades, denitrification media, oyster biofiltration'}
                         {r.key === 'TP' && 'Focus: P-sorption media, iron-enhanced filtration, constructed wetlands'}
                         {r.key === 'turbidity' && 'Focus: filter media replacement, settling basin optimization, real-time monitoring'}
@@ -322,7 +322,7 @@ function StatePeerBenchmarking({ removalEfficiencies, regionId }: { removalEffic
                     {r.gapTo1 <= 3 && (
                       <div className="flex items-center gap-1 text-green-700 font-medium">
                         <ChevronRight className="h-3 w-3 text-green-500 flex-shrink-0" />
-                        <span>Within striking distance — PEARL deployment could close this gap</span>
+                        <span>Within striking distance — ALIA deployment could close this gap</span>
                       </div>
                     )}
                   </div>

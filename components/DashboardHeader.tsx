@@ -9,7 +9,7 @@ const ROUTE_LABELS: Record<string, string> = {
   federal: 'Federal',
   state: 'State',
   ms4: 'MS4',
-  esg: 'Corporate ESG',
+  esg: 'Sustainability',
   k12: 'K-12 Education',
   university: 'University Research',
   ngo: 'NGO Conservation',
@@ -17,7 +17,7 @@ const ROUTE_LABELS: Record<string, string> = {
   infrastructure: 'Infrastructure',
   insurance: 'Insurance & Risk',
   agriculture: 'Agriculture',
-  shuck: 'SHUCK LIMS',
+  'aqua-lo': 'AQUA-LO',
 };
 
 const ROUTE_ACCENTS: Record<string, string> = {
@@ -32,7 +32,7 @@ const ROUTE_ACCENTS: Record<string, string> = {
   infrastructure: 'text-slate-600',
   insurance: 'text-indigo-600',
   agriculture: 'text-lime-600',
-  shuck: 'text-teal-600',
+  'aqua-lo': 'text-teal-600',
 };
 
 export function DashboardHeader() {

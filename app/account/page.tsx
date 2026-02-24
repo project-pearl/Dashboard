@@ -39,7 +39,7 @@ const ROLE_LABELS: Record<string, string> = {
   MS4: 'MS4 Operator',
   State: 'State Agency',
   Federal: 'Federal',
-  Corporate: 'Corporate / ESG',
+  Corporate: 'Sustainability',
   Researcher: 'Research / Academic',
   College: 'Undergrad',
   K12: 'K-12 Educator',

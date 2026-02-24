@@ -107,10 +107,10 @@ type Props = {
 // ─── Constants ──────────────────────────────────────────────────────────────
 
 const PEARL_UNITS: Record<string, { gpm: number; footprint: string; price: number; oysterCapacity: string }> = {
-  'PEARL-200': { gpm: 200, footprint: "4' × 4'", price: 45000, oysterCapacity: '500 adults' },
-  'PEARL-500': { gpm: 500, footprint: "6' × 6'", price: 85000, oysterCapacity: '1,200 adults' },
-  'PEARL-1200': { gpm: 1200, footprint: "8' × 10'", price: 165000, oysterCapacity: '3,000 adults' },
-  'PEARL-2500': { gpm: 2500, footprint: "10' × 16'", price: 290000, oysterCapacity: '6,500 adults' },
+  'ALIA-200': { gpm: 200, footprint: "4' × 4'", price: 45000, oysterCapacity: '500 adults' },
+  'ALIA-500': { gpm: 500, footprint: "6' × 6'", price: 85000, oysterCapacity: '1,200 adults' },
+  'ALIA-1200': { gpm: 1200, footprint: "8' × 10'", price: 165000, oysterCapacity: '3,000 adults' },
+  'ALIA-2500': { gpm: 2500, footprint: "10' × 16'", price: 290000, oysterCapacity: '6,500 adults' },
 };
 
 // ─── Mock Deployments (replace with real API when sondes go live) ───────────
@@ -126,7 +126,7 @@ function generateDeployments(): Deployment[] {
       lat: 30.6325,
       lon: -87.0397,
       status: 'active',
-      unitModel: 'PEARL-500',
+      unitModel: 'ALIA-500',
       gpmCapacity: 500,
       installDate: '2026-01-09',
       lastReading: {
@@ -181,7 +181,7 @@ function generateDeployments(): Deployment[] {
       lat: 39.0740,
       lon: -76.5460,
       status: 'staging',
-      unitModel: 'PEARL-1200',
+      unitModel: 'ALIA-1200',
       gpmCapacity: 1200,
       installDate: '2026-04-15',
       lastReading: null,
@@ -370,10 +370,10 @@ function calculateGPM(inputs: GPMCalcInputs) {
   const designGPM = Q_gpm * (inputs.designCapturePercent / 100);
 
   // Recommend PEARL unit
-  let recommended = 'PEARL-2500';
-  if (designGPM <= 200) recommended = 'PEARL-200';
-  else if (designGPM <= 500) recommended = 'PEARL-500';
-  else if (designGPM <= 1200) recommended = 'PEARL-1200';
+  let recommended = 'ALIA-2500';
+  if (designGPM <= 200) recommended = 'ALIA-200';
+  else if (designGPM <= 500) recommended = 'ALIA-500';
+  else if (designGPM <= 1200) recommended = 'ALIA-1200';
 
   const unit = PEARL_UNITS[recommended];
   const unitsNeeded = Math.ceil(designGPM / unit.gpm);
@@ -494,7 +494,7 @@ export function PEARLCommandCenter(props: Props) {
 
   // ── National Water Health Score ──
   // Baseline: national water quality is poor (~31/100 based on ATTAINS impairment rates)
-  // Each active PEARL deployment nudges it up. This is the number we're trying to move.
+  // Each active ALIA deployment nudges it up. This is the number we're trying to move.
   const baselineHealth = 31; // ~69% of US waterbodies have some impairment (ATTAINS 2022)
   const pearlBoost = activeDeployments.length * 0.8 + (totalGallons / 1e8) * 2;
   const nationalHealthScore = Math.min(100, Math.round(baselineHealth + pearlBoost));
@@ -638,7 +638,7 @@ export function PEARLCommandCenter(props: Props) {
                 <p className="text-xs text-slate-500 mt-1 max-w-sm">
                   Based on EPA ATTAINS impairment data across {(116000).toLocaleString()} assessed waterbodies.
                   {pearlBoost > 0 && (
-                    <span className="text-green-600 font-semibold"> PEARL is contributing +{pearlBoost.toFixed(1)} points from {activeDeployments.length} active deployment{activeDeployments.length !== 1 ? 's' : ''} treating {formatNumber(totalGallons)} gallons.</span>
+                    <span className="text-green-600 font-semibold"> ALIA is contributing +{pearlBoost.toFixed(1)} points from {activeDeployments.length} active deployment{activeDeployments.length !== 1 ? 's' : ''} treating {formatNumber(totalGallons)} gallons.</span>
                   )}
                 </p>
                 <div className="flex flex-wrap gap-2 mt-3">
@@ -689,7 +689,7 @@ export function PEARLCommandCenter(props: Props) {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
-                  <Calculator size={18} /> PEARL Unit Sizing Calculator
+                  <Calculator size={18} /> ALIA Unit Sizing Calculator
                 </CardTitle>
                 <Button variant="ghost" size="sm" onClick={() => setShowGPMCalc(false)}>
                   <X size={14} />

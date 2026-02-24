@@ -326,7 +326,7 @@ export function K12EducationalHub({ data, isTeacher }: K12EducationalHubProps) {
               <div className="text-xs text-amber-900 leading-relaxed">
                 <span className="font-semibold block mb-1">Teacher Resources Available:</span>
                 • Downloadable worksheets aligned to NGSS standards<br/>
-                • Virtual field trip to PEARL monitoring sites<br/>
+                • Virtual field trip to ALIA monitoring sites<br/>
                 • Classroom sensor kit loan program<br/>
                 • Guest speaker requests (scientists, engineers)<br/>
                 • Student data collection projects (contribute to real research!)

@@ -160,9 +160,14 @@ export const DEFAULT_SECTIONS: Record<CCKey, SectionDefinition[]> = {
     { id: 'contaminants-tracker', label: 'Emerging Contaminants',     order: 23, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'interagency-hub',    label: 'Cross-Agency Coordination',   order: 24, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'funding-landscape',  label: 'Funding & Grant Landscape',   order: 25, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'waterbody-card',    label: 'State Waterbody Card',        order: 26, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'resolution-planner', label: 'Resolution Planner',         order: 27, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'disclaimer',         label: 'Platform Disclaimer',         order: 28, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'funding-deadlines', label: 'Upcoming Funding Deadlines',   order: 26, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'funding-state',    label: 'State Funding Snapshot',        order: 27, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'funding-matrix',   label: 'Impairment-to-Program Matrix',  order: 28, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'grant-outcomes',   label: 'Historical Grant Outcomes',     order: 29, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'funding-gap',      label: 'Funding Gap Analysis',          order: 30, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'waterbody-card',    label: 'State Waterbody Card',        order: 31, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'resolution-planner', label: 'Resolution Planner',         order: 32, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'disclaimer',         label: 'Platform Disclaimer',         order: 33, visible: true, defaultExpanded: true, lensControlled: true },
   ],
 
   Utility: [

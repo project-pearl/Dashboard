@@ -77,13 +77,13 @@ export function ESGImpactReporting({
             content: [
               `Region: ${regionName}`,
               `Report Date: ${new Date().toLocaleDateString()}`,
-              `ESG Score: ${esgScore.overall}/100 (Grade ${esgScore.grade})`
+              `Sustainability Score: ${esgScore.overall}/100 (Grade ${esgScore.grade})`
             ]
           },
           {
             title: 'EXECUTIVE SUMMARY',
             content: [
-              `Overall ESG Water Impact Score: ${esgScore.overall}/100`,
+              `Overall Sustainability Water Impact Score: ${esgScore.overall}/100`,
               `Grade: ${esgScore.grade}`,
               `Water Risk Level: ${esgScore.waterRiskLevel}`,
               '',
@@ -91,7 +91,7 @@ export function ESGImpactReporting({
             ]
           },
           {
-            title: 'ESG COMPONENT SCORES',
+            title: 'SUSTAINABILITY COMPONENT SCORES',
             content: [],
             table: {
               headers: ['Component', 'Score', 'Weight', 'Contribution'],
@@ -145,19 +145,19 @@ export function ESGImpactReporting({
         sections.push({
           title: 'METHODOLOGY',
           content: [
-            'This ESG Water Impact Score is calculated using the following methodology:',
+            'This Sustainability Water Impact Score is calculated using the following methodology:',
             '',
             '• Water Quality (40%): Based on compliance with regulatory thresholds for key parameters',
             '• Pollutant Reduction (30%): Measured by BMP removal efficiency performance',
             '• Risk Management (20%): Alert frequency and response effectiveness',
             '• Transparency (10%): Public data availability and stakeholder engagement',
             '',
-            'Scoring aligned with GRI 303 (Water and Effluents) and SASB Water Sector Standards for ESG disclosure and stakeholder communication.'
+            'Scoring aligned with GRI 303 (Water and Effluents) and SASB Water Sector Standards for sustainability disclosure and stakeholder communication.'
           ]
         });
 
-        const pdf = await createBrandedPDF('ESG WATER IMPACT REPORT', sections);
-        pdf.download(`ESG-Water-Impact-Report-${regionName.replace(/\s/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`);
+        const pdf = await createBrandedPDF('SUSTAINABILITY WATER IMPACT REPORT', sections);
+        pdf.download(`Sustainability-Water-Impact-Report-${regionName.replace(/\s/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`);
       } catch (error) {
         console.error('Error generating PDF:', error);
         alert('Failed to generate PDF report. Please try again.');
@@ -170,7 +170,7 @@ export function ESGImpactReporting({
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `ESG-Water-Impact-Report-${regionName.replace(/\s/g, '-')}-${new Date().toISOString().split('T')[0]}.txt`;
+      a.download = `Sustainability-Water-Impact-Report-${regionName.replace(/\s/g, '-')}-${new Date().toISOString().split('T')[0]}.txt`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -212,7 +212,7 @@ export function ESGImpactReporting({
       trigger: 'axis',
       formatter: (params: any) => {
         const date = new Date(params[0].value[0]).toLocaleDateString();
-        return `${date}<br/>ESG Score: ${params[0].value[1]}`;
+        return `${date}<br/>Sustainability Score: ${params[0].value[1]}`;
       }
     },
     grid: {
@@ -238,7 +238,7 @@ export function ESGImpactReporting({
       }
     },
     series: [{
-      name: 'ESG Score',
+      name: 'Sustainability Score',
       type: 'line',
       smooth: true,
       symbol: 'circle',
@@ -293,7 +293,7 @@ export function ESGImpactReporting({
               <BarChart3 className="h-6 w-6 text-white" />
             </div>
             <div>
-              ESG Water Impact Score
+              Sustainability Water Impact Score
               <CardDescription className="text-sm mt-1">
                 Environmental, Social, and Governance Performance
               </CardDescription>
@@ -383,7 +383,7 @@ export function ESGImpactReporting({
           <div className="flex flex-wrap gap-3">
             <Button onClick={() => handleDownloadReport('pdf')} className="flex-1 min-w-[200px] bg-blue-600 hover:bg-blue-700" disabled={isGenerating}>
               <Download className="h-4 w-4 mr-2" />
-              {isGenerating ? 'Generating PDF...' : 'Download ESG Report (PDF)'}
+              {isGenerating ? 'Generating PDF...' : 'Download Sustainability Report (PDF)'}
             </Button>
             <Button onClick={() => handleDownloadReport('csv')} variant="outline" className="flex-1 min-w-[200px] border-blue-600 text-blue-600 hover:bg-blue-50" disabled={isGenerating}>
               <FileText className="h-4 w-4 mr-2" />
@@ -397,7 +397,7 @@ export function ESGImpactReporting({
         <CardHeader>
           <CardTitle className="text-slate-900 flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-blue-600" />
-            ESG Score Trend (12 Months)
+            Sustainability Score Trend (12 Months)
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -430,19 +430,19 @@ export function ESGImpactReporting({
         <CardHeader>
           <CardTitle className="text-green-900 flex items-center gap-2">
             <Download className="h-5 w-5" />
-            ESG Grant Opportunities
+            Sustainability Grant Opportunities
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             <p className="text-sm text-green-800">
-              Your ESG score of <span className="font-bold">{esgScore.overall}/100</span> qualifies you for
-              specialized ESG and sustainability-focused grants.
+              Your sustainability score of <span className="font-bold">{esgScore.overall}/100</span> qualifies you for
+              specialized sustainability-focused grants.
             </p>
             <Alert className="border-green-300 bg-white/60">
               <CheckCircle2 className="h-4 w-4 text-green-700" />
               <AlertDescription className="text-xs text-green-900">
-                <span className="font-semibold">ESG Water Stewardship Partnership</span> - Up to $300,000 available.
+                <span className="font-semibold">Water Stewardship Partnership</span> - Up to $300,000 available.
                 Your strong {esgScore.components.waterQuality >= 80 ? 'water quality' : 'transparency'} score
                 makes this a high-match opportunity.
               </AlertDescription>
@@ -451,7 +451,7 @@ export function ESGImpactReporting({
               <CheckCircle2 className="h-4 w-4 text-green-700" />
               <AlertDescription className="text-xs text-green-900">
                 <span className="font-semibold">UN Sustainable Development Goals - Water Action</span> - Up to $1,000,000.
-                Requires ESG performance documentation (your reports qualify).
+                Requires sustainability performance documentation (your reports qualify).
               </AlertDescription>
             </Alert>
             <p className="text-xs text-green-700 italic">
@@ -466,10 +466,10 @@ export function ESGImpactReporting({
           <div className="flex items-start gap-3">
             <FileText className="h-5 w-5 text-slate-600 flex-shrink-0 mt-0.5" />
             <div className="text-xs text-slate-700 leading-relaxed">
-              <span className="font-semibold">ESG Methodology:</span> Score based on 40% water quality metrics,
+              <span className="font-semibold">Sustainability Methodology:</span> Score based on 40% water quality metrics,
               30% pollutant reduction efficiency, 20% risk management, and 10% transparency.
               Aligned with GRI 303 (Water and Effluents) and SASB Water Sector Standards.
-              Reports provide standardized metrics for ESG disclosure and stakeholder communication.
+              Reports provide standardized metrics for sustainability disclosure and stakeholder communication.
             </div>
           </div>
         </CardContent>

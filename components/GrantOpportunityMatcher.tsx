@@ -343,7 +343,7 @@ const NATIONAL_CORPORATE_GRANTS: Grant[] = [
     url: 'https://www.epa.gov/wifia',
     fit: 'Good',
     deadline: 'Rolling – Letters of Interest',
-    description: 'Water Infrastructure Finance and Innovation Act. Low-interest federal loans for water quality infrastructure. ESG-aligned investment vehicle.',
+    description: 'Water Infrastructure Finance and Innovation Act. Low-interest federal loans for water quality infrastructure. sustainability-aligned investment vehicle.',
     badge: 'Infrastructure Finance',
   },
   {
@@ -354,7 +354,7 @@ const NATIONAL_CORPORATE_GRANTS: Grant[] = [
     url: 'https://www.nfwf.org/who-we-are/corporate-partners',
     fit: 'High',
     deadline: 'Ongoing partnership model',
-    description: 'Corporate-funded conservation matching. ESG reporting integration, biodiversity credits, and water quality impact metrics from PEARL data.',
+    description: 'Corporate-funded conservation matching. sustainability reporting integration, biodiversity credits, and water quality impact metrics from PEARL data.',
   },
   {
     name: 'World Wildlife Fund - Project Finance for Permanence',
@@ -364,7 +364,7 @@ const NATIONAL_CORPORATE_GRANTS: Grant[] = [
     url: 'https://www.worldwildlife.org/',
     fit: 'Good',
     deadline: 'By invitation',
-    description: 'Large-scale conservation finance. PEARL monitoring provides verification data for nature-based ESG investments.',
+    description: 'Large-scale conservation finance. PEARL monitoring provides verification data for nature-based sustainability investments.',
   },
 ];
 

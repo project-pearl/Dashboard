@@ -680,7 +680,7 @@ export default function MS4ComplianceFineAvoidance({
                       fontSize: 9.5, fontWeight: 700, color: "#15803d",
                       textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4,
                     }}>
-                      w/ PEARL Deployed
+                      w/ ALIA Deployed
                     </div>
                     <div style={{
                       fontSize: 24, fontWeight: 900, color: "#16a34a", lineHeight: 1,

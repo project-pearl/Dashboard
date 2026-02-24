@@ -42,7 +42,7 @@ function calculateESGScores(data: WaterQualityData, removalEfficiencies: Record<
   const tpEcosystem  = data.parameters.TP.value <= 0.05 ? 100 : data.parameters.TP.value <= 0.15 ? 65 : 25;
   const ecosystemHealth = Math.round((doEcosystem + tnEcosystem + tpEcosystem) / 3);
 
-  // ── Overall ESG Score (weighted) ──────────────────────────────────────
+  // ── Overall Sustainability Score (weighted) ──────────────────────────────────────
   const overall = Math.round(waterQuality * 0.35 + loadReduction * 0.40 + ecosystemHealth * 0.25);
 
   return { waterQuality, loadReduction, ecosystemHealth, overall };
@@ -123,7 +123,7 @@ export function LiveESGScore({ data, removalEfficiencies, regionName }: LiveESGS
           <div>
             <CardTitle className="text-xl flex items-center gap-2 text-slate-900">
               <BarChart3 className="h-6 w-6 text-teal-600" />
-              Live ESG Water Impact Score
+              Live Sustainability Water Impact Score
             </CardTitle>
             <CardDescription>
               Real-time environmental performance — recalculates with every sensor update · {regionName}
@@ -156,7 +156,7 @@ export function LiveESGScore({ data, removalEfficiencies, regionName }: LiveESGS
                 <div className="flex items-center gap-1 text-sm">
                   {trend === 'up'   && <><TrendingUp   className="h-4 w-4 text-green-500" /><span className="text-green-600 font-semibold">Improving</span></>}
                   {trend === 'down' && <><TrendingDown  className="h-4 w-4 text-red-500"   /><span className="text-red-600 font-semibold">Declining</span></>}
-                  {trend === 'flat' && <span className="text-slate-500">Overall ESG Score</span>}
+                  {trend === 'flat' && <span className="text-slate-500">Overall Sustainability Score</span>}
                 </div>
                 <div className="text-xs text-slate-400 mt-0.5">Updates with live sensor data</div>
               </div>
@@ -196,7 +196,7 @@ export function LiveESGScore({ data, removalEfficiencies, regionName }: LiveESGS
 
         {/* Investor framing */}
         <div className="bg-teal-50 border border-teal-200 rounded-lg p-3 text-xs text-teal-800">
-          <strong>📊 For ESG Reporting:</strong> This score maps to GRI Standard 303 (Water and Effluents), SASB Environment metric EM-WM-140a.1, and Chesapeake Bay Program water quality indicators. Score recalculates in real time as sensor data updates.
+          <strong>📊 For Sustainability Reporting:</strong> This score maps to GRI Standard 303 (Water and Effluents), SASB Environment metric EM-WM-140a.1, and Chesapeake Bay Program water quality indicators. Score recalculates in real time as sensor data updates.
         </div>
       </CardContent>
     </Card>

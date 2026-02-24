@@ -69,7 +69,7 @@ const ROLE_TONE: Record<Role, string> = {
   MS4: 'Focus on compliance risk, permit deadlines, cost optimization, and MS4 regulatory obligations.',
   State: 'Focus on statewide trends, impairment reclassification risk, resource allocation, and TMDL progress.',
   Federal: 'Focus on cross-state patterns, national trends, policy impact, and Clean Water Act implications.',
-  Corporate: 'Focus on portfolio risk, ESG disclosure readiness, supply chain water risk, and investor-relevant metrics.',
+  Corporate: 'Focus on portfolio risk, sustainability disclosure readiness, supply chain water risk, and investor-relevant metrics.',
   K12: 'Focus on fun discoveries, wildlife impacts, "did you know" style facts, and engaging educational content for students.',
   College: 'Focus on research-worthy anomalies, data quality assessment, publication-ready findings, and methodology rigor.',
   Researcher: 'Focus on statistical anomalies, research-worthy patterns, data quality, and peer-comparable findings.',
@@ -144,8 +144,8 @@ export function AIInsightsEngine({ role, stateAbbr, selectedWaterbody, regionDat
       cat4c_notPollutant: nationalData.cat4c,
       tmdlGapPct: nationalData.tmdlGapPct,
       topCauses: nationalData.topCauses.slice(0, 15),
-      pearlAddressablePct: nationalData.addressablePct,
-      pearlAddressableCount: nationalData.addressableCount,
+      aliaAddressablePct: nationalData.addressablePct,
+      aliaAddressableCount: nationalData.addressableCount,
       totalCauseInstances: nationalData.totalCauseInstances,
       worstStates: nationalData.worstStates?.slice(0, 8) || [],
     } : null;
@@ -174,11 +174,11 @@ export function AIInsightsEngine({ role, stateAbbr, selectedWaterbody, regionDat
 
     // Build system prompt — national or state scope
     const nationalPromptAddendum = isNational ? `
-NATIONAL SCOPE: You are analyzing ALL 50 states + DC. The data includes EPA ATTAINS assessment categories (Cat 1-5), TMDL status, impairment causes, and PEARL addressability analysis.
+NATIONAL SCOPE: You are analyzing ALL 50 states + DC. The data includes EPA ATTAINS assessment categories (Cat 1-5), TMDL status, impairment causes, and ALIA addressability analysis.
 CRITICAL CONTEXT — POTOMAC/CHESAPEAKE: The Chesapeake Bay TMDL is the LARGEST and most complex Total Maximum Daily Load ever issued by EPA. The Potomac River basin carries the heaviest nutrient and sediment loads into the Bay. This is arguably the biggest water quality crisis in U.S. regulatory history. The January 2026 Potomac Interceptor collapse (200M+ gallons of raw sewage) demonstrates why independent continuous monitoring is critical. Maryland faces the most intense TMDL compliance pressure of any state. ALWAYS lead with or prominently feature the Chesapeake/Potomac crisis in national analysis.
 ATTAINS CATEGORIES: Cat 5 = impaired, NO approved TMDL (on 303(d) list — worst). Cat 4a = impaired, HAS approved TMDL. Cat 4b = impaired, alternative controls. Cat 4c = impaired, not pollutant-caused. Cat 3 = insufficient data. Cat 2 = good with some concerns. Cat 1 = fully meeting standards.
-PEARL ADDRESSABILITY: PEARL treats sediment/TSS, nutrients (N, P), bacteria (E. coli, Enterococci), dissolved oxygen, and stormwater metals. It does NOT treat mercury, PCBs, PFAS, or legacy contaminants.
-Use the nationalSummary data to provide specific numbers: cat5 count, TMDL gap percentage, top impairment causes with counts, PEARL addressable percentage, and worst states by Cat 5 concentration.` : '';
+ALIA ADDRESSABILITY: ALIA treats sediment/TSS, nutrients (N, P), bacteria (E. coli, Enterococci), dissolved oxygen, and stormwater metals. It does NOT treat mercury, PCBs, PFAS, or legacy contaminants.
+Use the nationalSummary data to provide specific numbers: cat5 count, TMDL gap percentage, top impairment causes with counts, ALIA addressable percentage, and worst states by Cat 5 concentration.` : '';
 
     try {
       const res = await fetch('/api/ai-insights', {
@@ -384,7 +384,7 @@ function generateFallbackInsights(
         type: 'summary',
         severity: 'critical',
         title: 'Potomac–Chesapeake: Largest Water Quality Crisis in U.S. Regulatory History',
-        body: `The Chesapeake Bay TMDL is the most complex ever issued by EPA, spanning 7 states and requiring decades of coordinated pollution reduction. The Potomac River basin carries the heaviest nutrient and sediment loads feeding the Bay's chronic dead zones. The January 2026 Potomac Interceptor collapse — 200M+ gallons of raw sewage discharged with no independent monitoring — demonstrated catastrophic infrastructure failure. Maryland faces the most intense TMDL compliance pressure of any state. This watershed represents the single largest opportunity for PEARL deployment at scale.`,
+        body: `The Chesapeake Bay TMDL is the most complex ever issued by EPA, spanning 7 states and requiring decades of coordinated pollution reduction. The Potomac River basin carries the heaviest nutrient and sediment loads feeding the Bay's chronic dead zones. The January 2026 Potomac Interceptor collapse — 200M+ gallons of raw sewage discharged with no independent monitoring — demonstrated catastrophic infrastructure failure. Maryland faces the most intense TMDL compliance pressure of any state. This watershed represents the single largest opportunity for ALIA deployment at scale.`,
         timeframe: 'Ongoing — multi-decade federal mandate',
       },
       {
@@ -396,21 +396,21 @@ function generateFallbackInsights(
       {
         type: 'comparison',
         severity: 'warning',
-        title: `${nd.addressablePct}% of National Impairment Causes Are PEARL-Addressable`,
-        body: `Of ${nd.totalCauseInstances.toLocaleString()} cause-instances across all impaired waterbodies, ${nd.addressableCount.toLocaleString()} involve pollutants PEARL directly treats: sediment/TSS, nutrients (N, P), bacteria (E. coli, Enterococci), dissolved oxygen, and stormwater metals. The remaining ${100 - nd.addressablePct}% include mercury, PCBs, PFAS, and legacy contaminants requiring specialized treatment.${topCauses.length > 0 ? ` Top national impairment causes: ${topCauses.map(c => `${c.cause} (${c.count.toLocaleString()})`).join(', ')}.` : ''}`,
+        title: `${nd.addressablePct}% of National Impairment Causes Are ALIA-Addressable`,
+        body: `Of ${nd.totalCauseInstances.toLocaleString()} cause-instances across all impaired waterbodies, ${nd.addressableCount.toLocaleString()} involve pollutants ALIA directly treats: sediment/TSS, nutrients (N, P), bacteria (E. coli, Enterococci), dissolved oxygen, and stormwater metals. The remaining ${100 - nd.addressablePct}% include mercury, PCBs, PFAS, and legacy contaminants requiring specialized treatment.${topCauses.length > 0 ? ` Top national impairment causes: ${topCauses.map(c => `${c.cause} (${c.count.toLocaleString()})`).join(', ')}.` : ''}`,
       },
       {
         type: 'predictive',
         severity: 'warning',
         title: 'Spring Runoff Will Intensify Nutrient Loading Nationwide',
-        body: `Historical patterns show 40-60% of annual nitrogen and phosphorus loads are delivered during March-June storm events. Waterbodies already impaired for nutrients — particularly in the Chesapeake, Gulf of Mexico, and Great Lakes watersheds — will see elevated concentrations. PEARL deployments targeting high-loading outfalls during this window capture the most pollutant mass per dollar invested.`,
+        body: `Historical patterns show 40-60% of annual nitrogen and phosphorus loads are delivered during March-June storm events. Waterbodies already impaired for nutrients — particularly in the Chesapeake, Gulf of Mexico, and Great Lakes watersheds — will see elevated concentrations. ALIA deployments targeting high-loading outfalls during this window capture the most pollutant mass per dollar invested.`,
         timeframe: 'March–June 2026',
       },
       {
         type: 'recommendation',
         severity: 'info',
         title: 'Deploy at the Worst Hotspots First — Not Everywhere',
-        body: `PEARL's strategy: clusters of 4× PEARL-50 units (200 GPM each) targeting the 3 worst pollutant-loading outfalls per waterbody. Don't try to match total stormwater flow — target where pollution concentrates. ${nd.cat5 > 0 ? `With ${nd.cat5.toLocaleString()} Cat 5 waterbodies lacking TMDLs, every PEARL deployment that demonstrates measurable pollutant reduction creates compliance documentation municipalities desperately need.` : ''}`,
+        body: `ALIA's strategy: clusters of 4× ALIA-50 units (200 GPM each) targeting the 3 worst pollutant-loading outfalls per waterbody. Don't try to match total stormwater flow — target where pollution concentrates. ${nd.cat5 > 0 ? `With ${nd.cat5.toLocaleString()} Cat 5 waterbodies lacking TMDLs, every ALIA deployment that demonstrates measurable pollutant reduction creates compliance documentation municipalities desperately need.` : ''}`,
       },
     ];
 
@@ -419,7 +419,7 @@ function generateFallbackInsights(
         type: 'recommendation',
         severity: 'warning',
         title: 'Federal Infrastructure Funding Favors Nature-Based Solutions',
-        body: `The Bipartisan Infrastructure Law and State Revolving Fund programs increasingly prioritize nature-based BMPs and environmental justice targeting. PEARL qualifies as a nature-based solution (oyster biofiltration + living habitat creation) while providing the verifiable sensor data SRF applications require. ${nd.totalImpaired > 0 ? `The ${nd.totalImpaired.toLocaleString()} impaired waterbodies represent a federal intervention backlog that traditional approaches cannot clear at current funding levels.` : ''}`,
+        body: `The Bipartisan Infrastructure Law and State Revolving Fund programs increasingly prioritize nature-based BMPs and environmental justice targeting. ALIA qualifies as a nature-based solution (oyster biofiltration + living habitat creation) while providing the verifiable sensor data SRF applications require. ${nd.totalImpaired > 0 ? `The ${nd.totalImpaired.toLocaleString()} impaired waterbodies represent a federal intervention backlog that traditional approaches cannot clear at current funding levels.` : ''}`,
       });
     }
 

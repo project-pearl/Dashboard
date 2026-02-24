@@ -34,7 +34,7 @@ export function DataIntegrityPanel({ regionName = 'Middle Branch' }: DataIntegri
             <h3 className="font-bold text-lg">Regulatory-Grade Monitoring</h3>
           </div>
           <p className="text-sm opacity-90">
-            PEARL monitoring meets EPA QAPP (Quality Assurance Project Plan) standards and MDE data quality requirements 
+            ALIA monitoring meets EPA QAPP (Quality Assurance Project Plan) standards and MDE data quality requirements 
             for MS4 permit compliance. All data is traceable, auditable, and defensible.
           </p>
         </div>
@@ -130,7 +130,7 @@ export function DataIntegrityPanel({ regionName = 'Middle Branch' }: DataIntegri
                 <div className="text-xs text-amber-800">
                   MDE requires 12 storm events + 4 baseflow samples = <strong>16 data points/year</strong>
                   <br />
-                  PEARL provides <strong>32,850× more data points</strong>
+                  ALIA provides <strong>32,850× more data points</strong>
                 </div>
               </div>
             </CardContent>
@@ -416,7 +416,7 @@ export function DataIntegrityPanel({ regionName = 'Middle Branch' }: DataIntegri
                       MDE Audit Portal Access
                     </h4>
                     <p className="text-xs text-orange-800">
-                      Maryland Department of Environment has read-only access to all PEARL data, 
+                      Maryland Department of Environment has read-only access to all ALIA data, 
                       calibration records, and audit logs 24/7 through secure portal. No prior notice required 
                       for MDE data inspection. All Baltimore City data available to MDE staff with appropriate 
                       credentials.
@@ -433,7 +433,7 @@ export function DataIntegrityPanel({ regionName = 'Middle Branch' }: DataIntegri
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <GitBranch className="h-5 w-5 text-gray-600" />
-              Data Defensibility: PEARL vs Traditional Grab Sampling
+              Data Defensibility: ALIA vs Traditional Grab Sampling
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -442,7 +442,7 @@ export function DataIntegrityPanel({ regionName = 'Middle Branch' }: DataIntegri
                 <thead>
                   <tr className="border-b-2 border-gray-300">
                     <th className="text-left p-2 font-semibold">Criterion</th>
-                    <th className="text-left p-2 font-semibold bg-green-50">PEARL Continuous</th>
+                    <th className="text-left p-2 font-semibold bg-green-50">ALIA Continuous</th>
                     <th className="text-left p-2 font-semibold bg-red-50">Traditional Grab</th>
                   </tr>
                 </thead>
@@ -513,7 +513,7 @@ export function DataIntegrityPanel({ regionName = 'Middle Branch' }: DataIntegri
           </CardHeader>
           <CardContent>
             <p className="text-xs text-purple-900 mb-4">
-              PEARL implementation follows a phased approach that reduces regulatory risk and builds confidence incrementally:
+              ALIA implementation follows a phased approach that reduces regulatory risk and builds confidence incrementally:
             </p>
             
             <div className="space-y-3">
@@ -525,7 +525,7 @@ export function DataIntegrityPanel({ regionName = 'Middle Branch' }: DataIntegri
                   <div className="flex-1">
                     <h4 className="font-semibold text-sm text-purple-900 mb-1">Phase 1: Augmentation</h4>
                     <p className="text-xs text-gray-700">
-                      PEARL operates <strong>alongside traditional grab sampling</strong>. Side-by-side data collection 
+                      ALIA operates <strong>alongside traditional grab sampling</strong>. Side-by-side data collection 
                       proves continuous monitoring captures storm events episodic sampling misses. No changes to current 
                       MS4 permit compliance approach. Full validation study conducted.
                     </p>
@@ -545,7 +545,7 @@ export function DataIntegrityPanel({ regionName = 'Middle Branch' }: DataIntegri
                   <div className="flex-1">
                     <h4 className="font-semibold text-sm text-purple-900 mb-1">Phase 2: Storm Events & Trend Reporting</h4>
                     <p className="text-xs text-gray-700">
-                      After validation demonstrates equivalency, <strong>use PEARL as primary data stream for storm 
+                      After validation demonstrates equivalency, <strong>use ALIA as primary data stream for storm 
                       characterization</strong> (per 40 CFR §122.26) and annual trend reporting. Traditional grab sampling 
                       continues for baseflow conditions and specific pollutants.
                     </p>
@@ -565,7 +565,7 @@ export function DataIntegrityPanel({ regionName = 'Middle Branch' }: DataIntegri
                   <div className="flex-1">
                     <h4 className="font-semibold text-sm text-purple-900 mb-1">Phase 3: Reduce Grab Frequency</h4>
                     <p className="text-xs text-gray-700">
-                      Where PEARL coverage is proven and MDE-accepted, <strong>reduce grab sampling frequency</strong> (e.g., 
+                      Where ALIA coverage is proven and MDE-accepted, <strong>reduce grab sampling frequency</strong> (e.g., 
                       quarterly instead of monthly for baseflow). Confirmatory sampling validates sensors meet QA/QC targets. 
                       Consultant scope shifts from full report writing to technical review.
                     </p>
@@ -585,7 +585,7 @@ export function DataIntegrityPanel({ regionName = 'Middle Branch' }: DataIntegri
                   <div className="flex-1">
                     <h4 className="font-semibold text-sm text-green-900 mb-1">Phase 4: Primary Data Stream</h4>
                     <p className="text-xs text-gray-700">
-                      PEARL becomes <strong>primary monitoring method</strong> with periodic validation sampling for sensor 
+                      ALIA becomes <strong>primary monitoring method</strong> with periodic validation sampling for sensor 
                       QA/QC per EPA QA/R-5. Traditional grab sampling retained for parameters not measured by sensors 
                       (e.g., metals, specific organics). Automated reporting fully operational.
                     </p>
@@ -615,7 +615,7 @@ export function DataIntegrityPanel({ regionName = 'Middle Branch' }: DataIntegri
             <div>
               <h3 className="font-bold text-lg mb-2">For MDE Regulators: Data You Can Trust</h3>
               <p className="text-sm opacity-90 mb-3">
-                PEARL monitoring provides more defensible data than traditional grab sampling because:
+                ALIA monitoring provides more defensible data than traditional grab sampling because:
               </p>
               <ul className="text-sm space-y-1 opacity-90">
                 <li>• <strong>32,850× more data points</strong> = statistical confidence in load calculations</li>

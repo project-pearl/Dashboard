@@ -70,7 +70,7 @@ const DATA_FEEDS = [
   { name: 'Water Quality Portal', desc: 'Multi-agency monitoring results', icon: Search, color: 'from-violet-600 to-purple-800' },
   { name: 'NOAA CO-OPS', desc: 'Tidal & oceanographic observations', icon: Waves, color: 'from-cyan-600 to-sky-800' },
   { name: 'EJScreen', desc: 'Environmental justice mapping overlays', icon: ShieldCheck, color: 'from-amber-600 to-orange-800' },
-  { name: 'PEARL Sensors (In Development)', desc: 'Proprietary continuous monitoring network — hardware integration in progress', icon: Zap, color: 'from-rose-600 to-red-800' },
+  { name: 'ALIA Sensors (In Development)', desc: 'Proprietary continuous monitoring network — hardware integration in progress', icon: Zap, color: 'from-rose-600 to-red-800' },
 ];
 
 const STAKEHOLDER_TRACKS = [
@@ -108,7 +108,7 @@ const STAKEHOLDER_TRACKS = [
     headline: 'Continuous high-frequency data for real science',
     points: [
       '15-minute interval sensor data with QAPP-grade QA/QC',
-      'Multi-source data fusion: USGS + WQP + PEARL sensors',
+      'Multi-source data fusion: USGS + WQP + ALIA sensors',
       'Bulk export, API access, and citation-ready formats',
       'Manuscript collaboration tools and DOI registration',
     ],
@@ -144,8 +144,8 @@ const STAKEHOLDER_TRACKS = [
 const DIFFERENTIATORS = [
   {
     icon: Beaker,
-    title: 'Nature-Based Treatment',
-    desc: 'Oyster biofiltration combined with engineered media \u2014 proven 88-95% TSS removal in field pilots. Nature and engineering, working together.',
+    title: 'ALIA Treatment Platform',
+    desc: 'Modular, deployable water treatment powered by oyster biofiltration and engineered media. 88-95% TSS removal, 93.8% bacteria reduction \u2014 field validated.',
   },
   {
     icon: Zap,
@@ -158,9 +158,19 @@ const DIFFERENTIATORS = [
     desc: 'ATTAINS, USGS NWIS, WQP, NOAA CO-OPS, EJScreen \u2014 all normalized, cross-referenced, and queryable from a single platform.',
   },
   {
+    icon: Microscope,
+    title: 'AQUA-Lo Laboratory Intelligence',
+    desc: 'Full-spectrum LIMS for water quality labs \u2014 sample intake, chain of custody, QA/QC workflows, method management, and audit-ready reporting in one system.',
+  },
+  {
     icon: BarChart3,
     title: 'Compliance Automation',
     desc: 'One-click MS4 annual reports, automated TMDL tracking, nutrient credit calculation. What used to take weeks now takes minutes.',
+  },
+  {
+    icon: Shield,
+    title: 'Closed-Loop Verification',
+    desc: 'PIN detects the problem, ALIA treats it, AQUA-Lo validates the results, PIN documents the outcome. Detection to resolution in a single platform.',
   },
 ];
 
@@ -186,11 +196,11 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
       <PublicHeader />
 
       {/* ═══ HERO ═══ */}
-      <section className="relative min-h-[92vh] flex items-end overflow-hidden">
+      <section className="relative min-h-[92vh] flex items-end overflow-hidden bg-slate-950">
+        {/* Abstract gradient background — no photo */}
         <div className="absolute inset-0">
-          <Image src="/marsh-waterfront.jpeg" alt="Coastal marsh waterfront" fill className="object-cover" priority />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/40 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/50 via-transparent to-transparent" />
+          <div className="absolute inset-0 opacity-40" style={{ backgroundImage: 'radial-gradient(circle at 15% 85%, rgba(6,182,212,.5) 0%, transparent 45%), radial-gradient(circle at 85% 15%, rgba(59,130,246,.4) 0%, transparent 40%), radial-gradient(circle at 50% 60%, rgba(20,184,166,.2) 0%, transparent 55%)' }} />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/30" />
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 pb-20 pt-32 w-full">
@@ -232,7 +242,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
         <div className="max-w-4xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-8">
             <h2 className="text-3xl sm:text-4xl font-bold text-white leading-tight" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-              What if PEARL had been there?
+              What if ALIA had been there?
             </h2>
           </div>
           <p className="text-lg text-slate-300 leading-relaxed text-center max-w-3xl mx-auto mb-10">
@@ -240,7 +250,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
           </p>
           <div className="rounded-2xl border border-cyan-500/30 bg-gradient-to-br from-cyan-950/60 to-slate-800/60 p-8 backdrop-blur-sm">
             <p className="text-lg sm:text-xl text-white font-semibold leading-relaxed text-center">
-              In our first pilot, PEARL achieved <span className="text-cyan-400">93.8% E. coli reduction</span> and <span className="text-cyan-400">90-95% TSS removal</span> &mdash; without even targeting bacteria. Imagine that technology deployed at every overflow point.
+              In our first pilot, ALIA achieved <span className="text-cyan-400">93.8% E. coli reduction</span> and <span className="text-cyan-400">90-95% TSS removal</span> &mdash; without even targeting bacteria. Imagine that technology deployed at every overflow point.
             </p>
           </div>
           <div className="mt-10 text-center">
@@ -255,15 +265,15 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
       </section>
 
       {/* ═══ PLATFORM SCALE ═══ */}
-      <section id="platform" className="relative bg-slate-950 py-20 overflow-hidden">
-        <div className="absolute inset-0 opacity-[0.03]" style={{
-          backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)',
+      <section id="platform" className="relative bg-white py-20 overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.04]" style={{
+          backgroundImage: 'linear-gradient(rgba(0,0,0,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,.06) 1px, transparent 1px)',
           backgroundSize: '60px 60px',
         }} />
         <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-16">
-            <p className="text-xs font-bold tracking-[0.2em] uppercase text-cyan-400 mb-3">National Scale</p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-white" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+            <p className="text-xs font-bold tracking-[0.2em] uppercase text-cyan-600 mb-3">National Scale</p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
               Built for the complexity of U.S. water
             </h2>
           </div>
@@ -271,12 +281,12 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
             {PLATFORM_STATS.map((s, i) => {
               const Icon = s.icon;
               return (
-                <div key={i} className="text-center p-8 rounded-2xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm">
-                  <Icon className="h-6 w-6 text-cyan-400 mx-auto mb-4" />
-                  <div className="text-4xl sm:text-5xl font-bold text-white mb-2 tabular-nums">
+                <div key={i} className="text-center p-8 rounded-2xl bg-slate-50 border border-slate-200">
+                  <Icon className="h-6 w-6 text-cyan-600 mx-auto mb-4" />
+                  <div className="text-4xl sm:text-5xl font-bold text-slate-900 mb-2 tabular-nums">
                     <Counter target={s.value} suffix={s.suffix} />
                   </div>
-                  <div className="text-sm text-slate-400 font-medium">{s.label}</div>
+                  <div className="text-sm text-slate-500 font-medium">{s.label}</div>
                 </div>
               );
             })}
@@ -285,14 +295,14 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
       </section>
 
       {/* ═══ DATA SOURCES ═══ */}
-      <section id="data" className="py-24 bg-slate-50">
+      <section id="data" className="py-24 bg-slate-900">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="max-w-2xl mb-16">
-            <p className="text-xs font-bold tracking-[0.2em] uppercase text-slate-400 mb-3">Integrated Data</p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+            <p className="text-xs font-bold tracking-[0.2em] uppercase text-cyan-400 mb-3">Integrated Data</p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
               Six federal and proprietary data streams. One unified view.
             </h2>
-            <p className="text-slate-600 leading-relaxed">
+            <p className="text-slate-300 leading-relaxed">
               We don&#39;t just aggregate data &mdash; we normalize, cross-reference, and contextualize it.
               Every measurement is traceable to its source, QA/QC verified, and available through a single API.
             </p>
@@ -301,13 +311,13 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
             {DATA_FEEDS.map((feed, i) => {
               const Icon = feed.icon;
               return (
-                <div key={i} className="group relative p-6 rounded-2xl bg-white border border-slate-200 hover:border-slate-300 hover:shadow-lg transition-all duration-300 cursor-default overflow-hidden">
+                <div key={i} className="group relative p-6 rounded-2xl bg-white/[0.05] border border-white/[0.08] hover:bg-white/[0.08] hover:border-white/[0.15] transition-all duration-300 cursor-default overflow-hidden">
                   <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${feed.color} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
                   <div className={`inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br ${feed.color} mb-4`}>
                     <Icon className="h-5 w-5 text-white" />
                   </div>
-                  <h3 className="text-base font-bold text-slate-900 mb-1">{feed.name}</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed">{feed.desc}</p>
+                  <h3 className="text-base font-bold text-white mb-1">{feed.name}</h3>
+                  <p className="text-sm text-slate-400 leading-relaxed">{feed.desc}</p>
                 </div>
               );
             })}
@@ -320,13 +330,13 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center mb-20">
             <div>
-              <p className="text-xs font-bold tracking-[0.2em] uppercase text-slate-400 mb-3">The PEARL Difference</p>
+              <p className="text-xs font-bold tracking-[0.2em] uppercase text-slate-400 mb-3">The ALIA Difference</p>
               <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-6" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
                 Not another dashboard.<br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-blue-600">A new category of water intelligence.</span>
               </h2>
               <p className="text-slate-600 leading-relaxed mb-8">
-                Every PEARL unit is a modular treatment platform and high-frequency data node with 8 monitoring points, transforming environmental restoration into a source of valuable, real-time intelligence for regulators, researchers, and municipalities.
+                Every ALIA unit is a modular treatment platform and high-frequency data node with 8 monitoring points. Paired with AQUA-Lo, our laboratory information management system, every sample is tracked from intake to audit-ready report &mdash; transforming environmental restoration into verified, actionable intelligence.
               </p>
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center p-4 rounded-xl bg-slate-50">
@@ -344,7 +354,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
               </div>
             </div>
             <div className="relative">
-              <Image src="/pearl-barge.jpg" alt="PEARL modular treatment barge" width={700} height={400} className="rounded-2xl shadow-2xl" />
+              <Image src="/pearl-barge.jpg" alt="ALIA modular treatment barge" width={700} height={400} className="rounded-2xl shadow-2xl" />
               <div className="absolute -bottom-4 -right-4 bg-white rounded-xl shadow-lg border border-slate-200 px-4 py-3 hidden sm:block">
                 <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Field Validated</div>
                 <div className="text-sm font-bold text-slate-900">Milton, FL &mdash; Jan 2026</div>
@@ -352,7 +362,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
             </div>
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {DIFFERENTIATORS.map((d, i) => {
               const Icon = d.icon;
               return (

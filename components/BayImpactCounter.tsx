@@ -103,7 +103,7 @@ function K12ImpactCard({ removalEfficiencies, daysRunning, gallonsTreated, oyste
     <Card className="border-2 border-cyan-400 bg-gradient-to-br from-cyan-50 via-blue-50 to-white shadow-lg">
       <CardHeader>
         <CardTitle className="text-xl flex items-center gap-2">
-          🌊 What Has PEARL Cleaned? 
+          🌊 What Has ALIA Cleaned? 
         </CardTitle>
         <CardDescription>Real water quality impact — made simple!</CardDescription>
       </CardHeader>
@@ -136,7 +136,7 @@ function K12ImpactCard({ removalEfficiencies, daysRunning, gallonsTreated, oyste
         </div>
         <div className="bg-cyan-100 border border-cyan-300 rounded-lg p-3 text-center">
           <p className="text-sm text-cyan-900 font-medium">
-            🌍 PEARL removes dirt, chemicals, and pollution from stormwater before it reaches the Chesapeake Bay watershed — protecting fish, crabs, and the whole ecosystem!
+            🌍 ALIA removes dirt, chemicals, and pollution from stormwater before it reaches the Chesapeake Bay watershed — protecting fish, crabs, and the whole ecosystem!
           </p>
         </div>
       </CardContent>
@@ -233,7 +233,7 @@ export function BayImpactCounter({ removalEfficiencies, regionId, userRole }: Ba
           <StatCard emoji="🦪" label="Oyster Equivalent" value={oysterEquivalent} unit="oysters" sublabel="Filtration equivalent"                                     color="purple" animatedValue={animOysters} />
         </div>
 
-        {/* TMDL bar — hide for Corporate/ESG, show for everyone else */}
+        {/* TMDL bar — hide for Sustainability, show for everyone else */}
         {userRole !== 'Corporate / ESG' && (
           <div className="bg-white/5 border border-white/10 rounded-xl p-4">
             <div className="flex items-center justify-between mb-2">
@@ -257,7 +257,7 @@ export function BayImpactCounter({ removalEfficiencies, regionId, userRole }: Ba
         {/* ESG-specific sustainability framing */}
         {userRole === 'Corporate / ESG' && (
           <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-            <div className="text-xs font-semibold text-blue-300 uppercase tracking-widest mb-3">ESG Water Impact Metrics</div>
+            <div className="text-xs font-semibold text-blue-300 uppercase tracking-widest mb-3">Sustainability Water Impact Metrics</div>
             <div className="grid grid-cols-3 gap-3 text-center">
               <div className="bg-white/5 rounded-lg p-3">
                 <div className="text-xl font-black text-emerald-400">{((tnRemoved + tpRemoved) * 0.001).toFixed(1)}t</div>
@@ -294,7 +294,7 @@ export function BayImpactCounter({ removalEfficiencies, regionId, userRole }: Ba
         </div>
 
         <p className="text-xs text-blue-500 text-center">
-          Based on PEARL Milton pilot data (Jan 2025). Flow rate and concentrations are representative estimates for demonstration. Chesapeake Bay Watershed states: MD, VA, PA, WV, DE, NY, DC.
+          Based on ALIA Milton pilot data (Jan 2025). Flow rate and concentrations are representative estimates for demonstration. Chesapeake Bay Watershed states: MD, VA, PA, WV, DE, NY, DC.
         </p>
       </CardContent>
     </Card>

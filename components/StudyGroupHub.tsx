@@ -54,10 +54,10 @@ function getMockGroups(stateAbbr: string): StudyGroup[] {
     ],
     FL: [
       {
-        id: 'sg-4', name: 'Gulf Coast Monitoring Team', focus: 'Coastal water quality & PEARL pilot data',
+        id: 'sg-4', name: 'Gulf Coast Monitoring Team', focus: 'Coastal water quality & ALIA pilot data',
         institution: 'UWF - Marine Science', memberCount: 3, maxMembers: 5,
         waterbodies: ['Pensacola Bay', 'Escambia River'], meetingSchedule: 'Wednesdays 3-5pm',
-        status: 'active', tags: ['coastal', 'PEARL', 'pilot data'],
+        status: 'active', tags: ['coastal', 'ALIA', 'pilot data'],
       },
     ],
     VA: [
@@ -192,7 +192,7 @@ export function StudyGroupHub({ stateAbbr, regionId }: Props) {
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
         <div className="text-xs font-semibold text-blue-800 mb-1">🗓️ Upcoming Field Sampling Sessions</div>
         <p className="text-[10px] text-blue-700 mb-2">
-          Coordinate with your study group for joint field sampling. PEARL sensors provide continuous baseline data
+          Coordinate with your study group for joint field sampling. ALIA sensors provide continuous baseline data
           between your sampling events.
         </p>
         <div className="text-[10px] text-blue-500 italic">No upcoming sessions scheduled. Create one from your study group page.</div>

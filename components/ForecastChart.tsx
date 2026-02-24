@@ -44,7 +44,7 @@ function generate24HourForecast(
     // Random noise
     const noise = (Math.random() - 0.5) * 0.08;
     
-    // Without PEARL (ambient conditions)
+    // Without ALIA (ambient conditions)
     let ambient: number;
     if (paramType === 'decreasing-bad') {
       // DO drops lower without treatment
@@ -54,10 +54,10 @@ function generate24HourForecast(
       ambient = currentValue * (1.4 + diurnalEffect * 0.3 + noise);
     }
     
-    // With PEARL treatment
+    // With ALIA treatment
     let treated: number;
     if (paramType === 'decreasing-bad') {
-      // DO maintained higher with PEARL
+      // DO maintained higher with ALIA
       treated = currentValue * (1.0 + diurnalEffect * 0.2 + noise * 0.5);
     } else {
       // Pollutants reduced by efficiency
@@ -92,7 +92,7 @@ export function ForecastChart({ data, removalEfficiencies, userRole }: ForecastC
       <CardHeader className="pb-3">
         <CardTitle className="text-lg">24-Hour Water Quality Forecast</CardTitle>
         <CardDescription>
-          Predicted conditions with and without PEARL treatment — Left to right: next 24 hours
+          Predicted conditions with and without ALIA treatment — Left to right: next 24 hours
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -132,11 +132,11 @@ export function ForecastChart({ data, removalEfficiencies, userRole }: ForecastC
                 <div className="flex items-center gap-3 text-xs">
                   <div className="flex items-center gap-1.5">
                     <div className="w-4 h-0.5 rounded" style={{ background: colors.ambient }} />
-                    <span className="text-slate-600">Without PEARL</span>
+                    <span className="text-slate-600">Without ALIA</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <div className="w-4 h-0.5 rounded" style={{ background: colors.treated }} />
-                    <span className="text-slate-600">With PEARL</span>
+                    <span className="text-slate-600">With ALIA</span>
                   </div>
                 </div>
               </div>

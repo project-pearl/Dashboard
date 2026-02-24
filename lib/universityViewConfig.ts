@@ -53,7 +53,7 @@ export const RESEARCHER_VIEW: ViewConfig = {
   overview:       { id: 'overview',       label: 'State Overview & Waterbody Map',     icon: '🗺️', visible: true,  defaultExpanded: true,  order: 1 },
   waterbody:      { id: 'waterbody',      label: 'Waterbody Detail',                   icon: '💧', visible: true,  defaultExpanded: true,  order: 2 },
   waterquality:   { id: 'waterquality',   label: 'Water Quality Trends',               icon: '📈', visible: true,  defaultExpanded: true,  order: 3 },
-  restoration:    { id: 'restoration',    label: 'Restoration & PEARL Deployment',     icon: '🦪', visible: true,  defaultExpanded: true,  order: 4 },
+  restoration:    { id: 'restoration',    label: 'Restoration & ALIA Deployment',     icon: '🦪', visible: true,  defaultExpanded: true,  order: 4 },
   methodology:    { id: 'methodology',    label: 'Data Integrity & Methodology',       icon: '⚗️', visible: true,  defaultExpanded: false, order: 5 },
   datasets:       { id: 'datasets',       label: 'Dataset Catalog & Research Export',  icon: '📦', visible: true,  defaultExpanded: false, order: 6 },
   manuscript:     { id: 'manuscript',     label: 'Manuscript & Publication Tools',     icon: '📝', visible: true,  defaultExpanded: false, order: 7 },
@@ -88,7 +88,7 @@ export const COLLEGE_VIEW: ViewConfig = {
   research:       { id: 'research',       label: 'Find Advisors & Research Groups',    icon: '🔬', visible: true,  defaultExpanded: false, order: 9 },
   internships:    { id: 'internships',    label: 'Internships & Career Board',         icon: '💼', visible: true,  defaultExpanded: false, order: 10, badge: 'New' },
   // Still available but deprioritized
-  restoration:    { id: 'restoration',    label: 'Restoration & PEARL Deployment',     icon: '🦪', visible: true,  defaultExpanded: false, order: 11 },
+  restoration:    { id: 'restoration',    label: 'Restoration & ALIA Deployment',     icon: '🦪', visible: true,  defaultExpanded: false, order: 11 },
   bayImpact:      { id: 'bayImpact',      label: 'Bay Impact Counter',                 icon: '🌊', visible: true,  defaultExpanded: false, order: 12 },
   forecast:       { id: 'forecast',       label: 'Trend Forecast',                     icon: '🔮', visible: true,  defaultExpanded: false, order: 13 },
   // Hidden for College (too advanced)
