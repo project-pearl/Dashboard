@@ -76,41 +76,18 @@ function FadeIn({ children, className = "", delay = 0 }: {
    ═══════════════════════════════════════════════════════════════════════ */
 
 const TreatmentSection: React.FC = () => {
-  /* Hero parallax-lite: translate image on scroll */
-  const [scrollY, setScrollY] = useState(0);
-  useEffect(() => {
-    const onScroll = () => setScrollY(window.scrollY);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   return (
     <section className="min-h-screen bg-white">
       <PublicHeader />
 
       {/* ════════════════════════════════════════════════════════════════
-          HERO — Full-viewport, cinematic
+          HERO — Dark gradient with standalone restoration image
           ════════════════════════════════════════════════════════════════ */}
-      <div className="relative h-[100vh] min-h-[600px] overflow-hidden flex items-end">
-        {/* Background image with parallax offset */}
-        <div
-          className="absolute inset-0 scale-110"
-          style={{ transform: `translateY(${scrollY * 0.25}px) scale(1.1)` }}
-        >
-          <Image
-            src="/Waterway Restoration.jpg"
-            alt="ALIA waterway restoration system deployed in a coastal environment"
-            fill
-            className="object-cover"
-            priority
-          />
-        </div>
-        {/* Gradient overlay — dark at bottom for text */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
+      <div className="relative bg-slate-950 overflow-hidden">
+        <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(circle at 30% 70%, rgba(6,182,212,.4) 0%, transparent 50%), radial-gradient(circle at 70% 30%, rgba(16,185,129,.3) 0%, transparent 50%)' }} />
 
-        {/* Hero copy */}
-        <div className="relative z-10 max-w-7xl mx-auto px-8 pb-24 md:pb-32 w-full">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-emerald-300/90 mb-5">
+        <div className="relative z-10 max-w-7xl mx-auto px-8 pt-32 pb-16 md:pt-40 md:pb-20">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-emerald-400/90 mb-5">
             Treatment Technology
           </p>
           <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-white leading-[1.05] max-w-4xl">
@@ -119,15 +96,23 @@ const TreatmentSection: React.FC = () => {
               where it matters most.
             </span>
           </h1>
-          <p className="mt-6 text-lg md:text-xl text-white/70 max-w-2xl leading-relaxed">
+          <p className="mt-6 text-lg md:text-xl text-white/60 max-w-2xl leading-relaxed">
             ALIA systems deploy directly in the waterway — treating pollution at the source
             with oyster biofiltration and multi-stage mechanical filtration.
           </p>
+        </div>
 
-          {/* Scroll indicator */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-60">
-            <span className="text-[10px] uppercase tracking-[0.3em] text-white/60">Scroll</span>
-            <div className="w-px h-8 bg-gradient-to-b from-white/50 to-transparent animate-pulse" />
+        {/* Waterway Restoration — standalone featured image */}
+        <div className="relative z-10 max-w-6xl mx-auto px-8 pb-20">
+          <div className="rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10">
+            <Image
+              src="/Waterway Restoration.jpg"
+              alt="ALIA waterway restoration system deployed in a coastal environment"
+              width={1200}
+              height={600}
+              className="w-full object-cover"
+              priority
+            />
           </div>
         </div>
       </div>

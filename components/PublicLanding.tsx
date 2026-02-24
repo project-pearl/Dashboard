@@ -609,7 +609,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
               </div>
             </div>
             <div>
-              <h4 className="text-xs font-bold tracking-[0.15em] uppercase text-slate-400 mb-4">Platform</h4>
+              <h4 className="text-xs font-bold tracking-[0.15em] uppercase text-slate-400 mb-4">Dashboards</h4>
               <ul className="space-y-3 text-sm text-slate-500">
                 <li><span className="hover:text-white cursor-pointer transition-colors" onClick={onSignIn}>MS4 Compliance</span></li>
                 <li><span className="hover:text-white cursor-pointer transition-colors" onClick={onSignIn}>State Dashboard</span></li>

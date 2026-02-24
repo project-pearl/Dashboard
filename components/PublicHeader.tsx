@@ -7,7 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { ArrowRight, Menu, X } from 'lucide-react';
 
 const NAV_LINKS = [
-  { href: '/', label: 'Platform', anchor: '#platform' },
+  { href: '/', label: 'Home', anchor: undefined },
   { href: '/explore', label: 'Explore Data' },
   { href: '/treatment', label: 'Our Technology' },
   { href: '/story', label: 'Our Story' },
