@@ -2570,8 +2570,8 @@ export function NationalCommandCenter(props: Props) {
 
         </div>
 
-        {/* ── AI INSIGHTS — hidden in monitoring lens ── */}
-        {viewLens !== 'monitoring' && (
+        {/* ── AI INSIGHTS — hidden in overview & monitoring lenses ── */}
+        {viewLens !== 'monitoring' && viewLens !== 'overview' && (
           <AIInsightsEngine key={selectedState} role="Federal" stateAbbr={selectedState} regionData={selectedStateRegions as any} />
         )}
 

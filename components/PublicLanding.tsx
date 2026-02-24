@@ -6,7 +6,7 @@ import {
   ArrowRight, BarChart3, Zap, Database, Building2,
   GraduationCap, Globe, Eye,
   Search, Waves, Beaker, Microscope, ShieldCheck, LineChart,
-  ChevronDown, ExternalLink, FileText, Landmark, Factory, Leaf, HardHat, Settings, FlaskConical, Play,
+  ChevronDown, ExternalLink, FileText, Landmark, Factory, Leaf, HardHat, Settings, FlaskConical,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -232,13 +232,14 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
             {/* Hero video */}
             <div className={`mt-4 lg:mt-0 transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
               <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-900/80 border border-white/[0.12] shadow-2xl backdrop-blur-sm">
-                {/* Replace src with actual Synthesize / YouTube embed URL */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-                  <div className="w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center cursor-pointer hover:bg-white/20 transition-colors">
-                    <Play className="h-6 sm:h-8 w-6 sm:w-8 text-white ml-1" />
-                  </div>
-                  <p className="text-xs sm:text-sm text-white/60 font-medium">Video coming soon</p>
-                </div>
+                <video
+                  className="absolute inset-0 w-full h-full object-cover"
+                  src="https://ifpen1a3kqxzhzkj.public.blob.vercel-storage.com/videos/pin-unifying-water-intelligence.mp4"
+                  controls
+                  playsInline
+                  preload="metadata"
+                  poster=""
+                />
               </div>
             </div>
           </div>
