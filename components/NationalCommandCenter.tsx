@@ -10,7 +10,7 @@ import statesTopo from 'us-atlas/states-10m.json';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, AlertTriangle, AlertCircle, CheckCircle, MapPin, Droplets, Leaf, DollarSign, Users, TrendingUp, BarChart3, Gauge, Shield, LogOut, Building2, Info, ChevronDown, Minus } from 'lucide-react';
+import { X, AlertTriangle, AlertCircle, CheckCircle, MapPin, Droplets, Leaf, DollarSign, Users, TrendingUp, BarChart3, Gauge, Shield, LogOut, Building2, Info, ChevronDown, Minus, Clock, Target, ArrowRight } from 'lucide-react';
 import { brandedPrintSection, BrandedPrintBtn } from '@/lib/brandedPrint';
 import { useRouter } from 'next/navigation';
 import { getRegionById } from '@/lib/regionsConfig';
@@ -35,6 +35,7 @@ import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import { GrantOpportunityMatcher } from './GrantOpportunityMatcher';
+import { GrantOutcomesCard } from './GrantOutcomesCard';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -190,7 +191,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['funding-landscape', 'disclaimer']),
+    sections: new Set(['funding-landscape', 'funding-deadlines', 'funding-state', 'funding-matrix', 'grant-outcomes', 'funding-gap', 'disclaimer']),
   },
 };
 
@@ -4235,7 +4236,32 @@ export function NationalCommandCenter(props: Props) {
                     {aiInsights.length} findings from {attainsAggregation.totalAssessed.toLocaleString()} ATTAINS records
                   </span>
                 </CardTitle>
-                <BrandedPrintBtn sectionId="national-briefing" title="National Intelligence Briefing" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs gap-1.5 text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+                  onClick={async () => {
+                    const pdf = new BrandedPDFGenerator();
+                    await pdf.loadLogo();
+                    pdf.initialize();
+                    pdf.addTitle('National Intelligence Briefing');
+                    pdf.addMetadata('Findings', `${aiInsights.length}`);
+                    pdf.addMetadata('ATTAINS Records', attainsAggregation.totalAssessed.toLocaleString());
+                    pdf.addMetadata('Generated', new Date().toLocaleString());
+                    pdf.addSpacer(5);
+                    for (const insight of aiInsights) {
+                      const label = insight.type === 'urgent' ? 'URGENT' : insight.type === 'warning' ? 'WARNING' : insight.type === 'success' ? 'SUCCESS' : 'INFO';
+                      pdf.addSubtitle(`[${label}] ${insight.title}`);
+                      pdf.addText(insight.detail);
+                      pdf.addSpacer(3);
+                    }
+                    const dateStr = new Date().toISOString().slice(0, 10);
+                    pdf.download(`PEARL_National_Intel_Briefing_${dateStr}.pdf`);
+                  }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Export PDF
+                </Button>
               </div>
               <CardDescription>AI analysis of EPA ATTAINS data, TMDL gaps, impairment causes, and deployment opportunities</CardDescription>
             </CardHeader>
@@ -5725,6 +5751,434 @@ export function NationalCommandCenter(props: Props) {
           </CardContent>
         </Card>
         </>);
+
+        case 'funding-deadlines': return DS(<>
+        {/* ── Upcoming Funding Deadlines ── */}
+        <Card id="section-funding-deadlines" className="border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-white">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Clock className="h-5 w-5 text-amber-600" />
+                Upcoming Funding Deadlines
+                <span className="text-[10px] font-normal text-slate-400 ml-1">
+                  {(() => { const now = new Date(); return [
+                    { deadline: '2026-03-28' }, { deadline: '2026-04-01' }, { deadline: '2026-05-15' },
+                    { deadline: '2026-06-15' }, { deadline: '2026-07-31' }, { deadline: '2026-08-30' },
+                    { deadline: '2026-09-30' },
+                  ].filter(d => new Date(d.deadline) > now && new Date(d.deadline) <= new Date(now.getTime() + 90 * 86400000)).length; })()}{' '}closing in 90 days
+                </span>
+              </CardTitle>
+              <BrandedPrintBtn sectionId="funding-deadlines" title="Funding Deadlines" />
+            </div>
+            <CardDescription>Federal grant and loan application windows — sortable by deadline</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-slate-200">
+                    <th className="text-left py-2 pr-3 font-semibold text-slate-600 uppercase tracking-wider text-[10px]">Program</th>
+                    <th className="text-left py-2 pr-3 font-semibold text-slate-600 uppercase tracking-wider text-[10px]">Deadline</th>
+                    <th className="text-left py-2 pr-3 font-semibold text-slate-600 uppercase tracking-wider text-[10px]">Eligible</th>
+                    <th className="text-right py-2 pr-3 font-semibold text-slate-600 uppercase tracking-wider text-[10px]">Available</th>
+                    <th className="text-center py-2 font-semibold text-slate-600 uppercase tracking-wider text-[10px]">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { program: 'FEMA BRIC — Sub-applications', deadline: '2026-03-28', entity: 'State/local/tribal', amount: '$2.3B', urgency: 'closing' },
+                    { program: 'EPA 319(h) Work Plans', deadline: '2026-04-01', entity: 'States, Tribes', amount: '$170M', urgency: 'closing' },
+                    { program: 'BIL Emerging Contaminants', deadline: '2026-05-15', entity: 'Public water systems', amount: '$5B', urgency: 'open' },
+                    { program: 'DWSRF — Lead Service Line', deadline: '2026-06-15', entity: 'Water systems', amount: '$3.2B', urgency: 'open' },
+                    { program: 'WIFIA Letter of Interest', deadline: '2026-07-31', entity: 'Large utilities (≥$20M)', amount: '$13B capacity', urgency: 'open' },
+                    { program: 'DWSRF EC Set-Aside (PFAS)', deadline: '2026-08-30', entity: 'States', amount: '$4B', urgency: 'open' },
+                    { program: 'CWSRF Intended Use Plans', deadline: '2026-09-30', entity: 'States, municipalities', amount: '$7.4B', urgency: 'open' },
+                    { program: 'USDA RD Water & Waste', deadline: 'Rolling', entity: 'Rural communities (<10K)', amount: '$1.8B', urgency: 'always' },
+                  ].sort((a, b) => {
+                    if (a.deadline === 'Rolling') return 1;
+                    if (b.deadline === 'Rolling') return -1;
+                    return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+                  }).map((d, i) => {
+                    const isClosing = d.urgency === 'closing';
+                    const daysLeft = d.deadline !== 'Rolling'
+                      ? Math.ceil((new Date(d.deadline).getTime() - Date.now()) / 86400000)
+                      : null;
+                    return (
+                      <tr key={i} className={`border-b border-slate-100 ${isClosing ? 'bg-amber-50/50' : 'hover:bg-slate-50'}`}>
+                        <td className="py-2.5 pr-3">
+                          <div className="font-medium text-slate-800">{d.program}</div>
+                        </td>
+                        <td className="py-2.5 pr-3">
+                          <div className={`font-medium ${isClosing ? 'text-amber-700' : 'text-slate-700'}`}>
+                            {d.deadline === 'Rolling' ? 'Rolling' : new Date(d.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </div>
+                          {daysLeft !== null && daysLeft > 0 && (
+                            <div className={`text-[10px] ${daysLeft <= 45 ? 'text-amber-600 font-semibold' : 'text-slate-400'}`}>
+                              {daysLeft} days left
+                            </div>
+                          )}
+                        </td>
+                        <td className="py-2.5 pr-3 text-slate-600">{d.entity}</td>
+                        <td className="py-2.5 pr-3 text-right font-semibold text-green-700">{d.amount}</td>
+                        <td className="py-2.5 text-center">
+                          <Badge variant="outline" className={`text-[10px] ${
+                            d.urgency === 'closing' ? 'bg-amber-100 text-amber-800 border-amber-300' :
+                            d.urgency === 'always' ? 'bg-green-100 text-green-800 border-green-300' :
+                            'bg-blue-100 text-blue-800 border-blue-300'
+                          }`}>
+                            {d.urgency === 'closing' ? 'Closing Soon' : d.urgency === 'always' ? 'Always Open' : 'Open'}
+                          </Badge>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+        </>);
+
+        case 'funding-state': {
+          const fundingRow = stateRollup.find(r => r.abbr === selectedState);
+          const fundingStateName = STATE_ABBR_TO_NAME[selectedState] || selectedState;
+          // Derive estimated SRF share based on proportion of national impairments
+          const nationalImpaired = stateRollup.reduce((s, r) => s + r.totalImpaired, 0);
+          const stateShare = fundingRow && nationalImpaired > 0
+            ? (fundingRow.totalImpaired / nationalImpaired)
+            : 0;
+          const estimatedSrf = Math.round(stateShare * 12_700_000_000);
+          // Map top causes to eligible programs
+          const causeToPrograms: Record<string, string[]> = {
+            'Nutrients': ['CWSRF', '319(h)'],
+            'Pathogens': ['319(h)', 'CWSRF'],
+            'Sediment': ['319(h)', 'USDA'],
+            'Organic Enrichment/Oxygen Depletion': ['CWSRF', '319(h)'],
+            'Temperature': ['319(h)'],
+            'Metals (other than Mercury)': ['CWSRF', 'Superfund'],
+            'Mercury': ['Superfund', 'CWSRF'],
+            'pH/Acidity/Caustic Conditions': ['CWSRF'],
+            'Cause Unknown': [],
+            'Polychlorinated Biphenyls (PCBs)': ['Superfund'],
+            'Turbidity': ['319(h)', 'USDA'],
+            'Algal Growth': ['CWSRF', '319(h)'],
+            'Total Toxics': ['CWSRF', 'Superfund'],
+            'Salinity/Total Dissolved Solids/Chlorides/Sulfates': ['CWSRF'],
+          };
+          const topProgramsForState = new Map<string, number>();
+          for (const c of (fundingRow?.topCauses || []).slice(0, 5)) {
+            // Find matching programs by partial key match
+            for (const [causeKey, progs] of Object.entries(causeToPrograms)) {
+              if (c.cause.toLowerCase().includes(causeKey.toLowerCase().slice(0, 8))) {
+                for (const p of progs) topProgramsForState.set(p, (topProgramsForState.get(p) || 0) + c.count);
+              }
+            }
+          }
+
+          return DS(<>
+        <Card id="section-funding-state" className="border-2 border-sky-200 bg-gradient-to-br from-sky-50 to-white">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-sky-600" />
+                  Your State Funding Snapshot
+                </CardTitle>
+                <select
+                  value={selectedState}
+                  onChange={(e) => setSelectedState(e.target.value)}
+                  className="px-2 py-1 rounded-md border border-slate-300 text-xs bg-white cursor-pointer hover:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-300"
+                >
+                  {Object.entries(STATE_ABBR_TO_NAME).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
+                    <option key={abbr} value={abbr}>{name} ({abbr})</option>
+                  ))}
+                </select>
+              </div>
+              <BrandedPrintBtn sectionId="funding-state" title={`${fundingStateName} Funding Snapshot`} />
+            </div>
+            <CardDescription>State-level funding allocation, impairment categories, and eligible programs</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* State KPIs */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="rounded-xl border border-slate-200 bg-white p-3 text-center">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Est. SRF Allocation</div>
+                <div className="text-xl font-bold text-green-600 mt-1">
+                  {estimatedSrf >= 1e9 ? `$${(estimatedSrf / 1e9).toFixed(1)}B` : estimatedSrf >= 1e6 ? `$${(estimatedSrf / 1e6).toFixed(0)}M` : `$${(estimatedSrf / 1e3).toFixed(0)}K`}
+                </div>
+                <div className="text-[10px] text-slate-400 mt-0.5">CWSRF + DWSRF combined</div>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white p-3 text-center">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Impaired Waterbodies</div>
+                <div className="text-xl font-bold text-red-600 mt-1">{(fundingRow?.totalImpaired || 0).toLocaleString()}</div>
+                <div className="text-[10px] text-slate-400 mt-0.5">Cat 4 + Cat 5</div>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white p-3 text-center">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Cat 5 (303(d))</div>
+                <div className="text-xl font-bold text-amber-600 mt-1">{(fundingRow?.cat5 || 0).toLocaleString()}</div>
+                <div className="text-[10px] text-slate-400 mt-0.5">Requiring TMDL</div>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white p-3 text-center">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Assessed</div>
+                <div className="text-xl font-bold text-blue-600 mt-1">{(fundingRow?.assessed || 0).toLocaleString()}</div>
+                <div className="text-[10px] text-slate-400 mt-0.5">EPA ATTAINS</div>
+              </div>
+            </div>
+
+            {/* Top impairment causes → eligible programs */}
+            {fundingRow && fundingRow.topCauses.length > 0 && (
+              <div>
+                <h4 className="text-xs font-semibold text-slate-700 mb-2 uppercase tracking-wide">Top Impairment Causes & Eligible Programs</h4>
+                <div className="space-y-2">
+                  {fundingRow.topCauses.slice(0, 5).map((c, i) => {
+                    const matchedPrograms: string[] = [];
+                    for (const [causeKey, progs] of Object.entries(causeToPrograms)) {
+                      if (c.cause.toLowerCase().includes(causeKey.toLowerCase().slice(0, 8))) {
+                        matchedPrograms.push(...progs);
+                      }
+                    }
+                    const uniquePrograms = [...new Set(matchedPrograms)];
+                    return (
+                      <div key={i} className="flex items-center justify-between p-2.5 rounded-lg bg-white border border-slate-200">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-sm font-bold text-slate-400 w-5">{i + 1}</span>
+                          <div className="min-w-0">
+                            <div className="text-xs font-medium text-slate-800 truncate">{c.cause}</div>
+                            <div className="text-[10px] text-slate-500">{c.count.toLocaleString()} waterbodies affected</div>
+                          </div>
+                        </div>
+                        <div className="flex gap-1 flex-wrap justify-end shrink-0 ml-2">
+                          {uniquePrograms.length > 0 ? uniquePrograms.map(p => (
+                            <Badge key={p} variant="outline" className="text-[10px] py-0 px-1.5 h-5 bg-green-50 text-green-700 border-green-200">{p}</Badge>
+                          )) : (
+                            <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-5 text-slate-400">—</Badge>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* State-specific insight */}
+            <div className="bg-sky-50 border-l-2 border-sky-400 rounded-lg p-3">
+              <div className="text-xs text-sky-800 leading-relaxed">
+                <span className="font-semibold">{fundingStateName}</span> has{' '}
+                {(fundingRow?.totalImpaired || 0).toLocaleString()} impaired waterbodies eligible for federal remediation funding.
+                {fundingRow && fundingRow.cat5 > 0 && (
+                  <> Of these, <span className="font-semibold">{fundingRow.cat5.toLocaleString()}</span> are Category 5 (303(d) listed), requiring TMDLs and eligible for 319(h) grants.</>
+                )}
+                {' '}Use Grant Matching below to find specific programs for your jurisdiction.
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        </>);
+        }
+
+        case 'funding-matrix': return DS(<>
+        {/* ── Impairment-to-Program Reference Matrix ── */}
+        <Card id="section-funding-matrix" className="border-2 border-slate-200 bg-gradient-to-br from-slate-50 to-white">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Target className="h-5 w-5 text-slate-600" />
+                Impairment-to-Program Matrix
+              </CardTitle>
+              <BrandedPrintBtn sectionId="funding-matrix" title="Impairment-to-Program Matrix" />
+            </div>
+            <CardDescription>Quick reference: which federal programs fund which impairment types</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b-2 border-slate-200">
+                    <th className="text-left py-2 pr-3 font-semibold text-slate-600 uppercase tracking-wider text-[10px]">Impairment Type</th>
+                    <th className="text-left py-2 pr-3 font-semibold text-slate-600 uppercase tracking-wider text-[10px]">Primary Programs</th>
+                    <th className="text-left py-2 pr-3 font-semibold text-slate-600 uppercase tracking-wider text-[10px]">Funding Type</th>
+                    <th className="text-left py-2 font-semibold text-slate-600 uppercase tracking-wider text-[10px]">Typical Use</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { icon: '🌿', impairment: 'Nutrients (N/P)', programs: ['CWSRF', '319(h)'], type: 'Loans + Grants', use: 'WWTP upgrades, ag BMPs, buffer strips' },
+                    { icon: '⚗️', impairment: 'PFAS / Emerging Contaminants', programs: ['DWSRF EC Set-Aside', 'BIL EC'], type: 'Grants', use: 'Treatment systems, source investigation' },
+                    { icon: '🦠', impairment: 'Bacteria / Pathogens', programs: ['319(h)', 'CWSRF'], type: 'Grants + Loans', use: 'Septic repair, WWTP upgrades, CSO control' },
+                    { icon: '🌧️', impairment: 'Stormwater / Flooding', programs: ['FEMA BRIC', 'BIL', 'CWSRF'], type: 'Grants', use: 'Green infrastructure, retention, flood control' },
+                    { icon: '🔩', impairment: 'Lead / Copper (LCRR)', programs: ['DWSRF'], type: 'Loans + Grants', use: 'Lead service line replacement' },
+                    { icon: '🏔️', impairment: 'Sediment / Erosion', programs: ['319(h)', 'USDA'], type: 'Grants', use: 'Erosion control, streambank stabilization' },
+                    { icon: '☣️', impairment: 'Mercury / PCBs', programs: ['Superfund', 'CWSRF'], type: 'Various', use: 'Source control, fish tissue monitoring' },
+                    { icon: '🏗️', impairment: 'Aging Infrastructure', programs: ['WIFIA', 'CWSRF', 'BIL'], type: 'Loans', use: 'Pipe replacement, capacity upgrades' },
+                  ].map((row, i) => (
+                    <tr key={i} className="border-b border-slate-100 hover:bg-slate-50/50">
+                      <td className="py-2.5 pr-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">{row.icon}</span>
+                          <span className="font-medium text-slate-800">{row.impairment}</span>
+                        </div>
+                      </td>
+                      <td className="py-2.5 pr-3">
+                        <div className="flex gap-1 flex-wrap">
+                          {row.programs.map(p => (
+                            <Badge key={p} variant="outline" className="text-[10px] py-0 px-1.5 h-5 bg-green-50 text-green-700 border-green-200">{p}</Badge>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="py-2.5 pr-3 text-slate-600">{row.type}</td>
+                      <td className="py-2.5 text-slate-500">{row.use}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-3 flex items-center gap-2 text-[10px] text-slate-400">
+              <ArrowRight className="h-3 w-3" />
+              Use the Grant Matching Analysis above for AI-powered program recommendations based on your specific impairments.
+            </div>
+          </CardContent>
+        </Card>
+        </>);
+
+        case 'grant-outcomes': return DS(<>
+        {/* ── Historical Grant Outcomes ── */}
+        <GrantOutcomesCard onRunAnalysis={() => setShowGrantMatcher(true)} />
+        </>);
+
+        case 'funding-gap': {
+          const gapRow = stateRollup.find(r => r.abbr === selectedState);
+          const gapStateName = STATE_ABBR_TO_NAME[selectedState] || selectedState;
+          const gapNationalImpaired = stateRollup.reduce((s, r) => s + r.totalImpaired, 0);
+          // Cost estimates per impaired waterbody (EPA TMDL implementation averages)
+          const avgCostPerWaterbody = 2_500_000; // $2.5M average remediation
+          const stateImpairedCount = gapRow?.totalImpaired || 0;
+          const estimatedCost = stateImpairedCount * avgCostPerWaterbody;
+          // Estimated available funding (proportional SRF share)
+          const gapStateShare = gapRow && gapNationalImpaired > 0 ? (gapRow.totalImpaired / gapNationalImpaired) : 0;
+          const estimatedFunding = Math.round(gapStateShare * 12_700_000_000);
+          const fundingGap = Math.max(0, estimatedCost - estimatedFunding);
+          const coveragePct = estimatedCost > 0 ? Math.min(100, Math.round((estimatedFunding / estimatedCost) * 100)) : 0;
+
+          // National totals
+          const natCost = gapNationalImpaired * avgCostPerWaterbody;
+          const natFunding = 12_700_000_000;
+          const natGap = Math.max(0, natCost - natFunding);
+          const natCoveragePct = natCost > 0 ? Math.min(100, Math.round((natFunding / natCost) * 100)) : 0;
+
+          const fmtDollars = (n: number) => n >= 1e12 ? `$${(n / 1e12).toFixed(1)}T` : n >= 1e9 ? `$${(n / 1e9).toFixed(1)}B` : n >= 1e6 ? `$${(n / 1e6).toFixed(0)}M` : n >= 1e3 ? `$${(n / 1e3).toFixed(0)}K` : `$${n}`;
+
+          return DS(<>
+        <Card id="section-funding-gap" className="border-2 border-rose-200 bg-gradient-to-br from-rose-50 to-white">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-rose-600" />
+                  Funding Gap Analysis
+                </CardTitle>
+                <select
+                  value={selectedState}
+                  onChange={(e) => setSelectedState(e.target.value)}
+                  className="px-2 py-1 rounded-md border border-slate-300 text-xs bg-white cursor-pointer hover:border-rose-400 focus:outline-none focus:ring-1 focus:ring-rose-300"
+                >
+                  {Object.entries(STATE_ABBR_TO_NAME).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
+                    <option key={abbr} value={abbr}>{name} ({abbr})</option>
+                  ))}
+                </select>
+              </div>
+              <BrandedPrintBtn sectionId="funding-gap" title={`${gapStateName} Funding Gap`} />
+            </div>
+            <CardDescription>Estimated compliance cost vs. available federal funding for impaired waterbodies</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* State Gap Visualization */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="rounded-xl border-2 border-red-200 bg-red-50 p-4 text-center">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-red-500">Estimated Compliance Cost</div>
+                <div className="text-2xl font-bold text-red-700 mt-1">{fmtDollars(estimatedCost)}</div>
+                <div className="text-[10px] text-red-400 mt-1">{stateImpairedCount.toLocaleString()} impaired waterbodies × $2.5M avg</div>
+              </div>
+              <div className="rounded-xl border-2 border-green-200 bg-green-50 p-4 text-center">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-green-500">Available Federal Funding</div>
+                <div className="text-2xl font-bold text-green-700 mt-1">{fmtDollars(estimatedFunding)}</div>
+                <div className="text-[10px] text-green-400 mt-1">Est. SRF allocation (CWSRF + DWSRF)</div>
+              </div>
+              <div className="rounded-xl border-2 border-rose-300 bg-rose-100 p-4 text-center">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-rose-600">Funding Gap</div>
+                <div className="text-2xl font-bold text-rose-700 mt-1">{fmtDollars(fundingGap)}</div>
+                <div className="text-[10px] text-rose-500 mt-1">
+                  {coveragePct}% of estimated need covered
+                </div>
+              </div>
+            </div>
+
+            {/* Coverage Bar */}
+            <div>
+              <div className="flex justify-between text-[10px] text-slate-500 mb-1">
+                <span>{gapStateName} Federal Funding Coverage</span>
+                <span className="font-semibold">{coveragePct}%</span>
+              </div>
+              <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-700"
+                  style={{
+                    width: `${coveragePct}%`,
+                    backgroundColor: coveragePct >= 50 ? '#16a34a' : coveragePct >= 25 ? '#d97706' : '#dc2626',
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* National Context */}
+            <div className="border border-slate-200 rounded-lg p-4 bg-white">
+              <h4 className="text-xs font-semibold text-slate-700 mb-3 uppercase tracking-wide">National Context</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="text-center">
+                  <div className="text-lg font-bold text-slate-700">{gapNationalImpaired.toLocaleString()}</div>
+                  <div className="text-[10px] text-slate-500">Impaired Waterbodies</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-lg font-bold text-red-600">{fmtDollars(natCost)}</div>
+                  <div className="text-[10px] text-slate-500">Est. National Cost</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-lg font-bold text-green-600">{fmtDollars(natFunding)}</div>
+                  <div className="text-[10px] text-slate-500">Available SRF</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-lg font-bold text-rose-600">{fmtDollars(natGap)}</div>
+                  <div className="text-[10px] text-slate-500">National Gap ({natCoveragePct}% covered)</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Urgency callout */}
+            <div className="bg-rose-50 border-l-2 border-rose-400 rounded-lg p-3">
+              <div className="text-xs text-rose-800 leading-relaxed">
+                <span className="font-bold">The gap drives urgency.</span>{' '}
+                {gapStateName} needs an estimated <span className="font-semibold">{fmtDollars(estimatedCost)}</span> to address all impaired waterbodies,
+                but current federal SRF allocations cover approximately <span className="font-semibold">{coveragePct}%</span> of that need.
+                {fundingGap > 0 && <> The remaining <span className="font-semibold">{fmtDollars(fundingGap)}</span> gap requires state matching funds, competitive grants, and strategic prioritization.</>}
+              </div>
+            </div>
+
+            {/* CTA */}
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs border-rose-300 text-rose-700 hover:bg-rose-100"
+                onClick={() => setShowGrantMatcher(true)}
+              >
+                Find Grants to Close the Gap
+              </Button>
+              <span className="text-[10px] text-slate-400">Methodology: $2.5M avg per impaired waterbody based on EPA TMDL implementation cost studies</span>
+            </div>
+          </CardContent>
+        </Card>
+        </>);
+        }
 
         case 'waterbody-card': {
           const wbRow = stateRollup.find(r => r.abbr === selectedState);
