@@ -254,15 +254,16 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
         <div className="max-w-4xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-8">
             <h2 className="text-3xl sm:text-4xl font-bold text-white leading-tight" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-              What if ALIA had been there?
+              What if PEARL ALIA had been there?
             </h2>
+            <p className="mt-3 text-base sm:text-lg text-slate-400 italic">Aquatic Life Improvement Accelerator</p>
           </div>
           <p className="text-lg text-slate-300 leading-relaxed text-center max-w-3xl mx-auto mb-10">
             In January 2026, a collapsed sewer line dumped 200+ million gallons of raw sewage into the Potomac River &mdash; one of the largest spills in U.S. history. No independent monitoring detected it. No treatment intercepted it.
           </p>
           <div className="rounded-2xl border border-cyan-500/30 bg-gradient-to-br from-cyan-950/60 to-slate-800/60 p-8 backdrop-blur-sm">
             <p className="text-lg sm:text-xl text-white font-semibold leading-relaxed text-center">
-              In our first pilot, ALIA achieved <span className="text-cyan-400">93.8% E. coli reduction</span> and <span className="text-cyan-400">90-95% TSS removal</span> &mdash; without even targeting bacteria. Imagine that technology deployed at every overflow point.
+              In our first pilot, PEARL ALIA achieved <span className="text-cyan-400">93.8% E. coli reduction</span> and <span className="text-cyan-400">90-95% TSS removal</span> &mdash; without even targeting bacteria. Imagine that technology deployed at every overflow point.
             </p>
           </div>
           <div className="mt-10 text-center">
