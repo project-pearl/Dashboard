@@ -134,7 +134,7 @@ export default function HeroBanner({ role, className = '', children, onDoubleCli
   return (
     <div className={`relative w-full overflow-hidden rounded-2xl cursor-default select-none ${className}`} onDoubleClick={onDoubleClick}>
       {/* Background image */}
-      <div className="relative h-[280px] sm:h-[320px] lg:h-[360px] w-full">
+      <div className="relative h-[160px] sm:h-[180px] lg:h-[200px] w-full">
         <Image
           src={config.image}
           alt={config.headline}
@@ -158,18 +158,19 @@ export default function HeroBanner({ role, className = '', children, onDoubleCli
         <div className="absolute inset-0 flex flex-col justify-center px-6 sm:px-10 lg:px-14">
           {/* Subtitle label */}
           <span
-            className={`text-xs sm:text-sm font-bold uppercase tracking-[0.2em] ${config.accentColor} mb-2 sm:mb-3`}
+            className={`inline-flex items-center gap-1.5 w-fit text-sm sm:text-base font-extrabold uppercase tracking-[0.18em] ${config.accentColor} mb-1.5 sm:mb-2 drop-shadow-[0_0_8px_currentColor]`}
           >
+            <span className="inline-block w-2 h-2 rounded-full bg-current animate-pulse" />
             {config.subtitle}
           </span>
 
           {/* Headline */}
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-white leading-tight max-w-2xl">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white leading-tight max-w-2xl">
             {config.headline}
           </h1>
 
           {/* Description */}
-          <p className="mt-3 sm:mt-4 text-sm sm:text-base text-white/80 max-w-xl leading-relaxed">
+          <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-white/80 max-w-xl leading-relaxed">
             {config.description}
           </p>
         </div>
