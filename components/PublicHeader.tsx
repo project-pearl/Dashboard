@@ -37,7 +37,7 @@ export default function PublicHeader() {
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link href="/">
-            <Image src="/Pearl-Header.png" alt="Project PEARL" width={160} height={44} className="object-contain" priority />
+            <Image src="/Pearl-Intelligence-Network.png" alt="PEARL Intelligence Network" width={160} height={44} className="object-contain" priority />
           </Link>
 
           {/* Desktop nav */}

@@ -517,7 +517,7 @@ export default function WaterQualityExplorer() {
 
         <div className={`relative z-10 max-w-7xl mx-auto px-6 lg:px-8 pb-16 pt-32 w-full transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <div className="max-w-2xl">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-600 mb-3">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-900 mb-3">
               Free Public Data
             </p>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-[1.08] tracking-tight">
