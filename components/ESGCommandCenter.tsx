@@ -5,6 +5,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import MissionQuote from './MissionQuote';
 import { useLensParam } from '@/lib/useLensParam';
 import { CircleMarker, Tooltip } from 'react-leaflet';
 import HeroBanner from './HeroBanner';
@@ -795,6 +796,8 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
             </div>
             )}
         </HeroBanner>
+
+        <MissionQuote role="esg" variant="light" />
 
         {/* ── COMPANY NAME ── */}
         <div className="text-7xl font-bold text-emerald-700 text-center pt-3 capitalize">{companyName}</div>

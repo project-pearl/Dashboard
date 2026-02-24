@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import MissionQuote from './MissionQuote';
 import { useLensParam } from '@/lib/useLensParam';
 import Image from 'next/image';
 import { CircleMarker, Tooltip } from 'react-leaflet';
@@ -733,6 +734,7 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
             </Badge>
         </HeroBanner>
 
+        <MissionQuote role="ngo" variant="light" />
 
         <LayoutEditor ccKey="NGO">
         {({ sections, isEditMode, onToggleVisibility, onToggleCollapse, collapsedSections }) => {
