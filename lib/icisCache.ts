@@ -17,7 +17,7 @@ export interface IcisPermit {
   type: string;            // Permit type (e.g. Individual, General)
   expiration: string;      // Expiration date
   flow: number | null;     // Design flow (MGD)
-  lat: number;
+  lat: number;             // 0 when coords unavailable (ICIS_PERMIT table lacks lat/lng)
   lng: number;
 }
 

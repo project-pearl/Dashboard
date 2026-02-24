@@ -16,111 +16,170 @@ import {
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
-const ECHO_BASE = 'https://echodata.epa.gov/echo/cwa_rest_services.get_facilities';
+const ECHO_QUERY = 'https://echodata.epa.gov/echo/cwa_rest_services.get_facilities';
+const ECHO_QID   = 'https://echodata.epa.gov/echo/cwa_rest_services.get_qid';
+const ECHO_DL    = 'https://echodata.epa.gov/echo/cwa_rest_services.get_download';
 const STATE_DELAY_MS = 2000;
-const PAGE_SIZE = 1000; // ECHO max responseset size
+// Columns we request: basic info (1-9), coords (24-25), compliance (97-101)
+const DL_QCOLS = '1,2,3,4,5,9,24,25,97,98,99,101';
 
 import { PRIORITY_STATES } from '@/lib/constants';
 
-// ── ECHO fetch helpers ──────────────────────────────────────────────────────
+// ── CSV parser (no external deps) ───────────────────────────────────────────
+
+function parseCSV(text: string): Record<string, string>[] {
+  const lines = text.split('\n').filter(l => l.trim());
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
+  const rows: Record<string, string>[] = [];
+  for (let i = 1; i < lines.length; i++) {
+    // Simple CSV split — handles quoted fields with commas
+    const vals: string[] = [];
+    let cur = '';
+    let inQuote = false;
+    for (const ch of lines[i]) {
+      if (ch === '"') { inQuote = !inQuote; continue; }
+      if (ch === ',' && !inQuote) { vals.push(cur.trim()); cur = ''; continue; }
+      cur += ch;
+    }
+    vals.push(cur.trim());
+    const row: Record<string, string> = {};
+    for (let j = 0; j < headers.length; j++) row[headers[j]] = vals[j] || '';
+    rows.push(row);
+  }
+  return rows;
+}
+
+// ── ECHO two-step fetch: get_facilities → QueryID → get_download (CSV) ──────
 
 async function fetchEchoFacilities(stateAbbr: string): Promise<EchoFacility[]> {
-  const results: EchoFacility[] = [];
-  let page = 1;
+  try {
+    // Step 1: get QueryID
+    const queryUrl = `${ECHO_QUERY}?output=JSON&p_st=${stateAbbr}&qcolumns=${DL_QCOLS}`;
+    const qRes = await fetch(queryUrl, {
+      headers: { 'Accept': 'application/json' },
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!qRes.ok) {
+      console.warn(`[ECHO Cron] Facilities ${stateAbbr} query: HTTP ${qRes.status}`);
+      return [];
+    }
+    const qJson = await qRes.json();
+    const qid = qJson?.Results?.QueryID;
+    const totalRows = parseInt(qJson?.Results?.QueryRows || '0', 10);
+    if (!qid || totalRows === 0) return [];
 
-  while (true) {
-    const url = `${ECHO_BASE}?output=JSON&p_st=${stateAbbr}&responseset=${page}`;
-    try {
-      const res = await fetch(url, {
-        headers: { 'Accept': 'application/json' },
-        signal: AbortSignal.timeout(30_000),
+    console.log(`[ECHO Cron] ${stateAbbr} facilities: QID=${qid}, rows=${totalRows}`);
+
+    // Step 2: download CSV (paginated — ECHO returns up to 5000 rows per page)
+    const results: EchoFacility[] = [];
+    let pageNo = 1;
+    const PAGE_SIZE = 5000;
+
+    while (results.length < totalRows) {
+      const dlUrl = `${ECHO_DL}?qid=${qid}&qcolumns=${DL_QCOLS}&pageno=${pageNo}&pagesize=${PAGE_SIZE}`;
+      const dlRes = await fetch(dlUrl, {
+        signal: AbortSignal.timeout(60_000),
       });
-
-      if (!res.ok) {
-        console.warn(`[ECHO Cron] Facilities ${stateAbbr} page ${page}: HTTP ${res.status}`);
+      if (!dlRes.ok) {
+        console.warn(`[ECHO Cron] Facilities ${stateAbbr} download page ${pageNo}: HTTP ${dlRes.status}`);
         break;
       }
+      const csv = await dlRes.text();
+      const rows = parseCSV(csv);
+      if (rows.length === 0) break;
 
-      const json = await res.json();
-      const facilities = json?.Results?.Facilities;
-      if (!Array.isArray(facilities) || facilities.length === 0) break;
-
-      for (const f of facilities) {
+      for (const f of rows) {
         const lat = parseFloat(f.FacLat || '');
         const lng = parseFloat(f.FacLong || '');
-        if (isNaN(lat) || isNaN(lng) || lat <= 0) continue;
+        if (isNaN(lat) || isNaN(lng) || Math.abs(lat) < 1) continue;
 
         results.push({
           registryId: f.RegistryID || f.SourceID || '',
-          name: f.CWPName || f.FacName || '',
-          state: f.FacState || stateAbbr,
-          permitId: f.CWPPermitStatusDesc ? (f.SourceID || '') : (f.CWPNpdesIds || ''),
+          name: (f.CWPName || '').trim(),
+          state: (f.CWPState || stateAbbr).trim(),
+          permitId: (f.SourceID || '').trim(),
           lat: Math.round(lat * 100000) / 100000,
           lng: Math.round(lng * 100000) / 100000,
-          complianceStatus: f.CWPComplianceStatus || f.CWPSNCStatus || '',
-          qtrsInViolation: parseInt(f.CWPQtrsInNC || '0', 10) || 0,
+          complianceStatus: (f.CWPSNCStatus || f.CWPStatus || '').trim(),
+          qtrsInViolation: parseInt(f.CWPQtrsWithNC || '0', 10) || 0,
         });
       }
 
-      // ECHO paginates by responseset — if fewer than ~1000 results, we're done
-      if (facilities.length < PAGE_SIZE) break;
-      page++;
-    } catch (e) {
-      console.warn(`[ECHO Cron] Facilities ${stateAbbr} page ${page}: ${e instanceof Error ? e.message : e}`);
-      break;
+      if (rows.length < PAGE_SIZE) break;
+      pageNo++;
     }
-  }
 
-  return results;
+    return results;
+  } catch (e) {
+    console.warn(`[ECHO Cron] Facilities ${stateAbbr}: ${e instanceof Error ? e.message : e}`);
+    return [];
+  }
 }
 
 async function fetchEchoViolations(stateAbbr: string): Promise<EchoViolation[]> {
-  const results: EchoViolation[] = [];
-  let page = 1;
+  try {
+    // Step 1: get QueryID (p_qiv=Y filters to violating facilities)
+    const queryUrl = `${ECHO_QUERY}?output=JSON&p_st=${stateAbbr}&p_qiv=Y&qcolumns=${DL_QCOLS}`;
+    const qRes = await fetch(queryUrl, {
+      headers: { 'Accept': 'application/json' },
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!qRes.ok) {
+      console.warn(`[ECHO Cron] Violations ${stateAbbr} query: HTTP ${qRes.status}`);
+      return [];
+    }
+    const qJson = await qRes.json();
+    const qid = qJson?.Results?.QueryID;
+    const totalRows = parseInt(qJson?.Results?.QueryRows || '0', 10);
+    if (!qid || totalRows === 0) return [];
 
-  while (true) {
-    const url = `${ECHO_BASE}?output=JSON&p_st=${stateAbbr}&p_qiv=Y&responseset=${page}`;
-    try {
-      const res = await fetch(url, {
-        headers: { 'Accept': 'application/json' },
-        signal: AbortSignal.timeout(30_000),
+    console.log(`[ECHO Cron] ${stateAbbr} violations: QID=${qid}, rows=${totalRows}`);
+
+    // Step 2: download CSV
+    const results: EchoViolation[] = [];
+    let pageNo = 1;
+    const PAGE_SIZE = 5000;
+
+    while (results.length < totalRows) {
+      const dlUrl = `${ECHO_DL}?qid=${qid}&qcolumns=${DL_QCOLS}&pageno=${pageNo}&pagesize=${PAGE_SIZE}`;
+      const dlRes = await fetch(dlUrl, {
+        signal: AbortSignal.timeout(60_000),
       });
-
-      if (!res.ok) {
-        console.warn(`[ECHO Cron] Violations ${stateAbbr} page ${page}: HTTP ${res.status}`);
+      if (!dlRes.ok) {
+        console.warn(`[ECHO Cron] Violations ${stateAbbr} download page ${pageNo}: HTTP ${dlRes.status}`);
         break;
       }
+      const csv = await dlRes.text();
+      const rows = parseCSV(csv);
+      if (rows.length === 0) break;
 
-      const json = await res.json();
-      const facilities = json?.Results?.Facilities;
-      if (!Array.isArray(facilities) || facilities.length === 0) break;
-
-      for (const f of facilities) {
+      for (const f of rows) {
         const lat = parseFloat(f.FacLat || '');
         const lng = parseFloat(f.FacLong || '');
-        if (isNaN(lat) || isNaN(lng) || lat <= 0) continue;
+        if (isNaN(lat) || isNaN(lng) || Math.abs(lat) < 1) continue;
 
         results.push({
           registryId: f.RegistryID || f.SourceID || '',
-          name: f.CWPName || f.FacName || '',
-          state: f.FacState || stateAbbr,
+          name: (f.CWPName || '').trim(),
+          state: (f.CWPState || stateAbbr).trim(),
           lat: Math.round(lat * 100000) / 100000,
           lng: Math.round(lng * 100000) / 100000,
-          violationType: f.CWPViolStatus || f.CWPComplianceStatus || '',
-          pollutant: f.CWPCsoOutfalls || '',
-          qtrsInNc: parseInt(f.CWPQtrsInNC || '0', 10) || 0,
+          violationType: (f.CWPVioStatus || f.CWPViolStatus || '').trim(),
+          pollutant: '',
+          qtrsInNc: parseInt(f.CWPQtrsWithNC || '0', 10) || 0,
         });
       }
 
-      if (facilities.length < PAGE_SIZE) break;
-      page++;
-    } catch (e) {
-      console.warn(`[ECHO Cron] Violations ${stateAbbr} page ${page}: ${e instanceof Error ? e.message : e}`);
-      break;
+      if (rows.length < PAGE_SIZE) break;
+      pageNo++;
     }
-  }
 
-  return results;
+    return results;
+  } catch (e) {
+    console.warn(`[ECHO Cron] Violations ${stateAbbr}: ${e instanceof Error ? e.message : e}`);
+    return [];
+  }
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────

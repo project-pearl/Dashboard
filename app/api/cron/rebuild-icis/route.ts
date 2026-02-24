@@ -110,20 +110,24 @@ async function fetchTable<T>(
 // ── Row transforms ──────────────────────────────────────────────────────────
 
 function transformPermit(row: Record<string, any>): IcisPermit | null {
-  const lat = parseFloat(row.LATITUDE_MEASURE || row.FAC_LAT || '');
-  const lng = parseFloat(row.LONGITUDE_MEASURE || row.FAC_LONG || '');
-  if (isNaN(lat) || isNaN(lng) || lat <= 0) return null;
+  const permitId = row.NPDES_ID || row.EXTERNAL_PERMIT_NMBR || row.external_permit_nmbr || '';
+  if (!permitId) return null;
+
+  // ICIS_PERMIT table lacks coordinates — use 0,0 as placeholder
+  const lat = parseFloat(row.LATITUDE_MEASURE || row.FAC_LAT || '0');
+  const lng = parseFloat(row.LONGITUDE_MEASURE || row.FAC_LONG || '0');
 
   return {
-    permit: row.NPDES_ID || row.EXTERNAL_PERMIT_NMBR || '',
-    facility: row.FACILITY_NAME || row.FAC_NAME || '',
+    permit: permitId,
+    facility: row.FACILITY_NAME || row.FAC_NAME || row.permit_name || '',
     state: row.STATE_ABBR || row.FAC_STATE || '',
-    status: row.PERMIT_STATUS_CODE || row.PERMIT_STATUS || '',
-    type: row.PERMIT_TYPE_CODE || row.INDIVIDUAL_GENERAL_FLAG || '',
-    expiration: row.PERMIT_EXPIRATION_DATE || '',
-    flow: row.DESIGN_FLOW_NMBR ? parseFloat(row.DESIGN_FLOW_NMBR) : null,
-    lat: Math.round(lat * 100000) / 100000,
-    lng: Math.round(lng * 100000) / 100000,
+    status: row.PERMIT_STATUS_CODE || row.permit_status_code || '',
+    type: row.PERMIT_TYPE_CODE || row.permit_type_code || '',
+    expiration: row.PERMIT_EXPIRATION_DATE || row.expiration_date || '',
+    flow: row.DESIGN_FLOW_NMBR || row.total_design_flow_nmbr
+      ? parseFloat(row.DESIGN_FLOW_NMBR || row.total_design_flow_nmbr) : null,
+    lat: isNaN(lat) ? 0 : Math.round(lat * 100000) / 100000,
+    lng: isNaN(lng) ? 0 : Math.round(lng * 100000) / 100000,
   };
 }
 
@@ -260,8 +264,10 @@ export async function GET(request: NextRequest) {
         console.log(`[ICIS Cron] Fetching ${stateAbbr}...`);
 
         // Fetch all 5 tables in parallel for this state
+        // Note: ICIS_PERMIT lacks a state column in the JSON, so we set it post-fetch
         const [permits, violations, dmr, enforcement, inspections] = await Promise.all([
-          fetchTable('ICIS_PERMIT', 'STATE_ABBR', stateAbbr, transformPermit),
+          fetchTable('ICIS_PERMIT', 'STATE_ABBR', stateAbbr, transformPermit)
+            .then(rows => rows.map(r => ({ ...r, state: r.state || stateAbbr }))),
           // ICIS_VIOLATIONS table removed from Envirofacts — violations via ECHO API
           Promise.resolve([]) as Promise<IcisViolation[]>,
           fetchTable('ICIS_DMR', 'STATE_ABBR', stateAbbr, transformDmr),
