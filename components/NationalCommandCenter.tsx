@@ -2358,8 +2358,8 @@ export function NationalCommandCenter(props: Props) {
                   const rollup = stateRollup.find(s => s.abbr === selectedState);
                   if (!rollup?.canGradeState) {
                     return (
-                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 bg-slate-100 border-slate-300">
-                        <div className="text-2xl font-black text-slate-400">N/A</div>
+                      <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg border-2 bg-slate-100 border-slate-300">
+                        <div className="text-lg font-black text-slate-400">N/A</div>
                         <div className="text-right">
                           <div className="text-[10px] text-slate-500">Ungraded</div>
                           <div className="text-[10px] text-slate-400">{attainsBulkLoading.has(selectedState) ? 'Loading ATTAINS...' : 'No assessment data'}</div>
@@ -2370,10 +2370,10 @@ export function NationalCommandCenter(props: Props) {
                   const grade = rollup.grade;
                   return (
                     <div className="relative">
-                      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 ${grade.bg}`}>
-                        <div className={`text-2xl font-black ${grade.color}`}>{grade.letter}</div>
+                      <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border-2 ${grade.bg}`}>
+                        <div className={`text-lg font-black ${grade.color}`}>{grade.letter}</div>
                         <div className="text-right">
-                          <div className={`text-sm font-bold ${grade.color}`}>{rollup.score}%</div>
+                          <div className={`text-xs font-bold ${grade.color}`}>{rollup.score}%</div>
                           <div className="text-[10px] text-slate-500">
                             {rollup.assessed} assessed{rollup.dataSource === 'attains' ? ' (EPA)' : ''}
                           </div>
