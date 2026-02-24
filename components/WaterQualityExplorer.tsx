@@ -1,26 +1,23 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { GeoJSON, CircleMarker } from 'react-leaflet';
-import dynamic from 'next/dynamic';
-import { getStatesGeoJSON, geoToAbbr, STATE_GEO_LEAFLET, STATE_NAMES as _SN } from '@/lib/leafletMapUtils';
-
-const LeafletMapShell = dynamic(
-  () => import('@/components/LeafletMapShell').then(m => m.LeafletMapShell),
-  { ssr: false }
-);
+import { useState, useEffect, useRef, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import PublicHeader from '@/components/PublicHeader';
+import { STATE_NAMES } from '@/lib/leafletMapUtils';
 import {
-  ArrowRight, Droplets, AlertTriangle, ShieldCheck, TrendingDown, X, ChevronDown,
+  STATE_AUTHORITIES, STATE_CHALLENGES, STATE_TMDL_CONTEXT,
+  STATE_COMPLAINT_CONTACTS, getComplaintContact,
+} from '@/lib/stateWaterData';
+import { getEpaRegionForState, EPA_REGIONS } from '@/lib/epa-regions';
+import {
+  ArrowRight, ChevronDown, Building2, ExternalLink, Phone, Users,
+  Droplets, ShieldCheck, FileText, BookOpen,
 } from 'lucide-react';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    CONSTANTS
    ═══════════════════════════════════════════════════════════════════════════ */
-
-const STATE_NAMES = _SN;
 
 const CAUSE_EMOJI: Record<string, string> = {
   'PATHOGENS': '🦠', 'NUTRIENTS': '🧪', 'NITROGEN (TOTAL)': '🧪',
@@ -108,14 +105,6 @@ function scoreToGrade(score: number): { letter: string; color: string; bg: strin
   return { letter: 'F', color: 'text-red-600', bg: 'bg-red-500', textColor: 'text-red-700' };
 }
 
-function gradeColorFill(score: number): string {
-  if (score >= 90) return '#22c55e';
-  if (score >= 80) return '#86efac';
-  if (score >= 70) return '#fde68a';
-  if (score >= 60) return '#f59e0b';
-  return '#ef4444';
-}
-
 function computeStateGrade(s: { high: number; medium: number; low: number; none: number; total: number }) {
   if (s.total === 0) return { score: -1, ...scoreToGrade(0) };
   const highPct = (s.high / s.total) * 100;
@@ -164,6 +153,16 @@ interface CacheResponse {
   states: Record<string, StateSummary>;
 }
 
+/* ═══ REPORT CARD ITEM TYPE ═══ */
+
+interface ReportCardItem {
+  title: string;
+  description: string;
+  status: 'green' | 'yellow' | 'red' | 'blue';
+  badge?: string;
+  emoji?: string;
+}
+
 /* ═══ ANIMATED COUNTER ═══ */
 
 function Counter({ target, suffix = '', duration = 2000 }: {
@@ -198,6 +197,18 @@ function Counter({ target, suffix = '', duration = 2000 }: {
   return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
 }
 
+/* ═══ STATUS DOT COMPONENT ═══ */
+
+const STATUS_COLORS = {
+  green:  { dot: 'bg-green-500',  bg: 'bg-green-50',  border: 'border-green-200', text: 'text-green-700' },
+  yellow: { dot: 'bg-yellow-500', bg: 'bg-yellow-50', border: 'border-yellow-200', text: 'text-yellow-700' },
+  red:    { dot: 'bg-red-500',    bg: 'bg-red-50',    border: 'border-red-200', text: 'text-red-700' },
+  blue:   { dot: 'bg-blue-500',   bg: 'bg-blue-50',   border: 'border-blue-200', text: 'text-blue-700' },
+};
+
+/* ═══ NATIONAL MEDIAN TOTAL (approximate for monitoring coverage) ═══ */
+const NATIONAL_MEDIAN_TOTAL = 800;
+
 /* ═══════════════════════════════════════════════════════════════════════════
    MAIN COMPONENT
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -206,16 +217,7 @@ export default function WaterQualityExplorer() {
   const [selectedState, setSelectedState] = useState<string>('');
   const [nationalCache, setNationalCache] = useState<CacheResponse | null>(null);
   const [cacheLoading, setCacheLoading] = useState(true);
-  const aiCacheRef = useRef<Record<string, string>>({});
-  const [aiText, setAiText] = useState('');
-  const [aiLoading, setAiLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [selectedMarker, setSelectedMarker] = useState<CachedWaterbody | null>(null);
-
-  const geoData = useMemo(() => {
-    try { return getStatesGeoJSON() as any; }
-    catch { return null; }
-  }, []);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -248,66 +250,6 @@ export default function WaterQualityExplorer() {
     return { totalWb, totalCat5, fGradeCount, stateCount: Object.keys(nationalCache.states).length };
   }, [nationalCache]);
 
-  const stateGrades = useMemo(() => {
-    if (!nationalCache?.states) return {} as Record<string, { score: number; letter: string }>;
-    const map: Record<string, { score: number; letter: string }> = {};
-    Object.entries(nationalCache.states).forEach(([abbr, s]) => {
-      const g = computeStateGrade(s);
-      map[abbr] = { score: g.score, letter: g.letter };
-    });
-    return map;
-  }, [nationalCache]);
-
-  const fetchAiInsights = useCallback(async (abbr: string, data: StateSummary) => {
-    if (aiCacheRef.current[abbr]) {
-      setAiText(aiCacheRef.current[abbr]);
-      return;
-    }
-    setAiLoading(true);
-    setAiText('');
-    try {
-      const grade = computeStateGrade(data);
-      const pctImpaired = data.total > 0 ? ((data.high / data.total) * 100).toFixed(1) : '0';
-      const res = await fetch('/api/ai-insights', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          systemPrompt: `You are a water quality analyst writing for the general public. Write 3-4 prose paragraphs (no markdown, no bullets, no headers) summarizing the water quality situation in a U.S. state. Be informative, accessible, and slightly conversational. Mention specific pollutants, what they mean for people and wildlife, and what could improve the situation.`,
-          userMessage: JSON.stringify({
-            state: STATE_NAMES[abbr] || abbr,
-            totalWaterbodies: data.total,
-            category5Impaired: data.high,
-            category4WithPlan: data.medium,
-            category3InsufficientData: data.low,
-            healthyCategory1or2: data.none,
-            topCauses: data.topCauses,
-            grade: grade.letter,
-            percentImpaired: pctImpaired,
-            tmdlNeeded: data.tmdlNeeded,
-          }),
-        }),
-      });
-      const json = await res.json();
-      const text = json.text || (json.insights ? JSON.stringify(json.insights) : 'Analysis unavailable.');
-      aiCacheRef.current[abbr] = text;
-      setAiText(text);
-    } catch {
-      setAiText('Unable to load AI analysis at this time.');
-    } finally {
-      setAiLoading(false);
-    }
-  }, []);
-
-  const handleStateSelect = useCallback((abbr: string) => {
-    setSelectedState(abbr);
-    setSelectedMarker(null);
-    if (abbr && nationalCache?.states?.[abbr]) {
-      fetchAiInsights(abbr, nationalCache.states[abbr]);
-    } else {
-      setAiText('');
-    }
-  }, [nationalCache, fetchAiInsights]);
-
   const causeFrequency = useMemo(() => {
     if (!stateData?.waterbodies) return [];
     const freq: Record<string, number> = {};
@@ -320,18 +262,148 @@ export default function WaterQualityExplorer() {
   const spotlight = useMemo(() => {
     if (!stateData?.waterbodies?.length) return null;
     const wbs = stateData.waterbodies;
-    const worst = wbs.filter(w => w.alertLevel === 'high').sort((a, b) => b.causeCount - a.causeCount)[0] || null;
     const attaining = wbs.find(w => w.alertLevel === 'none') || null;
-    const atRisk = wbs.filter(w => w.alertLevel === 'medium').sort((a, b) => b.causeCount - a.causeCount)[0] || null;
-    return { worst, attaining, atRisk };
+    return { attaining };
   }, [stateData]);
 
-  const pctImpaired = stateData && stateData.total > 0
-    ? ((stateData.high / stateData.total) * 100).toFixed(1)
-    : '0';
-  const pctAttaining = stateData && stateData.total > 0
-    ? ((stateData.none / stateData.total) * 100).toFixed(1)
-    : '0';
+  /* ═══ REPORT CARD ITEMS ═══ */
+  const reportCardItems = useMemo((): ReportCardItem[] => {
+    if (!stateData || !stateGrade) return [];
+    const items: ReportCardItem[] = [];
+    const abbr = selectedState;
+
+    // 1. Overall Grade
+    const gradeStatus = stateGrade.letter.startsWith('A') || stateGrade.letter.startsWith('B')
+      ? 'green' : stateGrade.letter.startsWith('C') ? 'yellow' : 'red';
+    items.push({
+      title: 'Overall Water Quality Grade',
+      description: gradeStatus === 'green'
+        ? `${STATE_NAMES[abbr]} earns a strong grade, with most waterbodies meeting quality standards.`
+        : gradeStatus === 'yellow'
+        ? `${STATE_NAMES[abbr]} has a moderate grade — some waterbodies are healthy, but others need attention.`
+        : `${STATE_NAMES[abbr]} faces notable water quality challenges across many of its waterbodies.`,
+      status: gradeStatus,
+      badge: stateGrade.letter,
+    });
+
+    // 2. Waterbody Health
+    const attainingPct = stateData.total > 0 ? (stateData.none / stateData.total) * 100 : 0;
+    const healthStatus = attainingPct > 70 ? 'green' : attainingPct >= 40 ? 'yellow' : 'red';
+    items.push({
+      title: 'Waterbody Health',
+      description: healthStatus === 'green'
+        ? `Over ${Math.round(attainingPct)}% of assessed waterbodies are meeting water quality standards — a positive sign.`
+        : healthStatus === 'yellow'
+        ? `About ${Math.round(attainingPct)}% of waterbodies are meeting standards, with room for improvement.`
+        : `Less than ${Math.round(attainingPct)}% of waterbodies are fully meeting standards — indicating widespread challenges.`,
+      status: healthStatus,
+    });
+
+    // 3. Pollution Cleanup Progress
+    const totalTmdl = (stateData.tmdlCompleted || 0) + (stateData.tmdlAlternative || 0) + (stateData.tmdlNeeded || 0);
+    if (totalTmdl > 0) {
+      const tmdlDonePct = ((stateData.tmdlCompleted + stateData.tmdlAlternative) / totalTmdl) * 100;
+      const tmdlStatus = tmdlDonePct > 60 ? 'green' : tmdlDonePct >= 30 ? 'yellow' : 'red';
+      items.push({
+        title: 'Pollution Cleanup Progress',
+        description: tmdlStatus === 'green'
+          ? 'Good progress on cleanup plans — the majority of needed pollution limits have been established or addressed.'
+          : tmdlStatus === 'yellow'
+          ? 'Cleanup plans are underway but many waterbodies still need pollution reduction strategies.'
+          : 'Most impaired waterbodies still need formal pollution cleanup plans (TMDLs).',
+        status: tmdlStatus,
+      });
+    }
+
+    // 4. Top Pollution Threat
+    if (causeFrequency.length > 0) {
+      const [topCause, topCount] = causeFrequency[0];
+      const topPct = stateData.total > 0 ? (topCount / stateData.total) * 100 : 0;
+      const causeName = topCause.toLowerCase().replace(/\b\w/g, l => l.toUpperCase()).replace(/\(.*?\)/g, '').trim();
+      items.push({
+        title: 'Top Pollution Concern',
+        description: getCauseDescription(topCause),
+        status: topPct > 30 ? 'red' : 'yellow',
+        emoji: getCauseEmoji(topCause),
+        badge: causeName,
+      });
+    }
+
+    // 5. Second Biggest Threat
+    if (causeFrequency.length > 1) {
+      const [cause2, count2] = causeFrequency[1];
+      const pct2 = stateData.total > 0 ? (count2 / stateData.total) * 100 : 0;
+      const causeName2 = cause2.toLowerCase().replace(/\b\w/g, l => l.toUpperCase()).replace(/\(.*?\)/g, '').trim();
+      items.push({
+        title: 'Second Concern',
+        description: getCauseDescription(cause2),
+        status: pct2 > 30 ? 'red' : 'yellow',
+        emoji: getCauseEmoji(cause2),
+        badge: causeName2,
+      });
+    }
+
+    // 6. Waters Needing Attention
+    const highPct = stateData.total > 0 ? (stateData.high / stateData.total) * 100 : 0;
+    const attentionStatus = highPct < 10 ? 'green' : highPct <= 25 ? 'yellow' : 'red';
+    items.push({
+      title: 'Waters Needing Attention',
+      description: attentionStatus === 'green'
+        ? 'Very few waterbodies have severe impairments — indicating effective environmental management.'
+        : attentionStatus === 'yellow'
+        ? 'A moderate number of waterbodies have severe impairments that need cleanup plans.'
+        : 'A significant portion of waterbodies have severe impairments requiring urgent attention.',
+      status: attentionStatus,
+    });
+
+    // 7. Monitoring Coverage
+    const coverageStatus = stateData.total > NATIONAL_MEDIAN_TOTAL * 1.2 ? 'green'
+      : stateData.total >= NATIONAL_MEDIAN_TOTAL * 0.5 ? 'yellow' : 'red';
+    items.push({
+      title: 'Monitoring Coverage',
+      description: coverageStatus === 'green'
+        ? `With ${stateData.total.toLocaleString()} assessed waterbodies, this state has above-average monitoring coverage.`
+        : coverageStatus === 'yellow'
+        ? `${stateData.total.toLocaleString()} waterbodies are assessed — typical monitoring coverage for a state this size.`
+        : `Only ${stateData.total.toLocaleString()} waterbodies are assessed — more monitoring would provide a clearer picture.`,
+      status: coverageStatus,
+    });
+
+    // 8. Key Current Challenge (conditional)
+    const challenges = STATE_CHALLENGES[abbr];
+    if (challenges?.length > 0) {
+      const challenge = challenges[0];
+      const dashParts = challenge.split(' — ');
+      const title = dashParts.length >= 2 ? dashParts[0].trim() : challenge.substring(0, 60);
+      const desc = dashParts.length >= 2 ? dashParts.slice(1).join(' — ').trim() : challenge;
+      items.push({
+        title: 'Key Current Challenge',
+        description: desc || title,
+        status: 'yellow',
+      });
+    }
+
+    // 9. Bright Spot (conditional)
+    if (spotlight?.attaining) {
+      items.push({
+        title: 'Bright Spot',
+        description: `${spotlight.attaining.name || spotlight.attaining.id} is meeting water quality standards — an example of what effective stewardship looks like.`,
+        status: 'green',
+      });
+    }
+
+    // 10. Regulatory Framework (conditional)
+    const tmdlCtx = STATE_TMDL_CONTEXT[abbr];
+    if (tmdlCtx) {
+      items.push({
+        title: 'Regulatory Framework',
+        description: `${tmdlCtx.framework}${tmdlCtx.deadline ? ` — ${tmdlCtx.deadline}` : ''}. Key focus areas include ${tmdlCtx.keyTMDLs.slice(0, 2).join(' and ')}.`,
+        status: 'blue',
+      });
+    }
+
+    return items;
+  }, [stateData, stateGrade, selectedState, causeFrequency, spotlight]);
 
   /* ═══ RENDER ═══ */
 
@@ -341,7 +413,6 @@ export default function WaterQualityExplorer() {
 
       {/* ═══ HERO ═══ */}
       <section className="relative min-h-[70vh] flex items-end overflow-hidden">
-        {/* Placeholder hero image — replace with real photo */}
         <div className="absolute inset-0 bg-gradient-to-br from-cyan-800 via-slate-700 to-slate-900">
           <Image
             src="/marsh-waterfront.jpeg"
@@ -359,11 +430,16 @@ export default function WaterQualityExplorer() {
               Free Public Data
             </p>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-[1.08] tracking-tight">
-              How healthy is<br />your water?
+              {selectedState && STATE_NAMES[selectedState]
+                ? <>{STATE_NAMES[selectedState]}&rsquo;s<br />water story</>
+                : <>Discover your<br />state&rsquo;s water story</>
+              }
             </h1>
             <p className="mt-5 text-lg text-slate-600 leading-relaxed max-w-xl">
-              Explore water quality across every state &mdash; powered by EPA assessment data
-              and AI analysis. No account required.
+              {selectedState
+                ? `See how ${STATE_NAMES[selectedState]} measures up — powered by EPA assessment data. No account required.`
+                : 'Explore water quality across every state — powered by EPA assessment data. No account required.'
+              }
             </p>
 
             {/* State selector */}
@@ -371,7 +447,7 @@ export default function WaterQualityExplorer() {
               <div className="relative">
                 <select
                   value={selectedState}
-                  onChange={e => handleStateSelect(e.target.value)}
+                  onChange={e => setSelectedState(e.target.value)}
                   className="w-full appearance-none rounded-xl bg-white border-2 border-slate-200 text-slate-800 text-lg px-6 py-4 pr-12 focus:outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100 transition-all cursor-pointer shadow-lg"
                 >
                   <option value="">Select a state to explore...</option>
@@ -392,7 +468,7 @@ export default function WaterQualityExplorer() {
         </div>
       </section>
 
-      {/* ═══ NATIONAL STATS BAR ═══ */}
+      {/* ═══ NATIONAL STATS BAR (no state selected) ═══ */}
       {nationalStats && !selectedState && (
         <section className="py-12 bg-slate-50 border-b border-slate-200">
           <div className="max-w-6xl mx-auto px-6">
@@ -404,16 +480,16 @@ export default function WaterQualityExplorer() {
                 <p className="mt-2 text-sm text-slate-500 font-medium">Assessed Waterbodies</p>
               </div>
               <div className="text-center p-6 rounded-xl bg-white border border-slate-200 shadow-sm">
-                <div className="text-3xl sm:text-4xl font-bold text-red-600">
-                  <Counter target={nationalStats.totalCat5} />
+                <div className="text-3xl sm:text-4xl font-bold text-slate-900">
+                  <Counter target={nationalStats.stateCount} />
                 </div>
-                <p className="mt-2 text-sm text-slate-500 font-medium">Severely Impaired (Category 5)</p>
+                <p className="mt-2 text-sm text-slate-500 font-medium">States &amp; Territories Tracked</p>
               </div>
               <div className="text-center p-6 rounded-xl bg-white border border-slate-200 shadow-sm">
-                <div className="text-3xl sm:text-4xl font-bold text-orange-600">
-                  <Counter target={nationalStats.fGradeCount} />
+                <div className="text-3xl sm:text-4xl font-bold text-cyan-600">
+                  <Counter target={nationalStats.totalWb - nationalStats.totalCat5} />
                 </div>
-                <p className="mt-2 text-sm text-slate-500 font-medium">States with &ldquo;F&rdquo; Grade</p>
+                <p className="mt-2 text-sm text-slate-500 font-medium">Waterbodies Meeting Standards</p>
               </div>
             </div>
           </div>
@@ -421,293 +497,238 @@ export default function WaterQualityExplorer() {
       )}
 
       {/* ═══ STATE REPORT CARD ═══ */}
-      {selectedState && stateData && stateGrade && (
+      {selectedState && stateData && stateGrade && reportCardItems.length > 0 && (
         <section className="py-16 bg-slate-50 border-b border-slate-200">
-          <div className="max-w-6xl mx-auto px-6">
+          <div className="max-w-4xl mx-auto px-6">
             <div className="text-center mb-10">
-              <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
-                {STATE_NAMES[selectedState]}
-              </h2>
-              <p className="mt-2 text-slate-500 text-lg">Water Quality Report Card</p>
-            </div>
-
-            <div className="flex flex-col lg:flex-row items-center gap-10">
-              {/* Grade circle */}
-              <div className="flex-shrink-0">
-                <div className={`w-28 h-28 rounded-full flex items-center justify-center text-5xl font-black text-white shadow-xl ${stateGrade.bg}`}>
+              <div className="inline-flex items-center gap-3 mb-4">
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl font-black text-white shadow-lg ${stateGrade.bg}`}>
                   {stateGrade.letter}
                 </div>
-                <p className="text-center mt-3 text-sm text-slate-400">Overall Grade</p>
               </div>
-
-              {/* KPI grid */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 flex-1 w-full">
-                {[
-                  { label: 'Total Waterbodies', value: stateData.total, suffix: '' },
-                  { label: '% Impaired (Cat 5)', value: parseFloat(pctImpaired), suffix: '%' },
-                  { label: '% Attaining', value: parseFloat(pctAttaining), suffix: '%' },
-                  { label: 'TMDLs Needed', value: stateData.tmdlNeeded, suffix: '' },
-                ].map(kpi => (
-                  <div key={kpi.label} className="text-center p-5 rounded-xl bg-white border border-slate-200 shadow-sm">
-                    <div className="text-2xl sm:text-3xl font-bold text-slate-900">
-                      <Counter target={kpi.value} suffix={kpi.suffix} />
-                    </div>
-                    <p className="mt-1 text-xs text-slate-500">{kpi.label}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ═══ AI STATE ANALYSIS ═══ */}
-      {selectedState && stateData && (
-        <section className="py-14 bg-white border-b border-slate-100">
-          <div className="max-w-4xl mx-auto px-6">
-            <div className="rounded-2xl bg-slate-50 border border-slate-200 p-8 sm:p-10">
-              <div className="flex items-center gap-3 mb-6">
-                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-50 border border-cyan-200 text-cyan-700 text-xs font-semibold tracking-wide">
-                  AI Analysis
-                </span>
-                <span className="text-xs text-slate-400">Powered by Claude</span>
-              </div>
-
-              {aiLoading ? (
-                <div className="space-y-3">
-                  {[...Array(6)].map((_, i) => (
-                    <div key={i} className="h-4 bg-slate-200 rounded animate-pulse" style={{ width: `${70 + Math.random() * 30}%` }} />
-                  ))}
-                </div>
-              ) : aiText ? (
-                <div className="space-y-4">
-                  {aiText.split('\n\n').filter(Boolean).map((para, i) => (
-                    <p key={i} className="text-slate-600 leading-relaxed">{para}</p>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-slate-400 italic">Select a state to see AI-powered analysis.</p>
-              )}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ═══ MAP ═══ */}
-      <section id="map-section" className="py-16 bg-white border-b border-slate-100">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
-              {selectedState ? `${STATE_NAMES[selectedState]} Water Quality Map` : 'National Water Quality Map'}
-            </h2>
-            <p className="mt-2 text-slate-500">
-              {selectedState ? 'Waterbodies colored by impairment level. Click a marker for details.' : 'States colored by overall health grade. Click a state to explore.'}
-            </p>
-            {selectedState && (
-              <button onClick={() => handleStateSelect('')} className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-sm hover:bg-slate-200 transition-all">
+              <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
+                {STATE_NAMES[selectedState]} Water Quality Report Card
+              </h2>
+              <p className="mt-2 text-slate-500">
+                {reportCardItems.length} key findings based on EPA assessment data
+              </p>
+              <button
+                onClick={() => setSelectedState('')}
+                className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-600 text-sm hover:bg-slate-100 transition-all"
+              >
                 <ArrowRight className="h-3 w-3 rotate-180" /> Back to national view
               </button>
-            )}
-          </div>
-
-          <div className="relative rounded-2xl bg-slate-50 border border-slate-200 overflow-hidden shadow-sm">
-            <div className="h-[300px] sm:h-[400px] lg:h-[500px]">
-              {!selectedState ? (
-                <LeafletMapShell center={[39.8, -98.5]} zoom={4} maxZoom={8} height="100%" showZoomControls={false}>
-                  <GeoJSON
-                    data={geoData}
-                    style={(feature: any) => {
-                      const abbr = geoToAbbr(feature as any);
-                      const sg = abbr ? stateGrades[abbr] : undefined;
-                      const fillColor = sg && sg.score >= 0 ? gradeColorFill(sg.score) : '#e2e8f0';
-                      return { fillColor, fillOpacity: 0.85, color: '#94a3b8', weight: 0.5 };
-                    }}
-                    onEachFeature={(feature: any, layer: any) => {
-                      const abbr = geoToAbbr(feature as any);
-                      if (!abbr) return;
-                      layer.on('click', () => handleStateSelect(abbr));
-                      layer.on('mouseover', () => layer.setStyle({ color: '#0891b2', weight: 2 }));
-                      layer.on('mouseout', () => layer.setStyle({ color: '#94a3b8', weight: 0.5 }));
-                    }}
-                  />
-                </LeafletMapShell>
-              ) : STATE_GEO_LEAFLET[selectedState] ? (
-                <LeafletMapShell
-                  center={STATE_GEO_LEAFLET[selectedState].center}
-                  zoom={STATE_GEO_LEAFLET[selectedState].zoom}
-                  maxZoom={12}
-                  height="100%"
-                  mapKey={selectedState}
-                >
-                  <GeoJSON
-                    key={selectedState}
-                    data={geoData}
-                    style={(feature: any) => {
-                      const abbr = geoToAbbr(feature as any);
-                      const isSelected = abbr === selectedState;
-                      return {
-                        fillColor: isSelected ? '#cffafe' : '#f1f5f9',
-                        fillOpacity: 1,
-                        color: isSelected ? '#0891b2' : '#cbd5e1',
-                        weight: isSelected ? 2 : 0.3,
-                      };
-                    }}
-                  />
-                  {stateData?.waterbodies?.slice(0, 200).map((wb, i) => {
-                    const geo = STATE_GEO_LEAFLET[selectedState];
-                    const latSpread = 3;
-                    const lonSpread = 4;
-                    const hash = (wb.id.charCodeAt(0) * 31 + wb.id.charCodeAt(Math.min(1, wb.id.length - 1)) * 17 + i) % 1000;
-                    const lat = geo.center[0] + (hash / 1000 - 0.5) * latSpread;
-                    const lon = geo.center[1] + ((hash * 7 % 1000) / 1000 - 0.5) * lonSpread;
-                    const markerColor = wb.alertLevel === 'high' ? '#ef4444' : wb.alertLevel === 'medium' ? '#f59e0b' : wb.alertLevel === 'low' ? '#3b82f6' : '#22c55e';
-                    const isActive = selectedMarker?.id === wb.id;
-                    return (
-                      <CircleMarker
-                        key={wb.id}
-                        center={[lat, lon]}
-                        radius={isActive ? 6 : 3.5}
-                        pathOptions={{
-                          fillColor: markerColor,
-                          color: isActive ? '#0f172a' : 'rgba(100,116,139,0.5)',
-                          weight: isActive ? 2 : 0.8,
-                          fillOpacity: 0.9,
-                        }}
-                        eventHandlers={{ click: () => setSelectedMarker(isActive ? null : wb) }}
-                      />
-                    );
-                  })}
-                </LeafletMapShell>
-              ) : null}
             </div>
 
-            {/* Legend */}
-            <div className="absolute bottom-3 left-3 z-10 flex items-center gap-3 px-4 py-2 rounded-lg bg-white/90 backdrop-blur border border-slate-200 text-[11px] text-slate-600 shadow-sm">
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-green-500 inline-block" /> Healthy</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-yellow-400 inline-block" /> Moderate</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-orange-500 inline-block" /> Impaired</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-red-500 inline-block" /> Severe</span>
-            </div>
-
-            {/* Marker popup */}
-            {selectedMarker && (
-              <div className="absolute top-3 left-3 z-20 max-w-xs w-full p-4 rounded-xl bg-white border border-slate-200 shadow-xl">
-                <div className="flex items-start justify-between mb-2">
-                  <h4 className="text-sm font-semibold text-slate-900 leading-tight pr-2">{selectedMarker.name || selectedMarker.id}</h4>
-                  <button onClick={() => setSelectedMarker(null)} className="text-slate-400 hover:text-slate-700 flex-shrink-0">
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                    selectedMarker.alertLevel === 'high' ? 'bg-red-100 text-red-700' :
-                    selectedMarker.alertLevel === 'medium' ? 'bg-orange-100 text-orange-700' :
-                    selectedMarker.alertLevel === 'low' ? 'bg-blue-100 text-blue-700' :
-                    'bg-green-100 text-green-700'
-                  }`}>
-                    Category {selectedMarker.category}
-                  </span>
-                  <span className="text-[10px] text-slate-400">{selectedMarker.causeCount} pollutant{selectedMarker.causeCount !== 1 ? 's' : ''}</span>
-                </div>
-                {selectedMarker.causes.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5">
-                    {selectedMarker.causes.slice(0, 5).map(c => (
-                      <span key={c} className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">{getCauseEmoji(c)} {c.toLowerCase().replace(/\b\w/g, l => l.toUpperCase())}</span>
-                    ))}
-                    {selectedMarker.causes.length > 5 && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-400">+{selectedMarker.causes.length - 5} more</span>
-                    )}
+            <div className="space-y-3">
+              {reportCardItems.map((item, i) => {
+                const colors = STATUS_COLORS[item.status];
+                return (
+                  <div
+                    key={i}
+                    className={`flex items-start gap-4 p-5 rounded-xl border ${colors.border} ${colors.bg} transition-all`}
+                  >
+                    <div className="flex-shrink-0 mt-0.5">
+                      {item.badge && item.badge.length <= 2 ? (
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-black text-white ${
+                          item.status === 'green' ? 'bg-green-500' : item.status === 'yellow' ? 'bg-yellow-500' : item.status === 'red' ? 'bg-red-500' : 'bg-blue-500'
+                        }`}>
+                          {item.badge}
+                        </div>
+                      ) : (
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${colors.dot}`}>
+                          {item.emoji ? (
+                            <span className="text-lg">{item.emoji}</span>
+                          ) : (
+                            <span className="w-3 h-3 rounded-full bg-white" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-sm font-semibold text-slate-900">{item.title}</h3>
+                        {item.badge && item.badge.length > 2 && (
+                          <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${colors.bg} ${colors.text} border ${colors.border}`}>
+                            {item.badge}
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 text-sm text-slate-600 leading-relaxed">{item.description}</p>
+                    </div>
                   </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══ TOP THREATS ═══ */}
-      {selectedState && stateData && causeFrequency.length > 0 && (
-        <section className="py-20 bg-slate-50 border-b border-slate-200">
-          <div className="max-w-6xl mx-auto px-6">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
-                Top Water Quality Threats
-              </h2>
-              <p className="mt-2 text-slate-500">The most common pollutants affecting {STATE_NAMES[selectedState]}&rsquo;s waterbodies</p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-              {causeFrequency.slice(0, 5).map(([cause, count]) => (
-                <div key={cause} className="p-5 rounded-xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="text-2xl mb-2">{getCauseEmoji(cause)}</div>
-                  <h3 className="text-sm font-semibold text-slate-800 mb-1 leading-tight">
-                    {cause.toLowerCase().replace(/\b\w/g, l => l.toUpperCase()).replace(/\(.*?\)/g, '').trim()}
-                  </h3>
-                  <p className="text-2xl font-bold text-slate-900 mb-2"><Counter target={count} /></p>
-                  <p className="text-xs text-slate-500 leading-relaxed">{getCauseDescription(cause)}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>
       )}
 
-      {/* ═══ WATERBODY SPOTLIGHT ═══ */}
-      {selectedState && spotlight && (spotlight.worst || spotlight.attaining || spotlight.atRisk) && (
-        <section className="py-20 bg-white border-b border-slate-100">
-          <div className="max-w-6xl mx-auto px-6">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
-                Waterbody Spotlight
+      {/* ═══ STATE AUTHORITY ═══ */}
+      {selectedState && (() => {
+        const authority = STATE_AUTHORITIES[selectedState];
+        const regionNum = getEpaRegionForState(selectedState);
+        const region = regionNum ? EPA_REGIONS[regionNum] : null;
+        if (!authority) return null;
+        return (
+          <section className="py-14 bg-white border-b border-slate-100">
+            <div className="max-w-4xl mx-auto px-6">
+              <h2 className="text-2xl font-bold text-slate-900 mb-6 text-center">
+                Your State Environmental Authority
               </h2>
-              <p className="mt-2 text-slate-500">A closer look at notable waterbodies in {STATE_NAMES[selectedState]}</p>
+              <div className="rounded-2xl bg-slate-50 border border-slate-200 p-6 sm:p-8">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-5">
+                  <div className="flex items-center gap-3">
+                    <Building2 className="h-6 w-6 text-cyan-600 flex-shrink-0" />
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-900 leading-tight">{authority.name}</h3>
+                      <span className="inline-block mt-1 px-2.5 py-0.5 rounded-full bg-cyan-100 text-cyan-700 text-xs font-bold tracking-wide">
+                        {authority.abbr}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                  {authority.primaryContact && (
+                    <div className="flex items-start gap-2">
+                      <Users className="h-4 w-4 text-slate-400 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-slate-500 text-xs">Primary Contact Division</p>
+                        <p className="text-slate-800 font-medium">{authority.primaryContact}</p>
+                      </div>
+                    </div>
+                  )}
+                  {authority.website && (
+                    <div className="flex items-start gap-2">
+                      <ExternalLink className="h-4 w-4 text-slate-400 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-slate-500 text-xs">Website</p>
+                        <a
+                          href={`https://${authority.website}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-cyan-600 font-medium hover:underline"
+                        >
+                          {authority.website}
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                  {region && (
+                    <div className="flex items-start gap-2">
+                      <ShieldCheck className="h-4 w-4 text-slate-400 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-slate-500 text-xs">EPA Oversight</p>
+                        <p className="text-slate-800 font-medium">EPA {region.name} &mdash; {region.hq}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
+          </section>
+        );
+      })()}
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {spotlight.worst && (
-                <div className="p-6 rounded-xl bg-white border-l-4 border-red-500 border border-slate-200 shadow-sm">
-                  <div className="flex items-center gap-2 mb-3">
-                    <AlertTriangle className="h-4 w-4 text-red-500" />
-                    <span className="text-xs font-semibold text-red-600 uppercase tracking-wider">Most Impaired</span>
-                  </div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2 leading-tight">{spotlight.worst.name || spotlight.worst.id}</h3>
-                  <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 uppercase mb-3">Category {spotlight.worst.category}</span>
-                  <p className="text-xs text-slate-500 mb-2">{spotlight.worst.causeCount} identified pollutant{spotlight.worst.causeCount !== 1 ? 's' : ''}</p>
-                  <div className="flex flex-wrap gap-1">
-                    {spotlight.worst.causes.slice(0, 4).map(c => (
-                      <span key={c} className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">{getCauseEmoji(c)} {c.toLowerCase().replace(/\b\w/g, l => l.toUpperCase()).replace(/\(.*?\)/g, '').trim()}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
+      {/* ═══ TAKE ACTION ═══ */}
+      {selectedState && (
+        <section className="py-14 bg-slate-50 border-b border-slate-200">
+          <div className="max-w-4xl mx-auto px-6">
+            <h2 className="text-2xl font-bold text-slate-900 mb-2 text-center">
+              Take Action
+            </h2>
+            <p className="text-slate-500 text-center mb-8">
+              Ways you can make a difference for {STATE_NAMES[selectedState]}&rsquo;s water quality
+            </p>
 
-              {spotlight.attaining && (
-                <div className="p-6 rounded-xl bg-white border-l-4 border-green-500 border border-slate-200 shadow-sm">
-                  <div className="flex items-center gap-2 mb-3">
-                    <ShieldCheck className="h-4 w-4 text-green-500" />
-                    <span className="text-xs font-semibold text-green-600 uppercase tracking-wider">Healthy Example</span>
-                  </div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2 leading-tight">{spotlight.attaining.name || spotlight.attaining.id}</h3>
-                  <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700 uppercase mb-3">Category {spotlight.attaining.category}</span>
-                  <p className="text-xs text-slate-500">Meeting water quality standards &mdash; an example of what&rsquo;s possible with proper stewardship.</p>
-                </div>
-              )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Report Pollution */}
+              {(() => {
+                const contact = getComplaintContact(selectedState);
+                return (
+                  <a
+                    href={contact.complaintUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex items-start gap-4 p-5 rounded-xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-cyan-300 transition-all"
+                  >
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                      <Droplets className="h-5 w-5 text-red-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-semibold text-slate-900 group-hover:text-cyan-700 transition-colors">
+                        Report a Pollution Issue
+                      </h3>
+                      <p className="mt-1 text-xs text-slate-500">{contact.reportLabel}</p>
+                      {contact.hotline && (
+                        <p className="mt-1 text-xs text-slate-400 flex items-center gap-1">
+                          <Phone className="h-3 w-3" /> {contact.hotline}
+                        </p>
+                      )}
+                    </div>
+                    <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-cyan-500 flex-shrink-0 mt-0.5" />
+                  </a>
+                );
+              })()}
 
-              {spotlight.atRisk && (
-                <div className="p-6 rounded-xl bg-white border-l-4 border-orange-500 border border-slate-200 shadow-sm">
-                  <div className="flex items-center gap-2 mb-3">
-                    <TrendingDown className="h-4 w-4 text-orange-500" />
-                    <span className="text-xs font-semibold text-orange-600 uppercase tracking-wider">Most At-Risk</span>
-                  </div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2 leading-tight">{spotlight.atRisk.name || spotlight.atRisk.id}</h3>
-                  <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-700 uppercase mb-3">Category {spotlight.atRisk.category}</span>
-                  <p className="text-xs text-slate-500 mb-2">{spotlight.atRisk.causeCount} identified pollutant{spotlight.atRisk.causeCount !== 1 ? 's' : ''}</p>
-                  <div className="flex flex-wrap gap-1">
-                    {spotlight.atRisk.causes.slice(0, 4).map(c => (
-                      <span key={c} className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">{getCauseEmoji(c)} {c.toLowerCase().replace(/\b\w/g, l => l.toUpperCase()).replace(/\(.*?\)/g, '').trim()}</span>
-                    ))}
-                  </div>
+              {/* Contact Representatives */}
+              <a
+                href="https://www.usa.gov/elected-officials"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-start gap-4 p-5 rounded-xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-cyan-300 transition-all"
+              >
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                  <Users className="h-5 w-5 text-blue-600" />
                 </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-semibold text-slate-900 group-hover:text-cyan-700 transition-colors">
+                    Contact Your Representatives
+                  </h3>
+                  <p className="mt-1 text-xs text-slate-500">Let elected officials know clean water matters to you</p>
+                </div>
+                <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-cyan-500 flex-shrink-0 mt-0.5" />
+              </a>
+
+              {/* Conservation Groups */}
+              <a
+                href={`https://www.google.com/search?q=${encodeURIComponent(STATE_NAMES[selectedState] + ' watershed conservation groups')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-start gap-4 p-5 rounded-xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-cyan-300 transition-all"
+              >
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                  <BookOpen className="h-5 w-5 text-green-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-semibold text-slate-900 group-hover:text-cyan-700 transition-colors">
+                    Join a Conservation Group
+                  </h3>
+                  <p className="mt-1 text-xs text-slate-500">Find watershed and environmental groups in {STATE_NAMES[selectedState]}</p>
+                </div>
+                <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-cyan-500 flex-shrink-0 mt-0.5" />
+              </a>
+
+              {/* Agency Resources (conditional) */}
+              {STATE_AUTHORITIES[selectedState]?.website && (
+                <a
+                  href={`https://${STATE_AUTHORITIES[selectedState].website}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-start gap-4 p-5 rounded-xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-cyan-300 transition-all"
+                >
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+                    <FileText className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-semibold text-slate-900 group-hover:text-cyan-700 transition-colors">
+                      Explore Agency Resources
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-500">Visit {STATE_AUTHORITIES[selectedState].abbr}&rsquo;s official website</p>
+                  </div>
+                  <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-cyan-500 flex-shrink-0 mt-0.5" />
+                </a>
               )}
             </div>
           </div>

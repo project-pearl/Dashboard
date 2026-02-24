@@ -7,21 +7,21 @@ const WaterQualityExplorer = dynamic(
 );
 
 export const metadata: Metadata = {
-  title: 'Water Quality Explorer | Project PEARL',
+  title: 'State Water Quality Report Card | Project PEARL',
   description:
-    'Explore water quality data across all 50 states. Interactive maps, AI-powered analysis, and real-time EPA ATTAINS data — no account required.',
+    'Discover your state\'s water quality story. Report cards, environmental authority contacts, and take-action resources for all 50 states — powered by EPA data.',
   openGraph: {
-    title: 'Water Quality Explorer | Project PEARL',
+    title: 'State Water Quality Report Card | Project PEARL',
     description:
-      'Explore water quality data across all 50 states with AI-powered analysis and interactive maps.',
+      'Discover your state\'s water quality story with EPA-powered report cards and take-action resources.',
     type: 'website',
     url: 'https://project-pearl.org/explore',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Water Quality Explorer | Project PEARL',
+    title: 'State Water Quality Report Card | Project PEARL',
     description:
-      'Explore water quality data across all 50 states with AI-powered analysis and interactive maps.',
+      'Discover your state\'s water quality story with EPA-powered report cards and take-action resources.',
   },
 };
 

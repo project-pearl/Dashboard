@@ -1153,3 +1153,76 @@ export function getMS4ComplianceSummary(jurisdictions: MS4Jurisdiction[]): {
     totalPopulation: jurisdictions.reduce((sum, j) => sum + j.population, 0),
   };
 }
+
+// ─── State Complaint / Reporting Contacts ────────────────────────────────────
+// Real URLs for each state's environmental complaint reporting page
+
+export interface StateComplaintContact {
+  complaintUrl: string;
+  complaintEmail?: string;
+  hotline?: string;
+  reportLabel: string;
+}
+
+const EPA_FALLBACK: StateComplaintContact = {
+  complaintUrl: 'https://www.epa.gov/enforcement/report-environmental-violations',
+  reportLabel: 'Report to EPA',
+};
+
+export const STATE_COMPLAINT_CONTACTS: Record<string, StateComplaintContact> = {
+  AL: { complaintUrl: 'https://adem.alabama.gov/complianceAssistance/complaints.cnt', hotline: '1-800-533-2336', reportLabel: 'File an ADEM Complaint' },
+  AK: { complaintUrl: 'https://dec.alaska.gov/eh/complaints/', reportLabel: 'File a DEC Complaint' },
+  AZ: { complaintUrl: 'https://azdeq.gov/complaints', hotline: '1-800-234-5677', reportLabel: 'File an ADEQ Complaint' },
+  AR: { complaintUrl: 'https://www.adeq.state.ar.us/complaints/', reportLabel: 'File a DEE Complaint' },
+  CA: { complaintUrl: 'https://www.waterboards.ca.gov/water_issues/programs/enforcement/complaints.html', reportLabel: 'File a Water Board Complaint' },
+  CO: { complaintUrl: 'https://cdphe.colorado.gov/report-environmental-problem', reportLabel: 'Report to CDPHE' },
+  CT: { complaintUrl: 'https://portal.ct.gov/DEEP/Enforcement/Environmental-Violations/Report-an-Environmental-Problem', hotline: '1-866-337-7745', reportLabel: 'Report to CT DEEP' },
+  DE: { complaintUrl: 'https://dnrec.alpha.delaware.gov/environmental-complaints/', hotline: '1-800-662-8802', reportLabel: 'File a DNREC Complaint' },
+  DC: { complaintUrl: 'https://doee.dc.gov/service/report-environmental-problem', reportLabel: 'Report to DOEE' },
+  FL: { complaintUrl: 'https://reportillegalburn.freshfromflorida.com/', hotline: '1-855-305-3678', reportLabel: 'Report to FL DEP' },
+  GA: { complaintUrl: 'https://epd.georgia.gov/about-us/land-protection-branch/compliance-and-enforcement-program/environmental-complaint-form', reportLabel: 'Report to GA EPD' },
+  HI: { complaintUrl: 'https://health.hawaii.gov/cwb/clean-water-branch-complaints/', reportLabel: 'Report to HI DOH' },
+  ID: { complaintUrl: 'https://www.deq.idaho.gov/pollution-prevention/report-a-pollution-concern/', reportLabel: 'Report to ID DEQ' },
+  IL: { complaintUrl: 'https://www2.illinois.gov/epa/about-us/complaints/Pages/default.aspx', hotline: '1-888-372-1996', reportLabel: 'Report to IL EPA' },
+  IN: { complaintUrl: 'https://www.in.gov/idem/partnerships/compliance-and-technical-assistance/report-an-environmental-emergency-or-complaint/', hotline: '1-888-233-7745', reportLabel: 'Report to IDEM' },
+  IA: { complaintUrl: 'https://programs.iowadnr.gov/aboronline/', reportLabel: 'Report to IA DNR' },
+  KS: { complaintUrl: 'https://www.kdhe.ks.gov/171/File-a-Complaint', reportLabel: 'Report to KDHE' },
+  KY: { complaintUrl: 'https://dep.gateway.ky.gov/DES_UI/DesUI.aspx', hotline: '1-800-928-2380', reportLabel: 'Report to KY DEP' },
+  LA: { complaintUrl: 'https://www.deq.louisiana.gov/page/file-a-complaint', hotline: '1-888-763-5424', reportLabel: 'Report to LA DEQ' },
+  ME: { complaintUrl: 'https://www.maine.gov/dep/ftp/OnlineReporting/environmental-complaint/index.html', reportLabel: 'Report to ME DEP' },
+  MD: { complaintUrl: 'https://mde.maryland.gov/programs/compliance/Pages/complaint.aspx', hotline: '1-866-633-4686', reportLabel: 'Report to MDE' },
+  MA: { complaintUrl: 'https://www.mass.gov/how-to/report-an-environmental-emergency-or-violation', hotline: '1-888-304-1133', reportLabel: 'Report to MassDEP' },
+  MI: { complaintUrl: 'https://www.michigan.gov/egle/about/contact/pollution-emergency-alerting-system', hotline: '1-800-292-4706', reportLabel: 'Report to EGLE' },
+  MN: { complaintUrl: 'https://www.pca.state.mn.us/about-mpca/report-a-violation-or-make-a-complaint', hotline: '1-800-657-3864', reportLabel: 'Report to MPCA' },
+  MS: { complaintUrl: 'https://www.mdeq.ms.gov/contact/report-an-environmental-problem/', reportLabel: 'Report to MS DEQ' },
+  MO: { complaintUrl: 'https://dnr.mo.gov/environmental-complaint', hotline: '1-800-361-4827', reportLabel: 'Report to MO DNR' },
+  MT: { complaintUrl: 'https://deq.mt.gov/about/complaint', reportLabel: 'Report to MT DEQ' },
+  NE: { complaintUrl: 'https://dee.ne.gov/NDEQProg.nsf/OnWeb/ComCon', reportLabel: 'Report to NDEE' },
+  NV: { complaintUrl: 'https://ndep.nv.gov/posts/category/complaints', reportLabel: 'Report to NV DEP' },
+  NH: { complaintUrl: 'https://www.des.nh.gov/business-and-community/complaints-and-emergencies', hotline: '1-866-478-4300', reportLabel: 'Report to NH DES' },
+  NJ: { complaintUrl: 'https://www.nj.gov/dep/opppc/hot.html', hotline: '1-877-927-6337', reportLabel: 'Report to NJ DEP' },
+  NM: { complaintUrl: 'https://www.env.nm.gov/general/complaints/', reportLabel: 'Report to NMED' },
+  NY: { complaintUrl: 'https://www.dec.ny.gov/regulations/4553.html', hotline: '1-800-847-7332', reportLabel: 'Report to NY DEC' },
+  NC: { complaintUrl: 'https://deq.nc.gov/about/contact/report-pollution-or-environmental-incident', hotline: '1-800-858-0368', reportLabel: 'Report to NC DEQ' },
+  ND: { complaintUrl: 'https://deq.nd.gov/AQ/Compliance/Complaint.aspx', reportLabel: 'Report to ND DEQ' },
+  OH: { complaintUrl: 'https://epa.ohio.gov/help-center/report-a-complaint', hotline: '1-800-282-9378', reportLabel: 'Report to OH EPA' },
+  OK: { complaintUrl: 'https://www.deq.ok.gov/environmental-complaints/', hotline: '1-800-522-0206', reportLabel: 'Report to OK DEQ' },
+  OR: { complaintUrl: 'https://www.oregon.gov/deq/about-us/Pages/Report-Pollution.aspx', hotline: '1-888-997-7888', reportLabel: 'Report to OR DEQ' },
+  PA: { complaintUrl: 'https://www.dep.pa.gov/Citizens/ReportaProblem/Pages/default.aspx', hotline: '1-866-255-5158', reportLabel: 'Report to PA DEP' },
+  RI: { complaintUrl: 'https://dem.ri.gov/environmental-protection-bureau/compliance-inspection/report-environmental-violation', hotline: '1-401-222-3070', reportLabel: 'Report to RI DEM' },
+  SC: { complaintUrl: 'https://des.sc.gov/programs/compliance-enforcement/complaints', reportLabel: 'Report to SC DES' },
+  SD: { complaintUrl: 'https://danr.sd.gov/public/default.aspx', reportLabel: 'Report to SD DANR' },
+  TN: { complaintUrl: 'https://www.tn.gov/environment/program-areas/opsp-policy-and-sustainable-practices/redirect---community-resources/environmental-complaints.html', reportLabel: 'Report to TDEC' },
+  TX: { complaintUrl: 'https://www.tceq.texas.gov/compliance/complaints', hotline: '1-888-777-3186', reportLabel: 'Report to TCEQ' },
+  UT: { complaintUrl: 'https://deq.utah.gov/general/report-an-environmental-violation', reportLabel: 'Report to UT DEQ' },
+  VT: { complaintUrl: 'https://dec.vermont.gov/enforcement/report-violation', reportLabel: 'Report to VT DEC' },
+  VA: { complaintUrl: 'https://www.deq.virginia.gov/permits-regulations/pollution-complaint', hotline: '1-800-592-5482', reportLabel: 'Report to VA DEQ' },
+  WA: { complaintUrl: 'https://ecology.wa.gov/about-us/contact-us/report-an-environmental-issue', hotline: '1-360-407-6300', reportLabel: 'Report to WA Ecology' },
+  WV: { complaintUrl: 'https://dep.wv.gov/pio/Pages/ReportaSpillorComplaint.aspx', hotline: '1-800-642-3074', reportLabel: 'Report to WV DEP' },
+  WI: { complaintUrl: 'https://dnr.wisconsin.gov/topic/Enforcement/complaint.html', hotline: '1-800-847-9367', reportLabel: 'Report to WI DNR' },
+  WY: { complaintUrl: 'https://deq.wyoming.gov/complaints/', reportLabel: 'Report to WY DEQ' },
+};
+
+export function getComplaintContact(stateAbbr: string): StateComplaintContact {
+  return STATE_COMPLAINT_CONTACTS[stateAbbr] || EPA_FALLBACK;
+}
