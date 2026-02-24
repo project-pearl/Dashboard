@@ -200,10 +200,10 @@ const LENS_CONFIG: Record<ViewLens, {
     description: 'Federal-scope resolution planning with before/after impact maps',
     defaultOverlay: 'hotspots',
     showTopStrip: false, showPriorityQueue: false, showCoverageGaps: false,
-    showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
+    showNetworkHealth: false, showNationalImpact: false, showAIInsights: true,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['federal-planner', 'disclaimer']),
+    sections: new Set(['ai-water-intelligence', 'resolution-planner', 'federal-planner', 'disclaimer']),
   },
 };
 
