@@ -196,55 +196,55 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
       <PublicHeader />
 
       {/* ═══ HERO ═══ */}
-      <section className="relative min-h-[92vh] flex items-end overflow-hidden bg-slate-950">
+      <section className="relative overflow-hidden bg-slate-950">
         <div className="absolute inset-0">
           <Image src="/marsh-waterfront.jpeg" alt="" fill className="object-cover" priority sizes="100vw" />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-slate-950/30" />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 pb-20 pt-32 w-full">
-          <div className="grid lg:grid-cols-2 gap-12 items-end">
+        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 pb-12 sm:pb-20 pt-24 sm:pt-32 w-full">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div className={`transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-              <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/10 mb-8">
+              <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/10 mb-6 sm:mb-8">
                 <LivePulse />
                 <span className="text-xs font-semibold text-emerald-300 tracking-wide">Live data from 50 states</span>
               </div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-[1.08] tracking-tight" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-[1.1] tracking-tight" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
                 Your water data is scattered across a dozen systems.
               </h1>
-              <p className="mt-5 text-lg sm:text-xl text-slate-300 leading-relaxed max-w-2xl font-light">
+              <p className="mt-4 sm:mt-5 text-base sm:text-lg lg:text-xl text-slate-300 leading-relaxed max-w-2xl font-light">
                 Manual reporting. Siloed databases. Quarterly grab samples that miss everything between visits.
                 There&rsquo;s a better way &mdash; one platform that connects EPA datasets, live sensors, and
                 treatment verification into decision-ready intelligence.
               </p>
 
-              <div className="mt-10 flex flex-wrap gap-4">
-                <button onClick={onSignIn} className="group inline-flex items-center gap-3 px-8 py-4 text-base font-semibold text-slate-900 bg-white rounded-full hover:bg-slate-100 transition-all shadow-2xl shadow-black/20">
+              <div className="mt-8 sm:mt-10 flex flex-wrap gap-3 sm:gap-4">
+                <button onClick={onSignIn} className="group inline-flex items-center gap-3 px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-semibold text-slate-900 bg-white rounded-full hover:bg-slate-100 transition-all shadow-2xl shadow-black/20">
                   Explore the Platform <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </button>
-                <a href="#technology" className="inline-flex items-center gap-2 px-8 py-4 text-base font-medium text-white/90 border border-white/20 rounded-full hover:bg-white/10 transition-all backdrop-blur-sm">
+                <a href="#technology" className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-medium text-white/90 border border-white/20 rounded-full hover:bg-white/10 transition-all backdrop-blur-sm">
                   <Eye className="h-4 w-4" /> Learn More
                 </a>
               </div>
             </div>
 
             {/* Hero video */}
-            <div className={`transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
+            <div className={`mt-4 lg:mt-0 transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
               <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-900/80 border border-white/[0.12] shadow-2xl backdrop-blur-sm">
                 {/* Replace src with actual Synthesize / YouTube embed URL */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-                  <div className="w-20 h-20 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center cursor-pointer hover:bg-white/20 transition-colors">
-                    <Play className="h-8 w-8 text-white ml-1" />
+                  <div className="w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center cursor-pointer hover:bg-white/20 transition-colors">
+                    <Play className="h-6 sm:h-8 w-6 sm:w-8 text-white ml-1" />
                   </div>
-                  <p className="text-sm text-white/60 font-medium">Video coming soon</p>
+                  <p className="text-xs sm:text-sm text-white/60 font-medium">Video coming soon</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className={`absolute bottom-6 left-1/2 -translate-x-1/2 transition-all duration-1000 delay-700 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-            <ChevronDown className="h-6 w-6 text-white/40 animate-bounce" />
+          <div className={`mt-8 lg:mt-4 text-center transition-all duration-1000 delay-700 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+            <ChevronDown className="h-6 w-6 text-white/40 animate-bounce mx-auto" />
           </div>
         </div>
       </section>
