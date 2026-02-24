@@ -160,7 +160,7 @@ export default function LoginPage() {
         </div>
         <div className="relative z-10 w-full max-w-md py-12">
           <div className="text-center mb-8">
-            <Image src="/Logo_Pearl_with_reef.jpg" alt="Project PEARL" width={200} height={200} className="mx-auto object-contain drop-shadow-2xl rounded-xl" priority />
+            <Image src="/Pearl-Intelligence-Network.png" alt="PEARL Intelligence Network" width={320} height={160} className="mx-auto object-contain drop-shadow-2xl rounded-xl" priority />
           </div>
           <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-8 shadow-2xl shadow-black/30 text-center">
             <div className="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-400/40 flex items-center justify-center mx-auto mb-5">
@@ -205,7 +205,7 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-md py-12">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Image src="/Logo_Pearl_with_reef.jpg" alt="Project PEARL" width={200} height={200} className="mx-auto object-contain drop-shadow-2xl rounded-xl" priority />
+          <Image src="/Pearl-Intelligence-Network.png" alt="PEARL Intelligence Network" width={320} height={160} className="mx-auto object-contain drop-shadow-2xl rounded-xl" priority />
         </div>
 
         {/* Card — frosted glass */}
