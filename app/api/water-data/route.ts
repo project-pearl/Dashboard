@@ -1089,6 +1089,29 @@ export async function GET(request: NextRequest) {
         if (!stateCode) {
           return NextResponse.json({ error: 'state parameter required' }, { status: 400 });
         }
+        // Warm all caches used by buildStateAssessmentData in parallel
+        const [
+          { ensureWarmed: warmSdwis },
+          { ensureWarmed: warmIcis },
+          { ensureWarmed: warmEcho },
+          { ensureWarmed: warmNwisGw },
+          { ensureWarmed: warmPfas },
+        ] = await Promise.all([
+          import('@/lib/sdwisCache'),
+          import('@/lib/icisCache'),
+          import('@/lib/echoCache'),
+          import('@/lib/nwisGwCache'),
+          import('@/lib/pfasCache'),
+        ]);
+        await Promise.all([
+          warmAttains(),
+          warmSdwis(),
+          warmIcis(),
+          warmEcho(),
+          warmNwisGw(),
+          warmPfas(),
+          warmStateReports(),
+        ]);
         const assessmentData = buildStateAssessmentData(stateCode);
         const reportCard = generateReportCard(assessmentData);
         return NextResponse.json(reportCard, {
