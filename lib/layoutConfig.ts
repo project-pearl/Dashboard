@@ -55,7 +55,8 @@ export const DEFAULT_SECTIONS: Record<CCKey, SectionDefinition[]> = {
     { id: 'groundwater', label: 'Groundwater Monitoring (NWIS)', order: 10, visible: true, defaultExpanded: false },
     { id: 'exporthub',   label: 'Data Export Hub',              order: 11, visible: true, defaultExpanded: true },
     { id: 'grants',      label: 'Grant Opportunities',          order: 12, visible: true, defaultExpanded: true },
-    { id: 'disclaimer',  label: 'Platform Disclaimer',          order: 13, visible: true, defaultExpanded: true },
+    { id: 'trends-dashboard', label: 'Trends & Forecasting',   order: 13, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'disclaimer',  label: 'Platform Disclaimer',          order: 14, visible: true, defaultExpanded: true },
   ],
 
   MS4: [
@@ -78,7 +79,8 @@ export const DEFAULT_SECTIONS: Record<CCKey, SectionDefinition[]> = {
     { id: 'exporthub',      label: 'Data Export Hub',               order: 16, visible: true, defaultExpanded: true },
     { id: 'grants',         label: 'Grant Opportunities',           order: 17, visible: true, defaultExpanded: true },
     { id: 'provenance',     label: 'Data Provenance & Chain of Custody', order: 18, visible: true, defaultExpanded: true },
-    { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 19, visible: true, defaultExpanded: true },
+    { id: 'trends-dashboard', label: 'Trends & Forecasting',        order: 19, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 20, visible: true, defaultExpanded: true },
   ],
 
   Sustainability: [
@@ -98,7 +100,8 @@ export const DEFAULT_SECTIONS: Record<CCKey, SectionDefinition[]> = {
     { id: 'brand',          label: 'Brand & Reputation',            order: 13, visible: true, defaultExpanded: true },
     { id: 'groundwater',    label: 'Groundwater & Aquifer Risk',    order: 14, visible: true, defaultExpanded: false },
     { id: 'grants',         label: 'Grant Opportunities',           order: 15, visible: true, defaultExpanded: true },
-    { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 16, visible: true, defaultExpanded: true },
+    { id: 'trends-dashboard', label: 'Trends & Forecasting',       order: 16, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 17, visible: true, defaultExpanded: true },
   ],
 
   NGO: [
@@ -113,7 +116,8 @@ export const DEFAULT_SECTIONS: Record<CCKey, SectionDefinition[]> = {
     { id: 'policy',      label: 'Policy Recommendations',       order: 8,  visible: true, defaultExpanded: true },
     { id: 'partners',    label: 'Partner Organizations',        order: 9,  visible: true, defaultExpanded: true },
     { id: 'grants',      label: 'Grant Opportunities',          order: 10, visible: true, defaultExpanded: true },
-    { id: 'disclaimer',  label: 'Platform Disclaimer',          order: 11, visible: true, defaultExpanded: true },
+    { id: 'trends-dashboard', label: 'Trends & Forecasting',   order: 11, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'disclaimer',  label: 'Platform Disclaimer',          order: 12, visible: true, defaultExpanded: true },
   ],
 
   University: [
@@ -130,7 +134,8 @@ export const DEFAULT_SECTIONS: Record<CCKey, SectionDefinition[]> = {
     { id: 'datasets',    label: 'Dataset Catalog',              order: 10, visible: true, defaultExpanded: true },
     { id: 'exporthub',   label: 'Data Export Hub',              order: 11, visible: true, defaultExpanded: true },
     { id: 'grants',      label: 'Grant Opportunities',          order: 12, visible: true, defaultExpanded: true },
-    { id: 'disclaimer',  label: 'Platform Disclaimer',          order: 13, visible: true, defaultExpanded: true },
+    { id: 'trends-dashboard', label: 'Trends & Forecasting',   order: 13, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'disclaimer',  label: 'Platform Disclaimer',          order: 14, visible: true, defaultExpanded: true },
   ],
 
   NCC: [

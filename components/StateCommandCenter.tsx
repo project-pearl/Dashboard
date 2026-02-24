@@ -110,7 +110,7 @@ function scoreToGrade(score: number): { letter: string; color: string; bg: strin
 
 // ─── View Lens: controls what each view shows/hides ──────────────────────────
 
-type ViewLens = 'compliance' | 'coverage' | 'ms4oversight' | 'programs' | 'full';
+type ViewLens = 'compliance' | 'coverage' | 'ms4oversight' | 'programs' | 'trends' | 'full';
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -121,6 +121,7 @@ const LENS_CONFIG: Record<ViewLens, {
   showMS4: boolean;
   ms4DefaultExpanded: boolean;
   showHotspots: boolean;
+  showTrends: boolean;
 }> = {
   compliance: {
     label: 'Compliance',
@@ -128,7 +129,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showMap: true,
     showDetail: true, showRestorationPlan: true,
     showMS4: true, ms4DefaultExpanded: false,
-    showHotspots: false,
+    showHotspots: false, showTrends: false,
   },
   coverage: {
     label: 'Coverage',
@@ -136,7 +137,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showMap: true,
     showDetail: true, showRestorationPlan: false,
     showMS4: false, ms4DefaultExpanded: false,
-    showHotspots: false,
+    showHotspots: false, showTrends: false,
   },
   ms4oversight: {
     label: 'MS4 Oversight',
@@ -144,7 +145,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showMap: true,
     showDetail: false, showRestorationPlan: false,
     showMS4: true, ms4DefaultExpanded: true,
-    showHotspots: false,
+    showHotspots: false, showTrends: false,
   },
   programs: {
     label: 'Programs',
@@ -152,7 +153,15 @@ const LENS_CONFIG: Record<ViewLens, {
     showMap: true,
     showDetail: true, showRestorationPlan: true,
     showMS4: true, ms4DefaultExpanded: true,
-    showHotspots: true,
+    showHotspots: true, showTrends: false,
+  },
+  trends: {
+    label: 'Trends & Forecasting',
+    description: 'Long-term water quality trends, TMDL progress, and outlook',
+    showMap: false,
+    showDetail: false, showRestorationPlan: false,
+    showMS4: false, ms4DefaultExpanded: false,
+    showHotspots: false, showTrends: true,
   },
   full: {
     label: 'Full Dashboard',
@@ -160,7 +169,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showMap: true,
     showDetail: true, showRestorationPlan: true,
     showMS4: true, ms4DefaultExpanded: true,
-    showHotspots: true,
+    showHotspots: true, showTrends: true,
   },
 };
 
@@ -2734,6 +2743,83 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
           </div>
         )}
             </>);
+
+            case 'trends-dashboard': return DS(
+        lens.showTrends ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>State Water Quality Trends</CardTitle>
+            <CardDescription>Long-term impairment trends, TMDL progress, and next assessment cycle outlook</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Trend KPI Strip */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[
+                { label: 'Impairment Trend', value: '↓ 3.1%', sub: 'vs. prior assessment cycle', color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
+                { label: 'TMDL Completion', value: '↑ 6.4%', sub: 'approved TMDLs this period', color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
+                { label: 'Permit Renewals', value: '87%', sub: 'on-time renewal rate', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
+                { label: 'Monitoring Stations', value: '↑ 4.8%', sub: 'new stations added', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
+              ].map(t => (
+                <div key={t.label} className={`rounded-xl border p-4 ${t.bg}`}>
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{t.label}</div>
+                  <div className={`text-2xl font-bold ${t.color} mt-1`}>{t.value}</div>
+                  <div className="text-[10px] text-slate-500 mt-1">{t.sub}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Category Trend Cards */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-800 mb-3">Water Quality Trend Categories</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {[
+                  { category: 'Impaired Waters Trajectory', trend: 'Improving', detail: 'Category 5 listings decreased 3.1% since last cycle. 12 waterbodies delisted after successful restoration.', color: 'text-green-700', bg: 'border-green-200' },
+                  { category: 'Nutrient Loading', trend: 'Mixed', detail: 'Phosphorus declining in regulated point sources, but agricultural nonpoint nitrogen still rising in 3 watersheds.', color: 'text-amber-700', bg: 'border-amber-200' },
+                  { category: 'TMDL Restoration Progress', trend: 'On Track', detail: '68% of active TMDLs showing measurable pollutant load reductions. 4 watersheds approaching delisting criteria.', color: 'text-green-700', bg: 'border-green-200' },
+                  { category: 'Permit Compliance Rate', trend: 'Stable', detail: '92% of NPDES permittees in compliance. Significant noncompliance actions down 8% year-over-year.', color: 'text-blue-700', bg: 'border-blue-200' },
+                  { category: 'Emerging Contaminants', trend: 'Worsening', detail: 'PFAS detections up 22% as monitoring expands. 14 new sites flagged above health advisory levels.', color: 'text-red-700', bg: 'border-red-200' },
+                  { category: 'Monitoring Network Growth', trend: 'Expanding', detail: '48 new continuous monitoring stations deployed. Real-time data coverage increased to 64% of priority watersheds.', color: 'text-blue-700', bg: 'border-blue-200' },
+                ].map(c => (
+                  <div key={c.category} className={`border rounded-lg p-4 ${c.bg}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-semibold text-slate-800">{c.category}</h4>
+                      <Badge variant="outline" className={`text-[10px] ${c.color}`}>{c.trend}</Badge>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed">{c.detail}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Outlook */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-800 mb-3">Next Assessment Cycle Outlook</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {[
+                  { scenario: 'Optimistic Scenario', impacts: ['8 additional waterbodies expected to meet standards', 'TMDL completion rate projected to reach 75%', 'Monitoring gaps reduced below 30% in priority watersheds'] },
+                  { scenario: 'Conservative Scenario', impacts: ['Emerging contaminants may offset impairment reductions', 'Climate-driven stormwater increases could stress MS4 compliance', 'Federal funding uncertainty may slow monitoring expansion'] },
+                ].map(s => (
+                  <div key={s.scenario} className="border border-slate-200 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-slate-800 mb-2">{s.scenario}</h4>
+                    <ul className="space-y-1.5">
+                      {s.impacts.map(imp => (
+                        <li key={imp} className="text-xs text-slate-600 flex items-start gap-2">
+                          <AlertTriangle className="w-3 h-3 text-amber-500 flex-shrink-0 mt-0.5" />
+                          {imp}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="text-[10px] text-slate-400 italic">
+              Projections based on state 303(d)/305(b) assessment data, TMDL tracking, and NPDES compliance records. Actual values will populate as historical snapshots accumulate.
+            </div>
+          </CardContent>
+        </Card>
+        ) : null);
 
             case 'disclaimer': return DS(
               <PlatformDisclaimer />

@@ -29,7 +29,12 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'coverage', label: 'Coverage' },
     { id: 'ms4oversight', label: 'MS4 Oversight' },
     { id: 'programs', label: 'Programs' },
+    { id: 'trends', label: 'Trends & Forecasting' },
     { id: 'full', label: 'Full Overview' },
+  ],
+  '/dashboard/ms4': [
+    { id: 'overview', label: 'Overview' },
+    { id: 'trends', label: 'Trends & Forecasting' },
   ],
   '/dashboard/esg': [
     { id: 'overview', label: 'Overview' },
@@ -37,11 +42,17 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'risk', label: 'Risk' },
     { id: 'impact', label: 'Impact' },
     { id: 'compliance', label: 'Compliance' },
+    { id: 'trends', label: 'Trends & Forecasting' },
+  ],
+  '/dashboard/ngo': [
+    { id: 'overview', label: 'Overview' },
+    { id: 'trends', label: 'Trends & Forecasting' },
   ],
   '/dashboard/university': [
     { id: 'data-analysis', label: 'Data Analysis' },
     { id: 'field-study', label: 'Field Study' },
     { id: 'publication', label: 'Publication' },
+    { id: 'trends', label: 'Trends & Forecasting' },
   ],
 };
 

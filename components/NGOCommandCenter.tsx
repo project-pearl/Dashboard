@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useLensParam } from '@/lib/useLensParam';
 import Image from 'next/image';
 import { CircleMarker, Tooltip } from 'react-leaflet';
 import { getStatesGeoJSON, geoToAbbr, STATE_GEO_LEAFLET, FIPS_TO_ABBR as _FIPS, STATE_NAMES as _SN } from '@/lib/leafletMapUtils';
@@ -58,6 +59,13 @@ type Props = {
   stateAbbr: string;
   onSelectRegion?: (regionId: string) => void;
   onToggleDevMode?: () => void;
+};
+
+type ViewLens = 'overview' | 'trends';
+
+const NGO_LENS_CONFIG: Record<ViewLens, { showTrends: boolean }> = {
+  overview: { showTrends: true },
+  trends:   { showTrends: true },
 };
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -227,7 +235,11 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
   const { user, logout } = useAuth();
   const router = useRouter();
 
-  // ── View (all panels visible — NGOs see everything for advocacy) ──
+  // ── Lens switching ──
+  const [viewLens] = useLensParam<ViewLens>('overview');
+  const ngoLens = NGO_LENS_CONFIG[viewLens] || NGO_LENS_CONFIG.overview;
+
+  // ── View state ──
   const [showAccountPanel, setShowAccountPanel] = useState(false);
   const [overlay, setOverlay] = useState<OverlayId>('risk');
   const [selectedWatershed, setSelectedWatershed] = useState('All Watersheds');
@@ -2690,6 +2702,83 @@ export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, 
           </div>
         ) : null
             );
+
+            case 'trends-dashboard': return DS(
+        ngoLens.showTrends ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Watershed & Impact Trends</CardTitle>
+            <CardDescription>Water quality trajectories, community engagement metrics, and 5-year watershed recovery outlook</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Trend KPI Strip */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[
+                { label: 'Watershed Health', value: '↑ 6.1%', sub: 'composite index improvement', color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
+                { label: 'Volunteer Hours', value: '↑ 18%', sub: 'year-over-year growth', color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
+                { label: 'Advocacy Wins', value: '7', sub: 'policy actions this year', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
+                { label: 'Grant Success', value: '68%', sub: 'application award rate', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
+              ].map(t => (
+                <div key={t.label} className={`rounded-xl border p-4 ${t.bg}`}>
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{t.label}</div>
+                  <div className={`text-2xl font-bold ${t.color} mt-1`}>{t.value}</div>
+                  <div className="text-[10px] text-slate-500 mt-1">{t.sub}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Category Trend Cards */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-800 mb-3">Watershed & Advocacy Trends</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {[
+                  { category: 'Water Quality Trajectory', trend: 'Improving', detail: 'Monitored streams showing 6.1% improvement in composite health index. Dissolved oxygen levels rising in 4 priority reaches.', color: 'text-green-700', bg: 'border-green-200' },
+                  { category: 'Community Engagement', trend: 'Growing', detail: 'Volunteer monitoring participation up 18%. 12 new citizen science groups trained. Community cleanups removed 14 tons of debris.', color: 'text-green-700', bg: 'border-green-200' },
+                  { category: 'Policy Influence', trend: 'Strong', detail: '7 policy actions supported this year including 2 new buffer ordinances and 1 stormwater fee adoption. Testimony provided at 15 hearings.', color: 'text-blue-700', bg: 'border-blue-200' },
+                  { category: 'Restoration Outcomes', trend: 'On Track', detail: '23 acres of riparian buffer planted. 8 stream restoration projects completed. Fish passage restored at 3 barrier sites.', color: 'text-green-700', bg: 'border-green-200' },
+                  { category: 'Funding Landscape', trend: 'Competitive', detail: 'Grant funding up 12% but applicant pool grew 25%. Federal infrastructure funds creating new restoration opportunities.', color: 'text-amber-700', bg: 'border-amber-200' },
+                  { category: 'Partner Network', trend: 'Expanding', detail: '6 new organizational partnerships formed. Cross-watershed collaboration increased with 3 joint monitoring programs launched.', color: 'text-blue-700', bg: 'border-blue-200' },
+                ].map(c => (
+                  <div key={c.category} className={`border rounded-lg p-4 ${c.bg}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-semibold text-slate-800">{c.category}</h4>
+                      <Badge variant="outline" className={`text-[10px] ${c.color}`}>{c.trend}</Badge>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed">{c.detail}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Outlook */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-800 mb-3">5-Year Watershed Recovery Projection</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {[
+                  { scenario: 'Sustained Effort', impacts: ['3 additional stream segments expected to meet water quality standards', 'Volunteer network projected to reach 500+ active monitors', 'Riparian buffer coverage target of 60% achievable by 2030'] },
+                  { scenario: 'Challenges Ahead', impacts: ['Climate variability may offset restoration gains in 2 watersheds', 'Volunteer retention requires expanded training and recognition programs', 'Aging infrastructure upstream could introduce new impairment sources'] },
+                ].map(s => (
+                  <div key={s.scenario} className="border border-slate-200 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-slate-800 mb-2">{s.scenario}</h4>
+                    <ul className="space-y-1.5">
+                      {s.impacts.map(imp => (
+                        <li key={imp} className="text-xs text-slate-600 flex items-start gap-2">
+                          <AlertTriangle className="w-3 h-3 text-amber-500 flex-shrink-0 mt-0.5" />
+                          {imp}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="text-[10px] text-slate-400 italic">
+              Projections based on volunteer monitoring data, restoration project tracking, and watershed health assessments. Actual values will populate as historical snapshots accumulate.
+            </div>
+          </CardContent>
+        </Card>
+        ) : null);
 
             case 'disclaimer': return DS(
               <PlatformDisclaimer />

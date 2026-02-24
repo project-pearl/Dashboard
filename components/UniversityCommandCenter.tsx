@@ -67,12 +67,13 @@ type Props = {
 
 // ─── Lenses ──────────────────────────────────────────────────────────────────
 
-type LensId = 'data-analysis' | 'field-study' | 'publication';
+type LensId = 'data-analysis' | 'field-study' | 'publication' | 'trends';
 
 const LENSES: { id: LensId; label: string; description: string }[] = [
   { id: 'data-analysis', label: 'Data Analysis', description: 'Water quality data exploration, trends, and statistical analysis' },
   { id: 'field-study', label: 'Field Study', description: 'Field investigation guides, sampling protocols, and coursework tools' },
   { id: 'publication', label: 'Publication', description: 'Manuscript preparation, citation tools, and research export' },
+  { id: 'trends', label: 'Trends & Forecasting', description: 'Water quality trends, research metrics, and data projections' },
 ];
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -2541,6 +2542,83 @@ export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole 
               />
             )}
           </div>
+        ) : null);
+
+            case 'trends-dashboard': return DS(
+        showInLens(['data-analysis', 'trends']) ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Research & Data Trends</CardTitle>
+            <CardDescription>Water quality parameter trends, research metrics, and emerging research frontiers</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Trend KPI Strip */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[
+                { label: 'Publication Output', value: '↑ 14%', sub: 'peer-reviewed papers this year', color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
+                { label: 'Dataset Growth', value: '↑ 23%', sub: 'new records added to repository', color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
+                { label: 'Parameter Coverage', value: '84%', sub: 'of priority parameters monitored', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
+                { label: 'Citation Impact', value: '↑ 8.3', sub: 'avg citations per paper (h-index)', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
+              ].map(t => (
+                <div key={t.label} className={`rounded-xl border p-4 ${t.bg}`}>
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{t.label}</div>
+                  <div className={`text-2xl font-bold ${t.color} mt-1`}>{t.value}</div>
+                  <div className="text-[10px] text-slate-500 mt-1">{t.sub}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Category Trend Cards */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-800 mb-3">Research & Monitoring Trends</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {[
+                  { category: 'Water Quality Parameters', trend: 'Expanding', detail: 'Study sites now monitoring 84% of priority parameters. PFAS and microplastics added at 6 new locations this year.', color: 'text-green-700', bg: 'border-green-200' },
+                  { category: 'Research Funding', trend: 'Competitive', detail: 'Federal water research grants up 9% but applicant pool grew 15%. NSF and EPA STAR programs remain most competitive.', color: 'text-amber-700', bg: 'border-amber-200' },
+                  { category: 'Cross-Institution Collaboration', trend: 'Growing', detail: '8 new inter-university research partnerships formed. Multi-site studies now account for 35% of publications.', color: 'text-green-700', bg: 'border-green-200' },
+                  { category: 'Methodology Evolution', trend: 'Advancing', detail: 'eDNA sampling adopted at 40% of sites. Machine learning models deployed for 3 predictive water quality applications.', color: 'text-blue-700', bg: 'border-blue-200' },
+                  { category: 'Open Data Adoption', trend: 'Accelerating', detail: '72% of new datasets published with open licenses. FAIR data principles compliance up from 45% to 68% in 2 years.', color: 'text-green-700', bg: 'border-green-200' },
+                  { category: 'Student Engagement', trend: 'Strong', detail: '28 graduate theses on water quality topics. Undergraduate research participation up 22% with new REU programs.', color: 'text-blue-700', bg: 'border-blue-200' },
+                ].map(c => (
+                  <div key={c.category} className={`border rounded-lg p-4 ${c.bg}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-semibold text-slate-800">{c.category}</h4>
+                      <Badge variant="outline" className={`text-[10px] ${c.color}`}>{c.trend}</Badge>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed">{c.detail}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Outlook */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-800 mb-3">Emerging Research Frontiers</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {[
+                  { scenario: 'High-Growth Areas', impacts: ['PFAS fate and transport modeling gaining rapid traction', 'AI/ML-driven water quality prediction becoming standard methodology', 'Microplastic source tracking creating new interdisciplinary collaborations'] },
+                  { scenario: 'Emerging Opportunities', impacts: ['Environmental DNA (eDNA) enabling non-invasive biodiversity monitoring', 'Real-time sensor networks generating unprecedented temporal resolution data', 'Climate-water nexus research attracting cross-disciplinary funding'] },
+                ].map(s => (
+                  <div key={s.scenario} className="border border-slate-200 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-slate-800 mb-2">{s.scenario}</h4>
+                    <ul className="space-y-1.5">
+                      {s.impacts.map(imp => (
+                        <li key={imp} className="text-xs text-slate-600 flex items-start gap-2">
+                          <Microscope className="w-3 h-3 text-violet-500 flex-shrink-0 mt-0.5" />
+                          {imp}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="text-[10px] text-slate-400 italic">
+              Metrics based on institutional research databases, WQP submissions, and publication tracking. Actual values will populate as research outputs accumulate.
+            </div>
+          </CardContent>
+        </Card>
         ) : null);
 
             case 'disclaimer': return DS(

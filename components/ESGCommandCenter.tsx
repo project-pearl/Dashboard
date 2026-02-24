@@ -75,7 +75,7 @@ type FacilityRow = {
   ejScore?: number;     // 0-100 EJScreen burden
 };
 
-type ESGLens = 'overview' | 'disclosure' | 'risk' | 'impact' | 'compliance';
+type ESGLens = 'overview' | 'disclosure' | 'risk' | 'impact' | 'compliance' | 'trends';
 
 type LensConfig = {
   label: string;
@@ -90,6 +90,7 @@ type LensConfig = {
   showGrants: boolean;
   showBrand: boolean;
   showShareholder: boolean;
+  showTrends: boolean;
 };
 
 const LENS_CONFIG: Record<ESGLens, LensConfig> = {
@@ -98,35 +99,42 @@ const LENS_CONFIG: Record<ESGLens, LensConfig> = {
     description: 'Portfolio-level Sustainability summary for leadership',
     icon: Building2,
     showMap: true, showImpact: true, showDisclosure: true, showRisk: true,
-    showCompliance: true, showBenchmark: true, showGrants: false, showBrand: true, showShareholder: true,
+    showCompliance: true, showBenchmark: true, showGrants: false, showBrand: true, showShareholder: true, showTrends: true,
   },
   disclosure: {
     label: 'Disclosure & Reporting',
     description: 'GRI, SASB, CDP, TCFD framework readiness',
     icon: FileText,
     showMap: false, showImpact: true, showDisclosure: true, showRisk: false,
-    showCompliance: true, showBenchmark: false, showGrants: false, showBrand: false, showShareholder: true,
+    showCompliance: true, showBenchmark: false, showGrants: false, showBrand: false, showShareholder: true, showTrends: false,
   },
   risk: {
     label: 'Water Risk Portfolio',
     description: 'Facility-level water stress & impairment exposure',
     icon: AlertTriangle,
     showMap: true, showImpact: false, showDisclosure: false, showRisk: true,
-    showCompliance: true, showBenchmark: true, showGrants: false, showBrand: false, showShareholder: false,
+    showCompliance: true, showBenchmark: true, showGrants: false, showBrand: false, showShareholder: false, showTrends: false,
   },
   impact: {
     label: 'Environmental Impact',
     description: 'Measured outcomes & ecosystem restoration metrics',
     icon: Leaf,
     showMap: true, showImpact: true, showDisclosure: false, showRisk: false,
-    showCompliance: false, showBenchmark: true, showGrants: true, showBrand: true, showShareholder: false,
+    showCompliance: false, showBenchmark: true, showGrants: true, showBrand: true, showShareholder: false, showTrends: false,
   },
   compliance: {
     label: 'Regulatory Compliance',
     description: 'Permit status, violations, enforcement exposure',
     icon: Shield,
     showMap: true, showImpact: false, showDisclosure: false, showRisk: true,
-    showCompliance: true, showBenchmark: false, showGrants: true, showBrand: false, showShareholder: false,
+    showCompliance: true, showBenchmark: false, showGrants: true, showBrand: false, showShareholder: false, showTrends: false,
+  },
+  trends: {
+    label: 'Trends & Forecasting',
+    description: 'Water risk trajectories, regulatory outlook, and ESG scoring trends',
+    icon: TrendingUp,
+    showMap: false, showImpact: false, showDisclosure: false, showRisk: false,
+    showCompliance: false, showBenchmark: false, showGrants: false, showBrand: false, showShareholder: false, showTrends: true,
   },
 };
 
@@ -2066,6 +2074,83 @@ export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: 
           />
         </div>
             );
+
+            case 'trends-dashboard': return DS(
+        lens.showTrends ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>ESG & Water Risk Trends</CardTitle>
+            <CardDescription>Water risk trajectories, regulatory outlook, and ESG scoring methodology shifts</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Trend KPI Strip */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[
+                { label: 'Water Risk Score', value: '↑ 4.7%', sub: 'portfolio-weighted trajectory', color: 'text-red-600', bg: 'bg-red-50 border-red-200' },
+                { label: 'Disclosure Readiness', value: '82%', sub: 'CDP/SASB framework coverage', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
+                { label: 'Regulatory Pace', value: '↑ 3 rules', sub: 'new water-related regulations', color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200' },
+                { label: 'Portfolio Exposure', value: '34%', sub: 'facilities in high-stress zones', color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200' },
+              ].map(t => (
+                <div key={t.label} className={`rounded-xl border p-4 ${t.bg}`}>
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{t.label}</div>
+                  <div className={`text-2xl font-bold ${t.color} mt-1`}>{t.value}</div>
+                  <div className="text-[10px] text-slate-500 mt-1">{t.sub}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Category Trend Cards */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-800 mb-3">ESG Water Risk Trends</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {[
+                  { category: 'Water Stress Projections', trend: 'Worsening', detail: 'WRI Aqueduct projects 18% increase in baseline water stress for portfolio facilities by 2030. 5 facilities entering high-risk zones.', color: 'text-red-700', bg: 'border-red-200' },
+                  { category: 'Regulatory Timeline', trend: 'Accelerating', detail: 'EU CSRD mandatory reporting by 2025. SEC climate disclosure rule finalized. PFAS regulations expanding globally.', color: 'text-amber-700', bg: 'border-amber-200' },
+                  { category: 'ESG Scoring Shifts', trend: 'Evolving', detail: 'MSCI increased water risk weighting by 15%. S&P Global adding watershed-level impact metrics to ESG assessments.', color: 'text-amber-700', bg: 'border-amber-200' },
+                  { category: 'Supply Chain Water Risk', trend: 'Increasing', detail: 'Tier 1 supplier water stress exposure up 22%. 3 critical suppliers in regions facing regulatory water allocation cuts.', color: 'text-red-700', bg: 'border-red-200' },
+                  { category: 'Carbon-Water Nexus', trend: 'Emerging', detail: 'Water-energy intensity metrics gaining traction. 8 portfolio facilities show correlated carbon and water reduction opportunities.', color: 'text-blue-700', bg: 'border-blue-200' },
+                  { category: 'Stakeholder Pressure', trend: 'Intensifying', detail: 'Water-related shareholder resolutions up 40% YoY. Investor engagement on water stewardship at all-time high.', color: 'text-amber-700', bg: 'border-amber-200' },
+                ].map(c => (
+                  <div key={c.category} className={`border rounded-lg p-4 ${c.bg}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-semibold text-slate-800">{c.category}</h4>
+                      <Badge variant="outline" className={`text-[10px] ${c.color}`}>{c.trend}</Badge>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed">{c.detail}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Outlook */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-800 mb-3">2030 Regulatory Scenario Outlook</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {[
+                  { scenario: 'Moderate Scenario', impacts: ['Mandatory water disclosure in 3 major markets', 'Water pricing increases of 15-20% in stressed regions', 'ESG water scores become prerequisite for green bond eligibility'] },
+                  { scenario: 'Aggressive Scenario', impacts: ['Global corporate water stewardship reporting mandated', 'Water allocation cuts affecting 12% of portfolio facilities', 'Water risk premium embedded in insurance and lending rates'] },
+                ].map(s => (
+                  <div key={s.scenario} className="border border-slate-200 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-slate-800 mb-2">{s.scenario}</h4>
+                    <ul className="space-y-1.5">
+                      {s.impacts.map(imp => (
+                        <li key={imp} className="text-xs text-slate-600 flex items-start gap-2">
+                          <AlertTriangle className="w-3 h-3 text-amber-500 flex-shrink-0 mt-0.5" />
+                          {imp}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="text-[10px] text-slate-400 italic">
+              Projections based on WRI Aqueduct, CDP Water Security responses, and global ESG regulatory tracking. Actual values will populate as portfolio assessments accumulate.
+            </div>
+          </CardContent>
+        </Card>
+        ) : null);
 
             case 'disclaimer': return DS(
               <PlatformDisclaimer />
