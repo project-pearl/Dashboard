@@ -70,7 +70,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
     accentColor: 'text-emerald-400',
   },
   pearl: {
-    image: '/underwater.png',
+    image: '/images/heroes/underwater-pearl.jpg',
     subtitle: 'PEARL Intelligence Network',
     headline: 'Pearl Command Center',
     description:

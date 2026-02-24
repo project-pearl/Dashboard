@@ -6,7 +6,7 @@ import {
   ArrowRight, BarChart3, Zap, Database, Building2,
   GraduationCap, Globe, Eye,
   Search, Waves, Beaker, Microscope, ShieldCheck, LineChart,
-  ChevronDown, ExternalLink, FileText, Landmark, Factory, Leaf, HardHat, Settings, FlaskConical,
+  ChevronDown, ExternalLink, FileText, Landmark, Factory, Leaf, HardHat, Settings, FlaskConical, Play,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -198,8 +198,8 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
       {/* ═══ HERO ═══ */}
       <section className="relative min-h-[92vh] flex items-end overflow-hidden bg-slate-950">
         <div className="absolute inset-0">
-          <div className="absolute inset-0 opacity-40" style={{ backgroundImage: 'radial-gradient(circle at 15% 85%, rgba(6,182,212,.5) 0%, transparent 45%), radial-gradient(circle at 85% 15%, rgba(59,130,246,.4) 0%, transparent 40%), radial-gradient(circle at 50% 60%, rgba(20,184,166,.2) 0%, transparent 55%)' }} />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/30" />
+          <Image src="/marsh-waterfront.jpeg" alt="" fill className="object-cover" priority sizes="100vw" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 pb-20 pt-32 w-full">
@@ -223,7 +223,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
                 <button onClick={onSignIn} className="group inline-flex items-center gap-3 px-8 py-4 text-base font-semibold text-slate-900 bg-white rounded-full hover:bg-slate-100 transition-all shadow-2xl shadow-black/20">
                   Explore the Platform <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </button>
-                <a href="#platform" className="inline-flex items-center gap-2 px-8 py-4 text-base font-medium text-white/90 border border-white/20 rounded-full hover:bg-white/10 transition-all backdrop-blur-sm">
+                <a href="#intro-video" className="inline-flex items-center gap-2 px-8 py-4 text-base font-medium text-white/90 border border-white/20 rounded-full hover:bg-white/10 transition-all backdrop-blur-sm">
                   <Eye className="h-4 w-4" /> See How It Works
                 </a>
               </div>
@@ -327,6 +327,27 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
           <p className="text-center text-[11px] text-slate-400 mt-5">
             430M+ federal datapoints aggregated &middot; 565,000+ assessment units &middot; Field validated in Milton, FL (Jan 2025)
           </p>
+        </div>
+      </section>
+
+      {/* ═══ INTRO VIDEO ═══ */}
+      <section id="intro-video" className="relative py-20 bg-slate-50">
+        <div className="max-w-4xl mx-auto px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <p className="text-xs font-bold tracking-[0.2em] uppercase text-cyan-600 mb-3">See It In Action</p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+              How ALIA Works
+            </h2>
+          </div>
+          {/* Video placeholder — replace src with Synthesize embed URL */}
+          <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-900 border border-slate-200 shadow-2xl">
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+              <div className="w-20 h-20 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
+                <Play className="h-8 w-8 text-white ml-1" />
+              </div>
+              <p className="text-sm text-white/60 font-medium">Video coming soon</p>
+            </div>
+          </div>
         </div>
       </section>
 
