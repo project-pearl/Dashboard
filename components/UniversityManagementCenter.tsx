@@ -25,6 +25,15 @@ import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
 import { WaterQualityChallenges } from '@/components/WaterQualityChallenges';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
+import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
+import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
+import { NwisGwPanel } from '@/components/NwisGwPanel';
+import { PolicyTracker } from '@/components/PolicyTracker';
+import { EmergingContaminantsTracker } from '@/components/EmergingContaminantsTracker';
+import ResolutionPlanner from '@/components/ResolutionPlanner';
+import { DisasterEmergencyPanel } from '@/components/DisasterEmergencyPanel';
+import { CampusStormwaterPanel } from '@/components/CampusStormwaterPanel';
+import { WatershedPartnershipsPanel } from '@/components/WatershedPartnershipsPanel';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import dynamic from 'next/dynamic';
@@ -68,16 +77,55 @@ type Props = {
   onToggleDevMode?: () => void;
 };
 
-// ─── Lenses ──────────────────────────────────────────────────────────────────
+// ─── Lenses (18-view architecture) ───────────────────────────────────────────
 
-type LensId = 'data-analysis' | 'field-study' | 'publication' | 'trends';
+type ViewLens = 'overview' | 'briefing' | 'planner' | 'trends' | 'policy' | 'compliance' |
+  'water-quality' | 'public-health' | 'research-monitoring' | 'campus-stormwater' |
+  'infrastructure' | 'monitoring' | 'disaster-emergency' | 'watershed-partnerships' |
+  'scorecard' | 'reports' | 'grants-publications' | 'funding';
 
-const LENSES: { id: LensId; label: string; description: string }[] = [
-  { id: 'data-analysis', label: 'Data Analysis', description: 'Water quality data exploration, trends, and statistical analysis' },
-  { id: 'field-study', label: 'Field Study', description: 'Field investigation guides, sampling protocols, and coursework tools' },
-  { id: 'publication', label: 'Publication', description: 'Manuscript preparation, citation tools, and research export' },
-  { id: 'trends', label: 'Trends & Forecasting', description: 'Water quality trends, research metrics, and data projections' },
-];
+const LENS_CONFIG: Record<ViewLens, {
+  label: string;
+  description: string;
+  sections: Set<string> | null;
+}> = {
+  overview:    { label: 'Overview',    description: 'University water quality dashboard overview',
+    sections: new Set(['regprofile', 'map-grid', 'top10', 'disclaimer']) },
+  briefing:    { label: 'AI Briefing', description: 'AI-generated research intelligence briefing',
+    sections: new Set(['insights', 'alertfeed', 'disclaimer']) },
+  planner:     { label: 'Resolution Planner', description: 'Research-driven resolution planning workspace',
+    sections: new Set(['resolution-planner', 'disclaimer']) },
+  trends:      { label: 'Trends & Projections', description: 'Water quality trends, research metrics, and data projections',
+    sections: new Set(['trends-dashboard', 'disclaimer']) },
+  policy:      { label: 'Policy Tracker', description: 'Water policy tracking for research context',
+    sections: new Set(['policy-tracker', 'disclaimer']) },
+  compliance:  { label: 'Compliance', description: 'Campus NPDES and drinking water compliance',
+    sections: new Set(['icis', 'sdwis', 'disclaimer']) },
+  'water-quality': { label: 'Water Quality', description: 'Water quality data exploration and analysis',
+    sections: new Set(['regprofile', 'map-grid', 'detail', 'top10', 'disclaimer']) },
+  'public-health': { label: 'Public Health & Contaminants', description: 'Emerging contaminants and public health research',
+    sections: new Set(['contaminants-tracker', 'disclaimer']) },
+  'research-monitoring': { label: 'Research & Monitoring', description: 'Research collaboration and dataset management',
+    sections: new Set(['research', 'datasets', 'methodology', 'disclaimer']) },
+  'campus-stormwater': { label: 'Campus Stormwater', description: 'Campus stormwater management and green infrastructure',
+    sections: new Set(['campus-stormwater-panel', 'disclaimer']) },
+  infrastructure: { label: 'Infrastructure', description: 'Campus water infrastructure overview',
+    sections: new Set(['groundwater', 'map-grid', 'disclaimer']) },
+  monitoring:  { label: 'Monitoring', description: 'Water quality monitoring network management',
+    sections: new Set(['regprofile', 'map-grid', 'detail', 'disclaimer']) },
+  'disaster-emergency': { label: 'Disaster & Emergency', description: 'Emergency response for campus water systems',
+    sections: new Set(['disaster-emergency-panel', 'disclaimer']) },
+  'watershed-partnerships': { label: 'Watershed Partnerships', description: 'Community and inter-institutional partnerships',
+    sections: new Set(['watershed-partnerships-panel', 'disclaimer']) },
+  scorecard:   { label: 'Scorecard', description: 'Campus water program performance scorecard',
+    sections: new Set(['scorecard-kpis', 'scorecard-grades', 'disclaimer']) },
+  reports:     { label: 'Reports', description: 'Research reports and data export',
+    sections: new Set(['exporthub', 'reports-hub', 'disclaimer']) },
+  'grants-publications': { label: 'Grants & Publications', description: 'Manuscript preparation, grants, and academic tools',
+    sections: new Set(['manuscript', 'grants', 'academic', 'disclaimer']) },
+  funding:     { label: 'Funding & Grants', description: 'Research funding opportunities',
+    sections: new Set(['grants', 'disclaimer']) },
+};
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -233,10 +281,8 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
   const { user, logout } = useAuth();
 
   // ── Lens switching ──
-  const [activeLens, setActiveLens] = useLensParam<LensId>(defaultLens || 'data-analysis');
-  const isFieldStudy = activeLens === 'field-study';
-  const isPublication = activeLens === 'publication';
-  const showInLens = (ids: LensId[]) => ids.includes(activeLens);
+  const [activeLens, setActiveLens] = useLensParam<ViewLens>('overview');
+  const lens = LENS_CONFIG[activeLens];
 
   // ── View state ──
   const [showAccountPanel, setShowAccountPanel] = useState(false);
@@ -622,18 +668,18 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
         <HeroBanner role="university" onDoubleClick={() => onToggleDevMode?.()}>
             {/* Lens Switcher */}
             <div className="hidden md:flex items-center gap-1 p-1 rounded-full bg-violet-100/60 border border-violet-200">
-              {LENSES.map(lens => (
+              {(Object.entries(LENS_CONFIG) as [ViewLens, typeof LENS_CONFIG[ViewLens]][]).map(([id, cfg]) => (
                 <button
-                  key={lens.id}
-                  onClick={() => setActiveLens(lens.id)}
+                  key={id}
+                  onClick={() => setActiveLens(id)}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    activeLens === lens.id
+                    activeLens === id
                       ? 'bg-violet-600 text-white shadow-md'
                       : 'text-violet-600 hover:bg-violet-200/60'
                   }`}
-                  title={lens.description}
+                  title={cfg.description}
                 >
-                  {lens.label}
+                  {cfg.label}
                 </button>
               ))}
             </div>
@@ -702,7 +748,12 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
           return (<>
         <div className={`space-y-6 ${isEditMode ? 'pl-12' : ''}`}>
 
-        {sections.filter(s => s.visible || isEditMode).map(section => {
+        {sections.filter(s => {
+          if (isEditMode) return true;
+          if (!s.visible) return false;
+          if (s.lensControlled && lens.sections) return lens.sections.has(s.id);
+          return true;
+        }).map(section => {
           const DS = (children: React.ReactNode) => (
             <DraggableSection key={section.id} id={section.id} label={section.label}
               isEditMode={isEditMode} isVisible={section.visible} onToggleVisibility={onToggleVisibility}>
@@ -1175,8 +1226,8 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
               );
             })()}
 
-            {/* Field Study Guide — shown in field-study lens when waterbody selected */}
-            {isFieldStudy && activeDetailId && (
+            {/* Field Study Guide — shown in research-monitoring lens when waterbody selected */}
+            {activeLens === 'research-monitoring' && activeDetailId && (
               <div className="rounded-2xl border-2 border-violet-200 bg-gradient-to-br from-violet-50 to-white p-5 space-y-4">
                 <div className="flex items-center gap-2">
                   <Microscope className="h-5 w-5 text-violet-600" />
@@ -1202,8 +1253,8 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
               </div>
             )}
 
-            {/* Restoration Plan — data-analysis + publication lenses */}
-            {showInLens(['data-analysis', 'publication']) && showRestorationPlan && activeDetailId && (() => {
+            {/* Restoration Plan */}
+            {showRestorationPlan && activeDetailId && (() => {
               const nccRegion = regionData.find(r => r.id === activeDetailId);
               const regionConfig = getRegionById(activeDetailId);
               const regionName = regionConfig?.name || nccRegion?.name || activeDetailId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -2392,7 +2443,6 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
             );
 
             case 'manuscript': return DS(
-        showInLens(['publication']) ? (
         <div id="section-manuscript" className="rounded-2xl border border-violet-200 bg-white shadow-sm overflow-hidden">
           <button onClick={() => onToggleCollapse('manuscript')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
             <span className="text-sm font-bold text-violet-900">📝 Manuscript & Publication Tools</span>
@@ -2421,10 +2471,9 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
             </div>
           )}
         </div>
-        ) : null);
+        );
 
             case 'academic': return DS(
-        showInLens(['field-study']) ? (
         <div id="section-academic" className="rounded-2xl border border-violet-200 bg-white shadow-sm overflow-hidden">
           <button onClick={() => onToggleCollapse('academic')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
             <span className="text-sm font-bold text-violet-900">{userRole === 'College' ? '🎓 Undergrad Tools & Learning Resources' : '🎓 Academic & Teaching Resources'}</span>
@@ -2439,10 +2488,9 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
             </div>
           )}
         </div>
-        ) : null);
+        );
 
             case 'methodology': return DS(
-        showInLens(['data-analysis', 'publication']) ? (
         <div id="section-methodology" className="rounded-2xl border border-violet-200 bg-white shadow-sm overflow-hidden">
           <button onClick={() => onToggleCollapse('methodology')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
             <span className="text-sm font-bold text-violet-900">🛡️ Data Integrity, QA/QC & Methodology</span>
@@ -2478,10 +2526,9 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
             </div>
           )}
         </div>
-        ) : null);
+        );
 
             case 'datasets': return DS(
-        showInLens(['data-analysis', 'publication']) ? (
         <div id="section-datasets" className="rounded-2xl border border-violet-200 bg-white shadow-sm overflow-hidden">
           <button onClick={() => onToggleCollapse('datasets')} className="w-full flex items-center justify-between px-4 py-3 border-l-4 border-l-violet-400 bg-violet-50/30 hover:bg-violet-100/50 transition-colors">
             <span className="text-sm font-bold text-violet-900">📦 Dataset Catalog & Research Export</span>
@@ -2526,7 +2573,7 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
             </div>
           )}
         </div>
-        ) : null);
+        );
 
             case 'exporthub': return DS(
         <div id="section-exporthub" className="rounded-2xl border border-violet-200 bg-white shadow-sm overflow-hidden">
@@ -2568,7 +2615,8 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
         ) : null);
 
             case 'trends-dashboard': return DS(
-        showInLens(['data-analysis', 'trends']) ? (
+        (() => {
+        return (
         <Card>
           <CardHeader>
             <CardTitle>Research & Data Trends</CardTitle>
@@ -2642,7 +2690,47 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
             </div>
           </CardContent>
         </Card>
-        ) : null);
+        );
+        })());
+
+            // ── Shared panels ──
+            case 'resolution-planner': return DS(<ResolutionPlanner userRole="university" scopeContext={{ scope: 'state', data: { abbr: stateAbbr, name: STATE_NAMES[stateAbbr] || stateAbbr, epaRegion: 3, totalWaterbodies: regionData.length, assessed: regionData.length, impaired: regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length, score: Math.round(regionData.reduce((a, r) => a + (r.alertLevel === 'none' ? 95 : r.alertLevel === 'low' ? 75 : r.alertLevel === 'medium' ? 50 : 25), 0) / Math.max(regionData.length, 1)), grade: 'B', cat5: 0, cat4a: 0, cat4b: 0, cat4c: 0, topCauses: [] } }} />);
+            case 'policy-tracker': return DS(<PolicyTracker />);
+            case 'contaminants-tracker': return DS(<EmergingContaminantsTracker role="university" selectedState={stateAbbr} />);
+            case 'icis': return DS(<ICISCompliancePanel state={stateAbbr} compactMode={false} />);
+            case 'sdwis': return DS(<SDWISCompliancePanel state={stateAbbr} compactMode={false} />);
+            case 'groundwater': return DS(<NwisGwPanel state={stateAbbr} compactMode={false} />);
+            case 'disaster-emergency-panel': return DS(<DisasterEmergencyPanel selectedState={stateAbbr} stateRollup={[]} />);
+            case 'scorecard-kpis': return DS(
+              <Card><CardHeader><CardTitle>University Water Program Scorecard</CardTitle><CardDescription>Key performance indicators for campus water quality management</CardDescription></CardHeader>
+              <CardContent><div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[{ label: 'Research Output', value: '87%', color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
+                  { label: 'Data Quality', value: '94%', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
+                  { label: 'Campus Compliance', value: '100%', color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
+                  { label: 'Partnership Score', value: 'A-', color: 'text-violet-600', bg: 'bg-violet-50 border-violet-200' }
+                ].map(k => <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}><div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div><div className={`text-2xl font-bold ${k.color} mt-1`}>{k.value}</div></div>)}
+              </div></CardContent></Card>
+            );
+            case 'scorecard-grades': return DS(
+              <Card><CardHeader><CardTitle>Program Grades</CardTitle></CardHeader>
+              <CardContent><div className="grid grid-cols-3 gap-3">
+                {[{ area: 'Water Quality Research', grade: 'A' }, { area: 'Campus Stormwater', grade: 'B+' }, { area: 'Community Engagement', grade: 'A-' }].map(g =>
+                  <div key={g.area} className="text-center p-4 border rounded-lg"><div className="text-3xl font-bold text-violet-600">{g.grade}</div><div className="text-xs text-slate-500 mt-1">{g.area}</div></div>
+                )}
+              </div></CardContent></Card>
+            );
+            case 'reports-hub': return DS(
+              <Card><CardHeader><CardTitle>Research Reports</CardTitle><CardDescription>Generated reports and data exports for academic use</CardDescription></CardHeader>
+              <CardContent><div className="space-y-2">
+                {['Annual Water Quality Summary', 'Campus Stormwater Report', 'Research Output Bibliography', 'Monitoring Network Status'].map(r =>
+                  <div key={r} className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50"><span className="text-sm text-slate-700">{r}</span><Badge variant="outline" className="text-[10px]">Generate</Badge></div>
+                )}
+              </div></CardContent></Card>
+            );
+
+            // ── University exclusive panels ──
+            case 'campus-stormwater-panel': return DS(<CampusStormwaterPanel stateAbbr={stateAbbr} />);
+            case 'watershed-partnerships-panel': return DS(<WatershedPartnershipsPanel stateAbbr={stateAbbr} />);
 
             case 'disclaimer': return DS(
               <PlatformDisclaimer />

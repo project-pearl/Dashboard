@@ -26,6 +26,17 @@ import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
 import { WaterQualityChallenges } from '@/components/WaterQualityChallenges';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
+import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
+import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
+import { NwisGwPanel } from '@/components/NwisGwPanel';
+import { PolicyTracker } from '@/components/PolicyTracker';
+import { EmergingContaminantsTracker } from '@/components/EmergingContaminantsTracker';
+import ResolutionPlanner from '@/components/ResolutionPlanner';
+import { DisasterEmergencyPanel } from '@/components/DisasterEmergencyPanel';
+import { WatershedHealthPanel } from '@/components/WatershedHealthPanel';
+import { RestorationProjectsPanel } from '@/components/RestorationProjectsPanel';
+import { AdvocacyPanel } from '@/components/AdvocacyPanel';
+import { VolunteerProgramPanel } from '@/components/VolunteerProgramPanel';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import dynamic from 'next/dynamic';
@@ -65,11 +76,54 @@ type Props = {
   onToggleDevMode?: () => void;
 };
 
-type ViewLens = 'overview' | 'trends';
+// ─── Lenses (18-view architecture) ───────────────────────────────────────────
 
-const NGO_LENS_CONFIG: Record<ViewLens, { showTrends: boolean }> = {
-  overview: { showTrends: true },
-  trends:   { showTrends: true },
+type ViewLens = 'overview' | 'briefing' | 'planner' | 'trends' | 'policy' | 'compliance' |
+  'water-quality' | 'public-health' | 'watershed-health' | 'restoration-projects' |
+  'infrastructure' | 'monitoring' | 'disaster-emergency' | 'advocacy' |
+  'scorecard' | 'reports' | 'volunteer-program' | 'funding';
+
+const LENS_CONFIG: Record<ViewLens, {
+  label: string;
+  description: string;
+  sections: Set<string> | null;
+}> = {
+  overview:    { label: 'Overview',    description: 'NGO watershed management overview',
+    sections: new Set(['regprofile', 'map-grid', 'top10', 'partners', 'disclaimer']) },
+  briefing:    { label: 'AI Briefing', description: 'AI-generated conservation intelligence briefing',
+    sections: new Set(['insights', 'alertfeed', 'disclaimer']) },
+  planner:     { label: 'Resolution Planner', description: 'Conservation-driven resolution planning workspace',
+    sections: new Set(['resolution-planner', 'disclaimer']) },
+  trends:      { label: 'Trends & Projections', description: 'Watershed health trends and conservation projections',
+    sections: new Set(['trends-dashboard', 'disclaimer']) },
+  policy:      { label: 'Policy Tracker', description: 'Water policy tracking for advocacy',
+    sections: new Set(['policy-tracker', 'disclaimer']) },
+  compliance:  { label: 'Compliance', description: 'Regulatory compliance monitoring',
+    sections: new Set(['icis', 'sdwis', 'disclaimer']) },
+  'water-quality': { label: 'Water Quality', description: 'Watershed water quality assessment',
+    sections: new Set(['regprofile', 'map-grid', 'detail', 'top10', 'disclaimer']) },
+  'public-health': { label: 'Public Health & Contaminants', description: 'Emerging contaminants and community health',
+    sections: new Set(['contaminants-tracker', 'disclaimer']) },
+  'watershed-health': { label: 'Watershed Health', description: 'Comprehensive watershed health assessment',
+    sections: new Set(['watershed-health-panel', 'map-grid', 'disclaimer']) },
+  'restoration-projects': { label: 'Restoration Projects', description: 'Active restoration project tracker',
+    sections: new Set(['restoration-projects-panel', 'map-grid', 'disclaimer']) },
+  infrastructure: { label: 'Infrastructure', description: 'Infrastructure impact on watersheds',
+    sections: new Set(['groundwater', 'map-grid', 'disclaimer']) },
+  monitoring:  { label: 'Monitoring', description: 'Community-based monitoring network',
+    sections: new Set(['regprofile', 'map-grid', 'detail', 'disclaimer']) },
+  'disaster-emergency': { label: 'Disaster & Emergency', description: 'Environmental emergency response',
+    sections: new Set(['disaster-emergency-panel', 'disclaimer']) },
+  advocacy:    { label: 'Advocacy', description: 'Policy advocacy and regulatory engagement',
+    sections: new Set(['advocacy-panel', 'policy', 'disclaimer']) },
+  scorecard:   { label: 'Scorecard', description: 'Conservation program scorecard',
+    sections: new Set(['scorecard-kpis', 'scorecard-grades', 'disclaimer']) },
+  reports:     { label: 'Reports', description: 'Impact reports and data exports',
+    sections: new Set(['reports-hub', 'disclaimer']) },
+  'volunteer-program': { label: 'Volunteer Program', description: 'Volunteer monitoring program management',
+    sections: new Set(['volunteer', 'community', 'volunteer-program-panel', 'disclaimer']) },
+  funding:     { label: 'Funding & Grants', description: 'Conservation funding opportunities',
+    sections: new Set(['grants', 'disclaimer']) },
 };
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -241,7 +295,7 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
 
   // ── Lens switching ──
   const [viewLens] = useLensParam<ViewLens>('overview');
-  const ngoLens = NGO_LENS_CONFIG[viewLens] || NGO_LENS_CONFIG.overview;
+  const lens = LENS_CONFIG[viewLens] || LENS_CONFIG.overview;
 
   // ── View state ──
   const [showAccountPanel, setShowAccountPanel] = useState(false);
@@ -767,7 +821,12 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
           return (<>
         <div className={`space-y-6 ${isEditMode ? 'pl-12' : ''}`}>
 
-        {sections.filter(s => s.visible || isEditMode).map(section => {
+        {sections.filter(s => {
+          if (isEditMode) return true;
+          if (!s.visible) return false;
+          if (s.lensControlled && lens.sections) return lens.sections.has(s.id);
+          return true;
+        }).map(section => {
           const DS = (children: React.ReactNode) => (
             <DraggableSection key={section.id} id={section.id} label={section.label}
               isEditMode={isEditMode} isVisible={section.visible} onToggleVisibility={onToggleVisibility}>
@@ -2725,7 +2784,7 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
             );
 
             case 'trends-dashboard': return DS(
-        ngoLens.showTrends ? (
+        (() => { return (
         <Card>
           <CardHeader>
             <CardTitle>Watershed & Impact Trends</CardTitle>
@@ -2799,7 +2858,48 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
             </div>
           </CardContent>
         </Card>
-        ) : null);
+        ); })());
+
+            // ── Shared panels ──
+            case 'resolution-planner': return DS(<ResolutionPlanner userRole="ngo" scopeContext={{ scope: 'state', data: { abbr: stateAbbr, name: STATE_NAMES[stateAbbr] || stateAbbr, epaRegion: 0, totalWaterbodies: regionData.length, assessed: regionData.length, impaired: regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length, score: Math.round(regionData.reduce((a, r) => a + (r.alertLevel === 'none' ? 95 : r.alertLevel === 'low' ? 75 : r.alertLevel === 'medium' ? 50 : 25), 0) / Math.max(regionData.length, 1)), grade: 'B', cat5: 0, cat4a: 0, cat4b: 0, cat4c: 0, topCauses: [] } }} />);
+            case 'policy-tracker': return DS(<PolicyTracker />);
+            case 'contaminants-tracker': return DS(<EmergingContaminantsTracker role="ngo" selectedState={stateAbbr} />);
+            case 'icis': return DS(<ICISCompliancePanel state={stateAbbr} compactMode={false} />);
+            case 'sdwis': return DS(<SDWISCompliancePanel state={stateAbbr} compactMode={false} />);
+            case 'groundwater': return DS(<NwisGwPanel state={stateAbbr} compactMode={false} />);
+            case 'disaster-emergency-panel': return DS(<DisasterEmergencyPanel selectedState={stateAbbr} stateRollup={[]} />);
+            case 'scorecard-kpis': return DS(
+              <Card><CardHeader><CardTitle>Conservation Program Scorecard</CardTitle><CardDescription>Key performance indicators for watershed conservation</CardDescription></CardHeader>
+              <CardContent><div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[{ label: 'Watershed Health', value: '72%', color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
+                  { label: 'Volunteer Engagement', value: '89%', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
+                  { label: 'Restoration Progress', value: '64%', color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200' },
+                  { label: 'Advocacy Impact', value: 'B+', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' }
+                ].map(k => <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}><div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div><div className={`text-2xl font-bold ${k.color} mt-1`}>{k.value}</div></div>)}
+              </div></CardContent></Card>
+            );
+            case 'scorecard-grades': return DS(
+              <Card><CardHeader><CardTitle>Program Grades</CardTitle></CardHeader>
+              <CardContent><div className="grid grid-cols-3 gap-3">
+                {[{ area: 'Watershed Restoration', grade: 'B+' }, { area: 'Community Engagement', grade: 'A' }, { area: 'Policy Advocacy', grade: 'A-' }].map(g =>
+                  <div key={g.area} className="text-center p-4 border rounded-lg"><div className="text-3xl font-bold text-emerald-600">{g.grade}</div><div className="text-xs text-slate-500 mt-1">{g.area}</div></div>
+                )}
+              </div></CardContent></Card>
+            );
+            case 'reports-hub': return DS(
+              <Card><CardHeader><CardTitle>Impact Reports</CardTitle><CardDescription>Generated reports and impact documentation</CardDescription></CardHeader>
+              <CardContent><div className="space-y-2">
+                {['Annual Impact Report', 'Watershed Health Assessment', 'Volunteer Program Summary', 'Advocacy Outcomes Report'].map(r =>
+                  <div key={r} className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50"><span className="text-sm text-slate-700">{r}</span><Badge variant="outline" className="text-[10px]">Generate</Badge></div>
+                )}
+              </div></CardContent></Card>
+            );
+
+            // ── NGO exclusive panels ──
+            case 'watershed-health-panel': return DS(<WatershedHealthPanel stateAbbr={stateAbbr} />);
+            case 'restoration-projects-panel': return DS(<RestorationProjectsPanel stateAbbr={stateAbbr} />);
+            case 'advocacy-panel': return DS(<AdvocacyPanel stateAbbr={stateAbbr} />);
+            case 'volunteer-program-panel': return DS(<VolunteerProgramPanel stateAbbr={stateAbbr} />);
 
             case 'disclaimer': return DS(
               <PlatformDisclaimer />

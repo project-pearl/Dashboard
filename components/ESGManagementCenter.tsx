@@ -39,6 +39,16 @@ import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
+import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
+import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
+import { PolicyTracker } from '@/components/PolicyTracker';
+import { EmergingContaminantsTracker } from '@/components/EmergingContaminantsTracker';
+import ResolutionPlanner from '@/components/ResolutionPlanner';
+import { DisasterEmergencyPanel } from '@/components/DisasterEmergencyPanel';
+import { WaterStewardshipPanel } from '@/components/WaterStewardshipPanel';
+import { FacilityOperationsPanel } from '@/components/FacilityOperationsPanel';
+import { ESGReportingPanel } from '@/components/ESGReportingPanel';
+import { SupplyChainRiskPanel } from '@/components/SupplyChainRiskPanel';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 
@@ -76,7 +86,20 @@ type FacilityRow = {
   ejScore?: number;     // 0-100 EJScreen burden
 };
 
-type ESGLens = 'overview' | 'disclosure' | 'risk' | 'impact' | 'compliance' | 'trends';
+// ─── Lenses (18-view architecture) ───────────────────────────────────────────
+
+type ViewLens = 'overview' | 'briefing' | 'planner' | 'trends' | 'policy' | 'compliance' |
+  'water-quality' | 'public-health' | 'water-stewardship' | 'facility-operations' |
+  'infrastructure' | 'monitoring' | 'disaster-emergency' | 'esg-reporting' |
+  'scorecard' | 'reports' | 'supply-chain-risk' | 'funding';
+
+// Legacy compat: keep showX booleans so existing inner conditionals work
+// (section filter handles real visibility via sections Set)
+const SHOW_ALL = {
+  showMap: true, showImpact: true, showDisclosure: true, showRisk: true,
+  showCompliance: true, showBenchmark: true, showGrants: true, showBrand: true,
+  showShareholder: true, showTrends: true,
+};
 
 type LensConfig = {
   label: string;
@@ -92,50 +115,99 @@ type LensConfig = {
   showBrand: boolean;
   showShareholder: boolean;
   showTrends: boolean;
+  sections: Set<string> | null;
 };
 
-const LENS_CONFIG: Record<ESGLens, LensConfig> = {
+const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   overview: {
-    label: 'Executive Overview',
-    description: 'Portfolio-level Sustainability summary for leadership',
-    icon: Building2,
-    showMap: true, showImpact: true, showDisclosure: true, showRisk: true,
-    showCompliance: true, showBenchmark: true, showGrants: false, showBrand: true, showShareholder: true, showTrends: true,
+    label: 'Executive Overview', description: 'Portfolio-level Sustainability summary for leadership',
+    icon: Building2, ...SHOW_ALL,
+    sections: new Set(['summary', 'kpis', 'map-grid', 'insights', 'impact', 'compliance', 'disclaimer']),
   },
-  disclosure: {
-    label: 'Disclosure & Reporting',
-    description: 'GRI, SASB, CDP, TCFD framework readiness',
-    icon: FileText,
-    showMap: false, showImpact: true, showDisclosure: true, showRisk: false,
-    showCompliance: true, showBenchmark: false, showGrants: false, showBrand: false, showShareholder: true, showTrends: false,
+  briefing: {
+    label: 'AI Briefing', description: 'AI-generated sustainability intelligence briefing',
+    icon: Sparkles, ...SHOW_ALL,
+    sections: new Set(['insights', 'disclaimer']),
   },
-  risk: {
-    label: 'Water Risk Portfolio',
-    description: 'Facility-level water stress & impairment exposure',
-    icon: AlertTriangle,
-    showMap: true, showImpact: false, showDisclosure: false, showRisk: true,
-    showCompliance: true, showBenchmark: true, showGrants: false, showBrand: false, showShareholder: false, showTrends: false,
-  },
-  impact: {
-    label: 'Environmental Impact',
-    description: 'Measured outcomes & ecosystem restoration metrics',
-    icon: Leaf,
-    showMap: true, showImpact: true, showDisclosure: false, showRisk: false,
-    showCompliance: false, showBenchmark: true, showGrants: true, showBrand: true, showShareholder: false, showTrends: false,
-  },
-  compliance: {
-    label: 'Regulatory Compliance',
-    description: 'Permit status, violations, enforcement exposure',
-    icon: Shield,
-    showMap: true, showImpact: false, showDisclosure: false, showRisk: true,
-    showCompliance: true, showBenchmark: false, showGrants: true, showBrand: false, showShareholder: false, showTrends: false,
+  planner: {
+    label: 'Resolution Planner', description: 'Sustainability resolution planning workspace',
+    icon: ClipboardList, ...SHOW_ALL,
+    sections: new Set(['resolution-planner', 'disclaimer']),
   },
   trends: {
-    label: 'Trends & Forecasting',
-    description: 'Water risk trajectories, regulatory outlook, and ESG scoring trends',
-    icon: TrendingUp,
-    showMap: false, showImpact: false, showDisclosure: false, showRisk: false,
-    showCompliance: false, showBenchmark: false, showGrants: false, showBrand: false, showShareholder: false, showTrends: true,
+    label: 'Trends & Forecasting', description: 'Water risk trajectories, regulatory outlook, and ESG scoring trends',
+    icon: TrendingUp, ...SHOW_ALL,
+    sections: new Set(['trends-dashboard', 'disclaimer']),
+  },
+  policy: {
+    label: 'Policy Tracker', description: 'Environmental policy and regulatory tracking',
+    icon: Scale, ...SHOW_ALL,
+    sections: new Set(['policy-tracker', 'disclaimer']),
+  },
+  compliance: {
+    label: 'Compliance', description: 'Regulatory compliance and enforcement exposure',
+    icon: Shield, ...SHOW_ALL,
+    sections: new Set(['compliance', 'icis', 'sdwis', 'disclaimer']),
+  },
+  'water-quality': {
+    label: 'Water Quality', description: 'Facility water quality assessment',
+    icon: Droplets, ...SHOW_ALL,
+    sections: new Set(['map-grid', 'kpis', 'impact', 'disclaimer']),
+  },
+  'public-health': {
+    label: 'Public Health & Contaminants', description: 'Emerging contaminants and public health',
+    icon: AlertTriangle, ...SHOW_ALL,
+    sections: new Set(['contaminants-tracker', 'disclaimer']),
+  },
+  'water-stewardship': {
+    label: 'Water Stewardship', description: 'Corporate water stewardship tracking',
+    icon: Droplets, ...SHOW_ALL,
+    sections: new Set(['water-stewardship-panel', 'sustainability', 'impact', 'disclaimer']),
+  },
+  'facility-operations': {
+    label: 'Facility Operations', description: 'Facility-level water operations tracking',
+    icon: Building2, ...SHOW_ALL,
+    sections: new Set(['facility-operations-panel', 'map-grid', 'kpis', 'disclaimer']),
+  },
+  infrastructure: {
+    label: 'Infrastructure', description: 'Water infrastructure and groundwater risk',
+    icon: Building2, ...SHOW_ALL,
+    sections: new Set(['groundwater', 'map-grid', 'disclaimer']),
+  },
+  monitoring: {
+    label: 'Monitoring', description: 'Environmental monitoring network',
+    icon: Activity, ...SHOW_ALL,
+    sections: new Set(['map-grid', 'kpis', 'impact', 'disclaimer']),
+  },
+  'disaster-emergency': {
+    label: 'Disaster & Emergency', description: 'Environmental emergency response',
+    icon: AlertTriangle, ...SHOW_ALL,
+    sections: new Set(['disaster-emergency-panel', 'disclaimer']),
+  },
+  'esg-reporting': {
+    label: 'ESG Reporting', description: 'ESG framework reporting and disclosure readiness',
+    icon: FileText, ...SHOW_ALL,
+    sections: new Set(['disclosure', 'shareholder', 'benchmark', 'esg-reporting-panel', 'disclaimer']),
+  },
+  scorecard: {
+    label: 'Scorecard', description: 'ESG performance scorecard',
+    icon: BarChart3, ...SHOW_ALL,
+    sections: new Set(['scorecard-kpis', 'scorecard-grades', 'disclaimer']),
+  },
+  reports: {
+    label: 'Reports', description: 'Sustainability reports and data exports',
+    icon: FileText, ...SHOW_ALL,
+    sections: new Set(['reports-hub', 'disclaimer']),
+  },
+  'supply-chain-risk': {
+    label: 'Supply Chain Risk', description: 'Supply chain water risk assessment',
+    icon: Link2, ...SHOW_ALL,
+    sections: new Set(['supplychain', 'economic', 'supply-chain-risk-panel', 'disclaimer']),
+  },
+  funding: {
+    label: 'Funding & Grants', description: 'Sustainability funding opportunities',
+    icon: DollarSign, ...SHOW_ALL,
+    sections: new Set(['grants', 'disclaimer']),
   },
 };
 
@@ -388,7 +460,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
   const router = useRouter();
 
   // ── View Lens ──
-  const [viewLens, setViewLens] = useLensParam<ESGLens>('overview');
+  const [viewLens, setViewLens] = useLensParam<ViewLens>('overview');
   const lens = LENS_CONFIG[viewLens];
   const [showLensDropdown, setShowLensDropdown] = useState(false);
   const [showAccountPanel, setShowAccountPanel] = useState(false);
@@ -733,7 +805,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
               </button>
               {showLensDropdown && (
                 <div className="absolute right-0 top-full mt-1 w-72 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
-                  {(Object.entries(LENS_CONFIG) as [ESGLens, LensConfig][]).map(([id, cfg]) => (
+                  {(Object.entries(LENS_CONFIG) as [ViewLens, LensConfig][]).map(([id, cfg]) => (
                     <button
                       key={id}
                       onClick={() => { setViewLens(id); setShowLensDropdown(false); }}
@@ -856,7 +928,12 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
           return (<>
           <div className={`space-y-4 ${isEditMode ? 'pl-12' : ''}`}>
 
-        {sections.filter(s => s.visible || isEditMode).map(section => {
+        {sections.filter(s => {
+          if (isEditMode) return true;
+          if (!s.visible) return false;
+          if (s.lensControlled && lens.sections) return lens.sections.has(s.id);
+          return true;
+        }).map(section => {
           const DS = (children: React.ReactNode) => (
             <DraggableSection key={section.id} id={section.id} label={section.label}
               isEditMode={isEditMode} isVisible={section.visible} onToggleVisibility={onToggleVisibility}>
@@ -2179,6 +2256,46 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
           </CardContent>
         </Card>
         ) : null);
+
+            // ── Shared panels ──
+            case 'resolution-planner': return DS(<ResolutionPlanner userRole="corporate" scopeContext={{ scope: 'national', data: { totalStates: 50, totalWaterbodies: 0, totalImpaired: 0, averageScore: 0, highAlertStates: 0, topCauses: [], worstStates: [] } }} />);
+            case 'policy-tracker': return DS(<PolicyTracker />);
+            case 'contaminants-tracker': return DS(<EmergingContaminantsTracker role="corporate" />);
+            case 'icis': return DS(<ICISCompliancePanel state="" compactMode={false} />);
+            case 'sdwis': return DS(<SDWISCompliancePanel state="" compactMode={false} />);
+            case 'disaster-emergency-panel': return DS(<DisasterEmergencyPanel selectedState="" stateRollup={[]} />);
+            case 'scorecard-kpis': return DS(
+              <Card><CardHeader><CardTitle>ESG Scorecard</CardTitle><CardDescription>Key sustainability performance indicators</CardDescription></CardHeader>
+              <CardContent><div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[{ label: 'Water Stewardship', value: 'B+', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' },
+                  { label: 'Compliance Rate', value: '97%', color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
+                  { label: 'Disclosure Score', value: '82/100', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
+                  { label: 'Supply Chain Risk', value: 'Low', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' }
+                ].map(k => <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}><div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div><div className={`text-2xl font-bold ${k.color} mt-1`}>{k.value}</div></div>)}
+              </div></CardContent></Card>
+            );
+            case 'scorecard-grades': return DS(
+              <Card><CardHeader><CardTitle>ESG Program Grades</CardTitle></CardHeader>
+              <CardContent><div className="grid grid-cols-3 gap-3">
+                {[{ area: 'Environmental', grade: 'A-' }, { area: 'Social', grade: 'B+' }, { area: 'Governance', grade: 'A' }].map(g =>
+                  <div key={g.area} className="text-center p-4 border rounded-lg"><div className="text-3xl font-bold text-emerald-600">{g.grade}</div><div className="text-xs text-slate-500 mt-1">{g.area}</div></div>
+                )}
+              </div></CardContent></Card>
+            );
+            case 'reports-hub': return DS(
+              <Card><CardHeader><CardTitle>Sustainability Reports</CardTitle><CardDescription>Generated ESG reports and disclosures</CardDescription></CardHeader>
+              <CardContent><div className="space-y-2">
+                {['Annual Sustainability Report', 'CDP Water Security Response', 'GRI Disclosure Index', 'TCFD Climate Report'].map(r =>
+                  <div key={r} className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50"><span className="text-sm text-slate-700">{r}</span><Badge variant="outline" className="text-[10px]">Generate</Badge></div>
+                )}
+              </div></CardContent></Card>
+            );
+
+            // ── ESG exclusive panels ──
+            case 'water-stewardship-panel': return DS(<WaterStewardshipPanel stateAbbr="" />);
+            case 'facility-operations-panel': return DS(<FacilityOperationsPanel stateAbbr="" />);
+            case 'esg-reporting-panel': return DS(<ESGReportingPanel stateAbbr="" />);
+            case 'supply-chain-risk-panel': return DS(<SupplyChainRiskPanel stateAbbr="" />);
 
             case 'disclaimer': return DS(
               <PlatformDisclaimer />

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useLensParam } from '@/lib/useLensParam';
 import Image from 'next/image';
 import HeroBanner from './HeroBanner';
 import { getStatesGeoJSON, geoToAbbr, STATE_GEO_LEAFLET, FIPS_TO_ABBR as _FIPS, STATE_NAMES as _SN } from '@/lib/mapUtils';
@@ -28,6 +29,12 @@ import { WaterQualityChallenges } from '@/components/WaterQualityChallenges';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import { exportK12FieldReport } from '@/components/PearlExports';
+import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
+import { EmergingContaminantsTracker } from '@/components/EmergingContaminantsTracker';
+import ResolutionPlanner from '@/components/ResolutionPlanner';
+import { OutdoorClassroomPanel } from '@/components/OutdoorClassroomPanel';
+import { DrinkingWaterSafetyPanel } from '@/components/DrinkingWaterSafetyPanel';
+import { StudentMonitoringPanel } from '@/components/StudentMonitoringPanel';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import dynamic from 'next/dynamic';
@@ -72,6 +79,43 @@ type Props = {
   isTeacher?: boolean;
   onSelectRegion?: (regionId: string) => void;
   onToggleDevMode?: () => void;
+};
+
+// ─── Lenses (12-view architecture) ──────────────────────────────────────────
+
+type ViewLens = 'overview' | 'briefing' | 'planner' | 'trends' | 'compliance' |
+  'water-quality' | 'public-health' | 'outdoor-classroom' | 'student-monitoring' |
+  'drinking-water-safety' | 'reports' | 'funding';
+
+const LENS_CONFIG: Record<ViewLens, {
+  label: string;
+  description: string;
+  sections: Set<string> | null;
+}> = {
+  overview:    { label: 'Overview',    description: 'Student water quality dashboard',
+    sections: new Set(['wildlife', 'regprofile', 'map-grid', 'top10', 'goodbye', 'disclaimer']) },
+  briefing:    { label: 'AI Briefing', description: 'AI-generated water quality briefing for students',
+    sections: new Set(['insights', 'alertfeed', 'disclaimer']) },
+  planner:     { label: 'Resolution Planner', description: 'Student-friendly resolution planning',
+    sections: new Set(['resolution-planner', 'disclaimer']) },
+  trends:      { label: 'Trends & Projections', description: 'Water quality trends students can explore',
+    sections: new Set(['trends-dashboard', 'disclaimer']) },
+  compliance:  { label: 'Compliance', description: 'School drinking water compliance',
+    sections: new Set(['sdwis', 'disclaimer']) },
+  'water-quality': { label: 'Water Quality', description: 'Explore water quality in your watershed',
+    sections: new Set(['regprofile', 'map-grid', 'detail', 'top10', 'disclaimer']) },
+  'public-health': { label: 'Public Health & Contaminants', description: 'Learn about water contaminants',
+    sections: new Set(['contaminants-tracker', 'disclaimer']) },
+  'outdoor-classroom': { label: 'Outdoor Classroom', description: 'Outdoor learning and nature exploration',
+    sections: new Set(['outdoor-classroom-panel', 'wildlife', 'disclaimer']) },
+  'student-monitoring': { label: 'Student Monitoring', description: 'Student water quality monitoring tools',
+    sections: new Set(['learning', 'projects', 'fieldreport', 'student-monitoring-panel', 'disclaimer']) },
+  'drinking-water-safety': { label: 'Drinking Water Safety', description: 'School drinking water safety testing',
+    sections: new Set(['drinking-water-safety-panel', 'sdwis', 'disclaimer']) },
+  reports:     { label: 'Reports', description: 'Educational reports and teacher resources',
+    sections: new Set(['eduhub', 'teacher', 'reports-hub', 'disclaimer']) },
+  funding:     { label: 'Funding & Grants', description: 'K-12 education grants for water science',
+    sections: new Set(['grants', 'disclaimer']) },
 };
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -212,6 +256,10 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
   const agency = STATE_AGENCIES[stateAbbr] || STATE_AUTHORITIES[stateAbbr] || null;
   const { user, logout } = useAuth();
   const router = useRouter();
+
+  // ── Lens switching ──
+  const [activeLens] = useLensParam<ViewLens>('overview');
+  const lens = LENS_CONFIG[activeLens] || LENS_CONFIG.overview;
 
   // ── K12-specific state ──
   const [isTeacher, setIsTeacher] = useState(isTeacherProp);
@@ -694,7 +742,12 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
           return (<>
         <div className={`space-y-6 ${isEditMode ? 'pl-12' : ''}`}>
 
-        {sections.filter(s => s.visible || isEditMode).map(section => {
+        {sections.filter(s => {
+          if (isEditMode) return true;
+          if (!s.visible) return false;
+          if (s.lensControlled && lens.sections) return lens.sections.has(s.id);
+          return true;
+        }).map(section => {
           const DS = (children: React.ReactNode) => (
             <DraggableSection key={section.id} id={section.id} label={section.label}
               isEditMode={isEditMode} isVisible={section.visible} onToggleVisibility={onToggleVisibility}>
@@ -2943,6 +2996,34 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                 </div>
               ) : null
             );
+
+            // ── Shared panels ──
+            case 'resolution-planner': return DS(<ResolutionPlanner userRole="k12" scopeContext={{ scope: 'state', data: { abbr: stateAbbr, name: STATE_NAMES[stateAbbr] || stateAbbr, epaRegion: 0, totalWaterbodies: regionData.length, assessed: regionData.length, impaired: regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length, score: Math.round(regionData.reduce((a, r) => a + (r.alertLevel === 'none' ? 95 : r.alertLevel === 'low' ? 75 : r.alertLevel === 'medium' ? 50 : 25), 0) / Math.max(regionData.length, 1)), grade: 'B', cat5: 0, cat4a: 0, cat4b: 0, cat4c: 0, topCauses: [] } }} />);
+            case 'contaminants-tracker': return DS(<EmergingContaminantsTracker role="k12" selectedState={stateAbbr} />);
+            case 'sdwis': return DS(<SDWISCompliancePanel state={stateAbbr} compactMode={false} />);
+            case 'trends-dashboard': return DS(
+              <Card><CardHeader><CardTitle>Water Quality Trends</CardTitle><CardDescription>See how water quality is changing over time in your watershed</CardDescription></CardHeader>
+              <CardContent><div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[{ label: 'Water Quality', value: '↑ 3%', sub: 'improving this year', color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
+                  { label: 'Species Count', value: '↑ 12', sub: 'new species documented', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
+                  { label: 'Student Reports', value: '47', sub: 'field reports submitted', color: 'text-violet-600', bg: 'bg-violet-50 border-violet-200' },
+                  { label: 'Clean Streams', value: '68%', sub: 'meeting water quality goals', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' }
+                ].map(t => <div key={t.label} className={`rounded-xl border p-4 ${t.bg}`}><div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{t.label}</div><div className={`text-2xl font-bold ${t.color} mt-1`}>{t.value}</div><div className="text-[10px] text-slate-500 mt-1">{t.sub}</div></div>)}
+              </div></CardContent></Card>
+            );
+            case 'reports-hub': return DS(
+              <Card><CardHeader><CardTitle>Student Reports</CardTitle><CardDescription>Download and share your water quality reports</CardDescription></CardHeader>
+              <CardContent><div className="space-y-2">
+                {['My Field Investigation Report', 'Class Water Quality Summary', 'Science Fair Data Report', 'Watershed Health Report Card'].map(r =>
+                  <div key={r} className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50"><span className="text-sm text-slate-700">{r}</span><Badge variant="outline" className="text-[10px]">Generate</Badge></div>
+                )}
+              </div></CardContent></Card>
+            );
+
+            // ── K-12 exclusive panels ──
+            case 'outdoor-classroom-panel': return DS(<OutdoorClassroomPanel stateAbbr={stateAbbr} />);
+            case 'student-monitoring-panel': return DS(<StudentMonitoringPanel stateAbbr={stateAbbr} />);
+            case 'drinking-water-safety-panel': return DS(<DrinkingWaterSafetyPanel stateAbbr={stateAbbr} />);
 
             case 'disclaimer': return DS(
               <PlatformDisclaimer />
