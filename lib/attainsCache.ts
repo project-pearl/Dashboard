@@ -36,6 +36,7 @@ export interface CachedWaterbody {
   causeCount: number;
   lat?: number | null;
   lon?: number | null;
+  waterType?: string;
 }
 
 export interface StateSummary {
@@ -51,6 +52,7 @@ export interface StateSummary {
   tmdlCompleted: number; // Cat 4a — impaired, TMDL done
   tmdlAlternative: number; // Cat 4b — other controls
   topCauses: string[]; // top 5 causes statewide
+  waterTypeCounts?: Record<string, number>; // per-state breakdown by water type code
   waterbodies: CachedWaterbody[];
 }
 
@@ -552,6 +554,7 @@ async function fetchViaGIS(stateCode: string): Promise<StateSummary | null> {
     tmdlCompleted,
     tmdlAlternative,
     topCauses,
+    waterTypeCounts: {}, // GIS MapServer doesn't expose water type
     waterbodies,
   };
 }
@@ -617,13 +620,15 @@ async function fetchAttainsState(
         tmdlCompleted: 0,
         tmdlAlternative: 0,
         topCauses: [],
+        waterTypeCounts: {},
         waterbodies: [],
       };
     }
 
-    // AU name/coord lookup — per organization to avoid truncation
+    // AU name/coord/waterType lookup — per organization to avoid truncation
     const nameMap = new Map<string, string>();
     const locMap = new Map<string, { lat: number; lon: number }>();
+    const waterTypeMap = new Map<string, string>();
 
     try {
       const orgIds = Array.from(
@@ -667,11 +672,18 @@ async function fetchAttainsState(
             ) {
               locMap.set(uid, { lat: Number(lat), lon: Number(lon) });
             }
+
+            // Extract primary water type from waterTypes array
+            const waterTypes = unit?.waterTypes || [];
+            if (uid && waterTypes.length > 0) {
+              const wtCode = (waterTypes[0]?.waterTypeCode || "").trim();
+              if (wtCode) waterTypeMap.set(uid, wtCode);
+            }
           }
         }
       }
       console.log(
-        `[ATTAINS Cache] ${stateCode}: resolved ${nameMap.size} names, ${locMap.size} locations`
+        `[ATTAINS Cache] ${stateCode}: resolved ${nameMap.size} names, ${locMap.size} locations, ${waterTypeMap.size} waterTypes`
       );
     } catch (e: any) {
       console.warn(
@@ -760,6 +772,7 @@ async function fetchAttainsState(
       }
 
       const loc = locMap.get(auId);
+      const wt = waterTypeMap.get(auId);
       return {
         id: auId,
         name: auName,
@@ -770,6 +783,7 @@ async function fetchAttainsState(
         causeCount: causesSet.size,
         lat: loc?.lat ?? null,
         lon: loc?.lon ?? null,
+        waterType: wt || undefined,
       };
     });
 
@@ -796,6 +810,14 @@ async function fetchAttainsState(
       .slice(0, 5)
       .map(([name]) => name);
 
+    // Compute water type counts from all processed waterbodies
+    const waterTypeCounts: Record<string, number> = {};
+    for (const wb of processed) {
+      if (wb.waterType) {
+        waterTypeCounts[wb.waterType] = (waterTypeCounts[wb.waterType] || 0) + 1;
+      }
+    }
+
     return {
       state: stateCode,
       total: totalCount || data?.count || allAssessments.length,
@@ -809,6 +831,7 @@ async function fetchAttainsState(
       tmdlCompleted,
       tmdlAlternative,
       topCauses,
+      waterTypeCounts,
       waterbodies: stored,
     };
   } catch (e: any) {

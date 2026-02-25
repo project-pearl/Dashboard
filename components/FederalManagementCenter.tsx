@@ -879,6 +879,7 @@ export function FederalManagementCenter(props: Props) {
   // Keyed by state abbreviation → array of matched waterbody assessments
   const [attainsBulk, setAttainsBulk] = useState<Record<string, Array<{
     name: string; category: string; alertLevel: AlertLevel; causes: string[]; cycle: string;
+    waterType?: string;
   }>>>({});
   const [attainsBulkLoading, setAttainsBulkLoading] = useState<Set<string>>(new Set());
   const [attainsBulkLoaded, setAttainsBulkLoaded] = useState<Set<string>>(new Set());
@@ -1091,6 +1092,7 @@ export function FederalManagementCenter(props: Props) {
               alertLevel: (wb.alertLevel || 'none') as AlertLevel,
               causes: wb.causes || [],
               cycle: '',
+              waterType: wb.waterType || undefined,
             }));
             if (waterbodies.length > 0) {
               bulk[st] = waterbodies;
@@ -1813,6 +1815,30 @@ export function FederalManagementCenter(props: Props) {
     // TMDL gap: Cat 5 / total impaired
     const tmdlGapPct = totalImpaired > 0 ? Math.round((catCounts['5'] / totalImpaired) * 100) : 0;
 
+    // Water type breakdown — normalize codes to display labels
+    const rawWaterTypeCounts: Record<string, number> = {};
+    for (const assessments of Object.values(attainsBulk)) {
+      for (const a of assessments) {
+        if (a.waterType) {
+          rawWaterTypeCounts[a.waterType] = (rawWaterTypeCounts[a.waterType] || 0) + 1;
+        }
+      }
+    }
+    const WATER_TYPE_LABELS: Record<string, string> = {
+      'RIVER': 'Rivers & Streams', 'STREAM': 'Rivers & Streams', 'STREAM/CREEK': 'Rivers & Streams',
+      'LAKE, RESERVOIR AND POND': 'Lakes & Reservoirs', 'FRESHWATER POND': 'Lakes & Reservoirs',
+      'LAKE': 'Lakes & Reservoirs', 'RESERVOIR': 'Lakes & Reservoirs',
+      'ESTUARY': 'Estuaries',
+      'OCEAN': 'Coastal/Ocean', 'COASTAL': 'Coastal/Ocean', 'GREAT LAKES SHORELINE': 'Coastal/Ocean',
+      'WETLAND': 'Wetlands', 'WETLANDS, TIDAL': 'Wetlands', 'WETLANDS, FRESHWATER': 'Wetlands',
+      'WETLANDS': 'Wetlands',
+    };
+    const waterTypeCounts: Record<string, number> = {};
+    for (const [code, count] of Object.entries(rawWaterTypeCounts)) {
+      const label = WATER_TYPE_LABELS[code.toUpperCase()] || 'Other';
+      waterTypeCounts[label] = (waterTypeCounts[label] || 0) + count;
+    }
+
     return {
       catCounts,
       totalAssessed,
@@ -1827,6 +1853,7 @@ export function FederalManagementCenter(props: Props) {
       totalCauseInstances: Object.values(causeCounts).reduce((s, c) => s + c, 0),
       addressablePct: Object.values(causeCounts).reduce((s, c) => s + c, 0) > 0
         ? Math.round((addressableCount / Object.values(causeCounts).reduce((s, c) => s + c, 0)) * 100) : 0,
+      waterTypeCounts,
     };
   }, [attainsBulk]);
 
@@ -4922,6 +4949,20 @@ export function FederalManagementCenter(props: Props) {
                     <span className="pin-label ml-1.5">Watch / Impaired</span>
                   </div>
                 </div>
+                {/* Waterbody type breakdown */}
+                {Object.keys(attainsAggregation.waterTypeCounts).length > 0 && (
+                  <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 pt-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+                    {Object.entries(attainsAggregation.waterTypeCounts)
+                      .filter(([, count]) => count > 0)
+                      .sort((a, b) => b[1] - a[1])
+                      .map(([type, count]) => (
+                        <span key={type} className="inline-flex items-center gap-1">
+                          <span className="pin-stat-secondary text-xs">{count.toLocaleString()}</span>
+                          <span className="pin-label text-xs">{type}</span>
+                        </span>
+                      ))}
+                  </div>
+                )}
               </div>
 
               {/* Vertical divider (horizontal on mobile) */}
