@@ -29,6 +29,7 @@ import StateWaterbodyCard from '@/components/StateWaterbodyCard';
 import ResolutionPlanner, { type ScopeContext } from '@/components/ResolutionPlanner';
 import { EPA_REGIONS, getEpaRegionForState } from '@/lib/epa-regions';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
+import { useTheme } from '@/lib/useTheme';
 import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
 import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
@@ -1126,6 +1127,8 @@ export function FederalManagementCenter(props: Props) {
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const { isDark } = useTheme();
 
   const [selectedState, setSelectedState] = useState<string>('MD');
 
@@ -2252,18 +2255,31 @@ export function FederalManagementCenter(props: Props) {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-cyan-50">
-      <div className="mx-auto max-w-7xl p-4 space-y-6">
+    <div className="min-h-screen w-full relative" style={{ background: isDark
+      ? 'linear-gradient(135deg, #0B0F1A 0%, #0D1526 50%, #0B1420 100%)'
+      : 'linear-gradient(135deg, #EFF6FF 0%, #FFFFFF 50%, #ECFDF5 100%)' }}>
+      {/* Dark mode atmospheric glow */}
+      {isDark && (
+        <>
+          <div className="pointer-events-none fixed inset-0 z-0" style={{
+            background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(26,154,142,0.07) 0%, transparent 60%)',
+          }} />
+          <div className="pointer-events-none fixed inset-0 z-0" style={{
+            background: 'radial-gradient(ellipse 60% 40% at 80% 100%, rgba(184,115,51,0.04) 0%, transparent 50%)',
+          }} />
+        </>
+      )}
+      <div className="relative z-10 mx-auto max-w-7xl p-4 space-y-6">
 
         {/* Toast notification */}
         {toastMsg && (
           <div className="fixed top-4 right-4 z-50 max-w-sm animate-in fade-in slide-in-from-top-2">
-            <div className="bg-white border-2 border-blue-300 rounded-xl shadow-lg p-4 flex items-start gap-3">
-              <div className="text-blue-600 mt-0.5">ℹ️</div>
+            <div className="rounded-xl shadow-lg p-4 flex items-start gap-3" style={{ background: 'var(--bg-card)', border: '2px solid var(--accent-teal)', color: 'var(--text-primary)' }}>
+              <div style={{ color: 'var(--accent-teal)' }} className="mt-0.5">ℹ️</div>
               <div className="flex-1">
-                <div className="text-sm text-slate-700">{toastMsg}</div>
+                <div className="text-sm" style={{ color: 'var(--text-primary)' }}>{toastMsg}</div>
               </div>
-              <button onClick={() => setToastMsg(null)} className="text-slate-400 hover:text-slate-600 text-lg leading-none">×</button>
+              <button onClick={() => setToastMsg(null)} className="text-lg leading-none" style={{ color: 'var(--text-dim)' }}>×</button>
             </div>
           </div>
         )}
@@ -2310,10 +2326,10 @@ export function FederalManagementCenter(props: Props) {
           <Card id="section-usmap" className="lg:col-span-2">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>United States Monitoring Network</CardTitle>
+                <CardTitle style={{ color: 'var(--text-bright)' }}>United States Monitoring Network</CardTitle>
                 <BrandedPrintBtn sectionId="usmap" title="United States Monitoring Network" />
               </div>
-              <CardDescription>
+              <CardDescription style={{ color: 'var(--text-secondary)' }}>
                 Real state outlines. Colors reflect data based on selected overlay.
               </CardDescription>
             </CardHeader>
@@ -2322,17 +2338,22 @@ export function FederalManagementCenter(props: Props) {
               <div className="flex flex-wrap gap-2 pb-3">
                 {OVERLAYS.map((o) => {
                   const Icon = o.icon;
+                  const isActive = overlay === o.id;
                   return (
-                    <Button
+                    <button
                       key={o.id}
-                      variant={overlay === o.id ? 'default' : 'outline'}
-                      size="sm"
                       onClick={() => setOverlay(o.id)}
                       title={o.description}
+                      className="inline-flex items-center rounded-full px-3.5 py-1.5 text-xs font-medium transition-all"
+                      style={{
+                        background: isActive ? 'var(--pill-bg-active)' : 'var(--pill-bg)',
+                        color: isActive ? 'var(--pill-text-active)' : 'var(--pill-text)',
+                        border: `1px solid ${isActive ? 'var(--pill-border-active)' : 'var(--pill-border)'}`,
+                      }}
                     >
-                      <Icon className="h-4 w-4 mr-1" />
+                      <Icon className="h-3.5 w-3.5 mr-1.5" />
                       {o.label}
-                    </Button>
+                    </button>
                   );
                 })}
               </div>
@@ -2369,14 +2390,14 @@ export function FederalManagementCenter(props: Props) {
                   </div>
                   
                   {/* Legend */}
-                  <div className="flex flex-wrap gap-2 p-3 text-xs bg-slate-50 border-t border-slate-200">
+                  <div className="flex flex-wrap gap-2 p-3 text-xs border-t" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}>
                     {overlay === 'hotspots' && (
                       <>
-                        <span className="text-slate-500 font-medium self-center mr-1">Impairment Risk:</span>
-                        <Badge variant="secondary" className="bg-gray-200 text-gray-700">Healthy</Badge>
-                        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">Watch</Badge>
-                        <Badge className="bg-orange-500 text-white">Impaired</Badge>
-                        <Badge variant="destructive">Severe</Badge>
+                        <span className="font-medium self-center mr-1" style={{ color: 'var(--text-secondary)' }}>Impairment Risk:</span>
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5" style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', background: 'var(--status-healthy-bg)', color: 'var(--status-healthy)' }}>Healthy</span>
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5" style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', background: 'var(--status-watch-bg)', color: 'var(--status-watch)' }}>Watch</span>
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5" style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', background: 'var(--status-impaired-bg)', color: 'var(--status-impaired)' }}>Impaired</span>
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5" style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', background: 'var(--status-severe-bg)', color: 'var(--status-severe)' }}>Severe</span>
                       </>
                     )}
                     {overlay === 'ms4' && (
@@ -2452,7 +2473,10 @@ export function FederalManagementCenter(props: Props) {
                     <select
                       value={selectedState}
                       onChange={(e) => { setSelectedState(e.target.value); setWaterbodySearch(''); setWaterbodyFilter('all'); setShowAllWaterbodies(false); }}
-                      className="px-2 py-1 rounded-md border border-slate-300 text-sm font-semibold bg-white cursor-pointer hover:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-300"
+                      className="px-2 py-1 rounded-md text-sm font-semibold cursor-pointer focus:outline-none"
+                      style={{ background: 'var(--bg-input)', border: '1px solid var(--border-default)', color: 'var(--text-primary)' }}
+                      onFocus={e => { e.currentTarget.style.borderColor = 'var(--accent-teal)'; e.currentTarget.style.boxShadow = '0 0 0 2px var(--accent-teal-glow)'; }}
+                      onBlur={e => { e.currentTarget.style.borderColor = 'var(--border-default)'; e.currentTarget.style.boxShadow = 'none'; }}
                     >
                       {Object.entries(STATE_ABBR_TO_NAME).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
                         <option key={abbr} value={abbr}>{name} ({abbr})</option>
@@ -2534,21 +2558,21 @@ export function FederalManagementCenter(props: Props) {
                 const severeCount = selectedStateRegions.filter(r => r.status === 'assessed' && r.alertLevel === 'high').length;
                 return (
                   <div className="grid grid-cols-4 gap-1.5 text-center">
-                    <div className="rounded-lg bg-slate-50 p-2">
-                      <div className="text-lg font-bold text-slate-800">{selectedStateRegions.length}</div>
-                      <div className="text-[10px] text-slate-500">Total</div>
+                    <div className="rounded-lg p-2" style={{ background: 'var(--bg-surface)' }}>
+                      <div className="text-lg font-bold" style={{ color: 'var(--text-bright)' }}>{selectedStateRegions.length}</div>
+                      <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-dim)' }}>Total</div>
                     </div>
-                    <div className="rounded-lg bg-green-50 p-2">
-                      <div className="text-lg font-bold text-green-700">{assessedCount}</div>
-                      <div className="text-[10px] text-slate-500">Assessed</div>
+                    <div className="rounded-lg p-2" style={{ background: 'var(--status-healthy-bg)' }}>
+                      <div className="text-lg font-bold" style={{ color: 'var(--status-healthy)' }}>{assessedCount}</div>
+                      <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-dim)' }}>Assessed</div>
                     </div>
-                    <div className="rounded-lg bg-blue-50 p-2">
-                      <div className="text-lg font-bold text-blue-600">{monitoredCount}</div>
-                      <div className="text-[10px] text-slate-500">Monitored</div>
+                    <div className="rounded-lg p-2" style={{ background: 'var(--accent-teal-glow)' }}>
+                      <div className="text-lg font-bold" style={{ color: 'var(--accent-teal)' }}>{monitoredCount}</div>
+                      <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-dim)' }}>Monitored</div>
                     </div>
-                    <div className="rounded-lg bg-slate-50 p-2">
-                      <div className="text-lg font-bold text-slate-400">{unmonitoredCount}</div>
-                      <div className="text-[10px] text-slate-500">No Data</div>
+                    <div className="rounded-lg p-2" style={{ background: 'var(--bg-surface)' }}>
+                      <div className="text-lg font-bold" style={{ color: 'var(--text-dim)' }}>{unmonitoredCount}</div>
+                      <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-dim)' }}>No Data</div>
                     </div>
                   </div>
                 );
@@ -2557,19 +2581,27 @@ export function FederalManagementCenter(props: Props) {
               {/* Waterbody Filters */}
               <div className="flex flex-wrap gap-1.5 mb-2">
                 {[
-                  { key: 'all' as const, label: 'All', color: 'bg-slate-100 text-slate-700 border-slate-200' },
-                  { key: 'impaired' as const, label: 'Impaired', color: 'bg-orange-100 text-orange-700 border-orange-200' },
-                  { key: 'severe' as const, label: 'Severe', color: 'bg-red-100 text-red-700 border-red-200' },
-                  { key: 'monitored' as const, label: 'Monitored', color: 'bg-blue-100 text-blue-700 border-blue-200' },
-                ].map((f) => (
+                  { key: 'all' as const, label: 'All', statusVar: '' },
+                  { key: 'impaired' as const, label: 'Impaired', statusVar: 'impaired' },
+                  { key: 'severe' as const, label: 'Severe', statusVar: 'severe' },
+                  { key: 'monitored' as const, label: 'Monitored', statusVar: '' },
+                ].map((f) => {
+                  const isActive = waterbodyFilter === f.key;
+                  return (
                   <button
                     key={f.key}
                     onClick={() => { setWaterbodyFilter(f.key); setShowAllWaterbodies(false); }}
-                    className={`px-2.5 py-1 text-[11px] font-medium rounded-full border transition-all ${
-                      waterbodyFilter === f.key
-                        ? f.color + ' ring-1 ring-offset-1 shadow-sm'
-                        : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'
-                    }`}
+                    className="rounded-full transition-all"
+                    style={{
+                      fontSize: '10px',
+                      fontWeight: 600,
+                      textTransform: 'uppercase' as const,
+                      letterSpacing: '0.04em',
+                      padding: '2px 8px',
+                      background: isActive && f.statusVar ? `var(--status-${f.statusVar}-bg)` : isActive ? 'var(--pill-bg-active)' : 'var(--pill-bg)',
+                      color: isActive && f.statusVar ? `var(--status-${f.statusVar})` : isActive ? 'var(--pill-text-active)' : 'var(--pill-text)',
+                      border: `1px solid ${isActive && f.statusVar ? `var(--status-${f.statusVar})` : isActive ? 'var(--pill-border-active)' : 'var(--pill-border)'}`,
+                    }}
                   >
                     {f.label}
                     {f.key !== 'all' && (() => {
@@ -2581,15 +2613,16 @@ export function FederalManagementCenter(props: Props) {
                       return count > 0 ? ` (${count})` : '';
                     })()}
                   </button>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Waterbody list — height matched to US map (480px) */}
               <div className="space-y-1.5 max-h-[480px] overflow-y-auto">
                 {selectedStateRegions.length === 0 ? (
-                  <div className="text-sm text-slate-500 py-4 text-center">
+                  <div className="text-sm py-4 text-center" style={{ color: 'var(--text-secondary)' }}>
                     No monitored waterbodies in this state yet.
-                    <div className="text-xs mt-1 text-slate-400">Click a colored state on the map to explore.</div>
+                    <div className="text-xs mt-1" style={{ color: 'var(--text-dim)' }}>Click a colored state on the map to explore.</div>
                   </div>
                 ) : (
                   <>
@@ -2600,9 +2633,12 @@ export function FederalManagementCenter(props: Props) {
                           placeholder="Search waterbodies..."
                           value={waterbodySearch}
                           onChange={(e) => { setWaterbodySearch(e.target.value); setShowAllWaterbodies(false); }}
-                          className="w-full px-2 py-1.5 text-sm border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-300"
+                          className="w-full px-2 py-1.5 text-sm rounded-md focus:outline-none"
+                          style={{ background: 'var(--bg-input)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', boxShadow: 'none' }}
+                          onFocus={e => { e.currentTarget.style.borderColor = 'var(--accent-teal)'; e.currentTarget.style.boxShadow = '0 0 0 2px var(--accent-teal-glow)'; }}
+                          onBlur={e => { e.currentTarget.style.borderColor = 'var(--border-default)'; e.currentTarget.style.boxShadow = 'none'; }}
                         />
-                        <div className="text-[10px] text-slate-400 mt-1">
+                        <div className="text-[10px] mt-1" style={{ color: 'var(--text-dim)' }}>
                           {filteredStateRegions.length} of {selectedStateRegions.length} waterbodies
                         </div>
                       </div>
@@ -2610,37 +2646,46 @@ export function FederalManagementCenter(props: Props) {
                     {displayedRegions.map((r) => {
                     const isActive = r.id === activeDetailId;
                     return (
-                    <div key={r.id} className={`flex items-center justify-between rounded-md border p-2 cursor-pointer transition-colors ${
-                      isActive ? 'border-blue-400 bg-blue-50 ring-1 ring-blue-200' : 'border-slate-200 hover:bg-slate-50'
-                    }`}
+                    <div key={r.id} className="flex items-center justify-between p-2 cursor-pointer transition-colors"
+                      style={{
+                        borderRadius: '10px',
+                        border: `1px solid ${isActive ? 'var(--accent-teal)' : 'var(--border-subtle)'}`,
+                        background: isActive ? 'var(--accent-teal-glow)' : 'transparent',
+                        boxShadow: isActive ? '0 0 0 1px var(--accent-teal)' : 'none',
+                      }}
+                      onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--bg-hover)'; }}
+                      onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
                       onClick={() => handleRegionClick(r.id)}>
                       <div className="min-w-0 flex-1">
-                        <div className={`truncate text-sm font-medium ${isActive ? 'text-blue-900' : ''}`}>{r.name}</div>
-                        <div className="flex items-center gap-2 text-xs text-slate-500">
+                        <div className="truncate text-sm font-medium" style={{ color: isActive ? 'var(--accent-teal)' : 'var(--text-primary)' }}>{r.name}</div>
+                        <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-dim)' }}>
                           {r.status === 'assessed' ? (
-                            <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
-                              r.alertLevel === 'high' ? 'bg-red-100 text-red-700' :
-                              r.alertLevel === 'medium' ? 'bg-orange-100 text-orange-700' :
-                              r.alertLevel === 'low' ? 'bg-yellow-100 text-yellow-700' :
-                              'bg-green-100 text-green-700'
-                            }`}>
+                            <span className="inline-flex items-center gap-1 rounded-full" style={{
+                              padding: '2px 8px',
+                              fontSize: '10px',
+                              fontWeight: 600,
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.04em',
+                              background: r.alertLevel === 'high' ? 'var(--status-severe-bg)' : r.alertLevel === 'medium' ? 'var(--status-impaired-bg)' : r.alertLevel === 'low' ? 'var(--status-watch-bg)' : 'var(--status-healthy-bg)',
+                              color: r.alertLevel === 'high' ? 'var(--status-severe)' : r.alertLevel === 'medium' ? 'var(--status-impaired)' : r.alertLevel === 'low' ? 'var(--status-watch)' : 'var(--status-healthy)',
+                            }}>
                               {r.alertLevel === 'high' ? 'Severe' : r.alertLevel === 'medium' ? 'Impaired' : r.alertLevel === 'low' ? 'Watch' : 'Healthy'}
                             </span>
                           ) : r.status === 'monitored' ? (
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-600">
+                            <span className="inline-flex items-center gap-1 rounded-full" style={{ padding: '2px 8px', fontSize: '10px', fontWeight: 600, letterSpacing: '0.04em', background: 'var(--accent-teal-glow)', color: 'var(--accent-teal)' }}>
                               ◐ {r.dataSourceCount} source{r.dataSourceCount !== 1 ? 's' : ''}
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-500">
+                            <span className="inline-flex items-center gap-1 rounded-full" style={{ padding: '2px 8px', fontSize: '10px', fontWeight: 600, letterSpacing: '0.04em', background: 'var(--bg-hover)', color: 'var(--text-dim)' }}>
                               — Unmonitored
                             </span>
                           )}
-                          {r.activeAlerts > 0 && <span>{r.activeAlerts} alert{r.activeAlerts !== 1 ? 's' : ''}</span>}
+                          {r.activeAlerts > 0 && <span style={{ color: 'var(--text-dim)' }}>{r.activeAlerts} alert{r.activeAlerts !== 1 ? 's' : ''}</span>}
                           {r.status === 'assessed' && (
-                            <span className="text-[9px] text-slate-400">EPA ATTAINS</span>
+                            <span style={{ fontSize: '9px', color: 'var(--text-dim)' }}>EPA ATTAINS</span>
                           )}
                           {r.status === 'monitored' && r.dataSourceCount > 0 && (
-                            <span className="text-[9px] text-slate-400">USGS/WQP</span>
+                            <span style={{ fontSize: '9px', color: 'var(--text-dim)' }}>USGS/WQP</span>
                           )}
                         </div>
                       </div>
@@ -2653,7 +2698,10 @@ export function FederalManagementCenter(props: Props) {
                   {filteredStateRegions.length > DISPLAY_LIMIT && !showAllWaterbodies && (
                     <button
                       onClick={() => setShowAllWaterbodies(true)}
-                      className="w-full py-2 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
+                      className="w-full py-2 text-xs rounded-md transition-colors"
+                      style={{ color: 'var(--accent-teal)' }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
                     >
                       Show all {filteredStateRegions.length} waterbodies
                     </button>
@@ -2681,56 +2729,58 @@ export function FederalManagementCenter(props: Props) {
             <Card>
               <CardContent className="py-3 px-4">
                 <div className="flex items-center gap-2 mb-2.5">
-                  <Building2 size={15} className="text-orange-600" />
-                  <span className="text-sm font-semibold text-slate-700">{STATE_ABBR_TO_NAME[selectedState]} — MS4 & Regulatory Profile</span>
+                  <Building2 size={15} style={{ color: 'var(--accent-copper)' }} />
+                  <span className="text-sm font-semibold" style={{ color: 'var(--text-bright)' }}>{STATE_ABBR_TO_NAME[selectedState]} — MS4 & Regulatory Profile</span>
                 </div>
                 <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 text-xs">
                   {ms4 && (
                     <>
-                      <div className="rounded-lg bg-orange-50 border border-orange-100 p-2.5 text-center">
-                        <div className="text-2xl font-black text-orange-700">{total}</div>
-                        <div className="text-[10px] text-orange-600 font-medium">MS4 Total</div>
+                      <div className="rounded-lg p-2.5 text-center" style={{ background: 'var(--status-impaired-bg)', border: '1px solid var(--border-subtle)' }}>
+                        <div className="text-2xl font-black" style={{ color: 'var(--status-impaired)' }}>{total}</div>
+                        <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--status-impaired)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>MS4 Total</div>
                       </div>
-                      <div className="rounded-lg bg-orange-50/50 border border-orange-100 p-2.5 text-center">
-                        <div className="text-xl font-bold text-orange-800">{ms4.phase1}</div>
-                        <div className="text-[10px] text-orange-500">Phase I (≥100k)</div>
+                      <div className="rounded-lg p-2.5 text-center" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
+                        <div className="text-xl font-bold" style={{ color: 'var(--text-bright)' }}>{ms4.phase1}</div>
+                        <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Phase I (≥100k)</div>
                       </div>
-                      <div className="rounded-lg bg-amber-50 border border-amber-100 p-2.5 text-center">
-                        <div className="text-xl font-bold text-amber-700">{ms4.phase2}</div>
-                        <div className="text-[10px] text-amber-500">Phase II (small)</div>
+                      <div className="rounded-lg p-2.5 text-center" style={{ background: 'var(--status-watch-bg)', border: '1px solid var(--border-subtle)' }}>
+                        <div className="text-xl font-bold" style={{ color: 'var(--status-watch)' }}>{ms4.phase2}</div>
+                        <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Phase II (small)</div>
                       </div>
                     </>
                   )}
-                  <div className="rounded-lg bg-slate-50 border border-slate-200 p-2.5 text-center">
-                    <div className="text-sm font-bold text-slate-700 leading-tight">{STATE_AGENCIES[selectedState]?.ms4Program || 'NPDES MS4'}</div>
-                    <div className="text-[10px] text-slate-400">Permit Program</div>
+                  <div className="rounded-lg p-2.5 text-center" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
+                    <div className="text-sm font-bold leading-tight" style={{ color: 'var(--text-primary)' }}>{STATE_AGENCIES[selectedState]?.ms4Program || 'NPDES MS4'}</div>
+                    <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Permit Program</div>
                   </div>
                   {ov && (
                     <>
-                      <div className="rounded-lg bg-purple-50 border border-purple-100 p-2.5 text-center">
-                        <div className="text-xl font-bold text-purple-700">{ov.ej}<span className="text-xs font-normal text-purple-400">/100</span></div>
-                        <div className="text-[10px] text-purple-500">EJ Vulnerability</div>
+                      <div className="rounded-lg p-2.5 text-center" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
+                        <div className="text-xl font-bold" style={{ color: 'var(--accent-copper)' }}>{ov.ej}<span className="text-xs font-normal" style={{ color: 'var(--text-dim)' }}>/100</span></div>
+                        <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>EJ Vulnerability</div>
                       </div>
-                      <div className="rounded-lg bg-blue-50 border border-blue-100 p-2.5 text-center">
-                        <div className="text-sm font-bold text-blue-700 leading-tight">
+                      <div className="rounded-lg p-2.5 text-center" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
+                        <div className="text-sm font-bold leading-tight" style={{ color: 'var(--accent-teal)' }}>
                           {(() => { const v = ov.economy ?? 0; return v >= 80 ? 'Very High' : v >= 60 ? 'High' : v >= 40 ? 'Moderate' : 'Low'; })()}
                         </div>
-                        <div className="text-[10px] text-blue-400">Compliance Burden</div>
+                        <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Compliance Burden</div>
                       </div>
-                      <div className="rounded-lg border p-2.5 text-center" style={{
-                        backgroundColor: (ov.trend ?? 0) > 5 ? '#f0fdf4' : (ov.trend ?? 0) < -5 ? '#fef2f2' : '#f8fafc',
-                        borderColor: (ov.trend ?? 0) > 5 ? '#bbf7d0' : (ov.trend ?? 0) < -5 ? '#fecaca' : '#e2e8f0',
+                      <div className="rounded-lg p-2.5 text-center" style={{
+                        background: (ov.trend ?? 0) > 5 ? 'var(--status-healthy-bg)' : (ov.trend ?? 0) < -5 ? 'var(--status-severe-bg)' : 'var(--bg-surface)',
+                        border: '1px solid var(--border-subtle)',
                       }}>
-                        <div className={`text-sm font-bold ${(ov.trend ?? 0) > 5 ? 'text-green-700' : (ov.trend ?? 0) < -5 ? 'text-red-700' : 'text-slate-500'}`}>
+                        <div className="text-sm font-bold" style={{
+                          color: (ov.trend ?? 0) > 5 ? 'var(--status-healthy)' : (ov.trend ?? 0) < -5 ? 'var(--status-severe)' : 'var(--text-dim)',
+                        }}>
                           {(() => { const t = ov.trend ?? 0; return t > 5 ? '↑ Improving' : t < -5 ? '↓ Worsening' : '— Stable'; })()}
                         </div>
-                        <div className="text-[10px] text-slate-400">WQ Trend</div>
+                        <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>WQ Trend</div>
                       </div>
                     </>
                   )}
                 </div>
                 {ms4?.notes && (
-                  <div className="text-[10px] text-slate-400 italic mt-2">{ms4.notes}</div>
+                  <div className="text-[10px] italic mt-2" style={{ color: 'var(--text-dim)' }}>{ms4.notes}</div>
                 )}
               </CardContent>
             </Card>
@@ -4906,40 +4956,40 @@ export function FederalManagementCenter(props: Props) {
         <Card id="section-situation" className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-cyan-50">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">National Situation Summary</CardTitle>
+              <CardTitle className="text-lg" style={{ color: 'var(--text-bright)' }}>National Situation Summary</CardTitle>
               <BrandedPrintBtn sectionId="situation" title="National Situation Summary" />
             </div>
-            <CardDescription>Real-time monitoring network status</CardDescription>
+            <CardDescription style={{ color: 'var(--text-secondary)' }}>Real-time monitoring network status</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
               <div className="text-center">
-                <div className="text-3xl font-bold text-blue-600">{nationalStats.statesCovered}</div>
-                <div className="text-xs text-slate-600 mt-1">States + DC</div>
+                <div className="text-3xl font-bold text-blue-600" style={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.03em', fontSize: '1.5rem' }}>{nationalStats.statesCovered}</div>
+                <div className="text-xs mt-1" style={{ color: 'var(--text-dim)', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>States + DC</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-slate-800 inline-flex items-center gap-1">{nationalStats.totalWaterbodies.toLocaleString()}<ProvenanceIcon metricName="Waterbodies" displayValue={String(nationalStats.totalWaterbodies)} /></div>
-                <div className="text-xs text-slate-600 mt-1">Waterbodies</div>
+                <div className="text-3xl font-bold text-slate-800 inline-flex items-center gap-1" style={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.03em', fontSize: '1.5rem' }}>{nationalStats.totalWaterbodies.toLocaleString()}<ProvenanceIcon metricName="Waterbodies" displayValue={String(nationalStats.totalWaterbodies)} /></div>
+                <div className="text-xs mt-1" style={{ color: 'var(--text-dim)', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Waterbodies</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-green-600 inline-flex items-center gap-1">{nationalStats.assessed}<ProvenanceIcon metricName="Assessed Waterbodies" displayValue={String(nationalStats.assessed)} /></div>
-                <div className="text-xs text-slate-600 mt-1">Assessed</div>
+                <div className="text-3xl font-bold text-green-600 inline-flex items-center gap-1" style={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.03em', fontSize: '1.5rem' }}>{nationalStats.assessed}<ProvenanceIcon metricName="Assessed Waterbodies" displayValue={String(nationalStats.assessed)} /></div>
+                <div className="text-xs mt-1" style={{ color: 'var(--text-dim)', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Assessed</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-blue-600 inline-flex items-center gap-1">{nationalStats.monitored.toLocaleString()}<ProvenanceIcon metricName="Monitored Waterbodies" displayValue={String(nationalStats.monitored)} /></div>
-                <div className="text-xs text-slate-600 mt-1">Monitored</div>
+                <div className="text-3xl font-bold text-blue-600 inline-flex items-center gap-1" style={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.03em', fontSize: '1.5rem' }}>{nationalStats.monitored.toLocaleString()}<ProvenanceIcon metricName="Monitored Waterbodies" displayValue={String(nationalStats.monitored)} /></div>
+                <div className="text-xs mt-1" style={{ color: 'var(--text-dim)', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Monitored</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-red-600 inline-flex items-center gap-1">{nationalStats.highAlerts}<ProvenanceIcon metricName="Severe Alerts" displayValue={String(nationalStats.highAlerts)} /></div>
-                <div className="text-xs text-slate-600 mt-1">Severe</div>
+                <div className="text-3xl font-bold text-red-600 inline-flex items-center gap-1" style={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.03em', fontSize: '1.5rem' }}>{nationalStats.highAlerts}<ProvenanceIcon metricName="Severe Alerts" displayValue={String(nationalStats.highAlerts)} /></div>
+                <div className="text-xs mt-1" style={{ color: 'var(--text-dim)', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Severe</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-orange-600 inline-flex items-center gap-1">{nationalStats.mediumAlerts}<ProvenanceIcon metricName="Impaired Waterbodies" displayValue={String(nationalStats.mediumAlerts)} /></div>
-                <div className="text-xs text-slate-600 mt-1">Impaired</div>
+                <div className="text-3xl font-bold text-orange-600 inline-flex items-center gap-1" style={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.03em', fontSize: '1.5rem' }}>{nationalStats.mediumAlerts}<ProvenanceIcon metricName="Impaired Waterbodies" displayValue={String(nationalStats.mediumAlerts)} /></div>
+                <div className="text-xs mt-1" style={{ color: 'var(--text-dim)', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Impaired</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-yellow-600">{nationalStats.lowAlerts}</div>
-                <div className="text-xs text-slate-600 mt-1">Watch</div>
+                <div className="text-3xl font-bold text-yellow-600" style={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.03em', fontSize: '1.5rem' }}>{nationalStats.lowAlerts}</div>
+                <div className="text-xs mt-1" style={{ color: 'var(--text-dim)', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Watch</div>
               </div>
             </div>
           </CardContent>
@@ -4951,9 +5001,9 @@ export function FederalManagementCenter(props: Props) {
         case 'top10': return DS(<>
         {/* Feature 3: Hotspots Rankings — lens controlled, starts collapsed */}
         {lens.showHotspots && (
-        <div id="section-top10" className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-          <button onClick={() => setShowHotspotsSection(prev => !prev)} className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors">
-            <span className="text-sm font-semibold text-slate-700 flex items-center gap-2">🔥 Top 10 Worsening / Improving Waterbodies</span>
+        <div id="section-top10" className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border-default)', background: 'var(--bg-card)' }}>
+          <button onClick={() => setShowHotspotsSection(prev => !prev)} className="w-full flex items-center justify-between px-4 py-3 transition-colors" style={{ color: 'var(--text-primary)' }} onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; }} onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
+            <span className="text-sm font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>🔥 Top 10 Worsening / Improving Waterbodies</span>
             <div className="flex items-center gap-1.5">
               {showHotspotsSection ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
             </div>
@@ -4977,26 +5027,34 @@ export function FederalManagementCenter(props: Props) {
                     <div
                       key={region.id}
                       onClick={() => handleRegionClick(region.id)}
-                      className="rounded-lg border border-red-100 bg-white hover:bg-red-50 cursor-pointer transition-colors"
+                      className="cursor-pointer transition-colors"
+                      style={{ borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)' }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-card)'; }}
                     >
                       <div className="flex items-center justify-between p-2.5">
                         <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xs font-bold">
+                          <div className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: 'var(--status-severe-bg)', color: 'var(--status-severe)' }}>
                             {idx + 1}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <div className="text-sm font-medium text-slate-700 truncate">
+                            <div className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
                               {region.state} · {region.name}
                             </div>
-                            <div className="text-xs text-slate-500">{region.activeAlerts} active alert{region.activeAlerts !== 1 ? 's' : ''}</div>
+                            <div className="text-xs" style={{ color: 'var(--text-dim)' }}>{region.activeAlerts} active alert{region.activeAlerts !== 1 ? 's' : ''}</div>
                           </div>
                         </div>
-                        <Badge variant={
-                          region.alertLevel === 'high' ? 'destructive' :
-                          region.alertLevel === 'medium' ? 'default' : 'secondary'
-                        } className="text-xs">
+                        <span className="inline-flex items-center rounded-full" style={{
+                          padding: '2px 8px',
+                          fontSize: '10px',
+                          fontWeight: 600,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.04em',
+                          background: region.alertLevel === 'high' ? 'var(--status-severe-bg)' : region.alertLevel === 'medium' ? 'var(--status-impaired-bg)' : region.alertLevel === 'low' ? 'var(--status-watch-bg)' : 'var(--status-healthy-bg)',
+                          color: region.alertLevel === 'high' ? 'var(--status-severe)' : region.alertLevel === 'medium' ? 'var(--status-impaired)' : region.alertLevel === 'low' ? 'var(--status-watch)' : 'var(--status-healthy)',
+                        }}>
                           {levelToLabel(region.alertLevel)}
-                        </Badge>
+                        </span>
                       </div>
                     </div>
                 ))}
@@ -5023,24 +5081,35 @@ export function FederalManagementCenter(props: Props) {
                   <div
                     key={region.id}
                     onClick={() => handleRegionClick(region.id)}
-                    className="flex items-center justify-between p-2 rounded-lg border border-green-100 hover:bg-green-50 cursor-pointer transition-colors"
+                    className="flex items-center justify-between p-2 cursor-pointer transition-colors"
+                    style={{ borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-card)'; }}
                   >
                     <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xs font-bold">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: 'var(--status-healthy-bg)', color: 'var(--status-healthy)' }}>
                         {idx + 1}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="text-sm font-medium text-slate-700 truncate">
+                        <div className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
                           {region.state} · {region.name}
                         </div>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-xs" style={{ color: 'var(--text-dim)' }}>
                           {region.alertLevel === 'none' ? 'No alerts' : `${region.activeAlerts} minor alerts`}
                         </div>
                       </div>
                     </div>
-                    <Badge variant="secondary" className="text-xs bg-green-100 text-green-800 border-green-200">
+                    <span className="inline-flex items-center rounded-full" style={{
+                      padding: '2px 8px',
+                      fontSize: '10px',
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                      background: 'var(--status-healthy-bg)',
+                      color: 'var(--status-healthy)',
+                    }}>
                       Healthy
-                    </Badge>
+                    </span>
                   </div>
                 ))}
               </div>
@@ -5199,13 +5268,13 @@ export function FederalManagementCenter(props: Props) {
                         {row.dataSource === 'attains' && <span className="text-[9px] text-blue-500 ml-0.5">EPA</span>}
                       </td>
                       <td className="py-2 px-3 text-center">
-                        {row.cat5 > 0 && <Badge variant="destructive" className="text-xs">{row.cat5}</Badge>}
+                        {row.cat5 > 0 && <span className="inline-flex items-center rounded-full" style={{ padding: '2px 8px', fontSize: '10px', fontWeight: 600, letterSpacing: '0.04em', background: 'var(--status-severe-bg)', color: 'var(--status-severe)' }}>{row.cat5}</span>}
                       </td>
                       <td className="py-2 px-3 text-center">
-                        {row.cat4a > 0 && <Badge variant="default" className="text-xs bg-amber-500">{row.cat4a}</Badge>}
+                        {row.cat4a > 0 && <span className="inline-flex items-center rounded-full" style={{ padding: '2px 8px', fontSize: '10px', fontWeight: 600, letterSpacing: '0.04em', background: 'var(--status-watch-bg)', color: 'var(--status-watch)' }}>{row.cat4a}</span>}
                       </td>
                       <td className="py-2 px-3 text-center">
-                        {row.totalImpaired > 0 && <Badge variant="default" className="text-xs bg-orange-500">{row.totalImpaired}</Badge>}
+                        {row.totalImpaired > 0 && <span className="inline-flex items-center rounded-full" style={{ padding: '2px 8px', fontSize: '10px', fontWeight: 600, letterSpacing: '0.04em', background: 'var(--status-impaired-bg)', color: 'var(--status-impaired)' }}>{row.totalImpaired}</span>}
                       </td>
                       <td className="py-2 px-3 text-center text-slate-600">{row.waterbodies}</td>
                     </tr>

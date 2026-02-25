@@ -56,8 +56,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+      <body className={inter.className} style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-primary)' }}>
+        <ThemeProvider attribute={['class', 'data-theme']} defaultTheme="light" enableSystem={false} storageKey="pin-theme">
           <AuthProvider>
             {children}
           </AuthProvider>

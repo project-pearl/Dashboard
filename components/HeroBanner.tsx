@@ -140,7 +140,7 @@ export default function HeroBanner({ role, className = '', children, onDoubleCli
   if (!config) return null;
 
   return (
-    <div className={`relative w-full overflow-hidden rounded-2xl cursor-default select-none dark:border dark:border-[rgba(58,189,176,0.12)] ${className}`} onDoubleClick={onDoubleClick}>
+    <div className={`relative w-full overflow-hidden rounded-2xl cursor-default select-none ${className}`} style={{ border: '1px solid var(--border-subtle)' }} onDoubleClick={onDoubleClick}>
       {/* Background image */}
       <div className="relative h-[160px] sm:h-[180px] lg:h-[200px] w-full">
         <Image
@@ -167,9 +167,10 @@ export default function HeroBanner({ role, className = '', children, onDoubleCli
           {/* Subtitle label */}
           <div className="mb-1.5 sm:mb-2">
             <span
-              className={`inline-flex items-center gap-1.5 w-fit text-sm sm:text-base font-extrabold uppercase tracking-[0.18em] ${config.accentColor} drop-shadow-[0_0_8px_currentColor]`}
+              className={`inline-flex items-center gap-1.5 w-fit text-sm sm:text-base font-extrabold uppercase tracking-[0.18em] ${config.accentColor}`}
+              style={{ textShadow: '0 0 12px currentColor, 0 0 24px currentColor' }}
             >
-              <span className="inline-block w-2 h-2 rounded-full bg-current animate-pulse" />
+              <span className="inline-block w-2 h-2 rounded-full bg-current animate-pulse" style={{ boxShadow: '0 0 6px currentColor' }} />
               {config.subtitle}
             </span>
             <p className="text-[10px] sm:text-xs text-white/50 tracking-widest uppercase ml-3.5 mt-0.5">
