@@ -59,14 +59,14 @@ export function DraggableSection({
           <button
             {...attributes}
             {...listeners}
-            className="cursor-grab active:cursor-grabbing p-1.5 rounded-lg bg-white shadow-md border border-slate-200 hover:border-blue-300 hover:shadow-lg transition-all"
+            className="cursor-grab active:cursor-grabbing p-1.5 rounded-lg bg-white shadow-md border border-slate-200 hover:border-blue-300 hover:shadow-lg transition-all dark:bg-[#0D1526] dark:border-[rgba(58,189,176,0.12)]"
             title={`Drag to reorder: ${label}`}
           >
             <GripVertical className="h-4 w-4 text-slate-400" />
           </button>
           <button
             onClick={() => onToggleVisibility(id)}
-            className="p-1.5 rounded-lg bg-white shadow-md border border-slate-200 hover:border-blue-300 hover:shadow-lg transition-all"
+            className="p-1.5 rounded-lg bg-white shadow-md border border-slate-200 hover:border-blue-300 hover:shadow-lg transition-all dark:bg-[#0D1526] dark:border-[rgba(58,189,176,0.12)]"
             title={isVisible ? `Hide: ${label}` : `Show: ${label}`}
           >
             {isVisible
@@ -92,7 +92,7 @@ export function DraggableSection({
       {collapsed && showCollapseBtn ? (
         <button
           onClick={() => setCollapsed(false)}
-          className="w-full py-2 px-4 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-between transition-colors"
+          className="w-full py-2 px-4 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-between transition-colors dark:bg-[rgba(14,22,45,0.85)] dark:border-[rgba(58,189,176,0.12)]"
         >
           <span className="text-sm font-medium text-slate-500">{label}</span>
           <ChevronDown className="h-4 w-4 text-slate-400" />

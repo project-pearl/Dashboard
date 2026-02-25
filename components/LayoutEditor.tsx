@@ -140,7 +140,7 @@ export function LayoutEditor({ ccKey, children }: LayoutEditorProps) {
     <>
       {/* Floating admin toolbar */}
       {isAdmin && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-white/95 backdrop-blur-sm border-2 border-blue-300 rounded-xl shadow-lg px-4 py-2.5">
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-white/95 backdrop-blur-sm border-2 border-blue-300 rounded-xl shadow-lg px-4 py-2.5 dark:bg-[rgba(14,22,45,0.9)] dark:border-[rgba(58,189,176,0.2)]">
           {!isEditMode ? (
             <button
               onClick={startEdit}

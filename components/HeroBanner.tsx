@@ -140,7 +140,7 @@ export default function HeroBanner({ role, className = '', children, onDoubleCli
   if (!config) return null;
 
   return (
-    <div className={`relative w-full overflow-hidden rounded-2xl cursor-default select-none ${className}`} onDoubleClick={onDoubleClick}>
+    <div className={`relative w-full overflow-hidden rounded-2xl cursor-default select-none dark:border dark:border-[rgba(58,189,176,0.12)] ${className}`} onDoubleClick={onDoubleClick}>
       {/* Background image */}
       <div className="relative h-[160px] sm:h-[180px] lg:h-[200px] w-full">
         <Image

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useRef, useCallback } from 'react';
+import { useTheme } from 'next-themes';
 import Map, { NavigationControl, type MapRef } from 'react-map-gl';
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
@@ -25,7 +26,7 @@ export function MapboxMapShell({
   center,
   zoom,
   height = '100%',
-  darkMode = false,
+  darkMode,
   children,
   interactiveLayerIds,
   onMapRef,
@@ -35,6 +36,7 @@ export function MapboxMapShell({
   className = '',
   mapKey,
 }: MapboxMapShellProps) {
+  const { resolvedTheme } = useTheme();
   const mapRef = useRef<MapRef>(null);
 
   const handleLoad = useCallback(() => {
@@ -58,7 +60,7 @@ export function MapboxMapShell({
         zoom,
       }}
       style={{ width: '100%', height }}
-      mapStyle={darkMode
+      mapStyle={(darkMode ?? resolvedTheme === 'dark')
         ? 'mapbox://styles/mapbox/dark-v11'
         : 'mapbox://styles/mapbox/light-v11'
       }

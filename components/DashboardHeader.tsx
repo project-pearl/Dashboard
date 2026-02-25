@@ -3,6 +3,7 @@
 import React from 'react';
 import { usePathname } from 'next/navigation';
 import UserMenu from '@/components/UserMenu';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { Bell, Radio } from 'lucide-react';
 
 const ROUTE_LABELS: Record<string, string> = {
@@ -48,7 +49,7 @@ export function DashboardHeader() {
   const subParam = segments[2]; // e.g. stateCode or permitId
 
   return (
-    <header className="h-14 flex items-center justify-between px-4 lg:px-6 bg-white border-b border-slate-200 flex-shrink-0 shadow-sm">
+    <header className="h-14 flex items-center justify-between px-4 lg:px-6 bg-white border-b border-slate-200 flex-shrink-0 shadow-sm dark:bg-[rgba(14,22,45,0.9)] dark:backdrop-blur-xl dark:border-[rgba(58,189,176,0.12)]">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm ml-12 lg:ml-0">
         <span className="text-slate-400 font-medium">Dashboard</span>
@@ -69,7 +70,7 @@ export function DashboardHeader() {
       {/* Right side */}
       <div className="flex items-center gap-3">
         {/* Live status */}
-        <div className="hidden sm:flex items-center gap-1.5 text-xs text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+        <div className="hidden sm:flex items-center gap-1.5 text-xs text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400">
           <Radio className="w-3 h-3 animate-pulse" />
           <span className="font-semibold">Live Data</span>
         </div>
@@ -78,6 +79,9 @@ export function DashboardHeader() {
         <button className="p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-600">
           <Bell className="w-4 h-4" />
         </button>
+
+        {/* Theme toggle */}
+        <ThemeToggle />
 
         {/* User menu */}
         <UserMenu />

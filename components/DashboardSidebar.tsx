@@ -322,7 +322,7 @@ export function DashboardSidebar() {
             <Icon className={`w-4 h-4 flex-shrink-0 ${active ? item.accent : 'text-slate-400'}`} />
           </Link>
           {/* Flyout popover on hover */}
-          <div className="hidden group-hover:block absolute left-full top-0 ml-2 z-50 min-w-[160px] bg-white border border-slate-200 rounded-lg shadow-lg py-1.5">
+          <div className="hidden group-hover:block absolute left-full top-0 ml-2 z-50 min-w-[160px] bg-white dark:bg-[#0D1526] border border-slate-200 dark:border-[rgba(58,189,176,0.12)] rounded-lg shadow-lg py-1.5">
             <div className="px-3 py-1.5 text-xs font-semibold text-slate-700 border-b border-slate-100">
               {item.label}
             </div>
@@ -397,9 +397,9 @@ export function DashboardSidebar() {
   };
 
   const sidebar = (
-    <div className={`flex flex-col h-full bg-white border-r border-slate-200 transition-all duration-300 ${collapsed ? 'w-16' : 'w-64'}`}>
+    <div className={`flex flex-col h-full bg-white dark:bg-[#0D1526] border-r border-slate-200 dark:border-[rgba(58,189,176,0.12)] transition-all duration-300 ${collapsed ? 'w-16' : 'w-64'}`}>
       {/* Logo */}
-      <div className="p-4 flex items-center justify-center border-b border-slate-200">
+      <div className="p-4 flex items-center justify-center border-b border-slate-200 dark:border-[rgba(58,189,176,0.12)]">
         {collapsed ? (
           <Image src="/Pearl-Logo-alt.png" alt="PEARL" width={32} height={32} className="rounded-lg flex-shrink-0" />
         ) : (
@@ -466,7 +466,7 @@ export function DashboardSidebar() {
 
       {/* Admin section — Pearl / admin users only */}
       {user && (user.role === 'Pearl' || user.isAdmin) && (
-        <div className="border-t border-slate-200 px-2 py-3 space-y-0.5">
+        <div className="border-t border-slate-200 dark:border-[rgba(58,189,176,0.12)] px-2 py-3 space-y-0.5">
           {!collapsed && (
             <div className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
               Admin
@@ -502,7 +502,7 @@ export function DashboardSidebar() {
       )}
 
       {/* Bottom section */}
-      <div className="border-t border-slate-200 p-3 space-y-2">
+      <div className="border-t border-slate-200 dark:border-[rgba(58,189,176,0.12)] p-3 space-y-2">
         <Link
           href="/account"
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
@@ -533,7 +533,7 @@ export function DashboardSidebar() {
       {/* Mobile hamburger */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="lg:hidden fixed top-3 left-3 z-50 p-2 rounded-lg bg-white shadow-md border border-slate-200"
+        className="lg:hidden fixed top-3 left-3 z-50 p-2 rounded-lg bg-white dark:bg-[#0D1526] shadow-md border border-slate-200 dark:border-[rgba(58,189,176,0.12)]"
       >
         <Menu className="w-5 h-5 text-slate-700" />
       </button>
