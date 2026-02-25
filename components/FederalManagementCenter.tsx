@@ -2457,10 +2457,10 @@ export function FederalManagementCenter(props: Props) {
           {/* State Detail Panel */}
           <Card style={{ background: 'var(--bg-card)' }}>
             <CardHeader className="pb-2 pt-5 px-5">
-              <div className="flex items-center justify-between">
-                <div>
+              <div className="flex items-center justify-between gap-4">
+                <div className="min-w-0 flex-1">
                   <CardTitle className="flex items-center gap-2 text-sm">
-                    <MapPin size={15} style={{ color: 'var(--text-dim)' }} />
+                    <MapPin size={15} className="flex-shrink-0" style={{ color: 'var(--text-dim)' }} />
                     <select
                       value={selectedState}
                       onChange={(e) => { setSelectedState(e.target.value); setWaterbodySearch(''); setWaterbodyFilter('all'); setShowAllWaterbodies(false); }}
@@ -4267,7 +4267,7 @@ export function FederalManagementCenter(props: Props) {
               </div>
             </CardHeader>
             <CardContent className="px-5">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
 
                 {/* Column 1: EPA Category Distribution */}
                 <div>
@@ -4322,11 +4322,11 @@ export function FederalManagementCenter(props: Props) {
                 {/* Column 3: ALIA Addressability */}
                 <div>
                   <div className="pin-section-label mb-2">ALIA Addressability</div>
-                  <div className="text-center py-2">
+                  <div className="text-center mb-2">
                     <div className="pin-stat-value text-xl">{attainsAggregation.addressablePct}%</div>
                     <div className="pin-label mt-0.5">Addressable</div>
                   </div>
-                  <div className="text-[10px] text-center mb-3" style={{ color: 'var(--text-dim)' }}>
+                  <div className="text-[10px] text-center mb-2" style={{ color: 'var(--text-dim)' }}>
                     <span className="pin-stat-secondary text-xs">{attainsAggregation.addressableCount.toLocaleString()}</span> of{' '}
                     <span className="pin-stat-secondary text-xs">{attainsAggregation.totalCauseInstances.toLocaleString()}</span> cause-instances
                   </div>
@@ -4360,21 +4360,24 @@ export function FederalManagementCenter(props: Props) {
         </>); {/* end ai-water-intelligence */}
 
         case 'national-briefing': return DS(<>
-        {/* ── National Intelligence Briefing — data-driven insights ── */}
+        {/* ── National Intelligence Briefing — PIN analysis summary ── */}
         {lens.showAIInsights && aiInsights.length > 0 && (
-          <Card id="section-national-briefing" className="border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-white">
-            <CardHeader className="pb-3">
+          <Card id="section-national-briefing">
+            <CardHeader className="pb-2 pt-5 px-5">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  🤖 National Intelligence Briefing
-                  <span className="text-[10px] font-normal text-slate-400 ml-1">
-                    {aiInsights.length} findings from {attainsAggregation.totalAssessed.toLocaleString()} ATTAINS records
-                  </span>
-                </CardTitle>
+                <div>
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2" style={{ color: 'var(--text-bright)' }}>
+                    National Intelligence Briefing
+                  </CardTitle>
+                  <CardDescription className="text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>
+                    {aiInsights.length} findings from {attainsAggregation.totalAssessed.toLocaleString()} ATTAINS records — AI analysis of impairment data, TMDL gaps, and deployment opportunities
+                  </CardDescription>
+                </div>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-7 text-xs gap-1.5 text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+                  className="h-7 text-xs gap-1.5"
+                  style={{ color: 'var(--text-secondary)', borderColor: 'var(--border-default)' }}
                   onClick={async () => {
                     const pdf = new BrandedPDFGenerator();
                     await pdf.loadLogo();
@@ -4398,34 +4401,25 @@ export function FederalManagementCenter(props: Props) {
                   Export PDF
                 </Button>
               </div>
-              <CardDescription>AI analysis of EPA ATTAINS data, TMDL gaps, impairment causes, and deployment opportunities</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
+            <CardContent className="px-5">
+              <div className="space-y-2">
                 {aiInsights.map((insight, idx) => {
-                  const bgColor = insight.type === 'urgent' ? 'bg-red-50 border-red-300' :
-                                 insight.type === 'warning' ? 'bg-orange-50 border-orange-300' :
-                                 insight.type === 'success' ? 'bg-green-50 border-green-300' :
-                                 'bg-blue-50 border-blue-300';
-                  const textColor = insight.type === 'urgent' ? 'text-red-700' :
-                                   insight.type === 'warning' ? 'text-orange-700' :
-                                   insight.type === 'success' ? 'text-green-700' :
-                                   'text-blue-700';
-                  const icon = insight.type === 'urgent' ? '🚨' :
-                              insight.type === 'warning' ? '⚠️' :
-                              insight.type === 'success' ? '✅' : 'ℹ️';
+                  const sevColor = insight.type === 'urgent' ? 'var(--status-severe)' :
+                                   insight.type === 'warning' ? 'var(--status-warning)' :
+                                   insight.type === 'success' ? 'var(--status-healthy)' :
+                                   'var(--text-dim)';
                   return (
-                    <div key={idx} className={`p-3 rounded-lg border ${bgColor}`}>
-                      <div className="flex items-start gap-2">
-                        <span className="text-lg flex-shrink-0">{icon}</span>
-                        <div className="flex-1 min-w-0">
-                          <div className={`font-semibold text-sm ${textColor} mb-1`}>{insight.title}</div>
-                          <div className="text-xs text-slate-700 leading-relaxed">{insight.detail}</div>
-                          {insight.action && (
-                            <Button size="sm" variant="outline" className="mt-2 h-7 text-xs">{insight.action}</Button>
-                          )}
-                        </div>
+                    <div key={idx} className="py-2.5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: sevColor }} />
+                        <span className="text-xs font-semibold" style={{ color: 'var(--text-bright)' }}>{insight.title}</span>
+                        <span className="pin-label ml-auto">{insight.type}</span>
                       </div>
+                      <div className="text-xs leading-relaxed pl-4" style={{ color: 'var(--text-secondary)' }}>{insight.detail}</div>
+                      {insight.action && (
+                        <Button size="sm" variant="outline" className="mt-2 ml-4 h-6 text-[10px]">{insight.action}</Button>
+                      )}
                     </div>
                   );
                 })}
@@ -4448,45 +4442,38 @@ export function FederalManagementCenter(props: Props) {
           />
         )}
         {lens.showAIInsights && aiInsights.length > 0 && (
-          <Card id="section-aiinsights" className="border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-white">
-            <CardHeader className="pb-3">
+          <Card id="section-aiinsights">
+            <CardHeader className="pb-2 pt-5 px-5">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  🤖 National Intelligence Briefing
-                  <span className="text-[10px] font-normal text-slate-400 ml-1">
+                <div>
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2" style={{ color: 'var(--text-bright)' }}>
+                    National Intelligence Briefing
+                  </CardTitle>
+                  <CardDescription className="text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>
                     {aiInsights.length} findings from {attainsAggregation.totalAssessed.toLocaleString()} ATTAINS records
-                  </span>
-                </CardTitle>
+                  </CardDescription>
+                </div>
                 <BrandedPrintBtn sectionId="aiinsights" title="National Intelligence Briefing" />
               </div>
-              <CardDescription>AI analysis of EPA ATTAINS data, TMDL gaps, impairment causes, and deployment opportunities</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
+            <CardContent className="px-5">
+              <div className="space-y-2">
                 {aiInsights.map((insight, idx) => {
-                  const bgColor = insight.type === 'urgent' ? 'bg-red-50 border-red-300' :
-                                 insight.type === 'warning' ? 'bg-orange-50 border-orange-300' :
-                                 insight.type === 'success' ? 'bg-green-50 border-green-300' :
-                                 'bg-blue-50 border-blue-300';
-                  const textColor = insight.type === 'urgent' ? 'text-red-700' :
-                                   insight.type === 'warning' ? 'text-orange-700' :
-                                   insight.type === 'success' ? 'text-green-700' :
-                                   'text-blue-700';
-                  const icon = insight.type === 'urgent' ? '🚨' :
-                              insight.type === 'warning' ? '⚠️' :
-                              insight.type === 'success' ? '✅' : 'ℹ️';
+                  const sevColor = insight.type === 'urgent' ? 'var(--status-severe)' :
+                                   insight.type === 'warning' ? 'var(--status-warning)' :
+                                   insight.type === 'success' ? 'var(--status-healthy)' :
+                                   'var(--text-dim)';
                   return (
-                    <div key={idx} className={`p-3 rounded-lg border ${bgColor}`}>
-                      <div className="flex items-start gap-2">
-                        <span className="text-lg flex-shrink-0">{icon}</span>
-                        <div className="flex-1 min-w-0">
-                          <div className={`font-semibold text-sm ${textColor} mb-1`}>{insight.title}</div>
-                          <div className="text-xs text-slate-700 leading-relaxed">{insight.detail}</div>
-                          {insight.action && (
-                            <Button size="sm" variant="outline" className="mt-2 h-7 text-xs">{insight.action}</Button>
-                          )}
-                        </div>
+                    <div key={idx} className="py-2.5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: sevColor }} />
+                        <span className="text-xs font-semibold" style={{ color: 'var(--text-bright)' }}>{insight.title}</span>
+                        <span className="pin-label ml-auto">{insight.type}</span>
                       </div>
+                      <div className="text-xs leading-relaxed pl-4" style={{ color: 'var(--text-secondary)' }}>{insight.detail}</div>
+                      {insight.action && (
+                        <Button size="sm" variant="outline" className="mt-2 ml-4 h-6 text-[10px]">{insight.action}</Button>
+                      )}
                     </div>
                   );
                 })}

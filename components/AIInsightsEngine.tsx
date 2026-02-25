@@ -257,28 +257,56 @@ Use the nationalSummary data to provide specific numbers: cat5 count, TMDL gap p
   }, [expanded, role, stateAbbr, selectedWaterbody, isNational, fetchInsights]);
 
   return (
-    <div className="rounded-2xl border border-indigo-200 bg-white shadow-sm overflow-hidden">
-      {/* Header */}
+    <div className="rounded-2xl border overflow-hidden" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-default)', boxShadow: 'var(--shadow-card)' }}>
+      {/* Header — always visible */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-indigo-50/80 to-violet-50/80 hover:from-indigo-100/80 hover:to-violet-100/80 transition-colors"
+        className="w-full text-left px-5 py-4 transition-colors"
+        style={{ background: expanded ? 'var(--bg-surface)' : 'transparent' }}
       >
-        <div className="flex items-center gap-2">
-          <Brain className="h-4 w-4 text-indigo-600" />
-          <span className="text-sm font-bold text-slate-800">AI Water Intelligence{isNational ? ' — National' : ` — ${stateAbbr}`}</span>
-          <Badge className="bg-gradient-to-r from-indigo-500 to-violet-500 text-white border-0 text-[9px] px-1.5 py-0">
-            <Sparkles className="h-2.5 w-2.5 mr-0.5" />AI
-          </Badge>
-          {lastUpdated && (
-            <span className="hidden sm:inline-flex items-center gap-1 text-[10px] text-slate-400">
-              <Clock className="h-2.5 w-2.5" />
-              {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </span>
-          )}
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-2">
+            <Brain className="h-4 w-4 flex-shrink-0" style={{ color: 'var(--accent-teal)' }} />
+            <span className="text-sm font-semibold" style={{ color: 'var(--text-bright)' }}>AI Water Intelligence{isNational ? ' — National' : ` — ${stateAbbr}`}</span>
+            <Badge className="bg-gradient-to-r from-indigo-500 to-violet-500 text-white border-0 text-[9px] px-1.5 py-0">
+              <Sparkles className="h-2.5 w-2.5 mr-0.5" />AI
+            </Badge>
+          </div>
+          <div className="flex items-center gap-2">
+            {lastUpdated && (
+              <span className="hidden sm:inline-flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-dim)' }}>
+                <Clock className="h-2.5 w-2.5" />
+                {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            )}
+            {expanded ? <Minus className="h-4 w-4" style={{ color: 'var(--text-dim)' }} /> : <ChevronDown className="h-4 w-4" style={{ color: 'var(--text-dim)' }} />}
+          </div>
         </div>
-        <div className="flex items-center gap-1.5">
-          {expanded ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
-        </div>
+        <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+          {isNational
+            ? 'Claude-powered analysis of EPA ATTAINS data, cross-state patterns, impairment trends, and deployment opportunities.'
+            : `AI-generated insights for ${stateAbbr} water quality, impairment causes, and monitoring coverage.`}
+        </p>
+        {/* Preview of loaded insights when collapsed */}
+        {!expanded && insights.length > 0 && (
+          <div className="mt-2 pt-2 space-y-1" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+            {insights.slice(0, 2).map((ins, i) => {
+              const sevColor = ins.severity === 'critical' ? 'var(--status-severe)' : ins.severity === 'warning' ? 'var(--status-warning)' : 'var(--text-dim)';
+              return (
+                <div key={i} className="flex items-center gap-2 text-[11px]">
+                  <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: sevColor }} />
+                  <span className="truncate" style={{ color: 'var(--text-secondary)' }}>{ins.title}</span>
+                </div>
+              );
+            })}
+            {insights.length > 2 && (
+              <div className="text-[10px]" style={{ color: 'var(--text-dim)' }}>+{insights.length - 2} more findings — click to expand</div>
+            )}
+          </div>
+        )}
+        {!expanded && insights.length === 0 && (
+          <div className="mt-2 text-[10px]" style={{ color: 'var(--text-dim)' }}>Click to generate AI analysis</div>
+        )}
       </button>
 
       {/* Body */}
@@ -343,16 +371,17 @@ Use the nationalSummary data to provide specific numbers: cat5 count, TMDL gap p
 
           {/* Actions */}
           {!loading && (
-            <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-              <div className="text-[10px] text-slate-400 leading-tight max-w-[70%]">
+            <div className="flex items-center justify-between pt-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+              <div className="text-[10px] leading-tight max-w-[70%]" style={{ color: 'var(--text-dim)' }}>
                 AI-generated analysis based on available data. Verify critical findings independently.
               </div>
               <button
                 onClick={() => fetchInsights(true)}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:from-indigo-700 hover:to-violet-700 transition-all shadow-sm"
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-semibold transition-all"
+                style={{ background: 'var(--accent-teal)', color: '#fff' }}
               >
                 <RefreshCw className="h-3 w-3" />
-                Refresh Insights
+                Refresh
               </button>
             </div>
           )}
