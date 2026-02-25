@@ -89,6 +89,12 @@ const LENS_ICONS: Record<string, LucideIcon> = {
   coverage: Activity,
   programs: Landmark,
   ms4oversight: CloudRain,
+  'public-health': Heart,
+  habitat: TreePine,
+  agriculture: Sprout,
+  disaster: AlertTriangle,
+  tmdl: Waves,
+  permits: FileCheck,
   // ── MS4 ────────────────────────────────────────────────────────────────────
   'permit-compliance': ShieldCheck,
   'monitoring-stations': RadioTower,

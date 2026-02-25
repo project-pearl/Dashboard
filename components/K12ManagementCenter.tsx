@@ -204,7 +204,7 @@ function generateStateRegionData(stateAbbr: string): RegionRow[] {
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-export function K12CommandCenter({ stateAbbr, isTeacher: isTeacherProp = false, onSelectRegion, onToggleDevMode }: Props) {
+export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = false, onSelectRegion, onToggleDevMode }: Props) {
   const stateName = STATE_NAMES[stateAbbr] || stateAbbr;
   const agency = STATE_AGENCIES[stateAbbr] || STATE_AUTHORITIES[stateAbbr] || null;
   const { user, logout } = useAuth();

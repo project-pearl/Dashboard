@@ -3,11 +3,11 @@
 import dynamic from 'next/dynamic';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const NGOCommandCenter = dynamic(
-  () => import('@/components/NGOCommandCenter').then((m) => m.NGOCommandCenter),
+const NGOManagementCenter = dynamic(
+  () => import('@/components/NGOManagementCenter').then((m) => m.NGOManagementCenter),
   { ssr: false, loading: () => <div className="flex items-center justify-center min-h-[400px]"><Skeleton className="w-full h-[400px]" /></div> }
 );
 
 export default function NGOPage() {
-  return <NGOCommandCenter stateAbbr="MD" />;
+  return <NGOManagementCenter stateAbbr="MD" />;
 }

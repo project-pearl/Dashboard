@@ -70,7 +70,7 @@ const rules: Rule[] = [
     impact:
       'Affects 66,000+ public water systems. Utilities must monitor, treat, and report. Compliance deadline: 2029.',
     pinConnection:
-      'PIN tracks PFAS detections across 12,400+ monitoring stations. Utility command center auto-flags systems exceeding new MCLs.',
+      'PIN tracks PFAS detections across 12,400+ monitoring stations. Utility management center auto-flags systems exceeding new MCLs.',
     assessmentUnits: 8420,
     statesAffected: 50,
     severity: 'critical',
@@ -120,7 +120,7 @@ const rules: Rule[] = [
     impact:
       'Approximately 9.2 million lead service lines nationwide. Utilities must inventory, notify customers, and replace all lead lines.',
     pinConnection:
-      "PIN's utility command center tracks lead/copper monitoring data and flags exceedances against the new 10 ppb action level.",
+      "PIN's utility management center tracks lead/copper monitoring data and flags exceedances against the new 10 ppb action level.",
     assessmentUnits: 3200,
     statesAffected: 50,
     severity: 'high',
@@ -145,7 +145,7 @@ const rules: Rule[] = [
     impact:
       'States can now condition or deny federal permits (dredge/fill, NPDES, hydropower) based on water quality concerns. Significant for pipeline and infrastructure projects.',
     pinConnection:
-      "PIN's state command center tracks 401 certifications alongside 303(d) impairments \u2014 showing where state authority intersects with listed waterbodies.",
+      "PIN's state management center tracks 401 certifications alongside 303(d) impairments \u2014 showing where state authority intersects with listed waterbodies.",
     assessmentUnits: 56000,
     statesAffected: 50,
     severity: 'medium',
@@ -195,7 +195,7 @@ const rules: Rule[] = [
     impact:
       'Affects ~100,000 industrial facilities with stormwater discharge. New monitoring benchmarks could trigger corrective action requirements.',
     pinConnection:
-      "PIN's MS4 command center tracks industrial stormwater alongside municipal permits \u2014 showing cumulative pollutant loading from all sources in a jurisdiction.",
+      "PIN's MS4 management center tracks industrial stormwater alongside municipal permits \u2014 showing cumulative pollutant loading from all sources in a jurisdiction.",
     assessmentUnits: 18000,
     statesAffected: 50,
     severity: 'medium',

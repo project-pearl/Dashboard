@@ -815,7 +815,7 @@ function MapController({ mapRef }: { mapRef: React.MutableRefObject<L.Map | null
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export function NationalCommandCenter(props: Props) {
+export function FederalManagementCenter(props: Props) {
   const { onClose, onSelectRegion, federalMode = false } = props;
   const { logout, user } = useAuth();
   const router = useRouter();
@@ -2158,7 +2158,7 @@ export function NationalCommandCenter(props: Props) {
 
 
         {/* ── LAYOUT EDITOR WRAPPER ── */}
-        <LayoutEditor ccKey="NCC">
+        <LayoutEditor ccKey="FMC">
         {({ sections, isEditMode, onToggleVisibility, onToggleCollapse, collapsedSections }) => {
           const isSectionOpen = (id: string) => !collapsedSections[id];
           return (<>

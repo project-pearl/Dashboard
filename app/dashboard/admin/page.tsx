@@ -1,7 +1,7 @@
 'use client';
 
-import { PEARLCommandCenter } from '@/components/PEARLCommandCenter';
+import { PEARLManagementCenter } from '@/components/PEARLManagementCenter';
 
 export default function AdminPage() {
-  return <PEARLCommandCenter onClose={() => {}} />;
+  return <PEARLManagementCenter onClose={() => {}} />;
 }

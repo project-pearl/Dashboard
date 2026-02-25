@@ -233,7 +233,7 @@ async function exportProvenancePDF(record: ProvenanceRecord) {
   pdf.download(filename);
 }
 
-// ─── ProvenanceIcon (exported for use in command centers) ────────────────────
+// ─── ProvenanceIcon (exported for use in management centers) ────────────────────
 
 interface ProvenanceIconProps {
   metricName: string;

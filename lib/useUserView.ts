@@ -63,7 +63,7 @@ const ROLE_DEFAULTS: Record<UserRole, Record<string, boolean>> = {
   },
 };
 
-// ─── NCC Card Defaults (for NationalCommandCenter) ────────────────────────────
+// ─── FMC Card Defaults (for FederalManagementCenter) ────────────────────────────
 
 const NCC_ROLE_DEFAULTS: Record<UserRole, Record<string, boolean>> = {
   ms4: {
@@ -123,7 +123,7 @@ type ToastCallback = (message: string, onUndo: () => void) => void;
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 interface UseUserViewOptions {
-  /** 'scc' for StateCommandCenter, 'ncc' for NationalCommandCenter */
+  /** 'scc' for StateManagementCenter, 'ncc' for FederalManagementCenter */
   scope: 'scc' | 'ncc';
   /** State abbreviation (for SCC — each state gets its own saved view) */
   stateAbbr?: string;

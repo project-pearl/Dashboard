@@ -14,7 +14,7 @@ const LeafletMapShell = dynamic(
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, AlertCircle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Building2, Info, LogOut } from 'lucide-react';
+import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, AlertCircle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Building2, Info, LogOut, Waves, Heart, TreePine, Sprout, FileCheck, Scale, Activity, Sparkles, ClipboardList, Trophy, FileText, Banknote, Zap, RadioTower, Wrench, HardHat, FlaskConical, Leaf, Landmark, ShieldCheck } from 'lucide-react';
 import { BrandedPrintBtn } from '@/lib/brandedPrint';
 import { useRouter } from 'next/navigation';
 import { getRegionById } from '@/lib/regionsConfig';
@@ -108,74 +108,132 @@ function scoreToGrade(score: number): { letter: string; color: string; bg: strin
   return { letter: 'F', color: 'text-red-700', bg: 'bg-red-50 border-red-300' };
 }
 
+// ─── Map Overlay: what drives marker colors ──────────────────────────────────
+
+type OverlayId = 'risk' | 'coverage' | 'bmp' | 'ej';
+
 // ─── View Lens: controls what each view shows/hides ──────────────────────────
 
-type ViewLens = 'compliance' | 'coverage' | 'ms4oversight' | 'programs' | 'trends' | 'full';
+type ViewLens = 'overview' | 'briefing' | 'planner' | 'trends' | 'policy'
+  | 'compliance' | 'water-quality' | 'public-health' | 'habitat' | 'agriculture'
+  | 'infrastructure' | 'monitoring' | 'disaster' | 'tmdl' | 'scorecard'
+  | 'reports' | 'permits' | 'funding';
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
   description: string;
-  showMap: boolean;
-  showDetail: boolean;
-  showRestorationPlan: boolean;
-  showMS4: boolean;
-  ms4DefaultExpanded: boolean;
-  showHotspots: boolean;
-  showTrends: boolean;
+  defaultOverlay: OverlayId;
+  sections: Set<string>;
 }> = {
-  compliance: {
-    label: 'Compliance',
-    description: 'Impairment severity, Category 5, enforcement priorities',
-    showMap: true,
-    showDetail: true, showRestorationPlan: true,
-    showMS4: true, ms4DefaultExpanded: false,
-    showHotspots: false, showTrends: false,
+  overview: {
+    label: 'Overview',
+    description: 'State operational dashboard — morning check before the day starts',
+    defaultOverlay: 'risk',
+    sections: new Set(['regprofile', 'datareport', 'operational-health', 'alertfeed', 'map-grid', 'detail', 'top10', 'quick-access', 'disclaimer']),
   },
-  coverage: {
-    label: 'Coverage',
-    description: 'Monitoring gaps, blind spots, data freshness',
-    showMap: true,
-    showDetail: true, showRestorationPlan: false,
-    showMS4: false, ms4DefaultExpanded: false,
-    showHotspots: false, showTrends: false,
+  briefing: {
+    label: 'AI Briefing',
+    description: 'AI-generated overnight summary and action items',
+    defaultOverlay: 'risk',
+    sections: new Set(['insights', 'briefing-actions', 'briefing-changes', 'briefing-pulse', 'briefing-stakeholder', 'disclaimer']),
   },
-  ms4oversight: {
-    label: 'MS4 Oversight',
-    description: 'Jurisdiction compliance, permit status, ALIA fit',
-    showMap: true,
-    showDetail: false, showRestorationPlan: false,
-    showMS4: true, ms4DefaultExpanded: true,
-    showHotspots: false, showTrends: false,
-  },
-  programs: {
-    label: 'Programs',
-    description: 'Funding targets, intervention candidates, restoration',
-    showMap: true,
-    showDetail: true, showRestorationPlan: true,
-    showMS4: true, ms4DefaultExpanded: true,
-    showHotspots: true, showTrends: false,
+  planner: {
+    label: 'Resolution Planner',
+    description: 'Waterbody-level restoration planning workspace',
+    defaultOverlay: 'risk',
+    sections: new Set(['map-grid', 'detail', 'resolution-planner', 'disclaimer']),
   },
   trends: {
-    label: 'Trends & Forecasting',
+    label: 'Trends & Projections',
     description: 'Long-term water quality trends, TMDL progress, and outlook',
-    showMap: false,
-    showDetail: false, showRestorationPlan: false,
-    showMS4: false, ms4DefaultExpanded: false,
-    showHotspots: false, showTrends: true,
+    defaultOverlay: 'risk',
+    sections: new Set(['trends-dashboard', 'disclaimer']),
   },
-  full: {
-    label: 'Full Dashboard',
-    description: 'All panels visible — power user view',
-    showMap: true,
-    showDetail: true, showRestorationPlan: true,
-    showMS4: true, ms4DefaultExpanded: true,
-    showHotspots: true, showTrends: true,
+  policy: {
+    label: 'Policy Tracker',
+    description: 'Federal, state, and EPA regulatory action tracking',
+    defaultOverlay: 'risk',
+    sections: new Set(['policy-federal', 'policy-state', 'policy-epa', 'disclaimer']),
+  },
+  compliance: {
+    label: 'Compliance',
+    description: 'Impairment severity, permits, enforcement, and drinking water',
+    defaultOverlay: 'risk',
+    sections: new Set(['regprofile', 'map-grid', 'detail', 'ms4jurisdictions', 'icis', 'sdwis', 'compliance-permits', 'compliance-assessment', 'compliance-dwp', 'compliance-ms4', 'compliance-analytics', 'disclaimer']),
+  },
+  'water-quality': {
+    label: 'Water Quality',
+    description: 'Standards, assessment, station data, and field integration',
+    defaultOverlay: 'risk',
+    sections: new Set(['regprofile', 'map-grid', 'detail', 'top10', 'groundwater', 'wq-standards', 'wq-assessment', 'wq-aqualo', 'wq-stations', 'disclaimer']),
+  },
+  'public-health': {
+    label: 'Public Health & Contaminants',
+    description: 'Contaminant tracking, health coordination, and lab capacity',
+    defaultOverlay: 'risk',
+    sections: new Set(['sdwis', 'ph-contaminants', 'ph-health-coord', 'ph-lab-capacity', 'disclaimer']),
+  },
+  habitat: {
+    label: 'Habitat & Ecology',
+    description: 'Bioassessment, 401 certification, and wildlife coordination',
+    defaultOverlay: 'risk',
+    sections: new Set(['hab-bioassessment', 'hab-401cert', 'hab-wildlife', 'disclaimer']),
+  },
+  agriculture: {
+    label: 'Agricultural & Nonpoint Source',
+    description: '319 program, watershed plans, and nutrient reduction',
+    defaultOverlay: 'risk',
+    sections: new Set(['ag-319', 'ag-wbp', 'ag-nutrient', 'ag-partners', 'disclaimer']),
+  },
+  infrastructure: {
+    label: 'Infrastructure',
+    description: 'SRF administration, capital planning, and green infrastructure',
+    defaultOverlay: 'risk',
+    sections: new Set(['infra-srf', 'infra-capital', 'infra-construction', 'infra-green', 'disclaimer']),
+  },
+  monitoring: {
+    label: 'Monitoring',
+    description: 'State monitoring network, data management, and optimization',
+    defaultOverlay: 'coverage',
+    sections: new Set(['map-grid', 'groundwater', 'mon-network', 'mon-data-mgmt', 'mon-optimization', 'mon-continuous', 'disclaimer']),
+  },
+  disaster: {
+    label: 'Disaster & Emergency Response',
+    description: 'Active incidents, spill reporting, and preparedness',
+    defaultOverlay: 'risk',
+    sections: new Set(['alertfeed', 'disaster-active', 'disaster-response', 'disaster-spill', 'disaster-prep', 'disclaimer']),
+  },
+  tmdl: {
+    label: 'TMDL & Restoration',
+    description: 'TMDL program status, 303(d) management, and watershed restoration',
+    defaultOverlay: 'risk',
+    sections: new Set(['tmdl-status', 'tmdl-303d', 'tmdl-workspace', 'tmdl-implementation', 'tmdl-restoration', 'tmdl-epa', 'disclaimer']),
+  },
+  scorecard: {
+    label: 'Scorecard',
+    description: 'Self-assessment, watershed scorecards, and peer comparison',
+    defaultOverlay: 'risk',
+    sections: new Set(['sc-self-assessment', 'sc-watershed', 'sc-peer', 'sc-epa-ppa', 'disclaimer']),
+  },
+  reports: {
+    label: 'Reports',
+    description: 'Integrated reports, regulatory filings, and data export',
+    defaultOverlay: 'risk',
+    sections: new Set(['exporthub', 'rpt-ir-workspace', 'rpt-regulatory', 'rpt-adhoc', 'disclaimer']),
+  },
+  permits: {
+    label: 'Permits & Enforcement',
+    description: 'Permitting operations, inventory, DMR monitoring, and enforcement',
+    defaultOverlay: 'risk',
+    sections: new Set(['icis', 'perm-status', 'perm-inventory', 'perm-pipeline', 'perm-dmr', 'perm-inspection', 'perm-enforcement', 'perm-general', 'disclaimer']),
+  },
+  funding: {
+    label: 'Funding & Grants',
+    description: 'Active grants, SRF management, and financial analytics',
+    defaultOverlay: 'risk',
+    sections: new Set(['grants', 'fund-active', 'fund-srf', 'fund-pipeline', 'fund-passthrough', 'fund-analytics', 'disclaimer']),
   },
 };
-
-// ─── Map Overlay: what drives marker colors ──────────────────────────────────
-
-type OverlayId = 'risk' | 'coverage' | 'bmp' | 'ej';
 
 const OVERLAYS: { id: OverlayId; label: string; description: string; icon: any }[] = [
   { id: 'risk', label: 'Impairment Risk', description: 'Impairment severity from EPA ATTAINS & state assessments', icon: Droplets },
@@ -278,14 +336,14 @@ function generateStateRegionData(stateAbbr: string): RegionRow[] {
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode }: Props) {
+export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMode }: Props) {
   const stateName = STATE_NAMES[stateAbbr] || stateAbbr;
   const agency = STATE_AGENCIES[stateAbbr] || STATE_AUTHORITIES[stateAbbr] || null;
   const { user, logout } = useAuth();
   const router = useRouter();
 
   // ── View Lens ──
-  const [viewLens, setViewLens] = useLensParam<ViewLens>('compliance');
+  const [viewLens, setViewLens] = useLensParam<ViewLens>('overview');
   const lens = LENS_CONFIG[viewLens];
   const [showViewDropdown, setShowViewDropdown] = useState(false);
   const [showAccountPanel, setShowAccountPanel] = useState(false);
@@ -601,7 +659,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
   const displayedRegions = showAll ? sortedRegions : sortedRegions.slice(0, 15);
 
   // ── Expanded sections ──
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({ waterbodies: true, ms4: lens.ms4DefaultExpanded });
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({ waterbodies: true, ms4: true });
   const toggleSection = (id: string) => setExpandedSections(prev => ({ ...prev, [id]: !prev[id] }));
 
   return (
@@ -638,15 +696,14 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
                   <div className="px-3 py-2 border-b border-slate-100">
                     <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Switch View</span>
                   </div>
-                  <div className="p-1.5">
-                    {(['compliance', 'coverage', 'ms4oversight', 'programs'] as ViewLens[]).map((key) => {
+                  <div className="p-1.5 max-h-80 overflow-y-auto">
+                    {(Object.keys(LENS_CONFIG) as ViewLens[]).map((key) => {
                       const cfg = LENS_CONFIG[key];
                       return (
                         <button
                           key={key}
                           onClick={() => {
                             setViewLens(key);
-                            setExpandedSections(prev => ({ ...prev, ms4: cfg.ms4DefaultExpanded }));
                             setShowViewDropdown(false);
                           }}
                           className={`w-full text-left px-3 py-2 rounded-md text-xs transition-all flex items-center justify-between ${
@@ -661,24 +718,6 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
                         </button>
                       );
                     })}
-                  </div>
-                  <div className="border-t border-slate-100 p-1.5">
-                    <button
-                      onClick={() => {
-                        setViewLens('full');
-                        setExpandedSections(prev => ({ ...prev, ms4: true }));
-                        setShowViewDropdown(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 rounded-md text-xs transition-all flex items-center justify-between ${
-                        viewLens === 'full' ? 'bg-slate-100 text-slate-700' : 'text-slate-500 hover:bg-slate-50'
-                      }`}
-                    >
-                      <div>
-                        <div className="font-medium">Full Dashboard</div>
-                        <div className="text-[10px] text-slate-400 mt-0.5">All panels — power user view</div>
-                      </div>
-                      {viewLens === 'full' && <CheckCircle size={14} className="text-slate-600 flex-shrink-0" />}
-                    </button>
                   </div>
                 </div>
                 </>
@@ -780,7 +819,12 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
           return (<>
         <div className={`space-y-6 ${isEditMode ? 'pl-12' : ''}`}>
 
-        {sections.filter(s => s.visible || isEditMode).map(section => {
+        {sections.filter(s => {
+          if (isEditMode) return true;
+          if (!s.visible) return false;
+          if (s.lensControlled && lens.sections) return lens.sections.has(s.id);
+          return true;
+        }).map(section => {
           const DS = (children: React.ReactNode) => (
             <DraggableSection key={section.id} id={section.id} label={section.label}
               isEditMode={isEditMode} isVisible={section.visible} onToggleVisibility={onToggleVisibility}>
@@ -1250,7 +1294,6 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
             );
 
             case 'detail': return DS(<>
-        {lens.showDetail && (
         <div className="space-y-4">
 
             {/* No selection state */}
@@ -1299,7 +1342,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
             })()}
 
             {/* Restoration Plan — NCC-matching collapsible with Deploy/PDF/Cost buttons */}
-            {lens.showRestorationPlan && showRestorationPlan && activeDetailId && (() => {
+            {showRestorationPlan && activeDetailId && (() => {
               const nccRegion = regionData.find(r => r.id === activeDetailId);
               const regionConfig = getRegionById(activeDetailId);
               const regionName = regionConfig?.name || nccRegion?.name || activeDetailId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -2264,7 +2307,6 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
               );
             })()}
           </div>
-        )}
 
         {/* ── Environmental Justice — Census ACS + EPA SDWIS (statewide) + EJScreen (per-waterbody) ── */}
         {activeDetailId && displayData && regionMockData && (
@@ -2394,8 +2436,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
         )}
             </>);
 
-            case 'top10': return DS(<>
-        {lens.showHotspots && (
+            case 'top10': return DS(
         <div id="section-top10" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
           <button onClick={() => onToggleCollapse('top10')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
             <span className="text-sm font-bold text-slate-800">🔥 Top 5 Worsening / Improving Waterbodies</span>
@@ -2563,11 +2604,10 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
         </div>
           )}
         </div>
-        )}
-            </>);
+            );
 
-            case 'ms4jurisdictions': return DS(<>
-        {lens.showMS4 && jurisdictions.length > 0 && (
+            case 'ms4jurisdictions': return DS(
+        jurisdictions.length > 0 ? (
           <Card id="section-ms4jurisdictions" className="border-2 border-indigo-200 bg-gradient-to-br from-indigo-50/30 to-white">
             <CardHeader className="pb-2 cursor-pointer" onClick={() => toggleSection('ms4')}>
               <div className="flex items-center justify-between">
@@ -2674,8 +2714,7 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
               </CardContent>
             )}
           </Card>
-        )}
-            </>);
+        ) : null);
 
             case 'icis': return DS(
         <div id="section-icis">
@@ -2745,7 +2784,6 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
             </>);
 
             case 'trends-dashboard': return DS(
-        lens.showTrends ? (
         <Card>
           <CardHeader>
             <CardTitle>State Water Quality Trends</CardTitle>
@@ -2819,10 +2857,1871 @@ export function StateCommandCenter({ stateAbbr, onSelectRegion, onToggleDevMode 
             </div>
           </CardContent>
         </Card>
-        ) : null);
+            );
 
             case 'disclaimer': return DS(
               <PlatformDisclaimer />
+            );
+
+            // ── Overview sections ──────────────────────────────────────────
+            case 'operational-health': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5 text-green-600" />
+                    Operational Health Bar
+                  </CardTitle>
+                  <CardDescription>Real-time system status across core program areas</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Permit Processing', status: 'On Track', color: 'text-green-700', bg: 'bg-green-50 border-green-200' },
+                      { label: 'TMDL Development', status: 'Behind', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Monitoring Network', status: 'Healthy', color: 'text-green-700', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Enforcement Pipeline', status: 'Active', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
+                    ].map(item => (
+                      <div key={item.label} className={`rounded-xl border p-4 ${item.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{item.label}</div>
+                        <div className={`text-lg font-bold ${item.color} mt-1`}>{item.status}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State program management system, EPA ICIS/ECHO</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'quick-access': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Zap className="h-5 w-5 text-amber-600" />
+                    Quick Access Grid
+                  </CardTitle>
+                  <CardDescription>Jump to frequently used tools and reports</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'New Permit Application', icon: '📋' },
+                      { label: 'Inspection Scheduler', icon: '🔍' },
+                      { label: '303(d) List Editor', icon: '📝' },
+                      { label: 'TMDL Status Report', icon: '📊' },
+                      { label: 'Enforcement Log', icon: '⚖️' },
+                      { label: 'Lab Data Upload', icon: '🔬' },
+                      { label: 'Public Notice Queue', icon: '📢' },
+                      { label: 'SRF Draw Request', icon: '💰' },
+                    ].map(item => (
+                      <button key={item.label} className="rounded-lg border border-slate-200 bg-white hover:bg-slate-50 p-3 text-left transition-colors">
+                        <span className="text-lg">{item.icon}</span>
+                        <div className="text-xs font-medium text-slate-700 mt-1">{item.label}</div>
+                      </button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            // ── AI Briefing sections ───────────────────────────────────────
+            case 'briefing-actions': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertCircle className="h-5 w-5 text-red-600" />
+                    Action Required
+                  </CardTitle>
+                  <CardDescription>Items requiring immediate attention from state program staff</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { priority: 'High', item: '3 NPDES permits expiring within 30 days — renewal packages incomplete', color: 'text-red-700 bg-red-50 border-red-200' },
+                      { priority: 'High', item: 'EPA Region 3 requesting TMDL progress update by end of week', color: 'text-red-700 bg-red-50 border-red-200' },
+                      { priority: 'Medium', item: '2 consent decree milestone reports due next month', color: 'text-amber-700 bg-amber-50 border-amber-200' },
+                      { priority: 'Low', item: 'Quarterly monitoring data upload window opens in 5 days', color: 'text-blue-700 bg-blue-50 border-blue-200' },
+                    ].map((a, i) => (
+                      <div key={i} className={`rounded-lg border p-3 ${a.color}`}>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-[10px]">{a.priority}</Badge>
+                          <span className="text-xs">{a.item}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: AI analysis of permit database, EPA correspondence, and program deadlines</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'briefing-changes': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-purple-600" />
+                    What Changed Overnight
+                  </CardTitle>
+                  <CardDescription>New data, alerts, and status changes since your last session</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { time: '2:14 AM', change: 'ATTAINS data refresh: 3 new Category 5 listings added for nutrient impairment' },
+                      { time: '3:45 AM', change: 'ECHO enforcement update: 1 new significant non-compliance finding in NPDES universe' },
+                      { time: '5:30 AM', change: 'NWIS groundwater data: 2 monitoring wells show declining water table trend' },
+                      { time: '6:00 AM', change: 'SDWIS update: MCL exceedance reported at 1 community water system' },
+                    ].map((c, i) => (
+                      <div key={i} className="flex items-start gap-3 rounded-lg border border-slate-200 p-3">
+                        <span className="text-[10px] font-mono text-slate-400 whitespace-nowrap mt-0.5">{c.time}</span>
+                        <span className="text-xs text-slate-700">{c.change}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ATTAINS, ECHO, SDWIS, USGS NWIS overnight batch updates</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'briefing-pulse': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5 text-blue-600" />
+                    Program Pulse
+                  </CardTitle>
+                  <CardDescription>Key program metrics at a glance</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Active Permits', value: '342', trend: '+2', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Open Inspections', value: '28', trend: '-3', color: 'text-green-700', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Pending TMDLs', value: '14', trend: '0', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'SRF Utilization', value: '78%', trend: '+5%', color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200' },
+                    ].map(m => (
+                      <div key={m.label} className={`rounded-xl border p-4 ${m.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{m.label}</div>
+                        <div className={`text-2xl font-bold ${m.color} mt-1`}>{m.value}</div>
+                        <div className="text-[10px] text-slate-500 mt-1">{m.trend} this week</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State permit tracking system, EPA ICIS, SRF loan management</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'briefing-stakeholder': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Scale className="h-5 w-5 text-indigo-600" />
+                    Stakeholder Watch
+                  </CardTitle>
+                  <CardDescription>Recent stakeholder activity, public comments, and media mentions</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { type: 'Public Comment', detail: 'Draft TMDL for Bear Creek received 14 comments during public notice period', status: 'Review Needed' },
+                      { type: 'Media', detail: 'Local news coverage of PFAS detection in 2 community water systems', status: 'Monitoring' },
+                      { type: 'Legislative', detail: 'State legislature committee hearing on SRF funding allocation scheduled next week', status: 'Prepare Testimony' },
+                    ].map((s, i) => (
+                      <div key={i} className="rounded-lg border border-slate-200 p-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <Badge variant="outline" className="text-[10px]">{s.type}</Badge>
+                          <Badge variant="secondary" className="text-[10px]">{s.status}</Badge>
+                        </div>
+                        <p className="text-xs text-slate-700">{s.detail}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: AI analysis of public notice systems, media monitoring, legislative tracking</p>
+                </CardContent>
+              </Card>
+            );
+
+            // ── Resolution Planner ─────────────────────────────────────────
+            case 'resolution-planner': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ClipboardList className="h-5 w-5 text-cyan-600" />
+                    Resolution Plan Workspace
+                  </CardTitle>
+                  <CardDescription>Build and track restoration plans for impaired waterbodies</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8 text-slate-400">
+                    <ClipboardList className="h-10 w-10 mx-auto mb-3 text-slate-300" />
+                    <p className="text-sm font-medium">Select a waterbody from the map to begin planning</p>
+                    <p className="text-xs mt-1">Resolution plans integrate TMDL requirements, BMP options, cost estimates, and implementation timelines</p>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ATTAINS, state TMDL tracking system, BMP cost database</p>
+                </CardContent>
+              </Card>
+            );
+
+            // ── Policy Tracker sections ────────────────────────────────────
+            case 'policy-federal': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Landmark className="h-5 w-5 text-blue-600" />
+                    Federal Actions Affecting State
+                  </CardTitle>
+                  <CardDescription>Recent federal regulatory actions with state program implications</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { action: 'EPA Proposed Rule: PFAS NPDWR', impact: 'May require expanded monitoring at 45+ systems', status: 'Comment Period', date: '2026-03-15' },
+                      { action: 'CWA Section 401 Certification Rule Update', impact: 'Changes to state certification timeline requirements', status: 'Final Rule', date: '2026-01-10' },
+                      { action: 'WOTUS Definition Update', impact: 'May affect jurisdiction over 200+ state wetland sites', status: 'Proposed', date: '2026-04-01' },
+                    ].map((f, i) => (
+                      <div key={i} className="rounded-lg border border-blue-200 bg-blue-50/50 p-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-semibold text-blue-800">{f.action}</span>
+                          <Badge variant="outline" className="text-[10px]">{f.status}</Badge>
+                        </div>
+                        <p className="text-xs text-slate-600">{f.impact}</p>
+                        <p className="text-[10px] text-slate-400 mt-1">Target date: {f.date}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: Federal Register, EPA regulatory agenda, Congressional tracking</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'policy-state': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Scale className="h-5 w-5 text-teal-600" />
+                    State Regulatory Actions
+                  </CardTitle>
+                  <CardDescription>Pending and recent state-level regulatory changes</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { action: 'Water Quality Standards Triennial Review', stage: 'Public Comment', impact: 'Revised nutrient criteria for 3 watershed categories' },
+                      { action: 'Biosolids Management Regulation Update', stage: 'Draft', impact: 'New PFAS limits for land application' },
+                      { action: 'Stormwater General Permit Renewal', stage: 'Under Review', impact: 'Updated MCM requirements for Phase II MS4s' },
+                    ].map((s, i) => (
+                      <div key={i} className="rounded-lg border border-teal-200 bg-teal-50/50 p-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-semibold text-teal-800">{s.action}</span>
+                          <Badge variant="outline" className="text-[10px]">{s.stage}</Badge>
+                        </div>
+                        <p className="text-xs text-slate-600">{s.impact}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State regulatory tracker, administrative code updates</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'policy-epa': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ShieldCheck className="h-5 w-5 text-green-600" />
+                    EPA Oversight Status
+                  </CardTitle>
+                  <CardDescription>State program authorization status and EPA review findings</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {[
+                      { program: 'NPDES', status: 'Authorized', lastReview: '2024' },
+                      { program: 'UIC', status: 'Authorized', lastReview: '2023' },
+                      { program: 'SDWA PWS', status: 'Primacy', lastReview: '2024' },
+                      { program: 'CWA §401', status: 'Authorized', lastReview: '2023' },
+                      { program: 'Biosolids', status: 'Authorized', lastReview: '2022' },
+                      { program: 'Wetlands §404', status: 'Federal (USACE)', lastReview: 'N/A' },
+                    ].map(p => (
+                      <div key={p.program} className="rounded-lg border border-slate-200 p-3 text-center">
+                        <div className="text-sm font-bold text-slate-700">{p.program}</div>
+                        <Badge variant={p.status === 'Authorized' || p.status === 'Primacy' ? 'default' : 'secondary'} className="text-[10px] mt-1">{p.status}</Badge>
+                        <div className="text-[10px] text-slate-400 mt-1">Last review: {p.lastReview}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA program authorization database, state-EPA MOA records</p>
+                </CardContent>
+              </Card>
+            );
+
+            // ── Compliance sections ────────────────────────────────────────
+            case 'compliance-permits': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileCheck className="h-5 w-5 text-blue-600" />
+                    Permit Compliance Management
+                  </CardTitle>
+                  <CardDescription>NPDES permit universe compliance status and upcoming actions</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Total Permits', value: '342', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'In Compliance', value: '312', bg: 'bg-green-50 border-green-200' },
+                      { label: 'SNC Facilities', value: '8', bg: 'bg-red-50 border-red-200' },
+                      { label: 'Expiring (90d)', value: '14', bg: 'bg-amber-50 border-amber-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ICIS-NPDES, state permit tracking system</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'compliance-assessment': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Waves className="h-5 w-5 text-cyan-600" />
+                    Assessment & Listing Management
+                  </CardTitle>
+                  <CardDescription>CWA 303(d)/305(b) assessment cycle status and listing decisions</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Total Assessed', value: '1,247', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Category 5 (Impaired)', value: '186', bg: 'bg-red-50 border-red-200' },
+                      { label: 'Category 4a (TMDL)', value: '94', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Category 1 (Attaining)', value: '423', bg: 'bg-green-50 border-green-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ATTAINS, state integrated report database</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'compliance-dwp': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Droplets className="h-5 w-5 text-sky-600" />
+                    Drinking Water Program
+                  </CardTitle>
+                  <CardDescription>SDWA compliance overview for public water systems</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'PWS Count', value: '1,842', bg: 'bg-sky-50 border-sky-200' },
+                      { label: 'In Compliance', value: '1,791', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Active Violations', value: '23', bg: 'bg-red-50 border-red-200' },
+                      { label: 'Enforcement Actions', value: '7', bg: 'bg-amber-50 border-amber-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA SDWIS, state drinking water program</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'compliance-ms4': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 className="h-5 w-5 text-indigo-600" />
+                    MS4 Program Oversight
+                  </CardTitle>
+                  <CardDescription>Municipal stormwater permit compliance and annual report tracking</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'MS4 Permittees', value: String(jurisdictions.length || '—'), bg: 'bg-indigo-50 border-indigo-200' },
+                      { label: 'Reports On Time', value: '89%', bg: 'bg-green-50 border-green-200' },
+                      { label: 'MCM Deficiencies', value: '12', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'BMP Audits Due', value: '6', bg: 'bg-blue-50 border-blue-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State MS4 permit tracking, annual report submissions</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'compliance-analytics': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5 text-violet-600" />
+                    Compliance Analytics
+                  </CardTitle>
+                  <CardDescription>Cross-program compliance trends and risk indicators</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {[
+                      { metric: 'Overall Compliance Rate', value: '94.2%', trend: '↑ 1.3%', detail: 'Across all regulated programs' },
+                      { metric: 'Repeat Violators', value: '12', trend: '↓ 2', detail: 'Facilities with 2+ violations in 3 years' },
+                      { metric: 'Avg. Resolution Time', value: '47 days', trend: '↓ 8 days', detail: 'From violation to return-to-compliance' },
+                    ].map(m => (
+                      <div key={m.metric} className="rounded-lg border border-violet-200 bg-violet-50/50 p-4">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{m.metric}</div>
+                        <div className="text-2xl font-bold text-violet-700 mt-1">{m.value}</div>
+                        <div className="text-xs text-green-600 font-medium">{m.trend}</div>
+                        <div className="text-[10px] text-slate-500 mt-1">{m.detail}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ECHO, ICIS, SDWIS, state enforcement tracking</p>
+                </CardContent>
+              </Card>
+            );
+
+            // ── Water Quality sections ─────────────────────────────────────
+            case 'wq-standards': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Scale className="h-5 w-5 text-blue-600" />
+                    Standards Applied
+                  </CardTitle>
+                  <CardDescription>Water quality standards and criteria currently in effect</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { standard: 'Dissolved Oxygen', criteria: '≥ 5.0 mg/L', use: 'Aquatic Life', status: 'Current' },
+                      { standard: 'Nitrogen (Total)', criteria: '≤ 3.0 mg/L', use: 'Nutrient Criteria', status: 'Under Review' },
+                      { standard: 'Phosphorus (Total)', criteria: '≤ 0.1 mg/L', use: 'Nutrient Criteria', status: 'Current' },
+                      { standard: 'E. coli', criteria: '≤ 126 CFU/100mL (GM)', use: 'Primary Contact', status: 'Current' },
+                      { standard: 'PFOS/PFOA', criteria: '≤ 4 ng/L', use: 'Human Health', status: 'Proposed' },
+                    ].map(s => (
+                      <div key={s.standard} className="flex items-center justify-between rounded-lg border border-slate-200 p-3">
+                        <div>
+                          <span className="text-xs font-semibold text-slate-800">{s.standard}</span>
+                          <span className="text-xs text-slate-500 ml-2">{s.criteria}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-slate-500">{s.use}</span>
+                          <Badge variant={s.status === 'Current' ? 'default' : 'secondary'} className="text-[10px]">{s.status}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State water quality standards, EPA approved criteria</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'wq-assessment': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Waves className="h-5 w-5 text-cyan-600" />
+                    Assessment Workspace
+                  </CardTitle>
+                  <CardDescription>Integrated reporting and assessment decision support</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8 text-slate-400">
+                    <Waves className="h-10 w-10 mx-auto mb-3 text-slate-300" />
+                    <p className="text-sm font-medium">Select a waterbody to begin assessment</p>
+                    <p className="text-xs mt-1">Compare monitoring data against applicable standards and generate assessment decisions</p>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State monitoring database, EPA ATTAINS, WQX</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'wq-aqualo': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FlaskConical className="h-5 w-5 text-teal-600" />
+                    Aqua-Lo Integration
+                  </CardTitle>
+                  <CardDescription>Real-time field sensor data from deployed Aqua-Lo units</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Deployed Units', value: '—', bg: 'bg-teal-50 border-teal-200' },
+                      { label: 'Active Streams', value: '—', bg: 'bg-teal-50 border-teal-200' },
+                      { label: 'Alerts (24h)', value: '—', bg: 'bg-teal-50 border-teal-200' },
+                      { label: 'Data Points', value: '—', bg: 'bg-teal-50 border-teal-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-teal-700 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: Aqua-Lo IoT sensor network (awaiting deployment)</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'wq-stations': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <RadioTower className="h-5 w-5 text-blue-600" />
+                    Enhanced Station Data
+                  </CardTitle>
+                  <CardDescription>Monitoring station inventory with data quality and coverage metrics</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Total Stations', value: '248', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Active (last 90d)', value: '186', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Continuous', value: '42', bg: 'bg-purple-50 border-purple-200' },
+                      { label: 'Data Quality Score', value: '91%', bg: 'bg-emerald-50 border-emerald-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: WQX, state monitoring network database, USGS NWIS</p>
+                </CardContent>
+              </Card>
+            );
+
+            // ── Public Health sections ──────────────────────────────────────
+            case 'ph-contaminants': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Heart className="h-5 w-5 text-red-600" />
+                    Contaminant Tracking
+                  </CardTitle>
+                  <CardDescription>PFAS, lead, and emerging contaminant monitoring across the state</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'PFAS Sites Monitored', value: '67', bg: 'bg-red-50 border-red-200' },
+                      { label: 'Above MCL', value: '12', bg: 'bg-red-50 border-red-200' },
+                      { label: 'Lead Action Level', value: '4', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'New Detections (90d)', value: '8', bg: 'bg-orange-50 border-orange-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State lab results, EPA UCMR, SDWIS contaminant monitoring</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'ph-health-coord': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Heart className="h-5 w-5 text-pink-600" />
+                    State Health Coordination
+                  </CardTitle>
+                  <CardDescription>Coordination with state health department on water-related health advisories</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { advisory: 'Swimming Advisory — Bear Creek', status: 'Active', issued: '2026-02-10' },
+                      { advisory: 'Fish Consumption — Patapsco River', status: 'Active', issued: '2025-11-15' },
+                      { advisory: 'HAB Watch — Deep Creek Lake', status: 'Seasonal', issued: '2025-07-01' },
+                    ].map((a, i) => (
+                      <div key={i} className="flex items-center justify-between rounded-lg border border-pink-200 bg-pink-50/50 p-3">
+                        <span className="text-xs font-medium text-slate-700">{a.advisory}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-slate-400">{a.issued}</span>
+                          <Badge variant={a.status === 'Active' ? 'destructive' : 'secondary'} className="text-[10px]">{a.status}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State health department advisory system, EPA beach monitoring</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'ph-lab-capacity': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FlaskConical className="h-5 w-5 text-purple-600" />
+                    State Lab Capacity
+                  </CardTitle>
+                  <CardDescription>Laboratory throughput, certification status, and backlog tracking</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Monthly Capacity', value: '2,400', bg: 'bg-purple-50 border-purple-200' },
+                      { label: 'Current Backlog', value: '142', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Avg. Turnaround', value: '8 days', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Certifications', value: '14 Active', bg: 'bg-green-50 border-green-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State environmental laboratory management system</p>
+                </CardContent>
+              </Card>
+            );
+
+            // ── Habitat sections ───────────────────────────────────────────
+            case 'hab-bioassessment': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TreePine className="h-5 w-5 text-green-600" />
+                    Bioassessment Program
+                  </CardTitle>
+                  <CardDescription>Biological monitoring and index of biotic integrity tracking</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Sites Sampled (yr)', value: '186', bg: 'bg-green-50 border-green-200' },
+                      { label: 'IBI Good/Excellent', value: '62%', bg: 'bg-green-50 border-green-200' },
+                      { label: 'IBI Fair', value: '24%', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'IBI Poor/V.Poor', value: '14%', bg: 'bg-red-50 border-red-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State bioassessment database, EPA BioData</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'hab-401cert': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileCheck className="h-5 w-5 text-teal-600" />
+                    Section 401 Certification
+                  </CardTitle>
+                  <CardDescription>CWA Section 401 water quality certification decisions and queue</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Pending Reviews', value: '18', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Certified (YTD)', value: '42', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Denied (YTD)', value: '3', bg: 'bg-red-50 border-red-200' },
+                      { label: 'Avg. Review Time', value: '45 days', bg: 'bg-blue-50 border-blue-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State 401 certification tracking, USACE permit database</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'hab-wildlife': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Leaf className="h-5 w-5 text-emerald-600" />
+                    State Wildlife Coordination
+                  </CardTitle>
+                  <CardDescription>Endangered species, critical habitat, and wildlife agency coordination</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {[
+                      { label: 'Listed Aquatic Species', value: '23', bg: 'bg-emerald-50 border-emerald-200' },
+                      { label: 'Critical Habitat Areas', value: '8', bg: 'bg-emerald-50 border-emerald-200' },
+                      { label: 'Active Consultations', value: '5', bg: 'bg-amber-50 border-amber-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State wildlife agency, USFWS IPaC, NatureServe</p>
+                </CardContent>
+              </Card>
+            );
+
+            // ── Agriculture sections ───────────────────────────────────────
+            case 'ag-319': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sprout className="h-5 w-5 text-lime-600" />
+                    319 Program Management
+                  </CardTitle>
+                  <CardDescription>CWA Section 319 nonpoint source pollution control program</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Active 319 Grants', value: '18', bg: 'bg-lime-50 border-lime-200' },
+                      { label: 'Watershed Projects', value: '32', bg: 'bg-lime-50 border-lime-200' },
+                      { label: 'BMPs Installed', value: '247', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Load Reduction (lbs)', value: '142K', bg: 'bg-green-50 border-green-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA GRTS, state 319 program tracking</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'ag-wbp': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sprout className="h-5 w-5 text-green-600" />
+                    Watershed-Based Plans
+                  </CardTitle>
+                  <CardDescription>EPA-accepted watershed plans and implementation progress</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {[
+                      { label: 'Accepted Plans', value: '14', bg: 'bg-green-50 border-green-200' },
+                      { label: 'In Development', value: '6', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Avg. Implementation', value: '42%', bg: 'bg-blue-50 border-blue-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA GRTS, state nonpoint source program</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'ag-nutrient': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sprout className="h-5 w-5 text-amber-600" />
+                    Nutrient Reduction Strategy
+                  </CardTitle>
+                  <CardDescription>Progress toward state nutrient reduction goals</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'N Reduction Goal', value: '35%', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'N Achieved', value: '22%', bg: 'bg-green-50 border-green-200' },
+                      { label: 'P Reduction Goal', value: '25%', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'P Achieved', value: '18%', bg: 'bg-green-50 border-green-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State nutrient reduction strategy, EPA nutrient framework</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'ag-partners': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sprout className="h-5 w-5 text-emerald-600" />
+                    Agricultural Partner Management
+                  </CardTitle>
+                  <CardDescription>Coordination with USDA, soil conservation districts, and ag stakeholders</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {[
+                      { label: 'Partner Organizations', value: '24', bg: 'bg-emerald-50 border-emerald-200' },
+                      { label: 'Active MOUs', value: '8', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Joint Projects', value: '15', bg: 'bg-green-50 border-green-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State agricultural partnership database, USDA NRCS</p>
+                </CardContent>
+              </Card>
+            );
+
+            // ── Infrastructure sections ────────────────────────────────────
+            case 'infra-srf': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Banknote className="h-5 w-5 text-green-600" />
+                    SRF Administration
+                  </CardTitle>
+                  <CardDescription>Clean Water and Drinking Water State Revolving Fund status</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'CWSRF Available', value: '$84M', bg: 'bg-green-50 border-green-200' },
+                      { label: 'DWSRF Available', value: '$62M', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Active Loans', value: '47', bg: 'bg-slate-50 border-slate-200' },
+                      { label: 'Utilization Rate', value: '78%', bg: 'bg-amber-50 border-amber-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State SRF program, EPA CWSRF/DWSRF national data</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'infra-capital': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <HardHat className="h-5 w-5 text-orange-600" />
+                    Capital Improvement Planning
+                  </CardTitle>
+                  <CardDescription>Planned infrastructure investments and priority project list</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Priority Projects', value: '28', bg: 'bg-orange-50 border-orange-200' },
+                      { label: 'Total Investment', value: '$340M', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Funded', value: '16', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Awaiting Funding', value: '12', bg: 'bg-amber-50 border-amber-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State capital improvement plan, EPA Needs Survey</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'infra-construction': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Wrench className="h-5 w-5 text-slate-600" />
+                    Construction Project Tracker
+                  </CardTitle>
+                  <CardDescription>Active construction projects with milestone tracking</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Active Projects', value: '12', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'On Schedule', value: '9', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Behind Schedule', value: '2', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Completed (YTD)', value: '5', bg: 'bg-slate-50 border-slate-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State construction management system, SRF disbursement records</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'infra-green': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Leaf className="h-5 w-5 text-green-600" />
+                    Green Infrastructure
+                  </CardTitle>
+                  <CardDescription>Nature-based solutions, LID projects, and green infrastructure inventory</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'GI Projects', value: '86', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Acres Managed', value: '1,240', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Runoff Captured', value: '2.4M gal/yr', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Co-Benefits Score', value: 'High', bg: 'bg-emerald-50 border-emerald-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State GI inventory, MS4 annual reports, SRF green project reserve</p>
+                </CardContent>
+              </Card>
+            );
+
+            // ── Monitoring sections ────────────────────────────────────────
+            case 'mon-network': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <RadioTower className="h-5 w-5 text-blue-600" />
+                    State Monitoring Network
+                  </CardTitle>
+                  <CardDescription>Comprehensive view of ambient and compliance monitoring stations</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Ambient Stations', value: '186', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'NPDES DMR', value: '342', bg: 'bg-slate-50 border-slate-200' },
+                      { label: 'SDWA Compliance', value: '1,842', bg: 'bg-sky-50 border-sky-200' },
+                      { label: 'Volunteer Sites', value: '94', bg: 'bg-green-50 border-green-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: WQX, state monitoring strategy, USGS cooperative program</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'mon-data-mgmt': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5 text-indigo-600" />
+                    Data Management Operations
+                  </CardTitle>
+                  <CardDescription>WQX submissions, data quality, and STORET/WQP integration status</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'WQX Submissions', value: '24', bg: 'bg-indigo-50 border-indigo-200' },
+                      { label: 'Pending QA', value: '3', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Records (YTD)', value: '48.2K', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'QA Pass Rate', value: '97.3%', bg: 'bg-green-50 border-green-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: WQX submission tracker, state data management system</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'mon-optimization': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-cyan-600" />
+                    Network Optimization
+                  </CardTitle>
+                  <CardDescription>Coverage gap analysis and monitoring strategy recommendations</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {[
+                      { label: 'Coverage Score', value: '72%', bg: 'bg-cyan-50 border-cyan-200' },
+                      { label: 'Priority Gaps', value: '14', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Recommended Stations', value: '22', bg: 'bg-blue-50 border-blue-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State monitoring strategy, coverage model analysis</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'mon-continuous': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5 text-green-600" />
+                    Continuous Monitoring
+                  </CardTitle>
+                  <CardDescription>Real-time and continuous monitoring stations with data streams</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Continuous Stations', value: '42', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Online Now', value: '38', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Alerts (24h)', value: '3', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Parameters Tracked', value: '8', bg: 'bg-blue-50 border-blue-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State continuous monitoring network, USGS NWIS real-time</p>
+                </CardContent>
+              </Card>
+            );
+
+            // ── Disaster sections ──────────────────────────────────────────
+            case 'disaster-active': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-red-600" />
+                    Active Incidents
+                  </CardTitle>
+                  <CardDescription>Current water quality emergencies and active response operations</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { incident: 'Sewage Bypass — Patapsco WWTP', status: 'Active', severity: 'High', since: '2026-02-20' },
+                      { incident: 'Chemical Spill — I-95 corridor', status: 'Monitoring', severity: 'Medium', since: '2026-02-22' },
+                    ].map((inc, i) => (
+                      <div key={i} className={`rounded-lg border p-3 ${inc.severity === 'High' ? 'border-red-200 bg-red-50' : 'border-amber-200 bg-amber-50'}`}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-semibold text-slate-800">{inc.incident}</span>
+                          <Badge variant={inc.severity === 'High' ? 'destructive' : 'default'} className="text-[10px]">{inc.status}</Badge>
+                        </div>
+                        <p className="text-[10px] text-slate-500">Since {inc.since} · Severity: {inc.severity}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State incident command system, NRC spill reports</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'disaster-response': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5 text-blue-600" />
+                    State Response Operations
+                  </CardTitle>
+                  <CardDescription>Emergency response team deployment and coordination status</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Teams Deployed', value: '2', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Sampling Sites', value: '18', bg: 'bg-cyan-50 border-cyan-200' },
+                      { label: 'Advisories Active', value: '3', bg: 'bg-red-50 border-red-200' },
+                      { label: 'Federal Coordination', value: 'Active', bg: 'bg-amber-50 border-amber-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State emergency operations, EPA emergency response</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'disaster-spill': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertCircle className="h-5 w-5 text-orange-600" />
+                    Spill Reporting
+                  </CardTitle>
+                  <CardDescription>Spill notification tracking and response coordination</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Reports (30d)', value: '14', bg: 'bg-orange-50 border-orange-200' },
+                      { label: 'Under Investigation', value: '4', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Cleanup Active', value: '3', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Closed (30d)', value: '7', bg: 'bg-green-50 border-green-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: NRC, state spill reporting hotline, CERCLA notifications</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'disaster-prep': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5 text-green-600" />
+                    Preparedness
+                  </CardTitle>
+                  <CardDescription>Emergency preparedness status and contingency plan tracking</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {[
+                      { label: 'Emergency Plans', value: '12 Current', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Last Drill', value: '45 days ago', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Equipment Ready', value: '94%', bg: 'bg-green-50 border-green-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State emergency management, EPA CAMEO/ALOHA</p>
+                </CardContent>
+              </Card>
+            );
+
+            // ── TMDL sections ──────────────────────────────────────────────
+            case 'tmdl-status': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Waves className="h-5 w-5 text-cyan-600" />
+                    TMDL Program Status
+                  </CardTitle>
+                  <CardDescription>TMDLs completed, in development, and backlog tracking</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'EPA Approved', value: '94', bg: 'bg-green-50 border-green-200' },
+                      { label: 'In Development', value: '14', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Backlog', value: '78', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Completion Rate', value: '55%', bg: 'bg-cyan-50 border-cyan-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ATTAINS TMDL tracking, state TMDL development system</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'tmdl-303d': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Waves className="h-5 w-5 text-red-600" />
+                    303(d) List Management
+                  </CardTitle>
+                  <CardDescription>Impaired waters list management and listing decision workspace</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Category 5 Listed', value: '186', bg: 'bg-red-50 border-red-200' },
+                      { label: 'New Listings (cycle)', value: '12', bg: 'bg-orange-50 border-orange-200' },
+                      { label: 'Delistings (cycle)', value: '8', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Vision Priority', value: '42', bg: 'bg-blue-50 border-blue-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ATTAINS, state 303(d) listing database</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'tmdl-workspace': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ClipboardList className="h-5 w-5 text-blue-600" />
+                    TMDL Development Workspace
+                  </CardTitle>
+                  <CardDescription>Active TMDL development projects with milestone tracking</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8 text-slate-400">
+                    <ClipboardList className="h-10 w-10 mx-auto mb-3 text-slate-300" />
+                    <p className="text-sm font-medium">Select a waterbody with a pending TMDL to begin</p>
+                    <p className="text-xs mt-1">Track pollutant source analysis, load allocations, and implementation milestones</p>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State TMDL development tracker, EPA ATTAINS</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'tmdl-implementation': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-green-600" />
+                    Implementation Tracking
+                  </CardTitle>
+                  <CardDescription>TMDL implementation plan progress and pollutant load reduction</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Active Impl. Plans', value: '68', bg: 'bg-green-50 border-green-200' },
+                      { label: 'On Track', value: '52', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Behind Schedule', value: '12', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Near Delisting', value: '4', bg: 'bg-cyan-50 border-cyan-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State TMDL implementation tracker, EPA Watershed Tracking</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'tmdl-restoration': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Waves className="h-5 w-5 text-emerald-600" />
+                    Watershed Restoration
+                  </CardTitle>
+                  <CardDescription>Active restoration projects and waterbody recovery progress</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {[
+                      { label: 'Active Projects', value: '24', bg: 'bg-emerald-50 border-emerald-200' },
+                      { label: 'Delisted (5yr)', value: '12', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Investment', value: '$28M', bg: 'bg-blue-50 border-blue-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State restoration program, EPA Recovery Potential Screening</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'tmdl-epa': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Landmark className="h-5 w-5 text-blue-600" />
+                    EPA Coordination
+                  </CardTitle>
+                  <CardDescription>EPA Region oversight, consent decree tracking, and federal TMDL actions</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { item: 'EPA-established TMDLs pending state adoption', count: '3', status: 'Action Needed' },
+                      { item: 'Consent decree TMDL milestones (next 12 months)', count: '5', status: 'On Track' },
+                      { item: 'EPA technical assistance requests', count: '2', status: 'In Progress' },
+                    ].map((e, i) => (
+                      <div key={i} className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50/50 p-3">
+                        <span className="text-xs text-slate-700">{e.item}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-blue-700">{e.count}</span>
+                          <Badge variant="outline" className="text-[10px]">{e.status}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA Region coordination records, consent decree dockets</p>
+                </CardContent>
+              </Card>
+            );
+
+            // ── Scorecard sections ─────────────────────────────────────────
+            case 'sc-self-assessment': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Trophy className="h-5 w-5 text-amber-600" />
+                    State Self-Assessment
+                  </CardTitle>
+                  <CardDescription>Program performance self-evaluation against state goals</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Overall Score', value: 'B+', bg: 'bg-emerald-50 border-emerald-200' },
+                      { label: 'Permit Timeliness', value: 'A-', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Monitoring Coverage', value: 'B', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Enforcement Resolve', value: 'B-', bg: 'bg-amber-50 border-amber-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-3xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State program performance metrics, EPA GPRA measures</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'sc-watershed': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Waves className="h-5 w-5 text-blue-600" />
+                    Watershed Scorecards
+                  </CardTitle>
+                  <CardDescription>Per-watershed health grades and trend indicators</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8 text-slate-400">
+                    <Waves className="h-10 w-10 mx-auto mb-3 text-slate-300" />
+                    <p className="text-sm font-medium">Watershed scorecards will populate from assessment data</p>
+                    <p className="text-xs mt-1">Individual HUC-8 and HUC-12 watershed grades based on impairment, monitoring, and restoration metrics</p>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ATTAINS, state monitoring database, NHDPlus</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'sc-peer': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5 text-indigo-600" />
+                    Peer Comparison
+                  </CardTitle>
+                  <CardDescription>Compare program performance against regional peer states</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Peer Rank', value: '3 of 8', bg: 'bg-indigo-50 border-indigo-200' },
+                      { label: 'Permit Timeliness', value: 'Above Avg', bg: 'bg-green-50 border-green-200' },
+                      { label: 'TMDL Progress', value: 'Average', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Enforcement Rate', value: 'Below Avg', bg: 'bg-amber-50 border-amber-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-lg font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ECHO, ATTAINS, state program comparison data</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'sc-epa-ppa': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Landmark className="h-5 w-5 text-blue-600" />
+                    EPA Performance Partnership
+                  </CardTitle>
+                  <CardDescription>Performance Partnership Agreement/Grant tracking and deliverables</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {[
+                      { label: 'PPA Commitments', value: '24', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'On Track', value: '20', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Needs Attention', value: '4', bg: 'bg-amber-50 border-amber-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA PPA/PPG tracking, state-EPA work plan</p>
+                </CardContent>
+              </Card>
+            );
+
+            // ── Reports sections ───────────────────────────────────────────
+            case 'rpt-ir-workspace': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-blue-600" />
+                    Integrated Report Workspace
+                  </CardTitle>
+                  <CardDescription>CWA 305(b)/303(d) integrated report development and submission</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Report Cycle', value: '2026', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Assessments Done', value: '78%', bg: 'bg-green-50 border-green-200' },
+                      { label: 'EPA Review Status', value: 'Pending', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Public Comment', value: 'Upcoming', bg: 'bg-slate-50 border-slate-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-lg font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ATTAINS, state integrated reporting system</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'rpt-regulatory': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-indigo-600" />
+                    Regulatory Reports
+                  </CardTitle>
+                  <CardDescription>Required regulatory submissions and compliance reporting deadlines</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { report: 'Annual NPDES Program Report', due: '2026-03-31', status: 'In Progress' },
+                      { report: 'SRF Annual Report', due: '2026-06-30', status: 'Not Started' },
+                      { report: 'Drinking Water Program Report', due: '2026-07-01', status: 'Not Started' },
+                      { report: 'NPS Annual Report (319)', due: '2026-10-01', status: 'Not Started' },
+                    ].map((r, i) => (
+                      <div key={i} className="flex items-center justify-between rounded-lg border border-slate-200 p-3">
+                        <span className="text-xs font-medium text-slate-700">{r.report}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-slate-400">Due: {r.due}</span>
+                          <Badge variant={r.status === 'In Progress' ? 'default' : 'secondary'} className="text-[10px]">{r.status}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State regulatory calendar, EPA reporting requirements</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'rpt-adhoc': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-slate-600" />
+                    Ad-Hoc Reports
+                  </CardTitle>
+                  <CardDescription>Custom report builder for legislative requests and stakeholder inquiries</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8 text-slate-400">
+                    <FileText className="h-10 w-10 mx-auto mb-3 text-slate-300" />
+                    <p className="text-sm font-medium">Build custom reports from available data</p>
+                    <p className="text-xs mt-1">Combine assessment, compliance, monitoring, and enforcement data into formatted reports</p>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: All integrated state and federal data sources</p>
+                </CardContent>
+              </Card>
+            );
+
+            // ── Permits sections ───────────────────────────────────────────
+            case 'perm-status': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileCheck className="h-5 w-5 text-blue-600" />
+                    Permitting Operations Status
+                  </CardTitle>
+                  <CardDescription>Overall permit program workload and processing metrics</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Applications Pending', value: '24', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Avg. Processing Time', value: '94 days', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Staff Utilization', value: '87%', bg: 'bg-slate-50 border-slate-200' },
+                      { label: 'Backlogged', value: '6', bg: 'bg-red-50 border-red-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State permit tracking system, EPA ICIS-NPDES</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'perm-inventory': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileCheck className="h-5 w-5 text-slate-600" />
+                    Permit Inventory
+                  </CardTitle>
+                  <CardDescription>Complete permit universe with status and expiration tracking</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Individual Permits', value: '148', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'General Permits', value: '194', bg: 'bg-slate-50 border-slate-200' },
+                      { label: 'Administratively Extended', value: '28', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Expired (no coverage)', value: '4', bg: 'bg-red-50 border-red-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ICIS-NPDES, state permit database</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'perm-pipeline': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-cyan-600" />
+                    Permit Development Pipeline
+                  </CardTitle>
+                  <CardDescription>Permits in development with stage tracking and bottleneck identification</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Application Review', value: '8', bg: 'bg-slate-50 border-slate-200' },
+                      { label: 'Draft Development', value: '6', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Public Notice', value: '4', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Final Issuance', value: '6', bg: 'bg-green-50 border-green-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State permit development workflow system</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'perm-dmr': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5 text-blue-600" />
+                    DMR & Compliance Monitoring
+                  </CardTitle>
+                  <CardDescription>Discharge monitoring report submissions and effluent limit compliance</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'DMRs Due (month)', value: '342', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Submitted On Time', value: '94%', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Limit Exceedances', value: '18', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Late/Missing', value: '12', bg: 'bg-red-50 border-red-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ICIS-NPDES DMR data, NetDMR submissions</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'perm-inspection': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Search className="h-5 w-5 text-orange-600" />
+                    Inspection Management
+                  </CardTitle>
+                  <CardDescription>Compliance inspection scheduling, tracking, and follow-up</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Scheduled (FY)', value: '186', bg: 'bg-orange-50 border-orange-200' },
+                      { label: 'Completed', value: '124', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Findings Pending', value: '18', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Coverage Rate', value: '67%', bg: 'bg-blue-50 border-blue-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State inspection tracking system, EPA ICIS inspections</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'perm-enforcement': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ShieldCheck className="h-5 w-5 text-red-600" />
+                    Enforcement Pipeline
+                  </CardTitle>
+                  <CardDescription>Active enforcement actions from informal to formal proceedings</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Informal Actions', value: '24', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Formal Actions', value: '8', bg: 'bg-red-50 border-red-200' },
+                      { label: 'Consent Orders', value: '4', bg: 'bg-orange-50 border-orange-200' },
+                      { label: 'Penalties Assessed', value: '$142K', bg: 'bg-slate-50 border-slate-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State enforcement tracking, EPA ICIS formal actions</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'perm-general': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileCheck className="h-5 w-5 text-teal-600" />
+                    General Permits & Coverage
+                  </CardTitle>
+                  <CardDescription>General permit registrations and coverage statistics</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Construction GP', value: '1,247', bg: 'bg-teal-50 border-teal-200' },
+                      { label: 'Industrial GP', value: '342', bg: 'bg-slate-50 border-slate-200' },
+                      { label: 'MS4 GP', value: '86', bg: 'bg-indigo-50 border-indigo-200' },
+                      { label: 'CAFO GP', value: '28', bg: 'bg-amber-50 border-amber-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State general permit registration system, EPA ICIS</p>
+                </CardContent>
+              </Card>
+            );
+
+            // ── Funding sections ───────────────────────────────────────────
+            case 'fund-active': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Banknote className="h-5 w-5 text-green-600" />
+                    My Active Grants
+                  </CardTitle>
+                  <CardDescription>Currently active federal and state grant awards</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { grant: 'CWA Section 106 — Water Pollution Control', amount: '$4.2M', period: 'FY2025-2026', status: 'Active', spent: '62%' },
+                      { grant: 'CWA Section 319 — NPS Management', amount: '$2.8M', period: 'FY2024-2026', status: 'Active', spent: '45%' },
+                      { grant: 'SDWA PWSS — Public Water System Supervision', amount: '$3.1M', period: 'FY2025-2026', status: 'Active', spent: '38%' },
+                      { grant: 'CWA Section 104(b)(3) — Monitoring', amount: '$680K', period: 'FY2025-2027', status: 'Active', spent: '22%' },
+                    ].map((g, i) => (
+                      <div key={i} className="rounded-lg border border-green-200 bg-green-50/50 p-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-semibold text-slate-800">{g.grant}</span>
+                          <Badge variant="default" className="text-[10px]">{g.status}</Badge>
+                        </div>
+                        <div className="flex items-center gap-4 text-[10px] text-slate-500">
+                          <span>Award: {g.amount}</span>
+                          <span>{g.period}</span>
+                          <span>Spent: {g.spent}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: USAspending.gov, EPA grant management system</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'fund-srf': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Banknote className="h-5 w-5 text-blue-600" />
+                    SRF Fund Management
+                  </CardTitle>
+                  <CardDescription>State Revolving Fund capitalization, disbursement, and repayment tracking</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'CWSRF Cap Grant', value: '$42M', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'DWSRF Cap Grant', value: '$28M', bg: 'bg-sky-50 border-sky-200' },
+                      { label: 'BIL Supplement', value: '$18M', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Loan Repayments', value: '$31M/yr', bg: 'bg-slate-50 border-slate-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA CWSRF/DWSRF national data, state SRF program</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'fund-pipeline': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-amber-600" />
+                    Opportunity Pipeline
+                  </CardTitle>
+                  <CardDescription>Upcoming grant opportunities and application deadlines</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { opportunity: 'EPA Water Quality Improvement Fund', deadline: '2026-04-15', amount: 'Up to $2M', match: '40%' },
+                      { opportunity: 'USDA Conservation Innovation Grant', deadline: '2026-05-01', amount: 'Up to $1M', match: '50%' },
+                      { opportunity: 'NOAA Coastal Resilience Grant', deadline: '2026-06-30', amount: 'Up to $5M', match: '50%' },
+                    ].map((o, i) => (
+                      <div key={i} className="rounded-lg border border-amber-200 bg-amber-50/50 p-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-semibold text-slate-800">{o.opportunity}</span>
+                          <Badge variant="outline" className="text-[10px]">Due: {o.deadline}</Badge>
+                        </div>
+                        <div className="flex items-center gap-4 text-[10px] text-slate-500">
+                          <span>Award: {o.amount}</span>
+                          <span>Match: {o.match}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: Grants.gov, EPA grant announcements, USDA RFPs</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'fund-passthrough': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Banknote className="h-5 w-5 text-teal-600" />
+                    Pass-Through Grants
+                  </CardTitle>
+                  <CardDescription>Federal funds distributed to local entities through state programs</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {[
+                      { label: 'Active Sub-Awards', value: '42', bg: 'bg-teal-50 border-teal-200' },
+                      { label: 'Total Distributed', value: '$8.4M', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Pending Closeout', value: '6', bg: 'bg-amber-50 border-amber-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State grants management system, USAspending.gov</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'fund-analytics': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5 text-purple-600" />
+                    Financial Analytics
+                  </CardTitle>
+                  <CardDescription>Grant performance metrics, cost-effectiveness, and ROI tracking</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Total Grant Portfolio', value: '$14.2M', bg: 'bg-purple-50 border-purple-200' },
+                      { label: 'Utilization Rate', value: '82%', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Cost per Impairment', value: '$248K', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Grant Success Rate', value: '68%', bg: 'bg-amber-50 border-amber-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State financial system, EPA grant performance data, USAspending.gov</p>
+                </CardContent>
+              </Card>
             );
 
             default: return null;

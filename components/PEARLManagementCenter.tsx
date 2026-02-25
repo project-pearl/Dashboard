@@ -447,7 +447,7 @@ function stageLabel(s: Prospect['stage']): string {
 
 // ─── Main Component ─────────────────────────────────────────────────────────
 
-export function PEARLCommandCenter(props: Props) {
+export function PEARLManagementCenter(props: Props) {
   const { onClose } = props;
   const { logout, user, isAdmin, listPendingUsers } = useAuth();
 
@@ -1204,7 +1204,7 @@ export function PEARLCommandCenter(props: Props) {
         {/* ── FOOTER ── */}
         <div className="border-t border-slate-200 pt-3 mt-6">
           <div className="flex items-center justify-between text-[10px] text-slate-400">
-            <span className="font-mono">PEARL Intelligence Network — Operations Command Center v1.0 · Internal Use Only · Local Seafood Projects Inc.</span>
+            <span className="font-mono">PEARL Intelligence Network — Operations Management Center v1.0 · Internal Use Only · Local Seafood Projects Inc.</span>
             <span className="font-mono">Session {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
           </div>
         </div>

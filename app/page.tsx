@@ -42,36 +42,36 @@ const STATE_NAMES: Record<string, string> = {
   RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',
   VT:'Vermont',VA:'Virginia',WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming',
 };
-const NationalCommandCenter = dynamic(
-  () => import('@/components/NationalCommandCenter').then((mod) => mod.NationalCommandCenter),
+const FederalManagementCenter = dynamic(
+  () => import('@/components/FederalManagementCenter').then((mod) => mod.FederalManagementCenter),
   { ssr: false, loading: () => <div className="flex items-center justify-center min-h-[400px]"><Skeleton className="w-full h-[400px]" /></div> }
 );
-const StateCommandCenter = dynamic(
-  () => import('@/components/StateCommandCenter').then((mod) => mod.StateCommandCenter),
+const StateManagementCenter = dynamic(
+  () => import('@/components/StateManagementCenter').then((mod) => mod.StateManagementCenter),
   { ssr: false, loading: () => <div className="flex items-center justify-center min-h-[400px]"><Skeleton className="w-full h-[400px]" /></div> }
 );
-const ESGCommandCenter = dynamic(
-  () => import('@/components/ESGCommandCenter').then((mod) => mod.ESGCommandCenter),
+const ESGManagementCenter = dynamic(
+  () => import('@/components/ESGManagementCenter').then((mod) => mod.ESGManagementCenter),
   { ssr: false, loading: () => <div className="flex items-center justify-center min-h-[400px]"><Skeleton className="w-full h-[400px]" /></div> }
 );
-const MS4CommandCenter = dynamic(
-  () => import('@/components/MS4CommandCenter').then((mod) => mod.MS4CommandCenter),
+const MS4ManagementCenter = dynamic(
+  () => import('@/components/MS4ManagementCenter').then((mod) => mod.MS4ManagementCenter),
   { ssr: false, loading: () => <div className="flex items-center justify-center min-h-[400px]"><Skeleton className="w-full h-[400px]" /></div> }
 );
-const K12CommandCenter = dynamic(
-  () => import('@/components/K12CommandCenter').then((mod) => mod.K12CommandCenter),
+const K12ManagementCenter = dynamic(
+  () => import('@/components/K12ManagementCenter').then((mod) => mod.K12ManagementCenter),
   { ssr: false, loading: () => <div className="flex items-center justify-center min-h-[400px]"><Skeleton className="w-full h-[400px]" /></div> }
 );
-const UniversityCommandCenter = dynamic(
-  () => import('@/components/UniversityCommandCenter').then((mod) => mod.UniversityCommandCenter),
+const UniversityManagementCenter = dynamic(
+  () => import('@/components/UniversityManagementCenter').then((mod) => mod.UniversityManagementCenter),
   { ssr: false, loading: () => <div className="flex items-center justify-center min-h-[400px]"><Skeleton className="w-full h-[400px]" /></div> }
 );
-const NGOCommandCenter = dynamic(
-  () => import('@/components/NGOCommandCenter').then((mod) => mod.NGOCommandCenter),
+const NGOManagementCenter = dynamic(
+  () => import('@/components/NGOManagementCenter').then((mod) => mod.NGOManagementCenter),
   { ssr: false, loading: () => <div className="flex items-center justify-center min-h-[400px]"><Skeleton className="w-full h-[400px]" /></div> }
 );
-const PEARLCommandCenter = dynamic(
-  () => import('@/components/PEARLCommandCenter').then((mod) => mod.PEARLCommandCenter),
+const PEARLManagementCenter = dynamic(
+  () => import('@/components/PEARLManagementCenter').then((mod) => mod.PEARLManagementCenter),
   { ssr: false }
 );
 const BreakpointLanding = dynamic(
@@ -238,7 +238,7 @@ const CollapsibleSection = ({ id, title, icon, collapsed, onToggle, children }: 
   );
 };
 
-// ── Error Boundary — prevents white-screen crashes in command centers ──
+// ── Error Boundary — prevents white-screen crashes in management centers ──
 class CommandCenterErrorBoundary extends React.Component<
   { children: React.ReactNode; name: string },
   { hasError: boolean; error: string; errorInfo: string }
@@ -1140,8 +1140,8 @@ export default function Home() {
       )}
 
       {showNationalView && (
-        <CommandCenterErrorBoundary name="PEARL Intelligence Network — National Command Center">
-        <NationalCommandCenter
+        <CommandCenterErrorBoundary name="PEARL Intelligence Network — Federal Management Center">
+        <FederalManagementCenter
           federalMode={userRole === 'Federal'}
           onToggleDevMode={() => setDevMode(prev => !prev)}
           onClose={() => {
@@ -1165,21 +1165,21 @@ export default function Home() {
       )}
     {/* State role: SCC is the entire dashboard — like Federal/NCC */}
     {userRole === 'State' && !showNationalView && (
-        <StateCommandCenter
+        <StateManagementCenter
           stateAbbr={userState}
           onToggleDevMode={() => setDevMode(prev => !prev)}
         />
     )}
     {/* Corporate/ESG: ESGCC is the entire dashboard */}
     {userRole === 'Corporate' && !showNationalView && (
-        <ESGCommandCenter
+        <ESGManagementCenter
           companyName={(user as any)?.organization || user?.name || 'PEARL Portfolio'}
           onBack={() => setUserRole('MS4')}
           onToggleDevMode={() => setDevMode(prev => !prev)}
         />
     )}
     {userRole === 'MS4' && !showNationalView && (
-        <MS4CommandCenter
+        <MS4ManagementCenter
           stateAbbr={userState}
           onSelectRegion={(regionId) => {
             setSelectedRegionId(regionId);
@@ -1189,7 +1189,7 @@ export default function Home() {
         />
     )}
     {userRole === 'K12' && !showNationalView && (
-        <K12CommandCenter
+        <K12ManagementCenter
           stateAbbr={userState}
           isTeacher={false}
           onSelectRegion={(regionId) => {
@@ -1200,7 +1200,7 @@ export default function Home() {
         />
     )}
     {userRole === 'College' && !showNationalView && (
-        <UniversityCommandCenter
+        <UniversityManagementCenter
           stateAbbr={userState}
           userRole="College"
           defaultLens="field-study"
@@ -1212,7 +1212,7 @@ export default function Home() {
         />
     )}
     {userRole === 'Researcher' && !showNationalView && (
-        <UniversityCommandCenter
+        <UniversityManagementCenter
           stateAbbr={userState}
           userRole="Researcher"
           defaultLens="data-analysis"
@@ -1224,7 +1224,7 @@ export default function Home() {
         />
     )}
     {userRole === 'NGO' && !showNationalView && (
-        <NGOCommandCenter
+        <NGOManagementCenter
           stateAbbr={userState}
           onSelectRegion={(regionId) => {
             setSelectedRegionId(regionId);
@@ -1234,7 +1234,7 @@ export default function Home() {
         />
     )}
     {userRole === 'Pearl' && !showNationalView && (
-        <PEARLCommandCenter
+        <PEARLManagementCenter
           onClose={() => {}}
           onToggleDevMode={() => setDevMode(prev => !prev)}
         />
@@ -1244,7 +1244,7 @@ export default function Home() {
           <BreakpointLanding onToggleDevMode={() => setDevMode(prev => !prev)} />
         </div>
     )}
-    {/* All roles now have command centers — old shared dashboard disabled */}
+    {/* All roles now have management centers — old shared dashboard disabled */}
     {false && (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50" suppressHydrationWarning>
       <div className="container mx-auto px-4 py-8 max-w-7xl">

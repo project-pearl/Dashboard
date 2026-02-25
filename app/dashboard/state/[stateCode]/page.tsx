@@ -5,8 +5,8 @@ import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const StateCommandCenter = dynamic(
-  () => import('@/components/StateCommandCenter').then((m) => m.StateCommandCenter),
+const StateManagementCenter = dynamic(
+  () => import('@/components/StateManagementCenter').then((m) => m.StateManagementCenter),
   { ssr: false, loading: () => <div className="flex items-center justify-center min-h-[400px]"><Skeleton className="w-full h-[400px]" /></div> }
 );
 
@@ -16,7 +16,7 @@ export default function StatePage() {
 
   return (
     <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><Skeleton className="w-full h-[400px]" /></div>}>
-      <StateCommandCenter stateAbbr={stateCode} />
+      <StateManagementCenter stateAbbr={stateCode} />
     </Suspense>
   );
 }

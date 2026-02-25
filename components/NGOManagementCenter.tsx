@@ -229,7 +229,7 @@ function generateStateRegionData(stateAbbr: string): RegionRow[] {
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-export function NGOCommandCenter({ stateAbbr: initialStateAbbr, onSelectRegion, onToggleDevMode }: Props) {
+export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegion, onToggleDevMode }: Props) {
   const [stateAbbr, setStateAbbr] = useState(initialStateAbbr);
   const stateName = STATE_NAMES[stateAbbr] || stateAbbr;
   const agency = STATE_AGENCIES[stateAbbr] || STATE_AUTHORITIES[stateAbbr] || null;

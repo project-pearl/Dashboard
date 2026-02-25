@@ -474,7 +474,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
           <div className="text-center max-w-2xl mx-auto mb-16">
             <p className="text-xs font-bold tracking-[0.2em] uppercase text-cyan-600 mb-3">Modular Architecture</p>
             <h2 className="text-3xl sm:text-4xl font-bold text-slate-900" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-              12 purpose-built command centers. 87 analytical lenses.
+              12 purpose-built management centers. 87 analytical lenses.
             </h2>
             <p className="mt-4 text-slate-500 leading-relaxed">
               Every user gets a workspace designed for their role &mdash; from MS4 coordinators to federal analysts to K-12 teachers. Pick your center, choose your lenses, see exactly what matters to you.
@@ -482,14 +482,14 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {[
-              { icon: Landmark, name: 'National Command', desc: 'Federal-scale oversight across all 50 states', accent: 'bg-blue-50 border-blue-200 text-blue-700' },
-              { icon: Shield, name: 'State Command', desc: 'Statewide ATTAINS dashboards and TMDL tracking', accent: 'bg-indigo-50 border-indigo-200 text-indigo-700' },
-              { icon: Building2, name: 'MS4 Command', desc: 'Permit compliance, BMP performance, storm events', accent: 'bg-cyan-50 border-cyan-200 text-cyan-700' },
-              { icon: Factory, name: 'Utility Command', desc: 'Infrastructure monitoring and discharge tracking', accent: 'bg-teal-50 border-teal-200 text-teal-700' },
-              { icon: LineChart, name: 'ESG Command', desc: 'GRI 303 & SASB aligned water impact scoring', accent: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
-              { icon: Microscope, name: 'University Command', desc: 'Research tools, data export, and manuscript support', accent: 'bg-violet-50 border-violet-200 text-violet-700' },
-              { icon: Leaf, name: 'NGO Command', desc: 'Conservation impact tracking and grant matching', accent: 'bg-green-50 border-green-200 text-green-700' },
-              { icon: GraduationCap, name: 'K-12 Command', desc: 'NGSS-aligned lessons with real sensor data', accent: 'bg-amber-50 border-amber-200 text-amber-700' },
+              { icon: Landmark, name: 'Federal', desc: 'Federal-scale oversight across all 50 states', accent: 'bg-blue-50 border-blue-200 text-blue-700' },
+              { icon: Shield, name: 'State', desc: 'Statewide ATTAINS dashboards and TMDL tracking', accent: 'bg-indigo-50 border-indigo-200 text-indigo-700' },
+              { icon: Building2, name: 'MS4', desc: 'Permit compliance, BMP performance, storm events', accent: 'bg-cyan-50 border-cyan-200 text-cyan-700' },
+              { icon: Factory, name: 'Utility', desc: 'Infrastructure monitoring and discharge tracking', accent: 'bg-teal-50 border-teal-200 text-teal-700' },
+              { icon: LineChart, name: 'ESG', desc: 'GRI 303 & SASB aligned water impact scoring', accent: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
+              { icon: Microscope, name: 'University', desc: 'Research tools, data export, and manuscript support', accent: 'bg-violet-50 border-violet-200 text-violet-700' },
+              { icon: Leaf, name: 'NGO', desc: 'Conservation impact tracking and grant matching', accent: 'bg-green-50 border-green-200 text-green-700' },
+              { icon: GraduationCap, name: 'K-12', desc: 'NGSS-aligned lessons with real sensor data', accent: 'bg-amber-50 border-amber-200 text-amber-700' },
               { icon: HardHat, name: 'Infrastructure', desc: 'Asset monitoring and capacity planning', accent: 'bg-orange-50 border-orange-200 text-orange-700' },
               { icon: FlaskConical, name: 'AQUA-Lo LIMS', desc: 'Lab management from intake to audit-ready report', accent: 'bg-pink-50 border-pink-200 text-pink-700' },
               { icon: Beaker, name: 'PEARL ALIA', desc: 'Treatment hardware monitoring and verification', accent: 'bg-rose-50 border-rose-200 text-rose-700' },
@@ -555,7 +555,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
           <div className="grid md:grid-cols-5 gap-12">
             <div className="md:col-span-2">
               <div className="flex items-center gap-4 mb-4">
-                <Image src="/Logo_Pearl_with_reef.jpg" alt="PEARL" width={120} height={120} className="object-contain rounded-lg opacity-90" />
+                <Image src="/Pearl-Intelligence-Network.png" alt="PEARL Intelligence Network" width={200} height={100} className="object-contain rounded-lg opacity-90" />
               </div>
               <p className="text-sm text-slate-500 leading-relaxed max-w-sm mb-4">
                 PEARL Intelligence Network (PIN) &mdash; Proactive Engineering for Aquatic Rehabilitation &amp; Legacy.

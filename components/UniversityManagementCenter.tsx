@@ -223,7 +223,7 @@ function generateStateRegionData(stateAbbr: string): RegionRow[] {
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-export function UniversityCommandCenter({ stateAbbr: initialStateAbbr, userRole = 'Researcher', defaultLens, onSelectRegion, onToggleDevMode }: Props) {
+export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRole = 'Researcher', defaultLens, onSelectRegion, onToggleDevMode }: Props) {
   const [stateAbbr, setStateAbbr] = useState(initialStateAbbr);
   const stateName = STATE_NAMES[stateAbbr] || stateAbbr;
   const agency = STATE_AGENCIES[stateAbbr] || STATE_AUTHORITIES[stateAbbr] || null;

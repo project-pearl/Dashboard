@@ -1,6 +1,6 @@
 // ============================================================
 // AcademicTools — College-aware academic resource panel
-// Plugs into the existing scaffold slot in UniversityCommandCenter
+// Plugs into the existing scaffold slot in UniversityManagementCenter
 // ============================================================
 'use client';
 

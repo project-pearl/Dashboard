@@ -56,7 +56,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   national: {
     image: '/images/heroes/NCC.png',
     subtitle: 'PEARL ALIA',
-    headline: 'National Command Center',
+    headline: 'Federal Management Center',
     description:
       'Real-time water quality intelligence across 565,000+ monitoring points in every state. Federal-scale oversight, watershed-level precision.',
     accentColor: 'text-blue-400',
@@ -72,7 +72,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   pearl: {
     image: '/images/heroes/underwater-pearl.jpg',
     subtitle: 'PEARL ALIA',
-    headline: 'Pearl Command Center',
+    headline: 'PEARL Management Center',
     description:
       'Deployment tracking, fleet performance, and field diagnostics across all active PEARL units.',
     accentColor: 'text-rose-400',

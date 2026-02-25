@@ -454,7 +454,7 @@ const WATERBODY_COORDS: Record<string, { lat: number; lon: number }> = {
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-export function MS4CommandCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, onToggleDevMode }: Props) {
+export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, onToggleDevMode }: Props) {
   const stateName = STATE_NAMES[stateAbbr] || stateAbbr;
   const agency = STATE_AGENCIES[stateAbbr] || STATE_AUTHORITIES[stateAbbr] || null;
   const { user, logout } = useAuth();

@@ -55,7 +55,7 @@ export type ManagementCenter =
   | 'college'
   | 'ngo'
   | 'k12'
-  | 'aqua-lo'    // Lab/LIMS command center (formerly SHUCK)
+  | 'aqua-lo'    // Lab/LIMS management center (formerly SHUCK)
   | 'tribal'
   | 'military';
 
@@ -96,7 +96,7 @@ export interface NavSection {
   centers?: ManagementCenter[];
 }
 
-// ─── Federal Command Center ───────────────────────────────────────────
+// ─── Federal Management Center ───────────────────────────────────────────
 
 export const federalNav: NavItem[] = [
   // 1. Strategic — big picture + insight
@@ -170,7 +170,7 @@ export const federalNav: NavItem[] = [
     isNew: true },
 ];
 
-// ─── State Command Center ─────────────────────────────────────────────
+// ─── State Management Center ─────────────────────────────────────────────
 
 export const stateNav: NavItem[] = [
   { label: 'Overview',
@@ -208,7 +208,7 @@ export const stateNav: NavItem[] = [
     icon: FileText },
 ];
 
-// ─── MS4 & Stormwater Command Center ──────────────────────────────────
+// ─── MS4 & Stormwater Management Center ──────────────────────────────────
 
 export const ms4Nav: NavItem[] = [
   { label: 'Overview',
@@ -249,7 +249,7 @@ export const ms4Nav: NavItem[] = [
     isNew: true },
 ];
 
-// ─── Municipal / Water Utility Command Center ─────────────────────────
+// ─── Municipal / Water Utility Management Center ─────────────────────────
 
 export const municipalNav: NavItem[] = [
   { label: 'Overview',
@@ -276,7 +276,7 @@ export const municipalNav: NavItem[] = [
     icon: FileText },
 ];
 
-// ─── Corporate ESG Command Center ─────────────────────────────────────
+// ─── Corporate ESG Management Center ─────────────────────────────────────
 
 export const corporateNav: NavItem[] = [
   { label: 'Overview',
@@ -309,7 +309,7 @@ export const corporateNav: NavItem[] = [
     icon: FileText },
 ];
 
-// ─── Researcher Command Center ────────────────────────────────────────
+// ─── Researcher Management Center ────────────────────────────────────────
 
 export const researcherNav: NavItem[] = [
   { label: 'Overview',
@@ -335,7 +335,7 @@ export const researcherNav: NavItem[] = [
     icon: FileText },
 ];
 
-// ─── College / University Command Center ──────────────────────────────
+// ─── College / University Management Center ──────────────────────────────
 
 export const collegeNav: NavItem[] = [
   { label: 'Overview',
@@ -360,7 +360,7 @@ export const collegeNav: NavItem[] = [
     icon: FileText },
 ];
 
-// ─── NGO Command Center ──────────────────────────────────────────────
+// ─── NGO Management Center ──────────────────────────────────────────────
 
 export const ngoNav: NavItem[] = [
   { label: 'Overview',
@@ -393,7 +393,7 @@ export const ngoNav: NavItem[] = [
     badge: 'AI' },
 ];
 
-// ─── K-12 Command Center (Read-Only, No Upload) ─────────────────────
+// ─── K-12 Management Center (Read-Only, No Upload) ─────────────────────
 
 export const k12Nav: NavItem[] = [
   { label: 'Overview',
@@ -414,7 +414,7 @@ export const k12Nav: NavItem[] = [
   // No upload. No data modification. Read-only.
 ];
 
-// ─── Aqua-LO Command Center (Lab/LIMS — formerly SHUCK) ────────────
+// ─── Aqua-LO Management Center (Lab/LIMS — formerly SHUCK) ────────────
 // Users with LAB_DIRECTOR or LAB_ANALYST role land here.
 // Visible in sidebar under DATA & LABS section.
 

@@ -96,7 +96,7 @@ function getMarkerColor(alertLevel: AlertLevel): string {
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-export function LabPartnerCommandCenter({ stateAbbr }: Props) {
+export function LabPartnerManagementCenter({ stateAbbr }: Props) {
   const stateName = STATE_NAMES[stateAbbr] || stateAbbr;
 
   // Lens param (default to overview)

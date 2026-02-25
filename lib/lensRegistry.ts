@@ -25,14 +25,26 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'interagency', label: 'Cross-Agency' },
     { id: 'funding', label: 'Funding & Grants' },
   ],
-  // ── State (6 items) ────────────────────────────────────────────────────────
+  // ── State (18 items) ───────────────────────────────────────────────────────
   '/dashboard/state': [
-    { id: 'compliance', label: 'Compliance' },
-    { id: 'coverage', label: 'Coverage' },
-    { id: 'ms4oversight', label: 'MS4 Oversight' },
-    { id: 'programs', label: 'Programs' },
-    { id: 'trends', label: 'Trends & Forecasting' },
-    { id: 'full', label: 'Full Overview' },
+    { id: 'overview',       label: 'Overview' },
+    { id: 'briefing',       label: 'AI Briefing' },
+    { id: 'planner',        label: 'Resolution Planner' },
+    { id: 'trends',         label: 'Trends & Projections' },
+    { id: 'policy',         label: 'Policy Tracker' },
+    { id: 'compliance',     label: 'Compliance' },
+    { id: 'water-quality',  label: 'Water Quality' },
+    { id: 'public-health',  label: 'Public Health & Contaminants' },
+    { id: 'habitat',        label: 'Habitat & Ecology' },
+    { id: 'agriculture',    label: 'Agricultural & Nonpoint Source' },
+    { id: 'infrastructure', label: 'Infrastructure' },
+    { id: 'monitoring',     label: 'Monitoring' },
+    { id: 'disaster',       label: 'Disaster & Emergency Response' },
+    { id: 'tmdl',           label: 'TMDL & Restoration' },
+    { id: 'scorecard',      label: 'Scorecard' },
+    { id: 'reports',        label: 'Reports' },
+    { id: 'permits',        label: 'Permits & Enforcement' },
+    { id: 'funding',        label: 'Funding & Grants' },
   ],
   // ── MS4 / Municipal (10 items) ─────────────────────────────────────────────
   '/dashboard/ms4': [

@@ -1,5 +1,5 @@
-// components/ESGCommandCenter.tsx
-// Corporate ESG Command Center — portfolio water risk, disclosure readiness, impact reporting
+// components/ESGManagementCenter.tsx
+// Corporate ESG Management Center — portfolio water risk, disclosure readiness, impact reporting
 // Architecture: SCC lens system + ESG-specific sections + existing ESG components from page.tsx
 
 'use client';
@@ -383,7 +383,7 @@ type Props = {
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-export function ESGCommandCenter({ companyName = 'PEARL Portfolio', facilities: propFacilities, onBack, onToggleDevMode }: Props) {
+export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilities: propFacilities, onBack, onToggleDevMode }: Props) {
   const { user, logout } = useAuth();
   const router = useRouter();
 
