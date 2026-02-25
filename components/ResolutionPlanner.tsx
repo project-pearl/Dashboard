@@ -338,12 +338,20 @@ ${JSON_SCHEMA_INSTRUCTION}`;
 
 // ── Scope-Aware Initial Prompt Router ──
 
-function buildInitialPrompt(ctx: ScopeContext, role: UserRole): string {
+function buildInitialPrompt(ctx: ScopeContext, role: UserRole, scenarioContext?: string): string {
+  let prompt: string;
   switch (ctx.scope) {
-    case 'national': return buildNationalPrompt(ctx.data, role);
-    case 'region':   return buildRegionPrompt(ctx.data, role);
-    case 'state':    return buildStatePrompt(ctx.data, role);
+    case 'national': prompt = buildNationalPrompt(ctx.data, role); break;
+    case 'region':   prompt = buildRegionPrompt(ctx.data, role); break;
+    case 'state':    prompt = buildStatePrompt(ctx.data, role); break;
   }
+  if (scenarioContext) {
+    prompt = prompt.replace(
+      JSON_SCHEMA_INSTRUCTION,
+      `SCENARIO CONTEXT (use this to frame the situation assessment and narrative):\n${scenarioContext}\n\n${JSON_SCHEMA_INSTRUCTION}`
+    );
+  }
+  return prompt;
 }
 
 // ── Scope-Aware Refine Prompt ──
@@ -431,9 +439,11 @@ export interface ResolutionPlannerProps {
   scopeContext: ScopeContext;
   userRole: UserRole;
   onClose?: () => void;
+  /** Optional scenario narrative injected into the AI prompt (used by What-If Simulator). */
+  scenarioContext?: string;
 }
 
-export default function ResolutionPlanner({ scopeContext, userRole, onClose }: ResolutionPlannerProps) {
+export default function ResolutionPlanner({ scopeContext, userRole, onClose, scenarioContext }: ResolutionPlannerProps) {
   const [plan, setPlan] = useState<ResolutionPlan | null>(null);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -466,7 +476,7 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose }: R
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prompt: buildInitialPrompt(scopeContext, userRole),
+          prompt: buildInitialPrompt(scopeContext, userRole, scenarioContext),
         }),
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);

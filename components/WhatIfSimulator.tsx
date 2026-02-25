@@ -97,6 +97,36 @@ export default function WhatIfSimulator() {
     };
   }, [simulatedNational, simulatedStates]);
 
+  // Build scenario narrative for the AI prompt
+  const scenarioNarrative = useMemo(() => {
+    if (selectedScenarios.length === 0) return undefined;
+    const baseMap = new Map(BASELINE_STATE_ROLLUP.map(s => [s.abbr, s]));
+    const lines = selectedScenarios.map(s => {
+      const states = s.affectedStates.length === 0 ? 'all states' : s.affectedStates.join(', ');
+      return `- ${s.icon} ${s.label} (${s.category}): ${s.description} Affected: ${states}.`;
+    });
+    const impactLines = simulatedStates
+      ? simulatedStates
+          .filter(s => s.scenarioApplied)
+          .sort((a, b) => a.score - b.score)
+          .slice(0, 10)
+          .map(s => {
+            const base = baseMap.get(s.abbr);
+            const delta = base ? s.score - base.score : 0;
+            return `  ${s.abbr}: score ${base?.score ?? '?'} → ${s.score} (${delta > 0 ? '+' : ''}${delta}), ${s.high} high alerts, ${s.cat5} Cat 5`;
+          })
+      : [];
+    return [
+      `ACTIVE SIMULATED SCENARIOS (${selectedScenarios.length}):`,
+      ...lines,
+      '',
+      'SIMULATED IMPACT ON WORST-HIT STATES:',
+      ...impactLines,
+      '',
+      'Generate the plan AS IF these scenarios are real active crises. Create a compelling, detailed narrative. Name the events, describe cascading effects, reference PIN early-warning detections, and propose a full federal response.',
+    ].join('\n');
+  }, [selectedScenarios, simulatedStates]);
+
   // Affected states sorted for the impact table
   const sortedAffectedStates = useMemo(() => {
     if (!simulatedStates) return [];
@@ -518,6 +548,7 @@ export default function WhatIfSimulator() {
                     <ResolutionPlanner
                       scopeContext={scopeContext}
                       userRole="federal"
+                      scenarioContext={scenarioNarrative}
                     />
                   </div>
                 </div>
