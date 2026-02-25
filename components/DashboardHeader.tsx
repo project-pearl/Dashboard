@@ -18,7 +18,6 @@ const ROUTE_LABELS: Record<string, string> = {
   insurance: 'Insurance & Risk',
   agriculture: 'Agriculture',
   'aqua-lo': 'AQUA-LO',
-  'lab-partner': 'Laboratory Partner',
 };
 
 const ROUTE_ACCENTS: Record<string, string> = {
@@ -34,7 +33,6 @@ const ROUTE_ACCENTS: Record<string, string> = {
   insurance: 'text-indigo-600',
   agriculture: 'text-lime-600',
   'aqua-lo': 'text-teal-600',
-  'lab-partner': 'text-cyan-600',
 };
 
 export function DashboardHeader() {

@@ -186,9 +186,9 @@ export default function LoginPage() {
               Back to Sign In
             </button>
           </div>
-          <div className="text-center text-white/25 text-xs mt-8 space-y-0.5">
+          <div className="text-center text-white/40 text-xs mt-8 space-y-1">
             <p>&copy; {new Date().getFullYear()} Local Seafood Projects Inc. All rights reserved.</p>
-            <p className="text-[10px] text-white/15">Project Pearl&trade;, Pearl&trade;, ALIA&trade;, and AQUA-LO&trade; are trademarks of Local Seafood Projects.</p>
+            <p className="text-[10px] text-white/30">Project Pearl&trade;, Pearl&trade;, ALIA&trade;, and AQUA-LO&trade; are trademarks of Local Seafood Projects Inc.</p>
           </div>
         </div>
       </div>
@@ -493,9 +493,9 @@ export default function LoginPage() {
           )}
         </div>
 
-        <div className="text-center text-white/25 text-xs mt-8 space-y-0.5">
+        <div className="text-center text-white/40 text-xs mt-8 space-y-1">
           <p>&copy; {new Date().getFullYear()} Local Seafood Projects Inc. All rights reserved.</p>
-          <p className="text-[10px] text-white/15">Project Pearl&trade;, Pearl&trade;, ALIA&trade;, and AQUA-LO&trade; are trademarks of Local Seafood Projects.</p>
+          <p className="text-[10px] text-white/30">Project Pearl&trade;, Pearl&trade;, ALIA&trade;, and AQUA-LO&trade; are trademarks of Local Seafood Projects Inc.</p>
         </div>
       </div>
     </div>

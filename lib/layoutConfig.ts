@@ -18,7 +18,7 @@ export interface SectionDefinition {
 }
 
 export type CCKey = 'K12' | 'State' | 'MS4' | 'Sustainability' | 'NGO' | 'University' | 'FMC' | 'NCC'
-  | 'Utility' | 'Infrastructure' | 'Insurance' | 'Agriculture' | 'AQUA-LO' | 'LabPartner';
+  | 'Utility' | 'Infrastructure' | 'Insurance' | 'Agriculture' | 'AQUA-LO';
 
 // ─── Default Section Orders ────────────────────────────────────────────────
 
@@ -574,16 +574,12 @@ export const DEFAULT_SECTIONS = {
     { id: 'reporting',      label: 'Reporting Engine',              order: 5,  visible: true, defaultExpanded: true },
     { id: 'calibration',    label: 'Equipment Calibration',         order: 6,  visible: true, defaultExpanded: false },
     { id: 'audits',         label: 'Audit Trail',                   order: 7,  visible: true, defaultExpanded: false },
-    { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 8,  visible: true, defaultExpanded: true },
-  ],
-
-  LabPartner: [
-    { id: 'wq-overview',     label: 'State WQ Overview',            order: 0,  visible: true, defaultExpanded: true },
-    { id: 'impairment-map',  label: 'Impairment Map',               order: 1,  visible: true, defaultExpanded: true, compound: true },
-    { id: 'monitoring-gaps', label: 'Monitoring Gaps',               order: 2,  visible: true, defaultExpanded: true },
-    { id: 'param-trends',    label: 'Parameter Trends',              order: 3,  visible: true, defaultExpanded: true },
-    { id: 'my-clients',      label: 'My Clients',                    order: 4,  visible: true, defaultExpanded: true },
-    { id: 'disclaimer',      label: 'Platform Disclaimer',           order: 5,  visible: true, defaultExpanded: true },
+    { id: 'wq-overview',     label: 'State WQ Overview',             order: 8,  visible: true, defaultExpanded: true },
+    { id: 'impairment-map',  label: 'Impairment Map',               order: 9,  visible: true, defaultExpanded: true, compound: true },
+    { id: 'monitoring-gaps', label: 'Monitoring Gaps',               order: 10, visible: true, defaultExpanded: true },
+    { id: 'param-trends',    label: 'Parameter Trends',              order: 11, visible: true, defaultExpanded: true },
+    { id: 'my-clients',      label: 'My Clients',                    order: 12, visible: true, defaultExpanded: true },
+    { id: 'disclaimer',      label: 'Platform Disclaimer',           order: 13, visible: true, defaultExpanded: true },
   ],
 } satisfies Record<Exclude<CCKey, 'NCC'>, SectionDefinition[]> as Record<CCKey, SectionDefinition[]>;
 

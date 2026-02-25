@@ -200,7 +200,6 @@ const NAV_GROUPS: NavGroup[] = [
     title: 'Science',
     items: [
       { label: 'AQUA-LO', href: '/dashboard/aqua-lo', icon: FlaskConical, accent: 'text-teal-700', accentBg: 'bg-teal-50 border-teal-200' },
-      { label: 'Laboratory Partner', href: '/dashboard/lab-partner', icon: Microscope, accent: 'text-cyan-700', accentBg: 'bg-cyan-50 border-cyan-200' },
       { label: 'University', href: '/dashboard/university', icon: GraduationCap, accent: 'text-violet-700', accentBg: 'bg-violet-50 border-violet-200' },
     ],
   },
