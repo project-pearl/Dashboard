@@ -2763,16 +2763,10 @@ export function FederalManagementCenter(props: Props) {
           const wbRegion = getEpaRegionForState(selectedState);
           return (
             <Card className="lg:max-w-[66%]">
-              <CardHeader className="pb-2 pt-4 px-5">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-semibold" style={{ color: 'var(--text-bright)' }}>State Waterbody Inspector</CardTitle>
-                  <BrandedPrintBtn sectionId="waterbody-inspector-inline" title="State Waterbody Inspector" />
+              <CardContent className="px-5 pt-4">
+                <div className="flex items-center justify-end mb-1">
+                  <BrandedPrintBtn sectionId="waterbody-inspector-inline" title="Waterbody Assessment" />
                 </div>
-                <CardDescription className="text-xs" style={{ color: 'var(--text-dim)' }}>
-                  {wbRow ? `${wbRow.name} (${wbRow.abbr}) — EPA Region ${wbRegion}` : 'Select a state from the map above'}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="px-5">
                 {!wbRow || !wbRow.canGradeState ? (
                   <p className="text-sm italic" style={{ color: 'var(--text-dim)' }}>
                     {wbRow ? `Insufficient data available for ${wbRow.name} to generate a waterbody assessment.` : 'Select a state from the map above to inspect its waterbody profile.'}
