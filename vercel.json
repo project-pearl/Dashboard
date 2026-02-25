@@ -71,6 +71,10 @@
     {
       "path": "/api/cron/rebuild-attains",
       "schedule": "30 * * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-nwis-iv",
+      "schedule": "*/30 * * * *"
     }
   ]
 }

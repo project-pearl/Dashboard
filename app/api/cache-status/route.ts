@@ -25,6 +25,8 @@ import { getNarsCacheStatus, ensureWarmed as warmNars } from '@/lib/narsCache';
 import { getDataGovCacheStatus, ensureWarmed as warmDataGov } from '@/lib/dataGovCache';
 import { getUsaceCacheStatus, ensureWarmed as warmUsace } from '@/lib/usaceCache';
 import { getStateIRCacheStatus } from '@/lib/stateIRCache';
+import { getUsgsIvCacheStatus, ensureWarmed as warmNwisIv } from '@/lib/nwisIvCache';
+import { getAlertCacheStatus, ensureWarmed as warmUsgsAlerts } from '@/lib/usgsAlertCache';
 
 function staleness(built: string | null | undefined): { stale: boolean; ageHours: number | null } {
   if (!built) return { stale: true, ageHours: null };
@@ -39,6 +41,7 @@ export async function GET() {
     [warmWqp, warmAttains, warmCeden, warmIcis, warmSdwis, warmNwisGw],
     [warmEcho, warmFrs, warmPfas, warmInsights, warmStateReports, warmBwb],
     [warmCdcNwss, warmNdbc, warmNasaCmr, warmNars, warmDataGov, warmUsace],
+    [warmNwisIv, warmUsgsAlerts],
   ];
   for (const batch of warmBatches) {
     await Promise.allSettled(batch.map(fn => fn()));
@@ -63,6 +66,8 @@ export async function GET() {
   const dataGov = getDataGovCacheStatus();
   const usace = getUsaceCacheStatus();
   const stateIR = getStateIRCacheStatus();
+  const nwisIv = getUsgsIvCacheStatus();
+  const usgsAlerts = getAlertCacheStatus();
 
   const caches = {
     wqp: {
@@ -144,6 +149,14 @@ export async function GET() {
     stateIR: {
       ...stateIR,
       ...staleness(stateIR.loaded ? (stateIR as any).generated : null),
+    },
+    nwisIv: {
+      ...nwisIv,
+      ...staleness(nwisIv.loaded ? (nwisIv as any).built : null),
+    },
+    usgsAlerts: {
+      ...usgsAlerts,
+      ...staleness(usgsAlerts.loaded ? (usgsAlerts as any).built : null),
     },
   };
 

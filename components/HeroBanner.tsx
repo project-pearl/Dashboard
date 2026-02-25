@@ -15,7 +15,7 @@ export interface HeroBannerConfig {
 export const heroConfigs: Record<string, HeroBannerConfig> = {
   k12: {
     image: '/images/heroes/K12.png',
-    subtitle: 'PEARL ALIA',
+    subtitle: 'PEARL Intelligence Network',
     headline: 'Explore Your Watershed',
     description:
       'Hands-on water quality learning powered by real EPA data. Discover what\'s in your local waterways and why it matters.',
@@ -23,7 +23,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   state: {
     image: '/images/heroes/Aerial.png',
-    subtitle: 'PEARL ALIA',
+    subtitle: 'PEARL Intelligence Network',
     headline: 'Statewide Water Intelligence',
     description:
       'Comprehensive watershed monitoring, compliance tracking, and assessment analytics across every waterbody in your jurisdiction.',
@@ -31,7 +31,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   ms4: {
     image: '/images/heroes/MS4.png',
-    subtitle: 'PEARL ALIA',
+    subtitle: 'PEARL Intelligence Network',
     headline: 'Municipal Stormwater Compliance',
     description:
       'Track BMP performance, monitor outfall discharge, and streamline MS4 permit reporting with real-time water quality data.',
@@ -39,7 +39,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   esg: {
     image: '/images/heroes/Industrial.png',
-    subtitle: 'PEARL ALIA',
+    subtitle: 'PEARL Intelligence Network',
     headline: 'Water Risk & Sustainability Performance',
     description:
       'Quantify water risk exposure, benchmark facility performance, and generate audit-ready sustainability disclosures.',
@@ -47,7 +47,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   university: {
     image: '/images/heroes/Research.png',
-    subtitle: 'PEARL ALIA',
+    subtitle: 'PEARL Intelligence Network',
     headline: 'Water Quality Research Hub',
     description:
       'Access nationwide water quality datasets, publish findings, and collaborate across institutions with integrated research tools.',
@@ -63,7 +63,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   ngo: {
     image: '/oyster-restoration.png',
-    subtitle: 'PEARL ALIA',
+    subtitle: 'PEARL Intelligence Network',
     headline: 'Watershed Conservation Hub',
     description:
       'Advocacy-ready data, grant matching, and restoration intelligence to protect the waterways your community depends on.',
@@ -71,7 +71,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   pearl: {
     image: '/images/heroes/underwater-pearl.jpg',
-    subtitle: 'PEARL ALIA',
+    subtitle: 'PEARL Intelligence Network',
     headline: 'PEARL Management Center',
     description:
       'Deployment tracking, fleet performance, and field diagnostics across all active PEARL units.',
@@ -79,7 +79,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   utility: {
     image: '/images/heroes/Industrial.png',
-    subtitle: 'PEARL ALIA',
+    subtitle: 'PEARL Intelligence Network',
     headline: 'Municipal Water Utility',
     description:
       'Compliance monitoring, treatment optimization, and contaminant tracking for public water systems.',
@@ -87,7 +87,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   infrastructure: {
     image: '/images/heroes/MS4.png',
-    subtitle: 'PEARL ALIA',
+    subtitle: 'PEARL Intelligence Network',
     headline: 'Infrastructure Intelligence',
     description:
       'Capital project tracking, capacity analysis, and green infrastructure planning for resilient water systems.',
@@ -95,7 +95,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   insurance: {
     image: '/images/heroes/Aerial.png',
-    subtitle: 'PEARL ALIA',
+    subtitle: 'PEARL Intelligence Network',
     headline: 'Water Risk Intelligence',
     description:
       'Flood risk assessment, contamination analysis, and portfolio due diligence for informed underwriting decisions.',
@@ -103,7 +103,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   agriculture: {
     image: '/images/heroes/Aerial.png',
-    subtitle: 'PEARL ALIA',
+    subtitle: 'PEARL Intelligence Network',
     headline: 'Agricultural Water Management',
     description:
       'Nutrient tracking, irrigation optimization, and conservation credit management for sustainable agriculture.',
@@ -111,7 +111,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   'aqua-lo': {
     image: '/images/heroes/Research.png',
-    subtitle: 'PEARL ALIA',
+    subtitle: 'PEARL Intelligence Network',
     headline: 'AQUA-LO Laboratory',
     description:
       'Full-spectrum laboratory information management — sample intake, QA/QC, methods, and chain of custody.',
@@ -120,7 +120,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   'lab-partner': {
     image: '/images/heroes/Research.png',
     subtitle: 'PEARL Intelligence Network',
-    headline: 'Laboratory Partner',
+    headline: 'AQUA-LO Laboratory Partner',
     description:
       'Water quality intelligence for business development — identify monitoring gaps, track impairment trends, and connect with municipal clients.',
     accentColor: 'text-cyan-400',
@@ -173,9 +173,6 @@ export default function HeroBanner({ role, className = '', children, onDoubleCli
               <span className="inline-block w-2 h-2 rounded-full bg-current animate-pulse" style={{ boxShadow: '0 0 6px currentColor' }} />
               {config.subtitle}
             </span>
-            <p className="text-[10px] sm:text-xs text-white/50 tracking-widest uppercase ml-3.5 mt-0.5">
-              Aquatic Life Improvement Accelerator
-            </p>
           </div>
 
           {/* Headline */}
