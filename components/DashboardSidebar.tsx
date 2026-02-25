@@ -63,6 +63,7 @@ import {
   Link2,
   Layers,
   TreePine,
+  Microscope,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -150,6 +151,12 @@ const LENS_ICONS: Record<string, LucideIcon> = {
   'watershed-impact': Waves,
   'soil-groundwater': Sprout,
   'conservation-funding': Banknote,
+  // ── Laboratory Partner ────────────────────────────────────────────────────
+  'wq-overview': LayoutDashboard,
+  'impairment-map': Map,
+  'monitoring-gaps': AlertTriangle,
+  'param-trends': TrendingUp,
+  'my-clients': Users,
 };
 
 interface NavItem {
@@ -193,6 +200,7 @@ const NAV_GROUPS: NavGroup[] = [
     title: 'Science',
     items: [
       { label: 'AQUA-LO', href: '/dashboard/aqua-lo', icon: FlaskConical, accent: 'text-teal-700', accentBg: 'bg-teal-50 border-teal-200' },
+      { label: 'Laboratory Partner', href: '/dashboard/lab-partner', icon: Microscope, accent: 'text-cyan-700', accentBg: 'bg-cyan-50 border-cyan-200' },
       { label: 'University', href: '/dashboard/university', icon: GraduationCap, accent: 'text-violet-700', accentBg: 'bg-violet-50 border-violet-200' },
     ],
   },

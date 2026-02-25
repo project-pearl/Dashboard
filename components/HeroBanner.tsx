@@ -117,6 +117,14 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
       'Full-spectrum laboratory information management — sample intake, QA/QC, methods, and chain of custody.',
     accentColor: 'text-teal-400',
   },
+  'lab-partner': {
+    image: '/images/heroes/Research.png',
+    subtitle: 'PEARL Intelligence Network',
+    headline: 'Laboratory Partner',
+    description:
+      'Water quality intelligence for business development — identify monitoring gaps, track impairment trends, and connect with municipal clients.',
+    accentColor: 'text-cyan-400',
+  },
 };
 
 // ─── Component ─────────────────────────────────────────────────────

@@ -18,7 +18,7 @@ export interface SectionDefinition {
 }
 
 export type CCKey = 'K12' | 'State' | 'MS4' | 'Sustainability' | 'NGO' | 'University' | 'NCC'
-  | 'Utility' | 'Infrastructure' | 'Insurance' | 'Agriculture' | 'AQUA-LO';
+  | 'Utility' | 'Infrastructure' | 'Insurance' | 'Agriculture' | 'AQUA-LO' | 'LabPartner';
 
 // ─── Default Section Orders ────────────────────────────────────────────────
 
@@ -232,6 +232,15 @@ export const DEFAULT_SECTIONS: Record<CCKey, SectionDefinition[]> = {
     { id: 'calibration',    label: 'Equipment Calibration',         order: 6,  visible: true, defaultExpanded: false },
     { id: 'audits',         label: 'Audit Trail',                   order: 7,  visible: true, defaultExpanded: false },
     { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 8,  visible: true, defaultExpanded: true },
+  ],
+
+  LabPartner: [
+    { id: 'wq-overview',     label: 'State WQ Overview',            order: 0,  visible: true, defaultExpanded: true },
+    { id: 'impairment-map',  label: 'Impairment Map',               order: 1,  visible: true, defaultExpanded: true, compound: true },
+    { id: 'monitoring-gaps', label: 'Monitoring Gaps',               order: 2,  visible: true, defaultExpanded: true },
+    { id: 'param-trends',    label: 'Parameter Trends',              order: 3,  visible: true, defaultExpanded: true },
+    { id: 'my-clients',      label: 'My Clients',                    order: 4,  visible: true, defaultExpanded: true },
+    { id: 'disclaimer',      label: 'Platform Disclaimer',           order: 5,  visible: true, defaultExpanded: true },
   ],
 };
 

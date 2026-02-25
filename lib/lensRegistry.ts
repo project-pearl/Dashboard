@@ -127,6 +127,14 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'portfolio-risk', label: 'Portfolio Risk Score' },
     { id: 'regulatory-changes', label: 'Regulatory Change Tracker' },
   ],
+  // ── Laboratory Partner (5 items) ───────────────────────────────────────────
+  '/dashboard/lab-partner': [
+    { id: 'wq-overview',     label: 'State WQ Overview' },
+    { id: 'impairment-map',  label: 'Impairment Map' },
+    { id: 'monitoring-gaps', label: 'Monitoring Gaps' },
+    { id: 'param-trends',    label: 'Parameter Trends' },
+    { id: 'my-clients',      label: 'My Clients' },
+  ],
   // ── Agriculture (9 items) ──────────────────────────────────────────────────
   '/dashboard/agriculture': [
     { id: 'overview', label: 'Dashboard' },

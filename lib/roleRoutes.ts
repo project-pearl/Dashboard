@@ -33,7 +33,7 @@ const ROLE_ALLOWED_ROUTES: Record<UserRole, string[]> = {
   Utility:    ['/dashboard/utility', '/dashboard/infrastructure'],
   Insurance:  ['/dashboard/insurance'],
   Agriculture:['/dashboard/agriculture'],
-  Lab:        ['/dashboard/aqua-lo'],
+  Lab:        ['/dashboard/aqua-lo', '/dashboard/lab-partner'],
   K12:        ['/dashboard/k12'],
   College:    ['/dashboard/university'],
   Researcher: ['/dashboard/university'],
