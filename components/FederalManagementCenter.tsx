@@ -2299,7 +2299,7 @@ export function FederalManagementCenter(props: Props) {
         {({ sections, isEditMode, onToggleVisibility, onToggleCollapse, collapsedSections }) => {
           const isSectionOpen = (id: string) => !collapsedSections[id];
           return (<>
-          <div className={`space-y-8 ${isEditMode ? 'pl-12' : ''}`}>
+          <div className={`space-y-10 ${isEditMode ? 'pl-12' : ''}`}>
 
         {sections.filter(s => {
           // In edit mode, show all sections for drag-and-drop
@@ -2321,7 +2321,7 @@ export function FederalManagementCenter(props: Props) {
         case 'usmap': return DS(<>
         {/* ── MONITORING NETWORK MAP ──────────────────────────────── */}
 
-        <div ref={mapSectionRef} className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div ref={mapSectionRef} className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Map Card */}
           <Card id="section-usmap" className="lg:col-span-2">
             <CardHeader>
@@ -2363,15 +2363,15 @@ export function FederalManagementCenter(props: Props) {
                   Map data unavailable. Ensure us-atlas and topojson-client are installed.
                 </div>
               ) : (
-                <div className="w-full overflow-hidden rounded-lg border border-slate-200 bg-white">
-                  <div className="p-2 text-xs text-slate-500 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-                    <span>Click a state to select · 50 states + DC</span>
+                <div className="w-full overflow-hidden rounded-lg" style={{ border: '1px solid var(--border-subtle)' }}>
+                  <div className="px-3 py-2 text-[10px] flex items-center justify-between" style={{ color: 'var(--text-dim)', borderBottom: '1px solid var(--border-subtle)' }}>
+                    <span>Click a state to select</span>
                     <button onClick={() => mapRef.current?.flyTo({ center: [US_CENTER[1], US_CENTER[0]], zoom: US_ZOOM, duration: 800 })}
-                      className="text-xs text-blue-600 hover:text-blue-800 hover:underline">
-                      Back to National View
+                      className="text-[10px] hover:underline" style={{ color: 'var(--accent-teal)' }}>
+                      Reset View
                     </button>
                   </div>
-                  <div className="h-[480px] w-full relative">
+                  <div className="h-[560px] w-full relative">
                     <MapboxMapShell
                       center={US_CENTER}
                       zoom={US_ZOOM}
@@ -2390,71 +2390,62 @@ export function FederalManagementCenter(props: Props) {
                   </div>
                   
                   {/* Legend */}
-                  <div className="flex flex-wrap gap-2 p-3 text-xs border-t" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}>
+                  <div className="flex flex-wrap items-center gap-3 px-3 py-2.5" style={{ borderTop: '1px solid var(--border-subtle)' }}>
                     {overlay === 'hotspots' && (
                       <>
-                        <span className="font-medium self-center mr-1" style={{ color: 'var(--text-secondary)' }}>Impairment Risk:</span>
-                        <span className="inline-flex items-center rounded-full px-2 py-0.5" style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', background: 'var(--status-healthy-bg)', color: 'var(--status-healthy)' }}>Healthy</span>
-                        <span className="inline-flex items-center rounded-full px-2 py-0.5" style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', background: 'var(--status-watch-bg)', color: 'var(--status-watch)' }}>Watch</span>
-                        <span className="inline-flex items-center rounded-full px-2 py-0.5" style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', background: 'var(--status-impaired-bg)', color: 'var(--status-impaired)' }}>Impaired</span>
-                        <span className="inline-flex items-center rounded-full px-2 py-0.5" style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', background: 'var(--status-severe-bg)', color: 'var(--status-severe)' }}>Severe</span>
+                        <span className="pin-label mr-1">Risk:</span>
+                        <span className="inline-flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: 'var(--status-healthy)' }} /> Healthy</span>
+                        <span className="inline-flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: 'var(--status-warning)' }} /> Watch</span>
+                        <span className="inline-flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: 'var(--status-warning)' }} /> Impaired</span>
+                        <span className="inline-flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: 'var(--status-severe)' }} /> Severe</span>
                       </>
                     )}
                     {overlay === 'ms4' && (
                       <>
-                        <span className="text-slate-500 font-medium self-center mr-1">MS4 Permits (Phase I + II):</span>
-                        <Badge variant="secondary" className="bg-orange-50 text-orange-700 border-orange-200">&lt;10</Badge>
-                        <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-orange-200">10–29</Badge>
-                        <Badge className="bg-orange-300 text-orange-900">30–74</Badge>
-                        <Badge className="bg-orange-500 text-white">75–149</Badge>
-                        <Badge className="bg-orange-700 text-white">150–299</Badge>
-                        <Badge className="bg-orange-900 text-white">300+</Badge>
+                        <span className="pin-label mr-1">MS4 Permits:</span>
+                        {[{ label: '<10', bg: '#fed7aa' }, { label: '10–29', bg: '#fdba74' }, { label: '30–74', bg: '#fb923c' }, { label: '75–149', bg: '#f97316' }, { label: '150–299', bg: '#ea580c' }, { label: '300+', bg: '#c2410c' }].map(s => (
+                          <span key={s.label} className="inline-flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: s.bg }} /> {s.label}</span>
+                        ))}
                       </>
                     )}
                     {overlay === 'ej' && (
                       <>
-                        <span className="text-slate-500 font-medium self-center mr-1">EJScreen Index:</span>
-                        <Badge variant="secondary" className="bg-gray-200 text-gray-700">Low (0–19)</Badge>
-                        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">Moderate (20–39)</Badge>
-                        <Badge className="bg-orange-500 text-white">High (40–59)</Badge>
-                        <Badge variant="destructive">Very High (60–79)</Badge>
-                        <Badge className="bg-red-950 text-white">Critical (80–100)</Badge>
+                        <span className="pin-label mr-1">EJScreen:</span>
+                        {[{ label: 'Low', bg: '#d1d5db' }, { label: 'Moderate', bg: '#fde68a' }, { label: 'High', bg: '#f97316' }, { label: 'Very High', bg: '#dc2626' }, { label: 'Critical', bg: '#7f1d1d' }].map(s => (
+                          <span key={s.label} className="inline-flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: s.bg }} /> {s.label}</span>
+                        ))}
                       </>
                     )}
                     {overlay === 'economy' && (
                       <>
-                        <span className="text-slate-500 font-medium self-center mr-1">Annual MS4 Compliance Cost:</span>
-                        <Badge variant="secondary" className="bg-gray-200 text-gray-700">Low (&lt;$1M)</Badge>
-                        <Badge className="bg-blue-200 text-blue-900">Moderate ($1–5M)</Badge>
-                        <Badge className="bg-blue-500 text-white">High ($5–20M)</Badge>
-                        <Badge className="bg-blue-800 text-white">Very High (&gt;$20M)</Badge>
+                        <span className="pin-label mr-1">Compliance Cost:</span>
+                        {[{ label: 'Low', bg: '#d1d5db' }, { label: 'Moderate', bg: '#bfdbfe' }, { label: 'High', bg: '#3b82f6' }, { label: 'Very High', bg: '#1e40af' }].map(s => (
+                          <span key={s.label} className="inline-flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: s.bg }} /> {s.label}</span>
+                        ))}
                       </>
                     )}
                     {overlay === 'wildlife' && (
                       <>
-                        <span className="text-slate-500 font-medium self-center mr-1">T&E Species (USFWS):</span>
-                        <Badge variant="secondary" className="bg-gray-200 text-gray-700">Minimal</Badge>
-                        <Badge className="bg-green-200 text-green-900">Low</Badge>
-                        <Badge className="bg-green-500 text-white">Moderate</Badge>
-                        <Badge className="bg-green-600 text-white">High</Badge>
-                        <Badge className="bg-green-900 text-white">Very High</Badge>
+                        <span className="pin-label mr-1">T&E Species:</span>
+                        {[{ label: 'Minimal', bg: '#d1d5db' }, { label: 'Low', bg: '#bbf7d0' }, { label: 'Moderate', bg: '#22c55e' }, { label: 'High', bg: '#16a34a' }, { label: 'Very High', bg: '#14532d' }].map(s => (
+                          <span key={s.label} className="inline-flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: s.bg }} /> {s.label}</span>
+                        ))}
                       </>
                     )}
                     {overlay === 'trend' && (
                       <>
-                        <span className="text-slate-500 font-medium self-center mr-1">vs Prior Period:</span>
-                        <Badge variant="destructive">Worsening</Badge>
-                        <Badge variant="secondary" className="bg-gray-200 text-gray-700">Stable</Badge>
-                        <Badge className="bg-green-500 text-white">Improving</Badge>
+                        <span className="pin-label mr-1">Trend:</span>
+                        {[{ label: 'Worsening', bg: 'var(--status-severe)' }, { label: 'Stable', bg: '#9ca3af' }, { label: 'Improving', bg: 'var(--status-healthy)' }].map(s => (
+                          <span key={s.label} className="inline-flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: s.bg }} /> {s.label}</span>
+                        ))}
                       </>
                     )}
                     {overlay === 'coverage' && (
                       <>
-                        <span className="text-slate-500 font-medium self-center mr-1">Monitoring Network:</span>
-                        <Badge variant="secondary" className="bg-gray-200 text-gray-700">No Coverage</Badge>
-                        <Badge className="bg-yellow-400 text-yellow-900">Ambient Only</Badge>
-                        <Badge className="bg-green-500 text-white">ALIA Deployed</Badge>
-                        <Badge className="bg-green-800 text-white">Full Coverage</Badge>
+                        <span className="pin-label mr-1">Coverage:</span>
+                        {[{ label: 'None', bg: '#d1d5db' }, { label: 'Ambient', bg: '#fde68a' }, { label: 'ALIA', bg: '#22c55e' }, { label: 'Full', bg: '#14532d' }].map(s => (
+                          <span key={s.label} className="inline-flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: s.bg }} /> {s.label}</span>
+                        ))}
                       </>
                     )}
                   </div>
@@ -2464,12 +2455,12 @@ export function FederalManagementCenter(props: Props) {
           </Card>
 
           {/* State Detail Panel */}
-          <Card>
-            <CardHeader className="pb-3">
+          <Card style={{ background: 'var(--bg-card)' }}>
+            <CardHeader className="pb-2 pt-5 px-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPin size={18} />
+                  <CardTitle className="flex items-center gap-2 text-sm">
+                    <MapPin size={15} style={{ color: 'var(--text-dim)' }} />
                     <select
                       value={selectedState}
                       onChange={(e) => { setSelectedState(e.target.value); setWaterbodySearch(''); setWaterbodyFilter('all'); setShowAllWaterbodies(false); }}
@@ -2549,58 +2540,54 @@ export function FederalManagementCenter(props: Props) {
                 })()}
               </div>
             </CardHeader>
-            <CardContent className="space-y-3">
-              {/* Quick stats — three-tier breakdown */}
+            <CardContent className="space-y-3 px-5 pb-5">
+              {/* Quick stats — compact, subordinate to national summary */}
               {(() => {
                 const assessedCount = selectedStateRegions.filter(r => r.status === 'assessed').length;
                 const monitoredCount = selectedStateRegions.filter(r => r.status === 'monitored').length;
                 const unmonitoredCount = selectedStateRegions.filter(r => r.status === 'unmonitored').length;
                 const severeCount = selectedStateRegions.filter(r => r.status === 'assessed' && r.alertLevel === 'high').length;
                 return (
-                  <div className="grid grid-cols-4 gap-1.5 text-center">
-                    <div className="rounded-lg p-2" style={{ background: 'var(--bg-surface)' }}>
-                      <div className="text-lg font-bold" style={{ color: 'var(--text-bright)' }}>{selectedStateRegions.length}</div>
-                      <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-dim)' }}>Total</div>
+                  <div className="flex items-baseline justify-between gap-3 py-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                    <div className="text-center">
+                      <div className="pin-stat-value text-base">{selectedStateRegions.length}</div>
+                      <div className="pin-label mt-0.5">Total</div>
                     </div>
-                    <div className="rounded-lg p-2" style={{ background: 'var(--status-healthy-bg)' }}>
-                      <div className="text-lg font-bold" style={{ color: 'var(--status-healthy)' }}>{assessedCount}</div>
-                      <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-dim)' }}>Assessed</div>
+                    <div className="text-center">
+                      <div className="pin-stat-secondary text-sm">{assessedCount}</div>
+                      <div className="pin-label mt-0.5">Assessed</div>
                     </div>
-                    <div className="rounded-lg p-2" style={{ background: 'var(--accent-teal-glow)' }}>
-                      <div className="text-lg font-bold" style={{ color: 'var(--accent-teal)' }}>{monitoredCount}</div>
-                      <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-dim)' }}>Monitored</div>
+                    <div className="text-center">
+                      <div className="pin-stat-secondary text-sm">{monitoredCount}</div>
+                      <div className="pin-label mt-0.5">Monitored</div>
                     </div>
-                    <div className="rounded-lg p-2" style={{ background: 'var(--bg-surface)' }}>
-                      <div className="text-lg font-bold" style={{ color: 'var(--text-dim)' }}>{unmonitoredCount}</div>
-                      <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-dim)' }}>No Data</div>
+                    <div className="text-center">
+                      <div className="pin-stat-secondary text-sm" style={{ color: 'var(--text-dim)' }}>{unmonitoredCount}</div>
+                      <div className="pin-label mt-0.5">No Data</div>
                     </div>
                   </div>
                 );
               })()}
 
               {/* Waterbody Filters */}
-              <div className="flex flex-wrap gap-1.5 mb-2">
+              <div className="flex flex-wrap gap-1.5 mb-3">
                 {[
-                  { key: 'all' as const, label: 'All', statusVar: '' },
-                  { key: 'impaired' as const, label: 'Impaired', statusVar: 'impaired' },
-                  { key: 'severe' as const, label: 'Severe', statusVar: 'severe' },
-                  { key: 'monitored' as const, label: 'Monitored', statusVar: '' },
+                  { key: 'all' as const, label: 'All' },
+                  { key: 'impaired' as const, label: 'Impaired' },
+                  { key: 'severe' as const, label: 'Severe' },
+                  { key: 'monitored' as const, label: 'Monitored' },
                 ].map((f) => {
                   const isActive = waterbodyFilter === f.key;
                   return (
                   <button
                     key={f.key}
                     onClick={() => { setWaterbodyFilter(f.key); setShowAllWaterbodies(false); }}
-                    className="rounded-full transition-all"
+                    className="pin-label rounded-full transition-all"
                     style={{
-                      fontSize: '10px',
-                      fontWeight: 600,
-                      textTransform: 'uppercase' as const,
-                      letterSpacing: '0.04em',
-                      padding: '2px 8px',
-                      background: isActive && f.statusVar ? `var(--status-${f.statusVar}-bg)` : isActive ? 'var(--pill-bg-active)' : 'var(--pill-bg)',
-                      color: isActive && f.statusVar ? `var(--status-${f.statusVar})` : isActive ? 'var(--pill-text-active)' : 'var(--pill-text)',
-                      border: `1px solid ${isActive && f.statusVar ? `var(--status-${f.statusVar})` : isActive ? 'var(--pill-border-active)' : 'var(--pill-border)'}`,
+                      padding: '3px 10px',
+                      background: isActive ? 'var(--pill-bg-active)' : 'var(--pill-bg)',
+                      color: isActive ? 'var(--pill-text-active)' : 'var(--pill-text)',
+                      border: `1px solid ${isActive ? 'var(--pill-border-active)' : 'var(--pill-border)'}`,
                     }}
                   >
                     {f.label}
@@ -2617,8 +2604,8 @@ export function FederalManagementCenter(props: Props) {
                 })}
               </div>
 
-              {/* Waterbody list — height matched to US map (480px) */}
-              <div className="space-y-1.5 max-h-[480px] overflow-y-auto">
+              {/* Waterbody list — height matched to US map (560px) */}
+              <div className="space-y-1.5 max-h-[560px] overflow-y-auto">
                 {selectedStateRegions.length === 0 ? (
                   <div className="text-sm py-4 text-center" style={{ color: 'var(--text-secondary)' }}>
                     No monitored waterbodies in this state yet.
@@ -2719,168 +2706,165 @@ export function FederalManagementCenter(props: Props) {
           <AIInsightsEngine key={selectedState} role="Federal" stateAbbr={selectedState} regionData={selectedStateRegions as any} />
         )}
 
-        {/* ── MS4 & REGULATORY PROFILE — Full-width bar below map (hidden in monitoring lens) ────── */}
+        {/* ── MS4 & REGULATORY PROFILE — Compact context strip below map ────── */}
         {viewLens !== 'monitoring' && (() => {
           const ms4 = MS4_JURISDICTIONS[selectedState];
           const ov = overlayByState.get(selectedState);
           if (!ms4 && !ov) return null;
           const total = ms4 ? ms4.phase1 + ms4.phase2 : 0;
+          const trendVal = ov?.trend ?? 0;
+          const trendLabel = trendVal > 5 ? 'Improving' : trendVal < -5 ? 'Worsening' : 'Stable';
+          const trendIsWorsening = trendVal < -5;
           return (
             <Card>
-              <CardContent className="py-3 px-4">
-                <div className="flex items-center gap-2 mb-2.5">
-                  <Building2 size={15} style={{ color: 'var(--accent-copper)' }} />
-                  <span className="text-sm font-semibold" style={{ color: 'var(--text-bright)' }}>{STATE_ABBR_TO_NAME[selectedState]} — MS4 & Regulatory Profile</span>
-                </div>
-                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 text-xs">
+              <CardContent className="py-2.5 px-4">
+                <div className="flex items-center flex-wrap gap-x-6 gap-y-1">
+                  <div className="flex items-center gap-1.5">
+                    <Building2 size={13} style={{ color: 'var(--text-dim)' }} />
+                    <span className="pin-section-label" style={{ fontSize: '10px' }}>{STATE_ABBR_TO_NAME[selectedState]} — MS4 & Regulatory</span>
+                  </div>
                   {ms4 && (
                     <>
-                      <div className="rounded-lg p-2.5 text-center" style={{ background: 'var(--status-impaired-bg)', border: '1px solid var(--border-subtle)' }}>
-                        <div className="text-2xl font-black" style={{ color: 'var(--status-impaired)' }}>{total}</div>
-                        <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--status-impaired)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>MS4 Total</div>
+                      <div className="flex items-baseline gap-1">
+                        <span className="pin-stat-secondary text-sm">{total}</span>
+                        <span className="pin-label">permits</span>
                       </div>
-                      <div className="rounded-lg p-2.5 text-center" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
-                        <div className="text-xl font-bold" style={{ color: 'var(--text-bright)' }}>{ms4.phase1}</div>
-                        <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Phase I (≥100k)</div>
-                      </div>
-                      <div className="rounded-lg p-2.5 text-center" style={{ background: 'var(--status-watch-bg)', border: '1px solid var(--border-subtle)' }}>
-                        <div className="text-xl font-bold" style={{ color: 'var(--status-watch)' }}>{ms4.phase2}</div>
-                        <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Phase II (small)</div>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-xs" style={{ color: 'var(--text-dim)' }}>{ms4.phase1} Phase I · {ms4.phase2} Phase II</span>
                       </div>
                     </>
                   )}
-                  <div className="rounded-lg p-2.5 text-center" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
-                    <div className="text-sm font-bold leading-tight" style={{ color: 'var(--text-primary)' }}>{STATE_AGENCIES[selectedState]?.ms4Program || 'NPDES MS4'}</div>
-                    <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Permit Program</div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-xs" style={{ color: 'var(--text-dim)' }}>{STATE_AGENCIES[selectedState]?.ms4Program || 'NPDES MS4'}</span>
                   </div>
                   {ov && (
                     <>
-                      <div className="rounded-lg p-2.5 text-center" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
-                        <div className="text-xl font-bold" style={{ color: 'var(--accent-copper)' }}>{ov.ej}<span className="text-xs font-normal" style={{ color: 'var(--text-dim)' }}>/100</span></div>
-                        <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>EJ Vulnerability</div>
+                      <div className="flex items-baseline gap-1">
+                        <span className="pin-stat-secondary text-sm">{ov.ej}</span>
+                        <span className="pin-label">EJ Index</span>
                       </div>
-                      <div className="rounded-lg p-2.5 text-center" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
-                        <div className="text-sm font-bold leading-tight" style={{ color: 'var(--accent-teal)' }}>
-                          {(() => { const v = ov.economy ?? 0; return v >= 80 ? 'Very High' : v >= 60 ? 'High' : v >= 40 ? 'Moderate' : 'Low'; })()}
-                        </div>
-                        <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Compliance Burden</div>
-                      </div>
-                      <div className="rounded-lg p-2.5 text-center" style={{
-                        background: (ov.trend ?? 0) > 5 ? 'var(--status-healthy-bg)' : (ov.trend ?? 0) < -5 ? 'var(--status-severe-bg)' : 'var(--bg-surface)',
-                        border: '1px solid var(--border-subtle)',
-                      }}>
-                        <div className="text-sm font-bold" style={{
-                          color: (ov.trend ?? 0) > 5 ? 'var(--status-healthy)' : (ov.trend ?? 0) < -5 ? 'var(--status-severe)' : 'var(--text-dim)',
-                        }}>
-                          {(() => { const t = ov.trend ?? 0; return t > 5 ? '↑ Improving' : t < -5 ? '↓ Worsening' : '— Stable'; })()}
-                        </div>
-                        <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>WQ Trend</div>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-xs font-semibold" style={{
+                          color: trendIsWorsening ? 'var(--status-severe)' : 'var(--text-dim)',
+                        }}>{trendLabel}</span>
+                        <span className="pin-label">WQ Trend</span>
                       </div>
                     </>
                   )}
                 </div>
-                {ms4?.notes && (
-                  <div className="text-[10px] italic mt-2" style={{ color: 'var(--text-dim)' }}>{ms4.notes}</div>
-                )}
               </CardContent>
             </Card>
           );
         })()}
 
-        {/* ── STATE WATERBODY INSPECTOR — tied to selectedState from map ────── */}
+        {/* ── STATE WATERBODY INSPECTOR — analytical focus, tied to selectedState ────── */}
         {viewLens !== 'monitoring' && (() => {
           const wbRow = stateRollup.find(r => r.abbr === selectedState);
           const wbRegion = getEpaRegionForState(selectedState);
           return (
-            <Card className="border-2 border-sky-200 bg-gradient-to-br from-sky-50 to-white">
-              <CardHeader className="pb-3">
+            <Card>
+              <CardHeader className="pb-2 pt-4 px-5">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">State Waterbody Inspector</CardTitle>
+                  <CardTitle className="text-sm font-semibold" style={{ color: 'var(--text-bright)' }}>State Waterbody Inspector</CardTitle>
                   <BrandedPrintBtn sectionId="waterbody-inspector-inline" title="State Waterbody Inspector" />
                 </div>
-                <CardDescription>
+                <CardDescription className="text-xs" style={{ color: 'var(--text-dim)' }}>
                   {wbRow ? `${wbRow.name} (${wbRow.abbr}) — EPA Region ${wbRegion}` : 'Select a state from the map above'}
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-5">
                 {!wbRow || !wbRow.canGradeState ? (
-                  <p className="text-sm text-slate-500 italic">
+                  <p className="text-sm italic" style={{ color: 'var(--text-dim)' }}>
                     {wbRow ? `Insufficient data available for ${wbRow.name} to generate a waterbody assessment.` : 'Select a state from the map above to inspect its waterbody profile.'}
                   </p>
                 ) : (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <span className={`inline-flex items-center justify-center w-10 h-10 rounded-full text-sm font-bold border ${wbRow.grade.bg} ${wbRow.grade.color}`}>
+                  <div className="space-y-5">
+                    {/* Grade + state name — compact */}
+                    <div className="flex items-center gap-2.5">
+                      <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold border ${wbRow.grade.bg} ${wbRow.grade.color}`}>
                         {wbRow.grade.letter}
                       </span>
                       <div>
-                        <p className="text-sm font-semibold text-slate-800">{wbRow.name}</p>
-                        <p className="text-xs text-slate-500">Score: {wbRow.score}/100 · Data: {wbRow.dataSource === 'per-waterbody' ? 'Per-Waterbody Assessment' : 'ATTAINS Bulk'} · EPA Region {wbRegion}</p>
+                        <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{wbRow.name}</p>
+                        <p className="text-[10px]" style={{ color: 'var(--text-dim)' }}>Score: {wbRow.score}/100 · {wbRow.dataSource === 'per-waterbody' ? 'Per-Waterbody' : 'ATTAINS Bulk'} · Region {wbRegion}</p>
                       </div>
                     </div>
-                    <div className="grid grid-cols-4 gap-2">
-                      {[
-                        { label: 'Total Waterbodies', value: wbRow.waterbodies.toLocaleString(), color: 'text-sky-700 bg-sky-50 border-sky-200' },
-                        { label: 'Assessed', value: wbRow.assessed.toLocaleString(), color: 'text-blue-700 bg-blue-50 border-blue-200' },
-                        { label: 'Total Impaired', value: wbRow.totalImpaired.toLocaleString(), color: 'text-amber-700 bg-amber-50 border-amber-200' },
-                        { label: 'Cat 5 (Needs TMDL)', value: wbRow.cat5.toLocaleString(), color: 'text-red-700 bg-red-50 border-red-200' },
-                      ].map(s => (
-                        <div key={s.label} className={`rounded-lg border p-2 text-center ${s.color}`}>
-                          <p className="text-lg font-bold">{s.value}</p>
-                          <p className="text-[10px] leading-tight">{s.label}</p>
-                        </div>
-                      ))}
+
+                    {/* Top 4 numbers — hero is Total Impaired, Cat 5 gets red if nonzero */}
+                    <div className="grid grid-cols-4 gap-3">
+                      <div className="pin-stat-tile">
+                        <div className="pin-stat-secondary text-base">{wbRow.waterbodies.toLocaleString()}</div>
+                        <div className="pin-label mt-0.5">Total</div>
+                      </div>
+                      <div className="pin-stat-tile">
+                        <div className="pin-stat-secondary text-base">{wbRow.assessed.toLocaleString()}</div>
+                        <div className="pin-label mt-0.5">Assessed</div>
+                      </div>
+                      <div className="pin-stat-tile">
+                        <div className="pin-stat-hero text-xl">{wbRow.totalImpaired.toLocaleString()}</div>
+                        <div className="pin-label mt-0.5">Impaired</div>
+                      </div>
+                      <div className="pin-stat-tile">
+                        <div className="pin-stat-value text-base" style={{ color: wbRow.cat5 > 0 ? 'var(--status-severe)' : 'var(--text-bright)' }}>{wbRow.cat5.toLocaleString()}</div>
+                        <div className="pin-label mt-0.5">Cat 5</div>
+                      </div>
                     </div>
+
+                    {/* Impairment categories — quiet, report-row feel */}
                     <div>
-                      <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">Impairment Categories</h4>
-                      <div className="grid grid-cols-4 gap-2">
+                      <h4 className="pin-section-label mb-2">Impairment Categories</h4>
+                      <div className="space-y-1">
                         {[
-                          { label: 'Cat 5 — Needs TMDL', value: wbRow.cat5, color: 'bg-red-100 text-red-800 border-red-200' },
-                          { label: 'Cat 4A — TMDL Done', value: wbRow.cat4a, color: 'bg-orange-100 text-orange-800 border-orange-200' },
-                          { label: 'Cat 4B — Other Control', value: wbRow.cat4b, color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-                          { label: 'Cat 4C — Not Pollutant', value: wbRow.cat4c, color: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+                          { label: 'Cat 5 — Needs TMDL', value: wbRow.cat5 },
+                          { label: 'Cat 4A — TMDL Complete', value: wbRow.cat4a },
+                          { label: 'Cat 4B — Other Control', value: wbRow.cat4b },
+                          { label: 'Cat 4C — Not Pollutant', value: wbRow.cat4c },
                         ].map(c => (
-                          <div key={c.label} className={`rounded border p-2 text-center ${c.color}`}>
-                            <p className="text-base font-bold">{c.value.toLocaleString()}</p>
-                            <p className="text-[9px] leading-tight">{c.label}</p>
+                          <div key={c.label} className="flex items-center justify-between py-1" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                            <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{c.label}</span>
+                            <span className="pin-stat-secondary text-xs">{c.value.toLocaleString()}</span>
                           </div>
                         ))}
                       </div>
                     </div>
+
+                    {/* Top causes — report-table feel */}
                     {wbRow.topCauses.length > 0 && (
                       <div>
-                        <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">Top Impairment Causes</h4>
-                        <div className="space-y-1">
+                        <h4 className="pin-section-label mb-2">Top Impairment Causes</h4>
+                        <div className="space-y-0.5">
                           {wbRow.topCauses.slice(0, 8).map((tc, i) => (
-                            <div key={tc.cause} className="flex items-center gap-2 text-xs">
-                              <span className="text-slate-400 w-4 text-right">{i + 1}.</span>
-                              <span className="flex-1 text-slate-700">{tc.cause}</span>
-                              <span className="font-mono text-slate-500">{tc.count.toLocaleString()}</span>
+                            <div key={tc.cause} className="flex items-center gap-2 text-xs py-0.5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                              <span className="w-4 text-right" style={{ color: 'var(--text-dim)' }}>{i + 1}.</span>
+                              <span className="flex-1" style={{ color: 'var(--text-secondary)' }}>{tc.cause}</span>
+                              <span className="pin-stat-secondary text-xs">{tc.count.toLocaleString()}</span>
                             </div>
                           ))}
                         </div>
                       </div>
                     )}
+
+                    {/* Monitoring coverage — muted bars, neutral tiles */}
                     <div>
-                      <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">Monitoring Coverage</h4>
-                      <div className="grid grid-cols-3 gap-2 text-xs">
-                        <div className="bg-green-50 border border-green-200 rounded p-2 text-center">
-                          <p className="text-sm font-bold text-green-700">{wbRow.monitored.toLocaleString()}</p>
-                          <p className="text-green-600">Monitored</p>
+                      <h4 className="pin-section-label mb-2">Monitoring Coverage</h4>
+                      <div className="flex items-baseline gap-4 mb-2">
+                        <div className="text-center">
+                          <span className="pin-stat-secondary text-sm">{wbRow.monitored.toLocaleString()}</span>
+                          <span className="pin-label ml-1">monitored</span>
                         </div>
-                        <div className="bg-blue-50 border border-blue-200 rounded p-2 text-center">
-                          <p className="text-sm font-bold text-blue-700">{wbRow.assessed.toLocaleString()}</p>
-                          <p className="text-blue-600">Assessed</p>
+                        <div className="text-center">
+                          <span className="pin-stat-secondary text-sm">{wbRow.assessed.toLocaleString()}</span>
+                          <span className="pin-label ml-1">assessed</span>
                         </div>
-                        <div className="bg-slate-50 border border-slate-200 rounded p-2 text-center">
-                          <p className="text-sm font-bold text-slate-700">{wbRow.unmonitored.toLocaleString()}</p>
-                          <p className="text-slate-600">Unmonitored</p>
+                        <div className="text-center">
+                          <span className="pin-stat-secondary text-sm">{wbRow.unmonitored.toLocaleString()}</span>
+                          <span className="pin-label ml-1">unmonitored</span>
                         </div>
                       </div>
                       {wbRow.waterbodies > 0 && (
-                        <div className="mt-2 h-2 rounded-full bg-slate-200 overflow-hidden flex">
-                          <div className="bg-green-500 h-full" style={{ width: `${(wbRow.monitored / wbRow.waterbodies * 100).toFixed(1)}%` }} />
-                          <div className="bg-blue-400 h-full" style={{ width: `${(wbRow.assessed / wbRow.waterbodies * 100).toFixed(1)}%` }} />
+                        <div className="h-1.5 rounded-full overflow-hidden flex" style={{ background: 'var(--border-subtle)' }}>
+                          <div style={{ width: `${(wbRow.monitored / wbRow.waterbodies * 100).toFixed(1)}%`, background: 'var(--status-healthy)', opacity: 0.5 }} />
+                          <div style={{ width: `${(wbRow.assessed / wbRow.waterbodies * 100).toFixed(1)}%`, background: 'var(--text-dim)', opacity: 0.3 }} />
                         </div>
                       )}
                     </div>
@@ -4233,26 +4217,24 @@ export function FederalManagementCenter(props: Props) {
         </>); {/* end usmap */}
 
         case 'impairmentprofile': return DS(<>
-        {/* ── TOP STRIP — lens controlled, tiles vary by view ────── */}
+        {/* ── KPI STRIP — quiet footnote-band, lens controlled ────── */}
         {lens.showTopStrip && topStrip && (() => {
           const s = topStrip;
-          const complianceTiles = [
-              { label: 'Cat 5 (No TMDL)', value: s.noTmdlCount.toLocaleString(), color: s.noTmdlCount > 0 ? 'text-red-700' : 'text-slate-500', bg: s.noTmdlCount > 0 ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200' },
-              { label: 'Cat 4a (Has TMDL)', value: s.hasTmdlCount.toLocaleString(), color: s.hasTmdlCount > 0 ? 'text-green-700' : 'text-slate-500', bg: s.hasTmdlCount > 0 ? 'bg-green-50 border-green-200' : 'bg-slate-50 border-slate-200' },
-              { label: 'Total Impaired', value: s.totalImpaired.toLocaleString(), color: s.totalImpaired > 0 ? 'text-purple-700' : 'text-slate-500', bg: s.totalImpaired > 0 ? 'bg-purple-50 border-purple-200' : 'bg-slate-50 border-slate-200' },
-              { label: 'Active Alerts', value: (s.severeCount + nationalStats.mediumAlerts).toLocaleString(), color: 'text-orange-700', bg: 'bg-orange-50 border-orange-200' },
-              { label: 'States Reporting', value: `${s.statesReporting}/${s.totalStates}`, color: s.statesReporting > 40 ? 'text-green-700' : 'text-amber-700', bg: 'bg-slate-50 border-slate-200' },
-              { label: 'TMDL Gap', value: `${s.tmdlGapPct}%`, color: s.tmdlGapPct > 50 ? 'text-red-700' : 'text-amber-700', bg: s.tmdlGapPct > 50 ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200' },
+          const complianceTiles: Array<{ label: string; value: string; severe?: boolean }> = [
+              { label: 'Impaired', value: s.totalImpaired.toLocaleString() },
+              { label: 'Cat 5', value: s.noTmdlCount.toLocaleString(), severe: s.noTmdlCount > 0 },
+              { label: 'TMDL Gap', value: `${s.tmdlGapPct}%`, severe: s.tmdlGapPct > 50 },
+              { label: 'Reporting', value: `${s.statesReporting}/${s.totalStates}` },
+              { label: 'Alerts', value: (s.severeCount + nationalStats.mediumAlerts).toLocaleString(), severe: s.severeCount > 0 },
           ];
-          const coverageTiles = [
-              { label: '% With Data', value: `${s.pctWithData}%`, color: s.pctWithData > 70 ? 'text-green-700' : 'text-amber-700', bg: s.pctWithData > 70 ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200' },
-              { label: 'No Data (Blind)', value: s.noData.toLocaleString(), color: s.noData > 0 ? 'text-red-700' : 'text-green-700', bg: s.noData > 0 ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200' },
-              { label: 'Worst Data Age', value: `${s.worstAge}d`, color: s.worstAge > 30 ? 'text-amber-700' : 'text-green-700', bg: s.worstAge > 30 ? 'bg-amber-50 border-amber-200' : 'bg-green-50 border-green-200' },
-              { label: 'States Reporting', value: `${s.statesReporting}/${s.totalStates}`, color: s.statesReporting > 40 ? 'text-green-700' : 'text-amber-700', bg: 'bg-slate-50 border-slate-200' },
-              { label: 'Sites Online', value: s.sitesOnline.toLocaleString(), color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
-              { label: 'Waterbodies w/ Data', value: s.withData.toLocaleString(), color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
+          const coverageTiles: Array<{ label: string; value: string; severe?: boolean }> = [
+              { label: 'With Data', value: `${s.pctWithData}%` },
+              { label: 'Reporting', value: `${s.statesReporting}/${s.totalStates}` },
+              { label: 'No Data', value: s.noData.toLocaleString(), severe: s.noData > 0 },
+              { label: 'Sites', value: s.sitesOnline.toLocaleString() },
+              { label: 'Waterbodies', value: s.withData.toLocaleString() },
           ];
-          const tilesByLens: Partial<Record<ViewLens, Array<{ label: string; value: string; color: string; bg: string }>>> = {
+          const tilesByLens: Partial<Record<ViewLens, Array<{ label: string; value: string; severe?: boolean }>>> = {
             overview: complianceTiles,
             compliance: complianceTiles,
             monitoring: coverageTiles,
@@ -4261,78 +4243,76 @@ export function FederalManagementCenter(props: Props) {
           const tiles = tilesByLens[viewLens] || complianceTiles;
           if (!tiles.length) return null;
           return (
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+            <div className="flex items-center justify-between flex-wrap gap-x-5 gap-y-1 py-2 px-3" style={{ borderTop: '1px solid var(--border-subtle)', borderBottom: '1px solid var(--border-subtle)' }}>
               {tiles.map((tile, i) => (
-                <div key={i} className={`rounded-lg border p-3 text-center ${tile.bg}`}>
-                  <div className={`text-2xl font-black tabular-nums ${tile.color}`}>{tile.value}</div>
-                  <div className="text-[10px] text-slate-500 font-medium mt-0.5 uppercase tracking-wide">{tile.label}</div>
+                <div key={i} className="flex items-baseline gap-1.5">
+                  <span className="pin-stat-secondary text-sm" style={tile.severe ? { color: 'var(--status-severe)' } : undefined}>{tile.value}</span>
+                  <span className="pin-label">{tile.label}</span>
                 </div>
               ))}
             </div>
           );
         })()}
 
-        {/* ── National Impairment Cause Breakdown — from ATTAINS category + causes ── */}
+        {/* ── National Impairment Profile — explanatory analysis, quiet ── */}
         {lens.showTopStrip && attainsAggregation.totalAssessed > 0 && (
-          <Card id="section-impairmentprofile" className="border border-slate-200">
-            <CardHeader className="pb-2">
+          <Card id="section-impairmentprofile" className="mt-2">
+            <CardHeader className="pb-2 pt-4 px-5">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  📊 National Impairment Profile
-                  <span className="text-[10px] font-normal text-slate-400">
-                    {attainsAggregation.totalAssessed.toLocaleString()} waterbodies from EPA ATTAINS
-                  </span>
-                </CardTitle>
+                <div>
+                  <CardTitle className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>National Impairment Profile</CardTitle>
+                  <CardDescription className="text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>{attainsAggregation.totalAssessed.toLocaleString()} waterbodies from EPA ATTAINS</CardDescription>
+                </div>
                 <BrandedPrintBtn sectionId="impairmentprofile" title="Impairment Profile" />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <CardContent className="px-5">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
                 {/* Column 1: EPA Category Distribution */}
                 <div>
-                  <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">EPA Assessment Categories</div>
-                  <div className="space-y-1.5">
+                  <div className="pin-section-label mb-2">EPA Assessment Categories</div>
+                  <div className="space-y-1">
                     {[
-                      { cat: '5', label: 'Cat 5 — Impaired, No TMDL', count: attainsAggregation.cat5, color: 'bg-red-500' },
-                      { cat: '4A', label: 'Cat 4a — Has TMDL', count: attainsAggregation.cat4a, color: 'bg-amber-500' },
-                      { cat: '4B', label: 'Cat 4b — Alt. Controls', count: attainsAggregation.cat4b, color: 'bg-yellow-400' },
-                      { cat: '4C', label: 'Cat 4c — Not Pollutant-Caused', count: attainsAggregation.cat4c, color: 'bg-blue-300' },
-                      { cat: '3', label: 'Cat 3 — Insufficient Data', count: attainsAggregation.catCounts['3'], color: 'bg-slate-300' },
-                      { cat: '2', label: 'Cat 2 — Good (some concerns)', count: attainsAggregation.catCounts['2'], color: 'bg-green-300' },
-                      { cat: '1', label: 'Cat 1 — Good', count: attainsAggregation.catCounts['1'], color: 'bg-green-500' },
+                      { cat: '5', label: 'Cat 5 — No TMDL', count: attainsAggregation.cat5, color: 'var(--status-severe)', opacity: 0.5 },
+                      { cat: '4A', label: 'Cat 4a — TMDL', count: attainsAggregation.cat4a, color: 'var(--status-warning)', opacity: 0.4 },
+                      { cat: '4B', label: 'Cat 4b — Alt. Ctrl', count: attainsAggregation.cat4b, color: 'var(--status-warning)', opacity: 0.3 },
+                      { cat: '4C', label: 'Cat 4c — Non-pollut.', count: attainsAggregation.cat4c, color: 'var(--text-dim)', opacity: 0.4 },
+                      { cat: '3', label: 'Cat 3 — No Data', count: attainsAggregation.catCounts['3'], color: 'var(--text-dim)', opacity: 0.3 },
+                      { cat: '2', label: 'Cat 2 — Concerns', count: attainsAggregation.catCounts['2'], color: 'var(--status-healthy)', opacity: 0.3 },
+                      { cat: '1', label: 'Cat 1 — Good', count: attainsAggregation.catCounts['1'], color: 'var(--status-healthy)', opacity: 0.4 },
                     ].filter(r => r.count > 0).map(r => {
                       const pct = attainsAggregation.totalAssessed > 0 ? (r.count / attainsAggregation.totalAssessed) * 100 : 0;
                       return (
                         <div key={r.cat} className="flex items-center gap-2">
-                          <div className="w-[140px] text-[10px] text-slate-600 truncate">{r.label}</div>
-                          <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
-                            <div className={`h-full ${r.color} rounded-full`} style={{ width: `${Math.max(pct, 1)}%` }} />
+                          <div className="w-[110px] text-[10px] truncate" style={{ color: 'var(--text-dim)' }}>{r.label}</div>
+                          <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
+                            <div className="h-full rounded-full" style={{ width: `${Math.max(pct, 1)}%`, background: r.color, opacity: r.opacity }} />
                           </div>
-                          <div className="text-[10px] font-mono text-slate-700 w-[52px] text-right">{r.count.toLocaleString()}</div>
+                          <div className="text-[10px] w-[48px] text-right pin-stat-secondary">{r.count.toLocaleString()}</div>
                         </div>
                       );
                     })}
                   </div>
-                  <div className="mt-2 pt-2 border-t border-slate-100 text-[10px] text-slate-500">
-                    TMDL Gap: <span className={`font-bold ${attainsAggregation.tmdlGapPct > 50 ? 'text-red-700' : 'text-amber-700'}`}>{attainsAggregation.tmdlGapPct}%</span> of impaired waterbodies lack an approved TMDL
+                  <div className="mt-2 pt-2 text-[10px]" style={{ borderTop: '1px solid var(--border-subtle)', color: 'var(--text-dim)' }}>
+                    TMDL Gap: <span className="pin-stat-secondary" style={attainsAggregation.tmdlGapPct > 50 ? { color: 'var(--status-severe)' } : undefined}>{attainsAggregation.tmdlGapPct}%</span> of impaired lack approved TMDL
                   </div>
                 </div>
 
                 {/* Column 2: Top Impairment Causes */}
                 <div>
-                  <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Top Impairment Causes</div>
-                  <div className="space-y-1">
-                    {attainsAggregation.topCauses.slice(0, 12).map((c, i) => {
+                  <div className="pin-section-label mb-2">Top Impairment Causes</div>
+                  <div className="space-y-0.5">
+                    {attainsAggregation.topCauses.slice(0, 10).map((c, i) => {
                       const maxCount = attainsAggregation.topCauses[0]?.count || 1;
                       const pct = (c.count / maxCount) * 100;
                       return (
                         <div key={i} className="flex items-center gap-2">
-                          <div className="w-[120px] text-[10px] text-slate-600 truncate" title={c.cause}>{c.cause}</div>
-                          <div className="flex-1 h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-blue-400 rounded-full" style={{ width: `${pct}%` }} />
+                          <div className="w-[110px] text-[10px] truncate" style={{ color: 'var(--text-dim)' }} title={c.cause}>{c.cause}</div>
+                          <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
+                            <div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'var(--text-dim)', opacity: 0.35 }} />
                           </div>
-                          <div className="text-[10px] font-mono text-slate-700 w-[42px] text-right">{c.count.toLocaleString()}</div>
+                          <div className="text-[10px] w-[40px] text-right pin-stat-secondary">{c.count.toLocaleString()}</div>
                         </div>
                       );
                     })}
@@ -4341,26 +4321,22 @@ export function FederalManagementCenter(props: Props) {
 
                 {/* Column 3: ALIA Addressability */}
                 <div>
-                  <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">ALIA Addressability</div>
-                  <div className="text-center py-3">
-                    <div className="inline-flex items-center justify-center w-24 h-24 rounded-full border-4 border-emerald-200 bg-emerald-50">
-                      <div>
-                        <div className="text-2xl font-black text-emerald-700">{attainsAggregation.addressablePct}%</div>
-                        <div className="text-[8px] text-emerald-600 font-medium">ADDRESSABLE</div>
-                      </div>
-                    </div>
+                  <div className="pin-section-label mb-2">ALIA Addressability</div>
+                  <div className="text-center py-2">
+                    <div className="pin-stat-value text-xl">{attainsAggregation.addressablePct}%</div>
+                    <div className="pin-label mt-0.5">Addressable</div>
                   </div>
-                  <div className="text-[10px] text-slate-500 text-center mb-3">
-                    <span className="font-bold text-emerald-700">{attainsAggregation.addressableCount.toLocaleString()}</span> of{' '}
-                    <span className="font-bold">{attainsAggregation.totalCauseInstances.toLocaleString()}</span> cause-instances treatable by ALIA
+                  <div className="text-[10px] text-center mb-3" style={{ color: 'var(--text-dim)' }}>
+                    <span className="pin-stat-secondary text-xs">{attainsAggregation.addressableCount.toLocaleString()}</span> of{' '}
+                    <span className="pin-stat-secondary text-xs">{attainsAggregation.totalCauseInstances.toLocaleString()}</span> cause-instances
                   </div>
-                  <div className="space-y-1 text-[9px] text-slate-500">
-                    <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" /> Sediment / TSS / Turbidity</div>
-                    <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" /> Nutrients (N, P, Ammonia)</div>
-                    <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" /> Bacteria (E. coli, Enterococci)</div>
-                    <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" /> Dissolved Oxygen / Organic</div>
-                    <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" /> Stormwater metals (Fe, Mn, Cu, Zn)</div>
-                    <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-slate-300 flex-shrink-0" /> Mercury, PCBs, PFAS — not addressable</div>
+                  <div className="space-y-1 text-[9px]" style={{ color: 'var(--text-dim)' }}>
+                    <div className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full flex-shrink-0" style={{ background: 'var(--status-healthy)', opacity: 0.5 }} /> Sediment / TSS / Turbidity</div>
+                    <div className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full flex-shrink-0" style={{ background: 'var(--status-healthy)', opacity: 0.5 }} /> Nutrients (N, P, Ammonia)</div>
+                    <div className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full flex-shrink-0" style={{ background: 'var(--status-healthy)', opacity: 0.5 }} /> Bacteria (E. coli, Enterococci)</div>
+                    <div className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full flex-shrink-0" style={{ background: 'var(--status-healthy)', opacity: 0.5 }} /> Dissolved Oxygen / Organic</div>
+                    <div className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full flex-shrink-0" style={{ background: 'var(--text-dim)', opacity: 0.4 }} /> Stormwater metals (Fe, Mn, Cu, Zn)</div>
+                    <div className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full flex-shrink-0" style={{ background: 'var(--text-dim)', opacity: 0.4 }} /> Mercury, PCBs, PFAS — not addressable</div>
                   </div>
                 </div>
               </div>
@@ -4953,43 +4929,43 @@ export function FederalManagementCenter(props: Props) {
 
         {/* Feature 1: National Situation Summary — lens controlled */}
         {lens.showSituationSummary && (
-        <Card id="section-situation" className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-cyan-50">
-          <CardHeader className="pb-3">
+        <Card id="section-situation">
+          <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg" style={{ color: 'var(--text-bright)' }}>National Situation Summary</CardTitle>
+              <CardTitle className="text-base" style={{ color: 'var(--text-bright)' }}>National Situation Summary</CardTitle>
               <BrandedPrintBtn sectionId="situation" title="National Situation Summary" />
             </div>
-            <CardDescription style={{ color: 'var(--text-secondary)' }}>Real-time monitoring network status</CardDescription>
+            <CardDescription style={{ color: 'var(--text-dim)' }}>Real-time monitoring network status</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+          <CardContent className="space-y-6">
+            {/* Primary tier: the headline numbers */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               <div className="text-center">
-                <div className="text-3xl font-bold text-blue-600" style={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.03em', fontSize: '1.5rem' }}>{nationalStats.statesCovered}</div>
-                <div className="text-xs mt-1" style={{ color: 'var(--text-dim)', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>States + DC</div>
+                <div className="pin-stat-hero text-[2rem] inline-flex items-center gap-1">{nationalStats.totalWaterbodies.toLocaleString()}<ProvenanceIcon metricName="Waterbodies" displayValue={String(nationalStats.totalWaterbodies)} /></div>
+                <div className="pin-label mt-2">Waterbodies</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-slate-800 inline-flex items-center gap-1" style={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.03em', fontSize: '1.5rem' }}>{nationalStats.totalWaterbodies.toLocaleString()}<ProvenanceIcon metricName="Waterbodies" displayValue={String(nationalStats.totalWaterbodies)} /></div>
-                <div className="text-xs mt-1" style={{ color: 'var(--text-dim)', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Waterbodies</div>
+                <div className="pin-stat-hero text-[2rem] inline-flex items-center gap-1">{nationalStats.assessed}<ProvenanceIcon metricName="Assessed Waterbodies" displayValue={String(nationalStats.assessed)} /></div>
+                <div className="pin-label mt-2">Assessed</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-green-600 inline-flex items-center gap-1" style={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.03em', fontSize: '1.5rem' }}>{nationalStats.assessed}<ProvenanceIcon metricName="Assessed Waterbodies" displayValue={String(nationalStats.assessed)} /></div>
-                <div className="text-xs mt-1" style={{ color: 'var(--text-dim)', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Assessed</div>
+                <div className="pin-stat-hero text-[2rem] inline-flex items-center gap-1" style={{ color: 'var(--status-severe)' }}>{nationalStats.highAlerts}<ProvenanceIcon metricName="Severe Alerts" displayValue={String(nationalStats.highAlerts)} /></div>
+                <div className="pin-label mt-2">Severe</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-blue-600 inline-flex items-center gap-1" style={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.03em', fontSize: '1.5rem' }}>{nationalStats.monitored.toLocaleString()}<ProvenanceIcon metricName="Monitored Waterbodies" displayValue={String(nationalStats.monitored)} /></div>
-                <div className="text-xs mt-1" style={{ color: 'var(--text-dim)', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Monitored</div>
+                <div className="pin-stat-hero text-[2rem] inline-flex items-center gap-1">{nationalStats.monitored.toLocaleString()}<ProvenanceIcon metricName="Monitored Waterbodies" displayValue={String(nationalStats.monitored)} /></div>
+                <div className="pin-label mt-2">Monitored</div>
+              </div>
+            </div>
+            {/* Secondary tier: supporting context */}
+            <div className="flex items-center justify-center gap-8 pt-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+              <div className="text-center">
+                <span className="pin-stat-secondary text-sm">{nationalStats.statesCovered}</span>
+                <span className="pin-label ml-1.5">States</span>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-red-600 inline-flex items-center gap-1" style={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.03em', fontSize: '1.5rem' }}>{nationalStats.highAlerts}<ProvenanceIcon metricName="Severe Alerts" displayValue={String(nationalStats.highAlerts)} /></div>
-                <div className="text-xs mt-1" style={{ color: 'var(--text-dim)', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Severe</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-orange-600 inline-flex items-center gap-1" style={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.03em', fontSize: '1.5rem' }}>{nationalStats.mediumAlerts}<ProvenanceIcon metricName="Impaired Waterbodies" displayValue={String(nationalStats.mediumAlerts)} /></div>
-                <div className="text-xs mt-1" style={{ color: 'var(--text-dim)', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Impaired</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-yellow-600" style={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.03em', fontSize: '1.5rem' }}>{nationalStats.lowAlerts}</div>
-                <div className="text-xs mt-1" style={{ color: 'var(--text-dim)', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Watch</div>
+                <span className="pin-stat-secondary text-sm" style={{ color: 'var(--status-warning)' }}>{nationalStats.mediumAlerts + nationalStats.lowAlerts}</span>
+                <span className="pin-label ml-1.5">Watch / Impaired</span>
               </div>
             </div>
           </CardContent>
@@ -5002,7 +4978,7 @@ export function FederalManagementCenter(props: Props) {
         {/* Feature 3: Hotspots Rankings — lens controlled, starts collapsed */}
         {lens.showHotspots && (
         <div id="section-top10" className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border-default)', background: 'var(--bg-card)' }}>
-          <button onClick={() => setShowHotspotsSection(prev => !prev)} className="w-full flex items-center justify-between px-4 py-3 transition-colors" style={{ color: 'var(--text-primary)' }} onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; }} onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
+          <button onClick={() => setShowHotspotsSection(prev => !prev)} className="w-full flex items-center justify-between px-4 py-3 transition-colors hover:bg-slate-50" style={{ color: 'var(--text-primary)' }}>
             <span className="text-sm font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>🔥 Top 10 Worsening / Improving Waterbodies</span>
             <div className="flex items-center gap-1.5">
               {showHotspotsSection ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
@@ -5044,12 +5020,7 @@ export function FederalManagementCenter(props: Props) {
                             <div className="text-xs" style={{ color: 'var(--text-dim)' }}>{region.activeAlerts} active alert{region.activeAlerts !== 1 ? 's' : ''}</div>
                           </div>
                         </div>
-                        <span className="inline-flex items-center rounded-full" style={{
-                          padding: '2px 8px',
-                          fontSize: '10px',
-                          fontWeight: 600,
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.04em',
+                        <span className="pin-label inline-flex items-center rounded-full px-2 py-0.5" style={{
                           background: region.alertLevel === 'high' ? 'var(--status-severe-bg)' : region.alertLevel === 'medium' ? 'var(--status-impaired-bg)' : region.alertLevel === 'low' ? 'var(--status-watch-bg)' : 'var(--status-healthy-bg)',
                           color: region.alertLevel === 'high' ? 'var(--status-severe)' : region.alertLevel === 'medium' ? 'var(--status-impaired)' : region.alertLevel === 'low' ? 'var(--status-watch)' : 'var(--status-healthy)',
                         }}>
@@ -5099,12 +5070,7 @@ export function FederalManagementCenter(props: Props) {
                         </div>
                       </div>
                     </div>
-                    <span className="inline-flex items-center rounded-full" style={{
-                      padding: '2px 8px',
-                      fontSize: '10px',
-                      fontWeight: 600,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.04em',
+                    <span className="pin-label inline-flex items-center rounded-full px-2 py-0.5" style={{
                       background: 'var(--status-healthy-bg)',
                       color: 'var(--status-healthy)',
                     }}>
@@ -5268,13 +5234,13 @@ export function FederalManagementCenter(props: Props) {
                         {row.dataSource === 'attains' && <span className="text-[9px] text-blue-500 ml-0.5">EPA</span>}
                       </td>
                       <td className="py-2 px-3 text-center">
-                        {row.cat5 > 0 && <span className="inline-flex items-center rounded-full" style={{ padding: '2px 8px', fontSize: '10px', fontWeight: 600, letterSpacing: '0.04em', background: 'var(--status-severe-bg)', color: 'var(--status-severe)' }}>{row.cat5}</span>}
+                        {row.cat5 > 0 && <span className="pin-label inline-flex items-center rounded-full px-2 py-0.5" style={{ background: 'var(--status-severe-bg)', color: 'var(--status-severe)' }}>{row.cat5}</span>}
                       </td>
                       <td className="py-2 px-3 text-center">
-                        {row.cat4a > 0 && <span className="inline-flex items-center rounded-full" style={{ padding: '2px 8px', fontSize: '10px', fontWeight: 600, letterSpacing: '0.04em', background: 'var(--status-watch-bg)', color: 'var(--status-watch)' }}>{row.cat4a}</span>}
+                        {row.cat4a > 0 && <span className="pin-label inline-flex items-center rounded-full px-2 py-0.5" style={{ background: 'var(--status-watch-bg)', color: 'var(--status-watch)' }}>{row.cat4a}</span>}
                       </td>
                       <td className="py-2 px-3 text-center">
-                        {row.totalImpaired > 0 && <span className="inline-flex items-center rounded-full" style={{ padding: '2px 8px', fontSize: '10px', fontWeight: 600, letterSpacing: '0.04em', background: 'var(--status-impaired-bg)', color: 'var(--status-impaired)' }}>{row.totalImpaired}</span>}
+                        {row.totalImpaired > 0 && <span className="pin-label inline-flex items-center rounded-full px-2 py-0.5" style={{ background: 'var(--status-impaired-bg)', color: 'var(--status-impaired)' }}>{row.totalImpaired}</span>}
                       </td>
                       <td className="py-2 px-3 text-center text-slate-600">{row.waterbodies}</td>
                     </tr>

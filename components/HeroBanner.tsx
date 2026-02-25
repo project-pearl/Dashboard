@@ -55,7 +55,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   national: {
     image: '/images/heroes/NCC.png',
-    subtitle: 'PEARL ALIA',
+    subtitle: 'PEARL Intelligence Network',
     headline: 'Federal Management Center',
     description:
       'Real-time water quality intelligence across 565,000+ monitoring points in every state. Federal-scale oversight, watershed-level precision.',

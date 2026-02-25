@@ -3,7 +3,6 @@
 import React from 'react';
 import { usePathname } from 'next/navigation';
 import UserMenu from '@/components/UserMenu';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { Bell, Radio } from 'lucide-react';
 
 const ROUTE_LABELS: Record<string, string> = {
@@ -79,9 +78,6 @@ export function DashboardHeader() {
         <button className="p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-600">
           <Bell className="w-4 h-4" />
         </button>
-
-        {/* Theme toggle */}
-        <ThemeToggle />
 
         {/* User menu */}
         <UserMenu />

@@ -126,16 +126,19 @@
   --accent-teal-glow: rgba(26, 154, 142, 0.08);
   --accent-copper: #A67A45;
   --accent-copper-glow: rgba(166, 122, 69, 0.08);
-  --status-healthy: #16A34A;
-  --status-healthy-bg: rgba(22, 163, 74, 0.08);
-  --status-watch: #CA8A04;
-  --status-watch-bg: rgba(202, 138, 4, 0.08);
-  --status-impaired: #EA580C;
-  --status-impaired-bg: rgba(234, 88, 12, 0.08);
-  --status-severe: #DC2626;
-  --status-severe-bg: rgba(220, 38, 38, 0.08);
-  --shadow-card: 0 1px 4px rgba(0,0,0,0.06);
-  --shadow-elevated: 0 8px 24px rgba(0,0,0,0.10);
+  --status-healthy: #5E9A6F;
+  --status-healthy-bg: rgba(94, 154, 111, 0.07);
+  --status-warning: #A89055;
+  --status-warning-bg: rgba(168, 144, 85, 0.07);
+  --status-watch: #A89055;
+  --status-watch-bg: rgba(168, 144, 85, 0.07);
+  --status-impaired: #A89055;
+  --status-impaired-bg: rgba(168, 144, 85, 0.07);
+  --status-severe: #C53030;
+  --status-severe-bg: rgba(197, 48, 48, 0.07);
+  --shadow-card: 0 1px 2px rgba(0,0,0,0.04), 0 2px 6px rgba(0,0,0,0.03), 0 4px 12px rgba(0,0,0,0.02);
+  --shadow-elevated: 0 2px 4px rgba(0,0,0,0.04), 0 8px 16px rgba(0,0,0,0.06), 0 16px 32px rgba(0,0,0,0.04);
+  --border-highlight: rgba(255,255,255,0.9);
   --pill-bg: #FFFFFF;
   --pill-bg-active: #1B2A4A;
   --pill-text: #64748B;
@@ -162,16 +165,19 @@
   --accent-teal-glow: rgba(58, 189, 176, 0.12);
   --accent-copper: #D4A56A;
   --accent-copper-glow: rgba(212, 165, 106, 0.12);
-  --status-healthy: #34D399;
-  --status-healthy-bg: rgba(52, 211, 153, 0.10);
-  --status-watch: #FBBF24;
-  --status-watch-bg: rgba(251, 191, 36, 0.10);
-  --status-impaired: #FB923C;
-  --status-impaired-bg: rgba(251, 146, 60, 0.10);
-  --status-severe: #F87171;
-  --status-severe-bg: rgba(248, 113, 113, 0.10);
-  --shadow-card: 0 2px 16px rgba(0,0,0,0.4), 0 0 1px rgba(58,189,176,0.10);
-  --shadow-elevated: 0 8px 24px rgba(0,0,0,0.50);
+  --status-healthy: #6EAA7E;
+  --status-healthy-bg: rgba(110, 170, 126, 0.08);
+  --status-warning: #C4B06A;
+  --status-warning-bg: rgba(196, 176, 106, 0.08);
+  --status-watch: #C4B06A;
+  --status-watch-bg: rgba(196, 176, 106, 0.08);
+  --status-impaired: #C4B06A;
+  --status-impaired-bg: rgba(196, 176, 106, 0.08);
+  --status-severe: #D45050;
+  --status-severe-bg: rgba(212, 80, 80, 0.08);
+  --shadow-card: 0 1px 2px rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.2), 0 0 1px rgba(255,255,255,0.04);
+  --shadow-elevated: 0 2px 4px rgba(0,0,0,0.3), 0 8px 20px rgba(0,0,0,0.3), 0 16px 40px rgba(0,0,0,0.2);
+  --border-highlight: rgba(255,255,255,0.06);
   --pill-bg: rgba(22, 34, 62, 0.8);
   --pill-bg-active: #3ABDB0;
   --pill-text: #7A8BA8;
@@ -180,10 +186,11 @@
   --pill-border-active: #3ABDB0;
 }
 
-/* ── Smooth theme transitions ── */
+/* ── Smooth theme transitions (split timings for refined feel) ── */
 *, *::before, *::after {
-  transition: background-color 400ms ease, border-color 400ms ease,
-              color 350ms ease, box-shadow 400ms ease;
+  transition: background-color 300ms ease, border-color 300ms ease,
+              color 250ms ease, box-shadow 350ms ease,
+              transform 200ms ease;
 }
 canvas, video, iframe, .no-theme-transition {
   transition: none !important;
@@ -234,16 +241,16 @@ canvas, video, iframe, .no-theme-transition {
 .dark .border-gray-200 { border-color: rgba(58, 189, 176, 0.12) !important; }
 .dark .border-gray-300 { border-color: rgba(58, 189, 176, 0.16) !important; }
 
-/* ── Shadow overrides (navy shadow + subtle teal glow) ── */
+/* ── Shadow overrides (pure dark elevation, no teal glow) ── */
 .dark .shadow-sm {
-  box-shadow: 0 1px 3px rgba(2, 6, 23, 0.5), 0 0 8px rgba(58, 189, 176, 0.04) !important;
+  box-shadow: 0 1px 3px rgba(2, 6, 23, 0.5), 0 0 1px rgba(255, 255, 255, 0.03) !important;
 }
 .dark .shadow-md,
 .dark .shadow {
-  box-shadow: 0 4px 12px rgba(2, 6, 23, 0.6), 0 0 12px rgba(58, 189, 176, 0.06) !important;
+  box-shadow: 0 4px 12px rgba(2, 6, 23, 0.6), 0 0 1px rgba(255, 255, 255, 0.04) !important;
 }
 .dark .shadow-lg {
-  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.7), 0 0 20px rgba(58, 189, 176, 0.08) !important;
+  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.7), 0 0 1px rgba(255, 255, 255, 0.05) !important;
 }
 
 /* ── Colored light backgrounds → dark tinted surfaces ── */
@@ -363,6 +370,18 @@ canvas, video, iframe, .no-theme-transition {
   box-shadow: var(--shadow-card);
 }
 
+/* ── Strip noisy colored borders from cards (use subtle border instead) ── */
+.bg-card.border-2 {
+  border-width: 1px !important;
+  border-color: var(--border-default) !important;
+}
+.bg-card[class*="bg-gradient"] {
+  background: hsl(var(--card)) !important;
+}
+[data-theme="dark"] .bg-card[class*="bg-gradient"] {
+  background: var(--bg-surface) !important;
+}
+
 /* ── Scrollbar styling for dark mode ── */
 .dark ::-webkit-scrollbar { width: 6px; height: 6px; }
 .dark ::-webkit-scrollbar-track { background: rgba(14, 22, 45, 0.3); }
@@ -375,11 +394,87 @@ canvas, video, iframe, .no-theme-transition {
 
 @layer components {
   .pin-card-glass {
-    @apply rounded-[14px] border shadow-sm;
+    @apply rounded-[14px] border;
     background: var(--bg-surface);
     border-color: var(--border-default);
     box-shadow: var(--shadow-card);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* ── PIN Typography ── */
+
+  /* Primary headline metric: largest, heaviest, JetBrains Mono */
+  .pin-stat-hero {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--text-bright);
+    line-height: 1.1;
+  }
+
+  /* Standard stat value: JetBrains Mono, neutral by default */
+  .pin-stat-value {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--text-bright);
+  }
+
+  /* Secondary stat: smaller, lighter weight, lower contrast */
+  .pin-stat-secondary {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text-secondary);
+  }
+
+  /* Labels: quiet, uppercase, below numbers */
+  .pin-label {
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+  }
+
+  /* Section sub-headers */
+  .pin-section-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-dim);
+  }
+
+  /* ── PIN Card Depth ── */
+  .pin-card-inset {
+    @apply rounded-[10px];
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);
+  }
+  [data-theme="dark"] .pin-card-inset {
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.15);
+  }
+
+  /* ── Card hover interaction ── */
+  .pin-card-hover {
+    transition: transform 200ms ease, box-shadow 350ms ease;
+  }
+  .pin-card-hover:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-elevated);
+  }
+
+  /* ── Stat tile: quiet container for a number + label ── */
+  .pin-stat-tile {
+    @apply rounded-lg text-center;
+    padding: 12px 8px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
   }
 }
