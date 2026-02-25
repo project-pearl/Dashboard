@@ -2762,7 +2762,7 @@ export function FederalManagementCenter(props: Props) {
           const wbRow = stateRollup.find(r => r.abbr === selectedState);
           const wbRegion = getEpaRegionForState(selectedState);
           return (
-            <Card>
+            <Card className="lg:max-w-[66%]">
               <CardHeader className="pb-2 pt-4 px-5">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm font-semibold" style={{ color: 'var(--text-bright)' }}>State Waterbody Inspector</CardTitle>
@@ -4217,43 +4217,6 @@ export function FederalManagementCenter(props: Props) {
         </>); {/* end usmap */}
 
         case 'impairmentprofile': return DS(<>
-        {/* ── KPI STRIP — quiet footnote-band, lens controlled ────── */}
-        {lens.showTopStrip && topStrip && (() => {
-          const s = topStrip;
-          const complianceTiles: Array<{ label: string; value: string; severe?: boolean }> = [
-              { label: 'Impaired', value: s.totalImpaired.toLocaleString() },
-              { label: 'Cat 5', value: s.noTmdlCount.toLocaleString(), severe: s.noTmdlCount > 0 },
-              { label: 'TMDL Gap', value: `${s.tmdlGapPct}%`, severe: s.tmdlGapPct > 50 },
-              { label: 'Reporting', value: `${s.statesReporting}/${s.totalStates}` },
-              { label: 'Alerts', value: (s.severeCount + nationalStats.mediumAlerts).toLocaleString(), severe: s.severeCount > 0 },
-          ];
-          const coverageTiles: Array<{ label: string; value: string; severe?: boolean }> = [
-              { label: 'With Data', value: `${s.pctWithData}%` },
-              { label: 'Reporting', value: `${s.statesReporting}/${s.totalStates}` },
-              { label: 'No Data', value: s.noData.toLocaleString(), severe: s.noData > 0 },
-              { label: 'Sites', value: s.sitesOnline.toLocaleString() },
-              { label: 'Waterbodies', value: s.withData.toLocaleString() },
-          ];
-          const tilesByLens: Partial<Record<ViewLens, Array<{ label: string; value: string; severe?: boolean }>>> = {
-            overview: complianceTiles,
-            compliance: complianceTiles,
-            monitoring: coverageTiles,
-            'water-quality': complianceTiles,
-          };
-          const tiles = tilesByLens[viewLens] || complianceTiles;
-          if (!tiles.length) return null;
-          return (
-            <div className="flex items-center justify-between flex-wrap gap-x-5 gap-y-1 py-2 px-3" style={{ borderTop: '1px solid var(--border-subtle)', borderBottom: '1px solid var(--border-subtle)' }}>
-              {tiles.map((tile, i) => (
-                <div key={i} className="flex items-baseline gap-1.5">
-                  <span className="pin-stat-secondary text-sm" style={tile.severe ? { color: 'var(--status-severe)' } : undefined}>{tile.value}</span>
-                  <span className="pin-label">{tile.label}</span>
-                </div>
-              ))}
-            </div>
-          );
-        })()}
-
         {/* ── National Impairment Profile — explanatory analysis, quiet ── */}
         {lens.showTopStrip && attainsAggregation.totalAssessed > 0 && (
           <Card id="section-impairmentprofile" className="mt-2">
@@ -4302,17 +4265,17 @@ export function FederalManagementCenter(props: Props) {
                 {/* Column 2: Top Impairment Causes */}
                 <div>
                   <div className="pin-section-label mb-2">Top Impairment Causes</div>
-                  <div className="space-y-0.5">
-                    {attainsAggregation.topCauses.slice(0, 10).map((c, i) => {
+                  <div className="space-y-1">
+                    {attainsAggregation.topCauses.slice(0, 7).map((c, i) => {
                       const maxCount = attainsAggregation.topCauses[0]?.count || 1;
                       const pct = (c.count / maxCount) * 100;
                       return (
                         <div key={i} className="flex items-center gap-2">
                           <div className="w-[110px] text-[10px] truncate" style={{ color: 'var(--text-dim)' }} title={c.cause}>{c.cause}</div>
-                          <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
+                          <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
                             <div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'var(--text-dim)', opacity: 0.35 }} />
                           </div>
-                          <div className="text-[10px] w-[40px] text-right pin-stat-secondary">{c.count.toLocaleString()}</div>
+                          <div className="text-[10px] w-[48px] text-right pin-stat-secondary">{c.count.toLocaleString()}</div>
                         </div>
                       );
                     })}
@@ -4914,49 +4877,94 @@ export function FederalManagementCenter(props: Props) {
         )}
 
 
-        {/* Feature 1: National Situation Summary — lens controlled */}
+        {/* Feature 1: National Situation Summary + KPI strip — side by side */}
         {lens.showSituationSummary && (
-        <Card id="section-situation">
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base" style={{ color: 'var(--text-bright)' }}>National Situation Summary</CardTitle>
-              <BrandedPrintBtn sectionId="situation" title="National Situation Summary" />
-            </div>
-            <CardDescription style={{ color: 'var(--text-dim)' }}>Real-time monitoring network status</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Primary tier: the headline numbers */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div className="text-center">
-                <div className="pin-stat-hero text-[2rem] inline-flex items-center gap-1">{nationalStats.totalWaterbodies.toLocaleString()}<ProvenanceIcon metricName="Waterbodies" displayValue={String(nationalStats.totalWaterbodies)} /></div>
-                <div className="pin-label mt-2">Waterbodies</div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Left: Summary card — 2 cols wide */}
+          <Card id="section-situation" className="lg:col-span-2">
+            <CardHeader className="pb-1 pt-4 px-5">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-semibold" style={{ color: 'var(--text-bright)' }}>National Situation Summary</CardTitle>
+                <BrandedPrintBtn sectionId="situation" title="National Situation Summary" />
               </div>
-              <div className="text-center">
-                <div className="pin-stat-hero text-[2rem] inline-flex items-center gap-1">{nationalStats.assessed}<ProvenanceIcon metricName="Assessed Waterbodies" displayValue={String(nationalStats.assessed)} /></div>
-                <div className="pin-label mt-2">Assessed</div>
+              <CardDescription className="text-xs" style={{ color: 'var(--text-dim)' }}>Real-time monitoring network status</CardDescription>
+            </CardHeader>
+            <CardContent className="px-5 pb-4 space-y-3">
+              {/* Primary tier: the headline numbers */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center">
+                  <div className="pin-stat-hero text-[1.75rem] inline-flex items-center gap-1">{nationalStats.totalWaterbodies.toLocaleString()}<ProvenanceIcon metricName="Waterbodies" displayValue={String(nationalStats.totalWaterbodies)} /></div>
+                  <div className="pin-label mt-1">Waterbodies</div>
+                </div>
+                <div className="text-center">
+                  <div className="pin-stat-hero text-[1.75rem] inline-flex items-center gap-1">{nationalStats.assessed}<ProvenanceIcon metricName="Assessed Waterbodies" displayValue={String(nationalStats.assessed)} /></div>
+                  <div className="pin-label mt-1">Assessed</div>
+                </div>
+                <div className="text-center">
+                  <div className="pin-stat-hero text-[1.75rem] inline-flex items-center gap-1" style={{ color: 'var(--status-severe)' }}>{nationalStats.highAlerts}<ProvenanceIcon metricName="Severe Alerts" displayValue={String(nationalStats.highAlerts)} /></div>
+                  <div className="pin-label mt-1">Severe</div>
+                </div>
+                <div className="text-center">
+                  <div className="pin-stat-hero text-[1.75rem] inline-flex items-center gap-1">{nationalStats.monitored.toLocaleString()}<ProvenanceIcon metricName="Monitored Waterbodies" displayValue={String(nationalStats.monitored)} /></div>
+                  <div className="pin-label mt-1">Monitored</div>
+                </div>
               </div>
-              <div className="text-center">
-                <div className="pin-stat-hero text-[2rem] inline-flex items-center gap-1" style={{ color: 'var(--status-severe)' }}>{nationalStats.highAlerts}<ProvenanceIcon metricName="Severe Alerts" displayValue={String(nationalStats.highAlerts)} /></div>
-                <div className="pin-label mt-2">Severe</div>
+              {/* Secondary tier: supporting context */}
+              <div className="flex items-center justify-center gap-6 pt-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+                <div className="text-center">
+                  <span className="pin-stat-secondary text-sm">{nationalStats.statesCovered}</span>
+                  <span className="pin-label ml-1.5">States</span>
+                </div>
+                <div className="text-center">
+                  <span className="pin-stat-secondary text-sm" style={{ color: 'var(--status-warning)' }}>{nationalStats.mediumAlerts + nationalStats.lowAlerts}</span>
+                  <span className="pin-label ml-1.5">Watch / Impaired</span>
+                </div>
               </div>
-              <div className="text-center">
-                <div className="pin-stat-hero text-[2rem] inline-flex items-center gap-1">{nationalStats.monitored.toLocaleString()}<ProvenanceIcon metricName="Monitored Waterbodies" displayValue={String(nationalStats.monitored)} /></div>
-                <div className="pin-label mt-2">Monitored</div>
-              </div>
-            </div>
-            {/* Secondary tier: supporting context */}
-            <div className="flex items-center justify-center gap-8 pt-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-              <div className="text-center">
-                <span className="pin-stat-secondary text-sm">{nationalStats.statesCovered}</span>
-                <span className="pin-label ml-1.5">States</span>
-              </div>
-              <div className="text-center">
-                <span className="pin-stat-secondary text-sm" style={{ color: 'var(--status-warning)' }}>{nationalStats.mediumAlerts + nationalStats.lowAlerts}</span>
-                <span className="pin-label ml-1.5">Watch / Impaired</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          {/* Right: KPI strip — vertical, 1 col */}
+          {lens.showTopStrip && topStrip && (() => {
+            const s = topStrip;
+            const complianceTiles: Array<{ label: string; value: string; severe?: boolean }> = [
+              { label: 'Impaired', value: s.totalImpaired.toLocaleString() },
+              { label: 'Cat 5', value: s.noTmdlCount.toLocaleString(), severe: s.noTmdlCount > 0 },
+              { label: 'TMDL Gap', value: `${s.tmdlGapPct}%`, severe: s.tmdlGapPct > 50 },
+              { label: 'Reporting', value: `${s.statesReporting}/${s.totalStates}` },
+              { label: 'Alerts', value: (s.severeCount + nationalStats.mediumAlerts).toLocaleString(), severe: s.severeCount > 0 },
+            ];
+            const coverageTiles: Array<{ label: string; value: string; severe?: boolean }> = [
+              { label: 'With Data', value: `${s.pctWithData}%` },
+              { label: 'Reporting', value: `${s.statesReporting}/${s.totalStates}` },
+              { label: 'No Data', value: s.noData.toLocaleString(), severe: s.noData > 0 },
+              { label: 'Sites', value: s.sitesOnline.toLocaleString() },
+              { label: 'Waterbodies', value: s.withData.toLocaleString() },
+            ];
+            const tilesByLens: Partial<Record<ViewLens, Array<{ label: string; value: string; severe?: boolean }>>> = {
+              overview: complianceTiles, compliance: complianceTiles,
+              monitoring: coverageTiles, 'water-quality': complianceTiles,
+            };
+            const tiles = tilesByLens[viewLens] || complianceTiles;
+            if (!tiles.length) return null;
+            return (
+              <Card className="flex flex-col justify-center">
+                <CardHeader className="pb-1 pt-4 px-4">
+                  <div className="pin-section-label">Key Indicators</div>
+                </CardHeader>
+                <CardContent className="px-4 pb-4">
+                  <div className="space-y-2.5">
+                    {tiles.map((tile, i) => (
+                      <div key={i} className="flex items-baseline justify-between">
+                        <span className="pin-label">{tile.label}</span>
+                        <span className="pin-stat-secondary text-sm" style={tile.severe ? { color: 'var(--status-severe)' } : undefined}>{tile.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })()}
+        </div>
         )}
 
         </>); {/* end situation */}
