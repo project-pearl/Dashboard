@@ -373,8 +373,8 @@ export const DEFAULT_SECTIONS = {
   ],
 
   FMC: [
-    { id: 'situation',          label: 'Situation Summary',           order: 0,  visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'usmap',              label: 'US Map',                      order: 1,  visible: true, defaultExpanded: true, compound: true, lensControlled: true },
+    { id: 'usmap',              label: 'US Map',                      order: 0,  visible: true, defaultExpanded: true, compound: true, lensControlled: true },
+    { id: 'situation',          label: 'Situation Summary',           order: 1,  visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'impairmentprofile',  label: 'Impairment Profile',          order: 2,  visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'ai-water-intelligence', label: 'AI Water Intelligence',     order: 3,  visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'national-briefing',  label: 'National Intelligence Briefing', order: 4, visible: true, defaultExpanded: true, lensControlled: true },

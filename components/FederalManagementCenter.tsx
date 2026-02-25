@@ -2318,7 +2318,7 @@ export function FederalManagementCenter(props: Props) {
           );
           switch (section.id) {
 
-        case 'usmap': return DS(<>
+        case 'usmap': return DS(<div className="space-y-6">
         {/* ── MONITORING NETWORK MAP ──────────────────────────────── */}
 
         <div ref={mapSectionRef} className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -2456,89 +2456,22 @@ export function FederalManagementCenter(props: Props) {
 
           {/* State Detail Panel */}
           <Card style={{ background: 'var(--bg-card)' }}>
-            <CardHeader className="pb-2 pt-5 px-5">
-              <div className="flex items-center justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <CardTitle className="flex items-center gap-2 text-sm">
-                    <MapPin size={15} className="flex-shrink-0" style={{ color: 'var(--text-dim)' }} />
-                    <select
-                      value={selectedState}
-                      onChange={(e) => { setSelectedState(e.target.value); setWaterbodySearch(''); setWaterbodyFilter('all'); setShowAllWaterbodies(false); }}
-                      className="px-2 py-1 rounded-md text-sm font-semibold cursor-pointer focus:outline-none"
-                      style={{ background: 'var(--bg-input)', border: '1px solid var(--border-default)', color: 'var(--text-primary)' }}
-                      onFocus={e => { e.currentTarget.style.borderColor = 'var(--accent-teal)'; e.currentTarget.style.boxShadow = '0 0 0 2px var(--accent-teal-glow)'; }}
-                      onBlur={e => { e.currentTarget.style.borderColor = 'var(--border-default)'; e.currentTarget.style.boxShadow = 'none'; }}
-                    >
-                      {Object.entries(STATE_ABBR_TO_NAME).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
-                        <option key={abbr} value={abbr}>{name} ({abbr})</option>
-                      ))}
-                    </select>
-                  </CardTitle>
-                  <CardDescription>Waterbody monitoring summary</CardDescription>
-                </div>
-                {selectedStateRegions.length > 0 && (() => {
-                  // Use stateRollup which already incorporates ATTAINS data
-                  const rollup = stateRollup.find(s => s.abbr === selectedState);
-                  if (!rollup?.canGradeState) {
-                    return (
-                      <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg border-2 bg-slate-100 border-slate-300">
-                        <div className="text-lg font-black text-slate-400">N/A</div>
-                        <div className="text-right">
-                          <div className="text-[10px] text-slate-500">Ungraded</div>
-                          <div className="text-[10px] text-slate-400">{attainsBulkLoading.has(selectedState) ? 'Loading ATTAINS...' : 'No assessment data'}</div>
-                        </div>
-                      </div>
-                    );
-                  }
-                  const grade = rollup.grade;
-                  return (
-                    <div className="relative">
-                      <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border-2 ${grade.bg}`}>
-                        <div className={`text-lg font-black ${grade.color}`}>{grade.letter}</div>
-                        <div className="text-right">
-                          <div className={`text-xs font-bold ${grade.color}`}>{rollup.score}%</div>
-                          <div className="text-[10px] text-slate-500">
-                            {rollup.assessed} assessed{rollup.dataSource === 'attains' ? ' (EPA)' : ''}
-                          </div>
-                        </div>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setShowMethodology(!showMethodology); }}
-                          className="ml-1 p-0.5 rounded-full hover:bg-black/10 transition-colors"
-                          title="Grading methodology"
-                        >
-                          <Info size={13} className="text-slate-400" />
-                        </button>
-                      </div>
-                      {/* Methodology Popover */}
-                      {showMethodology && (
-                        <div className="absolute right-0 top-full mt-2 w-80 z-50 rounded-lg border border-slate-200 bg-white shadow-xl p-4 text-xs text-slate-600 space-y-2"
-                          onClick={(e) => e.stopPropagation()}>
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="font-semibold text-slate-800 text-sm">ALIA Grading Methodology</span>
-                            <button onClick={() => setShowMethodology(false)} className="p-0.5 hover:bg-slate-100 rounded">
-                              <X size={14} />
-                            </button>
-                          </div>
-                          <div className="space-y-1.5">
-                            <p><span className="font-medium text-slate-700">Base score</span> from recent parameter readings vs. regulatory targets (CBP tidal criteria, state WQ standards, EPA recommended limits).</p>
-                            <p><span className="font-medium text-slate-700">Adjustments</span> for data freshness (deductions for &gt;30 days old), active alerts, and EPA ATTAINS impairment status.</p>
-                            <p><span className="font-medium text-slate-700">No sensors or stale data</span> = "Unassessed" (neutral — not assumed good or bad).</p>
-                            <div className="border-t border-slate-100 pt-1.5">
-                              <p className="font-medium text-slate-700 mb-0.5">Data Sources:</p>
-                              <p className="text-slate-500">USGS NWIS • Water Quality Portal • EPA ATTAINS • Blue Water Baltimore • NOAA CO-OPS</p>
-                            </div>
-                            <div className="border-t border-slate-100 pt-1.5">
-                              <p className="font-medium text-slate-700 mb-0.5">Scale:</p>
-                              <p className="text-slate-500">A+ (97+) · A (93) · A- (90) · B+ (87) · B (83) · B- (80) · C+ (77) · C (73) · C- (70) · D+ (67) · D (63) · D- (60) · F (&lt;60)</p>
-                            </div>
-                          </div>
-                          <p className="text-[10px] text-slate-400 italic pt-1 border-t border-slate-100">Not an official EPA/state assessment — informational only. See primary agency data for compliance purposes.</p>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
-              </div>
+            <CardHeader className="pb-2 pt-4 px-5">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <MapPin size={15} className="flex-shrink-0" style={{ color: 'var(--text-dim)' }} />
+                <select
+                  value={selectedState}
+                  onChange={(e) => { setSelectedState(e.target.value); setWaterbodySearch(''); setWaterbodyFilter('all'); setShowAllWaterbodies(false); }}
+                  className="px-2 py-1 rounded-md text-sm font-semibold cursor-pointer focus:outline-none"
+                  style={{ background: 'var(--bg-input)', border: '1px solid var(--border-default)', color: 'var(--text-primary)' }}
+                  onFocus={e => { e.currentTarget.style.borderColor = 'var(--accent-teal)'; e.currentTarget.style.boxShadow = '0 0 0 2px var(--accent-teal-glow)'; }}
+                  onBlur={e => { e.currentTarget.style.borderColor = 'var(--border-default)'; e.currentTarget.style.boxShadow = 'none'; }}
+                >
+                  {Object.entries(STATE_ABBR_TO_NAME).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
+                    <option key={abbr} value={abbr}>{name} ({abbr})</option>
+                  ))}
+                </select>
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 px-5 pb-5">
               {/* Quick stats — compact, subordinate to national summary */}
@@ -2706,7 +2639,7 @@ export function FederalManagementCenter(props: Props) {
           <AIInsightsEngine key={selectedState} role="Federal" stateAbbr={selectedState} regionData={selectedStateRegions as any} />
         )}
 
-        {/* ── MS4 & REGULATORY PROFILE — Compact context strip below map ────── */}
+        {/* ── MS4 & REGULATORY — Compact vertical card ────── */}
         {viewLens !== 'monitoring' && (() => {
           const ms4 = MS4_JURISDICTIONS[selectedState];
           const ov = overlayByState.get(selectedState);
@@ -2716,38 +2649,38 @@ export function FederalManagementCenter(props: Props) {
           const trendLabel = trendVal > 5 ? 'Improving' : trendVal < -5 ? 'Worsening' : 'Stable';
           const trendIsWorsening = trendVal < -5;
           return (
-            <Card>
-              <CardContent className="py-2.5 px-4">
-                <div className="flex items-center flex-wrap gap-x-6 gap-y-1">
-                  <div className="flex items-center gap-1.5">
-                    <Building2 size={13} style={{ color: 'var(--text-dim)' }} />
-                    <span className="pin-section-label" style={{ fontSize: '10px' }}>{STATE_ABBR_TO_NAME[selectedState]} — MS4 & Regulatory</span>
-                  </div>
+            <Card className="lg:max-w-[280px]">
+              <CardContent className="py-3 px-4">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Building2 size={13} style={{ color: 'var(--text-dim)' }} />
+                  <span className="pin-section-label" style={{ fontSize: '10px' }}>MS4 & Regulatory</span>
+                </div>
+                <div className="space-y-1.5">
                   {ms4 && (
                     <>
-                      <div className="flex items-baseline gap-1">
+                      <div className="flex items-baseline justify-between">
+                        <span className="pin-label">Permits</span>
                         <span className="pin-stat-secondary text-sm">{total}</span>
-                        <span className="pin-label">permits</span>
                       </div>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-xs" style={{ color: 'var(--text-dim)' }}>{ms4.phase1} Phase I · {ms4.phase2} Phase II</span>
+                      <div className="flex items-baseline justify-between">
+                        <span className="pin-label">Phase I / II</span>
+                        <span className="text-xs" style={{ color: 'var(--text-dim)' }}>{ms4.phase1} / {ms4.phase2}</span>
                       </div>
                     </>
                   )}
-                  <div className="flex items-baseline gap-1">
+                  <div className="flex items-baseline justify-between">
+                    <span className="pin-label">Program</span>
                     <span className="text-xs" style={{ color: 'var(--text-dim)' }}>{STATE_AGENCIES[selectedState]?.ms4Program || 'NPDES MS4'}</span>
                   </div>
                   {ov && (
                     <>
-                      <div className="flex items-baseline gap-1">
-                        <span className="pin-stat-secondary text-sm">{ov.ej}</span>
+                      <div className="flex items-baseline justify-between">
                         <span className="pin-label">EJ Index</span>
+                        <span className="pin-stat-secondary text-sm">{ov.ej}</span>
                       </div>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-xs font-semibold" style={{
-                          color: trendIsWorsening ? 'var(--status-severe)' : 'var(--text-dim)',
-                        }}>{trendLabel}</span>
+                      <div className="flex items-baseline justify-between">
                         <span className="pin-label">WQ Trend</span>
+                        <span className="text-xs font-semibold" style={{ color: trendIsWorsening ? 'var(--status-severe)' : 'var(--text-dim)' }}>{trendLabel}</span>
                       </div>
                     </>
                   )}
@@ -2764,24 +2697,48 @@ export function FederalManagementCenter(props: Props) {
           return (
             <Card className="lg:max-w-[66%]">
               <CardContent className="px-5 pt-4">
-                <div className="flex items-center justify-end mb-1">
-                  <BrandedPrintBtn sectionId="waterbody-inspector-inline" title="Waterbody Assessment" />
-                </div>
                 {!wbRow || !wbRow.canGradeState ? (
                   <p className="text-sm italic" style={{ color: 'var(--text-dim)' }}>
-                    {wbRow ? `Insufficient data available for ${wbRow.name} to generate a waterbody assessment.` : 'Select a state from the map above to inspect its waterbody profile.'}
+                    {wbRow ? `Insufficient data for ${wbRow.name}.` : 'Select a state from the map above.'}
                   </p>
                 ) : (
-                  <div className="space-y-5">
-                    {/* Grade + state name — compact */}
-                    <div className="flex items-center gap-2.5">
-                      <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold border ${wbRow.grade.bg} ${wbRow.grade.color}`}>
-                        {wbRow.grade.letter}
-                      </span>
-                      <div>
-                        <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{wbRow.name}</p>
-                        <p className="text-[10px]" style={{ color: 'var(--text-dim)' }}>Score: {wbRow.score}/100 · {wbRow.dataSource === 'per-waterbody' ? 'Per-Waterbody' : 'ATTAINS Bulk'} · Region {wbRegion}</p>
+                  <div className="space-y-4">
+                    {/* Title line: state name + grade + info + print */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-[11px] font-bold border ${wbRow.grade.bg} ${wbRow.grade.color}`}>
+                          {wbRow.grade.letter}
+                        </span>
+                        <div>
+                          <p className="text-sm font-semibold" style={{ color: 'var(--text-bright)' }}>{wbRow.name}</p>
+                          <p className="text-[10px]" style={{ color: 'var(--text-dim)' }}>{wbRow.score}/100 · {wbRow.dataSource === 'per-waterbody' ? 'Per-Waterbody' : 'ATTAINS Bulk'} · EPA Region {wbRegion}</p>
+                        </div>
+                        <div className="relative">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setShowMethodology(!showMethodology); }}
+                            className="p-0.5 rounded-full transition-colors"
+                            style={{ color: 'var(--text-dim)' }}
+                            title="Grading methodology"
+                          >
+                            <Info size={13} />
+                          </button>
+                          {showMethodology && (
+                            <div className="absolute left-0 top-full mt-2 w-72 z-50 rounded-lg p-3 text-xs space-y-1.5"
+                              style={{ background: 'var(--bg-card)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-elevated)', color: 'var(--text-secondary)' }}
+                              onClick={(e) => e.stopPropagation()}>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-semibold text-xs" style={{ color: 'var(--text-bright)' }}>Grading Methodology</span>
+                                <button onClick={() => setShowMethodology(false)} className="p-0.5 rounded" style={{ color: 'var(--text-dim)' }}><X size={12} /></button>
+                              </div>
+                              <p><span className="font-medium" style={{ color: 'var(--text-primary)' }}>Base score</span> from parameter readings vs. regulatory targets.</p>
+                              <p><span className="font-medium" style={{ color: 'var(--text-primary)' }}>Adjustments</span> for data freshness, active alerts, and ATTAINS status.</p>
+                              <p className="text-[10px]" style={{ color: 'var(--text-dim)' }}>Scale: A+ (97+) · A (93) · B (83) · C (73) · D (63) · F (&lt;60)</p>
+                              <p className="text-[9px] italic pt-1" style={{ borderTop: '1px solid var(--border-subtle)', color: 'var(--text-dim)' }}>Informational only — not an official EPA/state assessment.</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
+                      <BrandedPrintBtn sectionId="waterbody-inspector-inline" title="Waterbody Assessment" />
                     </div>
 
                     {/* Top 4 numbers — hero is Total Impaired, Cat 5 gets red if nonzero */}
@@ -4208,7 +4165,7 @@ export function FederalManagementCenter(props: Props) {
           );
         })()}
 
-        </>); {/* end usmap */}
+        </div>); {/* end usmap */}
 
         case 'impairmentprofile': return DS(<>
         {/* ── National Impairment Profile — explanatory analysis, quiet ── */}
