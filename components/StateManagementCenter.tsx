@@ -1,14 +1,17 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLensParam } from '@/lib/useLensParam';
-import { CircleMarker, Tooltip } from 'react-leaflet';
 import HeroBanner from './HeroBanner';
 import dynamic from 'next/dynamic';
-import { getStatesGeoJSON, geoToAbbr, STATE_GEO_LEAFLET, FIPS_TO_ABBR as _FIPS, STATE_NAMES as _SN } from '@/lib/leafletMapUtils';
+import { getStatesGeoJSON, geoToAbbr, STATE_GEO_LEAFLET, FIPS_TO_ABBR as _FIPS, STATE_NAMES as _SN } from '@/lib/mapUtils';
 
-const LeafletMapShell = dynamic(
-  () => import('@/components/LeafletMapShell').then(m => m.LeafletMapShell),
+const MapboxMapShell = dynamic(
+  () => import('@/components/MapboxMapShell').then(m => m.MapboxMapShell),
+  { ssr: false }
+);
+const MapboxMarkers = dynamic(
+  () => import('@/components/MapboxMarkers').then(m => m.MapboxMarkers),
   { ssr: false }
 );
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -455,6 +458,30 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
     }
     return resolved;
   }, [regionData, stateAbbr, attainsCoordMap]);
+
+  // Mapbox marker data — transform wbMarkers for MapboxMarkers component
+  const markerData = useMemo(() =>
+    wbMarkers.map(wb => ({
+      id: wb.id,
+      lat: wb.lat,
+      lon: wb.lon,
+      color: getMarkerColor(overlay, wb),
+      name: wb.name,
+    })),
+    [wbMarkers, overlay]
+  );
+
+  const [hoveredFeature, setHoveredFeature] = useState<mapboxgl.MapboxGeoJSONFeature | null>(null);
+
+  const onMarkerMouseMove = useCallback((e: mapboxgl.MapLayerMouseEvent) => {
+    if (e.features && e.features.length > 0) {
+      setHoveredFeature(e.features[0]);
+    }
+  }, []);
+
+  const onMarkerMouseLeave = useCallback(() => {
+    setHoveredFeature(null);
+  }, []);
 
   // Fetch ATTAINS bulk from cache for this state
   useEffect(() => {
@@ -1058,30 +1085,22 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                     {attainsBulkLoaded && <span className="text-green-600 font-medium">● ATTAINS live</span>}
                   </div>
                   <div className="h-[480px] w-full relative">
-                    <LeafletMapShell center={leafletGeo.center} zoom={leafletGeo.zoom} maxZoom={12} height="100%" mapKey={stateAbbr}>
-                      {/* Waterbody markers — color driven by overlay */}
-                      {wbMarkers.map(wb => {
-                        const isActive = wb.id === activeDetailId;
-                        const markerColor = getMarkerColor(overlay, wb);
-                        const baseR = wbMarkers.length > 150 ? 2.5 : wbMarkers.length > 50 ? 3.5 : 4.5;
-                        return (
-                          <CircleMarker
-                            key={wb.id}
-                            center={[wb.lat, wb.lon]}
-                            radius={isActive ? 8 : baseR}
-                            pathOptions={{
-                              fillColor: markerColor,
-                              color: isActive ? '#1e40af' : '#ffffff',
-                              weight: isActive ? 2.5 : wbMarkers.length > 150 ? 0.8 : 1.5,
-                              fillOpacity: 0.9,
-                            }}
-                            eventHandlers={{ click: () => setActiveDetailId(isActive ? null : wb.id) }}
-                          >
-                            {isActive && <Tooltip permanent direction="top" offset={[0, -8]}>{wb.name}</Tooltip>}
-                          </CircleMarker>
-                        );
-                      })}
-                    </LeafletMapShell>
+                    <MapboxMapShell
+                      center={leafletGeo.center}
+                      zoom={leafletGeo.zoom}
+                      height="100%"
+                      mapKey={stateAbbr}
+                      interactiveLayerIds={['state-markers']}
+                      onMouseMove={onMarkerMouseMove}
+                      onMouseLeave={onMarkerMouseLeave}
+                    >
+                      <MapboxMarkers
+                        data={markerData}
+                        layerId="state-markers"
+                        radius={wbMarkers.length > 150 ? 3 : wbMarkers.length > 50 ? 4 : 5}
+                        hoveredFeature={hoveredFeature}
+                      />
+                    </MapboxMapShell>
                   </div>
                   {/* Dynamic Legend */}
                   <div className="flex flex-wrap gap-2 p-3 text-xs bg-slate-50 border-t border-slate-200">

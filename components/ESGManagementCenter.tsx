@@ -4,20 +4,20 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import MissionQuote from './MissionQuote';
 import { useLensParam } from '@/lib/useLensParam';
-import { CircleMarker, Tooltip } from 'react-leaflet';
+import type { MapRef } from 'react-map-gl';
 import HeroBanner from './HeroBanner';
 import dynamic from 'next/dynamic';
-import { getStatesGeoJSON, STATE_GEO_LEAFLET, FIPS_TO_ABBR, STATE_NAMES as _SN } from '@/lib/leafletMapUtils';
+import { STATE_GEO_LEAFLET, FIPS_TO_ABBR, STATE_NAMES as _SN } from '@/lib/mapUtils';
 
-const LeafletMapShell = dynamic(
-  () => import('@/components/LeafletMapShell').then(m => m.LeafletMapShell),
+const MapboxMapShell = dynamic(
+  () => import('@/components/MapboxMapShell').then(m => m.MapboxMapShell),
   { ssr: false }
 );
-const FlyToLocation = dynamic(
-  () => import('@/components/LeafletMapShell').then(m => m.FlyToLocation),
+const MapboxMarkers = dynamic(
+  () => import('@/components/MapboxMarkers').then(m => m.MapboxMarkers),
   { ssr: false }
 );
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -409,6 +409,33 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
   const [searchQuery, setSearchQuery] = useState('');
   const [filterLevel, setFilterLevel] = useState<'all' | 'high' | 'medium' | 'low'>('all');
 
+  // ── Mapbox map ref + flyTo ──
+  const mapRef = useRef<MapRef | null>(null);
+  const onMapRef = useCallback((ref: MapRef) => { mapRef.current = ref; }, []);
+  useEffect(() => {
+    if (flyTarget && mapRef.current) {
+      mapRef.current.flyTo({ center: [flyTarget.center[1], flyTarget.center[0]], zoom: flyTarget.zoom });
+    }
+  }, [flyTarget]);
+
+  // ── Mapbox hover state ──
+  const [hoveredFeature, setHoveredFeature] = useState<mapboxgl.MapboxGeoJSONFeature | null>(null);
+  const onMapMouseMove = useCallback((e: mapboxgl.MapLayerMouseEvent) => {
+    const feat = e.features?.[0] ?? null;
+    setHoveredFeature(feat);
+    if (feat?.properties?.id) setHoveredFacility(feat.properties.id as string);
+    else setHoveredFacility(null);
+  }, []);
+  const onMapMouseLeave = useCallback(() => {
+    setHoveredFeature(null);
+    setHoveredFacility(null);
+  }, []);
+  const onMapClick = useCallback((e: mapboxgl.MapLayerMouseEvent) => {
+    const feat = e.features?.[0];
+    if (feat?.properties?.id) {
+      setSelectedFacility(prev => prev === feat.properties!.id ? null : feat.properties!.id as string);
+    }
+  }, []);
 
   // ── Expanded section state (for cards) ──
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
@@ -420,12 +447,6 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
   const [gapWizardStep, setGapWizardStep] = useState<WizardStep>(1);
   const openGapWizard = (fwId: string) => { setGapWizardFramework(fwId); setGapWizardStep(1); };
   const closeGapWizard = () => { setGapWizardFramework(null); setGapWizardStep(1); };
-
-  // ── GeoJSON data ──
-  const geoData = useMemo(() => {
-    try { return getStatesGeoJSON() as any; }
-    catch { return null; }
-  }, []);
 
   // ── Demo facilities (replace with real data when available) ──
   const facilitiesData: FacilityRow[] = useMemo(() => {
@@ -460,6 +481,33 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
     }
     return markers;
   }, [focusedState]);
+
+  // ── Mapbox marker data (waterbodies) ──
+  const wbMarkerData = useMemo(() =>
+    stateWaterbodies.map(wb => ({
+      id: wb.id,
+      lat: wb.lat,
+      lon: wb.lon,
+      color: wb.alertLevel === 'high' ? '#ef4444' : wb.alertLevel === 'medium' ? '#f59e0b' : wb.alertLevel === 'low' ? '#eab308' : '#22c55e',
+      name: wb.name,
+    })),
+    [stateWaterbodies]
+  );
+
+  // ── Mapbox marker data (facilities) ──
+  const facilityMarkerData = useMemo(() =>
+    facilitiesData.filter(f => f.lat && f.lon).map(f => ({
+      id: f.id,
+      lat: f.lat!,
+      lon: f.lon!,
+      color: getMarkerColor(overlay, f),
+      name: f.name,
+      waterRiskScore: f.waterRiskScore,
+      tssEfficiency: f.tssEfficiency,
+      status: f.status,
+    })),
+    [facilitiesData, overlay]
+  );
 
   // ── Filtered list ──
   const filteredFacilities = useMemo(() => {
@@ -988,55 +1036,32 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                 <div className="h-[450px] w-full relative">
                   <button onClick={() => setFlyTarget({ center: defaultCenter, zoom: defaultZoom })} className="w-7 h-7 rounded bg-white border border-slate-300 shadow-sm flex items-center justify-center text-slate-500 hover:bg-slate-50 text-[10px] font-medium absolute top-2 right-2 z-[1000]">⌂</button>
 
-                  {geoData && (
-                    <LeafletMapShell center={defaultCenter} zoom={defaultZoom} maxZoom={12} height="100%">
-                      {flyTarget && <FlyToLocation center={flyTarget.center} zoom={flyTarget.zoom} />}
-                      {/* Waterbody dots for focused state */}
-                      {stateWaterbodies.map(wb => {
-                        const wbColor = wb.alertLevel === 'high' ? '#ef4444' : wb.alertLevel === 'medium' ? '#f59e0b' : wb.alertLevel === 'low' ? '#eab308' : '#22c55e';
-                        return (
-                          <CircleMarker
-                            key={`wb-${wb.id}`}
-                            center={[wb.lat, wb.lon]}
-                            radius={3.5}
-                            pathOptions={{ fillColor: wbColor, color: '#ffffff', weight: 0.8, fillOpacity: 0.7 }}
-                          />
-                        );
-                      })}
-                      {/* Facility markers */}
-                      {facilitiesData.filter(f => f.lat && f.lon).map(f => {
-                        const isActive = f.id === selectedFacility;
-                        const isHovered = f.id === hoveredFacility;
-                        const color = getMarkerColor(overlay, f);
-                        return (
-                          <CircleMarker
-                            key={f.id}
-                            center={[f.lat!, f.lon!]}
-                            radius={isActive ? 8 : isHovered ? 6.5 : 5}
-                            pathOptions={{
-                              fillColor: color,
-                              color: isActive ? '#1e40af' : isHovered ? '#334155' : '#ffffff',
-                              weight: isActive ? 2.5 : isHovered ? 2 : 1.5,
-                              fillOpacity: 0.9,
-                              ...(f.status === 'monitored' ? { dashArray: '3 1.5' } : {}),
-                            }}
-                            eventHandlers={{
-                              click: () => setSelectedFacility(isActive ? null : f.id),
-                              mouseover: () => setHoveredFacility(f.id),
-                              mouseout: () => setHoveredFacility(null),
-                            }}
-                          >
-                            {(isActive || isHovered) && (
-                              <Tooltip permanent direction="top" offset={[0, -10]}>
-                                <div className="text-xs font-bold text-slate-800">{f.name}</div>
-                                <div className="text-[10px] text-slate-500">Risk: {f.waterRiskScore} | {f.tssEfficiency ? `TSS: ${f.tssEfficiency}%` : f.status}</div>
-                              </Tooltip>
-                            )}
-                          </CircleMarker>
-                        );
-                      })}
-                    </LeafletMapShell>
-                  )}
+                  <MapboxMapShell
+                    center={defaultCenter}
+                    zoom={defaultZoom}
+                    height="100%"
+                    onMapRef={onMapRef}
+                    interactiveLayerIds={['esg-markers']}
+                    onClick={onMapClick}
+                    onMouseMove={onMapMouseMove}
+                    onMouseLeave={onMapMouseLeave}
+                  >
+                    {/* Waterbody dots for focused state */}
+                    {wbMarkerData.length > 0 && (
+                      <MapboxMarkers
+                        data={wbMarkerData}
+                        layerId="esg-waterbodies"
+                        radius={3.5}
+                      />
+                    )}
+                    {/* Facility markers */}
+                    <MapboxMarkers
+                      data={facilityMarkerData}
+                      layerId="esg-markers"
+                      radius={5}
+                      hoveredFeature={hoveredFeature}
+                    />
+                  </MapboxMapShell>
                 </div>
 
                 {/* Legend */}

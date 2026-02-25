@@ -1,15 +1,15 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useLensParam } from '@/lib/useLensParam';
 import Image from 'next/image';
-import { CircleMarker, Tooltip, GeoJSON } from 'react-leaflet';
+import { Source, Layer } from 'react-map-gl';
 import HeroBanner from './HeroBanner';
-import { getStatesGeoJSON, geoToAbbr, STATE_GEO_LEAFLET, FIPS_TO_ABBR as _FIPS, STATE_NAMES as _SN } from '@/lib/leafletMapUtils';
+import { getStatesGeoJSON, geoToAbbr, STATE_GEO_LEAFLET, FIPS_TO_ABBR as _FIPS, STATE_NAMES as _SN } from '@/lib/mapUtils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Building2, Info, LogOut, FileCheck, Lock, Database, Activity, Eye, Fingerprint, Cpu, FlaskConical, ArrowRight, DollarSign, FileText, Leaf, AlertCircle } from 'lucide-react';
+import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Building2, Info, LogOut, FileCheck, Lock, Database, Activity, Eye, Fingerprint, Cpu, FlaskConical, ArrowRight, DollarSign, FileText, Leaf, AlertCircle, Waves, Wrench, ClipboardList, Scale, Heart, Landmark, HardHat, Radio, Gauge, Zap, Network, Banknote, Users, BookOpen, Calendar, Target } from 'lucide-react';
 import { BrandedPrintBtn } from '@/lib/brandedPrint';
 import { useRouter } from 'next/navigation';
 import { getRegionById } from '@/lib/regionsConfig';
@@ -35,8 +35,12 @@ import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import dynamic from 'next/dynamic';
 
-const LeafletMapShell = dynamic(
-  () => import('@/components/LeafletMapShell').then(m => m.LeafletMapShell),
+const MapboxMapShell = dynamic(
+  () => import('@/components/MapboxMapShell').then(m => m.MapboxMapShell),
+  { ssr: false }
+);
+const MapboxMarkers = dynamic(
+  () => import('@/components/MapboxMarkers').then(m => m.MapboxMarkers),
   { ssr: false }
 );
 const GrantOpportunityMatcher = dynamic(
@@ -101,11 +105,125 @@ type Props = {
   onToggleDevMode?: () => void;
 };
 
-type ViewLens = 'overview' | 'trends';
+type ViewLens = 'overview' | 'briefing' | 'planner' | 'trends' | 'policy'
+  | 'compliance' | 'water-quality' | 'public-health' | 'receiving-waters'
+  | 'stormwater-bmps' | 'infrastructure' | 'monitoring' | 'disaster'
+  | 'tmdl-compliance' | 'scorecard' | 'reports' | 'mcm-manager' | 'funding';
 
-const MS4_LENS_CONFIG: Record<ViewLens, { showTrends: boolean }> = {
-  overview: { showTrends: true },
-  trends:   { showTrends: true },
+const LENS_CONFIG: Record<ViewLens, {
+  label: string;
+  description: string;
+  defaultOverlay: OverlayId;
+  sections: Set<string>;
+}> = {
+  overview: {
+    label: 'Overview',
+    description: 'MS4 operational dashboard — morning check before the day starts',
+    defaultOverlay: 'impairment',
+    sections: new Set(['identity', 'operational-health', 'alertfeed', 'map-grid', 'detail', 'top10', 'quick-access', 'quickactions', 'disclaimer']),
+  },
+  briefing: {
+    label: 'AI Briefing',
+    description: 'AI-generated overnight summary and action items',
+    defaultOverlay: 'impairment',
+    sections: new Set(['insights', 'briefing-actions', 'briefing-changes', 'briefing-pulse', 'briefing-stakeholder', 'disclaimer']),
+  },
+  planner: {
+    label: 'Resolution Planner',
+    description: 'Waterbody-level restoration planning workspace',
+    defaultOverlay: 'impairment',
+    sections: new Set(['map-grid', 'detail', 'resolution-planner', 'disclaimer']),
+  },
+  trends: {
+    label: 'Trends & Projections',
+    description: 'Long-term water quality trends, TMDL progress, and outlook',
+    defaultOverlay: 'impairment',
+    sections: new Set(['trends-dashboard', 'disclaimer']),
+  },
+  policy: {
+    label: 'Policy Tracker',
+    description: 'Federal, state, and EPA regulatory action tracking',
+    defaultOverlay: 'impairment',
+    sections: new Set(['policy-federal', 'policy-state', 'policy-epa', 'disclaimer']),
+  },
+  compliance: {
+    label: 'Compliance',
+    description: 'Permit conditions, enforcement, and drinking water compliance',
+    defaultOverlay: 'impairment',
+    sections: new Set(['identity', 'map-grid', 'detail', 'icis', 'sdwis', 'compliance-permits', 'compliance-assessment', 'compliance-ms4', 'compliance-analytics', 'fineavoidance', 'economics', 'disclaimer']),
+  },
+  'water-quality': {
+    label: 'Water Quality',
+    description: 'Standards, assessment, station data, and stormwater monitoring',
+    defaultOverlay: 'impairment',
+    sections: new Set(['map-grid', 'detail', 'top10', 'wq-standards', 'wq-assessment', 'wq-stations', 'wq-stormwater', 'disclaimer']),
+  },
+  'public-health': {
+    label: 'Public Health & Contaminants',
+    description: 'Contaminant tracking, health coordination, and public advisories',
+    defaultOverlay: 'impairment',
+    sections: new Set(['sdwis', 'ph-contaminants', 'ph-health-coord', 'ph-advisories', 'disclaimer']),
+  },
+  'receiving-waters': {
+    label: 'Receiving Waters',
+    description: 'Receiving water profiles, upstream analysis, and impairment tracking',
+    defaultOverlay: 'impairment',
+    sections: new Set(['map-grid', 'detail', 'rw-map', 'rw-profiles', 'rw-upstream', 'rw-monitoring', 'rw-impairment', 'boundaryalerts', 'disclaimer']),
+  },
+  'stormwater-bmps': {
+    label: 'Stormwater BMPs',
+    description: 'BMP inventory, performance analytics, and maintenance scheduling',
+    defaultOverlay: 'bmp',
+    sections: new Set(['map-grid', 'bmp-inventory', 'bmp-details', 'bmp-analytics', 'bmp-maintenance', 'bmp-planning', 'nutrientcredits', 'disclaimer']),
+  },
+  infrastructure: {
+    label: 'Infrastructure',
+    description: 'SRF administration, capital planning, and green infrastructure',
+    defaultOverlay: 'impairment',
+    sections: new Set(['infra-srf', 'infra-capital', 'infra-construction', 'infra-green', 'disclaimer']),
+  },
+  monitoring: {
+    label: 'Monitoring',
+    description: 'Monitoring network, data management, and optimization',
+    defaultOverlay: 'coverage',
+    sections: new Set(['map-grid', 'mon-network', 'mon-data-mgmt', 'mon-optimization', 'mon-continuous', 'stormsim', 'provenance', 'disclaimer']),
+  },
+  disaster: {
+    label: 'Disaster & Emergency Response',
+    description: 'Active incidents, spill reporting, and preparedness',
+    defaultOverlay: 'impairment',
+    sections: new Set(['alertfeed', 'disaster-active', 'disaster-response', 'disaster-spill', 'disaster-prep', 'disclaimer']),
+  },
+  'tmdl-compliance': {
+    label: 'TMDL Compliance',
+    description: 'TMDL inventory, pollutant loading, and wasteload allocations',
+    defaultOverlay: 'impairment',
+    sections: new Set(['map-grid', 'detail', 'tmdl-inventory', 'tmdl-loading', 'tmdl-pathways', 'tmdl-docs', 'tmdl-wla', 'disclaimer']),
+  },
+  scorecard: {
+    label: 'Scorecard',
+    description: 'Permit compliance scoring, BMP performance, and peer comparison',
+    defaultOverlay: 'impairment',
+    sections: new Set(['sc-permit-score', 'sc-bmp-performance', 'sc-peer', 'sc-trends', 'disclaimer']),
+  },
+  reports: {
+    label: 'Reports',
+    description: 'Annual reports, MDE export, and regulatory filings',
+    defaultOverlay: 'impairment',
+    sections: new Set(['exporthub', 'rpt-annual', 'rpt-mde-export', 'rpt-regulatory', 'rpt-adhoc', 'mdeexport', 'disclaimer']),
+  },
+  'mcm-manager': {
+    label: 'MCM Program Manager',
+    description: 'Minimum Control Measures 1-6 program tracking and compliance',
+    defaultOverlay: 'impairment',
+    sections: new Set(['mcm-dashboard', 'mcm-1', 'mcm-2', 'mcm-3', 'mcm-4', 'mcm-5', 'mcm-6', 'disclaimer']),
+  },
+  funding: {
+    label: 'Funding & Grants',
+    description: 'Active grants, opportunity pipeline, and financial analytics',
+    defaultOverlay: 'impairment',
+    sections: new Set(['grants', 'fund-active', 'fund-pipeline', 'fund-stormwater', 'fund-analytics', 'disclaimer']),
+  },
 };
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -476,8 +594,8 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
   }, [stateAbbr]);
 
   // ── Lens switching ──
-  const [viewLens] = useLensParam<ViewLens>('overview');
-  const ms4Lens = MS4_LENS_CONFIG[viewLens] || MS4_LENS_CONFIG.overview;
+  const [viewLens, setViewLens] = useLensParam<ViewLens>('overview');
+  const lens = LENS_CONFIG[viewLens] || LENS_CONFIG.overview;
 
   // ── View state ──
   const [showAccountPanel, setShowAccountPanel] = useState(false);
@@ -486,7 +604,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
   // ── State-filtered region data ──
   const baseRegions = useMemo(() => generateStateRegionData(stateAbbr), [stateAbbr]);
 
-  // ── Map: GeoJSON + leaflet ──
+  // ── Map: GeoJSON + Mapbox ──
   const geoData = useMemo(() => {
     try { return getStatesGeoJSON() as any; }
     catch { return null; }
@@ -735,6 +853,30 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
 
     return [...fromResolved, ...extras].map(({ regionIdx, ...rest }) => rest);
   }, [scopedRegionData, allWbCoords]);
+
+  // Mapbox marker data — transform wbMarkers for MapboxMarkers component
+  const markerData = useMemo(() =>
+    wbMarkers.map(wb => ({
+      id: wb.id,
+      lat: wb.lat,
+      lon: wb.lon,
+      color: getMarkerColor(overlay, wb),
+      name: wb.name,
+    })),
+    [wbMarkers, overlay]
+  );
+
+  const [hoveredFeature, setHoveredFeature] = useState<mapboxgl.MapboxGeoJSONFeature | null>(null);
+
+  const onMarkerMouseMove = useCallback((e: mapboxgl.MapLayerMouseEvent) => {
+    if (e.features && e.features.length > 0) {
+      setHoveredFeature(e.features[0]);
+    }
+  }, []);
+
+  const onMarkerMouseLeave = useCallback(() => {
+    setHoveredFeature(null);
+  }, []);
 
   // Fetch ATTAINS bulk from cache for this state
   useEffect(() => {
@@ -1137,7 +1279,12 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
           return (<>
         <div className={`space-y-6 ${isEditMode ? 'pl-12' : ''}`}>
 
-        {sections.filter(s => s.visible || isEditMode).map(section => {
+        {sections.filter(s => {
+          if (isEditMode) return true;
+          if (!s.visible) return false;
+          if (s.lensControlled && lens.sections) return lens.sections.has(s.id);
+          return true;
+        }).map(section => {
           const DS = (children: React.ReactNode) => (
             <DraggableSection key={section.id} id={section.id} label={section.label}
               isEditMode={isEditMode} isVisible={section.visible} onToggleVisibility={onToggleVisibility}>
@@ -1601,46 +1748,38 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                     {attainsBulkLoaded && <span className="text-green-600 font-medium">● ATTAINS live</span>}
                   </div>
                   <div className="h-[480px] w-full relative">
-                    <LeafletMapShell center={leafletGeo.center} zoom={leafletGeo.zoom} maxZoom={12} height="100%" mapKey={stateAbbr}>
+                    <MapboxMapShell
+                      center={leafletGeo.center}
+                      zoom={leafletGeo.zoom}
+                      height="100%"
+                      mapKey={stateAbbr}
+                      interactiveLayerIds={['ms4-markers']}
+                      onMouseMove={onMarkerMouseMove}
+                      onMouseLeave={onMarkerMouseLeave}
+                    >
                       {/* State outline */}
                       {stateOutlineGeo && (
-                        <GeoJSON
-                          key={`outline-${stateAbbr}`}
-                          data={stateOutlineGeo}
-                          style={() => ({
-                            fillColor: '#e2e8f0',
-                            fillOpacity: 0.15,
-                            color: '#94a3b8',
-                            weight: 2,
-                          })}
-                          onEachFeature={(_feature, layer) => {
-                            layer.bindTooltip(stateName, { sticky: true });
-                          }}
-                        />
+                        <Source id={`ms4-outline-${stateAbbr}`} type="geojson" data={stateOutlineGeo}>
+                          <Layer
+                            id={`ms4-outline-fill-${stateAbbr}`}
+                            type="fill"
+                            paint={{ 'fill-color': '#e2e8f0', 'fill-opacity': 0.15 }}
+                          />
+                          <Layer
+                            id={`ms4-outline-line-${stateAbbr}`}
+                            type="line"
+                            paint={{ 'line-color': '#94a3b8', 'line-width': 2 }}
+                          />
+                        </Source>
                       )}
                       {/* Waterbody markers — color driven by overlay */}
-                      {wbMarkers.map(wb => {
-                        const isActive = wb.id === activeDetailId;
-                        const markerColor = getMarkerColor(overlay, wb);
-                        const baseR = wbMarkers.length > 150 ? 2.5 : wbMarkers.length > 50 ? 3.5 : 4.5;
-                        return (
-                          <CircleMarker
-                            key={wb.id}
-                            center={[wb.lat, wb.lon]}
-                            radius={isActive ? 8 : baseR}
-                            pathOptions={{
-                              fillColor: markerColor,
-                              color: isActive ? '#1e40af' : '#ffffff',
-                              weight: isActive ? 2.5 : wbMarkers.length > 150 ? 0.8 : 1.5,
-                              fillOpacity: 0.9,
-                            }}
-                            eventHandlers={{ click: () => setActiveDetailId(isActive ? null : wb.id) }}
-                          >
-                            <Tooltip direction="top" offset={[0, -6]} sticky>{wb.name}</Tooltip>
-                          </CircleMarker>
-                        );
-                      })}
-                    </LeafletMapShell>
+                      <MapboxMarkers
+                        data={markerData}
+                        layerId="ms4-markers"
+                        radius={wbMarkers.length > 150 ? 3 : wbMarkers.length > 50 ? 4 : 5}
+                        hoveredFeature={hoveredFeature}
+                      />
+                    </MapboxMapShell>
                   </div>
                   {/* Dynamic Legend */}
                   <div className="flex flex-wrap gap-2 p-3 text-xs bg-slate-50 border-t border-slate-200">
@@ -3480,7 +3619,6 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
         );
 
             case 'trends-dashboard': return DS(
-        ms4Lens.showTrends ? (
         <Card>
           <CardHeader>
             <CardTitle>Stormwater & Compliance Trends</CardTitle>
@@ -3554,7 +3692,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
             </div>
           </CardContent>
         </Card>
-        ) : null);
+            );
 
             case 'provenance': return DS(
           <Card className="border-2 border-slate-300 bg-gradient-to-br from-slate-50/50 to-white">

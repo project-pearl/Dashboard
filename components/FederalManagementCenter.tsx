@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useLensParam } from '@/lib/useLensParam';
-import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet';
-import L from 'leaflet';
 import { feature } from 'topojson-client';
 import statesTopo from 'us-atlas/states-10m.json';
+import type { MapRef } from 'react-map-gl';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -39,12 +39,28 @@ import { GrantOutcomesCard } from './GrantOutcomesCard';
 import { EmergingContaminantsTracker } from './EmergingContaminantsTracker';
 import { PolicyTracker } from './PolicyTracker';
 import FederalResolutionPlanner from './FederalResolutionPlanner';
+import { HabitatEcologyPanel } from './HabitatEcologyPanel';
+import { AgriculturalNPSPanel } from './AgriculturalNPSPanel';
+import { DisasterEmergencyPanel } from './DisasterEmergencyPanel';
+import { MilitaryInstallationsPanel } from './MilitaryInstallationsPanel';
+
+const MapboxMapShell = dynamic(
+  () => import('@/components/MapboxMapShell').then(m => m.MapboxMapShell),
+  { ssr: false }
+);
+const MapboxChoropleth = dynamic(
+  () => import('@/components/MapboxChoropleth').then(m => m.MapboxChoropleth),
+  { ssr: false }
+);
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type AlertLevel = 'none' | 'low' | 'medium' | 'high';
 type OverlayId = 'hotspots' | 'ms4' | 'ej' | 'economy' | 'wildlife' | 'trend' | 'coverage';
-type ViewLens = 'overview' | 'briefing' | 'planner' | 'trends' | 'policy' | 'compliance' | 'water-quality' | 'infrastructure' | 'monitoring' | 'contaminants' | 'scorecard' | 'reports' | 'interagency' | 'funding';
+type ViewLens = 'overview' | 'briefing' | 'planner' | 'trends' | 'policy' | 'compliance' |
+  'water-quality' | 'public-health' | 'habitat-ecology' | 'agricultural-nps' |
+  'infrastructure' | 'monitoring' | 'disaster-emergency' | 'military-installations' |
+  'scorecard' | 'reports' | 'interagency' | 'funding';
 
 // ─── Lens Configuration: what each view shows/hides ────────────────────────────
 const LENS_CONFIG: Record<ViewLens, {
@@ -146,8 +162,8 @@ const LENS_CONFIG: Record<ViewLens, {
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
     sections: new Set(['policy-tracker', 'disclaimer']),
   },
-  contaminants: {
-    label: 'Emerging Contaminants',
+  'public-health': {
+    label: 'Public Health & Contaminants',
     description: 'PFAS, microplastics, and unregulated contaminant tracking',
     defaultOverlay: 'hotspots',
     showTopStrip: false, showPriorityQueue: false, showCoverageGaps: false,
@@ -155,6 +171,46 @@ const LENS_CONFIG: Record<ViewLens, {
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
     sections: new Set(['contaminants-tracker', 'disclaimer']),
+  },
+  'habitat-ecology': {
+    label: 'Habitat & Ecology',
+    description: 'Aquatic life use attainment, habitat impairments, T&E species',
+    defaultOverlay: 'wildlife',
+    showTopStrip: false, showPriorityQueue: false, showCoverageGaps: false,
+    showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
+    showHotspots: false, showSituationSummary: false, showTimeRange: false,
+    showSLA: false, showRestorationPlan: false, collapseStateTable: true,
+    sections: new Set(['usmap', 'habitat-ecology', 'disclaimer']),
+  },
+  'agricultural-nps': {
+    label: 'Agricultural & NPS',
+    description: 'Agriculture-related impairments, nutrient loading, nonpoint sources',
+    defaultOverlay: 'hotspots',
+    showTopStrip: false, showPriorityQueue: false, showCoverageGaps: false,
+    showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
+    showHotspots: false, showSituationSummary: false, showTimeRange: false,
+    showSLA: false, showRestorationPlan: false, collapseStateTable: true,
+    sections: new Set(['usmap', 'agricultural-nps', 'disclaimer']),
+  },
+  'disaster-emergency': {
+    label: 'Disaster & Emergency',
+    description: 'Groundwater monitoring, emergency watch zones, incident readiness',
+    defaultOverlay: 'hotspots',
+    showTopStrip: false, showPriorityQueue: false, showCoverageGaps: false,
+    showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
+    showHotspots: false, showSituationSummary: false, showTimeRange: false,
+    showSLA: false, showRestorationPlan: false, collapseStateTable: true,
+    sections: new Set(['usmap', 'disaster-emergency', 'disclaimer']),
+  },
+  'military-installations': {
+    label: 'Military Installations',
+    description: 'Federal facility permits, DOD compliance, PFAS proximity analysis',
+    defaultOverlay: 'hotspots',
+    showTopStrip: false, showPriorityQueue: false, showCoverageGaps: false,
+    showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
+    showHotspots: false, showSituationSummary: false, showTimeRange: false,
+    showSLA: false, showRestorationPlan: false, collapseStateTable: true,
+    sections: new Set(['usmap', 'military-installations', 'disclaimer']),
   },
   scorecard: {
     label: 'Scorecard',
@@ -805,13 +861,7 @@ function getStateFill(
   return '#e5e7eb';
 }
 
-// ─── Leaflet Map Controller (captures map instance into ref) ─────────────────
-
-function MapController({ mapRef }: { mapRef: React.MutableRefObject<L.Map | null> }) {
-  const map = useMap();
-  useEffect(() => { mapRef.current = map; }, [map, mapRef]);
-  return null;
-}
+// ─── (MapController removed — Mapbox uses onMapRef callback) ─────────────────
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -1082,7 +1132,7 @@ export function FederalManagementCenter(props: Props) {
   const [waterbodySearch, setWaterbodySearch] = useState<string>('');
   const [waterbodyFilter, setWaterbodyFilter] = useState<'all' | 'impaired' | 'severe' | 'monitored'>('all');
   const [overlay, setOverlay] = useState<OverlayId>(lens.defaultOverlay);
-  const mapRef = useRef<L.Map | null>(null);
+  const mapRef = useRef<MapRef | null>(null);
   const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d' | 'custom'>('24h');
   const [showImpact, setShowImpact] = useState(false);
   const [alertWorkflow, setAlertWorkflow] = useState<Record<string, { status: 'new' | 'acknowledged' | 'assigned' | 'resolved'; owner?: string; }>>({});
@@ -1436,9 +1486,80 @@ export function FederalManagementCenter(props: Props) {
 
   const topo = useMemo(() => {
     try {
-      return feature(statesTopo as any, (statesTopo as any).objects.states) as any;
+      const geo = feature(statesTopo as any, (statesTopo as any).objects.states) as any;
+      // Bake in abbreviation for Mapbox expressions
+      return {
+        ...geo,
+        features: geo.features.map((f: any) => {
+          const fips = String(f.id).padStart(2, '0');
+          const FIPS_MAP: Record<string, string> = {
+            '01':'AL','02':'AK','04':'AZ','05':'AR','06':'CA','08':'CO','09':'CT','10':'DE','11':'DC',
+            '12':'FL','13':'GA','15':'HI','16':'ID','17':'IL','18':'IN','19':'IA','20':'KS','21':'KY',
+            '22':'LA','23':'ME','24':'MD','25':'MA','26':'MI','27':'MN','28':'MS','29':'MO','30':'MT',
+            '31':'NE','32':'NV','33':'NH','34':'NJ','35':'NM','36':'NY','37':'NC','38':'ND','39':'OH',
+            '40':'OK','41':'OR','42':'PA','44':'RI','45':'SC','46':'SD','47':'TN','48':'TX','49':'UT',
+            '50':'VT','51':'VA','53':'WA','54':'WV','55':'WI','56':'WY',
+          };
+          return { ...f, properties: { ...f.properties, abbr: FIPS_MAP[fips] || '' } };
+        }),
+      };
     } catch {
       return null;
+    }
+  }, []);
+
+  // Build Mapbox fill-color match expression from state colors
+  const fillColorExpr = useMemo(() => {
+    if (!topo) return '#e5e7eb';
+    const entries: (string)[] = [];
+    for (const f of topo.features) {
+      const abbr = f.properties?.abbr;
+      if (abbr) {
+        entries.push(abbr, getStateFill(abbr, overlay, overlayByState, stateRollup, showImpact));
+      }
+    }
+    return ['match', ['get', 'abbr'], ...entries, '#e5e7eb'] as any;
+  }, [topo, overlay, overlayByState, stateRollup, showImpact]);
+
+  const handleMapRef = useCallback((ref: MapRef) => {
+    mapRef.current = ref;
+  }, []);
+
+  const handleStateClick = useCallback((e: any) => {
+    if (!e.features?.length) return;
+    const abbr = e.features[0].properties?.abbr;
+    if (!abbr) return;
+    setSelectedState(abbr);
+    setWaterbodySearch('');
+    setWaterbodyFilter('all');
+    setShowAllWaterbodies(false);
+    // Zoom to clicked state
+    const map = mapRef.current;
+    if (map) {
+      // Zoom to state center
+      const stateGeo: Record<string, { center: [number, number]; zoom: number }> = {
+        AL:{center:[32.8,-86.8],zoom:7},AK:{center:[64.0,-153.0],zoom:4},AZ:{center:[34.2,-111.7],zoom:7},
+        AR:{center:[34.8,-92.4],zoom:7},CA:{center:[37.5,-119.5],zoom:6},CO:{center:[39.0,-105.5],zoom:7},
+        CT:{center:[41.6,-72.7],zoom:9},DE:{center:[39.0,-75.5],zoom:9},DC:{center:[38.9,-77.02],zoom:12},
+        FL:{center:[28.5,-82.5],zoom:7},GA:{center:[32.7,-83.5],zoom:7},HI:{center:[20.5,-157.0],zoom:7},
+        ID:{center:[44.5,-114.5],zoom:6},IL:{center:[40.0,-89.2],zoom:7},IN:{center:[39.8,-86.3],zoom:7},
+        IA:{center:[42.0,-93.5],zoom:7},KS:{center:[38.5,-98.5],zoom:7},KY:{center:[37.8,-85.3],zoom:7},
+        LA:{center:[31.0,-92.0],zoom:7},ME:{center:[45.5,-69.0],zoom:7},MD:{center:[39.0,-77.0],zoom:8},
+        MA:{center:[42.3,-71.8],zoom:8},MI:{center:[44.0,-85.5],zoom:7},MN:{center:[46.3,-94.5],zoom:6},
+        MS:{center:[32.7,-89.7],zoom:7},MO:{center:[38.5,-92.5],zoom:7},MT:{center:[47.0,-109.6],zoom:6},
+        NE:{center:[41.5,-99.8],zoom:7},NV:{center:[39.5,-117.0],zoom:6},NH:{center:[43.8,-71.6],zoom:8},
+        NJ:{center:[40.1,-74.7],zoom:8},NM:{center:[34.5,-106.0],zoom:7},NY:{center:[42.5,-75.5],zoom:7},
+        NC:{center:[35.5,-79.5],zoom:7},ND:{center:[47.5,-100.5],zoom:7},OH:{center:[40.2,-82.8],zoom:7},
+        OK:{center:[35.5,-97.5],zoom:7},OR:{center:[44.0,-120.5],zoom:7},PA:{center:[41.0,-77.6],zoom:7},
+        RI:{center:[41.7,-71.5],zoom:10},SC:{center:[33.8,-80.9],zoom:8},SD:{center:[44.5,-100.2],zoom:7},
+        TN:{center:[35.8,-86.3],zoom:7},TX:{center:[31.5,-99.5],zoom:6},UT:{center:[39.5,-111.7],zoom:7},
+        VT:{center:[44.0,-72.6],zoom:8},VA:{center:[37.8,-79.5],zoom:7},WA:{center:[47.5,-120.5],zoom:7},
+        WV:{center:[38.6,-80.6],zoom:8},WI:{center:[44.5,-89.8],zoom:7},WY:{center:[43.0,-107.5],zoom:7},
+      };
+      const s = stateGeo[abbr];
+      if (s) {
+        map.flyTo({ center: [s.center[1], s.center[0]], zoom: s.zoom, duration: 800 });
+      }
     }
   }, []);
 
@@ -2218,58 +2339,33 @@ export function FederalManagementCenter(props: Props) {
 
               {!topo ? (
                 <div className="text-sm text-slate-500">
-                  Map data unavailable. Install react-leaflet, leaflet, us-atlas, and topojson-client.
+                  Map data unavailable. Ensure us-atlas and topojson-client are installed.
                 </div>
               ) : (
                 <div className="w-full overflow-hidden rounded-lg border border-slate-200 bg-white">
                   <div className="p-2 text-xs text-slate-500 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
                     <span>Click a state to select · 50 states + DC</span>
-                    <button onClick={() => mapRef.current?.setView(US_CENTER, US_ZOOM)}
+                    <button onClick={() => mapRef.current?.flyTo({ center: [US_CENTER[1], US_CENTER[0]], zoom: US_ZOOM, duration: 800 })}
                       className="text-xs text-blue-600 hover:text-blue-800 hover:underline">
                       Back to National View
                     </button>
                   </div>
                   <div className="h-[480px] w-full relative">
-                    <div className="absolute top-2 right-2 z-[1000] flex flex-col gap-1">
-                      <button onClick={() => mapRef.current?.zoomIn()} className="w-7 h-7 rounded bg-white border border-slate-300 shadow-sm flex items-center justify-center text-slate-600 hover:bg-slate-50 text-sm font-bold">+</button>
-                      <button onClick={() => mapRef.current?.zoomOut()} className="w-7 h-7 rounded bg-white border border-slate-300 shadow-sm flex items-center justify-center text-slate-600 hover:bg-slate-50 text-sm font-bold">{'\u2212'}</button>
-                      <button onClick={() => mapRef.current?.setView(US_CENTER, US_ZOOM)} className="w-7 h-7 rounded bg-white border border-slate-300 shadow-sm flex items-center justify-center text-slate-500 hover:bg-slate-50 text-[10px] font-medium">{'\u2302'}</button>
-                    </div>
-                    <MapContainer center={US_CENTER} zoom={US_ZOOM} zoomControl={false}
-                      scrollWheelZoom={true} style={{ width: '100%', height: '100%' }}>
-                      <MapController mapRef={mapRef} />
-                      <TileLayer url={CARTO_TILES} attribution={CARTO_ATTR} />
-                      <GeoJSON
-                        key={`${overlay}-${selectedState}-${showImpact}`}
-                        data={topo}
-                        style={(feature) => {
-                          const abbr = geoToAbbr(feature as GeoFeature);
-                          return {
-                            fillColor: getStateFill(abbr, overlay, overlayByState, stateRollup, showImpact),
-                            fillOpacity: 0.65,
-                            color: abbr === selectedState ? '#111827' : '#ffffff',
-                            weight: abbr === selectedState ? 3 : 1,
-                          };
-                        }}
-                        onEachFeature={(feature, layer) => {
-                          const abbr = geoToAbbr(feature as GeoFeature);
-                          if (!abbr) return;
-                          layer.bindTooltip(STATE_ABBR_TO_NAME[abbr] || abbr, { sticky: true });
-                          layer.on('click', () => {
-                            setSelectedState(abbr);
-                            setWaterbodySearch('');
-                            setWaterbodyFilter('all');
-                            setShowAllWaterbodies(false);
-                            mapRef.current?.fitBounds((layer as any).getBounds(), { padding: [20, 20] });
-                          });
-                          layer.on('mouseover', () => (layer as any).setStyle({ weight: 2, color: '#111827' }));
-                          layer.on('mouseout', () => (layer as any).setStyle({
-                            weight: abbr === selectedState ? 3 : 1,
-                            color: abbr === selectedState ? '#111827' : '#ffffff',
-                          }));
-                        }}
+                    <MapboxMapShell
+                      center={US_CENTER}
+                      zoom={US_ZOOM}
+                      height="100%"
+                      onMapRef={handleMapRef}
+                      interactiveLayerIds={['states-choropleth-fill']}
+                      onClick={handleStateClick}
+                    >
+                      <MapboxChoropleth
+                        geoData={topo}
+                        fillColorExpression={fillColorExpr}
+                        selectedState={selectedState}
+                        fillOpacity={0.65}
                       />
-                    </MapContainer>
+                    </MapboxMapShell>
                   </div>
                   
                   {/* Legend */}
@@ -6269,6 +6365,26 @@ export function FederalManagementCenter(props: Props) {
         <div id="section-federal-planner">
           <FederalResolutionPlanner userTier="federal" userId={user?.uid || ''} stateRollup={stateRollup} />
         </div>
+        </>);
+
+        case 'habitat-ecology': return DS(<>
+        {/* ── HABITAT & ECOLOGY ── */}
+        <HabitatEcologyPanel stateRollup={stateRollup} selectedState={selectedState} attainsData={attainsBulk} />
+        </>);
+
+        case 'agricultural-nps': return DS(<>
+        {/* ── AGRICULTURAL & NONPOINT SOURCE ── */}
+        <AgriculturalNPSPanel stateRollup={stateRollup} selectedState={selectedState} attainsBulk={attainsBulk} />
+        </>);
+
+        case 'disaster-emergency': return DS(<>
+        {/* ── DISASTER & EMERGENCY RESPONSE ── */}
+        <DisasterEmergencyPanel selectedState={selectedState} stateRollup={stateRollup} />
+        </>);
+
+        case 'military-installations': return DS(<>
+        {/* ── MILITARY INSTALLATIONS ── */}
+        <MilitaryInstallationsPanel selectedState={selectedState} />
         </>);
 
         case 'disclaimer': return DS(

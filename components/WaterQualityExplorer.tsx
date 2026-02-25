@@ -5,7 +5,7 @@ import MissionQuote from './MissionQuote';
 import Image from 'next/image';
 import Link from 'next/link';
 import PublicHeader from '@/components/PublicHeader';
-import { STATE_NAMES } from '@/lib/leafletMapUtils';
+import { STATE_NAMES } from '@/lib/mapUtils';
 import {
   STATE_AUTHORITIES, STATE_CHALLENGES, STATE_TMDL_CONTEXT,
   STATE_COMPLAINT_CONTACTS, getComplaintContact,

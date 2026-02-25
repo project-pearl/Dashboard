@@ -1,14 +1,17 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLensParam } from '@/lib/useLensParam';
-import { CircleMarker, Tooltip } from 'react-leaflet';
 import HeroBanner from './HeroBanner';
 import dynamic from 'next/dynamic';
-import { STATE_GEO_LEAFLET, FIPS_TO_ABBR, STATE_NAMES } from '@/lib/leafletMapUtils';
+import { STATE_GEO_LEAFLET, FIPS_TO_ABBR, STATE_NAMES } from '@/lib/mapUtils';
 
-const LeafletMapShell = dynamic(
-  () => import('@/components/LeafletMapShell').then(m => m.LeafletMapShell),
+const MapboxMapShell = dynamic(
+  () => import('@/components/MapboxMapShell').then(m => m.MapboxMapShell),
+  { ssr: false }
+);
+const MapboxMarkers = dynamic(
+  () => import('@/components/MapboxMarkers').then(m => m.MapboxMarkers),
   { ssr: false }
 );
 import {
@@ -260,6 +263,30 @@ export function LabPartnerManagementCenter({ stateAbbr }: Props) {
 
   const leafletGeo = STATE_GEO_LEAFLET[stateAbbr] || { center: [39.8, -98.5] as [number, number], zoom: 4 };
 
+  // Mapbox marker data
+  const markerData = useMemo(() =>
+    wbMarkers.map((m) => ({
+      id: m.id,
+      lat: m.lat,
+      lon: m.lon,
+      color: getMarkerColor(m.alertLevel),
+      name: m.name,
+      status: m.status,
+      alertLevel: m.alertLevel,
+      causes: m.causes.slice(0, 3).join(', '),
+    })),
+    [wbMarkers]
+  );
+
+  // Hover state for Mapbox popups
+  const [hoveredFeature, setHoveredFeature] = useState<mapboxgl.MapboxGeoJSONFeature | null>(null);
+  const onMouseMove = useCallback((e: mapboxgl.MapLayerMouseEvent) => {
+    setHoveredFeature(e.features?.[0] ?? null);
+  }, []);
+  const onMouseLeave = useCallback(() => {
+    setHoveredFeature(null);
+  }, []);
+
   // Lens visibility
   const show = (section: string) => viewLens === section || viewLens === 'wq-overview';
 
@@ -365,31 +392,21 @@ export function LabPartnerManagementCenter({ stateAbbr }: Props) {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 {/* Map (2/3) */}
                 <div className="lg:col-span-2 rounded-xl overflow-hidden border border-slate-200">
-                  <LeafletMapShell
+                  <MapboxMapShell
                     center={leafletGeo.center}
                     zoom={leafletGeo.zoom}
                     height="450px"
+                    interactiveLayerIds={['lab-markers']}
+                    onMouseMove={onMouseMove}
+                    onMouseLeave={onMouseLeave}
                   >
-                    {wbMarkers.map((m) => (
-                      <CircleMarker
-                        key={m.id}
-                        center={[m.lat, m.lon]}
-                        radius={m.alertLevel === 'high' ? 8 : m.alertLevel === 'medium' ? 6 : 5}
-                        pathOptions={{
-                          color: getMarkerColor(m.alertLevel),
-                          fillColor: getMarkerColor(m.alertLevel),
-                          fillOpacity: 0.7,
-                          weight: 1,
-                        }}
-                      >
-                        <Tooltip>
-                          <strong>{m.name}</strong><br />
-                          Status: {m.status} | Alert: {m.alertLevel}<br />
-                          {m.causes.length > 0 && <>Causes: {m.causes.slice(0, 3).join(', ')}</>}
-                        </Tooltip>
-                      </CircleMarker>
-                    ))}
-                  </LeafletMapShell>
+                    <MapboxMarkers
+                      data={markerData}
+                      layerId="lab-markers"
+                      radius={6}
+                      hoveredFeature={hoveredFeature}
+                    />
+                  </MapboxMapShell>
                 </div>
 
                 {/* Impaired waterbody list (1/3) */}

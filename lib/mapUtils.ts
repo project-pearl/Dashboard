@@ -54,6 +54,21 @@ export function getStatesGeoJSON() {
   return feature(statesTopo as any, (statesTopo as any).objects.states);
 }
 
+/** GeoJSON with `abbr` property baked into each feature (for Mapbox expressions). */
+export function getStatesGeoJSONWithAbbr() {
+  const geo = getStatesGeoJSON() as any;
+  return {
+    ...geo,
+    features: geo.features.map((f: any) => ({
+      ...f,
+      properties: {
+        ...f.properties,
+        abbr: geoToAbbr(f) || '',
+      },
+    })),
+  };
+}
+
 // ─── Leaflet-compatible state centers: [lat, lng] + zoom ─────────────────────
 // Converted from the old geoMercator [lon, lat] + scale convention.
 export const STATE_GEO_LEAFLET: Record<string, { center: [number, number]; zoom: number }> = {
@@ -110,3 +125,6 @@ export const STATE_GEO_LEAFLET: Record<string, { center: [number, number]; zoom:
   WY: { center: [43.0, -107.5], zoom: 7 },
   US: { center: [39.8, -98.5], zoom: 4 },
 };
+
+/** Alias for cleaner imports (same data, [lat, lng] convention). */
+export const STATE_GEO = STATE_GEO_LEAFLET;

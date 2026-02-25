@@ -15,13 +15,17 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
-import { geoToAbbr, getStatesGeoJSON, CARTO_TILE_URL, CARTO_ATTRIBUTION } from "@/lib/leafletMapUtils";
-import type { GeoFeature } from "@/lib/leafletMapUtils";
+import { getStatesGeoJSONWithAbbr } from "@/lib/mapUtils";
 
-// Lazy-load Leaflet components (SSR-safe)
-const MapContainer = dynamic(() => import("react-leaflet").then(m => m.MapContainer), { ssr: false });
-const TileLayer = dynamic(() => import("react-leaflet").then(m => m.TileLayer), { ssr: false });
-const GeoJSON = dynamic(() => import("react-leaflet").then(m => m.GeoJSON), { ssr: false });
+// Lazy-load Mapbox components (SSR-safe)
+const MapboxMapShell = dynamic(
+  () => import('@/components/MapboxMapShell').then(m => m.MapboxMapShell),
+  { ssr: false }
+);
+const MapboxChoropleth = dynamic(
+  () => import('@/components/MapboxChoropleth').then(m => m.MapboxChoropleth),
+  { ssr: false }
+);
 
 // ── Types ──
 
@@ -339,7 +343,7 @@ function BeforeAfterMaps({
   projectedChanges: ProjectedScoreChange[];
   scopeStates: string[];
 }) {
-  const geoData = useMemo(() => getStatesGeoJSON(), []);
+  const geoData = useMemo(() => getStatesGeoJSONWithAbbr(), []);
   const scopeSet = useMemo(() => new Set(scopeStates.map(s => s.toUpperCase())), [scopeStates]);
 
   const projectedMap = useMemo(() => {
@@ -358,29 +362,42 @@ function BeforeAfterMaps({
     return m;
   }, [stateRollup, projectedChanges]);
 
-  const beforeStyle = useCallback((feature: any) => {
-    const abbr = geoToAbbr(feature as GeoFeature);
-    const inScope = abbr ? scopeSet.has(abbr) : false;
-    const score = abbr ? currentScoreMap.get(abbr) : undefined;
-    return {
-      fillColor: inScope ? scoreToColor(score) : "#d1d5db",
-      fillOpacity: inScope ? 0.7 : 0.3,
-      color: "#fff",
-      weight: 1,
-    };
-  }, [scopeSet, currentScoreMap]);
+  // Build Mapbox match expression for "before" (current scores) fill color
+  const beforeFillExpr = useMemo(() => {
+    const entries: string[] = [];
+    for (const f of (geoData as any).features) {
+      const abbr = f.properties?.abbr;
+      if (!abbr) continue;
+      const inScope = scopeSet.has(abbr);
+      const score = currentScoreMap.get(abbr);
+      entries.push(abbr, inScope ? scoreToColor(score) : "#d1d5db");
+    }
+    return ['match', ['get', 'abbr'], ...entries, '#d1d5db'] as any;
+  }, [geoData, scopeSet, currentScoreMap]);
 
-  const afterStyle = useCallback((feature: any) => {
-    const abbr = geoToAbbr(feature as GeoFeature);
-    const inScope = abbr ? scopeSet.has(abbr) : false;
-    const score = abbr && inScope ? projectedMap.get(abbr) : undefined;
-    return {
-      fillColor: inScope ? scoreToColor(score) : "#d1d5db",
-      fillOpacity: inScope ? 0.7 : 0.3,
-      color: "#fff",
-      weight: 1,
-    };
-  }, [scopeSet, projectedMap]);
+  // Build Mapbox match expression for "after" (projected scores) fill color
+  const afterFillExpr = useMemo(() => {
+    const entries: string[] = [];
+    for (const f of (geoData as any).features) {
+      const abbr = f.properties?.abbr;
+      if (!abbr) continue;
+      const inScope = scopeSet.has(abbr);
+      const score = inScope ? projectedMap.get(abbr) : undefined;
+      entries.push(abbr, inScope ? scoreToColor(score) : "#d1d5db");
+    }
+    return ['match', ['get', 'abbr'], ...entries, '#d1d5db'] as any;
+  }, [geoData, scopeSet, projectedMap]);
+
+  // Build Mapbox match expression for fill opacity (in-scope vs out-of-scope)
+  const opacityExpr = useMemo(() => {
+    const entries: (string | number)[] = [];
+    for (const f of (geoData as any).features) {
+      const abbr = f.properties?.abbr;
+      if (!abbr) continue;
+      entries.push(abbr, scopeSet.has(abbr) ? 0.7 : 0.3);
+    }
+    return ['match', ['get', 'abbr'], ...entries, 0.3] as any;
+  }, [geoData, scopeSet]);
 
   return (
     <div>
@@ -388,37 +405,27 @@ function BeforeAfterMaps({
         <div>
           <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-2 text-center">Before — Current Scores</h4>
           <div className="rounded-lg overflow-hidden border border-gray-200" style={{ height: 280 }}>
-            <MapContainer
-              center={[39.8, -98.5]}
-              zoom={3}
-              style={{ height: "100%", width: "100%" }}
-              zoomControl={false}
-              dragging={false}
-              scrollWheelZoom={false}
-              doubleClickZoom={false}
-              attributionControl={false}
-            >
-              <TileLayer url={CARTO_TILE_URL} attribution={CARTO_ATTRIBUTION} />
-              <GeoJSON data={geoData as any} style={beforeStyle} />
-            </MapContainer>
+            <MapboxMapShell center={[39.8, -98.5]} zoom={3} height="280px">
+              <MapboxChoropleth
+                geoData={geoData as any}
+                fillColorExpression={beforeFillExpr}
+                fillOpacity={opacityExpr}
+                sourceId="before-states"
+              />
+            </MapboxMapShell>
           </div>
         </div>
         <div>
           <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-2 text-center">After — Projected Scores</h4>
           <div className="rounded-lg overflow-hidden border border-gray-200" style={{ height: 280 }}>
-            <MapContainer
-              center={[39.8, -98.5]}
-              zoom={3}
-              style={{ height: "100%", width: "100%" }}
-              zoomControl={false}
-              dragging={false}
-              scrollWheelZoom={false}
-              doubleClickZoom={false}
-              attributionControl={false}
-            >
-              <TileLayer url={CARTO_TILE_URL} attribution={CARTO_ATTRIBUTION} />
-              <GeoJSON data={geoData as any} style={afterStyle} />
-            </MapContainer>
+            <MapboxMapShell center={[39.8, -98.5]} zoom={3} height="280px">
+              <MapboxChoropleth
+                geoData={geoData as any}
+                fillColorExpression={afterFillExpr}
+                fillOpacity={opacityExpr}
+                sourceId="after-states"
+              />
+            </MapboxMapShell>
           </div>
         </div>
       </div>

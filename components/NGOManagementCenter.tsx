@@ -1,11 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import MissionQuote from './MissionQuote';
 import { useLensParam } from '@/lib/useLensParam';
 import Image from 'next/image';
-import { CircleMarker, Tooltip } from 'react-leaflet';
-import { getStatesGeoJSON, geoToAbbr, STATE_GEO_LEAFLET, FIPS_TO_ABBR as _FIPS, STATE_NAMES as _SN } from '@/lib/leafletMapUtils';
+import { getStatesGeoJSON, geoToAbbr, STATE_GEO_LEAFLET, FIPS_TO_ABBR as _FIPS, STATE_NAMES as _SN } from '@/lib/mapUtils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -36,8 +35,12 @@ const GrantOpportunityMatcher = dynamic(
   { ssr: false }
 );
 
-const LeafletMapShell = dynamic(
-  () => import('@/components/LeafletMapShell').then(m => m.LeafletMapShell),
+const MapboxMapShell = dynamic(
+  () => import('@/components/MapboxMapShell').then(m => m.MapboxMapShell),
+  { ssr: false }
+);
+const MapboxMarkers = dynamic(
+  () => import('@/components/MapboxMarkers').then(m => m.MapboxMarkers),
   { ssr: false }
 );
 
@@ -383,6 +386,28 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
   const [showCostPanel, setShowCostPanel] = useState(false);
   const [alertFeedMinimized, setAlertFeedMinimized] = useState(true);
 
+  // Mapbox marker data — derived from wbMarkers + current overlay
+  const markerData = useMemo(() =>
+    wbMarkers.map((wb) => ({
+      id: wb.id,
+      lat: wb.lat,
+      lon: wb.lon,
+      color: getMarkerColor(overlay, wb),
+      name: wb.name,
+      alertLevel: wb.alertLevel,
+      status: wb.status,
+    })),
+    [wbMarkers, overlay]
+  );
+
+  // Hover state for Mapbox popups
+  const [hoveredFeature, setHoveredFeature] = useState<mapboxgl.MapboxGeoJSONFeature | null>(null);
+  const onMarkerMouseMove = useCallback((e: mapboxgl.MapLayerMouseEvent) => {
+    setHoveredFeature(e.features?.[0] ?? null);
+  }, []);
+  const onMarkerMouseLeave = useCallback(() => {
+    setHoveredFeature(null);
+  }, []);
 
   // Print a single card section by its DOM id
   const printSection = (sectionId: string, title: string) => {
@@ -940,7 +965,7 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
 
               {!geoData ? (
                 <div className="p-8 text-sm text-slate-500 text-center">
-                  Map data unavailable. Install react-leaflet and leaflet.
+                  Map data unavailable.
                 </div>
               ) : (
                 <div className="w-full overflow-hidden rounded-lg border border-slate-200 bg-white">
@@ -949,28 +974,22 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
                     {attainsBulkLoaded && <span className="text-green-600 font-medium">● ATTAINS live</span>}
                   </div>
                   <div className="h-[480px] w-full relative">
-                    <LeafletMapShell center={leafletGeo.center} zoom={leafletGeo.zoom} maxZoom={12} height="100%" mapKey={stateAbbr}>
-                      {wbMarkers.map(wb => {
-                        const isActive = wb.id === activeDetailId;
-                        const markerColor = getMarkerColor(overlay, wb);
-                        return (
-                          <CircleMarker
-                            key={wb.id}
-                            center={[wb.lat, wb.lon]}
-                            radius={isActive ? 8 : 4.5}
-                            pathOptions={{
-                              fillColor: markerColor,
-                              color: isActive ? '#1e40af' : '#ffffff',
-                              weight: isActive ? 2.5 : 1.5,
-                              fillOpacity: 0.9,
-                            }}
-                            eventHandlers={{ click: () => setActiveDetailId(isActive ? null : wb.id) }}
-                          >
-                            {isActive && <Tooltip permanent direction="top" offset={[0, -8]}>{wb.name}</Tooltip>}
-                          </CircleMarker>
-                        );
-                      })}
-                    </LeafletMapShell>
+                    <MapboxMapShell
+                      center={leafletGeo.center}
+                      zoom={leafletGeo.zoom}
+                      height="100%"
+                      mapKey={stateAbbr}
+                      interactiveLayerIds={['ngo-markers']}
+                      onMouseMove={onMarkerMouseMove}
+                      onMouseLeave={onMarkerMouseLeave}
+                    >
+                      <MapboxMarkers
+                        data={markerData}
+                        layerId="ngo-markers"
+                        radius={5}
+                        hoveredFeature={hoveredFeature}
+                      />
+                    </MapboxMapShell>
                   </div>
                   {/* Dynamic Legend */}
                   <div className="flex flex-wrap gap-2 p-3 text-xs bg-slate-50 border-t border-slate-200">

@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
-import { CircleMarker, Tooltip } from 'react-leaflet';
 import HeroBanner from './HeroBanner';
-import { getStatesGeoJSON, geoToAbbr, STATE_GEO_LEAFLET, FIPS_TO_ABBR as _FIPS, STATE_NAMES as _SN } from '@/lib/leafletMapUtils';
+import { getStatesGeoJSON, geoToAbbr, STATE_GEO_LEAFLET, FIPS_TO_ABBR as _FIPS, STATE_NAMES as _SN } from '@/lib/mapUtils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -38,8 +37,12 @@ const GrantOpportunityMatcher = dynamic(
   { ssr: false }
 );
 
-const LeafletMapShell = dynamic(
-  () => import('@/components/LeafletMapShell').then(m => m.LeafletMapShell),
+const MapboxMapShell = dynamic(
+  () => import('@/components/MapboxMapShell').then(m => m.MapboxMapShell),
+  { ssr: false }
+);
+const MapboxMarkers = dynamic(
+  () => import('@/components/MapboxMarkers').then(m => m.MapboxMarkers),
   { ssr: false }
 );
 
@@ -328,6 +331,36 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
     }
     return resolved;
   }, [regionData, stateAbbr, attainsCoordMap]);
+
+  // Mapbox marker data
+  const markerData = useMemo(() =>
+    wbMarkers.map((wb) => ({
+      id: wb.id,
+      lat: wb.lat,
+      lon: wb.lon,
+      color: getMarkerColor(overlay, wb),
+      name: wb.name,
+      alertLevel: wb.alertLevel,
+      status: wb.status,
+      dataSourceCount: wb.dataSourceCount,
+    })),
+    [wbMarkers, overlay]
+  );
+
+  // Hover state for Mapbox popups
+  const [hoveredFeature, setHoveredFeature] = useState<mapboxgl.MapboxGeoJSONFeature | null>(null);
+  const onMouseMove = useCallback((e: mapboxgl.MapLayerMouseEvent) => {
+    setHoveredFeature(e.features?.[0] ?? null);
+  }, []);
+  const onMouseLeave = useCallback(() => {
+    setHoveredFeature(null);
+  }, []);
+  const onMapClick = useCallback((e: mapboxgl.MapLayerMouseEvent) => {
+    const feature = e.features?.[0];
+    if (feature?.properties?.id) {
+      setActiveDetailId((prev: string | null) => prev === feature.properties!.id ? null : feature.properties!.id as string);
+    }
+  }, []);
 
   // Fetch ATTAINS bulk from cache for this state
   useEffect(() => {
@@ -861,29 +894,23 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                     {attainsBulkLoaded && <span className="text-green-600 font-medium">● ATTAINS live</span>}
                   </div>
                   <div className="h-[480px] w-full relative">
-                    <LeafletMapShell center={leafletGeo.center} zoom={leafletGeo.zoom} maxZoom={12} height="100%" mapKey={stateAbbr}>
-                      {/* Waterbody markers */}
-                      {wbMarkers.map(wb => {
-                        const isActive = wb.id === activeDetailId;
-                        const markerColor = getMarkerColor(overlay, wb);
-                        return (
-                          <CircleMarker
-                            key={wb.id}
-                            center={[wb.lat, wb.lon]}
-                            radius={isActive ? 8 : 4.5}
-                            pathOptions={{
-                              fillColor: markerColor,
-                              color: isActive ? '#1e40af' : '#ffffff',
-                              weight: isActive ? 2.5 : 1.5,
-                              fillOpacity: 0.9,
-                            }}
-                            eventHandlers={{ click: () => setActiveDetailId(isActive ? null : wb.id) }}
-                          >
-                            {isActive && <Tooltip permanent direction="top" offset={[0, -8]}>{wb.name}</Tooltip>}
-                          </CircleMarker>
-                        );
-                      })}
-                    </LeafletMapShell>
+                    <MapboxMapShell
+                      center={leafletGeo.center}
+                      zoom={leafletGeo.zoom}
+                      height="100%"
+                      mapKey={stateAbbr}
+                      interactiveLayerIds={['k12-markers']}
+                      onClick={onMapClick}
+                      onMouseMove={onMouseMove}
+                      onMouseLeave={onMouseLeave}
+                    >
+                      <MapboxMarkers
+                        data={markerData}
+                        layerId="k12-markers"
+                        radius={5}
+                        hoveredFeature={hoveredFeature}
+                      />
+                    </MapboxMapShell>
                   </div>
                   {/* Dynamic Legend */}
                   <div className="flex flex-wrap gap-2 p-3 text-xs bg-slate-50 border-t border-slate-200">
