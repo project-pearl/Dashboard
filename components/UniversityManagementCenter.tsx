@@ -102,7 +102,7 @@ const LENS_CONFIG: Record<ViewLens, {
   compliance:  { label: 'Compliance', description: 'Campus NPDES and drinking water compliance',
     sections: new Set(['icis', 'sdwis', 'disclaimer']) },
   'water-quality': { label: 'Water Quality', description: 'Water quality data exploration and analysis',
-    sections: new Set(['regprofile', 'map-grid', 'detail', 'top10', 'disclaimer']) },
+    sections: new Set(['regprofile', 'detail', 'top10', 'disclaimer']) },
   'public-health': { label: 'Public Health & Contaminants', description: 'Emerging contaminants and public health research',
     sections: new Set(['contaminants-tracker', 'disclaimer']) },
   'research-monitoring': { label: 'Research & Monitoring', description: 'Research collaboration and dataset management',
@@ -110,9 +110,9 @@ const LENS_CONFIG: Record<ViewLens, {
   'campus-stormwater': { label: 'Campus Stormwater', description: 'Campus stormwater management and green infrastructure',
     sections: new Set(['campus-stormwater-panel', 'disclaimer']) },
   infrastructure: { label: 'Infrastructure', description: 'Campus water infrastructure overview',
-    sections: new Set(['groundwater', 'map-grid', 'disclaimer']) },
+    sections: new Set(['groundwater', 'disclaimer']) },
   monitoring:  { label: 'Monitoring', description: 'Water quality monitoring network management',
-    sections: new Set(['regprofile', 'map-grid', 'detail', 'disclaimer']) },
+    sections: new Set(['regprofile', 'detail', 'disclaimer']) },
   'disaster-emergency': { label: 'Disaster & Emergency', description: 'Emergency response for campus water systems',
     sections: new Set(['disaster-emergency-panel', 'disclaimer']) },
   'watershed-partnerships': { label: 'Watershed Partnerships', description: 'Community and inter-institutional partnerships',
@@ -666,23 +666,6 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
 
         {/* ── HERO BANNER ── */}
         <HeroBanner role="university" onDoubleClick={() => onToggleDevMode?.()}>
-            {/* Lens Switcher */}
-            <div className="hidden md:flex items-center gap-1 p-1 rounded-full bg-violet-100/60 border border-violet-200">
-              {(Object.entries(LENS_CONFIG) as [ViewLens, typeof LENS_CONFIG[ViewLens]][]).map(([id, cfg]) => (
-                <button
-                  key={id}
-                  onClick={() => setActiveLens(id)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    activeLens === id
-                      ? 'bg-violet-600 text-white shadow-md'
-                      : 'text-violet-600 hover:bg-violet-200/60'
-                  }`}
-                  title={cfg.description}
-                >
-                  {cfg.label}
-                </button>
-              ))}
-            </div>
             {/* State Selector */}
             <select
               value={stateAbbr}

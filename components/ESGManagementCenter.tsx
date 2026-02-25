@@ -172,12 +172,12 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   infrastructure: {
     label: 'Infrastructure', description: 'Water infrastructure and groundwater risk',
     icon: Building2, ...SHOW_ALL,
-    sections: new Set(['groundwater', 'map-grid', 'disclaimer']),
+    sections: new Set(['groundwater', 'disclaimer']),
   },
   monitoring: {
     label: 'Monitoring', description: 'Environmental monitoring network',
     icon: Activity, ...SHOW_ALL,
-    sections: new Set(['map-grid', 'kpis', 'impact', 'disclaimer']),
+    sections: new Set(['kpis', 'impact', 'disclaimer']),
   },
   'disaster-emergency': {
     label: 'Disaster & Emergency', description: 'Environmental emergency response',

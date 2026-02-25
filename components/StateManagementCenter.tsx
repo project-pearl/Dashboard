@@ -144,7 +144,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Resolution Planner',
     description: 'Waterbody-level restoration planning workspace',
     defaultOverlay: 'risk',
-    sections: new Set(['map-grid', 'detail', 'resolution-planner', 'disclaimer']),
+    sections: new Set(['detail', 'resolution-planner', 'disclaimer']),
   },
   trends: {
     label: 'Trends & Projections',
@@ -162,7 +162,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Compliance',
     description: 'Impairment severity, permits, enforcement, and drinking water',
     defaultOverlay: 'risk',
-    sections: new Set(['regprofile', 'map-grid', 'detail', 'ms4jurisdictions', 'icis', 'sdwis', 'compliance-permits', 'compliance-assessment', 'compliance-dwp', 'compliance-ms4', 'compliance-analytics', 'disclaimer']),
+    sections: new Set(['regprofile', 'detail', 'ms4jurisdictions', 'icis', 'sdwis', 'compliance-permits', 'compliance-assessment', 'compliance-dwp', 'compliance-ms4', 'compliance-analytics', 'disclaimer']),
   },
   'water-quality': {
     label: 'Water Quality',
@@ -198,7 +198,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Monitoring',
     description: 'State monitoring network, data management, and optimization',
     defaultOverlay: 'coverage',
-    sections: new Set(['map-grid', 'groundwater', 'mon-network', 'mon-data-mgmt', 'mon-optimization', 'mon-continuous', 'disclaimer']),
+    sections: new Set(['groundwater', 'mon-network', 'mon-data-mgmt', 'mon-optimization', 'mon-continuous', 'disclaimer']),
   },
   disaster: {
     label: 'Disaster & Emergency Response',

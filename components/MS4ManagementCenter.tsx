@@ -132,7 +132,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Resolution Planner',
     description: 'Waterbody-level restoration planning workspace',
     defaultOverlay: 'impairment',
-    sections: new Set(['map-grid', 'detail', 'resolution-planner', 'disclaimer']),
+    sections: new Set(['detail', 'resolution-planner', 'disclaimer']),
   },
   trends: {
     label: 'Trends & Projections',
@@ -150,13 +150,13 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Compliance',
     description: 'Permit conditions, enforcement, and drinking water compliance',
     defaultOverlay: 'impairment',
-    sections: new Set(['identity', 'map-grid', 'detail', 'icis', 'sdwis', 'compliance-permits', 'compliance-assessment', 'compliance-ms4', 'compliance-analytics', 'fineavoidance', 'economics', 'disclaimer']),
+    sections: new Set(['identity', 'detail', 'icis', 'sdwis', 'compliance-permits', 'compliance-assessment', 'compliance-ms4', 'compliance-analytics', 'fineavoidance', 'economics', 'disclaimer']),
   },
   'water-quality': {
     label: 'Water Quality',
     description: 'Standards, assessment, station data, and stormwater monitoring',
     defaultOverlay: 'impairment',
-    sections: new Set(['map-grid', 'detail', 'top10', 'wq-standards', 'wq-assessment', 'wq-stations', 'wq-stormwater', 'disclaimer']),
+    sections: new Set(['detail', 'top10', 'wq-standards', 'wq-assessment', 'wq-stations', 'wq-stormwater', 'disclaimer']),
   },
   'public-health': {
     label: 'Public Health & Contaminants',
@@ -168,13 +168,13 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Receiving Waters',
     description: 'Receiving water profiles, upstream analysis, and impairment tracking',
     defaultOverlay: 'impairment',
-    sections: new Set(['map-grid', 'detail', 'rw-map', 'rw-profiles', 'rw-upstream', 'rw-monitoring', 'rw-impairment', 'boundaryalerts', 'disclaimer']),
+    sections: new Set(['detail', 'rw-map', 'rw-profiles', 'rw-upstream', 'rw-monitoring', 'rw-impairment', 'boundaryalerts', 'disclaimer']),
   },
   'stormwater-bmps': {
     label: 'Stormwater BMPs',
     description: 'BMP inventory, performance analytics, and maintenance scheduling',
     defaultOverlay: 'bmp',
-    sections: new Set(['map-grid', 'bmp-inventory', 'bmp-details', 'bmp-analytics', 'bmp-maintenance', 'bmp-planning', 'nutrientcredits', 'disclaimer']),
+    sections: new Set(['bmp-inventory', 'bmp-details', 'bmp-analytics', 'bmp-maintenance', 'bmp-planning', 'nutrientcredits', 'disclaimer']),
   },
   infrastructure: {
     label: 'Infrastructure',
@@ -186,7 +186,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Monitoring',
     description: 'Monitoring network, data management, and optimization',
     defaultOverlay: 'coverage',
-    sections: new Set(['map-grid', 'mon-network', 'mon-data-mgmt', 'mon-optimization', 'mon-continuous', 'stormsim', 'provenance', 'disclaimer']),
+    sections: new Set(['mon-network', 'mon-data-mgmt', 'mon-optimization', 'mon-continuous', 'stormsim', 'provenance', 'disclaimer']),
   },
   disaster: {
     label: 'Disaster & Emergency Response',
@@ -198,7 +198,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'TMDL Compliance',
     description: 'TMDL inventory, pollutant loading, and wasteload allocations',
     defaultOverlay: 'impairment',
-    sections: new Set(['map-grid', 'detail', 'tmdl-inventory', 'tmdl-loading', 'tmdl-pathways', 'tmdl-docs', 'tmdl-wla', 'disclaimer']),
+    sections: new Set(['detail', 'tmdl-inventory', 'tmdl-loading', 'tmdl-pathways', 'tmdl-docs', 'tmdl-wla', 'disclaimer']),
   },
   scorecard: {
     label: 'Scorecard',

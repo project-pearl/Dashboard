@@ -140,7 +140,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: true, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: true, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['usmap', 'networkhealth', 'impairmentprofile', 'coveragegaps', 'sla', 'disclaimer']),
+    sections: new Set(['networkhealth', 'impairmentprofile', 'coveragegaps', 'sla', 'disclaimer']),
   },
   trends: {
     label: 'Trends & Projections',
