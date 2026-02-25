@@ -2690,12 +2690,14 @@ export function FederalManagementCenter(props: Props) {
           );
         })()}
 
-        {/* ── STATE WATERBODY INSPECTOR — analytical focus, tied to selectedState ────── */}
+        {/* ── STATE WATERBODY INSPECTOR + NATIONAL IMPAIRMENT PROFILE ────── */}
         {viewLens !== 'monitoring' && (() => {
           const wbRow = stateRollup.find(r => r.abbr === selectedState);
           const wbRegion = getEpaRegionForState(selectedState);
+          const showNationalProfile = viewLens === 'overview' && attainsAggregation.totalAssessed > 0;
           return (
-            <Card className="lg:max-w-[66%]">
+            <div className={showNationalProfile ? "grid grid-cols-1 lg:grid-cols-2 gap-6 items-start" : undefined}>
+            <Card>
               <CardContent className="px-5 pt-4">
                 {!wbRow || !wbRow.canGradeState ? (
                   <p className="text-sm italic" style={{ color: 'var(--text-dim)' }}>
@@ -2823,6 +2825,74 @@ export function FederalManagementCenter(props: Props) {
                 )}
               </CardContent>
             </Card>
+
+              {/* ── NATIONAL IMPAIRMENT PROFILE (overview only, beside inspector) ── */}
+              {showNationalProfile && (
+                <Card>
+                  <CardContent className="px-5 pt-4">
+                    <div className="space-y-5">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>National Impairment Profile</p>
+                          <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-dim)' }}>{attainsAggregation.totalAssessed.toLocaleString()} waterbodies from EPA ATTAINS</p>
+                        </div>
+                        <BrandedPrintBtn sectionId="impairmentprofile" title="Impairment Profile" />
+                      </div>
+
+                      {/* EPA Assessment Categories */}
+                      <div>
+                        <div className="pin-section-label mb-2">EPA Assessment Categories</div>
+                        <div className="space-y-1">
+                          {[
+                            { cat: '5', label: 'Cat 5 — No TMDL', count: attainsAggregation.cat5, color: 'var(--status-severe)', opacity: 0.5 },
+                            { cat: '4A', label: 'Cat 4a — TMDL', count: attainsAggregation.cat4a, color: 'var(--status-warning)', opacity: 0.4 },
+                            { cat: '4B', label: 'Cat 4b — Alt. Ctrl', count: attainsAggregation.cat4b, color: 'var(--status-warning)', opacity: 0.3 },
+                            { cat: '4C', label: 'Cat 4c — Non-pollut.', count: attainsAggregation.cat4c, color: 'var(--text-dim)', opacity: 0.4 },
+                            { cat: '3', label: 'Cat 3 — No Data', count: attainsAggregation.catCounts['3'], color: 'var(--text-dim)', opacity: 0.3 },
+                            { cat: '2', label: 'Cat 2 — Concerns', count: attainsAggregation.catCounts['2'], color: 'var(--status-healthy)', opacity: 0.3 },
+                            { cat: '1', label: 'Cat 1 — Good', count: attainsAggregation.catCounts['1'], color: 'var(--status-healthy)', opacity: 0.4 },
+                          ].filter(r => r.count > 0).map(r => {
+                            const pct = attainsAggregation.totalAssessed > 0 ? (r.count / attainsAggregation.totalAssessed) * 100 : 0;
+                            return (
+                              <div key={r.cat} className="flex items-center gap-2">
+                                <div className="w-[110px] text-[10px] truncate" style={{ color: 'var(--text-dim)' }}>{r.label}</div>
+                                <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
+                                  <div className="h-full rounded-full" style={{ width: `${Math.max(pct, 1)}%`, background: r.color, opacity: r.opacity }} />
+                                </div>
+                                <div className="text-[10px] w-[48px] text-right pin-stat-secondary">{r.count.toLocaleString()}</div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div className="mt-2 pt-2 text-[10px]" style={{ borderTop: '1px solid var(--border-subtle)', color: 'var(--text-dim)' }}>
+                          TMDL Gap: <span className="pin-stat-secondary" style={attainsAggregation.tmdlGapPct > 50 ? { color: 'var(--status-severe)' } : undefined}>{attainsAggregation.tmdlGapPct}%</span> of impaired lack approved TMDL
+                        </div>
+                      </div>
+
+                      {/* Top Impairment Causes */}
+                      <div>
+                        <div className="pin-section-label mb-2">Top Impairment Causes</div>
+                        <div className="space-y-1">
+                          {attainsAggregation.topCauses.slice(0, 7).map((c, i) => {
+                            const maxCount = attainsAggregation.topCauses[0]?.count || 1;
+                            const pct = (c.count / maxCount) * 100;
+                            return (
+                              <div key={i} className="flex items-center gap-2">
+                                <div className="w-[110px] text-[10px] truncate" style={{ color: 'var(--text-dim)' }} title={c.cause}>{c.cause}</div>
+                                <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
+                                  <div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'var(--text-dim)', opacity: 0.35 }} />
+                                </div>
+                                <div className="text-[10px] w-[48px] text-right pin-stat-secondary">{c.count.toLocaleString()}</div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           );
         })()}
 
@@ -4167,146 +4237,9 @@ export function FederalManagementCenter(props: Props) {
 
         </div>); {/* end usmap */}
 
-        case 'impairmentprofile': {
-          const wbRow = stateRollup.find(r => r.abbr === selectedState);
-          const wbRegion = getEpaRegionForState(selectedState);
-          return DS(<>
-        {/* ── State Waterbody Inspector + National Impairment Profile (side by side) ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-2">
-
-          {/* LEFT: State Waterbody Inspector */}
-          <Card id="section-waterbody-card" className="border-2 border-sky-200 bg-gradient-to-br from-sky-50 to-white">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CardTitle className="text-lg">State Waterbody Inspector</CardTitle>
-                  <select
-                    value={selectedState}
-                    onChange={(e) => setSelectedState(e.target.value)}
-                    className="px-2 py-1 rounded-md border border-slate-300 text-xs bg-white cursor-pointer hover:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-300"
-                  >
-                    {Object.entries(STATE_ABBR_TO_NAME).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
-                      <option key={abbr} value={abbr}>{name} ({abbr})</option>
-                    ))}
-                  </select>
-                </div>
-                <BrandedPrintBtn sectionId="waterbody-card" title="State Waterbody Inspector" />
-              </div>
-              <CardDescription>
-                {wbRow ? `${wbRow.name} (${wbRow.abbr}) — EPA Region ${wbRegion}` : 'Select a state using the dropdown above'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {!wbRow || !wbRow.canGradeState ? (
-                <p className="text-sm text-slate-500 italic">
-                  {wbRow ? `Insufficient data available for ${wbRow.name} to generate a waterbody assessment.` : 'Select a state from the map or table above to inspect its waterbody profile.'}
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {/* Grade + Data Source */}
-                  <div className="flex items-center gap-3">
-                    <span className={`inline-flex items-center justify-center w-10 h-10 rounded-full text-sm font-bold border ${wbRow.grade.bg} ${wbRow.grade.color}`}>
-                      {wbRow.grade.letter}
-                    </span>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-800">{wbRow.name}</p>
-                      <p className="text-xs text-slate-500">Score: {wbRow.score}/100 · Data: {wbRow.dataSource === 'per-waterbody' ? 'Per-Waterbody Assessment' : 'ATTAINS Bulk'} · EPA Region {wbRegion}</p>
-                    </div>
-                  </div>
-
-                  {/* 4-stat summary row */}
-                  <div className="grid grid-cols-4 gap-2">
-                    {[
-                      { label: 'Total Waterbodies', value: wbRow.waterbodies.toLocaleString(), color: 'text-sky-700 bg-sky-50 border-sky-200' },
-                      { label: 'Assessed', value: wbRow.assessed.toLocaleString(), color: 'text-blue-700 bg-blue-50 border-blue-200' },
-                      { label: 'Total Impaired', value: wbRow.totalImpaired.toLocaleString(), color: 'text-amber-700 bg-amber-50 border-amber-200' },
-                      { label: 'Cat 5 (Needs TMDL)', value: wbRow.cat5.toLocaleString(), color: 'text-red-700 bg-red-50 border-red-200' },
-                    ].map(s => (
-                      <div key={s.label} className={`rounded-lg border p-2 text-center ${s.color}`}>
-                        <p className="text-lg font-bold">{s.value}</p>
-                        <p className="text-[10px] leading-tight">{s.label}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* ATTAINS Impairment Categories */}
-                  <div>
-                    <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">Impairment Categories</h4>
-                    <div className="grid grid-cols-4 gap-2">
-                      {[
-                        { label: 'Cat 5 — Needs TMDL', value: wbRow.cat5, color: 'bg-red-100 text-red-800 border-red-200' },
-                        { label: 'Cat 4A — TMDL Done', value: wbRow.cat4a, color: 'bg-orange-100 text-orange-800 border-orange-200' },
-                        { label: 'Cat 4B — Other Control', value: wbRow.cat4b, color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-                        { label: 'Cat 4C — Not Pollutant', value: wbRow.cat4c, color: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
-                      ].map(c => (
-                        <div key={c.label} className={`rounded border p-2 text-center ${c.color}`}>
-                          <p className="text-base font-bold">{c.value.toLocaleString()}</p>
-                          <p className="text-[9px] leading-tight">{c.label}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Top Causes */}
-                  {wbRow.topCauses.length > 0 && (
-                    <div>
-                      <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">Top Impairment Causes</h4>
-                      <div className="space-y-1">
-                        {wbRow.topCauses.slice(0, 8).map((tc, i) => (
-                          <div key={tc.cause} className="flex items-center gap-2 text-xs">
-                            <span className="text-slate-400 w-4 text-right">{i + 1}.</span>
-                            <span className="flex-1 text-slate-700">{tc.cause}</span>
-                            <span className="font-mono text-slate-500">{tc.count.toLocaleString()}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Monitoring Coverage */}
-                  <div>
-                    <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">Monitoring Coverage</h4>
-                    <div className="grid grid-cols-3 gap-2 text-xs">
-                      <div className="bg-green-50 border border-green-200 rounded p-2 text-center">
-                        <p className="text-sm font-bold text-green-700">{wbRow.monitored.toLocaleString()}</p>
-                        <p className="text-green-600">Monitored</p>
-                      </div>
-                      <div className="bg-blue-50 border border-blue-200 rounded p-2 text-center">
-                        <p className="text-sm font-bold text-blue-700">{wbRow.assessed.toLocaleString()}</p>
-                        <p className="text-blue-600">Assessed</p>
-                      </div>
-                      <div className="bg-slate-50 border border-slate-200 rounded p-2 text-center">
-                        <p className="text-sm font-bold text-slate-700">{wbRow.unmonitored.toLocaleString()}</p>
-                        <p className="text-slate-600">Unmonitored</p>
-                      </div>
-                    </div>
-                    {wbRow.waterbodies > 0 && (
-                      <div className="mt-2 h-2 rounded-full bg-slate-200 overflow-hidden flex">
-                        <div className="bg-green-500 h-full" style={{ width: `${(wbRow.monitored / wbRow.waterbodies * 100).toFixed(1)}%` }} />
-                        <div className="bg-blue-400 h-full" style={{ width: `${(wbRow.assessed / wbRow.waterbodies * 100).toFixed(1)}%` }} />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Alert Distribution */}
-                  {wbRow.total > 0 && (
-                    <div>
-                      <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">Active Alerts</h4>
-                      <div className="flex gap-2 text-xs">
-                        {wbRow.high > 0 && <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-medium">{wbRow.high} High</span>}
-                        {wbRow.medium > 0 && <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">{wbRow.medium} Medium</span>}
-                        {wbRow.low > 0 && <span className="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 font-medium">{wbRow.low} Low</span>}
-                        {wbRow.none > 0 && <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">{wbRow.none} Clear</span>}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* RIGHT: National Impairment Profile */}
-          {lens.showTopStrip && attainsAggregation.totalAssessed > 0 && (
+        case 'impairmentprofile': return DS(<>
+        {/* ── National Impairment Profile (overview renders this in usmap; other lenses get it here) ── */}
+        {viewLens !== 'overview' && lens.showTopStrip && attainsAggregation.totalAssessed > 0 && (
             <Card id="section-impairmentprofile">
               <CardHeader className="pb-2 pt-4 px-5">
                 <div className="flex items-center justify-between">
@@ -4375,9 +4308,7 @@ export function FederalManagementCenter(props: Props) {
             </Card>
           )}
 
-        </div>
-        </>);
-        } {/* end impairmentprofile */}
+        </>); {/* end impairmentprofile */}
 
         case 'ai-water-intelligence': return DS(<>
         {/* ── AI Water Intelligence — Claude-powered, ATTAINS-fed ── */}
