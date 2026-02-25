@@ -226,7 +226,7 @@ function buildFederalPrompt(scope: ScopeSelection): string {
   const statesList = scope.states?.length ? scope.states.join(", ") : "all states in scope";
 
   return `You are a senior EPA water quality strategist generating a Federal Resolution Plan.
-This plan is produced by the PEARL Intelligence Network (PIN) — a water quality data and monitoring platform by Local Seafood Projects, Inc. PIN = PEARL Intelligence Network. PEARL = Programmable Eco-Adaptive Reef Lattice. The platform website is pinwater.org.
+This plan is produced by the PEARL Intelligence Network (PIN) — an EPA water quality data platform. PIN stands for PEARL Intelligence Network. PEARL stands for Programmable Eco-Adaptive Reef Lattice.
 
 YOUR AUDIENCE: Federal EPA leadership with CWA enforcement authority, TMDL approval, interstate coordination, emergency declarations, and funding allocation powers.
 
@@ -242,11 +242,6 @@ ${scope.minEjIndex ? `EJ Index Minimum: ${scope.minEjIndex}/100` : ""}
 ${scope.crisisName ? `ACTIVE CRISIS: ${scope.crisisName}` : ""}
 
 Generate a comprehensive Federal Resolution Plan for this scope. This is a REGIONAL/NATIONAL plan, not a single-waterbody plan. Address the full portfolio of impairments across the scope. Be specific about which federal authorities apply, which agencies must coordinate, and what enforcement escalation looks like.
-
-IMPORTANT RULES:
-- Base your analysis ONLY on the data provided above. Do not fabricate statistics.
-- Do NOT invent specific incidents, spills, events, or dates that are not in the data. Describe conditions and trends, not fictional narratives.
-- You may mention PIN/PEARL as the source platform, but do NOT prefix every recommendation with "PIN-based" or "PIN-integrated." Write recommendations in plain professional language. Reference PIN only where genuinely relevant (e.g. monitoring capabilities, alert systems).
 
 Respond ONLY with valid JSON, no markdown, no backticks:
 {
