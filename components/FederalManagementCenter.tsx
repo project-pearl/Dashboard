@@ -1508,19 +1508,6 @@ export function FederalManagementCenter(props: Props) {
     }
   }, []);
 
-  // Build Mapbox fill-color match expression from state colors
-  const fillColorExpr = useMemo(() => {
-    if (!topo) return '#e5e7eb';
-    const entries: (string)[] = [];
-    for (const f of topo.features) {
-      const abbr = f.properties?.abbr;
-      if (abbr) {
-        entries.push(abbr, getStateFill(abbr, overlay, overlayByState, stateRollup, showImpact));
-      }
-    }
-    return ['match', ['get', 'abbr'], ...entries, '#e5e7eb'] as any;
-  }, [topo, overlay, overlayByState, stateRollup, showImpact]);
-
   const handleMapRef = useCallback((ref: MapRef) => {
     mapRef.current = ref;
   }, []);
@@ -1686,6 +1673,19 @@ export function FederalManagementCenter(props: Props) {
       return a.name.localeCompare(b.name);
     });
   }, [derived.regionsByState, attainsBulk]);
+
+  // Build Mapbox fill-color match expression from state colors
+  const fillColorExpr = useMemo(() => {
+    if (!topo) return '#e5e7eb';
+    const entries: (string)[] = [];
+    for (const f of topo.features) {
+      const abbr = f.properties?.abbr;
+      if (abbr) {
+        entries.push(abbr, getStateFill(abbr, overlay, overlayByState, stateRollup, showImpact));
+      }
+    }
+    return ['match', ['get', 'abbr'], ...entries, '#e5e7eb'] as any;
+  }, [topo, overlay, overlayByState, stateRollup, showImpact]);
 
   // Feature 1: National Summary Stats — three-tier awareness + ATTAINS
   const nationalStats = useMemo(() => {
