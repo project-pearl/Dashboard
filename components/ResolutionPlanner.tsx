@@ -253,7 +253,7 @@ function buildNationalPrompt(ctx: NationalContext, role: UserRole): string {
   const causeList = ctx.topCauses.slice(0, 10).map(c => `${c.cause} (${c.count.toLocaleString()})`).join(', ');
 
   return `You are a senior water quality engineer generating a National Resolution Plan.
-This plan is produced by the PEARL Intelligence Network (PIN) — an EPA water quality data platform. PIN stands for PEARL Intelligence Network. PEARL stands for Programmable Eco-Adaptive Reef Lattice.
+This plan is produced by the PEARL Intelligence Network (PIN) — a water quality data and monitoring platform by Local Seafood Projects, Inc. PIN = PEARL Intelligence Network. PEARL = Programmable Eco-Adaptive Reef Lattice. The platform website is pinwater.org.
 
 YOUR AUDIENCE: ${rc.label} role with authority over: ${rc.authority}
 
@@ -272,7 +272,10 @@ PLAN FOCUS: ${rc.planFocus}
 
 Generate a comprehensive National Resolution Plan. This is a strategic, nationwide plan — identify systemic issues, interstate patterns, regional disparities, and national-level actions. Be specific and actionable. Use regulatory language appropriate for ${rc.label} briefings.
 
-IMPORTANT: Base your analysis only on the data provided above. Do not fabricate statistics.
+IMPORTANT RULES:
+- Base your analysis ONLY on the data provided above. Do not fabricate statistics.
+- Do NOT invent specific incidents, spills, events, or dates that are not in the data. Describe conditions and trends, not fictional narratives.
+- You may mention PIN/PEARL as the source platform, but do NOT prefix every recommendation with "PIN-based" or "PIN-integrated." Write recommendations in plain professional language. Reference PIN only where genuinely relevant (e.g. monitoring capabilities, alert systems).
 
 ${JSON_SCHEMA_INSTRUCTION}`;
 }
@@ -283,7 +286,7 @@ function buildRegionPrompt(ctx: RegionContext, role: UserRole): string {
   const causeList = ctx.topCauses.slice(0, 10).map(c => `${c.cause} (${c.count.toLocaleString()})`).join(', ');
 
   return `You are a senior water quality engineer generating a Regional Resolution Plan.
-This plan is produced by the PEARL Intelligence Network (PIN) — an EPA water quality data platform. PIN stands for PEARL Intelligence Network. PEARL stands for Programmable Eco-Adaptive Reef Lattice.
+This plan is produced by the PEARL Intelligence Network (PIN) — a water quality data and monitoring platform by Local Seafood Projects, Inc. PIN = PEARL Intelligence Network. PEARL = Programmable Eco-Adaptive Reef Lattice. The platform website is pinwater.org.
 
 YOUR AUDIENCE: ${rc.label} role with authority over: ${rc.authority}
 
@@ -301,7 +304,10 @@ PLAN FOCUS: ${rc.planFocus}
 
 Generate a comprehensive Regional Resolution Plan for EPA ${ctx.regionName}. Focus on intra-regional coordination, state-to-state disparities, shared watershed issues, and region-specific regulatory actions. Be specific and actionable.
 
-IMPORTANT: Base your analysis only on the data provided above. Do not fabricate statistics.
+IMPORTANT RULES:
+- Base your analysis ONLY on the data provided above. Do not fabricate statistics.
+- Do NOT invent specific incidents, spills, events, or dates that are not in the data. Describe conditions and trends, not fictional narratives.
+- You may mention PIN/PEARL as the source platform, but do NOT prefix every recommendation with "PIN-based" or "PIN-integrated." Write recommendations in plain professional language. Reference PIN only where genuinely relevant (e.g. monitoring capabilities, alert systems).
 
 ${JSON_SCHEMA_INSTRUCTION}`;
 }
@@ -311,7 +317,7 @@ function buildStatePrompt(ctx: StateContext, role: UserRole): string {
   const causeList = ctx.topCauses.slice(0, 10).map(c => `${c.cause} (${c.count.toLocaleString()})`).join(', ');
 
   return `You are a senior water quality engineer generating a State Resolution Plan.
-This plan is produced by the PEARL Intelligence Network (PIN) — an EPA water quality data platform. PIN stands for PEARL Intelligence Network. PEARL stands for Programmable Eco-Adaptive Reef Lattice.
+This plan is produced by the PEARL Intelligence Network (PIN) — a water quality data and monitoring platform by Local Seafood Projects, Inc. PIN = PEARL Intelligence Network. PEARL = Programmable Eco-Adaptive Reef Lattice. The platform website is pinwater.org.
 
 YOUR AUDIENCE: ${rc.label} role with authority over: ${rc.authority}
 
@@ -331,7 +337,10 @@ PLAN FOCUS: ${rc.planFocus}
 
 Generate a comprehensive State Resolution Plan for ${ctx.name}. Focus on state-specific regulatory actions, priority waterbodies, TMDL development, permit conditions, and coordination with EPA Region ${ctx.epaRegion}. Be specific and actionable.
 
-IMPORTANT: Base your analysis only on the data provided above. Do not fabricate statistics.
+IMPORTANT RULES:
+- Base your analysis ONLY on the data provided above. Do not fabricate statistics.
+- Do NOT invent specific incidents, spills, events, or dates that are not in the data. Describe conditions and trends, not fictional narratives.
+- You may mention PIN/PEARL as the source platform, but do NOT prefix every recommendation with "PIN-based" or "PIN-integrated." Write recommendations in plain professional language. Reference PIN only where genuinely relevant (e.g. monitoring capabilities, alert systems).
 
 ${JSON_SCHEMA_INSTRUCTION}`;
 }
