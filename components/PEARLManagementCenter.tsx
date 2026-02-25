@@ -22,10 +22,11 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/lib/authContext';
 import { UserManagementPanel } from './UserManagementPanel';
+import WhatIfSimulator from './WhatIfSimulator';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type ViewLens = 'operations' | 'proposals' | 'users';
+type ViewLens = 'operations' | 'proposals' | 'scenarios' | 'users';
 
 type DeploymentStatus = 'active' | 'maintenance' | 'offline' | 'staging' | 'decommissioned';
 type AlertSeverity = 'critical' | 'warning' | 'info' | 'ok';
@@ -512,6 +513,7 @@ export function PEARLManagementCenter(props: Props) {
                 {([
                   { lens: 'operations' as ViewLens, label: '⚙ Operations', badge: 0 },
                   { lens: 'proposals' as ViewLens, label: '📋 Proposals', badge: 0 },
+                  { lens: 'scenarios' as ViewLens, label: '🔬 What-If', badge: 0 },
                   ...(isAdmin ? [{ lens: 'users' as ViewLens, label: '👥 Users', badge: pendingUserCount }] : []),
                 ]).map(({ lens, label, badge }) => (
                   <button
@@ -1191,6 +1193,14 @@ export function PEARLManagementCenter(props: Props) {
               })}
             </div>
           </>
+        )}
+
+        {/* ════════════════════════════════════════════════════════════ */}
+        {/* ── SCENARIOS LENS ─────────────────────────────────────────── */}
+        {/* ════════════════════════════════════════════════════════════ */}
+
+        {viewLens === 'scenarios' && (
+          <WhatIfSimulator />
         )}
 
         {/* ════════════════════════════════════════════════════════════ */}
