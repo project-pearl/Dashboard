@@ -904,9 +904,12 @@ export default function WaterQualityExplorer() {
               <Link href="/treatment" className="hover:text-slate-900 transition-colors">Our Technology</Link>
               <Link href="/story" className="hover:text-slate-900 transition-colors">Our Story</Link>
             </div>
-            <p className="text-xs text-slate-400">&copy; {new Date().getFullYear()} PEARL. All rights reserved.</p>
+            <p className="text-xs text-slate-400">&copy; {new Date().getFullYear()} Local Seafood Projects Inc. All rights reserved.</p>
           </div>
-          <p className="text-center mt-4 text-[11px] text-slate-400">
+          <p className="text-center mt-3 text-[10px] text-slate-400/70">
+            Project Pearl&trade;, Pearl&trade;, ALIA&trade;, and AQUA-LO&trade; are trademarks of Local Seafood Projects.
+          </p>
+          <p className="text-center mt-2 text-[11px] text-slate-400">
             Data sourced from EPA ATTAINS. Not affiliated with the U.S. Environmental Protection Agency.
           </p>
         </div>

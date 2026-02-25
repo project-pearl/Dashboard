@@ -190,12 +190,17 @@ export default function DarkPageShell({ children }: DarkPageShellProps) {
             </div>
           </div>
 
-          <div className="mt-12 pt-8 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-xs text-slate-700 font-mono">
-              &copy; {new Date().getFullYear()} PEARL. All rights reserved.
-            </p>
-            <p className="text-xs text-slate-700 font-mono">
-              Patent Pending &middot; Built in Maryland
+          <div className="mt-12 pt-8 border-t border-white/[0.06] space-y-2">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <p className="text-xs text-slate-700 font-mono">
+                &copy; {new Date().getFullYear()} Local Seafood Projects Inc. All rights reserved.
+              </p>
+              <p className="text-xs text-slate-700 font-mono">
+                Patent Pending &middot; Built in Maryland
+              </p>
+            </div>
+            <p className="text-[10px] text-slate-800 font-mono text-center sm:text-left">
+              Project Pearl&trade;, Pearl&trade;, ALIA&trade;, and AQUA-LO&trade; are trademarks of Local Seafood Projects.
             </p>
           </div>
         </div>

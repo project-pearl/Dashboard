@@ -388,7 +388,8 @@ export default function MethodologyPage() {
           <div className="mt-12 pt-6 border-t border-slate-200 text-[10px] text-slate-400 space-y-1">
             <p>PEARL Platform Methodology &amp; Data Standards · Version 1.0 · February 2026</p>
             <p>This document is provided for informational purposes. PEARL assessments are derived from publicly available data and do not constitute official regulatory determinations. Always verify with primary agency sources for compliance or permitting decisions.</p>
-            <p>© {new Date().getFullYear()} Project PEARL · project-pearl.org</p>
+            <p>&copy; {new Date().getFullYear()} Local Seafood Projects Inc. All rights reserved.</p>
+            <p>Project Pearl&trade;, Pearl&trade;, ALIA&trade;, and AQUA-LO&trade; are trademarks of Local Seafood Projects.</p>
           </div>
         </div>
       </div>

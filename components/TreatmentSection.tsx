@@ -77,7 +77,8 @@ function FadeIn({ children, className = "", delay = 0 }: {
 
 const TreatmentSection: React.FC = () => {
   return (
-    <section className="min-h-screen bg-white">
+    <div className="min-h-screen flex flex-col bg-white">
+    <section className="flex-1">
       <PublicHeader />
 
       {/* ════════════════════════════════════════════════════════════════
@@ -500,6 +501,13 @@ const TreatmentSection: React.FC = () => {
         </div>
       </div>
     </section>
+    <footer className="py-8 bg-slate-50 border-t border-slate-200">
+      <div className="max-w-3xl mx-auto px-6 text-center space-y-1">
+        <p className="text-xs text-slate-400">&copy; {new Date().getFullYear()} Local Seafood Projects Inc. All rights reserved.</p>
+        <p className="text-[10px] text-slate-400/70">Project Pearl&trade;, Pearl&trade;, ALIA&trade;, and AQUA-LO&trade; are trademarks of Local Seafood Projects.</p>
+      </div>
+    </footer>
+    </div>
   );
 };
 

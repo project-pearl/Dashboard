@@ -7,7 +7,8 @@ import PublicHeader from "@/components/PublicHeader";
 
 const OurStorySection: React.FC = () => {
   return (
-    <section className="min-h-screen bg-gradient-to-b from-stone-50 via-white to-stone-50">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-stone-50 via-white to-stone-50">
+    <section className="flex-1">
       <PublicHeader />
       {/* ── Title ── */}
       <div className="max-w-3xl mx-auto px-6 pt-28 md:pt-36 pb-10 text-center">
@@ -181,6 +182,13 @@ const OurStorySection: React.FC = () => {
         </div>
       </div>
     </section>
+    <footer className="py-8 bg-stone-50 border-t border-slate-200">
+      <div className="max-w-3xl mx-auto px-6 text-center space-y-1">
+        <p className="text-xs text-slate-400">&copy; {new Date().getFullYear()} Local Seafood Projects Inc. All rights reserved.</p>
+        <p className="text-[10px] text-slate-400/70">Project Pearl&trade;, Pearl&trade;, ALIA&trade;, and AQUA-LO&trade; are trademarks of Local Seafood Projects.</p>
+      </div>
+    </footer>
+    </div>
   );
 };
 

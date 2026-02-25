@@ -729,6 +729,11 @@ const DataRoadmap: React.FC = () => {
           Learn About the Technology &rarr;
         </Link>
       </div>
+
+      <footer style={{ padding: '32px 24px', borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
+        <p style={{ fontSize: '12px', color: '#94a3b8' }}>&copy; {new Date().getFullYear()} Local Seafood Projects Inc. All rights reserved.</p>
+        <p style={{ fontSize: '10px', color: '#94a3b8', opacity: 0.7, marginTop: '4px' }}>Project Pearl&trade;, Pearl&trade;, ALIA&trade;, and AQUA-LO&trade; are trademarks of Local Seafood Projects.</p>
+      </footer>
     </div>
   );
 };
