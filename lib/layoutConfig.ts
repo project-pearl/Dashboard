@@ -375,7 +375,7 @@ export const DEFAULT_SECTIONS = {
   FMC: [
     { id: 'usmap',              label: 'US Map',                      order: 0,  visible: true, defaultExpanded: true, compound: true, lensControlled: true },
     { id: 'situation',          label: 'Situation Summary',           order: 1,  visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'impairmentprofile',  label: 'Impairment Profile',          order: 2,  visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'impairmentprofile',  label: 'Waterbody & Impairment Profile', order: 2,  visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'ai-water-intelligence', label: 'AI Water Intelligence',     order: 3,  visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'national-briefing',  label: 'National Intelligence Briefing', order: 4, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'aiinsights',         label: 'AI Insights (Combined)',       order: 5,  visible: true, defaultExpanded: true, lensControlled: true },
@@ -404,8 +404,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'funding-matrix',   label: 'Impairment-to-Program Matrix',  order: 28, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'grant-outcomes',   label: 'Historical Grant Outcomes',     order: 29, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'funding-gap',      label: 'Funding Gap Analysis',          order: 30, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'waterbody-card',    label: 'State Waterbody Card',        order: 31, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'resolution-planner', label: 'Resolution Planner',         order: 32, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'resolution-planner', label: 'Resolution Planner',         order: 31, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'federal-planner',    label: 'Federal Resolution Planner',  order: 33, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'habitat-ecology',    label: 'Habitat & Ecology',           order: 34, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'agricultural-nps',   label: 'Agricultural & NPS',          order: 35, visible: true, defaultExpanded: true, lensControlled: true },
