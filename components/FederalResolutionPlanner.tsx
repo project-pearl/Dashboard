@@ -226,6 +226,7 @@ function buildFederalPrompt(scope: ScopeSelection): string {
   const statesList = scope.states?.length ? scope.states.join(", ") : "all states in scope";
 
   return `You are a senior EPA water quality strategist generating a Federal Resolution Plan.
+This plan is produced by the PEARL Intelligence Network (PIN) — an EPA water quality data platform. PIN stands for PEARL Intelligence Network. PEARL stands for Programmable Eco-Adaptive Reef Lattice.
 
 YOUR AUDIENCE: Federal EPA leadership with CWA enforcement authority, TMDL approval, interstate coordination, emergency declarations, and funding allocation powers.
 

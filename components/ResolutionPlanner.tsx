@@ -253,6 +253,7 @@ function buildNationalPrompt(ctx: NationalContext, role: UserRole): string {
   const causeList = ctx.topCauses.slice(0, 10).map(c => `${c.cause} (${c.count.toLocaleString()})`).join(', ');
 
   return `You are a senior water quality engineer generating a National Resolution Plan.
+This plan is produced by the PEARL Intelligence Network (PIN) — an EPA water quality data platform. PIN stands for PEARL Intelligence Network. PEARL stands for Programmable Eco-Adaptive Reef Lattice.
 
 YOUR AUDIENCE: ${rc.label} role with authority over: ${rc.authority}
 
@@ -282,6 +283,7 @@ function buildRegionPrompt(ctx: RegionContext, role: UserRole): string {
   const causeList = ctx.topCauses.slice(0, 10).map(c => `${c.cause} (${c.count.toLocaleString()})`).join(', ');
 
   return `You are a senior water quality engineer generating a Regional Resolution Plan.
+This plan is produced by the PEARL Intelligence Network (PIN) — an EPA water quality data platform. PIN stands for PEARL Intelligence Network. PEARL stands for Programmable Eco-Adaptive Reef Lattice.
 
 YOUR AUDIENCE: ${rc.label} role with authority over: ${rc.authority}
 
@@ -309,6 +311,7 @@ function buildStatePrompt(ctx: StateContext, role: UserRole): string {
   const causeList = ctx.topCauses.slice(0, 10).map(c => `${c.cause} (${c.count.toLocaleString()})`).join(', ');
 
   return `You are a senior water quality engineer generating a State Resolution Plan.
+This plan is produced by the PEARL Intelligence Network (PIN) — an EPA water quality data platform. PIN stands for PEARL Intelligence Network. PEARL stands for Programmable Eco-Adaptive Reef Lattice.
 
 YOUR AUDIENCE: ${rc.label} role with authority over: ${rc.authority}
 
