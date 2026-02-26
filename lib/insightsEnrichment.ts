@@ -29,6 +29,10 @@ export interface FormattedEnrichment {
   activeAlerts?: string;
   recentSignals?: string;
   weatherAlerts?: string;
+  floodConditions?: string;
+  complianceFlags?: string;
+  contaminationAlerts?: string;
+  wastewaterSurveillance?: string;
 }
 
 // ── Snapshot (call once per cron run) ────────────────────────────────────────
@@ -60,10 +64,13 @@ export function getStateEnrichment(
   // Get NWS weather alerts from cache
   const nwsAlerts = getNwsAlerts(upper) || [];
 
-  // Critical condition: any critical USGS alert, spill/bacteria signal, or severe NWS alert
+  // Critical condition: any critical USGS alert, high-severity signal, or severe NWS alert
   const hasCriticalCondition =
     criticalUsgsAlerts.length > 0 ||
-    stateSignals.some(s => s.category === 'spill' || s.category === 'bacteria' || s.category === 'hab') ||
+    stateSignals.some(s =>
+      s.category === 'spill' || s.category === 'bacteria' ||
+      s.category === 'hab' || s.category === 'flood' || s.category === 'contamination'
+    ) ||
     nwsAlerts.some(a => a.severity === 'Extreme' || a.severity === 'Severe');
 
   return {
@@ -77,7 +84,7 @@ export function getStateEnrichment(
 
 // ── Format for LLM (caps items, prioritizes critical) ────────────────────────
 
-const PRIORITY_CATEGORIES: Signal['category'][] = ['spill', 'bacteria', 'hab', 'enforcement'];
+const PRIORITY_CATEGORIES: Signal['category'][] = ['spill', 'flood', 'contamination', 'bacteria', 'hab', 'enforcement'];
 
 export function formatEnrichmentForLLM(enrichment: StateEnrichment): FormattedEnrichment {
   const result: FormattedEnrichment = {};
@@ -120,6 +127,42 @@ export function formatEnrichmentForLLM(enrichment: StateEnrichment): FormattedEn
     const capped = sorted.slice(0, 3);
     result.weatherAlerts = capped
       .map(a => `[${a.severity}] ${a.event}: ${a.headline}`)
+      .join('\n');
+  }
+
+  // Flood conditions: NWPS + SNOTEL flood signals (cap 3)
+  const floodSignals = enrichment.signals.filter(
+    s => s.category === 'flood' || (s.source === 'snotel' && s.category === 'advisory')
+  );
+  if (floodSignals.length > 0) {
+    result.floodConditions = floodSignals.slice(0, 3)
+      .map(s => `[${s.sourceLabel}] ${s.title}: ${s.summary}`)
+      .join('\n');
+  }
+
+  // Compliance flags: ECHO chronic violator signals (cap 3)
+  const complianceSignals = enrichment.signals.filter(s => s.source === 'echo');
+  if (complianceSignals.length > 0) {
+    result.complianceFlags = complianceSignals.slice(0, 3)
+      .map(s => `[${s.sourceLabel}] ${s.title}: ${s.summary}`)
+      .join('\n');
+  }
+
+  // Contamination alerts: PFAS + TRI signals (cap 3)
+  const contaminationSignals = enrichment.signals.filter(
+    s => s.source === 'pfas' || s.source === 'tri'
+  );
+  if (contaminationSignals.length > 0) {
+    result.contaminationAlerts = contaminationSignals.slice(0, 3)
+      .map(s => `[${s.sourceLabel}] ${s.title}: ${s.summary}`)
+      .join('\n');
+  }
+
+  // Wastewater surveillance: CDC NWSS pathogen signals (cap 3)
+  const wastewaterSignals = enrichment.signals.filter(s => s.source === 'cdc-nwss');
+  if (wastewaterSignals.length > 0) {
+    result.wastewaterSurveillance = wastewaterSignals.slice(0, 3)
+      .map(s => `[${s.sourceLabel}] ${s.title}: ${s.summary}`)
       .join('\n');
   }
 

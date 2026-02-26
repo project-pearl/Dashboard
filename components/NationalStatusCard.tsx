@@ -255,6 +255,25 @@ export default function NationalStatusCard({ summary: initialSummary }: Props) {
         </Tip>
         <span className="tabular-nums">{statesReporting}/51 reporting</span>
       </div>
+
+      {/* ── Extended footer: Data source coverage ── */}
+      {data.dataSources && data.dataSources.totalDataPoints > 0 && (
+        <div
+          className="flex items-center justify-between gap-4 px-5 py-2 text-[11px] flex-wrap"
+          style={{ borderTop: '1px solid var(--border-subtle)', color: 'var(--text-dim)' }}
+        >
+          <Tip text="Total data points ingested from 15+ federal and community monitoring sources">
+            <span className="tabular-nums">{data.dataSources.totalDataPoints.toLocaleString()} data points</span>
+          </Tip>
+          {data.dataSources.nwpsFlooding > 0 && (
+            <Tip text="NOAA NWPS gauges currently reporting minor, moderate, or major flood stage">
+              <span className="tabular-nums" style={{ color: '#EF4444' }}>
+                {data.dataSources.nwpsFlooding} flood gauge{data.dataSources.nwpsFlooding !== 1 ? 's' : ''} active
+              </span>
+            </Tip>
+          )}
+        </div>
+      )}
     </div>
   );
 }

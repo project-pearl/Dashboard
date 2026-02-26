@@ -182,6 +182,16 @@ export function getBwbCache(lat: number, lng: number): BwbLookupResult | null {
   };
 }
 
+export function getBwbAllStations(): BwbStation[] {
+  ensureDiskLoaded();
+  if (!_memCache) return [];
+  const all: BwbStation[] = [];
+  for (const cell of Object.values(_memCache.grid)) {
+    all.push(...cell.stations);
+  }
+  return all;
+}
+
 /**
  * Replace the in-memory cache (called by cron route after fetching fresh data).
  */

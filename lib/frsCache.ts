@@ -172,6 +172,16 @@ export function getFrsCache(lat: number, lng: number): FrsLookupResult | null {
   };
 }
 
+export function getFrsAllFacilities(): FrsFacility[] {
+  ensureDiskLoaded();
+  if (!_memCache) return [];
+  const all: FrsFacility[] = [];
+  for (const cell of Object.values(_memCache.grid)) {
+    all.push(...cell.facilities);
+  }
+  return all;
+}
+
 /**
  * Replace the in-memory cache (called by cron route after fetching fresh data).
  */

@@ -133,6 +133,16 @@ export function getUsaceCache(lat: number, lng: number): UsaceLookupResult | nul
   return { locations, cacheBuilt: _memCache._meta.built, fromCache: true };
 }
 
+export function getUsaceAllLocations(): UsaceLocation[] {
+  ensureDiskLoaded();
+  if (!_memCache) return [];
+  const all: UsaceLocation[] = [];
+  for (const cell of Object.values(_memCache.grid)) {
+    all.push(...cell.locations);
+  }
+  return all;
+}
+
 export async function setUsaceCache(data: UsaceCacheData): Promise<void> {
   _memCache = data;
   _cacheSource = 'memory (cron)';

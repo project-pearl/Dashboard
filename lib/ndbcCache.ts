@@ -177,6 +177,16 @@ export function getNdbcCache(lat: number, lng: number): NdbcLookupResult | null 
   return { stations, cacheBuilt: _memCache._meta.built, fromCache: true };
 }
 
+export function getNdbcAllStations(): NdbcStation[] {
+  ensureDiskLoaded();
+  if (!_memCache) return [];
+  const all: NdbcStation[] = [];
+  for (const cell of Object.values(_memCache.grid)) {
+    all.push(...cell.stations);
+  }
+  return all;
+}
+
 export async function setNdbcCache(data: NdbcCacheData): Promise<void> {
   _memCache = data;
   _cacheSource = 'memory (cron)';

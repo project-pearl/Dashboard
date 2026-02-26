@@ -16,6 +16,16 @@ import {
 } from '@/lib/insightsCache';
 import { ensureWarmed as warmUsgsAlerts } from '@/lib/usgsAlertCache';
 import { ensureWarmed as warmNwsAlerts } from '@/lib/nwsAlertCache';
+import { ensureWarmed as warmNwps } from '@/lib/nwpsCache';
+import { ensureWarmed as warmCoops } from '@/lib/coopsCache';
+import { ensureWarmed as warmNdbc } from '@/lib/ndbcCache';
+import { ensureWarmed as warmSnotel } from '@/lib/snotelCache';
+import { ensureWarmed as warmCdcNwss } from '@/lib/cdcNwssCache';
+import { ensureWarmed as warmEcho } from '@/lib/echoCache';
+import { ensureWarmed as warmPfas } from '@/lib/pfasCache';
+import { ensureWarmed as warmTri } from '@/lib/triCache';
+import { ensureWarmed as warmUsace } from '@/lib/usaceCache';
+import { ensureWarmed as warmBwb } from '@/lib/bwbCache';
 import {
   fetchEnrichmentSnapshot, getStateEnrichment,
   formatEnrichmentForLLM, buildEnrichedSignals, summarizeEnrichment,
@@ -58,8 +68,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Warm caches in parallel: insights (for delta detection) + alert caches (for enrichment)
-  await Promise.all([warmInsights(), warmUsgsAlerts(), warmNwsAlerts()]);
+  // Warm caches in parallel: insights (for delta detection) + alert caches + signal-producing caches
+  await Promise.all([
+    warmInsights(), warmUsgsAlerts(), warmNwsAlerts(),
+    warmNwps(), warmCoops(), warmNdbc(), warmSnotel(), warmCdcNwss(),
+    warmEcho(), warmPfas(), warmTri(), warmUsace(), warmBwb(),
+  ]);
 
   if (isBuildInProgress()) {
     return NextResponse.json({
@@ -179,6 +193,18 @@ export async function GET(request: NextRequest) {
             }
             if (enrichmentForLLM?.weatherAlerts) {
               userMessageObj.weatherAlerts = enrichmentForLLM.weatherAlerts;
+            }
+            if (enrichmentForLLM?.floodConditions) {
+              userMessageObj.floodConditions = enrichmentForLLM.floodConditions;
+            }
+            if (enrichmentForLLM?.complianceFlags) {
+              userMessageObj.complianceFlags = enrichmentForLLM.complianceFlags;
+            }
+            if (enrichmentForLLM?.contaminationAlerts) {
+              userMessageObj.contaminationAlerts = enrichmentForLLM.contaminationAlerts;
+            }
+            if (enrichmentForLLM?.wastewaterSurveillance) {
+              userMessageObj.wastewaterSurveillance = enrichmentForLLM.wastewaterSurveillance;
             }
 
             const userMessage = JSON.stringify(userMessageObj);

@@ -5,6 +5,22 @@
 import { getAttainsCacheSummary, type StateSummary } from './attainsCache';
 import { getUsgsIvCacheStatus } from './nwisIvCache';
 import { getAlertCacheStatus } from './usgsAlertCache';
+import { getNwpsCacheStatus } from './nwpsCache';
+import { getNwpsAllGauges } from './nwpsCache';
+import { getCoopsCacheStatus } from './coopsCache';
+import { getNdbcCacheStatus } from './ndbcCache';
+import { getSnotelCacheStatus } from './snotelCache';
+import { getCdcNwssCacheStatus } from './cdcNwssCache';
+import { getEchoCacheStatus, getEchoAllData } from './echoCache';
+import { getPfasCacheStatus, getPfasAllResults } from './pfasCache';
+import { getTriCacheStatus } from './triCache';
+import { getUsaceCacheStatus } from './usaceCache';
+import { getBwbCacheStatus } from './bwbCache';
+import { getNasaCmrCacheStatus } from './nasaCmrCache';
+import { getNarsCacheStatus } from './narsCache';
+import { getDataGovCacheStatus } from './dataGovCache';
+import { getStateIRCacheStatus } from './stateIRCache';
+import { getFrsCacheStatus } from './frsCache';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -30,6 +46,26 @@ export interface NationalSummary {
     score: number;
     grade: string;
   }>;
+  dataSources?: {
+    nwpsGauges: number;
+    nwpsFlooding: number;
+    coopsStations: number;
+    ndbcBuoys: number;
+    snotelStations: number;
+    cdcNwssStates: number;
+    echoFacilities: number;
+    echoViolations: number;
+    pfasDetections: number;
+    triFacilities: number;
+    usaceLocations: number;
+    bwbStations: number;
+    nasaCmrCollections: number;
+    narsSites: number;
+    dataGovDatasets: number;
+    stateIRsConfirmed: number;
+    frsFacilities: number;
+    totalDataPoints: number;
+  };
 }
 
 // ── Scoring ──────────────────────────────────────────────────────────────────
@@ -141,6 +177,45 @@ export function getNationalSummary(): NationalSummary {
   const activeAlerts = alerts.loaded ? (alerts as any).alertCount || 0 : 0;
   const criticalAlerts = alerts.loaded ? (alerts as any).criticalCount || 0 : 0;
 
+  // Data source counts from all 15 caches
+  const nwpsStatus = getNwpsCacheStatus();
+  const coopsStatus = getCoopsCacheStatus();
+  const ndbcStatus = getNdbcCacheStatus();
+  const snotelStatus = getSnotelCacheStatus();
+  const cdcNwssStatus = getCdcNwssCacheStatus();
+  const echoStatus = getEchoCacheStatus();
+  const pfasStatus = getPfasCacheStatus();
+  const triStatus = getTriCacheStatus();
+  const usaceStatus = getUsaceCacheStatus();
+  const bwbStatus = getBwbCacheStatus();
+  const nasaCmrStatus = getNasaCmrCacheStatus();
+  const narsStatus = getNarsCacheStatus();
+  const dataGovStatus = getDataGovCacheStatus();
+  const stateIrStatus = getStateIRCacheStatus();
+  const frsStatus = getFrsCacheStatus();
+
+  const nwpsGauges = nwpsStatus.loaded ? (nwpsStatus as any).gaugeCount || 0 : 0;
+  const nwpsFlooding = getNwpsAllGauges().filter(g => g.status === 'minor' || g.status === 'moderate' || g.status === 'major').length;
+  const coopsStations = coopsStatus.loaded ? (coopsStatus as any).stationCount || 0 : 0;
+  const ndbcBuoys = ndbcStatus.loaded ? (ndbcStatus as any).stationCount || 0 : 0;
+  const snotelStations = snotelStatus.loaded ? (snotelStatus as any).stationCount || 0 : 0;
+  const cdcNwssStates = cdcNwssStatus.loaded ? (cdcNwssStatus as any).stateCount || 0 : 0;
+  const echoFacilities = echoStatus.loaded ? (echoStatus as any).facilityCount || 0 : 0;
+  const echoViolations = echoStatus.loaded ? (echoStatus as any).violationCount || 0 : 0;
+  const pfasDetections = pfasStatus.loaded ? (pfasStatus as any).resultCount || 0 : 0;
+  const triFacilities = triStatus.loaded ? (triStatus as any).facilityCount || 0 : 0;
+  const usaceLocations = usaceStatus.loaded ? (usaceStatus as any).locationCount || 0 : 0;
+  const bwbStations = bwbStatus.loaded ? (bwbStatus as any).stationCount || 0 : 0;
+  const nasaCmrCollections = nasaCmrStatus.loaded ? (nasaCmrStatus as any).collectionCount || 0 : 0;
+  const narsSites = narsStatus.loaded ? (narsStatus as any).siteCount || 0 : 0;
+  const dataGovDatasets = dataGovStatus.loaded ? (dataGovStatus as any).datasetCount || 0 : 0;
+  const stateIRsConfirmed = stateIrStatus.loaded ? (stateIrStatus as any).confirmedStates || 0 : 0;
+  const frsFacilities = frsStatus.loaded ? (frsStatus as any).facilityCount || 0 : 0;
+
+  const totalDataPoints = nwpsGauges + coopsStations + ndbcBuoys + snotelStations +
+    echoFacilities + pfasDetections + triFacilities + usaceLocations + bwbStations +
+    nasaCmrCollections + narsSites + dataGovDatasets + frsFacilities;
+
   _cached = {
     generatedAt: new Date().toISOString(),
     statesReporting: stateEntries.length,
@@ -158,6 +233,12 @@ export function getNationalSummary(): NationalSummary {
     topCauses,
     worstStates,
     stateBreakdown,
+    dataSources: {
+      nwpsGauges, nwpsFlooding, coopsStations, ndbcBuoys, snotelStations,
+      cdcNwssStates, echoFacilities, echoViolations, pfasDetections,
+      triFacilities, usaceLocations, bwbStations, nasaCmrCollections,
+      narsSites, dataGovDatasets, stateIRsConfirmed, frsFacilities, totalDataPoints,
+    },
   };
   _cachedAt = now;
 

@@ -143,6 +143,16 @@ export function getNarsCache(lat: number, lng: number): NarsLookupResult | null 
   return { sites, cacheBuilt: _memCache._meta.built, fromCache: true };
 }
 
+export function getNarsAllSites(): NarsSite[] {
+  ensureDiskLoaded();
+  if (!_memCache) return [];
+  const all: NarsSite[] = [];
+  for (const cell of Object.values(_memCache.grid)) {
+    all.push(...cell.sites);
+  }
+  return all;
+}
+
 export async function setNarsCache(data: NarsCacheData): Promise<void> {
   _memCache = data;
   _cacheSource = 'memory (cron)';

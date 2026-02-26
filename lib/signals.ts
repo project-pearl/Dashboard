@@ -15,9 +15,13 @@
 
 export interface Signal {
   id: string;
-  source: 'uscg' | 'beacon' | 'noaa-hab' | 'epa-news';
+  source: 'uscg' | 'beacon' | 'noaa-hab' | 'epa-news'
+    | 'nwps' | 'coops' | 'ndbc' | 'snotel' | 'cdc-nwss'
+    | 'echo' | 'pfas' | 'tri' | 'usace' | 'bwb';
   sourceLabel: string;
-  category: 'spill' | 'bacteria' | 'hab' | 'enforcement' | 'advisory' | 'safety' | 'regulatory' | 'general';
+  category: 'spill' | 'bacteria' | 'hab' | 'enforcement' | 'advisory'
+    | 'safety' | 'regulatory' | 'general'
+    | 'flood' | 'contamination';
   title: string;
   summary: string;          // 1-2 sentence max
   publishedAt: string;      // ISO
@@ -321,6 +325,10 @@ async function fetchEPANews(): Promise<Signal[]> {
   }
 }
 
+// ─── Cache-derived signals ──────────────────────────────────────────────────
+
+import { generateCacheSignals } from './cacheSignals';
+
 // ─── Signal cache (5 min TTL, globalThis for hot reload survival) ───────────────
 
 interface SigCache { signals: Signal[]; sources: SignalResponse['sources']; at: Date; }
@@ -360,8 +368,23 @@ export async function fetchAllSignals(opts: {
 
     all = results
       .filter((r): r is PromiseFulfilledResult<Signal[]> => r.status === 'fulfilled')
-      .flatMap(r => r.value)
-      .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+      .flatMap(r => r.value);
+
+    // Merge cache-derived signals (synchronous, no API calls)
+    let cacheSignals: Signal[] = [];
+    try {
+      cacheSignals = generateCacheSignals();
+    } catch (e: any) {
+      console.warn(`[Signals] Cache signal generation error:`, e.message);
+    }
+    all.push(...cacheSignals);
+    sources.push({
+      name: 'Cache-Derived Signals',
+      status: cacheSignals.length > 0 ? 'ok' : 'error',
+      count: cacheSignals.length,
+    });
+
+    all.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 
     (globalThis as any)[SIG_KEY] = { signals: all, sources, at: new Date() } satisfies SigCache;
     console.log(`[Signals] Fetched ${all.length} signals from ${sources.filter(s => s.status === 'ok').length}/${sources.length} sources`);
