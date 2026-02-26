@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import type { NationalSummary } from '@/lib/national-summary';
 
 // ── Relative-time helper ─────────────────────────────────────────────────────
@@ -20,10 +20,12 @@ function timeAgo(iso: string): string {
   return `${days} day${days > 1 ? 's' : ''} ago`;
 }
 
+const REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5 min
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 interface Props {
-  /** Pre-fetched summary from parent (avoids double-fetch) */
+  /** Pre-fetched summary from parent (used as initial data, then self-refreshes) */
   summary: NationalSummary | null;
 }
 
@@ -68,8 +70,27 @@ function Skeleton() {
 
 // ── Main component ───────────────────────────────────────────────────────────
 
-export default function NationalStatusCard({ summary }: Props) {
-  if (!summary) return <Skeleton />;
+export default function NationalStatusCard({ summary: initialSummary }: Props) {
+  const [data, setData] = useState<NationalSummary | null>(initialSummary);
+
+  // Sync when parent provides fresh data
+  useEffect(() => {
+    if (initialSummary) setData(initialSummary);
+  }, [initialSummary]);
+
+  // Self-refresh every 5 minutes
+  useEffect(() => {
+    const tick = async () => {
+      try {
+        const res = await fetch('/api/national-summary');
+        if (res.ok) setData(await res.json());
+      } catch { /* silent — will retry next interval */ }
+    };
+    const id = setInterval(tick, REFRESH_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, []);
+
+  if (!data) return <Skeleton />;
 
   const {
     totalWaterbodies,
@@ -83,7 +104,7 @@ export default function NationalStatusCard({ summary }: Props) {
     activeAlerts,
     worstStates,
     generatedAt,
-  } = summary;
+  } = data;
 
   // Derive the four health-cascade buckets
   const good = totalHealthy;
