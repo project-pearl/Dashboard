@@ -215,7 +215,7 @@ export async function ensureWarmed(): Promise<void> {
 
 // ── Core Build Logic ─────────────────────────────────────────────────────────
 
-export function buildStateReports(): StateReportCacheData {
+export async function buildStateReports(): Promise<StateReportCacheData> {
   const registry = loadStationRegistry();
   const attainsData = getAttainsCache();
   const wqpRecords = getWqpAllRecords();
@@ -424,7 +424,7 @@ export function buildStateReports(): StateReportCacheData {
 
   _memCache = cacheData;
   saveToDisk();
-  saveCacheToBlob('cache/state-reports.json', cacheData).catch(() => {});
+  await saveCacheToBlob('cache/state-reports.json', cacheData);
   console.warn(`[State Reports] Built ${cacheData._meta.stateCount} state reports`);
   return cacheData;
 }

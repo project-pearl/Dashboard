@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
 
   try {
     console.log('[State Reports Cron] Starting build...');
-    const stateReports = buildStateReports();
+    const stateReports = await buildStateReports();
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
 
     console.log(`[State Reports Cron] Build complete in ${elapsed}s — ${stateReports._meta.stateCount} states`);
