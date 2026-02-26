@@ -29,13 +29,14 @@ function delay(ms: number): Promise<void> {
 }
 
 /**
- * Fetch all recent NWSS records for a given state using Socrata pagination.
- * Gets last 90 days of data to capture seasonal trends.
+ * Fetch recent NWSS records for a given state using Socrata pagination.
+ * Uses a 365-day window to handle upstream dataset freezes (CDC froze this
+ * dataset in Sept 2025 — a 90-day window would miss all data by Dec 2025).
  */
 async function fetchStateRecords(state: string): Promise<CdcNwssRecord[]> {
   const records: CdcNwssRecord[] = [];
   const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - 90);
+  cutoff.setDate(cutoff.getDate() - 365);
   const cutoffStr = cutoff.toISOString().split('T')[0];
 
   let offset = 0;

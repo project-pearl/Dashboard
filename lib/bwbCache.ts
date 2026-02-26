@@ -59,7 +59,7 @@ const GRID_RES = 0.1;
 const CACHE_TTL_MS = 48 * 60 * 60 * 1000; // 48 hours — buffer past daily cron
 
 let _memCache: BwbCacheData | null = null;
-let _cacheSource: 'disk' | 'memory (cron)' | null = null;
+let _cacheSource: 'disk' | 'blob' | 'memory (cron)' | null = null;
 
 // ── Disk Persistence ────────────────────────────────────────────────────────
 
@@ -139,7 +139,7 @@ export async function ensureWarmed(): Promise<void> {
   const data = await loadCacheFromBlob<{meta: any; grid: any}>('cache/bwb.json');
   if (data?.meta && data?.grid) {
     _memCache = { _meta: data.meta, grid: data.grid };
-    _cacheSource = 'disk';
+    _cacheSource = 'blob';
     console.warn(`[BWB Cache] Loaded from blob (${data.meta.stationCount} stations)`);
   }
 }

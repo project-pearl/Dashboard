@@ -274,10 +274,10 @@ export async function GET(request: NextRequest) {
               const [permits, violations, dmr, enforcement, inspections] = await Promise.all([
                 fetchTable('ICIS_PERMIT', 'STATE_ABBR', stateAbbr, transformPermit)
                   .then(rows => rows.map(r => ({ ...r, state: r.state || stateAbbr }))),
-                Promise.resolve([]) as Promise<IcisViolation[]>,
+                fetchTable('ICIS_VIOLATION', 'STATE_ABBR', stateAbbr, transformViolation),
                 fetchTable('ICIS_DMR', 'STATE_ABBR', stateAbbr, transformDmr),
                 fetchTable('ICIS_ENFORCEMENT', 'STATE_ABBR', stateAbbr, transformEnforcement),
-                Promise.resolve([]) as Promise<IcisInspection[]>,
+                fetchTable('ICIS_INSPECTION', 'STATE_ABBR', stateAbbr, transformInspection),
               ]);
 
               // Deduplicate permits by permit number
@@ -339,8 +339,8 @@ export async function GET(request: NextRequest) {
                 `${dedupedEnforcement.length} enforcement, ${dedupedInspections.length} inspections`
               );
             } catch (e) {
-              console.warn(`[ICIS Cron] ${stateAbbr} failed:`, e instanceof Error ? e.message : e);
-              stateResults[stateAbbr] = { permits: 0, violations: 0, dmr: 0, enforcement: 0, inspections: 0 };
+              console.warn(`[ICIS Cron] ${stateAbbr} failed (will retry):`, e instanceof Error ? e.message : e);
+              stateResults[stateAbbr] = { permits: -1, violations: 0, dmr: 0, enforcement: 0, inspections: 0 }; // -1 = needs retry
             } finally {
               running--;
               next();
@@ -350,6 +350,45 @@ export async function GET(request: NextRequest) {
       }
       next();
     });
+
+    // ── Retry failed states once with 5s backoff ────────────────────────────
+    const retryStates = Object.entries(stateResults)
+      .filter(([, v]) => v.permits === -1)
+      .map(([s]) => s);
+
+    if (retryStates.length > 0) {
+      console.log(`[ICIS Cron] Retrying ${retryStates.length} failed states: ${retryStates.join(', ')}`);
+      await new Promise(r => setTimeout(r, 5000));
+
+      for (const stateAbbr of retryStates) {
+        try {
+          const [permits, violations, dmr, enforcement, inspections] = await Promise.all([
+            fetchTable('ICIS_PERMIT', 'STATE_ABBR', stateAbbr, transformPermit)
+              .then(rows => rows.map(r => ({ ...r, state: r.state || stateAbbr }))),
+            fetchTable('ICIS_VIOLATION', 'STATE_ABBR', stateAbbr, transformViolation),
+            fetchTable('ICIS_DMR', 'STATE_ABBR', stateAbbr, transformDmr),
+            fetchTable('ICIS_ENFORCEMENT', 'STATE_ABBR', stateAbbr, transformEnforcement),
+            fetchTable('ICIS_INSPECTION', 'STATE_ABBR', stateAbbr, transformInspection),
+          ]);
+
+          const dedupedPermits = Array.from(new Map(permits.map(p => [p.permit, p])).values());
+          allPermits.push(...dedupedPermits);
+          allViolations.push(...violations);
+          allDmr.push(...dmr);
+          allEnforcement.push(...enforcement);
+          allInspections.push(...inspections);
+          processedStates.push(stateAbbr);
+          stateResults[stateAbbr] = {
+            permits: dedupedPermits.length, violations: violations.length,
+            dmr: dmr.length, enforcement: enforcement.length, inspections: inspections.length,
+          };
+          console.log(`[ICIS Cron] ${stateAbbr} retry succeeded: ${dedupedPermits.length} permits`);
+        } catch (e) {
+          console.warn(`[ICIS Cron] ${stateAbbr} retry failed:`, e instanceof Error ? e.message : e);
+          stateResults[stateAbbr] = { permits: 0, violations: 0, dmr: 0, enforcement: 0, inspections: 0 };
+        }
+      }
+    }
 
     // ── Build Grid Index ───────────────────────────────────────────────────
     const grid: Record<string, {

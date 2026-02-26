@@ -43,7 +43,7 @@ async function fetchTable<T>(
       });
 
       if (!res.ok) {
-        console.warn(`[FRS Cron] ${table} ${stateAbbr}: HTTP ${res.status}`);
+        console.warn(`[FRS Cron] ${table}/${stateFilter}/${stateAbbr}: HTTP ${res.status} — ${url}`);
         break;
       }
 
@@ -136,9 +136,16 @@ export async function GET(request: NextRequest) {
           (async () => {
             try {
               console.log(`[FRS Cron] Fetching ${stateAbbr}...`);
-              const facilities = await fetchTable(
+              // Try STATE_CODE first (FRS_FACILITY_SITE column name), fall back to STATE_ABBR
+              let facilities = await fetchTable(
                 'FRS_FACILITY_SITE', 'STATE_CODE', stateAbbr, transformFacility,
               );
+              if (facilities.length === 0) {
+                console.log(`[FRS Cron] ${stateAbbr}: STATE_CODE returned 0, trying STATE_ABBR...`);
+                facilities = await fetchTable(
+                  'FRS_FACILITY_SITE', 'STATE_ABBR', stateAbbr, transformFacility,
+                );
+              }
 
               const facMap = new Map<string, FrsFacility>();
               for (const f of facilities) {
@@ -151,8 +158,8 @@ export async function GET(request: NextRequest) {
               stateResults[stateAbbr] = { facilities: dedupedFacilities.length };
               console.log(`[FRS Cron] ${stateAbbr}: ${dedupedFacilities.length} facilities`);
             } catch (e) {
-              console.warn(`[FRS Cron] ${stateAbbr} failed:`, e instanceof Error ? e.message : e);
-              stateResults[stateAbbr] = { facilities: 0 };
+              console.warn(`[FRS Cron] ${stateAbbr} failed (will retry):`, e instanceof Error ? e.message : e);
+              stateResults[stateAbbr] = { facilities: -1 }; // -1 = needs retry
             } finally {
               running--;
               next();
@@ -162,6 +169,41 @@ export async function GET(request: NextRequest) {
       }
       next();
     });
+
+    // ── Retry failed states once with 5s backoff ────────────────────────────
+    const retryStates = Object.entries(stateResults)
+      .filter(([, v]) => v.facilities === -1)
+      .map(([s]) => s);
+
+    if (retryStates.length > 0) {
+      console.log(`[FRS Cron] Retrying ${retryStates.length} failed states: ${retryStates.join(', ')}`);
+      await new Promise(r => setTimeout(r, 5000));
+
+      for (const stateAbbr of retryStates) {
+        try {
+          let facilities = await fetchTable(
+            'FRS_FACILITY_SITE', 'STATE_CODE', stateAbbr, transformFacility,
+          );
+          if (facilities.length === 0) {
+            facilities = await fetchTable(
+              'FRS_FACILITY_SITE', 'STATE_ABBR', stateAbbr, transformFacility,
+            );
+          }
+          const facMap = new Map<string, FrsFacility>();
+          for (const f of facilities) {
+            if (!facMap.has(f.registryId)) facMap.set(f.registryId, f);
+          }
+          const dedupedFacilities = Array.from(facMap.values());
+          allFacilities.push(...dedupedFacilities);
+          processedStates.push(stateAbbr);
+          stateResults[stateAbbr] = { facilities: dedupedFacilities.length };
+          console.log(`[FRS Cron] ${stateAbbr} retry succeeded: ${dedupedFacilities.length} facilities`);
+        } catch (e) {
+          console.warn(`[FRS Cron] ${stateAbbr} retry failed:`, e instanceof Error ? e.message : e);
+          stateResults[stateAbbr] = { facilities: 0 };
+        }
+      }
+    }
 
     // ── Build Grid Index ───────────────────────────────────────────────────
     const grid: Record<string, { facilities: FrsFacility[] }> = {};

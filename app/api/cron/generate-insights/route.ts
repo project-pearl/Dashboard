@@ -2,6 +2,7 @@
 // Vercel Cron — runs every 6 hours to pre-generate AI insights for all state/role combos.
 // Populates the in-memory insightsCache so user requests are served instantly.
 
+export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -175,10 +176,10 @@ export async function GET(request: NextRequest) {
   const { cacheStatus, states } = getAttainsCacheSummary();
   const loadedStates = cacheStatus.statesLoaded;
 
-  if (loadedStates.length === 0) {
+  if (loadedStates.length < 5) {
     return NextResponse.json({
       status: 'skipped',
-      reason: 'No ATTAINS data loaded yet',
+      reason: `ATTAINS cache not yet warm (${loadedStates.length} states loaded, need >= 5)`,
       attainsCacheStatus: cacheStatus.status,
     });
   }
