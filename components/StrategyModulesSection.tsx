@@ -22,6 +22,8 @@ function scoreBarColor(score: number) {
 }
 
 function ModuleCard({ mod }: { mod: ScoredModule }) {
+  const [showOutputs, setShowOutputs] = useState(false);
+
   return (
     <div className="border border-gray-200 rounded-lg p-4 space-y-2.5">
       {/* Row 1: Title + Score bar */}
@@ -44,7 +46,18 @@ function ModuleCard({ mod }: { mod: ScoredModule }) {
       {/* Row 2: Description */}
       <p className="text-xs text-gray-600 leading-relaxed">{mod.description}</p>
 
-      {/* Row 3: Matched causes */}
+      {/* Row 3: Primary Users */}
+      {mod.primaryUsers.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {mod.primaryUsers.map(user => (
+            <span key={user} className="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-600 border border-purple-200">
+              {user}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Row 4: Matched causes */}
       {mod.matchedCauses.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {mod.matchedCauses.map(cause => (
@@ -55,7 +68,18 @@ function ModuleCard({ mod }: { mod: ScoredModule }) {
         </div>
       )}
 
-      {/* Row 4: Metadata chips */}
+      {/* Row 5: Data Sources */}
+      {mod.dataSources.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {mod.dataSources.map(src => (
+            <span key={src} className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">
+              {src}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Row 6: Metadata chips */}
       <div className="flex flex-wrap items-center gap-2 text-[11px]">
         <span className="px-2 py-0.5 rounded bg-gray-100 text-gray-600">{mod.loadReductionRange}</span>
         <span className="px-2 py-0.5 rounded bg-gray-100 text-gray-600">{mod.timeline}</span>
@@ -63,6 +87,25 @@ function ModuleCard({ mod }: { mod: ScoredModule }) {
           {mod.costTier} — {mod.costNote}
         </span>
       </div>
+
+      {/* Row 7: Outputs (collapsible) */}
+      {mod.outputs.length > 0 && (
+        <div>
+          <button
+            onClick={() => setShowOutputs(v => !v)}
+            className="text-[11px] text-indigo-600 hover:text-indigo-800 font-medium"
+          >
+            {showOutputs ? 'Hide deliverables' : 'Show deliverables'}
+          </button>
+          {showOutputs && (
+            <ul className="mt-1.5 space-y-0.5 text-[11px] text-gray-600 list-disc list-inside">
+              {mod.outputs.map(output => (
+                <li key={output}>{output}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
     </div>
   );
 }
