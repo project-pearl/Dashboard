@@ -226,6 +226,50 @@ export function SourceHealthPanel() {
           </div>
         )}
 
+        {/* ─── Dataset Totals ───────────────────────────────────────────── */}
+        {datapoints && (
+          <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+            <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Total Dataset</div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-1.5 text-[11px]">
+              {([
+                ['ATTAINS', datapoints.attains.waterbodies, 'waterbodies'],
+                ['ATTAINS Assessed', datapoints.attains.assessments, 'assessments'],
+                ['WQP', datapoints.wqp.records, 'records'],
+                ['ICIS Permits', datapoints.icis.permits, ''],
+                ['ICIS Violations', datapoints.icis.violations, ''],
+                ['ICIS DMR', datapoints.icis.dmr, ''],
+                ['ICIS Enforcement', datapoints.icis.enforcement, ''],
+                ['SDWIS Systems', datapoints.sdwis.systems, ''],
+                ['SDWIS Violations', datapoints.sdwis.violations, ''],
+                ['ECHO Facilities', datapoints.echo.facilities, ''],
+                ['ECHO Violations', datapoints.echo.violations, ''],
+                ['FRS WWTPs', datapoints.frs.facilities, ''],
+                ['NWIS-GW Sites', datapoints.nwisGw.sites, ''],
+                ['NWIS-GW Levels', datapoints.nwisGw.levels, ''],
+                ['PFAS Results', datapoints.pfas.results, ''],
+                ['CEDEN Chem', datapoints.ceden.chemistry, ''],
+                ['CEDEN Tox', datapoints.ceden.toxicity, ''],
+                ['BWB Stations', datapoints.bwb.stations, ''],
+                ['CDC NWSS', datapoints.cdcNwss?.records ?? 0, ''],
+                ['NOAA Buoys', datapoints.ndbc?.stations ?? 0, ''],
+                ['NASA CMR', datapoints.nasaCmr?.collections ?? 0, 'collections'],
+                ['NARS Sites', datapoints.nars?.sites ?? 0, ''],
+                ['Data.gov', datapoints.dataGov?.datasets ?? 0, 'datasets'],
+                ['USACE', datapoints.usace?.locations ?? 0, 'locations'],
+              ] as [string, number, string][])
+                .filter(([, count]) => count > 0)
+                .map(([label, count, unit]) => (
+                  <div key={label} className="flex items-baseline justify-between">
+                    <span className="text-slate-500 truncate mr-2">{label}</span>
+                    <span className="font-semibold text-slate-800 font-mono tabular-nums">
+                      {formatNumber(count)}{unit ? <span className="text-slate-400 font-normal ml-0.5">{unit}</span> : ''}
+                    </span>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
+
         {/* ─── Source Grid ─────────────────────────────────────────────── */}
         {isLoading && sources.length === 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">

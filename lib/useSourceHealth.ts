@@ -28,6 +28,12 @@ export interface DatapointSummary {
   frs: { facilities: number };
   pfas: { results: number };
   bwb: { stations: number; readings: number };
+  cdcNwss: { records: number };
+  ndbc: { stations: number };
+  nasaCmr: { collections: number };
+  nars: { sites: number };
+  dataGov: { datasets: number };
+  usace: { locations: number };
   total: number;
 }
 
