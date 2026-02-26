@@ -121,7 +121,7 @@ export function buildStateAssessmentData(stateCode: string): StateAssessmentData
   const report = getStateReport(sc);
   const stationsTotal = report?.wqpStationCount ?? 0;
   const staleStations = report?.freshnessTiers
-    ?.filter(t => t.freshness === 'stale' || t.freshness === 'archival')
+    ?.filter(t => t.maxDays > 365 || t.maxDays === Infinity)
     .reduce((sum, t) => sum + t.count, 0) ?? 0;
   const recentStations = stationsTotal - staleStations;
 
