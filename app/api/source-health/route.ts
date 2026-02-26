@@ -175,13 +175,12 @@ export async function GET() {
       'https://data.epa.gov/efservice/WATER_SYSTEM/STATE_CODE/MD/ROWS/0:0/JSON',
       8_000,
     ),
-    // Source 10: NASA STREAM
+    // Source 10: NASA STREAM (use CMR API — earthdata.nasa.gov is a heavy CMS portal that times out)
     check(
       'NASA_STREAM',
       'NASA STREAM',
-      'https://earthdata.nasa.gov',
-      5_000,
-      'HEAD',
+      'https://cmr.earthdata.nasa.gov/search/collections.json?keyword=STREAM&page_size=1',
+      8_000,
     ),
     // Source 11: HydroShare
     check(
