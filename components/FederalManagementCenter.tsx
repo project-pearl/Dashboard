@@ -1978,7 +1978,8 @@ export function FederalManagementCenter(props: Props) {
   const [dataReliability, setDataReliability] = useState<DataReliabilityReport | undefined>(undefined);
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+
+    const fetchReliability = async () => {
       try {
         const res = await fetch('/api/cache-status');
         if (!res.ok || cancelled) return;
@@ -2038,9 +2039,17 @@ export function FederalManagementCenter(props: Props) {
       } catch {
         // Silently fail — plan will generate without reliability banner
       }
-    })();
-    return () => { cancelled = true; };
-  }, []);
+    };
+
+    // Fetch immediately
+    fetchReliability();
+
+    // Re-poll every 60s while the planner lens is active so new sources show up
+    const plannerActive = viewLens === 'planner';
+    const interval = plannerActive ? setInterval(fetchReliability, 60_000) : undefined;
+
+    return () => { cancelled = true; if (interval) clearInterval(interval); };
+  }, [viewLens]);
 
   const [showStateTable, setShowStateTable] = useState(false);
   const [showHotspotsSection, setShowHotspotsSection] = useState(false);
@@ -6406,6 +6415,7 @@ export function FederalManagementCenter(props: Props) {
             scopeContext={resolutionPlannerScope}
             userRole="federal"
             dataReliability={dataReliability}
+            dataReady={attainsBulkLoaded.size > 0}
           />
         </div>
         </>);
