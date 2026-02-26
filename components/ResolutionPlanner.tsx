@@ -694,7 +694,7 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, logging: false, letterRendering: true, windowWidth: 1000 },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' as const },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'], before: '.pdf-page-break' },
+        pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.action-card', '.domain-table'] },
       }).from(el).toPdf().get('pdf').then((pdf: any) => {
         const totalPages = pdf.internal.getNumberOfPages();
         const pageWidth = pdf.internal.pageSize.getWidth();
@@ -869,19 +869,19 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
         <section>
           <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">Recommended Actions</h3>
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <div className="action-card bg-red-50 border border-red-200 rounded-lg p-3">
               <h4 className="text-xs font-bold text-red-700 uppercase mb-2">Immediate (0-30 days)</h4>
               <ul className="space-y-1.5">{plan!.sections.actionsImmediate.map((a, i) => (
                 <li key={i} className="text-xs text-red-800"><span className="font-bold mr-1">{i+1}.</span>{a}</li>
               ))}</ul>
             </div>
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+            <div className="action-card bg-orange-50 border border-orange-200 rounded-lg p-3">
               <h4 className="text-xs font-bold text-orange-700 uppercase mb-2">Short-Term (1-6 months)</h4>
               <ul className="space-y-1.5">{plan!.sections.actionsShortTerm.map((a, i) => (
                 <li key={i} className="text-xs text-orange-800"><span className="font-bold mr-1">{i+1}.</span>{a}</li>
               ))}</ul>
             </div>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div className="action-card bg-blue-50 border border-blue-200 rounded-lg p-3">
               <h4 className="text-xs font-bold text-blue-700 uppercase mb-2">Long-Term (6+ months)</h4>
               <ul className="space-y-1.5">{plan!.sections.actionsLongTerm.map((a, i) => (
                 <li key={i} className="text-xs text-blue-800"><span className="font-bold mr-1">{i+1}.</span>{a}</li>
@@ -892,17 +892,17 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
 
         <section className="pdf-page-break">
           <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">Co-Benefits Across Water Domains</h3>
-          <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
+          <div className="domain-table bg-teal-50 border border-teal-200 rounded-lg p-4">
             <CoBenefitsMatrix benefits={plan!.sections.coBenefits} />
           </div>
         </section>
 
-        <section className="pdf-page-break">
+        <section>
           <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">Cost Range</h3>
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-sm text-green-800 whitespace-pre-wrap">{plan!.sections.costRange}</div>
         </section>
 
-        <section className="pdf-page-break">
+        <section>
           <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">Regulatory Pathway</h3>
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 text-sm text-purple-800 whitespace-pre-wrap">{plan!.sections.regulatoryPath}</div>
         </section>
@@ -912,7 +912,7 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
           <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 text-sm text-emerald-800 whitespace-pre-wrap">{plan!.sections.grantOpportunities}</div>
         </section>
 
-        <section className="pdf-page-break">
+        <section>
           <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">Projected Outcomes</h3>
           <div className="bg-sky-50 border border-sky-200 rounded-lg p-4 text-sm text-sky-800 whitespace-pre-wrap">{plan!.sections.projectedOutcomes}</div>
         </section>
