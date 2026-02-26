@@ -26,7 +26,7 @@ import { useWaterData, DATA_SOURCES } from '@/lib/useWaterData';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import StateWaterbodyCard from '@/components/StateWaterbodyCard';
-import ResolutionPlanner, { type ScopeContext } from '@/components/ResolutionPlanner';
+import ResolutionPlanner, { type ScopeContext, type DataReliabilityReport } from '@/components/ResolutionPlanner';
 import { EPA_REGIONS, getEpaRegionForState } from '@/lib/epa-regions';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import { useTheme } from '@/lib/useTheme';
@@ -254,8 +254,8 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set(['funding-landscape', 'funding-deadlines', 'funding-state', 'funding-matrix', 'grant-outcomes', 'funding-gap', 'disclaimer']),
   },
   planner: {
-    label: 'Resolution Planner',
-    description: 'Federal-scope resolution planning with before/after impact maps',
+    label: 'Response Planner',
+    description: 'Federal-scope response planning with data reliability assessment and before/after impact maps',
     defaultOverlay: 'hotspots',
     showTopStrip: false, showPriorityQueue: false, showCoverageGaps: false,
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: true,
@@ -1903,7 +1903,7 @@ export function FederalManagementCenter(props: Props) {
     return { ...attainsAggregation, worstStates };
   }, [attainsAggregation, stateRollup]);
 
-  // ── Resolution Planner scope context (national default) ──
+  // ── Response Planner scope context (national default) ──
   const resolutionPlannerScope = useMemo((): ScopeContext => {
     const gradedStates = stateRollup.filter(s => s.canGradeState);
     const avgScore = gradedStates.length > 0
@@ -1932,6 +1932,115 @@ export function FederalManagementCenter(props: Props) {
       },
     };
   }, [stateRollup, attainsAggregation]);
+
+  // ── Data Reliability Report (computed from /api/cache-status) ──
+  //
+  // Per-source refresh config derived from vercel.json cron schedules.
+  // staleAfterHours = 2× the scheduled interval so normal cycles don't trip the alarm.
+  // deployed=false for crons registered in vercel.json but not yet live on Vercel.
+  //
+  const CACHE_REFRESH_CONFIG: Record<string, { label: string; staleAfterHours: number; deployed: boolean }> = {
+    // ── 30-min sources (*/30 or per-hour) ──
+    nwisIv:       { label: 'NWIS-IV',       staleAfterHours: 1,      deployed: true },   // */30 * * * *
+    usgsAlerts:   { label: 'USGS Alerts',   staleAfterHours: 1,      deployed: true },   // rebuilt with NWIS-IV
+    nwsAlerts:    { label: 'NWS Alerts',    staleAfterHours: 1,      deployed: true },   // */30 * * * *
+    // ── Hourly incremental (full cycle spans days) ──
+    attains:      { label: 'ATTAINS',       staleAfterHours: 144,    deployed: true },   // 30 * * * * — full 51-state cycle ~3 days
+    // ── 6-hourly sources ──
+    insights:     { label: 'AI Insights',   staleAfterHours: 12,     deployed: true },   // 0 */6 * * *
+    // ── Daily sources ──
+    ceden:        { label: 'CEDEN',         staleAfterHours: 48,     deployed: true },   // 0 4 * * *
+    wqp:          { label: 'WQP',           staleAfterHours: 48,     deployed: true },   // 0 5 * * *
+    stateReports: { label: 'State Reports', staleAfterHours: 48,     deployed: true },   // 30 5 * * *
+    icis:         { label: 'ICIS',          staleAfterHours: 48,     deployed: true },   // 0 6 * * *
+    sdwis:        { label: 'SDWIS',         staleAfterHours: 48,     deployed: true },   // 0 7 * * *
+    nwisGw:       { label: 'NWIS-GW',       staleAfterHours: 48,     deployed: true },   // 0 8 * * *
+    echo:         { label: 'ECHO',          staleAfterHours: 48,     deployed: true },   // 0 9 * * *
+    frs:          { label: 'FRS',           staleAfterHours: 48,     deployed: true },   // 0 10 * * *
+    pfas:         { label: 'PFAS',          staleAfterHours: 48,     deployed: true },   // 0 11 * * *
+    bwb:          { label: 'BWB',           staleAfterHours: 48,     deployed: true },   // 0 12 * * *
+    cdcNwss:      { label: 'CDC-NWSS',      staleAfterHours: 48,     deployed: true },   // 0 13 * * *
+    ndbc:         { label: 'NDBC',          staleAfterHours: 48,     deployed: true },   // 0 14 * * *
+    nasaCmr:      { label: 'NASA-CMR',      staleAfterHours: 48,     deployed: true },   // 0 15 * * *
+    usace:        { label: 'USACE',         staleAfterHours: 48,     deployed: true },   // 0 16 * * *
+    // ── Weekly sources (Sunday) ──
+    nars:         { label: 'NARS',          staleAfterHours: 336,    deployed: true },   // 0 16 * * 0 — 14 days
+    dataGov:      { label: 'Data.gov',      staleAfterHours: 336,    deployed: true },   // 0 17 * * 0 — 14 days
+    // ── Static / biennial ──
+    stateIR:      { label: 'State IR',      staleAfterHours: 17520,  deployed: true },   // static file, ~biennial
+    // ── Not yet deployed ──
+    nwps:         { label: 'NWPS',          staleAfterHours: 1,      deployed: false },
+    coops:        { label: 'CO-OPS',        staleAfterHours: 12,     deployed: false },
+    snotel:       { label: 'SNOTEL',        staleAfterHours: 48,     deployed: false },
+    tri:          { label: 'TRI',           staleAfterHours: 48,     deployed: false },
+  };
+
+  const [dataReliability, setDataReliability] = useState<DataReliabilityReport | undefined>(undefined);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/cache-status');
+        if (!res.ok || cancelled) return;
+        const json = await res.json();
+        const caches = json.caches as Record<string, any>;
+        const staleCaches: string[] = [];
+        const missingCaches: string[] = [];
+        const healthyCaches: string[] = [];
+        let staleStateCount = 0;
+        let deployedTotal = 0;
+        let deployedLoaded = 0;
+
+        for (const [key, c] of Object.entries(caches)) {
+          const cfg = CACHE_REFRESH_CONFIG[key];
+          if (!cfg || !cfg.deployed) continue;              // skip unknown / undeployed
+          deployedTotal++;
+
+          const loaded = c.loaded !== false && c.status !== 'cold' && c.status !== 'idle';
+          if (!loaded) {
+            missingCaches.push(cfg.label);                  // deployed but failed to load
+            continue;
+          }
+          deployedLoaded++;
+
+          const age = c.ageHours as number | null;
+          if (age != null && age > cfg.staleAfterHours) {
+            staleCaches.push(`${cfg.label} (${Math.round(age)}h old)`);
+          } else {
+            const ageStr = age != null ? ` (${Math.round(age)}h)` : '';
+            healthyCaches.push(`${cfg.label}${ageStr}`);
+          }
+        }
+
+        // Count ATTAINS states with missing data
+        if (caches.attains) {
+          staleStateCount = caches.attains.statesMissing || 0;
+        }
+
+        const problemCount = staleCaches.length + missingCaches.length;
+        const overallReliable = problemCount <= Math.floor(deployedTotal * 0.25);
+        const recommendation = overallReliable
+          ? 'Data sufficient for reliable analysis'
+          : 'Repair data pipeline first — too many stale or failed sources for reliable recommendations';
+
+        if (!cancelled) {
+          setDataReliability({
+            overallReliable,
+            staleCaches,
+            missingCaches,
+            healthyCaches,
+            staleStateCount,
+            totalCacheCount: deployedTotal,
+            loadedCacheCount: deployedLoaded,
+            recommendation,
+          });
+        }
+      } catch {
+        // Silently fail — plan will generate without reliability banner
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const [showStateTable, setShowStateTable] = useState(false);
   const [showHotspotsSection, setShowHotspotsSection] = useState(false);
@@ -6291,11 +6400,12 @@ export function FederalManagementCenter(props: Props) {
         case 'waterbody-card': return DS(<>{/* now rendered inside impairmentprofile */}</>);
 
         case 'resolution-planner': return DS(<>
-        {/* ── Resolution Planner — AI-powered action planning ── */}
+        {/* ── Response Planner — AI-powered action planning ── */}
         <div id="section-resolution-planner">
           <ResolutionPlanner
             scopeContext={resolutionPlannerScope}
             userRole="federal"
+            dataReliability={dataReliability}
           />
         </div>
         </>);

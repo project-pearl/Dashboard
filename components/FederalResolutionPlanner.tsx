@@ -1,5 +1,5 @@
 // =============================================================
-// Federal Resolution Planner — National/Regional Scope
+// Federal Response Planner — National/Regional Scope
 // Sidebar item in Federal Management Center
 //
 // Features:
@@ -225,7 +225,7 @@ function buildFederalPrompt(scope: ScopeSelection): string {
   const polls = scope.pollutants?.length ? scope.pollutants.join(", ") : "all pollutants";
   const statesList = scope.states?.length ? scope.states.join(", ") : "all states in scope";
 
-  return `You are a senior EPA water quality strategist generating a Federal Resolution Plan.
+  return `You are a senior EPA water quality strategist generating a Federal Response Plan.
 This plan is produced by the PEARL Intelligence Network (PIN) — an EPA water quality data platform. PIN stands for PEARL Intelligence Network. PEARL stands for Programmable Eco-Adaptive Reef Lattice.
 
 YOUR AUDIENCE: Federal EPA leadership with CWA enforcement authority, TMDL approval, interstate coordination, emergency declarations, and funding allocation powers.
@@ -241,7 +241,7 @@ ${scope.requireNoTmdl ? "FILTER: Only assessment units WITHOUT established TMDLs
 ${scope.minEjIndex ? `EJ Index Minimum: ${scope.minEjIndex}/100` : ""}
 ${scope.crisisName ? `ACTIVE CRISIS: ${scope.crisisName}` : ""}
 
-Generate a comprehensive Federal Resolution Plan for this scope. This is a REGIONAL/NATIONAL plan, not a single-waterbody plan. Address the full portfolio of impairments across the scope. Be specific about which federal authorities apply, which agencies must coordinate, and what enforcement escalation looks like.
+Generate a comprehensive Federal Response Plan for this scope. This is a REGIONAL/NATIONAL plan, not a single-waterbody plan. Address the full portfolio of impairments across the scope. Be specific about which federal authorities apply, which agencies must coordinate, and what enforcement escalation looks like.
 
 Respond ONLY with valid JSON, no markdown, no backticks:
 {
@@ -268,7 +268,7 @@ IMPORTANT: The projectedScoreChanges array MUST include one entry for each state
 function buildFederalRefinePrompt(scope: ScopeSelection, currentPlan: FederalPlanSections, refinement: string): string {
   const statesList = scope.states?.length ? scope.states.join(", ") : "all states in scope";
 
-  return `You previously generated a Federal Resolution Plan for scope: ${scopeSummary(scope)}.
+  return `You previously generated a Federal Response Plan for scope: ${scopeSummary(scope)}.
 
 CURRENT PLAN SUMMARY:
 - Exec Summary: ${currentPlan.executiveSummary.slice(0, 300)}...
@@ -684,7 +684,7 @@ export default function FederalResolutionPlanner({ userTier, userId, stateRollup
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-xl font-bold text-gray-800">Federal Resolution Planner</h1>
+          <h1 className="text-xl font-bold text-gray-800">Federal Response Planner</h1>
           <p className="text-sm text-gray-500 mt-1">National and regional scope analysis · {limits.dailyPlans === Infinity ? "Unlimited" : `${plansToday}/${limits.dailyPlans}`} plans used today</p>
         </div>
 
@@ -810,7 +810,7 @@ export default function FederalResolutionPlanner({ userTier, userId, stateRollup
 
             <button onClick={generate} disabled={atLimit}
               className={`w-full py-4 rounded-lg text-sm font-bold transition-all ${atLimit ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-blue-600 text-white hover:bg-blue-700 shadow-sm"}`}>
-              {atLimit ? `Daily limit reached (${limits.dailyPlans} plans). Upgrade for more.` : "Generate Federal Resolution Plan"}
+              {atLimit ? `Daily limit reached (${limits.dailyPlans} plans). Upgrade for more.` : "Generate Federal Response Plan"}
             </button>
           </div>
 
@@ -875,7 +875,7 @@ export default function FederalResolutionPlanner({ userTier, userId, stateRollup
           <div className="flex justify-between items-start">
             <div>
               <p className="text-blue-200 text-xs uppercase tracking-wide font-medium">
-                Federal Resolution Plan · Revision {revision}
+                Federal Response Plan · Revision {revision}
               </p>
               <h2 className="text-lg font-bold mt-1">{scope.label || scopeSummary(scope)}</h2>
               <p className="text-blue-200 text-xs mt-0.5">
@@ -1028,7 +1028,7 @@ export default function FederalResolutionPlanner({ userTier, userId, stateRollup
   // Fallback — if view state is somehow invalid, reset to scope
   return (
     <div className="max-w-5xl mx-auto py-8 text-center">
-      <p className="text-sm text-gray-500 mb-4">Loading Federal Resolution Planner...</p>
+      <p className="text-sm text-gray-500 mb-4">Loading Federal Response Planner...</p>
       <button onClick={() => setView("scope")} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
         Open Planner
       </button>
