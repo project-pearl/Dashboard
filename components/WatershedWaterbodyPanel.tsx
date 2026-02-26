@@ -202,6 +202,21 @@ export function WatershedWaterbodyPanel({
   const filteredWatersheds = filterWatersheds(watersheds);
   const displayedWatersheds = showAll ? filteredWatersheds : filteredWatersheds.slice(0, 15);
 
+  // Auto-drill: when searching narrows to waterbodies in a single watershed, jump in
+  const autoDrillTarget = useMemo(() => {
+    if (!searchQuery || activeWatershed !== null) return null;
+    const q = searchQuery.toLowerCase();
+    // Find which watersheds have waterbody-level matches (not just watershed name matches)
+    const withWbMatches = filteredWatersheds.filter(ws =>
+      ws.waterbodies.some(r => r.name.toLowerCase().includes(q) || r.id.toLowerCase().includes(q))
+    );
+    return withWbMatches.length === 1 ? withWbMatches[0].huc8 : null;
+  }, [searchQuery, activeWatershed, filteredWatersheds]);
+
+  useEffect(() => {
+    if (autoDrillTarget) setActiveWatershed(autoDrillTarget);
+  }, [autoDrillTarget]);
+
   // ── Filter pill counts (context-aware) ──
   const pillCounts = useMemo(() => {
     const source = activeWs ? activeWs.waterbodies : regionData;
@@ -260,7 +275,7 @@ export function WatershedWaterbodyPanel({
     return (
       <div
         key={ws.huc8}
-        onClick={() => { setActiveWatershed(ws.huc8); setShowAll(false); setSearchQuery(''); }}
+        onClick={() => { setActiveWatershed(ws.huc8); setShowAll(false); }}
         className="rounded-lg border border-slate-200 p-3 cursor-pointer transition-colors hover:bg-slate-50 hover:border-slate-300"
       >
         <div className="flex items-center justify-between mb-1.5">
