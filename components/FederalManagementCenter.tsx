@@ -1968,11 +1968,11 @@ export function FederalManagementCenter(props: Props) {
     dataGov:      { label: 'Data.gov',      staleAfterHours: 336,    deployed: true },   // 0 17 * * 0 — 14 days
     // ── Static / biennial ──
     stateIR:      { label: 'State IR',      staleAfterHours: 17520,  deployed: true },   // static file, ~biennial
-    // ── Not yet deployed ──
-    nwps:         { label: 'NWPS',          staleAfterHours: 1,      deployed: false },
-    coops:        { label: 'CO-OPS',        staleAfterHours: 12,     deployed: false },
-    snotel:       { label: 'SNOTEL',        staleAfterHours: 48,     deployed: false },
-    tri:          { label: 'TRI',           staleAfterHours: 48,     deployed: false },
+    // ── Additional deployed sources ──
+    nwps:         { label: 'NWPS',          staleAfterHours: 1,      deployed: true },    // */30 * * * *
+    coops:        { label: 'CO-OPS',        staleAfterHours: 12,     deployed: true },    // 0 */6 * * *
+    snotel:       { label: 'SNOTEL',        staleAfterHours: 48,     deployed: true },    // 0 18 * * *
+    tri:          { label: 'TRI',           staleAfterHours: 48,     deployed: true },     // 0 19 * * *
   };
 
   const [dataReliability, setDataReliability] = useState<DataReliabilityReport | undefined>(undefined);
