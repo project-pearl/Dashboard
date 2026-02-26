@@ -17,7 +17,8 @@ export interface Signal {
   id: string;
   source: 'uscg' | 'beacon' | 'noaa-hab' | 'epa-news'
     | 'nwps' | 'coops' | 'ndbc' | 'snotel' | 'cdc-nwss'
-    | 'echo' | 'pfas' | 'tri' | 'usace' | 'bwb';
+    | 'echo' | 'pfas' | 'tri' | 'usace' | 'bwb'
+    | 'fema' | 'qpe' | 'sso-cso';
   sourceLabel: string;
   category: 'spill' | 'bacteria' | 'hab' | 'enforcement' | 'advisory'
     | 'safety' | 'regulatory' | 'general'

@@ -32,6 +32,10 @@ import { getNwpsCacheStatus, ensureWarmed as warmNwps } from '@/lib/nwpsCache';
 import { getCoopsCacheStatus, ensureWarmed as warmCoops } from '@/lib/coopsCache';
 import { getSnotelCacheStatus, ensureWarmed as warmSnotel } from '@/lib/snotelCache';
 import { getTriCacheStatus, ensureWarmed as warmTri } from '@/lib/triCache';
+import { getHealthSummary, ensureWarmed as warmSentinelHealth } from '@/lib/sentinel/sentinelHealth';
+import { getQueueStats, ensureWarmed as warmSentinelQueue } from '@/lib/sentinel/eventQueue';
+import { getScoredHucsSummary, ensureWarmed as warmSentinelScores } from '@/lib/sentinel/scoringEngine';
+import { SENTINEL_FLAGS } from '@/lib/sentinel/config';
 
 function staleness(built: string | null | undefined): { stale: boolean; ageHours: number | null } {
   if (!built) return { stale: true, ageHours: null };
@@ -47,7 +51,7 @@ export async function GET() {
     [warmEcho, warmFrs, warmPfas, warmInsights, warmStateReports, warmBwb],
     [warmCdcNwss, warmNdbc, warmNasaCmr, warmNars, warmDataGov, warmUsace],
     [warmNwisIv, warmUsgsAlerts, warmNwsAlerts, warmNwps, warmCoops, warmSnotel],
-    [warmTri],
+    [warmTri, warmSentinelHealth, warmSentinelQueue, warmSentinelScores],
   ];
   for (const batch of warmBatches) {
     await Promise.allSettled(batch.map(fn => fn()));
@@ -194,6 +198,19 @@ export async function GET() {
   const loadedCount = Object.values(caches).filter((c: any) => c.loaded !== false && c.status !== 'cold' && c.status !== 'idle').length;
   const staleCount = Object.values(caches).filter((c: any) => c.stale).length;
 
+  // Sentinel summary (lightweight, no extra warming needed)
+  let sentinel = null;
+  if (SENTINEL_FLAGS.ENABLED) {
+    try {
+      const health = getHealthSummary();
+      const queue = getQueueStats();
+      const scores = getScoredHucsSummary();
+      sentinel = { health, queue, scores };
+    } catch {
+      sentinel = { error: 'failed to load sentinel status' };
+    }
+  }
+
   return NextResponse.json({
     timestamp: new Date().toISOString(),
     summary: {
@@ -202,5 +219,6 @@ export async function GET() {
       stale: staleCount,
     },
     caches,
+    sentinel,
   });
 }

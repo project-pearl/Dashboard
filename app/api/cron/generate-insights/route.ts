@@ -92,11 +92,34 @@ export async function GET(request: NextRequest) {
   }
   const { callLLM, provider } = llmConfig;
 
+  // Sentinel integration: accept ?hucs= for targeted generation
+  const sentinelHucs = request.nextUrl.searchParams.get('hucs')?.split(',').filter(Boolean) ?? [];
+  const sentinelTriggered = request.nextUrl.searchParams.get('sentinelTriggered') === 'true';
+  const sentinelLevel = request.nextUrl.searchParams.get('level') ?? '';
+
   // Get ATTAINS state data (lightweight — no waterbody arrays)
   const { cacheStatus, states } = getAttainsCacheSummary();
-  const loadedStates = cacheStatus.statesLoaded;
+  let loadedStates = cacheStatus.statesLoaded;
 
-  if (loadedStates.length < 5) {
+  // If sentinel-triggered, filter to only states containing the targeted HUCs
+  if (sentinelTriggered && sentinelHucs.length > 0) {
+    try {
+      const { getStateForHuc } = await import('@/lib/sentinel/hucAdjacency');
+      const targetStates = new Set<string>();
+      for (const huc of sentinelHucs) {
+        const st = getStateForHuc(huc);
+        if (st) targetStates.add(st);
+      }
+      if (targetStates.size > 0) {
+        loadedStates = loadedStates.filter((s: string) => targetStates.has(s));
+        console.log(`[Cron/Insights] Sentinel-triggered: targeting ${loadedStates.length} states for ${sentinelHucs.length} HUCs (level=${sentinelLevel})`);
+      }
+    } catch {
+      // HUC adjacency not available — process all states
+    }
+  }
+
+  if (loadedStates.length < 5 && !sentinelTriggered) {
     return NextResponse.json({
       status: 'skipped',
       reason: `ATTAINS cache not yet warm (${loadedStates.length} states loaded, need >= 5)`,
@@ -113,7 +136,11 @@ export async function GET(request: NextRequest) {
     console.warn(`[Cron/Insights] Enrichment fetch failed, proceeding ATTAINS-only: ${err.message}`);
   }
 
-  console.log(`[Cron/Insights] Starting build — ${loadedStates.length} states × ${ALL_ROLES.length} roles = ${loadedStates.length * ALL_ROLES.length} combos`);
+  // When sentinel-triggered, only generate for crisis-relevant roles
+  const SENTINEL_ROLES: Role[] = ['MS4', 'State', 'Federal'];
+  const rolesToProcess = sentinelTriggered ? SENTINEL_ROLES : ALL_ROLES;
+
+  console.log(`[Cron/Insights] Starting build — ${loadedStates.length} states × ${rolesToProcess.length} roles = ${loadedStates.length * rolesToProcess.length} combos${sentinelTriggered ? ' (sentinel-triggered)' : ''}`);
   setBuildInProgress(true);
 
   const results = {
@@ -129,7 +156,7 @@ export async function GET(request: NextRequest) {
       withSemaphore(semaphore, async () => {
         const stateData = states[stateAbbr];
         if (!stateData || stateData.total === 0) {
-          results.skipped += ALL_ROLES.length;
+          results.skipped += rolesToProcess.length;
           return;
         }
 
@@ -167,7 +194,7 @@ export async function GET(request: NextRequest) {
         const enrichmentForLLM = enrichment ? formatEnrichmentForLLM(enrichment) : null;
         const enrichmentSummaryStr = enrichment ? summarizeEnrichment(enrichment) : undefined;
 
-        for (const role of ALL_ROLES) {
+        for (const role of rolesToProcess) {
           try {
             const existing = getInsights(stateAbbr, role);
             if (existing && existing.signalsHash === currentHash) {
@@ -276,7 +303,9 @@ export async function GET(request: NextRequest) {
     duration: `${durationSec}s`,
     provider,
     statesProcessed: loadedStates.length,
-    rolesPerState: ALL_ROLES.length,
+    rolesPerState: rolesToProcess.length,
+    sentinelTriggered: sentinelTriggered || undefined,
+    sentinelHucs: sentinelHucs.length > 0 ? sentinelHucs : undefined,
     ...results,
     enrichment: enrichmentSnapshot ? {
       signalCount: enrichmentSnapshot.signals.length,
