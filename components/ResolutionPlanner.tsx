@@ -27,6 +27,12 @@ export interface NationalContext {
   highAlertStates: number;
   topCauses: { cause: string; count: number }[];
   worstStates: { abbr: string; score: number; impaired: number }[];
+  // Fields from unified national-summary endpoint
+  tmdlGap?: number;
+  tmdlCompleted?: number;
+  realtimeSites?: number;
+  activeAlerts?: number;
+  criticalAlerts?: number;
 }
 
 export interface RegionContext {
@@ -293,7 +299,15 @@ NATIONAL OVERVIEW:
 - ${ctx.totalImpaired.toLocaleString()} impaired waterbodies (Cat 4 + Cat 5)
 - ${ctx.highAlertStates} states with high alert levels
 - Average national score: ${ctx.averageScore >= 0 ? ctx.averageScore : 'Insufficient data'}
-
+${ctx.totalImpaired === 0 ? '\nWARNING: Zero impaired waterbodies reported. This likely indicates a data pipeline gap — the ATTAINS cache may still be loading. Acknowledge this data limitation in the Situation Assessment and note that impairment counts will update when the data pipeline completes.\n' : ''}
+${ctx.tmdlGap != null && ctx.tmdlGap > 0 ? `TMDL STATUS:
+- ${ctx.tmdlGap.toLocaleString()} waterbodies need TMDLs (Cat 5 — impaired, no plan)
+- ${(ctx.tmdlCompleted || 0).toLocaleString()} TMDLs completed
+- TMDL gap ratio: ${ctx.tmdlGap + (ctx.tmdlCompleted || 0) > 0 ? Math.round(ctx.tmdlGap / (ctx.tmdlGap + (ctx.tmdlCompleted || 0)) * 100) : 0}%
+` : ''}${ctx.realtimeSites != null && ctx.realtimeSites > 0 ? `REAL-TIME MONITORING:
+- ${ctx.realtimeSites.toLocaleString()} USGS streamgage sites reporting
+- ${(ctx.activeAlerts || 0).toLocaleString()} active alerts (${(ctx.criticalAlerts || 0).toLocaleString()} critical)
+` : ''}
 WORST-PERFORMING STATES: ${worstList || 'No state data available'}
 
 TOP CAUSES OF IMPAIRMENT: ${causeList || 'No cause data available'}

@@ -27,6 +27,7 @@ import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import StateWaterbodyCard from '@/components/StateWaterbodyCard';
 import ResolutionPlanner, { type ScopeContext, type DataReliabilityReport } from '@/components/ResolutionPlanner';
+import type { NationalSummary } from '@/lib/national-summary';
 import { EPA_REGIONS, getEpaRegionForState } from '@/lib/epa-regions';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import { useTheme } from '@/lib/useTheme';
@@ -1903,8 +1904,33 @@ export function FederalManagementCenter(props: Props) {
     return { ...attainsAggregation, worstStates };
   }, [attainsAggregation, stateRollup]);
 
+  // ── National Summary (single source of truth for planner) ──
+  const [nationalSummary, setNationalSummary] = useState<NationalSummary | null>(null);
+
   // ── Response Planner scope context (national default) ──
   const resolutionPlannerScope = useMemo((): ScopeContext => {
+    // Prefer server-computed national summary (single source of truth)
+    if (nationalSummary) {
+      return {
+        scope: 'national',
+        data: {
+          totalStates: nationalSummary.statesReporting,
+          totalWaterbodies: nationalSummary.totalWaterbodies,
+          totalImpaired: nationalSummary.totalImpaired,
+          averageScore: nationalSummary.averageScore,
+          highAlertStates: nationalSummary.highAlertStates,
+          topCauses: nationalSummary.topCauses,
+          worstStates: nationalSummary.worstStates,
+          tmdlGap: nationalSummary.tmdlGap,
+          tmdlCompleted: nationalSummary.tmdlCompleted,
+          realtimeSites: nationalSummary.realtimeSites,
+          activeAlerts: nationalSummary.activeAlerts,
+          criticalAlerts: nationalSummary.criticalAlerts,
+        },
+      };
+    }
+
+    // Fallback to client-side stateRollup computation
     const gradedStates = stateRollup.filter(s => s.canGradeState);
     const avgScore = gradedStates.length > 0
       ? Math.round(gradedStates.reduce((s, r) => s + r.score, 0) / gradedStates.length)
@@ -1931,7 +1957,7 @@ export function FederalManagementCenter(props: Props) {
         worstStates,
       },
     };
-  }, [stateRollup, attainsAggregation]);
+  }, [nationalSummary, stateRollup, attainsAggregation]);
 
   // ── Data Reliability Report (computed from /api/cache-status) ──
   //
@@ -1981,7 +2007,13 @@ export function FederalManagementCenter(props: Props) {
 
     const fetchReliability = async () => {
       try {
-        const res = await fetch('/api/cache-status');
+        const [res, summaryRes] = await Promise.all([
+          fetch('/api/cache-status'),
+          fetch('/api/national-summary'),
+        ]);
+        if (summaryRes.ok && !cancelled) {
+          setNationalSummary(await summaryRes.json());
+        }
         if (!res.ok || cancelled) return;
         const json = await res.json();
         const caches = json.caches as Record<string, any>;
@@ -6415,7 +6447,7 @@ export function FederalManagementCenter(props: Props) {
             scopeContext={resolutionPlannerScope}
             userRole="federal"
             dataReliability={dataReliability}
-            dataReady={attainsBulkLoaded.size > 0}
+            dataReady={nationalSummary !== null || attainsBulkLoaded.size > 0}
           />
         </div>
         </>);
