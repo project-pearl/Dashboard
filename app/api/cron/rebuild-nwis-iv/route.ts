@@ -14,6 +14,8 @@ import {
 } from '@/lib/nwisIvCache';
 import { evaluateThresholds } from '@/lib/usgsAlertEngine';
 import { setAlertsBulk } from '@/lib/usgsAlertCache';
+import { fetchAllSignals } from '@/lib/signals';
+import { archiveSignals } from '@/lib/signalArchiveCache';
 import { ALL_STATES } from '@/lib/constants';
 
 // Allow up to 5 minutes on Vercel Pro
@@ -273,6 +275,18 @@ export async function GET(request: NextRequest) {
       await setAlertsBulk(alertsByState);
     }
 
+    // ── Archive signals from authoritative feeds ────────────────────────
+    let archivedCount = 0;
+    try {
+      const { signals } = await fetchAllSignals({ limit: 100 });
+      if (signals.length > 0) {
+        await archiveSignals(signals);
+        archivedCount = signals.length;
+      }
+    } catch (e: any) {
+      console.warn(`[NWIS-IV Cron] Signal archive failed (non-blocking): ${e.message}`);
+    }
+
     const alertSummary = {
       total: allAlerts.length,
       critical: allAlerts.filter(a => a.severity === 'critical').length,
@@ -281,7 +295,8 @@ export async function GET(request: NextRequest) {
 
     console.log(
       `[NWIS-IV Cron] Alerts: ${alertSummary.total} fired ` +
-      `(${alertSummary.critical} critical, ${alertSummary.warning} warning)`
+      `(${alertSummary.critical} critical, ${alertSummary.warning} warning)` +
+      ` | Signals archived: ${archivedCount}`
     );
 
     // ── Merge into grid ─────────────────────────────────────────────────
@@ -364,6 +379,7 @@ export async function GET(request: NextRequest) {
       gridCells: Object.keys(grid).length,
       statesProcessed: processedStates.length,
       alerts: alertSummary,
+      signalsArchived: archivedCount,
       states: stateResults,
       cache: getUsgsIvCacheStatus(),
     });
