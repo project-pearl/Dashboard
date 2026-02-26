@@ -35,6 +35,7 @@ export interface DatapointSummary {
   dataGov: { datasets: number };
   usace: { locations: number };
   total: number;
+  totalAccessible: number;
 }
 
 export interface UseSourceHealthResult {

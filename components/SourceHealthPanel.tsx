@@ -172,7 +172,16 @@ export function SourceHealthPanel() {
                 <span className="text-lg font-bold text-slate-800 leading-tight">
                   {datapoints ? formatNumber(datapoints.total) : '—'}
                 </span>
-                <span className="text-[10px] text-slate-500 ml-1">datapoints live</span>
+                <span className="text-[10px] text-slate-500 ml-1">cached</span>
+                {datapoints?.totalAccessible && (
+                  <>
+                    <span className="text-[10px] text-slate-400 mx-1">&middot;</span>
+                    <span className="text-sm font-semibold text-blue-600">
+                      {formatNumber(datapoints.totalAccessible)}+
+                    </span>
+                    <span className="text-[10px] text-slate-500 ml-1">accessible</span>
+                  </>
+                )}
               </div>
             </div>
 
@@ -229,7 +238,12 @@ export function SourceHealthPanel() {
         {/* ─── Dataset Totals ───────────────────────────────────────────── */}
         {datapoints && (
           <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-            <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Total Dataset</div>
+            <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              Total Dataset
+              <span className="normal-case tracking-normal font-normal text-slate-400 ml-1">
+                — {formatNumber(datapoints.total)} cached of {datapoints.totalAccessible ? `${formatNumber(datapoints.totalAccessible)}+` : '—'} accessible across {sources.length} federal sources
+              </span>
+            </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-1.5 text-[11px]">
               {([
                 ['ATTAINS', datapoints.attains.waterbodies, 'waterbodies'],

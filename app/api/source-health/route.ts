@@ -17,6 +17,27 @@ import { getNarsCacheStatus, ensureWarmed as warmNars } from '@/lib/narsCache';
 import { getDataGovCacheStatus, ensureWarmed as warmDataGov } from '@/lib/dataGovCache';
 import { getUsaceCacheStatus, ensureWarmed as warmUsace } from '@/lib/usaceCache';
 
+// ─── Federal Source Totals (conservative public figures, updated ~yearly) ────
+
+const FEDERAL_SOURCE_TOTALS: Record<string, number> = {
+  attains:   85_000,       // EPA assessment units nationally (~85K AUs)
+  wqp:       380_000_000,  // WQP total results (waterqualitydata.us)
+  icis:      350_000,      // NPDES permits nationally
+  sdwis:     150_000,      // Public water systems (EPA SDWIS)
+  echo:      800_000,      // ECHO regulated facilities
+  frs:       4_000_000,    // FRS registered facilities
+  nwisGw:    1_500_000,    // USGS groundwater monitoring sites
+  pfas:      75_000,       // UCMR monitoring results
+  ceden:     5_000_000,    // CEDEN chemistry+toxicity records (CA)
+  bwb:       500,          // Water Reporter active stations
+  cdcNwss:   1_500,        // CDC wastewater treatment plants monitored
+  ndbc:      1_300,        // NOAA buoy stations
+  nars:      25_000,       // NARS national survey sites
+  usace:     700,          // USACE reservoir locations
+};
+
+const TOTAL_ACCESSIBLE = Object.values(FEDERAL_SOURCE_TOTALS).reduce((a, b) => a + b, 0);
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface SourceHealthEntry {
@@ -422,6 +443,7 @@ export async function GET() {
     dataGov: { datasets: dataGovDatasets },
     usace: { locations: usaceLocations },
     total: attainsWaterbodies + wqpRecords + cedenChem + cedenTox + icisPermits + icisViolations + icisDmr + icisEnforcement + nwisGwSites + nwisGwLevels + sdwisSystems + sdwisViolations + sdwisEnforcement + echoFacilities + echoViolations + frsFacilities + pfasResults + bwbStations + bwbReadings + cdcNwssRecords + ndbcStations + narsSites + usaceLocations,
+    totalAccessible: TOTAL_ACCESSIBLE,
   };
 
   return NextResponse.json(
