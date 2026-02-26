@@ -90,9 +90,9 @@ const LENS_CONFIG: Record<ViewLens, {
     defaultOverlay: 'hotspots',
     showTopStrip: true, showPriorityQueue: false, showCoverageGaps: false,
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
-    showHotspots: false, showSituationSummary: true, showTimeRange: false,
+    showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['usmap', 'impairmentprofile', 'situation', 'disclaimer']),
+    sections: new Set(['usmap', 'impairmentprofile', 'disclaimer']),
   },
   briefing: {
     label: 'AI Briefing',

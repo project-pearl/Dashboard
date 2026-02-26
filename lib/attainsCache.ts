@@ -5,6 +5,8 @@
 // - ATTAINS updates ~biannually — this cache uses a long TTL
 // - Persists to local disk (.cache/) + Vercel Blob (cross-instance)
 
+import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+
 // ─── Config ────────────────────────────────────────────────────────────────────
 
 const ATTAINS_BASE = "https://attains.epa.gov/attains-public/api";
@@ -242,102 +244,36 @@ function ensureDiskLoaded() {
   }
 }
 
-// ─── Vercel Blob persistence (cross-instance via REST API) ───────────────────
+// ─── Vercel Blob persistence (shared helpers) ────────────────────────────────
 
 const BLOB_PATH = 'cache/attains-national.json';
-const BLOB_API = 'https://blob.vercel-storage.com';
 
 async function saveToBlob(): Promise<boolean> {
-  try {
-    const token = process.env.BLOB_READ_WRITE_TOKEN;
-    if (!token) {
-      console.warn('[ATTAINS Cache] Blob save skipped — no BLOB_READ_WRITE_TOKEN');
-      return false;
-    }
-    const payload = JSON.stringify({
-      meta: { lastBuilt: lastBuilt?.toISOString(), stateCount: loadedStates.size },
-      states: cache,
-    });
-    const res = await fetch(`${BLOB_API}/${BLOB_PATH}`, {
-      method: 'PUT',
-      headers: {
-        'authorization': `Bearer ${token}`,
-        'x-api-version': '7',
-        'x-content-type': 'application/json',
-        'x-add-random-suffix': '0',
-      },
-      body: payload,
-    });
-    if (!res.ok) {
-      const body = await res.text().catch(() => '');
-      throw new Error(`HTTP ${res.status}: ${body.slice(0, 200)}`);
-    }
-    const sizeMB = (Buffer.byteLength(payload) / 1024 / 1024).toFixed(1);
-    console.warn(`[ATTAINS Cache] Saved to Vercel Blob (${sizeMB}MB, ${loadedStates.size} states)`);
-    return true;
-  } catch (e: any) {
-    console.warn(`[ATTAINS Cache] Blob save failed: ${e.message}`);
-    return false;
-  }
+  const payload = {
+    meta: { lastBuilt: lastBuilt?.toISOString(), stateCount: loadedStates.size },
+    states: cache,
+  };
+  return saveCacheToBlob(BLOB_PATH, payload);
 }
 
 async function loadFromBlob(): Promise<boolean> {
-  try {
-    const token = process.env.BLOB_READ_WRITE_TOKEN;
-    if (!token) {
-      console.warn('[ATTAINS Cache] Blob load skipped — no BLOB_READ_WRITE_TOKEN');
-      return false;
-    }
+  const data = await loadCacheFromBlob<{ meta: { lastBuilt?: string; stateCount?: number }; states: Record<string, StateSummary> }>(BLOB_PATH);
+  if (!data?.states || !data?.meta) return false;
 
-    // List blobs matching our path
-    const listRes = await fetch(
-      `${BLOB_API}?prefix=${encodeURIComponent(BLOB_PATH)}&limit=1`,
-      { headers: { 'authorization': `Bearer ${token}`, 'x-api-version': '7' } },
-    );
-    if (!listRes.ok) {
-      console.warn(`[ATTAINS Cache] Blob list failed: HTTP ${listRes.status}`);
-      return false;
-    }
-    const listData = await listRes.json();
-    const blobs = listData?.blobs || [];
-    if (blobs.length === 0) {
-      console.warn('[ATTAINS Cache] Blob list returned 0 blobs');
-      return false;
-    }
+  cache = data.states;
+  const stateKeys = Object.keys(cache);
+  loadedStates = new Set(stateKeys);
+  lastBuilt = data.meta.lastBuilt ? new Date(data.meta.lastBuilt) : null;
+  buildStatus =
+    lastBuilt && Date.now() - lastBuilt.getTime() < CACHE_TTL_MS ? "ready" : "stale";
+  _cacheSource = "blob";
 
-    // Download the blob (public URL)
-    const downloadUrl = blobs[0].downloadUrl || blobs[0].url;
-    console.warn(`[ATTAINS Cache] Downloading blob from ${downloadUrl}`);
-    const res = await fetch(downloadUrl);
-    if (!res.ok) {
-      console.warn(`[ATTAINS Cache] Blob download failed: HTTP ${res.status}`);
-      return false;
-    }
-
-    const data = await res.json();
-    if (!data?.states || !data?.meta) {
-      console.warn('[ATTAINS Cache] Blob data missing states or meta');
-      return false;
-    }
-
-    cache = data.states;
-    const stateKeys = Object.keys(cache);
-    loadedStates = new Set(stateKeys);
-    lastBuilt = data.meta.lastBuilt ? new Date(data.meta.lastBuilt) : null;
-    buildStatus =
-      lastBuilt && Date.now() - lastBuilt.getTime() < CACHE_TTL_MS ? "ready" : "stale";
-    _cacheSource = "blob";
-
-    console.warn(
-      `[ATTAINS Cache] Loaded from Vercel Blob (${stateKeys.length} states, built ${
-        lastBuilt?.toISOString() || "unknown"
-      })`
-    );
-    return true;
-  } catch (e: any) {
-    console.warn(`[ATTAINS Cache] Blob load failed: ${e.message}`);
-    return false;
-  }
+  console.log(
+    `[ATTAINS Cache] Loaded from Vercel Blob (${stateKeys.length} states, built ${
+      lastBuilt?.toISOString() || "unknown"
+    })`
+  );
+  return true;
 }
 
 let _blobChecked = false;
@@ -1066,8 +1002,9 @@ async function buildCache(): Promise<void> {
     }${stillMissing.length > 0 ? ` | MISSING: ${stillMissing.join(", ")}` : ""}`
   );
 
-  // Persist to disk
+  // Persist to disk + blob
   saveToDisk();
+  await saveToBlob();
 }
 
 // ─── Public API ────────────────────────────────────────────────────────────────
