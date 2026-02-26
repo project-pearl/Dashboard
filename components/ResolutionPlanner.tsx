@@ -1,16 +1,17 @@
 // =============================================================
-// Resolution Planner v5 — Scope-Driven (National / Region / State)
+// Response Planner v6 — Scope-Driven (National / Region / State)
 // PEARL Intelligence Network (PIN)
 //
-// No wizard. No checkboxes. One click generates a plan based on
-// the user's role and the current scope level. Refine iteratively
-// with natural language prompts.
+// Auto-generates a response plan on mount based on the user's
+// role and current scope level. Data reliability assessment
+// renders before any action items. Refine iteratively with
+// natural language prompts.
 // =============================================================
 
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { BrandedPDFGenerator } from '@/lib/brandedPdfGenerator';
+import html2pdf from 'html2pdf.js';
 
 // ── Types ──
 
@@ -87,6 +88,17 @@ export interface CoBenefit {
   wastewater: string;
   groundwater: string;
   stormwater: string;
+}
+
+export interface DataReliabilityReport {
+  overallReliable: boolean;
+  staleCaches: string[];
+  missingCaches: string[];
+  healthyCaches: string[];
+  staleStateCount: number;
+  totalCacheCount: number;
+  loadedCacheCount: number;
+  recommendation: string;
 }
 
 export interface RefineMessage {
@@ -247,16 +259,32 @@ const JSON_SCHEMA_INSTRUCTION = `Respond ONLY with valid JSON, no markdown, no b
   "projectedOutcomes": "What improves and by when if this plan is executed. Quantify where possible."
 }`;
 
-function buildNationalPrompt(ctx: NationalContext, role: UserRole): string {
+function buildDataReliabilitySection(dr?: DataReliabilityReport): string {
+  if (!dr) return '';
+  const lines = ['\nDATA RELIABILITY ASSESSMENT:'];
+  if (dr.overallReliable) {
+    lines.push(`- Status: DATA SUFFICIENT (${dr.loadedCacheCount}/${dr.totalCacheCount} caches loaded)`);
+    lines.push(`- Healthy sources: ${dr.healthyCaches.join(', ') || 'none'}`);
+  } else {
+    lines.push(`- Status: DATA PIPELINE REPAIR NEEDED (${dr.loadedCacheCount}/${dr.totalCacheCount} caches loaded)`);
+    if (dr.staleCaches.length > 0) lines.push(`- Stale caches: ${dr.staleCaches.join(', ')}`);
+    if (dr.missingCaches.length > 0) lines.push(`- Missing/unloaded caches: ${dr.missingCaches.join(', ')}`);
+    lines.push(`- ${dr.staleStateCount} states have stale or missing ATTAINS data`);
+    lines.push('- CRITICAL INSTRUCTION: Because the data pipeline is unreliable, the #1 IMMEDIATE ACTION must be "Repair and refresh data pipelines" with specific steps to restore the stale/missing data sources listed above. All subsequent recommendations should note they are based on potentially incomplete data.');
+  }
+  return lines.join('\n') + '\n';
+}
+
+function buildNationalPrompt(ctx: NationalContext, role: UserRole, dataReliability?: DataReliabilityReport): string {
   const rc = ROLE_CONTEXT[role];
   const worstList = ctx.worstStates.map(s => `${s.abbr} (score: ${s.score}, impaired: ${s.impaired.toLocaleString()})`).join(', ');
   const causeList = ctx.topCauses.slice(0, 10).map(c => `${c.cause} (${c.count.toLocaleString()})`).join(', ');
 
-  return `You are a senior water quality engineer generating a National Resolution Plan.
+  return `You are a senior water quality engineer generating a National Response Plan.
 This plan is produced by the PEARL Intelligence Network (PIN) — an EPA water quality data platform. PIN stands for PEARL Intelligence Network. PEARL stands for Programmable Eco-Adaptive Reef Lattice.
 
 YOUR AUDIENCE: ${rc.label} role with authority over: ${rc.authority}
-
+${buildDataReliabilitySection(dataReliability)}
 NATIONAL OVERVIEW:
 - ${ctx.totalStates} states reporting
 - ${ctx.totalWaterbodies.toLocaleString()} total waterbodies tracked
@@ -270,23 +298,23 @@ TOP CAUSES OF IMPAIRMENT: ${causeList || 'No cause data available'}
 
 PLAN FOCUS: ${rc.planFocus}
 
-Generate a comprehensive National Resolution Plan. This is a strategic, nationwide plan — identify systemic issues, interstate patterns, regional disparities, and national-level actions. Be specific and actionable. Use regulatory language appropriate for ${rc.label} briefings.
+Generate a comprehensive National Response Plan. This is a strategic, nationwide plan — identify systemic issues, interstate patterns, regional disparities, and national-level actions. Be specific and actionable. Use regulatory language appropriate for ${rc.label} briefings.
 
 IMPORTANT: Base your analysis only on the data provided above. Do not fabricate statistics.
 
 ${JSON_SCHEMA_INSTRUCTION}`;
 }
 
-function buildRegionPrompt(ctx: RegionContext, role: UserRole): string {
+function buildRegionPrompt(ctx: RegionContext, role: UserRole, dataReliability?: DataReliabilityReport): string {
   const rc = ROLE_CONTEXT[role];
   const stateList = ctx.stateBreakdown.map(s => `${s.abbr} (score: ${s.score}, impaired: ${s.impaired.toLocaleString()})`).join(', ');
   const causeList = ctx.topCauses.slice(0, 10).map(c => `${c.cause} (${c.count.toLocaleString()})`).join(', ');
 
-  return `You are a senior water quality engineer generating a Regional Resolution Plan.
+  return `You are a senior water quality engineer generating a Regional Response Plan.
 This plan is produced by the PEARL Intelligence Network (PIN) — an EPA water quality data platform. PIN stands for PEARL Intelligence Network. PEARL stands for Programmable Eco-Adaptive Reef Lattice.
 
 YOUR AUDIENCE: ${rc.label} role with authority over: ${rc.authority}
-
+${buildDataReliabilitySection(dataReliability)}
 EPA ${ctx.regionName.toUpperCase()} (HQ: ${ctx.hq}):
 - Covers states: ${ctx.states.join(', ')}
 - ${ctx.totalWaterbodies.toLocaleString()} total waterbodies tracked
@@ -299,22 +327,22 @@ TOP CAUSES OF IMPAIRMENT: ${causeList || 'No cause data available'}
 
 PLAN FOCUS: ${rc.planFocus}
 
-Generate a comprehensive Regional Resolution Plan for EPA ${ctx.regionName}. Focus on intra-regional coordination, state-to-state disparities, shared watershed issues, and region-specific regulatory actions. Be specific and actionable.
+Generate a comprehensive Regional Response Plan for EPA ${ctx.regionName}. Focus on intra-regional coordination, state-to-state disparities, shared watershed issues, and region-specific regulatory actions. Be specific and actionable.
 
 IMPORTANT: Base your analysis only on the data provided above. Do not fabricate statistics.
 
 ${JSON_SCHEMA_INSTRUCTION}`;
 }
 
-function buildStatePrompt(ctx: StateContext, role: UserRole): string {
+function buildStatePrompt(ctx: StateContext, role: UserRole, dataReliability?: DataReliabilityReport): string {
   const rc = ROLE_CONTEXT[role];
   const causeList = ctx.topCauses.slice(0, 10).map(c => `${c.cause} (${c.count.toLocaleString()})`).join(', ');
 
-  return `You are a senior water quality engineer generating a State Resolution Plan.
+  return `You are a senior water quality engineer generating a State Response Plan.
 This plan is produced by the PEARL Intelligence Network (PIN) — an EPA water quality data platform. PIN stands for PEARL Intelligence Network. PEARL stands for Programmable Eco-Adaptive Reef Lattice.
 
 YOUR AUDIENCE: ${rc.label} role with authority over: ${rc.authority}
-
+${buildDataReliabilitySection(dataReliability)}
 STATE: ${ctx.name} (${ctx.abbr}) — EPA Region ${ctx.epaRegion}
 - ${ctx.totalWaterbodies.toLocaleString()} total waterbodies
 - ${ctx.assessed.toLocaleString()} assessed
@@ -329,7 +357,7 @@ TOP CAUSES OF IMPAIRMENT: ${causeList || 'No cause data available'}
 
 PLAN FOCUS: ${rc.planFocus}
 
-Generate a comprehensive State Resolution Plan for ${ctx.name}. Focus on state-specific regulatory actions, priority waterbodies, TMDL development, permit conditions, and coordination with EPA Region ${ctx.epaRegion}. Be specific and actionable.
+Generate a comprehensive State Response Plan for ${ctx.name}. Focus on state-specific regulatory actions, priority waterbodies, TMDL development, permit conditions, and coordination with EPA Region ${ctx.epaRegion}. Be specific and actionable.
 
 IMPORTANT: Base your analysis only on the data provided above. Do not fabricate statistics.
 
@@ -338,12 +366,12 @@ ${JSON_SCHEMA_INSTRUCTION}`;
 
 // ── Scope-Aware Initial Prompt Router ──
 
-function buildInitialPrompt(ctx: ScopeContext, role: UserRole, scenarioContext?: string): string {
+function buildInitialPrompt(ctx: ScopeContext, role: UserRole, scenarioContext?: string, dataReliability?: DataReliabilityReport): string {
   let prompt: string;
   switch (ctx.scope) {
-    case 'national': prompt = buildNationalPrompt(ctx.data, role); break;
-    case 'region':   prompt = buildRegionPrompt(ctx.data, role); break;
-    case 'state':    prompt = buildStatePrompt(ctx.data, role); break;
+    case 'national': prompt = buildNationalPrompt(ctx.data, role, dataReliability); break;
+    case 'region':   prompt = buildRegionPrompt(ctx.data, role, dataReliability); break;
+    case 'state':    prompt = buildStatePrompt(ctx.data, role, dataReliability); break;
   }
   if (scenarioContext) {
     prompt = prompt.replace(
@@ -363,7 +391,7 @@ function buildRefinePrompt(
   refinement: string
 ): string {
   const scopeLabel = getScopeLabel(ctx);
-  return `You previously generated a Resolution Plan for ${scopeLabel} for a ${ROLE_CONTEXT[role].label} user.
+  return `You previously generated a Response Plan for ${scopeLabel} for a ${ROLE_CONTEXT[role].label} user.
 
 CURRENT PLAN (summarized):
 - Situation: ${currentPlan.situationAssessment.slice(0, 300)}...
@@ -441,9 +469,11 @@ export interface ResolutionPlannerProps {
   onClose?: () => void;
   /** Optional scenario narrative injected into the AI prompt (used by What-If Simulator). */
   scenarioContext?: string;
+  /** Data reliability report computed from cache-status — drives the reliability banner. */
+  dataReliability?: DataReliabilityReport;
 }
 
-export default function ResolutionPlanner({ scopeContext, userRole, onClose, scenarioContext }: ResolutionPlannerProps) {
+export default function ResolutionPlanner({ scopeContext, userRole, onClose, scenarioContext, dataReliability }: ResolutionPlannerProps) {
   const [plan, setPlan] = useState<ResolutionPlan | null>(null);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -452,6 +482,8 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
   const [history, setHistory] = useState<RefineMessage[]>([]);
   const refineRef = useRef<HTMLInputElement>(null);
   const historyRef = useRef<HTMLDivElement>(null);
+  const pdfContentRef = useRef<HTMLDivElement>(null);
+  const hasAutoGenerated = useRef(false);
 
   // Auto-scroll refine history
   useEffect(() => {
@@ -476,7 +508,7 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prompt: buildInitialPrompt(scopeContext, userRole, scenarioContext),
+          prompt: buildInitialPrompt(scopeContext, userRole, scenarioContext, dataReliability),
         }),
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
@@ -496,7 +528,15 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
     } finally {
       setGenerating(false);
     }
-  }, [scopeContext, userRole, scopeLabel]);
+  }, [scopeContext, userRole, scopeLabel, dataReliability]);
+
+  // ── Auto-generate on mount ──
+  useEffect(() => {
+    if (!hasAutoGenerated.current && !plan && !generating) {
+      hasAutoGenerated.current = true;
+      generatePlan();
+    }
+  }, [generatePlan, plan, generating]);
 
   // ── Refine Plan ──
   const refinePlan = useCallback(async () => {
@@ -552,81 +592,64 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
     switch (scopeContext.scope) {
       case 'national': {
         const d = scopeContext.data;
-        return `A national resolution plan tailored to your ${roleCtx.label} role, analyzing ${d.totalStates} states with ${d.totalImpaired.toLocaleString()} impaired waterbodies. The plan will identify systemic issues, interstate patterns, and national-level actions including situation assessment, root cause analysis, stakeholder mapping, phased actions, co-benefits, cost estimates, regulatory pathway, and grant opportunities.`;
+        return `A national response plan tailored to your ${roleCtx.label} role, analyzing ${d.totalStates} states with ${d.totalImpaired.toLocaleString()} impaired waterbodies. The plan will identify systemic issues, interstate patterns, and national-level actions including situation assessment, root cause analysis, stakeholder mapping, phased actions, co-benefits, cost estimates, regulatory pathway, and grant opportunities.`;
       }
       case 'region': {
         const d = scopeContext.data;
-        return `A regional resolution plan for EPA ${d.regionName} (HQ: ${d.hq}), covering ${d.states.join(', ')}. Analyzing ${d.totalImpaired.toLocaleString()} impaired waterbodies across ${d.states.length} states. The plan will address intra-regional coordination, shared watershed issues, and region-specific regulatory actions.`;
+        return `A regional response plan for EPA ${d.regionName} (HQ: ${d.hq}), covering ${d.states.join(', ')}. Analyzing ${d.totalImpaired.toLocaleString()} impaired waterbodies across ${d.states.length} states. The plan will address intra-regional coordination, shared watershed issues, and region-specific regulatory actions.`;
       }
       case 'state': {
         const d = scopeContext.data;
-        return `A state resolution plan for ${d.name} (${d.abbr}), EPA Region ${d.epaRegion}. Analyzing ${d.impaired.toLocaleString()} impaired waterbodies (Cat 5: ${d.cat5.toLocaleString()}, Cat 4a: ${d.cat4a.toLocaleString()}, Cat 4b: ${d.cat4b.toLocaleString()}) out of ${d.assessed.toLocaleString()} assessed. The plan will include state-specific regulatory actions, priority waterbodies, and TMDL development timelines.`;
+        return `A state response plan for ${d.name} (${d.abbr}), EPA Region ${d.epaRegion}. Analyzing ${d.impaired.toLocaleString()} impaired waterbodies (Cat 5: ${d.cat5.toLocaleString()}, Cat 4a: ${d.cat4a.toLocaleString()}, Cat 4b: ${d.cat4b.toLocaleString()}) out of ${d.assessed.toLocaleString()} assessed. The plan will include state-specific regulatory actions, priority waterbodies, and TMDL development timelines.`;
       }
     }
   })();
 
-  // ── Pre-generation State ──
-  if (!plan && !generating) {
+  // ── Generating / Pre-generation State (auto-generate fires on mount) ──
+  if (!plan) {
     return (
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
         <div className="bg-gradient-to-r from-blue-900 to-blue-700 px-6 py-5 text-white">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-blue-200 text-xs uppercase tracking-wide font-medium">Resolution Planner</p>
+              <p className="text-blue-200 text-xs uppercase tracking-wide font-medium">Response Planner</p>
               <h2 className="text-xl font-bold mt-1">{scopeLabel}</h2>
               <p className="text-blue-200 text-sm">{scopeSubtitle}</p>
             </div>
             {onClose && <button onClick={onClose} className="text-blue-200 hover:text-white">&#x2715;</button>}
           </div>
         </div>
-
-        <div className="p-6">
-          <ScopeSummaryBadge scopeContext={scopeContext} />
-
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-5 mb-5">
-            <h3 className="text-sm font-bold text-blue-900 mb-2">What this will generate</h3>
-            <p className="text-sm text-blue-800 leading-relaxed">{analysisDescription}</p>
-          </div>
-
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-5 text-xs text-gray-600">
-            <p className="font-semibold text-gray-700 mb-1">After generation, you can refine:</p>
-            <div className="grid grid-cols-2 gap-2 mt-2">
-              <span className="px-2 py-1 bg-white rounded border border-gray-200">&quot;Focus more on environmental justice&quot;</span>
-              <span className="px-2 py-1 bg-white rounded border border-gray-200">&quot;What if we double the budget?&quot;</span>
-              <span className="px-2 py-1 bg-white rounded border border-gray-200">&quot;Prioritize Cat 5 waterbodies&quot;</span>
-              <span className="px-2 py-1 bg-white rounded border border-gray-200">&quot;Add green infrastructure solutions&quot;</span>
-              <span className="px-2 py-1 bg-white rounded border border-gray-200">&quot;Make this emergency-level urgency&quot;</span>
-              <span className="px-2 py-1 bg-white rounded border border-gray-200">&quot;Expand the groundwater section&quot;</span>
+        <div className="p-8">
+          {/* Data Reliability Banner */}
+          {dataReliability && (
+            <div className={`rounded-lg p-4 mb-5 border ${dataReliability.overallReliable
+              ? 'bg-green-50 border-green-200'
+              : 'bg-amber-50 border-amber-200'}`}>
+              <h3 className={`text-sm font-bold mb-1 ${dataReliability.overallReliable ? 'text-green-800' : 'text-amber-800'}`}>
+                {dataReliability.overallReliable ? 'Data Sources Verified' : 'Data Pipeline Repair Required'}
+              </h3>
+              <p className={`text-xs ${dataReliability.overallReliable ? 'text-green-700' : 'text-amber-700'}`}>
+                {dataReliability.recommendation} — {dataReliability.loadedCacheCount}/{dataReliability.totalCacheCount} caches loaded
+              </p>
             </div>
-          </div>
+          )}
 
-          {error && <div className="mb-4 px-4 py-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{error}</div>}
-
-          <button
-            onClick={generatePlan}
-            className="w-full py-4 bg-blue-600 text-white rounded-lg text-base font-bold hover:bg-blue-700 transition-colors shadow-sm"
-          >
-            Generate Resolution Plan
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Generating State ──
-  if (generating) {
-    return (
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-900 to-blue-700 px-6 py-5 text-white">
-          <p className="text-blue-200 text-xs uppercase tracking-wide font-medium">Resolution Planner</p>
-          <h2 className="text-xl font-bold mt-1">{scopeLabel}</h2>
-        </div>
-        <div className="p-12 text-center">
-          <div className="inline-block w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4" />
-          <p className="text-sm font-semibold text-gray-700">Analyzing {scopeContext.scope}-level data...</p>
-          <p className="text-xs text-gray-400 mt-2">
-            Generating {roleCtx.label}-specific resolution plan for {scopeLabel}. This takes 30-60 seconds.
-          </p>
+          {error ? (
+            <div className="text-center">
+              <div className="mb-4 px-4 py-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{error}</div>
+              <button onClick={generatePlan} className="px-6 py-3 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors">
+                Retry
+              </button>
+            </div>
+          ) : (
+            <div className="text-center py-6">
+              <div className="inline-block w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4" />
+              <p className="text-sm font-semibold text-gray-700">Analyzing {scopeContext.scope}-level data...</p>
+              <p className="text-xs text-gray-400 mt-2">
+                Generating {roleCtx.label}-specific response plan for {scopeLabel}. This takes 30-60 seconds.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -640,64 +663,72 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
         <div className="flex justify-between items-start">
           <div>
             <p className="text-blue-200 text-xs uppercase tracking-wide font-medium">
-              Resolution Plan · {roleCtx.label} · Revision {plan!.revision}
+              Response Plan · {roleCtx.label} · Revision {plan!.revision}
             </p>
             <h2 className="text-xl font-bold mt-1">{plan!.scopeLabel}</h2>
             <p className="text-blue-200 text-sm">{new Date(plan!.generatedAt).toLocaleString()}</p>
           </div>
           <div className="flex gap-2 print:hidden">
             <button onClick={async () => {
-              if (!plan) return;
-              const pdf = new BrandedPDFGenerator();
-              await pdf.loadLogo();
-              pdf.initialize();
-              pdf.addTitle(`Resolution Plan — ${plan.scopeLabel}`);
-              pdf.addMetadata('Role', roleCtx.label);
-              pdf.addMetadata('Revision', String(plan.revision));
-              pdf.addMetadata('Generated', new Date(plan.generatedAt).toLocaleString());
-              pdf.addSpacer(5);
-              pdf.addSubtitle('Situation Assessment');
-              pdf.addText(plan.sections.situationAssessment);
-              pdf.addSpacer(3);
-              pdf.addSubtitle('Root Causes');
-              pdf.addText(plan.sections.rootCauses);
-              pdf.addSpacer(3);
-              pdf.addSubtitle('Stakeholders & Responsibilities');
-              pdf.addText(plan.sections.stakeholders);
-              pdf.addSpacer(3);
-              pdf.addSubtitle('Recommended Actions — Immediate (0-30 days)');
-              plan.sections.actionsImmediate.forEach((a, i) => pdf.addText(`${i + 1}. ${a}`, { indent: 2 }));
-              pdf.addSpacer(2);
-              pdf.addSubtitle('Recommended Actions — Short-Term (1-6 months)');
-              plan.sections.actionsShortTerm.forEach((a, i) => pdf.addText(`${i + 1}. ${a}`, { indent: 2 }));
-              pdf.addSpacer(2);
-              pdf.addSubtitle('Recommended Actions — Long-Term (6+ months)');
-              plan.sections.actionsLongTerm.forEach((a, i) => pdf.addText(`${i + 1}. ${a}`, { indent: 2 }));
-              pdf.addSpacer(3);
-              if (plan.sections.coBenefits.length > 0) {
-                pdf.addSubtitle('Co-Benefits Across Water Domains');
-                pdf.addTable(
-                  ['Solution', 'Surface Water', 'Drinking Water', 'Wastewater', 'Groundwater', 'Stormwater'],
-                  plan.sections.coBenefits.map(b => [b.solution, b.surfaceWater || '—', b.drinkingWater || '—', b.wastewater || '—', b.groundwater || '—', b.stormwater || '—'])
-                );
+              const el = pdfContentRef.current;
+              if (!el || !plan) return;
+
+              // Show pdf-only elements, hide no-pdf elements
+              const pdfOnlyEls = el.querySelectorAll<HTMLElement>('.pdf-only');
+              const noPdfEls = el.querySelectorAll<HTMLElement>('.no-pdf');
+              pdfOnlyEls.forEach(e => e.style.display = 'block');
+              noPdfEls.forEach(e => e.style.display = 'none');
+
+              try {
+                const dateStr = new Date().toISOString().slice(0, 10);
+                const filename = `PIN_Response_Plan_${dateStr}.pdf`;
+
+                await html2pdf().set({
+                  margin: [0.5, 0.5, 0.75, 0.5],
+                  filename,
+                  image: { type: 'jpeg', quality: 0.98 },
+                  html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
+                  jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' as const },
+                  pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+                }).from(el).toPdf().get('pdf').then((pdf: any) => {
+                  const totalPages = pdf.internal.getNumberOfPages();
+                  const pageWidth = pdf.internal.pageSize.getWidth();
+                  const pageHeight = pdf.internal.pageSize.getHeight();
+
+                  // Layer 4 — PDF metadata
+                  pdf.setProperties({
+                    title: 'PIN Resolution Plan \u2014 AI-Generated Analysis',
+                    author: 'PEARL Intelligence Network (AI-Generated)',
+                    subject: 'Decision Support \u2014 Not Regulatory Guidance',
+                    creator: 'PIN v1.0 \u2014 pinwater.org',
+                  });
+
+                  for (let i = 1; i <= totalPages; i++) {
+                    pdf.setPage(i);
+
+                    // Layer 2 — Diagonal watermark
+                    pdf.saveGraphicsState();
+                    const gState = new pdf.GState({ opacity: 0.15 });
+                    pdf.setGState(gState);
+                    pdf.setFontSize(54);
+                    pdf.setTextColor(150, 150, 150);
+                    pdf.text('AI-GENERATED DRAFT', pageWidth / 2, pageHeight / 2, { angle: 45, align: 'center' });
+                    pdf.restoreGraphicsState();
+
+                    // Layer 3 — Footer disclaimer
+                    pdf.setFontSize(7);
+                    pdf.setTextColor(128, 128, 128);
+                    pdf.text('Generated by PEARL Intelligence Network (PIN) using AI modeling. Not a regulatory determination,', 0.5, pageHeight - 0.55);
+                    pdf.text('legal opinion, or engineering design. All cost estimates are planning-level approximations.', 0.5, pageHeight - 0.42);
+                    pdf.text('Verify with primary agency data and qualified professionals before implementation.', 0.5, pageHeight - 0.29);
+                    pdf.text(`Page ${i} of ${totalPages}`, pageWidth - 0.5, pageHeight - 0.29, { align: 'right' });
+                  }
+                }).save();
+              } finally {
+                // Restore visibility
+                pdfOnlyEls.forEach(e => e.style.display = '');
+                noPdfEls.forEach(e => e.style.display = '');
               }
-              pdf.addSubtitle('Cost Range');
-              pdf.addText(plan.sections.costRange);
-              pdf.addSpacer(3);
-              pdf.addSubtitle('Regulatory Pathway');
-              pdf.addText(plan.sections.regulatoryPath);
-              pdf.addSpacer(3);
-              pdf.addSubtitle('Grant & Funding Opportunities');
-              pdf.addText(plan.sections.grantOpportunities);
-              pdf.addSpacer(3);
-              pdf.addSubtitle('Projected Outcomes');
-              pdf.addText(plan.sections.projectedOutcomes);
-              pdf.addSpacer(5);
-              pdf.addDivider();
-              pdf.addText('Generated by PEARL Intelligence Network (PIN). Informational only — not an official regulatory determination, legal opinion, or engineering design. All cost estimates are planning-level approximations. Verify with primary agency data and qualified professionals before implementation.', { fontSize: 8 });
-              const safeLabel = plan.scopeLabel.replace(/[^a-zA-Z0-9]/g, '_');
-              const dateStr = new Date().toISOString().slice(0, 10);
-              pdf.download(`PEARL_Resolution_Plan_${safeLabel}_${dateStr}.pdf`);
             }} className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-white/30 text-blue-900 font-semibold hover:bg-blue-50 rounded text-sm shadow-sm">
               <svg xmlns="http://www.w3.org/2000/svg" width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               Export PDF
@@ -709,9 +740,71 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
       </div>
 
       {/* Scrollable Plan Content */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 print:overflow-visible">
+      <div ref={pdfContentRef} className="flex-1 overflow-y-auto p-6 space-y-6 print:overflow-visible">
+
+        {/* PDF-only branded header — hidden on screen, shown during export */}
+        <div className="pdf-only hidden">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/Pearl-Intelligence-Network.png" alt="PIN" style={{ height: '40px', width: 'auto' }} />
+            <div>
+              <div style={{ fontSize: '16px', fontWeight: 700, color: '#1e3a5f' }}>PEARL Intelligence Network</div>
+              <div style={{ fontSize: '10px', color: '#6b7280' }}>pinwater.org</div>
+            </div>
+          </div>
+          <div style={{ height: '3px', background: '#3ABDB0', marginBottom: '4px' }} />
+          <div style={{ fontSize: '9px', color: '#9ca3af', marginBottom: '12px' }}>
+            Generated {new Date().toLocaleDateString()} &middot; {roleCtx.label} &middot; {plan!.scopeLabel} &middot; Revision {plan!.revision}
+          </div>
+          {/* Layer 1 — AI Disclosure Banner */}
+          <div style={{
+            background: '#FFF3CD',
+            borderLeft: '4px solid #D4A017',
+            padding: '8px 12px',
+            marginBottom: '16px',
+            borderRadius: '4px',
+          }}>
+            <div style={{ fontSize: '9px', color: '#664D03', lineHeight: 1.5 }}>
+              <span style={{ fontWeight: 700 }}>{'\u26A0'} AI-GENERATED ANALYSIS</span>
+              {' \u2014 '}
+              This plan was produced by PIN&apos;s AI modeling engine and has not been reviewed or endorsed by any regulatory authority. It is intended as a decision-support tool, not an official plan of action.
+            </div>
+          </div>
+        </div>
 
         <ScopeSummaryBadge scopeContext={scopeContext} />
+
+        {/* Data Reliability Banner */}
+        {dataReliability && (
+          <div className={`rounded-lg p-4 border ${dataReliability.overallReliable
+            ? 'bg-green-50 border-green-200'
+            : 'bg-amber-50 border-amber-200'}`}>
+            <div className="flex items-start gap-3">
+              <span className={`text-lg mt-0.5 ${dataReliability.overallReliable ? 'text-green-600' : 'text-amber-500'}`}>
+                {dataReliability.overallReliable ? '\u2713' : '\u26A0'}
+              </span>
+              <div className="flex-1">
+                <h3 className={`text-sm font-bold ${dataReliability.overallReliable ? 'text-green-800' : 'text-amber-800'}`}>
+                  {dataReliability.overallReliable ? 'Data Sources Verified' : 'Data Pipeline Repair Required'}
+                </h3>
+                <p className={`text-xs mt-1 ${dataReliability.overallReliable ? 'text-green-700' : 'text-amber-700'}`}>
+                  {dataReliability.loadedCacheCount}/{dataReliability.totalCacheCount} data sources loaded.{' '}
+                  {dataReliability.overallReliable
+                    ? `Healthy: ${dataReliability.healthyCaches.slice(0, 5).join(', ')}${dataReliability.healthyCaches.length > 5 ? ` +${dataReliability.healthyCaches.length - 5} more` : ''}`
+                    : <>
+                        {dataReliability.staleCaches.length > 0 && <>Stale: {dataReliability.staleCaches.join(', ')}. </>}
+                        {dataReliability.missingCaches.length > 0 && <>Missing: {dataReliability.missingCaches.join(', ')}. </>}
+                        Actions below may be based on incomplete data.
+                      </>
+                  }
+                </p>
+                <p className="text-[10px] text-gray-500 mt-2 italic">
+                  This response plan is based on currently available data. Data accuracy can be improved by updating source parameters and refreshing data pipelines.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <section>
           <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">Situation Assessment</h3>
@@ -752,19 +845,19 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
           </div>
         </section>
 
-        <section>
+        <section style={{ breakBefore: 'page' }}>
           <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">Co-Benefits Across Water Domains</h3>
           <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
             <CoBenefitsMatrix benefits={plan!.sections.coBenefits} />
           </div>
         </section>
 
-        <section>
+        <section style={{ breakBefore: 'page' }}>
           <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">Cost Range</h3>
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-sm text-green-800 whitespace-pre-wrap">{plan!.sections.costRange}</div>
         </section>
 
-        <section>
+        <section style={{ breakBefore: 'page' }}>
           <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">Regulatory Pathway</h3>
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 text-sm text-purple-800 whitespace-pre-wrap">{plan!.sections.regulatoryPath}</div>
         </section>
@@ -780,7 +873,8 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
         </section>
 
         {/* Disclaimer */}
-        <div className="pt-4 border-t border-gray-200 text-xs text-gray-400">
+        <div className="pt-4 border-t border-gray-200 text-xs text-gray-400 space-y-2">
+          <p>This response plan is based on currently available data. Data accuracy can be improved by updating source parameters and refreshing data pipelines.</p>
           <p>Generated by PEARL Intelligence Network (PIN). Informational only — not an official regulatory determination, legal opinion, or engineering design. All cost estimates are planning-level approximations. Verify with primary agency data and qualified professionals before implementation.</p>
         </div>
       </div>
