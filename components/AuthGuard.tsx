@@ -66,8 +66,8 @@ export default function AuthGuard({ children }: AuthGuardProps) {
         <div className="relative z-10 w-full max-w-lg py-12">
           <div className="text-center mb-8">
             <Image
-              src="/Logo_Pearl_with_reef.jpg"
-              alt="Project PEARL"
+              src="/Pearl-Intelligence-Network.png"
+              alt="PEARL Intelligence Network"
               width={180}
               height={180}
               className="mx-auto object-contain drop-shadow-2xl rounded-xl"

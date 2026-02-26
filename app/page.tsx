@@ -1259,8 +1259,8 @@ export default function Home() {
                 }}
               >
                 <Image
-                  src="/Pearl-Header.png"
-                  alt="Project Pearl Logo"
+                  src="/Pearl-Intelligence-Network.png"
+                  alt="PEARL Intelligence Network"
                   fill
                   className="object-contain object-left"
                   priority

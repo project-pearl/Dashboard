@@ -28,8 +28,8 @@ export default function DarkPageShell({ children }: DarkPageShellProps) {
           <div className="flex items-center justify-between h-16">
             <Link href="/">
               <Image
-                src="/Pearl-Logo-alt.png"
-                alt="Project PEARL"
+                src="/Pearl-Intelligence-Network.png"
+                alt="PEARL Intelligence Network"
                 width={140}
                 height={38}
                 className="object-contain"
