@@ -1,6 +1,7 @@
 // app/api/cron/generate-insights/route.ts
 // Vercel Cron — runs every 6 hours to pre-generate AI insights for all state/role combos.
 // Populates the in-memory insightsCache so user requests are served instantly.
+// Enriched with real-time data from signals, USGS alerts, and NWS alerts.
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -11,109 +12,23 @@ import {
   setInsights, getInsights, setBuildInProgress, setLastFullBuild,
   isBuildInProgress, getCacheStatus as getInsightsCacheStatus,
   hashSignals, ensureWarmed as warmInsights,
-  type CacheEntry, type CachedInsight,
+  type CacheEntry,
 } from '@/lib/insightsCache';
-
-// ─── Role definitions (mirrors AIInsightsEngine) ─────────────────────────────
-
-type Role = 'MS4' | 'State' | 'Federal' | 'Corporate' | 'K12' | 'College' | 'Researcher' | 'NGO';
-
-const ALL_ROLES: Role[] = ['MS4', 'State', 'Federal', 'Corporate', 'K12', 'College', 'Researcher', 'NGO'];
-
-const ROLE_TONE: Record<Role, string> = {
-  MS4: 'Focus on compliance risk, permit deadlines, cost optimization, and MS4 regulatory obligations.',
-  State: 'Focus on statewide trends, impairment reclassification risk, resource allocation, and TMDL progress.',
-  Federal: 'Focus on cross-state patterns, national trends, policy impact, and Clean Water Act implications.',
-  Corporate: 'Focus on portfolio risk, ESG disclosure readiness, supply chain water risk, and investor-relevant metrics.',
-  K12: 'Focus on fun discoveries, wildlife impacts, "did you know" style facts, and engaging educational content for students.',
-  College: 'Focus on research-worthy anomalies, data quality assessment, publication-ready findings, and methodology rigor.',
-  Researcher: 'Focus on statistical anomalies, research-worthy patterns, data quality, and peer-comparable findings.',
-  NGO: 'Focus on community impact, advocacy opportunities, environmental justice, and public health connections.',
-};
-
-function buildSystemPrompt(role: Role): string {
-  return `You are a water quality data analyst for the PEARL platform. Generate actionable insights based on the provided water quality data. Be specific, cite parameter values, and provide early warnings. When analyzing waterbody data near major infrastructure (CSO outfalls, interceptors, treatment plants), flag sudden multi-parameter anomalies (simultaneous E. coli spike + DO crash + turbidity surge) as potential sewage discharge events. Reference the January 2026 Potomac Interceptor collapse as an example of why early detection matters — 200M+ gallons went unmonitored because no independent continuous monitoring existed. ${ROLE_TONE[role]} Format your response as a JSON array of exactly 4 objects, each with: {type: "predictive"|"anomaly"|"comparison"|"recommendation"|"summary", severity: "info"|"warning"|"critical", title: string, body: string, waterbody?: string, timeframe?: string}. Return ONLY the JSON array, no markdown or extra text.`;
-}
-
-// ─── LLM Callers (same pattern as ai-insights/route.ts) ─────────────────────
-
-async function callAnthropic(apiKey: string, systemPrompt: string, userMessage: string): Promise<string> {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1500,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userMessage }],
-    }),
-  });
-
-  if (!res.ok) {
-    const errBody = await res.text().catch(() => '');
-    throw new Error(`Anthropic ${res.status}: ${errBody.slice(0, 200)}`);
-  }
-
-  const data = await res.json();
-  return data?.content?.[0]?.text || '';
-}
-
-async function callOpenAI(apiKey: string, systemPrompt: string, userMessage: string): Promise<string> {
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      max_tokens: 1500,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userMessage },
-      ],
-    }),
-  });
-
-  if (!res.ok) {
-    const errBody = await res.text().catch(() => '');
-    throw new Error(`OpenAI ${res.status}: ${errBody.slice(0, 200)}`);
-  }
-
-  const data = await res.json();
-  return data?.choices?.[0]?.message?.content || '';
-}
-
-// ─── Parse + validate insights ───────────────────────────────────────────────
-
-function parseInsights(rawText: string): CachedInsight[] {
-  const cleaned = rawText.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
-  const jsonMatch = cleaned.match(/\[[\s\S]*\]/);
-  if (!jsonMatch) return [];
-
-  const parsed = JSON.parse(jsonMatch[0]);
-  if (!Array.isArray(parsed)) return [];
-
-  return parsed.filter((i: any) =>
-    i &&
-    typeof i.title === 'string' &&
-    typeof i.body === 'string' &&
-    ['predictive', 'anomaly', 'comparison', 'recommendation', 'summary'].includes(i.type) &&
-    ['info', 'warning', 'critical'].includes(i.severity)
-  ).slice(0, 5);
-}
-
-// ─── Delay helper to avoid rate-limiting ─────────────────────────────────────
-
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+import { ensureWarmed as warmUsgsAlerts } from '@/lib/usgsAlertCache';
+import { ensureWarmed as warmNwsAlerts } from '@/lib/nwsAlertCache';
+import {
+  fetchEnrichmentSnapshot, getStateEnrichment,
+  formatEnrichmentForLLM, buildEnrichedSignals, summarizeEnrichment,
+  type EnrichmentSnapshot,
+} from '@/lib/insightsEnrichment';
+import {
+  ALL_ROLES, buildSystemPrompt, getConfiguredLLMCaller,
+  parseInsights, sleep, type Role,
+} from '@/lib/llmHelpers';
 
 // ─── Concurrency semaphore ──────────────────────────────────────────────────
 
-const CONCURRENCY = 4; // Process 4 states concurrently
+const CONCURRENCY = 4;
 
 async function withSemaphore<T>(
   semaphore: { count: number },
@@ -137,17 +52,15 @@ const MAX_ENTRY_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
 // ─── GET Handler (invoked by Vercel Cron) ────────────────────────────────────
 
 export async function GET(request: NextRequest) {
-  // Verify cron secret (Vercel sets this header automatically)
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
   if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Warm from blob so delta detection can see existing entries
-  await warmInsights();
+  // Warm caches in parallel: insights (for delta detection) + alert caches (for enrichment)
+  await Promise.all([warmInsights(), warmUsgsAlerts(), warmNwsAlerts()]);
 
-  // Prevent concurrent builds
   if (isBuildInProgress()) {
     return NextResponse.json({
       status: 'skipped',
@@ -156,21 +69,14 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // Read API keys at request time
-  const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
-  const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
-
-  if (!ANTHROPIC_API_KEY && !OPENAI_API_KEY) {
+  const llmConfig = getConfiguredLLMCaller();
+  if (!llmConfig) {
     return NextResponse.json(
       { error: 'No AI provider configured. Set ANTHROPIC_API_KEY or OPENAI_API_KEY.' },
       { status: 503 },
     );
   }
-
-  const provider = ANTHROPIC_API_KEY ? 'anthropic' : 'openai';
-  const callLLM = ANTHROPIC_API_KEY
-    ? (sys: string, msg: string) => callAnthropic(ANTHROPIC_API_KEY, sys, msg)
-    : (sys: string, msg: string) => callOpenAI(OPENAI_API_KEY, sys, msg);
+  const { callLLM, provider } = llmConfig;
 
   // Get ATTAINS state data (lightweight — no waterbody arrays)
   const { cacheStatus, states } = getAttainsCacheSummary();
@@ -184,15 +90,27 @@ export async function GET(request: NextRequest) {
     });
   }
 
+  // Fetch real-time enrichment snapshot once (signals have 5-min internal cache)
+  let enrichmentSnapshot: EnrichmentSnapshot | null = null;
+  try {
+    enrichmentSnapshot = await fetchEnrichmentSnapshot();
+    console.log(`[Cron/Insights] Enrichment snapshot: ${enrichmentSnapshot.signals.length} signals from ${enrichmentSnapshot.sources.filter(s => s.status === 'ok').length}/${enrichmentSnapshot.sources.length} sources`);
+  } catch (err: any) {
+    console.warn(`[Cron/Insights] Enrichment fetch failed, proceeding ATTAINS-only: ${err.message}`);
+  }
+
   console.log(`[Cron/Insights] Starting build — ${loadedStates.length} states × ${ALL_ROLES.length} roles = ${loadedStates.length * ALL_ROLES.length} combos`);
   setBuildInProgress(true);
 
-  const results = { generated: 0, failed: 0, skipped: 0, deltaSkipped: 0, errors: [] as string[] };
+  const results = {
+    generated: 0, failed: 0, skipped: 0, deltaSkipped: 0,
+    enrichedStates: 0, criticalStates: 0,
+    errors: [] as string[],
+  };
   const startTime = Date.now();
   const semaphore = { count: CONCURRENCY };
 
   try {
-    // Process states concurrently using semaphore
     const statePromises = loadedStates.map(stateAbbr =>
       withSemaphore(semaphore, async () => {
         const stateData = states[stateAbbr];
@@ -201,7 +119,6 @@ export async function GET(request: NextRequest) {
           return;
         }
 
-        // Build region summary matching AIInsightsEngine format
         const regionSummary = {
           totalWaterbodies: stateData.total,
           highAlert: stateData.high,
@@ -210,17 +127,34 @@ export async function GET(request: NextRequest) {
           topCauses: stateData.topCauses?.slice(0, 10) || [],
         };
 
-        // Compute signals hash for delta detection
-        const signals = [
-          { type: 'summary', severity: 'info', title: `${stateData.total} waterbodies` },
-          { type: 'summary', severity: stateData.high > 0 ? 'critical' : 'info', title: `${stateData.high} high alert` },
-          ...(stateData.topCauses || []).map((c: string) => ({ type: 'cause', severity: 'info', title: c })),
-        ];
+        // Get per-state enrichment (synchronous filter of pre-fetched snapshot)
+        const enrichment = enrichmentSnapshot
+          ? getStateEnrichment(stateAbbr, enrichmentSnapshot)
+          : null;
+
+        if (enrichment && (enrichment.usgsAlerts.length > 0 || enrichment.signals.length > 0)) {
+          results.enrichedStates++;
+        }
+        if (enrichment?.hasCriticalCondition) {
+          results.criticalStates++;
+        }
+
+        // Build enriched signals array for delta hash (includes USGS + signal IDs)
+        const signals = enrichment
+          ? buildEnrichedSignals(stateData, enrichment)
+          : [
+              { type: 'summary', severity: 'info', title: `${stateData.total} waterbodies` },
+              { type: 'summary', severity: stateData.high > 0 ? 'critical' : 'info', title: `${stateData.high} high alert` },
+              ...(stateData.topCauses || []).map((c: string) => ({ type: 'cause', severity: 'info', title: c })),
+            ];
         const currentHash = hashSignals(signals);
+
+        // Format enrichment for LLM user message
+        const enrichmentForLLM = enrichment ? formatEnrichmentForLLM(enrichment) : null;
+        const enrichmentSummaryStr = enrichment ? summarizeEnrichment(enrichment) : undefined;
 
         for (const role of ALL_ROLES) {
           try {
-            // Delta detection: skip if hash matches and entry is fresh
             const existing = getInsights(stateAbbr, role);
             if (existing && existing.signalsHash === currentHash) {
               const entryAge = Date.now() - new Date(existing.generatedAt).getTime();
@@ -230,16 +164,26 @@ export async function GET(request: NextRequest) {
               }
             }
 
-            const userMessage = JSON.stringify({
+            // Build user message with enrichment data alongside regionSummary
+            const userMessageObj: Record<string, any> = {
               role,
               state: stateAbbr,
               selectedWaterbody: null,
               regionSummary,
-            });
+            };
+            if (enrichmentForLLM?.activeAlerts) {
+              userMessageObj.activeAlerts = enrichmentForLLM.activeAlerts;
+            }
+            if (enrichmentForLLM?.recentSignals) {
+              userMessageObj.recentSignals = enrichmentForLLM.recentSignals;
+            }
+            if (enrichmentForLLM?.weatherAlerts) {
+              userMessageObj.weatherAlerts = enrichmentForLLM.weatherAlerts;
+            }
 
-            const systemPrompt = buildSystemPrompt(role);
+            const userMessage = JSON.stringify(userMessageObj);
+            const systemPrompt = buildSystemPrompt(role as Role);
 
-            // Exponential backoff on rate limits
             let rawText = '';
             let backoffMs = 2000;
             for (let attempt = 0; attempt < 3; attempt++) {
@@ -270,12 +214,12 @@ export async function GET(request: NextRequest) {
               generatedAt: new Date().toISOString(),
               signalsHash: currentHash,
               provider,
+              enrichmentSummary: enrichmentSummaryStr,
             };
 
             setInsights(stateAbbr, role, entry);
             results.generated++;
 
-            // Small throttle between calls within a state
             await sleep(100);
           } catch (err: any) {
             results.failed++;
@@ -294,7 +238,12 @@ export async function GET(request: NextRequest) {
   }
 
   const durationSec = ((Date.now() - startTime) / 1000).toFixed(1);
-  console.log(`[Cron/Insights] Build complete in ${durationSec}s — ${results.generated} generated, ${results.deltaSkipped} delta-skipped, ${results.failed} failed, ${results.skipped} skipped`);
+  console.log(
+    `[Cron/Insights] Build complete in ${durationSec}s — ` +
+    `${results.generated} generated, ${results.deltaSkipped} delta-skipped, ` +
+    `${results.failed} failed, ${results.skipped} skipped, ` +
+    `${results.enrichedStates} enriched states, ${results.criticalStates} critical`
+  );
 
   return NextResponse.json({
     status: 'complete',
@@ -303,7 +252,11 @@ export async function GET(request: NextRequest) {
     statesProcessed: loadedStates.length,
     rolesPerState: ALL_ROLES.length,
     ...results,
-    errors: results.errors.slice(0, 20), // cap error list
+    enrichment: enrichmentSnapshot ? {
+      signalCount: enrichmentSnapshot.signals.length,
+      sources: enrichmentSnapshot.sources,
+    } : null,
+    errors: results.errors.slice(0, 20),
     cache: getInsightsCacheStatus(),
   });
 }
