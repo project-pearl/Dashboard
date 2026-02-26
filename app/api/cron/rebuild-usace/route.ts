@@ -1,9 +1,9 @@
 // app/api/cron/rebuild-usace/route.ts
 // Cron endpoint — fetches USACE (Army Corps of Engineers) reservoir/dam locations
-// and recent water temperature data from CWMS Data API.
+// and recent water temperature data from CWMS Data API for all 38 district offices.
 // Schedule: daily via Vercel cron (4 PM UTC) or manual trigger.
 
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 import { NextRequest, NextResponse } from 'next/server';
 import {
@@ -19,25 +19,53 @@ const CWMS_BASE = 'https://cwms-data.usace.army.mil/cwms-data';
 const FETCH_TIMEOUT_MS = 30_000;
 const DELAY_MS = 500;
 
-// USACE offices that cover priority states
-const PRIORITY_OFFICES = [
-  'NAB', // Baltimore (MD, VA, DC, PA, DE)
-  'NAE', // New England (MA)
-  'NAN', // New York (NY, NJ)
-  'NAP', // Philadelphia (PA, NJ, DE)
-  'SAJ', // Jacksonville (FL)
-  'SAW', // Wilmington (NC)
-  'SAS', // Savannah (GA)
-  'LRB', // Buffalo (OH, NY)
-  'LRC', // Chicago (IL, MI)
+// All USACE district offices (~38 districts across 8 divisions)
+const ALL_OFFICES = [
+  // Great Lakes and Ohio River Division (LRD)
+  'LRB', // Buffalo (NY, OH)
+  'LRC', // Chicago (IL, IN, MI)
   'LRE', // Detroit (MI, OH)
-  'SWF', // Fort Worth (TX)
-  'SPL', // Los Angeles (CA)
-  'SPK', // Sacramento (CA)
-  'NWP', // Portland (OR, WA)
-  'NWS', // Seattle (WA)
-  'LRH', // Huntington (WV, OH)
+  'LRH', // Huntington (WV, OH, KY)
+  'LRL', // Louisville (KY, IN)
+  'LRN', // Nashville (TN, KY)
   'LRP', // Pittsburgh (PA, WV)
+  // Mississippi Valley Division (MVD)
+  'MVK', // Vicksburg (MS, LA, AR)
+  'MVM', // Memphis (TN, MS, AR)
+  'MVN', // New Orleans (LA)
+  'MVP', // St. Paul (MN, WI)
+  'MVR', // Rock Island (IA, IL, MO)
+  'MVS', // St. Louis (MO, IL)
+  // North Atlantic Division (NAD)
+  'NAB', // Baltimore (MD, VA, DC, DE)
+  'NAE', // New England (MA, CT, NH, VT, ME, RI)
+  'NAN', // New York (NY, NJ)
+  'NAO', // Norfolk (VA)
+  'NAP', // Philadelphia (PA, NJ, DE)
+  // Northwestern Division (NWD)
+  'NWK', // Kansas City (KS, MO)
+  'NWO', // Omaha (NE, SD, ND, MT, CO, WY)
+  'NWP', // Portland (OR, WA, ID)
+  'NWS', // Seattle (WA)
+  'NWW', // Walla Walla (WA, OR, ID)
+  // Pacific Ocean Division (POD)
+  'POA', // Alaska (AK)
+  'POH', // Honolulu (HI)
+  // South Atlantic Division (SAD)
+  'SAC', // Charleston (SC)
+  'SAJ', // Jacksonville (FL)
+  'SAM', // Mobile (AL, MS, FL)
+  'SAS', // Savannah (GA)
+  'SAW', // Wilmington (NC)
+  // South Pacific Division (SPD)
+  'SPA', // Albuquerque (NM, AZ, CO)
+  'SPK', // Sacramento (CA, NV, UT)
+  'SPL', // Los Angeles (CA, AZ)
+  // Southwestern Division (SWD)
+  'SWF', // Fort Worth (TX, OK)
+  'SWG', // Galveston (TX)
+  'SWL', // Little Rock (AR, MO)
+  'SWT', // Tulsa (OK, KS, TX)
 ];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -92,8 +120,8 @@ export async function GET(request: NextRequest) {
     let officesQueried = 0;
 
     // Fetch timeseries catalog for water temp across offices
-    for (let i = 0; i < PRIORITY_OFFICES.length; i += 3) {
-      const batch = PRIORITY_OFFICES.slice(i, i + 3);
+    for (let i = 0; i < ALL_OFFICES.length; i += 6) {
+      const batch = ALL_OFFICES.slice(i, i + 6);
 
       const results = await Promise.allSettled(
         batch.map(async (office) => {
@@ -155,7 +183,7 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      if (i + 3 < PRIORITY_OFFICES.length) await delay(DELAY_MS);
+      if (i + 6 < ALL_OFFICES.length) await delay(DELAY_MS);
     }
 
     // Fetch recent water temp for locations (batch by office)

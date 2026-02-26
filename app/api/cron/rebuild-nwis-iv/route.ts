@@ -14,7 +14,7 @@ import {
 } from '@/lib/nwisIvCache';
 import { evaluateThresholds } from '@/lib/usgsAlertEngine';
 import { setAlertsBulk } from '@/lib/usgsAlertCache';
-import { PRIORITY_STATES } from '@/lib/constants';
+import { ALL_STATES } from '@/lib/constants';
 
 // Allow up to 5 minutes on Vercel Pro
 export const maxDuration = 300;
@@ -22,7 +22,7 @@ export const maxDuration = 300;
 // ── Config ───────────────────────────────────────────────────────────────────
 
 const NWIS_IV_BASE = 'https://waterservices.usgs.gov/nwis/iv/';
-const CONCURRENCY = 3;   // Fetch 3 states at a time
+const CONCURRENCY = 6;   // Fetch 6 states at a time
 const RETRY_DELAY_MS = 5000;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -220,10 +220,10 @@ export async function GET(request: NextRequest) {
   try {
     // ── Fetch all states ────────────────────────────────────────────────
     const { allSites, allReadings, processedStates, stateResults } =
-      await fetchAllStates(PRIORITY_STATES);
+      await fetchAllStates(ALL_STATES);
 
     // ── Retry failed states ─────────────────────────────────────────────
-    const failedStates = PRIORITY_STATES.filter(s => !processedStates.includes(s));
+    const failedStates = ALL_STATES.filter(s => !processedStates.includes(s));
     if (failedStates.length > 0) {
       console.log(`[NWIS-IV Cron] Retrying ${failedStates.length} failed states...`);
       await delay(RETRY_DELAY_MS);

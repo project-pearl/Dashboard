@@ -12,7 +12,7 @@ import {
   isCdcNwssBuildInProgress, setCdcNwssBuildInProgress,
   type CdcNwssRecord,
 } from '@/lib/cdcNwssCache';
-import { PRIORITY_STATES } from '@/lib/constants';
+import { ALL_STATES } from '@/lib/constants';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -124,10 +124,10 @@ export async function GET(request: NextRequest) {
     const stateResults: string[] = [];
     const failedStates: string[] = [];
 
-    // Fetch states in parallel batches of 4 to avoid rate limiting
-    const BATCH_SIZE = 4;
-    for (let i = 0; i < PRIORITY_STATES.length; i += BATCH_SIZE) {
-      const batch = PRIORITY_STATES.slice(i, i + BATCH_SIZE);
+    // Fetch states in parallel batches of 8 to avoid rate limiting
+    const BATCH_SIZE = 8;
+    for (let i = 0; i < ALL_STATES.length; i += BATCH_SIZE) {
+      const batch = ALL_STATES.slice(i, i + BATCH_SIZE);
 
       const results = await Promise.allSettled(
         batch.map(async (state) => {
@@ -175,7 +175,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Delay between batches
-      if (i + BATCH_SIZE < PRIORITY_STATES.length) {
+      if (i + BATCH_SIZE < ALL_STATES.length) {
         await delay(1000);
       }
     }

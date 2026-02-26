@@ -19,9 +19,9 @@ import {
 const EF_BASE = 'https://data.epa.gov/efservice';
 const PAGE_SIZE = 5000;
 const MAX_PAGES_PER_STATE = 1; // Cap at 5000 facilities per state (API crashes on huge states)
-const CONCURRENCY = 3;
+const CONCURRENCY = 6;
 
-import { PRIORITY_STATES } from '@/lib/constants';
+import { ALL_STATES } from '@/lib/constants';
 
 // ── Paginated fetch helper ──────────────────────────────────────────────────
 
@@ -123,7 +123,7 @@ export async function GET(request: NextRequest) {
     const processedStates: string[] = [];
 
     // Semaphore-based parallel fetching
-    const queue = [...PRIORITY_STATES];
+    const queue = [...ALL_STATES];
     let running = 0;
     let idx = 0;
 

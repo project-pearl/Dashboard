@@ -266,6 +266,24 @@ export function getNwisGwAllSites(): NwisGwSite[] {
 }
 
 /**
+ * Get the existing grid (for cron route to merge new state data into).
+ */
+export function getExistingGrid(): Record<string, GridCell> | null {
+  ensureDiskLoaded();
+  if (!_memCache) return null;
+  return _memCache.grid;
+}
+
+/**
+ * Get list of states already in the cache.
+ */
+export function getExistingStatesProcessed(): string[] {
+  ensureDiskLoaded();
+  if (!_memCache) return [];
+  return _memCache._meta.statesProcessed || [];
+}
+
+/**
  * Get cache metadata (for status/debug endpoints).
  */
 export function getNwisGwCacheStatus() {

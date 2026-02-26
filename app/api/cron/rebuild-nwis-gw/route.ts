@@ -1,13 +1,16 @@
 // app/api/cron/rebuild-nwis-gw/route.ts
 // Cron endpoint — fetches USGS NWIS groundwater level data (gwlevels, IV-GW,
-// DV-GW) for priority states, computes trends, deduplicates, and populates
-// the in-memory spatial cache for instant lookups.
+// DV-GW) for all 51 states using time-budgeted self-chaining.
+// Each invocation processes as many states as it can within 230s, then
+// self-chains to the next chunk via ?offset=N.
 // Schedule: daily via Vercel cron (8 AM UTC) or manual trigger.
 
 import { NextRequest, NextResponse } from 'next/server';
 import {
   setNwisGwCache, getNwisGwCacheStatus,
   isNwisGwBuildInProgress, setNwisGwBuildInProgress,
+  getExistingGrid, getExistingStatesProcessed,
+  ensureWarmed,
   gridKey,
   type NwisGwSite, type NwisGwLevel, type NwisGwTrend,
 } from '@/lib/nwisGwCache';
@@ -18,25 +21,16 @@ export const maxDuration = 300;
 // ── Config ───────────────────────────────────────────────────────────────────
 
 const NWIS_BASE = 'https://waterservices.usgs.gov/nwis';
-const STATE_DELAY_MS = 2000;
+const TIME_BUDGET_MS = 230_000;  // 230s — leave 70s margin for save + response
+const MAX_CHAIN_DEPTH = 10;      // Safety: stop after 10 hops
+const CONCURRENCY = 3;           // Fetch 3 states at a time within budget
 
 // GW parameter codes: depth-to-water, GW level NGVD29, GW level NAVD88
 const GW_PARAMS = '72019,62610,62611';
 
-import { PRIORITY_STATES } from '@/lib/constants';
-
-// USGS state code mapping (FIPS)
-const STATE_TO_FIPS: Record<string, string> = {
-  MD: '24', VA: '51', DC: '11', PA: '42', DE: '10', FL: '12', WV: '54',
-  CA: '06', TX: '48', NY: '36', NJ: '34', OH: '39', NC: '37', MA: '25',
-  GA: '13', IL: '17', MI: '26', WA: '53', OR: '41',
-};
+import { ALL_STATES } from '@/lib/constants';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-
-function delay(ms: number): Promise<void> {
-  return new Promise(r => setTimeout(r, ms));
-}
 
 /**
  * Parse USGS NWIS WaterML JSON response into site + level records.
@@ -162,9 +156,6 @@ function computeTrends(
     const avg30d = vals30d.length > 0 ? vals30d.reduce((a, b) => a + b, 0) / vals30d.length : null;
     const avg90d = vals90d.length > 0 ? vals90d.reduce((a, b) => a + b, 0) / vals90d.length : null;
 
-    // Determine trend: compare recent 7-day avg to 30-day avg
-    // For depth-to-water (72019): rising value = water dropping; for elevation params: rising = water rising
-    // We normalize: "rising" always means water table is getting higher (good)
     let trend: 'rising' | 'falling' | 'stable' | 'unknown' = 'unknown';
     let trendMagnitude = 0;
 
@@ -177,7 +168,6 @@ function computeTrends(
         const recentAvg = recent7d.reduce((a, b) => a + b, 0) / recent7d.length;
         const diff = recentAvg - avg30d;
 
-        // For depth-to-water (72019), positive diff means deeper = falling water table
         const isDepthParam = latest.parameterCd === '72019';
         const normalizedDiff = isDepthParam ? -diff : diff;
 
@@ -210,6 +200,116 @@ function computeTrends(
   return trends;
 }
 
+/**
+ * Fetch GW data for a single state (3 endpoints in parallel).
+ */
+async function fetchStateGw(stateAbbr: string): Promise<{
+  sites: NwisGwSite[];
+  levels: NwisGwLevel[];
+  trends: NwisGwTrend[];
+}> {
+  const siteMap = new Map<string, NwisGwSite>();
+  let stateLevels: NwisGwLevel[] = [];
+  let dvLevels: NwisGwLevel[] = [];
+
+  const gwUrl = `${NWIS_BASE}/gwlevels/?format=json&stateCd=${stateAbbr}&period=P365D&siteStatus=active`;
+  const ivUrl = `${NWIS_BASE}/iv/?format=json&stateCd=${stateAbbr}&parameterCd=${GW_PARAMS}&siteType=GW&period=P7D&siteStatus=active`;
+  const dvUrl = `${NWIS_BASE}/dv/?format=json&stateCd=${stateAbbr}&parameterCd=${GW_PARAMS}&siteType=GW&period=P90D&siteStatus=active`;
+
+  const fetchOpts = { headers: { 'Accept': 'application/json' }, signal: AbortSignal.timeout(45_000) };
+
+  const [gwResult, ivResult, dvResult] = await Promise.allSettled([
+    fetch(gwUrl, fetchOpts).then(r => r.ok ? r.json() : null).catch(() => null),
+    fetch(ivUrl, fetchOpts).then(r => r.ok ? r.json() : null).catch(() => null),
+    fetch(dvUrl, fetchOpts).then(r => r.ok ? r.json() : null).catch(() => null),
+  ]);
+
+  const gwJson = gwResult.status === 'fulfilled' ? gwResult.value : null;
+  if (gwJson) {
+    const parsed = parseNwisResponse(gwJson, stateAbbr, false);
+    for (const s of parsed.sites) siteMap.set(s.siteNumber, s);
+    stateLevels.push(...parsed.levels);
+  }
+
+  const ivJson = ivResult.status === 'fulfilled' ? ivResult.value : null;
+  if (ivJson) {
+    const parsed = parseNwisResponse(ivJson, stateAbbr, true);
+    for (const s of parsed.sites) {
+      if (!siteMap.has(s.siteNumber)) siteMap.set(s.siteNumber, s);
+    }
+    stateLevels.push(...parsed.levels);
+  }
+
+  const dvJson = dvResult.status === 'fulfilled' ? dvResult.value : null;
+  if (dvJson) {
+    const parsed = parseNwisResponse(dvJson, stateAbbr, false);
+    for (const s of parsed.sites) {
+      if (!siteMap.has(s.siteNumber)) siteMap.set(s.siteNumber, s);
+    }
+    dvLevels = parsed.levels;
+  }
+
+  const dedupedSites = Array.from(siteMap.values());
+
+  // Deduplicate levels by siteNumber|dateTime|parameterCd
+  const levelMap = new Map<string, NwisGwLevel>();
+  for (const l of stateLevels) {
+    const key = `${l.siteNumber}|${l.dateTime}|${l.parameterCd}`;
+    if (!levelMap.has(key)) levelMap.set(key, l);
+  }
+
+  // Cap levels per site to limit cache size
+  const latestPerSite = new Map<string, NwisGwLevel[]>();
+  for (const l of levelMap.values()) {
+    const arr = latestPerSite.get(l.siteNumber) || [];
+    arr.push(l);
+    latestPerSite.set(l.siteNumber, arr);
+  }
+  const cappedLevels: NwisGwLevel[] = [];
+  for (const [, siteLevels] of latestPerSite) {
+    siteLevels.sort((a, b) => (b.dateTime || '').localeCompare(a.dateTime || ''));
+    cappedLevels.push(...siteLevels.slice(0, 30));
+  }
+
+  const trends = computeTrends(siteMap, dvLevels);
+
+  return { sites: dedupedSites, levels: cappedLevels, trends };
+}
+
+/**
+ * Trigger the next chunk via self-chain.
+ */
+async function triggerNextChunk(
+  cronSecret: string | undefined,
+  offset: number,
+  depth: number,
+  failed: string[],
+) {
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_ORIGIN ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null);
+  if (!baseUrl) return;
+
+  const params = new URLSearchParams();
+  params.set('offset', String(offset));
+  params.set('depth', String(depth + 1));
+  if (failed.length > 0) params.set('failed', failed.join(','));
+  const url = `${baseUrl}/api/cron/rebuild-nwis-gw?${params}`;
+  const headers: Record<string, string> = {};
+  if (cronSecret) headers['authorization'] = `Bearer ${cronSecret}`;
+
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), 5000);
+  try {
+    await fetch(url, { headers, signal: ac.signal });
+  } catch {
+    // AbortError is expected
+  } finally {
+    clearTimeout(timer);
+  }
+  console.log(`[NWIS-GW Chain] Triggered depth=${depth + 1}, offset=${offset}`);
+}
+
 // ── GET Handler ──────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
@@ -220,11 +320,30 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Prevent concurrent builds
-  if (isNwisGwBuildInProgress()) {
+  // Parse chain params
+  const offset = parseInt(request.nextUrl.searchParams.get('offset') || '0', 10);
+  const depth = parseInt(request.nextUrl.searchParams.get('depth') || '0', 10);
+  const failedParam = request.nextUrl.searchParams.get('failed') || '';
+  const previouslyFailed = failedParam ? failedParam.split(',').filter(Boolean) : [];
+
+  // Load existing cache from blob for merging
+  await ensureWarmed();
+
+  // Prevent concurrent builds (only on first chunk)
+  if (offset === 0 && isNwisGwBuildInProgress()) {
     return NextResponse.json({
       status: 'skipped',
       reason: 'NWIS-GW build already in progress',
+      cache: getNwisGwCacheStatus(),
+    });
+  }
+
+  // Safety: stop infinite chains
+  if (depth >= MAX_CHAIN_DEPTH) {
+    return NextResponse.json({
+      status: 'chain-limit',
+      reason: `Reached max chain depth (${MAX_CHAIN_DEPTH})`,
+      depth,
       cache: getNwisGwCacheStatus(),
     });
   }
@@ -234,166 +353,100 @@ export async function GET(request: NextRequest) {
   const stateResults: Record<string, Record<string, number>> = {};
 
   try {
+    // Build the queue: remaining states from offset, plus any previously failed
+    const remaining = ALL_STATES.slice(offset);
+    const retryStates = previouslyFailed.filter(s => !(remaining as readonly string[]).includes(s));
+    const queue = [...remaining, ...retryStates];
+
+    if (queue.length === 0) {
+      setNwisGwBuildInProgress(false);
+      return NextResponse.json({
+        status: 'no-op',
+        reason: 'All states already processed',
+        cache: getNwisGwCacheStatus(),
+      });
+    }
+
     const allSites: NwisGwSite[] = [];
     const allLevels: NwisGwLevel[] = [];
     const allTrends: NwisGwTrend[] = [];
     const processedStates: string[] = [];
+    const failedStates: string[] = [];
+    let statesConsumed = 0;  // How many from ALL_STATES we attempted (not retries)
 
-    for (const stateAbbr of PRIORITY_STATES) {
-      try {
-        console.log(`[NWIS-GW Cron] Fetching ${stateAbbr}...`);
+    // Process states with semaphore, respecting time budget
+    let qIdx = 0;
+    let runningCount = 0;
+    let budgetExhausted = false;
 
-        const siteMap = new Map<string, NwisGwSite>();
-        let stateLevels: NwisGwLevel[] = [];
-        let dvLevels: NwisGwLevel[] = [];
+    await new Promise<void>((resolve) => {
+      function next() {
+        if (qIdx >= queue.length && runningCount === 0) return resolve();
+        if (budgetExhausted && runningCount === 0) return resolve();
 
-        // Fetch all 3 endpoints in parallel
-        const gwUrl = `${NWIS_BASE}/gwlevels/?format=json&stateCd=${stateAbbr}&period=P365D&siteStatus=active`;
-        const ivUrl = `${NWIS_BASE}/iv/?format=json&stateCd=${stateAbbr}&parameterCd=${GW_PARAMS}&siteType=GW&period=P7D&siteStatus=active`;
-        const dvUrl = `${NWIS_BASE}/dv/?format=json&stateCd=${stateAbbr}&parameterCd=${GW_PARAMS}&siteType=GW&period=P90D&siteStatus=active`;
-
-        const fetchOpts = { headers: { 'Accept': 'application/json' }, signal: AbortSignal.timeout(45_000) };
-
-        const [gwResult, ivResult, dvResult] = await Promise.allSettled([
-          fetch(gwUrl, fetchOpts).then(r => r.ok ? r.json() : null).catch(() => null),
-          fetch(ivUrl, fetchOpts).then(r => r.ok ? r.json() : null).catch(() => null),
-          fetch(dvUrl, fetchOpts).then(r => r.ok ? r.json() : null).catch(() => null),
-        ]);
-
-        // Process gwlevels
-        const gwJson = gwResult.status === 'fulfilled' ? gwResult.value : null;
-        if (gwJson) {
-          const parsed = parseNwisResponse(gwJson, stateAbbr, false);
-          for (const s of parsed.sites) siteMap.set(s.siteNumber, s);
-          stateLevels.push(...parsed.levels);
-        }
-
-        // Process IV
-        const ivJson = ivResult.status === 'fulfilled' ? ivResult.value : null;
-        if (ivJson) {
-          const parsed = parseNwisResponse(ivJson, stateAbbr, true);
-          for (const s of parsed.sites) {
-            if (!siteMap.has(s.siteNumber)) siteMap.set(s.siteNumber, s);
+        while (runningCount < CONCURRENCY && qIdx < queue.length && !budgetExhausted) {
+          // Check time budget before starting a new state
+          if (Date.now() - startTime > TIME_BUDGET_MS) {
+            budgetExhausted = true;
+            if (runningCount === 0) return resolve();
+            return;
           }
-          stateLevels.push(...parsed.levels);
+
+          const stateAbbr = queue[qIdx];
+          const isRetry = qIdx >= remaining.length;
+          qIdx++;
+          if (!isRetry) statesConsumed++;
+          runningCount++;
+
+          (async () => {
+            try {
+              console.log(`[NWIS-GW Cron] Fetching ${stateAbbr}${isRetry ? ' (retry)' : ''}...`);
+              const result = await fetchStateGw(stateAbbr);
+
+              allSites.push(...result.sites);
+              allLevels.push(...result.levels);
+              allTrends.push(...result.trends);
+              processedStates.push(stateAbbr);
+
+              stateResults[stateAbbr] = {
+                sites: result.sites.length,
+                levels: result.levels.length,
+                trends: result.trends.length,
+              };
+
+              console.log(
+                `[NWIS-GW Cron] ${stateAbbr}: ${result.sites.length} sites, ` +
+                `${result.levels.length} levels, ${result.trends.length} trends`
+              );
+            } catch (e) {
+              console.warn(`[NWIS-GW Cron] ${stateAbbr} failed:`, e instanceof Error ? e.message : e);
+              stateResults[stateAbbr] = { sites: 0, levels: 0, trends: 0 };
+              failedStates.push(stateAbbr);
+            } finally {
+              runningCount--;
+              next();
+            }
+          })();
         }
-
-        // Process DV
-        const dvJson = dvResult.status === 'fulfilled' ? dvResult.value : null;
-        if (dvJson) {
-          const parsed = parseNwisResponse(dvJson, stateAbbr, false);
-          for (const s of parsed.sites) {
-            if (!siteMap.has(s.siteNumber)) siteMap.set(s.siteNumber, s);
-          }
-          dvLevels = parsed.levels;
-        }
-
-        // Deduplicate sites
-        const dedupedSites = Array.from(siteMap.values());
-
-        // Deduplicate levels by siteNumber|dateTime|parameterCd
-        const levelMap = new Map<string, NwisGwLevel>();
-        for (const l of stateLevels) {
-          const key = `${l.siteNumber}|${l.dateTime}|${l.parameterCd}`;
-          if (!levelMap.has(key)) levelMap.set(key, l);
-        }
-        const dedupedLevels = Array.from(levelMap.values());
-
-        // Keep only latest N levels per site to limit cache size
-        const latestPerSite = new Map<string, NwisGwLevel[]>();
-        for (const l of dedupedLevels) {
-          const arr = latestPerSite.get(l.siteNumber) || [];
-          arr.push(l);
-          latestPerSite.set(l.siteNumber, arr);
-        }
-        const cappedLevels: NwisGwLevel[] = [];
-        for (const [, siteLevels] of latestPerSite) {
-          siteLevels.sort((a, b) => (b.dateTime || '').localeCompare(a.dateTime || ''));
-          cappedLevels.push(...siteLevels.slice(0, 30)); // Keep last 30 per site
-        }
-
-        // Compute trends from DV data
-        const stateTrends = computeTrends(siteMap, dvLevels);
-
-        for (const s of dedupedSites) allSites.push(s);
-        for (const l of cappedLevels) allLevels.push(l);
-        for (const t of stateTrends) allTrends.push(t);
-        processedStates.push(stateAbbr);
-
-        stateResults[stateAbbr] = {
-          sites: dedupedSites.length,
-          levels: cappedLevels.length,
-          trends: stateTrends.length,
-        };
-
-        console.log(
-          `[NWIS-GW Cron] ${stateAbbr}: ${dedupedSites.length} sites, ` +
-          `${cappedLevels.length} levels, ${stateTrends.length} trends`
-        );
-      } catch (e) {
-        console.warn(`[NWIS-GW Cron] ${stateAbbr} failed:`, e instanceof Error ? e.message : e);
-        stateResults[stateAbbr] = { sites: 0, levels: 0, trends: 0 };
       }
+      next();
+    });
 
-      // Rate limit delay between states
-      await delay(STATE_DELAY_MS);
-    }
+    // ── Merge into grid: start from existing, replace processed states ────
+    const existingGrid = getExistingGrid();
+    const existingStates = new Set(getExistingStatesProcessed());
+    const grid: Record<string, { sites: NwisGwSite[]; levels: NwisGwLevel[]; trends: NwisGwTrend[] }> = {};
 
-    // ── Retry failed states ───────────────────────────────────────────────
-    const failedStates = PRIORITY_STATES.filter(s => !processedStates.includes(s));
-    if (failedStates.length > 0) {
-      console.log(`[NWIS-GW Cron] Retrying ${failedStates.length} failed states...`);
-      for (const stateAbbr of failedStates) {
-        await delay(5000);
-        try {
-          const retryOpts = { headers: { 'Accept': 'application/json' }, signal: AbortSignal.timeout(60_000) };
-          const gwUrl = `${NWIS_BASE}/gwlevels/?format=json&stateCd=${stateAbbr}&period=P365D&siteStatus=active`;
-          const ivUrl = `${NWIS_BASE}/iv/?format=json&stateCd=${stateAbbr}&parameterCd=${GW_PARAMS}&siteType=GW&period=P7D&siteStatus=active`;
-          const dvUrl = `${NWIS_BASE}/dv/?format=json&stateCd=${stateAbbr}&parameterCd=${GW_PARAMS}&siteType=GW&period=P90D&siteStatus=active`;
-
-          const [gwR, ivR, dvR] = await Promise.allSettled([
-            fetch(gwUrl, retryOpts).then(r => r.ok ? r.json() : null).catch(() => null),
-            fetch(ivUrl, retryOpts).then(r => r.ok ? r.json() : null).catch(() => null),
-            fetch(dvUrl, retryOpts).then(r => r.ok ? r.json() : null).catch(() => null),
-          ]);
-
-          const retrySiteMap = new Map<string, NwisGwSite>();
-          const retryLevels: NwisGwLevel[] = [];
-          if (gwR.status === 'fulfilled' && gwR.value) {
-            const p = parseNwisResponse(gwR.value, stateAbbr, false);
-            for (const s of p.sites) retrySiteMap.set(s.siteNumber, s);
-            retryLevels.push(...p.levels);
-          }
-          if (ivR.status === 'fulfilled' && ivR.value) {
-            const p = parseNwisResponse(ivR.value, stateAbbr, true);
-            for (const s of p.sites) if (!retrySiteMap.has(s.siteNumber)) retrySiteMap.set(s.siteNumber, s);
-            retryLevels.push(...p.levels);
-          }
-          let retryDvLevels: NwisGwLevel[] = [];
-          if (dvR.status === 'fulfilled' && dvR.value) {
-            const p = parseNwisResponse(dvR.value, stateAbbr, false);
-            for (const s of p.sites) if (!retrySiteMap.has(s.siteNumber)) retrySiteMap.set(s.siteNumber, s);
-            retryDvLevels = p.levels;
-          }
-
-          for (const s of retrySiteMap.values()) allSites.push(s);
-          for (const l of retryLevels) allLevels.push(l);
-          for (const t of computeTrends(retrySiteMap, retryDvLevels)) allTrends.push(t);
-          processedStates.push(stateAbbr);
-          stateResults[stateAbbr] = { sites: retrySiteMap.size, levels: retryLevels.length, trends: 0 };
-          console.log(`[NWIS-GW Cron] ${stateAbbr}: RETRY OK`);
-        } catch (e) {
-          console.warn(`[NWIS-GW Cron] ${stateAbbr}: RETRY FAILED — ${e instanceof Error ? e.message : e}`);
+    // Copy existing cells for states NOT in this chunk (preserves previous data)
+    if (existingGrid) {
+      for (const [key, cell] of Object.entries(existingGrid)) {
+        const cellStates = new Set(cell.sites.map(s => s.state));
+        const isProcessedState = [...cellStates].some(s => processedStates.includes(s));
+        if (!isProcessedState) {
+          grid[key] = cell;
         }
       }
     }
-
-    // ── Build Grid Index ───────────────────────────────────────────────────
-    const grid: Record<string, {
-      sites: NwisGwSite[];
-      levels: NwisGwLevel[];
-      trends: NwisGwTrend[];
-    }> = {};
 
     const emptyCell = () => ({
       sites: [] as NwisGwSite[],
@@ -417,42 +470,71 @@ export async function GET(request: NextRequest) {
       grid[key].trends.push(t);
     }
 
-    // ── Store in memory ────────────────────────────────────────────────────
-    const cacheData = {
-      _meta: {
-        built: new Date().toISOString(),
-        siteCount: allSites.length,
-        levelCount: allLevels.length,
-        trendCount: allTrends.length,
-        statesProcessed: processedStates,
-        gridCells: Object.keys(grid).length,
-      },
-      grid,
-    };
+    // Merge states processed lists
+    const allStatesProcessed = [
+      ...new Set([...existingStates, ...processedStates]),
+    ];
 
-    if (allSites.length === 0) {
-      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-      console.warn(`[NWIS-GW Cron] 0 sites fetched in ${elapsed}s — skipping cache save`);
-      return NextResponse.json({ status: 'empty', duration: `${elapsed}s`, cache: getNwisGwCacheStatus() });
+    // Count totals (including preserved cells)
+    let totalSites = 0;
+    let totalLevels = 0;
+    let totalTrends = 0;
+    for (const cell of Object.values(grid)) {
+      totalSites += cell.sites.length;
+      totalLevels += cell.levels.length;
+      totalTrends += cell.trends.length;
     }
 
-    await setNwisGwCache(cacheData);
+    // ── Save (even partial) — always save to preserve progress ──────────
+    if (allSites.length > 0 || existingGrid) {
+      const cacheData = {
+        _meta: {
+          built: new Date().toISOString(),
+          siteCount: totalSites,
+          levelCount: totalLevels,
+          trendCount: totalTrends,
+          statesProcessed: allStatesProcessed,
+          gridCells: Object.keys(grid).length,
+        },
+        grid,
+      };
+      await setNwisGwCache(cacheData);
+    }
+
+    // ── Self-chain if there are more states ──────────────────────────────
+    const nextOffset = offset + statesConsumed;
+    const moreStates = nextOffset < ALL_STATES.length;
+    const hasFailedToRetry = failedStates.length > 0;
+    const willChain = moreStates || hasFailedToRetry;
+
+    if (willChain) {
+      const chainOffset = moreStates ? nextOffset : ALL_STATES.length;
+      await triggerNextChunk(cronSecret, chainOffset, depth, failedStates);
+    }
+
+    setNwisGwBuildInProgress(false);
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(
-      `[NWIS-GW Cron] Build complete in ${elapsed}s — ` +
-      `${allSites.length} sites, ${allLevels.length} levels, ` +
-      `${allTrends.length} trends, ${Object.keys(grid).length} cells`
+      `[NWIS-GW Cron] Chunk complete in ${elapsed}s — ` +
+      `${processedStates.length} states this chunk, ${allStatesProcessed.length} total, ` +
+      `${totalSites} sites, ${totalLevels} levels, ${totalTrends} trends`
     );
 
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
-      sites: allSites.length,
-      levels: allLevels.length,
-      trends: allTrends.length,
+      depth,
+      offset,
+      nextOffset: willChain ? nextOffset : null,
+      statesThisChunk: processedStates.length,
+      statesFailed: failedStates,
+      totalStatesProcessed: allStatesProcessed.length,
+      sites: totalSites,
+      levels: totalLevels,
+      trends: totalTrends,
       gridCells: Object.keys(grid).length,
-      statesProcessed: processedStates.length,
+      selfChained: willChain,
       states: stateResults,
       cache: getNwisGwCacheStatus(),
     });

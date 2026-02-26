@@ -19,11 +19,11 @@ import {
 const ECHO_QUERY = 'https://echodata.epa.gov/echo/cwa_rest_services.get_facilities';
 const ECHO_QID   = 'https://echodata.epa.gov/echo/cwa_rest_services.get_qid';
 const ECHO_DL    = 'https://echodata.epa.gov/echo/cwa_rest_services.get_download';
-const STATE_DELAY_MS = 2000;
+const CONCURRENCY = 6;
 // Columns we request: basic info (1-9), coords (24-25), compliance (97-101)
 const DL_QCOLS = '1,2,3,4,5,9,24,25,97,98,99,101';
 
-import { PRIORITY_STATES } from '@/lib/constants';
+import { ALL_STATES } from '@/lib/constants';
 
 // ── CSV parser (no external deps) ───────────────────────────────────────────
 
@@ -182,12 +182,6 @@ async function fetchEchoViolations(stateAbbr: string): Promise<EchoViolation[]> 
   }
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-function delay(ms: number): Promise<void> {
-  return new Promise(r => setTimeout(r, ms));
-}
-
 // ── GET Handler ──────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
@@ -216,76 +210,68 @@ export async function GET(request: NextRequest) {
     const allViolations: EchoViolation[] = [];
     const processedStates: string[] = [];
 
-    for (const stateAbbr of PRIORITY_STATES) {
-      try {
-        console.log(`[ECHO Cron] Fetching ${stateAbbr}...`);
+    // Semaphore-based parallel fetching (6 states at a time)
+    const queue = [...ALL_STATES];
+    let running = 0;
+    let qIdx = 0;
 
-        const facilities = await fetchEchoFacilities(stateAbbr);
-        await delay(STATE_DELAY_MS);
+    await new Promise<void>((resolve) => {
+      function next() {
+        if (qIdx >= queue.length && running === 0) return resolve();
+        while (running < CONCURRENCY && qIdx < queue.length) {
+          const stateAbbr = queue[qIdx++];
+          running++;
+          (async () => {
+            try {
+              console.log(`[ECHO Cron] Fetching ${stateAbbr}...`);
 
-        const violations = await fetchEchoViolations(stateAbbr);
+              const [facilities, violations] = await Promise.allSettled([
+                fetchEchoFacilities(stateAbbr),
+                fetchEchoViolations(stateAbbr),
+              ]);
 
-        // Deduplicate facilities by registryId
-        const facMap = new Map<string, EchoFacility>();
-        for (const f of facilities) {
-          if (!facMap.has(f.registryId)) facMap.set(f.registryId, f);
-        }
-        const dedupedFacilities = Array.from(facMap.values());
+              const rawFacilities = facilities.status === 'fulfilled' ? facilities.value : [];
+              const rawViolations = violations.status === 'fulfilled' ? violations.value : [];
 
-        // Deduplicate violations by registryId
-        const violMap = new Map<string, EchoViolation>();
-        for (const v of violations) {
-          if (!violMap.has(v.registryId)) violMap.set(v.registryId, v);
-        }
-        const dedupedViolations = Array.from(violMap.values());
+              // Deduplicate facilities by registryId
+              const facMap = new Map<string, EchoFacility>();
+              for (const f of rawFacilities) {
+                if (!facMap.has(f.registryId)) facMap.set(f.registryId, f);
+              }
+              const dedupedFacilities = Array.from(facMap.values());
 
-        allFacilities.push(...dedupedFacilities);
-        allViolations.push(...dedupedViolations);
-        processedStates.push(stateAbbr);
+              // Deduplicate violations by registryId
+              const violMap = new Map<string, EchoViolation>();
+              for (const v of rawViolations) {
+                if (!violMap.has(v.registryId)) violMap.set(v.registryId, v);
+              }
+              const dedupedViolations = Array.from(violMap.values());
 
-        stateResults[stateAbbr] = {
-          facilities: dedupedFacilities.length,
-          violations: dedupedViolations.length,
-        };
+              allFacilities.push(...dedupedFacilities);
+              allViolations.push(...dedupedViolations);
+              processedStates.push(stateAbbr);
 
-        console.log(
-          `[ECHO Cron] ${stateAbbr}: ${dedupedFacilities.length} facilities, ` +
-          `${dedupedViolations.length} violations`
-        );
-      } catch (e) {
-        console.warn(`[ECHO Cron] ${stateAbbr} failed:`, e instanceof Error ? e.message : e);
-        stateResults[stateAbbr] = { facilities: 0, violations: 0 };
-      }
+              stateResults[stateAbbr] = {
+                facilities: dedupedFacilities.length,
+                violations: dedupedViolations.length,
+              };
 
-      // Rate limit delay between states
-      await delay(STATE_DELAY_MS);
-    }
-
-    // ── Retry failed states ───────────────────────────────────────────────
-    const failedStates = PRIORITY_STATES.filter(s => !processedStates.includes(s));
-    if (failedStates.length > 0) {
-      console.log(`[ECHO Cron] Retrying ${failedStates.length} failed states...`);
-      for (const stateAbbr of failedStates) {
-        await delay(5000);
-        try {
-          const facilities = await fetchEchoFacilities(stateAbbr);
-          const violations = await fetchEchoViolations(stateAbbr);
-
-          const facMap = new Map<string, EchoFacility>();
-          for (const f of facilities) if (!facMap.has(f.registryId)) facMap.set(f.registryId, f);
-          const violMap = new Map<string, EchoViolation>();
-          for (const v of violations) if (!violMap.has(v.registryId)) violMap.set(v.registryId, v);
-
-          allFacilities.push(...facMap.values());
-          allViolations.push(...violMap.values());
-          processedStates.push(stateAbbr);
-          stateResults[stateAbbr] = { facilities: facMap.size, violations: violMap.size };
-          console.log(`[ECHO Cron] ${stateAbbr}: RETRY OK`);
-        } catch (e) {
-          console.warn(`[ECHO Cron] ${stateAbbr}: RETRY FAILED — ${e instanceof Error ? e.message : e}`);
+              console.log(
+                `[ECHO Cron] ${stateAbbr}: ${dedupedFacilities.length} facilities, ` +
+                `${dedupedViolations.length} violations`
+              );
+            } catch (e) {
+              console.warn(`[ECHO Cron] ${stateAbbr} failed:`, e instanceof Error ? e.message : e);
+              stateResults[stateAbbr] = { facilities: 0, violations: 0 };
+            } finally {
+              running--;
+              next();
+            }
+          })();
         }
       }
-    }
+      next();
+    });
 
     // ── Build Grid Index ───────────────────────────────────────────────────
     const grid: Record<string, {

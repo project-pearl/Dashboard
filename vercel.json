@@ -75,6 +75,26 @@
     {
       "path": "/api/cron/rebuild-nwis-iv",
       "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-nws-alerts",
+      "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-nwps",
+      "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-coops",
+      "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-snotel",
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-tri",
+      "schedule": "0 18 * * *"
     }
   ]
 }

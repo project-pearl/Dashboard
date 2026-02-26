@@ -19,9 +19,9 @@ import {
 const EF_BASE = 'https://data.epa.gov/efservice';
 const PAGE_SIZE = 5000;
 const MAX_PAGES = 3; // Safety cap: 15k records max per table per state
-const CONCURRENCY = 5;
+const CONCURRENCY = 10;
 
-import { PRIORITY_STATES } from '@/lib/constants';
+import { ALL_STATES } from '@/lib/constants';
 import zipCentroids from '@/lib/zipCentroids.json';
 
 // ── Paginated fetch helper ──────────────────────────────────────────────────
@@ -188,7 +188,7 @@ export async function GET(request: NextRequest) {
     // ── Phase 1: Fetch CWS systems + violations for all states ──────────
     // Filter to CWS (Community Water Systems) — covers 95%+ of population
     // and reduces record count by ~85% vs all system types.
-    const queue = [...PRIORITY_STATES];
+    const queue = [...ALL_STATES];
     let running = 0;
     let qIdx = 0;
 

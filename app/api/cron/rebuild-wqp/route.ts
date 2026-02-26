@@ -17,9 +17,9 @@ export const maxDuration = 300;
 // ── Config ───────────────────────────────────────────────────────────────────
 
 const WQP_BASE = 'https://www.waterqualitydata.us/data/Result/search';
-const CONCURRENCY = 4;  // Parallel state fetches (respects WQP rate limits)
+const CONCURRENCY = 8;  // Parallel state fetches (respects WQP rate limits)
 
-import { PRIORITY_STATES_WITH_FIPS } from '@/lib/constants';
+import { ALL_STATES_WITH_FIPS } from '@/lib/constants';
 
 // Top characteristics to fetch (maps to PEARL keys)
 const CHARACTERISTICS = [
@@ -187,7 +187,7 @@ export async function GET(request: NextRequest) {
     const processedStates: string[] = [];
 
     // Semaphore-based concurrency to respect WQP rate limits
-    const queue = [...PRIORITY_STATES_WITH_FIPS];
+    const queue = [...ALL_STATES_WITH_FIPS];
     let running = 0;
     let idx = 0;
 

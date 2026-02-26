@@ -27,6 +27,11 @@ import { getUsaceCacheStatus, ensureWarmed as warmUsace } from '@/lib/usaceCache
 import { getStateIRCacheStatus } from '@/lib/stateIRCache';
 import { getUsgsIvCacheStatus, ensureWarmed as warmNwisIv } from '@/lib/nwisIvCache';
 import { getAlertCacheStatus, ensureWarmed as warmUsgsAlerts } from '@/lib/usgsAlertCache';
+import { getNwsAlertCacheStatus, ensureWarmed as warmNwsAlerts } from '@/lib/nwsAlertCache';
+import { getNwpsCacheStatus, ensureWarmed as warmNwps } from '@/lib/nwpsCache';
+import { getCoopsCacheStatus, ensureWarmed as warmCoops } from '@/lib/coopsCache';
+import { getSnotelCacheStatus, ensureWarmed as warmSnotel } from '@/lib/snotelCache';
+import { getTriCacheStatus, ensureWarmed as warmTri } from '@/lib/triCache';
 
 function staleness(built: string | null | undefined): { stale: boolean; ageHours: number | null } {
   if (!built) return { stale: true, ageHours: null };
@@ -41,7 +46,8 @@ export async function GET() {
     [warmWqp, warmAttains, warmCeden, warmIcis, warmSdwis, warmNwisGw],
     [warmEcho, warmFrs, warmPfas, warmInsights, warmStateReports, warmBwb],
     [warmCdcNwss, warmNdbc, warmNasaCmr, warmNars, warmDataGov, warmUsace],
-    [warmNwisIv, warmUsgsAlerts],
+    [warmNwisIv, warmUsgsAlerts, warmNwsAlerts, warmNwps, warmCoops, warmSnotel],
+    [warmTri],
   ];
   for (const batch of warmBatches) {
     await Promise.allSettled(batch.map(fn => fn()));
@@ -68,6 +74,11 @@ export async function GET() {
   const stateIR = getStateIRCacheStatus();
   const nwisIv = getUsgsIvCacheStatus();
   const usgsAlerts = getAlertCacheStatus();
+  const nwsAlerts = getNwsAlertCacheStatus();
+  const nwps = getNwpsCacheStatus();
+  const coops = getCoopsCacheStatus();
+  const snotel = getSnotelCacheStatus();
+  const tri = getTriCacheStatus();
 
   const caches = {
     wqp: {
@@ -157,6 +168,26 @@ export async function GET() {
     usgsAlerts: {
       ...usgsAlerts,
       ...staleness(usgsAlerts.loaded ? (usgsAlerts as any).built : null),
+    },
+    nwsAlerts: {
+      ...nwsAlerts,
+      ...staleness(nwsAlerts.loaded ? (nwsAlerts as any).built : null),
+    },
+    nwps: {
+      ...nwps,
+      ...staleness(nwps.loaded ? (nwps as any).built : null),
+    },
+    coops: {
+      ...coops,
+      ...staleness(coops.loaded ? (coops as any).built : null),
+    },
+    snotel: {
+      ...snotel,
+      ...staleness(snotel.loaded ? (snotel as any).built : null),
+    },
+    tri: {
+      ...tri,
+      ...staleness(tri.loaded ? (tri as any).built : null),
     },
   };
 

@@ -18,10 +18,10 @@ import {
 // ── Config ───────────────────────────────────────────────────────────────────
 
 const EF_BASE = 'https://data.epa.gov/efservice';
-const STATE_DELAY_MS = 2000;
 const PAGE_SIZE = 5000;
+const CONCURRENCY = 6;
 
-import { PRIORITY_STATES } from '@/lib/constants';
+import { ALL_STATES } from '@/lib/constants';
 
 // DMR parameter description → PEARL key mapping
 const DMR_PARAM_TO_PEARL: Record<string, string> = {
@@ -224,10 +224,6 @@ function findPearlKey(paramDesc: string): string {
   return 'other';
 }
 
-function delay(ms: number): Promise<void> {
-  return new Promise(r => setTimeout(r, ms));
-}
-
 // ── GET Handler ──────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
@@ -259,125 +255,101 @@ export async function GET(request: NextRequest) {
     const allInspections: IcisInspection[] = [];
     const processedStates: string[] = [];
 
-    for (const stateAbbr of PRIORITY_STATES) {
-      try {
-        console.log(`[ICIS Cron] Fetching ${stateAbbr}...`);
+    // Semaphore-based parallel fetching (6 states at a time)
+    const queue = [...ALL_STATES];
+    let running = 0;
+    let qIdx = 0;
 
-        // Fetch all 5 tables in parallel for this state
-        // Note: ICIS_PERMIT lacks a state column in the JSON, so we set it post-fetch
-        const [permits, violations, dmr, enforcement, inspections] = await Promise.all([
-          fetchTable('ICIS_PERMIT', 'STATE_ABBR', stateAbbr, transformPermit)
-            .then(rows => rows.map(r => ({ ...r, state: r.state || stateAbbr }))),
-          // ICIS_VIOLATIONS table removed from Envirofacts — violations via ECHO API
-          Promise.resolve([]) as Promise<IcisViolation[]>,
-          fetchTable('ICIS_DMR', 'STATE_ABBR', stateAbbr, transformDmr),
-          fetchTable('ICIS_ENFORCEMENT', 'STATE_ABBR', stateAbbr, transformEnforcement),
-          // ICIS_INSPECTIONS table removed from Envirofacts
-          Promise.resolve([]) as Promise<IcisInspection[]>,
-        ]);
+    await new Promise<void>((resolve) => {
+      function next() {
+        if (qIdx >= queue.length && running === 0) return resolve();
+        while (running < CONCURRENCY && qIdx < queue.length) {
+          const stateAbbr = queue[qIdx++];
+          running++;
+          (async () => {
+            try {
+              console.log(`[ICIS Cron] Fetching ${stateAbbr}...`);
 
-        // Deduplicate permits by permit number
-        const permitMap = new Map<string, IcisPermit>();
-        for (const p of permits) {
-          if (!permitMap.has(p.permit)) permitMap.set(p.permit, p);
-        }
-        const dedupedPermits = Array.from(permitMap.values());
+              // Fetch all 5 tables in parallel for this state
+              const [permits, violations, dmr, enforcement, inspections] = await Promise.all([
+                fetchTable('ICIS_PERMIT', 'STATE_ABBR', stateAbbr, transformPermit)
+                  .then(rows => rows.map(r => ({ ...r, state: r.state || stateAbbr }))),
+                Promise.resolve([]) as Promise<IcisViolation[]>,
+                fetchTable('ICIS_DMR', 'STATE_ABBR', stateAbbr, transformDmr),
+                fetchTable('ICIS_ENFORCEMENT', 'STATE_ABBR', stateAbbr, transformEnforcement),
+                Promise.resolve([]) as Promise<IcisInspection[]>,
+              ]);
 
-        // Deduplicate violations by permit|code|date
-        const violationMap = new Map<string, IcisViolation>();
-        for (const v of violations) {
-          const key = `${v.permit}|${v.code}|${v.date}`;
-          if (!violationMap.has(key)) violationMap.set(key, v);
-        }
-        const dedupedViolations = Array.from(violationMap.values());
+              // Deduplicate permits by permit number
+              const permitMap = new Map<string, IcisPermit>();
+              for (const p of permits) {
+                if (!permitMap.has(p.permit)) permitMap.set(p.permit, p);
+              }
+              const dedupedPermits = Array.from(permitMap.values());
 
-        // Deduplicate DMR by permit|param|period
-        const dmrMap = new Map<string, IcisDmr>();
-        for (const d of dmr) {
-          const key = `${d.permit}|${d.paramDesc}|${d.period}`;
-          if (!dmrMap.has(key)) dmrMap.set(key, d);
-        }
-        const dedupedDmr = Array.from(dmrMap.values());
+              // Deduplicate violations by permit|code|date
+              const violationMap = new Map<string, IcisViolation>();
+              for (const v of violations) {
+                const key = `${v.permit}|${v.code}|${v.date}`;
+                if (!violationMap.has(key)) violationMap.set(key, v);
+              }
+              const dedupedViolations = Array.from(violationMap.values());
 
-        // Deduplicate enforcement by case number
-        const enfMap = new Map<string, IcisEnforcement>();
-        for (const e of enforcement) {
-          if (!enfMap.has(e.caseNumber)) enfMap.set(e.caseNumber, e);
-        }
-        const dedupedEnforcement = Array.from(enfMap.values());
+              // Deduplicate DMR by permit|param|period
+              const dmrMap = new Map<string, IcisDmr>();
+              for (const d of dmr) {
+                const key = `${d.permit}|${d.paramDesc}|${d.period}`;
+                if (!dmrMap.has(key)) dmrMap.set(key, d);
+              }
+              const dedupedDmr = Array.from(dmrMap.values());
 
-        // Deduplicate inspections by permit|date|type
-        const inspMap = new Map<string, IcisInspection>();
-        for (const i of inspections) {
-          const key = `${i.permit}|${i.date}|${i.type}`;
-          if (!inspMap.has(key)) inspMap.set(key, i);
-        }
-        const dedupedInspections = Array.from(inspMap.values());
+              // Deduplicate enforcement by case number
+              const enfMap = new Map<string, IcisEnforcement>();
+              for (const e of enforcement) {
+                if (!enfMap.has(e.caseNumber)) enfMap.set(e.caseNumber, e);
+              }
+              const dedupedEnforcement = Array.from(enfMap.values());
 
-        allPermits.push(...dedupedPermits);
-        allViolations.push(...dedupedViolations);
-        allDmr.push(...dedupedDmr);
-        allEnforcement.push(...dedupedEnforcement);
-        allInspections.push(...dedupedInspections);
-        processedStates.push(stateAbbr);
+              // Deduplicate inspections by permit|date|type
+              const inspMap = new Map<string, IcisInspection>();
+              for (const i of inspections) {
+                const key = `${i.permit}|${i.date}|${i.type}`;
+                if (!inspMap.has(key)) inspMap.set(key, i);
+              }
+              const dedupedInspections = Array.from(inspMap.values());
 
-        stateResults[stateAbbr] = {
-          permits: dedupedPermits.length,
-          violations: dedupedViolations.length,
-          dmr: dedupedDmr.length,
-          enforcement: dedupedEnforcement.length,
-          inspections: dedupedInspections.length,
-        };
+              allPermits.push(...dedupedPermits);
+              allViolations.push(...dedupedViolations);
+              allDmr.push(...dedupedDmr);
+              allEnforcement.push(...dedupedEnforcement);
+              allInspections.push(...dedupedInspections);
+              processedStates.push(stateAbbr);
 
-        console.log(
-          `[ICIS Cron] ${stateAbbr}: ${dedupedPermits.length} permits, ` +
-          `${dedupedViolations.length} violations, ${dedupedDmr.length} DMR, ` +
-          `${dedupedEnforcement.length} enforcement, ${dedupedInspections.length} inspections`
-        );
-      } catch (e) {
-        console.warn(`[ICIS Cron] ${stateAbbr} failed:`, e instanceof Error ? e.message : e);
-        stateResults[stateAbbr] = { permits: 0, violations: 0, dmr: 0, enforcement: 0, inspections: 0 };
-      }
+              stateResults[stateAbbr] = {
+                permits: dedupedPermits.length,
+                violations: dedupedViolations.length,
+                dmr: dedupedDmr.length,
+                enforcement: dedupedEnforcement.length,
+                inspections: dedupedInspections.length,
+              };
 
-      // Rate limit delay between states
-      await delay(STATE_DELAY_MS);
-    }
-
-    // ── Retry failed states ───────────────────────────────────────────────
-    const failedStates = PRIORITY_STATES.filter(
-      s => !processedStates.includes(s)
-    );
-    if (failedStates.length > 0) {
-      console.log(`[ICIS Cron] Retrying ${failedStates.length} failed states...`);
-      for (const stateAbbr of failedStates) {
-        await delay(5000);
-        try {
-          const [permits, violations, dmr, enforcement, inspections] = await Promise.all([
-            fetchTable('ICIS_PERMIT', 'STATE_ABBR', stateAbbr, transformPermit),
-            Promise.resolve([]) as Promise<IcisViolation[]>,
-            fetchTable('ICIS_DMR', 'STATE_ABBR', stateAbbr, transformDmr),
-            fetchTable('ICIS_ENFORCEMENT', 'STATE_ABBR', stateAbbr, transformEnforcement),
-            Promise.resolve([]) as Promise<IcisInspection[]>,
-          ]);
-
-          allPermits.push(...permits);
-          allViolations.push(...violations);
-          allDmr.push(...dmr);
-          allEnforcement.push(...enforcement);
-          allInspections.push(...inspections);
-          processedStates.push(stateAbbr);
-
-          stateResults[stateAbbr] = {
-            permits: permits.length, violations: violations.length,
-            dmr: dmr.length, enforcement: enforcement.length,
-            inspections: inspections.length,
-          };
-          console.log(`[ICIS Cron] ${stateAbbr}: RETRY OK`);
-        } catch (e) {
-          console.warn(`[ICIS Cron] ${stateAbbr}: RETRY FAILED — ${e instanceof Error ? e.message : e}`);
+              console.log(
+                `[ICIS Cron] ${stateAbbr}: ${dedupedPermits.length} permits, ` +
+                `${dedupedViolations.length} violations, ${dedupedDmr.length} DMR, ` +
+                `${dedupedEnforcement.length} enforcement, ${dedupedInspections.length} inspections`
+              );
+            } catch (e) {
+              console.warn(`[ICIS Cron] ${stateAbbr} failed:`, e instanceof Error ? e.message : e);
+              stateResults[stateAbbr] = { permits: 0, violations: 0, dmr: 0, enforcement: 0, inspections: 0 };
+            } finally {
+              running--;
+              next();
+            }
+          })();
         }
       }
-    }
+      next();
+    });
 
     // ── Build Grid Index ───────────────────────────────────────────────────
     const grid: Record<string, {
