@@ -34,6 +34,7 @@ import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { resolveWaterbodyCoordinates } from '@/lib/waterbodyCentroids';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
+import { WatershedWaterbodyPanel } from '@/components/WatershedWaterbodyPanel';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
 import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
@@ -367,7 +368,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
   const leafletGeo = STATE_GEO_LEAFLET[stateAbbr] || { center: [39.8, -98.5] as [number, number], zoom: 4 };
 
   // ── ATTAINS bulk for this state ──
-  const [attainsBulk, setAttainsBulk] = useState<Array<{ id: string; name: string; category: string; alertLevel: AlertLevel; causes: string[]; cycle: string; lat?: number | null; lon?: number | null }>>([]);
+  const [attainsBulk, setAttainsBulk] = useState<Array<{ id: string; name: string; category: string; alertLevel: AlertLevel; causes: string[]; cycle: string; lat?: number | null; lon?: number | null; waterType?: string | null; causeCount: number }>>([]);
   const [attainsBulkLoaded, setAttainsBulkLoaded] = useState(false);
 
   // Merge ATTAINS into region data
@@ -503,6 +504,8 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
           cycle: '',
           lat: wb.lat ?? null,
           lon: wb.lon ?? null,
+          waterType: wb.waterType || null,
+          causeCount: wb.causeCount || wb.causes?.length || 0,
         }));
         if (!cancelled) {
           setAttainsBulk(waterbodies);
@@ -622,29 +625,8 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeDetailId, regionData]);
 
-  // ── Filtering & sorting ──
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterLevel, setFilterLevel] = useState<'all' | 'high' | 'medium' | 'low' | 'impaired' | 'monitored'>('all');
   const [showMS4, setShowMS4] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
-
-  const sortedRegions = useMemo(() => {
-    let filtered = regionData;
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      filtered = filtered.filter(r => r.name.toLowerCase().includes(q) || r.id.toLowerCase().includes(q));
-    }
-    if (filterLevel !== 'all') {
-      if (filterLevel === 'impaired') {
-        filtered = filtered.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium');
-      } else if (filterLevel === 'monitored') {
-        filtered = filtered.filter(r => r.status === 'monitored');
-      } else {
-        filtered = filtered.filter(r => r.alertLevel === filterLevel);
-      }
-    }
-    return [...filtered].sort((a, b) => SEVERITY_ORDER[b.alertLevel] - SEVERITY_ORDER[a.alertLevel] || a.name.localeCompare(b.name));
-  }, [regionData, searchQuery, filterLevel]);
 
   // ── Summary stats ──
   const stats = useMemo(() => {
@@ -680,10 +662,6 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
       return aN.includes(normName) || normName.includes(aN);
     }) || null;
   }
-
-  // ── Waterbody display limit ──
-  const [showAll, setShowAll] = useState(false);
-  const displayedRegions = showAll ? sortedRegions : sortedRegions.slice(0, 15);
 
   // ── Expanded sections ──
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({ waterbodies: true, ms4: true });
@@ -1146,165 +1124,16 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             </CardContent>
           </Card>
 
-          {/* RIGHT: Waterbody List (1/3 width) — matches NCC layout */}
-          <Card className="lg:col-span-1 border-2 border-slate-200">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPin size={18} />
-                    <span>{stateName}</span>
-                  </CardTitle>
-                  <CardDescription>Waterbody monitoring summary</CardDescription>
-                </div>
-                {/* State Grade Circle */}
-                {(() => {
-                  const assessed = regionData.filter(r => r.status === 'assessed');
-                  if (assessed.length === 0) return (
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 bg-slate-100 border-slate-300">
-                      <div className="text-2xl font-black text-slate-400">N/A</div>
-                      <div className="text-right">
-                        <div className="text-[10px] text-slate-500">Ungraded</div>
-                        <div className="text-[10px] text-slate-400">{attainsBulkLoaded ? 'No data' : 'Loading...'}</div>
-                      </div>
-                    </div>
-                  );
-                  const avgScore = Math.round(assessed.reduce((sum, r) => sum + (r.alertLevel === 'none' ? 100 : r.alertLevel === 'low' ? 85 : r.alertLevel === 'medium' ? 65 : 40), 0) / assessed.length);
-                  const grade = scoreToGrade(avgScore);
-                  return (
-                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 ${grade.bg}`}>
-                      <div className={`text-2xl font-black ${grade.color}`}>{grade.letter}</div>
-                      <div className="text-right">
-                        <div className={`text-sm font-bold ${grade.color}`}>{avgScore}%</div>
-                        <div className="text-[10px] text-slate-500">{assessed.length} assessed</div>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-
-              {/* Quick stats — matching NCC 4-tile row */}
-              <div className="grid grid-cols-4 gap-1.5 text-center mt-3">
-                <div className="rounded-lg bg-slate-50 p-2">
-                  <div className="text-lg font-bold text-slate-800">{regionData.length}</div>
-                  <div className="text-[10px] text-slate-500">Total</div>
-                </div>
-                <div className="rounded-lg bg-green-50 p-2">
-                  <div className="text-lg font-bold text-green-700">{regionData.filter(r => r.status === 'assessed').length}</div>
-                  <div className="text-[10px] text-slate-500">Assessed</div>
-                </div>
-                <div className="rounded-lg bg-blue-50 p-2">
-                  <div className="text-lg font-bold text-blue-600">{regionData.filter(r => r.status === 'monitored').length}</div>
-                  <div className="text-[10px] text-slate-500">Monitored</div>
-                </div>
-                <div className="rounded-lg bg-slate-50 p-2">
-                  <div className="text-lg font-bold text-slate-400">{regionData.filter(r => r.status === 'unmonitored').length}</div>
-                  <div className="text-[10px] text-slate-500">No Data</div>
-                </div>
-              </div>
-
-              {/* Filter pills — matching NCC tabs */}
-              <div className="flex flex-wrap gap-1.5 mt-3">
-                {([
-                  { key: 'all' as const, label: 'All', color: 'bg-slate-100 text-slate-700 border-slate-200' },
-                  { key: 'impaired' as const, label: 'Impaired', color: 'bg-orange-100 text-orange-700 border-orange-200' },
-                  { key: 'high' as const, label: 'Severe', color: 'bg-red-100 text-red-700 border-red-200' },
-                  { key: 'monitored' as const, label: 'Monitored', color: 'bg-blue-100 text-blue-700 border-blue-200' },
-                ] as const).map((f) => (
-                  <button
-                    key={f.key}
-                    onClick={() => { setFilterLevel(f.key); setShowAll(false); }}
-                    className={`px-2.5 py-1 text-[11px] font-medium rounded-full border transition-all ${
-                      filterLevel === f.key
-                        ? f.color + ' ring-1 ring-offset-1 shadow-sm'
-                        : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'
-                    }`}
-                  >
-                    {f.label}
-                    {f.key !== 'all' && (() => {
-                      const count = f.key === 'impaired'
-                        ? regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length
-                        : f.key === 'high'
-                        ? regionData.filter(r => r.alertLevel === 'high').length
-                        : regionData.filter(r => r.status === 'monitored').length;
-                      return count > 0 ? ` (${count})` : '';
-                    })()}
-                  </button>
-                ))}
-              </div>
-
-              {/* Search */}
-              <div className="relative mt-2">
-                <input
-                  type="text"
-                  placeholder="Search waterbodies..."
-                  value={searchQuery}
-                  onChange={e => { setSearchQuery(e.target.value); setShowAll(false); }}
-                  className="w-full px-2 py-1.5 text-sm border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-300"
-                />
-                {searchQuery && (
-                  <div className="text-[10px] text-slate-400 mt-1">{sortedRegions.length} of {regionData.length} waterbodies</div>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-1.5 max-h-[480px] overflow-y-auto">
-                {sortedRegions.length === 0 ? (
-                  <div className="text-sm text-slate-500 py-8 text-center">
-                    {searchQuery ? 'No waterbodies match your search.' : 'No waterbodies registered for this state yet.'}
-                  </div>
-                ) : (
-                  <>
-                    {displayedRegions.map(r => {
-                      const isActive = r.id === activeDetailId;
-                      return (
-                        <div
-                          key={r.id}
-                          onClick={() => setActiveDetailId(isActive ? null : r.id)}
-                          className={`flex items-center justify-between rounded-md border p-2 cursor-pointer transition-colors ${
-                            isActive ? 'border-blue-400 bg-blue-50 ring-1 ring-blue-200' : 'border-slate-200 hover:bg-slate-50'
-                          }`}
-                        >
-                          <div className="min-w-0 flex-1">
-                            <div className={`truncate text-sm font-medium ${isActive ? 'text-blue-900' : ''}`}>{r.name}</div>
-                            <div className="flex items-center gap-2 text-xs text-slate-500">
-                              {r.status === 'assessed' ? (
-                                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
-                                  r.alertLevel === 'high' ? 'bg-red-100 text-red-700' :
-                                  r.alertLevel === 'medium' ? 'bg-orange-100 text-orange-700' :
-                                  r.alertLevel === 'low' ? 'bg-yellow-100 text-yellow-700' :
-                                  'bg-green-100 text-green-700'
-                                }`}>
-                                  {levelToLabel(r.alertLevel)}
-                                </span>
-                              ) : r.status === 'monitored' ? (
-                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-600">
-                                  ◐ {r.dataSourceCount} source{r.dataSourceCount !== 1 ? 's' : ''}
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-500">— Unmonitored</span>
-                              )}
-                              {r.activeAlerts > 0 && <span>{r.activeAlerts} alert{r.activeAlerts !== 1 ? 's' : ''}</span>}
-                              {r.status === 'assessed' && <span className="text-[9px] text-slate-400">EPA ATTAINS</span>}
-                            </div>
-                          </div>
-                          {isActive && <div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0 mr-1" />}
-                        </div>
-                      );
-                    })}
-                    {sortedRegions.length > 15 && !showAll && (
-                      <button
-                        onClick={() => setShowAll(true)}
-                        className="w-full py-2 text-xs text-blue-600 hover:text-blue-800 font-medium"
-                      >
-                        Show all {sortedRegions.length} waterbodies
-                      </button>
-                    )}
-                  </>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          {/* RIGHT: Watershed Waterbody Panel (1/3 width) */}
+          <WatershedWaterbodyPanel
+            stateAbbr={stateAbbr}
+            stateName={stateName}
+            regionData={regionData}
+            attainsBulk={attainsBulk}
+            attainsBulkLoaded={attainsBulkLoaded}
+            activeDetailId={activeDetailId}
+            setActiveDetailId={setActiveDetailId}
+          />
         </div>
             );
 
