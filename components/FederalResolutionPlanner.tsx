@@ -16,6 +16,9 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { getStatesGeoJSONWithAbbr } from "@/lib/mapUtils";
+import { getArchivedSignals, type Signal } from "@/lib/signalArchiveCache";
+import { scoreModules, type ModuleScoringInput } from "@/lib/resolutionModules";
+import { StrategyModulesSection } from "./StrategyModulesSection";
 
 // Lazy-load Mapbox components (SSR-safe)
 const MapboxMapShell = dynamic(
@@ -124,10 +127,23 @@ const TIER_LIMITS: Record<Tier, { dailyPlans: number; retentionDays: number }> =
   admin:        { dailyPlans: Infinity, retentionDays: Infinity },
 };
 
-const CRISIS_EVENTS = [
-  { id: "potomac-interceptor-2026", name: "Potomac Interceptor Collapse", region: 3, states: ["DC","MD","VA"], active: true },
-  { id: "east-palestine-legacy", name: "East Palestine Derailment (Legacy)", region: 5, states: ["OH","PA"], active: false },
-];
+/** Derive crisis events dynamically from signal archive. */
+function getCrisisEvents(): { id: string; name: string; region?: number; states: string[]; active: boolean; source: string; date: string }[] {
+  const signals = getArchivedSignals({
+    pearlOnly: true,
+    category: ['spill', 'bacteria', 'hab', 'enforcement'],
+    limit: 20,
+  });
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  return signals.map(s => ({
+    id: `signal-${s.id}`,
+    name: s.title,
+    states: s.state ? [s.state] : [],
+    active: s.publishedAt >= sevenDaysAgo,
+    source: s.sourceLabel,
+    date: s.publishedAt.slice(0, 10),
+  }));
+}
 
 const CATEGORIES = [
   { value: "5", label: "Category 5 — Impaired, TMDL needed", color: "#c0392b" },
@@ -220,6 +236,23 @@ function scopeSummary(s: ScopeSelection): string {
 
 // ── Prompt Builder ──
 
+function buildFederalConditionsSection(scope: ScopeSelection): string {
+  const signals = scope.states?.length
+    ? getArchivedSignals({ states: scope.states, limit: 8 })
+    : getArchivedSignals({ limit: 8 });
+
+  if (signals.length === 0) return '';
+
+  const lines = ['\nACTIVE CONDITIONS FROM AUTHORITATIVE SOURCES:'];
+  lines.push('(Incorporate these factually into the Executive Summary and Critical Findings. These are reports from authoritative federal sources — USCG, EPA, NOAA, NWS. Present facts only — do not speculate beyond what is reported.)');
+  for (const s of signals) {
+    const date = s.publishedAt.slice(0, 10);
+    const stateTag = s.state ? ` [${s.state}]` : '';
+    lines.push(`- [${s.sourceLabel}] ${date}${stateTag}: ${s.title}${s.summary ? ` — ${s.summary}` : ''}`);
+  }
+  return lines.join('\n') + '\n';
+}
+
 function buildFederalPrompt(scope: ScopeSelection): string {
   const cats = scope.categories?.length ? scope.categories.join(", ") : "all categories";
   const polls = scope.pollutants?.length ? scope.pollutants.join(", ") : "all pollutants";
@@ -240,7 +273,7 @@ Pollutants of Concern: ${polls}
 ${scope.requireNoTmdl ? "FILTER: Only assessment units WITHOUT established TMDLs" : ""}
 ${scope.minEjIndex ? `EJ Index Minimum: ${scope.minEjIndex}/100` : ""}
 ${scope.crisisName ? `ACTIVE CRISIS: ${scope.crisisName}` : ""}
-
+${buildFederalConditionsSection(scope)}
 Generate a comprehensive Federal Response Plan for this scope. This is a REGIONAL/NATIONAL plan, not a single-waterbody plan. Address the full portfolio of impairments across the scope. Be specific about which federal authorities apply, which agencies must coordinate, and what enforcement escalation looks like.
 
 Respond ONLY with valid JSON, no markdown, no backticks:
@@ -275,7 +308,7 @@ CURRENT PLAN SUMMARY:
 - Critical Findings: ${currentPlan.criticalFindings.slice(0, 200)}...
 - Actions: ${currentPlan.actionsImmediate.length} immediate, ${currentPlan.actionsShortTerm.length} short-term, ${currentPlan.actionsLongTerm.length} long-term
 - Solutions: ${currentPlan.coBenefits.map(c => c.solution).join(", ")}
-
+${buildFederalConditionsSection(scope)}
 USER REFINEMENT: "${refinement}"
 
 Revise the COMPLETE plan per the user's request. Return the full updated JSON, same structure as before. Do not fabricate data sources.
@@ -483,6 +516,57 @@ function BeforeAfterMaps({
   );
 }
 
+// ── Conditions Banner ──
+
+function FederalConditionsBanner({ scope }: { scope: ScopeSelection }) {
+  const [expanded, setExpanded] = useState(false);
+  const signals = scope.states?.length
+    ? getArchivedSignals({ states: scope.states, limit: 12 })
+    : getArchivedSignals({ limit: 12 });
+
+  if (signals.length === 0) return null;
+
+  const SOURCE_COLORS: Record<string, string> = {
+    'uscg': 'bg-blue-100 text-blue-700',
+    'beacon': 'bg-cyan-100 text-cyan-700',
+    'noaa-hab': 'bg-teal-100 text-teal-700',
+    'epa-news': 'bg-indigo-100 text-indigo-700',
+  };
+
+  const shown = expanded ? signals : signals.slice(0, 3);
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  return (
+    <div className="action-card bg-slate-50 border border-slate-200 rounded-lg p-4">
+      <h3 className="text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">
+        Current Conditions
+        <span className="ml-2 text-[10px] font-normal text-slate-400 normal-case">from authoritative federal sources</span>
+      </h3>
+      <div className="space-y-1.5">
+        {shown.map((s, i) => {
+          const isRecent = s.publishedAt >= sevenDaysAgo;
+          return (
+            <div key={i} className="flex items-start gap-2 text-xs">
+              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold shrink-0 ${SOURCE_COLORS[s.source] || 'bg-gray-100 text-gray-600'}`}>
+                {isRecent && <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />}
+                {s.sourceLabel}
+              </span>
+              <span className="text-gray-400 shrink-0">{s.publishedAt.slice(0, 10)}</span>
+              {s.state && <span className="text-gray-400 shrink-0">[{s.state}]</span>}
+              <span className="text-gray-700">{s.title}</span>
+            </div>
+          );
+        })}
+      </div>
+      {signals.length > 3 && (
+        <button onClick={() => setExpanded(e => !e)} className="mt-2 text-[11px] text-blue-600 hover:underline">
+          {expanded ? 'Show fewer' : `Show ${signals.length - 3} more`}
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ── Main Component ──
 
 interface FederalResolutionPlannerProps {
@@ -490,6 +574,21 @@ interface FederalResolutionPlannerProps {
   userId: string;
   stateRollup: Array<{ abbr: string; score: number; canGradeState: boolean }>;
 }
+
+// ── Pollutant group → ATTAINS cause keyword mapping ──
+const POLLUTANT_TO_CAUSES: Record<string, string[]> = {
+  'Nutrients (N/P)': ['nutrient', 'nitrogen', 'phosphor'],
+  'Bacteria/Pathogens': ['pathogen', 'bacteria', 'e. coli', 'fecal', 'enterococ'],
+  'Metals/Heavy Metals': ['metal', 'mercury', 'lead', 'copper', 'zinc'],
+  'PFAS/PFOA': ['pfas', 'pfoa', 'pfos', 'perfluor'],
+  'Sediment/TSS': ['sediment', 'turbidity', 'total suspended', 'siltation'],
+  'Dissolved Oxygen': ['dissolved oxygen', 'oxygen'],
+  'Temperature': ['temperature', 'thermal'],
+  'pH': ['ph', 'acidity'],
+  'Pesticides': ['pesticide', 'herbicide', 'insecticide'],
+  'Microplastics': ['microplastic', 'plastic'],
+  'Emerging Contaminants': ['emerging', 'contaminant'],
+};
 
 export default function FederalResolutionPlanner({ userTier, userId, stateRollup }: FederalResolutionPlannerProps) {
   // ── State ──
@@ -515,12 +614,35 @@ export default function FederalResolutionPlanner({ userTier, userId, stateRollup
   const [selectedCrisis, setSelectedCrisis] = useState<string | null>(null);
   const [hucCode, setHucCode] = useState("");
   const [minEj, setMinEj] = useState(0);
+  const [customPrompt, setCustomPrompt] = useState("");
 
   const refineRef = useRef<HTMLInputElement>(null);
   const historyRef = useRef<HTMLDivElement>(null);
   const limits = TIER_LIMITS[userTier];
   const plansToday = getPlansGeneratedToday();
   const atLimit = plansToday >= limits.dailyPlans;
+
+  // ── Strategy Module Scoring ──
+  const scoredCategories = useMemo(() => {
+    if (!scope) return [];
+    const topCauses = (scope.pollutants || []).flatMap(p =>
+      (POLLUTANT_TO_CAUSES[p] || [p.toLowerCase()]).map(c => ({ cause: c, count: 500 }))
+    );
+    if (topCauses.length === 0) {
+      topCauses.push(
+        { cause: 'nutrient', count: 1000 },
+        { cause: 'pathogen', count: 800 },
+        { cause: 'sediment', count: 600 },
+      );
+    }
+    const input: ModuleScoringInput = {
+      topCauses,
+      totalImpaired: scope.assessmentUnitCount || 1000,
+      totalWaterbodies: (scope.assessmentUnitCount || 1000) * 2,
+      tmdlNeeded: scope.requireNoTmdl ? (scope.assessmentUnitCount || 500) : 0,
+    };
+    return scoreModules(input);
+  }, [scope]);
 
   // ── Session Restore ──
   useEffect(() => {
@@ -568,8 +690,8 @@ export default function FederalResolutionPlanner({ userTier, userId, stateRollup
       case "watershed":
         return { ...base, label: `HUC ${hucCode}`, hucCode, hucLevel: (hucCode.length as any) };
       case "crisis": {
-        const crisis = CRISIS_EVENTS.find(c => c.id === selectedCrisis);
-        return { ...base, label: crisis?.name || "", crisisId: selectedCrisis!, crisisName: crisis?.name, epaRegion: crisis?.region, states: crisis?.states };
+        const crisis = getCrisisEvents().find(c => c.id === selectedCrisis);
+        return { ...base, label: crisis?.name || "", crisisId: selectedCrisis!, crisisName: crisis?.name, states: crisis?.states || [] };
       }
       case "custom":
         return { ...base, label: "Custom Filter", states: selectedStates };
@@ -593,10 +715,14 @@ export default function FederalResolutionPlanner({ userTier, userId, stateRollup
     setView("generating");
 
     try {
+      let prompt = buildFederalPrompt(s);
+      if (customPrompt.trim()) {
+        prompt += `\n\nADDITIONAL USER DIRECTION: "${customPrompt.trim()}"\nIncorporate this guidance into every section of the plan. Prioritize this direction when it conflicts with generic defaults.`;
+      }
       const response = await fetch("/api/ai/resolution-plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: buildFederalPrompt(s) }),
+        body: JSON.stringify({ prompt }),
       });
       const data = await response.json();
       const text = data.text || '';
@@ -621,7 +747,7 @@ export default function FederalResolutionPlanner({ userTier, userId, stateRollup
     } finally {
       setGenerating(false);
     }
-  }, [buildScope, atLimit, limits]);
+  }, [buildScope, atLimit, limits, customPrompt]);
 
   // ── Refine ──
   const refine = useCallback(async () => {
@@ -721,23 +847,31 @@ export default function FederalResolutionPlanner({ userTier, userId, stateRollup
                 </div>
               )}
 
-              {scopeType === "crisis" && (
-                <div>
-                  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Active & Recent Crisis Events</h3>
-                  <div className="space-y-2">
-                    {CRISIS_EVENTS.map(c => (
-                      <button key={c.id} onClick={() => setSelectedCrisis(c.id)}
-                        className={`w-full text-left px-4 py-3 rounded-lg text-sm transition-all ${selectedCrisis === c.id ? "bg-red-50 border-red-400 border" : "bg-gray-50 border border-gray-200 hover:bg-gray-100"}`}>
-                        <div className="flex items-center gap-2">
-                          {c.active && <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />}
-                          <span className="font-bold text-gray-800">{c.name}</span>
-                        </div>
-                        <span className="text-xs text-gray-500">Region {c.region} · {c.states.join(", ")}</span>
-                      </button>
-                    ))}
+              {scopeType === "crisis" && (() => {
+                const crisisEvents = getCrisisEvents();
+                return (
+                  <div>
+                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Active & Recent Events from Authoritative Sources</h3>
+                    {crisisEvents.length === 0 ? (
+                      <p className="text-xs text-gray-400 italic">No high-impact signals in the archive. Events will appear here as they are reported by USCG, EPA, and NOAA feeds.</p>
+                    ) : (
+                      <div className="space-y-2 max-h-[40vh] overflow-y-auto">
+                        {crisisEvents.map(c => (
+                          <button key={c.id} onClick={() => { setSelectedCrisis(c.id); setSelectedStates(c.states); }}
+                            className={`w-full text-left px-4 py-3 rounded-lg text-sm transition-all ${selectedCrisis === c.id ? "bg-red-50 border-red-400 border" : "bg-gray-50 border border-gray-200 hover:bg-gray-100"}`}>
+                            <div className="flex items-center gap-2">
+                              {c.active && <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />}
+                              {!c.active && <span className="w-2 h-2 bg-gray-300 rounded-full" />}
+                              <span className="font-bold text-gray-800 line-clamp-1">{c.name}</span>
+                            </div>
+                            <span className="text-xs text-gray-500">{c.source} · {c.date}{c.states.length > 0 ? ` · ${c.states.join(", ")}` : ''}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {scopeType === "state" && (
                 <div>
@@ -805,6 +939,19 @@ export default function FederalResolutionPlanner({ userTier, userId, stateRollup
               </div>
             </div>
 
+            {/* Direction input — prominent before generating */}
+            <div className="bg-white border border-gray-200 rounded-lg p-4">
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Direction (optional)</label>
+              <input
+                value={customPrompt}
+                onChange={e => setCustomPrompt(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && !atLimit) generate(); }}
+                placeholder='e.g. "Focus on EJ communities" or "Prioritize PFAS enforcement" or "Emergency drought posture"'
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
+              />
+              <p className="text-[11px] text-gray-400 mt-1.5">Add specific focus areas or priorities. You can also refine the plan after it generates.</p>
+            </div>
+
             {/* Generate Button */}
             {error && <div className="px-4 py-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{error}</div>}
 
@@ -869,9 +1016,9 @@ export default function FederalResolutionPlanner({ userTier, userId, stateRollup
   // ═══════════════════════════════════════
   if (view === "plan" && plan && scope) {
     return (
-      <div className="max-w-5xl mx-auto flex flex-col" style={{ maxHeight: "calc(100vh - 80px)" }}>
+      <div className="max-w-5xl mx-auto">
         {/* Header Bar */}
-        <div className="bg-gradient-to-r from-blue-900 to-blue-700 rounded-t-xl px-6 py-4 text-white flex-shrink-0">
+        <div className="bg-gradient-to-r from-blue-900 to-blue-700 rounded-t-xl px-6 py-4 text-white">
           <div className="flex justify-between items-start">
             <div>
               <p className="text-blue-200 text-xs uppercase tracking-wide font-medium">
@@ -891,7 +1038,9 @@ export default function FederalResolutionPlanner({ userTier, userId, stateRollup
         </div>
 
         {/* Scrollable Plan Content */}
-        <div className="flex-1 overflow-y-auto bg-white border-x border-gray-200 p-6 space-y-5">
+        <div className="bg-white border-x border-gray-200 p-6 space-y-5">
+
+          <FederalConditionsBanner scope={scope} />
 
           <section>
             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Executive Summary</h3>
@@ -920,7 +1069,7 @@ export default function FederalResolutionPlanner({ userTier, userId, stateRollup
 
           <section>
             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Recommended Actions</h3>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                 <h4 className="text-[10px] font-bold text-red-700 uppercase mb-2">Immediate (0-30d)</h4>
                 <ul className="space-y-1">{plan.actionsImmediate.map((a, i) => (
@@ -949,7 +1098,7 @@ export default function FederalResolutionPlanner({ userTier, userId, stateRollup
             </div>
           </section>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <section>
               <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Budget Estimate</h3>
               <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-xs text-green-800 whitespace-pre-wrap">{plan.budgetEstimate}</div>
@@ -989,15 +1138,25 @@ export default function FederalResolutionPlanner({ userTier, userId, stateRollup
             <div className="bg-gray-50 border border-gray-300 rounded-lg p-4 text-sm text-gray-700 whitespace-pre-wrap">{plan.congressionalBriefing}</div>
           </section>
 
+          {/* Strategy Modules — algorithmic, not AI-generated */}
+          {scoredCategories.length > 0 && (
+            <StrategyModulesSection categories={scoredCategories} />
+          )}
+
           <div className="pt-3 border-t border-gray-200 text-[10px] text-gray-400">
             Generated by PEARL Intelligence Network (PIN). Informational only — not an official regulatory determination, legal opinion, or engineering design. Verify with primary agency data before action.
           </div>
         </div>
 
-        {/* Refine Bar — pinned bottom */}
-        <div className="flex-shrink-0 border border-gray-200 border-t-0 rounded-b-xl bg-white">
+        {/* Refine Bar — at end of output */}
+        <div className="border border-gray-200 border-t-0 rounded-b-xl bg-gray-50">
+          <div className="px-6 pt-5 pb-1">
+            <h3 className="text-sm font-bold text-gray-700">Refine This Plan</h3>
+            <p className="text-xs text-gray-400 mt-0.5">Describe what to change and the plan will be regenerated with your direction.</p>
+          </div>
+
           {refineHistory.length > 0 && (
-            <div ref={historyRef} className="max-h-28 overflow-y-auto px-4 pt-3 space-y-1.5">
+            <div ref={historyRef} className="max-h-48 overflow-y-auto px-6 pt-3 space-y-1.5">
               {refineHistory.map((r, i) => (
                 <div key={i} className={`text-xs px-3 py-1 rounded-lg ${r.prompt.startsWith("[!]") ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-800"} max-w-[85%] ml-auto`}>
                   {r.prompt} <span className="text-[10px] opacity-50">rev {r.revision}</span>
@@ -1005,18 +1164,18 @@ export default function FederalResolutionPlanner({ userTier, userId, stateRollup
               ))}
             </div>
           )}
-          <div className="px-4 py-3 flex gap-2">
+          <div className="px-6 py-4 flex gap-2">
             <input ref={refineRef} value={refineInput} onChange={e => setRefineInput(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter" && !refining) refine(); }}
-              placeholder='Refine: "Focus on EJ communities" or "Add FEMA coordination" or "Increase urgency"'
-              className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
+              placeholder='e.g. "Focus on EJ communities" or "Add FEMA coordination" or "Increase urgency"'
+              className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 bg-white"
               disabled={refining} />
             <button onClick={refine} disabled={!refineInput.trim() || refining}
               className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${refineInput.trim() && !refining ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-gray-100 text-gray-400 cursor-not-allowed"}`}>
               {refining ? "Refining..." : "Refine"}
             </button>
           </div>
-          <div className="px-4 pb-2 flex justify-between text-[10px] text-gray-400">
+          <div className="px-6 pb-3 flex justify-between text-[10px] text-gray-400">
             <span>Refinements are unlimited and don&apos;t count toward your daily plan limit</span>
             <span>Plan auto-saved · Expires {activePlanId ? new Date(getSavedPlans().find(p => p.id === activePlanId)?.expiresAt || "").toLocaleDateString() : "—"}</span>
           </div>

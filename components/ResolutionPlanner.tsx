@@ -10,7 +10,10 @@
 
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { getArchivedSignals, type Signal } from "@/lib/signalArchiveCache";
+import { scoreModules, type ModuleScoringInput } from "@/lib/resolutionModules";
+import { StrategyModulesSection } from "./StrategyModulesSection";
 // html2pdf.js loaded dynamically in export handler (code-split)
 
 // ── Types ──
@@ -287,7 +290,30 @@ function buildDataReliabilitySection(dr?: DataReliabilityReport): string {
   return lines.join('\n') + '\n';
 }
 
-function buildNationalPrompt(ctx: NationalContext, role: UserRole, dataReliability?: DataReliabilityReport): string {
+function buildActiveConditionsSection(scopeContext: ScopeContext): string {
+  let signals: Signal[];
+  if (scopeContext.scope === 'state') {
+    signals = getArchivedSignals({ state: scopeContext.data.abbr, limit: 8 });
+  } else if (scopeContext.scope === 'region') {
+    signals = getArchivedSignals({ states: scopeContext.data.states, limit: 8 });
+  } else {
+    // National — top 8 most recent across all states
+    signals = getArchivedSignals({ limit: 8 });
+  }
+
+  if (signals.length === 0) return '';
+
+  const lines = ['\nACTIVE CONDITIONS FROM AUTHORITATIVE SOURCES:'];
+  lines.push('(If active conditions are listed, incorporate them factually into the Situation Assessment. These are reports from authoritative federal sources — USCG, EPA, NOAA, NWS. Present facts only — do not speculate beyond what is reported.)');
+  for (const s of signals) {
+    const date = s.publishedAt.slice(0, 10);
+    const stateTag = s.state ? ` [${s.state}]` : '';
+    lines.push(`- [${s.sourceLabel}] ${date}${stateTag}: ${s.title}${s.summary ? ` — ${s.summary}` : ''}`);
+  }
+  return lines.join('\n') + '\n';
+}
+
+function buildNationalPrompt(ctx: NationalContext, role: UserRole, dataReliability?: DataReliabilityReport, activeConditions?: string): string {
   const rc = ROLE_CONTEXT[role];
   const worstList = ctx.worstStates.map(s => `${s.abbr} (score: ${s.score}, impaired: ${s.impaired.toLocaleString()})`).join(', ');
   const causeList = ctx.topCauses.slice(0, 10).map(c => `${c.cause} (${c.count.toLocaleString()})`).join(', ');
@@ -296,7 +322,7 @@ function buildNationalPrompt(ctx: NationalContext, role: UserRole, dataReliabili
 This plan is produced by the PEARL Intelligence Network (PIN) — an EPA water quality data platform. PIN stands for PEARL Intelligence Network. PEARL stands for Programmable Eco-Adaptive Reef Lattice.
 
 YOUR AUDIENCE: ${rc.label} role with authority over: ${rc.authority}
-${buildDataReliabilitySection(dataReliability)}
+${buildDataReliabilitySection(dataReliability)}${activeConditions || ''}
 NATIONAL OVERVIEW:
 - ${ctx.totalStates} states reporting
 - ${ctx.totalWaterbodies.toLocaleString()} total waterbodies tracked
@@ -325,7 +351,7 @@ IMPORTANT: Base your analysis only on the data provided above. Do not fabricate 
 ${JSON_SCHEMA_INSTRUCTION}`;
 }
 
-function buildRegionPrompt(ctx: RegionContext, role: UserRole, dataReliability?: DataReliabilityReport): string {
+function buildRegionPrompt(ctx: RegionContext, role: UserRole, dataReliability?: DataReliabilityReport, activeConditions?: string): string {
   const rc = ROLE_CONTEXT[role];
   const stateList = ctx.stateBreakdown.map(s => `${s.abbr} (score: ${s.score}, impaired: ${s.impaired.toLocaleString()})`).join(', ');
   const causeList = ctx.topCauses.slice(0, 10).map(c => `${c.cause} (${c.count.toLocaleString()})`).join(', ');
@@ -334,7 +360,7 @@ function buildRegionPrompt(ctx: RegionContext, role: UserRole, dataReliability?:
 This plan is produced by the PEARL Intelligence Network (PIN) — an EPA water quality data platform. PIN stands for PEARL Intelligence Network. PEARL stands for Programmable Eco-Adaptive Reef Lattice.
 
 YOUR AUDIENCE: ${rc.label} role with authority over: ${rc.authority}
-${buildDataReliabilitySection(dataReliability)}
+${buildDataReliabilitySection(dataReliability)}${activeConditions || ''}
 EPA ${ctx.regionName.toUpperCase()} (HQ: ${ctx.hq}):
 - Covers states: ${ctx.states.join(', ')}
 - ${ctx.totalWaterbodies.toLocaleString()} total waterbodies tracked
@@ -354,7 +380,7 @@ IMPORTANT: Base your analysis only on the data provided above. Do not fabricate 
 ${JSON_SCHEMA_INSTRUCTION}`;
 }
 
-function buildStatePrompt(ctx: StateContext, role: UserRole, dataReliability?: DataReliabilityReport): string {
+function buildStatePrompt(ctx: StateContext, role: UserRole, dataReliability?: DataReliabilityReport, activeConditions?: string): string {
   const rc = ROLE_CONTEXT[role];
   const causeList = ctx.topCauses.slice(0, 10).map(c => `${c.cause} (${c.count.toLocaleString()})`).join(', ');
 
@@ -362,7 +388,7 @@ function buildStatePrompt(ctx: StateContext, role: UserRole, dataReliability?: D
 This plan is produced by the PEARL Intelligence Network (PIN) — an EPA water quality data platform. PIN stands for PEARL Intelligence Network. PEARL stands for Programmable Eco-Adaptive Reef Lattice.
 
 YOUR AUDIENCE: ${rc.label} role with authority over: ${rc.authority}
-${buildDataReliabilitySection(dataReliability)}
+${buildDataReliabilitySection(dataReliability)}${activeConditions || ''}
 STATE: ${ctx.name} (${ctx.abbr}) — EPA Region ${ctx.epaRegion}
 - ${ctx.totalWaterbodies.toLocaleString()} total waterbodies
 - ${ctx.assessed.toLocaleString()} assessed
@@ -387,11 +413,12 @@ ${JSON_SCHEMA_INSTRUCTION}`;
 // ── Scope-Aware Initial Prompt Router ──
 
 function buildInitialPrompt(ctx: ScopeContext, role: UserRole, scenarioContext?: string, dataReliability?: DataReliabilityReport): string {
+  const conditions = buildActiveConditionsSection(ctx);
   let prompt: string;
   switch (ctx.scope) {
-    case 'national': prompt = buildNationalPrompt(ctx.data, role, dataReliability); break;
-    case 'region':   prompt = buildRegionPrompt(ctx.data, role, dataReliability); break;
-    case 'state':    prompt = buildStatePrompt(ctx.data, role, dataReliability); break;
+    case 'national': prompt = buildNationalPrompt(ctx.data, role, dataReliability, conditions); break;
+    case 'region':   prompt = buildRegionPrompt(ctx.data, role, dataReliability, conditions); break;
+    case 'state':    prompt = buildStatePrompt(ctx.data, role, dataReliability, conditions); break;
   }
   if (scenarioContext) {
     prompt = prompt.replace(
@@ -411,13 +438,14 @@ function buildRefinePrompt(
   refinement: string
 ): string {
   const scopeLabel = getScopeLabel(ctx);
+  const conditions = buildActiveConditionsSection(ctx);
   return `You previously generated a Response Plan for ${scopeLabel} for a ${ROLE_CONTEXT[role].label} user.
 
 CURRENT PLAN (summarized):
 - Situation: ${currentPlan.situationAssessment.slice(0, 300)}...
 - Actions: ${currentPlan.actionsImmediate.length} immediate, ${currentPlan.actionsShortTerm.length} short-term, ${currentPlan.actionsLongTerm.length} long-term
 - Solutions with co-benefits: ${currentPlan.coBenefits.map(c => c.solution).join(", ")}
-
+${conditions}
 USER REFINEMENT REQUEST: "${refinement}"
 
 Revise the plan according to the user's request. Return the COMPLETE updated plan in the same JSON structure. Do not fabricate data sources or statistics.
@@ -483,6 +511,61 @@ function CoBenefitsMatrix({ benefits }: { benefits: CoBenefit[] }) {
   );
 }
 
+// ── Conditions Banner ──
+
+function ConditionsBanner({ scopeContext }: { scopeContext: ScopeContext }) {
+  const [expanded, setExpanded] = useState(false);
+  const signals = getArchivedSignals(
+    scopeContext.scope === 'state'
+      ? { state: (scopeContext.data as StateContext).abbr, limit: 12 }
+      : scopeContext.scope === 'region'
+        ? { states: (scopeContext.data as RegionContext).states, limit: 12 }
+        : { limit: 12 }
+  );
+
+  if (signals.length === 0) return null;
+
+  const SOURCE_COLORS: Record<string, string> = {
+    'uscg': 'bg-blue-100 text-blue-700',
+    'beacon': 'bg-cyan-100 text-cyan-700',
+    'noaa-hab': 'bg-teal-100 text-teal-700',
+    'epa-news': 'bg-indigo-100 text-indigo-700',
+  };
+
+  const shown = expanded ? signals : signals.slice(0, 3);
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  return (
+    <div className="action-card bg-slate-50 border border-slate-200 rounded-lg p-4">
+      <h3 className="text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">
+        Current Conditions
+        <span className="ml-2 text-[10px] font-normal text-slate-400 normal-case">from authoritative federal sources</span>
+      </h3>
+      <div className="space-y-1.5">
+        {shown.map((s, i) => {
+          const isRecent = s.publishedAt >= sevenDaysAgo;
+          return (
+            <div key={i} className="flex items-start gap-2 text-xs">
+              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold shrink-0 ${SOURCE_COLORS[s.source] || 'bg-gray-100 text-gray-600'}`}>
+                {isRecent && <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />}
+                {s.sourceLabel}
+              </span>
+              <span className="text-gray-400 shrink-0">{s.publishedAt.slice(0, 10)}</span>
+              {s.state && <span className="text-gray-400 shrink-0">[{s.state}]</span>}
+              <span className="text-gray-700">{s.title}</span>
+            </div>
+          );
+        })}
+      </div>
+      {signals.length > 3 && (
+        <button onClick={() => setExpanded(e => !e)} className="mt-2 text-[11px] text-blue-600 hover:underline">
+          {expanded ? 'Show fewer' : `Show ${signals.length - 3} more`}
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ── Main Component ──
 
 export interface ResolutionPlannerProps {
@@ -519,6 +602,20 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
   const roleCtx = ROLE_CONTEXT[userRole];
   const scopeLabel = getScopeLabel(scopeContext);
   const scopeSubtitle = getScopeSubtitle(scopeContext);
+
+  // ── Strategy Module Scoring ──
+  const scoredCategories = useMemo(() => {
+    const ctx = scopeContext;
+    const input: ModuleScoringInput = {
+      topCauses: ctx.data.topCauses,
+      totalImpaired: ctx.scope === 'state' ? ctx.data.impaired : ctx.data.totalImpaired,
+      totalWaterbodies: ctx.data.totalWaterbodies,
+      cat5: ctx.scope === 'state' ? ctx.data.cat5 : undefined,
+      cat4a: ctx.scope === 'state' ? ctx.data.cat4a : undefined,
+      tmdlNeeded: ctx.scope === 'national' ? ctx.data.tmdlGap : undefined,
+    };
+    return scoreModules(input);
+  }, [scopeContext]);
 
   // ── Generate Initial Plan ──
   const generatePlan = useCallback(async (additionalDirection?: string) => {
@@ -741,6 +838,21 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
       scrollDiv.style.maxHeight = 'none';
     }
 
+    // Force single-column layout for grids (prevents overlap in PDF rendering)
+    const actionGrids = el.querySelectorAll<HTMLElement>('.pdf-stack-grid');
+    actionGrids.forEach(g => {
+      g.style.display = 'flex';
+      g.style.flexDirection = 'column';
+      g.style.gap = '12px';
+    });
+
+    // Force table cells to wrap instead of overflow
+    const tables = el.querySelectorAll<HTMLElement>('table');
+    tables.forEach(t => {
+      t.style.tableLayout = 'fixed';
+      t.style.wordBreak = 'break-word';
+    });
+
     try {
       const dateStr = new Date().toISOString().slice(0, 10);
       const filename = `PIN_Resolution_Plan_${dateStr}.pdf`;
@@ -752,7 +864,7 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, logging: false, letterRendering: true, windowWidth: 1000 },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' as const },
-        pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.action-card', '.domain-table'] },
+        pagebreak: { mode: ['css', 'legacy'], before: ['.pdf-page-break'], avoid: ['tr', '.action-card', '.domain-table', 'section'] },
       }).from(el).toPdf().get('pdf').then((pdf: any) => {
         const totalPages = pdf.internal.getNumberOfPages();
         const pageWidth = pdf.internal.pageSize.getWidth();
@@ -794,13 +906,22 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
         }
       }).save();
     } finally {
-      // Restore visibility and scroll
+      // Restore visibility, scroll, and grid layout
       pdfOnlyEls.forEach(e => e.style.display = '');
       noPdfEls.forEach(e => e.style.display = '');
       if (scrollDiv) {
         scrollDiv.style.overflow = '';
         scrollDiv.style.maxHeight = '';
       }
+      actionGrids.forEach(g => {
+        g.style.display = '';
+        g.style.flexDirection = '';
+        g.style.gap = '';
+      });
+      tables.forEach(t => {
+        t.style.tableLayout = '';
+        t.style.wordBreak = '';
+      });
     }
   };
 
@@ -910,6 +1031,8 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
           </div>
         )}
 
+        <ConditionsBanner scopeContext={scopeContext} />
+
         <section>
           <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">Situation Assessment</h3>
           <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{plan!.sections.situationAssessment}</div>
@@ -927,7 +1050,7 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
 
         <section>
           <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">Recommended Actions</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="pdf-stack-grid grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="action-card bg-red-50 border border-red-200 rounded-lg p-3">
               <h4 className="text-xs font-bold text-red-700 uppercase mb-2">Immediate (0-30 days)</h4>
               <ul className="space-y-1.5">{plan!.sections.actionsImmediate.map((a, i) => (
@@ -975,6 +1098,9 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
           <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">Projected Outcomes</h3>
           <div className="bg-sky-50 border border-sky-200 rounded-lg p-4 text-sm text-sky-800 whitespace-pre-wrap">{plan!.sections.projectedOutcomes}</div>
         </section>
+
+        {/* Strategy Modules — algorithmic, not AI-generated */}
+        <StrategyModulesSection categories={scoredCategories} />
 
         {/* Disclaimer */}
         <div className="pt-4 border-t border-gray-200 text-xs text-gray-400 space-y-2">
