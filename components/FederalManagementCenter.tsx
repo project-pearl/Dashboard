@@ -28,6 +28,7 @@ import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import StateWaterbodyCard from '@/components/StateWaterbodyCard';
 import ResolutionPlanner, { type ScopeContext, type DataReliabilityReport } from '@/components/ResolutionPlanner';
 import type { NationalSummary } from '@/lib/national-summary';
+import NationalStatusCard from '@/components/NationalStatusCard';
 import { EPA_REGIONS, getEpaRegionForState } from '@/lib/epa-regions';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import { useTheme } from '@/lib/useTheme';
@@ -122,7 +123,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: true, showSituationSummary: true, showTimeRange: true,
     showSLA: false, showRestorationPlan: false, collapseStateTable: false,
-    sections: new Set(['usmap', 'impairmentprofile', 'statebystatesummary', 'top10', 'disclaimer']),
+    sections: new Set(['usmap', 'impairmentprofile', 'situation', 'statebystatesummary', 'top10', 'disclaimer']),
   },
   infrastructure: {
     label: 'Infrastructure',
@@ -5055,110 +5056,9 @@ export function FederalManagementCenter(props: Props) {
         )}
 
 
-        {/* Feature 1: National Situation Summary — unified card with vertical divider */}
+        {/* National Water Quality Status — three-layer story card */}
         {lens.showSituationSummary && (
-        <Card id="section-situation">
-          <CardHeader className="pb-1 pt-4 px-5">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-semibold" style={{ color: 'var(--text-bright)' }}>National Situation Summary</CardTitle>
-              <BrandedPrintBtn sectionId="situation" title="National Situation Summary" />
-            </div>
-            <CardDescription className="text-xs" style={{ color: 'var(--text-dim)' }}>Real-time monitoring network status</CardDescription>
-          </CardHeader>
-          <CardContent className="px-5 pb-4">
-            <div className="flex flex-col lg:flex-row gap-0">
-              {/* Left: Summary stats */}
-              <div className="flex-[2] space-y-3">
-                {/* Primary tier: the headline numbers */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="text-center">
-                    <div className="pin-stat-hero text-[1.75rem] inline-flex items-center gap-1">{nationalStats.totalWaterbodies.toLocaleString()}<ProvenanceIcon metricName="Waterbodies" displayValue={String(nationalStats.totalWaterbodies)} /></div>
-                    <div className="pin-label mt-1">Waterbodies</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="pin-stat-hero text-[1.75rem] inline-flex items-center gap-1">{nationalStats.assessed}<ProvenanceIcon metricName="Assessed Waterbodies" displayValue={String(nationalStats.assessed)} /></div>
-                    <div className="pin-label mt-1">Assessed</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="pin-stat-hero text-[1.75rem] inline-flex items-center gap-1" style={{ color: 'var(--status-severe)' }}>{nationalStats.highAlerts}<ProvenanceIcon metricName="Severe Alerts" displayValue={String(nationalStats.highAlerts)} /></div>
-                    <div className="pin-label mt-1">Severe</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="pin-stat-hero text-[1.75rem] inline-flex items-center gap-1">{nationalStats.monitored.toLocaleString()}<ProvenanceIcon metricName="Monitored Waterbodies" displayValue={String(nationalStats.monitored)} /></div>
-                    <div className="pin-label mt-1">Monitored</div>
-                  </div>
-                </div>
-                {/* Secondary tier: supporting context */}
-                <div className="flex items-center justify-center gap-6 pt-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-                  <div className="text-center">
-                    <span className="pin-stat-secondary text-sm">{nationalStats.statesCovered}</span>
-                    <span className="pin-label ml-1.5">States</span>
-                  </div>
-                  <div className="text-center">
-                    <span className="pin-stat-secondary text-sm" style={{ color: 'var(--status-warning)' }}>{nationalStats.mediumAlerts + nationalStats.lowAlerts}</span>
-                    <span className="pin-label ml-1.5">Watch / Impaired</span>
-                  </div>
-                </div>
-                {/* Waterbody type breakdown */}
-                {Object.keys(attainsAggregation.waterTypeCounts).length > 0 && (
-                  <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 pt-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-                    {Object.entries(attainsAggregation.waterTypeCounts)
-                      .filter(([, count]) => count > 0)
-                      .sort((a, b) => b[1] - a[1])
-                      .map(([type, count]) => (
-                        <span key={type} className="inline-flex items-center gap-1">
-                          <span className="pin-stat-secondary text-xs">{count.toLocaleString()}</span>
-                          <span className="pin-label text-xs">{type}</span>
-                        </span>
-                      ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Vertical divider (horizontal on mobile) */}
-              <div className="hidden lg:block w-px mx-5 self-stretch" style={{ background: 'var(--border-subtle)' }} />
-              <div className="lg:hidden h-px my-3" style={{ background: 'var(--border-subtle)' }} />
-
-              {/* Right: Key Indicators */}
-              {lens.showTopStrip && topStrip && (() => {
-                const s = topStrip;
-                const complianceTiles: Array<{ label: string; value: string; severe?: boolean }> = [
-                  { label: 'Impaired', value: s.totalImpaired.toLocaleString() },
-                  { label: 'Cat 5', value: s.noTmdlCount.toLocaleString(), severe: s.noTmdlCount > 0 },
-                  { label: 'TMDL Gap', value: `${s.tmdlGapPct}%`, severe: s.tmdlGapPct > 50 },
-                  { label: 'Reporting', value: `${s.statesReporting}/${s.totalStates}` },
-                  { label: 'Alerts', value: (s.severeCount + nationalStats.mediumAlerts).toLocaleString(), severe: s.severeCount > 0 },
-                ];
-                const coverageTiles: Array<{ label: string; value: string; severe?: boolean }> = [
-                  { label: 'With Data', value: `${s.pctWithData}%` },
-                  { label: 'Reporting', value: `${s.statesReporting}/${s.totalStates}` },
-                  { label: 'No Data', value: s.noData.toLocaleString(), severe: s.noData > 0 },
-                  { label: 'Sites', value: s.sitesOnline.toLocaleString() },
-                  { label: 'Waterbodies', value: s.withData.toLocaleString() },
-                ];
-                const tilesByLens: Partial<Record<ViewLens, Array<{ label: string; value: string; severe?: boolean }>>> = {
-                  overview: complianceTiles, compliance: complianceTiles,
-                  monitoring: coverageTiles, 'water-quality': complianceTiles,
-                };
-                const tiles = tilesByLens[viewLens] || complianceTiles;
-                if (!tiles.length) return null;
-                return (
-                  <div className="flex-1 flex flex-col justify-center">
-                    <div className="pin-section-label mb-2">Key Indicators</div>
-                    <div className="space-y-2.5">
-                      {tiles.map((tile, i) => (
-                        <div key={i} className="flex items-baseline justify-between">
-                          <span className="pin-label">{tile.label}</span>
-                          <span className="pin-stat-secondary text-sm" style={tile.severe ? { color: 'var(--status-severe)' } : undefined}>{tile.value}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
-          </CardContent>
-        </Card>
+          <NationalStatusCard summary={nationalSummary} />
         )}
 
         </>); {/* end situation */}

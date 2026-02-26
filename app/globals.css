@@ -145,6 +145,9 @@
   --pill-text-active: #FFFFFF;
   --pill-border: rgba(0,0,0,0.10);
   --pill-border-active: #1B2A4A;
+  --bar-track: #E5E7EB;
+  --bg-tooltip: #1e293b;
+  --text-tooltip: #f8fafc;
 }
 
 [data-theme="dark"] {
@@ -184,6 +187,9 @@
   --pill-text-active: #0A1128;
   --pill-border: rgba(58, 189, 176, 0.12);
   --pill-border-active: #3ABDB0;
+  --bar-track: #374151;
+  --bg-tooltip: #f8fafc;
+  --text-tooltip: #1e293b;
 }
 
 /* ── Smooth theme transitions (split timings for refined feel) ── */
