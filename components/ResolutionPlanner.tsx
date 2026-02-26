@@ -100,6 +100,7 @@ export interface DataReliabilityReport {
   overallReliable: boolean;
   staleCaches: string[];
   missingCaches: string[];
+  pendingCaches: string[];
   healthyCaches: string[];
   staleStateCount: number;
   totalCacheCount: number;
@@ -276,9 +277,12 @@ function buildDataReliabilitySection(dr?: DataReliabilityReport): string {
   } else {
     lines.push(`- Status: DATA PIPELINE REPAIR NEEDED (${dr.loadedCacheCount}/${dr.totalCacheCount} caches loaded)`);
     if (dr.staleCaches.length > 0) lines.push(`- Stale caches: ${dr.staleCaches.join(', ')}`);
-    if (dr.missingCaches.length > 0) lines.push(`- Missing/unloaded caches: ${dr.missingCaches.join(', ')}`);
+    if (dr.missingCaches.length > 0) lines.push(`- Failed caches (had data, now missing): ${dr.missingCaches.join(', ')}`);
+    if (dr.pendingCaches.length > 0) lines.push(`- Pending first build (recently deployed): ${dr.pendingCaches.join(', ')} — these will populate on their next scheduled cron run`);
     lines.push(`- ${dr.staleStateCount} states have stale or missing ATTAINS data`);
-    lines.push('- CRITICAL INSTRUCTION: Because the data pipeline is unreliable, the #1 IMMEDIATE ACTION must be "Repair and refresh data pipelines" with specific steps to restore the stale/missing data sources listed above. All subsequent recommendations should note they are based on potentially incomplete data.');
+    if (dr.missingCaches.length > 0 || dr.staleCaches.length > 0) {
+      lines.push('- CRITICAL INSTRUCTION: Because the data pipeline is unreliable, the #1 IMMEDIATE ACTION must be "Repair and refresh data pipelines" with specific steps to restore the stale/missing data sources listed above. All subsequent recommendations should note they are based on potentially incomplete data.');
+    }
   }
   return lines.join('\n') + '\n';
 }
@@ -664,7 +668,20 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
 
               <p className="text-sm text-gray-600 leading-relaxed">{analysisDescription}</p>
 
-              {/* One-click generate */}
+              {/* Direction input — prominent at top before generating */}
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">Direction (optional)</label>
+                <input
+                  value={customPrompt}
+                  onChange={e => setCustomPrompt(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') generatePlan(customPrompt || undefined); }}
+                  placeholder='e.g. "Focus on environmental justice" or "Prioritize PFAS contamination" or "Emergency drought response"'
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 bg-white"
+                />
+                <p className="text-[11px] text-gray-400 mt-1.5">Add specific focus areas or priorities. You can also refine the plan after it generates.</p>
+              </div>
+
+              {/* Generate */}
               <button
                 onClick={() => generatePlan(customPrompt || undefined)}
                 className="w-full py-3.5 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
@@ -672,18 +689,6 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
                 <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                 Generate {scopeContext.scope === 'national' ? 'National' : scopeContext.scope === 'region' ? 'Regional' : 'State'} Response Plan
               </button>
-
-              {/* Optional custom direction */}
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">Optional: add specific direction before generating</label>
-                <input
-                  value={customPrompt}
-                  onChange={e => setCustomPrompt(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') generatePlan(customPrompt || undefined); }}
-                  placeholder='e.g. "Focus on environmental justice" or "Prioritize PFAS contamination" or "Emergency drought response"'
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
-                />
-              </div>
 
               <p className="text-[11px] text-gray-400 text-center">Plan generation uses AI tokens and takes 30-60 seconds.</p>
             </>
@@ -801,7 +806,7 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
 
   // ── Plan Display ──
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col" style={{ maxHeight: "90vh" }}>
+    <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
       {/* === PDF capture area — includes header + content, excludes refine bar === */}
       <div ref={pdfContentRef}>
 
@@ -847,7 +852,7 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
         </div>
 
         {/* Blue title header (captured in PDF) */}
-        <div className="bg-gradient-to-r from-blue-900 to-blue-700 px-6 py-4 text-white flex-shrink-0">
+        <div className="bg-gradient-to-r from-blue-900 to-blue-700 px-6 py-4 text-white">
           <div className="flex justify-between items-start">
             <div>
               <p className="text-blue-200 text-xs uppercase tracking-wide font-medium">
@@ -868,7 +873,7 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
         </div>
 
         {/* Scrollable Plan Content */}
-        <div className="plan-scroll-area flex-1 overflow-y-auto p-6 space-y-6 print:overflow-visible">
+        <div className="plan-scroll-area p-6 space-y-6 print:overflow-visible">
 
         <ScopeSummaryBadge scopeContext={scopeContext} />
 
@@ -891,8 +896,9 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
                     ? `Healthy: ${dataReliability.healthyCaches.slice(0, 5).join(', ')}${dataReliability.healthyCaches.length > 5 ? ` +${dataReliability.healthyCaches.length - 5} more` : ''}`
                     : <>
                         {dataReliability.staleCaches.length > 0 && <>Stale: {dataReliability.staleCaches.join(', ')}. </>}
-                        {dataReliability.missingCaches.length > 0 && <>Missing: {dataReliability.missingCaches.join(', ')}. </>}
-                        Actions below may be based on incomplete data.
+                        {dataReliability.missingCaches.length > 0 && <>Failed: {dataReliability.missingCaches.join(', ')}. </>}
+                        {(dataReliability.staleCaches.length > 0 || dataReliability.missingCaches.length > 0) && <>Actions below may be based on incomplete data. </>}
+                        {dataReliability.pendingCaches.length > 0 && <>Awaiting first run: {dataReliability.pendingCaches.join(', ')}.</>}
                       </>
                   }
                 </p>
@@ -921,7 +927,7 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
 
         <section>
           <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">Recommended Actions</h3>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="action-card bg-red-50 border border-red-200 rounded-lg p-3">
               <h4 className="text-xs font-bold text-red-700 uppercase mb-2">Immediate (0-30 days)</h4>
               <ul className="space-y-1.5">{plan!.sections.actionsImmediate.map((a, i) => (
@@ -978,11 +984,16 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
       </div>
       </div>{/* end pdfContentRef capture area */}
 
-      {/* Refine Bar — always visible at bottom */}
-      <div className="flex-shrink-0 border-t border-gray-200 bg-white print:hidden">
+      {/* Refine Bar — at end of output */}
+      <div className="border-t border-gray-200 bg-gray-50 rounded-b-xl print:hidden">
+        <div className="px-6 pt-5 pb-1">
+          <h3 className="text-sm font-bold text-gray-700">Refine This Plan</h3>
+          <p className="text-xs text-gray-400 mt-0.5">Describe what to change and the plan will be regenerated with your direction.</p>
+        </div>
+
         {/* Refine history */}
         {history.length > 0 && (
-          <div ref={historyRef} className="max-h-32 overflow-y-auto px-4 pt-3 space-y-2">
+          <div ref={historyRef} className="max-h-48 overflow-y-auto px-6 pt-3 space-y-2">
             {history.map((msg, i) => (
               <div key={i} className={`text-xs px-3 py-1.5 rounded-lg max-w-[80%] ${
                 msg.role === "user"
@@ -996,14 +1007,14 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
         )}
 
         {/* Input */}
-        <div className="px-4 py-3 flex gap-2">
+        <div className="px-6 py-4 flex gap-2">
           <input
             ref={refineRef}
             value={refineInput}
             onChange={e => setRefineInput(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter" && !refining) refinePlan(); }}
-            placeholder='Refine: "Focus on EJ" or "Add emergency urgency" or "What about green infrastructure?"'
-            className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
+            placeholder='e.g. "Focus on EJ" or "Add emergency urgency" or "What about green infrastructure?"'
+            className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 bg-white"
             disabled={refining}
           />
           <button

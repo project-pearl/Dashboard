@@ -2020,6 +2020,7 @@ export function FederalManagementCenter(props: Props) {
         const caches = json.caches as Record<string, any>;
         const staleCaches: string[] = [];
         const missingCaches: string[] = [];
+        const pendingCaches: string[] = [];
         const healthyCaches: string[] = [];
         let staleStateCount = 0;
         let deployedTotal = 0;
@@ -2032,7 +2033,13 @@ export function FederalManagementCenter(props: Props) {
 
           const loaded = c.loaded !== false && c.status !== 'cold' && c.status !== 'idle';
           if (!loaded) {
-            missingCaches.push(cfg.label);                  // deployed but failed to load
+            // Distinguish "never built" (pending first cron run) from "was built but lost"
+            const hasEverBuilt = c.built || c.ageHours != null;
+            if (hasEverBuilt) {
+              missingCaches.push(cfg.label);                // had data but failed to reload
+            } else {
+              pendingCaches.push(cfg.label);                // awaiting first cron run
+            }
             continue;
           }
           deployedLoaded++;
@@ -2051,6 +2058,7 @@ export function FederalManagementCenter(props: Props) {
           staleStateCount = caches.attains.statesMissing || 0;
         }
 
+        // Pending caches don't count as problems — they just haven't had their first run
         const problemCount = staleCaches.length + missingCaches.length;
         const overallReliable = problemCount <= Math.floor(deployedTotal * 0.25);
         const recommendation = overallReliable
@@ -2062,6 +2070,7 @@ export function FederalManagementCenter(props: Props) {
             overallReliable,
             staleCaches,
             missingCaches,
+            pendingCaches,
             healthyCaches,
             staleStateCount,
             totalCacheCount: deployedTotal,
