@@ -1,4 +1,5 @@
-import jsPDF from 'jspdf';
+// jsPDF is imported dynamically to avoid 'self is not defined' during SSR prerendering
+type JsPDF = import('jspdf').jsPDF;
 
 export interface PDFContentSection {
   title?: string;
@@ -10,34 +11,43 @@ export interface PDFContentSection {
 }
 
 export class BrandedPDFGenerator {
-  private doc: jsPDF;
+  private doc!: JsPDF;
   private currentPage: number = 1;
   private totalPages: number = 1;
   private currentY: number = 0;
-  private readonly pageWidth: number;
-  private readonly pageHeight: number;
+  private pageWidth: number = 0;
+  private pageHeight: number = 0;
   private readonly margin: number = 20;
   private readonly headerHeight: number = 35;
   private readonly footerHeight: number = 25;
   private logoImage: string | null = null;
+  private orientation: 'portrait' | 'landscape';
 
   constructor(orientation: 'portrait' | 'landscape' = 'portrait') {
-    this.doc = new jsPDF({
-      orientation,
-      unit: 'mm',
-      format: 'letter'
-    });
+    this.orientation = orientation;
+  }
 
+  /** Must be called before any other method. Dynamically loads jsPDF (browser-only). */
+  async init(): Promise<void> {
+    const { default: jsPDF } = await import('jspdf');
+    this.doc = new jsPDF({
+      orientation: this.orientation,
+      unit: 'mm',
+      format: 'letter',
+    });
     this.pageWidth = this.doc.internal.pageSize.getWidth();
     this.pageHeight = this.doc.internal.pageSize.getHeight();
     this.currentY = this.headerHeight + 10;
   }
 
   initialize() {
+    if (!this.doc) throw new Error('BrandedPDFGenerator: call await loadLogo() before initialize()');
     this.addHeader();
   }
 
   async loadLogo(): Promise<void> {
+    // Auto-initialize jsPDF on first async call (avoids 'self is not defined' during SSR)
+    if (!this.doc) await this.init();
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
@@ -269,7 +279,7 @@ export class BrandedPDFGenerator {
     this.addSpacer(5);
   }
 
-  finalize(): jsPDF {
+  finalize(): JsPDF {
     this.totalPages = this.currentPage;
 
     for (let i = 1; i <= this.totalPages; i++) {
