@@ -289,7 +289,7 @@ const ROLE_ROUTES: Record<UserRole, string> = {
   Utility: '/dashboard/utility/default',
   Insurance: '/dashboard/insurance',
   Agriculture: '/dashboard/agriculture',
-  Lab: '/dashboard/shuck',
+  Lab: '/dashboard/aqua-lo',
 };
 
 export default function Home() {
