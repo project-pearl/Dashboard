@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, AlertCircle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Building2, Info, LogOut, Waves, Heart, TreePine, Sprout, FileCheck, Scale, Activity, Sparkles, ClipboardList, Trophy, FileText, Banknote, Zap, RadioTower, Wrench, HardHat, FlaskConical, Leaf, Landmark, ShieldCheck } from 'lucide-react';
+import ResolutionPlanner from '@/components/ResolutionPlanner';
 import { BrandedPrintBtn } from '@/lib/brandedPrint';
 import { useRouter } from 'next/navigation';
 import { getRegionById } from '@/lib/regionsConfig';
@@ -2896,25 +2897,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             );
 
             // ── Resolution Planner ─────────────────────────────────────────
-            case 'resolution-planner': return DS(
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <ClipboardList className="h-5 w-5 text-cyan-600" />
-                    Resolution Plan Workspace
-                  </CardTitle>
-                  <CardDescription>Build and track restoration plans for impaired waterbodies</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8 text-slate-400">
-                    <ClipboardList className="h-10 w-10 mx-auto mb-3 text-slate-300" />
-                    <p className="text-sm font-medium">Select a waterbody from the map to begin planning</p>
-                    <p className="text-xs mt-1">Resolution plans integrate TMDL requirements, BMP options, cost estimates, and implementation timelines</p>
-                  </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ATTAINS, state TMDL tracking system, BMP cost database</p>
-                </CardContent>
-              </Card>
-            );
+            case 'resolution-planner': return DS(<ResolutionPlanner userRole="state" scopeContext={{ scope: 'state', data: { abbr: stateAbbr, name: STATE_NAMES[stateAbbr] || stateAbbr, epaRegion: 0, totalWaterbodies: regionData.length, assessed: regionData.length, impaired: regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length, score: Math.round(regionData.reduce((a, r) => a + (r.alertLevel === 'none' ? 95 : r.alertLevel === 'low' ? 75 : r.alertLevel === 'medium' ? 50 : 25), 0) / Math.max(regionData.length, 1)), grade: 'B', cat5: 0, cat4a: 0, cat4b: 0, cat4c: 0, topCauses: [] } }} />);
 
             // ── Restoration Planner ─────────────────────────────────────────
             case 'restoration-planner': {

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import LocationReportCard from '@/components/LocationReportCard';
+import ResolutionPlanner from '@/components/ResolutionPlanner';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 
@@ -354,36 +355,7 @@ export default function UtilityManagementCenter({ systemId }: Props) {
             // VIEW 3: RESOLUTION PLANNER
             // ══════════════════════════════════════════════════════════════
 
-            case 'resolution-planner': return DS(
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <ClipboardList className="h-5 w-5 text-indigo-600" />
-                    Resolution Plan Workspace
-                  </CardTitle>
-                  <CardDescription>Select an issue type to generate a utility-specific resolution plan with root cause analysis, solution options, compliance pathway, and capital integration</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {[
-                      { label: 'Effluent Limit Exceedance', bg: 'bg-red-50 border-red-200' },
-                      { label: 'Capacity Constraint', bg: 'bg-amber-50 border-amber-200' },
-                      { label: 'Source Water Challenge', bg: 'bg-cyan-50 border-cyan-200' },
-                      { label: 'Infrastructure Failure', bg: 'bg-slate-50 border-slate-200' },
-                      { label: 'New Regulatory Requirement', bg: 'bg-purple-50 border-purple-200' },
-                      { label: 'I&I Reduction Need', bg: 'bg-blue-50 border-blue-200' },
-                      { label: 'Consent Decree Milestone', bg: 'bg-red-50 border-red-200' },
-                      { label: 'PEARL ALIA Evaluation', bg: 'bg-green-50 border-green-200' },
-                    ].map(item => (
-                      <button key={item.label} className={`rounded-xl border p-4 text-left hover:shadow-sm transition-all ${item.bg}`}>
-                        <div className="text-xs font-semibold text-slate-700">{item.label}</div>
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Pre-populated with utility&apos;s active issues from compliance data</p>
-                </CardContent>
-              </Card>
-            );
+            case 'resolution-planner': return DS(<ResolutionPlanner userRole="ms4_utility" scopeContext={{ scope: 'national', data: { totalStates: 50, totalWaterbodies: 0, totalImpaired: 0, averageScore: 0, highAlertStates: 0, topCauses: [], worstStates: [] } }} />);
 
             // ══════════════════════════════════════════════════════════════
             // VIEW 4: TRENDS & PROJECTIONS
