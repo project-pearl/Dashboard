@@ -580,7 +580,7 @@ const WATERBODY_COORDS: Record<string, { lat: number; lon: number }> = {
 export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion, onToggleDevMode }: Props) {
   const stateName = STATE_NAMES[stateAbbr] || stateAbbr;
   const agency = STATE_AGENCIES[stateAbbr] || STATE_AUTHORITIES[stateAbbr] || null;
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const router = useRouter();
 
   // ── MS4 Jurisdiction Scoping ──
@@ -5060,10 +5060,23 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
             case 'mon-network': return DS(
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Radio className="h-5 w-5 text-blue-600" />
-                    Monitoring Network
-                  </CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Radio className="h-5 w-5 text-blue-600" />
+                      Monitoring Network
+                    </CardTitle>
+                    {isAdmin && (
+                      <select
+                        value={stateAbbr}
+                        onChange={e => router.push(`/dashboard/state/${e.target.value}`)}
+                        className="text-xs border border-slate-200 rounded-md px-2 py-1 bg-white text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-blue-300 cursor-pointer"
+                      >
+                        {Object.entries(STATE_NAMES).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
+                          <option key={abbr} value={abbr}>{abbr} — {name}</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
                   <CardDescription>MS4 monitoring station network status and coverage</CardDescription>
                 </CardHeader>
                 <CardContent>

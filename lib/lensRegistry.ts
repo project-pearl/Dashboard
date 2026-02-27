@@ -190,6 +190,17 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'portfolio-risk', label: 'Portfolio Risk Score' },
     { id: 'regulatory-changes', label: 'Regulatory Change Tracker' },
   ],
+  // ── Aqua-LO Laboratory (8 items) ───────────────────────────────────────────
+  '/dashboard/aqua-lo': [
+    { id: 'overview',          label: 'Lab Dashboard' },
+    { id: 'intake',            label: 'Sample Intake' },
+    { id: 'chain-of-custody',  label: 'Chain of Custody' },
+    { id: 'queue',             label: 'Analysis Queue' },
+    { id: 'results',           label: 'Results & QA/QC' },
+    { id: 'push',              label: 'Push to PIN' },
+    { id: 'audit',             label: 'Audit Trail' },
+    { id: 'reports',           label: 'Reports' },
+  ],
   // ── Agriculture (9 items) ──────────────────────────────────────────────────
   '/dashboard/agriculture': [
     { id: 'overview', label: 'Dashboard' },

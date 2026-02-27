@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import HeroBanner from '@/components/HeroBanner';
 import { KPIStrip, KPICard } from '@/components/KPIStrip';
 import { DashboardSection } from '@/components/DashboardSection';
+import { useLensParam } from '@/lib/useLensParam';
 import {
   FlaskConical,
   Award,
@@ -14,7 +15,20 @@ import {
   FileText,
   Thermometer,
   ClipboardList,
+  Activity,
+  Network,
+  ScrollText,
 } from 'lucide-react';
+
+type AquaLoLens =
+  | 'overview'
+  | 'intake'
+  | 'chain-of-custody'
+  | 'queue'
+  | 'results'
+  | 'push'
+  | 'audit'
+  | 'reports';
 
 const MOCK_SAMPLES = [
   { id: 'SH-2025-0847', matrix: 'Surface Water', collected: '2025-02-20', analyst: 'J. Chen', status: 'In Progress', method: 'EPA 524.2', holdTime: '14 days' },
@@ -68,7 +82,10 @@ const statusColor = (status: string) => {
   }
 };
 
-export default function AquaLoPage() {
+function AquaLoContent() {
+  const [lens] = useLensParam<AquaLoLens>('overview');
+  const show = (target: AquaLoLens) => lens === 'overview' || lens === target;
+
   const kpiCards: KPICard[] = [
     { label: 'Active Samples', value: '47', icon: FlaskConical, delta: 12, status: 'good' },
     { label: 'Pending QA/QC', value: '8', icon: ClipboardList, delta: -20, status: 'good' },
@@ -88,180 +105,242 @@ export default function AquaLoPage() {
         <KPIStrip cards={kpiCards} />
 
         {/* Sample Intake Queue */}
-        <DashboardSection title="Sample Intake Queue" subtitle="Incoming and active sample tracking">
-          <div className="overflow-x-auto -mx-5">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-200">
-                  <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Sample ID</th>
-                  <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Matrix</th>
-                  <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Collected</th>
-                  <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Method</th>
-                  <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Analyst</th>
-                  <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Hold Time</th>
-                  <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {MOCK_SAMPLES.map((s) => (
-                  <tr key={s.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                    <td className="py-2.5 px-4 text-teal-700 font-mono text-xs font-semibold">{s.id}</td>
-                    <td className="py-2.5 px-4 text-slate-700">{s.matrix}</td>
-                    <td className="py-2.5 px-4 text-slate-500 text-xs">{s.collected}</td>
-                    <td className="py-2.5 px-4 text-slate-700 font-mono text-xs">{s.method}</td>
-                    <td className="py-2.5 px-4 text-slate-700">{s.analyst}</td>
-                    <td className="py-2.5 px-4 text-slate-500 text-xs">{s.holdTime}</td>
-                    <td className="py-2.5 px-4">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor(s.status)}`}>
-                        {s.status}
-                      </span>
-                    </td>
+        {show('intake') && (
+          <DashboardSection title="Sample Intake Queue" subtitle="Incoming and active sample tracking">
+            <div className="overflow-x-auto -mx-5">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200">
+                    <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Sample ID</th>
+                    <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Matrix</th>
+                    <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Collected</th>
+                    <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Method</th>
+                    <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Analyst</th>
+                    <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Hold Time</th>
+                    <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </DashboardSection>
+                </thead>
+                <tbody>
+                  {MOCK_SAMPLES.map((s) => (
+                    <tr key={s.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                      <td className="py-2.5 px-4 text-teal-700 font-mono text-xs font-semibold">{s.id}</td>
+                      <td className="py-2.5 px-4 text-slate-700">{s.matrix}</td>
+                      <td className="py-2.5 px-4 text-slate-500 text-xs">{s.collected}</td>
+                      <td className="py-2.5 px-4 text-slate-700 font-mono text-xs">{s.method}</td>
+                      <td className="py-2.5 px-4 text-slate-700">{s.analyst}</td>
+                      <td className="py-2.5 px-4 text-slate-500 text-xs">{s.holdTime}</td>
+                      <td className="py-2.5 px-4">
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor(s.status)}`}>
+                          {s.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </DashboardSection>
+        )}
 
         {/* QA/QC Dashboard */}
-        <DashboardSection title="QA/QC Dashboard" subtitle="Method quality control metrics">
-          <div className="overflow-x-auto -mx-5">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-200">
-                  <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Method</th>
-                  <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Blanks</th>
-                  <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Duplicates</th>
-                  <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Spikes</th>
-                  <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {QA_QC_METRICS.map((q) => (
-                  <tr key={q.method} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                    <td className="py-2.5 px-4 text-slate-800 font-medium">{q.method}</td>
-                    <td className="py-2.5 px-4">
-                      <span className={`text-xs font-medium ${q.blanks === 'Pass' ? 'text-emerald-600' : 'text-amber-600'}`}>{q.blanks}</span>
-                    </td>
-                    <td className="py-2.5 px-4 text-slate-600">{q.duplicates}</td>
-                    <td className="py-2.5 px-4 text-slate-600">{q.spikes}</td>
-                    <td className="py-2.5 px-4">
-                      {q.status === 'good'
-                        ? <CheckCircle className="w-4 h-4 text-emerald-500" />
-                        : <AlertTriangle className="w-4 h-4 text-amber-500" />
-                      }
-                    </td>
+        {show('results') && (
+          <DashboardSection title="QA/QC Dashboard" subtitle="Method quality control metrics">
+            <div className="overflow-x-auto -mx-5">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200">
+                    <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Method</th>
+                    <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Blanks</th>
+                    <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Duplicates</th>
+                    <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Spikes</th>
+                    <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </DashboardSection>
+                </thead>
+                <tbody>
+                  {QA_QC_METRICS.map((q) => (
+                    <tr key={q.method} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                      <td className="py-2.5 px-4 text-slate-800 font-medium">{q.method}</td>
+                      <td className="py-2.5 px-4">
+                        <span className={`text-xs font-medium ${q.blanks === 'Pass' ? 'text-emerald-600' : 'text-amber-600'}`}>{q.blanks}</span>
+                      </td>
+                      <td className="py-2.5 px-4 text-slate-600">{q.duplicates}</td>
+                      <td className="py-2.5 px-4 text-slate-600">{q.spikes}</td>
+                      <td className="py-2.5 px-4">
+                        {q.status === 'good'
+                          ? <CheckCircle className="w-4 h-4 text-emerald-500" />
+                          : <AlertTriangle className="w-4 h-4 text-amber-500" />
+                        }
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </DashboardSection>
+        )}
 
         {/* Method Registry */}
-        <DashboardSection title="Method Registry" subtitle="Certified analytical methods and parameters">
-          <div className="overflow-x-auto -mx-5">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-200">
-                  <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Method</th>
-                  <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Analytes</th>
-                  <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Matrix</th>
-                  <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">MDL Range</th>
-                  <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Hold Time</th>
-                  <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Preservation</th>
-                </tr>
-              </thead>
-              <tbody>
-                {METHOD_REGISTRY.map((m) => (
-                  <tr key={m.method} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                    <td className="py-2.5 px-4 text-teal-700 font-mono text-xs font-semibold">{m.method}</td>
-                    <td className="py-2.5 px-4 text-slate-800">{m.analytes}</td>
-                    <td className="py-2.5 px-4 text-slate-600">{m.matrix}</td>
-                    <td className="py-2.5 px-4 text-slate-500 font-mono text-xs">{m.mdl}</td>
-                    <td className="py-2.5 px-4 text-slate-500">{m.holdTime}</td>
-                    <td className="py-2.5 px-4 text-slate-500 text-xs">{m.preservation}</td>
+        {show('results') && (
+          <DashboardSection title="Method Registry" subtitle="Certified analytical methods and parameters">
+            <div className="overflow-x-auto -mx-5">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200">
+                    <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Method</th>
+                    <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Analytes</th>
+                    <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Matrix</th>
+                    <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">MDL Range</th>
+                    <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Hold Time</th>
+                    <th className="text-left py-2.5 px-4 text-slate-500 font-medium text-xs">Preservation</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </DashboardSection>
+                </thead>
+                <tbody>
+                  {METHOD_REGISTRY.map((m) => (
+                    <tr key={m.method} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                      <td className="py-2.5 px-4 text-teal-700 font-mono text-xs font-semibold">{m.method}</td>
+                      <td className="py-2.5 px-4 text-slate-800">{m.analytes}</td>
+                      <td className="py-2.5 px-4 text-slate-600">{m.matrix}</td>
+                      <td className="py-2.5 px-4 text-slate-500 font-mono text-xs">{m.mdl}</td>
+                      <td className="py-2.5 px-4 text-slate-500">{m.holdTime}</td>
+                      <td className="py-2.5 px-4 text-slate-500 text-xs">{m.preservation}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </DashboardSection>
+        )}
 
         {/* Chain of Custody */}
-        <DashboardSection title="Chain of Custody" subtitle="Sample SH-2025-0847 custody timeline">
-          <div className="relative pl-6">
-            {COC_TIMELINE.map((step, i) => (
-              <div key={i} className="relative pb-6 last:pb-0">
-                {i < COC_TIMELINE.length - 1 && (
-                  <div className="absolute left-[-17px] top-6 bottom-0 w-px bg-teal-300" />
-                )}
-                <div className="absolute left-[-21px] top-1 w-2 h-2 rounded-full bg-teal-500 ring-2 ring-teal-200" />
-                <div className="bg-white border border-slate-200 rounded-lg px-4 py-3 shadow-sm">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-semibold text-slate-800">{step.event}</span>
-                    <span className="text-[10px] text-slate-400 font-mono">{step.time}</span>
-                  </div>
-                  <div className="flex items-center gap-4 text-xs text-slate-500">
-                    <span>{step.by}</span>
-                    {step.temp !== '\u2014' && (
-                      <span className="flex items-center gap-1">
-                        <Thermometer className="w-3 h-3" /> {step.temp}
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-[10px] text-slate-400 mt-1">{step.notes}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </DashboardSection>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Inventory Management */}
-          <DashboardSection title="Inventory Management" subtitle="Reagent and supply tracking">
-            <div className="space-y-2">
-              {INVENTORY_ALERTS.map((item) => (
-                <div key={item.item} className={`flex items-center justify-between rounded-lg px-4 py-3 ${
-                  item.status === 'critical' ? 'bg-red-50 border border-red-200' : 'bg-white border border-slate-200'
-                }`}>
-                  <div>
-                    <div className="text-sm text-slate-800 font-medium">{item.item}</div>
-                    <div className="text-[10px] text-slate-400">Reorder at: {item.reorder}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className={`text-lg font-bold ${item.qty < item.reorder ? 'text-red-600' : 'text-slate-800'}`}>
-                      {item.qty}
+        {show('chain-of-custody') && (
+          <DashboardSection title="Chain of Custody" subtitle="Sample SH-2025-0847 custody timeline">
+            <div className="relative pl-6">
+              {COC_TIMELINE.map((step, i) => (
+                <div key={i} className="relative pb-6 last:pb-0">
+                  {i < COC_TIMELINE.length - 1 && (
+                    <div className="absolute left-[-17px] top-6 bottom-0 w-px bg-teal-300" />
+                  )}
+                  <div className="absolute left-[-21px] top-1 w-2 h-2 rounded-full bg-teal-500 ring-2 ring-teal-200" />
+                  <div className="bg-white border border-slate-200 rounded-lg px-4 py-3 shadow-sm">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-semibold text-slate-800">{step.event}</span>
+                      <span className="text-[10px] text-slate-400 font-mono">{step.time}</span>
                     </div>
-                    <div className="text-[10px] text-slate-400">in stock</div>
+                    <div className="flex items-center gap-4 text-xs text-slate-500">
+                      <span>{step.by}</span>
+                      {step.temp !== '\u2014' && (
+                        <span className="flex items-center gap-1">
+                          <Thermometer className="w-3 h-3" /> {step.temp}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[10px] text-slate-400 mt-1">{step.notes}</div>
                   </div>
                 </div>
               ))}
             </div>
           </DashboardSection>
+        )}
 
-          {/* Reporting Engine */}
-          <DashboardSection title="Reporting Engine" subtitle="Generate lab reports and export data">
-            <div className="space-y-3">
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 text-center">
-                <FileText className="w-8 h-8 text-teal-600 mx-auto mb-2" />
-                <h4 className="text-sm font-semibold text-slate-800 mb-1">Lab Report Generator</h4>
-                <p className="text-xs text-slate-500 mb-4 max-w-sm mx-auto">
-                  Generate branded lab reports per sample or batch with QA/QC data, chain of custody, and certifications.
-                </p>
-                <div className="flex justify-center gap-3">
-                  <button className="px-4 py-2 rounded-lg bg-teal-50 text-teal-700 border border-teal-200 text-sm font-medium hover:bg-teal-100 transition-colors">
-                    Single Sample
-                  </button>
-                  <button className="px-4 py-2 rounded-lg bg-white text-slate-600 border border-slate-200 text-sm font-medium hover:bg-slate-50 transition-colors">
-                    Batch Report
-                  </button>
-                </div>
-              </div>
+        {/* Analysis Queue — placeholder */}
+        {show('queue') && lens !== 'overview' && (
+          <DashboardSection title="Analysis Queue" subtitle="Pending and in-progress analytical runs">
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-8 text-center">
+              <Activity className="w-8 h-8 text-teal-600 mx-auto mb-2" />
+              <h4 className="text-sm font-semibold text-slate-800 mb-1">Analysis Queue</h4>
+              <p className="text-xs text-slate-500 max-w-md mx-auto">
+                Instrument scheduling, method queue management, and real-time run status will appear here.
+              </p>
             </div>
           </DashboardSection>
-        </div>
+        )}
+
+        {/* Push to PIN — placeholder */}
+        {show('push') && lens !== 'overview' && (
+          <DashboardSection title="Push to PIN" subtitle="Publish validated results to the PIN network">
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-8 text-center">
+              <Network className="w-8 h-8 text-teal-600 mx-auto mb-2" />
+              <h4 className="text-sm font-semibold text-slate-800 mb-1">Push to PIN</h4>
+              <p className="text-xs text-slate-500 max-w-md mx-auto">
+                Select validated batches and publish finalized results to the Public Interest Network for downstream consumers.
+              </p>
+            </div>
+          </DashboardSection>
+        )}
+
+        {/* Audit Trail — placeholder */}
+        {show('audit') && lens !== 'overview' && (
+          <DashboardSection title="Audit Trail" subtitle="Complete record of lab actions and changes">
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-8 text-center">
+              <ScrollText className="w-8 h-8 text-teal-600 mx-auto mb-2" />
+              <h4 className="text-sm font-semibold text-slate-800 mb-1">Audit Trail</h4>
+              <p className="text-xs text-slate-500 max-w-md mx-auto">
+                Immutable log of sample edits, QA/QC overrides, custody transfers, and user actions for regulatory compliance.
+              </p>
+            </div>
+          </DashboardSection>
+        )}
+
+        {/* Inventory + Reporting — side-by-side on overview, stacked on individual lenses */}
+        {(show('intake') || show('reports')) && (
+          <div className={`grid gap-6 ${lens === 'overview' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
+            {/* Inventory Management */}
+            {show('intake') && (
+              <DashboardSection title="Inventory Management" subtitle="Reagent and supply tracking">
+                <div className="space-y-2">
+                  {INVENTORY_ALERTS.map((item) => (
+                    <div key={item.item} className={`flex items-center justify-between rounded-lg px-4 py-3 ${
+                      item.status === 'critical' ? 'bg-red-50 border border-red-200' : 'bg-white border border-slate-200'
+                    }`}>
+                      <div>
+                        <div className="text-sm text-slate-800 font-medium">{item.item}</div>
+                        <div className="text-[10px] text-slate-400">Reorder at: {item.reorder}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className={`text-lg font-bold ${item.qty < item.reorder ? 'text-red-600' : 'text-slate-800'}`}>
+                          {item.qty}
+                        </div>
+                        <div className="text-[10px] text-slate-400">in stock</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </DashboardSection>
+            )}
+
+            {/* Reporting Engine */}
+            {show('reports') && (
+              <DashboardSection title="Reporting Engine" subtitle="Generate lab reports and export data">
+                <div className="space-y-3">
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 text-center">
+                    <FileText className="w-8 h-8 text-teal-600 mx-auto mb-2" />
+                    <h4 className="text-sm font-semibold text-slate-800 mb-1">Lab Report Generator</h4>
+                    <p className="text-xs text-slate-500 mb-4 max-w-sm mx-auto">
+                      Generate branded lab reports per sample or batch with QA/QC data, chain of custody, and certifications.
+                    </p>
+                    <div className="flex justify-center gap-3">
+                      <button className="px-4 py-2 rounded-lg bg-teal-50 text-teal-700 border border-teal-200 text-sm font-medium hover:bg-teal-100 transition-colors">
+                        Single Sample
+                      </button>
+                      <button className="px-4 py-2 rounded-lg bg-white text-slate-600 border border-slate-200 text-sm font-medium hover:bg-slate-50 transition-colors">
+                        Batch Report
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </DashboardSection>
+            )}
+          </div>
+        )}
       </div>
     </div>
+  );
+}
+
+export default function AquaLoPage() {
+  return (
+    <Suspense fallback={null}>
+      <AquaLoContent />
+    </Suspense>
   );
 }
