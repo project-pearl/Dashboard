@@ -32,9 +32,11 @@ import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { PolicyTracker } from '@/components/PolicyTracker';
 import { EmergingContaminantsTracker } from '@/components/EmergingContaminantsTracker';
 import ResolutionPlanner from '@/components/ResolutionPlanner';
+import RestorationPlanner from '@/components/RestorationPlanner';
 import { DisasterEmergencyPanel } from '@/components/DisasterEmergencyPanel';
 import { CampusStormwaterPanel } from '@/components/CampusStormwaterPanel';
 import { WatershedPartnershipsPanel } from '@/components/WatershedPartnershipsPanel';
+import LocationReportCard from '@/components/LocationReportCard';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import dynamic from 'next/dynamic';
@@ -95,7 +97,7 @@ const LENS_CONFIG: Record<ViewLens, {
   briefing:    { label: 'AI Briefing', description: 'AI-generated research intelligence briefing',
     sections: new Set(['insights', 'alertfeed', 'disclaimer']) },
   planner:     { label: 'Resolution Planner', description: 'Research-driven resolution planning workspace',
-    sections: new Set(['resolution-planner', 'disclaimer']) },
+    sections: new Set(['resolution-planner', 'restoration-planner', 'disclaimer']) },
   trends:      { label: 'Trends & Projections', description: 'Water quality trends, research metrics, and data projections',
     sections: new Set(['trends-dashboard', 'disclaimer']) },
   policy:      { label: 'Policy Tracker', description: 'Water policy tracking for research context',
@@ -2680,6 +2682,20 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
 
             // ── Shared panels ──
             case 'resolution-planner': return DS(<ResolutionPlanner userRole="university" scopeContext={{ scope: 'state', data: { abbr: stateAbbr, name: STATE_NAMES[stateAbbr] || stateAbbr, epaRegion: 3, totalWaterbodies: regionData.length, assessed: regionData.length, impaired: regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length, score: Math.round(regionData.reduce((a, r) => a + (r.alertLevel === 'none' ? 95 : r.alertLevel === 'low' ? 75 : r.alertLevel === 'medium' ? 50 : 25), 0) / Math.max(regionData.length, 1)), grade: 'B', cat5: 0, cat4a: 0, cat4b: 0, cat4c: 0, topCauses: [] } }} />);
+            case 'restoration-planner': {
+              const rpRegion = regionData.find(r => r.id === activeDetailId);
+              return DS(
+                <RestorationPlanner
+                  regionId={activeDetailId}
+                  regionName={rpRegion?.name}
+                  stateAbbr={stateAbbr}
+                  waterData={waterData?.parameters ?? null}
+                  alertLevel={rpRegion?.alertLevel}
+                  attainsCategory={attainsCache[activeDetailId ?? '']?.category}
+                  attainsCauses={attainsCache[activeDetailId ?? '']?.causes}
+                />
+              );
+            }
             case 'policy-tracker': return DS(<PolicyTracker />);
             case 'contaminants-tracker': return DS(<EmergingContaminantsTracker role="university" selectedState={stateAbbr} />);
             case 'icis': return DS(<ICISCompliancePanel state={stateAbbr} compactMode={false} />);
@@ -2716,6 +2732,8 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
             // ── University exclusive panels ──
             case 'campus-stormwater-panel': return DS(<CampusStormwaterPanel stateAbbr={stateAbbr} />);
             case 'watershed-partnerships-panel': return DS(<WatershedPartnershipsPanel stateAbbr={stateAbbr} />);
+
+            case 'location-report': return DS(<LocationReportCard />);
 
             case 'disclaimer': return DS(
               <PlatformDisclaimer />

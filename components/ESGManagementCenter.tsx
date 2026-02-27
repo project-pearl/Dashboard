@@ -44,11 +44,13 @@ import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
 import { PolicyTracker } from '@/components/PolicyTracker';
 import { EmergingContaminantsTracker } from '@/components/EmergingContaminantsTracker';
 import ResolutionPlanner from '@/components/ResolutionPlanner';
+import RestorationPlanner from '@/components/RestorationPlanner';
 import { DisasterEmergencyPanel } from '@/components/DisasterEmergencyPanel';
 import { WaterStewardshipPanel } from '@/components/WaterStewardshipPanel';
 import { FacilityOperationsPanel } from '@/components/FacilityOperationsPanel';
 import { ESGReportingPanel } from '@/components/ESGReportingPanel';
 import { SupplyChainRiskPanel } from '@/components/SupplyChainRiskPanel';
+import LocationReportCard from '@/components/LocationReportCard';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 
@@ -132,7 +134,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   planner: {
     label: 'Resolution Planner', description: 'Sustainability resolution planning workspace',
     icon: ClipboardList, ...SHOW_ALL,
-    sections: new Set(['resolution-planner', 'disclaimer']),
+    sections: new Set(['resolution-planner', 'restoration-planner', 'disclaimer']),
   },
   trends: {
     label: 'Trends & Forecasting', description: 'Water risk trajectories, regulatory outlook, and ESG scoring trends',
@@ -2259,6 +2261,13 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
 
             // ── Shared panels ──
             case 'resolution-planner': return DS(<ResolutionPlanner userRole="corporate" scopeContext={{ scope: 'national', data: { totalStates: 50, totalWaterbodies: 0, totalImpaired: 0, averageScore: 0, highAlertStates: 0, topCauses: [], worstStates: [] } }} />);
+            case 'restoration-planner': return DS(
+              <RestorationPlanner
+                regionId={null}
+                stateAbbr=""
+                waterData={null}
+              />
+            );
             case 'policy-tracker': return DS(<PolicyTracker />);
             case 'contaminants-tracker': return DS(<EmergingContaminantsTracker role="corporate" />);
             case 'icis': return DS(<ICISCompliancePanel state="" compactMode={false} />);
@@ -2296,6 +2305,8 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
             case 'facility-operations-panel': return DS(<FacilityOperationsPanel stateAbbr="" />);
             case 'esg-reporting-panel': return DS(<ESGReportingPanel stateAbbr="" />);
             case 'supply-chain-risk-panel': return DS(<SupplyChainRiskPanel stateAbbr="" />);
+
+            case 'location-report': return DS(<LocationReportCard />);
 
             case 'disclaimer': return DS(
               <PlatformDisclaimer />

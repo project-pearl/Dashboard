@@ -33,9 +33,11 @@ import { exportK12FieldReport } from '@/components/PearlExports';
 import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
 import { EmergingContaminantsTracker } from '@/components/EmergingContaminantsTracker';
 import ResolutionPlanner from '@/components/ResolutionPlanner';
+import RestorationPlanner from '@/components/RestorationPlanner';
 import { OutdoorClassroomPanel } from '@/components/OutdoorClassroomPanel';
 import { DrinkingWaterSafetyPanel } from '@/components/DrinkingWaterSafetyPanel';
 import { StudentMonitoringPanel } from '@/components/StudentMonitoringPanel';
+import LocationReportCard from '@/components/LocationReportCard';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import dynamic from 'next/dynamic';
@@ -98,7 +100,7 @@ const LENS_CONFIG: Record<ViewLens, {
   briefing:    { label: 'AI Briefing', description: 'AI-generated water quality briefing for students',
     sections: new Set(['insights', 'alertfeed', 'disclaimer']) },
   planner:     { label: 'Resolution Planner', description: 'Student-friendly resolution planning',
-    sections: new Set(['resolution-planner', 'disclaimer']) },
+    sections: new Set(['resolution-planner', 'restoration-planner', 'disclaimer']) },
   trends:      { label: 'Trends & Projections', description: 'Water quality trends students can explore',
     sections: new Set(['trends-dashboard', 'disclaimer']) },
   compliance:  { label: 'Compliance', description: 'School drinking water compliance',
@@ -3001,6 +3003,20 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
 
             // ── Shared panels ──
             case 'resolution-planner': return DS(<ResolutionPlanner userRole="k12" scopeContext={{ scope: 'state', data: { abbr: stateAbbr, name: STATE_NAMES[stateAbbr] || stateAbbr, epaRegion: 0, totalWaterbodies: regionData.length, assessed: regionData.length, impaired: regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length, score: Math.round(regionData.reduce((a, r) => a + (r.alertLevel === 'none' ? 95 : r.alertLevel === 'low' ? 75 : r.alertLevel === 'medium' ? 50 : 25), 0) / Math.max(regionData.length, 1)), grade: 'B', cat5: 0, cat4a: 0, cat4b: 0, cat4c: 0, topCauses: [] } }} />);
+            case 'restoration-planner': {
+              const rpRegion = regionData.find(r => r.id === activeDetailId);
+              return DS(
+                <RestorationPlanner
+                  regionId={activeDetailId}
+                  regionName={rpRegion?.name}
+                  stateAbbr={stateAbbr}
+                  waterData={waterData?.parameters ?? null}
+                  alertLevel={rpRegion?.alertLevel}
+                  attainsCategory={attainsCache[activeDetailId ?? '']?.category}
+                  attainsCauses={attainsCache[activeDetailId ?? '']?.causes}
+                />
+              );
+            }
             case 'contaminants-tracker': return DS(<EmergingContaminantsTracker role="k12" selectedState={stateAbbr} />);
             case 'sdwis': return DS(<SDWISCompliancePanel state={stateAbbr} compactMode={false} />);
             case 'trends-dashboard': return DS(
@@ -3026,6 +3042,8 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
             case 'outdoor-classroom-panel': return DS(<OutdoorClassroomPanel stateAbbr={stateAbbr} />);
             case 'student-monitoring-panel': return DS(<StudentMonitoringPanel stateAbbr={stateAbbr} />);
             case 'drinking-water-safety-panel': return DS(<DrinkingWaterSafetyPanel stateAbbr={stateAbbr} />);
+
+            case 'location-report': return DS(<LocationReportCard />);
 
             case 'disclaimer': return DS(
               <PlatformDisclaimer />

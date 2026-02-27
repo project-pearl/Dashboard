@@ -18,6 +18,7 @@ import { useWaterData, DATA_SOURCES } from '@/lib/useWaterData';
 import { useTierFilter } from '@/lib/useTierFilter';
 import { computeRestorationPlan, resolveAttainsCategory, mergeAttainsCauses, COST_PER_UNIT_YEAR } from '@/lib/restorationEngine';
 import { BrandedPDFGenerator } from '@/lib/brandedPdfGenerator';
+import RestorationPlanner from '@/components/RestorationPlanner';
 import { WaterbodyDetailCard } from '@/components/WaterbodyDetailCard';
 import { getEcoScore, getEcoData } from '@/lib/ecologicalSensitivity';
 import { getEJScore, getEJData, ejScoreLabel } from '@/lib/ejVulnerability';
@@ -83,6 +84,7 @@ import { StormEventTable } from '@/components/StormEventTable';
 import { StormDetectionBanner } from '@/components/StormDetectionBanner';
 import { WaterQualityAlerts } from '@/components/WaterQualityAlerts';
 import { MDEExportTool } from '@/components/MDEExportTool';
+import LocationReportCard from '@/components/LocationReportCard';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -133,7 +135,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Resolution Planner',
     description: 'Waterbody-level restoration planning workspace',
     defaultOverlay: 'impairment',
-    sections: new Set(['detail', 'resolution-planner', 'disclaimer']),
+    sections: new Set(['detail', 'resolution-planner', 'restoration-planner', 'disclaimer']),
   },
   trends: {
     label: 'Trends & Projections',
@@ -4253,6 +4255,22 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
               </Card>
             );
 
+            // ── Restoration Planner ─────────────────────────────────────────
+            case 'restoration-planner': {
+              const rpRegion = regionData.find(r => r.id === activeDetailId);
+              return DS(
+                <RestorationPlanner
+                  regionId={activeDetailId}
+                  regionName={rpRegion?.name}
+                  stateAbbr={stateAbbr}
+                  waterData={waterData?.parameters ?? null}
+                  alertLevel={rpRegion?.alertLevel}
+                  attainsCategory={attainsCache[activeDetailId ?? '']?.category}
+                  attainsCauses={attainsCache[activeDetailId ?? '']?.causes}
+                />
+              );
+            }
+
             // ── Policy Tracker sections ────────────────────────────────────────
             case 'policy-federal': return DS(
               <Card>
@@ -6075,6 +6093,8 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                 </CardContent>
               </Card>
             );
+
+            case 'location-report': return DS(<LocationReportCard />);
 
             case 'disclaimer': return DS(
               <PlatformDisclaimer />
