@@ -23,6 +23,7 @@ import { getEJScore, getEJData } from '@/lib/ejVulnerability';
 import { BrandedPDFGenerator } from '@/lib/brandedPdfGenerator';
 import { useAuth } from '@/lib/authContext';
 import { useWaterData, DATA_SOURCES } from '@/lib/useWaterData';
+import { useTierFilter } from '@/lib/useTierFilter';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import StateWaterbodyCard from '@/components/StateWaterbodyCard';
@@ -1148,7 +1149,8 @@ export function FederalManagementCenter(props: Props) {
   const [activeDetailId, setActiveDetailId] = useState<string | null>(null);
 
   // Fetch real water quality data for the active waterbody
-  const { waterData, isLoading: waterLoading, hasRealData, primarySource } = useWaterData(activeDetailId);
+  const { waterData: rawWaterData, isLoading: waterLoading, hasRealData, primarySource } = useWaterData(activeDetailId);
+  const waterData = useTierFilter(rawWaterData, 'Federal');
 
   // ── ATTAINS: Real 303(d) data per waterbody ──
   const [attainsCache, setAttainsCache] = useState<Record<string, {

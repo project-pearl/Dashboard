@@ -4,8 +4,9 @@
 
 import { useState } from 'react';
 import type { DataSourceId } from '@/lib/useWaterData';
-import { DATA_SOURCES } from '@/lib/useWaterData';
+import { DATA_SOURCES, getTierForSource } from '@/lib/useWaterData';
 import type { WaterDataResult } from '@/lib/useWaterData';
+import { TierBadge } from '@/components/TierBadge';
 
 interface DataSourceBadgeProps {
   waterData: WaterDataResult | null;
@@ -98,6 +99,7 @@ export function DataSourceBadge({ waterData, isLoading, compact = false }: DataS
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
                   <span className={`font-medium text-xs ${detail.source.textColor}`}>{detail.source.name}</span>
+                  <TierBadge tier={getTierForSource(detail.source.id)} size="xs" />
                   <span className="text-[10px] text-gray-400 px-1 py-0 rounded bg-gray-50">
                     {detail.parameterCount} param{detail.parameterCount !== 1 ? 's' : ''}
                   </span>
@@ -121,6 +123,7 @@ export function DataSourceBadge({ waterData, isLoading, compact = false }: DataS
                   <span className={`w-1.5 h-1.5 rounded-full ${sourceDotColor(param.source)}`} />
                   <span className="text-gray-600">{key}</span>
                   <span className="text-gray-400">→ {param.source}</span>
+                  <TierBadge tier={getTierForSource(param.source as DataSourceId)} size="xs" compact />
                 </div>
               ))}
             </div>
@@ -138,10 +141,11 @@ export function DataSourceBadge({ waterData, isLoading, compact = false }: DataS
 // Simple inline badge for individual parameters
 export function ParamSourceDot({ source }: { source: DataSourceId }) {
   const info = DATA_SOURCES[source];
+  const tier = getTierForSource(source);
   return (
     <span
       className={`inline-block w-2 h-2 rounded-full ${sourceDotColor(source)}`}
-      title={`Data from ${info.name}`}
+      title={`Data from ${info.name} (Tier ${tier})`}
     />
   );
 }

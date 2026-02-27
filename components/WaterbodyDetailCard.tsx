@@ -10,6 +10,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { MapPin, Info, Shield, Maximize2, X } from 'lucide-react';
 import { calculateGrade, generateObservations, generateImplications, computeFreshnessScore, paramAgeTint, TOTAL_DISPLAY_PARAMS } from '@/lib/waterQualityScore';
 import { resolveAttainsCategory, mergeAttainsCauses } from '@/lib/restorationEngine';
+import { TierBadge } from '@/components/TierBadge';
+import { DATA_SOURCES, getTierForSource } from '@/lib/useWaterData';
+import type { DataSourceId } from '@/lib/useWaterData';
 
 // ─── Static Config ───────────────────────────────────────────────────────────
 
@@ -338,6 +341,7 @@ export function WaterbodyDetailCard({
                     <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${SOURCE_COLOR[p.source] || 'bg-slate-100 text-slate-500'}`}>
                       {getSourceName(p.source)}
                     </span>
+                    <TierBadge tier={getTierForSource(p.source as DataSourceId)} size="xs" compact />
                   </div>
                   <div className="text-[8px] text-slate-400 mt-0.5">
                     {ageLabel || <span className="text-slate-300">No timestamp</span>}
@@ -822,8 +826,9 @@ export function WaterbodyDetailCard({
           <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-200 text-[10px] text-slate-500">
             <span className="font-medium">Sources:</span>
             {waterData.sourceDetails.map((sd: any, i: number) => (
-              <span key={i} className={`px-1.5 py-0.5 rounded-full ${SOURCE_COLOR[sd.source.id] || 'bg-slate-100'}`}>
+              <span key={i} className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full ${SOURCE_COLOR[sd.source.id] || 'bg-slate-100'}`}>
                 {sd.source.name} ({sd.parameterCount}) — {sd.stationName}
+                <TierBadge tier={getTierForSource(sd.source.id as DataSourceId)} size="xs" compact />
               </span>
             ))}
             {waterData.lastSampled && (
@@ -969,10 +974,11 @@ export function WaterbodyDetailCard({
                         </div>
                         <div className="bg-slate-50 rounded-lg p-2">
                           <div className="text-slate-500">Source</div>
-                          <div className="font-medium text-slate-700">
+                          <div className="font-medium text-slate-700 flex items-center gap-1">
                             <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${SOURCE_COLOR[p.source] || 'bg-slate-100 text-slate-500'}`}>
                               {getSourceName(p.source)}
                             </span>
+                            <TierBadge tier={getTierForSource(p.source as DataSourceId)} size="xs" />
                           </div>
                         </div>
                         <div className="bg-slate-50 rounded-lg p-2">

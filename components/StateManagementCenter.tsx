@@ -23,6 +23,7 @@ import { useRouter } from 'next/navigation';
 import { getRegionById } from '@/lib/regionsConfig';
 import { REGION_META, getWaterbodyDataSources } from '@/lib/useWaterData';
 import { useWaterData, DATA_SOURCES } from '@/lib/useWaterData';
+import { useTierFilter } from '@/lib/useTierFilter';
 import { computeRestorationPlan, resolveAttainsCategory, mergeAttainsCauses, COST_PER_UNIT_YEAR } from '@/lib/restorationEngine';
 import { BrandedPDFGenerator } from '@/lib/brandedPdfGenerator';
 import { WaterbodyDetailCard } from '@/components/WaterbodyDetailCard';
@@ -527,7 +528,8 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
   const [alertFeedMinimized, setAlertFeedMinimized] = useState(true);
 
 
-  const { waterData, isLoading: waterLoading, hasRealData } = useWaterData(activeDetailId);
+  const { waterData: rawWaterData, isLoading: waterLoading, hasRealData } = useWaterData(activeDetailId);
+  const waterData = useTierFilter(rawWaterData, 'State');
 
   // ── Mock data bridge: supplies removalEfficiencies, stormEvents, displayData to child components ──
   // getRegionMockData only has data for pre-configured demo regions — wrap defensively

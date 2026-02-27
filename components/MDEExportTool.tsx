@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Download, FileText, CheckCircle, Building2, AlertCircle } from 'lucide-react';
 import { WaterQualityData } from '@/lib/types';
+import { isComplianceEligible } from '@/lib/useWaterData';
+import type { DataSourceId } from '@/lib/useWaterData';
 import { Button } from '@/components/ui/button';
 import { createBrandedPDF } from '@/lib/brandedPdfGenerator';
 
@@ -37,6 +39,11 @@ export function MDEExportTool({
   const periodEnd   = `Sep 30, ${reportingYear}`;
   const meetsTargetCount = ['TSS', 'TN', 'TP', 'turbidity'].filter(k => removalEfficiencies[k] >= 80).length;
   const avgRemoval = ((removalEfficiencies.TSS + removalEfficiencies.TN + removalEfficiencies.TP) / 3).toFixed(1);
+
+  // Tier guard: when WaterQualityData gains per-parameter source tracking,
+  // filter out non-compliance-eligible (tier 3/4) data before export.
+  // Currently, upstream management centers apply useTierFilter so only
+  // tier-appropriate data reaches this component.
 
   const handleDownload = async () => {
     setStatus('generating');

@@ -15,6 +15,7 @@ import { resolveWaterbodyCoordinates } from '@/lib/waterbodyCentroids';
 import HeroBanner from './HeroBanner';
 import { REGION_META, getWaterbodyDataSources } from '@/lib/useWaterData';
 import { useWaterData, DATA_SOURCES } from '@/lib/useWaterData';
+import { useTierFilter } from '@/lib/useTierFilter';
 import { computeRestorationPlan, resolveAttainsCategory, mergeAttainsCauses, COST_PER_UNIT_YEAR } from '@/lib/restorationEngine';
 import { BrandedPDFGenerator } from '@/lib/brandedPdfGenerator';
 import { WaterbodyDetailCard } from '@/components/WaterbodyDetailCard';
@@ -494,7 +495,8 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
     win.document.close();
     setTimeout(() => { win.print(); }, 400);
   };
-  const { waterData, isLoading: waterLoading, hasRealData } = useWaterData(activeDetailId);
+  const { waterData: rawWaterData, isLoading: waterLoading, hasRealData } = useWaterData(activeDetailId);
+  const waterData = useTierFilter(rawWaterData, 'NGO');
 
   // ── Mock data bridge: supplies removalEfficiencies, stormEvents, displayData to child components ──
   // getRegionMockData only has data for pre-configured demo regions — wrap defensively

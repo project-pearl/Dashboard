@@ -61,6 +61,22 @@ export type DataSourceId =
   | 'CEDEN'
   | 'REFERENCE' | 'MOCK';
 
+// ─── Data Confidence Tiers ──────────────────────────────────────────────────
+export type DataConfidenceTier = 1 | 2 | 3 | 4;
+
+export const TIER_META: Record<DataConfidenceTier, {
+  label: string;
+  description: string;
+  color: string;       // Tailwind text color
+  bgColor: string;     // Tailwind bg color
+  borderColor: string; // Tailwind border color
+}> = {
+  1: { label: 'Regulatory',    description: 'Federal/state agency data with QA/QC protocols',    color: 'text-green-700',  bgColor: 'bg-green-50',  borderColor: 'border-green-200' },
+  2: { label: 'Research',      description: 'Peer-reviewed research and satellite-derived data',  color: 'text-blue-700',   bgColor: 'bg-blue-50',   borderColor: 'border-blue-200' },
+  3: { label: 'Community',     description: 'Citizen science and community monitoring networks',  color: 'text-amber-700',  bgColor: 'bg-amber-50',  borderColor: 'border-amber-200' },
+  4: { label: 'Observational', description: 'Modeled, simulated, or unverified observational data', color: 'text-slate-500',  bgColor: 'bg-slate-50',  borderColor: 'border-slate-200' },
+};
+
 export interface DataSourceInfo {
   id: DataSourceId;
   name: string;
@@ -69,6 +85,7 @@ export interface DataSourceInfo {
   textColor: string;   // Tailwind text class
   url: string;
   description: string;
+  tier: DataConfidenceTier;
 }
 
 export const DATA_SOURCES: Record<DataSourceId, DataSourceInfo> = {
@@ -80,6 +97,7 @@ export const DATA_SOURCES: Record<DataSourceId, DataSourceInfo> = {
     textColor: 'text-cyan-700',
     url: 'https://waterservices.usgs.gov',
     description: 'Real-time sensor data updated every 15 minutes',
+    tier: 1,
   },
   BWB: {
     id: 'BWB',
@@ -89,6 +107,7 @@ export const DATA_SOURCES: Record<DataSourceId, DataSourceInfo> = {
     textColor: 'text-emerald-700',
     url: 'https://waterreporter.org',
     description: 'Community-based water quality monitoring',
+    tier: 3,
   },
   CBP: {
     id: 'CBP',
@@ -98,6 +117,7 @@ export const DATA_SOURCES: Record<DataSourceId, DataSourceInfo> = {
     textColor: 'text-blue-700',
     url: 'https://datahub.chesapeakebay.net',
     description: 'Federal/state Chesapeake watershed monitoring (1984–present)',
+    tier: 1,
   },
   CEDEN: {
     id: 'CEDEN',
@@ -107,6 +127,7 @@ export const DATA_SOURCES: Record<DataSourceId, DataSourceInfo> = {
     textColor: 'text-amber-700',
     url: 'https://data.ca.gov/dataset/surface-water-chemistry-results',
     description: 'California state water quality data (chemistry, toxicity) via Open Data Portal',
+    tier: 1,
   },
   WQP: {
     id: 'WQP',
@@ -116,6 +137,7 @@ export const DATA_SOURCES: Record<DataSourceId, DataSourceInfo> = {
     textColor: 'text-violet-700',
     url: 'https://www.waterqualitydata.us',
     description: 'National water quality data aggregating EPA, USGS, and state partners',
+    tier: 1,
   },
   ERDDAP: {
     id: 'ERDDAP',
@@ -125,6 +147,7 @@ export const DATA_SOURCES: Record<DataSourceId, DataSourceInfo> = {
     textColor: 'text-teal-700',
     url: 'https://erddap.maracoos.org/erddap/tabledap/',
     description: 'Continuous tidal water quality monitoring (15-min intervals)',
+    tier: 1,
   },
   NOAA: {
     id: 'NOAA',
@@ -134,6 +157,7 @@ export const DATA_SOURCES: Record<DataSourceId, DataSourceInfo> = {
     textColor: 'text-sky-700',
     url: 'https://tidesandcurrents.noaa.gov',
     description: 'Real-time water temperature, conductivity, and water levels',
+    tier: 1,
   },
   USGS_DV: {
     id: 'USGS_DV',
@@ -143,6 +167,7 @@ export const DATA_SOURCES: Record<DataSourceId, DataSourceInfo> = {
     textColor: 'text-cyan-600',
     url: 'https://waterservices.usgs.gov',
     description: 'Daily aggregated values (min/max/mean) from USGS monitoring stations',
+    tier: 1,
   },
   MMW: {
     id: 'MMW',
@@ -152,6 +177,7 @@ export const DATA_SOURCES: Record<DataSourceId, DataSourceInfo> = {
     textColor: 'text-lime-700',
     url: 'https://monitormywatershed.org',
     description: 'Citizen science sensor data from the EnviroDIY/Stroud Research Center network',
+    tier: 3,
   },
   EPA_EF: {
     id: 'EPA_EF',
@@ -161,6 +187,7 @@ export const DATA_SOURCES: Record<DataSourceId, DataSourceInfo> = {
     textColor: 'text-orange-700',
     url: 'https://data.epa.gov/efservice/',
     description: 'EPA compliance data — SDWIS violations, TRI releases, PCS permit compliance',
+    tier: 1,
   },
   STATE: {
     id: 'STATE',
@@ -170,6 +197,7 @@ export const DATA_SOURCES: Record<DataSourceId, DataSourceInfo> = {
     textColor: 'text-rose-700',
     url: '',
     description: 'Water quality data from state open data portals (MD iMap, VA DEQ, CA Open Data)',
+    tier: 1,
   },
   NASA_STREAM: {
     id: 'NASA_STREAM',
@@ -179,6 +207,7 @@ export const DATA_SOURCES: Record<DataSourceId, DataSourceInfo> = {
     textColor: 'text-indigo-700',
     url: 'https://earthdata.nasa.gov',
     description: 'Satellite-derived chlorophyll-a, turbidity, and Secchi depth estimates',
+    tier: 2,
   },
   HYDROSHARE: {
     id: 'HYDROSHARE',
@@ -188,6 +217,7 @@ export const DATA_SOURCES: Record<DataSourceId, DataSourceInfo> = {
     textColor: 'text-fuchsia-700',
     url: 'https://www.hydroshare.org',
     description: 'Hydrologic dataset repository from CUAHSI research network',
+    tier: 2,
   },
   REFERENCE: {
     id: 'REFERENCE',
@@ -197,6 +227,7 @@ export const DATA_SOURCES: Record<DataSourceId, DataSourceInfo> = {
     textColor: 'text-amber-700',
     url: '',
     description: 'Last recorded data from state/federal agency reports and assessments',
+    tier: 2,
   },
   MOCK: {
     id: 'MOCK',
@@ -206,8 +237,36 @@ export const DATA_SOURCES: Record<DataSourceId, DataSourceInfo> = {
     textColor: 'text-gray-500',
     url: '',
     description: 'Modeled data based on regional averages and pilot results',
+    tier: 4,
   },
 };
+
+// ─── Tier Helper Functions ──────────────────────────────────────────────────
+
+export function getTierForSource(sourceId: DataSourceId): DataConfidenceTier {
+  return DATA_SOURCES[sourceId]?.tier ?? 4;
+}
+
+/** Returns true if data from this source can be used in compliance exports (tier 1–2) */
+export function isComplianceEligible(sourceId: DataSourceId): boolean {
+  return getTierForSource(sourceId) <= 2;
+}
+
+const ROLE_VISIBLE_TIERS: Record<string, DataConfidenceTier[]> = {
+  Federal:    [1, 2],
+  State:      [1, 2, 3],
+  MS4:        [1, 2],
+  College:    [1, 2, 3, 4],
+  Researcher: [1, 2, 3, 4],
+  University: [1, 2, 3, 4],
+  K12:        [1, 4],
+  NGO:        [1, 2, 3, 4],
+  ESG:        [1, 2],
+};
+
+export function getVisibleTiersForRole(role: string): DataConfidenceTier[] {
+  return ROLE_VISIBLE_TIERS[role] ?? [1, 2, 3, 4];
+}
 
 // BWB Station Mapping imported from lib/useWaterReporter.ts (canonical source)
 
