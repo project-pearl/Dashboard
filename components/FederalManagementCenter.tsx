@@ -53,6 +53,9 @@ import { useSentinelAlerts } from '@/hooks/useSentinelAlerts';
 import { useSentinelAudio } from '@/hooks/useSentinelAudio';
 import { SentinelStatusBadge } from './SentinelStatusBadge';
 import { SentinelBriefingCard } from './SentinelBriefingCard';
+import AMSAlertMonitor from '@/ams/components/AMSAlertMonitor';
+import { useAlertSummary } from '@/ams/hooks/useAlertSummary';
+import { MOCK_ALERT_SUMMARY } from '@/ams/data/mock-alerts';
 import hucNamesData from '@/data/huc8-names.json';
 import centroidsData from '@/data/huc8-centroids.json';
 
@@ -1163,6 +1166,7 @@ export function FederalManagementCenter(props: Props) {
 
   // ── Sentinel Alert System ──
   const sentinel = useSentinelAlerts();
+  const amsSummary = useAlertSummary();
   const { audioEnabled, toggleAudio, playChime } = useSentinelAudio({ userRole: user?.role });
   const [reducedMotion, setReducedMotion] = useState(false);
   const [selectedAlertHuc, setSelectedAlertHuc] = useState<string | null>(null);
@@ -6583,6 +6587,10 @@ export function FederalManagementCenter(props: Props) {
 
         case 'disaster-emergency': return DS(<>
         {/* ── DISASTER & EMERGENCY RESPONSE ── */}
+        <AMSAlertMonitor
+          summary={amsSummary ?? MOCK_ALERT_SUMMARY}
+          role="FEDERAL_OVERSIGHT"
+        />
         <DisasterEmergencyPanel selectedState={selectedState} stateRollup={stateRollup} />
         </>);
 

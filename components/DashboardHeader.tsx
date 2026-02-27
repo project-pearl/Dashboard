@@ -3,7 +3,10 @@
 import React from 'react';
 import { usePathname } from 'next/navigation';
 import UserMenu from '@/components/UserMenu';
-import { Bell, Radio } from 'lucide-react';
+import { Radio } from 'lucide-react';
+import GlobalAlertBadge from '@/ams/components/GlobalAlertBadge';
+import { useAlertSummary } from '@/ams/hooks/useAlertSummary';
+import { MOCK_ALERT_SUMMARY } from '@/ams/data/mock-alerts';
 
 const ROUTE_LABELS: Record<string, string> = {
   federal: 'Federal',
@@ -37,6 +40,7 @@ const ROUTE_ACCENTS: Record<string, string> = {
 
 export function DashboardHeader() {
   const pathname = usePathname();
+  const alertSummary = useAlertSummary();
 
   // Build breadcrumb from path
   const segments = pathname.split('/').filter(Boolean);
@@ -73,9 +77,7 @@ export function DashboardHeader() {
         </div>
 
         {/* Notification bell */}
-        <button className="p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-600">
-          <Bell className="w-4 h-4" />
-        </button>
+        <GlobalAlertBadge summary={alertSummary ?? MOCK_ALERT_SUMMARY} />
 
         {/* User menu */}
         <UserMenu />
