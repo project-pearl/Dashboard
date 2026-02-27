@@ -40,6 +40,7 @@ interface RestorationPlannerProps {
   alertLevel?: string;
   attainsCategory?: string;
   attainsCauses?: string[];
+  defaultAllStates?: boolean;
 }
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -152,7 +153,7 @@ function buildVirtualWatershed(
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export default function RestorationPlanner({
-  regionId, regionName, stateAbbr, waterData, alertLevel, attainsCategory, attainsCauses,
+  regionId, regionName, stateAbbr, waterData, alertLevel, attainsCategory, attainsCauses, defaultAllStates,
 }: RestorationPlannerProps) {
   // ── Auth ──
   const { user } = useAuth();
@@ -169,6 +170,7 @@ export default function RestorationPlanner({
   const [unitCounts, setUnitCounts] = useState<Record<string, number>>({});
   const [selectedNGOs, setSelectedNGOs] = useState<Set<string>>(new Set());
   const [selectedEvents, setSelectedEvents] = useState<Set<string>>(new Set());
+  const [ngoValueOverrides, setNgoValueOverrides] = useState<Record<string, number>>({});
 
   // ── Custom admin items ──
   const [customModules, setCustomModules] = useState<TreatmentModule[]>([]);
@@ -288,8 +290,8 @@ export default function RestorationPlanner({
 
   // ── NGO + community costs ──
   const ngoValue = useMemo(() =>
-    allNGOs.filter(n => selectedNGOs.has(n.id)).reduce((s, n) => s + n.value, 0),
-    [allNGOs, selectedNGOs],
+    allNGOs.filter(n => selectedNGOs.has(n.id)).reduce((s, n) => s + (ngoValueOverrides[n.id] ?? n.value), 0),
+    [allNGOs, selectedNGOs, ngoValueOverrides],
   );
   const eventCostYr = useMemo(() =>
     allEvents.filter(e => selectedEvents.has(e.id)).reduce((s, e) => s + e.cost, 0),
@@ -298,7 +300,9 @@ export default function RestorationPlanner({
 
   // ── Staffing ──
   const staffing = useMemo(() => {
-    const selNGOs = allNGOs.filter(n => selectedNGOs.has(n.id));
+    const selNGOs = allNGOs
+      .filter(n => selectedNGOs.has(n.id))
+      .map(n => ngoValueOverrides[n.id] != null ? { ...n, value: ngoValueOverrides[n.id] } : n);
     const selEvents = allEvents.filter(e => selectedEvents.has(e.id));
     return calculateStaffing(
       selectedModules.size,
@@ -307,7 +311,7 @@ export default function RestorationPlanner({
       selEvents,
       timelineYrs,
     );
-  }, [allNGOs, allEvents, selectedModules.size, calc?.aliaUnits, selectedNGOs, selectedEvents, timelineYrs]);
+  }, [allNGOs, allEvents, selectedModules.size, calc?.aliaUnits, selectedNGOs, selectedEvents, ngoValueOverrides, timelineYrs]);
 
   // ── Sorted partners and events ──
   const sortedNGOs = useMemo(() =>
@@ -388,6 +392,15 @@ export default function RestorationPlanner({
     });
   }, []);
 
+  const setNgoValue = useCallback((id: string, v: number) => {
+    setNgoValueOverrides(prev => ({ ...prev, [id]: Math.max(0, v) }));
+  }, []);
+
+  /** Get effective value for an NGO (override or default) */
+  const getNgoValue = useCallback((n: NGO) => {
+    return ngoValueOverrides[n.id] ?? n.value;
+  }, [ngoValueOverrides]);
+
   const toggleCat = useCallback((cat: string) => {
     setExpandedCats(prev => {
       const next = new Set(prev);
@@ -423,6 +436,7 @@ export default function RestorationPlanner({
             stateAbbr={stateAbbr}
             selected={waterbodyOverride}
             onSelect={handleWaterbodySelect}
+            defaultAllStates={defaultAllStates}
           />
           <div className="text-center py-6 text-slate-400">
             <Wrench className="h-10 w-10 mx-auto mb-3 text-slate-300" />
@@ -463,6 +477,7 @@ export default function RestorationPlanner({
           onSelect={handleWaterbodySelect}
           sizeTier={waterbodyOverride ? sizeTier : undefined}
           sizeLabel={waterbodyOverride ? sizeLabel : undefined}
+          defaultAllStates={defaultAllStates}
         />
 
         {/* ── Pillar Selector ── */}
@@ -600,7 +615,7 @@ export default function RestorationPlanner({
                     )}
                   </div>
                   {sortedNGOs.map(n => (
-                    <NgoRow key={n.id} n={n} checked={selectedNGOs.has(n.id)} onToggle={toggleNGO} />
+                    <NgoRow key={n.id} n={n} checked={selectedNGOs.has(n.id)} onToggle={toggleNGO} value={getNgoValue(n)} onValue={setNgoValue} />
                   ))}
                 </div>
               )}
@@ -771,7 +786,7 @@ export default function RestorationPlanner({
                 grade,
                 target,
                 timelineYrs,
-                selectedNGOs: allNGOs.filter(n => selectedNGOs.has(n.id)),
+                selectedNGOs: allNGOs.filter(n => selectedNGOs.has(n.id)).map(n => ngoValueOverrides[n.id] != null ? { ...n, value: ngoValueOverrides[n.id] } : n),
                 selectedEvents: allEvents.filter(e => selectedEvents.has(e.id)),
                 staffing,
                 stateGrants: stateGrantsList,
@@ -1070,7 +1085,11 @@ function ModRow({ m, checked, onToggle, units, onUnits }: {
 
 // ─── NGO Row ─────────────────────────────────────────────────────────────────
 
-function NgoRow({ n, checked, onToggle }: { n: NGO; checked: boolean; onToggle: (id: string) => void }) {
+function NgoRow({ n, checked, onToggle, value, onValue }: {
+  n: NGO; checked: boolean; onToggle: (id: string) => void;
+  value: number; onValue: (id: string, v: number) => void;
+}) {
+  const step = value >= 50000 ? 10000 : 5000;
   return (
     <div
       onClick={() => onToggle(n.id)}
@@ -1102,9 +1121,20 @@ function NgoRow({ n, checked, onToggle }: { n: NGO; checked: boolean; onToggle: 
           </div>
         )}
       </div>
-      <span className={`font-mono text-[9px] font-medium shrink-0 ${checked ? 'text-green-700' : 'text-slate-300'}`}>
-        {checked ? '+' + fmt(n.value) : '\u2014'}
-      </span>
+      <div className="flex flex-col items-end gap-1 shrink-0" onClick={e => e.stopPropagation()}>
+        <span className={`font-mono text-[9px] font-medium ${checked ? 'text-green-700' : 'text-slate-300'}`}>
+          {checked ? '+' + fmt(value) : '\u2014'}
+        </span>
+        {checked && (
+          <div className="flex items-center gap-0.5">
+            <button onClick={() => onValue(n.id, value - step)}
+              className="w-[16px] h-[16px] rounded border border-slate-200 bg-slate-50 text-[10px] flex items-center justify-center text-slate-500 hover:bg-slate-100">&minus;</button>
+            <span className="text-[9px] font-mono text-slate-700 min-w-[28px] text-center">{fmt(value)}</span>
+            <button onClick={() => onValue(n.id, value + step)}
+              className="w-[16px] h-[16px] rounded border border-slate-200 bg-slate-50 text-[10px] flex items-center justify-center text-slate-500 hover:bg-slate-100">+</button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

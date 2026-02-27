@@ -142,18 +142,20 @@ interface WaterbodySelectorProps {
   onSelect: (wb: CachedWaterbody | null) => void;
   sizeTier?: SizeTier;
   sizeLabel?: string;
+  defaultAllStates?: boolean;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function WaterbodySelector({
-  stateAbbr, selected, onSelect, sizeTier, sizeLabel,
+  stateAbbr, selected, onSelect, sizeTier, sizeLabel, defaultAllStates,
 }: WaterbodySelectorProps) {
   const [mode, setMode] = useState<SearchMode>('name');
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [allStates, setAllStates] = useState(defaultAllStates ?? false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   const search = useCallback(async (q: string, searchMode: SearchMode) => {
@@ -166,7 +168,7 @@ export default function WaterbodySelector({
       const params = new URLSearchParams();
       params.set('mode', searchMode);
       params.set('limit', '20');
-      if (stateAbbr) params.set('state', stateAbbr);
+      if (stateAbbr && !allStates) params.set('state', stateAbbr);
 
       switch (searchMode) {
         case 'name':
@@ -199,7 +201,7 @@ export default function WaterbodySelector({
     } finally {
       setLoading(false);
     }
-  }, [stateAbbr]);
+  }, [stateAbbr, allStates]);
 
   const handleInput = useCallback((value: string) => {
     setQuery(value);
@@ -306,6 +308,17 @@ export default function WaterbodySelector({
               {m.label}
             </button>
           ))}
+          <button
+            onClick={() => { setAllStates(prev => !prev); setResults([]); }}
+            className={`px-2 py-1.5 text-[10px] font-medium transition-colors border-l border-slate-200 ${
+              allStates
+                ? 'text-cyan-700 bg-cyan-50'
+                : 'text-slate-400 hover:text-slate-600'
+            }`}
+            title={allStates ? 'Searching all states' : `Searching ${stateAbbr} only`}
+          >
+            {allStates ? 'All States' : stateAbbr}
+          </button>
         </div>
 
         {/* Search input */}

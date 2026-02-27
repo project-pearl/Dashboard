@@ -6566,6 +6566,7 @@ export function FederalManagementCenter(props: Props) {
               alertLevel={rpRegion?.alertLevel}
               attainsCategory={rpAttains?.category}
               attainsCauses={rpAttains?.causes}
+              defaultAllStates
             />
           );
         }
