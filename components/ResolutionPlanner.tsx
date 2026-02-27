@@ -259,7 +259,7 @@ function ScopeSummaryBadge({ scopeContext }: { scopeContext: ScopeContext }) {
 
 const JSON_SCHEMA_INSTRUCTION = `Respond ONLY with valid JSON, no markdown, no backticks:
 {
-  "responseSummary": "2-3 sentence executive summary of this response plan: what conditions triggered it, what scope of response is needed, and what the primary coordination objectives are. This is the top-line briefing a decision-maker reads first.",
+  "responseSummary": "3-5 sentence executive summary of this response plan: what conditions triggered it, the estimated economic impact (lost revenue to fisheries, tourism, recreation, property values, municipal costs, emergency response spending) and ecological impact (habitat degradation, species displacement, dissolved oxygen collapse, contamination extent, recovery timeline), what scope of response is needed, and what the primary coordination objectives are. This is the top-line briefing a decision-maker reads first.",
   "situationAssessment": "2-3 paragraphs: what is happening RIGHT NOW based on the data and active conditions provided. Treat all active conditions as CONFIRMED REAL EVENTS that have occurred — never frame them as hypothetical or speculative. Describe who is affected, what the scope of impact is, and why this requires immediate coordinated response.",
   "rootCauses": "What is driving the current conditions. Cite specific data patterns, infrastructure failures, weather events, or systemic gaps from the data provided.",
   "stakeholders": "Who must be notified and coordinated with. For each: name/office, their authority, what alert or communication they should receive, and what specific response action they own.",
@@ -505,7 +505,7 @@ Revise the plan according to the user's request. Return the COMPLETE updated pla
 
 BRANDING RULE: Never reference PIN, PEARL, PEARL Intelligence Network, or any platform-specific branding in the plan content. Reference capabilities generically — not specific products.
 
-Respond ONLY with valid JSON, same structure as before:
+Respond ONLY with valid JSON, same structure as before. The responseSummary MUST include estimated economic and ecological impact of the event.
 {
   "responseSummary": "...",
   "situationAssessment": "...",
@@ -664,13 +664,35 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
   // ── Strategy Module Scoring ──
   const scoredCategories = useMemo(() => {
     const ctx = scopeContext;
+    let topCauses: { cause: string; count: number }[] = [];
+    let totalImpaired = 0;
+    let totalWaterbodies = 0;
+    let tmdlNeeded = 0;
+    if (ctx.scope === 'state') {
+      topCauses = ctx.data.topCauses || [];
+      totalImpaired = ctx.data.impaired || 0;
+      totalWaterbodies = ctx.data.totalWaterbodies || 0;
+    } else if (ctx.scope === 'national') {
+      topCauses = ctx.data.topCauses || [];
+      totalImpaired = ctx.data.totalImpaired || 0;
+      totalWaterbodies = ctx.data.totalWaterbodies || 0;
+    } else if (ctx.scope === 'region') {
+      topCauses = ctx.data.topCauses || [];
+      totalImpaired = ctx.data.totalImpaired || 0;
+      totalWaterbodies = ctx.data.totalWaterbodies || 0;
+    }
+    if (topCauses.length === 0) {
+      topCauses = [
+        { cause: 'nutrient', count: 1000 },
+        { cause: 'pathogen', count: 800 },
+        { cause: 'sediment', count: 600 },
+      ];
+    }
     const input: ModuleScoringInput = {
-      topCauses: ctx.data.topCauses,
-      totalImpaired: ctx.scope === 'state' ? ctx.data.impaired : ctx.data.totalImpaired,
-      totalWaterbodies: ctx.data.totalWaterbodies,
-      cat5: ctx.scope === 'state' ? ctx.data.cat5 : undefined,
-      cat4a: ctx.scope === 'state' ? ctx.data.cat4a : undefined,
-      tmdlNeeded: ctx.scope === 'national' ? ctx.data.tmdlGap : undefined,
+      topCauses,
+      totalImpaired: totalImpaired || 1,
+      totalWaterbodies: totalWaterbodies || 1,
+      tmdlNeeded,
     };
     return scoreModules(input);
   }, [scopeContext]);
@@ -1229,7 +1251,9 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
         )}
 
         {/* Strategy Modules — algorithmic, not AI-generated */}
-        <StrategyModulesSection categories={scoredCategories} />
+        {scoredCategories.length > 0 && (
+          <StrategyModulesSection categories={scoredCategories} />
+        )}
 
         {/* Disclaimer */}
         <div className="pt-4 border-t border-gray-200 text-xs text-gray-400 space-y-2">

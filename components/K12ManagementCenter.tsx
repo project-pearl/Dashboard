@@ -39,6 +39,7 @@ import { DrinkingWaterSafetyPanel } from '@/components/DrinkingWaterSafetyPanel'
 import { StudentMonitoringPanel } from '@/components/StudentMonitoringPanel';
 import { StudentUploadPanel } from '@/components/StudentUploadPanel';
 import LocationReportCard from '@/components/LocationReportCard';
+import { getEpaRegionForState } from '@/lib/epa-regions';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import dynamic from 'next/dynamic';
@@ -3005,7 +3006,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
             );
 
             // ── Shared panels ──
-            case 'resolution-planner': return DS(<ResolutionPlanner userRole="k12" scopeContext={{ scope: 'state', data: { abbr: stateAbbr, name: STATE_NAMES[stateAbbr] || stateAbbr, epaRegion: 0, totalWaterbodies: regionData.length, assessed: regionData.length, impaired: regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length, score: Math.round(regionData.reduce((a, r) => a + (r.alertLevel === 'none' ? 95 : r.alertLevel === 'low' ? 75 : r.alertLevel === 'medium' ? 50 : 25), 0) / Math.max(regionData.length, 1)), grade: 'B', cat5: 0, cat4a: 0, cat4b: 0, cat4c: 0, topCauses: [] } }} />);
+            case 'resolution-planner': return DS(<ResolutionPlanner userRole="k12" scopeContext={{ scope: 'state', data: { abbr: stateAbbr, name: STATE_NAMES[stateAbbr] || stateAbbr, epaRegion: getEpaRegionForState(stateAbbr) || 0, totalWaterbodies: regionData.length, assessed: regionData.length, impaired: regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length, score: Math.round(regionData.reduce((a, r) => a + (r.alertLevel === 'none' ? 95 : r.alertLevel === 'low' ? 75 : r.alertLevel === 'medium' ? 50 : 25), 0) / Math.max(regionData.length, 1)), grade: 'B', cat5: 0, cat4a: 0, cat4b: 0, cat4c: 0, topCauses: [] } }} />);
             case 'restoration-planner': {
               const rpRegion = regionData.find(r => r.id === activeDetailId);
               return DS(
