@@ -12,11 +12,18 @@ import {
   MODULES, MODULE_CATS, CAT_COLORS, NGOS, EVENTS, GRANTS,
   CK, CONTAMINANT_LABELS, CONTAMINANT_COLORS,
   OPEX_TEAM_YEAR, ALIA_PER_TEAM,
-  runCalc, fmt,
+  runCalc, fmt, SIZE_TIER_ORDER,
   type Watershed, type TreatmentModule, type ModuleCategory,
   type ContaminantKey, type CalcResult, type NGO, type CommunityEvent,
+  type Pillar, type SizeTier,
 } from '@/components/treatment/treatmentData';
 import { getStateGrants, type GrantOpportunity } from '@/lib/stateWaterData';
+import WaterbodySelector, {
+  classifySize, deriveBaselineFromCauses, suggestPillars,
+  SIZE_TIERS, moduleMatchesTier,
+} from '@/components/restoration/WaterbodySelector';
+import PillarSelector from '@/components/restoration/PillarSelector';
+import type { CachedWaterbody } from '@/lib/attainsCache';
 
 // ─── Props ──────────────────────────────────────────────────────────────────
 
@@ -58,6 +65,36 @@ const THRESHOLDS: Record<string, { key: ContaminantKey; threshold: number; inver
 };
 
 const DEFAULT_MODULES = new Set(['sensors', 'alia_50', 'riparian']);
+
+// ─── Pillar & Sizing Helpers ────────────────────────────────────────────────
+
+/** Filter modules by active pillars + size tier */
+function filterModules(
+  modules: TreatmentModule[],
+  activePillars: Set<Pillar>,
+  sizeTier: SizeTier,
+): TreatmentModule[] {
+  return modules.filter(m => {
+    // Pillar filter: if pillars active, module must match at least one
+    const pillarOk = activePillars.size === 0 || m.pillars.some(p => activePillars.has(p));
+    // Size filter
+    const sizeOk = moduleMatchesTier(m.sizeRange, sizeTier);
+    return pillarOk && sizeOk;
+  });
+}
+
+/** Recommend unit counts scaled by size tier */
+function recommendUnitCounts(
+  modules: TreatmentModule[],
+  sizeTier: SizeTier,
+): Record<string, number> {
+  const tierInfo = SIZE_TIERS.find(s => s.tier === sizeTier) || SIZE_TIERS[2];
+  const counts: Record<string, number> = {};
+  for (const m of modules) {
+    counts[m.id] = Math.max(1, Math.round(m.defUnits * tierInfo.unitMult));
+  }
+  return counts;
+}
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -112,6 +149,12 @@ function buildVirtualWatershed(
 export default function RestorationPlanner({
   regionId, regionName, stateAbbr, waterData, alertLevel, attainsCategory, attainsCauses,
 }: RestorationPlannerProps) {
+  // ── Waterbody override state ──
+  const [waterbodyOverride, setWaterbodyOverride] = useState<CachedWaterbody | null>(null);
+  const [activePillars, setActivePillars] = useState<Set<Pillar>>(new Set());
+  const [sizeTier, setSizeTier] = useState<SizeTier>('M');
+  const [sizeLabel, setSizeLabel] = useState<string>('');
+
   // ── Module selection state ──
   const [selectedModules, setSelectedModules] = useState<Set<string>>(new Set(DEFAULT_MODULES));
   const [unitCounts, setUnitCounts] = useState<Record<string, number>>({});
@@ -139,15 +182,82 @@ export default function RestorationPlanner({
     }
   }, [waterData, attainsCategory]);
 
+  // ── Waterbody selection handler ──
+  const handleWaterbodySelect = useCallback((wb: CachedWaterbody | null) => {
+    setWaterbodyOverride(wb);
+    setGenerated(false);
+    if (wb) {
+      // Auto-detect pillars
+      const suggested = suggestPillars(wb);
+      setActivePillars(suggested);
+      // Classify size
+      const sizeInfo = classifySize(wb);
+      setSizeTier(sizeInfo.tier);
+      setSizeLabel(`est. ${sizeInfo.estAcres.toLocaleString()} ac`);
+      // Pre-populate unit counts scaled to size
+      const filtered = filterModules(MODULES, suggested, sizeInfo.tier);
+      const counts = recommendUnitCounts(filtered, sizeInfo.tier);
+      setUnitCounts(prev => ({ ...prev, ...counts }));
+    } else {
+      setActivePillars(new Set());
+      setSizeTier('M');
+      setSizeLabel('');
+    }
+  }, []);
+
+  const handlePillarToggle = useCallback((pillar: Pillar) => {
+    setActivePillars(prev => {
+      const next = new Set(prev);
+      if (next.has(pillar)) next.delete(pillar); else next.add(pillar);
+      return next;
+    });
+    setGenerated(false);
+  }, []);
+
+  // ── Effective waterbody data ──
+  const effectiveName = waterbodyOverride?.name || regionName || regionId || 'Unknown';
+  const effectiveCategory = waterbodyOverride?.category
+    ? (waterbodyOverride.category.startsWith('5') ? '5' : waterbodyOverride.category.startsWith('4') ? '4' : waterbodyOverride.category)
+    : attainsCategory;
+  const effectiveCauses = waterbodyOverride?.causes || attainsCauses || [];
+
   // ── Baseline derivation ──
-  const baseline = useMemo(() => deriveBaseline(waterData), [waterData]);
+  const baseline = useMemo(() => {
+    if (waterbodyOverride) {
+      return deriveBaselineFromCauses(waterbodyOverride.causes, waterbodyOverride.category);
+    }
+    return deriveBaseline(waterData);
+  }, [waterData, waterbodyOverride]);
   const doMgL = waterData?.DO?.value ?? 5.5;
 
   // ── Virtual watershed ──
-  const virtualWs = useMemo(() =>
-    buildVirtualWatershed(regionId || 'unknown', regionName || 'Unknown', stateAbbr, baseline, doMgL),
-    [regionId, regionName, stateAbbr, baseline, doMgL],
+  const virtualWs = useMemo(() => {
+    const sizeInfo = waterbodyOverride ? classifySize(waterbodyOverride) : null;
+    const acres = sizeInfo?.estAcres || 2000;
+    const ws = buildVirtualWatershed(
+      waterbodyOverride?.id || regionId || 'unknown',
+      effectiveName,
+      stateAbbr,
+      baseline,
+      doMgL,
+    );
+    ws.acres = acres;
+    return ws;
+  }, [waterbodyOverride, regionId, effectiveName, stateAbbr, baseline, doMgL]);
+
+  // ── Filtered modules/NGOs/events ──
+  const filteredModules = useMemo(() =>
+    filterModules(MODULES, activePillars, sizeTier),
+    [activePillars, sizeTier],
   );
+  const filteredNGOs = useMemo(() => {
+    if (activePillars.size === 0) return NGOS;
+    return NGOS.filter(n => !n.pillars || n.pillars.some(p => activePillars.has(p)));
+  }, [activePillars]);
+  const filteredEvents = useMemo(() => {
+    if (activePillars.size === 0) return EVENTS;
+    return EVENTS.filter(e => !e.pillars || e.pillars.some(p => activePillars.has(p)));
+  }, [activePillars]);
 
   // ── Live calculation ──
   const targetPct = TARGET_PCT[target];
@@ -239,8 +349,9 @@ export default function RestorationPlanner({
     });
   }, []);
 
-  // ── No data guard ──
-  if (!regionId || !waterData || !grade.canBeGraded) {
+  // ── No data guard — bypass if waterbody override is selected ──
+  const hasData = (regionId && waterData && grade.canBeGraded) || waterbodyOverride;
+  if (!hasData) {
     return (
       <Card>
         <CardHeader>
@@ -250,21 +361,27 @@ export default function RestorationPlanner({
           </CardTitle>
           <CardDescription>Interactive treatment module selection & impact modeling</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 text-slate-400">
+        <CardContent className="space-y-3">
+          <WaterbodySelector
+            stateAbbr={stateAbbr}
+            selected={waterbodyOverride}
+            onSelect={handleWaterbodySelect}
+          />
+          <div className="text-center py-6 text-slate-400">
             <Wrench className="h-10 w-10 mx-auto mb-3 text-slate-300" />
-            <p className="text-sm font-medium">Select a waterbody with monitoring data to begin planning</p>
-            <p className="text-xs mt-1">The planner requires water quality grades and parameter data to generate restoration portfolios</p>
+            <p className="text-sm font-medium">Select a waterbody to begin planning</p>
+            <p className="text-xs mt-1">Search by name, HUC-8, MS4, or coordinates above — or select a monitored waterbody from the management center</p>
           </div>
         </CardContent>
       </Card>
     );
   }
 
-  // Module counts per category
+  // Module counts per category (use filtered list)
+  const filteredModuleIds = new Set(filteredModules.map(m => m.id));
   const catCounts: Record<string, number> = {};
   for (const cat of MODULE_CATS) {
-    catCounts[cat] = MODULES.filter(m => m.cat === cat && selectedModules.has(m.id)).length;
+    catCounts[cat] = filteredModules.filter(m => m.cat === cat && selectedModules.has(m.id)).length;
   }
 
   const totalLifecycle = (calc?.lifecycle ?? 0) + eventCostYr * timelineYrs;
@@ -282,24 +399,46 @@ export default function RestorationPlanner({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* ── Waterbody Selector ── */}
+        <WaterbodySelector
+          stateAbbr={stateAbbr}
+          selected={waterbodyOverride}
+          onSelect={handleWaterbodySelect}
+          sizeTier={waterbodyOverride ? sizeTier : undefined}
+          sizeLabel={waterbodyOverride ? sizeLabel : undefined}
+        />
+
+        {/* ── Pillar Selector ── */}
+        {(waterbodyOverride || activePillars.size > 0) && (
+          <PillarSelector
+            activePillars={activePillars}
+            onToggle={handlePillarToggle}
+          />
+        )}
+
         {/* ── Waterbody Summary Bar ── */}
         <div className="flex items-center gap-3 flex-wrap bg-slate-50 rounded-lg px-4 py-2.5 border border-slate-200">
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-semibold text-slate-800 truncate">{regionName || regionId}</div>
+            <div className="text-sm font-semibold text-slate-800 truncate">{effectiveName}</div>
             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
               <span className="text-[10px] font-mono text-slate-400">{stateAbbr}</span>
-              {attainsCategory && (
+              {effectiveCategory && (
                 <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
-                  attainsCategory.includes('5') ? 'bg-red-100 text-red-700'
-                  : attainsCategory.includes('4') ? 'bg-amber-100 text-amber-700'
+                  effectiveCategory.includes('5') ? 'bg-red-100 text-red-700'
+                  : effectiveCategory.includes('4') ? 'bg-amber-100 text-amber-700'
                   : 'bg-slate-100 text-slate-600'
                 }`}>
-                  Cat {attainsCategory}
+                  Cat {effectiveCategory}
                 </span>
               )}
-              {(attainsCauses ?? []).slice(0, 3).map(c => (
+              {effectiveCauses.slice(0, 3).map(c => (
                 <span key={c} className="text-[9px] px-1 py-0.5 rounded bg-red-50 text-red-600">{c}</span>
               ))}
+              {waterbodyOverride && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-medium">
+                  {sizeTier} — {sizeLabel}
+                </span>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-3 shrink-0">
@@ -351,7 +490,8 @@ export default function RestorationPlanner({
             {/* Module List */}
             <div className="max-h-[420px] overflow-y-auto">
               {activeTab === 'modules' && MODULE_CATS.map(cat => {
-                const catModules = MODULES.filter(m => m.cat === cat);
+                const catModules = filteredModules.filter(m => m.cat === cat);
+                if (catModules.length === 0) return null;
                 const isExpanded = expandedCats.has(cat);
                 const count = catCounts[cat] || 0;
                 return (
@@ -390,7 +530,7 @@ export default function RestorationPlanner({
                   <div className="px-3 py-2 bg-green-50 border-b text-[10px] text-green-700 font-medium">
                     Partnership In-Kind Value: {fmt$(ngoValue)}
                   </div>
-                  {NGOS.map(n => (
+                  {filteredNGOs.map(n => (
                     <NgoRow key={n.id} n={n} checked={selectedNGOs.has(n.id)} onToggle={toggleNGO} />
                   ))}
                 </div>
@@ -401,7 +541,7 @@ export default function RestorationPlanner({
                   <div className="px-3 py-2 bg-amber-50 border-b text-[10px] text-amber-700 font-medium">
                     Community Programs: {fmt$(eventCostYr)}/yr
                   </div>
-                  {EVENTS.map(ev => (
+                  {filteredEvents.map(ev => (
                     <EventRow key={ev.id} ev={ev} checked={selectedEvents.has(ev.id)} onToggle={toggleEvent} />
                   ))}
                 </div>
@@ -529,15 +669,15 @@ export default function RestorationPlanner({
           <>
             {/* Analysis Summary */}
             <AnalysisSummary
-              regionName={regionName || regionId || 'this waterbody'}
+              regionName={effectiveName}
               grade={grade}
               calc={calc}
               baseline={baseline}
               targetPct={targetPct}
               target={target}
               timelineYrs={timelineYrs}
-              attainsCategory={attainsCategory}
-              attainsCauses={attainsCauses}
+              attainsCategory={effectiveCategory}
+              attainsCauses={effectiveCauses}
             />
 
             {/* Trajectory Chart */}
@@ -557,7 +697,7 @@ export default function RestorationPlanner({
               targetPct={targetPct}
               target={target}
               timelineYrs={timelineYrs}
-              regionName={regionName || regionId || 'this waterbody'}
+              regionName={effectiveName}
             />
 
             {/* Budget Breakdown */}
@@ -634,7 +774,7 @@ export default function RestorationPlanner({
               totalGrants={totalGrants}
               ngoCount={selectedNGOs.size}
               eventCount={selectedEvents.size}
-              regionName={regionName || regionId || 'this waterbody'}
+              regionName={effectiveName}
               stateAbbr={stateAbbr}
               stateGrantCount={stateGrantsList.filter(g => g.fit === 'high').length}
             />
