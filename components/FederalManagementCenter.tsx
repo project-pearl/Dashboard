@@ -44,7 +44,7 @@ import { GrantOpportunityMatcher } from './GrantOpportunityMatcher';
 import { GrantOutcomesCard } from './GrantOutcomesCard';
 import { EmergingContaminantsTracker } from './EmergingContaminantsTracker';
 import { PolicyTracker } from './PolicyTracker';
-import FederalResolutionPlanner from './FederalResolutionPlanner';
+
 import { HabitatEcologyPanel } from './HabitatEcologyPanel';
 import { AgriculturalNPSPanel } from './AgriculturalNPSPanel';
 import { DisasterEmergencyPanel } from './DisasterEmergencyPanel';
@@ -280,7 +280,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['resolution-planner', 'restoration-planner', 'federal-planner', 'disclaimer']),
+    sections: new Set(['resolution-planner', 'restoration-planner', 'disclaimer']),
   },
 };
 
@@ -6569,12 +6569,6 @@ export function FederalManagementCenter(props: Props) {
             />
           );
         }
-
-        case 'federal-planner': return DS(<>
-        <div id="section-federal-planner">
-          <FederalResolutionPlanner userTier="federal" userId={user?.uid || ''} stateRollup={stateRollup} />
-        </div>
-        </>);
 
         case 'habitat-ecology': return DS(<>
         {/* ── HABITAT & ECOLOGY ── */}

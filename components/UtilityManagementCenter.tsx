@@ -12,6 +12,7 @@ import {
   ThermometerSun, Beaker, Factory, Settings, Users,
 } from 'lucide-react';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
+import LocationReportCard from '@/components/LocationReportCard';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 
@@ -1583,6 +1584,8 @@ export default function UtilityManagementCenter({ systemId }: Props) {
             // ══════════════════════════════════════════════════════════════
             // DISCLAIMER (always visible)
             // ══════════════════════════════════════════════════════════════
+
+            case 'location-report': return DS(<LocationReportCard />);
 
             case 'disclaimer': return DS(
               <PlatformDisclaimer />

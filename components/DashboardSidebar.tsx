@@ -215,6 +215,12 @@ const NAV_GROUPS: NavGroup[] = [
       { label: 'NGO', href: '/dashboard/ngo', icon: Leaf, accent: 'text-emerald-700', accentBg: 'bg-emerald-50 border-emerald-200' },
     ],
   },
+  {
+    title: 'Tools',
+    items: [
+      { label: 'Water Tools', href: '/tools/water-quality-lookup', icon: Search, accent: 'text-sky-700', accentBg: 'bg-sky-50 border-sky-200' },
+    ],
+  },
 ];
 
 export function DashboardSidebar() {
