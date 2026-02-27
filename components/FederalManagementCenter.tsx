@@ -280,7 +280,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['resolution-planner', 'federal-planner', 'disclaimer']),
+    sections: new Set(['resolution-planner', 'restoration-planner', 'federal-planner', 'disclaimer']),
   },
 };
 
@@ -6553,6 +6553,22 @@ export function FederalManagementCenter(props: Props) {
           />
         </div>
         </>);
+
+        case 'restoration-planner': {
+          const rpRegion = regionData.find(r => r.id === activeDetailId);
+          const rpAttains = attainsCache[activeDetailId ?? ''];
+          return DS(
+            <RestorationPlanner
+              regionId={activeDetailId}
+              regionName={rpRegion?.name}
+              stateAbbr={rpRegion?.state || selectedState || ''}
+              waterData={waterData?.parameters ?? null}
+              alertLevel={rpRegion?.alertLevel}
+              attainsCategory={rpAttains?.category}
+              attainsCauses={rpAttains?.causes}
+            />
+          );
+        }
 
         case 'federal-planner': return DS(<>
         <div id="section-federal-planner">
