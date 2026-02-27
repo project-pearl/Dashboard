@@ -253,6 +253,7 @@ export function isComplianceEligible(sourceId: DataSourceId): boolean {
 }
 
 const ROLE_VISIBLE_TIERS: Record<string, DataConfidenceTier[]> = {
+  Admin:      [1, 2, 3, 4],
   Federal:    [1, 2],
   State:      [1, 2, 3],
   MS4:        [1, 2],

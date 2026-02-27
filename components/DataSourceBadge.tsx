@@ -99,7 +99,7 @@ export function DataSourceBadge({ waterData, isLoading, compact = false }: DataS
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
                   <span className={`font-medium text-xs ${detail.source.textColor}`}>{detail.source.name}</span>
-                  <TierBadge tier={getTierForSource(detail.source.id)} size="xs" />
+                  <TierBadge tier={getTierForSource(detail.source.id)} size="sm" />
                   <span className="text-[10px] text-gray-400 px-1 py-0 rounded bg-gray-50">
                     {detail.parameterCount} param{detail.parameterCount !== 1 ? 's' : ''}
                   </span>
@@ -123,7 +123,7 @@ export function DataSourceBadge({ waterData, isLoading, compact = false }: DataS
                   <span className={`w-1.5 h-1.5 rounded-full ${sourceDotColor(param.source)}`} />
                   <span className="text-gray-600">{key}</span>
                   <span className="text-gray-400">→ {param.source}</span>
-                  <TierBadge tier={getTierForSource(param.source as DataSourceId)} size="xs" compact />
+                  <TierBadge tier={getTierForSource(param.source as DataSourceId)} size="sm" />
                 </div>
               ))}
             </div>

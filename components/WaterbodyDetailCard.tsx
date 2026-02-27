@@ -341,7 +341,7 @@ export function WaterbodyDetailCard({
                     <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${SOURCE_COLOR[p.source] || 'bg-slate-100 text-slate-500'}`}>
                       {getSourceName(p.source)}
                     </span>
-                    <TierBadge tier={getTierForSource(p.source as DataSourceId)} size="xs" compact />
+                    <TierBadge tier={getTierForSource(p.source as DataSourceId)} size="sm" />
                   </div>
                   <div className="text-[8px] text-slate-400 mt-0.5">
                     {ageLabel || <span className="text-slate-300">No timestamp</span>}
@@ -828,7 +828,7 @@ export function WaterbodyDetailCard({
             {waterData.sourceDetails.map((sd: any, i: number) => (
               <span key={i} className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full ${SOURCE_COLOR[sd.source.id] || 'bg-slate-100'}`}>
                 {sd.source.name} ({sd.parameterCount}) — {sd.stationName}
-                <TierBadge tier={getTierForSource(sd.source.id as DataSourceId)} size="xs" compact />
+                <TierBadge tier={getTierForSource(sd.source.id as DataSourceId)} size="sm" />
               </span>
             ))}
             {waterData.lastSampled && (
@@ -887,7 +887,7 @@ export function WaterbodyDetailCard({
 
           return (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={(e) => { e.stopPropagation(); setExpandedParam(null); }}>
-              <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-[420px] max-w-[90vw] max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-[340px] max-w-[90vw] max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between p-4 border-b border-slate-100">
                   <h3 className="text-sm font-semibold text-slate-800">
                     {isHealth ? 'Waterbody Health Grade' : display?.label || expandedParam}
@@ -972,13 +972,13 @@ export function WaterbodyDetailCard({
                           <div className="text-slate-500">Target</div>
                           <div className="font-medium text-slate-700">{display.target || 'N/A'}</div>
                         </div>
-                        <div className="bg-slate-50 rounded-lg p-2">
+                        <div className="bg-slate-50 rounded-lg p-2 col-span-2">
                           <div className="text-slate-500">Source</div>
-                          <div className="font-medium text-slate-700 flex items-center gap-1">
+                          <div className="font-medium text-slate-700 flex items-center gap-1.5 mt-0.5">
                             <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${SOURCE_COLOR[p.source] || 'bg-slate-100 text-slate-500'}`}>
                               {getSourceName(p.source)}
                             </span>
-                            <TierBadge tier={getTierForSource(p.source as DataSourceId)} size="xs" />
+                            <TierBadge tier={getTierForSource(p.source as DataSourceId)} size="md" showLabel />
                           </div>
                         </div>
                         <div className="bg-slate-50 rounded-lg p-2">
