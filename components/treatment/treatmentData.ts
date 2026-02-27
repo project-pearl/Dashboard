@@ -6,6 +6,7 @@
 
 export type Pillar = 'GW' | 'SW' | 'SurfW' | 'DW' | 'WW';
 export type SizeTier = 'XS' | 'S' | 'M' | 'L' | 'XL';
+export type PartnerStrength = 'monitoring' | 'advocacy' | 'habitat' | 'engineering' | 'education' | 'funding' | 'legal' | 'research';
 
 export const SIZE_TIER_ORDER: SizeTier[] = ['XS', 'S', 'M', 'L', 'XL'];
 
@@ -59,6 +60,7 @@ export interface TreatmentModule {
   desc?: string;
   pillars: Pillar[];
   sizeRange: [SizeTier, SizeTier];
+  experimental?: boolean;
 }
 
 export type ModuleCategory =
@@ -81,6 +83,8 @@ export interface NGO {
   grant: boolean;
   desc: string;
   pillars?: Pillar[];
+  aligned?: boolean;
+  strengths?: PartnerStrength[];
 }
 
 export interface CommunityEvent {
@@ -272,6 +276,11 @@ export const MODULES: TreatmentModule[] = [
   { id: "biochar",     cat: "Emerging",     name: "Biochar Filtration",         icon: "\u267b\ufe0f", costPer: 30000,  defUnits: 2, gpm: 60, salMax: 99, mo: 4,  doBoost: 0,    tss: 60, bac: 35, nit: 40, pho: 55, pfas: 60, trash: 0,  isBMP: false, trl: 6, pilotNote: "TRL 6 \u2014 pilot + monitoring.", pillars: ['SW','GW','DW'], sizeRange: ['XS','L'] },
   { id: "pfas_foam",   cat: "Emerging",     name: "PFAS Foam Fractionation",    icon: "\ud83e\uddeb", costPer: 62000,  defUnits: 1, gpm: 40, salMax: 99, mo: 5,  doBoost: 0,    tss: 5,  bac: 5,  nit: 0,  pho: 0,  pfas: 95, trash: 0,  isBMP: false, trl: 5, pilotNote: "TRL 5 \u2014 requires pilot program.", pillars: ['DW','GW','SW'], sizeRange: ['S','L'] },
   { id: "sed_cap",     cat: "Emerging",     name: "Sediment Capping",           icon: "\ud83e\udea8", costPer: 120000, defUnits: 1, gpm: 0,  salMax: 99, mo: 8,  doBoost: 0,    tss: 10, bac: 5,  nit: 5,  pho: 15, pfas: 30, trash: 0,  isBMP: false, isSrc: true, pilotNote: "Site-specific design required.", pillars: ['SW','SurfW'], sizeRange: ['M','XL'] },
+  // New modules
+  { id: "basalt_reef", cat: "Biological",   name: "Basalt Enhanced Oyster Reef", icon: "\ud83e\uddea", costPer: 85000, defUnits: 2, gpm: 0,  salMax: 25, mo: 12, doBoost: 0.3,  tss: 20, bac: 0,  nit: 35, pho: 40, pfas: 0,  trash: 0,  isBMP: false, trl: 5, experimental: true, pilotNote: "TRL 5 \u2014 experimental basalt substrate reef.", desc: "Basalt aggregate oyster reef. Nutrient uptake via biological filtration + mineral weathering.", pillars: ['SurfW','SW'], sizeRange: ['M','XL'] },
+  { id: "biochar_socks", cat: "Emerging",   name: "Biochar Filter Socks",       icon: "\ud83e\uddf6", costPer: 4500,  defUnits: 6, gpm: 15, salMax: 99, mo: 1,  doBoost: 0,    tss: 55, bac: 0,  nit: 20, pho: 35, pfas: 25, trash: 0,  isBMP: false, trl: 6, experimental: true, pilotNote: "TRL 6 \u2014 field-tested biochar media socks.", desc: "Deployable biochar filter socks for rapid stormwater interception. Low cost, high TSS/phos capture.", pillars: ['SW','SurfW','GW'], sizeRange: ['XS','M'] },
+  { id: "alia_5",     cat: "PEARL ALIA",   name: "ALIA 5 GPM \u2014 Compact",  icon: "\ud83d\udd2c", costPer: 3800,  defUnits: 4, gpm: 5,  salMax: 25, mo: 2,  doBoost: 0.05, tss: 90, bac: 92, nit: 30, pho: 25, pfas: 0,  trash: 0,  isBMP: false, hasOpex: true, pilotNote: "Compact unit \u2014 included with OpEx for small coverage areas.", desc: "5 GPM compact ALIA for small outfalls, green infrastructure, and pilot sites.", pillars: ['SW','SurfW'], sizeRange: ['XS','S'] },
+  { id: "alia_10",    cat: "PEARL ALIA",   name: "ALIA 10 GPM \u2014 Mid",     icon: "\ud83e\uddea", costPer: 7200,  defUnits: 4, gpm: 10, salMax: 25, mo: 3,  doBoost: 0.08, tss: 91, bac: 93, nit: 32, pho: 26, pfas: 0,  trash: 0,  isBMP: false, hasOpex: true, pilotNote: "Mid-size unit \u2014 OpEx bundled for moderate coverage.", desc: "10 GPM ALIA for moderate outfalls and distributed treatment networks.", pillars: ['SW','SurfW','WW'], sizeRange: ['XS','M'] },
 ];
 
 export const MODULE_CATS: ModuleCategory[] = [
@@ -294,18 +303,19 @@ export const CAT_COLORS: Record<ModuleCategory, string> = {
 /* ─── NGO PARTNERS ────────────────────────────────────────────────────────── */
 
 export const NGOS: NGO[] = [
-  { id: "cbf",    name: "Chesapeake Bay Foundation",       icon: "\ud83e\udd80", type: "Advocacy & Monitoring",  value: 25000, grant: true,  desc: "In-kind monitoring, legal advocacy, public engagement.", pillars: ['SW','SurfW'] },
-  { id: "tnc",    name: "The Nature Conservancy",          icon: "\ud83c\udf3f", type: "Land & Habitat",          value: 40000, grant: true,  desc: "Riparian land acquisition, habitat restoration.", pillars: ['SurfW','GW'] },
-  { id: "wk",     name: "Waterkeeper Alliance",            icon: "\ud83d\udca7", type: "Water Quality Monitoring", value: 15000, grant: false, desc: "Patrol and citizen science data. Enforcement partnerships.", pillars: ['SW','SurfW'] },
-  { id: "du",     name: "Ducks Unlimited",                 icon: "\ud83e\udd86", type: "Wetland Restoration",     value: 55000, grant: true,  desc: "Wetland design, funding match, restoration contracts.", pillars: ['SurfW','GW'] },
-  { id: "tu",     name: "Trout Unlimited",                 icon: "\ud83d\udc1f", type: "Stream Restoration",      value: 20000, grant: true,  desc: "Cold-water stream restoration, riparian work.", pillars: ['SurfW'] },
-  { id: "ar",     name: "American Rivers",                 icon: "\ud83c\udfde\ufe0f", type: "Dam Removal / Flow",  value: 30000, grant: true,  desc: "Flow restoration, dam removal, instream habitat.", pillars: ['SurfW'] },
-  { id: "cf",     name: "Chesapeake Conservancy",          icon: "\ud83d\uddfa\ufe0f", type: "GIS & Data",          value: 18000, grant: false, desc: "Precision conservation GIS, land use mapping." },
-  { id: "bl",     name: "Blue Water Baltimore",            icon: "\ud83d\udd35", type: "Urban Stormwater",         value: 22000, grant: false, desc: "Urban outfall monitoring, community science, education.", pillars: ['SW'] },
-  { id: "wca",    name: "Local Watershed Association",     icon: "\ud83c\udf0a", type: "Grassroots / Local",       value: 8000,  grant: false, desc: "Community outreach, volunteer coordination, stewardship." },
-  { id: "bioha",  name: "Biohabitats Inc.",                icon: "\ud83c\udf31", type: "Ecological Engineering",   value: 45000, grant: false, desc: "Design services partner \u2014 wetland and stream restoration." },
-  { id: "sea",    name: "Sea Grant Program",               icon: "\ud83d\udd2c", type: "Research & Science",       value: 35000, grant: true,  desc: "University research, monitoring, technical support." },
-  { id: "epa_vol", name: "EPA Volunteer Monitor Network",  icon: "\ud83d\udccb", type: "Federal Support",          value: 12000, grant: true,  desc: "EPA-trained monitors. Plugs into ATTAINS data feed." },
+  { id: "cbf",    name: "Chesapeake Bay Foundation",       icon: "\ud83e\udd80", type: "Advocacy & Monitoring",  value: 25000, grant: true,  desc: "In-kind monitoring, legal advocacy, public engagement.", pillars: ['SW','SurfW'], strengths: ['monitoring', 'advocacy', 'education'] },
+  { id: "tnc",    name: "The Nature Conservancy",          icon: "\ud83c\udf3f", type: "Land & Habitat",          value: 40000, grant: true,  desc: "Riparian land acquisition, habitat restoration.", pillars: ['SurfW','GW'], strengths: ['habitat', 'funding', 'legal'] },
+  { id: "wk",     name: "Waterkeeper Alliance",            icon: "\ud83d\udca7", type: "Water Quality Monitoring", value: 15000, grant: false, desc: "Patrol and citizen science data. Enforcement partnerships.", pillars: ['SW','SurfW'], strengths: ['monitoring', 'advocacy'] },
+  { id: "du",     name: "Ducks Unlimited",                 icon: "\ud83e\udd86", type: "Wetland Restoration",     value: 55000, grant: true,  desc: "Wetland design, funding match, restoration contracts.", pillars: ['SurfW','GW'], strengths: ['habitat', 'funding'] },
+  { id: "tu",     name: "Trout Unlimited",                 icon: "\ud83d\udc1f", type: "Stream Restoration",      value: 20000, grant: true,  desc: "Cold-water stream restoration, riparian work.", pillars: ['SurfW'], strengths: ['habitat', 'monitoring'] },
+  { id: "ar",     name: "American Rivers",                 icon: "\ud83c\udfde\ufe0f", type: "Dam Removal / Flow",  value: 30000, grant: true,  desc: "Flow restoration, dam removal, instream habitat.", pillars: ['SurfW'], strengths: ['habitat', 'legal'] },
+  { id: "cf",     name: "Chesapeake Conservancy",          icon: "\ud83d\uddfa\ufe0f", type: "GIS & Data",          value: 18000, grant: false, desc: "Precision conservation GIS, land use mapping.", strengths: ['research', 'monitoring'] },
+  { id: "bl",     name: "Blue Water Baltimore",            icon: "\ud83d\udd35", type: "Urban Stormwater",         value: 22000, grant: false, desc: "Urban outfall monitoring, community science, education.", pillars: ['SW'], strengths: ['monitoring', 'education'] },
+  { id: "wca",    name: "Local Watershed Association",     icon: "\ud83c\udf0a", type: "Grassroots / Local",       value: 8000,  grant: false, desc: "Community outreach, volunteer coordination, stewardship.", strengths: ['education', 'advocacy'] },
+  { id: "bioha",  name: "Biohabitats Inc.",                icon: "\ud83c\udf31", type: "Ecological Engineering",   value: 45000, grant: false, desc: "Design services partner \u2014 wetland and stream restoration.", aligned: true, strengths: ['engineering', 'habitat'] },
+  { id: "sea",    name: "Sea Grant Program",               icon: "\ud83d\udd2c", type: "Research & Science",       value: 35000, grant: true,  desc: "University research, monitoring, technical support.", strengths: ['research', 'funding'] },
+  { id: "epa_vol", name: "EPA Volunteer Monitor Network",  icon: "\ud83d\udccb", type: "Federal Support",          value: 12000, grant: true,  desc: "EPA-trained monitors. Plugs into ATTAINS data feed.", strengths: ['monitoring', 'research'] },
+  { id: "vims",   name: "VIMS / William & Mary",           icon: "\ud83d\udd2c", type: "Research & Science",       value: 30000, grant: true,  desc: "Oyster reef research, living shoreline design, SAV monitoring.", pillars: ['SurfW'], aligned: true, strengths: ['research', 'monitoring'] },
 ];
 
 /* ─── COMMUNITY EVENTS ────────────────────────────────────────────────────── */

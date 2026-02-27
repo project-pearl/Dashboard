@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import {
   Wrench, Target, Clock, DollarSign, TrendingUp, CheckCircle2,
   ChevronDown, ChevronUp, Shield, Zap, Leaf, AlertTriangle,
-  Droplets, Activity, Users, Heart,
+  Droplets, Activity, Users, Heart, FileDown, Plus,
 } from 'lucide-react';
 import { calculateGrade, type WaterQualityGrade } from '@/lib/waterQualityScore';
 import {
@@ -23,6 +23,11 @@ import WaterbodySelector, {
   SIZE_TIERS, moduleMatchesTier,
 } from '@/components/restoration/WaterbodySelector';
 import PillarSelector from '@/components/restoration/PillarSelector';
+import GrantsPanel from '@/components/restoration/GrantsPanel';
+import AdminAddForm from '@/components/restoration/AdminAddForm';
+import { calculateStaffing, VOLUNTEER_HOURLY_RATE, type StaffingResult } from '@/components/restoration/StaffingCalculator';
+import { exportRestorationPDF } from '@/components/restoration/PlanExport';
+import { useAuth } from '@/lib/authContext';
 import type { CachedWaterbody } from '@/lib/attainsCache';
 
 // ─── Props ──────────────────────────────────────────────────────────────────
@@ -149,6 +154,10 @@ function buildVirtualWatershed(
 export default function RestorationPlanner({
   regionId, regionName, stateAbbr, waterData, alertLevel, attainsCategory, attainsCauses,
 }: RestorationPlannerProps) {
+  // ── Auth ──
+  const { user } = useAuth();
+  const isAdmin = user?.isAdmin ?? false;
+
   // ── Waterbody override state ──
   const [waterbodyOverride, setWaterbodyOverride] = useState<CachedWaterbody | null>(null);
   const [activePillars, setActivePillars] = useState<Set<Pillar>>(new Set());
@@ -161,9 +170,15 @@ export default function RestorationPlanner({
   const [selectedNGOs, setSelectedNGOs] = useState<Set<string>>(new Set());
   const [selectedEvents, setSelectedEvents] = useState<Set<string>>(new Set());
 
+  // ── Custom admin items ──
+  const [customModules, setCustomModules] = useState<TreatmentModule[]>([]);
+  const [customNGOs, setCustomNGOs] = useState<NGO[]>([]);
+  const [customEvents, setCustomEvents] = useState<CommunityEvent[]>([]);
+  const [adminFormType, setAdminFormType] = useState<'module' | 'partner' | 'event' | null>(null);
+
   // ── UI state ──
-  const [activeTab, setActiveTab] = useState<'modules' | 'partners' | 'events'>('modules');
-  const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set(MODULE_CATS));
+  const [activeTab, setActiveTab] = useState<'modules' | 'partners' | 'events' | 'grants'>('modules');
+  const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set());
   const [target, setTarget] = useState<TargetOutcome>('fishable');
   const [timelineYrs, setTimelineYrs] = useState<TimelineYears>(5);
   const [generated, setGenerated] = useState(false);
@@ -230,6 +245,11 @@ export default function RestorationPlanner({
   }, [waterData, waterbodyOverride]);
   const doMgL = waterData?.DO?.value ?? 5.5;
 
+  // ── Merged data arrays (base + custom admin items) ──
+  const allModules = useMemo(() => [...MODULES, ...customModules], [customModules]);
+  const allNGOs = useMemo(() => [...NGOS, ...customNGOs], [customNGOs]);
+  const allEvents = useMemo(() => [...EVENTS, ...customEvents], [customEvents]);
+
   // ── Virtual watershed ──
   const virtualWs = useMemo(() => {
     const sizeInfo = waterbodyOverride ? classifySize(waterbodyOverride) : null;
@@ -247,17 +267,17 @@ export default function RestorationPlanner({
 
   // ── Filtered modules/NGOs/events ──
   const filteredModules = useMemo(() =>
-    filterModules(MODULES, activePillars, sizeTier),
-    [activePillars, sizeTier],
+    filterModules(allModules, activePillars, sizeTier),
+    [allModules, activePillars, sizeTier],
   );
   const filteredNGOs = useMemo(() => {
-    if (activePillars.size === 0) return NGOS;
-    return NGOS.filter(n => !n.pillars || n.pillars.some(p => activePillars.has(p)));
-  }, [activePillars]);
+    if (activePillars.size === 0) return allNGOs;
+    return allNGOs.filter(n => !n.pillars || n.pillars.some(p => activePillars.has(p)));
+  }, [allNGOs, activePillars]);
   const filteredEvents = useMemo(() => {
-    if (activePillars.size === 0) return EVENTS;
-    return EVENTS.filter(e => !e.pillars || e.pillars.some(p => activePillars.has(p)));
-  }, [activePillars]);
+    if (activePillars.size === 0) return allEvents;
+    return allEvents.filter(e => !e.pillars || e.pillars.some(p => activePillars.has(p)));
+  }, [allEvents, activePillars]);
 
   // ── Live calculation ──
   const targetPct = TARGET_PCT[target];
@@ -268,12 +288,39 @@ export default function RestorationPlanner({
 
   // ── NGO + community costs ──
   const ngoValue = useMemo(() =>
-    NGOS.filter(n => selectedNGOs.has(n.id)).reduce((s, n) => s + n.value, 0),
-    [selectedNGOs],
+    allNGOs.filter(n => selectedNGOs.has(n.id)).reduce((s, n) => s + n.value, 0),
+    [allNGOs, selectedNGOs],
   );
   const eventCostYr = useMemo(() =>
-    EVENTS.filter(e => selectedEvents.has(e.id)).reduce((s, e) => s + e.cost, 0),
-    [selectedEvents],
+    allEvents.filter(e => selectedEvents.has(e.id)).reduce((s, e) => s + e.cost, 0),
+    [allEvents, selectedEvents],
+  );
+
+  // ── Staffing ──
+  const staffing = useMemo(() => {
+    const selNGOs = allNGOs.filter(n => selectedNGOs.has(n.id));
+    const selEvents = allEvents.filter(e => selectedEvents.has(e.id));
+    return calculateStaffing(
+      selectedModules.size,
+      calc?.aliaUnits ?? 0,
+      selNGOs,
+      selEvents,
+      timelineYrs,
+    );
+  }, [allNGOs, allEvents, selectedModules.size, calc?.aliaUnits, selectedNGOs, selectedEvents, timelineYrs]);
+
+  // ── Sorted partners and events ──
+  const sortedNGOs = useMemo(() =>
+    [...filteredNGOs].sort((a, b) => {
+      if (a.aligned && !b.aligned) return -1;
+      if (!a.aligned && b.aligned) return 1;
+      return a.name.localeCompare(b.name);
+    }),
+    [filteredNGOs],
+  );
+  const sortedEvents = useMemo(() =>
+    [...filteredEvents].sort((a, b) => a.name.localeCompare(b.name)),
+    [filteredEvents],
   );
 
   // ── State grants ──
@@ -349,6 +396,16 @@ export default function RestorationPlanner({
     });
   }, []);
 
+  const handleAdminAdd = useCallback((item: any) => {
+    if (adminFormType === 'module') {
+      setCustomModules(prev => [...prev, item]);
+    } else if (adminFormType === 'partner') {
+      setCustomNGOs(prev => [...prev, item]);
+    } else if (adminFormType === 'event') {
+      setCustomEvents(prev => [...prev, item]);
+    }
+  }, [adminFormType]);
+
   // ── No data guard — bypass if waterbody override is selected ──
   const hasData = (regionId && waterData && grade.canBeGraded) || waterbodyOverride;
   if (!hasData) {
@@ -384,7 +441,7 @@ export default function RestorationPlanner({
     catCounts[cat] = filteredModules.filter(m => m.cat === cat && selectedModules.has(m.id)).length;
   }
 
-  const totalLifecycle = (calc?.lifecycle ?? 0) + eventCostYr * timelineYrs;
+  const totalLifecycle = (calc?.lifecycle ?? 0) + eventCostYr * timelineYrs + staffing.netAnnualCost * timelineYrs;
   const totalGrants = (calc?.grantTotal ?? 0) + ngoValue;
 
   return (
@@ -466,14 +523,15 @@ export default function RestorationPlanner({
             {/* Tab Bar */}
             <div className="flex border-b border-slate-200 bg-slate-50">
               {([
-                { id: 'modules' as const, label: 'Treatment Modules', count: selectedModules.size },
-                { id: 'partners' as const, label: 'Partners', count: selectedNGOs.size },
-                { id: 'events' as const, label: 'Community', count: selectedEvents.size },
+                { id: 'modules' as const, label: 'Treatment', count: selectedModules.size, adminType: 'module' as const },
+                { id: 'partners' as const, label: 'Partners', count: selectedNGOs.size, adminType: 'partner' as const },
+                { id: 'events' as const, label: 'Community', count: selectedEvents.size, adminType: 'event' as const },
+                { id: 'grants' as const, label: 'Grants', count: stateGrantsList.filter(g => g.fit === 'high').length, adminType: null },
               ]).map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 px-3 py-2 text-[11px] font-medium transition-colors ${
+                  className={`flex-1 px-2 py-2 text-[11px] font-medium transition-colors flex items-center justify-center gap-1 ${
                     activeTab === tab.id
                       ? 'text-cyan-700 border-b-2 border-cyan-600 bg-white'
                       : 'text-slate-400 hover:text-slate-600'
@@ -481,7 +539,13 @@ export default function RestorationPlanner({
                 >
                   {tab.label}
                   {tab.count > 0 && (
-                    <span className="ml-1 text-[9px] bg-cyan-100 text-cyan-700 px-1 rounded-full">{tab.count}</span>
+                    <span className="text-[9px] bg-cyan-100 text-cyan-700 px-1 rounded-full">{tab.count}</span>
+                  )}
+                  {isAdmin && tab.adminType && (
+                    <span
+                      onClick={e => { e.stopPropagation(); setAdminFormType(tab.adminType); }}
+                      className="ml-0.5 w-4 h-4 flex items-center justify-center rounded bg-slate-200 hover:bg-cyan-200 text-slate-500 hover:text-cyan-700 text-[10px] font-bold"
+                    >+</span>
                   )}
                 </button>
               ))}
@@ -529,8 +593,13 @@ export default function RestorationPlanner({
                 <div>
                   <div className="px-3 py-2 bg-green-50 border-b text-[10px] text-green-700 font-medium">
                     Partnership In-Kind Value: {fmt$(ngoValue)}
+                    {staffing.partnerFteOffset > 0 && (
+                      <span className="ml-2 text-emerald-600">
+                        &asymp; {staffing.partnerFteOffset.toFixed(1)} FTE offset
+                      </span>
+                    )}
                   </div>
-                  {filteredNGOs.map(n => (
+                  {sortedNGOs.map(n => (
                     <NgoRow key={n.id} n={n} checked={selectedNGOs.has(n.id)} onToggle={toggleNGO} />
                   ))}
                 </div>
@@ -540,11 +609,28 @@ export default function RestorationPlanner({
                 <div>
                   <div className="px-3 py-2 bg-amber-50 border-b text-[10px] text-amber-700 font-medium">
                     Community Programs: {fmt$(eventCostYr)}/yr
+                    {staffing.volunteerCostOffset > 0 && (
+                      <span className="ml-2 text-green-600">
+                        Volunteer offset: {fmt$(staffing.volunteerCostOffset)}/yr
+                      </span>
+                    )}
                   </div>
-                  {filteredEvents.map(ev => (
+                  {sortedEvents.map(ev => (
                     <EventRow key={ev.id} ev={ev} checked={selectedEvents.has(ev.id)} onToggle={toggleEvent} />
                   ))}
                 </div>
+              )}
+
+              {activeTab === 'grants' && (
+                <GrantsPanel
+                  stateAbbr={stateAbbr}
+                  activePillars={activePillars}
+                  selectedCats={new Set(calc?.active.map(m => m.cat) ?? [])}
+                  attainsCauses={effectiveCauses}
+                  sizeTier={sizeTier}
+                  stateGrants={stateGrantsList}
+                  federalGrants={calc?.grants ?? []}
+                />
               )}
             </div>
           </div>
@@ -597,6 +683,13 @@ export default function RestorationPlanner({
                 )}
                 {eventCostYr > 0 && (
                   <LedgerLine label="Community" value={`${fmt$(eventCostYr)}/yr`} color="#e65100" />
+                )}
+                <LedgerLine label="Staffing" value={`${fmt$(staffing.netAnnualCost)}/yr`} sub={`${staffing.netStaffNeeded.toFixed(1)} FTE net`} />
+                {staffing.volunteerCostOffset > 0 && (
+                  <LedgerLine label="Volunteer Offset" value={`-${fmt$(staffing.volunteerCostOffset)}/yr`} color="#16a34a" sub={`${staffing.volunteerHoursYear.toLocaleString()} hrs @ $${VOLUNTEER_HOURLY_RATE}`} />
+                )}
+                {staffing.partnerFteOffset > 0 && (
+                  <LedgerLine label="Partner Offset" value={`-${staffing.partnerFteOffset.toFixed(1)} FTE`} color="#16a34a" />
                 )}
                 <LedgerLine label={`Lifecycle (${timelineYrs}yr)`} value={fmt$(totalLifecycle)} bold />
                 {totalGrants > 0 && (
@@ -662,6 +755,34 @@ export default function RestorationPlanner({
           >
             Generate Restoration Plan
           </button>
+
+          {/* PDF Export */}
+          {generated && calc && (
+            <button
+              onClick={() => exportRestorationPDF({
+                regionName: effectiveName,
+                stateAbbr,
+                waterbodyOverride,
+                sizeTier,
+                sizeLabel,
+                activePillars,
+                calc,
+                baseline,
+                grade,
+                target,
+                timelineYrs,
+                selectedNGOs: allNGOs.filter(n => selectedNGOs.has(n.id)),
+                selectedEvents: allEvents.filter(e => selectedEvents.has(e.id)),
+                staffing,
+                stateGrants: stateGrantsList,
+                attainsCategory: effectiveCategory,
+                attainsCauses: effectiveCauses,
+              })}
+              className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-md transition-colors flex items-center justify-center gap-2"
+            >
+              <FileDown className="h-4 w-4" /> Export PDF
+            </button>
+          )}
         </div>
 
         {/* ── Results ── */}
@@ -789,6 +910,15 @@ export default function RestorationPlanner({
             <p className="text-xs mt-1">Select modules from the panel above to generate a restoration plan</p>
           </div>
         )}
+
+        {/* Admin Add Form Modal */}
+        {adminFormType && (
+          <AdminAddForm
+            type={adminFormType}
+            onAdd={handleAdminAdd}
+            onClose={() => setAdminFormType(null)}
+          />
+        )}
       </CardContent>
     </Card>
   );
@@ -894,6 +1024,7 @@ function ModRow({ m, checked, onToggle, units, onUnits }: {
             {m.name.trim()}
           </span>
           {!m.isBMP && <span className="text-[7px] bg-red-50 text-red-700 px-1 rounded font-bold">PILOT</span>}
+          {m.experimental && <span className="text-[7px] bg-yellow-50 text-yellow-700 px-1 rounded font-bold">EXPERIMENTAL</span>}
           {m.trl != null && <span className="text-[7px] bg-purple-50 text-purple-700 px-1 rounded">TRL {m.trl}</span>}
           {m.hasOpex && <span className="text-[7px] bg-orange-50 text-orange-700 px-1 rounded font-bold">OPEX</span>}
           {m.isAddon && <span className="text-[7px] bg-green-50 text-green-800 px-1 rounded">ADD-ON</span>}
@@ -953,12 +1084,23 @@ function NgoRow({ n, checked, onToggle }: { n: NGO; checked: boolean; onToggle: 
         {checked && <svg width="9" height="7" viewBox="0 0 10 8"><path d="M1 3.5L4 6.5L9 1" stroke="white" strokeWidth="1.8" fill="none" strokeLinecap="round" /></svg>}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 flex-wrap">
           <span className="text-[11px]">{n.icon}</span>
           <span className={`text-[10px] font-semibold ${checked ? 'text-slate-800' : 'text-slate-500'}`}>{n.name}</span>
           {n.grant && <span className="text-[7px] bg-green-50 text-green-800 px-1 rounded font-bold">GRANT</span>}
+          {n.aligned
+            ? <span className="text-[7px] bg-green-100 text-green-700 px-1 rounded font-bold">ALIGNED</span>
+            : <span className="text-[7px] bg-slate-100 text-slate-400 px-1 rounded">REVIEW</span>
+          }
         </div>
         <div className="text-[8px] text-slate-400 mt-0.5">{n.type} &mdash; {n.desc}</div>
+        {n.strengths && n.strengths.length > 0 && (
+          <div className="flex gap-0.5 mt-0.5 flex-wrap">
+            {n.strengths.map(s => (
+              <span key={s} className="text-[7px] px-1 rounded bg-blue-50 text-blue-600 font-medium">{s}</span>
+            ))}
+          </div>
+        )}
       </div>
       <span className={`font-mono text-[9px] font-medium shrink-0 ${checked ? 'text-green-700' : 'text-slate-300'}`}>
         {checked ? '+' + fmt(n.value) : '\u2014'}
