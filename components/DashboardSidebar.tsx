@@ -3,10 +3,11 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/authContext';
 import { canAccessRoute } from '@/lib/roleRoutes';
 import { getLensesForHref, type LensDef } from '@/lib/lensRegistry';
+import { useAdminState, STATE_ABBR_TO_NAME } from '@/lib/adminStateContext';
 import {
   Building2,
   Map,
@@ -228,6 +229,8 @@ export function DashboardSidebar() {
   const searchParams = useSearchParams();
   const currentLensParam = searchParams.get('lens');
   const { user } = useAuth();
+  const router = useRouter();
+  const [adminState, setAdminState] = useAdminState();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedRoles, setExpandedRoles] = useState<Set<string>>(new Set());
@@ -472,9 +475,30 @@ export function DashboardSidebar() {
       {/* Admin section — Pearl / admin users only */}
       {user && (user.role === 'Pearl' || user.isAdmin) && (
         <div className="border-t border-slate-200 dark:border-[rgba(58,189,176,0.12)] px-2 py-3 space-y-0.5">
-          {!collapsed && (
-            <div className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              Admin
+          {!collapsed ? (
+            <div className="px-3 mb-1.5 space-y-1">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Admin</div>
+              <div className="text-[10px] font-medium text-slate-500">Viewing as</div>
+              <select
+                value={adminState}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setAdminState(next);
+                  if (pathname.startsWith('/dashboard/state/')) {
+                    router.push(`/dashboard/state/${next}`);
+                  }
+                }}
+                className="w-full text-xs px-2 py-1.5 rounded-md border border-slate-200 dark:border-[rgba(58,189,176,0.15)] bg-white dark:bg-[#0D1526] text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-purple-400"
+              >
+                {Object.entries(STATE_ABBR_TO_NAME).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
+                  <option key={abbr} value={abbr}>{abbr} — {name}</option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-0.5 px-1 mb-1" title={`${STATE_ABBR_TO_NAME[adminState] || adminState} (${adminState})`}>
+              <MapPin className="w-4 h-4 text-purple-500" />
+              <span className="text-[9px] font-bold text-purple-600">{adminState}</span>
             </div>
           )}
           <Link

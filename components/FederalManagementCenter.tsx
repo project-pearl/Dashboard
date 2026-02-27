@@ -44,6 +44,7 @@ import { GrantOpportunityMatcher } from './GrantOpportunityMatcher';
 import { GrantOutcomesCard } from './GrantOutcomesCard';
 import { EmergingContaminantsTracker } from './EmergingContaminantsTracker';
 import { PolicyTracker } from './PolicyTracker';
+import { useAdminState, STATE_ABBR_TO_NAME } from '@/lib/adminStateContext';
 
 import { HabitatEcologyPanel } from './HabitatEcologyPanel';
 import { AgriculturalNPSPanel } from './AgriculturalNPSPanel';
@@ -330,20 +331,6 @@ function scoreToGrade(score: number): { letter: string; color: string; bg: strin
   if (score >= 60) return { letter: 'D-', color: 'text-orange-500', bg: 'bg-orange-50 border-orange-200' };
   return { letter: 'F', color: 'text-red-700', bg: 'bg-red-50 border-red-300' };
 }
-
-const STATE_ABBR_TO_NAME: Record<string, string> = {
-  AL: 'Alabama', AK: 'Alaska', AZ: 'Arizona', AR: 'Arkansas', CA: 'California',
-  CO: 'Colorado', CT: 'Connecticut', DE: 'Delaware', FL: 'Florida', GA: 'Georgia',
-  HI: 'Hawaii', ID: 'Idaho', IL: 'Illinois', IN: 'Indiana', IA: 'Iowa',
-  KS: 'Kansas', KY: 'Kentucky', LA: 'Louisiana', ME: 'Maine', MD: 'Maryland',
-  MA: 'Massachusetts', MI: 'Michigan', MN: 'Minnesota', MS: 'Mississippi', MO: 'Missouri',
-  MT: 'Montana', NE: 'Nebraska', NV: 'Nevada', NH: 'New Hampshire', NJ: 'New Jersey',
-  NM: 'New Mexico', NY: 'New York', NC: 'North Carolina', ND: 'North Dakota', OH: 'Ohio',
-  OK: 'Oklahoma', OR: 'Oregon', PA: 'Pennsylvania', RI: 'Rhode Island', SC: 'South Carolina',
-  SD: 'South Dakota', TN: 'Tennessee', TX: 'Texas', UT: 'Utah', VT: 'Vermont',
-  VA: 'Virginia', WA: 'Washington', WV: 'West Virginia', WI: 'Wisconsin', WY: 'Wyoming',
-  DC: 'District of Columbia',
-};
 
 const NAME_TO_ABBR: Record<string, string> = Object.entries(STATE_ABBR_TO_NAME).reduce(
   (acc, [abbr, name]) => {
@@ -1180,7 +1167,10 @@ export function FederalManagementCenter(props: Props) {
   const hucNames = hucNamesData as Record<string, string>;
   const centroids = centroidsData as Record<string, { lat: number; lng: number }>;
 
-  const [selectedState, setSelectedState] = useState<string>('MD');
+  const [adminState] = useAdminState();
+  const [selectedState, setSelectedState] = useState<string>(adminState);
+  // Sync from sidebar admin state selector
+  useEffect(() => { setSelectedState(adminState); }, [adminState]);
 
   const [waterbodySearch, setWaterbodySearch] = useState<string>('');
   const [waterbodyFilter, setWaterbodyFilter] = useState<'all' | 'impaired' | 'severe' | 'monitored'>('all');
