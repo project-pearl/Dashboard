@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Wrench, Target, Clock, DollarSign, TrendingUp, CheckCircle2,
@@ -73,6 +73,14 @@ const STRATEGY_LINE_COLORS: Record<string, string> = {
   resilient: '#2563eb',
 };
 
+const POLLUTANT_LABELS: Record<string, string> = {
+  TN: 'Total Nitrogen',
+  TP: 'Total Phosphorus',
+  TSS: 'Total Suspended Solids',
+  bacteria: 'Bacteria (E. coli / Enterococcus)',
+  DO_improvement: 'Dissolved Oxygen',
+};
+
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export default function RestorationPlanner({
@@ -84,28 +92,43 @@ export default function RestorationPlanner({
   attainsCategory,
   attainsCauses,
 }: RestorationPlannerProps) {
+  // ── Error state ──
+  const [engineError, setEngineError] = useState<string | null>(null);
+
   // ── Compute grade from waterData ──
   const grade: WaterQualityGrade = useMemo(() => {
-    return calculateGrade(waterData ?? undefined, 'freshwater', {
-      attainsCategory: attainsCategory || '',
-      is303dListed: attainsCategory?.includes('5') ?? false,
-      hasTmdl: attainsCategory ? !attainsCategory.includes('5') : undefined,
-    });
+    try {
+      return calculateGrade(waterData ?? undefined, 'freshwater', {
+        attainsCategory: attainsCategory || '',
+        is303dListed: attainsCategory?.includes('5') ?? false,
+        hasTmdl: attainsCategory ? !attainsCategory.includes('5') : undefined,
+      });
+    } catch (e: any) {
+      console.error('[RestorationPlanner] calculateGrade error:', e);
+      setEngineError(e?.message || 'Grade calculation failed');
+      return { canBeGraded: false, score: 0, letter: 'F', label: 'Error', reason: '', color: '', bgColor: '', borderColor: '', parameterScores: [], coverage: {} as any, avgFreshnessWeight: 0, regulatoryPenalty: 0, gradedParamCount: 0, gradedParamTotal: 0, isPartialGrade: false, gradeSource: 'none' as const };
+    }
   }, [waterData, attainsCategory]);
 
   // ── Compute restoration plan from waterData ──
-  const restoration: RestorationResult = useMemo(() => {
-    const params: Record<string, { value: number; lastSampled?: string | null; unit?: string }> = waterData ?? {};
-    return computeRestorationPlan({
-      regionName: regionName || regionId || 'Unknown',
-      stateAbbr,
-      alertLevel: (alertLevel || 'none') as any,
-      params,
-      attainsCategory: attainsCategory || '',
-      attainsCauses: attainsCauses || [],
-      attainsCycle: '',
-      attainsAcres: null,
-    });
+  const restoration: RestorationResult | null = useMemo(() => {
+    try {
+      const params: Record<string, { value: number; lastSampled?: string | null; unit?: string }> = waterData ?? {};
+      return computeRestorationPlan({
+        regionName: regionName || regionId || 'Unknown',
+        stateAbbr,
+        alertLevel: (alertLevel || 'none') as any,
+        params,
+        attainsCategory: attainsCategory || '',
+        attainsCauses: attainsCauses || [],
+        attainsCycle: '',
+        attainsAcres: null,
+      });
+    } catch (e: any) {
+      console.error('[RestorationPlanner] computeRestorationPlan error:', e);
+      setEngineError(e?.message || 'Restoration plan computation failed');
+      return null;
+    }
   }, [waterData, regionName, regionId, stateAbbr, alertLevel, attainsCategory, attainsCauses]);
 
   // ── User constraint state ──
@@ -127,12 +150,18 @@ export default function RestorationPlanner({
   }), [target, timeline, budgetMin, budgetMax, landAvailable, permittingFeasible, politicalSupport]);
 
   // ── Map waterType for portfolio engine ──
-  const waterbodyType: WaterbodyCategory = restoration.waterType === 'brackish' ? 'estuary' : 'freshwater';
+  const waterbodyType: WaterbodyCategory = restoration?.waterType === 'brackish' ? 'estuary' : 'freshwater';
 
   // ── Generate portfolios ──
   const result: PortfolioResult | null = useMemo(() => {
-    if (!generated) return null;
-    return generatePortfolios(grade, restoration, waterData, waterbodyType, constraints);
+    if (!generated || !restoration) return null;
+    try {
+      return generatePortfolios(grade, restoration, waterData, waterbodyType, constraints);
+    } catch (e: any) {
+      console.error('[RestorationPlanner] generatePortfolios error:', e);
+      setEngineError(e?.message || 'Portfolio generation failed');
+      return null;
+    }
   }, [generated, grade, restoration, waterData, waterbodyType, constraints]);
 
   // ── Project trajectories for each portfolio ──
@@ -142,16 +171,22 @@ export default function RestorationPlanner({
 
   const trajectories: Trajectory[] = useMemo(() => {
     if (!result) return [];
-    const baseScore = grade.score ?? 50;
-    const baselineParams: Partial<Record<string, number>> = {};
-    if (waterData) {
-      for (const [k, v] of Object.entries(waterData)) {
-        baselineParams[k] = v.value;
+    try {
+      const baseScore = grade.score ?? 50;
+      const baselineParams: Partial<Record<string, number>> = {};
+      if (waterData) {
+        for (const [k, v] of Object.entries(waterData)) {
+          baselineParams[k] = v.value;
+        }
       }
+      return result.portfolios.map(p =>
+        projectTrajectory(p, baseScore, baselineParams as any, waterbodyType, TIMELINE_MONTHS[timeline])
+      );
+    } catch (e: any) {
+      console.error('[RestorationPlanner] projectTrajectory error:', e);
+      setEngineError(e?.message || 'Trajectory projection failed');
+      return [];
     }
-    return result.portfolios.map(p =>
-      projectTrajectory(p, baseScore, baselineParams as any, waterbodyType, TIMELINE_MONTHS[timeline])
-    );
   }, [result, grade.score, waterData, waterbodyType, timeline]);
 
   // ── Grant eligibility ──
@@ -162,8 +197,30 @@ export default function RestorationPlanner({
     setSelectedPortfolio(0);
   }, []);
 
+  // ── Error guard ──
+  if (engineError) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Wrench className="h-5 w-5 text-cyan-600" />
+            Restoration Planner
+          </CardTitle>
+          <CardDescription>Path-to-Fix portfolio optimizer</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8 text-slate-400">
+            <AlertTriangle className="h-10 w-10 mx-auto mb-3 text-amber-400" />
+            <p className="text-sm font-medium text-slate-600">Engine error</p>
+            <p className="text-xs mt-1">{engineError}</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   // ── No data guard ──
-  if (!regionId || !waterData || !grade.canBeGraded) {
+  if (!regionId || !waterData || !grade.canBeGraded || !restoration) {
     return (
       <Card>
         <CardHeader>
@@ -299,6 +356,17 @@ export default function RestorationPlanner({
         {/* ── Results ────────────────────────────────────────────── */}
         {result && result.portfolios.length > 0 && (
           <>
+            {/* ── Analysis Summary ── */}
+            <AnalysisSummary
+              regionName={regionName || regionId || 'this waterbody'}
+              grade={grade}
+              restoration={restoration}
+              result={result}
+              constraints={constraints}
+              attainsCategory={attainsCategory}
+              attainsCauses={attainsCauses}
+            />
+
             {/* Portfolio Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {result.portfolios.map((portfolio, i) => {
@@ -373,6 +441,19 @@ export default function RestorationPlanner({
               />
             )}
 
+            {/* ── Scenario Outcome — "What If" ── */}
+            {trajectories[selectedPortfolio] && (
+              <ScenarioOutcome
+                portfolio={result.portfolios[selectedPortfolio]}
+                trajectory={trajectories[selectedPortfolio]}
+                baselineScore={grade.score ?? 50}
+                grade={grade}
+                constraints={constraints}
+                result={result}
+                regionName={regionName || regionId || 'this waterbody'}
+              />
+            )}
+
             {/* Budget Breakdown Table */}
             {result.portfolios[selectedPortfolio]?.phases.length > 0 && (
               <div className="border rounded-lg overflow-hidden">
@@ -418,6 +499,17 @@ export default function RestorationPlanner({
                 </div>
               </div>
             )}
+
+            {/* ── Closing Summary ── */}
+            <ClosingSummary
+              portfolio={result.portfolios[selectedPortfolio]}
+              trajectory={trajectories[selectedPortfolio]}
+              constraints={constraints}
+              regionName={regionName || regionId || 'this waterbody'}
+              grade={grade}
+              grants={grants}
+              stateAbbr={stateAbbr}
+            />
           </>
         )}
 
@@ -429,10 +521,6 @@ export default function RestorationPlanner({
             <p className="text-xs mt-1">Try increasing the budget, timeline, or enabling land/permitting options</p>
           </div>
         )}
-
-        <p className="text-xs text-slate-400 italic">
-          Data source: EPA ATTAINS, PEARL pilot data, literature efficacy ranges. Projections are modeled estimates — site-specific assessment recommended.
-        </p>
       </CardContent>
     </Card>
   );
@@ -642,8 +730,8 @@ function BudgetTable({ portfolio }: { portfolio: Portfolio }) {
         </thead>
         <tbody>
           {portfolio.phases.map(phase => (
-            <>
-              <tr key={`phase-${phase.phase}`} className="bg-slate-100">
+            <React.Fragment key={`phase-${phase.phase}`}>
+              <tr className="bg-slate-100">
                 <td colSpan={5} className="px-3 py-1.5 font-semibold text-slate-700">
                   {phase.label}
                   <span className="ml-2 font-normal text-slate-400">
@@ -660,7 +748,7 @@ function BudgetTable({ portfolio }: { portfolio: Portfolio }) {
                   <td className="px-3 py-1.5 text-right text-slate-400">{a.monthsToFull}</td>
                 </tr>
               ))}
-            </>
+            </React.Fragment>
           ))}
         </tbody>
         <tfoot>
@@ -673,6 +761,281 @@ function BudgetTable({ portfolio }: { portfolio: Portfolio }) {
           </tr>
         </tfoot>
       </table>
+    </div>
+  );
+}
+
+// ─── Analysis Summary (Opening) ─────────────────────────────────────────────
+
+function AnalysisSummary({
+  regionName,
+  grade,
+  restoration,
+  result,
+  constraints,
+  attainsCategory,
+  attainsCauses,
+}: {
+  regionName: string;
+  grade: WaterQualityGrade;
+  restoration: RestorationResult;
+  result: PortfolioResult;
+  constraints: PlannerConstraints;
+  attainsCategory?: string;
+  attainsCauses?: string[];
+}) {
+  const targetLabel = TARGET_LABELS[constraints.target].label.toLowerCase();
+  const timeLabel = TIMELINE_LABELS[constraints.timeline].toLowerCase();
+
+  // Summarize which pollutants have gaps
+  const gapEntries = Object.entries(result.pollutantGaps).filter(([, g]) => g > 0);
+  const gapNames = gapEntries.map(([p]) => POLLUTANT_LABELS[p] || p);
+
+  // ATTAINS status description
+  const attainsDesc = attainsCategory?.includes('5')
+    ? '303(d)-listed as impaired'
+    : attainsCategory?.includes('4')
+      ? 'impaired with a TMDL or alternative plan in place'
+      : attainsCategory?.includes('3')
+        ? 'insufficient data for a full assessment'
+        : attainsCategory?.includes('2')
+          ? 'attaining some designated uses'
+          : attainsCategory?.includes('1')
+            ? 'meeting all designated uses'
+            : 'not yet fully assessed';
+
+  const causeList = attainsCauses?.length
+    ? attainsCauses.slice(0, 5).join(', ') + (attainsCauses.length > 5 ? ` (+${attainsCauses.length - 5} more)` : '')
+    : null;
+
+  // Constraint descriptions
+  const excluded: string[] = [];
+  if (!constraints.landAvailable) excluded.push('land-intensive solutions (riparian buffers, constructed wetlands)');
+  if (!constraints.permittingFeasible) excluded.push('projects requiring complex permitting (sediment dredging)');
+  if (!constraints.politicalSupport) excluded.push('strategies requiring multi-stakeholder buy-in');
+
+  return (
+    <div className="bg-gradient-to-br from-cyan-50 to-slate-50 border border-cyan-200 rounded-lg p-4 space-y-2">
+      <h3 className="text-sm font-semibold text-cyan-800 flex items-center gap-2">
+        <Target className="h-4 w-4" />
+        Analysis Summary
+      </h3>
+      <div className="text-xs text-slate-700 leading-relaxed space-y-2">
+        <p>
+          <strong>{regionName}</strong> currently holds a water quality score of{' '}
+          <strong>{grade.score ?? 'N/A'}/100</strong> (grade <strong>{grade.letter}</strong>).
+          Under EPA ATTAINS, this waterbody is <strong>{attainsDesc}</strong>.
+          {causeList && (
+            <> Listed impairment causes include: <em>{causeList}</em>.</>
+          )}
+        </p>
+        <p>
+          You requested a plan to reach <strong>{targetLabel}</strong> status within{' '}
+          <strong>{timeLabel}</strong>, with a budget between{' '}
+          <strong>{fmt$(constraints.budgetMin)}</strong> and <strong>{fmt$(constraints.budgetMax)}</strong>.
+          {excluded.length > 0 && (
+            <> Constraints exclude {excluded.join('; ')}.</>
+          )}
+        </p>
+        {gapEntries.length > 0 ? (
+          <p>
+            The analysis identified <strong>{gapEntries.length} pollutant gap{gapEntries.length > 1 ? 's' : ''}</strong>{' '}
+            between current conditions and the target: {gapNames.join(', ')}.
+            {gapEntries.length >= 3
+              ? ' Multiple concurrent impairments require a diversified intervention portfolio for effective restoration.'
+              : ' Focused interventions targeting these parameters can produce measurable improvement.'}
+          </p>
+        ) : (
+          <p>
+            Current water quality parameters already meet or are close to the selected target thresholds.
+            The portfolios below focus on reinforcing water quality resilience and maintaining compliance.
+          </p>
+        )}
+        <p>
+          Three strategy portfolios were generated below — <strong>lowest cost</strong>,{' '}
+          <strong>fastest timeline</strong>, and <strong>most resilient</strong> (diversified across intervention types).
+          Select a portfolio to compare projected trajectories and detailed budget breakdowns.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Scenario Outcome ("What If") ───────────────────────────────────────────
+
+function ScenarioOutcome({
+  portfolio,
+  trajectory,
+  baselineScore,
+  grade,
+  constraints,
+  result,
+  regionName,
+}: {
+  portfolio: Portfolio;
+  trajectory: Trajectory;
+  baselineScore: number;
+  grade: WaterQualityGrade;
+  constraints: PlannerConstraints;
+  result: PortfolioResult;
+  regionName: string;
+}) {
+  const finalPoint = trajectory.points[trajectory.points.length - 1];
+  const finalScore = finalPoint?.projectedScore.expected ?? baselineScore;
+  const scoreImprovement = Math.round(finalScore - baselineScore);
+  const targetLabel = TARGET_LABELS[constraints.target].label.toLowerCase();
+  const reachesTarget = portfolio.monthsToTarget > 0 && portfolio.monthsToTarget <= trajectory.points.length;
+
+  // Identify which pollutants get fully resolved vs remain
+  const resolved: string[] = [];
+  const remaining: string[] = [];
+  for (const [p, gap] of Object.entries(result.pollutantGaps)) {
+    if (gap <= 0) continue;
+    const residual = portfolio.residualGaps[p as keyof typeof portfolio.residualGaps];
+    if (!residual || residual < 0.01) {
+      resolved.push(POLLUTANT_LABELS[p] || p);
+    } else {
+      remaining.push(POLLUTANT_LABELS[p] || p);
+    }
+  }
+
+  // Find key milestones
+  const milestones = trajectory.points.flatMap(p => p.milestones);
+  const firstFullEfficacy = milestones.find(m => m.label.includes('full efficacy'));
+
+  // Grade letter projection
+  const projectedLetter = finalScore >= 90 ? 'A' : finalScore >= 80 ? 'B' : finalScore >= 70 ? 'C' : finalScore >= 60 ? 'D' : 'F';
+
+  return (
+    <div className="bg-gradient-to-br from-emerald-50 to-slate-50 border border-emerald-200 rounded-lg p-4 space-y-2">
+      <h3 className="text-sm font-semibold text-emerald-800 flex items-center gap-2">
+        <TrendingUp className="h-4 w-4" />
+        Scenario Outcome — What Would Change
+      </h3>
+      <div className="text-xs text-slate-700 leading-relaxed space-y-2">
+        <p>
+          If the <strong>{portfolio.label}</strong> strategy were fully implemented, the projected water quality score
+          for <strong>{regionName}</strong> would move from{' '}
+          <strong>{Math.round(baselineScore)}/100 ({grade.letter})</strong> to approximately{' '}
+          <strong>{Math.round(finalScore)}/100 ({projectedLetter})</strong> — a{' '}
+          <strong>{scoreImprovement > 0 ? '+' : ''}{scoreImprovement}-point</strong> change
+          over <strong>{trajectory.points.length - 1} months</strong>.
+        </p>
+
+        {reachesTarget ? (
+          <p>
+            The model projects this waterbody would reach <strong>{targetLabel}</strong> status
+            at approximately <strong>month {portfolio.monthsToTarget}</strong>.
+            {firstFullEfficacy && (
+              <> Key milestone: {firstFullEfficacy.label} at month {firstFullEfficacy.month}.</>
+            )}
+          </p>
+        ) : (
+          <p>
+            Based on current modeling, the selected portfolio may not fully achieve{' '}
+            <strong>{targetLabel}</strong> status within the selected timeframe.
+            Expanding the budget, timeline, or enabling additional constraints could close the remaining gap.
+          </p>
+        )}
+
+        {resolved.length > 0 && (
+          <p>
+            <strong>Pollutants addressed:</strong> {resolved.join(', ')}{' '}
+            {resolved.length === 1 ? 'is' : 'are'} projected to reach target thresholds.
+          </p>
+        )}
+        {remaining.length > 0 && (
+          <p>
+            <strong>Residual gaps remain</strong> for {remaining.join(', ')}.
+            Additional interventions or extended timelines may be needed to fully resolve{' '}
+            {remaining.length === 1 ? 'this parameter' : 'these parameters'}.
+          </p>
+        )}
+
+        <p>
+          Estimated capital investment: <strong>{fmtRange$(portfolio.totalCapital)}</strong>,
+          with ongoing annual O&M of <strong>{fmtRange$(portfolio.totalAnnualOM)}</strong>.
+          The portfolio deploys <strong>{portfolio.interventionTypeCount} intervention type{portfolio.interventionTypeCount !== 1 ? 's' : ''}</strong>{' '}
+          across <strong>{portfolio.phases.length} phase{portfolio.phases.length !== 1 ? 's' : ''}</strong>.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Closing Summary ────────────────────────────────────────────────────────
+
+function ClosingSummary({
+  portfolio,
+  trajectory,
+  constraints,
+  regionName,
+  grade,
+  grants,
+  stateAbbr,
+}: {
+  portfolio: Portfolio;
+  trajectory?: Trajectory;
+  constraints: PlannerConstraints;
+  regionName: string;
+  grade: WaterQualityGrade;
+  grants: GrantOpportunity[];
+  stateAbbr: string;
+}) {
+  const residualCount = Object.keys(portfolio.residualGaps).length;
+  const allResolved = residualCount === 0;
+  const highGrants = grants.filter(g => g.fit === 'high');
+  const finalScore = trajectory?.points[trajectory.points.length - 1]?.projectedScore.expected;
+  const targetLabel = TARGET_LABELS[constraints.target].label.toLowerCase();
+
+  return (
+    <div className="bg-gradient-to-br from-slate-50 to-blue-50 border border-slate-200 rounded-lg p-4 space-y-2">
+      <h3 className="text-sm font-semibold text-slate-800 flex items-center gap-2">
+        <CheckCircle2 className="h-4 w-4 text-blue-600" />
+        Summary & Recommendations
+      </h3>
+      <div className="text-xs text-slate-700 leading-relaxed space-y-2">
+        <p>
+          This restoration analysis evaluated pathways to achieve <strong>{targetLabel}</strong> status
+          for <strong>{regionName}</strong>, currently scored at{' '}
+          <strong>{grade.score ?? 'N/A'}/100 ({grade.letter})</strong>.
+          The <strong>{portfolio.label}</strong> strategy is currently selected,
+          projecting a score of <strong>{finalScore ? Math.round(finalScore) : '—'}/100</strong>{' '}
+          over <strong>{TIMELINE_LABELS[constraints.timeline].toLowerCase()}</strong>{' '}
+          at an estimated cost of <strong>{fmtRange$(portfolio.totalCapital)}</strong>.
+        </p>
+
+        {allResolved ? (
+          <p>
+            All identified pollutant gaps are projected to be resolved under this portfolio.
+            Ongoing monitoring is recommended to confirm modeled improvements translate to
+            field conditions and to detect any emerging stressors.
+          </p>
+        ) : (
+          <p>
+            <strong>{residualCount} pollutant gap{residualCount > 1 ? 's' : ''}</strong>{' '}
+            remain unresolved under the current portfolio. Consider adjusting the budget ceiling,
+            extending the timeline, or relaxing feasibility constraints to enable additional
+            interventions. Phased implementation with adaptive management checkpoints is recommended.
+          </p>
+        )}
+
+        {highGrants.length > 0 && stateAbbr && (
+          <p>
+            <strong>{highGrants.length}</strong> high-fit grant{highGrants.length > 1 ? 's' : ''}{' '}
+            in <strong>{stateAbbr}</strong> may offset project costs.
+            Early coordination with state water quality agencies and SRF programs can
+            accelerate permitting and funding timelines.
+          </p>
+        )}
+
+        <p className="text-slate-500 italic">
+          All projections are modeled estimates based on EPA ATTAINS assessments, PEARL pilot data,
+          and published intervention efficacy literature. Actual outcomes depend on site-specific
+          hydrology, land use, climate variability, and implementation fidelity.
+          A site-specific feasibility study is recommended before committing capital.
+        </p>
+      </div>
     </div>
   );
 }
