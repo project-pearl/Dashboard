@@ -39,6 +39,7 @@ import { WatershedHealthPanel } from '@/components/WatershedHealthPanel';
 import { RestorationProjectsPanel } from '@/components/RestorationProjectsPanel';
 import { AdvocacyPanel } from '@/components/AdvocacyPanel';
 import { VolunteerProgramPanel } from '@/components/VolunteerProgramPanel';
+import { CitizenReportingPanel } from '@/components/CitizenReportingPanel';
 import LocationReportCard from '@/components/LocationReportCard';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
@@ -84,7 +85,7 @@ type Props = {
 type ViewLens = 'overview' | 'briefing' | 'planner' | 'trends' | 'policy' | 'compliance' |
   'water-quality' | 'public-health' | 'watershed-health' | 'restoration-projects' |
   'infrastructure' | 'monitoring' | 'disaster-emergency' | 'advocacy' |
-  'scorecard' | 'reports' | 'volunteer-program' | 'funding';
+  'scorecard' | 'reports' | 'volunteer-program' | 'citizen-reporting' | 'funding';
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -125,6 +126,8 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set(['reports-hub', 'disclaimer']) },
   'volunteer-program': { label: 'Volunteer Program', description: 'Volunteer monitoring program management',
     sections: new Set(['volunteer', 'community', 'volunteer-program-panel', 'disclaimer']) },
+  'citizen-reporting': { label: 'Citizen Reporting', description: 'Community citizen science data submission and review',
+    sections: new Set(['citizen-reporting-panel', 'volunteer-program-panel', 'community', 'disclaimer']) },
   funding:     { label: 'Funding & Grants', description: 'Conservation funding opportunities',
     sections: new Set(['grants', 'disclaimer']) },
 };
@@ -2918,6 +2921,7 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
             case 'restoration-projects-panel': return DS(<RestorationProjectsPanel stateAbbr={stateAbbr} />);
             case 'advocacy-panel': return DS(<AdvocacyPanel stateAbbr={stateAbbr} />);
             case 'volunteer-program-panel': return DS(<VolunteerProgramPanel stateAbbr={stateAbbr} />);
+            case 'citizen-reporting-panel': return DS(<CitizenReportingPanel stateAbbr={stateAbbr} />);
 
             case 'location-report': return DS(<LocationReportCard />);
 

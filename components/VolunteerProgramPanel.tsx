@@ -147,6 +147,27 @@ export function VolunteerProgramPanel({ stateAbbr }: VolunteerProgramPanelProps)
         </span>
       </div>
 
+      {/* ── Citizen Reporting CTA ─────────────────────────────────────────────── */}
+      <Card className="border-amber-200 bg-amber-50/50">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold text-amber-800">Submit Citizen Science Data</p>
+              <p className="text-[10px] text-amber-600 mt-0.5">
+                Upload field readings from volunteer monitoring sessions — single entry or CSV bulk upload
+              </p>
+            </div>
+            <a
+              href="?lens=citizen-reporting"
+              className="shrink-0 h-8 px-4 rounded-md bg-amber-600 hover:bg-amber-700 flex items-center gap-1.5 transition-colors"
+            >
+              <ClipboardCheck size={14} className="text-white" />
+              <span className="text-xs font-semibold text-white">Submit Report</span>
+            </a>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* ── Section 1: Volunteer Roster Summary ──────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {([

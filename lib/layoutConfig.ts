@@ -49,10 +49,11 @@ export const DEFAULT_SECTIONS = {
     // ── K-12 exclusive panels ──
     { id: 'outdoor-classroom-panel',     label: 'Outdoor Classroom',           order: 19, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'student-monitoring-panel',    label: 'Student Monitoring Tools',    order: 20, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'drinking-water-safety-panel', label: 'Drinking Water Safety',      order: 21, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'location-report', label: 'Location Water Quality Report', order: 22, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'student-upload-panel',        label: 'Student Data Uploads',        order: 21, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'drinking-water-safety-panel', label: 'Drinking Water Safety',      order: 22, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'location-report', label: 'Location Water Quality Report', order: 23, visible: true, defaultExpanded: false, lensControlled: true },
     // ── Always visible ──
-    { id: 'disclaimer',  label: 'Platform Disclaimer',          order: 23, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'disclaimer',  label: 'Platform Disclaimer',          order: 24, visible: true, defaultExpanded: true,  lensControlled: true },
   ],
 
   State: [
@@ -343,9 +344,10 @@ export const DEFAULT_SECTIONS = {
     { id: 'restoration-projects-panel',  label: 'Restoration Projects',          order: 23, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'advocacy-panel',              label: 'Advocacy Center',               order: 24, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'volunteer-program-panel',     label: 'Volunteer Program Management',  order: 25, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'location-report',            label: 'Location Water Quality Report', order: 26, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'citizen-reporting-panel',     label: 'Citizen Reporting',             order: 26, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'location-report',            label: 'Location Water Quality Report', order: 27, visible: true, defaultExpanded: false, lensControlled: true },
     // ── Always visible ──
-    { id: 'disclaimer',  label: 'Platform Disclaimer',          order: 27, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'disclaimer',  label: 'Platform Disclaimer',          order: 28, visible: true, defaultExpanded: true,  lensControlled: true },
   ],
 
   University: [

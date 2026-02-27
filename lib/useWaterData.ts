@@ -59,6 +59,7 @@ export type DataSourceId =
   | 'ERDDAP' | 'NOAA' | 'MMW' | 'EPA_EF'
   | 'STATE' | 'NASA_STREAM' | 'HYDROSHARE'
   | 'CEDEN'
+  | 'CITIZEN_UPLOAD' | 'STUDENT_UPLOAD'
   | 'REFERENCE' | 'MOCK';
 
 // ─── Data Confidence Tiers ──────────────────────────────────────────────────
@@ -218,6 +219,26 @@ export const DATA_SOURCES: Record<DataSourceId, DataSourceInfo> = {
     url: 'https://www.hydroshare.org',
     description: 'Hydrologic dataset repository from CUAHSI research network',
     tier: 2,
+  },
+  CITIZEN_UPLOAD: {
+    id: 'CITIZEN_UPLOAD',
+    name: 'Citizen Upload',
+    fullName: 'Community Citizen Science Upload',
+    color: 'bg-amber-100',
+    textColor: 'text-amber-700',
+    url: '',
+    description: 'Volunteer-submitted field samples from citizen science programs',
+    tier: 3,
+  },
+  STUDENT_UPLOAD: {
+    id: 'STUDENT_UPLOAD',
+    name: 'Student Upload',
+    fullName: 'K-12 Student Lab Submission',
+    color: 'bg-indigo-100',
+    textColor: 'text-indigo-700',
+    url: '',
+    description: 'Student-collected lab results from K-12 water quality monitoring',
+    tier: 4,
   },
   REFERENCE: {
     id: 'REFERENCE',
@@ -2282,6 +2303,69 @@ export function useWaterData(regionId: string | null): UseWaterDataResult {
         } catch (e) {
           console.warn(`[PEARL Source 9c] CEDEN enrichment failed:`, e instanceof Error ? e.message : e);
         }
+      }
+
+      if (cancelled) return;
+
+      // ── Source 9d: User-Uploaded Samples (citizen science / student) ────
+      // Fetch ACTIVE samples from the uploads API, fill gaps only
+      try {
+        const uploadRes = await fetch(`/api/uploads/samples?stateAbbr=${regionMeta.stateCode}`);
+        if (uploadRes.ok) {
+          const uploadData = await uploadRes.json();
+          const uploadSamples: Array<{ parameter: string; value: number; unit: string; sample_date: string; location_name: string | null; provenance: string }> = uploadData.samples || [];
+          let citizenCount = 0;
+          let studentCount = 0;
+          let citizenStation = '';
+          let studentStation = '';
+          let citizenTime = '';
+          let studentTime = '';
+          for (const s of uploadSamples) {
+            const pearlKey = s.parameter;
+            if (!allParams[pearlKey]) {
+              const sourceId = s.provenance === 'CITIZEN_SCIENCE' ? 'CITIZEN_UPLOAD' : 'STUDENT_UPLOAD';
+              allParams[pearlKey] = {
+                pearlKey,
+                value: s.value,
+                unit: s.unit,
+                source: sourceId,
+                stationName: s.location_name || 'User Upload',
+                lastSampled: s.sample_date,
+                parameterName: pearlKey,
+              };
+              if (sourceId === 'CITIZEN_UPLOAD') {
+                citizenCount++;
+                if (!citizenStation) citizenStation = s.location_name || 'Citizen Upload';
+                if (!citizenTime) citizenTime = s.sample_date;
+              } else {
+                studentCount++;
+                if (!studentStation) studentStation = s.location_name || 'Student Upload';
+                if (!studentTime) studentTime = s.sample_date;
+              }
+            }
+          }
+          if (citizenCount > 0 && !activeSources.includes('CITIZEN_UPLOAD')) {
+            activeSources.push('CITIZEN_UPLOAD');
+            sourceDetails.push({
+              source: DATA_SOURCES.CITIZEN_UPLOAD,
+              parameterCount: citizenCount,
+              stationName: citizenStation,
+              lastSampled: citizenTime,
+            });
+          }
+          if (studentCount > 0 && !activeSources.includes('STUDENT_UPLOAD')) {
+            activeSources.push('STUDENT_UPLOAD');
+            sourceDetails.push({
+              source: DATA_SOURCES.STUDENT_UPLOAD,
+              parameterCount: studentCount,
+              stationName: studentStation,
+              lastSampled: studentTime,
+            });
+          }
+          console.log(`[PEARL Source 9d] User Uploads: ${citizenCount} citizen, ${studentCount} student params`);
+        }
+      } catch (e) {
+        console.warn(`[PEARL Source 9d] User upload fetch failed:`, e instanceof Error ? e.message : e);
       }
 
       if (cancelled) return;

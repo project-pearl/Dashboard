@@ -28,6 +28,8 @@ const SOURCE_DOT_COLORS: Record<string, string> = {
   STATE: 'bg-rose-500',
   NASA_STREAM: 'bg-indigo-500',
   HYDROSHARE: 'bg-fuchsia-500',
+  CITIZEN_UPLOAD: 'bg-amber-500',
+  STUDENT_UPLOAD: 'bg-indigo-400',
   REFERENCE: 'bg-amber-500',
   MOCK: 'bg-gray-400',
 };

@@ -160,6 +160,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'scorecard',             label: 'Scorecard' },
     { id: 'reports',               label: 'Reports' },
     { id: 'volunteer-program',     label: 'Volunteer Program' },
+    { id: 'citizen-reporting',     label: 'Citizen Reporting' },
     { id: 'funding',               label: 'Funding & Grants' },
   ],
   // ── K-12 Education (12 items) ──────────────────────────────────────────────
@@ -173,6 +174,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'public-health',          label: 'Public Health & Contaminants' },
     { id: 'outdoor-classroom',      label: 'Outdoor Classroom' },
     { id: 'student-monitoring',     label: 'Student Monitoring' },
+    { id: 'student-uploads',        label: 'Student Uploads' },
     { id: 'drinking-water-safety',  label: 'Drinking Water Safety' },
     { id: 'reports',                label: 'Reports' },
     { id: 'funding',                label: 'Funding & Grants' },

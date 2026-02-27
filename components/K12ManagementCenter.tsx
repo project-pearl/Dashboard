@@ -37,6 +37,7 @@ import RestorationPlanner from '@/components/RestorationPlanner';
 import { OutdoorClassroomPanel } from '@/components/OutdoorClassroomPanel';
 import { DrinkingWaterSafetyPanel } from '@/components/DrinkingWaterSafetyPanel';
 import { StudentMonitoringPanel } from '@/components/StudentMonitoringPanel';
+import { StudentUploadPanel } from '@/components/StudentUploadPanel';
 import LocationReportCard from '@/components/LocationReportCard';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
@@ -88,7 +89,7 @@ type Props = {
 
 type ViewLens = 'overview' | 'briefing' | 'planner' | 'trends' | 'compliance' |
   'water-quality' | 'public-health' | 'outdoor-classroom' | 'student-monitoring' |
-  'drinking-water-safety' | 'reports' | 'funding';
+  'student-uploads' | 'drinking-water-safety' | 'reports' | 'funding';
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -113,6 +114,8 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set(['outdoor-classroom-panel', 'wildlife', 'disclaimer']) },
   'student-monitoring': { label: 'Student Monitoring', description: 'Student water quality monitoring tools',
     sections: new Set(['learning', 'projects', 'fieldreport', 'student-monitoring-panel', 'disclaimer']) },
+  'student-uploads': { label: 'Student Uploads', description: 'Submit and manage student water quality data',
+    sections: new Set(['student-upload-panel', 'student-monitoring-panel', 'learning', 'disclaimer']) },
   'drinking-water-safety': { label: 'Drinking Water Safety', description: 'School drinking water safety testing',
     sections: new Set(['drinking-water-safety-panel', 'sdwis', 'disclaimer']) },
   reports:     { label: 'Reports', description: 'Educational reports and teacher resources',
@@ -3041,6 +3044,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
             // ── K-12 exclusive panels ──
             case 'outdoor-classroom-panel': return DS(<OutdoorClassroomPanel stateAbbr={stateAbbr} />);
             case 'student-monitoring-panel': return DS(<StudentMonitoringPanel stateAbbr={stateAbbr} />);
+            case 'student-upload-panel': return DS(<StudentUploadPanel stateAbbr={stateAbbr} isTeacher={isTeacher} />);
             case 'drinking-water-safety-panel': return DS(<DrinkingWaterSafetyPanel stateAbbr={stateAbbr} />);
 
             case 'location-report': return DS(<LocationReportCard />);

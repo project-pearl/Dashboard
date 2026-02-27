@@ -143,10 +143,13 @@ export function StudentMonitoringPanel({ stateAbbr }: StudentMonitoringPanelProp
             ))}
           </div>
           <div className="mt-3 flex items-center gap-2">
-            <div className="flex-1 h-9 rounded-md bg-indigo-600 flex items-center justify-center cursor-not-allowed opacity-60">
+            <a
+              href="?lens=student-uploads"
+              className="flex-1 h-9 rounded-md bg-indigo-600 hover:bg-indigo-700 flex items-center justify-center transition-colors"
+            >
               <span className="text-xs font-semibold text-white">Submit Reading</span>
-            </div>
-            <p className="text-[10px] text-slate-400 italic">Data entry coming soon</p>
+            </a>
+            <p className="text-[10px] text-slate-400 italic">Opens the Student Uploads portal</p>
           </div>
         </CardContent>
       </Card>
