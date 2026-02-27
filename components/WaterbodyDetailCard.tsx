@@ -233,7 +233,7 @@ export function WaterbodyDetailCard({
   const getSourceName = (sourceId: string) => dataSources[sourceId]?.name || sourceId;
 
   return (
-    <Card className="border-2 border-blue-300 bg-gradient-to-br from-blue-50/80 to-slate-50 shadow-lg">
+    <Card className="border-2 border-blue-300 bg-gradient-to-br from-blue-50/80 to-slate-50 shadow-lg relative">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
@@ -886,8 +886,8 @@ export function WaterbodyDetailCard({
           };
 
           return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={(e) => { e.stopPropagation(); setExpandedParam(null); }}>
-              <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-[340px] max-w-[90vw] max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/30 rounded-xl cursor-pointer" onClick={() => setExpandedParam(null)}>
+              <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-[300px] max-w-[95%] max-h-[90%] overflow-y-auto cursor-default" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between p-4 border-b border-slate-100">
                   <h3 className="text-sm font-semibold text-slate-800">
                     {isHealth ? 'Waterbody Health Grade' : display?.label || expandedParam}
