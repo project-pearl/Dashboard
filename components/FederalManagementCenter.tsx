@@ -2978,7 +2978,7 @@ export function FederalManagementCenter(props: Props) {
         )}
 
         {/* ── MS4 & REGULATORY — Compact vertical card ────── */}
-        {viewLens !== 'monitoring' && (() => {
+        {viewLens !== 'monitoring' && viewLens !== 'overview' && (() => {
           const ms4 = MS4_JURISDICTIONS[selectedState];
           const ov = overlayByState.get(selectedState);
           if (!ms4 && !ov) return null;
@@ -3177,6 +3177,26 @@ export function FederalManagementCenter(props: Props) {
                         <BrandedPrintBtn sectionId="impairmentprofile" title="Impairment Profile" />
                       </div>
 
+                      {/* Top Impairment Causes */}
+                      <div>
+                        <div className="pin-section-label mb-2">Top Impairment Causes</div>
+                        <div className="space-y-1">
+                          {attainsAggregation.topCauses.slice(0, 7).map((c, i) => {
+                            const maxCount = attainsAggregation.topCauses[0]?.count || 1;
+                            const pct = (c.count / maxCount) * 100;
+                            return (
+                              <div key={i} className="flex items-center gap-2">
+                                <div className="w-[110px] text-[10px] truncate" style={{ color: 'var(--text-dim)' }} title={c.cause}>{c.cause}</div>
+                                <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
+                                  <div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'var(--text-dim)', opacity: 0.35 }} />
+                                </div>
+                                <div className="text-[10px] w-[48px] text-right pin-stat-secondary">{c.count.toLocaleString()}</div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
                       {/* EPA Assessment Categories */}
                       <div>
                         <div className="pin-section-label mb-2">EPA Assessment Categories</div>
@@ -3204,26 +3224,6 @@ export function FederalManagementCenter(props: Props) {
                         </div>
                         <div className="mt-2 pt-2 text-[10px]" style={{ borderTop: '1px solid var(--border-subtle)', color: 'var(--text-dim)' }}>
                           TMDL Gap: <span className="pin-stat-secondary" style={attainsAggregation.tmdlGapPct > 50 ? { color: 'var(--status-severe)' } : undefined}>{attainsAggregation.tmdlGapPct}%</span> of impaired lack approved TMDL
-                        </div>
-                      </div>
-
-                      {/* Top Impairment Causes */}
-                      <div>
-                        <div className="pin-section-label mb-2">Top Impairment Causes</div>
-                        <div className="space-y-1">
-                          {attainsAggregation.topCauses.slice(0, 7).map((c, i) => {
-                            const maxCount = attainsAggregation.topCauses[0]?.count || 1;
-                            const pct = (c.count / maxCount) * 100;
-                            return (
-                              <div key={i} className="flex items-center gap-2">
-                                <div className="w-[110px] text-[10px] truncate" style={{ color: 'var(--text-dim)' }} title={c.cause}>{c.cause}</div>
-                                <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
-                                  <div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'var(--text-dim)', opacity: 0.35 }} />
-                                </div>
-                                <div className="text-[10px] w-[48px] text-right pin-stat-secondary">{c.count.toLocaleString()}</div>
-                              </div>
-                            );
-                          })}
                         </div>
                       </div>
                     </div>
