@@ -77,6 +77,7 @@ export interface ResolutionPlan {
 }
 
 export interface PlanSections {
+  responseSummary: string;
   situationAssessment: string;
   rootCauses: string;
   stakeholders: string;
@@ -84,12 +85,21 @@ export interface PlanSections {
   actionsShortTerm: string[];
   actionsLongTerm: string[];
   coBenefits: CoBenefit[];
+  pillarRoles: PillarRole[];
   alertsAndNotifications: string;
   interAgencyCoordination: string;
   monitoringMobilization: string;
   publicCommunication: string;
   regulatoryPath: string;
   projectedOutcomes: string;
+  closingSummary: string;
+}
+
+export interface PillarRole {
+  pillar: string;
+  role: string;
+  awareness: string;
+  contribution: string;
 }
 
 export interface CoBenefit {
@@ -249,6 +259,7 @@ function ScopeSummaryBadge({ scopeContext }: { scopeContext: ScopeContext }) {
 
 const JSON_SCHEMA_INSTRUCTION = `Respond ONLY with valid JSON, no markdown, no backticks:
 {
+  "responseSummary": "2-3 sentence executive summary of this response plan: what conditions triggered it, what scope of response is needed, and what the primary coordination objectives are. This is the top-line briefing a decision-maker reads first.",
   "situationAssessment": "2-3 paragraphs: what is happening RIGHT NOW based on the data and active conditions provided. Treat all active conditions as CONFIRMED REAL EVENTS that have occurred — never frame them as hypothetical or speculative. Describe who is affected, what the scope of impact is, and why this requires immediate coordinated response.",
   "rootCauses": "What is driving the current conditions. Cite specific data patterns, infrastructure failures, weather events, or systemic gaps from the data provided.",
   "stakeholders": "Who must be notified and coordinated with. For each: name/office, their authority, what alert or communication they should receive, and what specific response action they own.",
@@ -270,7 +281,40 @@ const JSON_SCHEMA_INSTRUCTION = `Respond ONLY with valid JSON, no markdown, no b
   "monitoringMobilization": "What additional monitoring should be deployed: where, what parameters, what frequency, what triggers escalation. Include both automated sensor networks and field team deployments.",
   "publicCommunication": "What the public needs to know: advisories to issue, community meetings to hold, media statements to prepare, dashboard updates to publish. Include specific messaging for affected communities.",
   "regulatoryPath": "Regulatory notifications required: which agencies must be formally notified, what reporting deadlines apply, what enforcement mechanisms may be triggered, what compliance actions are needed.",
-  "projectedOutcomes": "What improves and by when if this response plan is executed. Focus on response effectiveness: faster detection, broader notification coverage, better inter-agency coordination, improved public awareness. NOT water quality treatment outcomes — the Restoration Planner handles remediation."
+  "pillarRoles": [
+    {
+      "pillar": "Surface Water",
+      "role": "What surface water programs and agencies need to DO in this response (monitoring, assessment, reporting).",
+      "awareness": "What surface water stakeholders need to be MADE AWARE OF (conditions, risks, upstream/downstream impacts).",
+      "contribution": "How surface water data and programs CONTRIBUTE to the overall coordinated response."
+    },
+    {
+      "pillar": "Drinking Water",
+      "role": "Same structure for drinking water utilities and programs.",
+      "awareness": "...",
+      "contribution": "..."
+    },
+    {
+      "pillar": "Wastewater",
+      "role": "Same structure for wastewater/discharge programs.",
+      "awareness": "...",
+      "contribution": "..."
+    },
+    {
+      "pillar": "Groundwater",
+      "role": "Same structure for groundwater monitoring and protection programs.",
+      "awareness": "...",
+      "contribution": "..."
+    },
+    {
+      "pillar": "Stormwater",
+      "role": "Same structure for stormwater management programs.",
+      "awareness": "...",
+      "contribution": "..."
+    }
+  ],
+  "projectedOutcomes": "What improves and by when if this response plan is executed. Focus on response effectiveness: faster detection, broader notification coverage, better inter-agency coordination, improved public awareness. NOT water quality treatment outcomes — the Restoration Planner handles remediation.",
+  "closingSummary": "2-3 sentence closing that ties together the response plan: what was identified, what the coordinated response achieves, and what ongoing vigilance is needed. End with a forward-looking statement about sustained monitoring and readiness."
 }
 
 CRITICAL FRAMING RULES:
@@ -463,6 +507,7 @@ BRANDING RULE: Never reference PIN, PEARL, PEARL Intelligence Network, or any pl
 
 Respond ONLY with valid JSON, same structure as before:
 {
+  "responseSummary": "...",
   "situationAssessment": "...",
   "rootCauses": "...",
   "stakeholders": "...",
@@ -470,12 +515,14 @@ Respond ONLY with valid JSON, same structure as before:
   "actionsShortTerm": ["..."],
   "actionsLongTerm": ["..."],
   "coBenefits": [{"action": "...", "surfaceWater": "...", "drinkingWater": "...", "wastewater": "...", "groundwater": "...", "stormwater": "..."}],
+  "pillarRoles": [{"pillar": "...", "role": "...", "awareness": "...", "contribution": "..."}],
   "alertsAndNotifications": "...",
   "interAgencyCoordination": "...",
   "monitoringMobilization": "...",
   "publicCommunication": "...",
   "regulatoryPath": "...",
-  "projectedOutcomes": "..."
+  "projectedOutcomes": "...",
+  "closingSummary": "..."
 }`;
 }
 
@@ -1044,6 +1091,16 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
 
         <ConditionsBanner scopeContext={scopeContext} />
 
+        {/* Response Summary (Opening) */}
+        {plan!.sections.responseSummary && (
+          <section>
+            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-4">
+              <h3 className="text-sm font-bold text-blue-800 uppercase tracking-wide mb-2">Response Summary</h3>
+              <div className="text-sm text-blue-900 leading-relaxed whitespace-pre-wrap font-medium">{plan!.sections.responseSummary}</div>
+            </div>
+          </section>
+        )}
+
         <section>
           <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">Situation Assessment</h3>
           <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{plan!.sections.situationAssessment}</div>
@@ -1090,6 +1147,47 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
           </div>
         </section>
 
+        {/* Pillar Response Roles */}
+        {plan!.sections.pillarRoles && plan!.sections.pillarRoles.length > 0 && (
+          <section>
+            <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">Water Domain Response Roles</h3>
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+              {plan!.sections.pillarRoles.map((p, i) => {
+                const colors: Record<string, { bg: string; border: string; title: string; text: string; icon: string }> = {
+                  'Surface Water':  { bg: 'bg-blue-50',   border: 'border-blue-200',   title: 'text-blue-800',   text: 'text-blue-700',   icon: '~' },
+                  'Drinking Water': { bg: 'bg-cyan-50',   border: 'border-cyan-200',   title: 'text-cyan-800',   text: 'text-cyan-700',   icon: 'DW' },
+                  'Wastewater':     { bg: 'bg-amber-50',  border: 'border-amber-200',  title: 'text-amber-800',  text: 'text-amber-700',  icon: 'WW' },
+                  'Groundwater':    { bg: 'bg-emerald-50', border: 'border-emerald-200', title: 'text-emerald-800', text: 'text-emerald-700', icon: 'GW' },
+                  'Stormwater':     { bg: 'bg-violet-50', border: 'border-violet-200', title: 'text-violet-800', text: 'text-violet-700', icon: 'SW' },
+                };
+                const c = colors[p.pillar] || { bg: 'bg-gray-50', border: 'border-gray-200', title: 'text-gray-800', text: 'text-gray-700', icon: '?' };
+                return (
+                  <div key={i} className={`${c.bg} ${c.border} border rounded-lg p-3`}>
+                    <div className={`text-xs font-bold ${c.title} uppercase tracking-wide mb-2 flex items-center gap-1.5`}>
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white border border-current text-[9px] font-bold">{c.icon}</span>
+                      {p.pillar}
+                    </div>
+                    <div className="space-y-2">
+                      <div>
+                        <p className={`text-[10px] font-semibold ${c.title} uppercase`}>Role</p>
+                        <p className={`text-xs ${c.text} leading-relaxed`}>{p.role}</p>
+                      </div>
+                      <div>
+                        <p className={`text-[10px] font-semibold ${c.title} uppercase`}>Must Be Aware Of</p>
+                        <p className={`text-xs ${c.text} leading-relaxed`}>{p.awareness}</p>
+                      </div>
+                      <div>
+                        <p className={`text-[10px] font-semibold ${c.title} uppercase`}>Contribution</p>
+                        <p className={`text-xs ${c.text} leading-relaxed`}>{p.contribution}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
         <section>
           <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">Alerts & Notifications</h3>
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-800 whitespace-pre-wrap">{plan!.sections.alertsAndNotifications || 'No alert actions generated.'}</div>
@@ -1120,13 +1218,23 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
           <div className="bg-sky-50 border border-sky-200 rounded-lg p-4 text-sm text-sky-800 whitespace-pre-wrap">{plan!.sections.projectedOutcomes}</div>
         </section>
 
+        {/* Closing Summary */}
+        {plan!.sections.closingSummary && (
+          <section>
+            <div className="bg-gradient-to-r from-slate-50 to-blue-50 border border-slate-200 rounded-lg p-4">
+              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-2">Closing Summary</h3>
+              <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{plan!.sections.closingSummary}</div>
+            </div>
+          </section>
+        )}
+
         {/* Strategy Modules — algorithmic, not AI-generated */}
         <StrategyModulesSection categories={scoredCategories} />
 
         {/* Disclaimer */}
         <div className="pt-4 border-t border-gray-200 text-xs text-gray-400 space-y-2">
-          <p>This response plan is based on currently available data. Data accuracy can be improved by updating source parameters and refreshing data pipelines.</p>
-          <p>Generated by PEARL Intelligence Network (PIN). Informational only — not an official regulatory determination, legal opinion, or engineering design. All cost estimates are planning-level approximations. Verify with primary agency data and qualified professionals before implementation.</p>
+          <p>This response plan is based on currently available data from authoritative federal sources. Data accuracy can be improved by updating source parameters and refreshing data pipelines.</p>
+          <p>Informational only — not an official regulatory determination, legal opinion, or engineering design. Verify with primary agency data and qualified professionals before implementation. Water quality treatment and remediation strategies are available in the Restoration Planner.</p>
         </div>
       </div>
       </div>{/* end pdfContentRef capture area */}
