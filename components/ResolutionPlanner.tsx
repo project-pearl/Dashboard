@@ -84,14 +84,16 @@ export interface PlanSections {
   actionsShortTerm: string[];
   actionsLongTerm: string[];
   coBenefits: CoBenefit[];
-  costRange: string;
+  alertsAndNotifications: string;
+  interAgencyCoordination: string;
+  monitoringMobilization: string;
+  publicCommunication: string;
   regulatoryPath: string;
-  grantOpportunities: string;
   projectedOutcomes: string;
 }
 
 export interface CoBenefit {
-  solution: string;
+  action: string;
   surfaceWater: string;
   drinkingWater: string;
   wastewater: string;
@@ -247,29 +249,36 @@ function ScopeSummaryBadge({ scopeContext }: { scopeContext: ScopeContext }) {
 
 const JSON_SCHEMA_INSTRUCTION = `Respond ONLY with valid JSON, no markdown, no backticks:
 {
-  "situationAssessment": "2-3 paragraphs: what is wrong, how bad, who is affected, why this demands attention now.",
-  "rootCauses": "What is causing the impairments. Cite specific patterns, regions, infrastructure failures from the data.",
-  "stakeholders": "Who must be involved. For each: name/office, their authority, and the specific action they should take.",
-  "actionsImmediate": ["0-30 day actions appropriate to the role's authority"],
-  "actionsShortTerm": ["1-6 month actions"],
-  "actionsLongTerm": ["6+ month actions"],
+  "situationAssessment": "2-3 paragraphs: what is happening RIGHT NOW based on the data and active conditions provided. Treat all active conditions as CONFIRMED REAL EVENTS that have occurred — never frame them as hypothetical or speculative. Describe who is affected, what the scope of impact is, and why this requires immediate coordinated response.",
+  "rootCauses": "What is driving the current conditions. Cite specific data patterns, infrastructure failures, weather events, or systemic gaps from the data provided.",
+  "stakeholders": "Who must be notified and coordinated with. For each: name/office, their authority, what alert or communication they should receive, and what specific response action they own.",
+  "actionsImmediate": ["0-30 day OPERATIONAL RESPONSE actions: alerts to send, notifications to issue, monitoring to mobilize, advisories to publish, inter-agency calls to convene, data to share, emergency protocols to activate. Focus on communication, coordination, and mobilization — NOT treatment or remediation."],
+  "actionsShortTerm": ["1-6 month response actions: sustained monitoring deployments, inter-agency coordination meetings, public reporting cycles, data-sharing agreements, advisory updates, follow-up assessments."],
+  "actionsLongTerm": ["6+ month systemic response improvements: monitoring network expansion, alert protocol upgrades, inter-agency data integration, early warning system enhancements, communication infrastructure."],
   "coBenefits": [
     {
-      "solution": "name of recommended solution",
-      "surfaceWater": "impact on surface water quality",
-      "drinkingWater": "impact on drinking water safety",
-      "wastewater": "impact on wastewater/discharge",
-      "groundwater": "impact on groundwater resources",
-      "stormwater": "impact on stormwater management"
+      "action": "name of response action taken",
+      "surfaceWater": "how this action protects or monitors surface water",
+      "drinkingWater": "how this action protects or alerts on drinking water",
+      "wastewater": "how this action addresses wastewater/discharge concerns",
+      "groundwater": "how this action addresses groundwater monitoring or protection",
+      "stormwater": "how this action addresses stormwater response or alerts"
     }
   ],
-  "costRange": "Planning-level cost estimates by action tier. Use ranges. Reference comparable programs.",
-  "regulatoryPath": "Regulatory framework, enforcement options, compliance timeline.",
-  "grantOpportunities": "Specific federal and state programs: name, typical range, eligibility, next deadline if known.",
-  "projectedOutcomes": "What improves and by when if this plan is executed. Quantify where possible."
+  "alertsAndNotifications": "Specific alerts and notifications that should be sent: who receives them, what channel (email, SMS, dashboard alert, press release), what the message says, and what urgency level. Include public health advisories, downstream community notifications, and agency-to-agency alerts.",
+  "interAgencyCoordination": "Which agencies must coordinate, what information should flow between them, what joint actions are needed. Include federal-state-local coordination chain, timeline for coordination calls, and shared situational awareness requirements.",
+  "monitoringMobilization": "What additional monitoring should be deployed: where, what parameters, what frequency, what triggers escalation. Include both automated sensor networks and field team deployments.",
+  "publicCommunication": "What the public needs to know: advisories to issue, community meetings to hold, media statements to prepare, dashboard updates to publish. Include specific messaging for affected communities.",
+  "regulatoryPath": "Regulatory notifications required: which agencies must be formally notified, what reporting deadlines apply, what enforcement mechanisms may be triggered, what compliance actions are needed.",
+  "projectedOutcomes": "What improves and by when if this response plan is executed. Focus on response effectiveness: faster detection, broader notification coverage, better inter-agency coordination, improved public awareness. NOT water quality treatment outcomes — the Restoration Planner handles remediation."
 }
 
-BRANDING RULE: Never reference PIN, PEARL, PEARL Intelligence Network, or any platform-specific branding in the plan content. Recommended actions should reference capabilities generically — "deploy unified water quality intelligence platform" or "establish cross-agency data integration" — not specific products. The plan is the product. The plan should not sell the product.`;
+CRITICAL FRAMING RULES:
+1. This is an OPERATIONAL RESPONSE PLAN — it is about what actions the platform, agencies, and stakeholders TAKE in response to conditions (send alerts, coordinate, mobilize monitoring, notify the public). It is NOT about treating or remediating water quality — that is handled separately by the Restoration Planner.
+2. All active conditions listed in the data are CONFIRMED REAL EVENTS. Never call them hypothetical, speculative, or simulated. They happened.
+3. Focus on the 5 pillars (surface water, drinking water, wastewater, groundwater, stormwater) through the lens of monitoring, alerts, and coordinated response — not treatment.
+
+BRANDING RULE: Never reference PIN, PEARL, PEARL Intelligence Network, or any platform-specific branding in the plan content. Recommended actions should reference capabilities generically — "unified water quality intelligence platform" or "cross-agency data integration system" — not specific products.`;
 
 function buildDataReliabilitySection(dr?: DataReliabilityReport): string {
   if (!dr) return '';
@@ -303,8 +312,8 @@ function buildActiveConditionsSection(scopeContext: ScopeContext): string {
 
   if (signals.length === 0) return '';
 
-  const lines = ['\nACTIVE CONDITIONS FROM AUTHORITATIVE SOURCES:'];
-  lines.push('(If active conditions are listed, incorporate them factually into the Situation Assessment. These are reports from authoritative federal sources — USCG, EPA, NOAA, NWS. Present facts only — do not speculate beyond what is reported.)');
+  const lines = ['\nCONFIRMED ACTIVE CONDITIONS (treat as real, confirmed events — not hypothetical):'];
+  lines.push('These are verified reports from authoritative federal sources — USCG, EPA, NOAA, NWS. They have occurred. Incorporate them directly into the Situation Assessment and base response actions on them.');
   for (const s of signals) {
     const date = s.publishedAt.slice(0, 10);
     const stateTag = s.state ? ` [${s.state}]` : '';
@@ -344,9 +353,9 @@ TOP CAUSES OF IMPAIRMENT: ${causeList || 'No cause data available'}
 
 PLAN FOCUS: ${rc.planFocus}
 
-Generate a comprehensive National Response Plan. This is a strategic, nationwide plan — identify systemic issues, interstate patterns, regional disparities, and national-level actions. Be specific and actionable. Use regulatory language appropriate for ${rc.label} briefings.
+Generate a comprehensive National Response Plan. This is an OPERATIONAL response plan — focus on what alerts to send, who to notify, what monitoring to mobilize, what inter-agency coordination to initiate, and what public communications to issue. Identify systemic response gaps, interstate coordination needs, and national-level mobilization actions. Do NOT focus on water treatment or remediation — the Restoration Planner handles that separately. Be specific and actionable. Use regulatory language appropriate for ${rc.label} briefings.
 
-IMPORTANT: Base your analysis only on the data provided above. Do not fabricate statistics.
+IMPORTANT: Base your analysis only on the data provided above. All active conditions are CONFIRMED events. Do not fabricate statistics.
 
 ${JSON_SCHEMA_INSTRUCTION}`;
 }
@@ -373,9 +382,9 @@ TOP CAUSES OF IMPAIRMENT: ${causeList || 'No cause data available'}
 
 PLAN FOCUS: ${rc.planFocus}
 
-Generate a comprehensive Regional Response Plan for EPA ${ctx.regionName}. Focus on intra-regional coordination, state-to-state disparities, shared watershed issues, and region-specific regulatory actions. Be specific and actionable.
+Generate a comprehensive Regional Response Plan for EPA ${ctx.regionName}. Focus on what alerts and notifications to send, inter-state coordination to initiate, monitoring to mobilize, and public communications to issue across the region. Identify response gaps, coordination needs between states, and shared watershed alert requirements. Do NOT focus on water treatment or remediation — the Restoration Planner handles that separately. Be specific and actionable.
 
-IMPORTANT: Base your analysis only on the data provided above. Do not fabricate statistics.
+IMPORTANT: Base your analysis only on the data provided above. All active conditions are CONFIRMED events. Do not fabricate statistics.
 
 ${JSON_SCHEMA_INSTRUCTION}`;
 }
@@ -403,9 +412,9 @@ TOP CAUSES OF IMPAIRMENT: ${causeList || 'No cause data available'}
 
 PLAN FOCUS: ${rc.planFocus}
 
-Generate a comprehensive State Response Plan for ${ctx.name}. Focus on state-specific regulatory actions, priority waterbodies, TMDL development, permit conditions, and coordination with EPA Region ${ctx.epaRegion}. Be specific and actionable.
+Generate a comprehensive State Response Plan for ${ctx.name}. Focus on what alerts and notifications to send, monitoring to mobilize, public advisories to issue, inter-agency coordination with EPA Region ${ctx.epaRegion} and local jurisdictions, and response protocols to activate for priority waterbodies. Do NOT focus on water treatment or remediation — the Restoration Planner handles that separately. Be specific and actionable.
 
-IMPORTANT: Base your analysis only on the data provided above. Do not fabricate statistics.
+IMPORTANT: Base your analysis only on the data provided above. All active conditions are CONFIRMED events. Do not fabricate statistics.
 
 ${JSON_SCHEMA_INSTRUCTION}`;
 }
@@ -444,11 +453,11 @@ function buildRefinePrompt(
 CURRENT PLAN (summarized):
 - Situation: ${currentPlan.situationAssessment.slice(0, 300)}...
 - Actions: ${currentPlan.actionsImmediate.length} immediate, ${currentPlan.actionsShortTerm.length} short-term, ${currentPlan.actionsLongTerm.length} long-term
-- Solutions with co-benefits: ${currentPlan.coBenefits.map(c => c.solution).join(", ")}
+- Response actions with co-benefits: ${currentPlan.coBenefits.map(c => c.action).join(", ")}
 ${conditions}
 USER REFINEMENT REQUEST: "${refinement}"
 
-Revise the plan according to the user's request. Return the COMPLETE updated plan in the same JSON structure. Do not fabricate data sources or statistics.
+Revise the plan according to the user's request. Return the COMPLETE updated plan in the same JSON structure. Remember: this is an OPERATIONAL RESPONSE plan focused on alerts, notifications, coordination, and monitoring mobilization — NOT treatment or remediation. All active conditions are CONFIRMED real events. Do not fabricate data sources or statistics.
 
 BRANDING RULE: Never reference PIN, PEARL, PEARL Intelligence Network, or any platform-specific branding in the plan content. Reference capabilities generically — not specific products.
 
@@ -460,10 +469,12 @@ Respond ONLY with valid JSON, same structure as before:
   "actionsImmediate": ["..."],
   "actionsShortTerm": ["..."],
   "actionsLongTerm": ["..."],
-  "coBenefits": [{"solution": "...", "surfaceWater": "...", "drinkingWater": "...", "wastewater": "...", "groundwater": "...", "stormwater": "..."}],
-  "costRange": "...",
+  "coBenefits": [{"action": "...", "surfaceWater": "...", "drinkingWater": "...", "wastewater": "...", "groundwater": "...", "stormwater": "..."}],
+  "alertsAndNotifications": "...",
+  "interAgencyCoordination": "...",
+  "monitoringMobilization": "...",
+  "publicCommunication": "...",
   "regulatoryPath": "...",
-  "grantOpportunities": "...",
   "projectedOutcomes": "..."
 }`;
 }
@@ -485,7 +496,7 @@ function CoBenefitsMatrix({ benefits }: { benefits: CoBenefit[] }) {
       <table className="w-full text-xs">
         <thead>
           <tr className="border-b border-gray-200">
-            <th className="text-left py-2 pr-3 font-bold text-gray-500 uppercase tracking-wide">Solution</th>
+            <th className="text-left py-2 pr-3 font-bold text-gray-500 uppercase tracking-wide">Response Action</th>
             {domains.map(d => (
               <th key={d.key} className="text-center py-2 px-2 font-bold text-gray-500 uppercase tracking-wide">
                 <span className="block text-base mb-0.5">{d.icon}</span>
@@ -497,7 +508,7 @@ function CoBenefitsMatrix({ benefits }: { benefits: CoBenefit[] }) {
         <tbody>
           {benefits.map((b, i) => (
             <tr key={i} className="border-b border-gray-100">
-              <td className="py-2.5 pr-3 font-semibold text-gray-700">{b.solution}</td>
+              <td className="py-2.5 pr-3 font-semibold text-gray-700">{b.action || (b as any).solution}</td>
               {domains.map(d => (
                 <td key={d.key} className="py-2.5 px-2 text-gray-600 text-center">
                   {(b as any)[d.key] || "—"}
@@ -1073,29 +1084,39 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
         </section>
 
         <section className="pdf-page-break">
-          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">Co-Benefits Across Water Domains</h3>
+          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">Response Impact Across Water Domains</h3>
           <div className="domain-table bg-teal-50 border border-teal-200 rounded-lg p-4">
             <CoBenefitsMatrix benefits={plan!.sections.coBenefits} />
           </div>
         </section>
 
         <section>
-          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">Cost Range</h3>
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-sm text-green-800 whitespace-pre-wrap">{plan!.sections.costRange}</div>
+          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">Alerts & Notifications</h3>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-800 whitespace-pre-wrap">{plan!.sections.alertsAndNotifications || 'No alert actions generated.'}</div>
         </section>
 
         <section>
-          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">Regulatory Pathway</h3>
+          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">Inter-Agency Coordination</h3>
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800 whitespace-pre-wrap">{plan!.sections.interAgencyCoordination || 'No coordination actions generated.'}</div>
+        </section>
+
+        <section>
+          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">Monitoring Mobilization</h3>
+          <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-4 text-sm text-cyan-800 whitespace-pre-wrap">{plan!.sections.monitoringMobilization || 'No monitoring actions generated.'}</div>
+        </section>
+
+        <section>
+          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">Public Communication</h3>
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-sm text-green-800 whitespace-pre-wrap">{plan!.sections.publicCommunication || 'No public communication actions generated.'}</div>
+        </section>
+
+        <section>
+          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">Regulatory Notifications</h3>
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 text-sm text-purple-800 whitespace-pre-wrap">{plan!.sections.regulatoryPath}</div>
         </section>
 
         <section>
-          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">Grant & Funding Opportunities</h3>
-          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 text-sm text-emerald-800 whitespace-pre-wrap">{plan!.sections.grantOpportunities}</div>
-        </section>
-
-        <section>
-          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">Projected Outcomes</h3>
+          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">Projected Response Outcomes</h3>
           <div className="bg-sky-50 border border-sky-200 rounded-lg p-4 text-sm text-sky-800 whitespace-pre-wrap">{plan!.sections.projectedOutcomes}</div>
         </section>
 
