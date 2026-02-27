@@ -47,6 +47,12 @@ import { HabitatEcologyPanel } from './HabitatEcologyPanel';
 import { AgriculturalNPSPanel } from './AgriculturalNPSPanel';
 import { DisasterEmergencyPanel } from './DisasterEmergencyPanel';
 import { MilitaryInstallationsPanel } from './MilitaryInstallationsPanel';
+import { useSentinelAlerts } from '@/hooks/useSentinelAlerts';
+import { useSentinelAudio } from '@/hooks/useSentinelAudio';
+import { SentinelStatusBadge } from './SentinelStatusBadge';
+import { SentinelBriefingCard } from './SentinelBriefingCard';
+import hucNamesData from '@/data/huc8-names.json';
+import centroidsData from '@/data/huc8-centroids.json';
 
 const MapboxMapShell = dynamic(
   () => import('@/components/MapboxMapShell').then(m => m.MapboxMapShell),
@@ -54,6 +60,14 @@ const MapboxMapShell = dynamic(
 );
 const MapboxChoropleth = dynamic(
   () => import('@/components/MapboxChoropleth').then(m => m.MapboxChoropleth),
+  { ssr: false }
+);
+const SentinelAlertLayer = dynamic(
+  () => import('@/components/SentinelAlertLayer').then(m => m.SentinelAlertLayer),
+  { ssr: false }
+);
+const SentinelAlertPanel = dynamic(
+  () => import('@/components/SentinelAlertPanel').then(m => m.SentinelAlertPanel),
   { ssr: false }
 );
 
@@ -104,7 +118,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: true,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['ai-water-intelligence', 'national-briefing', 'disclaimer']),
+    sections: new Set(['ai-water-intelligence', 'sentinel-briefing', 'national-briefing', 'disclaimer']),
   },
   compliance: {
     label: 'Compliance',
@@ -184,7 +198,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['usmap', 'habitat-ecology', 'disclaimer']),
+    sections: new Set(['habitat-ecology', 'disclaimer']),
   },
   'agricultural-nps': {
     label: 'Agricultural & NPS',
@@ -194,7 +208,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['usmap', 'agricultural-nps', 'disclaimer']),
+    sections: new Set(['agricultural-nps', 'disclaimer']),
   },
   'disaster-emergency': {
     label: 'Disaster & Emergency',
@@ -204,7 +218,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['usmap', 'disaster-emergency', 'disclaimer']),
+    sections: new Set(['disaster-emergency', 'disclaimer']),
   },
   'military-installations': {
     label: 'Military Installations',
@@ -214,7 +228,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['usmap', 'military-installations', 'disclaimer']),
+    sections: new Set(['military-installations', 'disclaimer']),
   },
   scorecard: {
     label: 'Scorecard',
@@ -1134,6 +1148,21 @@ export function FederalManagementCenter(props: Props) {
   }, []);
 
   const { isDark } = useTheme();
+
+  // ── Sentinel Alert System ──
+  const sentinel = useSentinelAlerts();
+  const { audioEnabled, toggleAudio, playChime } = useSentinelAudio({ userRole: user?.role });
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const [selectedAlertHuc, setSelectedAlertHuc] = useState<string | null>(null);
+  const [selectedAlertLevel, setSelectedAlertLevel] = useState<string>('CRITICAL');
+
+  // Play chime when new CRITICAL HUCs appear
+  useEffect(() => {
+    if (sentinel.newCriticalHucs.length > 0) playChime();
+  }, [sentinel.newCriticalHucs, playChime]);
+
+  const hucNames = hucNamesData as Record<string, string>;
+  const centroids = centroidsData as Record<string, { lat: number; lng: number }>;
 
   const [selectedState, setSelectedState] = useState<string>('MD');
 
@@ -2525,7 +2554,11 @@ export function FederalManagementCenter(props: Props) {
             <CardContent>
               {/* Overlay Selector */}
               <div className="flex flex-wrap gap-2 pb-3">
-                {OVERLAYS.map((o) => {
+                {OVERLAYS.filter(o => {
+                  // MS4 overlay only on compliance lens
+                  if (o.id === 'ms4' && viewLens !== 'compliance') return false;
+                  return true;
+                }).map((o) => {
                   const Icon = o.icon;
                   const isActive = overlay === o.id;
                   return (
@@ -2554,13 +2587,41 @@ export function FederalManagementCenter(props: Props) {
               ) : (
                 <div className="w-full overflow-hidden rounded-lg" style={{ border: '1px solid var(--border-subtle)' }}>
                   <div className="px-3 py-2 text-[10px] flex items-center justify-between" style={{ color: 'var(--text-dim)', borderBottom: '1px solid var(--border-subtle)' }}>
-                    <span>Click a state to select</span>
-                    <button onClick={() => mapRef.current?.flyTo({ center: [US_CENTER[1], US_CENTER[0]], zoom: US_ZOOM, duration: 800 })}
-                      className="text-[10px] hover:underline" style={{ color: 'var(--accent-teal)' }}>
-                      Reset View
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <span>Click a state to select</span>
+                      <SentinelStatusBadge
+                        systemStatus={sentinel.systemStatus}
+                        lastFetched={sentinel.lastFetched}
+                        sources={sentinel.sources}
+                        criticalCount={sentinel.criticalHucs.length}
+                        watchCount={sentinel.watchHucs.length}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {/* Accessibility controls */}
+                      <button
+                        onClick={() => setReducedMotion(m => !m)}
+                        className="text-[10px] hover:underline"
+                        style={{ color: 'var(--text-dim)' }}
+                        title={reducedMotion ? 'Enable animations' : 'Reduce motion'}
+                      >
+                        {reducedMotion ? 'Motion: Off' : 'Motion: On'}
+                      </button>
+                      <button
+                        onClick={toggleAudio}
+                        className="text-[10px] hover:underline"
+                        style={{ color: 'var(--text-dim)' }}
+                        title={audioEnabled ? 'Disable alert audio' : 'Enable alert audio'}
+                      >
+                        {audioEnabled ? 'Audio: On' : 'Audio: Off'}
+                      </button>
+                      <button onClick={() => mapRef.current?.flyTo({ center: [US_CENTER[1], US_CENTER[0]], zoom: US_ZOOM, duration: 800 })}
+                        className="text-[10px] hover:underline" style={{ color: 'var(--accent-teal)' }}>
+                        Reset View
+                      </button>
+                    </div>
                   </div>
-                  <div className="h-[560px] w-full relative">
+                  <div className={`h-[560px] w-full relative${reducedMotion ? ' sentinel-motion-off' : ''}`}>
                     <MapboxMapShell
                       center={US_CENTER}
                       zoom={US_ZOOM}
@@ -2575,7 +2636,38 @@ export function FederalManagementCenter(props: Props) {
                         selectedState={selectedState}
                         fillOpacity={0.65}
                       />
+                      <SentinelAlertLayer
+                        criticalHucs={sentinel.criticalHucs}
+                        watchHucs={sentinel.watchHucs}
+                        advisoryHucs={sentinel.advisoryHucs}
+                        centroids={centroids}
+                        hucNames={hucNames}
+                        onHucClick={(huc8, level) => {
+                          setSelectedAlertHuc(huc8);
+                          setSelectedAlertLevel(level);
+                        }}
+                        reducedMotion={reducedMotion}
+                      />
                     </MapboxMapShell>
+                    {/* Sentinel alert detail panel (overlays map) */}
+                    {selectedAlertHuc && (
+                      <SentinelAlertPanel
+                        huc8={selectedAlertHuc}
+                        level={selectedAlertLevel as any}
+                        hucName={hucNames[selectedAlertHuc] ?? selectedAlertHuc}
+                        scoredHuc={
+                          [...sentinel.criticalHucs, ...sentinel.watchHucs, ...sentinel.advisoryHucs]
+                            .find(h => h.huc8 === selectedAlertHuc)
+                        }
+                        onClose={() => setSelectedAlertHuc(null)}
+                      />
+                    )}
+                    {/* Screen reader announcement for new CRITICAL events */}
+                    <div aria-live="assertive" className="sr-only">
+                      {sentinel.newCriticalHucs.length > 0 &&
+                        `Critical alert: ${sentinel.newCriticalHucs.length} new watershed${sentinel.newCriticalHucs.length > 1 ? 's' : ''} at critical level`
+                      }
+                    </div>
                   </div>
                   
                   {/* Legend */}
@@ -4442,6 +4534,32 @@ export function FederalManagementCenter(props: Props) {
               <CardContent className="px-5">
                 <div className="space-y-6">
 
+                  {/* TMDL Gap Summary (top) */}
+                  <div>
+                    <div className="pin-section-label mb-2">TMDL Status</div>
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-baseline gap-2 mb-1">
+                          <span className="pin-stat-hero text-2xl" style={attainsAggregation.tmdlGapPct > 50 ? { color: 'var(--status-severe)' } : undefined}>
+                            {attainsAggregation.tmdlGapPct}%
+                          </span>
+                          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>of impaired lack approved TMDL</span>
+                        </div>
+                        <div className="h-2.5 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
+                          <div className="h-full rounded-full" style={{
+                            width: `${attainsAggregation.tmdlGapPct}%`,
+                            background: attainsAggregation.tmdlGapPct > 50 ? 'var(--status-severe)' : 'var(--status-warning)',
+                            opacity: 0.6,
+                          }} />
+                        </div>
+                        <div className="flex justify-between mt-1 text-[10px]" style={{ color: 'var(--text-dim)' }}>
+                          <span>Cat 5 (no TMDL): {attainsAggregation.cat5.toLocaleString()}</span>
+                          <span>Cat 4a (has TMDL): {attainsAggregation.cat4a.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* EPA Category Distribution */}
                   <div>
                     <div className="pin-section-label mb-2">EPA Assessment Categories</div>
@@ -4466,9 +4584,6 @@ export function FederalManagementCenter(props: Props) {
                           </div>
                         );
                       })}
-                    </div>
-                    <div className="mt-2 pt-2 text-[10px]" style={{ borderTop: '1px solid var(--border-subtle)', color: 'var(--text-dim)' }}>
-                      TMDL Gap: <span className="pin-stat-secondary" style={attainsAggregation.tmdlGapPct > 50 ? { color: 'var(--status-severe)' } : undefined}>{attainsAggregation.tmdlGapPct}%</span> of impaired lack approved TMDL
                     </div>
                   </div>
 
@@ -4513,8 +4628,7 @@ export function FederalManagementCenter(props: Props) {
         </>); {/* end ai-water-intelligence */}
 
         case 'national-briefing': return DS(<>
-        {/* ── National Intelligence Briefing — PIN analysis summary ── */}
-        {lens.showAIInsights && aiInsights.length > 0 && (
+        {/* ── National Intelligence Briefing — Sentinel-powered 3-layer view ── */}
           <Card id="section-national-briefing">
             <CardHeader className="pb-2 pt-5 px-5">
               <div className="flex items-center justify-between">
@@ -4523,7 +4637,7 @@ export function FederalManagementCenter(props: Props) {
                     National Intelligence Briefing
                   </CardTitle>
                   <CardDescription className="text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>
-                    {aiInsights.length} findings from {attainsAggregation.totalAssessed.toLocaleString()} ATTAINS records — AI analysis of impairment data, TMDL gaps, and deployment opportunities
+                    Real-time sentinel monitoring + {aiInsights.length} AI findings from {attainsAggregation.totalAssessed.toLocaleString()} ATTAINS records
                   </CardDescription>
                 </div>
                 <Button
@@ -4536,10 +4650,18 @@ export function FederalManagementCenter(props: Props) {
                     await pdf.loadLogo();
                     pdf.initialize();
                     pdf.addTitle('National Intelligence Briefing');
-                    pdf.addMetadata('Findings', `${aiInsights.length}`);
+                    pdf.addMetadata('Active Alerts', `${sentinel.criticalHucs.length} critical, ${sentinel.watchHucs.length} watch`);
+                    pdf.addMetadata('AI Findings', `${aiInsights.length}`);
                     pdf.addMetadata('ATTAINS Records', attainsAggregation.totalAssessed.toLocaleString());
                     pdf.addMetadata('Generated', new Date().toLocaleString());
                     pdf.addSpacer(5);
+                    if (sentinel.criticalHucs.length > 0) {
+                      pdf.addSubtitle('Active Sentinel Events');
+                      for (const h of [...sentinel.criticalHucs, ...sentinel.watchHucs]) {
+                        pdf.addText(`[${h.level}] ${hucNames[h.huc8] ?? h.huc8} — Score: ${h.score}, ${h.eventCount} signals`);
+                      }
+                      pdf.addSpacer(3);
+                    }
                     for (const insight of aiInsights) {
                       const label = insight.type === 'urgent' ? 'URGENT' : insight.type === 'warning' ? 'WARNING' : insight.type === 'success' ? 'SUCCESS' : 'INFO';
                       pdf.addSubtitle(`[${label}] ${insight.title}`);
@@ -4556,30 +4678,42 @@ export function FederalManagementCenter(props: Props) {
               </div>
             </CardHeader>
             <CardContent className="px-5">
-              <div className="space-y-2">
-                {aiInsights.map((insight, idx) => {
-                  const sevColor = insight.type === 'urgent' ? 'var(--status-severe)' :
-                                   insight.type === 'warning' ? 'var(--status-warning)' :
-                                   insight.type === 'success' ? 'var(--status-healthy)' :
-                                   'var(--text-dim)';
-                  return (
-                    <div key={idx} className="py-2.5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: sevColor }} />
-                        <span className="text-xs font-semibold" style={{ color: 'var(--text-bright)' }}>{insight.title}</span>
-                        <span className="pin-label ml-auto">{insight.type}</span>
-                      </div>
-                      <div className="text-xs leading-relaxed pl-4" style={{ color: 'var(--text-secondary)' }}>{insight.detail}</div>
-                      {insight.action && (
-                        <Button size="sm" variant="outline" className="mt-2 ml-4 h-6 text-[10px]">{insight.action}</Button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+              <SentinelBriefingCard
+                criticalHucs={sentinel.criticalHucs}
+                watchHucs={sentinel.watchHucs}
+                recentResolutions={sentinel.recentResolutions}
+                hucNames={hucNames}
+                sources={sentinel.sources}
+                systemStatus={sentinel.systemStatus}
+                lastFetched={sentinel.lastFetched}
+              >
+                {/* Layer 3: Structural context — existing AI insights */}
+                {aiInsights.length > 0 && (
+                  <div className="space-y-2">
+                    {aiInsights.map((insight, idx) => {
+                      const sevColor = insight.type === 'urgent' ? 'var(--status-severe)' :
+                                       insight.type === 'warning' ? 'var(--status-warning)' :
+                                       insight.type === 'success' ? 'var(--status-healthy)' :
+                                       'var(--text-dim)';
+                      return (
+                        <div key={idx} className="py-2.5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: sevColor }} />
+                            <span className="text-xs font-semibold" style={{ color: 'var(--text-bright)' }}>{insight.title}</span>
+                            <span className="pin-label ml-auto">{insight.type}</span>
+                          </div>
+                          <div className="text-xs leading-relaxed pl-4" style={{ color: 'var(--text-secondary)' }}>{insight.detail}</div>
+                          {insight.action && (
+                            <Button size="sm" variant="outline" className="mt-2 ml-4 h-6 text-[10px]">{insight.action}</Button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </SentinelBriefingCard>
             </CardContent>
           </Card>
-        )}
 
         </>); {/* end national-briefing */}
 

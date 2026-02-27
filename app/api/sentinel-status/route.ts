@@ -18,6 +18,7 @@ import {
 import {
   ensureWarmed as ensureScoreWarmed,
   getScoredHucs,
+  getResolvedHucs,
 } from '@/lib/sentinel/scoringEngine';
 
 export const dynamic = 'force-dynamic';
@@ -41,7 +42,8 @@ export async function GET(): Promise<NextResponse> {
     const healthSummary = getHealthSummary();
     const queue = getQueueStats();
     const allScored = getScoredHucs();
-    const activeHucs = allScored.filter(h => h.level !== 'NORMAL');
+    const activeHucs = allScored.filter(h => h.level !== 'NOMINAL');
+    const recentResolutions = getResolvedHucs();
 
     const response: SentinelStatusResponse = {
       sources,
@@ -51,10 +53,11 @@ export async function GET(): Promise<NextResponse> {
         healthySources: healthSummary.healthy,
         degradedSources: healthSummary.degraded,
         offlineSources: healthSummary.offline,
+        criticalHucs: allScored.filter(h => h.level === 'CRITICAL').length,
         watchHucs: allScored.filter(h => h.level === 'WATCH').length,
         advisoryHucs: allScored.filter(h => h.level === 'ADVISORY').length,
-        alertHucs: allScored.filter(h => h.level === 'ALERT').length,
       },
+      recentResolutions,
     };
 
     return NextResponse.json(response);

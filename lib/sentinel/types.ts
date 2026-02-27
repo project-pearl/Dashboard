@@ -22,7 +22,7 @@ export type ChangeType =
 
 export type SeverityHint = 'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL';
 export type SourceStatus = 'HEALTHY' | 'DEGRADED' | 'OFFLINE';
-export type ScoreLevel = 'NORMAL' | 'WATCH' | 'ADVISORY' | 'ALERT';
+export type ScoreLevel = 'NOMINAL' | 'ADVISORY' | 'WATCH' | 'CRITICAL';
 
 /* ------------------------------------------------------------------ */
 /*  Change Events                                                     */
@@ -135,10 +135,11 @@ export interface SentinelStatusResponse {
     healthySources: number;
     degradedSources: number;
     offlineSources: number;
+    criticalHucs: number;
     watchHucs: number;
     advisoryHucs: number;
-    alertHucs: number;
   };
+  recentResolutions?: ResolvedHuc[];
 }
 
 /* ------------------------------------------------------------------ */
@@ -148,4 +149,31 @@ export interface SentinelStatusResponse {
 export interface AdapterResult {
   events: ChangeEvent[];
   updatedState: Partial<SentinelSourceState>;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Resolved HUC (for briefing Layer 2)                               */
+/* ------------------------------------------------------------------ */
+
+export interface ResolvedHuc {
+  huc8: string;
+  stateAbbr: string;
+  peakScore: number;
+  peakLevel: ScoreLevel;
+  resolvedAt: string;         // ISO-8601
+  patternNames: string[];
+}
+
+/* ------------------------------------------------------------------ */
+/*  Client-side scored HUC (subset for API response)                  */
+/* ------------------------------------------------------------------ */
+
+export interface ScoredHucClient {
+  huc8: string;
+  stateAbbr: string;
+  score: number;
+  level: ScoreLevel;
+  eventCount: number;
+  patternNames: string[];
+  lastScored: string;
 }

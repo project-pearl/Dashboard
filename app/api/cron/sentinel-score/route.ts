@@ -44,25 +44,25 @@ export async function GET(request: NextRequest) {
     // Run Tier-2 scoring
     const scored = await scoreAllHucs();
 
+    const criticalHucs = scored.filter(h => h.level === 'CRITICAL');
     const watchHucs = scored.filter(h => h.level === 'WATCH');
     const advisoryHucs = scored.filter(h => h.level === 'ADVISORY');
-    const alertHucs = scored.filter(h => h.level === 'ALERT');
 
     // LLM escalation
     let llmTriggered = 0;
     const llmResults: { huc8: string; level: string; status: string }[] = [];
 
     if (SENTINEL_FLAGS.LLM && !SENTINEL_FLAGS.LOG_ONLY) {
-      // ADVISORY: Call generate-insights with targeted HUCs
-      if (advisoryHucs.length > 0) {
-        const result = await triggerTargetedInsights(advisoryHucs, 'advisory');
+      // WATCH: Call generate-insights with targeted HUCs
+      if (watchHucs.length > 0) {
+        const result = await triggerTargetedInsights(watchHucs, 'watch');
         llmTriggered += result.triggered;
         llmResults.push(...result.results);
       }
 
-      // ALERT: Inline LLM call for immediate response
-      if (alertHucs.length > 0) {
-        const result = await triggerTargetedInsights(alertHucs, 'alert');
+      // CRITICAL: Inline LLM call for immediate response
+      if (criticalHucs.length > 0) {
+        const result = await triggerTargetedInsights(criticalHucs, 'critical');
         llmTriggered += result.triggered;
         llmResults.push(...result.results);
       }
@@ -75,9 +75,9 @@ export async function GET(request: NextRequest) {
       duration: `${duration}s`,
       scoring: {
         totalScored: scored.length,
+        critical: criticalHucs.length,
         watch: watchHucs.length,
         advisory: advisoryHucs.length,
-        alert: alertHucs.length,
         topHucs: scored.slice(0, 5).map(h => ({
           huc8: h.huc8,
           state: h.stateAbbr,
@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
 
 async function triggerTargetedInsights(
   hucs: ScoredHuc[],
-  level: 'advisory' | 'alert'
+  level: 'advisory' | 'watch' | 'critical'
 ): Promise<{ triggered: number; results: { huc8: string; level: string; status: string }[] }> {
   const results: { huc8: string; level: string; status: string }[] = [];
 

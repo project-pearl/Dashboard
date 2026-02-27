@@ -26,17 +26,17 @@ export const BASE_SCORES: Record<ChangeSource, Record<SeverityHint, number>> = {
 /* ------------------------------------------------------------------ */
 
 export const SCORE_THRESHOLDS: { min: number; level: ScoreLevel }[] = [
-  { min: 150, level: 'ALERT' },
-  { min: 100, level: 'ADVISORY' },
-  { min:  50, level: 'WATCH' },
-  { min:   0, level: 'NORMAL' },
+  { min: 150, level: 'CRITICAL' },
+  { min:  75, level: 'WATCH' },
+  { min:  30, level: 'ADVISORY' },
+  { min:   0, level: 'NOMINAL' },
 ];
 
 export function scoreToLevel(score: number): ScoreLevel {
   for (const t of SCORE_THRESHOLDS) {
     if (score >= t.min) return t.level;
   }
-  return 'NORMAL';
+  return 'NOMINAL';
 }
 
 /* ------------------------------------------------------------------ */
@@ -149,6 +149,7 @@ export const BLOB_PATHS = {
   sourceHealth:  'sentinel/source-health.json',
   scoredHucs:    'sentinel/scored-hucs.json',
   pollCounter:   'sentinel/poll-counter.json',
+  resolvedHucs:  'sentinel/resolved-hucs.json',
 };
 
 export const DISK_PATHS = {
@@ -156,4 +157,5 @@ export const DISK_PATHS = {
   sourceHealth:  '.cache/sentinel-source-health.json',
   scoredHucs:    '.cache/sentinel-scored-hucs.json',
   pollCounter:   '.cache/sentinel-poll-counter.json',
+  resolvedHucs:  '.cache/sentinel-resolved-hucs.json',
 };

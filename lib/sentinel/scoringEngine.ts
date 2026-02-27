@@ -10,6 +10,7 @@ import type {
   ActivePattern,
   CompoundPattern,
   ScoreLevel,
+  ResolvedHuc,
 } from './types';
 import {
   BASE_SCORES,
@@ -33,11 +34,16 @@ import path from 'path';
 /* ------------------------------------------------------------------ */
 
 let _scoredHucs: ScoredHuc[] = [];
+let _resolvedHucs: ResolvedHuc[] = [];
 let _diskLoaded = false;
 let _blobChecked = false;
 
 function diskPath(): string {
   return path.resolve(process.cwd(), DISK_PATHS.scoredHucs);
+}
+
+function resolvedDiskPath(): string {
+  return path.resolve(process.cwd(), DISK_PATHS.resolvedHucs);
 }
 
 function ensureDiskLoaded(): void {
@@ -47,6 +53,11 @@ function ensureDiskLoaded(): void {
     const raw = fs.readFileSync(diskPath(), 'utf-8');
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) _scoredHucs = parsed;
+  } catch { /* no disk */ }
+  try {
+    const raw = fs.readFileSync(resolvedDiskPath(), 'utf-8');
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) _resolvedHucs = parsed;
   } catch { /* no disk */ }
 }
 
@@ -74,6 +85,19 @@ export async function ensureWarmed(): Promise<void> {
 async function persist(): Promise<void> {
   saveToDisk();
   await saveCacheToBlob(BLOB_PATHS.scoredHucs, _scoredHucs);
+}
+
+function saveResolvedToDisk(): void {
+  try {
+    const dir = path.dirname(resolvedDiskPath());
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(resolvedDiskPath(), JSON.stringify(_resolvedHucs));
+  } catch { /* non-fatal */ }
+}
+
+async function persistResolved(): Promise<void> {
+  saveResolvedToDisk();
+  await saveCacheToBlob(BLOB_PATHS.resolvedHucs, _resolvedHucs);
 }
 
 /* ------------------------------------------------------------------ */
@@ -238,8 +262,41 @@ export async function scoreAllHucs(): Promise<ScoredHuc[]> {
   // Sort by score descending
   scored.sort((a, b) => b.score - a.score);
 
+  // Track resolved HUCs — HUCs that were WATCH+ last cycle but dropped below
+  const previousWatchPlus = new Map<string, ScoredHuc>();
+  for (const h of _scoredHucs) {
+    if (h.level === 'WATCH' || h.level === 'CRITICAL') {
+      previousWatchPlus.set(h.huc8, h);
+    }
+  }
+
+  const currentWatchPlus = new Set(
+    scored.filter(h => h.level === 'WATCH' || h.level === 'CRITICAL').map(h => h.huc8)
+  );
+
+  const nowIso = new Date().toISOString();
+  for (const [huc8, prev] of previousWatchPlus) {
+    if (!currentWatchPlus.has(huc8)) {
+      _resolvedHucs.push({
+        huc8,
+        stateAbbr: prev.stateAbbr,
+        peakScore: prev.score,
+        peakLevel: prev.level,
+        resolvedAt: nowIso,
+        patternNames: prev.activePatterns.map(p => p.patternId),
+      });
+    }
+  }
+
+  // Expire resolutions older than 7 days
+  const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+  _resolvedHucs = _resolvedHucs.filter(
+    r => Date.now() - new Date(r.resolvedAt).getTime() < sevenDaysMs
+  );
+
   _scoredHucs = scored;
   await persist();
+  await persistResolved();
   return scored;
 }
 
@@ -259,24 +316,29 @@ export function getHucsAtLevel(level: ScoreLevel): ScoredHuc[] {
 
 export function getHucsAboveWatch(): ScoredHuc[] {
   ensureDiskLoaded();
-  return _scoredHucs.filter(h => h.level !== 'NORMAL');
+  return _scoredHucs.filter(h => h.level !== 'NOMINAL');
 }
 
 export function getScoredHucsSummary(): {
+  critical: number;
   watch: number;
   advisory: number;
-  alert: number;
   topHucs: { huc8: string; score: number; level: ScoreLevel }[];
 } {
   ensureDiskLoaded();
   return {
+    critical: _scoredHucs.filter(h => h.level === 'CRITICAL').length,
     watch: _scoredHucs.filter(h => h.level === 'WATCH').length,
     advisory: _scoredHucs.filter(h => h.level === 'ADVISORY').length,
-    alert: _scoredHucs.filter(h => h.level === 'ALERT').length,
     topHucs: _scoredHucs.slice(0, 10).map(h => ({
       huc8: h.huc8,
       score: h.score,
       level: h.level,
     })),
   };
+}
+
+export function getResolvedHucs(): ResolvedHuc[] {
+  ensureDiskLoaded();
+  return _resolvedHucs;
 }

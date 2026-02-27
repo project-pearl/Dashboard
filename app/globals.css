@@ -484,3 +484,73 @@ canvas, video, iframe, .no-theme-transition {
     border: 1px solid var(--border-subtle);
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PIN Sentinel — Alert Animations & Badges
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes sentinel-heartbeat {
+  0%   { opacity: 0.15; }
+  50%  { opacity: 0.35; }
+  100% { opacity: 0.15; }
+}
+
+.sentinel-pulse {
+  animation: sentinel-heartbeat 1.5s ease-in-out infinite;
+  will-change: opacity;
+}
+
+/* Respect OS-level reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .sentinel-pulse {
+    animation: none;
+    opacity: 0.25;
+  }
+}
+
+/* JS-toggled reduced motion */
+.sentinel-motion-off .sentinel-pulse {
+  animation: none;
+  opacity: 0.25;
+}
+
+/* Score numeral badges at HUC centroids */
+.sentinel-score-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  pointer-events: auto;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.sentinel-score-badge[data-level="CRITICAL"] {
+  background: #D32F2F;
+}
+.sentinel-score-badge[data-level="WATCH"] {
+  background: #F9A825;
+  color: #1a1a1a;
+}
+.sentinel-score-badge[data-level="ADVISORY"] {
+  background: #FDD835;
+  color: #1a1a1a;
+}
+
+/* Corner system status indicator */
+.sentinel-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.sentinel-status-dot[data-status="active"]   { background: #10B981; }
+.sentinel-status-dot[data-status="degraded"] { background: #F59E0B; }
+.sentinel-status-dot[data-status="offline"]  { background: #EF4444; }
