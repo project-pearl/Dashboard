@@ -28,6 +28,7 @@ import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import StateWaterbodyCard from '@/components/StateWaterbodyCard';
 import ResolutionPlanner, { type ScopeContext, type DataReliabilityReport } from '@/components/ResolutionPlanner';
+import RestorationPlanner from '@/components/RestorationPlanner';
 import type { NationalSummary } from '@/lib/national-summary';
 import NationalStatusCard from '@/components/NationalStatusCard';
 import { EPA_REGIONS, getEpaRegionForState } from '@/lib/epa-regions';
@@ -36,6 +37,7 @@ import { useTheme } from '@/lib/useTheme';
 import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
 import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
+import LocationReportCard from '@/components/LocationReportCard';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import { GrantOpportunityMatcher } from './GrantOpportunityMatcher';
@@ -74,7 +76,7 @@ const SentinelAlertPanel = dynamic(
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type AlertLevel = 'none' | 'low' | 'medium' | 'high';
-type OverlayId = 'hotspots' | 'ms4' | 'ej' | 'economy' | 'wildlife' | 'trend' | 'coverage';
+type OverlayId = 'hotspots' | 'ms4' | 'ej' | 'economy' | 'wildlife' | 'trend' | 'coverage' | 'indices';
 type ViewLens = 'overview' | 'briefing' | 'planner' | 'trends' | 'policy' | 'compliance' |
   'water-quality' | 'public-health' | 'habitat-ecology' | 'agricultural-nps' |
   'infrastructure' | 'monitoring' | 'disaster-emergency' | 'military-installations' |
@@ -138,7 +140,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: true, showSituationSummary: true, showTimeRange: true,
     showSLA: false, showRestorationPlan: false, collapseStateTable: false,
-    sections: new Set(['usmap', 'impairmentprofile', 'situation', 'statebystatesummary', 'top10', 'disclaimer']),
+    sections: new Set(['impairmentprofile', 'situation', 'statebystatesummary', 'top10', 'disclaimer']),
   },
   infrastructure: {
     label: 'Infrastructure',
@@ -275,10 +277,10 @@ const LENS_CONFIG: Record<ViewLens, {
     description: 'Federal-scope response planning with data reliability assessment and before/after impact maps',
     defaultOverlay: 'hotspots',
     showTopStrip: false, showPriorityQueue: false, showCoverageGaps: false,
-    showNetworkHealth: false, showNationalImpact: false, showAIInsights: true,
+    showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['ai-water-intelligence', 'resolution-planner', 'federal-planner', 'disclaimer']),
+    sections: new Set(['resolution-planner', 'federal-planner', 'disclaimer']),
   },
 };
 
@@ -605,6 +607,7 @@ const OVERLAYS: { id: OverlayId; label: string; description: string; icon: any }
   { id: 'wildlife', label: 'Ecological Sensitivity', description: 'USFWS ESA-listed threatened & endangered species density (aquatic-weighted)', icon: Leaf },
   { id: 'trend', label: 'Trends', description: 'Water quality change vs prior assessment period', icon: TrendingUp },
   { id: 'coverage', label: 'Monitoring Coverage', description: 'ALIA deployment and monitoring network gaps', icon: BarChart3 },
+  { id: 'indices', label: 'Watershed Indices', description: 'Composite HUC-8 risk score from PEARL, Infrastructure, Recovery, and Permit indices', icon: Gauge },
 ];
 
 // ─── MS4 Jurisdiction Data (EPA NPDES universe, est. 2024) ──────────────────
@@ -813,7 +816,7 @@ function useLiveTick(baseValue: number, ratePerSecond: number) {
 function getStateFill(
   abbr: string | undefined,
   overlay: OverlayId,
-  overlayByState: Map<string, { ej: number; economy: number; wildlife: number; trend: number; coverage: number; ms4Total: number }>,
+  overlayByState: Map<string, { ej: number; economy: number; wildlife: number; trend: number; coverage: number; ms4Total: number; indices: number }>,
   stateRollup: Array<{ abbr: string; canGradeState: boolean; score: number; assessed: number; monitored: number; waterbodies: number }>,
   showImpact: boolean,
 ): string {
@@ -874,6 +877,15 @@ function getStateFill(
     if (covPct >= 40) return '#fbbf24';
     if (covPct >= 20) return '#f59e0b';
     return '#d1d5db';
+  }
+
+  if (overlay === 'indices') {
+    const v = o?.indices ?? -1;
+    if (v < 0) return '#e5e7eb';
+    if (v >= 67) return '#dc2626';  // red — high risk
+    if (v >= 50) return '#f59e0b';  // amber
+    if (v >= 34) return '#fbbf24';  // yellow
+    return '#22c55e';               // green — low risk
   }
 
   return '#e5e7eb';
@@ -1174,6 +1186,37 @@ export function FederalManagementCenter(props: Props) {
   const [showImpact, setShowImpact] = useState(false);
   const [alertWorkflow, setAlertWorkflow] = useState<Record<string, { status: 'new' | 'acknowledged' | 'assigned' | 'resolved'; owner?: string; }>>({});
   
+  // HUC-8 indices for overlay + detail card
+  const [hucIndicesByState, setHucIndicesByState] = useState<Record<string, { composite: number }[]>>({});
+  const [selectedHucIndices, setSelectedHucIndices] = useState<any>(null);
+
+  // Fetch indices for selected HUC (for WaterbodyDetailCard pass-through)
+  useEffect(() => {
+    if (!selectedAlertHuc) { setSelectedHucIndices(null); return; }
+    fetch(`/api/indices?huc8=${selectedAlertHuc}`)
+      .then(r => r.json())
+      .then(data => { setSelectedHucIndices(data?.hucIndices?.[0] ?? null); })
+      .catch(() => setSelectedHucIndices(null));
+  }, [selectedAlertHuc]);
+
+  // Fetch indices for overlay when overlay = 'indices' and state changes
+  useEffect(() => {
+    if (overlay !== 'indices') return;
+    // Fetch for all states to color the map
+    fetch('/api/indices')
+      .then(r => r.json())
+      .then(data => {
+        if (!data?.hucIndices) return;
+        const byState: Record<string, { composite: number }[]> = {};
+        for (const h of data.hucIndices) {
+          if (!byState[h.stateAbbr]) byState[h.stateAbbr] = [];
+          byState[h.stateAbbr].push({ composite: h.composite });
+        }
+        setHucIndicesByState(byState);
+      })
+      .catch(() => {});
+  }, [overlay]);
+
   // Inline detail panel — works for ALL roles
   const [activeDetailId, setActiveDetailId] = useState<string | null>(null);
 
@@ -1449,7 +1492,7 @@ export function FederalManagementCenter(props: Props) {
 
     const pick01 = (abbr: string, salt: string) => stableHash01(abbr + '|' + salt);
 
-    const result = new Map<string, { ej: number; economy: number; wildlife: number; trend: number; coverage: number; ms4Total: number; ms4Phase1: number; ms4Phase2: number }>();
+    const result = new Map<string, { ej: number; economy: number; wildlife: number; trend: number; coverage: number; ms4Total: number; ms4Phase1: number; ms4Phase2: number; indices: number }>();
 
     for (const abbr of states) {
       const ej = getEJScore(abbr); // Census ACS + EPA SDWIS — real EJ vulnerability data
@@ -1465,11 +1508,17 @@ export function FederalManagementCenter(props: Props) {
       const ms4Phase2 = ms4?.phase2 ?? 0;
       const ms4Total = ms4Phase1 + ms4Phase2;
 
-      result.set(abbr, { ej, economy, wildlife, trend, coverage, ms4Total, ms4Phase1, ms4Phase2 });
+      // Indices: average composite from HUC-8 data if available
+      const stateHucs = hucIndicesByState[abbr];
+      const indices = stateHucs && stateHucs.length > 0
+        ? Math.round(stateHucs.reduce((s, h) => s + h.composite, 0) / stateHucs.length)
+        : -1;
+
+      result.set(abbr, { ej, economy, wildlife, trend, coverage, ms4Total, ms4Phase1, ms4Phase2, indices });
     }
 
     return result;
-  }, [derived.regionsByState]);
+  }, [derived.regionsByState, hucIndicesByState]);
 
   const selectedStateRegions = derived.regionsByState.get(selectedState) ?? [];
   const selectedStateTopRegion = selectedStateRegions[0]?.id;
@@ -2725,6 +2774,14 @@ export function FederalManagementCenter(props: Props) {
                       <>
                         <span className="pin-label mr-1">Coverage:</span>
                         {[{ label: 'None', bg: '#d1d5db' }, { label: 'Ambient', bg: '#fde68a' }, { label: 'ALIA', bg: '#22c55e' }, { label: 'Full', bg: '#14532d' }].map(s => (
+                          <span key={s.label} className="inline-flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: s.bg }} /> {s.label}</span>
+                        ))}
+                      </>
+                    )}
+                    {overlay === 'indices' && (
+                      <>
+                        <span className="pin-label mr-1">Composite Risk:</span>
+                        {[{ label: 'Low (0-33)', bg: '#22c55e' }, { label: 'Moderate (34-49)', bg: '#fbbf24' }, { label: 'Elevated (50-66)', bg: '#f59e0b' }, { label: 'High (67-100)', bg: '#dc2626' }].map(s => (
                           <span key={s.label} className="inline-flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: s.bg }} /> {s.label}</span>
                         ))}
                       </>
@@ -6522,6 +6579,8 @@ export function FederalManagementCenter(props: Props) {
         {/* ── MILITARY INSTALLATIONS ── */}
         <MilitaryInstallationsPanel selectedState={selectedState} />
         </>);
+
+        case 'location-report': return DS(<LocationReportCard />);
 
         case 'disclaimer': return DS(
               <PlatformDisclaimer />

@@ -110,6 +110,9 @@ export interface WaterbodyDetailCardProps {
   // Coordinates
   coordinates?: { lat: number; lon: number } | null;
 
+  // HUC-8 indices (from /api/indices)
+  hucIndices?: import('@/lib/indices/types').HucIndices | null;
+
   // Callbacks
   onToast?: (msg: string) => void;
 }
@@ -126,6 +129,7 @@ export function WaterbodyDetailCard({
   stateAgency: agency,
   coordinates,
   dataSources = {},
+  hucIndices,
   onToast,
 }: WaterbodyDetailCardProps) {
 
@@ -455,6 +459,42 @@ export function WaterbodyDetailCard({
                   );
                 })()}
               </div>
+
+              {/* Index tiles row (4 proprietary HUC-8 indices) */}
+              {hucIndices && (
+                <div className="grid grid-cols-4 gap-2">
+                  {([
+                    { key: 'pearlLoadVelocity' as const, label: 'PEARL Load', invert: false },
+                    { key: 'infrastructureFailure' as const, label: 'Infra Risk', invert: false },
+                    { key: 'watershedRecovery' as const, label: 'Recovery', invert: true },
+                    { key: 'permitRiskExposure' as const, label: 'Permit Risk', invert: false },
+                  ] as const).map(({ key, label, invert }) => {
+                    const idx = hucIndices[key];
+                    const v = idx.value;
+                    // For inverted indices (Recovery), high = good. For others, low = good.
+                    const effectiveRisk = invert ? 100 - v : v;
+                    const borderColor = effectiveRisk >= 67 ? 'border-red-200' : effectiveRisk >= 34 ? 'border-amber-200' : 'border-green-200';
+                    const bgColor = effectiveRisk >= 67 ? 'bg-red-50' : effectiveRisk >= 34 ? 'bg-amber-50' : 'bg-green-50';
+                    const textColor = effectiveRisk >= 67 ? 'text-red-700' : effectiveRisk >= 34 ? 'text-amber-700' : 'text-green-700';
+                    const trendArrow = idx.trend === 'improving' ? '\u25B2' : idx.trend === 'declining' ? '\u25BC' : idx.trend === 'stable' ? '\u2192' : '';
+                    const trendColor = idx.trend === 'improving' ? 'text-green-600' : idx.trend === 'declining' ? 'text-red-600' : 'text-slate-400';
+                    const confDot = idx.confidence >= 70 ? 'bg-green-500' : idx.confidence >= 40 ? 'bg-amber-500' : 'bg-red-500';
+                    return (
+                      <div key={key} className={`rounded-lg border-2 ${borderColor} ${bgColor} p-2 text-center relative group`}
+                        title={`${label}: ${v}/100 | Confidence: ${idx.confidence}% | Data points: ${idx.dataPoints} | Last calculated: ${idx.lastCalculated?.slice(0, 10) ?? 'N/A'}${idx.tidalModified ? ' | Tidal-modified' : ''}`}>
+                        <div className="text-[10px] uppercase tracking-wider text-slate-500 flex items-center justify-center gap-1">
+                          {label}
+                          <span className={`inline-block w-1.5 h-1.5 rounded-full ${confDot}`} />
+                        </div>
+                        <div className={`text-base font-bold ${textColor}`}>
+                          {v} <span className={`text-xs ${trendColor}`}>{trendArrow}</span>
+                        </div>
+                        <div className="text-[9px] text-slate-400">{idx.dataPoints} pts</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
               {/* Observations */}
               {observations.length > 0 && (
