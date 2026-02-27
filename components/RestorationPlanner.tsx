@@ -5,19 +5,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import {
   Wrench, Target, Clock, DollarSign, TrendingUp, CheckCircle2,
   ChevronDown, ChevronUp, Shield, Zap, Leaf, AlertTriangle,
+  Droplets, Activity, Users, Heart,
 } from 'lucide-react';
 import { calculateGrade, type WaterQualityGrade } from '@/lib/waterQualityScore';
-import { computeRestorationPlan, type RestorationResult } from '@/lib/restorationEngine';
-import type { WaterbodyCategory } from '@/lib/interventionLibrary';
 import {
-  generatePortfolios,
-  type PlannerConstraints,
-  type TargetOutcome,
-  type TimelineCommitment,
-  type Portfolio,
-  type PortfolioResult,
-} from '@/lib/portfolioEngine';
-import { projectTrajectory, type Trajectory } from '@/lib/trajectoryEngine';
+  MODULES, MODULE_CATS, CAT_COLORS, NGOS, EVENTS, GRANTS,
+  CK, CONTAMINANT_LABELS, CONTAMINANT_COLORS,
+  OPEX_TEAM_YEAR, ALIA_PER_TEAM,
+  runCalc, fmt,
+  type Watershed, type TreatmentModule, type ModuleCategory,
+  type ContaminantKey, type CalcResult, type NGO, type CommunityEvent,
+} from '@/components/treatment/treatmentData';
 import { getStateGrants, type GrantOpportunity } from '@/lib/stateWaterData';
 
 // ─── Props ──────────────────────────────────────────────────────────────────
@@ -32,6 +30,35 @@ interface RestorationPlannerProps {
   attainsCauses?: string[];
 }
 
+// ─── Constants ──────────────────────────────────────────────────────────────
+
+type TargetOutcome = 'fishable' | 'swimmable' | 'healthy' | 'shellfish_safe';
+type TimelineYears = 2 | 5 | 10 | 15;
+
+const TARGET_LABELS: Record<TargetOutcome, string> = {
+  fishable: 'Fishable', swimmable: 'Swimmable',
+  healthy: 'Healthy Ecosystem', shellfish_safe: 'Shellfish Safe',
+};
+
+const TARGET_PCT: Record<TargetOutcome, number> = {
+  fishable: 50, swimmable: 65, healthy: 80, shellfish_safe: 75,
+};
+
+const TIMELINE_OPTIONS: TimelineYears[] = [2, 5, 10, 15];
+
+const THRESHOLDS: Record<string, { key: ContaminantKey; threshold: number; inverse?: boolean }> = {
+  TN:           { key: 'nit',   threshold: 1.0 },
+  TP:           { key: 'pho',   threshold: 0.1 },
+  TSS:          { key: 'tss',   threshold: 25 },
+  Turbidity:    { key: 'tss',   threshold: 10 },
+  Ecoli:        { key: 'bac',   threshold: 126 },
+  Enterococcus: { key: 'bac',   threshold: 35 },
+  DO:           { key: 'tss',   threshold: 5.0, inverse: true },
+  PFAS:         { key: 'pfas',  threshold: 70 },
+};
+
+const DEFAULT_MODULES = new Set(['sensors', 'alia_50', 'riparian']);
+
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function fmt$(n: number): string {
@@ -40,62 +67,66 @@ function fmt$(n: number): string {
   return `$${n.toFixed(0)}`;
 }
 
-function fmtRange$(r: { min: number; expected: number; max: number }): string {
-  return `${fmt$(r.min)}-${fmt$(r.max)}`;
+function clamp(v: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, v));
 }
 
-const TARGET_LABELS: Record<TargetOutcome, { label: string; icon: typeof Target }> = {
-  healthy:        { label: 'Healthy Ecosystem', icon: Leaf },
-  swimmable:      { label: 'Swimmable',         icon: Target },
-  fishable:       { label: 'Fishable',           icon: Target },
-  shellfish_safe: { label: 'Shellfish Safe',     icon: Shield },
-};
+/** Derive baseline contaminant % from waterData parameters */
+function deriveBaseline(
+  waterData: Record<string, { value: number }> | null,
+): Record<ContaminantKey, number> {
+  const base: Record<ContaminantKey, number> = { tss: 15, bac: 10, nit: 20, pho: 18, pfas: 8, trash: 5 };
+  if (!waterData) return base;
 
-const TIMELINE_LABELS: Record<TimelineCommitment, string> = {
-  '1yr': '1 Year', '5yr': '5 Years', '10yr': '10 Years', '25yr': '25 Years',
-};
+  for (const [param, { value }] of Object.entries(waterData)) {
+    const mapping = THRESHOLDS[param];
+    if (!mapping || value == null) continue;
+    const { key, threshold, inverse } = mapping;
+    if (inverse) {
+      // DO: lower = worse → higher impairment
+      base[key] = Math.max(base[key], clamp(Math.round((1 - Math.min(value, 10) / 10) * 100), 5, 95));
+    } else {
+      base[key] = Math.max(base[key], clamp(Math.round((value / threshold) * 42), 5, 95));
+    }
+  }
+  return base;
+}
 
-const STRATEGY_ICONS: Record<string, typeof DollarSign> = {
-  cheapest: DollarSign,
-  fastest: Zap,
-  resilient: Shield,
-};
-
-const STRATEGY_COLORS: Record<string, string> = {
-  cheapest: 'border-green-300 bg-green-50',
-  fastest: 'border-amber-300 bg-amber-50',
-  resilient: 'border-blue-300 bg-blue-50',
-};
-
-const STRATEGY_LINE_COLORS: Record<string, string> = {
-  cheapest: '#16a34a',
-  fastest: '#d97706',
-  resilient: '#2563eb',
-};
-
-const POLLUTANT_LABELS: Record<string, string> = {
-  TN: 'Total Nitrogen',
-  TP: 'Total Phosphorus',
-  TSS: 'Total Suspended Solids',
-  bacteria: 'Bacteria (E. coli / Enterococcus)',
-  DO_improvement: 'Dissolved Oxygen',
-};
+/** Build a virtual Watershed object from props for runCalc */
+function buildVirtualWatershed(
+  id: string,
+  name: string,
+  stateAbbr: string,
+  baseline: Record<ContaminantKey, number>,
+  doMgL: number,
+): Watershed {
+  return {
+    id, state: stateAbbr, name, huc: '', acres: 2000, flowMGD: 100,
+    salinity: 0, doMgL, baseline, causes: [], context: '',
+    treatable: 70, aquaculture: [],
+  };
+}
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export default function RestorationPlanner({
-  regionId,
-  regionName,
-  stateAbbr,
-  waterData,
-  alertLevel,
-  attainsCategory,
-  attainsCauses,
+  regionId, regionName, stateAbbr, waterData, alertLevel, attainsCategory, attainsCauses,
 }: RestorationPlannerProps) {
-  // ── Error state ──
-  const [engineError, setEngineError] = useState<string | null>(null);
+  // ── Module selection state ──
+  const [selectedModules, setSelectedModules] = useState<Set<string>>(new Set(DEFAULT_MODULES));
+  const [unitCounts, setUnitCounts] = useState<Record<string, number>>({});
+  const [selectedNGOs, setSelectedNGOs] = useState<Set<string>>(new Set());
+  const [selectedEvents, setSelectedEvents] = useState<Set<string>>(new Set());
 
-  // ── Compute grade from waterData ──
+  // ── UI state ──
+  const [activeTab, setActiveTab] = useState<'modules' | 'partners' | 'events'>('modules');
+  const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set(MODULE_CATS));
+  const [target, setTarget] = useState<TargetOutcome>('fishable');
+  const [timelineYrs, setTimelineYrs] = useState<TimelineYears>(5);
+  const [generated, setGenerated] = useState(false);
+  const [budgetExpanded, setBudgetExpanded] = useState(false);
+
+  // ── Grade ──
   const grade: WaterQualityGrade = useMemo(() => {
     try {
       return calculateGrade(waterData ?? undefined, 'freshwater', {
@@ -103,124 +134,113 @@ export default function RestorationPlanner({
         is303dListed: attainsCategory?.includes('5') ?? false,
         hasTmdl: attainsCategory ? !attainsCategory.includes('5') : undefined,
       });
-    } catch (e: any) {
-      console.error('[RestorationPlanner] calculateGrade error:', e);
-      setEngineError(e?.message || 'Grade calculation failed');
+    } catch {
       return { canBeGraded: false, score: 0, letter: 'F', label: 'Error', reason: '', color: '', bgColor: '', borderColor: '', parameterScores: [], coverage: {} as any, avgFreshnessWeight: 0, regulatoryPenalty: 0, gradedParamCount: 0, gradedParamTotal: 0, isPartialGrade: false, gradeSource: 'none' as const };
     }
   }, [waterData, attainsCategory]);
 
-  // ── Compute restoration plan from waterData ──
-  const restoration: RestorationResult | null = useMemo(() => {
-    try {
-      const params: Record<string, { value: number; lastSampled?: string | null; unit?: string }> = waterData ?? {};
-      return computeRestorationPlan({
-        regionName: regionName || regionId || 'Unknown',
-        stateAbbr,
-        alertLevel: (alertLevel || 'none') as any,
-        params,
-        attainsCategory: attainsCategory || '',
-        attainsCauses: attainsCauses || [],
-        attainsCycle: '',
-        attainsAcres: null,
-      });
-    } catch (e: any) {
-      console.error('[RestorationPlanner] computeRestorationPlan error:', e);
-      setEngineError(e?.message || 'Restoration plan computation failed');
-      return null;
-    }
-  }, [waterData, regionName, regionId, stateAbbr, alertLevel, attainsCategory, attainsCauses]);
+  // ── Baseline derivation ──
+  const baseline = useMemo(() => deriveBaseline(waterData), [waterData]);
+  const doMgL = waterData?.DO?.value ?? 5.5;
 
-  // ── User constraint state ──
-  const [target, setTarget] = useState<TargetOutcome>('fishable');
-  const [timeline, setTimeline] = useState<TimelineCommitment>('10yr');
-  const [budgetMin, setBudgetMin] = useState(100_000);
-  const [budgetMax, setBudgetMax] = useState(5_000_000);
-  const [landAvailable, setLandAvailable] = useState(true);
-  const [permittingFeasible, setPermittingFeasible] = useState(true);
-  const [politicalSupport, setPoliticalSupport] = useState(true);
-  const [selectedPortfolio, setSelectedPortfolio] = useState<number>(0);
-  const [generated, setGenerated] = useState(false);
-  const [budgetExpanded, setBudgetExpanded] = useState(false);
+  // ── Virtual watershed ──
+  const virtualWs = useMemo(() =>
+    buildVirtualWatershed(regionId || 'unknown', regionName || 'Unknown', stateAbbr, baseline, doMgL),
+    [regionId, regionName, stateAbbr, baseline, doMgL],
+  );
 
-  // ── Constraints ──
-  const constraints: PlannerConstraints = useMemo(() => ({
-    target, timeline, budgetMin, budgetMax,
-    landAvailable, permittingFeasible, politicalSupport,
-  }), [target, timeline, budgetMin, budgetMax, landAvailable, permittingFeasible, politicalSupport]);
+  // ── Live calculation ──
+  const targetPct = TARGET_PCT[target];
+  const calc: CalcResult | null = useMemo(() => {
+    if (selectedModules.size === 0) return null;
+    return runCalc(virtualWs, selectedModules, unitCounts, timelineYrs, targetPct);
+  }, [virtualWs, selectedModules, unitCounts, timelineYrs, targetPct]);
 
-  // ── Map waterType for portfolio engine ──
-  const waterbodyType: WaterbodyCategory = restoration?.waterType === 'brackish' ? 'estuary' : 'freshwater';
+  // ── NGO + community costs ──
+  const ngoValue = useMemo(() =>
+    NGOS.filter(n => selectedNGOs.has(n.id)).reduce((s, n) => s + n.value, 0),
+    [selectedNGOs],
+  );
+  const eventCostYr = useMemo(() =>
+    EVENTS.filter(e => selectedEvents.has(e.id)).reduce((s, e) => s + e.cost, 0),
+    [selectedEvents],
+  );
 
-  // ── Generate portfolios ──
-  const result: PortfolioResult | null = useMemo(() => {
-    if (!generated || !restoration) return null;
-    try {
-      return generatePortfolios(grade, restoration, waterData, waterbodyType, constraints);
-    } catch (e: any) {
-      console.error('[RestorationPlanner] generatePortfolios error:', e);
-      setEngineError(e?.message || 'Portfolio generation failed');
-      return null;
-    }
-  }, [generated, grade, restoration, waterData, waterbodyType, constraints]);
+  // ── State grants ──
+  const stateGrantsList: GrantOpportunity[] = useMemo(() => getStateGrants(stateAbbr), [stateAbbr]);
 
-  // ── Project trajectories for each portfolio ──
-  const TIMELINE_MONTHS: Record<TimelineCommitment, number> = {
-    '1yr': 12, '5yr': 60, '10yr': 120, '25yr': 300,
-  };
+  // ── Trajectory points ──
+  const trajectoryPoints = useMemo(() => {
+    if (!calc || !generated) return [];
+    const maxMonths = timelineYrs * 12;
+    const baseScore = grade.score ?? 50;
+    const improvementPotential = calc.avg / 100 * (100 - baseScore) * 0.8;
 
-  const trajectories: Trajectory[] = useMemo(() => {
-    if (!result) return [];
-    try {
-      const baseScore = grade.score ?? 50;
-      const baselineParams: Partial<Record<string, number>> = {};
-      if (waterData) {
-        for (const [k, v] of Object.entries(waterData)) {
-          baselineParams[k] = v.value;
+    // Weighted average ramp based on module deployment times
+    const activeModules = calc.active;
+    const totalCost = activeModules.reduce((s, m) => s + m.totalCost, 0);
+
+    const points: { month: number; score: number; min: number; max: number }[] = [];
+    for (let mo = 0; mo <= maxMonths; mo += Math.max(1, Math.floor(maxMonths / 60))) {
+      let ramp = 0;
+      if (totalCost > 0) {
+        for (const m of activeModules) {
+          const moduleRamp = m.mo > 0 ? Math.min(1, mo / m.mo) : 1;
+          ramp += (m.totalCost / totalCost) * moduleRamp;
         }
       }
-      return result.portfolios.map(p =>
-        projectTrajectory(p, baseScore, baselineParams as any, waterbodyType, TIMELINE_MONTHS[timeline])
-      );
-    } catch (e: any) {
-      console.error('[RestorationPlanner] projectTrajectory error:', e);
-      setEngineError(e?.message || 'Trajectory projection failed');
-      return [];
+      const projected = baseScore + improvementPotential * ramp;
+      points.push({
+        month: mo,
+        score: Math.min(100, projected),
+        min: Math.min(100, projected * 0.85),
+        max: Math.min(100, projected * 1.12),
+      });
     }
-  }, [result, grade.score, waterData, waterbodyType, timeline]);
+    return points;
+  }, [calc, generated, timelineYrs, grade.score]);
 
-  // ── Grant eligibility ──
-  const grants: GrantOpportunity[] = useMemo(() => getStateGrants(stateAbbr), [stateAbbr]);
-
-  const handleGenerate = useCallback(() => {
-    setGenerated(true);
-    setSelectedPortfolio(0);
+  // ── Handlers ──
+  const toggleModule = useCallback((id: string) => {
+    setSelectedModules(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+    setGenerated(false);
   }, []);
 
-  // ── Error guard ──
-  if (engineError) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Wrench className="h-5 w-5 text-cyan-600" />
-            Restoration Planner
-          </CardTitle>
-          <CardDescription>Path-to-Fix portfolio optimizer</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 text-slate-400">
-            <AlertTriangle className="h-10 w-10 mx-auto mb-3 text-amber-400" />
-            <p className="text-sm font-medium text-slate-600">Engine error</p>
-            <p className="text-xs mt-1">{engineError}</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  const setUnits = useCallback((id: string, v: number) => {
+    setUnitCounts(prev => ({ ...prev, [id]: Math.max(1, v) }));
+    setGenerated(false);
+  }, []);
+
+  const toggleNGO = useCallback((id: string) => {
+    setSelectedNGOs(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const toggleEvent = useCallback((id: string) => {
+    setSelectedEvents(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const toggleCat = useCallback((cat: string) => {
+    setExpandedCats(prev => {
+      const next = new Set(prev);
+      if (next.has(cat)) next.delete(cat); else next.add(cat);
+      return next;
+    });
+  }, []);
 
   // ── No data guard ──
-  if (!regionId || !waterData || !grade.canBeGraded || !restoration) {
+  if (!regionId || !waterData || !grade.canBeGraded) {
     return (
       <Card>
         <CardHeader>
@@ -228,7 +248,7 @@ export default function RestorationPlanner({
             <Wrench className="h-5 w-5 text-cyan-600" />
             Restoration Planner
           </CardTitle>
-          <CardDescription>Path-to-Fix portfolio optimizer</CardDescription>
+          <CardDescription>Interactive treatment module selection & impact modeling</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 text-slate-400">
@@ -241,221 +261,307 @@ export default function RestorationPlanner({
     );
   }
 
+  // Module counts per category
+  const catCounts: Record<string, number> = {};
+  for (const cat of MODULE_CATS) {
+    catCounts[cat] = MODULES.filter(m => m.cat === cat && selectedModules.has(m.id)).length;
+  }
+
+  const totalLifecycle = (calc?.lifecycle ?? 0) + eventCostYr * timelineYrs;
+  const totalGrants = (calc?.grantTotal ?? 0) + ngoValue;
+
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2">
           <Wrench className="h-5 w-5 text-cyan-600" />
           Restoration Planner
         </CardTitle>
         <CardDescription>
-          Generate ranked intervention portfolios with cost breakdowns and projected water quality trajectories
+          Configure treatment modules, project water quality improvements, and estimate costs
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {/* ── Input Panel ────────────────────────────────────────── */}
-        <div className="space-y-4 bg-slate-50 rounded-lg p-4 border border-slate-200">
-          <h3 className="text-sm font-semibold text-slate-700">Planning Parameters</h3>
-
-          {/* Target Outcome */}
-          <div>
-            <label className="text-xs font-medium text-slate-600 mb-1.5 block">Target Outcome</label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {(Object.entries(TARGET_LABELS) as [TargetOutcome, { label: string; icon: typeof Target }][]).map(([key, { label }]) => (
-                <button
-                  key={key}
-                  onClick={() => { setTarget(key); setGenerated(false); }}
-                  className={`px-3 py-2 text-xs rounded-md border transition-colors ${
-                    target === key
-                      ? 'bg-cyan-600 text-white border-cyan-600'
-                      : 'bg-white text-slate-600 border-slate-200 hover:border-cyan-300'
-                  }`}
-                >
-                  {label}
-                </button>
+      <CardContent className="space-y-4">
+        {/* ── Waterbody Summary Bar ── */}
+        <div className="flex items-center gap-3 flex-wrap bg-slate-50 rounded-lg px-4 py-2.5 border border-slate-200">
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold text-slate-800 truncate">{regionName || regionId}</div>
+            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+              <span className="text-[10px] font-mono text-slate-400">{stateAbbr}</span>
+              {attainsCategory && (
+                <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
+                  attainsCategory.includes('5') ? 'bg-red-100 text-red-700'
+                  : attainsCategory.includes('4') ? 'bg-amber-100 text-amber-700'
+                  : 'bg-slate-100 text-slate-600'
+                }`}>
+                  Cat {attainsCategory}
+                </span>
+              )}
+              {(attainsCauses ?? []).slice(0, 3).map(c => (
+                <span key={c} className="text-[9px] px-1 py-0.5 rounded bg-red-50 text-red-600">{c}</span>
               ))}
             </div>
           </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="text-center">
+              <div className={`text-lg font-bold font-mono ${
+                (grade.score ?? 0) >= 70 ? 'text-green-600' : (grade.score ?? 0) >= 50 ? 'text-amber-600' : 'text-red-600'
+              }`}>{grade.letter}</div>
+              <div className="text-[9px] text-slate-400">Grade</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-bold font-mono text-slate-700">{grade.score ?? '—'}</div>
+              <div className="text-[9px] text-slate-400">Score</div>
+            </div>
+            <div className="text-center">
+              <div className="text-sm font-bold font-mono text-cyan-700">{doMgL.toFixed(1)}</div>
+              <div className="text-[9px] text-slate-400">DO mg/L</div>
+            </div>
+          </div>
+        </div>
 
-          {/* Timeline */}
-          <div>
-            <label className="text-xs font-medium text-slate-600 mb-1.5 block">Timeline Commitment</label>
-            <div className="flex gap-2">
-              {(Object.entries(TIMELINE_LABELS) as [TimelineCommitment, string][]).map(([key, label]) => (
+        {/* ── Two-column: Module Selection + Live Preview ── */}
+        <div className="flex gap-4 flex-col lg:flex-row">
+          {/* LEFT: Module Selection */}
+          <div className="flex-1 min-w-0 border rounded-lg overflow-hidden">
+            {/* Tab Bar */}
+            <div className="flex border-b border-slate-200 bg-slate-50">
+              {([
+                { id: 'modules' as const, label: 'Treatment Modules', count: selectedModules.size },
+                { id: 'partners' as const, label: 'Partners', count: selectedNGOs.size },
+                { id: 'events' as const, label: 'Community', count: selectedEvents.size },
+              ]).map(tab => (
                 <button
-                  key={key}
-                  onClick={() => { setTimeline(key); setGenerated(false); }}
-                  className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${
-                    timeline === key
-                      ? 'bg-cyan-600 text-white border-cyan-600'
-                      : 'bg-white text-slate-600 border-slate-200 hover:border-cyan-300'
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex-1 px-3 py-2 text-[11px] font-medium transition-colors ${
+                    activeTab === tab.id
+                      ? 'text-cyan-700 border-b-2 border-cyan-600 bg-white'
+                      : 'text-slate-400 hover:text-slate-600'
                   }`}
                 >
-                  {label}
+                  {tab.label}
+                  {tab.count > 0 && (
+                    <span className="ml-1 text-[9px] bg-cyan-100 text-cyan-700 px-1 rounded-full">{tab.count}</span>
+                  )}
                 </button>
               ))}
             </div>
-          </div>
 
-          {/* Budget Range */}
-          <div>
-            <label className="text-xs font-medium text-slate-600 mb-1.5 block">Budget Range</label>
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-slate-400">$</span>
-                <input
-                  type="number"
-                  value={budgetMin}
-                  onChange={e => { setBudgetMin(Number(e.target.value)); setGenerated(false); }}
-                  className="w-full pl-5 pr-2 py-1.5 text-xs border rounded-md border-slate-200"
-                  placeholder="Min"
-                />
-              </div>
-              <span className="text-xs text-slate-400">to</span>
-              <div className="relative flex-1">
-                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-slate-400">$</span>
-                <input
-                  type="number"
-                  value={budgetMax}
-                  onChange={e => { setBudgetMax(Number(e.target.value)); setGenerated(false); }}
-                  className="w-full pl-5 pr-2 py-1.5 text-xs border rounded-md border-slate-200"
-                  placeholder="Max"
-                />
-              </div>
+            {/* Module List */}
+            <div className="max-h-[420px] overflow-y-auto">
+              {activeTab === 'modules' && MODULE_CATS.map(cat => {
+                const catModules = MODULES.filter(m => m.cat === cat);
+                const isExpanded = expandedCats.has(cat);
+                const count = catCounts[cat] || 0;
+                return (
+                  <div key={cat}>
+                    <button
+                      onClick={() => toggleCat(cat)}
+                      className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 border-b border-slate-100 hover:bg-slate-100 transition-colors sticky top-0 z-10"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-sm" style={{ background: CAT_COLORS[cat] }} />
+                        <span className="text-[11px] font-semibold text-slate-700">{cat}</span>
+                        {count > 0 && (
+                          <span className="text-[9px] px-1.5 rounded-full font-bold text-white" style={{ background: CAT_COLORS[cat] }}>
+                            {count}
+                          </span>
+                        )}
+                      </div>
+                      {isExpanded ? <ChevronUp className="h-3 w-3 text-slate-400" /> : <ChevronDown className="h-3 w-3 text-slate-400" />}
+                    </button>
+                    {isExpanded && catModules.map(m => (
+                      <ModRow
+                        key={m.id}
+                        m={m}
+                        checked={selectedModules.has(m.id)}
+                        onToggle={toggleModule}
+                        units={unitCounts[m.id] ?? m.defUnits}
+                        onUnits={setUnits}
+                      />
+                    ))}
+                  </div>
+                );
+              })}
+
+              {activeTab === 'partners' && (
+                <div>
+                  <div className="px-3 py-2 bg-green-50 border-b text-[10px] text-green-700 font-medium">
+                    Partnership In-Kind Value: {fmt$(ngoValue)}
+                  </div>
+                  {NGOS.map(n => (
+                    <NgoRow key={n.id} n={n} checked={selectedNGOs.has(n.id)} onToggle={toggleNGO} />
+                  ))}
+                </div>
+              )}
+
+              {activeTab === 'events' && (
+                <div>
+                  <div className="px-3 py-2 bg-amber-50 border-b text-[10px] text-amber-700 font-medium">
+                    Community Programs: {fmt$(eventCostYr)}/yr
+                  </div>
+                  {EVENTS.map(ev => (
+                    <EventRow key={ev.id} ev={ev} checked={selectedEvents.has(ev.id)} onToggle={toggleEvent} />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Constraint Checkboxes */}
-          <div className="flex flex-wrap gap-4">
-            {[
-              { label: 'Land available', checked: landAvailable, set: setLandAvailable },
-              { label: 'Permitting feasible', checked: permittingFeasible, set: setPermittingFeasible },
-              { label: 'Political support', checked: politicalSupport, set: setPoliticalSupport },
-            ].map(({ label, checked, set }) => (
-              <label key={label} className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={e => { set(e.target.checked); setGenerated(false); }}
-                  className="rounded border-slate-300"
+          {/* RIGHT: Live Impact Preview */}
+          <div className="w-full lg:w-[280px] shrink-0 space-y-3">
+            {/* Contaminant Bars */}
+            <div className="border rounded-lg p-3">
+              <h4 className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                Contaminant Reduction
+              </h4>
+              {CK.map(k => (
+                <ContaminantBar
+                  key={k}
+                  colorKey={k}
+                  base={baseline[k]}
+                  result={calc?.ach[k]}
                 />
-                {label}
-              </label>
-            ))}
+              ))}
+            </div>
+
+            {/* Performance Metrics */}
+            <div className="border rounded-lg p-3">
+              <h4 className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                Performance
+              </h4>
+              <div className="grid grid-cols-2 gap-2">
+                <MetricBox label="Avg Reduction" value={calc ? `${calc.avg.toFixed(0)}%` : '—'} color={
+                  calc && calc.avg >= targetPct ? 'text-green-600' : 'text-slate-700'
+                } />
+                <MetricBox label="Projected DO" value={calc ? `${calc.projDO.toFixed(1)} mg/L` : '—'} color={
+                  calc && calc.projDO >= 5.0 ? 'text-green-600' : 'text-amber-600'
+                } />
+                <MetricBox label="GPM Deployed" value={calc ? calc.totGPM.toLocaleString() : '—'} color="text-blue-600" />
+                <MetricBox label="Target" value={calc?.met ? 'Met' : 'Below'} color={
+                  calc?.met ? 'text-green-600' : 'text-amber-600'
+                } icon={calc?.met ? CheckCircle2 : AlertTriangle} />
+              </div>
+            </div>
+
+            {/* Cost Summary */}
+            <div className="border rounded-lg p-3 bg-slate-50">
+              <h4 className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                Cost Summary
+              </h4>
+              <div className="space-y-1">
+                <LedgerLine label="CapEx" value={calc ? fmt$(calc.capex) : '—'} />
+                {calc && calc.teams > 0 && (
+                  <LedgerLine label="OpEx" value={`${fmt$(calc.annualOpex)}/yr`} sub={`${calc.teams} team${calc.teams > 1 ? 's' : ''}`} />
+                )}
+                {eventCostYr > 0 && (
+                  <LedgerLine label="Community" value={`${fmt$(eventCostYr)}/yr`} color="#e65100" />
+                )}
+                <LedgerLine label={`Lifecycle (${timelineYrs}yr)`} value={fmt$(totalLifecycle)} bold />
+                {totalGrants > 0 && (
+                  <LedgerLine label="Grants / In-Kind" value={`-${fmt$(totalGrants)}`} color="#16a34a" />
+                )}
+                {totalGrants > 0 && (
+                  <LedgerLine label="Net Cost" value={fmt$(Math.max(0, totalLifecycle - totalGrants))} bold color="#0e7490" />
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Planning Controls ── */}
+        <div className="space-y-3 bg-slate-50 rounded-lg p-4 border border-slate-200">
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* Target Outcome */}
+            <div className="flex-1">
+              <label className="text-xs font-medium text-slate-600 mb-1.5 block">Target Outcome</label>
+              <div className="flex gap-1.5 flex-wrap">
+                {(Object.entries(TARGET_LABELS) as [TargetOutcome, string][]).map(([key, label]) => (
+                  <button
+                    key={key}
+                    onClick={() => { setTarget(key); setGenerated(false); }}
+                    className={`px-2.5 py-1.5 text-[11px] rounded-md border transition-colors ${
+                      target === key
+                        ? 'bg-cyan-600 text-white border-cyan-600'
+                        : 'bg-white text-slate-600 border-slate-200 hover:border-cyan-300'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Timeline */}
+            <div>
+              <label className="text-xs font-medium text-slate-600 mb-1.5 block">Timeline</label>
+              <div className="flex gap-1.5">
+                {TIMELINE_OPTIONS.map(yr => (
+                  <button
+                    key={yr}
+                    onClick={() => { setTimelineYrs(yr); setGenerated(false); }}
+                    className={`px-2.5 py-1.5 text-[11px] rounded-md border transition-colors ${
+                      timelineYrs === yr
+                        ? 'bg-cyan-600 text-white border-cyan-600'
+                        : 'bg-white text-slate-600 border-slate-200 hover:border-cyan-300'
+                    }`}
+                  >
+                    {yr}yr
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Generate Button */}
           <button
-            onClick={handleGenerate}
-            className="w-full py-2 bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-medium rounded-md transition-colors"
+            onClick={() => setGenerated(true)}
+            disabled={selectedModules.size === 0}
+            className="w-full py-2.5 bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-300 text-white text-sm font-semibold rounded-md transition-colors"
           >
-            Generate Restoration Portfolios
+            Generate Restoration Plan
           </button>
         </div>
 
-        {/* ── Results ────────────────────────────────────────────── */}
-        {result && result.portfolios.length > 0 && (
+        {/* ── Results ── */}
+        {generated && calc && (
           <>
-            {/* ── Analysis Summary ── */}
+            {/* Analysis Summary */}
             <AnalysisSummary
               regionName={regionName || regionId || 'this waterbody'}
               grade={grade}
-              restoration={restoration}
-              result={result}
-              constraints={constraints}
+              calc={calc}
+              baseline={baseline}
+              targetPct={targetPct}
+              target={target}
+              timelineYrs={timelineYrs}
               attainsCategory={attainsCategory}
               attainsCauses={attainsCauses}
             />
 
-            {/* Portfolio Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {result.portfolios.map((portfolio, i) => {
-                const Icon = STRATEGY_ICONS[portfolio.strategy] || Target;
-                const isSelected = selectedPortfolio === i;
-                return (
-                  <button
-                    key={portfolio.strategy}
-                    onClick={() => setSelectedPortfolio(i)}
-                    className={`text-left p-3 rounded-lg border-2 transition-all ${
-                      isSelected
-                        ? STRATEGY_COLORS[portfolio.strategy] + ' ring-2 ring-cyan-400'
-                        : 'border-slate-200 bg-white hover:border-slate-300'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <Icon className="h-4 w-4 text-slate-600" />
-                      <span className="text-sm font-semibold text-slate-800">{portfolio.label}</span>
-                    </div>
-                    <p className="text-xs text-slate-500 mb-3">{portfolio.description}</p>
-
-                    {/* Intervention List */}
-                    <div className="space-y-1 mb-3">
-                      {portfolio.allocations.map(a => (
-                        <div key={a.interventionId} className="flex justify-between text-xs">
-                          <span className="text-slate-600 truncate mr-2">{a.interventionName}</span>
-                          <span className="text-slate-400 whitespace-nowrap">{fmt$(a.capitalCost.expected)}</span>
-                        </div>
-                      ))}
-                      {portfolio.allocations.length === 0 && (
-                        <p className="text-xs text-slate-400 italic">No interventions fit constraints</p>
-                      )}
-                    </div>
-
-                    {/* Summary Stats */}
-                    <div className="flex items-center justify-between text-xs border-t border-slate-200 pt-2">
-                      <div>
-                        <span className="text-slate-500">Cost: </span>
-                        <span className="font-medium text-slate-700">{fmtRange$(portfolio.totalCapital)}</span>
-                      </div>
-                      <div>
-                        <span className="text-slate-500">Time: </span>
-                        <span className="font-medium text-slate-700">{portfolio.monthsToTarget}mo</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between text-xs mt-1">
-                      <div>
-                        <span className="text-slate-500">Score: </span>
-                        <span className="font-medium text-slate-700">
-                          {grade.score ?? '?'} → {portfolio.projectedScore}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-slate-500">Types: </span>
-                        <span className="font-medium text-slate-700">{portfolio.interventionTypeCount}</span>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Trajectory Chart (SVG) */}
-            {trajectories.length > 0 && (
+            {/* Trajectory Chart */}
+            {trajectoryPoints.length > 0 && (
               <TrajectoryChart
-                trajectories={trajectories}
-                portfolios={result.portfolios}
-                selectedIndex={selectedPortfolio}
+                points={trajectoryPoints}
                 baselineScore={grade.score ?? 50}
-                targetScore={80}
-                timeline={timeline}
+                targetScore={targetPct + 20}
               />
             )}
 
-            {/* ── Scenario Outcome — "What If" ── */}
-            {trajectories[selectedPortfolio] && (
-              <ScenarioOutcome
-                portfolio={result.portfolios[selectedPortfolio]}
-                trajectory={trajectories[selectedPortfolio]}
-                baselineScore={grade.score ?? 50}
-                grade={grade}
-                constraints={constraints}
-                result={result}
-                regionName={regionName || regionId || 'this waterbody'}
-              />
-            )}
+            {/* Scenario Outcome */}
+            <ScenarioOutcome
+              calc={calc}
+              baseline={baseline}
+              grade={grade}
+              targetPct={targetPct}
+              target={target}
+              timelineYrs={timelineYrs}
+              regionName={regionName || regionId || 'this waterbody'}
+            />
 
-            {/* Budget Breakdown Table */}
-            {result.portfolios[selectedPortfolio]?.phases.length > 0 && (
+            {/* Budget Breakdown */}
+            {calc.active.length > 0 && (
               <div className="border rounded-lg overflow-hidden">
                 <button
                   onClick={() => setBudgetExpanded(!budgetExpanded)}
@@ -463,62 +569,84 @@ export default function RestorationPlanner({
                 >
                   <span className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                     <DollarSign className="h-4 w-4 text-green-600" />
-                    Budget Breakdown
+                    Budget Breakdown ({calc.active.length} modules)
                   </span>
                   {budgetExpanded ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
                 </button>
-                {budgetExpanded && (
-                  <BudgetTable portfolio={result.portfolios[selectedPortfolio]} />
+                {budgetExpanded && <BudgetTable calc={calc} timelineYrs={timelineYrs} />}
+              </div>
+            )}
+
+            {/* Grant Matches */}
+            {(calc.grants.length > 0 || stateGrantsList.length > 0) && (
+              <div className="border rounded-lg p-3">
+                <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2 mb-3">
+                  <TrendingUp className="h-4 w-4 text-emerald-600" />
+                  Grant Eligibility
+                </h3>
+                {calc.grants.length > 0 && (
+                  <div className="space-y-1.5 mb-3">
+                    {calc.grants.map(g => (
+                      <div key={g.id} className="flex items-center justify-between text-xs bg-green-50 px-3 py-2 rounded">
+                        <div>
+                          <span className="font-medium text-slate-700">{g.name}</span>
+                          <span className="text-slate-400 ml-2">{Math.round(g.match * 100)}% match</span>
+                        </div>
+                        <span className="font-mono font-semibold text-green-700">-{fmt$(g.savings)}</span>
+                      </div>
+                    ))}
+                    <div className="flex justify-between text-xs font-semibold pt-1 border-t border-green-200">
+                      <span className="text-slate-600">Total Grant Potential</span>
+                      <span className="text-green-700 font-mono">{fmt$(calc.grantTotal)}</span>
+                    </div>
+                  </div>
+                )}
+                {stateGrantsList.length > 0 && (
+                  <div>
+                    <p className="text-[10px] text-slate-400 mb-1.5">Additional {stateAbbr} grant programs:</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                      {stateGrantsList.slice(0, 6).map((g, i) => (
+                        <div key={i} className="flex items-start gap-1.5 text-xs p-2 rounded bg-slate-50">
+                          <span className={`px-1 py-0.5 rounded text-[9px] font-medium ${
+                            g.fit === 'high' ? 'bg-green-100 text-green-700'
+                            : g.fit === 'medium' ? 'bg-yellow-100 text-yellow-700'
+                            : 'bg-slate-100 text-slate-500'
+                          }`}>{g.fit === 'high' ? 'High' : g.fit === 'medium' ? 'Good' : 'Low'}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-slate-600 truncate">{g.name}</p>
+                            <p className="text-slate-400 text-[10px]">{g.amount}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
             )}
 
-            {/* Grant Eligibility */}
-            {grants.length > 0 && (
-              <div className="border rounded-lg p-3">
-                <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2 mb-3">
-                  <TrendingUp className="h-4 w-4 text-emerald-600" />
-                  Potential Grant Matches ({stateAbbr})
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {grants.slice(0, 6).map((g, i) => (
-                    <div key={i} className="flex items-start gap-2 text-xs p-2 rounded bg-slate-50">
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                        g.fit === 'high' ? 'bg-green-100 text-green-700'
-                        : g.fit === 'medium' ? 'bg-yellow-100 text-yellow-700'
-                        : 'bg-slate-100 text-slate-600'
-                      }`}>
-                        {g.fit === 'high' ? 'High' : g.fit === 'medium' ? 'Good' : 'Review'}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-slate-700 truncate">{g.name}</p>
-                        <p className="text-slate-400">{g.amount}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* ── Closing Summary ── */}
+            {/* Closing Summary */}
             <ClosingSummary
-              portfolio={result.portfolios[selectedPortfolio]}
-              trajectory={trajectories[selectedPortfolio]}
-              constraints={constraints}
-              regionName={regionName || regionId || 'this waterbody'}
+              calc={calc}
               grade={grade}
-              grants={grants}
+              target={target}
+              timelineYrs={timelineYrs}
+              totalLifecycle={totalLifecycle}
+              totalGrants={totalGrants}
+              ngoCount={selectedNGOs.size}
+              eventCount={selectedEvents.size}
+              regionName={regionName || regionId || 'this waterbody'}
               stateAbbr={stateAbbr}
+              stateGrantCount={stateGrantsList.filter(g => g.fit === 'high').length}
             />
           </>
         )}
 
         {/* Empty result guard */}
-        {result && result.portfolios.every(p => p.allocations.length === 0) && (
+        {generated && calc && calc.active.length === 0 && (
           <div className="text-center py-6 text-slate-400">
             <AlertTriangle className="h-8 w-8 mx-auto mb-2 text-amber-400" />
-            <p className="text-sm font-medium text-slate-600">No interventions fit current constraints</p>
-            <p className="text-xs mt-1">Try increasing the budget, timeline, or enabling land/permitting options</p>
+            <p className="text-sm font-medium text-slate-600">No treatment modules selected</p>
+            <p className="text-xs mt-1">Select modules from the panel above to generate a restoration plan</p>
           </div>
         )}
       </CardContent>
@@ -526,45 +654,231 @@ export default function RestorationPlanner({
   );
 }
 
-// ─── Trajectory SVG Chart ───────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// Sub-components
+// ═══════════════════════════════════════════════════════════════════════════
 
-function TrajectoryChart({
-  trajectories,
-  portfolios,
-  selectedIndex,
-  baselineScore,
-  targetScore,
-  timeline,
-}: {
-  trajectories: Trajectory[];
-  portfolios: Portfolio[];
-  selectedIndex: number;
-  baselineScore: number;
-  targetScore: number;
-  timeline: TimelineCommitment;
+// ─── Contaminant Bar ─────────────────────────────────────────────────────────
+
+function ContaminantBar({ base, result, colorKey }: { base: number; result?: number; colorKey: ContaminantKey }) {
+  const remaining = result != null ? Math.max(0, base - (base * result / 100)) : base;
+  const color = CONTAMINANT_COLORS[colorKey];
+  return (
+    <div className="flex items-center gap-1.5 mb-1">
+      <div className="w-[58px] text-[9px] text-slate-400 font-mono truncate">
+        {CONTAMINANT_LABELS[colorKey]?.split(' / ')[0]}
+      </div>
+      <div className="flex-1 h-[5px] bg-slate-100 rounded-sm overflow-hidden relative">
+        <div
+          className="absolute left-0 top-0 h-full rounded-sm opacity-[0.18]"
+          style={{ width: `${base}%`, background: color }}
+        />
+        {result != null && (
+          <div
+            className="absolute left-0 top-0 h-full rounded-sm opacity-80 transition-[width] duration-300"
+            style={{ width: `${remaining}%`, background: color }}
+          />
+        )}
+      </div>
+      <div className="w-[55px] text-[9px] font-mono text-right text-slate-600">
+        {base}%{result != null ? ` \u2192 ${remaining.toFixed(0)}%` : ''}
+      </div>
+    </div>
+  );
+}
+
+// ─── Metric Box ─────────────────────────────────────────────────────────────
+
+function MetricBox({ label, value, color, icon: Icon }: {
+  label: string; value: string; color: string; icon?: typeof CheckCircle2;
 }) {
-  const W = 800;
-  const H = 400;
-  const PAD = { top: 30, right: 20, bottom: 40, left: 50 };
+  return (
+    <div className="bg-white rounded border border-slate-100 p-2 text-center">
+      <div className={`text-sm font-bold font-mono ${color} flex items-center justify-center gap-1`}>
+        {Icon && <Icon className="h-3 w-3" />}
+        {value}
+      </div>
+      <div className="text-[9px] text-slate-400">{label}</div>
+    </div>
+  );
+}
+
+// ─── Ledger Line ─────────────────────────────────────────────────────────────
+
+function LedgerLine({ label, value, sub, color, bold }: {
+  label: string; value: string; sub?: string; color?: string; bold?: boolean;
+}) {
+  return (
+    <div className="flex justify-between items-baseline py-0.5">
+      <div>
+        <span className="text-[10px] text-slate-500">{label}</span>
+        {sub && <span className="text-[8px] text-slate-300 ml-1">{sub}</span>}
+      </div>
+      <span className={`font-mono text-[11px] ${bold ? 'font-bold' : 'font-medium'}`} style={{ color: color || '#334155' }}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
+// ─── Module Row ─────────────────────────────────────────────────────────────
+
+function ModRow({ m, checked, onToggle, units, onUnits }: {
+  m: TreatmentModule; checked: boolean; onToggle: (id: string) => void;
+  units: number; onUnits: (id: string, v: number) => void;
+}) {
+  const cost = units * m.costPer;
+  const catColor = CAT_COLORS[m.cat];
+  return (
+    <div
+      onClick={() => onToggle(m.id)}
+      className={`flex items-start gap-2 px-3 py-2 border-b border-slate-100 cursor-pointer transition-colors ${
+        checked ? 'bg-blue-50/60' : 'hover:bg-slate-50'
+      }`}
+      style={{ borderLeft: `3px solid ${checked ? catColor : 'transparent'}` }}
+    >
+      <div
+        className="w-3.5 h-3.5 rounded shrink-0 mt-0.5 flex items-center justify-center"
+        style={{ border: checked ? 'none' : '1.5px solid #c8d4e0', background: checked ? catColor : 'white' }}
+      >
+        {checked && (
+          <svg width="9" height="7" viewBox="0 0 10 8">
+            <path d="M1 3.5L4 6.5L9 1" stroke="white" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+          </svg>
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1 flex-wrap">
+          <span className="text-[11px]">{m.icon}</span>
+          <span className={`text-[10px] font-semibold ${checked ? 'text-slate-800' : 'text-slate-500'}`}>
+            {m.name.trim()}
+          </span>
+          {!m.isBMP && <span className="text-[7px] bg-red-50 text-red-700 px-1 rounded font-bold">PILOT</span>}
+          {m.trl != null && <span className="text-[7px] bg-purple-50 text-purple-700 px-1 rounded">TRL {m.trl}</span>}
+          {m.hasOpex && <span className="text-[7px] bg-orange-50 text-orange-700 px-1 rounded font-bold">OPEX</span>}
+          {m.isAddon && <span className="text-[7px] bg-green-50 text-green-800 px-1 rounded">ADD-ON</span>}
+        </div>
+        {(m.desc || m.pilotNote) && (
+          <div className="text-[8px] text-slate-400 mt-0.5 leading-snug">{m.desc || m.pilotNote}</div>
+        )}
+        <div className="flex gap-0.5 mt-0.5 flex-wrap">
+          {CK.map(k => m[k] > 0 && (
+            <span key={k} className="text-[7px] px-1 rounded font-mono"
+              style={{
+                background: m[k] > 60 ? CONTAMINANT_COLORS[k] + '22' : '#f0f3f7',
+                color: m[k] > 60 ? CONTAMINANT_COLORS[k] : '#8a9bb0',
+              }}
+            >
+              {k.toUpperCase()} {m[k]}%
+            </span>
+          ))}
+          {m.gpm > 0 && (
+            <span className="text-[7px] px-1 rounded font-mono bg-blue-50 text-blue-700">
+              {(m.gpm * units).toLocaleString()} GPM
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="flex flex-col items-end gap-1 shrink-0" onClick={e => e.stopPropagation()}>
+        <span className={`font-mono text-[10px] font-medium ${checked ? 'text-slate-800' : 'text-slate-300'}`}>
+          {checked ? fmt(cost) : '\u2014'}
+        </span>
+        {checked && (
+          <div className="flex items-center gap-0.5">
+            <button onClick={() => onUnits(m.id, units - 1)}
+              className="w-[16px] h-[16px] rounded border border-slate-200 bg-slate-50 text-[10px] flex items-center justify-center text-slate-500 hover:bg-slate-100">&minus;</button>
+            <span className="text-[10px] font-mono text-slate-800 min-w-[14px] text-center">{units}</span>
+            <button onClick={() => onUnits(m.id, units + 1)}
+              className="w-[16px] h-[16px] rounded border border-slate-200 bg-slate-50 text-[10px] flex items-center justify-center text-slate-500 hover:bg-slate-100">+</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── NGO Row ─────────────────────────────────────────────────────────────────
+
+function NgoRow({ n, checked, onToggle }: { n: NGO; checked: boolean; onToggle: (id: string) => void }) {
+  return (
+    <div
+      onClick={() => onToggle(n.id)}
+      className={`flex items-start gap-2 px-3 py-2 border-b border-slate-100 cursor-pointer transition-colors ${
+        checked ? 'bg-green-50/60' : 'hover:bg-slate-50'
+      }`}
+      style={{ borderLeft: `3px solid ${checked ? '#2e7d32' : 'transparent'}` }}
+    >
+      <div className="w-3.5 h-3.5 rounded shrink-0 mt-0.5 flex items-center justify-center"
+        style={{ border: checked ? 'none' : '1.5px solid #c8d4e0', background: checked ? '#2e7d32' : 'white' }}>
+        {checked && <svg width="9" height="7" viewBox="0 0 10 8"><path d="M1 3.5L4 6.5L9 1" stroke="white" strokeWidth="1.8" fill="none" strokeLinecap="round" /></svg>}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1">
+          <span className="text-[11px]">{n.icon}</span>
+          <span className={`text-[10px] font-semibold ${checked ? 'text-slate-800' : 'text-slate-500'}`}>{n.name}</span>
+          {n.grant && <span className="text-[7px] bg-green-50 text-green-800 px-1 rounded font-bold">GRANT</span>}
+        </div>
+        <div className="text-[8px] text-slate-400 mt-0.5">{n.type} &mdash; {n.desc}</div>
+      </div>
+      <span className={`font-mono text-[9px] font-medium shrink-0 ${checked ? 'text-green-700' : 'text-slate-300'}`}>
+        {checked ? '+' + fmt(n.value) : '\u2014'}
+      </span>
+    </div>
+  );
+}
+
+// ─── Event Row ───────────────────────────────────────────────────────────────
+
+function EventRow({ ev, checked, onToggle }: { ev: CommunityEvent; checked: boolean; onToggle: (id: string) => void }) {
+  return (
+    <div
+      onClick={() => onToggle(ev.id)}
+      className={`flex items-start gap-2 px-3 py-2 border-b border-slate-100 cursor-pointer transition-colors ${
+        checked ? 'bg-amber-50/60' : 'hover:bg-slate-50'
+      }`}
+      style={{ borderLeft: `3px solid ${checked ? '#e65100' : 'transparent'}` }}
+    >
+      <div className="w-3.5 h-3.5 rounded shrink-0 mt-0.5 flex items-center justify-center"
+        style={{ border: checked ? 'none' : '1.5px solid #c8d4e0', background: checked ? '#e65100' : 'white' }}>
+        {checked && <svg width="9" height="7" viewBox="0 0 10 8"><path d="M1 3.5L4 6.5L9 1" stroke="white" strokeWidth="1.8" fill="none" strokeLinecap="round" /></svg>}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1 flex-wrap">
+          <span className="text-[11px]">{ev.icon}</span>
+          <span className={`text-[10px] font-semibold ${checked ? 'text-slate-800' : 'text-slate-500'}`}>{ev.name}</span>
+          <span className="text-[7px] bg-orange-50 text-orange-700 px-1 rounded">{ev.freq}</span>
+          <span className="text-[7px] bg-slate-100 text-slate-500 px-1 rounded">{ev.cat}</span>
+        </div>
+        <div className="text-[8px] text-slate-400 mt-0.5">{ev.desc}</div>
+      </div>
+      <span className={`font-mono text-[9px] font-medium shrink-0 ${checked ? 'text-orange-700' : 'text-slate-300'}`}>
+        {checked ? fmt(ev.cost) + '/yr' : '\u2014'}
+      </span>
+    </div>
+  );
+}
+
+// ─── Trajectory Chart ────────────────────────────────────────────────────────
+
+function TrajectoryChart({ points, baselineScore, targetScore }: {
+  points: { month: number; score: number; min: number; max: number }[];
+  baselineScore: number; targetScore: number;
+}) {
+  const W = 760, H = 320;
+  const PAD = { top: 25, right: 60, bottom: 35, left: 45 };
   const plotW = W - PAD.left - PAD.right;
   const plotH = H - PAD.top - PAD.bottom;
-
-  const maxMonths = trajectories.length > 0
-    ? Math.max(...trajectories.map(t => t.points.length - 1))
-    : 12;
-
-  const xScale = (month: number) => PAD.left + (month / maxMonths) * plotW;
-  const yScale = (score: number) => PAD.top + plotH - ((score / 100) * plotH);
-
-  // Y-axis ticks
+  const maxMonth = points[points.length - 1]?.month ?? 60;
+  const x = (mo: number) => PAD.left + (mo / maxMonth) * plotW;
+  const y = (s: number) => PAD.top + plotH - (s / 100) * plotH;
   const yTicks = [0, 20, 40, 60, 80, 100];
-
-  // X-axis ticks (roughly every 12 months)
   const xTicks: number[] = [];
-  for (let m = 0; m <= maxMonths; m += Math.max(1, Math.floor(maxMonths / 6))) {
-    xTicks.push(m);
-  }
-  if (!xTicks.includes(maxMonths)) xTicks.push(maxMonths);
+  for (let m = 0; m <= maxMonth; m += Math.max(1, Math.floor(maxMonth / 6))) xTicks.push(m);
+  if (!xTicks.includes(maxMonth)) xTicks.push(maxMonth);
+
+  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${x(p.month)} ${y(p.score)}`).join(' ');
+  const bandUpper = points.map(p => `${x(p.month)},${y(p.max)}`).join(' ');
+  const bandLower = points.map(p => `${x(p.month)},${y(p.min)}`).reverse().join(' ');
 
   return (
     <div className="border rounded-lg p-3">
@@ -572,180 +886,74 @@ function TrajectoryChart({
         <TrendingUp className="h-4 w-4 text-cyan-600" />
         Projected Water Quality Trajectory
       </h3>
-      <div className="w-full aspect-[2/1]">
+      <div className="w-full aspect-[2.4/1]">
         <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full" preserveAspectRatio="xMidYMid meet">
-          {/* Grid lines */}
-          {yTicks.map(tick => (
-            <line
-              key={`grid-${tick}`}
-              x1={PAD.left} y1={yScale(tick)}
-              x2={W - PAD.right} y2={yScale(tick)}
-              stroke="#e2e8f0" strokeWidth={1}
-            />
+          {yTicks.map(t => (
+            <line key={t} x1={PAD.left} y1={y(t)} x2={W - PAD.right} y2={y(t)} stroke="#e2e8f0" strokeWidth={1} />
           ))}
-
-          {/* Baseline reference */}
-          <line
-            x1={PAD.left} y1={yScale(baselineScore)}
-            x2={W - PAD.right} y2={yScale(baselineScore)}
-            stroke="#94a3b8" strokeWidth={1} strokeDasharray="6,4"
-          />
-          <text x={W - PAD.right + 4} y={yScale(baselineScore) + 4} fontSize={10} fill="#94a3b8">
-            Baseline
-          </text>
-
-          {/* Target reference */}
-          <line
-            x1={PAD.left} y1={yScale(targetScore)}
-            x2={W - PAD.right} y2={yScale(targetScore)}
-            stroke="#16a34a" strokeWidth={1.5} strokeDasharray="4,3"
-          />
-          <text x={W - PAD.right + 4} y={yScale(targetScore) + 4} fontSize={10} fill="#16a34a">
-            Target
-          </text>
-
-          {/* Confidence band for selected portfolio */}
-          {trajectories[selectedIndex] && (() => {
-            const pts = trajectories[selectedIndex].points;
-            const upper = pts.map(p => `${xScale(p.month)},${yScale(p.projectedScore.max)}`).join(' ');
-            const lower = pts.map(p => `${xScale(p.month)},${yScale(p.projectedScore.min)}`).reverse().join(' ');
-            const color = STRATEGY_LINE_COLORS[portfolios[selectedIndex]?.strategy] || '#2563eb';
-            return (
-              <polygon
-                points={`${upper} ${lower}`}
-                fill={color}
-                fillOpacity={0.1}
-                stroke="none"
-              />
-            );
-          })()}
-
-          {/* Portfolio lines */}
-          {trajectories.map((traj, i) => {
-            const isSelected = i === selectedIndex;
-            const color = STRATEGY_LINE_COLORS[portfolios[i]?.strategy] || '#64748b';
-            const pts = traj.points;
-            const d = pts.map((p, j) =>
-              `${j === 0 ? 'M' : 'L'} ${xScale(p.month)} ${yScale(p.projectedScore.expected)}`
-            ).join(' ');
-            return (
-              <path
-                key={i}
-                d={d}
-                fill="none"
-                stroke={color}
-                strokeWidth={isSelected ? 3 : 1.5}
-                strokeOpacity={isSelected ? 1 : 0.35}
-              />
-            );
-          })}
-
-          {/* Milestone markers for selected */}
-          {trajectories[selectedIndex]?.points.map(point =>
-            point.milestones.map((ms, j) => (
-              <g key={`ms-${point.month}-${j}`}>
-                <line
-                  x1={xScale(point.month)} y1={PAD.top}
-                  x2={xScale(point.month)} y2={H - PAD.bottom}
-                  stroke="#cbd5e1" strokeWidth={1} strokeDasharray="2,3"
-                />
-                <text
-                  x={xScale(point.month) + 3}
-                  y={PAD.top + 10 + j * 12}
-                  fontSize={8} fill="#64748b"
-                  className="pointer-events-none"
-                >
-                  {ms.label.length > 30 ? ms.label.slice(0, 28) + '...' : ms.label}
-                </text>
-              </g>
-            ))
-          )}
-
-          {/* Y-axis labels */}
-          {yTicks.map(tick => (
-            <text
-              key={`ylabel-${tick}`}
-              x={PAD.left - 8} y={yScale(tick) + 4}
-              fontSize={10} fill="#64748b" textAnchor="end"
-            >
-              {tick}
-            </text>
+          <line x1={PAD.left} y1={y(baselineScore)} x2={W - PAD.right} y2={y(baselineScore)}
+            stroke="#94a3b8" strokeWidth={1} strokeDasharray="6,4" />
+          <text x={W - PAD.right + 4} y={y(baselineScore) + 4} fontSize={9} fill="#94a3b8">Baseline</text>
+          <line x1={PAD.left} y1={y(targetScore)} x2={W - PAD.right} y2={y(targetScore)}
+            stroke="#16a34a" strokeWidth={1.5} strokeDasharray="4,3" />
+          <text x={W - PAD.right + 4} y={y(targetScore) + 4} fontSize={9} fill="#16a34a">Target</text>
+          <polygon points={`${bandUpper} ${bandLower}`} fill="#0891b2" fillOpacity={0.08} stroke="none" />
+          <path d={linePath} fill="none" stroke="#0891b2" strokeWidth={2.5} />
+          {yTicks.map(t => (
+            <text key={`yl-${t}`} x={PAD.left - 6} y={y(t) + 3} fontSize={9} fill="#64748b" textAnchor="end">{t}</text>
           ))}
-
-          {/* X-axis labels */}
-          {xTicks.map(tick => (
-            <text
-              key={`xlabel-${tick}`}
-              x={xScale(tick)} y={H - PAD.bottom + 16}
-              fontSize={10} fill="#64748b" textAnchor="middle"
-            >
-              {tick}mo
-            </text>
+          {xTicks.map(t => (
+            <text key={`xl-${t}`} x={x(t)} y={H - PAD.bottom + 14} fontSize={9} fill="#64748b" textAnchor="middle">{t}mo</text>
           ))}
-
-          {/* Axis labels */}
-          <text x={PAD.left - 35} y={H / 2} fontSize={11} fill="#64748b" textAnchor="middle" transform={`rotate(-90 ${PAD.left - 35} ${H / 2})`}>
-            WQ Score
-          </text>
-          <text x={W / 2} y={H - 4} fontSize={11} fill="#64748b" textAnchor="middle">
-            Months
-          </text>
+          <text x={PAD.left - 32} y={H / 2} fontSize={10} fill="#64748b" textAnchor="middle"
+            transform={`rotate(-90 ${PAD.left - 32} ${H / 2})`}>WQ Score</text>
+          <text x={W / 2} y={H - 3} fontSize={10} fill="#64748b" textAnchor="middle">Months</text>
         </svg>
-      </div>
-
-      {/* Legend */}
-      <div className="flex items-center gap-4 mt-2 justify-center">
-        {portfolios.map((p, i) => {
-          const color = STRATEGY_LINE_COLORS[p.strategy] || '#64748b';
-          return (
-            <button
-              key={p.strategy}
-              onClick={() => {/* parent handles selection via portfolio cards */}}
-              className={`flex items-center gap-1.5 text-xs ${i === selectedIndex ? 'font-semibold' : 'text-slate-400'}`}
-            >
-              <span className="inline-block w-3 h-0.5 rounded" style={{ backgroundColor: color }} />
-              {p.label}
-            </button>
-          );
-        })}
       </div>
     </div>
   );
 }
 
-// ─── Budget Breakdown Table ─────────────────────────────────────────────────
+// ─── Budget Table ────────────────────────────────────────────────────────────
 
-function BudgetTable({ portfolio }: { portfolio: Portfolio }) {
+function BudgetTable({ calc, timelineYrs }: { calc: CalcResult; timelineYrs: number }) {
+  const byCat: Record<string, typeof calc.active> = {};
+  for (const m of calc.active) {
+    if (!byCat[m.cat]) byCat[m.cat] = [];
+    byCat[m.cat].push(m);
+  }
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-xs">
         <thead>
           <tr className="bg-slate-50 text-slate-600">
-            <th className="px-3 py-2 text-left font-medium">Intervention</th>
-            <th className="px-3 py-2 text-right font-medium">Qty</th>
-            <th className="px-3 py-2 text-right font-medium">Capital</th>
-            <th className="px-3 py-2 text-right font-medium">Annual O&M</th>
-            <th className="px-3 py-2 text-right font-medium">Ramp (mo)</th>
+            <th className="px-3 py-2 text-left font-medium">Module</th>
+            <th className="px-3 py-2 text-right font-medium">Units</th>
+            <th className="px-3 py-2 text-right font-medium">Unit Cost</th>
+            <th className="px-3 py-2 text-right font-medium">Total</th>
+            <th className="px-3 py-2 text-right font-medium">Deploy (mo)</th>
           </tr>
         </thead>
         <tbody>
-          {portfolio.phases.map(phase => (
-            <React.Fragment key={`phase-${phase.phase}`}>
+          {Object.entries(byCat).map(([cat, modules]) => (
+            <React.Fragment key={cat}>
               <tr className="bg-slate-100">
                 <td colSpan={5} className="px-3 py-1.5 font-semibold text-slate-700">
-                  {phase.label}
+                  <span className="inline-block w-2 h-2 rounded-sm mr-1.5" style={{ background: CAT_COLORS[cat as ModuleCategory] }} />
+                  {cat}
                   <span className="ml-2 font-normal text-slate-400">
-                    Subtotal: {fmtRange$(phase.phaseCost)}
+                    Subtotal: {fmt$(modules.reduce((s, m) => s + m.totalCost, 0))}
                   </span>
                 </td>
               </tr>
-              {phase.allocations.map(a => (
-                <tr key={`${phase.phase}-${a.interventionId}`} className="border-t border-slate-100">
-                  <td className="px-3 py-1.5 text-slate-700">{a.interventionName}</td>
-                  <td className="px-3 py-1.5 text-right text-slate-600">{a.quantity} {a.unitLabel}</td>
-                  <td className="px-3 py-1.5 text-right text-slate-600">{fmtRange$(a.capitalCost)}</td>
-                  <td className="px-3 py-1.5 text-right text-slate-600">{fmtRange$(a.annualOM)}</td>
-                  <td className="px-3 py-1.5 text-right text-slate-400">{a.monthsToFull}</td>
+              {modules.map(m => (
+                <tr key={m.id} className="border-t border-slate-100">
+                  <td className="px-3 py-1.5 text-slate-700">{m.icon} {m.name.trim()}</td>
+                  <td className="px-3 py-1.5 text-right text-slate-600">{m.units}</td>
+                  <td className="px-3 py-1.5 text-right text-slate-600">{fmt$(m.costPer)}</td>
+                  <td className="px-3 py-1.5 text-right text-slate-600">{fmt$(m.totalCost)}</td>
+                  <td className="px-3 py-1.5 text-right text-slate-400">{m.mo}</td>
                 </tr>
               ))}
             </React.Fragment>
@@ -753,66 +961,61 @@ function BudgetTable({ portfolio }: { portfolio: Portfolio }) {
         </tbody>
         <tfoot>
           <tr className="border-t-2 border-slate-300 bg-slate-50 font-semibold">
-            <td className="px-3 py-2 text-slate-700">Total</td>
-            <td className="px-3 py-2 text-right text-slate-600">{portfolio.allocations.length}</td>
-            <td className="px-3 py-2 text-right text-slate-700">{fmtRange$(portfolio.totalCapital)}</td>
-            <td className="px-3 py-2 text-right text-slate-700">{fmtRange$(portfolio.totalAnnualOM)}</td>
-            <td className="px-3 py-2 text-right text-slate-400">{portfolio.monthsToTarget}</td>
+            <td className="px-3 py-2 text-slate-700">Total CapEx</td>
+            <td className="px-3 py-2 text-right text-slate-600">{calc.active.reduce((s, m) => s + m.units, 0)}</td>
+            <td className="px-3 py-2" />
+            <td className="px-3 py-2 text-right text-slate-700">{fmt$(calc.capex)}</td>
+            <td className="px-3 py-2" />
           </tr>
+          {calc.teams > 0 && (
+            <tr className="bg-slate-50">
+              <td className="px-3 py-1.5 text-slate-600" colSpan={3}>
+                OpEx: {calc.teams} team{calc.teams > 1 ? 's' : ''} x {fmt$(OPEX_TEAM_YEAR)}/yr x {timelineYrs}yr
+              </td>
+              <td className="px-3 py-1.5 text-right font-semibold text-orange-700">{fmt$(calc.totalOpex)}</td>
+              <td />
+            </tr>
+          )}
+          <tr className="bg-slate-800 text-white font-bold">
+            <td className="px-3 py-2" colSpan={3}>Lifecycle ({timelineYrs}yr)</td>
+            <td className="px-3 py-2 text-right">{fmt$(calc.lifecycle)}</td>
+            <td />
+          </tr>
+          {calc.grantTotal > 0 && (
+            <tr className="bg-green-50 text-green-800 font-semibold">
+              <td className="px-3 py-1.5" colSpan={3}>Grant Potential</td>
+              <td className="px-3 py-1.5 text-right">-{fmt$(calc.grantTotal)}</td>
+              <td />
+            </tr>
+          )}
         </tfoot>
       </table>
     </div>
   );
 }
 
-// ─── Analysis Summary (Opening) ─────────────────────────────────────────────
+// ─── Analysis Summary ────────────────────────────────────────────────────────
 
-function AnalysisSummary({
-  regionName,
-  grade,
-  restoration,
-  result,
-  constraints,
-  attainsCategory,
-  attainsCauses,
-}: {
-  regionName: string;
-  grade: WaterQualityGrade;
-  restoration: RestorationResult;
-  result: PortfolioResult;
-  constraints: PlannerConstraints;
-  attainsCategory?: string;
-  attainsCauses?: string[];
+function AnalysisSummary({ regionName, grade, calc, baseline, targetPct, target, timelineYrs, attainsCategory, attainsCauses }: {
+  regionName: string; grade: WaterQualityGrade; calc: CalcResult;
+  baseline: Record<ContaminantKey, number>; targetPct: number;
+  target: TargetOutcome; timelineYrs: number;
+  attainsCategory?: string; attainsCauses?: string[];
 }) {
-  const targetLabel = TARGET_LABELS[constraints.target].label.toLowerCase();
-  const timeLabel = TIMELINE_LABELS[constraints.timeline].toLowerCase();
-
-  // Summarize which pollutants have gaps
-  const gapEntries = Object.entries(result.pollutantGaps).filter(([, g]) => g > 0);
-  const gapNames = gapEntries.map(([p]) => POLLUTANT_LABELS[p] || p);
-
-  // ATTAINS status description
-  const attainsDesc = attainsCategory?.includes('5')
-    ? '303(d)-listed as impaired'
-    : attainsCategory?.includes('4')
-      ? 'impaired with a TMDL or alternative plan in place'
-      : attainsCategory?.includes('3')
-        ? 'insufficient data for a full assessment'
-        : attainsCategory?.includes('2')
-          ? 'attaining some designated uses'
-          : attainsCategory?.includes('1')
-            ? 'meeting all designated uses'
-            : 'not yet fully assessed';
+  const attainsDesc = attainsCategory?.includes('5') ? '303(d)-listed as impaired'
+    : attainsCategory?.includes('4') ? 'impaired with a TMDL or alternative plan'
+    : attainsCategory?.includes('3') ? 'insufficient data for assessment'
+    : attainsCategory?.includes('2') ? 'attaining some designated uses'
+    : attainsCategory?.includes('1') ? 'meeting all designated uses'
+    : 'not yet fully assessed';
 
   const causeList = attainsCauses?.length
-    ? attainsCauses.slice(0, 5).join(', ') + (attainsCauses.length > 5 ? ` (+${attainsCauses.length - 5} more)` : '')
+    ? attainsCauses.slice(0, 5).join(', ')
     : null;
 
-  // Constraint descriptions
-  const excluded: string[] = [];
-  if (!constraints.landAvailable) excluded.push('land-intensive solutions (riparian buffers, constructed wetlands)');
-  if (!constraints.permittingFeasible) excluded.push('projects requiring complex permitting (sediment dredging)');
-  if (!constraints.politicalSupport) excluded.push('strategies requiring multi-stakeholder buy-in');
+  const highImpairment = CK.filter(k => baseline[k] > 50);
+  const moduleCount = calc.active.length;
+  const catCount = new Set(calc.active.map(m => m.cat)).size;
 
   return (
     <div className="bg-gradient-to-br from-cyan-50 to-slate-50 border border-cyan-200 rounded-lg p-4 space-y-2">
@@ -825,168 +1028,103 @@ function AnalysisSummary({
           <strong>{regionName}</strong> currently holds a water quality score of{' '}
           <strong>{grade.score ?? 'N/A'}/100</strong> (grade <strong>{grade.letter}</strong>).
           Under EPA ATTAINS, this waterbody is <strong>{attainsDesc}</strong>.
-          {causeList && (
-            <> Listed impairment causes include: <em>{causeList}</em>.</>
+          {causeList && <> Listed impairment causes include: <em>{causeList}</em>.</>}
+        </p>
+        <p>
+          You have configured <strong>{moduleCount} treatment module{moduleCount !== 1 ? 's' : ''}</strong> across{' '}
+          <strong>{catCount} categor{catCount !== 1 ? 'ies' : 'y'}</strong>, targeting{' '}
+          <strong>{TARGET_LABELS[target]}</strong> status within <strong>{timelineYrs} years</strong>.
+          {highImpairment.length > 0 && (
+            <> Key contaminants above 50% baseline impairment: <strong>
+              {highImpairment.map(k => CONTAMINANT_LABELS[k].split(' / ')[0]).join(', ')}
+            </strong>.</>
           )}
         </p>
         <p>
-          You requested a plan to reach <strong>{targetLabel}</strong> status within{' '}
-          <strong>{timeLabel}</strong>, with a budget between{' '}
-          <strong>{fmt$(constraints.budgetMin)}</strong> and <strong>{fmt$(constraints.budgetMax)}</strong>.
-          {excluded.length > 0 && (
-            <> Constraints exclude {excluded.join('; ')}.</>
+          The treatment stack projects an average contaminant reduction of{' '}
+          <strong>{calc.avg.toFixed(0)}%</strong> with{' '}
+          <strong>{calc.totGPM.toLocaleString()} GPM</strong> deployed.
+          {calc.met ? (
+            <> The target threshold of <strong>{targetPct}%</strong> is projected to be achievable.</>
+          ) : (
+            <> Additional modules or higher unit counts may be needed to reach the <strong>{targetPct}%</strong> target.</>
           )}
-        </p>
-        {gapEntries.length > 0 ? (
-          <p>
-            The analysis identified <strong>{gapEntries.length} pollutant gap{gapEntries.length > 1 ? 's' : ''}</strong>{' '}
-            between current conditions and the target: {gapNames.join(', ')}.
-            {gapEntries.length >= 3
-              ? ' Multiple concurrent impairments require a diversified intervention portfolio for effective restoration.'
-              : ' Focused interventions targeting these parameters can produce measurable improvement.'}
-          </p>
-        ) : (
-          <p>
-            Current water quality parameters already meet or are close to the selected target thresholds.
-            The portfolios below focus on reinforcing water quality resilience and maintaining compliance.
-          </p>
-        )}
-        <p>
-          Three strategy portfolios were generated below — <strong>lowest cost</strong>,{' '}
-          <strong>fastest timeline</strong>, and <strong>most resilient</strong> (diversified across intervention types).
-          Select a portfolio to compare projected trajectories and detailed budget breakdowns.
         </p>
       </div>
     </div>
   );
 }
 
-// ─── Scenario Outcome ("What If") ───────────────────────────────────────────
+// ─── Scenario Outcome ────────────────────────────────────────────────────────
 
-function ScenarioOutcome({
-  portfolio,
-  trajectory,
-  baselineScore,
-  grade,
-  constraints,
-  result,
-  regionName,
-}: {
-  portfolio: Portfolio;
-  trajectory: Trajectory;
-  baselineScore: number;
-  grade: WaterQualityGrade;
-  constraints: PlannerConstraints;
-  result: PortfolioResult;
-  regionName: string;
+function ScenarioOutcome({ calc, baseline, grade, targetPct, target, timelineYrs, regionName }: {
+  calc: CalcResult; baseline: Record<ContaminantKey, number>;
+  grade: WaterQualityGrade; targetPct: number;
+  target: TargetOutcome; timelineYrs: number; regionName: string;
 }) {
-  const finalPoint = trajectory.points[trajectory.points.length - 1];
-  const finalScore = finalPoint?.projectedScore.expected ?? baselineScore;
-  const scoreImprovement = Math.round(finalScore - baselineScore);
-  const targetLabel = TARGET_LABELS[constraints.target].label.toLowerCase();
-  const reachesTarget = portfolio.monthsToTarget > 0 && portfolio.monthsToTarget <= trajectory.points.length;
+  const baseScore = grade.score ?? 50;
+  const projectedScore = Math.min(100, Math.round(baseScore + (calc.avg / 100) * (100 - baseScore) * 0.8));
+  const projectedLetter = projectedScore >= 90 ? 'A' : projectedScore >= 80 ? 'B' : projectedScore >= 70 ? 'C' : projectedScore >= 60 ? 'D' : 'F';
+  const delta = projectedScore - baseScore;
 
-  // Identify which pollutants get fully resolved vs remain
-  const resolved: string[] = [];
-  const remaining: string[] = [];
-  for (const [p, gap] of Object.entries(result.pollutantGaps)) {
-    if (gap <= 0) continue;
-    const residual = portfolio.residualGaps[p as keyof typeof portfolio.residualGaps];
-    if (!residual || residual < 0.01) {
-      resolved.push(POLLUTANT_LABELS[p] || p);
-    } else {
-      remaining.push(POLLUTANT_LABELS[p] || p);
-    }
-  }
+  // Top performing contaminants
+  const topReductions = CK
+    .filter(k => calc.ach[k] > 0 && baseline[k] > 10)
+    .sort((a, b) => calc.ach[b] - calc.ach[a])
+    .slice(0, 3);
 
-  // Find key milestones
-  const milestones = trajectory.points.flatMap(p => p.milestones);
-  const firstFullEfficacy = milestones.find(m => m.label.includes('full efficacy'));
-
-  // Grade letter projection
-  const projectedLetter = finalScore >= 90 ? 'A' : finalScore >= 80 ? 'B' : finalScore >= 70 ? 'C' : finalScore >= 60 ? 'D' : 'F';
+  // Weak contaminants
+  const weakContaminants = CK.filter(k => baseline[k] > 40 && calc.ach[k] < 30);
 
   return (
     <div className="bg-gradient-to-br from-emerald-50 to-slate-50 border border-emerald-200 rounded-lg p-4 space-y-2">
       <h3 className="text-sm font-semibold text-emerald-800 flex items-center gap-2">
         <TrendingUp className="h-4 w-4" />
-        Scenario Outcome — What Would Change
+        Scenario Outcome
       </h3>
       <div className="text-xs text-slate-700 leading-relaxed space-y-2">
         <p>
-          If the <strong>{portfolio.label}</strong> strategy were fully implemented, the projected water quality score
-          for <strong>{regionName}</strong> would move from{' '}
-          <strong>{Math.round(baselineScore)}/100 ({grade.letter})</strong> to approximately{' '}
-          <strong>{Math.round(finalScore)}/100 ({projectedLetter})</strong> — a{' '}
-          <strong>{scoreImprovement > 0 ? '+' : ''}{scoreImprovement}-point</strong> change
-          over <strong>{trajectory.points.length - 1} months</strong>.
+          If fully implemented, the projected water quality score for <strong>{regionName}</strong> would move from{' '}
+          <strong>{baseScore}/100 ({grade.letter})</strong> to approximately{' '}
+          <strong>{projectedScore}/100 ({projectedLetter})</strong> &mdash; a{' '}
+          <strong>{delta > 0 ? '+' : ''}{delta}-point</strong> improvement over <strong>{timelineYrs} years</strong>.
         </p>
-
-        {reachesTarget ? (
+        {topReductions.length > 0 && (
           <p>
-            The model projects this waterbody would reach <strong>{targetLabel}</strong> status
-            at approximately <strong>month {portfolio.monthsToTarget}</strong>.
-            {firstFullEfficacy && (
-              <> Key milestone: {firstFullEfficacy.label} at month {firstFullEfficacy.month}.</>
-            )}
-          </p>
-        ) : (
-          <p>
-            Based on current modeling, the selected portfolio may not fully achieve{' '}
-            <strong>{targetLabel}</strong> status within the selected timeframe.
-            Expanding the budget, timeline, or enabling additional constraints could close the remaining gap.
+            <strong>Top reductions:</strong>{' '}
+            {topReductions.map(k =>
+              `${CONTAMINANT_LABELS[k].split(' / ')[0]} (${calc.ach[k].toFixed(0)}%)`
+            ).join(', ')}.
           </p>
         )}
-
-        {resolved.length > 0 && (
+        {weakContaminants.length > 0 && (
           <p>
-            <strong>Pollutants addressed:</strong> {resolved.join(', ')}{' '}
-            {resolved.length === 1 ? 'is' : 'are'} projected to reach target thresholds.
+            <strong>Residual gaps:</strong>{' '}
+            {weakContaminants.map(k => CONTAMINANT_LABELS[k].split(' / ')[0]).join(', ')}{' '}
+            remain elevated. Consider adding targeted modules for{' '}
+            {weakContaminants.length === 1 ? 'this parameter' : 'these parameters'}.
           </p>
         )}
-        {remaining.length > 0 && (
-          <p>
-            <strong>Residual gaps remain</strong> for {remaining.join(', ')}.
-            Additional interventions or extended timelines may be needed to fully resolve{' '}
-            {remaining.length === 1 ? 'this parameter' : 'these parameters'}.
-          </p>
-        )}
-
         <p>
-          Estimated capital investment: <strong>{fmtRange$(portfolio.totalCapital)}</strong>,
-          with ongoing annual O&M of <strong>{fmtRange$(portfolio.totalAnnualOM)}</strong>.
-          The portfolio deploys <strong>{portfolio.interventionTypeCount} intervention type{portfolio.interventionTypeCount !== 1 ? 's' : ''}</strong>{' '}
-          across <strong>{portfolio.phases.length} phase{portfolio.phases.length !== 1 ? 's' : ''}</strong>.
+          Estimated capital: <strong>{fmt$(calc.capex)}</strong>.
+          {calc.teams > 0 && <> Annual operating cost: <strong>{fmt$(calc.annualOpex)}</strong>.</>}
+          {calc.grantTotal > 0 && <> Up to <strong>{fmt$(calc.grantTotal)}</strong> in grant savings may apply.</>}
         </p>
       </div>
     </div>
   );
 }
 
-// ─── Closing Summary ────────────────────────────────────────────────────────
+// ─── Closing Summary ─────────────────────────────────────────────────────────
 
-function ClosingSummary({
-  portfolio,
-  trajectory,
-  constraints,
-  regionName,
-  grade,
-  grants,
-  stateAbbr,
-}: {
-  portfolio: Portfolio;
-  trajectory?: Trajectory;
-  constraints: PlannerConstraints;
-  regionName: string;
-  grade: WaterQualityGrade;
-  grants: GrantOpportunity[];
-  stateAbbr: string;
+function ClosingSummary({ calc, grade, target, timelineYrs, totalLifecycle, totalGrants, ngoCount, eventCount, regionName, stateAbbr, stateGrantCount }: {
+  calc: CalcResult; grade: WaterQualityGrade;
+  target: TargetOutcome; timelineYrs: number;
+  totalLifecycle: number; totalGrants: number;
+  ngoCount: number; eventCount: number;
+  regionName: string; stateAbbr: string; stateGrantCount: number;
 }) {
-  const residualCount = Object.keys(portfolio.residualGaps).length;
-  const allResolved = residualCount === 0;
-  const highGrants = grants.filter(g => g.fit === 'high');
-  const finalScore = trajectory?.points[trajectory.points.length - 1]?.projectedScore.expected;
-  const targetLabel = TARGET_LABELS[constraints.target].label.toLowerCase();
+  const netCost = Math.max(0, totalLifecycle - totalGrants);
 
   return (
     <div className="bg-gradient-to-br from-slate-50 to-blue-50 border border-slate-200 rounded-lg p-4 space-y-2">
@@ -996,44 +1134,36 @@ function ClosingSummary({
       </h3>
       <div className="text-xs text-slate-700 leading-relaxed space-y-2">
         <p>
-          This restoration analysis evaluated pathways to achieve <strong>{targetLabel}</strong> status
-          for <strong>{regionName}</strong>, currently scored at{' '}
-          <strong>{grade.score ?? 'N/A'}/100 ({grade.letter})</strong>.
-          The <strong>{portfolio.label}</strong> strategy is currently selected,
-          projecting a score of <strong>{finalScore ? Math.round(finalScore) : '—'}/100</strong>{' '}
-          over <strong>{TIMELINE_LABELS[constraints.timeline].toLowerCase()}</strong>{' '}
-          at an estimated cost of <strong>{fmtRange$(portfolio.totalCapital)}</strong>.
+          This restoration analysis configured <strong>{calc.active.length} treatment modules</strong> for{' '}
+          <strong>{regionName}</strong> targeting <strong>{TARGET_LABELS[target]}</strong> status
+          over <strong>{timelineYrs} years</strong>.
+          The projected average contaminant reduction is <strong>{calc.avg.toFixed(0)}%</strong> at a
+          lifecycle cost of <strong>{fmt$(totalLifecycle)}</strong>
+          {totalGrants > 0 && <> (net <strong>{fmt$(netCost)}</strong> after grants/in-kind)</>}.
         </p>
-
-        {allResolved ? (
+        {ngoCount > 0 && (
           <p>
-            All identified pollutant gaps are projected to be resolved under this portfolio.
-            Ongoing monitoring is recommended to confirm modeled improvements translate to
-            field conditions and to detect any emerging stressors.
-          </p>
-        ) : (
-          <p>
-            <strong>{residualCount} pollutant gap{residualCount > 1 ? 's' : ''}</strong>{' '}
-            remain unresolved under the current portfolio. Consider adjusting the budget ceiling,
-            extending the timeline, or relaxing feasibility constraints to enable additional
-            interventions. Phased implementation with adaptive management checkpoints is recommended.
+            <strong>{ngoCount} NGO partner{ngoCount > 1 ? 's' : ''}</strong> selected for in-kind support,
+            contributing monitoring, advocacy, and technical capacity.
           </p>
         )}
-
-        {highGrants.length > 0 && stateAbbr && (
+        {eventCount > 0 && (
           <p>
-            <strong>{highGrants.length}</strong> high-fit grant{highGrants.length > 1 ? 's' : ''}{' '}
-            in <strong>{stateAbbr}</strong> may offset project costs.
-            Early coordination with state water quality agencies and SRF programs can
-            accelerate permitting and funding timelines.
+            <strong>{eventCount} community program{eventCount > 1 ? 's' : ''}</strong> included for
+            stakeholder engagement, volunteer coordination, and public education.
           </p>
         )}
-
+        {stateGrantCount > 0 && stateAbbr && (
+          <p>
+            <strong>{stateGrantCount}</strong> high-fit grant program{stateGrantCount > 1 ? 's' : ''} in{' '}
+            <strong>{stateAbbr}</strong> may further offset costs. Early coordination with state water quality
+            agencies and SRF programs can accelerate permitting and funding timelines.
+          </p>
+        )}
         <p className="text-slate-500 italic">
-          All projections are modeled estimates based on EPA ATTAINS assessments, PEARL pilot data,
-          and published intervention efficacy literature. Actual outcomes depend on site-specific
-          hydrology, land use, climate variability, and implementation fidelity.
-          A site-specific feasibility study is recommended before committing capital.
+          All projections are modeled estimates based on EPA ATTAINS assessments, published intervention efficacy
+          literature, and industry cost data. Actual outcomes depend on site-specific hydrology, land use, climate
+          variability, and implementation fidelity. A site-specific feasibility study is recommended before committing capital.
         </p>
       </div>
     </div>
