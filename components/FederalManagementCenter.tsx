@@ -88,7 +88,7 @@ const SentinelAlertPanel = dynamic(
 
 type AlertLevel = 'none' | 'low' | 'medium' | 'high';
 type OverlayId = 'hotspots' | 'ms4' | 'ej' | 'economy' | 'wildlife' | 'trend' | 'coverage' | 'indices';
-type ViewLens = 'overview' | 'briefing' | 'planner' | 'trends' | 'policy' | 'compliance' |
+type ViewLens = 'overview' | 'briefing' | 'trends' | 'policy' | 'compliance' |
   'water-quality' | 'public-health' | 'habitat-ecology' | 'agricultural-nps' |
   'infrastructure' | 'monitoring' | 'disaster-emergency' | 'military-installations' |
   'scorecard' | 'reports' | 'interagency' | 'funding';
@@ -235,13 +235,13 @@ const LENS_CONFIG: Record<ViewLens, {
   },
   'disaster-emergency': {
     label: 'Disaster & Emergency',
-    description: 'Groundwater monitoring, emergency watch zones, incident readiness',
+    description: 'Federal emergency response coordination, active incidents, and restoration planning',
     defaultOverlay: 'hotspots',
     showTopStrip: false, showPriorityQueue: false, showCoverageGaps: false,
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['disaster-emergency', 'disclaimer']),
+    sections: new Set(['disaster-emergency', 'fed-emergency-overview', 'fed-active-incidents', 'fed-spill-tracker', 'resolution-planner', 'disclaimer']),
   },
   'military-installations': {
     label: 'Military Installations',
@@ -292,16 +292,6 @@ const LENS_CONFIG: Record<ViewLens, {
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
     sections: new Set(['fund-srf', 'infra-capital', 'infra-construction', 'funding-deadlines', 'grant-outcomes', 'funding-gap', 'disclaimer']),
-  },
-  planner: {
-    label: 'Emergency Response',
-    description: 'Federal emergency response coordination, active incidents, and restoration planning',
-    defaultOverlay: 'hotspots',
-    showTopStrip: false, showPriorityQueue: false, showCoverageGaps: false,
-    showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
-    showHotspots: false, showSituationSummary: false, showTimeRange: false,
-    showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['fed-emergency-overview', 'fed-active-incidents', 'fed-spill-tracker', 'resolution-planner', 'disclaimer']),
   },
 };
 
@@ -2190,7 +2180,7 @@ export function FederalManagementCenter(props: Props) {
     fetchReliability();
 
     // Re-poll every 60s while the planner lens is active so new sources show up
-    const plannerActive = viewLens === 'planner';
+    const plannerActive = viewLens === 'disaster-emergency';
     const interval = plannerActive ? setInterval(fetchReliability, 60_000) : undefined;
 
     return () => { cancelled = true; if (interval) clearInterval(interval); };
@@ -7214,7 +7204,7 @@ export function FederalManagementCenter(props: Props) {
         );
 
         case 'warr-resolve': return DS(
-          <WARRZones zone="warr-resolve" role="Federal" stateAbbr={selectedState || 'US'} metrics={warrMetrics} events={warrEvents} activeResolutionCount={sentinel.criticalHucs.length} onOpenPlanner={() => setViewLens('planner' as ViewLens)} />
+          <WARRZones zone="warr-resolve" role="Federal" stateAbbr={selectedState || 'US'} metrics={warrMetrics} events={warrEvents} activeResolutionCount={sentinel.criticalHucs.length} onOpenPlanner={() => setViewLens('disaster-emergency')} />
         );
 
         // ── AI Briefing: National Scope Cards ──────────────────────────────

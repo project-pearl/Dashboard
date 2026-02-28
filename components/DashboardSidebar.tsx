@@ -92,7 +92,6 @@ const LENS_ICONS: Record<string, LucideIcon> = {
   reports: FileText,
   interagency: Network,
   funding: Banknote,
-  planner: ClipboardList,
   full: LayoutDashboard,
   // ── State ──────────────────────────────────────────────────────────────────
   coverage: Activity,
