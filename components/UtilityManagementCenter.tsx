@@ -16,6 +16,8 @@ import LocationReportCard from '@/components/LocationReportCard';
 import ResolutionPlanner from '@/components/ResolutionPlanner';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
+import { WARRZones } from './WARRZones';
+import type { WARRMetric } from './WARRZones';
 
 // ─── View Lens ──────────────────────────────────────────────────────────────
 
@@ -32,7 +34,7 @@ const LENS_CONFIG: Record<ViewLens, {
   overview: {
     label: 'Overview',
     description: 'Utility control room dashboard — real-time plant status, compliance, and alerts',
-    sections: new Set(['system-status', 'operational-stats', 'compliance-calendar', 'weather-source', 'alerts-notifications', 'quick-access', 'disclaimer']),
+    sections: new Set(['system-status', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'operational-stats', 'compliance-calendar', 'weather-source', 'alerts-notifications', 'quick-access', 'disclaimer']),
   },
   briefing: {
     label: 'AI Briefing',
@@ -907,14 +909,14 @@ export default function UtilityManagementCenter({ systemId }: Props) {
 
             case 'tp-optimization': return DS(
               <PlaceholderSection icon={Sparkles} iconColor="text-violet-600" title="Process Optimization"
-                description="AI-assisted recommendations for chemical dose, setpoints, energy, and PEARL ALIA integration (Phase 2)"
+                description="AI-assisted recommendations for chemical dose, setpoints, energy, and PIN integration (Phase 2)"
                 kpis={[
                   { label: 'AI Status', value: 'Phase 2', bg: 'bg-violet-50 border-violet-200' },
                   { label: 'Chemical Savings', value: 'Est. 8-12%', bg: 'bg-green-50 border-green-200' },
                   { label: 'Energy Savings', value: 'Est. 5-10%', bg: 'bg-green-50 border-green-200' },
-                  { label: 'PEARL ALIA', value: 'Evaluated', bg: 'bg-blue-50 border-blue-200' },
+                  { label: 'PIN', value: 'Evaluated', bg: 'bg-blue-50 border-blue-200' },
                 ]}
-                source="AI optimization engine (Phase 2), PEARL ALIA performance data"
+                source="AI optimization engine (Phase 2), PIN performance data"
               />
             );
 
@@ -1473,12 +1475,12 @@ export default function UtilityManagementCenter({ systemId }: Props) {
 
             case 'am-lifecycle': return DS(
               <PlaceholderSection icon={TrendingUp} iconColor="text-emerald-600" title="Lifecycle Cost Analysis"
-                description="Total cost of ownership, repair vs. replace decisions, and PEARL ALIA lifecycle cost"
+                description="Total cost of ownership, repair vs. replace decisions, and PIN lifecycle cost"
                 kpis={[
                   { label: 'Avg TCO', value: '$1.2M / asset', bg: 'bg-slate-50 border-slate-200' },
                   { label: 'Replace Decisions', value: '3 pending', bg: 'bg-blue-50 border-blue-200' },
                   { label: 'Energy Savings', value: '$420K/yr est.', bg: 'bg-green-50 border-green-200' },
-                  { label: 'PEARL ALIA', value: 'Evaluated', bg: 'bg-blue-50 border-blue-200' },
+                  { label: 'PIN', value: 'Evaluated', bg: 'bg-blue-50 border-blue-200' },
                 ]}
                 source="Utility financial records, engineering assessments"
               />
@@ -1551,6 +1553,28 @@ export default function UtilityManagementCenter({ systemId }: Props) {
                 ]}
                 source="Utility CIP, financial plan, grant applications"
               />
+            );
+
+            // ══════════════════════════════════════════════════════════════
+            // WARR ZONES
+            // ══════════════════════════════════════════════════════════════
+
+            case 'warr-metrics': {
+              const warrM: WARRMetric[] = [
+                { label: 'Plant Uptime', value: '—', icon: Gauge, iconColor: 'var(--status-healthy)', subtitle: 'Treatment facility status' },
+                { label: 'Effluent Compliance', value: '—', icon: Shield, iconColor: 'var(--accent-teal)', subtitle: 'Permit limit compliance' },
+                { label: 'Service Alerts', value: '—', icon: AlertTriangle, iconColor: 'var(--status-warning)', subtitle: 'Active service notifications' },
+              ];
+              return DS(<WARRZones zone="warr-metrics" role="Utility" stateAbbr={systemId} metrics={warrM} events={[]} activeResolutionCount={0} />);
+            }
+            case 'warr-analyze': return DS(
+              <WARRZones zone="warr-analyze" role="Utility" stateAbbr={systemId} metrics={[]} events={[]} activeResolutionCount={0} />
+            );
+            case 'warr-respond': return DS(
+              <WARRZones zone="warr-respond" role="Utility" stateAbbr={systemId} metrics={[]} events={[]} activeResolutionCount={0} />
+            );
+            case 'warr-resolve': return DS(
+              <WARRZones zone="warr-resolve" role="Utility" stateAbbr={systemId} metrics={[]} events={[]} activeResolutionCount={0} onOpenPlanner={() => setActiveLens('planner')} />
             );
 
             // ══════════════════════════════════════════════════════════════

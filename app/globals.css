@@ -148,6 +148,18 @@
   --bar-track: #E5E7EB;
   --bg-tooltip: #1e293b;
   --text-tooltip: #f8fafc;
+
+  /* ── Domain tint surfaces (light) ── */
+  --domain-surface-sw:    rgba(59, 130, 246, 0.05);
+  --domain-surface-storm: rgba(107, 114, 128, 0.05);
+  --domain-surface-gw:    rgba(139, 92, 246, 0.05);
+  --domain-surface-dw:    rgba(6, 182, 212, 0.05);
+  --domain-surface-coast: rgba(14, 165, 233, 0.05);
+  --domain-border-sw:     rgba(59, 130, 246, 0.20);
+  --domain-border-storm:  rgba(107, 114, 128, 0.20);
+  --domain-border-gw:     rgba(139, 92, 246, 0.20);
+  --domain-border-dw:     rgba(6, 182, 212, 0.20);
+  --domain-border-coast:  rgba(14, 165, 233, 0.20);
 }
 
 [data-theme="dark"] {
@@ -190,6 +202,78 @@
   --bar-track: #374151;
   --bg-tooltip: #f8fafc;
   --text-tooltip: #1e293b;
+
+  /* ── Domain tint surfaces (dark) ── */
+  --domain-surface-sw:    rgba(96, 165, 250, 0.08);
+  --domain-surface-storm: rgba(156, 163, 175, 0.08);
+  --domain-surface-gw:    rgba(167, 139, 250, 0.08);
+  --domain-surface-dw:    rgba(34, 211, 238, 0.08);
+  --domain-surface-coast: rgba(56, 189, 248, 0.08);
+  --domain-border-sw:     rgba(96, 165, 250, 0.25);
+  --domain-border-storm:  rgba(156, 163, 175, 0.25);
+  --domain-border-gw:     rgba(167, 139, 250, 0.25);
+  --domain-border-dw:     rgba(34, 211, 238, 0.25);
+  --domain-border-coast:  rgba(56, 189, 248, 0.25);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PIN Accent Color Presets
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Sapphire — blue */
+[data-accent="sapphire"] {
+  --accent-teal: #2563EB;
+  --accent-teal-glow: rgba(37, 99, 235, 0.08);
+  --accent-copper: #1D4ED8;
+  --accent-copper-glow: rgba(29, 78, 216, 0.08);
+}
+[data-accent="sapphire"][data-theme="dark"] {
+  --accent-teal: #60A5FA;
+  --accent-teal-glow: rgba(96, 165, 250, 0.12);
+  --accent-copper: #93C5FD;
+  --accent-copper-glow: rgba(147, 197, 253, 0.12);
+}
+
+/* Indigo — violet */
+[data-accent="indigo"] {
+  --accent-teal: #4F46E5;
+  --accent-teal-glow: rgba(79, 70, 229, 0.08);
+  --accent-copper: #4338CA;
+  --accent-copper-glow: rgba(67, 56, 202, 0.08);
+}
+[data-accent="indigo"][data-theme="dark"] {
+  --accent-teal: #818CF8;
+  --accent-teal-glow: rgba(129, 140, 248, 0.12);
+  --accent-copper: #A5B4FC;
+  --accent-copper-glow: rgba(165, 180, 252, 0.12);
+}
+
+/* Emerald — green */
+[data-accent="emerald"] {
+  --accent-teal: #059669;
+  --accent-teal-glow: rgba(5, 150, 105, 0.08);
+  --accent-copper: #047857;
+  --accent-copper-glow: rgba(4, 120, 87, 0.08);
+}
+[data-accent="emerald"][data-theme="dark"] {
+  --accent-teal: #34D399;
+  --accent-teal-glow: rgba(52, 211, 153, 0.12);
+  --accent-copper: #6EE7B7;
+  --accent-copper-glow: rgba(110, 231, 183, 0.12);
+}
+
+/* Copper — amber */
+[data-accent="copper"] {
+  --accent-teal: #B45309;
+  --accent-teal-glow: rgba(180, 83, 9, 0.08);
+  --accent-copper: #92400E;
+  --accent-copper-glow: rgba(146, 64, 14, 0.08);
+}
+[data-accent="copper"][data-theme="dark"] {
+  --accent-teal: #F59E0B;
+  --accent-teal-glow: rgba(245, 158, 11, 0.12);
+  --accent-copper: #FBBF24;
+  --accent-copper-glow: rgba(251, 191, 36, 0.12);
 }
 
 /* ── Smooth theme transitions (split timings for refined feel) ── */
@@ -474,6 +558,41 @@ canvas, video, iframe, .no-theme-transition {
   .pin-card-hover:hover {
     transform: translateY(-1px);
     box-shadow: var(--shadow-elevated);
+  }
+
+  /* ── Tinted domain card: glass surface with colored top border ── */
+  .pin-card-tinted {
+    @apply rounded-[14px] border;
+    background: var(--bg-surface);
+    border-color: var(--border-default);
+    box-shadow: var(--shadow-card);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 2px solid var(--border-default);
+    transition: transform 200ms ease, box-shadow 350ms ease;
+  }
+  .pin-card-tinted:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-elevated);
+  }
+  .pin-card-tinted[data-domain="surface-water"]  { background: var(--domain-surface-sw);    border-top-color: var(--domain-border-sw); }
+  .pin-card-tinted[data-domain="stormwater"]      { background: var(--domain-surface-storm); border-top-color: var(--domain-border-storm); }
+  .pin-card-tinted[data-domain="groundwater"]     { background: var(--domain-surface-gw);    border-top-color: var(--domain-border-gw); }
+  .pin-card-tinted[data-domain="drinking-water"]  { background: var(--domain-surface-dw);    border-top-color: var(--domain-border-dw); }
+  .pin-card-tinted[data-domain="coastal"]         { background: var(--domain-surface-coast); border-top-color: var(--domain-border-coast); }
+
+  /* ── Interactive card: clickable with hover lift + accent border ── */
+  .pin-card-interactive {
+    cursor: pointer;
+    transition: transform 200ms ease, box-shadow 350ms ease, border-color 200ms ease;
+  }
+  .pin-card-interactive:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-elevated);
+    border-color: var(--accent-teal);
+  }
+  .pin-card-interactive:active {
+    transform: translateY(0);
   }
 
   /* ── Stat tile: quiet container for a number + label ── */

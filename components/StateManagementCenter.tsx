@@ -37,6 +37,8 @@ import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { resolveWaterbodyCoordinates } from '@/lib/waterbodyCentroids';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
+import { WARRZones } from './WARRZones';
+import type { WARRMetric } from './WARRZones';
 import { WatershedWaterbodyPanel } from '@/components/WatershedWaterbodyPanel';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
@@ -138,7 +140,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Overview',
     description: 'State operational dashboard — morning check before the day starts',
     defaultOverlay: 'risk',
-    sections: new Set(['regprofile', 'datareport', 'operational-health', 'alertfeed', 'map-grid', 'detail', 'top10', 'quick-access', 'insights', 'briefing-actions', 'briefing-changes', 'briefing-pulse', 'briefing-stakeholder', 'disclaimer']),
+    sections: new Set(['regprofile', 'datareport', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'operational-health', 'alertfeed', 'map-grid', 'detail', 'top10', 'quick-access', 'insights', 'briefing-actions', 'briefing-changes', 'briefing-pulse', 'briefing-stakeholder', 'disclaimer']),
   },
   briefing: {
     label: 'AI Briefing',
@@ -147,10 +149,10 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set(['insights', 'briefing-actions', 'briefing-changes', 'briefing-pulse', 'briefing-stakeholder', 'disclaimer']),
   },
   planner: {
-    label: 'Resolution Planner',
-    description: 'Waterbody-level restoration planning workspace',
+    label: 'Disaster & Emergency',
+    description: 'Emergency response, active incidents, and restoration planning',
     defaultOverlay: 'risk',
-    sections: new Set(['resolution-planner', 'disclaimer']),
+    sections: new Set(['alertfeed', 'disaster-active', 'disaster-response', 'disaster-spill', 'disaster-prep', 'disaster-cascade', 'resolution-planner', 'disclaimer']),
   },
   trends: {
     label: 'Trends & Projections',
@@ -208,15 +210,15 @@ const LENS_CONFIG: Record<ViewLens, {
   },
   disaster: {
     label: 'Disaster & Emergency Response',
-    description: 'Active incidents, spill reporting, and preparedness',
+    description: 'Active incidents, spill reporting, and preparedness — redirects to merged planner view',
     defaultOverlay: 'risk',
-    sections: new Set(['alertfeed', 'disaster-active', 'disaster-response', 'disaster-spill', 'disaster-prep', 'disaster-cascade', 'disclaimer']),
+    sections: new Set(['alertfeed', 'disaster-active', 'disaster-response', 'disaster-spill', 'disaster-prep', 'disaster-cascade', 'resolution-planner', 'disclaimer']),
   },
   tmdl: {
     label: 'TMDL & Restoration',
     description: 'TMDL program status, 303(d) management, and watershed restoration',
     defaultOverlay: 'risk',
-    sections: new Set(['tmdl-status', 'tmdl-303d', 'tmdl-workspace', 'tmdl-implementation', 'tmdl-restoration', 'tmdl-epa', 'disclaimer']),
+    sections: new Set(['tmdl-status', 'tmdl-303d', 'tmdl-workspace', 'tmdl-implementation', 'tmdl-restoration', 'tmdl-epa', 'tmdl-completion-trend', 'tmdl-cause-breakdown', 'tmdl-delisting-stories', 'disclaimer']),
   },
   scorecard: {
     label: 'Scorecard',
@@ -234,13 +236,13 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Permits & Enforcement',
     description: 'Permitting operations, inventory, DMR monitoring, and enforcement',
     defaultOverlay: 'risk',
-    sections: new Set(['icis', 'perm-status', 'perm-inventory', 'perm-pipeline', 'perm-dmr', 'perm-inspection', 'perm-enforcement', 'perm-general', 'disclaimer']),
+    sections: new Set(['icis', 'perm-status', 'perm-inventory', 'perm-pipeline', 'perm-dmr', 'perm-inspection', 'perm-enforcement', 'perm-general', 'perm-snc', 'perm-waterbody', 'perm-expiring', 'perm-dmr-trends', 'disclaimer']),
   },
   funding: {
     label: 'Funding & Grants',
     description: 'Active grants, SRF management, and financial analytics',
     defaultOverlay: 'risk',
-    sections: new Set(['grants', 'fund-active', 'fund-srf', 'fund-pipeline', 'fund-passthrough', 'fund-analytics', 'disclaimer']),
+    sections: new Set(['grants', 'fund-active', 'fund-srf', 'fund-pipeline', 'fund-passthrough', 'fund-analytics', 'fund-bil', 'fund-j40', 'fund-srf-pipeline', 'fund-grant-compliance', 'fund-trend', 'fund-match', 'disclaimer']),
   },
 };
 
@@ -1013,16 +1015,52 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
         <AIInsightsEngine key={stateAbbr} role="State" stateAbbr={stateAbbr} regionData={regionData as any} />
             );
 
+        case 'warr-metrics': {
+          const warrM: WARRMetric[] = [
+            { label: 'Waterbody Health', value: '—', icon: Gauge, iconColor: 'var(--status-healthy)', subtitle: 'ATTAINS assessed waterbodies' },
+            { label: 'Open Violations', value: '—', icon: AlertTriangle, iconColor: 'var(--status-warning)', subtitle: 'Active ICIS violations' },
+            { label: 'Monitoring Coverage', value: '—', icon: Shield, iconColor: 'var(--accent-teal)', subtitle: 'Stations reporting data' },
+          ];
+          return DS(<WARRZones zone="warr-metrics" role="State" stateAbbr={stateAbbr} metrics={warrM} events={[]} activeResolutionCount={0} />);
+        }
+        case 'warr-analyze': return DS(
+          <WARRZones zone="warr-analyze" role="State" stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} />
+        );
+        case 'warr-respond': return DS(
+          <WARRZones zone="warr-respond" role="State" stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} />
+        );
+        case 'warr-resolve': return DS(
+          <WARRZones zone="warr-resolve" role="State" stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} onOpenPlanner={() => setViewLens('planner')} />
+        );
+
             case 'detail': return DS(<>
         <div className="space-y-4">
 
-            {/* No selection state */}
+            {/* No selection state — search prompt */}
             {!activeDetailId && (
               <Card className="border-2 border-dashed border-slate-300 bg-white/50">
-                <div className="py-12 text-center">
-                  <MapPin className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-                  <div className="text-base font-medium text-slate-500">Select a waterbody to view details</div>
-                  <div className="text-sm text-slate-400 mt-1">Click a marker on the map or a waterbody from the list</div>
+                <div className="p-6">
+                  <div className="relative mb-4">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder={`Search ${stateName} waterbodies...`}
+                      className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400"
+                      onClick={() => setComingSoonId(comingSoonId === 'wb-search-detail' ? null : 'wb-search-detail')}
+                      readOnly
+                    />
+                  </div>
+                  {comingSoonId === 'wb-search-detail' ? (
+                    <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-3">
+                      <p className="text-xs text-slate-700">Search by waterbody name, ATTAINS ID, or HUC-12 code to view assessment status, impairment causes, TMDL linkage, and monitoring data.</p>
+                      <p className="text-[10px] text-blue-600 mt-2 font-medium">Waterbody search — Coming Soon</p>
+                    </div>
+                  ) : (
+                    <div className="text-center text-slate-400">
+                      <MapPin className="h-8 w-8 mx-auto mb-2 text-slate-300" />
+                      <p className="text-xs">Or click a marker on the map to view waterbody details</p>
+                    </div>
+                  )}
                 </div>
               </Card>
             )}
@@ -1278,9 +1316,9 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                         </div>
                       </div>
 
-                      {/* Why ALIA */}
+                      {/* Why PIN */}
                       <div className="space-y-1.5">
-                        <div className="text-xs font-semibold text-slate-700 uppercase tracking-wide">Why ALIA at {regionName}</div>
+                        <div className="text-xs font-semibold text-slate-700 uppercase tracking-wide">Why PIN at {regionName}</div>
                         {whyBullets.map((b, i) => (
                           <div key={i} className="flex items-start gap-2 text-xs">
                             <span className="flex-shrink-0 mt-0.5">{b.icon}</span>
@@ -1297,7 +1335,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       {impairmentClassification.length > 0 && (
                         <div className="space-y-1">
                           <div className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
-                            Impairment Classification ({impairmentClassification.length} causes · {addressabilityPct}% ALIA-addressable)
+                            Impairment Classification ({impairmentClassification.length} causes · {addressabilityPct}% PIN-addressable)
                           </div>
                           <div className="grid gap-1">
                             {impairmentClassification.map((imp, i) => (
@@ -1472,9 +1510,9 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       <div className="flex flex-wrap gap-2">
                         <button
                           onClick={() => {
-                            const subject = encodeURIComponent(`ALIA Pilot Deployment Request — ${regionName}, ${stateAbbr}`);
+                            const subject = encodeURIComponent(`PIN Pilot Deployment Request — ${regionName}, ${stateAbbr}`);
                             const body = encodeURIComponent(
-                              `ALIA Pilot Deployment Request\n` +
+                              `PIN Pilot Deployment Request\n` +
                               `${'='.repeat(40)}\n\n` +
                               `Site: ${regionName}\n` +
                               `State: ${stateName}\n` +
@@ -1497,7 +1535,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                           }}
                           className="flex-1 min-w-[140px] bg-cyan-700 hover:bg-cyan-800 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition-colors shadow-sm"
                         >
-                          🚀 Deploy ALIA Pilot Here
+                          🚀 Deploy PIN Pilot Here
                         </button>
                         <button
                           onClick={async () => {
@@ -1526,13 +1564,13 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                               const catTitleMap: Record<string, string> = {
                                 source: 'SOURCE CONTROL -- Upstream BMPs',
                                 nature: 'NATURE-BASED SOLUTIONS',
-                                pearl: 'ALIA -- Treatment Accelerator',
+                                pearl: 'PIN -- Treatment Accelerator',
                                 community: 'COMMUNITY ENGAGEMENT & STEWARDSHIP',
                                 regulatory: 'REGULATORY & PLANNING',
                               };
 
                               // ─── Title ───
-                              pdf.addTitle('ALIA Deployment Plan');
+                              pdf.addTitle('PIN Deployment Plan');
                               pdf.addText(clean(`${regionName}, ${stateName}`), { bold: true, fontSize: 12 });
                               pdf.addText(`Generated ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, { fontSize: 9 });
                               pdf.addSpacer(5);
@@ -1566,7 +1604,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                               pdf.addSpacer(3);
 
                               pdf.addText('RECOMMENDED ACTION', { bold: true });
-                              pdf.addText(clean(`Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} unit${phase1Units > 1 ? 's' : ''}, ${phase1GPM} GPM)` : `${totalUnits} ALIA unit${totalUnits > 1 ? 's' : ''}`} at ${regionName} and begin continuous monitoring within 30 days.`), { indent: 5, bold: true });
+                              pdf.addText(clean(`Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} unit${phase1Units > 1 ? 's' : ''}, ${phase1GPM} GPM)` : `${totalUnits} PIN unit${totalUnits > 1 ? 's' : ''}`} at ${regionName} and begin continuous monitoring within 30 days.`), { indent: 5, bold: true });
                               pdf.addText('Typical deployment: 30-60 days. Pilot generates continuous data and measurable reductions within the first operating cycle.', { indent: 5, fontSize: 9 });
                               pdf.addSpacer(5);
 
@@ -1613,8 +1651,8 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                                 pdf.addSpacer(3);
                               }
 
-                              // ─── Why ALIA ───
-                              pdf.addSubtitle('Why ALIA at This Site');
+                              // ─── Why PIN ───
+                              pdf.addSubtitle('Why PIN at This Site');
                               pdf.addDivider();
                               for (const b of whyBullets) {
                                 pdf.addText(clean(`- ${b.problem}`), { indent: 5, bold: true });
@@ -1622,8 +1660,8 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                               }
                               pdf.addSpacer(3);
 
-                              // ─── ALIA Configuration ───
-                              pdf.addSubtitle(`ALIA Configuration: ${pearlModel}`);
+                              // ─── PIN Configuration ───
+                              pdf.addSubtitle(`PIN Configuration: ${pearlModel}`);
                               pdf.addDivider();
                               pdf.addText(`System Type: ${waterType === 'brackish' ? 'Oyster (C. virginica)' : 'Freshwater Mussel'} Biofiltration`, { indent: 5 });
                               const pearlCatMods = categories.find(c => c.id === 'pearl');
@@ -1643,7 +1681,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                                 [
                                   ['Sizing Method', 'Severity-driven treatment need assessment'],
                                   ['Site Severity Score', `${siteSeverityScore}/100 (${siteSeverityLabel})`],
-                                  ['Unit Capacity', '50 GPM per ALIA unit (4 units per quad)'],
+                                  ['Unit Capacity', '50 GPM per PIN unit (4 units per quad)'],
                                   ['Waterbody Size', `~${estimatedAcres} acres (${acresSource})`],
                                   ['Deployment Size', `${totalQuads} quad${totalQuads > 1 ? 's' : ''} (${totalUnits} units, ${fullGPM} GPM)`],
                                   ...(isPhasedDeployment ? [
@@ -1771,10 +1809,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
 
                               // ─── Impairment Classification ───
                               if (impairmentClassification.length > 0) {
-                                pdf.addSubtitle(`Impairment Classification -- ALIA addresses ${pearlAddressable} of ${totalClassified} (${addressabilityPct}%)`);
+                                pdf.addSubtitle(`Impairment Classification -- PIN addresses ${pearlAddressable} of ${totalClassified} (${addressabilityPct}%)`);
                                 pdf.addDivider();
                                 pdf.addTable(
-                                  ['Cause', 'Tier', 'ALIA Action'],
+                                  ['Cause', 'Tier', 'PIN Action'],
                                   impairmentClassification.map((item: any) => [
                                     clean(item.cause),
                                     item.tier === 1 ? 'T1 -- Primary Target' : item.tier === 2 ? 'T2 -- Contributes/Planned' : 'T3 -- Outside Scope',
@@ -1800,7 +1838,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                               // ─── Full Restoration Plan ───
                               pdf.addSubtitle('Full Restoration Plan');
                               pdf.addDivider();
-                              pdf.addText(`This plan combines ${totalBMPs} conventional BMPs and nature-based solutions with ALIA accelerated treatment.`);
+                              pdf.addText(`This plan combines ${totalBMPs} conventional BMPs and nature-based solutions with PIN accelerated treatment.`);
                               pdf.addSpacer(3);
 
                               for (const cat of categories.filter((c: any) => c.id !== 'pearl')) {
@@ -1819,7 +1857,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                               // ─── Recommended Next Steps ───
                               pdf.addSubtitle('Recommended Next Steps');
                               pdf.addDivider();
-                              pdf.addText(clean(`1. Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} ALIA units, ${phase1GPM} GPM) at highest-priority inflow zone${phase1Quads > 1 ? 's' : ''}` : `${totalUnits} ALIA unit${totalUnits > 1 ? 's' : ''}`} within 30 days.`), { indent: 5 });
+                              pdf.addText(clean(`1. Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} PIN units, ${phase1GPM} GPM) at highest-priority inflow zone${phase1Quads > 1 ? 's' : ''}` : `${totalUnits} PIN unit${totalUnits > 1 ? 's' : ''}`} within 30 days.`), { indent: 5 });
                               pdf.addText('2. Begin continuous water quality monitoring (15-min intervals, telemetered).', { indent: 5 });
                               pdf.addText('3. Use 90-day baseline dataset to calibrate treatment priorities and validate severity assessment.', { indent: 5 });
                               if (isPhasedDeployment) {
@@ -1880,14 +1918,14 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
 
                         return (
                           <div className="rounded-lg border-2 border-green-300 bg-gradient-to-br from-green-50 to-emerald-50 p-3 space-y-3">
-                            <div className="text-[10px] font-bold text-green-800 uppercase tracking-wider">ALIA Economics -- {regionName}</div>
+                            <div className="text-[10px] font-bold text-green-800 uppercase tracking-wider">PIN Economics -- {regionName}</div>
 
                             {/* Unit pricing */}
                             <div className="space-y-1">
-                              <div className="text-[10px] font-bold text-slate-600 uppercase">ALIA Unit Pricing</div>
+                              <div className="text-[10px] font-bold text-slate-600 uppercase">PIN Unit Pricing</div>
                               <div className="rounded-md bg-white border border-slate-200 overflow-hidden">
                                 <div className="grid grid-cols-[1fr_auto] text-[11px]">
-                                  <div className="px-2 py-1.5 bg-slate-100 font-semibold border-b border-slate-200">ALIA Unit (50 GPM)</div>
+                                  <div className="px-2 py-1.5 bg-slate-100 font-semibold border-b border-slate-200">PIN Unit (50 GPM)</div>
                                   <div className="px-2 py-1.5 bg-slate-100 font-bold text-right border-b border-slate-200">{fmt(unitCost)}/unit/year</div>
                                   <div className="px-2 py-1.5 border-b border-slate-100 text-[10px] text-slate-500" style={{ gridColumn: '1 / -1' }}>
                                     All-inclusive: hardware, deployment, calibration, continuous monitoring, dashboards, automated reporting, maintenance, and support
@@ -1971,7 +2009,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                               <div className="rounded-md bg-green-100 border border-green-200 text-center py-2">
                                 <div className="text-[9px] text-green-600">Compliance Savings Offset</div>
                                 <div className="text-lg font-bold text-green-700">{offsetPctLow}% -- {offsetPctHigh}%</div>
-                                <div className="text-[9px] text-green-500">of ALIA cost offset by reduced spend</div>
+                                <div className="text-[9px] text-green-500">of PIN cost offset by reduced spend</div>
                               </div>
                               <div className="rounded-md bg-cyan-100 border border-cyan-200 text-center py-2">
                                 <div className="text-[9px] text-cyan-600">Time to Compliance Data</div>
@@ -2233,9 +2271,9 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                     <div>
                       <span className="font-bold">Federal Response:</span> President Trump directed FEMA coordination on Feb 17. Gov. Moore's office noted the federal government has been responsible for the Potomac Interceptor since the last century. Potomac Conservancy submitted a letter signed by 2,100+ community members demanding accountability from DC Water.
                     </div>
-                    {/* ALIA relevance */}
+                    {/* PIN relevance */}
                     <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-2 text-cyan-900">
-                      <span className="font-bold">🔬 ALIA Relevance:</span> This event demonstrates catastrophic infrastructure failure impact on receiving waters. ALIA's real-time monitoring capability would provide continuous E. coli, nutrient, and pathogen tracking during and after spill events — filling the gap that required UMD researchers and volunteer riverkeepers to manually sample. Continuous deployment at 6 DC Water monitoring sites would provide the 24/7 data regulators and the public need.
+                      <span className="font-bold">🔬 PIN Relevance:</span> This event demonstrates catastrophic infrastructure failure impact on receiving waters. PIN's real-time monitoring capability would provide continuous E. coli, nutrient, and pathogen tracking during and after spill events — filling the gap that required UMD researchers and volunteer riverkeepers to manually sample. Continuous deployment at 6 DC Water monitoring sites would provide the 24/7 data regulators and the public need.
                     </div>
                     <div className="flex flex-wrap gap-1.5 pt-1">
                       <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">DC Water</span>
@@ -3200,10 +3238,25 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   <CardDescription>Integrated reporting and assessment decision support</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8 text-slate-400">
-                    <Waves className="h-10 w-10 mx-auto mb-3 text-slate-300" />
-                    <p className="text-sm font-medium">Select a waterbody to begin assessment</p>
-                    <p className="text-xs mt-1">Compare monitoring data against applicable standards and generate assessment decisions</p>
+                  <div className="space-y-3">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder={`Search ${stateName} waterbodies for assessment...`}
+                        className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-300 focus:border-cyan-400"
+                        onClick={() => setComingSoonId(comingSoonId === 'wq-assess-search' ? null : 'wq-assess-search')}
+                        readOnly
+                      />
+                    </div>
+                    {comingSoonId === 'wq-assess-search' ? (
+                      <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-3">
+                        <p className="text-xs text-slate-700">Search by waterbody name or ATTAINS ID to compare monitoring data against applicable water quality standards and generate assessment decisions.</p>
+                        <p className="text-[10px] text-blue-600 mt-2 font-medium">Assessment workspace — Coming Soon</p>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-500 text-center">Compare monitoring data against applicable standards and generate assessment decisions</p>
+                    )}
                   </div>
                   <p className="text-xs text-slate-400 mt-4 italic">Data source: State monitoring database, EPA ATTAINS, WQX</p>
                 </CardContent>
@@ -4523,61 +4576,83 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             );
 
             // ── TMDL sections ──────────────────────────────────────────────
-            case 'tmdl-status': return DS(
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Waves className="h-5 w-5 text-cyan-600" />
-                    TMDL Program Status
-                  </CardTitle>
-                  <CardDescription>TMDLs completed, in development, and backlog tracking</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {[
-                      { label: 'EPA Approved', value: '94', bg: 'bg-green-50 border-green-200' },
-                      { label: 'In Development', value: '14', bg: 'bg-blue-50 border-blue-200' },
-                      { label: 'Backlog', value: '78', bg: 'bg-amber-50 border-amber-200' },
-                      { label: 'Completion Rate', value: '55%', bg: 'bg-cyan-50 border-cyan-200' },
-                    ].map(k => (
-                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
-                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ATTAINS TMDL tracking, state TMDL development system</p>
-                </CardContent>
-              </Card>
-            );
+            case 'tmdl-status': {
+              const statusTiles = [
+                { id: 'tmdl-approved', label: 'EPA Approved', value: '94', bg: 'bg-green-50 border-green-200', detail: 'Full list of 94 EPA-approved TMDLs with pollutant, waterbody, and approval date. Includes load allocations and wasteload allocations by source.' },
+                { id: 'tmdl-indev', label: 'In Development', value: '14', bg: 'bg-blue-50 border-blue-200', detail: '14 TMDLs currently in development — pollutant source analysis, stakeholder engagement status, and projected completion dates.' },
+                { id: 'tmdl-backlog', label: 'Backlog', value: '78', bg: 'bg-amber-50 border-amber-200', detail: '78 impaired waterbodies awaiting TMDL development. Prioritized by designated use severity, population impact, and EPA Vision Priority ranking.' },
+                { id: 'tmdl-rate', label: 'Completion Rate', value: '55%', bg: 'bg-cyan-50 border-cyan-200', detail: 'TMDL completion rate trend — approved TMDLs vs total 303(d) listed waterbodies. Includes 10-year trendline and peer state comparison.' },
+              ];
+              return DS(
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Waves className="h-5 w-5 text-cyan-600" />
+                      TMDL Program Status
+                    </CardTitle>
+                    <CardDescription>TMDLs completed, in development, and backlog tracking</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {statusTiles.map(k => (
+                        <div key={k.id}>
+                          <button onClick={() => setComingSoonId(comingSoonId === k.id ? null : k.id)} className={`w-full rounded-xl border p-4 text-left transition-all hover:shadow-md cursor-pointer ${k.bg}`}>
+                            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                            <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                          </button>
+                          {comingSoonId === k.id && (
+                            <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
+                              <p className="text-xs text-slate-700">{k.detail}</p>
+                              <p className="text-[10px] text-blue-600 mt-2 font-medium">Full detail view — Coming Soon</p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ATTAINS TMDL tracking, state TMDL development system</p>
+                  </CardContent>
+                </Card>
+              );
+            }
 
-            case 'tmdl-303d': return DS(
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Waves className="h-5 w-5 text-red-600" />
-                    303(d) List Management
-                  </CardTitle>
-                  <CardDescription>Impaired waters list management and listing decision workspace</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {[
-                      { label: 'Category 5 Listed', value: '186', bg: 'bg-red-50 border-red-200' },
-                      { label: 'New Listings (cycle)', value: '12', bg: 'bg-orange-50 border-orange-200' },
-                      { label: 'Delistings (cycle)', value: '8', bg: 'bg-green-50 border-green-200' },
-                      { label: 'Vision Priority', value: '42', bg: 'bg-blue-50 border-blue-200' },
-                    ].map(k => (
-                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
-                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ATTAINS, state 303(d) listing database</p>
-                </CardContent>
-              </Card>
-            );
+            case 'tmdl-303d': {
+              const listTiles = [
+                { id: '303d-cat5', label: 'Category 5 Listed', value: '186', bg: 'bg-red-50 border-red-200', detail: 'Full 303(d) list — 186 Category 5 impaired waterbodies requiring TMDLs. Filterable by cause, designated use, and watershed.' },
+                { id: '303d-new', label: 'New Listings (cycle)', value: '12', bg: 'bg-orange-50 border-orange-200', detail: '12 waterbodies newly listed this assessment cycle. Includes impairment cause, supporting data, and listing rationale.' },
+                { id: '303d-delist', label: 'Delistings (cycle)', value: '8', bg: 'bg-green-50 border-green-200', detail: '8 waterbodies delisted this cycle — restored or reclassified. Includes recovery timeline and contributing actions.' },
+                { id: '303d-priority', label: 'Vision Priority', value: '42', bg: 'bg-blue-50 border-blue-200', detail: '42 waterbodies flagged as Vision Priority — highest-impact impairments targeted for accelerated TMDL development and alternative restoration.' },
+              ];
+              return DS(
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Waves className="h-5 w-5 text-red-600" />
+                      303(d) List Management
+                    </CardTitle>
+                    <CardDescription>Impaired waters list management and listing decision workspace</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {listTiles.map(k => (
+                        <div key={k.id}>
+                          <button onClick={() => setComingSoonId(comingSoonId === k.id ? null : k.id)} className={`w-full rounded-xl border p-4 text-left transition-all hover:shadow-md cursor-pointer ${k.bg}`}>
+                            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                            <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                          </button>
+                          {comingSoonId === k.id && (
+                            <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
+                              <p className="text-xs text-slate-700">{k.detail}</p>
+                              <p className="text-[10px] text-blue-600 mt-2 font-medium">Full detail view — Coming Soon</p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ATTAINS, state 303(d) listing database</p>
+                  </CardContent>
+                </Card>
+              );
+            }
 
             case 'tmdl-workspace': return DS(
               <Card>
@@ -4589,100 +4664,280 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   <CardDescription>Active TMDL development projects with milestone tracking</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8 text-slate-400">
-                    <ClipboardList className="h-10 w-10 mx-auto mb-3 text-slate-300" />
-                    <p className="text-sm font-medium">Select a waterbody with a pending TMDL to begin</p>
-                    <p className="text-xs mt-1">Track pollutant source analysis, load allocations, and implementation milestones</p>
+                  <div className="space-y-3">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder={`Search ${stateName} waterbodies with pending TMDLs...`}
+                        className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400"
+                        onClick={() => setComingSoonId(comingSoonId === 'tmdl-ws-search' ? null : 'tmdl-ws-search')}
+                        readOnly
+                      />
+                    </div>
+                    {comingSoonId === 'tmdl-ws-search' && (
+                      <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-3">
+                        <p className="text-xs text-slate-700">Search and select any {stateName} waterbody with a pending or active TMDL. View pollutant source analysis, load allocation tables, WLA/LA breakdowns, and implementation milestones.</p>
+                        <p className="text-[10px] text-blue-600 mt-2 font-medium">Waterbody search — Coming Soon</p>
+                      </div>
+                    )}
+                    <p className="text-xs text-slate-500">Track pollutant source analysis, load allocations, and implementation milestones</p>
                   </div>
                   <p className="text-xs text-slate-400 mt-4 italic">Data source: State TMDL development tracker, EPA ATTAINS</p>
                 </CardContent>
               </Card>
             );
 
-            case 'tmdl-implementation': return DS(
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5 text-green-600" />
-                    Implementation Tracking
-                  </CardTitle>
-                  <CardDescription>TMDL implementation plan progress and pollutant load reduction</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {[
-                      { label: 'Active Impl. Plans', value: '68', bg: 'bg-green-50 border-green-200' },
-                      { label: 'On Track', value: '52', bg: 'bg-green-50 border-green-200' },
-                      { label: 'Behind Schedule', value: '12', bg: 'bg-amber-50 border-amber-200' },
-                      { label: 'Near Delisting', value: '4', bg: 'bg-cyan-50 border-cyan-200' },
-                    ].map(k => (
-                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
-                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State TMDL implementation tracker, EPA Watershed Tracking</p>
-                </CardContent>
-              </Card>
-            );
-
-            case 'tmdl-restoration': return DS(
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Waves className="h-5 w-5 text-emerald-600" />
-                    Watershed Restoration
-                  </CardTitle>
-                  <CardDescription>Active restoration projects and waterbody recovery progress</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {[
-                      { label: 'Active Projects', value: '24', bg: 'bg-emerald-50 border-emerald-200' },
-                      { label: 'Delisted (5yr)', value: '12', bg: 'bg-green-50 border-green-200' },
-                      { label: 'Investment', value: '$28M', bg: 'bg-blue-50 border-blue-200' },
-                    ].map(k => (
-                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
-                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State restoration program, EPA Recovery Potential Screening</p>
-                </CardContent>
-              </Card>
-            );
-
-            case 'tmdl-epa': return DS(
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Landmark className="h-5 w-5 text-blue-600" />
-                    EPA Coordination
-                  </CardTitle>
-                  <CardDescription>EPA Region oversight, consent decree tracking, and federal TMDL actions</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {[
-                      { item: 'EPA-established TMDLs pending state adoption', count: '3', status: 'Action Needed' },
-                      { item: 'Consent decree TMDL milestones (next 12 months)', count: '5', status: 'On Track' },
-                      { item: 'EPA technical assistance requests', count: '2', status: 'In Progress' },
-                    ].map((e, i) => (
-                      <div key={i} className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50/50 p-3">
-                        <span className="text-xs text-slate-700">{e.item}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-blue-700">{e.count}</span>
-                          <Badge variant="outline" className="text-[10px]">{e.status}</Badge>
+            case 'tmdl-implementation': {
+              const implTiles = [
+                { id: 'impl-active', label: 'Active Impl. Plans', value: '68', bg: 'bg-green-50 border-green-200', detail: '68 active TMDL implementation plans — BMP installations, point-source reductions, and load allocation progress by waterbody.' },
+                { id: 'impl-ontrack', label: 'On Track', value: '52', bg: 'bg-green-50 border-green-200', detail: '52 plans meeting milestone targets. Pollutant load reductions on schedule with measurable water quality improvements documented.' },
+                { id: 'impl-behind', label: 'Behind Schedule', value: '12', bg: 'bg-amber-50 border-amber-200', detail: '12 implementation plans behind schedule — root cause analysis, resource gaps, and recommended corrective actions.' },
+                { id: 'impl-delist', label: 'Near Delisting', value: '4', bg: 'bg-cyan-50 border-cyan-200', detail: '4 waterbodies approaching delisting criteria — final monitoring data, trend analysis, and projected delisting timeline.' },
+              ];
+              return DS(
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <TrendingUp className="h-5 w-5 text-green-600" />
+                      Implementation Tracking
+                    </CardTitle>
+                    <CardDescription>TMDL implementation plan progress and pollutant load reduction</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {implTiles.map(k => (
+                        <div key={k.id}>
+                          <button onClick={() => setComingSoonId(comingSoonId === k.id ? null : k.id)} className={`w-full rounded-xl border p-4 text-left transition-all hover:shadow-md cursor-pointer ${k.bg}`}>
+                            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                            <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                          </button>
+                          {comingSoonId === k.id && (
+                            <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
+                              <p className="text-xs text-slate-700">{k.detail}</p>
+                              <p className="text-[10px] text-blue-600 mt-2 font-medium">Full detail view — Coming Soon</p>
+                            </div>
+                          )}
                         </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-slate-400 mt-4 italic">Data source: State TMDL implementation tracker, EPA Watershed Tracking</p>
+                  </CardContent>
+                </Card>
+              );
+            }
+
+            case 'tmdl-restoration': {
+              const restoreTiles = [
+                { id: 'restore-active', label: 'Active Projects', value: '24', bg: 'bg-emerald-50 border-emerald-200', detail: '24 active watershed restoration projects — riparian buffers, stream bank stabilization, nutrient management plans, and constructed wetlands.' },
+                { id: 'restore-delist', label: 'Delisted (5yr)', value: '12', bg: 'bg-green-50 border-green-200', detail: '12 waterbodies successfully delisted in the last 5 years. Recovery timelines, key interventions, and before/after water quality data.' },
+                { id: 'restore-invest', label: 'Investment', value: '$28M', bg: 'bg-blue-50 border-blue-200', detail: '$28M total restoration investment — funding sources (EPA 319, state match, NRCS), cost-effectiveness analysis, and projected ROI.' },
+              ];
+              return DS(
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Waves className="h-5 w-5 text-emerald-600" />
+                      Watershed Restoration
+                    </CardTitle>
+                    <CardDescription>Active restoration projects and waterbody recovery progress</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {restoreTiles.map(k => (
+                        <div key={k.id}>
+                          <button onClick={() => setComingSoonId(comingSoonId === k.id ? null : k.id)} className={`w-full rounded-xl border p-4 text-left transition-all hover:shadow-md cursor-pointer ${k.bg}`}>
+                            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                            <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                          </button>
+                          {comingSoonId === k.id && (
+                            <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
+                              <p className="text-xs text-slate-700">{k.detail}</p>
+                              <p className="text-[10px] text-blue-600 mt-2 font-medium">Full detail view — Coming Soon</p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-slate-400 mt-4 italic">Data source: State restoration program, EPA Recovery Potential Screening</p>
+                  </CardContent>
+                </Card>
+              );
+            }
+
+            case 'tmdl-epa': {
+              const epaRows = [
+                { id: 'epa-adoption', item: 'EPA-established TMDLs pending state adoption', count: '3', status: 'Action Needed', detail: '3 federal TMDLs awaiting state adoption — pollutant allocations, implementation timeline, and state response deadlines.' },
+                { id: 'epa-consent', item: 'Consent decree TMDL milestones (next 12 months)', count: '5', status: 'On Track', detail: '5 consent decree milestones — court-ordered TMDL submissions, interim load reductions, and compliance monitoring requirements.' },
+                { id: 'epa-assist', item: 'EPA technical assistance requests', count: '2', status: 'In Progress', detail: '2 pending technical assistance requests — modeling support, source identification, and monitoring network design.' },
+              ];
+              return DS(
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Landmark className="h-5 w-5 text-blue-600" />
+                      EPA Coordination
+                    </CardTitle>
+                    <CardDescription>EPA Region oversight, consent decree tracking, and federal TMDL actions</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {epaRows.map(e => (
+                        <div key={e.id}>
+                          <button onClick={() => setComingSoonId(comingSoonId === e.id ? null : e.id)} className="w-full flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50/50 p-3 hover:bg-blue-100/50 transition-all cursor-pointer text-left">
+                            <span className="text-xs text-slate-700">{e.item}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold text-blue-700">{e.count}</span>
+                              <Badge variant="outline" className="text-[10px]">{e.status}</Badge>
+                            </div>
+                          </button>
+                          {comingSoonId === e.id && (
+                            <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
+                              <p className="text-xs text-slate-700">{e.detail}</p>
+                              <p className="text-[10px] text-blue-600 mt-2 font-medium">Full detail view — Coming Soon</p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA Region coordination records, consent decree dockets</p>
+                  </CardContent>
+                </Card>
+              );
+            }
+
+            // ── TMDL Additional Cards (Fix 25) ──────────────────────────────
+            case 'tmdl-completion-trend': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-blue-600" />
+                    TMDL Completion Trend
+                  </CardTitle>
+                  <CardDescription>10-year TMDL completion trajectory and pace analysis</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-3 gap-3">
+                      {[
+                        { label: '2015', approved: 62, bg: 'bg-slate-50 border-slate-200' },
+                        { label: '2020', approved: 78, bg: 'bg-blue-50 border-blue-200' },
+                        { label: '2025', approved: 94, bg: 'bg-green-50 border-green-200' },
+                      ].map(yr => (
+                        <div key={yr.label} className={`rounded-xl border p-3 text-center ${yr.bg}`}>
+                          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{yr.label}</div>
+                          <div className="text-xl font-bold text-slate-800 mt-1">{yr.approved}</div>
+                          <div className="text-[10px] text-slate-400">approved</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="rounded-lg border border-blue-100 bg-blue-50/40 p-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-slate-700">Avg. completions/year</span>
+                        <span className="text-sm font-bold text-blue-700">3.2</span>
                       </div>
-                    ))}
+                      <div className="w-full bg-slate-200 rounded-full h-2 mt-2">
+                        <div className="bg-blue-500 h-2 rounded-full" style={{ width: '55%' }} />
+                      </div>
+                      <div className="flex justify-between mt-1">
+                        <span className="text-[9px] text-slate-400">0% of backlog cleared</span>
+                        <span className="text-[9px] text-slate-400">55% complete</span>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-slate-400 italic">At current pace, backlog clearance projected by 2049. Accelerated alternatives may reduce timeline.</p>
                   </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA Region coordination records, consent decree dockets</p>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ATTAINS TMDL tracking, state submission records</p>
                 </CardContent>
               </Card>
             );
+
+            case 'tmdl-cause-breakdown': {
+              const causeCounts = [
+                { cause: 'Pathogens (E. coli / Enterococcus)', count: 52, pct: 28, color: 'bg-red-500' },
+                { cause: 'Nutrients (N/P)', count: 41, pct: 22, color: 'bg-amber-500' },
+                { cause: 'Sediment / Siltation', count: 34, pct: 18, color: 'bg-yellow-600' },
+                { cause: 'Metals (Mercury, Lead)', count: 22, pct: 12, color: 'bg-slate-500' },
+                { cause: 'Dissolved Oxygen', count: 18, pct: 10, color: 'bg-cyan-500' },
+                { cause: 'Temperature', count: 11, pct: 6, color: 'bg-orange-500' },
+                { cause: 'Other', count: 8, pct: 4, color: 'bg-slate-300' },
+              ];
+              return DS(
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5 text-amber-600" />
+                      Impairment Cause Breakdown
+                    </CardTitle>
+                    <CardDescription>Distribution of impairment causes driving TMDL development needs</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {causeCounts.map(c => (
+                        <button key={c.cause} onClick={() => setComingSoonId(comingSoonId === `cause-${c.cause}` ? null : `cause-${c.cause}`)} className="w-full text-left">
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs text-slate-700 w-44 truncate">{c.cause}</span>
+                            <div className="flex-1 bg-slate-100 rounded-full h-4 overflow-hidden">
+                              <div className={`h-full rounded-full ${c.color}`} style={{ width: `${c.pct}%` }} />
+                            </div>
+                            <span className="text-xs font-bold text-slate-700 w-8 text-right">{c.count}</span>
+                            <span className="text-[10px] text-slate-400 w-8 text-right">{c.pct}%</span>
+                          </div>
+                          {comingSoonId === `cause-${c.cause}` && (
+                            <div className="ml-44 mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-2">
+                              <p className="text-[10px] text-slate-600">{c.count} waterbodies impaired by {c.cause.toLowerCase()}. View affected waterbodies, TMDL status, and load reduction targets.</p>
+                              <p className="text-[10px] text-blue-600 mt-1 font-medium">Drill-down — Coming Soon</p>
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ATTAINS cause/source data, state 303(d) listings</p>
+                  </CardContent>
+                </Card>
+              );
+            }
+
+            case 'tmdl-delisting-stories': {
+              const stories = [
+                { id: 'delist-1', name: 'Little Patuxent River', cause: 'Sediment', year: '2023', action: 'Stream bank stabilization + agricultural BMPs reduced sediment loading 64% over 8 years.' },
+                { id: 'delist-2', name: 'Rock Creek', cause: 'Nutrients', year: '2022', action: 'Nutrient TMDL implementation with stormwater retrofits and enhanced BNR at WWTP achieved target TP concentrations.' },
+                { id: 'delist-3', name: 'Herring Run', cause: 'Bacteria', year: '2024', action: 'Sanitary sewer rehabilitation eliminated SSOs. Post-TMDL monitoring showed E. coli below WQS for 3 consecutive years.' },
+              ];
+              return DS(
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                      Delisting Success Stories
+                    </CardTitle>
+                    <CardDescription>Waterbodies successfully restored and removed from the impaired list</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {stories.map(s => (
+                        <div key={s.id}>
+                          <button onClick={() => setComingSoonId(comingSoonId === s.id ? null : s.id)} className="w-full flex items-center gap-3 rounded-lg border border-green-200 bg-green-50/50 p-3 hover:bg-green-100/50 transition-all cursor-pointer text-left">
+                            <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <div className="text-xs font-semibold text-slate-800">{s.name}</div>
+                              <div className="text-[10px] text-slate-500">Delisted {s.year} — {s.cause}</div>
+                            </div>
+                            <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${comingSoonId === s.id ? 'rotate-180' : ''}`} />
+                          </button>
+                          {comingSoonId === s.id && (
+                            <div className="mt-1 rounded-lg border border-green-200 bg-green-50/60 p-3">
+                              <p className="text-xs text-slate-700">{s.action}</p>
+                              <p className="text-[10px] text-blue-600 mt-2 font-medium">Full case study — Coming Soon</p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ATTAINS delisting records, state restoration summaries</p>
+                  </CardContent>
+                </Card>
+              );
+            }
 
             // ── Scorecard sections ─────────────────────────────────────────
             case 'sc-self-assessment': return DS(
@@ -4713,25 +4968,72 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </Card>
             );
 
-            case 'sc-watershed': return DS(
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Waves className="h-5 w-5 text-blue-600" />
-                    Watershed Scorecards
-                  </CardTitle>
-                  <CardDescription>Per-watershed health grades and trend indicators</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8 text-slate-400">
-                    <Waves className="h-10 w-10 mx-auto mb-3 text-slate-300" />
-                    <p className="text-sm font-medium">Watershed scorecards will populate from assessment data</p>
-                    <p className="text-xs mt-1">Individual HUC-8 and HUC-12 watershed grades based on impairment, monitoring, and restoration metrics</p>
-                  </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ATTAINS, state monitoring database, NHDPlus</p>
-                </CardContent>
-              </Card>
-            );
+            case 'sc-watershed': {
+              const defaultWatersheds = [
+                { id: 'ws-1', name: 'Patapsco River — Lower North Branch', huc: '02060003', grade: 'C+', trend: 'improving', impaired: 4, total: 12, pct: 33 },
+                { id: 'ws-2', name: 'Gunpowder Falls', huc: '02060004', grade: 'B-', trend: 'stable', impaired: 2, total: 9, pct: 22 },
+                { id: 'ws-3', name: 'Back River', huc: '02060005', grade: 'D', trend: 'declining', impaired: 7, total: 8, pct: 88 },
+                { id: 'ws-4', name: 'Chester River', huc: '02060006', grade: 'B', trend: 'improving', impaired: 3, total: 14, pct: 21 },
+                { id: 'ws-5', name: 'Choptank River', huc: '02060007', grade: 'C', trend: 'stable', impaired: 5, total: 11, pct: 45 },
+              ];
+              const trendIcon = (t: string) => t === 'improving' ? '↑' : t === 'declining' ? '↓' : '→';
+              const trendColor = (t: string) => t === 'improving' ? 'text-green-600' : t === 'declining' ? 'text-red-600' : 'text-slate-500';
+              const gradeColor = (g: string) => g.startsWith('A') ? 'bg-green-100 text-green-800 border-green-300' : g.startsWith('B') ? 'bg-blue-100 text-blue-800 border-blue-300' : g.startsWith('C') ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-red-100 text-red-800 border-red-300';
+              return DS(
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Waves className="h-5 w-5 text-blue-600" />
+                      Watershed Scorecards
+                    </CardTitle>
+                    <CardDescription>Per-watershed health grades and trend indicators</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <input
+                          type="text"
+                          placeholder={`Search ${stateName} watersheds by name or HUC code...`}
+                          className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400"
+                          onClick={() => setComingSoonId(comingSoonId === 'ws-search' ? null : 'ws-search')}
+                          readOnly
+                        />
+                      </div>
+                      {comingSoonId === 'ws-search' && (
+                        <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-3">
+                          <p className="text-xs text-slate-700">Search by watershed name or HUC-8/HUC-12 code to view health scorecard, impairment breakdown, and restoration progress.</p>
+                          <p className="text-[10px] text-blue-600 mt-2 font-medium">Watershed search — Coming Soon</p>
+                        </div>
+                      )}
+                      <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Top Watersheds by Need</div>
+                      <div className="space-y-1.5">
+                        {defaultWatersheds.map(w => (
+                          <button key={w.id} onClick={() => setComingSoonId(comingSoonId === w.id ? null : w.id)} className="w-full flex items-center gap-3 rounded-lg border border-slate-200 p-3 hover:bg-slate-50 transition-all cursor-pointer text-left">
+                            <span className={`inline-flex items-center justify-center w-8 h-8 rounded-lg border text-sm font-bold ${gradeColor(w.grade)}`}>{w.grade}</span>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-xs font-semibold text-slate-800 truncate">{w.name}</div>
+                              <div className="text-[10px] text-slate-400">HUC-8: {w.huc} · {w.impaired}/{w.total} impaired ({w.pct}%)</div>
+                            </div>
+                            <span className={`text-sm font-bold ${trendColor(w.trend)}`}>{trendIcon(w.trend)}</span>
+                          </button>
+                        ))}
+                      </div>
+                      {defaultWatersheds.some(w => comingSoonId === w.id) && (() => {
+                        const w = defaultWatersheds.find(w => comingSoonId === w.id)!;
+                        return (
+                          <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-3">
+                            <p className="text-xs text-slate-700"><strong>{w.name}</strong> — Grade {w.grade}, {w.trend}. {w.impaired} of {w.total} waterbodies impaired. View full scorecard with cause breakdown, TMDL coverage, and restoration timeline.</p>
+                            <p className="text-[10px] text-blue-600 mt-2 font-medium">Watershed scorecard — Coming Soon</p>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                    <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ATTAINS, state monitoring database, NHDPlus</p>
+                  </CardContent>
+                </Card>
+              );
+            }
 
             case 'sc-peer': return DS(
               <Card>
@@ -4848,25 +5150,54 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </Card>
             );
 
-            case 'rpt-adhoc': return DS(
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-slate-600" />
-                    Ad-Hoc Reports
-                  </CardTitle>
-                  <CardDescription>Custom report builder for legislative requests and stakeholder inquiries</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8 text-slate-400">
-                    <FileText className="h-10 w-10 mx-auto mb-3 text-slate-300" />
-                    <p className="text-sm font-medium">Build custom reports from available data</p>
-                    <p className="text-xs mt-1">Combine assessment, compliance, monitoring, and enforcement data into formatted reports</p>
-                  </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: All integrated state and federal data sources</p>
-                </CardContent>
-              </Card>
-            );
+            case 'rpt-adhoc': {
+              const reportTemplates = [
+                { id: 'rpt-leg', icon: '🏛️', name: 'Legislative Briefing', desc: 'One-page water quality summary for elected officials — key metrics, trends, and investment needs', sections: ['Assessment Summary', 'Impairment Trends', 'Budget Impact'] },
+                { id: 'rpt-stakeholder', icon: '👥', name: 'Stakeholder Update', desc: 'Public-facing watershed status report with plain-language findings and restoration progress', sections: ['Watershed Health', 'Active Projects', 'Next Steps'] },
+                { id: 'rpt-compliance', icon: '📋', name: 'Compliance Summary', desc: 'NPDES permit compliance rates, enforcement actions, and significant non-compliance breakdown', sections: ['Permit Status', 'SNC Facilities', 'Enforcement Timeline'] },
+                { id: 'rpt-assessment', icon: '📊', name: 'Assessment Cycle Report', desc: 'Integrated Report submission summary — new listings, delistings, and category changes', sections: ['303(d) Changes', 'Cause Analysis', 'TMDL Queue'] },
+                { id: 'rpt-monitoring', icon: '📡', name: 'Monitoring Network Review', desc: 'Station coverage, parameter gaps, and recommended network expansions', sections: ['Station Map', 'Gap Analysis', 'Recommendations'] },
+                { id: 'rpt-custom', icon: '🔧', name: 'Custom Report', desc: 'Build from scratch — select data sources, parameters, date ranges, and output format', sections: ['Data Selection', 'Filters', 'Format'] },
+              ];
+              return DS(
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-slate-600" />
+                      Report Builder
+                    </CardTitle>
+                    <CardDescription>Choose a template or build a custom report from available data</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                      {reportTemplates.map(t => (
+                        <div key={t.id}>
+                          <button onClick={() => setComingSoonId(comingSoonId === t.id ? null : t.id)} className="w-full flex items-start gap-3 p-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all text-left cursor-pointer">
+                            <span className="text-lg flex-shrink-0">{t.icon}</span>
+                            <div className="min-w-0">
+                              <div className="text-xs font-semibold text-slate-800">{t.name}</div>
+                              <div className="text-[10px] text-slate-500 leading-tight mt-0.5">{t.desc}</div>
+                              <div className="flex flex-wrap gap-1 mt-1.5">
+                                {t.sections.map(s => (
+                                  <span key={s} className="px-1.5 py-0.5 rounded text-[9px] bg-slate-100 text-slate-500 border border-slate-200">{s}</span>
+                                ))}
+                              </div>
+                            </div>
+                          </button>
+                          {comingSoonId === t.id && (
+                            <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
+                              <p className="text-xs text-slate-700">Generate a <strong>{t.name}</strong> report for {stateName}. Sections: {t.sections.join(', ')}. Output as PDF or interactive dashboard view.</p>
+                              <p className="text-[10px] text-blue-600 mt-2 font-medium">Report builder — Coming Soon</p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-slate-400 mt-4 italic">Data source: All integrated state and federal data sources</p>
+                  </CardContent>
+                </Card>
+              );
+            }
 
             // ── Permits sections ───────────────────────────────────────────
             case 'perm-status': return DS(
@@ -4892,7 +5223,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State permit tracking system, EPA ICIS-NPDES</p>
+                  <div className="flex items-start gap-1.5 mt-4 text-xs text-slate-400 italic">
+                    <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                    <span>Permit operations metrics (applications, processing) — counts differ from Permit Inventory (individual + general universe) and DMR counts (monthly submissions). Source: State permit tracking system, EPA ICIS-NPDES</span>
+                  </div>
                 </CardContent>
               </Card>
             );
@@ -4920,7 +5254,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ICIS-NPDES, state permit database</p>
+                  <div className="flex items-start gap-1.5 mt-4 text-xs text-slate-400 italic">
+                    <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                    <span>Total = 374 unique NPDES permits (individual + general + extended + expired). Differs from DMR count (342 monthly submission slots) and General Permits card (1,703 registrations under general permits). Source: EPA ICIS-NPDES, state permit database</span>
+                  </div>
                 </CardContent>
               </Card>
             );
@@ -4948,7 +5285,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State permit development workflow system</p>
+                  <div className="flex items-start gap-1.5 mt-4 text-xs text-slate-400 italic">
+                    <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                    <span>Pipeline counts = permits currently in development stages. These are a subset of the Permit Inventory totals. Source: State permit development workflow system</span>
+                  </div>
                 </CardContent>
               </Card>
             );
@@ -4976,7 +5316,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ICIS-NPDES DMR data, NetDMR submissions</p>
+                  <div className="flex items-start gap-1.5 mt-4 text-xs text-slate-400 italic">
+                    <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                    <span>342 = monthly DMR submission slots (one per parameter per permit). Not a permit count — one permit may have multiple DMR parameters. Source: EPA ICIS-NPDES DMR data, NetDMR submissions</span>
+                  </div>
                 </CardContent>
               </Card>
             );
@@ -5004,7 +5347,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State inspection tracking system, EPA ICIS inspections</p>
+                  <div className="flex items-start gap-1.5 mt-4 text-xs text-slate-400 italic">
+                    <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                    <span>Inspections = compliance evaluation visits. Coverage rate = inspected facilities / total permitted facilities. Source: State inspection tracking system, EPA ICIS inspections</span>
+                  </div>
                 </CardContent>
               </Card>
             );
@@ -5032,7 +5378,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State enforcement tracking, EPA ICIS formal actions</p>
+                  <div className="flex items-start gap-1.5 mt-4 text-xs text-slate-400 italic">
+                    <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                    <span>Enforcement actions (not permits). One facility may have multiple actions. The ICIS Compliance panel shows all enforcement records from EPA ECHO. Source: State enforcement tracking, EPA ICIS formal actions</span>
+                  </div>
                 </CardContent>
               </Card>
             );
@@ -5060,7 +5409,248 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State general permit registration system, EPA ICIS</p>
+                  <div className="flex items-start gap-1.5 mt-4 text-xs text-slate-400 italic">
+                    <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                    <span>General permit registrations (NOIs filed). Each registration = one discharger covered under a general permit. Distinct from the 194 general permit authorizations in Permit Inventory. Source: State general permit registration system, EPA ICIS</span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'perm-snc': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ShieldAlert className="h-5 w-5 text-red-600" />
+                    Significant Non-Compliance (SNC) Detail
+                  </CardTitle>
+                  <CardDescription>Facilities currently in significant non-compliance with NPDES permits</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto rounded-lg border border-slate-200">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                          <th className="px-2.5 py-2">Facility</th>
+                          <th className="px-2.5 py-2">Permit ID</th>
+                          <th className="px-2.5 py-2">Violation Type</th>
+                          <th className="px-2.5 py-2">Duration</th>
+                          <th className="px-2.5 py-2">RTC Date</th>
+                          <th className="px-2.5 py-2">Enforcement</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {[
+                          { fac: 'Metro WWTP', permit: 'MD0021601', type: 'Effluent', dur: '3 qtrs', rtc: '2026-06-30', enf: 'Consent Order' },
+                          { fac: 'Industrial Park STP', permit: 'MD0052124', type: 'Schedule', dur: '2 qtrs', rtc: '2026-09-15', enf: 'Formal NOV' },
+                          { fac: 'County WRF', permit: 'MD0068713', type: 'Effluent', dur: '4 qtrs', rtc: '2026-03-31', enf: 'Penalty Action' },
+                          { fac: 'Harbor Treatment', permit: 'MD0021237', type: 'Reporting', dur: '1 qtr', rtc: '2026-04-30', enf: 'Informal' },
+                        ].map(r => (
+                          <tr key={r.permit} className="hover:bg-slate-50">
+                            <td className="px-2.5 py-2 text-slate-700 font-medium">{r.fac}</td>
+                            <td className="px-2.5 py-2 font-mono text-slate-600">{r.permit}</td>
+                            <td className="px-2.5 py-2">
+                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                                r.type === 'Effluent' ? 'bg-red-100 text-red-700' :
+                                r.type === 'Schedule' ? 'bg-amber-100 text-amber-700' :
+                                'bg-slate-100 text-slate-600'
+                              }`}>{r.type}</span>
+                            </td>
+                            <td className="px-2.5 py-2 text-slate-600">{r.dur}</td>
+                            <td className="px-2.5 py-2 text-slate-600 whitespace-nowrap">{r.rtc}</td>
+                            <td className="px-2.5 py-2 text-slate-600">{r.enf}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="flex items-start gap-1.5 mt-4 text-xs text-slate-400 italic">
+                    <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                    <span>SNC = facilities in significant non-compliance for 2+ consecutive quarters. RTC = planned return-to-compliance date. Source: EPA ECHO QNCR, state enforcement tracking</span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'perm-waterbody': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Waves className="h-5 w-5 text-blue-600" />
+                    Permit-to-Waterbody Impact Cross-Reference
+                  </CardTitle>
+                  <CardDescription>NPDES permits linked to impaired receiving waters (ATTAINS 303(d) list)</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto rounded-lg border border-slate-200">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                          <th className="px-2.5 py-2">Permit</th>
+                          <th className="px-2.5 py-2">Facility</th>
+                          <th className="px-2.5 py-2">Receiving Water</th>
+                          <th className="px-2.5 py-2">Impairment</th>
+                          <th className="px-2.5 py-2">TMDL</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {[
+                          { permit: 'MD0021601', fac: 'Metro WWTP', water: 'Back River', impair: 'Nitrogen, Phosphorus', tmdl: 'Chesapeake Bay' },
+                          { permit: 'MD0052124', fac: 'Industrial Park STP', water: 'Patapsco River', impair: 'Sediment, Bacteria', tmdl: 'Pending' },
+                          { permit: 'MD0068713', fac: 'County WRF', water: 'Bush River', impair: 'Dissolved Oxygen', tmdl: 'Chesapeake Bay' },
+                          { permit: 'MD0067814', fac: 'Coastal Discharge', water: 'Chesapeake Bay mainstem', impair: 'Chlorophyll-a', tmdl: 'Chesapeake Bay' },
+                        ].map(r => (
+                          <tr key={r.permit} className="hover:bg-slate-50">
+                            <td className="px-2.5 py-2 font-mono text-slate-600">{r.permit}</td>
+                            <td className="px-2.5 py-2 text-slate-700">{r.fac}</td>
+                            <td className="px-2.5 py-2 text-blue-700 font-medium">{r.water}</td>
+                            <td className="px-2.5 py-2 text-slate-600">{r.impair}</td>
+                            <td className="px-2.5 py-2">
+                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                                r.tmdl === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
+                              }`}>{r.tmdl}</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="flex items-start gap-1.5 mt-4 text-xs text-slate-400 italic">
+                    <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                    <span>Cross-references NPDES discharge permits with EPA ATTAINS impaired waters list. Facilities discharging to 303(d)-listed waters may face stricter limits. Source: EPA ICIS-NPDES, EPA ATTAINS</span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'perm-expiring': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Clock className="h-5 w-5 text-amber-600" />
+                    Expiring Permits Timeline
+                  </CardTitle>
+                  <CardDescription>Permits approaching expiration with renewal status tracking</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-3 gap-3 mb-4">
+                    {[
+                      { label: 'Within 30 days', value: '2', bg: 'bg-red-50 border-red-200', textColor: 'text-red-700' },
+                      { label: 'Within 60 days', value: '5', bg: 'bg-amber-50 border-amber-200', textColor: 'text-amber-700' },
+                      { label: 'Within 90 days', value: '8', bg: 'bg-blue-50 border-blue-200', textColor: 'text-blue-700' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg} text-center`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className={`text-2xl font-bold mt-1 ${k.textColor}`}>{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="overflow-x-auto rounded-lg border border-slate-200">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                          <th className="px-2.5 py-2">Permit</th>
+                          <th className="px-2.5 py-2">Facility</th>
+                          <th className="px-2.5 py-2">Expires</th>
+                          <th className="px-2.5 py-2">Renewal Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {[
+                          { permit: 'MD0021601', fac: 'Metro WWTP', exp: '2026-03-15', status: 'Application Filed' },
+                          { permit: 'MD0052124', fac: 'Industrial Park STP', exp: '2026-03-28', status: 'Under Review' },
+                          { permit: 'MD0035432', fac: 'Regional Authority', exp: '2026-04-12', status: 'Not Filed' },
+                          { permit: 'MD0041897', fac: 'Riverside Plant', exp: '2026-04-30', status: 'Draft Pending' },
+                          { permit: 'MD0068713', fac: 'County WRF', exp: '2026-05-15', status: 'Application Filed' },
+                        ].map(r => (
+                          <tr key={r.permit} className="hover:bg-slate-50">
+                            <td className="px-2.5 py-2 font-mono text-slate-600">{r.permit}</td>
+                            <td className="px-2.5 py-2 text-slate-700">{r.fac}</td>
+                            <td className="px-2.5 py-2 text-slate-600 whitespace-nowrap">{r.exp}</td>
+                            <td className="px-2.5 py-2">
+                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                                r.status === 'Not Filed' ? 'bg-red-100 text-red-700' :
+                                r.status === 'Under Review' ? 'bg-amber-100 text-amber-700' :
+                                r.status === 'Application Filed' ? 'bg-green-100 text-green-700' :
+                                'bg-blue-100 text-blue-700'
+                              }`}>{r.status}</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="flex items-start gap-1.5 mt-4 text-xs text-slate-400 italic">
+                    <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                    <span>Permits expiring within 90 days. Renewal applications due 180 days before expiration per CWA Section 402. &quot;Not Filed&quot; flags facilities at risk of coverage gaps. Source: EPA ICIS-NPDES permit data</span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'perm-dmr-trends': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-indigo-600" />
+                    DMR Trend Analysis
+                  </CardTitle>
+                  <CardDescription>12-month discharge monitoring trends, repeat violators, and parameter patterns</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                    {[
+                      { label: 'Exceedance Rate (12mo)', value: '6.2%', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Trend', value: 'Improving', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Repeat Violators', value: '4', bg: 'bg-red-50 border-red-200' },
+                      { label: 'Top Parameter', value: 'TSS', bg: 'bg-blue-50 border-blue-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="overflow-x-auto rounded-lg border border-slate-200">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                          <th className="px-2.5 py-2">Parameter</th>
+                          <th className="px-2.5 py-2 text-right">Exceedances</th>
+                          <th className="px-2.5 py-2 text-right">Total DMRs</th>
+                          <th className="px-2.5 py-2 text-right">Rate</th>
+                          <th className="px-2.5 py-2">Trend</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {[
+                          { param: 'Total Suspended Solids', exceed: 12, total: 186, trend: 'Stable' },
+                          { param: 'Total Nitrogen', exceed: 8, total: 142, trend: 'Worsening' },
+                          { param: 'Total Phosphorus', exceed: 6, total: 142, trend: 'Improving' },
+                          { param: 'BOD5', exceed: 4, total: 186, trend: 'Improving' },
+                          { param: 'E. coli', exceed: 3, total: 98, trend: 'Stable' },
+                        ].map(r => (
+                          <tr key={r.param} className="hover:bg-slate-50">
+                            <td className="px-2.5 py-2 text-slate-700 font-medium">{r.param}</td>
+                            <td className="px-2.5 py-2 text-right font-semibold text-red-700">{r.exceed}</td>
+                            <td className="px-2.5 py-2 text-right text-slate-500">{r.total}</td>
+                            <td className="px-2.5 py-2 text-right font-semibold text-slate-700">{(r.exceed / r.total * 100).toFixed(1)}%</td>
+                            <td className="px-2.5 py-2">
+                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                                r.trend === 'Improving' ? 'bg-green-100 text-green-700' :
+                                r.trend === 'Worsening' ? 'bg-red-100 text-red-700' :
+                                'bg-slate-100 text-slate-600'
+                              }`}>{r.trend}</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="flex items-start gap-1.5 mt-4 text-xs text-slate-400 italic">
+                    <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                    <span>12-month rolling DMR exceedance analysis. Repeat violators = facilities with 3+ exceedances on the same parameter. Trend based on 6-month slope. Source: EPA ICIS-NPDES DMR data</span>
+                  </div>
                 </CardContent>
               </Card>
             );
@@ -5212,7 +5802,342 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State financial system, EPA grant performance data, USAspending.gov</p>
+                  <div className="flex items-start gap-1.5 mt-4 text-xs text-slate-400 italic">
+                    <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                    <span>Source: State financial system, EPA grant performance data, USAspending.gov</span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'fund-bil': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Landmark className="h-5 w-5 text-blue-700" />
+                    BIL/IIJA Funding Tracker
+                  </CardTitle>
+                  <CardDescription>Bipartisan Infrastructure Law water funding allocation and drawdown status</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                    {[
+                      { label: 'Total BIL Allocation', value: '$126M', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Drawn Down', value: '$48M', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Committed', value: '$62M', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Remaining', value: '$16M', bg: 'bg-slate-50 border-slate-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="overflow-x-auto rounded-lg border border-slate-200">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                          <th className="px-2.5 py-2">Program</th>
+                          <th className="px-2.5 py-2 text-right">Allocated</th>
+                          <th className="px-2.5 py-2 text-right">Drawn</th>
+                          <th className="px-2.5 py-2 text-right">Rate</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {[
+                          { prog: 'DWSRF Supplemental', alloc: '$42M', drawn: '$18M', rate: '43%' },
+                          { prog: 'CWSRF Supplemental', alloc: '$38M', drawn: '$14M', rate: '37%' },
+                          { prog: 'Lead Service Lines', alloc: '$28M', drawn: '$12M', rate: '43%' },
+                          { prog: 'Emerging Contaminants', alloc: '$18M', drawn: '$4M', rate: '22%' },
+                        ].map(r => (
+                          <tr key={r.prog} className="hover:bg-slate-50">
+                            <td className="px-2.5 py-2 text-slate-700 font-medium">{r.prog}</td>
+                            <td className="px-2.5 py-2 text-right text-slate-600">{r.alloc}</td>
+                            <td className="px-2.5 py-2 text-right font-semibold text-green-700">{r.drawn}</td>
+                            <td className="px-2.5 py-2 text-right text-slate-600">{r.rate}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="flex items-start gap-1.5 mt-4 text-xs text-slate-400 italic">
+                    <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                    <span>BIL/IIJA = Bipartisan Infrastructure Law (Infrastructure Investment and Jobs Act). Drawdown rate = funds disbursed / allocated. Source: EPA DWSRF/CWSRF allotments, state SRF program data</span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'fund-j40': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Scale className="h-5 w-5 text-emerald-600" />
+                    Justice40 Tracker
+                  </CardTitle>
+                  <CardDescription>Investment in disadvantaged communities toward the 40% threshold</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                    {[
+                      { label: 'J40 Target (40%)', value: '$50.4M', bg: 'bg-emerald-50 border-emerald-200' },
+                      { label: 'Current Investment', value: '$38.2M', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Achievement', value: '76%', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'DAC Communities Served', value: '24', bg: 'bg-slate-50 border-slate-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Progress bar */}
+                  <div className="mt-2">
+                    <div className="flex justify-between text-[10px] text-slate-500 mb-1">
+                      <span>Progress toward 40% DAC investment</span>
+                      <span>76% of target</span>
+                    </div>
+                    <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-emerald-500 rounded-full" style={{ width: '76%' }} />
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-1.5 mt-4 text-xs text-slate-400 italic">
+                    <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                    <span>Justice40 requires 40% of climate/clean energy investment benefits flow to disadvantaged communities (DACs). DAC designation per CEJST. Source: EPA EJScreen, CEJST, state program data</span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'fund-srf-pipeline': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <HardHat className="h-5 w-5 text-orange-600" />
+                    SRF Project Pipeline
+                  </CardTitle>
+                  <CardDescription>State Revolving Fund intended use plan queue with priority scoring</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto rounded-lg border border-slate-200">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                          <th className="px-2.5 py-2">Project</th>
+                          <th className="px-2.5 py-2">Applicant</th>
+                          <th className="px-2.5 py-2 text-right">Amount</th>
+                          <th className="px-2.5 py-2 text-right">Priority</th>
+                          <th className="px-2.5 py-2">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {[
+                          { proj: 'WWTP Nutrient Upgrade', app: 'City of Frederick', amt: '$18.4M', pri: 92, status: 'Approved' },
+                          { proj: 'Lead Line Replacement', app: 'Baltimore City', amt: '$24.6M', pri: 88, status: 'Under Review' },
+                          { proj: 'CSO Long-term Control', app: 'Cumberland', amt: '$8.2M', pri: 85, status: 'Approved' },
+                          { proj: 'Stormwater Retrofit', app: 'Anne Arundel Co.', amt: '$3.1M', pri: 78, status: 'Pending' },
+                          { proj: 'Water Treatment Plant', app: 'Hagerstown', amt: '$12.8M', pri: 74, status: 'Pending' },
+                        ].map(r => (
+                          <tr key={r.proj} className="hover:bg-slate-50">
+                            <td className="px-2.5 py-2 text-slate-700 font-medium">{r.proj}</td>
+                            <td className="px-2.5 py-2 text-slate-600">{r.app}</td>
+                            <td className="px-2.5 py-2 text-right font-semibold text-slate-700">{r.amt}</td>
+                            <td className="px-2.5 py-2 text-right">
+                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                                r.pri >= 85 ? 'bg-green-100 text-green-700' :
+                                r.pri >= 75 ? 'bg-blue-100 text-blue-700' :
+                                'bg-slate-100 text-slate-600'
+                              }`}>{r.pri}</span>
+                            </td>
+                            <td className="px-2.5 py-2">
+                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                                r.status === 'Approved' ? 'bg-green-100 text-green-700' :
+                                r.status === 'Under Review' ? 'bg-amber-100 text-amber-700' :
+                                'bg-slate-100 text-slate-600'
+                              }`}>{r.status}</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="flex items-start gap-1.5 mt-4 text-xs text-slate-400 italic">
+                    <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                    <span>Priority scores from state IUP (Intended Use Plan). Higher scores funded first. Loan terms vary by project type and DAC status. Source: State CWSRF/DWSRF IUP, EPA SRF data</span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'fund-grant-compliance': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ClipboardList className="h-5 w-5 text-teal-600" />
+                    Grant Compliance & Reporting
+                  </CardTitle>
+                  <CardDescription>Per-grant deliverables, due dates, and submission tracking</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto rounded-lg border border-slate-200">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                          <th className="px-2.5 py-2">Grant</th>
+                          <th className="px-2.5 py-2">Deliverable</th>
+                          <th className="px-2.5 py-2">Due Date</th>
+                          <th className="px-2.5 py-2">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {[
+                          { grant: 'CWA 106', deliv: 'Annual Performance Report', due: '2026-03-31', status: 'Due Soon' },
+                          { grant: 'CWA 319', deliv: 'Semi-Annual Progress Report', due: '2026-04-15', status: 'Not Started' },
+                          { grant: 'SDWA PWSS', deliv: 'Quarterly Financial Report', due: '2026-03-15', status: 'Submitted' },
+                          { grant: 'CWA 104(b)(3)', deliv: 'Final Project Report', due: '2026-06-30', status: 'In Progress' },
+                          { grant: 'BIL LSLR', deliv: 'Inventory Certification', due: '2026-04-01', status: 'Due Soon' },
+                          { grant: 'BIL EC', deliv: 'PFAS Sampling Plan Update', due: '2026-05-15', status: 'Not Started' },
+                        ].map((r, i) => (
+                          <tr key={`${r.grant}-${i}`} className="hover:bg-slate-50">
+                            <td className="px-2.5 py-2 font-medium text-slate-700">{r.grant}</td>
+                            <td className="px-2.5 py-2 text-slate-600">{r.deliv}</td>
+                            <td className="px-2.5 py-2 text-slate-600 whitespace-nowrap">{r.due}</td>
+                            <td className="px-2.5 py-2">
+                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                                r.status === 'Submitted' ? 'bg-green-100 text-green-700' :
+                                r.status === 'Due Soon' ? 'bg-red-100 text-red-700' :
+                                r.status === 'In Progress' ? 'bg-blue-100 text-blue-700' :
+                                'bg-slate-100 text-slate-600'
+                              }`}>{r.status}</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="flex items-start gap-1.5 mt-4 text-xs text-slate-400 italic">
+                    <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                    <span>Grant reporting requirements per award terms. &quot;Due Soon&quot; = within 30 days. Late submissions may trigger grant conditions. Source: EPA GICS, state grant management system</span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'fund-trend': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-indigo-600" />
+                    Federal Funding Trend
+                  </CardTitle>
+                  <CardDescription>5-year historical federal water funding by program with growth/decline indicators</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto rounded-lg border border-slate-200">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                          <th className="px-2.5 py-2">Program</th>
+                          <th className="px-2.5 py-2 text-right">FY22</th>
+                          <th className="px-2.5 py-2 text-right">FY23</th>
+                          <th className="px-2.5 py-2 text-right">FY24</th>
+                          <th className="px-2.5 py-2 text-right">FY25</th>
+                          <th className="px-2.5 py-2 text-right">FY26</th>
+                          <th className="px-2.5 py-2">Trend</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {[
+                          { prog: 'CWSRF (base)', fy: ['$38M', '$40M', '$42M', '$42M', '$44M'], trend: 'Growing' },
+                          { prog: 'DWSRF (base)', fy: ['$24M', '$26M', '$28M', '$28M', '$30M'], trend: 'Growing' },
+                          { prog: 'CWA 319 (NPS)', fy: ['$2.6M', '$2.8M', '$2.8M', '$2.7M', '$2.8M'], trend: 'Stable' },
+                          { prog: 'CWA 106 (NPDES)', fy: ['$4.0M', '$4.2M', '$4.2M', '$4.1M', '$4.2M'], trend: 'Stable' },
+                          { prog: 'BIL Supplement', fy: ['—', '$12M', '$16M', '$18M', '$18M'], trend: 'Growing' },
+                        ].map(r => (
+                          <tr key={r.prog} className="hover:bg-slate-50">
+                            <td className="px-2.5 py-2 text-slate-700 font-medium">{r.prog}</td>
+                            {r.fy.map((v, i) => (
+                              <td key={i} className="px-2.5 py-2 text-right text-slate-600">{v}</td>
+                            ))}
+                            <td className="px-2.5 py-2">
+                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                                r.trend === 'Growing' ? 'bg-green-100 text-green-700' :
+                                r.trend === 'Declining' ? 'bg-red-100 text-red-700' :
+                                'bg-slate-100 text-slate-600'
+                              }`}>{r.trend}</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="flex items-start gap-1.5 mt-4 text-xs text-slate-400 italic">
+                    <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                    <span>Federal water program funding by fiscal year. BIL supplement began FY23. Trend based on 3-year slope. Source: EPA budget justifications, congressional appropriations, USAspending.gov</span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'fund-match': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Banknote className="h-5 w-5 text-amber-600" />
+                    Match & Cost-Share Tracker
+                  </CardTitle>
+                  <CardDescription>State match commitments, funding sources, and unfunded gap analysis</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                    {[
+                      { label: 'Total Match Required', value: '$8.4M', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Committed', value: '$6.8M', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Unfunded Gap', value: '$1.6M', bg: 'bg-red-50 border-red-200' },
+                      { label: 'Match Rate', value: '81%', bg: 'bg-blue-50 border-blue-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="overflow-x-auto rounded-lg border border-slate-200">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                          <th className="px-2.5 py-2">Grant</th>
+                          <th className="px-2.5 py-2 text-right">Required</th>
+                          <th className="px-2.5 py-2 text-right">Committed</th>
+                          <th className="px-2.5 py-2">Source</th>
+                          <th className="px-2.5 py-2 text-right">Gap</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {[
+                          { grant: 'CWA 106', req: '$1.4M', comm: '$1.4M', src: 'State General Fund', gap: '$0' },
+                          { grant: 'CWA 319', req: '$1.1M', comm: '$0.9M', src: 'State NPS Fund', gap: '$200K' },
+                          { grant: 'SDWA PWSS', req: '$1.2M', comm: '$1.2M', src: 'State DW Program', gap: '$0' },
+                          { grant: 'CWSRF (20%)', req: '$3.2M', comm: '$2.4M', src: 'State Bond', gap: '$800K' },
+                          { grant: 'BIL LSLR (10%)', req: '$1.5M', comm: '$0.9M', src: 'Local Utilities', gap: '$600K' },
+                        ].map(r => (
+                          <tr key={r.grant} className="hover:bg-slate-50">
+                            <td className="px-2.5 py-2 font-medium text-slate-700">{r.grant}</td>
+                            <td className="px-2.5 py-2 text-right text-slate-600">{r.req}</td>
+                            <td className="px-2.5 py-2 text-right font-semibold text-green-700">{r.comm}</td>
+                            <td className="px-2.5 py-2 text-slate-600">{r.src}</td>
+                            <td className="px-2.5 py-2 text-right font-semibold">
+                              <span className={r.gap === '$0' ? 'text-green-700' : 'text-red-700'}>{r.gap}</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="flex items-start gap-1.5 mt-4 text-xs text-slate-400 italic">
+                    <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                    <span>State match = non-federal cost-share required by grant terms. CWSRF requires 20% state match; BIL programs require 10%. Unfunded gaps must be resolved before drawdown. Source: State budget, EPA grant terms</span>
+                  </div>
                 </CardContent>
               </Card>
             );

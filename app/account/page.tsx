@@ -54,11 +54,23 @@ export default function AccountPage() {
   // Dark mode
   const [isDark, setIsDark] = useState(false);
 
+  // Accent color
+  const ACCENT_PRESETS = [
+    { id: 'teal', label: 'Teal', swatch: '#1A9A8E' },
+    { id: 'sapphire', label: 'Sapphire', swatch: '#2563EB' },
+    { id: 'indigo', label: 'Indigo', swatch: '#4F46E5' },
+    { id: 'emerald', label: 'Emerald', swatch: '#059669' },
+    { id: 'copper', label: 'Copper', swatch: '#B45309' },
+  ];
+  const [accentId, setAccentId] = useState('teal');
+
   useEffect(() => {
     const stored = localStorage.getItem('pin-dark-mode');
     const prefersDark = stored === 'true';
     setIsDark(prefersDark);
     document.documentElement.classList.toggle('dark', prefersDark);
+    const storedAccent = localStorage.getItem('pin-accent') || 'teal';
+    setAccentId(storedAccent);
   }, []);
 
   const toggleDarkMode = () => {
@@ -66,6 +78,16 @@ export default function AccountPage() {
     setIsDark(next);
     localStorage.setItem('pin-dark-mode', String(next));
     document.documentElement.classList.toggle('dark', next);
+  };
+
+  const applyAccent = (id: string) => {
+    setAccentId(id);
+    localStorage.setItem('pin-accent', id);
+    if (id === 'teal') {
+      document.documentElement.removeAttribute('data-accent');
+    } else {
+      document.documentElement.setAttribute('data-accent', id);
+    }
   };
 
   // Change password state
@@ -215,6 +237,29 @@ export default function AccountPage() {
                 {isDark ? <Moon className="h-3.5 w-3.5 text-cyan-600" /> : <Sun className="h-3.5 w-3.5 text-amber-500" />}
               </div>
             </button>
+          </div>
+
+          <div className="mt-5 pt-5 border-t border-slate-200 dark:border-white/10">
+            <div className="text-sm font-medium text-slate-800 dark:text-white/90 mb-1">Accent Color</div>
+            <div className="text-xs text-slate-500 dark:text-white/40 mb-3">Choose a primary accent color for the interface</div>
+            <div className="flex gap-3">
+              {ACCENT_PRESETS.map(p => (
+                <button
+                  key={p.id}
+                  onClick={() => applyAccent(p.id)}
+                  className="flex flex-col items-center gap-1.5 group"
+                  title={p.label}
+                >
+                  <div
+                    className={`w-8 h-8 rounded-full transition-all ${accentId === p.id ? 'ring-2 ring-offset-2 dark:ring-offset-slate-900' : 'hover:scale-110'}`}
+                    style={{ background: p.swatch, ['--tw-ring-color' as string]: p.swatch }}
+                  />
+                  <span className={`text-[10px] font-medium ${accentId === p.id ? 'text-slate-800 dark:text-white/90' : 'text-slate-400 dark:text-white/40'}`}>
+                    {p.label}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

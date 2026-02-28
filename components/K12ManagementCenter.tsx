@@ -8,7 +8,7 @@ import { getStatesGeoJSON, geoToAbbr, STATE_GEO_LEAFLET, FIPS_TO_ABBR as _FIPS, 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Info, LogOut, BookOpen } from 'lucide-react';
+import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Info, LogOut, BookOpen, Gauge } from 'lucide-react';
 import { BrandedPrintBtn } from '@/lib/brandedPrint';
 import { useRouter } from 'next/navigation';
 import { getRegionById } from '@/lib/regionsConfig';
@@ -40,6 +40,8 @@ import { StudentMonitoringPanel } from '@/components/StudentMonitoringPanel';
 import { StudentUploadPanel } from '@/components/StudentUploadPanel';
 import LocationReportCard from '@/components/LocationReportCard';
 import { getEpaRegionForState } from '@/lib/epa-regions';
+import { WARRZones } from './WARRZones';
+import type { WARRMetric } from './WARRZones';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import dynamic from 'next/dynamic';
@@ -98,7 +100,7 @@ const LENS_CONFIG: Record<ViewLens, {
   sections: Set<string> | null;
 }> = {
   overview:    { label: 'Overview',    description: 'Student water quality dashboard',
-    sections: new Set(['wildlife', 'regprofile', 'map-grid', 'top10', 'goodbye', 'disclaimer']) },
+    sections: new Set(['wildlife', 'regprofile', 'map-grid', 'top10', 'goodbye', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']) },
   briefing:    { label: 'AI Briefing', description: 'AI-generated water quality briefing for students',
     sections: new Set(['insights', 'alertfeed', 'disclaimer']) },
   planner:     { label: 'Resolution Planner', description: 'Student-friendly resolution planning',
@@ -1167,10 +1169,20 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
             {/* No selection state */}
             {!activeDetailId && (
               <Card className="border-2 border-dashed border-slate-300 bg-white/50">
-                <div className="py-12 text-center">
-                  <MapPin className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-                  <div className="text-base font-medium text-slate-500">Select a waterbody to view details</div>
-                  <div className="text-sm text-slate-400 mt-1">Click a marker on the map or a waterbody from the list</div>
+                <div className="p-6">
+                  <div className="relative mb-4">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Search waterbodies to explore..."
+                      className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400"
+                      readOnly
+                    />
+                  </div>
+                  <div className="text-center text-slate-400">
+                    <MapPin className="h-8 w-8 mx-auto mb-2 text-slate-300" />
+                    <p className="text-xs">Or click a marker on the map to view waterbody details</p>
+                  </div>
                 </div>
               </Card>
             )}
@@ -2426,7 +2438,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                 <div className="text-lg font-bold text-sky-900">Real Results from Our First Pilot!</div>
                 <p className="text-sm text-sky-700 mt-1">ALIA cleaned real water in Milton, Florida using nature-inspired technology</p>
               </div>
-              <Image src="/Mascot.png" alt="PEARL Bubble Mascot" width={160} height={160} className="flex-shrink-0" />
+              <Image src="/Mascot.png" alt="PIN Bubble Mascot" width={160} height={160} className="flex-shrink-0" />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="rounded-xl bg-green-50 border border-green-200 p-4 text-center">
@@ -2460,7 +2472,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
         {/* ── WATER QUALITY GAMES ── */}
         <div className="space-y-4">
           <div className="flex items-center gap-3 px-1">
-            <Image src="/Mascot.png" alt="PEARL Mascot" width={90} height={90} />
+            <Image src="/Mascot.png" alt="PIN Mascot" width={90} height={90} />
             <div>
               <h2 className="text-lg font-bold text-slate-800">Water Quality Games</h2>
               <span className="text-xs text-slate-400">Learn by playing — can you save the bay?</span>
@@ -3033,6 +3045,24 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
             case 'student-monitoring-panel': return DS(<StudentMonitoringPanel stateAbbr={stateAbbr} />);
             case 'student-upload-panel': return DS(<StudentUploadPanel stateAbbr={stateAbbr} isTeacher={isTeacher} />);
             case 'drinking-water-safety-panel': return DS(<DrinkingWaterSafetyPanel stateAbbr={stateAbbr} />);
+
+            case 'warr-metrics': {
+              const warrM: WARRMetric[] = [
+                { label: 'Student Engagement', value: '—', icon: BookOpen, iconColor: 'var(--status-healthy)', subtitle: 'Active student projects' },
+                { label: 'Active Projects', value: '—', icon: Gauge, iconColor: 'var(--accent-teal)', subtitle: 'STEM water projects' },
+                { label: 'Field Trips', value: '—', icon: Shield, iconColor: 'var(--status-warning)', subtitle: 'Scheduled field activities' },
+              ];
+              return DS(<WARRZones zone="warr-metrics" role="K12" stateAbbr={stateAbbr} metrics={warrM} events={[]} activeResolutionCount={0} />);
+            }
+            case 'warr-analyze': return DS(
+              <WARRZones zone="warr-analyze" role="K12" stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} />
+            );
+            case 'warr-respond': return DS(
+              <WARRZones zone="warr-respond" role="K12" stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} />
+            );
+            case 'warr-resolve': return DS(
+              <WARRZones zone="warr-resolve" role="K12" stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} />
+            );
 
             case 'location-report': return DS(<LocationReportCard />);
 

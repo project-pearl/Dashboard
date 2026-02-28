@@ -24,7 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import {
   Droplets, BarChart3, Shield, TrendingUp, TrendingDown, AlertTriangle, ChevronDown,
-  Minus, MapPin, Building2, FileText, Award, Globe, Leaf, Users, Target,
+  Gauge, Minus, MapPin, Building2, FileText, Award, Globe, Leaf, Users, Target,
   DollarSign, Eye, Lock, Activity, ArrowRight, ChevronRight, Search, Filter,
   Download, ExternalLink, Star, Zap, Heart, Scale, X, LogOut,
   CheckCircle2, Circle, AlertCircle, Sparkles, ClipboardList, Link2, PenTool, Package
@@ -51,6 +51,8 @@ import { FacilityOperationsPanel } from '@/components/FacilityOperationsPanel';
 import { ESGReportingPanel } from '@/components/ESGReportingPanel';
 import { SupplyChainRiskPanel } from '@/components/SupplyChainRiskPanel';
 import LocationReportCard from '@/components/LocationReportCard';
+import { WARRZones } from './WARRZones';
+import type { WARRMetric } from './WARRZones';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 
@@ -124,7 +126,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   overview: {
     label: 'Executive Overview', description: 'Portfolio-level Sustainability summary for leadership',
     icon: Building2, ...SHOW_ALL,
-    sections: new Set(['summary', 'kpis', 'map-grid', 'insights', 'impact', 'compliance', 'disclaimer']),
+    sections: new Set(['summary', 'kpis', 'map-grid', 'insights', 'impact', 'compliance', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']),
   },
   briefing: {
     label: 'AI Briefing', description: 'AI-generated sustainability intelligence briefing',
@@ -220,7 +222,7 @@ type OverlayId = 'waterrisk' | 'compliance' | 'impact';
 const OVERLAYS: { id: OverlayId; label: string; description: string; icon: any }[] = [
   { id: 'waterrisk', label: 'Water Risk', description: 'Facility water stress exposure from ATTAINS & WRI Aqueduct', icon: Droplets },
   { id: 'compliance', label: 'Compliance Status', description: 'EPA ECHO violations & permit status', icon: Shield },
-  { id: 'impact', label: 'ALIA Impact', description: 'Active treatment performance by facility', icon: Leaf },
+  { id: 'impact', label: 'PIN Impact', description: 'Active treatment performance by facility', icon: Leaf },
 ];
 
 function getMarkerColor(overlay: OverlayId, f: FacilityRow): string {
@@ -304,7 +306,7 @@ const CLOSE_THE_GAP: Record<string, CloseTheGapEntry> = {
   gri303: {
     missingFields: [
       { field: '303-1: Water withdrawal by source', status: 'amber', description: 'Surface water, groundwater, third-party breakdown required' },
-      { field: '303-2: Management of discharge impacts', status: 'green', description: 'BMP verification & TMDL tracking available via ALIA' },
+      { field: '303-2: Management of discharge impacts', status: 'green', description: 'BMP verification & TMDL tracking available via PIN' },
       { field: '303-3: Water withdrawal (water-stressed areas)', status: 'red', description: 'Need facility-level intake volumes + WRI Aqueduct overlay' },
       { field: '303-4: Water discharge by destination', status: 'amber', description: 'Receiving waterbody identified; need volume + quality breakdown' },
       { field: '303-5: Water consumption', status: 'red', description: 'Consumption = withdrawal minus discharge; need intake metering data' },
@@ -314,7 +316,7 @@ const CLOSE_THE_GAP: Record<string, CloseTheGapEntry> = {
       { field: '303-2: Management of discharge impacts', pearlParameter: 'BMP verification records, TMDL progress tracking, nutrient load reductions (TN/TP/TSS)', availability: 'available' },
       { field: '303-3: Water withdrawal (water-stressed areas)', pearlParameter: 'WRI Aqueduct water-stress scores overlaid on facility locations', availability: 'partial' },
       { field: '303-4: Water discharge by destination', pearlParameter: 'Receiving waterbody ID, NPDES discharge monitoring reports (DMRs)', availability: 'available' },
-      { field: '303-5: Water consumption', pearlParameter: 'Calculated from ALIA intake/discharge differential per facility', availability: 'planned' },
+      { field: '303-5: Water consumption', pearlParameter: 'Calculated from PIN intake/discharge differential per facility', availability: 'planned' },
     ],
     narrativeTemplate: 'During the reporting period, [Company] withdrew approximately [X] megaliters of water across [N] facilities monitored through the PEARL platform. Surface water accounted for [Y]% of total withdrawal, primarily from Chesapeake Bay watershed tributaries.\n\nDischarge impacts are managed through verified BMPs achieving [TN]% nitrogen reduction and [TP]% phosphorus reduction against TMDL targets. All facilities discharge to waterbodies tracked in EPA ATTAINS, with [Z]% meeting designated use standards.\n\nFacilities in water-stressed basins (WRI Aqueduct score >=3) represent [W]% of total withdrawal. Water consumption totaled [C] megaliters, calculated as the differential between metered withdrawal and monitored discharge volumes.',
     evidenceExhibits: [
@@ -337,7 +339,7 @@ const CLOSE_THE_GAP: Record<string, CloseTheGapEntry> = {
       { field: '13.4: Natural ecosystem conversion', pearlParameter: 'NLCD land cover change detection (planned integration)', availability: 'planned' },
       { field: '13.10: Local community water impacts', pearlParameter: 'EJScreen burden scores, community water supply impairment data', availability: 'available' },
     ],
-    narrativeTemplate: '[Company] operations interact with freshwater and estuarine ecosystems across [N] facilities in the Chesapeake Bay watershed. Water effluent management follows TMDL-aligned reduction targets, with ALIA-verified BMPs achieving measurable nutrient load reductions.\n\nBiodiversity monitoring leverages ALIA platform data including submerged aquatic vegetation (SAV) coverage and benthic index of biological integrity (IBI) for waterbodies adjacent to operations.\n\nEnvironmental justice screening (EJScreen) confirms [X]% of facility communities fall below the 80th percentile burden threshold, with active community engagement programs in high-burden areas.',
+    narrativeTemplate: '[Company] operations interact with freshwater and estuarine ecosystems across [N] facilities in the Chesapeake Bay watershed. Water effluent management follows TMDL-aligned reduction targets, with PIN-verified BMPs achieving measurable nutrient load reductions.\n\nBiodiversity monitoring leverages PIN platform data including submerged aquatic vegetation (SAV) coverage and benthic index of biological integrity (IBI) for waterbodies adjacent to operations.\n\nEnvironmental justice screening (EJScreen) confirms [X]% of facility communities fall below the 80th percentile burden threshold, with active community engagement programs in high-burden areas.',
     evidenceExhibits: [
       { name: 'Biodiversity Indicator Dashboard', type: 'chart', description: 'SAV, benthic IBI, and species trends near operational areas' },
       { name: 'EJScreen Community Impact Report', type: 'report', description: 'Environmental justice scores for all facility zip codes' },
@@ -347,17 +349,17 @@ const CLOSE_THE_GAP: Record<string, CloseTheGapEntry> = {
   sasb: {
     missingFields: [
       { field: 'FB-MP-140a.1: Water withdrawn in stressed basins', status: 'amber', description: 'Facility-level volumes in WRI high-stress basins needed' },
-      { field: 'FB-MP-140a.2: Non-compliance incidents', status: 'green', description: 'ECHO violation data integrated via ALIA' },
+      { field: 'FB-MP-140a.2: Non-compliance incidents', status: 'green', description: 'ECHO violation data integrated via PIN' },
       { field: 'FB-MP-140a.3: Water management risks', status: 'amber', description: 'Risk narrative linking water stress to business continuity' },
       { field: 'FB-SF-140a.3: Fleet water impact', status: 'red', description: 'Supply chain water footprint not yet quantified' },
     ],
     pearlMappings: [
       { field: 'FB-MP-140a.1: Water withdrawn in stressed basins', pearlParameter: 'WRI Aqueduct overlay + facility HUC-12 withdrawal estimates', availability: 'partial' },
       { field: 'FB-MP-140a.2: Non-compliance incidents', pearlParameter: 'EPA ECHO compliance data, permit violation history', availability: 'available' },
-      { field: 'FB-MP-140a.3: Water management risks', pearlParameter: 'ALIA water risk scores + TMDL exposure analysis', availability: 'available' },
+      { field: 'FB-MP-140a.3: Water management risks', pearlParameter: 'PIN water risk scores + TMDL exposure analysis', availability: 'available' },
       { field: 'FB-SF-140a.3: Fleet water impact', pearlParameter: 'Supply chain water risk mapping (planned feature)', availability: 'planned' },
     ],
-    narrativeTemplate: '[Company] operates [N] facilities, of which [X] are located in basins classified as high or extremely high water stress per WRI Aqueduct. Total water withdrawn in stressed basins was approximately [Y] megaliters.\n\nDuring the reporting period, [Z] incidents of water-related non-compliance were recorded across the portfolio, as tracked through EPA ECHO integration in the PEARL platform. All incidents were remediated within [D] days.\n\nWater management risks are assessed quarterly using ALIA composite water risk scoring, which integrates TMDL status, impairment listings, and regulatory trajectory for each facility receiving waterbody.',
+    narrativeTemplate: '[Company] operates [N] facilities, of which [X] are located in basins classified as high or extremely high water stress per WRI Aqueduct. Total water withdrawn in stressed basins was approximately [Y] megaliters.\n\nDuring the reporting period, [Z] incidents of water-related non-compliance were recorded across the portfolio, as tracked through EPA ECHO integration in the PEARL platform. All incidents were remediated within [D] days.\n\nWater management risks are assessed quarterly using PIN composite water risk scoring, which integrates TMDL status, impairment listings, and regulatory trajectory for each facility receiving waterbody.',
     evidenceExhibits: [
       { name: 'Water Stress Basin Map', type: 'chart', description: 'Facilities overlaid on WRI Aqueduct stress classification' },
       { name: 'ECHO Compliance History', type: 'table', description: 'Permit violations and remediation timelines' },
@@ -375,13 +377,13 @@ const CLOSE_THE_GAP: Record<string, CloseTheGapEntry> = {
     pearlMappings: [
       { field: 'W1: Current state — water accounting', pearlParameter: 'Facility-level water parameters, BMP treatment volumes, discharge monitoring', availability: 'partial' },
       { field: 'W2: Business impacts of water issues', pearlParameter: 'Nutrient credit valuations, compliance cost tracking, risk exposure scores', availability: 'partial' },
-      { field: 'W3: Procedures for water assessment', pearlParameter: 'ALIA risk scoring methodology documentation + QAPP-grade QA/QC', availability: 'available' },
+      { field: 'W3: Procedures for water assessment', pearlParameter: 'PIN risk scoring methodology documentation + QAPP-grade QA/QC', availability: 'available' },
       { field: 'W4: Risk assessment details', pearlParameter: 'Per-facility water risk scores, TMDL exposure, impairment trends by HUC-12', availability: 'available' },
       { field: 'W8: Targets & goals', pearlParameter: 'TMDL reduction targets, BMP implementation milestones, restoration timeline', availability: 'partial' },
     ],
-    narrativeTemplate: '[Company] completed a comprehensive water security assessment across [N] facilities using the PEARL water intelligence platform. The assessment identified [X] facilities in basins with substantive water risk (ALIA risk score >=60/100).\n\nKey water-related risks include regulatory tightening under Clean Water Act TMDL programs, with [Y] facilities subject to nutrient reduction mandates. Physical risks include projected increases in precipitation intensity affecting stormwater management at [Z] locations.\n\nALIA QAPP-grade quality assurance protocol ensures data integrity across all monitoring points. Risk assessments incorporate EPA ATTAINS impairment data, ECHO compliance records, and real-time BMP performance metrics.\n\nThe company targets a [T]% reduction in nutrient loading by [Year], tracked through ALIA TMDL credit accounting system. Progress to date: [P]% of target achieved across the portfolio.',
+    narrativeTemplate: '[Company] completed a comprehensive water security assessment across [N] facilities using the PEARL water intelligence platform. The assessment identified [X] facilities in basins with substantive water risk (PIN risk score >=60/100).\n\nKey water-related risks include regulatory tightening under Clean Water Act TMDL programs, with [Y] facilities subject to nutrient reduction mandates. Physical risks include projected increases in precipitation intensity affecting stormwater management at [Z] locations.\n\nPIN QAPP-grade quality assurance protocol ensures data integrity across all monitoring points. Risk assessments incorporate EPA ATTAINS impairment data, ECHO compliance records, and real-time BMP performance metrics.\n\nThe company targets a [T]% reduction in nutrient loading by [Year], tracked through PIN TMDL credit accounting system. Progress to date: [P]% of target achieved across the portfolio.',
     evidenceExhibits: [
-      { name: 'CDP Water Response Data Tables', type: 'table', description: 'Pre-formatted W1 accounting tables from ALIA data' },
+      { name: 'CDP Water Response Data Tables', type: 'table', description: 'Pre-formatted W1 accounting tables from PIN data' },
       { name: 'Basin Risk Assessment Map', type: 'chart', description: 'Facility risk scores with basin-level context' },
       { name: 'TMDL Progress Tracker', type: 'report', description: 'Nutrient reduction targets vs. actuals by facility' },
       { name: 'Water Quality Trend Analysis', type: 'chart', description: '3-year parameter trends for all monitored waterbodies' },
@@ -391,7 +393,7 @@ const CLOSE_THE_GAP: Record<string, CloseTheGapEntry> = {
   tcfd: {
     missingFields: [
       { field: 'Physical Risk: Acute (flooding, drought)', status: 'amber', description: 'Facility-level exposure to extreme water events' },
-      { field: 'Physical Risk: Chronic (water stress trends)', status: 'green', description: 'ALIA tracks long-term impairment and stress trends' },
+      { field: 'Physical Risk: Chronic (water stress trends)', status: 'green', description: 'PIN tracks long-term impairment and stress trends' },
       { field: 'Transition Risk: Regulatory (TMDLs, permits)', status: 'green', description: 'TMDL compliance trajectory and regulatory pipeline tracked' },
       { field: 'Transition Risk: Market (water pricing)', status: 'red', description: 'Water pricing and market shift data not yet integrated' },
       { field: 'Metrics & Targets: Nutrient credits', status: 'amber', description: 'Credit generation tracked; financial valuation methodology needed' },
@@ -416,17 +418,17 @@ const CLOSE_THE_GAP: Record<string, CloseTheGapEntry> = {
       { field: 'Dependencies on freshwater ecosystems', status: 'amber', description: 'Ecosystem services valuation for operational water use' },
       { field: 'Impacts on freshwater biodiversity', status: 'amber', description: 'Species and habitat impact assessment per facility' },
       { field: 'Risk management: Nature-related risks', status: 'red', description: 'Formal nature-risk governance framework not documented' },
-      { field: 'Restoration metrics & targets', status: 'green', description: 'BMP restoration data and SAV/habitat metrics available via ALIA' },
+      { field: 'Restoration metrics & targets', status: 'green', description: 'BMP restoration data and SAV/habitat metrics available via PIN' },
       { field: 'LEAP assessment (Locate, Evaluate, Assess, Prepare)', status: 'red', description: 'Full LEAP methodology assessment not yet completed' },
     ],
     pearlMappings: [
       { field: 'Dependencies on freshwater ecosystems', pearlParameter: 'Waterbody designated-use classifications, ecosystem service indicators', availability: 'partial' },
       { field: 'Impacts on freshwater biodiversity', pearlParameter: 'SAV coverage, benthic IBI, fish passage data, species-of-concern proximity', availability: 'available' },
-      { field: 'Risk management: Nature-related risks', pearlParameter: 'ALIA risk framework documentation + board reporting templates', availability: 'partial' },
+      { field: 'Risk management: Nature-related risks', pearlParameter: 'PIN risk framework documentation + board reporting templates', availability: 'partial' },
       { field: 'Restoration metrics & targets', pearlParameter: 'BMP restoration acres, riparian buffer miles, SAV recovery trends', availability: 'available' },
-      { field: 'LEAP assessment (Locate, Evaluate, Assess, Prepare)', pearlParameter: 'ALIA facility-waterbody mapping + impact scoring (partial LEAP coverage)', availability: 'partial' },
+      { field: 'LEAP assessment (Locate, Evaluate, Assess, Prepare)', pearlParameter: 'PIN facility-waterbody mapping + impact scoring (partial LEAP coverage)', availability: 'partial' },
     ],
-    narrativeTemplate: '[Company] recognizes its dependencies and impacts on freshwater and estuarine ecosystems across the Chesapeake Bay watershed and beyond. This disclosure follows the TNFD LEAP framework.\n\nLocate: [N] facilities have been mapped to their receiving waterbodies and associated ecosystems using ALIA HUC-12 delineation. [X] facilities are adjacent to priority biodiversity areas.\n\nEvaluate: Dependencies include water supply for operations, effluent assimilation capacity, and ecosystem services (flood attenuation, water purification). ALIA data quantifies these at $[V] annual ecosystem service value.\n\nAssess: Key nature-related risks include biodiversity loss in impaired waterbodies ([Y] facilities), regulatory restrictions on water use in stressed basins, and reputational risk from proximity to degraded ecosystems.\n\nPrepare: The company has invested in [Z] verified BMPs through the PEARL platform, restoring [A] acres of riparian habitat and contributing to [B]% improvement in submerged aquatic vegetation coverage in target watersheds.',
+    narrativeTemplate: '[Company] recognizes its dependencies and impacts on freshwater and estuarine ecosystems across the Chesapeake Bay watershed and beyond. This disclosure follows the TNFD LEAP framework.\n\nLocate: [N] facilities have been mapped to their receiving waterbodies and associated ecosystems using PIN HUC-12 delineation. [X] facilities are adjacent to priority biodiversity areas.\n\nEvaluate: Dependencies include water supply for operations, effluent assimilation capacity, and ecosystem services (flood attenuation, water purification). PIN data quantifies these at $[V] annual ecosystem service value.\n\nAssess: Key nature-related risks include biodiversity loss in impaired waterbodies ([Y] facilities), regulatory restrictions on water use in stressed basins, and reputational risk from proximity to degraded ecosystems.\n\nPrepare: The company has invested in [Z] verified BMPs through the PEARL platform, restoring [A] acres of riparian habitat and contributing to [B]% improvement in submerged aquatic vegetation coverage in target watersheds.',
     evidenceExhibits: [
       { name: 'LEAP Location Map', type: 'chart', description: 'Facilities mapped to priority biodiversity areas and sensitive ecosystems' },
       { name: 'Biodiversity Impact Dashboard', type: 'chart', description: 'SAV, benthic IBI, and species trends near operations' },
@@ -663,7 +665,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
       pdf.addSubtitle('Executive Summary');
       pdf.addDivider();
       pdf.addText(clean(`Overall Sustainability Score: ${portfolioScores.avgESG}/100 (${portfolioScores.avgESG >= 80 ? 'A - Leader' : portfolioScores.avgESG >= 60 ? 'B - Above Average' : portfolioScores.avgESG >= 40 ? 'C - Average' : 'D - Below Average'})`), { bold: true });
-      pdf.addText(clean(`Portfolio: ${portfolioScores.total} facilities | ${portfolioScores.monitored} ALIA-verified | ${portfolioScores.highRisk} high-risk | ${portfolioScores.medRisk} medium-risk | ${portfolioScores.lowRisk} low-risk`), { indent: 5 });
+      pdf.addText(clean(`Portfolio: ${portfolioScores.total} facilities | ${portfolioScores.monitored} PIN-verified | ${portfolioScores.highRisk} high-risk | ${portfolioScores.medRisk} medium-risk | ${portfolioScores.lowRisk} low-risk`), { indent: 5 });
       pdf.addSpacer(3);
       pdf.addText('KEY STRENGTHS', { bold: true });
       if (portfolioScores.avgTSSEff > 0) pdf.addText(clean(`- ${portfolioScores.avgTSSEff}% avg TSS removal efficiency vs. industry ~45%`), { indent: 5 });
@@ -673,7 +675,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
       pdf.addText('RISK FLAGS', { bold: true });
       if (portfolioScores.highRisk > 0) pdf.addText(clean(`- ${portfolioScores.highRisk} high-risk facility(ies) in impaired watersheds`), { indent: 5 });
       if (portfolioScores.ejHighCount > 0) pdf.addText(clean(`- ${portfolioScores.ejHighCount} facility(ies) in environmental justice communities`), { indent: 5 });
-      pdf.addText(clean(`- ${portfolioScores.total - portfolioScores.monitored} facility(ies) without ALIA monitoring`), { indent: 5 });
+      pdf.addText(clean(`- ${portfolioScores.total - portfolioScores.monitored} facility(ies) without PIN monitoring`), { indent: 5 });
       pdf.addSpacer(5);
 
       // Environmental Impact
@@ -687,7 +689,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
           ['Total TN Reduced (Bay TMDL)', clean(`${portfolioScores.totalTN.toFixed(1)} lbs`)],
           ['Total TP Reduced (Bay TMDL)', clean(`${portfolioScores.totalTP.toFixed(1)} lbs`)],
           ['Avg TSS Efficiency', clean(`${portfolioScores.avgTSSEff}%`)],
-          ['ALIA Active Sites', `${portfolioScores.monitored} of ${portfolioScores.total}`],
+          ['PIN Active Sites', `${portfolioScores.monitored} of ${portfolioScores.total}`],
         ]
       );
       pdf.addSpacer(3);
@@ -718,7 +720,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
           ['Metric', 'Value'],
           [
             ['Bay Watershed Facilities', `${portfolioScores.cbFacs}`],
-            ['ALIA Active (Bay)', `${portfolioScores.cbMonitored}`],
+            ['PIN Active (Bay)', `${portfolioScores.cbMonitored}`],
             ['Gallons Treated (Bay)', clean(`${(portfolioScores.cbGallons / 1_000_000).toFixed(1)}M`)],
             ['TN Reduced (TMDL-eligible)', clean(`${portfolioScores.cbTN.toFixed(1)} lbs`)],
             ['TP Reduced (TMDL-eligible)', clean(`${portfolioScores.cbTP.toFixed(1)} lbs`)],
@@ -757,9 +759,9 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
       // Disclaimer
       pdf.addDivider();
       pdf.addText('DISCLAIMER', { bold: true, fontSize: 8 });
-      pdf.addText(clean('This report is generated for informational and voluntary sustainability disclosure purposes only. It does not constitute a formal sustainability audit. Baseline projections derived from Milton, FL pilot (Jan 2025: 88-95% TSS removal, 50K GPD). ALIA-monitored facilities reflect verified continuous data. Non-monitored facilities show modeled estimates only.'), { fontSize: 8 });
+      pdf.addText(clean('This report is generated for informational and voluntary sustainability disclosure purposes only. It does not constitute a formal sustainability audit. Baseline projections derived from Milton, FL pilot (Jan 2025: 88-95% TSS removal, 50K GPD). PIN-monitored facilities reflect verified continuous data. Non-monitored facilities show modeled estimates only.'), { fontSize: 8 });
       pdf.addSpacer(2);
-      pdf.addText(clean('Data Sources: ALIA continuous monitoring | EPA ATTAINS | EPA ECHO | USGS WDFN | NOAA CO-OPS | WRI Aqueduct | EJScreen'), { fontSize: 8 });
+      pdf.addText(clean('Data Sources: PIN continuous monitoring | EPA ATTAINS | EPA ECHO | USGS WDFN | NOAA CO-OPS | WRI Aqueduct | EJScreen'), { fontSize: 8 });
       pdf.addText(clean(`Contact: info@project-pearl.org | ${dateStr}`), { fontSize: 8 });
 
       const safeName = companyName.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_');
@@ -989,7 +991,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                 )}
                 <div className="flex items-start gap-1.5">
                   <AlertTriangle className="h-3 w-3 text-amber-500 mt-0.5 flex-shrink-0" />
-                  <span><span className="font-semibold">{portfolioScores.total - portfolioScores.monitored} facilit{(portfolioScores.total - portfolioScores.monitored) === 1 ? 'y' : 'ies'}</span> without ALIA monitoring</span>
+                  <span><span className="font-semibold">{portfolioScores.total - portfolioScores.monitored} facilit{(portfolioScores.total - portfolioScores.monitored) === 1 ? 'y' : 'ies'}</span> without PIN monitoring</span>
                 </div>
               </div>
             </div>
@@ -1165,10 +1167,10 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                   )}
                   {overlay === 'impact' && (
                     <>
-                      <span className="text-slate-500 font-medium self-center mr-1">ALIA Status:</span>
+                      <span className="text-slate-500 font-medium self-center mr-1">PIN Status:</span>
                       <Badge variant="secondary" className="bg-gray-200 text-gray-700">No System</Badge>
                       <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-200">Assessed Only</Badge>
-                      <Badge variant="secondary" className="bg-green-800 text-white">Active ALIA</Badge>
+                      <Badge variant="secondary" className="bg-green-800 text-white">Active PIN</Badge>
                     </>
                   )}
                   <span className="mx-1 text-slate-300">|</span>
@@ -1300,7 +1302,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                   <div className="rounded-lg border border-cyan-200 bg-cyan-50/50 p-3 text-center">
                     <Heart className="h-5 w-5 text-cyan-600 mx-auto mb-1" />
                     <div className="text-lg font-bold text-cyan-700">{portfolioScores.monitored}</div>
-                    <div className="text-[10px] text-cyan-600">Active ALIA Sites</div>
+                    <div className="text-[10px] text-cyan-600">Active PIN Sites</div>
                   </div>
                 </div>
 
@@ -1347,7 +1349,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                     <BarChart3 className="h-3 w-3 text-amber-600 flex-shrink-0" />
                     <span className="text-[10px] font-semibold text-amber-800">Projected vs. Verified Data</span>
                   </div>
-                  <span className="text-[10px] text-amber-700 block">Baseline projections derived from Milton, FL pilot (Jan 2025: 88-95% TSS removal, 50K GPD throughput). ALIA-monitored facilities reflect verified continuous data. Non-monitored facilities show modeled estimates only. TN/TP reductions contribute directly to Chesapeake Bay TMDL credits under CWA Section 303(d).</span>
+                  <span className="text-[10px] text-amber-700 block">Baseline projections derived from Milton, FL pilot (Jan 2025: 88-95% TSS removal, 50K GPD throughput). PIN-monitored facilities reflect verified continuous data. Non-monitored facilities show modeled estimates only. TN/TP reductions contribute directly to Chesapeake Bay TMDL credits under CWA Section 303(d).</span>
                 </div>
               </div>
             )}
@@ -1401,7 +1403,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                   <div className="rounded-lg border border-emerald-200 bg-emerald-50/50 p-3 text-center">
                     <Leaf className="h-5 w-5 text-emerald-600 mx-auto mb-1" />
                     <div className="text-lg font-bold text-emerald-700">{portfolioScores.cbMonitored}</div>
-                    <div className="text-[10px] text-emerald-600">ALIA Active</div>
+                    <div className="text-[10px] text-emerald-600">PIN Active</div>
                     <div className="text-[9px] text-emerald-400">of {portfolioScores.cbFacs} Bay facilities</div>
                   </div>
                   <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3 text-center">
@@ -1452,7 +1454,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                 </div>
 
                 <div className="rounded-md border border-blue-200 bg-blue-50/50 px-3 py-2 text-[10px] text-blue-700">
-                  Chesapeake Bay TMDL allocations require jurisdictions to meet nitrogen, phosphorus, and sediment reduction targets under EPA-approved Watershed Implementation Plans (WIPs). ALIA-verified nutrient reductions may qualify for tradeable credits under state nutrient trading programs (MD, VA, PA).
+                  Chesapeake Bay TMDL allocations require jurisdictions to meet nitrogen, phosphorus, and sediment reduction targets under EPA-approved Watershed Implementation Plans (WIPs). PIN-verified nutrient reductions may qualify for tradeable credits under state nutrient trading programs (MD, VA, PA).
                 </div>
               </div>
             )}
@@ -1474,7 +1476,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
             </button>
             {isSectionOpen('sustainability') && (
               <div id="section-sustainability" className="p-4">
-                <div className="text-xs text-slate-500 mb-3">Composite scores from continuous monitoring data across {portfolioScores.monitored} ALIA-instrumented facilities</div>
+                <div className="text-xs text-slate-500 mb-3">Composite scores from continuous monitoring data across {portfolioScores.monitored} PIN-instrumented facilities</div>
                 {(() => {
                   const waterQual = Math.max(0, 100 - portfolioScores.avgRisk);
                   const loadRed = portfolioScores.avgTSSEff > 0 ? Math.round(portfolioScores.avgTSSEff * 0.8) : 0; // weight TSS eff
@@ -1653,11 +1655,11 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                     </div>
                   )}
 
-                  {/* STEP 2: ALIA Can Measure */}
+                  {/* STEP 2: PIN Can Measure */}
                   {gapWizardStep === 2 && (
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-bold text-slate-800">ALIA Data Connections</h3>
+                        <h3 className="text-sm font-bold text-slate-800">PIN Data Connections</h3>
                         <div className="flex items-center gap-3 text-[10px] text-slate-500">
                           <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> Available</span>
                           <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500" /> Partial</span>
@@ -1712,7 +1714,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                           <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
                           <div>
                             <div className="text-xs font-semibold text-amber-800">Placeholders require your data</div>
-                            <div className="text-[11px] text-amber-700 mt-0.5">Bracketed values like [X], [N], [Company] must be replaced with actual figures from your facility data. Connect ALIA data sources in Step 2 to auto-populate where available.</div>
+                            <div className="text-[11px] text-amber-700 mt-0.5">Bracketed values like [X], [N], [Company] must be replaced with actual figures from your facility data. Connect PIN data sources in Step 2 to auto-populate where available.</div>
                           </div>
                         </div>
                       </div>
@@ -1840,7 +1842,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                         <span className="font-medium text-amber-600">{facilitiesData.filter(f => f.status === 'monitored' || f.status === 'assessed').length}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>ALIA-mitigated discharge points</span>
+                        <span>PIN-mitigated discharge points</span>
                         <span className="font-medium text-green-600">{portfolioScores.monitored}</span>
                       </div>
                       <div className="flex justify-between">
@@ -2093,7 +2095,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                     <div className="text-[11px] text-slate-600 leading-relaxed">
                       "{companyName} actively invests in nature-based water infrastructure across {facilitiesData.length} facilities,
                       treating stormwater runoff and restoring aquatic ecosystems in the communities where we operate.
-                      Our ALIA biofiltration systems combine oyster-powered natural filtration with real-time water quality monitoring,
+                      Our PIN biofiltration systems combine oyster-powered natural filtration with real-time water quality monitoring,
                       demonstrating measurable environmental improvement at every deployment."
                     </div>
                     <div className="text-[9px] text-slate-400 italic">Auto-generated narrative — customize for annual report, press releases, investor comms</div>
@@ -2145,7 +2147,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
             {isSectionOpen('grants') && (
               <div id="section-grants" className="p-4">
                 <p className="text-xs text-slate-500 mb-3">
-                  Environmental grants, tax incentives, and sustainability funding that align with your ALIA deployments.
+                  Environmental grants, tax incentives, and sustainability funding that align with your PIN deployments.
                   Filtered by facility locations and eligible programs.
                 </p>
                 <div className="space-y-2">
@@ -2301,6 +2303,24 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
 
             case 'location-report': return DS(<LocationReportCard />);
 
+            case 'warr-metrics': {
+              const warrM: WARRMetric[] = [
+                { label: 'Water Footprint', value: '—', icon: Gauge, iconColor: 'var(--status-healthy)', subtitle: 'Portfolio water usage' },
+                { label: 'Compliance Rate', value: '—', icon: Shield, iconColor: 'var(--accent-teal)', subtitle: 'Regulatory compliance' },
+                { label: 'Sustainability Score', value: '—', icon: AlertTriangle, iconColor: 'var(--status-warning)', subtitle: 'ESG water score' },
+              ];
+              return DS(<WARRZones zone="warr-metrics" role="Corporate" stateAbbr="US" metrics={warrM} events={[]} activeResolutionCount={0} />);
+            }
+            case 'warr-analyze': return DS(
+              <WARRZones zone="warr-analyze" role="Corporate" stateAbbr="US" metrics={[]} events={[]} activeResolutionCount={0} />
+            );
+            case 'warr-respond': return DS(
+              <WARRZones zone="warr-respond" role="Corporate" stateAbbr="US" metrics={[]} events={[]} activeResolutionCount={0} />
+            );
+            case 'warr-resolve': return DS(
+              <WARRZones zone="warr-resolve" role="Corporate" stateAbbr="US" metrics={[]} events={[]} activeResolutionCount={0} />
+            );
+
             case 'disclaimer': return DS(
               <PlatformDisclaimer />
             );
@@ -2344,7 +2364,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                     selectedFac.status === 'assessed' ? 'bg-amber-100 text-amber-700' :
                     'bg-gray-100 text-gray-600'
                   }>
-                    {selectedFac.status === 'monitored' ? 'ALIA Active' : selectedFac.status === 'assessed' ? 'Assessed Only' : 'Unmonitored'}
+                    {selectedFac.status === 'monitored' ? 'PIN Active' : selectedFac.status === 'assessed' ? 'Assessed Only' : 'Unmonitored'}
                   </Badge>
                   <div className="text-[10px] text-slate-500 mt-1">Status</div>
                 </div>

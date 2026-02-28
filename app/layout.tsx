@@ -61,6 +61,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var a=localStorage.getItem('pin-accent');if(a&&a!=='teal')document.documentElement.setAttribute('data-accent',a)}catch(e){}})()` }} />
+      </head>
       <body className={`${inter.className} ${jetbrainsMono.variable}`} style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-primary)' }}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="pin-theme">
           <AuthProvider>

@@ -87,6 +87,8 @@ import { WaterQualityAlerts } from '@/components/WaterQualityAlerts';
 import { MDEExportTool } from '@/components/MDEExportTool';
 import LocationReportCard from '@/components/LocationReportCard';
 import { getEpaRegionForState } from '@/lib/epa-regions';
+import { WARRZones } from './WARRZones';
+import type { WARRMetric } from './WARRZones';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -125,7 +127,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Overview',
     description: 'MS4 operational dashboard — morning check before the day starts',
     defaultOverlay: 'impairment',
-    sections: new Set(['identity', 'operational-health', 'alertfeed', 'map-grid', 'detail', 'top10', 'quick-access', 'quickactions', 'disclaimer']),
+    sections: new Set(['identity', 'operational-health', 'alertfeed', 'map-grid', 'detail', 'top10', 'quick-access', 'quickactions', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']),
   },
   briefing: {
     label: 'AI Briefing',
@@ -1378,6 +1380,24 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
               <AIInsightsEngine key={stateAbbr} role="MS4" stateAbbr={stateAbbr} regionData={scopedRegionData as any} />
             );
 
+        case 'warr-metrics': {
+          const warrM: WARRMetric[] = [
+            { label: 'Permit Compliance', value: '—', icon: Gauge, iconColor: 'var(--status-healthy)', subtitle: 'MS4 permit status' },
+            { label: 'BMP Status', value: '—', icon: Shield, iconColor: 'var(--accent-teal)', subtitle: 'Active BMPs tracked' },
+            { label: 'Storm Events', value: '—', icon: AlertTriangle, iconColor: 'var(--status-warning)', subtitle: 'Recent storm activity' },
+          ];
+          return DS(<WARRZones zone="warr-metrics" role="MS4" stateAbbr={stateAbbr} metrics={warrM} events={[]} activeResolutionCount={0} />);
+        }
+        case 'warr-analyze': return DS(
+          <WARRZones zone="warr-analyze" role="MS4" stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} />
+        );
+        case 'warr-respond': return DS(
+          <WARRZones zone="warr-respond" role="MS4" stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} />
+        );
+        case 'warr-resolve': return DS(
+          <WARRZones zone="warr-resolve" role="MS4" stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} onOpenPlanner={() => setViewLens('planner')} />
+        );
+
             case 'quickactions': return DS(
         <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-3">
               <div className="flex items-center gap-2 mb-2">
@@ -1600,7 +1620,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       pdf.addSubtitle('ESG Framework Alignment');
                       pdf.addDivider();
                       pdf.addTable(
-                        ['Framework', 'Relevant Standards', 'ALIA Coverage'],
+                        ['Framework', 'Relevant Standards', 'PIN Coverage'],
                         [
                           ['GRI', 'GRI 303: Water & Effluents, GRI 304: Biodiversity', 'Partial -- water quality metrics mapped'],
                           ['SASB', 'Water Management, Ecological Impacts', 'Partial -- treatment performance data'],
@@ -2005,10 +2025,20 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
             {/* No selection state */}
             {!activeDetailId && (
               <Card className="border-2 border-dashed border-slate-300 bg-white/50">
-                <div className="py-12 text-center">
-                  <MapPin className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-                  <div className="text-base font-medium text-slate-500">Select a waterbody to view details</div>
-                  <div className="text-sm text-slate-400 mt-1">Click a marker on the map or a waterbody from the list</div>
+                <div className="p-6">
+                  <div className="relative mb-4">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Search municipal waterbodies..."
+                      className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400"
+                      readOnly
+                    />
+                  </div>
+                  <div className="text-center text-slate-400">
+                    <MapPin className="h-8 w-8 mx-auto mb-2 text-slate-300" />
+                    <p className="text-xs">Or click a marker on the map to view waterbody details</p>
+                  </div>
                 </div>
               </Card>
             )}
@@ -2264,9 +2294,9 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         </div>
                       </div>
 
-                      {/* Why ALIA */}
+                      {/* Why PIN */}
                       <div className="space-y-1.5">
-                        <div className="text-xs font-semibold text-slate-700 uppercase tracking-wide">Why ALIA at {regionName}</div>
+                        <div className="text-xs font-semibold text-slate-700 uppercase tracking-wide">Why PIN at {regionName}</div>
                         {whyBullets.map((b, i) => (
                           <div key={i} className="flex items-start gap-2 text-xs">
                             <span className="flex-shrink-0 mt-0.5">{b.icon}</span>
@@ -2283,7 +2313,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       {impairmentClassification.length > 0 && (
                         <div className="space-y-1">
                           <div className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
-                            Impairment Classification ({impairmentClassification.length} causes · {addressabilityPct}% ALIA-addressable)
+                            Impairment Classification ({impairmentClassification.length} causes · {addressabilityPct}% PIN-addressable)
                           </div>
                           <div className="grid gap-1">
                             {impairmentClassification.map((imp, i) => (
@@ -2458,9 +2488,9 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       <div className="flex flex-wrap gap-2">
                         <button
                           onClick={() => {
-                            const subject = encodeURIComponent(`ALIA Pilot Deployment Request — ${regionName}, ${stateAbbr}`);
+                            const subject = encodeURIComponent(`PIN Pilot Deployment Request — ${regionName}, ${stateAbbr}`);
                             const body = encodeURIComponent(
-                              `ALIA Pilot Deployment Request\n` +
+                              `PIN Pilot Deployment Request\n` +
                               `${'='.repeat(40)}\n\n` +
                               `Site: ${regionName}\n` +
                               `State: ${stateName}\n` +
@@ -2483,7 +2513,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                           }}
                           className="flex-1 min-w-[140px] bg-cyan-700 hover:bg-cyan-800 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition-colors shadow-sm"
                         >
-                          🚀 Deploy ALIA Pilot Here
+                          🚀 Deploy PIN Pilot Here
                         </button>
                         <button
                           onClick={async () => {
@@ -2512,13 +2542,13 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                               const catTitleMap: Record<string, string> = {
                                 source: 'SOURCE CONTROL -- Upstream BMPs',
                                 nature: 'NATURE-BASED SOLUTIONS',
-                                pearl: 'ALIA -- Treatment Accelerator',
+                                pearl: 'PIN -- Treatment Accelerator',
                                 community: 'COMMUNITY ENGAGEMENT & STEWARDSHIP',
                                 regulatory: 'REGULATORY & PLANNING',
                               };
 
                               // ─── Title ───
-                              pdf.addTitle('ALIA Deployment Plan');
+                              pdf.addTitle('PIN Deployment Plan');
                               pdf.addText(clean(`${regionName}, ${stateName}`), { bold: true, fontSize: 12 });
                               pdf.addText(`Generated ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, { fontSize: 9 });
                               pdf.addSpacer(5);
@@ -2552,7 +2582,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                               pdf.addSpacer(3);
 
                               pdf.addText('RECOMMENDED ACTION', { bold: true });
-                              pdf.addText(clean(`Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} unit${phase1Units > 1 ? 's' : ''}, ${phase1GPM} GPM)` : `${totalUnits} ALIA unit${totalUnits > 1 ? 's' : ''}`} at ${regionName} and begin continuous monitoring within 30 days.`), { indent: 5, bold: true });
+                              pdf.addText(clean(`Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} unit${phase1Units > 1 ? 's' : ''}, ${phase1GPM} GPM)` : `${totalUnits} PIN unit${totalUnits > 1 ? 's' : ''}`} at ${regionName} and begin continuous monitoring within 30 days.`), { indent: 5, bold: true });
                               pdf.addText('Typical deployment: 30-60 days. Pilot generates continuous data and measurable reductions within the first operating cycle.', { indent: 5, fontSize: 9 });
                               pdf.addSpacer(5);
 
@@ -2599,8 +2629,8 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                                 pdf.addSpacer(3);
                               }
 
-                              // ─── Why ALIA ───
-                              pdf.addSubtitle('Why ALIA at This Site');
+                              // ─── Why PIN ───
+                              pdf.addSubtitle('Why PIN at This Site');
                               pdf.addDivider();
                               for (const b of whyBullets) {
                                 pdf.addText(clean(`- ${b.problem}`), { indent: 5, bold: true });
@@ -2608,8 +2638,8 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                               }
                               pdf.addSpacer(3);
 
-                              // ─── ALIA Configuration ───
-                              pdf.addSubtitle(`ALIA Configuration: ${pearlModel}`);
+                              // ─── PIN Configuration ───
+                              pdf.addSubtitle(`PIN Configuration: ${pearlModel}`);
                               pdf.addDivider();
                               pdf.addText(`System Type: ${waterType === 'brackish' ? 'Oyster (C. virginica)' : 'Freshwater Mussel'} Biofiltration`, { indent: 5 });
                               const pearlCatMods = categories.find(c => c.id === 'pearl');
@@ -2629,7 +2659,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                                 [
                                   ['Sizing Method', 'Severity-driven treatment need assessment'],
                                   ['Site Severity Score', `${siteSeverityScore}/100 (${siteSeverityLabel})`],
-                                  ['Unit Capacity', '50 GPM per ALIA unit (4 units per quad)'],
+                                  ['Unit Capacity', '50 GPM per PIN unit (4 units per quad)'],
                                   ['Waterbody Size', `~${estimatedAcres} acres (${acresSource})`],
                                   ['Deployment Size', `${totalQuads} quad${totalQuads > 1 ? 's' : ''} (${totalUnits} units, ${fullGPM} GPM)`],
                                   ...(isPhasedDeployment ? [
@@ -2757,10 +2787,10 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
 
                               // ─── Impairment Classification ───
                               if (impairmentClassification.length > 0) {
-                                pdf.addSubtitle(`Impairment Classification -- ALIA addresses ${pearlAddressable} of ${totalClassified} (${addressabilityPct}%)`);
+                                pdf.addSubtitle(`Impairment Classification -- PIN addresses ${pearlAddressable} of ${totalClassified} (${addressabilityPct}%)`);
                                 pdf.addDivider();
                                 pdf.addTable(
-                                  ['Cause', 'Tier', 'ALIA Action'],
+                                  ['Cause', 'Tier', 'PIN Action'],
                                   impairmentClassification.map((item: any) => [
                                     clean(item.cause),
                                     item.tier === 1 ? 'T1 -- Primary Target' : item.tier === 2 ? 'T2 -- Contributes/Planned' : 'T3 -- Outside Scope',
@@ -2786,7 +2816,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                               // ─── Full Restoration Plan ───
                               pdf.addSubtitle('Full Restoration Plan');
                               pdf.addDivider();
-                              pdf.addText(`This plan combines ${totalBMPs} conventional BMPs and nature-based solutions with ALIA accelerated treatment.`);
+                              pdf.addText(`This plan combines ${totalBMPs} conventional BMPs and nature-based solutions with PIN accelerated treatment.`);
                               pdf.addSpacer(3);
 
                               for (const cat of categories.filter((c: any) => c.id !== 'pearl')) {
@@ -2805,7 +2835,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                               // ─── Recommended Next Steps ───
                               pdf.addSubtitle('Recommended Next Steps');
                               pdf.addDivider();
-                              pdf.addText(clean(`1. Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} ALIA units, ${phase1GPM} GPM) at highest-priority inflow zone${phase1Quads > 1 ? 's' : ''}` : `${totalUnits} ALIA unit${totalUnits > 1 ? 's' : ''}`} within 30 days.`), { indent: 5 });
+                              pdf.addText(clean(`1. Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} PIN units, ${phase1GPM} GPM) at highest-priority inflow zone${phase1Quads > 1 ? 's' : ''}` : `${totalUnits} PIN unit${totalUnits > 1 ? 's' : ''}`} within 30 days.`), { indent: 5 });
                               pdf.addText('2. Begin continuous water quality monitoring (15-min intervals, telemetered).', { indent: 5 });
                               pdf.addText('3. Use 90-day baseline dataset to calibrate treatment priorities and validate severity assessment.', { indent: 5 });
                               if (isPhasedDeployment) {
@@ -2866,14 +2896,14 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
 
                         return (
                           <div className="rounded-lg border-2 border-green-300 bg-gradient-to-br from-green-50 to-emerald-50 p-3 space-y-3">
-                            <div className="text-[10px] font-bold text-green-800 uppercase tracking-wider">ALIA Economics -- {regionName}</div>
+                            <div className="text-[10px] font-bold text-green-800 uppercase tracking-wider">PIN Economics -- {regionName}</div>
 
                             {/* Unit pricing */}
                             <div className="space-y-1">
-                              <div className="text-[10px] font-bold text-slate-600 uppercase">ALIA Unit Pricing</div>
+                              <div className="text-[10px] font-bold text-slate-600 uppercase">PIN Unit Pricing</div>
                               <div className="rounded-md bg-white border border-slate-200 overflow-hidden">
                                 <div className="grid grid-cols-[1fr_auto] text-[11px]">
-                                  <div className="px-2 py-1.5 bg-slate-100 font-semibold border-b border-slate-200">ALIA Unit (50 GPM)</div>
+                                  <div className="px-2 py-1.5 bg-slate-100 font-semibold border-b border-slate-200">PIN Unit (50 GPM)</div>
                                   <div className="px-2 py-1.5 bg-slate-100 font-bold text-right border-b border-slate-200">{fmt(unitCost)}/unit/year</div>
                                   <div className="px-2 py-1.5 border-b border-slate-100 text-[10px] text-slate-500" style={{ gridColumn: '1 / -1' }}>
                                     All-inclusive: hardware, deployment, calibration, continuous monitoring, dashboards, automated reporting, maintenance, and support
@@ -2957,7 +2987,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                               <div className="rounded-md bg-green-100 border border-green-200 text-center py-2">
                                 <div className="text-[9px] text-green-600">Compliance Savings Offset</div>
                                 <div className="text-lg font-bold text-green-700">{offsetPctLow}% -- {offsetPctHigh}%</div>
-                                <div className="text-[9px] text-green-500">of ALIA cost offset by reduced spend</div>
+                                <div className="text-[9px] text-green-500">of PIN cost offset by reduced spend</div>
                               </div>
                               <div className="rounded-md bg-cyan-100 border border-cyan-200 text-center py-2">
                                 <div className="text-[9px] text-cyan-600">Time to Compliance Data</div>
@@ -3290,7 +3320,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                           ['Data demonstrates stormwater load reduction for TMDL compliance documentation.'],
                           ['Target: >80% TSS removal and >60% nutrient removal per NPDES/MS4 standards.'],
                           ['Report generated', new Date().toLocaleString()],
-                          ['Source: ALIA Continuous Monitoring Platform | project-pearl.org']
+                          ['Source: PIN Continuous Monitoring Platform | project-pearl.org']
                         ];
                         const csvContent = rows.map(row => Array.isArray(row) ? row.join(',') : row).join('\n');
                         const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -3361,9 +3391,9 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         const event = selectedStormEvent;
                         const tssEff = event.removalEfficiencies?.TSS ?? 0;
                         const nutAvg = ((event.removalEfficiencies?.TN ?? 0) + (event.removalEfficiencies?.TP ?? 0)) / 2;
-                        const subject = encodeURIComponent(`ALIA Storm Event Report — ${wbName} — ${event.name}`);
+                        const subject = encodeURIComponent(`PIN Storm Event Report — ${wbName} — ${event.name}`);
                         const body = encodeURIComponent(
-                          `ALIA Storm Event BMP Performance Report\n` +
+                          `PIN Storm Event BMP Performance Report\n` +
                           `${'='.repeat(45)}\n\n` +
                           `Site: ${wbName}\n` +
                           `Jurisdiction: ${jurisdictionMeta?.name || stateName}\n` +
@@ -3494,9 +3524,9 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                     <div>
                       <span className="font-bold">Federal Response:</span> President Trump directed FEMA coordination on Feb 17. Gov. Moore's office noted the federal government has been responsible for the Potomac Interceptor since the last century. Potomac Conservancy submitted a letter signed by 2,100+ community members demanding accountability from DC Water.
                     </div>
-                    {/* ALIA relevance */}
+                    {/* PIN relevance */}
                     <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-2 text-cyan-900">
-                      <span className="font-bold">🔬 ALIA Relevance:</span> This event demonstrates catastrophic infrastructure failure impact on receiving waters. ALIA's real-time monitoring capability would provide continuous E. coli, nutrient, and pathogen tracking during and after spill events — filling the gap that required UMD researchers and volunteer riverkeepers to manually sample. Continuous deployment at 6 DC Water monitoring sites would provide the 24/7 data regulators and the public need.
+                      <span className="font-bold">🔬 PIN Relevance:</span> This event demonstrates catastrophic infrastructure failure impact on receiving waters. PIN's real-time monitoring capability would provide continuous E. coli, nutrient, and pathogen tracking during and after spill events — filling the gap that required UMD researchers and volunteer riverkeepers to manually sample. Continuous deployment at 6 DC Water monitoring sites would provide the 24/7 data regulators and the public need.
                     </div>
                     <div className="flex flex-wrap gap-1.5 pt-1">
                       <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">DC Water</span>
@@ -3713,7 +3743,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                 {expandedSections.provenance ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
               </div>
               <CardDescription>
-                What {(agency as any)?.division || 'your regulatory authority'} would find in an audit of ALIA monitoring data across {stateName}
+                What {(agency as any)?.division || 'your regulatory authority'} would find in an audit of PIN monitoring data across {stateName}
               </CardDescription>
             </CardHeader>
             {expandedSections.provenance && (
@@ -3728,7 +3758,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                     <div className="text-sm font-bold text-amber-900">Regulatory-Grade Monitoring</div>
                   </div>
                   <p className="text-xs text-amber-800">
-                    ALIA monitoring meets EPA QA/R-5 (Quality Assurance Project Plan) standards and {stateAbbr === 'MD' ? 'MDE' : stateAbbr === 'FL' ? 'FDEP' : stateAbbr === 'VA' ? 'VA DEQ' : (agency as any)?.name?.split(' ')[0] || 'state'} data quality requirements for MS4 permit compliance. All data is traceable, auditable, and defensible.
+                    PIN monitoring meets EPA QA/R-5 (Quality Assurance Project Plan) standards and {stateAbbr === 'MD' ? 'MDE' : stateAbbr === 'FL' ? 'FDEP' : stateAbbr === 'VA' ? 'VA DEQ' : (agency as any)?.name?.split(' ')[0] || 'state'} data quality requirements for MS4 permit compliance. All data is traceable, auditable, and defensible.
                   </p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -3777,7 +3807,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <div className="text-[10px] text-green-800 font-semibold">vs. Traditional Grab Sampling</div>
                         <div className="text-[10px] text-green-700">
                           MS4 permits typically require 2-4 grab samples → ~16 data points/year.
-                          ALIA generates <strong>32,850× more data points</strong> with no field crew deployment.
+                          PIN generates <strong>32,850× more data points</strong> with no field crew deployment.
                         </div>
                       </div>
                     </div>
@@ -3786,7 +3816,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                   <div className="bg-white border border-amber-300 rounded-md p-2.5">
                     <div className="text-[10px] text-amber-900">
                       <strong>Regulatory Compliance:</strong> All sensors meet EPA QA/R-5 quality assurance requirements.
-                      ALIA sites align with QA GLP classification. Lab &amp; NIST/IEEE 17025 accredited.{' '}
+                      PIN sites align with QA GLP classification. Lab &amp; NIST/IEEE 17025 accredited.{' '}
                       <strong>QAPP Status: Submitted for {stateAbbr === 'MD' ? 'MDE Water & Science Administration' : (agency as any)?.division || 'state agency'} review.</strong>
                     </div>
                   </div>
@@ -3835,7 +3865,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                     <div className="text-[10px] font-bold text-slate-600 uppercase mb-2">Data Path (Sensor → {(agency as any)?.name?.split(' ').slice(0, 2).join(' ') || 'State Agency'} Report)</div>
                     <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
                       {[
-                        { icon: Cpu, label: 'ALIA Sensor', sub: 'YSI EXO2 probe' },
+                        { icon: Cpu, label: 'PIN Sensor', sub: 'YSI EXO2 probe' },
                         { icon: Database, label: 'Data Logger', sub: 'Timestamped + GPS tagged' },
                         { icon: Lock, label: 'Transmission', sub: 'Cellular (encrypted)' },
                         { icon: Database, label: 'Cloud Database', sub: 'AWS (SOC2 lockdown)' },
@@ -3886,14 +3916,14 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                 <div className="rounded-lg border border-slate-200 bg-white p-4 space-y-3">
                   <div className="flex items-center gap-2">
                     <BarChart3 className="h-4 w-4 text-indigo-600" />
-                    <div className="text-sm font-bold text-slate-800">Data Defensibility: ALIA vs Traditional Grab Sampling</div>
+                    <div className="text-sm font-bold text-slate-800">Data Defensibility: PIN vs Traditional Grab Sampling</div>
                   </div>
                   <div className="rounded-lg border border-slate-200 overflow-hidden">
                     <table className="w-full text-[11px]">
                       <thead>
                         <tr className="bg-slate-50 border-b border-slate-200">
                           <th className="text-left px-3 py-2 font-semibold text-slate-700">Criteria</th>
-                          <th className="text-center px-3 py-2 font-semibold text-indigo-700 bg-indigo-50/50">ALIA Continuous</th>
+                          <th className="text-center px-3 py-2 font-semibold text-indigo-700 bg-indigo-50/50">PIN Continuous</th>
                           <th className="text-center px-3 py-2 font-semibold text-slate-500">Traditional Grab</th>
                         </tr>
                       </thead>
@@ -3927,10 +3957,10 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                   </div>
                   <div className="space-y-2.5">
                     {[
-                      { phase: 'Phase 1: Parallel Operation', desc: `ALIA runs alongside traditional grab sampling. Side-by-side validation confirms accuracy. No changes to current ${(agency as any)?.ms4Program || 'MS4 permit'} reporting.`, timeline: `Year 1`, goal: 'Prove equivalency', color: 'border-blue-300 bg-blue-50', textColor: 'text-blue-800', dotColor: 'bg-blue-500' },
+                      { phase: 'Phase 1: Parallel Operation', desc: `PIN runs alongside traditional grab sampling. Side-by-side validation confirms accuracy. No changes to current ${(agency as any)?.ms4Program || 'MS4 permit'} reporting.`, timeline: `Year 1`, goal: 'Prove equivalency', color: 'border-blue-300 bg-blue-50', textColor: 'text-blue-800', dotColor: 'bg-blue-500' },
                       { phase: 'Phase 2: Storm Events & Trend Reporting', desc: `Continuous data becomes primary source for storm event characterization (per 40 CFR §122.26). Traditional grab sampling continues quarterly.`, timeline: `Year 1-2`, goal: 'Primary for storms', color: 'border-emerald-300 bg-emerald-50', textColor: 'text-emerald-800', dotColor: 'bg-emerald-500' },
-                      { phase: 'Phase 3: Reduce Grab Frequency', desc: `${stateAbbr === 'MD' ? 'MDE' : 'State'} may accept reduced grab frequency based on ALIA's correlation record. Confirmatory sampling validates sensor consistency.`, timeline: `Year 2-3`, goal: 'Correlation proven', color: 'border-green-300 bg-green-50', textColor: 'text-green-800', dotColor: 'bg-green-500' },
-                      { phase: 'Phase 4: Primary Data Stream', desc: `ALIA serves as primary data with periodic validation sampling for sensor QA/QC. Traditional grab retained for parameters not measured by sensors.`, timeline: `Year 3+`, goal: 'Full continuous', color: 'border-green-400 bg-green-100', textColor: 'text-green-900', dotColor: 'bg-green-600' },
+                      { phase: 'Phase 3: Reduce Grab Frequency', desc: `${stateAbbr === 'MD' ? 'MDE' : 'State'} may accept reduced grab frequency based on PIN's correlation record. Confirmatory sampling validates sensor consistency.`, timeline: `Year 2-3`, goal: 'Correlation proven', color: 'border-green-300 bg-green-50', textColor: 'text-green-800', dotColor: 'bg-green-500' },
+                      { phase: 'Phase 4: Primary Data Stream', desc: `PIN serves as primary data with periodic validation sampling for sensor QA/QC. Traditional grab retained for parameters not measured by sensors.`, timeline: `Year 3+`, goal: 'Full continuous', color: 'border-green-400 bg-green-100', textColor: 'text-green-900', dotColor: 'bg-green-600' },
                     ].map((p, i) => (
                       <div key={i} className={`rounded-lg border ${p.color} p-3 space-y-1`}>
                         <div className="flex items-center gap-2">
@@ -3957,7 +3987,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                     <div className="text-sm font-bold text-slate-800">Independent Laboratory Confirmation</div>
                   </div>
                   <p className="text-xs text-slate-600">
-                    {stateAbbr === 'MD' ? 'MDE requires' : `${stateName} regulations require`} that monitoring data used for permit compliance be analyzed by a {stateAbbr === 'MD' ? 'Maryland' : 'state'}-certified laboratory. ALIA addresses this through a structured split-sample program.
+                    {stateAbbr === 'MD' ? 'MDE requires' : `${stateName} regulations require`} that monitoring data used for permit compliance be analyzed by a {stateAbbr === 'MD' ? 'Maryland' : 'state'}-certified laboratory. PIN addresses this through a structured split-sample program.
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     {[
@@ -3984,14 +4014,14 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                 <div className="rounded-lg border-2 border-indigo-200 bg-gradient-to-r from-indigo-50/30 to-white p-4 space-y-3">
                   <div className="flex items-center gap-2">
                     <Building2 className="h-4 w-4 text-indigo-600" />
-                    <div className="text-sm font-bold text-slate-800">{stateName} ALIA Fleet — Acceptance Status</div>
+                    <div className="text-sm font-bold text-slate-800">{stateName} PIN Fleet — Acceptance Status</div>
                   </div>
                   <p className="text-xs text-slate-600">
-                    Aggregate view of phased acceptance progress across all ALIA deployments in {stateName}.
+                    Aggregate view of phased acceptance progress across all PIN deployments in {stateName}.
                   </p>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {[
-                      { label: 'Active Sites', value: scopedRegionData.filter(r => r.status === 'assessed').length > 0 ? '1' : '0', sub: 'ALIA deployments', color: 'text-indigo-700', bg: 'bg-indigo-50 border-indigo-200' },
+                      { label: 'Active Sites', value: scopedRegionData.filter(r => r.status === 'assessed').length > 0 ? '1' : '0', sub: 'PIN deployments', color: 'text-indigo-700', bg: 'bg-indigo-50 border-indigo-200' },
                       { label: 'Phase 1 (Parallel)', value: '1', sub: 'Running validation', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
                       { label: 'Phase 2+ (Accepted)', value: '0', sub: 'Pending Phase 1 completion', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
                       { label: 'Correlation Score', value: '—', sub: 'Pending first 90-day cycle', color: 'text-green-700', bg: 'bg-green-50 border-green-200' },
@@ -4004,7 +4034,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                     ))}
                   </div>
                   <div className="text-[10px] text-slate-500 italic">
-                    Fleet data updates as ALIA deployments complete validation phases. Correlation scores calculated after 90 days of parallel sensor + grab sample data.
+                    Fleet data updates as PIN deployments complete validation phases. Correlation scores calculated after 90 days of parallel sensor + grab sample data.
                   </div>
                 </div>
 
@@ -4018,11 +4048,11 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                   </div>
                   <p className="text-xs text-slate-600">
                     Chesapeake Bay TMDL nutrient credit trading requires state-level certification before credits can be banked, traded, or applied to Waste Load Allocations.
-                    ALIA's status in the {stateAbbr === 'MD' ? 'Maryland Water Quality Trading Program' : stateAbbr === 'VA' ? 'Virginia Nutrient Credit Exchange' : 'state nutrient trading framework'}:
+                    PIN's status in the {stateAbbr === 'MD' ? 'Maryland Water Quality Trading Program' : stateAbbr === 'VA' ? 'Virginia Nutrient Credit Exchange' : 'state nutrient trading framework'}:
                   </p>
                   <div className="space-y-2">
                     {[
-                      { step: '1. BMP Registration', status: 'In Progress', detail: 'ALIA filed as nature-based BMP with provisional patent documentation', statusColor: 'bg-amber-100 text-amber-800 border-amber-200', icon: '🔄' },
+                      { step: '1. BMP Registration', status: 'In Progress', detail: 'PIN filed as nature-based BMP with provisional patent documentation', statusColor: 'bg-amber-100 text-amber-800 border-amber-200', icon: '🔄' },
                       { step: '2. Approved Monitoring Plan', status: 'In Progress', detail: 'QAPP submitted; continuous monitoring exceeds minimum requirements', statusColor: 'bg-amber-100 text-amber-800 border-amber-200', icon: '🔄' },
                       { step: '3. Verified BMP Efficiency', status: 'Pending', detail: 'Requires 12+ months of validated deployment data (Milton pilot: 7 days)', statusColor: 'bg-slate-100 text-slate-600 border-slate-200', icon: '⏳' },
                       { step: '4. Third-Party Credit Verification', status: 'Pending', detail: 'Independent verifier confirms removal quantities and credit calculations', statusColor: 'bg-slate-100 text-slate-600 border-slate-200', icon: '⏳' },
@@ -4042,7 +4072,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                   </div>
                   <div className="bg-teal-50 border border-teal-300 rounded-md p-2.5">
                     <div className="text-[10px] text-teal-900">
-                      <strong>Important:</strong> No ALIA nutrient credits are currently certified, banked, or tradeable.
+                      <strong>Important:</strong> No PIN nutrient credits are currently certified, banked, or tradeable.
                       Credit values shown elsewhere in this dashboard are <em>projected estimates</em> for planning purposes only.
                       Actual credit generation requires completing all 5 steps above.
                     </div>
@@ -4051,7 +4081,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                 )}
 
                 <div className="text-[10px] text-slate-400 italic">
-                  Source: ALIA monitoring infrastructure specifications, EPA QA/R-5 framework, {(agency as any)?.name || 'state agency'} data quality requirements.
+                  Source: PIN monitoring infrastructure specifications, EPA QA/R-5 framework, {(agency as any)?.name || 'state agency'} data quality requirements.
                   QAPP documentation available upon request.
                 </div>
 

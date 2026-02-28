@@ -46,6 +46,8 @@ import { GrantOutcomesCard } from './GrantOutcomesCard';
 import { EmergingContaminantsTracker } from './EmergingContaminantsTracker';
 import { PolicyTracker } from './PolicyTracker';
 import { DataLatencyTracker } from './DataLatencyTracker';
+import { WARRZones } from './WARRZones';
+import type { WARRMetric, WARREvent } from './WARRZones';
 import { useAdminState, STATE_ABBR_TO_NAME } from '@/lib/adminStateContext';
 
 import { HabitatEcologyPanel } from './HabitatEcologyPanel';
@@ -90,6 +92,16 @@ type ViewLens = 'overview' | 'briefing' | 'planner' | 'trends' | 'policy' | 'com
   'water-quality' | 'public-health' | 'habitat-ecology' | 'agricultural-nps' |
   'infrastructure' | 'monitoring' | 'disaster-emergency' | 'military-installations' |
   'scorecard' | 'reports' | 'interagency' | 'funding';
+
+// ─── Water Quality Domain Tabs ────────────────────────────────────────────────
+const WQ_DOMAINS = [
+  { id: 'all' as const, label: 'All Domains', color: 'var(--accent-teal)', description: 'Combined view across all water quality domains.' },
+  { id: 'surface-water' as const, label: 'Surface Water', color: '#3B82F6', description: 'Rivers, streams, lakes, and reservoirs assessed under CWA Section 305(b).', keyMetrics: ['Total Assessed', 'Impaired Miles', 'TMDL Coverage'] },
+  { id: 'stormwater' as const, label: 'Stormwater', color: '#6B7280', description: 'Urban runoff, MS4 discharges, and construction site stormwater management.', keyMetrics: ['MS4 Permits', 'BMP Status', 'CSO Events'] },
+  { id: 'groundwater' as const, label: 'Groundwater', color: '#8B5CF6', description: 'Aquifer monitoring, well water quality, and WDFN groundwater levels.', keyMetrics: ['Active Wells', 'Contaminant Detections', 'Level Trends'] },
+  { id: 'drinking-water' as const, label: 'Drinking Water', color: '#06B6D4', description: 'Public water system compliance via SDWIS — violations, enforcement, and treatment.', keyMetrics: ['Systems Monitored', 'Active Violations', 'Enforcement Actions'] },
+  { id: 'coastal' as const, label: 'Coastal', color: '#0EA5E9', description: 'Estuaries, bays, and coastal waters assessed for ocean health and beach advisories.', keyMetrics: ['Coastal Waters', 'Beach Advisories', 'Estuary Health'] },
+];
 
 // ─── Lens Configuration: what each view shows/hides ────────────────────────────
 const LENS_CONFIG: Record<ViewLens, {
@@ -149,7 +161,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: true, showSituationSummary: true, showTimeRange: true,
     showSLA: false, showRestorationPlan: false, collapseStateTable: false,
-    sections: new Set(['networkhealth', 'impairmentprofile', 'coveragegaps', 'situation', 'statebystatesummary', 'top10', 'disclaimer']),
+    sections: new Set(['wq-domain-tabs', 'networkhealth', 'impairmentprofile', 'coveragegaps', 'situation', 'statebystatesummary', 'top10', 'disclaimer']),
   },
   infrastructure: {
     label: 'Infrastructure',
@@ -282,14 +294,14 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set(['funding-deadlines', 'grant-outcomes', 'funding-gap', 'disclaimer']),
   },
   planner: {
-    label: 'Response Planner',
-    description: 'Federal-scope response planning with data reliability assessment and before/after impact maps',
+    label: 'Emergency Response',
+    description: 'Federal emergency response coordination, active incidents, and restoration planning',
     defaultOverlay: 'hotspots',
     showTopStrip: false, showPriorityQueue: false, showCoverageGaps: false,
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['resolution-planner', 'disclaimer']),
+    sections: new Set(['fed-emergency-overview', 'fed-active-incidents', 'fed-spill-tracker', 'resolution-planner', 'disclaimer']),
   },
 };
 
@@ -727,7 +739,7 @@ function generateRegionData(): RegionRow[] {
     // Delaware
     delaware_christina:        { alertLevel: 'high',   activeAlerts: 4 },
     delaware_brandywine:       { alertLevel: 'medium', activeAlerts: 3 },
-    // Florida — ALIA pilot
+    // Florida — PIN pilot
     florida_escambia:          { alertLevel: 'high',   activeAlerts: 4 },
     florida_tampa_bay:         { alertLevel: 'high',   activeAlerts: 5 },
     florida_charlotte_harbor:  { alertLevel: 'high',   activeAlerts: 4 },
@@ -898,6 +910,7 @@ export function FederalManagementCenter(props: Props) {
   // ── View Lens: controls layout composition ──
   const [viewLens, setViewLens] = useLensParam<ViewLens>(federalMode ? 'overview' : 'overview');
   const lens = LENS_CONFIG[viewLens];
+  const [wqDomain, setWqDomain] = useState<'all' | 'surface-water' | 'stormwater' | 'groundwater' | 'drinking-water' | 'coastal'>('all');
 
   // ── ATTAINS Bulk State Assessment Data ──
   // Keyed by state abbreviation → array of matched waterbody assessments
@@ -1893,7 +1906,7 @@ export function FederalManagementCenter(props: Props) {
       .slice(0, 20)
       .map(([cause, count]) => ({ cause, count }));
 
-    // ALIA-addressable causes (sediment, nutrients, bacteria, turbidity, DO, metals from stormwater)
+    // PIN-addressable causes (sediment, nutrients, bacteria, turbidity, DO, metals from stormwater)
     const PEARL_ADDRESSABLE = ['sediment', 'silt', 'tss', 'suspended solid', 'turbidity',
       'nutrient', 'nitrogen', 'phosphor', 'ammonia', 'nitrate', 'nitrite',
       'bacteria', 'e. coli', 'e.coli', 'enterococ', 'fecal', 'coliform', 'pathogen',
@@ -2448,6 +2461,40 @@ export function FederalManagementCenter(props: Props) {
       monitoredCount: totalMonitored, totalCount: stateRollup.reduce((s, r) => s + r.waterbodies, 0),
     };
   }, [stateRollup]);
+
+  // ─── WARR Zone Adapters ────────────────────────────────────────────────────
+  const warrMetrics = useMemo<WARRMetric[]>(() => [
+    {
+      label: 'Network Health', value: networkHealth.percentage >= 0 ? `${networkHealth.percentage}%` : '—',
+      icon: Gauge, iconColor: networkHealth.color === 'green' ? 'var(--status-healthy)' : networkHealth.color === 'yellow' ? 'var(--status-warning)' : 'var(--status-severe)',
+      subtitle: `${networkHealth.grade.letter} grade · ${networkHealth.gradedStateCount ?? 0} states`,
+    },
+    {
+      label: 'Impairment Rate', value: `${scorecardData.impairmentPct}%`,
+      icon: AlertTriangle, iconColor: 'var(--status-warning)',
+      subtitle: `${scorecardData.totalImpaired.toLocaleString()} of ${scorecardData.totalAssessed.toLocaleString()} waterbodies`,
+    },
+    {
+      label: 'Sentinel Events', value: sentinel.criticalHucs.length + sentinel.watchHucs.length,
+      icon: Shield, iconColor: 'var(--accent-teal)',
+      subtitle: `${sentinel.criticalHucs.length} critical · ${sentinel.watchHucs.length} watch`,
+    },
+  ], [networkHealth, scorecardData, sentinel]);
+
+  const warrEvents = useMemo<WARREvent[]>(() =>
+    [...sentinel.criticalHucs, ...sentinel.watchHucs]
+      .sort((a, b) => b.score - a.score)
+      .map(h => ({
+        id: h.huc8,
+        name: hucNames[h.huc8] ?? h.huc8,
+        location: FIPS_TO_ABBR[h.huc8.slice(0, 2)] || undefined,
+        level: h.level as 'CRITICAL' | 'WATCH',
+        score: h.score,
+        signalCount: h.eventCount,
+        patterns: h.patternNames,
+      })),
+    [sentinel, hucNames],
+  );
 
   // ─── National Impact Counter ──────────────────────────────────────────────
   const [impactPeriod, setImpactPeriod] = useState<'all' | string>('all');
@@ -3343,7 +3390,7 @@ export function FederalManagementCenter(props: Props) {
                     </div>
                     <div className="text-xs text-green-600 mt-0.5">
                       This waterbody is currently attaining designated uses with no Category 4/5 impairments or parameter exceedances detected.
-                      ALIA monitoring recommended for early warning and baseline documentation.
+                      PIN monitoring recommended for early warning and baseline documentation.
                     </div>
                   </div>
                 </div>
@@ -3521,25 +3568,25 @@ export function FederalManagementCenter(props: Props) {
                                 <div>→ Upstream BMPs and source control</div>
                                 <div>→ Nature-based restoration for long-term recovery</div>
                                 <div>→ Community programs for compliance and stewardship</div>
-                                <div>→ <span className="font-semibold">ALIA for immediate treatment and real-time verification</span></div>
+                                <div>→ <span className="font-semibold">PIN for immediate treatment and real-time verification</span></div>
                               </div>
                             </div>
                           </div>
 
-                          {/* Why ALIA First */}
+                          {/* Why PIN First */}
                           <div className="rounded-md bg-cyan-50 border-2 border-cyan-300 p-3">
-                            <div className="text-[10px] font-bold text-cyan-800 uppercase tracking-wider mb-1.5">Why ALIA First</div>
+                            <div className="text-[10px] font-bold text-cyan-800 uppercase tracking-wider mb-1.5">Why PIN First</div>
                             <div className="space-y-1.5 text-xs text-cyan-900 leading-relaxed">
                               {dataAgeDays !== null && dataAgeDays > 30 && (
-                                <div><span className="font-semibold text-red-700">Data is {dataAgeDays} days old.</span> ALIA restores continuous, compliance-grade monitoring.</div>
+                                <div><span className="font-semibold text-red-700">Data is {dataAgeDays} days old.</span> PIN restores continuous, compliance-grade monitoring.</div>
                               )}
                               {treatmentPriorities.length > 0 && treatmentPriorities[0].urgency === 'immediate' && (
-                                <div><span className="font-semibold text-red-700">{treatmentPriorities[0].driver.charAt(0).toUpperCase() + treatmentPriorities[0].driver.slice(1).split('(')[0].trim()}.</span> ALIA provides immediate treatment.</div>
+                                <div><span className="font-semibold text-red-700">{treatmentPriorities[0].driver.charAt(0).toUpperCase() + treatmentPriorities[0].driver.slice(1).split('(')[0].trim()}.</span> PIN provides immediate treatment.</div>
                               )}
                               {treatmentPriorities.length > 0 && treatmentPriorities[0].urgency !== 'immediate' && (
-                                <div><span className="font-semibold">{hasBacteria ? 'Pathogen risk is elevated' : hasNutrients ? 'Nutrient loading is degrading habitat' : hasSediment ? 'Sediment is impairing aquatic life' : 'Conditions are deteriorating'}.</span> ALIA begins treatment immediately.</div>
+                                <div><span className="font-semibold">{hasBacteria ? 'Pathogen risk is elevated' : hasNutrients ? 'Nutrient loading is degrading habitat' : hasSediment ? 'Sediment is impairing aquatic life' : 'Conditions are deteriorating'}.</span> PIN begins treatment immediately.</div>
                               )}
-                              <div><span className="font-semibold">Long-term restoration takes years.</span> ALIA delivers measurable results in weeks.</div>
+                              <div><span className="font-semibold">Long-term restoration takes years.</span> PIN delivers measurable results in weeks.</div>
                             </div>
                           </div>
                         </div>
@@ -3547,7 +3594,7 @@ export function FederalManagementCenter(props: Props) {
                         {/* Action line */}
                         <div className="rounded-md bg-cyan-700 text-white px-4 py-2.5">
                           <div className="text-xs font-semibold">
-                            Recommended next step: Deploy {isPhasedDeployment ? `Phase 1 (${phase1Units} unit${phase1Units > 1 ? 's' : ''}, ${phase1GPM} GPM)` : `${totalUnits} ALIA unit${totalUnits > 1 ? 's' : ''}`} at {regionName} and begin continuous monitoring within 30 days.
+                            Recommended next step: Deploy {isPhasedDeployment ? `Phase 1 (${phase1Units} unit${phase1Units > 1 ? 's' : ''}, ${phase1GPM} GPM)` : `${totalUnits} PIN unit${totalUnits > 1 ? 's' : ''}`} at {regionName} and begin continuous monitoring within 30 days.
                           </div>
                           <div className="text-[10px] text-cyan-200 mt-1">
                             Typical deployment: 30-60 days. Pilot generates continuous data and measurable reductions within the first operating cycle.
@@ -3557,7 +3604,7 @@ export function FederalManagementCenter(props: Props) {
                     );
                   })()}
 
-                  {/* ═══ IMPAIRMENT CLASSIFICATION — What ALIA Can/Can't Address ═══ */}
+                  {/* ═══ IMPAIRMENT CLASSIFICATION — What PIN Can/Can't Address ═══ */}
                   {impairmentClassification.length > 0 && (
                     <div className="rounded-lg border-2 border-slate-300 bg-white p-3 space-y-2">
                       <div className="flex items-center justify-between">
@@ -3570,7 +3617,7 @@ export function FederalManagementCenter(props: Props) {
                             addressabilityPct >= 50 ? 'bg-amber-200 text-amber-800' :
                             'bg-red-200 text-red-800'
                           }`}>
-                            ALIA addresses {pearlAddressable} of {totalClassified} impairment{totalClassified !== 1 ? 's' : ''} ({addressabilityPct}%)
+                            PIN addresses {pearlAddressable} of {totalClassified} impairment{totalClassified !== 1 ? 's' : ''} ({addressabilityPct}%)
                           </span>
                         </div>
                       </div>
@@ -3578,7 +3625,7 @@ export function FederalManagementCenter(props: Props) {
                       <div className="space-y-1">
                         {/* Tier 1 */}
                         {impairmentClassification.filter(i => i.tier === 1).length > 0 && (
-                          <div className="text-[10px] font-bold text-green-700 uppercase tracking-wider mt-1">Tier 1 — ALIA Primary Target</div>
+                          <div className="text-[10px] font-bold text-green-700 uppercase tracking-wider mt-1">Tier 1 — PIN Primary Target</div>
                         )}
                         {impairmentClassification.filter(i => i.tier === 1).map((item, i) => (
                           <div key={`t1-${i}`} className="flex items-start gap-2 text-xs py-1 px-2 rounded bg-green-50 border border-green-100">
@@ -3592,7 +3639,7 @@ export function FederalManagementCenter(props: Props) {
 
                         {/* Tier 2 */}
                         {impairmentClassification.filter(i => i.tier === 2).length > 0 && (
-                          <div className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mt-2">Tier 2 — ALIA Contributes / Planned</div>
+                          <div className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mt-2">Tier 2 — PIN Contributes / Planned</div>
                         )}
                         {impairmentClassification.filter(i => i.tier === 2).map((item, i) => (
                           <div key={`t2-${i}`} className="flex items-start gap-2 text-xs py-1 px-2 rounded bg-amber-50 border border-amber-100">
@@ -3606,7 +3653,7 @@ export function FederalManagementCenter(props: Props) {
 
                         {/* Tier 3 */}
                         {impairmentClassification.filter(i => i.tier === 3).length > 0 && (
-                          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-2">Tier 3 — Outside ALIA Scope</div>
+                          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-2">Tier 3 — Outside PIN Scope</div>
                         )}
                         {impairmentClassification.filter(i => i.tier === 3).map((item, i) => (
                           <div key={`t3-${i}`} className="flex items-start gap-2 text-xs py-1 px-2 rounded bg-slate-50 border border-slate-200">
@@ -3620,12 +3667,12 @@ export function FederalManagementCenter(props: Props) {
                       </div>
 
                       <div className="text-[9px] text-slate-400 pt-1 border-t border-slate-100">
-                        Classification based on EPA ATTAINS impairment causes and ALIA treatment train capabilities. Tier 1: directly treated. Tier 2: indirect benefit or planned module. Tier 3: requires different intervention.
+                        Classification based on EPA ATTAINS impairment causes and PIN treatment train capabilities. Tier 1: directly treated. Tier 2: indirect benefit or planned module. Tier 3: requires different intervention.
                       </div>
                     </div>
                   )}
 
-                  {/* ═══ ALIA — IMMEDIATE IMPACT LAYER (elevated, shown first) ═══ */}
+                  {/* ═══ PIN — IMMEDIATE IMPACT LAYER (elevated, shown first) ═══ */}
                   {(() => {
                     const pearlCat = categories.find(c => c.id === 'pearl');
                     if (!pearlCat) return null;
@@ -3645,9 +3692,9 @@ export function FederalManagementCenter(props: Props) {
                           </div>
                         </div>
 
-                        {/* Why ALIA here — dynamic evidence box */}
+                        {/* Why PIN here — dynamic evidence box */}
                         <div className="rounded-md border border-cyan-300 bg-white p-3 space-y-2">
-                          <div className="text-[10px] font-bold text-cyan-800 uppercase tracking-wider">Why ALIA at this site</div>
+                          <div className="text-[10px] font-bold text-cyan-800 uppercase tracking-wider">Why PIN at this site</div>
                           <div className="space-y-1.5">
                             {whyBullets.map((b, i) => (
                               <div key={i} className="flex items-start gap-2">
@@ -3661,7 +3708,7 @@ export function FederalManagementCenter(props: Props) {
                           </div>
                         </div>
 
-                        {/* ALIA modules */}
+                        {/* PIN modules */}
                         <div className="space-y-1">
                           {[...warranted, ...accelerators].map((t) => (
                             <div key={t.id} className={`rounded-md border p-2 ${t.color}`}>
@@ -3672,7 +3719,7 @@ export function FederalManagementCenter(props: Props) {
                                     <span className="text-xs font-semibold">{t.label}</span>
                                     <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase ${
                                       t.status === 'warranted' ? 'bg-red-200 text-red-800' : 'bg-cyan-200 text-cyan-800'
-                                    }`}>{t.status === 'warranted' ? 'WARRANTED' : 'ALIA'}</span>
+                                    }`}>{t.status === 'warranted' ? 'WARRANTED' : 'PIN'}</span>
                                   </div>
                                   <div className="text-[10px] mt-0.5 leading-relaxed opacity-90">{t.detail}</div>
                                 </div>
@@ -3718,7 +3765,7 @@ export function FederalManagementCenter(props: Props) {
 
                         {/* ═══ DEPLOYMENT ROADMAP ═══ */}
                         {isPhasedDeployment && (() => {
-                          // Each quad targets a ranked critical zone. Every ALIA unit treats AND monitors.
+                          // Each quad targets a ranked critical zone. Every PIN unit treats AND monitors.
                           // Monitoring continuity & verification is universal -- not unique to any single phase.
                           type PhaseInfo = { phase: string; quads: number; units: number; gpm: number; cost: number; mission: string; placement: string; why: string; trigger: string; color: string; bgColor: string };
                           const phases: PhaseInfo[] = [];
@@ -3873,9 +3920,9 @@ export function FederalManagementCenter(props: Props) {
                         <div className="flex flex-wrap gap-2">
                           <button
                             onClick={() => {
-                              const subject = encodeURIComponent(`ALIA Pilot Deployment Request — ${regionName}, ${stateAbbr}`);
+                              const subject = encodeURIComponent(`PIN Pilot Deployment Request — ${regionName}, ${stateAbbr}`);
                               const body = encodeURIComponent(
-                                `ALIA Pilot Deployment Request\n` +
+                                `PIN Pilot Deployment Request\n` +
                                 `${'='.repeat(40)}\n\n` +
                                 `Site: ${regionName}\n` +
                                 `State: ${STATE_ABBR_TO_NAME[stateAbbr] || stateAbbr}\n` +
@@ -3898,7 +3945,7 @@ export function FederalManagementCenter(props: Props) {
                             }}
                             className="flex-1 min-w-[140px] bg-cyan-700 hover:bg-cyan-800 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition-colors shadow-sm"
                           >
-                            🚀 Deploy ALIA Pilot Here
+                            🚀 Deploy PIN Pilot Here
                           </button>
                           <button
                             onClick={async () => {
@@ -3935,13 +3982,13 @@ export function FederalManagementCenter(props: Props) {
                                 const catTitleMap: Record<string, string> = {
                                   source: 'SOURCE CONTROL -- Upstream BMPs',
                                   nature: 'NATURE-BASED SOLUTIONS',
-                                  pearl: 'ALIA -- Treatment Accelerator',
+                                  pearl: 'PIN -- Treatment Accelerator',
                                   community: 'COMMUNITY ENGAGEMENT & STEWARDSHIP',
                                   regulatory: 'REGULATORY & PLANNING',
                                 };
 
                                 // Title
-                                pdf.addTitle('ALIA Deployment Plan');
+                                pdf.addTitle('PIN Deployment Plan');
                                 pdf.addText(clean(`${regionName}, ${STATE_ABBR_TO_NAME[stateAbbr] || stateAbbr}`), { bold: true, fontSize: 12 });
                                 pdf.addText(`Generated ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, { fontSize: 9 });
                                 pdf.addSpacer(5);
@@ -3975,7 +4022,7 @@ export function FederalManagementCenter(props: Props) {
                                 pdf.addSpacer(3);
 
                                 pdf.addText('RECOMMENDED ACTION', { bold: true });
-                                pdf.addText(clean(`Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} unit${phase1Units > 1 ? 's' : ''}, ${phase1GPM} GPM)` : `${totalUnits} ALIA unit${totalUnits > 1 ? 's' : ''}`} at ${regionName} and begin continuous monitoring within 30 days.`), { indent: 5, bold: true });
+                                pdf.addText(clean(`Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} unit${phase1Units > 1 ? 's' : ''}, ${phase1GPM} GPM)` : `${totalUnits} PIN unit${totalUnits > 1 ? 's' : ''}`} at ${regionName} and begin continuous monitoring within 30 days.`), { indent: 5, bold: true });
                                 pdf.addText('Typical deployment: 30-60 days. Pilot generates continuous data and measurable reductions within the first operating cycle.', { indent: 5, fontSize: 9 });
                                 pdf.addSpacer(5);
 
@@ -4022,8 +4069,8 @@ export function FederalManagementCenter(props: Props) {
                                   pdf.addSpacer(3);
                                 }
 
-                                // Why ALIA at this site
-                                pdf.addSubtitle('Why ALIA at This Site');
+                                // Why PIN at this site
+                                pdf.addSubtitle('Why PIN at This Site');
                                 pdf.addDivider();
                                 for (const b of whyBullets) {
                                   pdf.addText(clean(`- ${b.problem}`), { indent: 5, bold: true });
@@ -4031,8 +4078,8 @@ export function FederalManagementCenter(props: Props) {
                                 }
                                 pdf.addSpacer(3);
 
-                                // ALIA Configuration
-                                pdf.addSubtitle(`ALIA Configuration: ${pearlModel}`);
+                                // PIN Configuration
+                                pdf.addSubtitle(`PIN Configuration: ${pearlModel}`);
                                 pdf.addDivider();
                                 pdf.addText(`System Type: ${waterType === 'brackish' ? 'Oyster (C. virginica)' : 'Freshwater Mussel'} Biofiltration`, { indent: 5 });
                                 const pearlCatMods = categories.find(c => c.id === 'pearl');
@@ -4052,7 +4099,7 @@ export function FederalManagementCenter(props: Props) {
                                   [
                                     ['Sizing Method', 'Severity-driven treatment need assessment'],
                                     ['Site Severity Score', `${prelimSeverity}/100 (${siteSeverityLabel})`],
-                                    ['Unit Capacity', '50 GPM per ALIA unit (4 units per quad)'],
+                                    ['Unit Capacity', '50 GPM per PIN unit (4 units per quad)'],
                                     ['Waterbody Size', `~${estimatedAcres} acres (${acresSource})`],
                                     ['Deployment Size', `${totalQuads} quad${totalQuads > 1 ? 's' : ''} (${totalUnits} units, ${fullGPM} GPM)`],
                                     ...(isPhasedDeployment ? [
@@ -4180,10 +4227,10 @@ export function FederalManagementCenter(props: Props) {
 
                                 // Impairment Classification
                                 if (impairmentClassification.length > 0) {
-                                  pdf.addSubtitle(`Impairment Classification — ALIA addresses ${pearlAddressable} of ${totalClassified} (${addressabilityPct}%)`);
+                                  pdf.addSubtitle(`Impairment Classification — PIN addresses ${pearlAddressable} of ${totalClassified} (${addressabilityPct}%)`);
                                   pdf.addDivider();
                                   pdf.addTable(
-                                    ['Cause', 'Tier', 'ALIA Action'],
+                                    ['Cause', 'Tier', 'PIN Action'],
                                     impairmentClassification.map(item => [
                                       clean(item.cause),
                                       item.tier === 1 ? 'T1 — Primary Target' : item.tier === 2 ? 'T2 — Contributes/Planned' : 'T3 — Outside Scope',
@@ -4207,7 +4254,7 @@ export function FederalManagementCenter(props: Props) {
                                 // Full Restoration Plan
                                 pdf.addSubtitle('Full Restoration Plan');
                                 pdf.addDivider();
-                                pdf.addText(`This plan combines ${totalBMPs} conventional BMPs and nature-based solutions with ALIA accelerated treatment.`);
+                                pdf.addText(`This plan combines ${totalBMPs} conventional BMPs and nature-based solutions with PIN accelerated treatment.`);
                                 pdf.addSpacer(3);
 
                                 for (const cat of categories.filter(c => c.id !== 'pearl')) {
@@ -4226,7 +4273,7 @@ export function FederalManagementCenter(props: Props) {
                                 // Next Steps
                                 pdf.addSubtitle('Recommended Next Steps');
                                 pdf.addDivider();
-                                pdf.addText(clean(`1. Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} ALIA units, ${phase1GPM} GPM) at highest-priority inflow zone${phase1Quads > 1 ? 's' : ''}` : `${totalUnits} ALIA unit${totalUnits > 1 ? 's' : ''}`} within 30 days.`), { indent: 5 });
+                                pdf.addText(clean(`1. Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} PIN units, ${phase1GPM} GPM) at highest-priority inflow zone${phase1Quads > 1 ? 's' : ''}` : `${totalUnits} PIN unit${totalUnits > 1 ? 's' : ''}`} within 30 days.`), { indent: 5 });
                                 pdf.addText('2. Begin continuous water quality monitoring (15-min intervals, telemetered).', { indent: 5 });
                                 pdf.addText('3. Use 90-day baseline dataset to calibrate treatment priorities and validate severity assessment.', { indent: 5 });
                                 if (isPhasedDeployment) {
@@ -4265,7 +4312,7 @@ export function FederalManagementCenter(props: Props) {
                           const fmt = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
 
                           // ═══ COMPLIANCE SAVINGS MODEL ═══
-                          // Framed as: "How much existing compliance cost can ALIA replace or compress?"
+                          // Framed as: "How much existing compliance cost can PIN replace or compress?"
                           // NOT fines avoided. This is reduced spend on monitoring, reporting, and BMP execution.
                           // Partial displacement assumptions — conservative, defensible for city procurement.
 
@@ -4284,17 +4331,17 @@ export function FederalManagementCenter(props: Props) {
                           const tradTotalHigh = (tradMonitoringHigh + tradBMPHigh + tradConsultingHigh) * totalQuads;
 
                           // ── Bucket 1: Monitoring & Reporting Efficiency ──
-                          // ALIA replaces 50-75% of fixed monitoring station cost
+                          // PIN replaces 50-75% of fixed monitoring station cost
                           const monStationSavingsLow = Math.round(0.50 * tradMonitoringLow * totalQuads);
                           const monStationSavingsHigh = Math.round(0.75 * tradMonitoringHigh * totalQuads);
-                          // ALIA replaces 40-60% of consulting, lab, and reporting
+                          // PIN replaces 40-60% of consulting, lab, and reporting
                           const consultSavingsLow = Math.round(0.40 * tradConsultingLow * totalQuads);
                           const consultSavingsHigh = Math.round(0.60 * tradConsultingHigh * totalQuads);
                           const bucket1Low = monStationSavingsLow + consultSavingsLow;
                           const bucket1High = monStationSavingsHigh + consultSavingsHigh;
 
                           // ── Bucket 2: BMP Execution Efficiency ──
-                          // ALIA data improves targeting, reduces rework and mis-targeted spend
+                          // PIN data improves targeting, reduces rework and mis-targeted spend
                           // Conservative: 5-10% of amortized BMP program
                           const bucket2Low = Math.round(0.05 * tradBMPLow * totalQuads);
                           const bucket2High = Math.round(0.10 * tradBMPHigh * totalQuads);
@@ -4306,7 +4353,7 @@ export function FederalManagementCenter(props: Props) {
                           const compSavingsLowRound = Math.round(compSavingsLow / 10000) * 10000;
                           const compSavingsHighRound = Math.round(compSavingsHigh / 10000) * 10000;
 
-                          // ── What this means relative to ALIA cost ──
+                          // ── What this means relative to PIN cost ──
                           const offsetPctLow = Math.round((compSavingsLowRound / fullAnnual) * 100);
                           const offsetPctHigh = Math.round((compSavingsHighRound / fullAnnual) * 100);
 
@@ -4322,14 +4369,14 @@ export function FederalManagementCenter(props: Props) {
 
                           return (
                             <div className="rounded-lg border-2 border-green-300 bg-gradient-to-br from-green-50 to-emerald-50 p-3 space-y-3">
-                              <div className="text-[10px] font-bold text-green-800 uppercase tracking-wider">ALIA Economics -- {regionName}</div>
+                              <div className="text-[10px] font-bold text-green-800 uppercase tracking-wider">PIN Economics -- {regionName}</div>
 
                               {/* Unit pricing */}
                               <div className="space-y-1">
-                                <div className="text-[10px] font-bold text-slate-600 uppercase">ALIA Unit Pricing</div>
+                                <div className="text-[10px] font-bold text-slate-600 uppercase">PIN Unit Pricing</div>
                                 <div className="rounded-md bg-white border border-slate-200 overflow-hidden">
                                   <div className="grid grid-cols-[1fr_auto] text-[11px]">
-                                    <div className="px-2 py-1.5 bg-slate-100 font-semibold border-b border-slate-200">ALIA Unit (50 GPM)</div>
+                                    <div className="px-2 py-1.5 bg-slate-100 font-semibold border-b border-slate-200">PIN Unit (50 GPM)</div>
                                     <div className="px-2 py-1.5 bg-slate-100 font-bold text-right border-b border-slate-200">{fmt(unitCost)}/unit/year</div>
                                     <div className="px-2 py-1.5 border-b border-slate-100 text-[10px] text-slate-500" style={{ gridColumn: '1 / -1' }}>
                                       All-inclusive: hardware, deployment, calibration, continuous monitoring, dashboards, automated reporting, maintenance, and support
@@ -4413,7 +4460,7 @@ export function FederalManagementCenter(props: Props) {
                                     <div className="px-2 py-1.5 bg-slate-200 font-bold text-slate-700 text-right">{fmt(tradTotalLow)} -- {fmt(tradTotalHigh)}/yr</div>
                                   </div>
                                 </div>
-                                <div className="text-[9px] text-slate-500 px-1">These are costs Baltimore already pays or would pay to achieve equivalent compliance coverage. ALIA does not eliminate all of these -- it partially displaces and compresses them.</div>
+                                <div className="text-[9px] text-slate-500 px-1">These are costs Baltimore already pays or would pay to achieve equivalent compliance coverage. PIN does not eliminate all of these -- it partially displaces and compresses them.</div>
                               </div>
 
                               {/* Compliance cost savings */}
@@ -4443,7 +4490,7 @@ export function FederalManagementCenter(props: Props) {
                                 <div className="rounded-md bg-green-100 border border-green-200 text-center py-2">
                                   <div className="text-[9px] text-green-600">Compliance Savings Offset</div>
                                   <div className="text-lg font-bold text-green-700">{offsetPctLow}% -- {offsetPctHigh}%</div>
-                                  <div className="text-[9px] text-green-500">of ALIA cost offset by reduced compliance spend</div>
+                                  <div className="text-[9px] text-green-500">of PIN cost offset by reduced compliance spend</div>
                                 </div>
                                 <div className="rounded-md bg-cyan-100 border border-cyan-200 text-center py-2">
                                   <div className="text-[9px] text-cyan-600">Time to Compliance Data</div>
@@ -4465,7 +4512,7 @@ export function FederalManagementCenter(props: Props) {
                                     <div className="px-2 py-1.5 bg-green-200 font-bold text-green-900 text-right">{fmt(effectiveCostLow)} -- {fmt(effectiveCostHigh)}/yr</div>
                                   </div>
                                 </div>
-                                <div className="text-[9px] text-slate-500 px-1">Effective net cost = ALIA annual cost minus grant funding minus compliance savings. This is the incremental budget impact for capabilities that would otherwise require {totalQuads} separate monitoring, treatment, and consulting contracts.</div>
+                                <div className="text-[9px] text-slate-500 px-1">Effective net cost = PIN annual cost minus grant funding minus compliance savings. This is the incremental budget impact for capabilities that would otherwise require {totalQuads} separate monitoring, treatment, and consulting contracts.</div>
                               </div>
 
                               {/* Grant alignment */}
@@ -4500,7 +4547,7 @@ export function FederalManagementCenter(props: Props) {
                   {/* ═══ SUPPORTING LAYERS (source, nature, community, regulatory) ═══ */}
                   <div className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold px-1 pt-1">Supporting Restoration Layers</div>
                   <div className="text-[11px] text-slate-500 px-1 -mt-2">
-                    ALIA accelerates results. These layers provide the long-term foundation.
+                    PIN accelerates results. These layers provide the long-term foundation.
                   </div>
 
                   {categories.filter(cat => cat.id !== 'pearl').map((cat) => {
@@ -4589,7 +4636,7 @@ export function FederalManagementCenter(props: Props) {
                       </div>
                     </div>
                     <div className="text-[10px] text-slate-400 mt-2 border-t border-slate-100 pt-1.5">
-                      Sizing derived from {isMD ? 'MD DNR Shallow Water Monitoring thresholds: DO (5.0/3.2 mg/L), chlorophyll (15/50/100 ug/L), turbidity (7 FNU)' : 'EPA National Recommended Water Quality Criteria: DO (5.0/4.0 mg/L), chlorophyll (20/40/60 ug/L), turbidity (10/25 FNU)'}, EPA ATTAINS category. ALIA is the data backbone -- it measures, verifies, and optimizes every restoration layer from day one.
+                      Sizing derived from {isMD ? 'MD DNR Shallow Water Monitoring thresholds: DO (5.0/3.2 mg/L), chlorophyll (15/50/100 ug/L), turbidity (7 FNU)' : 'EPA National Recommended Water Quality Criteria: DO (5.0/4.0 mg/L), chlorophyll (20/40/60 ug/L), turbidity (10/25 FNU)'}, EPA ATTAINS category. PIN is the data backbone -- it measures, verifies, and optimizes every restoration layer from day one.
                     </div>
                   </div>
                 </CardContent>
@@ -4880,6 +4927,49 @@ export function FederalManagementCenter(props: Props) {
           </Card>
         )}
         </>); {/* end aiinsights */}
+
+        case 'wq-domain-tabs': return DS(<>
+        {/* ── Water Quality Domain Tabs ── */}
+        <div>
+          <div className="flex flex-wrap gap-2 mb-3">
+            {WQ_DOMAINS.map(d => (
+              <button
+                key={d.id}
+                onClick={() => setWqDomain(d.id)}
+                className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+                style={{
+                  background: wqDomain === d.id ? d.color : 'var(--bg-card)',
+                  color: wqDomain === d.id ? '#fff' : 'var(--text-secondary)',
+                  border: `1px solid ${wqDomain === d.id ? d.color : 'var(--border-default)'}`,
+                }}
+              >
+                {d.label}
+              </button>
+            ))}
+          </div>
+          {wqDomain !== 'all' && (() => {
+            const domain = WQ_DOMAINS.find(d => d.id === wqDomain)!;
+            return (
+              <div className="pin-card-tinted p-4" data-domain={wqDomain}>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: domain.color }} />
+                  <span className="text-sm font-semibold" style={{ color: 'var(--text-bright)' }}>{domain.label}</span>
+                </div>
+                <p className="text-xs mb-3" style={{ color: 'var(--text-secondary)' }}>{domain.description}</p>
+                {domain.keyMetrics && (
+                  <div className="flex flex-wrap gap-2">
+                    {domain.keyMetrics.map(m => (
+                      <span key={m} className="px-2 py-0.5 rounded text-[10px] font-medium" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-dim)' }}>
+                        {m}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+        </div>
+        </>);
 
         case 'networkhealth': return DS(<>
         {/* Network Health Score — lens controlled */}
@@ -6719,6 +6809,118 @@ export function FederalManagementCenter(props: Props) {
 
         case 'waterbody-card': return DS(<>{/* now rendered inside impairmentprofile */}</>);
 
+        // ── Federal Emergency Response sections ───────────────────────
+        case 'fed-emergency-overview': return DS(
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-red-600" />
+                National Emergency Overview
+              </CardTitle>
+              <CardDescription>Active water quality emergencies and federal response coordination</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { id: 'em-active', label: 'Active Emergencies', value: '3', bg: 'bg-red-50 border-red-200', detail: '3 active water quality emergencies — East Palestine (OH), Jackson (MS) water system, and Maui wildfire runoff (HI). EPA On-Scene Coordinators deployed.' },
+                  { id: 'em-watch', label: 'Watch List', value: '7', bg: 'bg-amber-50 border-amber-200', detail: '7 situations on federal watch — emerging PFAS clusters, dam safety concerns, and drought-driven algal bloom risks.' },
+                  { id: 'em-teams', label: 'Teams Deployed', value: '12', bg: 'bg-blue-50 border-blue-200', detail: '12 EPA Emergency Response teams deployed across Regions 2, 4, 5, and 9. Coordination with FEMA, USACE, and state DEQs.' },
+                  { id: 'em-resolved', label: 'Resolved (90d)', value: '5', bg: 'bg-green-50 border-green-200', detail: '5 emergencies resolved in last 90 days. Post-incident monitoring ongoing at 3 sites.' },
+                ].map(k => (
+                  <div key={k.id}>
+                    <button onClick={() => setComingSoonId(comingSoonId === k.id ? null : k.id)} className={`w-full rounded-xl border p-4 text-left transition-all hover:shadow-md cursor-pointer ${k.bg}`}>
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                      <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                    </button>
+                    {comingSoonId === k.id && (
+                      <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
+                        <p className="text-xs text-slate-700">{k.detail}</p>
+                        <p className="text-[10px] text-blue-600 mt-2 font-medium">Full detail view — Coming Soon</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA Emergency Response, NRC, state emergency operations</p>
+            </CardContent>
+          </Card>
+        );
+
+        case 'fed-active-incidents': return DS(
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-orange-600" />
+                Active Incidents
+              </CardTitle>
+              <CardDescription>Current water quality incidents requiring federal coordination</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {[
+                  { id: 'inc-1', name: 'East Palestine Derailment — Long-term Monitoring', region: 'Region 5', severity: 'High', states: 'OH, PA, WV', detail: 'Ongoing surface water and groundwater monitoring post-derailment. Vinyl chloride and butyl acrylate tracking across 3 watersheds.' },
+                  { id: 'inc-2', name: 'Jackson MS Water System Crisis', region: 'Region 4', severity: 'Critical', states: 'MS', detail: 'Federal emergency water distribution, infrastructure assessment, and long-term system rehabilitation coordination.' },
+                  { id: 'inc-3', name: 'Maui Wildfire Runoff Monitoring', region: 'Region 9', severity: 'Moderate', states: 'HI', detail: 'Post-wildfire sediment, metals, and nutrient loading into nearshore waters. Coral reef impact assessment underway.' },
+                ].map(e => (
+                  <div key={e.id}>
+                    <button onClick={() => setComingSoonId(comingSoonId === e.id ? null : e.id)} className="w-full flex items-center gap-3 rounded-lg border border-orange-200 bg-orange-50/50 p-3 hover:bg-orange-100/50 transition-all cursor-pointer text-left">
+                      <AlertCircle className={`h-4 w-4 flex-shrink-0 ${e.severity === 'Critical' ? 'text-red-600' : e.severity === 'High' ? 'text-orange-600' : 'text-amber-500'}`} />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-semibold text-slate-800">{e.name}</div>
+                        <div className="text-[10px] text-slate-500">{e.region} · {e.states}</div>
+                      </div>
+                      <Badge variant="outline" className={`text-[10px] ${e.severity === 'Critical' ? 'border-red-300 text-red-700 bg-red-50' : e.severity === 'High' ? 'border-orange-300 text-orange-700 bg-orange-50' : 'border-amber-300 text-amber-700 bg-amber-50'}`}>{e.severity}</Badge>
+                    </button>
+                    {comingSoonId === e.id && (
+                      <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
+                        <p className="text-xs text-slate-700">{e.detail}</p>
+                        <p className="text-[10px] text-blue-600 mt-2 font-medium">Full incident dashboard — Coming Soon</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA Emergency Response, National Response Center, state emergency ops</p>
+            </CardContent>
+          </Card>
+        );
+
+        case 'fed-spill-tracker': return DS(
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Droplets className="h-5 w-5 text-purple-600" />
+                Federal Spill & Release Tracker
+              </CardTitle>
+              <CardDescription>NRC-reported releases with water quality impact potential</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                {[
+                  { id: 'spill-30d', label: 'Reports (30d)', value: '142', bg: 'bg-purple-50 border-purple-200', detail: '142 NRC-reported releases in last 30 days with potential water quality impact. Filtered from 1,200+ total NRC reports.' },
+                  { id: 'spill-wq', label: 'WQ Impact', value: '28', bg: 'bg-red-50 border-red-200', detail: '28 releases confirmed to have reached surface water or groundwater. Monitoring initiated at 22 sites.' },
+                  { id: 'spill-open', label: 'Open Investigations', value: '15', bg: 'bg-amber-50 border-amber-200', detail: '15 active federal investigations — source identification, responsible party determination, and remediation oversight.' },
+                  { id: 'spill-cleanup', label: 'Active Cleanup', value: '9', bg: 'bg-blue-50 border-blue-200', detail: '9 active cleanup operations under federal oversight. $12M in estimated cleanup costs.' },
+                ].map(k => (
+                  <div key={k.id}>
+                    <button onClick={() => setComingSoonId(comingSoonId === k.id ? null : k.id)} className={`w-full rounded-xl border p-4 text-left transition-all hover:shadow-md cursor-pointer ${k.bg}`}>
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                      <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                    </button>
+                    {comingSoonId === k.id && (
+                      <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
+                        <p className="text-xs text-slate-700">{k.detail}</p>
+                        <p className="text-[10px] text-blue-600 mt-2 font-medium">Full detail view — Coming Soon</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-slate-400 mt-4 italic">Data source: National Response Center (NRC), EPA CERCLIS, state spill databases</p>
+            </CardContent>
+          </Card>
+        );
+
         case 'resolution-planner': return DS(<>
         {/* ── Response Planner — AI-powered action planning ── */}
         <div id="section-resolution-planner">
@@ -6871,169 +7073,21 @@ export function FederalManagementCenter(props: Props) {
           <DataLatencyTracker />
         );
 
-        case 'warr-metrics': return DS(<>
-        {/* ── WATCH ZONE: Key National Metrics Strip ── */}
-        <div>
-          <div className="text-[9px] font-bold uppercase tracking-[0.15em] mb-2 flex items-center gap-2" style={{ color: 'var(--text-dim)' }}>
-            <span className="w-2 h-2 rounded-full" style={{ background: 'var(--accent-teal)' }} />
-            WATCH
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="rounded-lg p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
-              <div className="flex items-center gap-2 mb-1">
-                <Gauge className="w-4 h-4" style={{ color: networkHealth.color === 'green' ? 'var(--status-healthy)' : networkHealth.color === 'yellow' ? 'var(--status-warning)' : 'var(--status-severe)' }} />
-                <span className="text-[10px] uppercase tracking-wide font-semibold" style={{ color: 'var(--text-dim)' }}>Network Health</span>
-              </div>
-              <div className="text-2xl font-bold" style={{ color: 'var(--text-bright)' }}>
-                {networkHealth.percentage >= 0 ? `${networkHealth.percentage}%` : '—'}
-              </div>
-              <div className="text-[10px]" style={{ color: 'var(--text-dim)' }}>
-                {networkHealth.grade.letter} grade · {networkHealth.gradedStateCount ?? 0} states
-              </div>
-            </div>
-            <div className="rounded-lg p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
-              <div className="flex items-center gap-2 mb-1">
-                <AlertTriangle className="w-4 h-4" style={{ color: 'var(--status-warning)' }} />
-                <span className="text-[10px] uppercase tracking-wide font-semibold" style={{ color: 'var(--text-dim)' }}>Impairment Rate</span>
-              </div>
-              <div className="text-2xl font-bold" style={{ color: 'var(--text-bright)' }}>
-                {scorecardData.impairmentPct}%
-              </div>
-              <div className="text-[10px]" style={{ color: 'var(--text-dim)' }}>
-                {scorecardData.totalImpaired.toLocaleString()} of {scorecardData.totalAssessed.toLocaleString()} waterbodies
-              </div>
-            </div>
-            <div className="rounded-lg p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
-              <div className="flex items-center gap-2 mb-1">
-                <Shield className="w-4 h-4" style={{ color: 'var(--accent-teal)' }} />
-                <span className="text-[10px] uppercase tracking-wide font-semibold" style={{ color: 'var(--text-dim)' }}>Sentinel Events</span>
-              </div>
-              <div className="text-2xl font-bold" style={{ color: 'var(--text-bright)' }}>
-                {sentinel.criticalHucs.length + sentinel.watchHucs.length}
-              </div>
-              <div className="text-[10px]" style={{ color: 'var(--text-dim)' }}>
-                {sentinel.criticalHucs.length} critical · {sentinel.watchHucs.length} watch
-              </div>
-            </div>
-          </div>
-        </div>
-        </>);
+        case 'warr-metrics': return DS(
+          <WARRZones zone="warr-metrics" role="Federal" stateAbbr={selectedState || 'US'} metrics={warrMetrics} events={warrEvents} activeResolutionCount={sentinel.criticalHucs.length} />
+        );
 
-        case 'warr-analyze': return DS(<>
-        {/* ── ANALYZE ZONE: PIN Insights ── */}
-        <div>
-          <div className="text-[9px] font-bold uppercase tracking-[0.15em] mb-2 flex items-center gap-2" style={{ color: 'var(--text-dim)' }}>
-            <span className="w-2 h-2 rounded-full bg-blue-400" />
-            ANALYZE
-          </div>
-          <AIInsightsEngine
-            role="Federal"
-            stateAbbr={selectedState || 'US'}
-            nationalData={nationalAIData}
-          />
-        </div>
-        </>);
+        case 'warr-analyze': return DS(
+          <WARRZones zone="warr-analyze" role="Federal" stateAbbr={selectedState || 'US'} metrics={warrMetrics} aiData={nationalAIData} events={warrEvents} activeResolutionCount={sentinel.criticalHucs.length} />
+        );
 
-        case 'warr-respond': return DS(<>
-        {/* ── RESPOND ZONE: Top 3 Sentinel Events ── */}
-        <div>
-          <div className="text-[9px] font-bold uppercase tracking-[0.15em] mb-2 flex items-center gap-2" style={{ color: 'var(--text-dim)' }}>
-            <span className="w-2 h-2 rounded-full bg-amber-400" />
-            RESPOND
-          </div>
-          {[...sentinel.criticalHucs, ...sentinel.watchHucs].sort((a, b) => b.score - a.score).slice(0, 3).length > 0 ? (
-            <div className="space-y-2">
-              {[...sentinel.criticalHucs, ...sentinel.watchHucs].sort((a, b) => b.score - a.score).slice(0, 3).map(h => {
-                const stateAbbr = FIPS_TO_ABBR[h.huc8.slice(0, 2)] || '';
-                const hucName = hucNames[h.huc8] ?? h.huc8;
-                const severity = h.score >= 400 ? 'Critical' : h.score >= 300 ? 'Severe' : h.score >= 200 ? 'Elevated' : 'Watch';
-                return (
-                  <div
-                    key={h.huc8}
-                    className="flex items-center gap-3 p-3 rounded-lg"
-                    style={{
-                      background: 'var(--bg-card)',
-                      border: `1px solid ${h.level === 'CRITICAL' ? '#D32F2F40' : 'var(--border-subtle)'}`,
-                      borderLeft: `3px solid ${h.level === 'CRITICAL' ? '#D32F2F' : '#F9A825'}`,
-                    }}
-                  >
-                    {h.level === 'CRITICAL' ? (
-                      <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0" />
-                    ) : (
-                      <Eye className="w-4 h-4 text-amber-500 flex-shrink-0" />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate" style={{ color: 'var(--text-bright)' }}>
-                        {hucName}{stateAbbr ? `, ${stateAbbr}` : ''}
-                      </div>
-                      <div className="text-[10px]" style={{ color: 'var(--text-dim)' }}>
-                        {h.eventCount} signal{h.eventCount !== 1 ? 's' : ''} · {h.patternNames.map(p => p.replace(/-/g, ' ')).join(' + ')}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span
-                        className="sentinel-score-badge text-[10px]"
-                        data-level={h.level}
-                        style={{ width: '24px', height: '24px', fontSize: '10px' }}
-                      >
-                        {Math.round(h.score)}
-                      </span>
-                      <span className="text-[9px]" style={{ color: 'var(--text-dim)' }}>/500</span>
-                      <span className="text-[9px] font-medium" style={{ color: h.score >= 400 ? '#D32F2F' : h.score >= 300 ? '#E65100' : '#F9A825' }}>{severity}</span>
-                    </div>
-                  </div>
-                );
-              })}
-              <button
-                onClick={() => setViewLens('briefing' as ViewLens)}
-                className="w-full text-center py-2 rounded-lg text-xs font-medium transition-colors"
-                style={{ color: 'var(--text-secondary)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
-              >
-                View all events in AI Briefing →
-              </button>
-            </div>
-          ) : (
-            <div className="p-4 rounded-lg text-center text-xs" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}>
-              <CheckCircle className="w-4 h-4 mx-auto mb-1" style={{ color: 'var(--status-healthy)' }} />
-              No active Sentinel events. All monitored watersheds within normal parameters.
-            </div>
-          )}
-        </div>
-        </>);
+        case 'warr-respond': return DS(
+          <WARRZones zone="warr-respond" role="Federal" stateAbbr={selectedState || 'US'} metrics={warrMetrics} events={warrEvents} activeResolutionCount={sentinel.criticalHucs.length} onViewAllEvents={() => setViewLens('briefing' as ViewLens)} />
+        );
 
-        case 'warr-resolve': return DS(<>
-        {/* ── RESOLVE ZONE: Active Response Tracking ── */}
-        <div>
-          <div className="text-[9px] font-bold uppercase tracking-[0.15em] mb-2 flex items-center gap-2" style={{ color: 'var(--text-dim)' }}>
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
-            RESOLVE
-          </div>
-          <div className="rounded-lg p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
-            <div className="flex items-center justify-between mb-3">
-              <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Active Response Plans</div>
-              <button
-                onClick={() => setViewLens('planner' as ViewLens)}
-                className="text-[10px] font-medium px-2 py-1 rounded transition-colors"
-                style={{ color: 'var(--accent-teal)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
-              >
-                Open Resolution Planner →
-              </button>
-            </div>
-            <div className="space-y-2">
-              {sentinel.criticalHucs.length > 0 ? (
-                <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                  {sentinel.criticalHucs.length} critical watershed{sentinel.criticalHucs.length !== 1 ? 's' : ''} pending response plan generation.
-                  Use the Resolution Planner to create targeted action plans.
-                </div>
-              ) : (
-                <div className="text-xs" style={{ color: 'var(--text-dim)' }}>
-                  No watersheds currently require response plans. Sentinel is actively monitoring.
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-        </>);
+        case 'warr-resolve': return DS(
+          <WARRZones zone="warr-resolve" role="Federal" stateAbbr={selectedState || 'US'} metrics={warrMetrics} events={warrEvents} activeResolutionCount={sentinel.criticalHucs.length} onOpenPlanner={() => setViewLens('planner' as ViewLens)} />
+        );
 
         // ── AI Briefing: National Scope Cards ──────────────────────────────
         case 'briefing-actions': return DS(
