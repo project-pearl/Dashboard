@@ -18,7 +18,6 @@ const ROUTE_LABELS: Record<string, string> = {
   utility: 'Municipal Utility',
   infrastructure: 'Site & Property',
   insurance: 'Insurance & Risk',
-  agriculture: 'Agriculture',
   'aqua-lo': 'AQUA-LO',
 };
 
@@ -32,7 +31,6 @@ const ROUTE_ACCENTS: Record<string, string> = {
   utility: 'text-sky-600',
   infrastructure: 'text-slate-600',
   insurance: 'text-indigo-600',
-  agriculture: 'text-lime-600',
   'aqua-lo': 'text-teal-600',
 };
 

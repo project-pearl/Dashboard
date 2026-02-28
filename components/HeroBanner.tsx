@@ -93,14 +93,6 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
       'Flood risk assessment, contamination analysis, and portfolio due diligence for informed underwriting decisions.',
     accentColor: 'text-indigo-400',
   },
-  agriculture: {
-    image: '/images/heroes/Aerial.png',
-    subtitle: 'PIN — PEARL Intelligence Network',
-    headline: 'Agricultural Water Management',
-    description:
-      'Nutrient tracking, irrigation optimization, and conservation credit management for sustainable agriculture.',
-    accentColor: 'text-lime-400',
-  },
   'aqua-lo': {
     image: '/images/heroes/Research.png',
     subtitle: 'PIN — PEARL Intelligence Network',
