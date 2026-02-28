@@ -8,6 +8,11 @@ import { computePermitRiskExposure } from '@/lib/indices/permitRiskExposure';
 import { computeInfrastructureFailure } from '@/lib/indices/infrastructureFailure';
 import { computePearlLoadVelocity } from '@/lib/indices/pearlLoadVelocity';
 import { computeWatershedRecovery } from '@/lib/indices/watershedRecovery';
+import { computePerCapitaLoad } from '@/lib/indices/perCapitaLoad';
+import { computeWaterfrontExposure } from '@/lib/indices/waterfrontExposure';
+import { computeEcologicalHealth } from '@/lib/indices/ecologicalHealth';
+import { computeEjVulnerability } from '@/lib/indices/ejVulnerability';
+import { computeGovernanceResponse } from '@/lib/indices/governanceResponse';
 import { isCoastalHuc, applyTidalModifiers } from '@/lib/indices/tidalModifiers';
 import { computeProjections, type ScoreHistoryEntry } from '@/lib/indices/projections';
 import { INDEX_WEIGHTS } from '@/lib/indices/config';
@@ -63,23 +68,37 @@ export async function GET(request: Request) {
         const data = collectForHuc(huc8);
         if (!data) return null;
 
-        // Run all 4 index engines
+        // Run all 9 index engines
         const pearlLoadVelocity = computePearlLoadVelocity(data);
         const infrastructureFailure = computeInfrastructureFailure(data);
         const watershedRecovery = computeWatershedRecovery(data);
         const permitRiskExposure = computePermitRiskExposure(data);
+        const perCapitaLoad = computePerCapitaLoad(data);
+        const waterfrontExposure = computeWaterfrontExposure(data);
+        const ecologicalHealth = computeEcologicalHealth(data);
+        const ejVulnerability = computeEjVulnerability(data);
+        const governanceResponse = computeGovernanceResponse(data);
 
         // Apply tidal modifiers for coastal HUCs
         if (isCoastalHuc(huc8)) {
-          applyTidalModifiers({ pearlLoadVelocity, infrastructureFailure, watershedRecovery, permitRiskExposure });
+          applyTidalModifiers({
+            pearlLoadVelocity, infrastructureFailure, watershedRecovery,
+            permitRiskExposure, perCapitaLoad,
+            waterfrontExposure, ecologicalHealth, ejVulnerability, governanceResponse,
+          });
         }
 
-        // Compute composite (weighted average)
+        // Compute composite (weighted average of all 9 indices)
         const composite = Math.round(
           pearlLoadVelocity.value * INDEX_WEIGHTS.pearlLoadVelocity +
           infrastructureFailure.value * INDEX_WEIGHTS.infrastructureFailure +
           watershedRecovery.value * INDEX_WEIGHTS.watershedRecovery +
-          permitRiskExposure.value * INDEX_WEIGHTS.permitRiskExposure
+          permitRiskExposure.value * INDEX_WEIGHTS.permitRiskExposure +
+          perCapitaLoad.value * INDEX_WEIGHTS.perCapitaLoad +
+          waterfrontExposure.value * INDEX_WEIGHTS.waterfrontExposure +
+          ecologicalHealth.value * INDEX_WEIGHTS.ecologicalHealth +
+          ejVulnerability.value * INDEX_WEIGHTS.ejVulnerability +
+          governanceResponse.value * INDEX_WEIGHTS.governanceResponse
         );
 
         // Composite confidence = minimum across all indices
@@ -88,6 +107,11 @@ export async function GET(request: Request) {
           infrastructureFailure.confidence,
           watershedRecovery.confidence,
           permitRiskExposure.confidence,
+          perCapitaLoad.confidence,
+          waterfrontExposure.confidence,
+          ecologicalHealth.confidence,
+          ejVulnerability.confidence,
+          governanceResponse.confidence,
         );
 
         // Projections from score history
@@ -101,6 +125,11 @@ export async function GET(request: Request) {
           infrastructureFailure,
           watershedRecovery,
           permitRiskExposure,
+          perCapitaLoad,
+          waterfrontExposure,
+          ecologicalHealth,
+          ejVulnerability,
+          governanceResponse,
           composite,
           compositeConfidence,
           projection7d,

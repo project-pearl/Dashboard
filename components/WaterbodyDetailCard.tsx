@@ -358,10 +358,11 @@ function formatAge(lastSampled: string | null | undefined): string | null {
 }
 
 function getConditionLabel(score: number): { label: string; color: string } {
-  if (score >= 80) return { label: 'Good', color: 'text-blue-600' };
-  if (score >= 60) return { label: 'Fair', color: 'text-green-600' };
-  if (score >= 40) return { label: 'Poor', color: 'text-amber-600' };
-  return { label: 'Severe', color: 'text-red-600' };
+  if (score >= 90) return { label: 'Excellent', color: 'text-blue-600' };
+  if (score >= 70) return { label: 'Good', color: 'text-green-600' };
+  if (score >= 50) return { label: 'Fair', color: 'text-amber-600' };
+  if (score >= 30) return { label: 'Poor', color: 'text-orange-600' };
+  return { label: 'Critical', color: 'text-red-600' };
 }
 
 // ─── Main Component ──────────────────────────────────────────────────────────
@@ -452,13 +453,34 @@ export function WaterbodyDetailCard({
       idx.push({ name: 'Infrastructure Risk', value: Math.max(0, 100 - hucIndices.infrastructureFailure.value), weight: 0.10 });
       idx.push({ name: 'Recovery Potential', value: hucIndices.watershedRecovery.value, weight: 0.10 });
       idx.push({ name: 'Permit Risk Exposure', value: Math.max(0, 100 - hucIndices.permitRiskExposure.value), weight: 0.08 });
+      if (hucIndices.perCapitaLoad) {
+        idx.push({ name: 'Per Capita Load', value: Math.max(0, 100 - hucIndices.perCapitaLoad.value), weight: 0.08 });
+      }
     }
 
-    // Environmental Justice (lower vulnerability = better score)
-    idx.push({ name: 'Environmental Justice', value: Math.max(0, 100 - ejScore), weight: 0.10 });
+    // Environmental Justice — prefer HUC-level when available (higher = worse → invert)
+    if (hucIndices?.ejVulnerability) {
+      idx.push({ name: 'EJ Vulnerability', value: Math.max(0, 100 - hucIndices.ejVulnerability.value), weight: 0.10 });
+    } else {
+      idx.push({ name: 'Environmental Justice', value: Math.max(0, 100 - ejScore), weight: 0.10 });
+    }
 
-    // Ecological Sensitivity
-    idx.push({ name: 'Ecological Sensitivity', value: ecoScore, weight: 0.08 });
+    // Ecological Health — prefer HUC-level when available (higher = worse → invert)
+    if (hucIndices?.ecologicalHealth) {
+      idx.push({ name: 'Ecological Health', value: Math.max(0, 100 - hucIndices.ecologicalHealth.value), weight: 0.08 });
+    } else {
+      idx.push({ name: 'Ecological Sensitivity', value: ecoScore, weight: 0.08 });
+    }
+
+    // Waterfront Exposure (higher = worse → invert)
+    if (hucIndices?.waterfrontExposure) {
+      idx.push({ name: 'Waterfront Exposure', value: Math.max(0, 100 - hucIndices.waterfrontExposure.value), weight: 0.08 });
+    }
+
+    // Governance Response (higher = worse → invert)
+    if (hucIndices?.governanceResponse) {
+      idx.push({ name: 'Governance Response', value: Math.max(0, 100 - hucIndices.governanceResponse.value), weight: 0.07 });
+    }
 
     // Monitoring Coverage
     const monPct = coverage.keyParamsTotal > 0 ? (coverage.liveKeyParamCount / coverage.keyParamsTotal) * 100 : 0;

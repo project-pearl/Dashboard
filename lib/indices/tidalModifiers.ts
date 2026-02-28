@@ -39,6 +39,11 @@ export function applyTidalModifiers(indices: {
   infrastructureFailure: IndexScore;
   watershedRecovery: IndexScore;
   permitRiskExposure: IndexScore;
+  perCapitaLoad: IndexScore;
+  waterfrontExposure?: IndexScore;
+  ecologicalHealth?: IndexScore;
+  ejVulnerability?: IndexScore;
+  governanceResponse?: IndexScore;
 }): void {
   // PEARL: shift score up by 5% (TP is more mobile in tidal → worse)
   indices.pearlLoadVelocity.value = clamp(Math.round(indices.pearlLoadVelocity.value * 1.05));
@@ -55,6 +60,34 @@ export function applyTidalModifiers(indices: {
   // Permit Risk: tidal mixing dilution offsets enforcement boost → net 0.98x
   indices.permitRiskExposure.value = clamp(Math.round(indices.permitRiskExposure.value * 0.98));
   indices.permitRiskExposure.tidalModified = true;
+
+  // Per Capita Load: tidal mixing increases nutrient transport efficiency per capita → ×1.03
+  indices.perCapitaLoad.value = clamp(Math.round(indices.perCapitaLoad.value * 1.03));
+  indices.perCapitaLoad.tidalModified = true;
+
+  // Waterfront Exposure: coastal property premiums higher → ×1.12
+  if (indices.waterfrontExposure) {
+    indices.waterfrontExposure.value = clamp(Math.round(indices.waterfrontExposure.value * 1.12));
+    indices.waterfrontExposure.tidalModified = true;
+  }
+
+  // Ecological Health: estuarine ecosystems more sensitive → ×1.08
+  if (indices.ecologicalHealth) {
+    indices.ecologicalHealth.value = clamp(Math.round(indices.ecologicalHealth.value * 1.08));
+    indices.ecologicalHealth.tidalModified = true;
+  }
+
+  // EJ Vulnerability: coastal communities face compound flood/saltwater risks → ×1.05
+  if (indices.ejVulnerability) {
+    indices.ejVulnerability.value = clamp(Math.round(indices.ejVulnerability.value * 1.05));
+    indices.ejVulnerability.tidalModified = true;
+  }
+
+  // Governance Response: coastal zones get more federal oversight → ×0.95
+  if (indices.governanceResponse) {
+    indices.governanceResponse.value = clamp(Math.round(indices.governanceResponse.value * 0.95));
+    indices.governanceResponse.tidalModified = true;
+  }
 }
 
 function clamp(v: number): number {

@@ -1,11 +1,16 @@
 import type { IndexId } from './types';
 
-/** Composite weights — equal 25% each */
+/** Composite weights — 5 data-rich HUC-specific × 12% + 4 state-baseline × 10% = 100% */
 export const INDEX_WEIGHTS: Record<IndexId, number> = {
-  pearlLoadVelocity: 0.25,
-  infrastructureFailure: 0.25,
-  watershedRecovery: 0.25,
-  permitRiskExposure: 0.25,
+  pearlLoadVelocity: 0.12,
+  infrastructureFailure: 0.12,
+  watershedRecovery: 0.12,
+  permitRiskExposure: 0.12,
+  perCapitaLoad: 0.12,
+  waterfrontExposure: 0.10,
+  ecologicalHealth: 0.10,
+  ejVulnerability: 0.10,
+  governanceResponse: 0.10,
 };
 
 /** Confidence tier thresholds */
@@ -32,6 +37,11 @@ export const EXPECTED_DATA_POINTS: Record<IndexId, number> = {
   infrastructureFailure: 30,   // SDWIS systems + violations + inspections
   watershedRecovery: 15,       // ATTAINS waterbodies per HUC
   permitRiskExposure: 25,      // ICIS permits + violations + DMRs
+  perCapitaLoad: 20,           // SDWIS population + WQP nutrients + DMR records
+  waterfrontExposure: 10,      // WQP hedonic params + ATTAINS + DMR records
+  ecologicalHealth: 10,        // ATTAINS waterbodies + state T&E baseline
+  ejVulnerability: 8,          // SDWIS systems + violations + enforcement
+  governanceResponse: 15,      // ATTAINS + ICIS enforcement + permits + inspections
 };
 
 /** Expected unique data sources per index */
@@ -40,6 +50,11 @@ export const EXPECTED_SOURCES: Record<IndexId, number> = {
   infrastructureFailure: 3,   // SDWIS + ICIS inspections
   watershedRecovery: 1,       // ATTAINS only
   permitRiskExposure: 3,      // ICIS permits + violations + DMR + enforcement
+  perCapitaLoad: 3,           // SDWIS + WQP + ICIS DMR
+  waterfrontExposure: 1,      // WQP + ATTAINS + DMR (state baseline always present)
+  ecologicalHealth: 1,        // ATTAINS (state baseline always present)
+  ejVulnerability: 2,         // SDWIS + state baseline
+  governanceResponse: 3,      // ATTAINS + ICIS + SDWIS
 };
 
 /** Blob and disk persistence paths */

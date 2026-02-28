@@ -14,6 +14,11 @@ export interface HucIndices {
   infrastructureFailure: IndexScore;
   watershedRecovery: IndexScore;
   permitRiskExposure: IndexScore;
+  perCapitaLoad: IndexScore;
+  waterfrontExposure?: IndexScore;
+  ecologicalHealth?: IndexScore;
+  ejVulnerability?: IndexScore;
+  governanceResponse?: IndexScore;
   composite: number;               // weighted average 0-100
   compositeConfidence: number;     // min confidence across indices
   projection7d: HucProjection | null;
@@ -27,4 +32,4 @@ export interface HucProjection {
   confidence: number;       // projection confidence (lower than base)
 }
 
-export type IndexId = 'pearlLoadVelocity' | 'infrastructureFailure' | 'watershedRecovery' | 'permitRiskExposure';
+export type IndexId = 'pearlLoadVelocity' | 'infrastructureFailure' | 'watershedRecovery' | 'permitRiskExposure' | 'perCapitaLoad' | 'waterfrontExposure' | 'ecologicalHealth' | 'ejVulnerability' | 'governanceResponse';
