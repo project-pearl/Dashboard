@@ -18,7 +18,7 @@ export interface SectionDefinition {
 }
 
 export type CCKey = 'K12' | 'State' | 'MS4' | 'Sustainability' | 'NGO' | 'University' | 'FMC' | 'NCC'
-  | 'Utility' | 'Infrastructure' | 'Insurance' | 'Agriculture' | 'AQUA-LO';
+  | 'Utility' | 'Infrastructure' | 'Insurance' | 'AQUA-LO';
 
 // ─── Default Section Orders ────────────────────────────────────────────────
 
@@ -612,15 +612,13 @@ export const DEFAULT_SECTIONS = {
   ],
 
   Infrastructure: [
-    { id: 'projects',       label: 'Capital Project Tracker',       order: 0,  visible: true, defaultExpanded: true },
-    { id: 'greeninfra',     label: 'Green Infrastructure Map',      order: 1,  visible: true, defaultExpanded: true },
-    { id: 'capacity',       label: 'Stormwater Capacity Analysis',  order: 2,  visible: true, defaultExpanded: true },
-    { id: 'funding',        label: 'Funding Pipeline',              order: 3,  visible: true, defaultExpanded: true },
-    { id: 'lifecycle',      label: 'Asset Lifecycle',               order: 4,  visible: true, defaultExpanded: true },
-    { id: 'resilience',     label: 'Climate Resilience',            order: 5,  visible: true, defaultExpanded: false },
-    { id: 'reporting',      label: 'Infrastructure Reporting',      order: 6,  visible: true, defaultExpanded: false },
-    { id: 'location-report', label: 'Location Water Quality Report', order: 7, visible: true, defaultExpanded: false },
-    { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 8,  visible: true, defaultExpanded: true },
+    { id: 'spi-risk-profile', label: 'Waterbody Risk Profile',        order: 0,  visible: true, defaultExpanded: true },
+    { id: 'spi-regulatory',   label: 'Regulatory Exposure Summary',   order: 1,  visible: true, defaultExpanded: true },
+    { id: 'spi-ej-screen',    label: 'EJ Vulnerability Screen',       order: 2,  visible: true, defaultExpanded: true },
+    { id: 'spi-trends',       label: 'Trend Overlay',                 order: 3,  visible: true, defaultExpanded: true },
+    { id: 'spi-permits',      label: 'Permit Constraint Snapshot',    order: 4,  visible: true, defaultExpanded: true },
+    { id: 'location-report',  label: 'Location Water Quality Report', order: 5,  visible: true, defaultExpanded: false },
+    { id: 'disclaimer',       label: 'Platform Disclaimer',           order: 6,  visible: true, defaultExpanded: true },
   ],
 
   Insurance: [
@@ -636,35 +634,15 @@ export const DEFAULT_SECTIONS = {
     { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 9,  visible: true, defaultExpanded: true },
   ],
 
-  Agriculture: [
-    { id: 'nutrients',      label: 'Nutrient Management',           order: 0,  visible: true, defaultExpanded: true },
-    { id: 'irrigation',     label: 'Irrigation Efficiency',         order: 1,  visible: true, defaultExpanded: true },
-    { id: 'runoff',         label: 'Runoff Modeling',                order: 2,  visible: true, defaultExpanded: true },
-    { id: 'credits',        label: 'Nutrient Credit Trading',       order: 3,  visible: true, defaultExpanded: true },
-    { id: 'bmp',            label: 'BMP Inventory',                  order: 4,  visible: true, defaultExpanded: true },
-    { id: 'soilhealth',     label: 'Soil & Water Conservation',     order: 5,  visible: true, defaultExpanded: true },
-    { id: 'groundwater',   label: 'Groundwater Monitoring',         order: 6,  visible: true, defaultExpanded: true },
-    { id: 'conservation',   label: 'Conservation Programs',         order: 7,  visible: true, defaultExpanded: false },
-    { id: 'location-report', label: 'Location Water Quality Report', order: 8, visible: true, defaultExpanded: false },
-    { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 9,  visible: true, defaultExpanded: true },
-  ],
 
   'AQUA-LO': [
-    { id: 'intake',         label: 'Sample Intake Queue',           order: 0,  visible: true, defaultExpanded: true },
-    { id: 'qaqc',           label: 'QA/QC Dashboard',               order: 1,  visible: true, defaultExpanded: true },
-    { id: 'methods',        label: 'Method Registry',               order: 2,  visible: true, defaultExpanded: true },
-    { id: 'coc',            label: 'Chain of Custody',              order: 3,  visible: true, defaultExpanded: true },
-    { id: 'inventory',      label: 'Inventory Management',          order: 4,  visible: true, defaultExpanded: true },
-    { id: 'reporting',      label: 'Reporting Engine',              order: 5,  visible: true, defaultExpanded: true },
-    { id: 'calibration',    label: 'Equipment Calibration',         order: 6,  visible: true, defaultExpanded: false },
-    { id: 'audits',         label: 'Audit Trail',                   order: 7,  visible: true, defaultExpanded: false },
-    { id: 'wq-overview',     label: 'State WQ Overview',             order: 8,  visible: true, defaultExpanded: true },
-    { id: 'impairment-map',  label: 'Impairment Map',               order: 9,  visible: true, defaultExpanded: true, compound: true },
-    { id: 'monitoring-gaps', label: 'Monitoring Gaps',               order: 10, visible: true, defaultExpanded: true },
-    { id: 'param-trends',    label: 'Parameter Trends',              order: 11, visible: true, defaultExpanded: true },
-    { id: 'my-clients',      label: 'My Clients',                    order: 12, visible: true, defaultExpanded: true },
-    { id: 'location-report', label: 'Location Water Quality Report', order: 13, visible: true, defaultExpanded: false },
-    { id: 'disclaimer',      label: 'Platform Disclaimer',           order: 14, visible: true, defaultExpanded: true },
+    { id: 'kpi-bar',            label: 'KPI Summary',             order: 0, visible: true, defaultExpanded: true },
+    { id: 'recent-submissions', label: 'Recent Submissions',      order: 1, visible: true, defaultExpanded: true },
+    { id: 'validation-queue',   label: 'Validation Queue',        order: 2, visible: true, defaultExpanded: true },
+    { id: 'rejection-summary',  label: 'Rejection Summary',       order: 3, visible: true, defaultExpanded: true },
+    { id: 'pub-history',        label: 'Publication History',     order: 4, visible: true, defaultExpanded: true },
+    { id: 'pin-network',        label: 'PIN Network Status',      order: 5, visible: true, defaultExpanded: true },
+    { id: 'disclaimer',         label: 'Platform Disclaimer',     order: 6, visible: true, defaultExpanded: true },
   ],
 } satisfies Record<Exclude<CCKey, 'NCC'>, SectionDefinition[]> as Record<CCKey, SectionDefinition[]>;
 

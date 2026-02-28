@@ -85,16 +85,25 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'asset-management',   label: 'Asset Management' },
     { id: 'funding',            label: 'Funding & Grants' },
   ],
-  // ── Infrastructure (8 items) ───────────────────────────────────────────────
+  // ── Site & Property Intelligence (17 lenses) ──────────────────────────────
   '/dashboard/infrastructure': [
     { id: 'overview', label: 'Dashboard' },
-    { id: 'briefing', label: 'AI Briefing' },
-    { id: 'asset-condition', label: 'Asset Condition' },
-    { id: 'failure-risk', label: 'Failure Risk Assessment' },
-    { id: 'capacity', label: 'Capacity Planning' },
-    { id: 'discharge-permits', label: 'Discharge Permits (NPDES)' },
-    { id: 'capital-projects', label: 'Capital Projects' },
-    { id: 'regulatory-timeline', label: 'Regulatory Timeline' },
+    { id: 'developer', label: 'Developer' },
+    { id: 'real-estate', label: 'Real Estate' },
+    { id: 'insurance', label: 'Insurance' },
+    { id: 'legal', label: 'Legal' },
+    { id: 'consultant', label: 'Consultant' },
+    { id: 'lender', label: 'Lender' },
+    { id: 'appraiser', label: 'Appraiser' },
+    { id: 'title-company', label: 'Title Company' },
+    { id: 'construction', label: 'Construction' },
+    { id: 'ma-due-diligence', label: 'M&A Due Diligence' },
+    { id: 'energy-utilities', label: 'Energy & Utilities' },
+    { id: 'private-equity', label: 'Private Equity' },
+    { id: 'corporate-facilities', label: 'Corporate Facilities' },
+    { id: 'municipal-econ-dev', label: 'Municipal Econ Dev' },
+    { id: 'brownfield', label: 'Brownfield' },
+    { id: 'mining', label: 'Mining' },
   ],
   // ── Corporate ESG / Sustainability (18 items) ──────────────────────────────
   '/dashboard/esg': [
@@ -184,28 +193,13 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'portfolio-risk', label: 'Portfolio Risk Score' },
     { id: 'regulatory-changes', label: 'Regulatory Change Tracker' },
   ],
-  // ── Aqua-LO Laboratory (8 items) ───────────────────────────────────────────
+  // ── Aqua-LO Laboratory (5 items) ────────────────────────────────────────────
   '/dashboard/aqua-lo': [
-    { id: 'overview',          label: 'Lab Dashboard' },
-    { id: 'intake',            label: 'Sample Intake' },
-    { id: 'chain-of-custody',  label: 'Chain of Custody' },
-    { id: 'queue',             label: 'Analysis Queue' },
-    { id: 'results',           label: 'Results & QA/QC' },
-    { id: 'push',              label: 'Push to PIN' },
-    { id: 'audit',             label: 'Audit Trail' },
-    { id: 'reports',           label: 'Reports' },
-  ],
-  // ── Agriculture (9 items) ──────────────────────────────────────────────────
-  '/dashboard/agriculture': [
     { id: 'overview', label: 'Dashboard' },
-    { id: 'briefing', label: 'AI Briefing' },
-    { id: 'nutrient-loading', label: 'Nutrient Loading' },
-    { id: 'runoff', label: 'Runoff Monitoring' },
-    { id: 'bmp', label: 'Best Management Practices' },
-    { id: 'watershed-impact', label: 'Watershed Impact' },
-    { id: 'compliance', label: 'Compliance (CAFO/NPDES)' },
-    { id: 'soil-groundwater', label: 'Soil & Groundwater' },
-    { id: 'conservation-funding', label: 'Conservation Funding' },
+    { id: 'push',     label: 'Submit Data' },
+    { id: 'qaqc',     label: 'QA/QC' },
+    { id: 'audit',    label: 'Audit Trail' },
+    { id: 'reports',  label: 'Reports' },
   ],
 };
 

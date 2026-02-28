@@ -3125,9 +3125,8 @@ export function FederalManagementCenter(props: Props) {
         {viewLens !== 'monitoring' && (() => {
           const wbRow = stateRollup.find(r => r.abbr === selectedState);
           const wbRegion = getEpaRegionForState(selectedState);
-          const showNationalProfile = false;
           return (
-            <div className={showNationalProfile ? "grid grid-cols-1 lg:grid-cols-2 gap-6 items-start" : undefined}>
+            <div>
             <Card>
               <CardContent className="px-5 pt-4">
                 {!wbRow || !wbRow.canGradeState ? (
@@ -3257,72 +3256,6 @@ export function FederalManagementCenter(props: Props) {
               </CardContent>
             </Card>
 
-              {/* ── NATIONAL IMPAIRMENT PROFILE (overview only, beside inspector) ── */}
-              {showNationalProfile && (
-                <Card>
-                  <CardContent className="px-5 pt-4">
-                    <div className="space-y-5">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>National Impairment Profile</p>
-                          <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-dim)' }}>{attainsAggregation.totalAssessed.toLocaleString()} waterbodies from EPA ATTAINS</p>
-                        </div>
-                        <BrandedPrintBtn sectionId="impairmentprofile" title="Impairment Profile" />
-                      </div>
-
-                      {/* Top Impairment Causes */}
-                      <div>
-                        <div className="pin-section-label mb-2">Top Impairment Causes</div>
-                        <div className="space-y-1">
-                          {attainsAggregation.topCauses.slice(0, 7).map((c, i) => {
-                            const maxCount = attainsAggregation.topCauses[0]?.count || 1;
-                            const pct = (c.count / maxCount) * 100;
-                            return (
-                              <div key={i} className="flex items-center gap-2">
-                                <div className="w-[110px] text-[10px] truncate" style={{ color: 'var(--text-dim)' }} title={c.cause}>{c.cause}</div>
-                                <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
-                                  <div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'var(--text-dim)', opacity: 0.35 }} />
-                                </div>
-                                <div className="text-[10px] w-[48px] text-right pin-stat-secondary">{c.count.toLocaleString()}</div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {/* EPA Assessment Categories */}
-                      <div>
-                        <div className="pin-section-label mb-2">EPA Assessment Categories</div>
-                        <div className="space-y-1">
-                          {[
-                            { cat: '5', label: 'Cat 5 — No TMDL', count: attainsAggregation.cat5, color: 'var(--status-severe)', opacity: 0.5 },
-                            { cat: '4A', label: 'Cat 4a — TMDL', count: attainsAggregation.cat4a, color: 'var(--status-warning)', opacity: 0.4 },
-                            { cat: '4B', label: 'Cat 4b — Alt. Ctrl', count: attainsAggregation.cat4b, color: 'var(--status-warning)', opacity: 0.3 },
-                            { cat: '4C', label: 'Cat 4c — Non-pollut.', count: attainsAggregation.cat4c, color: 'var(--text-dim)', opacity: 0.4 },
-                            { cat: '3', label: 'Cat 3 — No Data', count: attainsAggregation.catCounts['3'], color: 'var(--text-dim)', opacity: 0.3 },
-                            { cat: '2', label: 'Cat 2 — Concerns', count: attainsAggregation.catCounts['2'], color: 'var(--status-healthy)', opacity: 0.3 },
-                            { cat: '1', label: 'Cat 1 — Good', count: attainsAggregation.catCounts['1'], color: 'var(--status-healthy)', opacity: 0.4 },
-                          ].filter(r => r.count > 0).map(r => {
-                            const pct = attainsAggregation.totalAssessed > 0 ? (r.count / attainsAggregation.totalAssessed) * 100 : 0;
-                            return (
-                              <div key={r.cat} className="flex items-center gap-2">
-                                <div className="w-[110px] text-[10px] truncate" style={{ color: 'var(--text-dim)' }}>{r.label}</div>
-                                <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
-                                  <div className="h-full rounded-full" style={{ width: `${Math.max(pct, 1)}%`, background: r.color, opacity: r.opacity }} />
-                                </div>
-                                <div className="text-[10px] w-[48px] text-right pin-stat-secondary">{r.count.toLocaleString()}</div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                        <div className="mt-2 pt-2 text-[10px]" style={{ borderTop: '1px solid var(--border-subtle)', color: 'var(--text-dim)' }}>
-                          TMDL Gap: <span className="pin-stat-secondary" style={attainsAggregation.tmdlGapPct > 50 ? { color: 'var(--status-severe)' } : undefined}>{attainsAggregation.tmdlGapPct}%</span> of impaired lack approved TMDL
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
             </div>
           );
         })()}

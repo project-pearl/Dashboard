@@ -52,8 +52,6 @@ import {
   Gauge,
   HardHat,
   DollarSign,
-  Download,
-  Database,
   Users,
   Heart,
   Search,
@@ -113,13 +111,23 @@ const LENS_ICONS: Record<string, LucideIcon> = {
   laboratory: Microscope,
   'permit-limits': FileCheck,
   'asset-management': Wrench,
-  // ── Infrastructure ─────────────────────────────────────────────────────────
-  'asset-condition': Wrench,
-  'failure-risk': AlertTriangle,
-  capacity: BarChart3,
-  'discharge-permits': FileCheck,
-  'capital-projects': HardHat,
-  'regulatory-timeline': Clock,
+  // ── Site & Property Intelligence ────────────────────────────────────────────
+  developer: HardHat,
+  'real-estate': MapPin,
+  'insurance-spi': Shield,
+  legal: Scale,
+  consultant: Search,
+  lender: Banknote,
+  appraiser: BarChart3,
+  'title-company': FileCheck,
+  construction: Hammer,
+  'ma-due-diligence': Search,
+  'energy-utilities': Zap,
+  'private-equity': DollarSign,
+  'corporate-facilities': Building2,
+  'municipal-econ-dev': Landmark,
+  brownfield: Layers,
+  mining: Hammer,
   // ── ESG / Sustainability ───────────────────────────────────────────────────
   'water-stewardship': Droplets,
   'facility-operations': Factory,
@@ -145,13 +153,10 @@ const LENS_ICONS: Record<string, LucideIcon> = {
   'flood-contamination': Layers,
   'portfolio-risk': Shield,
   'regulatory-changes': Scale,
-  // ── Agriculture ────────────────────────────────────────────────────────────
-  'nutrient-loading': FlaskConical,
-  runoff: CloudRain,
-  bmp: Wrench,
-  'watershed-impact': Waves,
-  'soil-groundwater': Sprout,
-  'conservation-funding': Banknote,
+  // ── Aqua-Lo ───────────────────────────────────────────────────────────────
+  push: Network,
+  qaqc: ClipboardList,
+  audit: FileText,
   // ── Laboratory Partner ────────────────────────────────────────────────────
   'wq-overview': LayoutDashboard,
   'impairment-map': Map,
@@ -180,8 +185,6 @@ const NAV_GROUPS: NavGroup[] = [
       { label: 'Federal', href: '/dashboard/federal', icon: Landmark, accent: 'text-blue-700', accentBg: 'bg-blue-50 border-blue-200' },
       { label: 'State', href: '/dashboard/state/MD', icon: Map, accent: 'text-cyan-700', accentBg: 'bg-cyan-50 border-cyan-200' },
       { label: 'Municipal Utility', href: '/dashboard/ms4/default', icon: CloudRain, accent: 'text-amber-700', accentBg: 'bg-amber-50 border-amber-200' },
-      { label: 'Municipal Utility', href: '/dashboard/utility/default', icon: Droplets, accent: 'text-sky-700', accentBg: 'bg-sky-50 border-sky-200' },
-      { label: 'Infrastructure', href: '/dashboard/infrastructure', icon: Building2, accent: 'text-slate-700', accentBg: 'bg-slate-100 border-slate-300' },
     ],
   },
   {
@@ -189,7 +192,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Sustainability', href: '/dashboard/esg', icon: Factory, accent: 'text-emerald-700', accentBg: 'bg-emerald-50 border-emerald-200' },
       { label: 'Insurance', href: '/dashboard/insurance', icon: Shield, accent: 'text-indigo-700', accentBg: 'bg-indigo-50 border-indigo-200' },
-      { label: 'Agriculture', href: '/dashboard/agriculture', icon: Sprout, accent: 'text-lime-700', accentBg: 'bg-lime-50 border-lime-200' },
+      { label: 'Site & Property', href: '/dashboard/infrastructure', icon: MapPin, accent: 'text-slate-700', accentBg: 'bg-slate-100 border-slate-300' },
     ],
   },
   {
@@ -212,16 +215,9 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    title: 'Tools',
+    title: 'Resources',
     items: [
-      { label: 'Location Report', href: '/tools/water-quality-lookup', icon: MapPin, accent: 'text-sky-700', accentBg: 'bg-sky-50 border-sky-200' },
-      { label: 'Data Export Hub', href: '/tools/data-export', icon: Download, accent: 'text-blue-700', accentBg: 'bg-blue-50 border-blue-200' },
-      { label: 'Report Builder', href: '/tools/reports', icon: FileText, accent: 'text-slate-700', accentBg: 'bg-slate-100 border-slate-300' },
-      { label: 'Bulk Data Export', href: '/tools/bulk-export', icon: Database, accent: 'text-violet-700', accentBg: 'bg-violet-50 border-violet-200' },
-      { label: 'Templates', href: '/tools/templates', icon: ClipboardList, accent: 'text-amber-700', accentBg: 'bg-amber-50 border-amber-200' },
-      { label: 'API Docs', href: '/tools/api', icon: BookOpen, accent: 'text-indigo-700', accentBg: 'bg-indigo-50 border-indigo-200' },
       { label: 'Data Provenance', href: '/tools/data-provenance', icon: FileCheck, accent: 'text-cyan-700', accentBg: 'bg-cyan-50 border-cyan-200' },
-      { label: 'Methodology', href: '/tools/methodology', icon: Beaker, accent: 'text-teal-700', accentBg: 'bg-teal-50 border-teal-200' },
     ],
   },
 ];
