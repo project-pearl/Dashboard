@@ -266,6 +266,20 @@ export function getNwisGwAllSites(): NwisGwSite[] {
 }
 
 /**
+ * Get all NWIS-GW trends across all grid cells (flat array).
+ * Used by /api/nwis-gw/national-summary for the Groundwater Monitoring Status table.
+ */
+export function getNwisGwAllTrends(): NwisGwTrend[] {
+  ensureDiskLoaded();
+  if (!_memCache) return [];
+  const all: NwisGwTrend[] = [];
+  for (const cell of Object.values(_memCache.grid)) {
+    all.push(...cell.trends);
+  }
+  return all;
+}
+
+/**
  * Get the existing grid (for cron route to merge new state data into).
  */
 export function getExistingGrid(): Record<string, GridCell> | null {
