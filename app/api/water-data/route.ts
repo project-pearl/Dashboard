@@ -2887,6 +2887,35 @@ export async function GET(request: NextRequest) {
         return NextResponse.json(debug);
       }
 
+      // ════════════════════════════════════════════════════════════════════════
+      // USAspending — Federal water spending cached data
+      // ════════════════════════════════════════════════════════════════════════
+
+      case 'usaspending-cached': {
+        const state = sp.get('state');
+        if (!state) {
+          return NextResponse.json({ error: 'state parameter required' }, { status: 400 });
+        }
+        try {
+          const { getUSAsStateData, ensureWarmed: warmUSAs } = await import('@/lib/usaSpendingCache');
+          await warmUSAs();
+          const data = getUSAsStateData(state);
+          return NextResponse.json({ source: 'usaspending-cached', state, data });
+        } catch (e: any) {
+          return NextResponse.json({ source: 'usaspending-cached', error: e.message }, { status: 502 });
+        }
+      }
+
+      case 'usaspending-cache-status': {
+        try {
+          const { getUSAsCacheStatus, ensureWarmed: warmUSAs } = await import('@/lib/usaSpendingCache');
+          await warmUSAs();
+          return NextResponse.json({ source: 'usaspending-cache-status', ...getUSAsCacheStatus() });
+        } catch (e: any) {
+          return NextResponse.json({ source: 'usaspending-cache-status', error: e.message }, { status: 502 });
+        }
+      }
+
       default:
         return NextResponse.json(
           {
@@ -2914,6 +2943,7 @@ export async function GET(request: NextRequest) {
                 'cbp-segments', 'cbp-substances', 'cbp-datastreams', 'cbp-waterquality'],
               unified: ['unified'],
               debug: ['debug-region'],
+              usaSpending: ['usaspending-cached', 'usaspending-cache-status'],
               signals: ['signals'],
             }
           },

@@ -47,6 +47,7 @@ import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import { useStateReport } from '@/lib/useStateReport';
+import { useUSASpendingData } from '@/lib/useUSASpendingData';
 import { StateDataReportCard } from '@/components/StateDataReportCard';
 import LocationReportCard from '@/components/LocationReportCard';
 import { getEpaRegionForState } from '@/lib/epa-regions';
@@ -354,6 +355,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
 
   // ── State Data Report Card ──
   const { report: stateReport, isLoading: stateReportLoading } = useStateReport(stateAbbr);
+  const { data: usasData, isLoading: usasLoading } = useUSASpendingData(stateAbbr);
 
   // ── State-filtered region data ──
   const baseRegions = useMemo(() => generateStateRegionData(stateAbbr), [stateAbbr]);
@@ -5675,32 +5677,57 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   <CardDescription>Currently active federal and state grant awards</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    {[
-                      { grant: 'CWA Section 106 — Water Pollution Control', amount: '$4.2M', period: 'FY2025-2026', status: 'Active', spent: '62%' },
-                      { grant: 'CWA Section 319 — NPS Management', amount: '$2.8M', period: 'FY2024-2026', status: 'Active', spent: '45%' },
-                      { grant: 'SDWA PWSS — Public Water System Supervision', amount: '$3.1M', period: 'FY2025-2026', status: 'Active', spent: '38%' },
-                      { grant: 'CWA Section 104(b)(3) — Monitoring', amount: '$680K', period: 'FY2025-2027', status: 'Active', spent: '22%' },
-                    ].map((g, i) => (
-                      <div key={i} className="rounded-lg border border-green-200 bg-green-50/50 p-3">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs font-semibold text-slate-800">{g.grant}</span>
-                          <Badge variant="default" className="text-[10px]">{g.status}</Badge>
+                  {usasLoading ? (
+                    <div className="flex items-center gap-2 text-xs text-slate-400 py-4"><Activity className="h-4 w-4 animate-spin" /> Loading USAspending data...</div>
+                  ) : usasData?.programs?.length ? (
+                    <div className="space-y-2">
+                      {usasData.programs.filter(p => p.totalObligated > 0).map((p, i) => (
+                        <div key={i} className="rounded-lg border border-green-200 bg-green-50/50 p-3">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-semibold text-slate-800">{p.programName} ({p.cfda})</span>
+                            <Badge variant="default" className="text-[10px]">{p.awardCount} awards</Badge>
+                          </div>
+                          <div className="flex items-center gap-4 text-[10px] text-slate-500">
+                            <span>Total: ${(p.totalObligated / 1e6).toFixed(1)}M</span>
+                            <span>Current FY: ${(p.currentFyObligated / 1e6).toFixed(1)}M</span>
+                            {p.bilAmount > 0 && <span>BIL: ${(p.bilAmount / 1e6).toFixed(1)}M</span>}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-4 text-[10px] text-slate-500">
-                          <span>Award: {g.amount}</span>
-                          <span>{g.period}</span>
-                          <span>Spent: {g.spent}</span>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {[
+                        { grant: 'CWA Section 106 — Water Pollution Control', amount: '$4.2M', period: 'FY2025-2026', status: 'Active', spent: '62%' },
+                        { grant: 'CWA Section 319 — NPS Management', amount: '$2.8M', period: 'FY2024-2026', status: 'Active', spent: '45%' },
+                        { grant: 'SDWA PWSS — Public Water System Supervision', amount: '$3.1M', period: 'FY2025-2026', status: 'Active', spent: '38%' },
+                        { grant: 'CWA Section 104(b)(3) — Monitoring', amount: '$680K', period: 'FY2025-2027', status: 'Active', spent: '22%' },
+                      ].map((g, i) => (
+                        <div key={i} className="rounded-lg border border-green-200 bg-green-50/50 p-3">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-semibold text-slate-800">{g.grant}</span>
+                            <Badge variant="default" className="text-[10px]">{g.status}</Badge>
+                          </div>
+                          <div className="flex items-center gap-4 text-[10px] text-slate-500">
+                            <span>Award: {g.amount}</span>
+                            <span>{g.period}</span>
+                            <span>Spent: {g.spent}</span>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: USAspending.gov, EPA grant management system</p>
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: USAspending.gov{usasData ? '' : ' (placeholder)'}</p>
                 </CardContent>
               </Card>
             );
 
-            case 'fund-srf': return DS(
+            case 'fund-srf': {
+              const cwsrfProg = usasData?.programs?.find(p => p.cfda === '66.458');
+              const dwsrfProg = usasData?.programs?.find(p => p.cfda === '66.468');
+              const srfBil = (cwsrfProg?.bilAmount || 0) + (dwsrfProg?.bilAmount || 0);
+              const hasSrf = cwsrfProg || dwsrfProg;
+              return DS(
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -5710,6 +5737,38 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   <CardDescription>State Revolving Fund capitalization, lending, and utilization</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {usasLoading ? (
+                    <div className="flex items-center gap-2 text-xs text-slate-400 py-4"><Activity className="h-4 w-4 animate-spin" /> Loading...</div>
+                  ) : hasSrf ? (<>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Capitalization (5-Year Total)</div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'CWSRF Cap Grant', value: `$${((cwsrfProg?.totalObligated || 0) / 1e6).toFixed(0)}M`, bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'DWSRF Cap Grant', value: `$${((dwsrfProg?.totalObligated || 0) / 1e6).toFixed(0)}M`, bg: 'bg-sky-50 border-sky-200' },
+                      { label: 'BIL Supplement', value: `$${(srfBil / 1e6).toFixed(0)}M`, bg: 'bg-green-50 border-green-200' },
+                      { label: 'SRF Awards', value: String((cwsrfProg?.awardCount || 0) + (dwsrfProg?.awardCount || 0)), bg: 'bg-slate-50 border-slate-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1 mt-4">Current FY</div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'CWSRF Current FY', value: `$${((cwsrfProg?.currentFyObligated || 0) / 1e6).toFixed(0)}M`, bg: 'bg-green-50 border-green-200' },
+                      { label: 'DWSRF Current FY', value: `$${((dwsrfProg?.currentFyObligated || 0) / 1e6).toFixed(0)}M`, bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Utilization Rate', value: 'N/A', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Available Balance', value: 'N/A', bg: 'bg-slate-50 border-slate-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  </>) : (<>
                   <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Capitalization</div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {[
@@ -5724,24 +5783,11 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       </div>
                     ))}
                   </div>
-                  <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1 mt-4">Lending</div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {[
-                      { label: 'CWSRF Available', value: '$84M', bg: 'bg-green-50 border-green-200' },
-                      { label: 'DWSRF Available', value: '$62M', bg: 'bg-blue-50 border-blue-200' },
-                      { label: 'Active Loans', value: '47', bg: 'bg-slate-50 border-slate-200' },
-                      { label: 'Utilization Rate', value: '78%', bg: 'bg-amber-50 border-amber-200' },
-                    ].map(k => (
-                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
-                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-slate-400 mt-2 italic">Data source: EPA CWSRF/DWSRF national data, state SRF program</p>
+                  </>)}
+                  <p className="text-xs text-slate-400 mt-2 italic">Data source: {hasSrf ? 'USAspending.gov (CFDA 66.458/66.468)' : 'EPA CWSRF/DWSRF national data (placeholder)'}</p>
                 </CardContent>
               </Card>
-            );
+            );}
 
             case 'fund-pipeline': return DS(
               <Card>
@@ -5834,7 +5880,11 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </Card>
             );
 
-            case 'fund-bil': return DS(
+            case 'fund-bil': {
+              const bilTotal = usasData?.totalBil || 0;
+              const bilProgs = usasData?.programs?.filter(p => p.bilAmount > 0) || [];
+              const hasBil = bilTotal > 0;
+              return DS(
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -5844,6 +5894,48 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   <CardDescription>Bipartisan Infrastructure Law water funding allocation and drawdown status</CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {usasLoading ? (
+                    <div className="flex items-center gap-2 text-xs text-slate-400 py-4"><Activity className="h-4 w-4 animate-spin" /> Loading...</div>
+                  ) : hasBil ? (<>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                    {[
+                      { label: 'Total BIL Obligated', value: `$${(bilTotal / 1e6).toFixed(0)}M`, bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Programs w/ BIL', value: String(bilProgs.length), bg: 'bg-green-50 border-green-200' },
+                      { label: 'Drawdown Rate', value: 'N/A', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Match Required', value: `$${((usasData?.bilMatchRequired || 0) / 1e6).toFixed(1)}M`, bg: 'bg-slate-50 border-slate-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="overflow-x-auto rounded-lg border border-slate-200">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                          <th className="px-2.5 py-2">Program</th>
+                          <th className="px-2.5 py-2 text-right">BIL Amount</th>
+                          <th className="px-2.5 py-2 text-right">Total Obligated</th>
+                          <th className="px-2.5 py-2 text-right">BIL Share</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {bilProgs.map(p => {
+                          const share = p.totalObligated > 0 ? Math.round((p.bilAmount / p.totalObligated) * 100) : 0;
+                          return (
+                          <tr key={p.cfda} className="hover:bg-slate-50">
+                            <td className="px-2.5 py-2 text-slate-700 font-medium">{p.programName}</td>
+                            <td className="px-2.5 py-2 text-right font-semibold text-green-700">${(p.bilAmount / 1e6).toFixed(1)}M</td>
+                            <td className="px-2.5 py-2 text-right text-slate-600">${(p.totalObligated / 1e6).toFixed(1)}M</td>
+                            <td className="px-2.5 py-2 text-right text-slate-600">{share}%</td>
+                          </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  </>) : (<>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                     {[
                       { label: 'Total BIL Allocation', value: '$126M', bg: 'bg-blue-50 border-blue-200' },
@@ -5857,40 +5949,14 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       </div>
                     ))}
                   </div>
-                  <div className="overflow-x-auto rounded-lg border border-slate-200">
-                    <table className="w-full text-xs">
-                      <thead>
-                        <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-                          <th className="px-2.5 py-2">Program</th>
-                          <th className="px-2.5 py-2 text-right">Allocated</th>
-                          <th className="px-2.5 py-2 text-right">Drawn</th>
-                          <th className="px-2.5 py-2 text-right">Rate</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {[
-                          { prog: 'DWSRF Supplemental', alloc: '$42M', drawn: '$18M', rate: '43%' },
-                          { prog: 'CWSRF Supplemental', alloc: '$38M', drawn: '$14M', rate: '37%' },
-                          { prog: 'Lead Service Lines', alloc: '$28M', drawn: '$12M', rate: '43%' },
-                          { prog: 'Emerging Contaminants', alloc: '$18M', drawn: '$4M', rate: '22%' },
-                        ].map(r => (
-                          <tr key={r.prog} className="hover:bg-slate-50">
-                            <td className="px-2.5 py-2 text-slate-700 font-medium">{r.prog}</td>
-                            <td className="px-2.5 py-2 text-right text-slate-600">{r.alloc}</td>
-                            <td className="px-2.5 py-2 text-right font-semibold text-green-700">{r.drawn}</td>
-                            <td className="px-2.5 py-2 text-right text-slate-600">{r.rate}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  </>)}
                   <div className="flex items-start gap-1.5 mt-4 text-xs text-slate-400 italic">
                     <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
-                    <span>BIL/IIJA = Bipartisan Infrastructure Law (Infrastructure Investment and Jobs Act). Drawdown rate = funds disbursed / allocated. Source: EPA DWSRF/CWSRF allotments, state SRF program data</span>
+                    <span>BIL/IIJA = Bipartisan Infrastructure Law. {hasBil ? 'Source: USAspending.gov (def_codes Z/1)' : 'Drawdown rate = funds disbursed / allocated. Source: EPA data (placeholder)'}</span>
                   </div>
                 </CardContent>
               </Card>
-            );
+            );}
 
             case 'fund-j40': return DS(
               <Card>
@@ -6047,7 +6113,19 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </Card>
             );
 
-            case 'fund-trend': return DS(
+            case 'fund-trend': {
+              // Build trend rows from usasData per-program fyTrend
+              const trendProgs = usasData?.programs?.filter(p => p.fyTrend?.length > 0) || [];
+              const hasTrend = trendProgs.length > 0 && trendProgs[0].fyTrend.length > 0;
+              const fyHeaders = hasTrend ? trendProgs[0].fyTrend.map(t => `FY${String(t.fy).slice(-2)}`) : [];
+              const trendRows = hasTrend ? trendProgs.map(p => {
+                const vals = p.fyTrend.map(t => t.amount);
+                const recent = vals.slice(-3);
+                const slope = recent.length >= 2 ? recent[recent.length - 1] - recent[0] : 0;
+                const trend = slope > recent[0] * 0.05 ? 'Growing' : slope < -recent[0] * 0.05 ? 'Declining' : 'Stable';
+                return { prog: p.programName, fyVals: vals, trend };
+              }) : [];
+              return DS(
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -6057,6 +6135,38 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   <CardDescription>5-year historical federal water funding by program with growth/decline indicators</CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {usasLoading ? (
+                    <div className="flex items-center gap-2 text-xs text-slate-400 py-4"><Activity className="h-4 w-4 animate-spin" /> Loading...</div>
+                  ) : hasTrend ? (
+                  <div className="overflow-x-auto rounded-lg border border-slate-200">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                          <th className="px-2.5 py-2">Program</th>
+                          {fyHeaders.map(h => <th key={h} className="px-2.5 py-2 text-right">{h}</th>)}
+                          <th className="px-2.5 py-2">Trend</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {trendRows.map(r => (
+                          <tr key={r.prog} className="hover:bg-slate-50">
+                            <td className="px-2.5 py-2 text-slate-700 font-medium">{r.prog}</td>
+                            {r.fyVals.map((v, i) => (
+                              <td key={i} className="px-2.5 py-2 text-right text-slate-600">{v > 0 ? `$${(v / 1e6).toFixed(1)}M` : '—'}</td>
+                            ))}
+                            <td className="px-2.5 py-2">
+                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                                r.trend === 'Growing' ? 'bg-green-100 text-green-700' :
+                                r.trend === 'Declining' ? 'bg-red-100 text-red-700' :
+                                'bg-slate-100 text-slate-600'
+                              }`}>{r.trend}</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  ) : (
                   <div className="overflow-x-auto rounded-lg border border-slate-200">
                     <table className="w-full text-xs">
                       <thead>
@@ -6095,15 +6205,27 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       </tbody>
                     </table>
                   </div>
+                  )}
                   <div className="flex items-start gap-1.5 mt-4 text-xs text-slate-400 italic">
                     <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
-                    <span>Federal water program funding by fiscal year. BIL supplement began FY23. Trend based on 3-year slope. Source: EPA budget justifications, congressional appropriations, USAspending.gov</span>
+                    <span>{hasTrend ? `Source: USAspending.gov — ${stateAbbr} state-level obligations by CFDA` : 'Federal water program funding by fiscal year. BIL supplement began FY23. Source: placeholder data'}</span>
                   </div>
                 </CardContent>
               </Card>
-            );
+            );}
 
-            case 'fund-match': return DS(
+            case 'fund-match': {
+              const srfMatch = usasData?.srfMatchRequired || 0;
+              const bilMatch = usasData?.bilMatchRequired || 0;
+              const totalMatch = srfMatch + bilMatch;
+              const hasMatch = totalMatch > 0;
+              // CFDA-based match rows from live data
+              const matchRows = hasMatch ? [
+                { grant: 'CWSRF (20%)', req: `$${((usasData?.programs?.find(p => p.cfda === '66.458')?.totalObligated || 0) * 0.25 / 1e6).toFixed(1)}M`, comm: 'N/A', src: '—', gap: '—' },
+                { grant: 'DWSRF (20%)', req: `$${((usasData?.programs?.find(p => p.cfda === '66.468')?.totalObligated || 0) * 0.25 / 1e6).toFixed(1)}M`, comm: 'N/A', src: '—', gap: '—' },
+                { grant: 'BIL Water (10%)', req: `$${(bilMatch / 1e6).toFixed(1)}M`, comm: 'N/A', src: '—', gap: '—' },
+              ] : [];
+              return DS(
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -6113,6 +6235,47 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   <CardDescription>State match commitments, funding sources, and unfunded gap analysis</CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {usasLoading ? (
+                    <div className="flex items-center gap-2 text-xs text-slate-400 py-4"><Activity className="h-4 w-4 animate-spin" /> Loading...</div>
+                  ) : hasMatch ? (<>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                    {[
+                      { label: 'SRF Match Required', value: `$${(srfMatch / 1e6).toFixed(1)}M`, bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'BIL Match Required', value: `$${(bilMatch / 1e6).toFixed(1)}M`, bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Total Match', value: `$${(totalMatch / 1e6).toFixed(1)}M`, bg: 'bg-red-50 border-red-200' },
+                      { label: 'Federal Total', value: `$${((usasData?.totalEpaWater || 0) / 1e6).toFixed(0)}M`, bg: 'bg-green-50 border-green-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="overflow-x-auto rounded-lg border border-slate-200">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                          <th className="px-2.5 py-2">Program</th>
+                          <th className="px-2.5 py-2 text-right">Match Required</th>
+                          <th className="px-2.5 py-2 text-right">Committed</th>
+                          <th className="px-2.5 py-2">Source</th>
+                          <th className="px-2.5 py-2 text-right">Gap</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {matchRows.map(r => (
+                          <tr key={r.grant} className="hover:bg-slate-50">
+                            <td className="px-2.5 py-2 font-medium text-slate-700">{r.grant}</td>
+                            <td className="px-2.5 py-2 text-right text-slate-600">{r.req}</td>
+                            <td className="px-2.5 py-2 text-right font-semibold text-slate-400">{r.comm}</td>
+                            <td className="px-2.5 py-2 text-slate-400">{r.src}</td>
+                            <td className="px-2.5 py-2 text-right font-semibold text-slate-400">{r.gap}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  </>) : (<>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                     {[
                       { label: 'Total Match Required', value: '$8.4M', bg: 'bg-amber-50 border-amber-200' },
@@ -6126,45 +6289,14 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       </div>
                     ))}
                   </div>
-                  <div className="overflow-x-auto rounded-lg border border-slate-200">
-                    <table className="w-full text-xs">
-                      <thead>
-                        <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-                          <th className="px-2.5 py-2">Grant</th>
-                          <th className="px-2.5 py-2 text-right">Required</th>
-                          <th className="px-2.5 py-2 text-right">Committed</th>
-                          <th className="px-2.5 py-2">Source</th>
-                          <th className="px-2.5 py-2 text-right">Gap</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {[
-                          { grant: 'CWA 106', req: '$1.4M', comm: '$1.4M', src: 'State General Fund', gap: '$0' },
-                          { grant: 'CWA 319', req: '$1.1M', comm: '$0.9M', src: 'State NPS Fund', gap: '$200K' },
-                          { grant: 'SDWA PWSS', req: '$1.2M', comm: '$1.2M', src: 'State DW Program', gap: '$0' },
-                          { grant: 'CWSRF (20%)', req: '$3.2M', comm: '$2.4M', src: 'State Bond', gap: '$800K' },
-                          { grant: 'BIL LSLR (10%)', req: '$1.5M', comm: '$0.9M', src: 'Local Utilities', gap: '$600K' },
-                        ].map(r => (
-                          <tr key={r.grant} className="hover:bg-slate-50">
-                            <td className="px-2.5 py-2 font-medium text-slate-700">{r.grant}</td>
-                            <td className="px-2.5 py-2 text-right text-slate-600">{r.req}</td>
-                            <td className="px-2.5 py-2 text-right font-semibold text-green-700">{r.comm}</td>
-                            <td className="px-2.5 py-2 text-slate-600">{r.src}</td>
-                            <td className="px-2.5 py-2 text-right font-semibold">
-                              <span className={r.gap === '$0' ? 'text-green-700' : 'text-red-700'}>{r.gap}</span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  </>)}
                   <div className="flex items-start gap-1.5 mt-4 text-xs text-slate-400 italic">
                     <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
-                    <span>State match = non-federal cost-share required by grant terms. CWSRF requires 20% state match; BIL programs require 10%. Unfunded gaps must be resolved before drawdown. Source: State budget, EPA grant terms</span>
+                    <span>{hasMatch ? 'Match calculated from USAspending.gov obligations: CWSRF/DWSRF 20% statutory match, BIL ~10%. Committed/gap columns require state budget data.' : 'State match = non-federal cost-share required by grant terms. Source: placeholder data'}</span>
                   </div>
                 </CardContent>
               </Card>
-            );
+            );}
 
             default: return null;
           }
