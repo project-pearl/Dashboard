@@ -51,8 +51,10 @@ import { HabitatEcologyPanel } from './HabitatEcologyPanel';
 import { AgriculturalNPSPanel } from './AgriculturalNPSPanel';
 import { DisasterEmergencyPanel } from './DisasterEmergencyPanel';
 import { MilitaryInstallationsPanel } from './MilitaryInstallationsPanel';
+import WaterfrontExposurePanel from './WaterfrontExposurePanel';
 import { INDEX_WEIGHTS } from '@/lib/indices/config';
 import { useSentinelAlerts } from '@/hooks/useSentinelAlerts';
+import { useSentinelHealth } from '@/hooks/useSentinelHealth';
 import { useSentinelAudio } from '@/hooks/useSentinelAudio';
 import { SentinelStatusBadge } from './SentinelStatusBadge';
 import { SentinelBriefingCard } from './SentinelBriefingCard';
@@ -126,7 +128,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: true,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['ai-water-intelligence', 'sentinel-briefing', 'national-briefing', 'disclaimer']),
+    sections: new Set(['ai-water-intelligence', 'sentinel-briefing', 'national-briefing', 'waterfront-exposure', 'disclaimer']),
   },
   compliance: {
     label: 'Compliance',
@@ -156,7 +158,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: true, showNationalImpact: true, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['networkhealth', 'nationalimpact', 'groundwater', 'disclaimer']),
+    sections: new Set(['networkhealth', 'nationalimpact', 'groundwater', 'waterfront-exposure', 'disclaimer']),
   },
   monitoring: {
     label: 'Monitoring',
@@ -166,7 +168,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: true, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: true, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['networkhealth', 'coveragegaps', 'sla', 'disclaimer']),
+    sections: new Set(['networkhealth', 'coveragegaps', 'sla', 'sentinel-briefing', 'disclaimer']),
   },
   trends: {
     label: 'Trends & Projections',
@@ -1155,6 +1157,7 @@ export function FederalManagementCenter(props: Props) {
 
   // ── Sentinel Alert System ──
   const sentinel = useSentinelAlerts();
+  const sentinelHealth = useSentinelHealth();
   const amsSummary = useAlertSummary();
   const { audioEnabled, toggleAudio, playChime } = useSentinelAudio({ userRole: user?.role });
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -5883,7 +5886,7 @@ export function FederalManagementCenter(props: Props) {
                 { title: 'TMDL Progress Report', desc: 'Total Maximum Daily Load development status and pollutant reduction targets', formats: ['PDF', 'CSV'] },
                 { title: 'Coverage Analysis', desc: 'Monitoring network gaps, data freshness, and state-by-state coverage metrics', formats: ['PDF', 'Excel'] },
                 { title: 'Drinking Water Quality', desc: 'SDWIS system violations, enforcement timeline, and compliance rates', formats: ['PDF', 'CSV'] },
-                { title: 'Groundwater Status', desc: 'NWIS groundwater levels, aquifer trends, and monitoring well inventory', formats: ['PDF', 'Excel'] },
+                { title: 'Groundwater Status', desc: 'WDFN groundwater levels, aquifer trends, and monitoring well inventory', formats: ['PDF', 'Excel'] },
               ].map((report) => (
                 <div key={report.title} className="border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-sm transition-all">
                   <h3 className="text-sm font-semibold text-slate-800">{report.title}</h3>
@@ -6652,6 +6655,95 @@ export function FederalManagementCenter(props: Props) {
         {/* ── MILITARY INSTALLATIONS ── */}
         <MilitaryInstallationsPanel selectedState={selectedState} />
         </>);
+
+        case 'sentinel-briefing': return DS(<>
+        {/* ── SENTINEL SYSTEM HEALTH ── */}
+        <div className="space-y-4">
+          {sentinelHealth.isLoading ? (
+            <div className="animate-pulse space-y-3">
+              <div className="h-4 bg-white/10 rounded w-48" />
+              <div className="h-20 bg-white/5 rounded" />
+            </div>
+          ) : !sentinelHealth.enabled ? (
+            <p className="text-sm text-white/40">Sentinel system is disabled.</p>
+          ) : (
+            <>
+              {/* Overall health badge + uptime */}
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${
+                  sentinelHealth.overallHealth === 'healthy'  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                  sentinelHealth.overallHealth === 'degraded' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                  sentinelHealth.overallHealth === 'critical' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+                                                                'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'
+                }`}>
+                  <span className={`w-2 h-2 rounded-full ${
+                    sentinelHealth.overallHealth === 'healthy'  ? 'bg-emerald-400' :
+                    sentinelHealth.overallHealth === 'degraded' ? 'bg-amber-400' :
+                    sentinelHealth.overallHealth === 'critical' ? 'bg-red-400' :
+                                                                  'bg-zinc-400'
+                  }`} />
+                  {sentinelHealth.overallHealth.toUpperCase()}
+                </span>
+                <span className="text-xs text-white/50">
+                  Uptime {sentinelHealth.uptimePct.toFixed(0)}%
+                </span>
+                <span className="text-xs text-white/40">
+                  {sentinelHealth.healthyCt} healthy · {sentinelHealth.degradedCt} degraded · {sentinelHealth.offlineCt} offline
+                </span>
+                {sentinelHealth.trend !== 'stable' && (
+                  <span className={`text-xs ${sentinelHealth.trend === 'improving' ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {sentinelHealth.trend === 'improving' ? '↑ Improving' : '↓ Degrading'}
+                  </span>
+                )}
+              </div>
+
+              {/* Per-source status rows */}
+              <div className="grid gap-1.5">
+                {sentinelHealth.sources.map(s => (
+                  <div key={s.source} className="flex items-center gap-2 text-xs px-2 py-1.5 rounded bg-white/[0.03]">
+                    <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                      s.status === 'HEALTHY'  ? 'bg-emerald-400' :
+                      s.status === 'DEGRADED' ? 'bg-amber-400' :
+                                                 'bg-red-400'
+                    }`} />
+                    <span className="text-white/70 w-24 truncate font-mono">{s.source}</span>
+                    <span className="text-white/40 flex-1">
+                      {s.lastPollAt ? `Last poll ${new Date(s.lastPollAt).toLocaleTimeString()}` : 'Never polled'}
+                    </span>
+                    {s.overdue && (
+                      <span className="text-red-400 font-medium">OVERDUE</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Queue depth */}
+              {sentinelHealth.queue && (
+                <div className="flex items-center gap-3 text-xs text-white/50">
+                  <span>Queue total: <span className="text-white/70 font-medium">{sentinelHealth.queue.total}</span></span>
+                  <span>Last 1h: <span className="text-white/70 font-medium">{sentinelHealth.queue.last1h}</span></span>
+                  <span>Last 24h: <span className="text-white/70 font-medium">{sentinelHealth.queue.last24h}</span></span>
+                </div>
+              )}
+
+              {/* Overdue sources callout */}
+              {sentinelHealth.overdueSources.length > 0 && (
+                <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-xs">
+                  <AlertTriangle className="w-3.5 h-3.5 text-red-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-red-300">
+                    <span className="font-semibold">{sentinelHealth.overdueSources.length} overdue source{sentinelHealth.overdueSources.length > 1 ? 's' : ''}:</span>{' '}
+                    {sentinelHealth.overdueSources.join(', ')}
+                  </span>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+        </>);
+
+        case 'waterfront-exposure': return DS(
+          <WaterfrontExposurePanel selectedState={selectedState} stateRollup={stateRollup} />
+        );
 
         case 'location-report': return DS(<LocationReportCard />);
 
