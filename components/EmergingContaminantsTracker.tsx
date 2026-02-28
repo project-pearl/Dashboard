@@ -46,11 +46,11 @@ interface ThreatData {
   };
   waterbodies: { name: string; type: string; status: string; level: string }[];
   trend: { yr: string; v: number }[];
-  aliaCapable: boolean;
-  aliaMethod: string;
-  aliaRemoval: number;
-  aliaStages: string;
-  aliaEvidence: string;
+  treatmentAvailable: boolean;
+  treatmentMethod: string;
+  treatmentRemoval: number;
+  treatmentStages: string;
+  treatmentEvidence: string;
   nationalCount: number;
   yoy: number;
 }
@@ -75,7 +75,7 @@ interface StateComparison {
   score: number;
 }
 
-type TabId = 'threats' | 'calendar' | 'states' | 'alia';
+type TabId = 'threats' | 'calendar' | 'states' | 'treatment';
 
 // ── Style constants ──────────────────────────────────────────────────────────
 
@@ -148,11 +148,11 @@ const threats: ThreatData[] = [
       { yr: '24', v: 2340 },
       { yr: '25', v: 2810 },
     ],
-    aliaCapable: true,
-    aliaMethod: 'Multi-stage resin adsorption + ozone',
-    aliaRemoval: 92,
-    aliaStages: 'Stages 18-34 (GAC/IX resin) + Stage 45 (ozone)',
-    aliaEvidence: 'Bench-scale confirmed. Milton FL pilot pending PFAS-specific trial.',
+    treatmentAvailable: true,
+    treatmentMethod: 'Multi-stage resin adsorption + ozone',
+    treatmentRemoval: 92,
+    treatmentStages: 'Stages 18-34 (GAC/IX resin) + Stage 45 (ozone)',
+    treatmentEvidence: 'Bench-scale confirmed. Milton FL pilot pending PFAS-specific trial.',
     nationalCount: 9823,
     yoy: 20,
   },
@@ -196,11 +196,11 @@ const threats: ThreatData[] = [
       { yr: '24', v: 1450 },
       { yr: '25', v: 2100 },
     ],
-    aliaCapable: true,
-    aliaMethod: 'Mechanical filtration (up to 75-stage)',
-    aliaRemoval: 95,
-    aliaStages: 'Stages 1-12 (graduated mesh screens 5mm\u219250\u03BCm)',
-    aliaEvidence: 'Milton FL pilot: 88-95% TSS removal includes microplastic fraction.',
+    treatmentAvailable: true,
+    treatmentMethod: 'Mechanical filtration (up to 75-stage)',
+    treatmentRemoval: 95,
+    treatmentStages: 'Stages 1-12 (graduated mesh screens 5mm\u219250\u03BCm)',
+    treatmentEvidence: 'Milton FL pilot: 88-95% TSS removal includes microplastic fraction.',
     nationalCount: 4890,
     yoy: 45,
   },
@@ -244,11 +244,11 @@ const threats: ThreatData[] = [
       { yr: '24', v: 3100 },
       { yr: '25', v: 3540 },
     ],
-    aliaCapable: true,
-    aliaMethod: 'Activated carbon + oyster biofiltration',
-    aliaRemoval: 88,
-    aliaStages: 'Stages 38-42 (GAC) + Stages 1-6 (biofiltration nutrient uptake)',
-    aliaEvidence: 'Biofiltration reduces nutrient loading that fuels HABs. Indirect prevention + direct toxin removal.',
+    treatmentAvailable: true,
+    treatmentMethod: 'Activated carbon + oyster biofiltration',
+    treatmentRemoval: 88,
+    treatmentStages: 'Stages 38-42 (GAC) + Stages 1-6 (biofiltration nutrient uptake)',
+    treatmentEvidence: 'Biofiltration reduces nutrient loading that fuels HABs. Indirect prevention + direct toxin removal.',
     nationalCount: 12450,
     yoy: 14,
   },
@@ -292,11 +292,11 @@ const threats: ThreatData[] = [
       { yr: '24', v: 480 },
       { yr: '25', v: 710 },
     ],
-    aliaCapable: true,
-    aliaMethod: 'Biochar media + mechanical pre-filtration',
-    aliaRemoval: 78,
-    aliaStages: 'Stages 8-14 (biochar adsorption media)',
-    aliaEvidence: 'Biochar shown effective in UW studies. ALIA adaptation in design phase.',
+    treatmentAvailable: true,
+    treatmentMethod: 'Biochar media + mechanical pre-filtration',
+    treatmentRemoval: 78,
+    treatmentStages: 'Stages 8-14 (biochar adsorption media)',
+    treatmentEvidence: 'Biochar shown effective in UW studies. Treatment adaptation in design phase.',
     nationalCount: 1870,
     yoy: 48,
   },
@@ -340,11 +340,11 @@ const threats: ThreatData[] = [
       { yr: '24', v: 1780 },
       { yr: '25', v: 1950 },
     ],
-    aliaCapable: true,
-    aliaMethod: 'Activated carbon + advanced oxidation',
-    aliaRemoval: 85,
-    aliaStages: 'Stages 38-42 (GAC) + Stage 45 (ozone/AOP)',
-    aliaEvidence: 'GAC + ozone industry standard for PPCPs. ALIA combines both.',
+    treatmentAvailable: true,
+    treatmentMethod: 'Activated carbon + advanced oxidation',
+    treatmentRemoval: 85,
+    treatmentStages: 'Stages 38-42 (GAC) + Stage 45 (ozone/AOP)',
+    treatmentEvidence: 'GAC + ozone industry standard for PPCPs. Combined treatment approach.',
     nationalCount: 3240,
     yoy: 10,
   },
@@ -388,11 +388,11 @@ const threats: ThreatData[] = [
       { yr: '24', v: 2800 },
       { yr: '25', v: 2500 },
     ],
-    aliaCapable: false,
-    aliaMethod: 'Infrastructure replacement required',
-    aliaRemoval: 0,
-    aliaStages: 'N/A \u2014 source is pipe material, not water quality',
-    aliaEvidence: 'Not a filtration-addressable contaminant. PIN tracks compliance status.',
+    treatmentAvailable: false,
+    treatmentMethod: 'Infrastructure replacement required',
+    treatmentRemoval: 0,
+    treatmentStages: 'N/A \u2014 source is pipe material, not water quality',
+    treatmentEvidence: 'Not a filtration-addressable contaminant. PIN tracks compliance status.',
     nationalCount: 18900,
     yoy: -11,
   },
@@ -948,15 +948,15 @@ function StateVsFederal() {
   );
 }
 
-// ── Tab 4: Treatment Effectiveness ──────────────────────────────────────────────
+// ── Tab 4: Treatment Effectiveness ────────────────────────────────────────────
 
-function AliaMatch({ role }: { role: string }) {
-  const treatable = threats.filter(t => t.aliaCapable);
+function TreatmentEffectiveness({ role }: { role: string }) {
+  const treatable = threats.filter(t => t.treatmentAvailable);
 
   const chartData = threats.map(t => ({
     name: t.name,
-    removal: t.aliaRemoval,
-    capable: t.aliaCapable,
+    removal: t.treatmentRemoval,
+    capable: t.treatmentAvailable,
   }));
 
   return (
@@ -983,7 +983,7 @@ function AliaMatch({ role }: { role: string }) {
               <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => `${v}%`} />
               <Bar dataKey="removal" radius={[4, 4, 0, 0]} barSize={36} name="Removal %">
                 {threats.map((t, i) => (
-                  <Cell key={i} fill={t.aliaCapable ? LEVEL_COLORS[t.level] : '#cbd5e1'} />
+                  <Cell key={i} fill={t.treatmentAvailable ? LEVEL_COLORS[t.level] : '#cbd5e1'} />
                 ))}
               </Bar>
             </BarChart>
@@ -991,7 +991,7 @@ function AliaMatch({ role }: { role: string }) {
         </div>
       </div>
 
-      {/* Threat cards with ALIA detail */}
+      {/* Threat cards with treatment detail */}
       <div className="grid grid-cols-2 gap-3">
         {threats.map(t => {
           const ls = LEVEL_STYLES[t.level];
@@ -999,7 +999,7 @@ function AliaMatch({ role }: { role: string }) {
             <div
               key={t.id}
               className={`bg-white rounded-lg p-3.5 border ${
-                t.aliaCapable ? 'border-blue-200' : 'border-slate-200 opacity-50'
+                t.treatmentAvailable ? 'border-blue-200' : 'border-slate-200 opacity-50'
               }`}
             >
               <div className="flex justify-between items-start mb-2.5">
@@ -1008,39 +1008,39 @@ function AliaMatch({ role }: { role: string }) {
                   <div>
                     <div className="text-sm font-extrabold text-slate-800">{t.name}</div>
                     <Badge className={`text-[9px] px-1.5 py-0 ${
-                      t.aliaCapable
+                      t.treatmentAvailable
                         ? 'bg-blue-100 text-blue-700 border-blue-200'
                         : 'bg-slate-100 text-slate-500 border-slate-200'
                     } border`}>
-                      {t.aliaCapable ? 'PIN TREATABLE' : 'NOT ADDRESSABLE'}
+                      {t.treatmentAvailable ? 'Treatment Available' : 'No Treatment Available'}
                     </Badge>
                   </div>
                 </div>
-                {t.aliaCapable && (
+                {t.treatmentAvailable && (
                   <div className="text-right">
-                    <div className="text-2xl font-black text-blue-600 font-mono">{t.aliaRemoval}%</div>
+                    <div className="text-2xl font-black text-blue-600 font-mono">{t.treatmentRemoval}%</div>
                     <div className="text-[9px] text-slate-400">removal rate</div>
                   </div>
                 )}
               </div>
 
-              {t.aliaCapable ? (
+              {t.treatmentAvailable ? (
                 <>
                   <div className="mb-2">
-                    <MiniBar pct={t.aliaRemoval} colorClass="bg-blue-500" />
+                    <MiniBar pct={t.treatmentRemoval} colorClass="bg-blue-500" />
                   </div>
                   <div className="grid grid-cols-2 gap-2 mb-2">
                     <div className="bg-slate-50 rounded p-2 border border-slate-200">
                       <div className="text-[9px] text-slate-400 uppercase tracking-wider">Method</div>
-                      <div className="text-[10px] text-slate-700 mt-0.5">{t.aliaMethod}</div>
+                      <div className="text-[10px] text-slate-700 mt-0.5">{t.treatmentMethod}</div>
                     </div>
                     <div className="bg-slate-50 rounded p-2 border border-slate-200">
                       <div className="text-[9px] text-slate-400 uppercase tracking-wider">Stages</div>
-                      <div className="text-[10px] text-slate-700 mt-0.5">{t.aliaStages}</div>
+                      <div className="text-[10px] text-slate-700 mt-0.5">{t.treatmentStages}</div>
                     </div>
                   </div>
                   <div className="text-[10px] text-slate-500 p-2 bg-slate-50 rounded border-l-2 border-blue-400">
-                    {t.aliaEvidence}
+                    {t.treatmentEvidence}
                   </div>
                   {role !== 'federal' && (
                     <div className="text-[9px] text-blue-500 mt-2 italic">
@@ -1051,7 +1051,7 @@ function AliaMatch({ role }: { role: string }) {
                   )}
                 </>
               ) : (
-                <div className="text-[10px] text-slate-500 mt-1">{t.aliaEvidence}</div>
+                <div className="text-[10px] text-slate-500 mt-1">{t.treatmentEvidence}</div>
               )}
             </div>
           );
@@ -1194,9 +1194,9 @@ function ExpandedOverlay({
                 </Button>
               ))}
             </div>
-            {threat.aliaCapable && (
+            {threat.treatmentAvailable && (
               <Badge className="bg-blue-100 text-blue-700 border-blue-200 text-[10px] border">
-                Treatment: {threat.aliaRemoval}% removal
+                Treatment: {threat.treatmentRemoval}% removal
               </Badge>
             )}
           </div>
@@ -1262,7 +1262,7 @@ export function EmergingContaminantsTracker({
     { id: 'threats', label: 'Threat Dashboard', icon: <AlertTriangle className="w-3.5 h-3.5" /> },
     { id: 'calendar', label: 'Regulatory Calendar', icon: <Calendar className="w-3.5 h-3.5" /> },
     { id: 'states', label: 'State vs Federal', icon: <Shield className="w-3.5 h-3.5" /> },
-    { id: 'alia', label: 'Treatment Effectiveness', icon: <FlaskConical className="w-3.5 h-3.5" /> },
+    { id: 'treatment', label: 'Treatment Effectiveness', icon: <FlaskConical className="w-3.5 h-3.5" /> },
   ];
 
   return (
@@ -1339,7 +1339,7 @@ export function EmergingContaminantsTracker({
           )}
           {tab === 'calendar' && <RegCalendar role={role} />}
           {tab === 'states' && <StateVsFederal />}
-          {tab === 'alia' && <AliaMatch role={role} />}
+          {tab === 'treatment' && <TreatmentEffectiveness role={role} />}
         </div>
       </CardContent>
 

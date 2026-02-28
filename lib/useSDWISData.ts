@@ -140,7 +140,7 @@ export function useSDWISData(input: SDWISDataInput): UseSDWISDataResult {
 
       // Strategy 3: State-level live query (fetches violations + systems + enforcement)
       if (state) {
-        const res = await fetch(`/api/water-data?action=envirofacts-sdwis&state=${state}&limit=100`);
+        const res = await fetch(`/api/water-data?action=envirofacts-sdwis&state=${state}&limit=1000`);
         if (res.ok) {
           const data = await res.json();
           const vArr = data.violations || data.data || [];

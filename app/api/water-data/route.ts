@@ -16,6 +16,7 @@ const USGS_SITE_BASE = 'https://waterservices.usgs.gov/nwis/site';
 const USGS_OGC_BASE = 'https://api.waterdata.usgs.gov/ogcapi/v0';
 const ATTAINS_BASE = 'https://attains.epa.gov/attains-public/api';
 const ECHO_BASE = 'https://echo.epa.gov/api/rest_services';
+const ECHO_CWA_BASE = 'https://echodata.epa.gov/echo';
 const EJSCREEN_BASE = 'https://ejscreen.epa.gov/mapper/ejscreenRESTbroker1.aspx';
 const CEDEN_BASE    = 'https://data.ca.gov/api/3/action';
 
@@ -489,6 +490,79 @@ async function ejscreenFetch(lat: number, lng: number) {
     } catch { /* try next URL */ }
   }
   return { error: 'EJScreen unavailable (both EPA and PEDP mirrors failed)' };
+}
+
+// ─── ECHO CWA Facility Search (2-step QueryID pattern) ──────────────────────
+// Used as fallback for retired/broken Envirofacts ICIS tables
+async function echoFacilitySearch(
+  state: string,
+  opts: { violatorsOnly?: boolean; limit?: number } = {},
+): Promise<any[]> {
+  const { violatorsOnly = false, limit = 500 } = opts;
+  // Step 1: get QueryID
+  const params = new URLSearchParams({
+    output: 'JSON',
+    p_st: state,
+  });
+  if (violatorsOnly) params.set('p_qiv', 'Y');
+  const queryUrl = `${ECHO_CWA_BASE}/cwa_rest_services.get_facilities?${params}`;
+  const qRes = await fetch(queryUrl, {
+    headers: { Accept: 'application/json' },
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!qRes.ok) throw new Error(`ECHO facility query HTTP ${qRes.status}`);
+  const qJson = await qRes.json();
+  const qid = qJson?.Results?.QueryID;
+  const totalRows = parseInt(qJson?.Results?.QueryRows || '0', 10);
+  if (!qid || totalRows === 0) return [];
+
+  // Step 2: get paginated JSON results
+  const cap = Math.min(limit, totalRows);
+  const qidUrl = `${ECHO_CWA_BASE}/cwa_rest_services.get_qid?output=JSON&qid=${qid}&responseset=${cap}&pageno=1`;
+  const dRes = await fetch(qidUrl, {
+    headers: { Accept: 'application/json' },
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!dRes.ok) throw new Error(`ECHO facility QID HTTP ${dRes.status}`);
+  const dJson = await dRes.json();
+  return dJson?.Results?.Facilities || [];
+}
+
+// ─── ECHO Effluent Chart (per-permit DMR + violations) ──────────────────────
+async function echoEffluentChart(permitId: string): Promise<any> {
+  const url = `${ECHO_CWA_BASE}/eff_rest_services.get_effluent_chart?output=JSON&p_id=${encodeURIComponent(permitId)}`;
+  const res = await fetch(url, {
+    headers: { Accept: 'application/json' },
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!res.ok) throw new Error(`ECHO effluent chart HTTP ${res.status}`);
+  return res.json();
+}
+
+// ─── ECHO Enforcement Cases (2-step, CWA only) ─────────────────────────────
+async function echoEnforcementSearch(state: string, limit = 500): Promise<any[]> {
+  // Step 1: get QueryID
+  const queryUrl = `${ECHO_CWA_BASE}/case_rest_services.get_cases?output=JSON&p_state=${state}&p_statute=CWA`;
+  const qRes = await fetch(queryUrl, {
+    headers: { Accept: 'application/json' },
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!qRes.ok) throw new Error(`ECHO enforcement query HTTP ${qRes.status}`);
+  const qJson = await qRes.json();
+  const qid = qJson?.Results?.QueryID;
+  const totalRows = parseInt(qJson?.Results?.QueryRows || '0', 10);
+  if (!qid || totalRows === 0) return [];
+
+  // Step 2: get paginated JSON results
+  const cap = Math.min(limit, totalRows);
+  const qidUrl = `${ECHO_CWA_BASE}/case_rest_services.get_qid?output=JSON&qid=${qid}&responseset=${cap}&pageno=1`;
+  const dRes = await fetch(qidUrl, {
+    headers: { Accept: 'application/json' },
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!dRes.ok) throw new Error(`ECHO enforcement QID HTTP ${dRes.status}`);
+  const dJson = await dRes.json();
+  return dJson?.Results?.Cases || [];
 }
 
 // ─── GET handler ─────────────────────────────────────────────────────────────
@@ -2150,6 +2224,7 @@ export async function GET(request: NextRequest) {
         const permit = sp.get('permit') || '';
         const limit = sp.get('limit') || '100';
         try {
+          // Primary: Envirofacts ICIS_PERMIT (still works)
           const filter = permit
             ? `NPDES_ID/${encodeURIComponent(permit)}`
             : `STATE_ABBR/${state}`;
@@ -2160,36 +2235,80 @@ export async function GET(request: NextRequest) {
             signal: AbortSignal.timeout(15_000),
             next: { revalidate: 3600 },
           });
-          if (!res.ok) {
-            return NextResponse.json({ source: 'icis-permits', error: `EPA error: ${res.status}` }, { status: 502 });
-          }
+          if (!res.ok) throw new Error(`Envirofacts HTTP ${res.status}`);
           const data = await res.json();
-          return NextResponse.json({ source: 'icis-permits', state, permit: permit || undefined, count: data.length, data });
-        } catch (e: any) {
-          return NextResponse.json({ source: 'icis-permits', error: e.message }, { status: 502 });
+          if (Array.isArray(data) && data.length > 0) {
+            return NextResponse.json({ source: 'icis-permits', state, permit: permit || undefined, count: data.length, data });
+          }
+          throw new Error('Envirofacts returned empty');
+        } catch (efErr) {
+          // Fallback: ECHO CWA facility search
+          try {
+            console.log(`[ICIS-Permits] Envirofacts failed (${efErr instanceof Error ? efErr.message : efErr}), falling back to ECHO`);
+            const facilities = await echoFacilitySearch(state, { limit: parseInt(limit, 10) });
+            const data = facilities.map((f: any) => ({
+              NPDES_ID: f.SourceID || '',
+              FACILITY_NAME: (f.CWPName || '').trim(),
+              STATE_ABBR: (f.CWPState || state).trim(),
+              PERMIT_STATUS_CODE: (f.CWPPermitStatusDesc || '').trim(),
+              PERMIT_TYPE_CODE: (f.CWPPermitTypeDesc || '').trim(),
+              PERMIT_EXPIRATION_DATE: f.CWPExpirationDate || '',
+              DESIGN_FLOW_NMBR: f.CWPActualAverageFlowNmbr || null,
+              lat: Number(f.FacLat) || 0,
+              lng: Number(f.FacLong) || 0,
+            }));
+            return NextResponse.json({ source: 'icis-permits', via: 'echo', state, count: data.length, data });
+          } catch (echoErr: any) {
+            return NextResponse.json({ source: 'icis-permits', error: echoErr.message }, { status: 502 });
+          }
         }
       }
 
       case 'icis-violations': {
+        // ECHO primary — Envirofacts ICIS_VIOLATION table is retired (404)
         const state = (sp.get('state') || 'MD').toUpperCase();
         const permit = sp.get('permit') || '';
         const limit = sp.get('limit') || '100';
         try {
-          const filter = permit
-            ? `NPDES_ID/${encodeURIComponent(permit)}`
-            : `STATE_ABBR/${state}`;
-          const url = `https://data.epa.gov/efservice/ICIS_VIOLATION/${filter}/ROWS/0:${limit}/JSON`;
-          console.log('[ICIS-Violations]', url);
-          const res = await fetch(url, {
-            headers: { 'Accept': 'application/json' },
-            signal: AbortSignal.timeout(15_000),
-            next: { revalidate: 3600 },
-          });
-          if (!res.ok) {
-            return NextResponse.json({ source: 'icis-violations', error: `EPA error: ${res.status}` }, { status: 502 });
+          if (permit) {
+            // Per-permit: use ECHO effluent chart to extract violations
+            console.log(`[ICIS-Violations] ECHO effluent chart for ${permit}`);
+            const chart = await echoEffluentChart(permit);
+            const violations: any[] = [];
+            const features = chart?.Results?.PermFeatures || [];
+            for (const feat of features) {
+              for (const param of feat.Parameters || []) {
+                for (const dmr of param.DischargeMonitoringReports || []) {
+                  for (const v of dmr.NPDESViolations || []) {
+                    violations.push({
+                      NPDES_ID: permit,
+                      VIOLATION_CODE: v.ViolationCode || '',
+                      VIOLATION_DESC: v.ViolationDesc || '',
+                      VIOLATION_TYPE_DESC: v.ViolationDesc || '',
+                      RNC_DETECTION_CODE: v.RNCDetectionCode || '',
+                      SEVERITY_IND: v.ViolationSeverity || '',
+                      lat: Number(feat.FacLat || feat.Latitude) || 0,
+                      lng: Number(feat.FacLong || feat.Longitude) || 0,
+                    });
+                  }
+                }
+              }
+            }
+            return NextResponse.json({ source: 'icis-violations', via: 'echo', permit, count: violations.length, data: violations });
+          } else {
+            // State-level: ECHO violating facilities
+            console.log(`[ICIS-Violations] ECHO facility search (violators) for ${state}`);
+            const facilities = await echoFacilitySearch(state, { violatorsOnly: true, limit: parseInt(limit, 10) });
+            const data = facilities.map((f: any) => ({
+              NPDES_ID: f.SourceID || '',
+              VIOLATION_TYPE_DESC: (f.CWPVioStatus || '').trim(),
+              SEVERITY_CODE: (f.CWPSNCStatus || '').trim(),
+              FACILITY_NAME: (f.CWPName || '').trim(),
+              lat: Number(f.FacLat) || 0,
+              lng: Number(f.FacLong) || 0,
+            }));
+            return NextResponse.json({ source: 'icis-violations', via: 'echo', state, count: data.length, data });
           }
-          const data = await res.json();
-          return NextResponse.json({ source: 'icis-violations', state, permit: permit || undefined, count: data.length, data });
         } catch (e: any) {
           return NextResponse.json({ source: 'icis-violations', error: e.message }, { status: 502 });
         }
@@ -2200,6 +2319,7 @@ export async function GET(request: NextRequest) {
         const permit = sp.get('permit') || '';
         const limit = sp.get('limit') || '100';
         try {
+          // Primary: Envirofacts ICIS_DMR (still works)
           const filter = permit
             ? `NPDES_ID/${encodeURIComponent(permit)}`
             : `STATE_ABBR/${state}`;
@@ -2210,13 +2330,42 @@ export async function GET(request: NextRequest) {
             signal: AbortSignal.timeout(15_000),
             next: { revalidate: 3600 },
           });
-          if (!res.ok) {
-            return NextResponse.json({ source: 'icis-dmr', error: `EPA error: ${res.status}` }, { status: 502 });
-          }
+          if (!res.ok) throw new Error(`Envirofacts HTTP ${res.status}`);
           const data = await res.json();
-          return NextResponse.json({ source: 'icis-dmr', state, permit: permit || undefined, count: data.length, data });
-        } catch (e: any) {
-          return NextResponse.json({ source: 'icis-dmr', error: e.message }, { status: 502 });
+          if (Array.isArray(data) && data.length > 0) {
+            return NextResponse.json({ source: 'icis-dmr', state, permit: permit || undefined, count: data.length, data });
+          }
+          throw new Error('Envirofacts returned empty');
+        } catch (efErr) {
+          // Fallback: ECHO effluent chart (permit queries only — no bulk state DMR)
+          if (permit) {
+            try {
+              console.log(`[ICIS-DMR] Envirofacts failed (${efErr instanceof Error ? efErr.message : efErr}), falling back to ECHO for ${permit}`);
+              const chart = await echoEffluentChart(permit);
+              const data: any[] = [];
+              const features = chart?.Results?.PermFeatures || [];
+              for (const feat of features) {
+                for (const param of feat.Parameters || []) {
+                  for (const dmr of param.DischargeMonitoringReports || []) {
+                    data.push({
+                      NPDES_ID: permit,
+                      DMR_VALUE_NMBR: dmr.DMRValueNmbr ?? null,
+                      LIMIT_VALUE_NMBR: dmr.LimitValueNmbr ?? null,
+                      PARAMETER_DESC: param.ParameterDesc || '',
+                      LIMIT_UNIT_DESC: param.LimitUnitDesc || '',
+                      MONITORING_PERIOD_END_DATE: dmr.MonitoringPeriodEndDate || '',
+                      lat: Number(feat.FacLat || feat.Latitude) || 0,
+                      lng: Number(feat.FacLong || feat.Longitude) || 0,
+                    });
+                  }
+                }
+              }
+              return NextResponse.json({ source: 'icis-dmr', via: 'echo', permit, count: data.length, data });
+            } catch (echoErr: any) {
+              return NextResponse.json({ source: 'icis-dmr', error: echoErr.message }, { status: 502 });
+            }
+          }
+          return NextResponse.json({ source: 'icis-dmr', error: (efErr instanceof Error ? efErr.message : String(efErr)) }, { status: 502 });
         }
       }
 
@@ -2224,6 +2373,7 @@ export async function GET(request: NextRequest) {
         const state = (sp.get('state') || 'MD').toUpperCase();
         const limit = sp.get('limit') || '100';
         try {
+          // Primary: Envirofacts ICIS_ENFORCEMENT (still works)
           const url = `https://data.epa.gov/efservice/ICIS_ENFORCEMENT/STATE_ABBR/${state}/ROWS/0:${limit}/JSON`;
           console.log('[ICIS-Enforcement]', url);
           const res = await fetch(url, {
@@ -2231,13 +2381,33 @@ export async function GET(request: NextRequest) {
             signal: AbortSignal.timeout(15_000),
             next: { revalidate: 3600 },
           });
-          if (!res.ok) {
-            return NextResponse.json({ source: 'icis-enforcement', error: `EPA error: ${res.status}` }, { status: 502 });
-          }
+          if (!res.ok) throw new Error(`Envirofacts HTTP ${res.status}`);
           const data = await res.json();
-          return NextResponse.json({ source: 'icis-enforcement', state, count: data.length, data });
-        } catch (e: any) {
-          return NextResponse.json({ source: 'icis-enforcement', error: e.message }, { status: 502 });
+          if (Array.isArray(data) && data.length > 0) {
+            return NextResponse.json({ source: 'icis-enforcement', state, count: data.length, data });
+          }
+          throw new Error('Envirofacts returned empty');
+        } catch (efErr) {
+          // Fallback: ECHO enforcement cases
+          try {
+            console.log(`[ICIS-Enforcement] Envirofacts failed (${efErr instanceof Error ? efErr.message : efErr}), falling back to ECHO`);
+            const cases = await echoEnforcementSearch(state, parseInt(limit, 10));
+            const data = cases.map((c: any) => {
+              const rawPenalty = String(c.FedPenalty || '0').replace(/[$,]/g, '');
+              return {
+                NPDES_ID: c.SourceID || '',
+                CASE_NUMBER: c.CaseNumber || '',
+                ENF_TYPE_DESC: (c.CaseCategoryDesc || '').trim(),
+                FED_PENALTY_ASSESSED_AMT: parseFloat(rawPenalty) || 0,
+                SETTLEMENT_ENTERED_DATE: c.SettlementDate || '',
+                lat: 0,
+                lng: 0,
+              };
+            });
+            return NextResponse.json({ source: 'icis-enforcement', via: 'echo', state, count: data.length, data });
+          } catch (echoErr: any) {
+            return NextResponse.json({ source: 'icis-enforcement', error: echoErr.message }, { status: 502 });
+          }
         }
       }
 

@@ -67,7 +67,7 @@ const CHALLENGES: ChallengeBase[] = [
       'Advocate for nutrient management plans and support watershed-level monitoring programs.',
     ngoGrant: 'EPA 319(h), USDA EQIP, state NPS grants',
     pearlCallout:
-      'ALIA sensors track nitrate and phosphate in real time so communities can spot blooms early.',
+      'Real-time sensors track nitrate and phosphate continuously so communities can spot blooms early.',
   },
   {
     id: 'sediment',
@@ -96,7 +96,7 @@ const CHALLENGES: ChallengeBase[] = [
       'Push for stronger erosion and sediment control ordinances; fund riparian buffer restoration.',
     ngoGrant: 'NRCS CRP, EPA 319(h), state erosion control funds',
     pearlCallout:
-      'ALIA turbidity sensors detect sediment spikes after storms and construction activity.',
+      'PIN monitoring detects turbidity and sediment spikes after storms and construction activity.',
   },
   {
     id: 'bacteria',
@@ -125,7 +125,7 @@ const CHALLENGES: ChallengeBase[] = [
       'Support infrastructure funding for underserved communities; demand transparent water quality reporting.',
     ngoGrant: 'EPA WIIN Act, SRF loans, Indian Health Service sanitation funds',
     pearlCallout:
-      'ALIA continuously monitors indicator bacteria levels so health warnings can go out fast.',
+      'Real-time sensors continuously monitor indicator bacteria levels so health warnings can go out fast.',
   },
   {
     id: 'stormwater',
@@ -154,7 +154,7 @@ const CHALLENGES: ChallengeBase[] = [
       'Champion green infrastructure investment and equitable stormwater utility fee structures.',
     ngoGrant: 'EPA Green Infrastructure grants, FEMA BRIC, state MS4 compliance funds',
     pearlCallout:
-      'ALIA tracks flow rates and pollutant surges during storms so cities can respond in real time.',
+      'PIN monitoring tracks flow rates and pollutant surges during storms so cities can respond in real time.',
   },
   {
     id: 'microplastics',
@@ -183,7 +183,7 @@ const CHALLENGES: ChallengeBase[] = [
       'Demand enforceable PFAS limits, fund advanced filtration for affected communities, and support right-to-know legislation.',
     ngoGrant: 'EPA PFAS Strategic Roadmap funding, DWSRF, DOD remediation funds',
     pearlCallout:
-      'ALIA helps researchers track where emerging contaminants concentrate in watersheds.',
+      'PIN monitoring helps researchers track where emerging contaminants concentrate in watersheds.',
   },
 ];
 
@@ -268,7 +268,7 @@ function StudentCard({ c, p }: { c: ChallengeBase; p: typeof PALETTES['k12-stude
           <h3 className={cn('text-base font-bold', p.title)}>{c.studentTitle}</h3>
           <p className={cn('text-sm leading-relaxed', p.body)}>{c.studentDesc}</p>
           <div className={cn('rounded-lg border px-3 py-2 text-xs', p.callout)}>
-            <span className={cn('font-semibold', p.calloutLabel)}>What ALIA does: </span>
+            <span className={cn('font-semibold', p.calloutLabel)}>How PIN monitors this: </span>
             {c.pearlCallout}
           </div>
         </div>
@@ -305,7 +305,7 @@ function TeacherCard({ c, p }: { c: ChallengeBase; p: typeof PALETTES['k12-teach
           </div>
 
           <div className={cn('rounded-lg border px-3 py-2 text-xs', p.callout)}>
-            <span className={cn('font-semibold', p.calloutLabel)}>What ALIA does: </span>
+            <span className={cn('font-semibold', p.calloutLabel)}>How PIN monitors this: </span>
             {c.pearlCallout}
           </div>
         </div>

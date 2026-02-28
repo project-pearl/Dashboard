@@ -1,10 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Shield, AlertTriangle, FileCheck, Gavel, Activity, ClipboardCheck } from 'lucide-react';
+import { Shield, AlertTriangle, FileCheck, Gavel, Activity, ClipboardCheck, Clock } from 'lucide-react';
 import { KPIStrip, type KPICard } from '@/components/KPIStrip';
 import { DashboardSection } from '@/components/DashboardSection';
-import { StatusCard } from '@/components/StatusCard';
 import { useICISData } from '@/lib/useICISData';
 
 // ── Props ───────────────────────────────────────────────────────────────────
@@ -36,12 +35,6 @@ function formatDate(dateStr: string): string {
   }
 }
 
-function violationSeverity(v: { rnc: boolean; severity: string }): 'critical' | 'warning' | 'good' {
-  if (v.rnc || v.severity === 'S') return 'critical';
-  if (v.severity === 'M' || v.severity === 'W') return 'warning';
-  return 'good';
-}
-
 // ── Component ───────────────────────────────────────────────────────────────
 
 export function ICISCompliancePanel({
@@ -52,7 +45,7 @@ export function ICISCompliancePanel({
   compactMode = false,
   className = '',
 }: ICISCompliancePanelProps) {
-  const { permits, violations, dmr, enforcement, inspections, summary, isLoading, error, fromCache } = useICISData({
+  const { permits, violations, dmr, enforcement, summary, isLoading, error, fromCache } = useICISData({
     state,
     lat,
     lng,
@@ -65,7 +58,7 @@ export function ICISCompliancePanel({
       <div className={`bg-white border border-slate-200 rounded-xl p-6 ${className}`}>
         <div className="flex items-center gap-3">
           <Shield className="w-5 h-5 text-indigo-500 animate-pulse" />
-          <span className="text-sm text-slate-500">Loading ICIS compliance data...</span>
+          <span className="text-sm text-slate-500">Loading NPDES compliance data...</span>
         </div>
       </div>
     );
@@ -76,7 +69,7 @@ export function ICISCompliancePanel({
       <div className={`bg-white border border-slate-200 rounded-xl p-6 ${className}`}>
         <div className="flex items-center gap-3">
           <Shield className="w-5 h-5 text-slate-400" />
-          <span className="text-sm text-slate-400">ICIS data unavailable: {error}</span>
+          <span className="text-sm text-slate-400">NPDES data unavailable: {error}</span>
         </div>
       </div>
     );
@@ -87,7 +80,7 @@ export function ICISCompliancePanel({
       <div className={`bg-white border border-slate-200 rounded-xl p-6 ${className}`}>
         <div className="flex items-center gap-3">
           <Shield className="w-5 h-5 text-slate-400" />
-          <span className="text-sm text-slate-400">No ICIS compliance data found for this area</span>
+          <span className="text-sm text-slate-400">No NPDES compliance data found for this area</span>
         </div>
       </div>
     );
@@ -96,21 +89,21 @@ export function ICISCompliancePanel({
   // ── KPI Cards ──────────────────────────────────────────────────────────
   const kpiCards: KPICard[] = [
     {
-      label: 'Active Permits',
-      value: summary.activePermits,
+      label: 'Total Permits',
+      value: permits.length,
       icon: FileCheck,
-      status: summary.activePermits > 0 ? 'good' : 'warning',
+      status: permits.length > 0 ? 'good' : 'warning',
     },
     {
-      label: 'Violations',
-      value: summary.totalViolations,
-      icon: AlertTriangle,
-      status: summary.totalViolations === 0 ? 'good' : summary.significantViolations > 0 ? 'critical' : 'warning',
+      label: 'In Compliance',
+      value: summary.activePermits,
+      icon: Shield,
+      status: summary.activePermits > 0 ? 'good' : 'warning',
     },
     {
       label: 'SNC Facilities',
       value: summary.significantViolations,
-      icon: Shield,
+      icon: AlertTriangle,
       status: summary.significantViolations === 0 ? 'good' : 'critical',
     },
     {
@@ -126,26 +119,32 @@ export function ICISCompliancePanel({
       status: summary.totalPenalties === 0 ? 'good' : summary.totalPenalties > 100000 ? 'critical' : 'warning',
     },
     {
-      label: 'DMR Exceedance Rate',
+      label: 'DMR Exceedance',
       value: `${summary.dmrExceedanceRate}%`,
       icon: ClipboardCheck,
       status: summary.dmrExceedanceRate <= 5 ? 'good' : summary.dmrExceedanceRate <= 15 ? 'warning' : 'critical',
+    },
+    {
+      label: 'Expiring (90d)',
+      value: summary.expiringPermits,
+      icon: Clock,
+      status: summary.expiringPermits === 0 ? 'good' : 'warning',
     },
   ];
 
   // ── Sorted lists ────────────────────────────────────────────────────────
   const recentViolations = [...violations]
     .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
-    .slice(0, compactMode ? 5 : 10);
+    .slice(0, compactMode ? 5 : 15);
 
   const recentEnforcement = [...enforcement]
     .sort((a, b) => (b.settlementDate || '').localeCompare(a.settlementDate || ''))
-    .slice(0, compactMode ? 5 : 10);
+    .slice(0, compactMode ? 10 : 25);
 
   const dmrExceedances = dmr
     .filter(d => d.exceedance)
     .sort((a, b) => (b.period || '').localeCompare(a.period || ''))
-    .slice(0, compactMode ? 5 : 10);
+    .slice(0, compactMode ? 5 : 15);
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -167,20 +166,40 @@ export function ICISCompliancePanel({
           icon={<AlertTriangle className="w-4 h-4" />}
           defaultExpanded={!compactMode}
         >
-          <div className="space-y-2 mt-3">
-            {recentViolations.map((v, i) => (
-              <StatusCard
-                key={`${v.permit}-${v.code}-${v.date}-${i}`}
-                title={`${v.permit} — ${v.code}`}
-                description={`${v.desc || 'Violation recorded'}${v.date ? ` (${formatDate(v.date)})` : ''}${v.rnc ? ' — Significant Noncompliance' : ''}`}
-                status={violationSeverity(v)}
-              />
-            ))}
+          <div className="overflow-x-auto mt-3 rounded-lg border border-slate-200">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                  <th className="px-2.5 py-2">Permit</th>
+                  <th className="px-2.5 py-2">Violation</th>
+                  <th className="px-2.5 py-2">Date</th>
+                  <th className="px-2.5 py-2">Severity</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {recentViolations.map((v, i) => (
+                  <tr key={`${v.permit}-${v.code}-${v.date}-${i}`} className="hover:bg-slate-50">
+                    <td className="px-2.5 py-2 font-mono text-slate-700">{v.permit || '—'}</td>
+                    <td className="px-2.5 py-2 text-slate-700">{v.desc || v.code || '—'}</td>
+                    <td className="px-2.5 py-2 text-slate-600 whitespace-nowrap">{v.date ? formatDate(v.date) : '—'}</td>
+                    <td className="px-2.5 py-2">
+                      {v.rnc ? (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-700">SNC</span>
+                      ) : v.severity === 'S' || v.severity === 'M' ? (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700">{v.severity}</span>
+                      ) : (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600">Minor</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </DashboardSection>
       )}
 
-      {/* Enforcement Actions */}
+      {/* Enforcement Actions — TABLE format */}
       {recentEnforcement.length > 0 && (
         <DashboardSection
           title="Enforcement Actions"
@@ -189,30 +208,31 @@ export function ICISCompliancePanel({
           icon={<Gavel className="w-4 h-4" />}
           defaultExpanded={!compactMode}
         >
-          <div className="space-y-2 mt-3">
-            {recentEnforcement.map((e, i) => (
-              <div
-                key={`${e.caseNumber}-${i}`}
-                className="bg-amber-50 border border-amber-200 rounded-xl p-4"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h4 className="text-sm font-semibold text-amber-800">{e.actionType || 'Enforcement Action'}</h4>
-                    <p className="text-xs text-slate-600 mt-1">
-                      Case: {e.caseNumber} | Permit: {e.permit}
-                    </p>
-                    {e.settlementDate && (
-                      <p className="text-xs text-slate-500 mt-0.5">Settlement: {formatDate(e.settlementDate)}</p>
-                    )}
-                  </div>
-                  {e.penaltyAssessed > 0 && (
-                    <span className="text-sm font-bold text-red-700 whitespace-nowrap">
-                      {formatCurrency(e.penaltyAssessed)}
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
+          <div className="overflow-x-auto mt-3 rounded-lg border border-slate-200">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                  <th className="px-2.5 py-2">Facility / Permit</th>
+                  <th className="px-2.5 py-2">Case ID</th>
+                  <th className="px-2.5 py-2">Type</th>
+                  <th className="px-2.5 py-2">Date</th>
+                  <th className="px-2.5 py-2 text-right">Penalty</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {recentEnforcement.map((e, i) => (
+                  <tr key={`${e.caseNumber}-${e.permit}-${i}`} className="hover:bg-slate-50">
+                    <td className="px-2.5 py-2 font-mono text-slate-700">{e.permit || '—'}</td>
+                    <td className="px-2.5 py-2 text-slate-700">{e.caseNumber || '—'}</td>
+                    <td className="px-2.5 py-2 text-slate-600">{e.actionType || '—'}</td>
+                    <td className="px-2.5 py-2 text-slate-600 whitespace-nowrap">{e.settlementDate ? formatDate(e.settlementDate) : '—'}</td>
+                    <td className="px-2.5 py-2 text-right font-semibold text-red-700">
+                      {e.penaltyAssessed > 0 ? formatCurrency(e.penaltyAssessed) : '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </DashboardSection>
       )}
@@ -226,31 +246,31 @@ export function ICISCompliancePanel({
           icon={<ClipboardCheck className="w-4 h-4" />}
           defaultExpanded={!compactMode}
         >
-          <div className="overflow-x-auto mt-3">
+          <div className="overflow-x-auto mt-3 rounded-lg border border-slate-200">
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-left text-slate-500 border-b border-slate-200">
-                  <th className="pb-2 font-semibold">Permit</th>
-                  <th className="pb-2 font-semibold">Parameter</th>
-                  <th className="pb-2 font-semibold text-right">Actual</th>
-                  <th className="pb-2 font-semibold text-right">Limit</th>
-                  <th className="pb-2 font-semibold">Unit</th>
-                  <th className="pb-2 font-semibold">Period</th>
+                <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                  <th className="px-2.5 py-2">Permit</th>
+                  <th className="px-2.5 py-2">Parameter</th>
+                  <th className="px-2.5 py-2 text-right">Actual</th>
+                  <th className="px-2.5 py-2 text-right">Limit</th>
+                  <th className="px-2.5 py-2">Unit</th>
+                  <th className="px-2.5 py-2">Period</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-100">
                 {dmrExceedances.map((d, i) => (
-                  <tr key={`${d.permit}-${d.paramDesc}-${d.period}-${i}`} className="border-b border-slate-50">
-                    <td className="py-2 font-mono text-slate-700">{d.permit}</td>
-                    <td className="py-2 text-slate-700">{d.paramDesc}</td>
-                    <td className="py-2 text-right font-semibold text-red-700">
+                  <tr key={`${d.permit}-${d.paramDesc}-${d.period}-${i}`} className="hover:bg-slate-50">
+                    <td className="px-2.5 py-2 font-mono text-slate-700">{d.permit || '—'}</td>
+                    <td className="px-2.5 py-2 text-slate-700">{d.paramDesc || '—'}</td>
+                    <td className="px-2.5 py-2 text-right font-semibold text-red-700">
                       {d.dmrValue !== null ? d.dmrValue.toFixed(2) : '—'}
                     </td>
-                    <td className="py-2 text-right text-slate-500">
+                    <td className="px-2.5 py-2 text-right text-slate-500">
                       {d.limitValue !== null ? d.limitValue.toFixed(2) : '—'}
                     </td>
-                    <td className="py-2 text-slate-500">{d.unit}</td>
-                    <td className="py-2 text-slate-500">{formatDate(d.period)}</td>
+                    <td className="px-2.5 py-2 text-slate-500">{d.unit || '—'}</td>
+                    <td className="px-2.5 py-2 text-slate-500 whitespace-nowrap">{formatDate(d.period)}</td>
                   </tr>
                 ))}
               </tbody>

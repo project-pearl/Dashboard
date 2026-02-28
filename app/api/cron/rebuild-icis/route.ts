@@ -224,6 +224,78 @@ function findPearlKey(paramDesc: string): string {
   return 'other';
 }
 
+// ── ECHO violation fetch (replaces retired ICIS_VIOLATION table) ─────────────
+
+const ECHO_CWA_QUERY = 'https://echodata.epa.gov/echo/cwa_rest_services.get_facilities';
+const ECHO_CWA_QID   = 'https://echodata.epa.gov/echo/cwa_rest_services.get_qid';
+
+async function fetchEchoViolations(stateAbbr: string): Promise<IcisViolation[]> {
+  try {
+    // Step 1: get QueryID (p_qiv=Y = violating facilities only)
+    const queryUrl = `${ECHO_CWA_QUERY}?output=JSON&p_st=${stateAbbr}&p_qiv=Y`;
+    const qRes = await fetch(queryUrl, {
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!qRes.ok) {
+      console.warn(`[ICIS Cron] ECHO violations ${stateAbbr}: HTTP ${qRes.status}`);
+      return [];
+    }
+    const qJson = await qRes.json();
+    const qid = qJson?.Results?.QueryID;
+    const totalRows = parseInt(qJson?.Results?.QueryRows || '0', 10);
+    if (!qid || totalRows === 0) return [];
+
+    console.log(`[ICIS Cron] ECHO violations ${stateAbbr}: QID=${qid}, rows=${totalRows}`);
+
+    // Step 2: paginated JSON results
+    const results: IcisViolation[] = [];
+    let pageNo = 1;
+    const PAGE = 5000;
+
+    while (results.length < totalRows) {
+      const qidUrl = `${ECHO_CWA_QID}?output=JSON&qid=${qid}&responseset=${PAGE}&pageno=${pageNo}`;
+      const dRes = await fetch(qidUrl, {
+        headers: { Accept: 'application/json' },
+        signal: AbortSignal.timeout(60_000),
+      });
+      if (!dRes.ok) {
+        console.warn(`[ICIS Cron] ECHO violations ${stateAbbr} page ${pageNo}: HTTP ${dRes.status}`);
+        break;
+      }
+      const dJson = await dRes.json();
+      const facilities = dJson?.Results?.Facilities || [];
+      if (facilities.length === 0) break;
+
+      for (const f of facilities) {
+        const lat = parseFloat(f.FacLat || '');
+        const lng = parseFloat(f.FacLong || '');
+        if (isNaN(lat) || isNaN(lng) || Math.abs(lat) < 1) continue;
+
+        const sncStatus = (f.CWPSNCStatus || '').trim();
+        results.push({
+          permit: (f.SourceID || '').trim(),
+          code: (f.CWPVioStatus || '').trim(),
+          desc: (f.CWPVioStatus || '').trim(),
+          date: new Date().toISOString().slice(0, 10), // ECHO gives facility status, not individual dates
+          rnc: sncStatus.startsWith('S'),
+          severity: sncStatus,
+          lat: Math.round(lat * 100000) / 100000,
+          lng: Math.round(lng * 100000) / 100000,
+        });
+      }
+
+      if (facilities.length < PAGE) break;
+      pageNo++;
+    }
+
+    return results;
+  } catch (e) {
+    console.warn(`[ICIS Cron] ECHO violations ${stateAbbr}: ${e instanceof Error ? e.message : e}`);
+    return [];
+  }
+}
+
 // ── GET Handler ──────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
@@ -270,14 +342,16 @@ export async function GET(request: NextRequest) {
             try {
               console.log(`[ICIS Cron] Fetching ${stateAbbr}...`);
 
-              // Fetch all 5 tables in parallel for this state
+              // Fetch tables in parallel: permits/DMR/enforcement from Envirofacts,
+              // violations from ECHO (Envirofacts ICIS_VIOLATION is retired),
+              // inspections skipped (low value, Envirofacts table retired)
               const [permits, violations, dmr, enforcement, inspections] = await Promise.all([
                 fetchTable('ICIS_PERMIT', 'STATE_ABBR', stateAbbr, transformPermit)
                   .then(rows => rows.map(r => ({ ...r, state: r.state || stateAbbr }))),
-                fetchTable('ICIS_VIOLATION', 'STATE_ABBR', stateAbbr, transformViolation),
+                fetchEchoViolations(stateAbbr),
                 fetchTable('ICIS_DMR', 'STATE_ABBR', stateAbbr, transformDmr),
                 fetchTable('ICIS_ENFORCEMENT', 'STATE_ABBR', stateAbbr, transformEnforcement),
-                fetchTable('ICIS_INSPECTION', 'STATE_ABBR', stateAbbr, transformInspection),
+                Promise.resolve([]) as Promise<IcisInspection[]>,  // inspections — retired, skip
               ]);
 
               // Deduplicate permits by permit number
@@ -365,10 +439,10 @@ export async function GET(request: NextRequest) {
           const [permits, violations, dmr, enforcement, inspections] = await Promise.all([
             fetchTable('ICIS_PERMIT', 'STATE_ABBR', stateAbbr, transformPermit)
               .then(rows => rows.map(r => ({ ...r, state: r.state || stateAbbr }))),
-            fetchTable('ICIS_VIOLATION', 'STATE_ABBR', stateAbbr, transformViolation),
+            fetchEchoViolations(stateAbbr),
             fetchTable('ICIS_DMR', 'STATE_ABBR', stateAbbr, transformDmr),
             fetchTable('ICIS_ENFORCEMENT', 'STATE_ABBR', stateAbbr, transformEnforcement),
-            fetchTable('ICIS_INSPECTION', 'STATE_ABBR', stateAbbr, transformInspection),
+            Promise.resolve([]) as Promise<IcisInspection[]>,
           ]);
 
           const dedupedPermits = Array.from(new Map(permits.map(p => [p.permit, p])).values());

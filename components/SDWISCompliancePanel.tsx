@@ -344,7 +344,7 @@ export function SDWISCompliancePanel({
         </DashboardSection>
       )}
 
-      {/* Enforcement Actions */}
+      {/* Enforcement Actions — TABLE format */}
       {sortedEnforcement.length > 0 && (
         <DashboardSection
           title="Enforcement Actions"
@@ -353,18 +353,30 @@ export function SDWISCompliancePanel({
           icon={<Gavel className="w-4 h-4" />}
           defaultExpanded={!compactMode}
         >
-          <div className="space-y-2 mt-3">
-            {sortedEnforcement.map((e, i) => (
-              <div
-                key={`${e.pwsid}-${e.date}-${i}`}
-                className="bg-amber-50 border border-amber-200 rounded-xl p-4"
-              >
-                <h4 className="text-sm font-semibold text-amber-800">{e.actionType || 'Enforcement Action'}</h4>
-                <p className="text-xs text-slate-600 mt-1">
-                  PWSID: {e.pwsid} | Date: {formatDate(e.date)}
-                </p>
-              </div>
-            ))}
+          <div className="overflow-x-auto mt-3 rounded-lg border border-slate-200">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                  <th className="px-2.5 py-2">System</th>
+                  <th className="px-2.5 py-2">PWSID</th>
+                  <th className="px-2.5 py-2">Type</th>
+                  <th className="px-2.5 py-2">Date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {sortedEnforcement.map((e, i) => {
+                  const sysName = sysNameMap.get(e.pwsid);
+                  return (
+                    <tr key={`${e.pwsid}-${e.date}-${i}`} className="hover:bg-slate-50">
+                      <td className="px-2.5 py-2 text-slate-700">{sysName || '—'}</td>
+                      <td className="px-2.5 py-2 font-mono text-slate-600">{e.pwsid || '—'}</td>
+                      <td className="px-2.5 py-2 text-slate-600">{e.actionType || '—'}</td>
+                      <td className="px-2.5 py-2 text-slate-600 whitespace-nowrap">{e.date ? formatDate(e.date) : '—'}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </DashboardSection>
       )}
