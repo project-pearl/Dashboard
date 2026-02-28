@@ -2824,7 +2824,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                     {[
                       { time: '2:14 AM', change: 'ATTAINS data refresh: 3 new Category 5 listings added for nutrient impairment' },
                       { time: '3:45 AM', change: 'ECHO enforcement update: 1 new significant non-compliance finding in NPDES universe' },
-                      { time: '5:30 AM', change: 'NWIS groundwater data: 2 monitoring wells show declining water table trend' },
+                      { time: '5:30 AM', change: 'WDFN groundwater data: 2 monitoring wells show declining water table trend' },
                       { time: '6:00 AM', change: 'SDWIS update: MCL exceedance reported at 1 community water system' },
                     ].map((c, i) => (
                       <div key={i} className="flex items-start gap-3 rounded-lg border border-slate-200 p-3">
@@ -2833,7 +2833,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ATTAINS, ECHO, SDWIS, USGS NWIS overnight batch updates</p>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ATTAINS, ECHO, SDWIS, USGS WDFN overnight batch updates</p>
                 </CardContent>
               </Card>
             );
@@ -3258,7 +3258,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: WQX, state monitoring network database, USGS NWIS</p>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: WQX, state monitoring network database, USGS WDFN</p>
                 </CardContent>
               </Card>
             );
@@ -3778,7 +3778,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State continuous monitoring network, USGS NWIS real-time</p>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State continuous monitoring network, USGS WDFN real-time</p>
                 </CardContent>
               </Card>
             );

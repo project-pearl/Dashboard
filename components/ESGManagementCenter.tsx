@@ -759,7 +759,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
       pdf.addText('DISCLAIMER', { bold: true, fontSize: 8 });
       pdf.addText(clean('This report is generated for informational and voluntary sustainability disclosure purposes only. It does not constitute a formal sustainability audit. Baseline projections derived from Milton, FL pilot (Jan 2025: 88-95% TSS removal, 50K GPD). ALIA-monitored facilities reflect verified continuous data. Non-monitored facilities show modeled estimates only.'), { fontSize: 8 });
       pdf.addSpacer(2);
-      pdf.addText(clean('Data Sources: ALIA continuous monitoring | EPA ATTAINS | EPA ECHO | USGS NWIS | NOAA CO-OPS | WRI Aqueduct | EJScreen'), { fontSize: 8 });
+      pdf.addText(clean('Data Sources: ALIA continuous monitoring | EPA ATTAINS | EPA ECHO | USGS WDFN | NOAA CO-OPS | WRI Aqueduct | EJScreen'), { fontSize: 8 });
       pdf.addText(clean(`Contact: info@project-pearl.org | ${dateStr}`), { fontSize: 8 });
 
       const safeName = companyName.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_');

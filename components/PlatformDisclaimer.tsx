@@ -9,7 +9,7 @@ export function PlatformDisclaimer() {
         <Info size={14} className="flex-shrink-0 mt-0.5 text-slate-300" />
         <div>
           <p className="mb-1">
-            <span className="font-medium text-slate-500">Data Sources:</span> USGS NWIS · EPA ATTAINS · Water Quality Portal · Blue Water Baltimore · NOAA CO-OPS · EPA ECHO
+            <span className="font-medium text-slate-500">Data Sources:</span> USGS WDFN · EPA ATTAINS · Water Quality Portal · Blue Water Baltimore · NOAA CO-OPS · EPA ECHO
           </p>
           <p>
             PEARL grades and alerts are informational tools derived from publicly available data and automated analysis. They are not official EPA, MDE, or state assessments and do not constitute regulatory determinations. Always verify with primary agency data for compliance or permitting purposes. Data freshness and completeness vary — stale or absent data results in &quot;Unassessed&quot; status to reflect uncertainty.

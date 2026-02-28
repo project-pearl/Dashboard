@@ -682,7 +682,7 @@ export default function StateWaterbodyCard({ data, onClose }: StateWaterbodyCard
       {/* ── Footer ── */}
       <div className="px-6 py-3 bg-gray-50 border-t border-gray-200 text-xs text-gray-400">
         <p>
-          Sources: EPA ATTAINS · EPA ECHO/ICIS · EPA SDWIS · USGS NWIS · State
+          Sources: EPA ATTAINS · EPA ECHO/ICIS · EPA SDWIS · USGS WDFN · State
           Integrated Reports · ALIA monitoring network
         </p>
         <p className="mt-1">

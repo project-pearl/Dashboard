@@ -266,7 +266,7 @@ export function AgriculturalNPSPanel({
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {([
           { label: 'Ag-Related Impairments', value: agData.totalAgWaterbodies, iconBg: 'bg-green-50 border-green-200', iconColor: 'text-green-600', valueColor: 'text-slate-800', Icon: Sprout },
-          { label: 'States Affected', value: agData.statesAffected, iconBg: 'bg-blue-50 border-blue-200', iconColor: 'text-blue-600', valueColor: 'text-slate-800', Icon: BarChart3 },
+          { label: agData.statesAffected === 1 ? 'State Affected' : 'States Affected', value: agData.statesAffected, iconBg: 'bg-blue-50 border-blue-200', iconColor: 'text-blue-600', valueColor: 'text-slate-800', Icon: BarChart3 },
           { label: 'Nutrient Impairments', value: agData.nutrientCount, iconBg: 'bg-indigo-50 border-indigo-200', iconColor: 'text-indigo-600', valueColor: 'text-indigo-700', Icon: Droplets },
           { label: 'Sediment Impairments', value: agData.sedimentCount, iconBg: 'bg-amber-50 border-amber-200', iconColor: 'text-amber-600', valueColor: 'text-amber-700', Icon: AlertTriangle },
         ] as const).map((stat) => (

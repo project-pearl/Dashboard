@@ -146,9 +146,16 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
   }
   if (!icisData && !pfasData) {
     return (
-      <div className="flex items-center gap-3 p-6">
-        <Shield className="w-5 h-5 text-slate-400" />
-        <span className="text-sm text-slate-400">Military installations data is currently unavailable. Please try again later.</span>
+      <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-indigo-50/30 p-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-200 flex items-center justify-center">
+            <Shield className="w-5 h-5 text-indigo-400" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-slate-700">DoD Installation Monitoring</p>
+            <p className="text-xs text-slate-500 mt-0.5">Federal facility permit and PFAS data integration in progress. Data sources: EPA ECHO (ICIS-NPDES) and UCMR/state PFAS monitoring.</p>
+          </div>
+        </div>
       </div>
     );
   }

@@ -66,7 +66,7 @@ const PLATFORM_STATS = [
 
 const DATA_FEEDS = [
   { name: 'EPA ATTAINS', desc: 'National assessment & impairment database', icon: Database, color: 'from-blue-600 to-blue-800' },
-  { name: 'USGS NWIS', desc: 'Real-time streamflow & water quality gauges', icon: Activity, color: 'from-emerald-600 to-teal-800' },
+  { name: 'USGS WDFN', desc: 'Real-time streamflow & water quality gauges', icon: Activity, color: 'from-emerald-600 to-teal-800' },
   { name: 'Water Quality Portal', desc: 'Multi-agency monitoring results', icon: Search, color: 'from-violet-600 to-purple-800' },
   { name: 'NOAA CO-OPS', desc: 'Tidal & oceanographic observations', icon: Waves, color: 'from-cyan-600 to-sky-800' },
   { name: 'EJScreen', desc: 'Environmental justice mapping overlays', icon: ShieldCheck, color: 'from-amber-600 to-orange-800' },
@@ -155,7 +155,7 @@ const DIFFERENTIATORS = [
   {
     icon: Database,
     title: 'Federal Data Integration',
-    desc: 'ATTAINS, USGS NWIS, WQP, NOAA CO-OPS, EJScreen \u2014 all normalized, cross-referenced, and queryable from a single platform.',
+    desc: 'ATTAINS, USGS WDFN, WQP, NOAA CO-OPS, EJScreen \u2014 all normalized, cross-referenced, and queryable from a single platform.',
   },
   {
     icon: Microscope,
@@ -287,7 +287,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
           <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
             {[
               { name: 'EPA', full: 'Environmental Protection Agency', datasets: 'ATTAINS + EJScreen' },
-              { name: 'USGS', full: 'U.S. Geological Survey', datasets: 'NWIS Real-Time Gauges' },
+              { name: 'USGS', full: 'U.S. Geological Survey', datasets: 'WDFN Real-Time Gauges' },
               { name: 'NOAA', full: 'National Oceanic & Atmospheric Administration', datasets: 'CO-OPS + NDBC Buoys' },
               { name: 'WQP', full: 'Water Quality Portal', datasets: 'Multi-Agency Monitoring' },
             ].map(agency => (
@@ -589,7 +589,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
               <ul className="space-y-3 text-sm text-slate-500">
                 <li><a href="https://www.epa.gov/npdes/stormwater-discharges-municipal-sources" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors inline-flex items-center gap-1">MS4 Regulations <ExternalLink className="h-3 w-3" /></a></li>
                 <li><a href="https://www.epa.gov/waterdata/attains" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors inline-flex items-center gap-1">EPA ATTAINS <ExternalLink className="h-3 w-3" /></a></li>
-                <li><a href="https://waterdata.usgs.gov/nwis" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors inline-flex items-center gap-1">USGS NWIS <ExternalLink className="h-3 w-3" /></a></li>
+                <li><a href="https://waterdata.usgs.gov/nwis" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors inline-flex items-center gap-1">USGS WDFN <ExternalLink className="h-3 w-3" /></a></li>
                 <li><a href="mailto:doug@project-pearl.org" className="hover:text-white transition-colors">Contact Us</a></li>
               </ul>
             </div>

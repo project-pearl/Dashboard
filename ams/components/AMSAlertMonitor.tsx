@@ -102,8 +102,9 @@ function AlertLevelBadge({ level }: { level: AlertLevel }) {
 }
 
 function ScoreMeter({ score }: { score: number }) {
-  // Visual meter: 0-200+ mapped to width percentage
-  const pct = Math.min(100, (score / 200) * 100);
+  // Visual meter: 0-200+ mapped to width percentage (max 200 for scale)
+  const maxScore = 200;
+  const pct = Math.min(100, (score / maxScore) * 100);
   const color =
     score >= 150
       ? "bg-red-500"
@@ -112,6 +113,7 @@ function ScoreMeter({ score }: { score: number }) {
         : score >= 50
           ? "bg-blue-500"
           : "bg-slate-300";
+  const label = score >= 150 ? 'Alert' : score >= 100 ? 'Advisory' : score >= 50 ? 'Watch' : 'Normal';
 
   return (
     <div className="flex items-center gap-2">
@@ -121,7 +123,7 @@ function ScoreMeter({ score }: { score: number }) {
           style={{ width: `${pct}%` }}
         />
       </div>
-      <span className="text-xs font-mono font-semibold text-slate-600 w-8 text-right">
+      <span className="text-xs font-mono font-semibold text-slate-600 text-right whitespace-nowrap" title={`Score ${score}/${maxScore} — ${label} threshold`}>
         {score}
       </span>
     </div>

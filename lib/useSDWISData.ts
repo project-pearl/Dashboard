@@ -45,6 +45,48 @@ const EMPTY_SUMMARY: SDWISSummary = {
   enforcementActions: 0,
 };
 
+// ── Envirofacts → typed helpers ──────────────────────────────────────────────
+
+function mapViolations(rows: any[], defaultPwsid?: string): SdwisViolation[] {
+  if (!Array.isArray(rows)) return [];
+  return rows.map((r: any) => ({
+    pwsid: r.PWSID || r.PWS_ID || r.pwsid || defaultPwsid || '',
+    code: r.VIOLATION_CODE || r.VIOLATION_TYPE_CODE || r.code || '',
+    contaminant: r.CONTAMINANT_NAME || r.CONTAMINANT_CODE || r.contaminant || '',
+    rule: r.RULE_NAME || r.RULE_CODE || r.rule || '',
+    isMajor: r.IS_MAJOR_VIOL_IND === 'Y' || r.isMajor === true,
+    isHealthBased: r.IS_HEALTH_BASED_IND === 'Y' || r.isHealthBased === true,
+    compliancePeriod: r.COMPL_PER_BEGIN_DATE || r.compliancePeriod || '',
+    lat: r.lat || 0,
+    lng: r.lng || 0,
+  }));
+}
+
+function mapSystems(rows: any[]): SdwisSystem[] {
+  if (!Array.isArray(rows)) return [];
+  return rows.map((r: any) => ({
+    pwsid: r.PWSID || r.PWS_ID || r.pwsid || '',
+    name: r.PWS_NAME || r.name || '',
+    type: r.PWS_TYPE_CODE || r.type || 'CWS',
+    population: Number(r.POPULATION_SERVED_COUNT || r.population || 0),
+    sourceWater: r.PRIMARY_SOURCE_CODE || r.sourceWater || '',
+    state: r.STATE_CODE || r.state || '',
+    lat: r.lat || 0,
+    lng: r.lng || 0,
+  }));
+}
+
+function mapEnforcement(rows: any[]): SdwisEnforcement[] {
+  if (!Array.isArray(rows)) return [];
+  return rows.map((r: any) => ({
+    pwsid: r.PWSID || r.PWS_ID || r.pwsid || '',
+    actionType: r.ENFORCEMENT_ACTION_TYPE_CODE || r.actionType || '',
+    date: r.ENFORCEMENT_DATE || r.date || '',
+    lat: r.lat || 0,
+    lng: r.lng || 0,
+  }));
+}
+
 // ── Hook ────────────────────────────────────────────────────────────────────
 
 export function useSDWISData(input: SDWISDataInput): UseSDWISDataResult {
@@ -79,42 +121,34 @@ export function useSDWISData(input: SDWISDataInput): UseSDWISDataResult {
         }
       }
 
-      // Strategy 2: PWSID-scoped live query
+      // Strategy 2: PWSID-scoped live query (fetches violations + systems + enforcement)
       if (pwsid) {
         const res = await fetch(`/api/water-data?action=envirofacts-sdwis&pwsid=${encodeURIComponent(pwsid)}&limit=100`);
         if (res.ok) {
           const data = await res.json();
-          setViolations((data.data || []).map((r: any) => ({
-            pwsid: r.PWSID || r.PWS_ID || pwsid,
-            code: r.VIOLATION_CODE || r.VIOLATION_TYPE_CODE || '',
-            contaminant: r.CONTAMINANT_NAME || r.CONTAMINANT_CODE || '',
-            rule: r.RULE_NAME || r.RULE_CODE || '',
-            isMajor: r.IS_MAJOR_VIOL_IND === 'Y',
-            isHealthBased: r.IS_HEALTH_BASED_IND === 'Y',
-            compliancePeriod: r.COMPL_PER_BEGIN_DATE || '',
-            lat: 0, lng: 0,
-          })));
+          const vArr = data.violations || data.data || [];
+          const sArr = data.systems || [];
+          const eArr = data.enforcement || [];
+          setViolations(mapViolations(vArr, pwsid));
+          setSystems(mapSystems(sArr));
+          setEnforcement(mapEnforcement(eArr));
         }
         setFromCache(false);
         setIsLoading(false);
         return;
       }
 
-      // Strategy 3: State-level live query
+      // Strategy 3: State-level live query (fetches violations + systems + enforcement)
       if (state) {
         const res = await fetch(`/api/water-data?action=envirofacts-sdwis&state=${state}&limit=100`);
         if (res.ok) {
           const data = await res.json();
-          setViolations((data.data || []).map((r: any) => ({
-            pwsid: r.PWSID || r.PWS_ID || '',
-            code: r.VIOLATION_CODE || r.VIOLATION_TYPE_CODE || '',
-            contaminant: r.CONTAMINANT_NAME || r.CONTAMINANT_CODE || '',
-            rule: r.RULE_NAME || r.RULE_CODE || '',
-            isMajor: r.IS_MAJOR_VIOL_IND === 'Y',
-            isHealthBased: r.IS_HEALTH_BASED_IND === 'Y',
-            compliancePeriod: r.COMPL_PER_BEGIN_DATE || '',
-            lat: 0, lng: 0,
-          })));
+          const vArr = data.violations || data.data || [];
+          const sArr = data.systems || [];
+          const eArr = data.enforcement || [];
+          setViolations(mapViolations(vArr));
+          setSystems(mapSystems(sArr));
+          setEnforcement(mapEnforcement(eArr));
         }
         setFromCache(false);
         setIsLoading(false);

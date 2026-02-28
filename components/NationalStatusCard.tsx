@@ -250,7 +250,7 @@ export default function NationalStatusCard({ summary: initialSummary }: Props) {
         <Tip text="Total threshold exceedances, violations, and watch-level events across all monitored sources">
           <span className="tabular-nums">{activeAlerts.toLocaleString()} active alerts</span>
         </Tip>
-        <Tip text="Waterbodies with active USGS NWIS-IV sensor monitoring">
+        <Tip text="Waterbodies with active USGS WDFN-IV sensor monitoring">
           <span className="tabular-nums">{realtimeSites.toLocaleString()} real-time sites</span>
         </Tip>
         <span className="tabular-nums">{statesReporting}/51 reporting</span>

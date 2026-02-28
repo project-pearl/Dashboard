@@ -258,7 +258,14 @@ export default function LocationReportCard() {
               <span className="text-xs text-muted-foreground">
                 {report.location.lat.toFixed(4)}, {report.location.lng.toFixed(4)}
               </span>
-              <Badge className={`ml-auto ${RISK_COLORS[computeRisk(report)]}`}>
+              <Badge
+                className={`ml-auto ${RISK_COLORS[computeRisk(report)]}`}
+                title={computeRisk(report) === 'high'
+                  ? 'Multiple violations or PFAS detections found near this location'
+                  : computeRisk(report) === 'medium'
+                  ? 'Some violations or PFAS detections found near this location'
+                  : 'No significant water quality concerns detected nearby'}
+              >
                 {computeRisk(report) === 'high' ? 'Elevated Risk' : computeRisk(report) === 'medium' ? 'Moderate Risk' : 'Low Risk'}
               </Badge>
             </div>
@@ -280,20 +287,39 @@ export default function LocationReportCard() {
                   )}
                   {report.sources.sdwis.systems.slice(0, 5).map(s => (
                     <div key={s.pwsid} className="flex items-center gap-2 text-xs">
-                      <Badge variant="outline" className="text-[10px]">{s.type}</Badge>
+                      <Badge
+                        variant="outline"
+                        className="text-[10px]"
+                        title={s.type === 'CWS' ? 'Community Water System — serves year-round residents'
+                          : s.type === 'NTNCWS' ? 'Non-Transient Non-Community Water System — serves the same people regularly (e.g. schools, offices)'
+                          : s.type === 'TNCWS' ? 'Transient Non-Community Water System — serves transient visitors (e.g. gas stations, campgrounds)'
+                          : s.type}
+                      >{s.type}</Badge>
                       <span className="truncate">{s.name}</span>
                       <span className="text-muted-foreground ml-auto">Pop: {s.population?.toLocaleString()}</span>
                     </div>
                   ))}
                 </div>
               ) : <NoData />}
-              {report.sources.pfas && report.sources.pfas.results.length > 0 && (
-                <div className="mt-2 pt-2 border-t">
-                  <p className="text-orange-600 dark:text-orange-400 font-medium text-xs">
-                    PFAS: {report.sources.pfas.results.filter(r => r.detected).length} detection(s) out of {report.sources.pfas.results.length} sample(s)
-                  </p>
-                </div>
-              )}
+              {report.sources.pfas && report.sources.pfas.results.length > 0 && (() => {
+                const detected = report.sources.pfas.results.filter(r => r.detected).length;
+                const total = report.sources.pfas.results.length;
+                const pct = Math.round((detected / total) * 100);
+                const isHigh = pct >= 80;
+                return (
+                  <div className={`mt-2 pt-2 border-t ${isHigh ? 'bg-red-50 dark:bg-red-950/20 -mx-4 px-4 -mb-3 pb-3 rounded-b-lg' : ''}`}>
+                    <p className={`font-medium text-xs ${isHigh ? 'text-red-700 dark:text-red-300' : 'text-orange-600 dark:text-orange-400'}`}>
+                      {isHigh && <AlertTriangle className="inline h-3.5 w-3.5 mr-1" />}
+                      PFAS: {detected} detection{detected !== 1 ? 's' : ''} out of {total} sample{total !== 1 ? 's' : ''} ({pct}%)
+                    </p>
+                    {isHigh && (
+                      <p className="text-[10px] text-red-600/80 dark:text-red-400/80 mt-0.5">
+                        High PFAS detection rate — review source water and treatment options
+                      </p>
+                    )}
+                  </div>
+                );
+              })()}
             </ReportSection>
 
             {/* Stream Conditions */}
@@ -309,7 +335,12 @@ export default function LocationReportCard() {
                     <div key={i} className="flex items-center gap-2 text-xs">
                       <Badge variant="outline" className="text-[10px]">{r.parameterName}</Badge>
                       <span>{r.value} {r.unit}</span>
-                      <span className="text-muted-foreground ml-auto">{r.qualifier === 'P' ? 'Provisional' : 'Approved'}</span>
+                      <span
+                        className="text-muted-foreground ml-auto cursor-help"
+                        title={r.qualifier === 'P'
+                          ? 'Provisional — data not yet reviewed and subject to revision'
+                          : 'Approved — data has been reviewed and accepted by USGS'}
+                      >{r.qualifier === 'P' ? 'Provisional' : 'Approved'}</span>
                     </div>
                   ))}
                 </div>
@@ -355,18 +386,38 @@ export default function LocationReportCard() {
                       {report.sources.icis.violations.length} violation(s) found
                     </p>
                   )}
+                  {report.sources.icis.permits.slice(0, 5).map((p, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs">
+                      <Badge variant="outline" className="text-[10px] shrink-0">{(p as any).permitId || (p as any).npdesId || (p as any).externalPermitNmbr || `Permit ${i + 1}`}</Badge>
+                      <span className="truncate">{(p as any).facilityName || (p as any).name || ''}</span>
+                      <Badge
+                        variant={(p as any).status === 'Effective' ? 'default' : 'secondary'}
+                        className="text-[10px] ml-auto shrink-0"
+                      >{(p as any).status || (p as any).permitStatus || 'Active'}</Badge>
+                    </div>
+                  ))}
                 </div>
-              ) : <NoData />}
+              ) : null}
               {report.sources.echo ? (
-                <div className="mt-2 pt-2 border-t space-y-1">
+                <div className={`space-y-1 ${report.sources.icis ? 'mt-2 pt-2 border-t' : ''}`}>
                   <p><strong>{report.sources.echo.facilities.length}</strong> ECHO facility(ies)</p>
                   {report.sources.echo.violations.length > 0 && (
                     <p className="text-red-600 dark:text-red-400 text-xs">
                       {report.sources.echo.violations.length} compliance violation(s)
                     </p>
                   )}
+                  {report.sources.echo.facilities.slice(0, 5).map((f, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs">
+                      <span className="truncate">{(f as any).facilityName || (f as any).name || `Facility ${i + 1}`}</span>
+                      <Badge
+                        variant={(f as any).complianceStatus === 'No Violation' ? 'default' : 'destructive'}
+                        className="text-[10px] ml-auto shrink-0"
+                      >{(f as any).complianceStatus || (f as any).status || 'Unknown'}</Badge>
+                    </div>
+                  ))}
                 </div>
               ) : null}
+              {!report.sources.icis && !report.sources.echo && <NoData />}
             </ReportSection>
 
             {/* Groundwater */}
@@ -376,9 +427,9 @@ export default function LocationReportCard() {
               defaultOpen={false}
               count={report.sources.nwisGw?.sites.length || 0}
             >
-              {report.sources.nwisGw ? (
+              {report.sources.nwisGw && report.sources.nwisGw.sites.length > 0 ? (
                 <div className="space-y-1">
-                  <p><strong>{report.sources.nwisGw.sites.length}</strong> monitoring well(s)</p>
+                  <p><strong>{report.sources.nwisGw.sites.length}</strong> USGS WDFN monitoring well(s)</p>
                   {report.sources.nwisGw.trends.slice(0, 5).map((t, i) => (
                     <div key={i} className="flex items-center gap-2 text-xs">
                       <span className="truncate">{t.siteName}</span>
@@ -388,7 +439,11 @@ export default function LocationReportCard() {
                     </div>
                   ))}
                 </div>
-              ) : <NoData />}
+              ) : (
+                <p className="text-muted-foreground text-xs italic">
+                  No USGS WDFN groundwater monitoring wells cached near this location
+                </p>
+              )}
             </ReportSection>
 
             {/* Toxic Releases */}
@@ -398,7 +453,7 @@ export default function LocationReportCard() {
               defaultOpen={false}
               count={(report.sources.tri?.facilities.length || 0) + (report.sources.frs?.facilities.length || 0)}
             >
-              {report.sources.tri ? (
+              {report.sources.tri && report.sources.tri.facilities.length > 0 ? (
                 <div className="space-y-1">
                   <p><strong>{report.sources.tri.facilities.length}</strong> TRI facility(ies)</p>
                   {report.sources.tri.facilities.slice(0, 5).map((f, i) => (
@@ -408,11 +463,17 @@ export default function LocationReportCard() {
                     </div>
                   ))}
                 </div>
-              ) : <NoData />}
+              ) : null}
               {report.sources.frs && report.sources.frs.facilities.length > 0 && (
-                <div className="mt-2 pt-2 border-t">
+                <div className={report.sources.tri && report.sources.tri.facilities.length > 0 ? 'mt-2 pt-2 border-t' : ''}>
                   <p><strong>{report.sources.frs.facilities.length}</strong> FRS registered facility(ies)</p>
                 </div>
+              )}
+              {(!report.sources.tri || report.sources.tri.facilities.length === 0) &&
+               (!report.sources.frs || report.sources.frs.facilities.length === 0) && (
+                <p className="text-muted-foreground text-xs italic">
+                  No EPA TRI or FRS facilities cached near this location
+                </p>
               )}
             </ReportSection>
 
@@ -426,27 +487,39 @@ export default function LocationReportCard() {
                 <div className="space-y-1">
                   {(() => {
                     const raw = report.sources.ejscreen as Record<string, unknown>;
-                    // EJScreen returns nested data — try to extract key percentiles
-                    const rObj = (raw?.RAW_D_INCOME != null) ? raw : (raw as Record<string, unknown>)?.data as Record<string, unknown> | undefined;
-                    if (!rObj) return <p className="text-xs">EJScreen data received (see raw response for details)</p>;
-                    const items: [string, unknown][] = [
-                      ['EJ Index', rObj.T_OVR64_PCT],
-                      ['Low Income %', rObj.T_LOWINC_PCT],
-                      ['People of Color %', rObj.T_MINORI_PCT],
-                      ['PM2.5', rObj.T_PM25_PCT],
-                      ['Wastewater Discharge', rObj.T_DWATER_PCT],
+                    // EJScreen returns data nested in various formats — try multiple access paths
+                    const rObj = (raw?.RAW_D_INCOME != null) ? raw
+                      : (raw as any)?.data != null ? (raw as any).data
+                      : (raw as any)?.results?.[0] ?? null;
+                    if (!rObj) {
+                      // Check if there's any useful data in the raw response
+                      const keys = Object.keys(raw).filter(k => k !== 'status' && k !== 'error');
+                      if (keys.length === 0) return <p className="text-muted-foreground text-xs italic">EJScreen returned no data for this location</p>;
+                      return <p className="text-xs">EJScreen data received — {keys.length} field(s)</p>;
+                    }
+                    const items: [string, string, unknown][] = [
+                      ['EJ Index', 'Combined environmental and demographic percentile', rObj.T_OVR64_PCT ?? rObj.EJ_INDEX_PCT],
+                      ['Low Income %', 'Percentage of population below poverty level', rObj.T_LOWINC_PCT ?? rObj.LOWINC_PCT],
+                      ['People of Color %', 'Percentage minority population', rObj.T_MINORI_PCT ?? rObj.MINORI_PCT],
+                      ['PM2.5', 'Particulate matter 2.5 microns percentile', rObj.T_PM25_PCT ?? rObj.PM25_PCT],
+                      ['Wastewater Discharge', 'Wastewater discharge indicator percentile', rObj.T_DWATER_PCT ?? rObj.DWATER_PCT],
+                      ['Superfund Proximity', 'Proximity to Superfund sites', rObj.T_PNPL_PCT ?? rObj.PNPL_PCT],
                     ];
-                    return items
-                      .filter(([, v]) => v != null)
-                      .map(([label, v]) => (
-                        <div key={label} className="flex items-center justify-between text-xs">
-                          <span>{label}</span>
-                          <span className="font-medium">{typeof v === 'number' ? `${(v * 100).toFixed(0)}th %ile` : String(v)}</span>
-                        </div>
-                      ));
+                    const filtered = items.filter(([,, v]) => v != null);
+                    if (filtered.length === 0) return <p className="text-muted-foreground text-xs italic">EJScreen data structure not recognized</p>;
+                    return filtered.map(([label, tooltip, v]) => (
+                      <div key={label} className="flex items-center justify-between text-xs">
+                        <span className="cursor-help" title={tooltip}>{label}</span>
+                        <span className="font-medium">{typeof v === 'number' ? (v <= 1 ? `${(v * 100).toFixed(0)}th %ile` : `${v.toFixed(0)}th %ile`) : String(v)}</span>
+                      </div>
+                    ));
                   })()}
                 </div>
-              ) : <NoData />}
+              ) : (
+                <p className="text-muted-foreground text-xs italic">
+                  EJScreen data unavailable — EPA EJScreen API may be temporarily offline
+                </p>
+              )}
             </ReportSection>
 
             {/* State Overview */}
@@ -455,36 +528,57 @@ export default function LocationReportCard() {
               icon={<FileBarChart className="h-4 w-4 text-slate-500" />}
               defaultOpen={false}
             >
-              {report.sources.stateReport ? (
+              {report.sources.stateReport || report.sources.attains ? (
                 <div className="space-y-1">
-                  <div className="flex items-center justify-between text-xs">
-                    <span>Coverage Grade</span>
-                    <Badge variant="outline">{report.sources.stateReport.coverageGrade}</Badge>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span>Monitored Waterbodies</span>
-                    <span>{report.sources.stateReport.monitoredPct.toFixed(0)}%</span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span>Impaired</span>
-                    <span>{report.sources.stateReport.impairedCount.toLocaleString()}</span>
-                  </div>
+                  {report.sources.stateReport && (
+                    <>
+                      <div className="flex items-center justify-between text-xs">
+                        <span>Coverage Grade</span>
+                        <Badge variant="outline">{report.sources.stateReport.coverageGrade}</Badge>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span>Monitored Waterbodies</span>
+                        <span>{report.sources.stateReport.monitoredPct.toFixed(0)}%</span>
+                      </div>
+                    </>
+                  )}
+                  {/* Prefer ATTAINS impaired count (more accurate) over stateReport */}
+                  {report.sources.attains ? (
+                    <div className={report.sources.stateReport ? 'mt-2 pt-2 border-t space-y-1' : 'space-y-1'}>
+                      <div className="flex items-center justify-between text-xs">
+                        <span>Assessed Waterbodies</span>
+                        <span className="font-medium">{report.sources.attains.total.toLocaleString()}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span>Impaired</span>
+                        <span className="font-medium text-red-600 dark:text-red-400">{report.sources.attains.impaired.toLocaleString()}</span>
+                      </div>
+                      {report.sources.attains.total > 0 && (
+                        <div className="flex items-center justify-between text-xs">
+                          <span>Impairment Rate</span>
+                          <span className="font-medium">{((report.sources.attains.impaired / report.sources.attains.total) * 100).toFixed(1)}%</span>
+                        </div>
+                      )}
+                      {report.sources.attains.topCauses.length > 0 && (
+                        <div className="mt-1">
+                          <p className="text-[10px] text-muted-foreground mb-1">Top Causes of Impairment</p>
+                          <div className="flex flex-wrap gap-1">
+                            {report.sources.attains.topCauses.slice(0, 5).map(c => (
+                              <Badge key={c} variant="secondary" className="text-[10px]">{c}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      <p className="text-[10px] text-muted-foreground mt-1">Source: EPA ATTAINS</p>
+                    </div>
+                  ) : report.sources.stateReport && report.sources.stateReport.impairedCount > 0 ? (
+                    <div className="flex items-center justify-between text-xs">
+                      <span>Impaired</span>
+                      <span>{report.sources.stateReport.impairedCount.toLocaleString()}</span>
+                    </div>
+                  ) : null}
                 </div>
               ) : <NoData />}
-              {report.sources.attains ? (
-                <div className="mt-2 pt-2 border-t space-y-1">
-                  <p className="text-xs">
-                    <strong>{report.sources.attains.impaired.toLocaleString()}</strong> impaired of <strong>{report.sources.attains.total.toLocaleString()}</strong> assessed
-                  </p>
-                  {report.sources.attains.topCauses.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {report.sources.attains.topCauses.slice(0, 5).map(c => (
-                        <Badge key={c} variant="secondary" className="text-[10px]">{c}</Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : null}
             </ReportSection>
 
             {/* NDBC */}

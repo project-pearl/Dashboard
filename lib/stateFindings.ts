@@ -257,7 +257,7 @@ export function generateFindings(data: StateAssessmentData): Finding[] {
         detail: `${data.stationsStale.toLocaleString()} of ${data.monitoringStations.toLocaleString()} stations have not reported data in over 2 years. ${data.stationsWithRecentData.toLocaleString()} stations are actively reporting. Data gaps reduce confidence in impairment assessments.`,
         metric: `${data.stationsStale.toLocaleString()}`,
         metricLabel: "Stale Stations",
-        dataSource: "EPA WQP / USGS NWIS",
+        dataSource: "EPA WQP / USGS WDFN",
       },
     });
   }

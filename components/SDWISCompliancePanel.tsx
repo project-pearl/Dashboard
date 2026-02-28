@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Droplets, AlertTriangle, Users, Gavel, Shield, Beaker } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Droplets, AlertTriangle, Users, Gavel, Shield, Beaker, ChevronUp, ChevronDown } from 'lucide-react';
 import { KPIStrip, type KPICard } from '@/components/KPIStrip';
 import { DashboardSection } from '@/components/DashboardSection';
-import { StatusCard } from '@/components/StatusCard';
 import { useSDWISData } from '@/lib/useSDWISData';
 
 // ── Props ───────────────────────────────────────────────────────────────────
@@ -56,6 +55,10 @@ export function SDWISCompliancePanel({
 
   const [filterMajor, setFilterMajor] = useState(false);
   const [filterHealthBased, setFilterHealthBased] = useState(false);
+  const [sortCol, setSortCol] = useState<'pwsid' | 'contaminant' | 'rule' | 'date' | 'status'>('date');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [violPage, setViolPage] = useState(0);
+  const VIOL_PAGE_SIZE = compactMode ? 10 : 25;
 
   if (isLoading) {
     return (
@@ -130,13 +133,45 @@ export function SDWISCompliancePanel({
     },
   ];
 
+  // ── System name lookup ────────────────────────────────────────────────
+  const sysNameMap = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const s of systems) if (s.pwsid && s.name) m.set(s.pwsid, s.name);
+    return m;
+  }, [systems]);
+
+  const sysPopMap = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const s of systems) if (s.pwsid) m.set(s.pwsid, s.population || 0);
+    return m;
+  }, [systems]);
+
   // ── Filtered & sorted violations ───────────────────────────────────────
-  let filteredViolations = [...violations];
-  if (filterMajor) filteredViolations = filteredViolations.filter(v => v.isMajor);
-  if (filterHealthBased) filteredViolations = filteredViolations.filter(v => v.isHealthBased);
-  const sortedViolations = filteredViolations
-    .sort((a, b) => (b.compliancePeriod || '').localeCompare(a.compliancePeriod || ''))
-    .slice(0, compactMode ? 5 : 15);
+  const sortedViolations = useMemo(() => {
+    let filtered = [...violations];
+    if (filterMajor) filtered = filtered.filter(v => v.isMajor);
+    if (filterHealthBased) filtered = filtered.filter(v => v.isHealthBased);
+
+    const dir = sortDir === 'asc' ? 1 : -1;
+    filtered.sort((a, b) => {
+      switch (sortCol) {
+        case 'pwsid': return dir * (a.pwsid || '').localeCompare(b.pwsid || '');
+        case 'contaminant': return dir * (a.contaminant || a.code || '').localeCompare(b.contaminant || b.code || '');
+        case 'rule': return dir * (a.rule || '').localeCompare(b.rule || '');
+        case 'date': return dir * (a.compliancePeriod || '').localeCompare(b.compliancePeriod || '');
+        case 'status': {
+          const sA = a.isMajor ? 2 : a.isHealthBased ? 1 : 0;
+          const sB = b.isMajor ? 2 : b.isHealthBased ? 1 : 0;
+          return dir * (sA - sB);
+        }
+        default: return 0;
+      }
+    });
+    return filtered;
+  }, [violations, filterMajor, filterHealthBased, sortCol, sortDir]);
+
+  const violPageCount = Math.max(1, Math.ceil(sortedViolations.length / VIOL_PAGE_SIZE));
+  const pagedViolations = sortedViolations.slice(violPage * VIOL_PAGE_SIZE, (violPage + 1) * VIOL_PAGE_SIZE);
 
   // ── System type breakdown ──────────────────────────────────────────────
   const cwsCount = systems.filter(s => s.type === 'CWS').length;
@@ -197,7 +232,7 @@ export function SDWISCompliancePanel({
       {violations.length > 0 && (
         <DashboardSection
           title="Drinking Water Violations"
-          subtitle={`${violations.length} total violations found`}
+          subtitle={`${sortedViolations.length}${filterMajor || filterHealthBased ? ' filtered' : ''} of ${violations.length} violations`}
           accent="red"
           icon={<AlertTriangle className="w-4 h-4" />}
           defaultExpanded={!compactMode}
@@ -208,7 +243,7 @@ export function SDWISCompliancePanel({
               <input
                 type="checkbox"
                 checked={filterMajor}
-                onChange={e => setFilterMajor(e.target.checked)}
+                onChange={e => { setFilterMajor(e.target.checked); setViolPage(0); }}
                 className="rounded border-slate-300"
               />
               Major only
@@ -217,23 +252,96 @@ export function SDWISCompliancePanel({
               <input
                 type="checkbox"
                 checked={filterHealthBased}
-                onChange={e => setFilterHealthBased(e.target.checked)}
+                onChange={e => { setFilterHealthBased(e.target.checked); setViolPage(0); }}
                 className="rounded border-slate-300"
               />
               Health-based only
             </label>
           </div>
 
-          <div className="space-y-2">
-            {sortedViolations.map((v, i) => (
-              <StatusCard
-                key={`${v.pwsid}-${v.code}-${v.compliancePeriod}-${i}`}
-                title={`${v.pwsid} — ${v.contaminant || v.code}`}
-                description={`${v.rule || 'Violation recorded'}${v.compliancePeriod ? ` (${formatDate(v.compliancePeriod)})` : ''}${v.isMajor ? ' — Major' : ''}${v.isHealthBased ? ' — Health-Based' : ''}`}
-                status={v.isMajor || v.isHealthBased ? 'critical' : 'warning'}
-              />
-            ))}
+          {/* Sortable table */}
+          <div className="overflow-x-auto rounded-lg border border-slate-200">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                  {([
+                    ['pwsid', 'System'],
+                    ['contaminant', 'Contaminant'],
+                    ['rule', 'Type'],
+                    ['date', 'Date'],
+                    ['status', 'Severity'],
+                  ] as const).map(([col, label]) => (
+                    <th
+                      key={col}
+                      className="px-2.5 py-2 cursor-pointer hover:bg-slate-100 select-none whitespace-nowrap"
+                      onClick={() => {
+                        if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+                        else { setSortCol(col); setSortDir('desc'); }
+                        setViolPage(0);
+                      }}
+                    >
+                      <span className="inline-flex items-center gap-0.5">
+                        {label}
+                        {sortCol === col && (sortDir === 'asc'
+                          ? <ChevronUp className="w-3 h-3" />
+                          : <ChevronDown className="w-3 h-3" />
+                        )}
+                      </span>
+                    </th>
+                  ))}
+                  <th className="px-2.5 py-2 whitespace-nowrap">Pop. Served</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {pagedViolations.map((v, i) => {
+                  const sysName = sysNameMap.get(v.pwsid);
+                  const pop = sysPopMap.get(v.pwsid);
+                  return (
+                    <tr key={`${v.pwsid}-${v.code}-${v.compliancePeriod}-${i}`} className="hover:bg-slate-50">
+                      <td className="px-2.5 py-2">
+                        <div className="font-medium text-slate-700">{sysName || v.pwsid}</div>
+                        {sysName && <div className="text-[10px] text-slate-400">{v.pwsid}</div>}
+                      </td>
+                      <td className="px-2.5 py-2 text-slate-700">{v.contaminant || v.code || '—'}</td>
+                      <td className="px-2.5 py-2 text-slate-600">{v.rule || '—'}</td>
+                      <td className="px-2.5 py-2 text-slate-600 whitespace-nowrap">{v.compliancePeriod ? formatDate(v.compliancePeriod) : '—'}</td>
+                      <td className="px-2.5 py-2">
+                        {v.isMajor ? (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-700">Major</span>
+                        ) : v.isHealthBased ? (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700">Health-Based</span>
+                        ) : (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600">Monitoring</span>
+                        )}
+                      </td>
+                      <td className="px-2.5 py-2 text-slate-600 text-right tabular-nums">
+                        {pop ? formatPopulation(pop) : '—'}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
+
+          {/* Pagination */}
+          {violPageCount > 1 && (
+            <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
+              <span>Page {violPage + 1} of {violPageCount}</span>
+              <div className="flex gap-1">
+                <button
+                  className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40"
+                  disabled={violPage === 0}
+                  onClick={() => setViolPage(p => p - 1)}
+                >Prev</button>
+                <button
+                  className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40"
+                  disabled={violPage >= violPageCount - 1}
+                  onClick={() => setViolPage(p => p + 1)}
+                >Next</button>
+              </div>
+            </div>
+          )}
         </DashboardSection>
       )}
 

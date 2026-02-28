@@ -148,11 +148,18 @@ function transformHuc(huc: any): WatershedScore {
     compoundScore: huc.score,
   }));
 
+  // Use composite score to determine alert level (calibrated thresholds)
+  // rather than trusting backend level string (which may be uncalibrated)
+  const compositeScore = Math.round(huc.score);
+  const baseName = hucNames[huc.huc8] ?? huc.huc8;
+  const stAbbr = huc.stateAbbr || '';
+  const fullName = stAbbr && !baseName.includes(stAbbr) ? `${baseName}, ${stAbbr}` : baseName;
+
   return {
     huc8: huc.huc8,
-    watershedName: hucNames[huc.huc8] ?? huc.huc8,
-    compositeScore: Math.round(huc.score),
-    alertLevel: toAlertLevel(huc.level),
+    watershedName: fullName,
+    compositeScore,
+    alertLevel: getAlertLevel(compositeScore),
     signals,
     compoundMatches,
     firstSignalAt: huc.lastScored,

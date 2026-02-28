@@ -2050,20 +2050,46 @@ export async function GET(request: NextRequest) {
       // ════════════════════════════════════════════════════════════════════════
       case 'envirofacts-sdwis': {
         const state = sp.get('state') || 'MD';
+        const pwsidParam = sp.get('pwsid') || '';
         const limit = sp.get('limit') || '20';
         try {
-          const url = `https://data.epa.gov/efservice/VIOLATION/PRIMACY_AGENCY_CODE/${state}/ROWS/0:${limit}/JSON`;
-          console.log('[Envirofacts-SDWIS]', url);
-          const res = await fetch(url, {
-            headers: { 'Accept': 'application/json' },
-            signal: AbortSignal.timeout(15_000),
-            next: { revalidate: 3600 },
+          // Fetch violations, systems, and enforcement in parallel
+          const stateFilter = pwsidParam ? `PWSID/${pwsidParam}` : `PRIMACY_AGENCY_CODE/${state}`;
+          const sysFilter = pwsidParam ? `PWSID/${pwsidParam}` : `STATE_CODE/${state}/PWS_TYPE_CODE/CWS`;
+          const enfFilter = pwsidParam ? `PWSID/${pwsidParam}` : `STATE_CODE/${state}`;
+
+          const [violRes, sysRes, enfRes] = await Promise.allSettled([
+            fetch(`https://data.epa.gov/efservice/VIOLATION/${stateFilter}/ROWS/0:${limit}/JSON`, {
+              headers: { 'Accept': 'application/json' },
+              signal: AbortSignal.timeout(15_000),
+              next: { revalidate: 3600 },
+            }),
+            fetch(`https://data.epa.gov/efservice/WATER_SYSTEM/${sysFilter}/ROWS/0:${limit}/JSON`, {
+              headers: { 'Accept': 'application/json' },
+              signal: AbortSignal.timeout(15_000),
+              next: { revalidate: 3600 },
+            }),
+            fetch(`https://data.epa.gov/efservice/ENFORCEMENT_ACTION/${enfFilter}/ROWS/0:${limit}/JSON`, {
+              headers: { 'Accept': 'application/json' },
+              signal: AbortSignal.timeout(15_000),
+              next: { revalidate: 3600 },
+            }),
+          ]);
+
+          const violations = violRes.status === 'fulfilled' && violRes.value.ok
+            ? await violRes.value.json() : [];
+          const systems = sysRes.status === 'fulfilled' && sysRes.value.ok
+            ? await sysRes.value.json() : [];
+          const enforcement = enfRes.status === 'fulfilled' && enfRes.value.ok
+            ? await enfRes.value.json() : [];
+
+          return NextResponse.json({
+            source: 'envirofacts-sdwis', state,
+            violations, systems, enforcement,
+            violationCount: Array.isArray(violations) ? violations.length : 0,
+            systemCount: Array.isArray(systems) ? systems.length : 0,
+            enforcementCount: Array.isArray(enforcement) ? enforcement.length : 0,
           });
-          if (!res.ok) {
-            return NextResponse.json({ source: 'envirofacts-sdwis', error: `EPA error: ${res.status}` }, { status: 502 });
-          }
-          const data = await res.json();
-          return NextResponse.json({ source: 'envirofacts-sdwis', state, count: data.length, data });
         } catch (e: any) {
           return NextResponse.json({ source: 'envirofacts-sdwis', error: e.message }, { status: 502 });
         }

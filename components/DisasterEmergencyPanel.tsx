@@ -233,7 +233,7 @@ export function DisasterEmergencyPanel({
       <div className="flex items-center gap-2 text-xs text-slate-400">
         <AlertTriangle className="w-3.5 h-3.5" />
         <span>
-          USGS NWIS + EPA ATTAINS — Disaster &amp; Emergency Readiness
+          USGS WDFN + EPA ATTAINS — Disaster &amp; Emergency Readiness
           {selectedState ? ` (${selectedState})` : ' (National)'}
         </span>
       </div>
@@ -572,62 +572,58 @@ export function DisasterEmergencyPanel({
         </CardContent>
       </Card>
 
-      {/* ── Section 5: Data Integration Roadmap ────────────────────────────── */}
+      {/* ── Section 5: Coming Soon — Additional Data Sources ────────────────── */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
             <Info size={16} className="text-blue-600" />
-            Data Integration Roadmap
+            Coming Soon
           </CardTitle>
           <CardDescription>
-            Planned data source integrations for enhanced disaster and emergency monitoring
+            Additional data source integrations for enhanced disaster and emergency monitoring
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-            <div className="flex items-start gap-3">
-              <AlertTriangle size={16} className="text-blue-600 mt-0.5 shrink-0" />
-              <div className="space-y-3 flex-1">
-                <p className="text-sm text-blue-800">
-                  The following data source integrations are planned to enhance disaster
-                  and emergency response capabilities:
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {[
-                    {
-                      name: 'FEMA Disaster Declarations API',
-                      desc: 'Real-time federal disaster declarations and emergency status',
-                    },
-                    {
-                      name: 'NRC Spill Reports Database',
-                      desc: 'National Response Center incident reports and spill tracking',
-                    },
-                    {
-                      name: 'NOAA Weather Alerts Integration',
-                      desc: 'Severe weather and flood warnings impacting water infrastructure',
-                    },
-                    {
-                      name: 'EPA Emergency Response System',
-                      desc: 'Superfund emergency response actions and removal site data',
-                    },
-                  ].map((item) => (
-                    <div
-                      key={item.name}
-                      className="rounded-md border border-blue-100 bg-white p-3"
-                    >
-                      <p className="text-xs font-semibold text-blue-800 mb-0.5">
-                        {item.name}
-                      </p>
-                      <p className="text-[10px] text-blue-600">{item.desc}</p>
-                    </div>
-                  ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {[
+              {
+                name: 'FEMA Disaster Declarations API',
+                desc: 'Real-time federal disaster declarations and emergency status',
+                status: 'In Development',
+                statusColor: 'bg-amber-100 text-amber-700',
+              },
+              {
+                name: 'NRC Spill Reports Database',
+                desc: 'National Response Center incident reports and spill tracking',
+                status: 'In Development',
+                statusColor: 'bg-amber-100 text-amber-700',
+              },
+              {
+                name: 'NOAA Weather Alerts',
+                desc: 'Severe weather and flood warnings impacting water infrastructure',
+                status: 'Beta',
+                statusColor: 'bg-cyan-100 text-cyan-700',
+              },
+              {
+                name: 'EPA Emergency Response',
+                desc: 'Superfund emergency response actions and removal site data',
+                status: 'Planned',
+                statusColor: 'bg-slate-100 text-slate-600',
+              },
+            ].map((item) => (
+              <div
+                key={item.name}
+                className="rounded-lg border border-slate-200 bg-white p-3"
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-xs font-semibold text-slate-800">{item.name}</p>
+                  <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${item.statusColor}`}>
+                    {item.status}
+                  </span>
                 </div>
-                <p className="text-[10px] text-blue-500">
-                  These integrations will provide early warning capabilities, incident
-                  tracking, and coordinated emergency response data across federal agencies.
-                </p>
+                <p className="text-[10px] text-slate-500">{item.desc}</p>
               </div>
-            </div>
+            ))}
           </div>
         </CardContent>
       </Card>

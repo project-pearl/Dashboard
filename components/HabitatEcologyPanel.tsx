@@ -28,6 +28,11 @@ interface HabitatEcologyPanelProps {
     score: number;
     assessed: number;
     waterbodies: number;
+    totalImpaired?: number;
+    cat5?: number;
+    cat4a?: number;
+    cat4b?: number;
+    cat4c?: number;
   }>;
   selectedState: string;
   attainsData: Record<
@@ -105,31 +110,40 @@ export function HabitatEcologyPanel({
   const [showAllStates, setShowAllStates] = useState(false);
   const [expandedSpeciesState, setExpandedSpeciesState] = useState<string | null>(null);
 
+  // ── Scope-filtered rollup ──────────────────────────────────────────────
+  const scopedRollup = useMemo(() => {
+    if (!selectedState) return stateRollup;
+    return stateRollup.filter(s => s.abbr === selectedState);
+  }, [stateRollup, selectedState]);
+
   // ── Hero stat: % of assessed waterbodies meeting aquatic life use ───────
   const heroStats = useMemo(() => {
-    const totalAssessed = stateRollup.reduce((sum, s) => sum + s.waterbodies, 0);
-    const meeting = stateRollup.reduce(
+    const totalAssessed = scopedRollup.reduce((sum, s) => sum + s.waterbodies, 0);
+    const meeting = scopedRollup.reduce(
       (sum, s) => sum + (s.score >= 3 ? s.waterbodies : 0),
       0
     );
     const meetingPct = totalAssessed > 0 ? (meeting / totalAssessed) * 100 : 0;
-    const totalStates = stateRollup.length;
-    const impairedStates = stateRollup.filter((s) => s.score < 3).length;
+    const totalStates = scopedRollup.length;
+    const impairedStates = scopedRollup.filter((s) => s.score < 3).length;
     return { totalAssessed, meeting, meetingPct, totalStates, impairedStates };
-  }, [stateRollup]);
+  }, [scopedRollup]);
 
   // ── State-by-state table data with eco scores ──────────────────────────
   const tableData = useMemo(() => {
     return stateRollup.map((s) => {
-      const impaired = s.score < 3 ? s.waterbodies : 0;
+      // Use real ATTAINS impaired count when available, fall back to score-based estimate
+      const impaired = s.totalImpaired ?? (s.score < 3 ? s.waterbodies : 0);
+      // assessed should be at least as large as impaired (impairment = result of assessment)
+      const assessed = Math.max(s.assessed, impaired);
       const attainmentRate =
-        s.assessed > 0
-          ? ((s.assessed - impaired) / s.assessed) * 100
+        assessed > 0
+          ? ((assessed - impaired) / assessed) * 100
           : 0;
       const eco = getEcoData(s.abbr);
       return {
         abbr: s.abbr,
-        assessed: s.assessed,
+        assessed,
         impaired,
         waterbodies: s.waterbodies,
         attainmentRate,
@@ -329,14 +343,16 @@ export function HabitatEcologyPanel({
                   Assessed
                 </p>
               </div>
-              <div className="text-center">
-                <p className="text-lg font-bold text-slate-800">
-                  {heroStats.totalStates}
-                </p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wide">
-                  States
-                </p>
-              </div>
+              {!selectedState && (
+                <div className="text-center">
+                  <p className="text-lg font-bold text-slate-800">
+                    {heroStats.totalStates}
+                  </p>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-wide">
+                    States
+                  </p>
+                </div>
+              )}
               {heroStats.impairedStates > 0 && (
                 <div className="text-center">
                   <p className="text-lg font-bold text-red-600">

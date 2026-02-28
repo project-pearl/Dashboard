@@ -244,7 +244,7 @@ export default function UtilityManagementCenter({ systemId }: Props) {
                   { label: 'Source Flow', value: '1,240 cfs', bg: 'bg-cyan-50 border-cyan-200' },
                   { label: 'Drought Index', value: 'Normal', bg: 'bg-green-50 border-green-200' },
                 ]}
-                source="NOAA weather, USGS NWIS flow data"
+                source="NOAA weather, USGS WDFN flow data"
               />
             );
 
@@ -702,7 +702,7 @@ export default function UtilityManagementCenter({ systemId }: Props) {
                   { label: 'Turbidity', value: '4.2 NTU', bg: 'bg-cyan-50 border-cyan-200' },
                   { label: 'Temperature', value: '8.4°C', bg: 'bg-blue-50 border-blue-200' },
                 ]}
-                source="USGS NWIS, utility intake monitoring"
+                source="USGS WDFN, utility intake monitoring"
               />
             );
 

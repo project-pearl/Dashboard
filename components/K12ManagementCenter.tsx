@@ -1422,7 +1422,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                         <div className="rounded-lg border border-purple-200 bg-white p-3">
                           <div className="text-xs font-bold text-slate-700 mb-1">Data Sources</div>
                           <div className="flex flex-wrap gap-1.5">
-                            {['EPA ATTAINS', 'USGS NWIS', 'Water Quality Portal', hasRealData ? 'Live Sensors' : null].filter(Boolean).map((src, i) => (
+                            {['EPA ATTAINS', 'USGS WDFN', 'Water Quality Portal', hasRealData ? 'Live Sensors' : null].filter(Boolean).map((src, i) => (
                               <span key={i} className="px-2 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200">{src}</span>
                             ))}
                           </div>

@@ -2534,7 +2534,7 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                   { name: 'ALIA Continuous Monitoring', source: 'ALIA Sensors', format: 'CSV / JSON API', freq: '15-min intervals', icon: '🦪' },
                   { name: 'EPA ATTAINS Assessments', source: 'EPA', format: 'JSON API', freq: 'Biennial (IR cycle)', icon: '🏛️' },
                   { name: 'Water Quality Portal', source: 'USGS/EPA/USDA', format: 'CSV / WQX', freq: 'Varies by station', icon: '💧' },
-                  { name: 'USGS NWIS Streamflow', source: 'USGS', format: 'RDB / JSON', freq: 'Real-time + daily', icon: '🌊' },
+                  { name: 'USGS WDFN Streamflow', source: 'USGS', format: 'RDB / JSON', freq: 'Real-time + daily', icon: '🌊' },
                   { name: 'EPA EJScreen Demographics', source: 'EPA', format: 'JSON API', freq: 'Annual update', icon: '⚖️' },
                   { name: 'NOAA Tides & Currents', source: 'NOAA CO-OPS', format: 'JSON / CSV', freq: '6-min intervals', icon: '🌊' },
                 ].map(ds => (

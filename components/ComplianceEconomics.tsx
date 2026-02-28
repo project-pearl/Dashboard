@@ -791,7 +791,7 @@ export function ComplianceEconomics({ regionId, tier: initialTier = 'large', jur
             </p>
           </div>
           <div className="text-[10px] text-slate-400 leading-relaxed">
-            <span className="font-semibold text-slate-500">Data Provenance:</span> PEARL aggregated from USGS NWIS, Water Quality Portal, EPA ATTAINS, NOAA CO-OPS. Estimates informational only — consult MDE for official compliance determinations.
+            <span className="font-semibold text-slate-500">Data Provenance:</span> PEARL aggregated from USGS WDFN, Water Quality Portal, EPA ATTAINS, NOAA CO-OPS. Estimates informational only — consult MDE for official compliance determinations.
           </div>
         </div>
 
