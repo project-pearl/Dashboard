@@ -10,7 +10,7 @@ import type { MapRef } from 'react-map-gl';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, AlertTriangle, AlertCircle, CheckCircle, MapPin, Droplets, Leaf, DollarSign, Users, TrendingUp, BarChart3, Gauge, Shield, LogOut, Building2, Info, ChevronDown, Minus, Clock, Target, ArrowRight, Eye, Sparkles, Scale, Activity } from 'lucide-react';
+import { X, AlertTriangle, AlertCircle, CheckCircle, MapPin, Droplets, Leaf, DollarSign, Users, TrendingUp, BarChart3, Gauge, Shield, LogOut, Building2, Info, ChevronDown, Minus, Clock, Target, ArrowRight, Eye, Sparkles, Scale, Activity, Banknote, HardHat, Wrench } from 'lucide-react';
 import { brandedPrintSection, BrandedPrintBtn } from '@/lib/brandedPrint';
 import { useRouter } from 'next/navigation';
 import { getRegionById } from '@/lib/regionsConfig';
@@ -171,7 +171,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: true, showNationalImpact: true, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['networkhealth', 'nationalimpact', 'groundwater', 'waterfront-exposure', 'disclaimer']),
+    sections: new Set(['networkhealth', 'nationalimpact', 'groundwater', 'waterfront-exposure', 'infra-green', 'infra-capital', 'infra-construction', 'disclaimer']),
   },
   monitoring: {
     label: 'Monitoring',
@@ -291,7 +291,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['funding-deadlines', 'grant-outcomes', 'funding-gap', 'disclaimer']),
+    sections: new Set(['fund-srf', 'infra-capital', 'infra-construction', 'funding-deadlines', 'grant-outcomes', 'funding-gap', 'disclaimer']),
   },
   planner: {
     label: 'Emergency Response',
@@ -7044,6 +7044,134 @@ export function FederalManagementCenter(props: Props) {
 
         case 'waterfront-exposure': return DS(
           <WaterfrontExposurePanel selectedState={selectedState} stateRollup={stateRollup} />
+        );
+
+        // ── Infrastructure / Funding national aggregate cards ──────────────
+        case 'fund-srf': return DS(
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Banknote className="h-5 w-5 text-blue-600" />
+                SRF Program — National Aggregate
+              </CardTitle>
+              <CardDescription>State Revolving Fund capitalization, lending, and utilization across all states</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Capitalization</div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { label: 'CWSRF Cap Grants', value: '$2.8B', bg: 'bg-blue-50 border-blue-200' },
+                  { label: 'DWSRF Cap Grants', value: '$1.9B', bg: 'bg-sky-50 border-sky-200' },
+                  { label: 'BIL Supplement', value: '$11.7B', bg: 'bg-green-50 border-green-200' },
+                  { label: 'Loan Repayments', value: '$4.2B/yr', bg: 'bg-slate-50 border-slate-200' },
+                ].map(k => (
+                  <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                    <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1 mt-4">Lending</div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { label: 'CWSRF Available', value: '$38B', bg: 'bg-green-50 border-green-200' },
+                  { label: 'DWSRF Available', value: '$24B', bg: 'bg-blue-50 border-blue-200' },
+                  { label: 'Active Loans', value: '6,800+', bg: 'bg-slate-50 border-slate-200' },
+                  { label: 'Nat\'l Utilization', value: '78%', bg: 'bg-amber-50 border-amber-200' },
+                ].map(k => (
+                  <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                    <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-slate-400 mt-2 italic">Data source: EPA CWSRF/DWSRF national data, BIL appropriations</p>
+            </CardContent>
+          </Card>
+        );
+
+        case 'infra-capital': return DS(
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <HardHat className="h-5 w-5 text-orange-600" />
+                Capital Improvement Planning — National Aggregate
+              </CardTitle>
+              <CardDescription>Infrastructure investment pipeline across all states</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { label: 'Priority Projects', value: '1,400+', bg: 'bg-orange-50 border-orange-200' },
+                  { label: 'Total Investment Need', value: '$625B', bg: 'bg-blue-50 border-blue-200' },
+                  { label: 'Funded', value: '~40%', bg: 'bg-green-50 border-green-200' },
+                  { label: 'Unfunded Gap', value: '$375B', bg: 'bg-rose-50 border-rose-200' },
+                ].map(k => (
+                  <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                    <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA Drinking Water & Clean Water Infrastructure Needs Surveys</p>
+            </CardContent>
+          </Card>
+        );
+
+        case 'infra-construction': return DS(
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Wrench className="h-5 w-5 text-slate-600" />
+                Construction Activity — National Aggregate
+              </CardTitle>
+              <CardDescription>Active construction projects funded by SRF and BIL across all states</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { label: 'Active Projects', value: '3,200+', bg: 'bg-blue-50 border-blue-200' },
+                  { label: 'On Schedule', value: '~74%', bg: 'bg-green-50 border-green-200' },
+                  { label: 'Behind Schedule', value: '~18%', bg: 'bg-amber-50 border-amber-200' },
+                  { label: 'Completed (FY)', value: '1,100+', bg: 'bg-slate-50 border-slate-200' },
+                ].map(k => (
+                  <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                    <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA SRF disbursement records, state construction reports</p>
+            </CardContent>
+          </Card>
+        );
+
+        case 'infra-green': return DS(
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Leaf className="h-5 w-5 text-green-600" />
+                Green Infrastructure — National Aggregate
+              </CardTitle>
+              <CardDescription>Nature-based solutions and green infrastructure installations across all states</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { label: 'Total GI Projects', value: '18,000+', bg: 'bg-green-50 border-green-200' },
+                  { label: 'Acres Managed', value: '142K', bg: 'bg-green-50 border-green-200' },
+                  { label: 'Stormwater Captured', value: '8.2B gal/yr', bg: 'bg-blue-50 border-blue-200' },
+                  { label: 'EJ Co-Benefit States', value: '38', bg: 'bg-emerald-50 border-emerald-200' },
+                ].map(k => (
+                  <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                    <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA GI inventory, SRF green project reserve, state NPS reports</p>
+            </CardContent>
+          </Card>
         );
 
         case 'location-report': return DS(<LocationReportCard />);

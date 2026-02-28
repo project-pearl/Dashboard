@@ -5008,25 +5008,41 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Banknote className="h-5 w-5 text-green-600" />
-                    SRF Administration
+                    <Banknote className="h-5 w-5 text-blue-600" />
+                    SRF Program
                   </CardTitle>
-                  <CardDescription>State Revolving Fund loan status and project financing</CardDescription>
+                  <CardDescription>State Revolving Fund loans received, terms, and repayment status</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <CardContent className="space-y-4">
+                  <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">State Capitalization</div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {[
-                      { label: 'Active SRF Loans', value: '3', bg: 'bg-green-50 border-green-200' },
-                      { label: 'Total Financed', value: '$12.4M', bg: 'bg-blue-50 border-blue-200' },
-                      { label: 'Applications Pending', value: '1', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'CWSRF Cap Grant', value: '$42M', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'DWSRF Cap Grant', value: '$28M', bg: 'bg-sky-50 border-sky-200' },
+                      { label: 'BIL Supplement', value: '$18M', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Loan Repayments', value: '$31M/yr', bg: 'bg-slate-50 border-slate-200' },
                     ].map(k => (
-                      <div key={k.label} className={`rounded-xl border p-3 ${k.bg}`}>
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
                         <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-slate-400 mt-3 italic">Data source: State SRF program, EPA CWSRF database</p>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1 mt-4">Municipal Pass-Through</div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'SRF Loans Received', value: '3', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Outstanding Balance', value: '$8.2M', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Interest Rate', value: '1.5%', bg: 'bg-slate-50 border-slate-200' },
+                      { label: 'Repayment Status', value: 'Current', bg: 'bg-emerald-50 border-emerald-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-2 italic">Data source: State SRF program, municipal loan records</p>
                 </CardContent>
               </Card>
             );

@@ -53,6 +53,7 @@ import {
   HardHat,
   DollarSign,
   Download,
+  Database,
   Users,
   Heart,
   Search,
@@ -214,12 +215,13 @@ const NAV_GROUPS: NavGroup[] = [
   {
     title: 'Tools',
     items: [
-      { label: 'Water Tools', href: '/tools/water-quality-lookup', icon: Search, accent: 'text-sky-700', accentBg: 'bg-sky-50 border-sky-200' },
-      { label: 'Data Provenance', href: '/tools/data-provenance', icon: FileCheck, accent: 'text-cyan-700', accentBg: 'bg-cyan-50 border-cyan-200' },
+      { label: 'Location Report', href: '/tools/water-quality-lookup', icon: MapPin, accent: 'text-sky-700', accentBg: 'bg-sky-50 border-sky-200' },
       { label: 'Data Export Hub', href: '/tools/data-export', icon: Download, accent: 'text-blue-700', accentBg: 'bg-blue-50 border-blue-200' },
       { label: 'Report Builder', href: '/tools/reports', icon: FileText, accent: 'text-slate-700', accentBg: 'bg-slate-100 border-slate-300' },
+      { label: 'Bulk Data Export', href: '/tools/bulk-export', icon: Database, accent: 'text-violet-700', accentBg: 'bg-violet-50 border-violet-200' },
       { label: 'Templates', href: '/tools/templates', icon: ClipboardList, accent: 'text-amber-700', accentBg: 'bg-amber-50 border-amber-200' },
       { label: 'API Docs', href: '/tools/api', icon: BookOpen, accent: 'text-indigo-700', accentBg: 'bg-indigo-50 border-indigo-200' },
+      { label: 'Data Provenance', href: '/tools/data-provenance', icon: FileCheck, accent: 'text-cyan-700', accentBg: 'bg-cyan-50 border-cyan-200' },
       { label: 'Methodology', href: '/tools/methodology', icon: Beaker, accent: 'text-teal-700', accentBg: 'bg-teal-50 border-teal-200' },
     ],
   },

@@ -130,7 +130,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'ag-nps-tmdl',         label: 'NPS-Specific TMDL Progress',  order: 45, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'ag-nps-funding',      label: 'NPS Funding & Grants',        order: 46, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Infrastructure (View 11) ──
-    { id: 'infra-srf',           label: 'SRF Administration',           order: 47, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'infra-srf',           label: 'SRF Program',           order: 47, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'infra-capital',       label: 'Capital Improvement Planning', order: 48, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'infra-construction',  label: 'Construction Project Tracker', order: 49, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'infra-green',         label: 'Green Infrastructure',         order: 50, visible: true, defaultExpanded: true,  lensControlled: true },
@@ -177,7 +177,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'perm-general',        label: 'General Permits & Coverage',   order: 82, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Funding (View 18) ──
     { id: 'fund-active',         label: 'My Active Grants',             order: 83, visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'fund-srf',            label: 'SRF Fund Management',          order: 84, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'fund-srf',            label: 'SRF Program',                  order: 84, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'fund-pipeline',       label: 'Opportunity Pipeline',         order: 85, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'fund-passthrough',    label: 'Pass-Through Grants',          order: 86, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'fund-analytics',      label: 'Financial Analytics',          order: 87, visible: true, defaultExpanded: true,  lensControlled: true },
@@ -247,7 +247,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'bmp-maintenance',     label: 'Maintenance Schedule',             order: 42, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'bmp-planning',        label: 'BMP Planning & Siting',            order: 43, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Infrastructure (View 11) ──
-    { id: 'infra-srf',           label: 'SRF Administration',               order: 44, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'infra-srf',           label: 'SRF Program',               order: 44, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'infra-capital',       label: 'Capital Improvement Planning',     order: 45, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'infra-construction',  label: 'Construction Project Tracker',     order: 46, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'infra-green',         label: 'Green Infrastructure',             order: 47, visible: true, defaultExpanded: true,  lensControlled: true },
@@ -287,6 +287,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'mcm-6',               label: 'MCM 6: Pollution Prevention',     order: 75, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Funding (View 18) ──
     { id: 'fund-active',         label: 'My Active Grants',                 order: 76, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'fund-srf',            label: 'SRF Program',                      order: 76.1, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'fund-pipeline',       label: 'Opportunity Pipeline',             order: 77, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'fund-stormwater',     label: 'Stormwater Funding Programs',      order: 78, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'fund-analytics',      label: 'Financial Analytics',              order: 79, visible: true, defaultExpanded: true,  lensControlled: true },
@@ -479,6 +480,10 @@ export const DEFAULT_SECTIONS = {
     { id: 'disaster-emergency', label: 'Disaster & Emergency',        order: 37, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'military-installations', label: 'Military Installations',  order: 38, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'waterfront-exposure', label: 'Waterfront Value Exposure',  order: 39, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'fund-srf',           label: 'SRF Program',                 order: 39.1, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'infra-capital',      label: 'Capital Improvement Planning', order: 39.2, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'infra-construction', label: 'Construction Project Tracker', order: 39.3, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'infra-green',        label: 'Green Infrastructure',        order: 39.4, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'location-report',    label: 'Location Water Quality Report', order: 40, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'disclaimer',         label: 'Platform Disclaimer',         order: 41, visible: true, defaultExpanded: true, lensControlled: true },
   ],

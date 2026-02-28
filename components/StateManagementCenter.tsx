@@ -194,7 +194,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Agricultural & Nonpoint Source',
     description: '319 program, watershed plans, and nutrient reduction',
     defaultOverlay: 'risk',
-    sections: new Set(['ag-319', 'ag-wbp', 'ag-nutrient', 'ag-partners', 'ag-nps-breakdown', 'ag-bmp-effectiveness', 'ag-nps-tmdl', 'ag-nps-funding', 'disclaimer']),
+    sections: new Set(['ag-319', 'ag-wbp', 'infra-green', 'ag-nutrient', 'ag-partners', 'ag-nps-breakdown', 'ag-bmp-effectiveness', 'ag-nps-tmdl', 'ag-nps-funding', 'disclaimer']),
   },
   infrastructure: {
     label: 'Infrastructure',
@@ -242,7 +242,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Funding & Grants',
     description: 'Active grants, SRF management, and financial analytics',
     defaultOverlay: 'risk',
-    sections: new Set(['grants', 'fund-active', 'fund-srf', 'fund-pipeline', 'fund-passthrough', 'fund-analytics', 'fund-bil', 'fund-j40', 'fund-srf-pipeline', 'fund-grant-compliance', 'fund-trend', 'fund-match', 'disclaimer']),
+    sections: new Set(['grants', 'fund-active', 'fund-srf', 'infra-capital', 'infra-construction', 'fund-pipeline', 'fund-passthrough', 'fund-analytics', 'fund-bil', 'fund-j40', 'fund-srf-pipeline', 'fund-grant-compliance', 'fund-trend', 'fund-match', 'disclaimer']),
   },
 };
 
@@ -3991,12 +3991,27 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Banknote className="h-5 w-5 text-green-600" />
-                    SRF Administration
+                    <Banknote className="h-5 w-5 text-blue-600" />
+                    SRF Program
                   </CardTitle>
-                  <CardDescription>Clean Water and Drinking Water State Revolving Fund status</CardDescription>
+                  <CardDescription>State Revolving Fund capitalization, lending, and utilization</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
+                  <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Capitalization</div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'CWSRF Cap Grant', value: '$42M', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'DWSRF Cap Grant', value: '$28M', bg: 'bg-sky-50 border-sky-200' },
+                      { label: 'BIL Supplement', value: '$18M', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Loan Repayments', value: '$31M/yr', bg: 'bg-slate-50 border-slate-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1 mt-4">Lending</div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {[
                       { label: 'CWSRF Available', value: '$84M', bg: 'bg-green-50 border-green-200' },
@@ -4010,7 +4025,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State SRF program, EPA CWSRF/DWSRF national data</p>
+                  <p className="text-xs text-slate-400 mt-2 italic">Data source: EPA CWSRF/DWSRF national data, state SRF program</p>
                 </CardContent>
               </Card>
             );
@@ -5696,11 +5711,12 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Banknote className="h-5 w-5 text-blue-600" />
-                    SRF Fund Management
+                    SRF Program
                   </CardTitle>
-                  <CardDescription>State Revolving Fund capitalization, disbursement, and repayment tracking</CardDescription>
+                  <CardDescription>State Revolving Fund capitalization, lending, and utilization</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
+                  <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Capitalization</div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {[
                       { label: 'CWSRF Cap Grant', value: '$42M', bg: 'bg-blue-50 border-blue-200' },
@@ -5714,7 +5730,21 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA CWSRF/DWSRF national data, state SRF program</p>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1 mt-4">Lending</div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'CWSRF Available', value: '$84M', bg: 'bg-green-50 border-green-200' },
+                      { label: 'DWSRF Available', value: '$62M', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Active Loans', value: '47', bg: 'bg-slate-50 border-slate-200' },
+                      { label: 'Utilization Rate', value: '78%', bg: 'bg-amber-50 border-amber-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-2 italic">Data source: EPA CWSRF/DWSRF national data, state SRF program</p>
                 </CardContent>
               </Card>
             );
