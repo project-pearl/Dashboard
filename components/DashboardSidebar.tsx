@@ -133,6 +133,7 @@ const LENS_ICONS: Record<string, LucideIcon> = {
   'facility-operations': Factory,
   'esg-reporting': FileCheck,
   'supply-chain-risk': Link2,
+  'supply-chain': Link2,
   // ── University ─────────────────────────────────────────────────────────────
   'research-monitoring': Microscope,
   'campus-stormwater': CloudRain,

@@ -78,7 +78,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
     accentColor: 'text-sky-400',
   },
   infrastructure: {
-    image: '/images/heroes/MS4.png',
+    image: '/site-management.png',
     subtitle: 'PIN — PEARL Intelligence Network',
     headline: 'Site & Property Intelligence',
     description:

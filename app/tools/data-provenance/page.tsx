@@ -190,7 +190,7 @@ export default function DataProvenancePage() {
         <div className="relative overflow-hidden rounded-xl mx-auto mt-6 max-w-4xl px-6 print:hidden">
           <div className="relative h-[160px] sm:h-[180px] lg:h-[200px] w-full">
             <Image
-              src="/images/heroes/Research.png"
+              src="/provenance.png"
               alt="Data Provenance & Methodology"
               fill
               className="object-cover"
