@@ -10,7 +10,7 @@ import type { MapRef } from 'react-map-gl';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, AlertTriangle, AlertCircle, CheckCircle, MapPin, Droplets, Leaf, DollarSign, Users, TrendingUp, BarChart3, Gauge, Shield, LogOut, Building2, Info, ChevronDown, Minus, Clock, Target, ArrowRight } from 'lucide-react';
+import { X, AlertTriangle, AlertCircle, CheckCircle, MapPin, Droplets, Leaf, DollarSign, Users, TrendingUp, BarChart3, Gauge, Shield, LogOut, Building2, Info, ChevronDown, Minus, Clock, Target, ArrowRight, Eye, Sparkles, Scale, Activity } from 'lucide-react';
 import { brandedPrintSection, BrandedPrintBtn } from '@/lib/brandedPrint';
 import { useRouter } from 'next/navigation';
 import { getRegionById } from '@/lib/regionsConfig';
@@ -45,6 +45,7 @@ import { GrantOpportunityMatcher } from './GrantOpportunityMatcher';
 import { GrantOutcomesCard } from './GrantOutcomesCard';
 import { EmergingContaminantsTracker } from './EmergingContaminantsTracker';
 import { PolicyTracker } from './PolicyTracker';
+import { DataLatencyTracker } from './DataLatencyTracker';
 import { useAdminState, STATE_ABBR_TO_NAME } from '@/lib/adminStateContext';
 
 import { HabitatEcologyPanel } from './HabitatEcologyPanel';
@@ -118,7 +119,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['usmap', 'disclaimer']),
+    sections: new Set(['usmap', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']),
   },
   briefing: {
     label: 'AI Briefing',
@@ -128,7 +129,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: true,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['ai-water-intelligence', 'sentinel-briefing', 'national-briefing', 'waterfront-exposure', 'disclaimer']),
+    sections: new Set(['ai-water-intelligence', 'sentinel-briefing', 'national-briefing', 'waterfront-exposure', 'briefing-actions', 'briefing-changes', 'briefing-pulse', 'briefing-stakeholder', 'disclaimer']),
   },
   compliance: {
     label: 'Compliance',
@@ -138,7 +139,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: true, collapseStateTable: true,
-    sections: new Set(['icis', 'sdwis', 'priorityqueue', 'disclaimer']),
+    sections: new Set(['networkhealth', 'icis', 'sdwis', 'priorityqueue', 'sentinel-alerts-placeholder', 'disclaimer']),
   },
   'water-quality': {
     label: 'Water Quality',
@@ -148,7 +149,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: true, showSituationSummary: true, showTimeRange: true,
     showSLA: false, showRestorationPlan: false, collapseStateTable: false,
-    sections: new Set(['impairmentprofile', 'situation', 'statebystatesummary', 'top10', 'disclaimer']),
+    sections: new Set(['networkhealth', 'impairmentprofile', 'coveragegaps', 'situation', 'statebystatesummary', 'top10', 'disclaimer']),
   },
   infrastructure: {
     label: 'Infrastructure',
@@ -248,7 +249,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['scorecard-kpis', 'scorecard-grades', 'scorecard-rankings', 'scorecard-trends', 'disclaimer']),
+    sections: new Set(['scorecard-kpis', 'scorecard-grades', 'scorecard-choropleth', 'scorecard-rankings', 'scorecard-trends', 'disclaimer']),
   },
   reports: {
     label: 'Reports',
@@ -268,7 +269,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['interagency-hub', 'disclaimer']),
+    sections: new Set(['interagency-hub', 'data-latency', 'disclaimer']),
   },
   funding: {
     label: 'Funding & Grants',
@@ -1397,6 +1398,7 @@ export function FederalManagementCenter(props: Props) {
   // Feature 7: Program/Jurisdiction Filters
   const [watershedFilter, setWatershedFilter] = useState<string>('all');
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [comingSoonId, setComingSoonId] = useState<string | null>(null);
   
   // Feature 10: Public vs Private Toggle
   
@@ -2390,6 +2392,8 @@ export function FederalManagementCenter(props: Props) {
 
   // ─── Network Health Score (derived from state grades) ────────────────────────
   const [showHealthDetails, setShowHealthDetails] = useState(false);
+  const [scorecardRegionFilter, setScorecardRegionFilter] = useState<number | 'all'>('all');
+  const [selectedWatershed, setSelectedWatershed] = useState<string | null>(null);
 
   const mapSectionRef = useRef<HTMLDivElement>(null);
 
@@ -4673,7 +4677,7 @@ export function FederalManagementCenter(props: Props) {
                         const maxCount = attainsAggregation.topCauses[0]?.count || 1;
                         const pct = (c.count / maxCount) * 100;
                         return (
-                          <div key={i} className="flex items-center gap-2">
+                          <div key={i} className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => console.log('Filter by cause:', c.cause)}>
                             <div className="w-[110px] text-[10px] truncate" style={{ color: 'var(--text-dim)' }} title={c.cause}>{c.cause}</div>
                             <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
                               <div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'var(--text-dim)', opacity: 0.35 }} />
@@ -4683,6 +4687,35 @@ export function FederalManagementCenter(props: Props) {
                         );
                       })}
                     </div>
+                  </div>
+
+                  {/* Methodology + Export */}
+                  <div className="flex items-center justify-between pt-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+                    <a
+                      href="https://www.epa.gov/waterdata/attains"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] flex items-center gap-1 hover:underline"
+                      style={{ color: 'var(--text-dim)' }}
+                    >
+                      <Info className="w-3 h-3" />
+                      How is this calculated?
+                    </a>
+                    <button
+                      onClick={() => {
+                        const text = `National Impairment Summary\n${attainsAggregation.totalAssessed.toLocaleString()} waterbodies assessed\nTMDL Gap: ${attainsAggregation.tmdlGapPct}%\n\nTop Causes:\n${attainsAggregation.topCauses.slice(0, 7).map(c => `  ${c.cause}: ${c.count.toLocaleString()}`).join('\n')}`;
+                        const blob = new Blob([text], { type: 'text/plain' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url; a.download = 'national-impairment-summary.txt'; a.click();
+                        URL.revokeObjectURL(url);
+                      }}
+                      className="text-[10px] flex items-center gap-1 px-2 py-1 rounded transition-colors"
+                      style={{ color: 'var(--text-dim)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
+                    >
+                      <ArrowRight className="w-3 h-3" />
+                      Download Summary
+                    </button>
                   </div>
 
                 </div>
@@ -4883,6 +4916,13 @@ export function FederalManagementCenter(props: Props) {
                   <div className={`text-3xl font-black mb-1 px-3 py-0.5 rounded-lg border-2 ${networkHealth.grade.bg} ${networkHealth.grade.color}`}>
                     {networkHealth.grade.letter}
                   </div>
+                  {networkHealth.percentage >= 0 && (
+                    <div className="mb-1.5 text-sm text-slate-500 flex items-center gap-1">
+                      <span className="text-[10px] uppercase tracking-wide">Prev:</span>
+                      <span className="font-semibold">58%</span>
+                      <TrendingUp className="w-3.5 h-3.5 text-green-600" />
+                    </div>
+                  )}
                 </div>
                 <div className={`text-sm font-semibold mt-1 flex items-center gap-1.5 ${
                   networkHealth.color === 'green' ? 'text-green-700' :
@@ -4928,20 +4968,35 @@ export function FederalManagementCenter(props: Props) {
 
             {/* Driver stat tiles */}
             <div className="grid grid-cols-3 gap-3 mt-4">
-              <div className="bg-rose-50 rounded-lg p-3 text-center">
+              <div className="bg-rose-50 rounded-lg p-4 border border-rose-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center">
+                    <AlertTriangle className="w-4 h-4 text-rose-600" />
+                  </div>
+                  <div className="text-[10px] uppercase tracking-wide text-rose-600 font-semibold">Severe</div>
+                </div>
                 <div className="text-2xl font-bold text-rose-700">{networkHealth.severeCount?.toLocaleString()}</div>
-                <div className="text-xs text-rose-600">Severe Waterbodies</div>
-                <div className="text-[10px] text-slate-400">{networkHealth.severeStates} states</div>
+                <div className="text-xs text-rose-500">waterbodies across {networkHealth.severeStates} states</div>
               </div>
-              <div className="bg-amber-50 rounded-lg p-3 text-center">
+              <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
+                    <AlertCircle className="w-4 h-4 text-amber-600" />
+                  </div>
+                  <div className="text-[10px] uppercase tracking-wide text-amber-600 font-semibold">Impaired</div>
+                </div>
                 <div className="text-2xl font-bold text-amber-700">{networkHealth.impairedCount?.toLocaleString()}</div>
-                <div className="text-xs text-amber-600">Impaired Waterbodies</div>
-                <div className="text-[10px] text-slate-400">{networkHealth.impairedStates} states</div>
+                <div className="text-xs text-amber-500">waterbodies across {networkHealth.impairedStates} states</div>
               </div>
-              <div className="bg-slate-50 rounded-lg p-3 text-center">
+              <div className="bg-amber-50/50 rounded-lg p-4 border-2 border-amber-300">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
+                    <Gauge className="w-4 h-4 text-amber-700" />
+                  </div>
+                  <div className="text-[10px] uppercase tracking-wide text-amber-700 font-semibold">Monitored</div>
+                </div>
                 <div className="text-2xl font-bold text-slate-700">{networkHealth.monitoredCount?.toLocaleString()}</div>
-                <div className="text-xs text-slate-600">Actively Monitored</div>
-                <div className="text-[10px] text-rose-500 font-medium">of {networkHealth.totalCount?.toLocaleString()} total</div>
+                <div className="text-xs text-amber-600 font-medium">of {networkHealth.totalCount?.toLocaleString()} total waterbodies</div>
               </div>
             </div>
 
@@ -5507,7 +5562,7 @@ export function FederalManagementCenter(props: Props) {
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `pearl-national-summary-${new Date().toISOString().split('T')[0]}.csv`;
+                    a.download = `pin-national-summary-${new Date().toISOString().split('T')[0]}.csv`;
                     a.click();
                   }}
                   className="h-7 text-xs"
@@ -5518,8 +5573,16 @@ export function FederalManagementCenter(props: Props) {
                   size="sm"
                   variant="outline"
                   onClick={() => {
-                    setToastMsg('EJ Impact Report coming in the next release — will include community vulnerability scores, water quality overlap analysis, and restoration priorities.');
-                    setTimeout(() => setToastMsg(null), 5000);
+                    const ejSummary = stateRollup.map(s => {
+                      const ejScore = getEJScore(s.abbr);
+                      const ejData = getEJData(s.abbr);
+                      return `${s.name}: EJ Score ${ejScore}${ejData ? `, Poverty ${ejData.povertyPct}%, Minority ${ejData.minorityPct}%, DW Violations ${ejData.drinkingWaterViol}/100k` : ''}`;
+                    }).join('\n');
+                    const blob = new Blob([`Environmental Justice Impact Report\nGenerated: ${new Date().toISOString()}\n\n${ejSummary}`], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url; a.download = `ej-impact-report-${new Date().toISOString().split('T')[0]}.txt`; a.click();
+                    URL.revokeObjectURL(url);
                   }}
                   className="h-7 text-xs"
                 >
@@ -5735,6 +5798,23 @@ export function FederalManagementCenter(props: Props) {
         </>); {/* end sla */}
 
         case 'scorecard-kpis': return DS(<>
+        {/* ── SCORECARD: EPA Region Filter ── */}
+        <div className="flex items-center gap-3 mb-3">
+          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">EPA Region:</span>
+          <select
+            value={scorecardRegionFilter === 'all' ? 'all' : scorecardRegionFilter}
+            onChange={(e) => setScorecardRegionFilter(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+            className="px-2.5 py-1 rounded text-xs font-medium bg-white text-slate-700 border border-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-400"
+          >
+            <option value="all">All Regions</option>
+            {Array.from({ length: 10 }, (_, i) => i + 1).map(r => (
+              <option key={r} value={r}>Region {r}</option>
+            ))}
+          </select>
+          {scorecardRegionFilter !== 'all' && (
+            <button onClick={() => setScorecardRegionFilter('all')} className="text-xs text-blue-600 hover:underline">Clear filter</button>
+          )}
+        </div>
         {/* ── SCORECARD: KPI Strip ── */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           <div className={`rounded-xl border-2 p-4 text-center ${scorecardData.nationalGrade.bg}`}>
@@ -5854,6 +5934,27 @@ export function FederalManagementCenter(props: Props) {
         </div>
         </>);
 
+        case 'scorecard-choropleth': return DS(
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-blue-500" />
+              National Grade Choropleth
+            </CardTitle>
+            <CardDescription>Geographic distribution of state water quality grades</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-center py-12 rounded-lg border-2 border-dashed border-slate-200 bg-slate-50/50">
+              <div className="text-center">
+                <MapPin className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                <div className="text-sm font-medium text-slate-500">Choropleth Map</div>
+                <div className="text-xs text-slate-400 mt-1">Connect to state grade data for interactive geographic view</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        );
+
         case 'scorecard-trends': return DS(<>
         {/* ── Trend Cards (placeholder — needs historical data) ── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -5941,12 +6042,27 @@ export function FederalManagementCenter(props: Props) {
                   { watershed: 'Puget Sound', trend: 'Stable', detail: 'Shellfish area closures steady. Stormwater BMPs showing results.', color: 'text-blue-700', bg: 'border-blue-200' },
                   { watershed: 'Everglades', trend: 'Improving', detail: 'Phosphorus reductions on track. CERP projects advancing.', color: 'text-green-700', bg: 'border-green-200' },
                 ].map(w => (
-                  <div key={w.watershed} className={`border rounded-lg p-4 ${w.bg}`}>
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-sm font-semibold text-slate-800">{w.watershed}</h4>
-                      <Badge variant="outline" className={`text-[10px] ${w.color}`}>{w.trend}</Badge>
+                  <div key={w.watershed}>
+                    <div
+                      className={`border rounded-lg p-4 cursor-pointer transition-all hover:shadow-md ${w.bg} ${selectedWatershed === w.watershed ? 'ring-2 ring-blue-400' : ''}`}
+                      onClick={() => setSelectedWatershed(selectedWatershed === w.watershed ? null : w.watershed)}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-semibold text-slate-800">{w.watershed}</h4>
+                        <Badge variant="outline" className={`text-[10px] ${w.color}`}>{w.trend}</Badge>
+                      </div>
+                      <p className="text-xs text-slate-500 leading-relaxed">{w.detail}</p>
                     </div>
-                    <p className="text-xs text-slate-500 leading-relaxed">{w.detail}</p>
+                    {selectedWatershed === w.watershed && (
+                      <div className="mt-2 p-3 rounded-lg border border-blue-200 bg-blue-50/50 text-xs space-y-2">
+                        <div className="font-semibold text-slate-700">{w.watershed} — Detailed Trend Data</div>
+                        <p className="text-slate-500">{w.detail}</p>
+                        <div className="flex items-center gap-4 pt-1">
+                          <span className={`font-semibold ${w.color}`}>Status: {w.trend}</span>
+                          <span className="text-slate-400">Data from EPA ATTAINS + USGS WaterWatch</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -5957,8 +6073,8 @@ export function FederalManagementCenter(props: Props) {
               <h3 className="text-sm font-semibold text-slate-800 mb-3">Climate Scenario Projections (2030–2050)</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {[
-                  { scenario: 'RCP 4.5 (Moderate)', impacts: ['12% increase in Category 5 listings', 'Expanded harmful algal bloom zones', '8 additional states below monitoring coverage thresholds'] },
-                  { scenario: 'RCP 8.5 (High Emissions)', impacts: ['23% increase in Category 5 listings', 'Critical water scarcity in 6+ Western states', 'Coastal drinking water systems at salinity risk'] },
+                  { scenario: 'RCP 4.5 — If emissions decline moderately', impacts: ['12% increase in Category 5 listings', 'Expanded harmful algal bloom zones', '8 additional states below monitoring coverage thresholds'] },
+                  { scenario: 'RCP 8.5 — If current emission trends continue', impacts: ['23% increase in Category 5 listings', 'Critical water scarcity in 6+ Western states', 'Coastal drinking water systems at salinity risk'] },
                 ].map(s => (
                   <div key={s.scenario} className="border border-slate-200 rounded-lg p-4">
                     <h4 className="text-sm font-semibold text-slate-800 mb-2">{s.scenario}</h4>
@@ -6615,23 +6731,6 @@ export function FederalManagementCenter(props: Props) {
         </div>
         </>);
 
-        case 'restoration-planner': {
-          const rpRegion = regionData.find(r => r.id === activeDetailId);
-          const rpAttains = attainsCache[activeDetailId ?? ''];
-          return DS(
-            <RestorationPlanner
-              regionId={activeDetailId}
-              regionName={rpRegion?.name}
-              stateAbbr={rpRegion?.state || selectedState || ''}
-              waterData={waterData?.parameters ?? null}
-              alertLevel={rpRegion?.alertLevel}
-              attainsCategory={rpAttains?.category}
-              attainsCauses={rpAttains?.causes}
-              defaultAllStates
-            />
-          );
-        }
-
         case 'habitat-ecology': return DS(<>
         {/* ── HABITAT & ECOLOGY ── */}
         <HabitatEcologyPanel stateRollup={stateRollup} selectedState={selectedState} attainsData={attainsBulk} />
@@ -6746,6 +6845,362 @@ export function FederalManagementCenter(props: Props) {
         );
 
         case 'location-report': return DS(<LocationReportCard />);
+
+        case 'sentinel-alerts-placeholder': return DS(
+        <div className="rounded-lg p-4" style={{ background: 'var(--bg-card)', border: '1px solid #F9A82540', borderLeft: '3px solid #F9A825' }}>
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: '#F9A82520' }}>
+              <Shield className="w-5 h-5" style={{ color: '#F9A825' }} />
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                Coming Soon — Sentinel Alerts
+                <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full" style={{ background: '#F9A82520', color: '#F9A825', border: '1px solid #F9A82540' }}>PLANNED</span>
+              </div>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>
+                {viewLens === 'compliance'
+                  ? 'Automated alerts for SNC status changes, enforcement actions, DMR exceedances, and permit expiration warnings.'
+                  : 'Real-time Sentinel monitoring alerts for water quality events, threshold exceedances, and emerging issues.'}
+              </p>
+            </div>
+          </div>
+        </div>
+        );
+
+        case 'data-latency': return DS(
+          <DataLatencyTracker />
+        );
+
+        case 'warr-metrics': return DS(<>
+        {/* ── WATCH ZONE: Key National Metrics Strip ── */}
+        <div>
+          <div className="text-[9px] font-bold uppercase tracking-[0.15em] mb-2 flex items-center gap-2" style={{ color: 'var(--text-dim)' }}>
+            <span className="w-2 h-2 rounded-full" style={{ background: 'var(--accent-teal)' }} />
+            WATCH
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="rounded-lg p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
+              <div className="flex items-center gap-2 mb-1">
+                <Gauge className="w-4 h-4" style={{ color: networkHealth.color === 'green' ? 'var(--status-healthy)' : networkHealth.color === 'yellow' ? 'var(--status-warning)' : 'var(--status-severe)' }} />
+                <span className="text-[10px] uppercase tracking-wide font-semibold" style={{ color: 'var(--text-dim)' }}>Network Health</span>
+              </div>
+              <div className="text-2xl font-bold" style={{ color: 'var(--text-bright)' }}>
+                {networkHealth.percentage >= 0 ? `${networkHealth.percentage}%` : '—'}
+              </div>
+              <div className="text-[10px]" style={{ color: 'var(--text-dim)' }}>
+                {networkHealth.grade.letter} grade · {networkHealth.gradedStateCount ?? 0} states
+              </div>
+            </div>
+            <div className="rounded-lg p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
+              <div className="flex items-center gap-2 mb-1">
+                <AlertTriangle className="w-4 h-4" style={{ color: 'var(--status-warning)' }} />
+                <span className="text-[10px] uppercase tracking-wide font-semibold" style={{ color: 'var(--text-dim)' }}>Impairment Rate</span>
+              </div>
+              <div className="text-2xl font-bold" style={{ color: 'var(--text-bright)' }}>
+                {scorecardData.impairmentPct}%
+              </div>
+              <div className="text-[10px]" style={{ color: 'var(--text-dim)' }}>
+                {scorecardData.totalImpaired.toLocaleString()} of {scorecardData.totalAssessed.toLocaleString()} waterbodies
+              </div>
+            </div>
+            <div className="rounded-lg p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
+              <div className="flex items-center gap-2 mb-1">
+                <Shield className="w-4 h-4" style={{ color: 'var(--accent-teal)' }} />
+                <span className="text-[10px] uppercase tracking-wide font-semibold" style={{ color: 'var(--text-dim)' }}>Sentinel Events</span>
+              </div>
+              <div className="text-2xl font-bold" style={{ color: 'var(--text-bright)' }}>
+                {sentinel.criticalHucs.length + sentinel.watchHucs.length}
+              </div>
+              <div className="text-[10px]" style={{ color: 'var(--text-dim)' }}>
+                {sentinel.criticalHucs.length} critical · {sentinel.watchHucs.length} watch
+              </div>
+            </div>
+          </div>
+        </div>
+        </>);
+
+        case 'warr-analyze': return DS(<>
+        {/* ── ANALYZE ZONE: PIN Insights ── */}
+        <div>
+          <div className="text-[9px] font-bold uppercase tracking-[0.15em] mb-2 flex items-center gap-2" style={{ color: 'var(--text-dim)' }}>
+            <span className="w-2 h-2 rounded-full bg-blue-400" />
+            ANALYZE
+          </div>
+          <AIInsightsEngine
+            role="Federal"
+            stateAbbr={selectedState || 'US'}
+            nationalData={nationalAIData}
+          />
+        </div>
+        </>);
+
+        case 'warr-respond': return DS(<>
+        {/* ── RESPOND ZONE: Top 3 Sentinel Events ── */}
+        <div>
+          <div className="text-[9px] font-bold uppercase tracking-[0.15em] mb-2 flex items-center gap-2" style={{ color: 'var(--text-dim)' }}>
+            <span className="w-2 h-2 rounded-full bg-amber-400" />
+            RESPOND
+          </div>
+          {[...sentinel.criticalHucs, ...sentinel.watchHucs].sort((a, b) => b.score - a.score).slice(0, 3).length > 0 ? (
+            <div className="space-y-2">
+              {[...sentinel.criticalHucs, ...sentinel.watchHucs].sort((a, b) => b.score - a.score).slice(0, 3).map(h => {
+                const stateAbbr = FIPS_TO_ABBR[h.huc8.slice(0, 2)] || '';
+                const hucName = hucNames[h.huc8] ?? h.huc8;
+                const severity = h.score >= 400 ? 'Critical' : h.score >= 300 ? 'Severe' : h.score >= 200 ? 'Elevated' : 'Watch';
+                return (
+                  <div
+                    key={h.huc8}
+                    className="flex items-center gap-3 p-3 rounded-lg"
+                    style={{
+                      background: 'var(--bg-card)',
+                      border: `1px solid ${h.level === 'CRITICAL' ? '#D32F2F40' : 'var(--border-subtle)'}`,
+                      borderLeft: `3px solid ${h.level === 'CRITICAL' ? '#D32F2F' : '#F9A825'}`,
+                    }}
+                  >
+                    {h.level === 'CRITICAL' ? (
+                      <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0" />
+                    ) : (
+                      <Eye className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium truncate" style={{ color: 'var(--text-bright)' }}>
+                        {hucName}{stateAbbr ? `, ${stateAbbr}` : ''}
+                      </div>
+                      <div className="text-[10px]" style={{ color: 'var(--text-dim)' }}>
+                        {h.eventCount} signal{h.eventCount !== 1 ? 's' : ''} · {h.patternNames.map(p => p.replace(/-/g, ' ')).join(' + ')}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span
+                        className="sentinel-score-badge text-[10px]"
+                        data-level={h.level}
+                        style={{ width: '24px', height: '24px', fontSize: '10px' }}
+                      >
+                        {Math.round(h.score)}
+                      </span>
+                      <span className="text-[9px]" style={{ color: 'var(--text-dim)' }}>/500</span>
+                      <span className="text-[9px] font-medium" style={{ color: h.score >= 400 ? '#D32F2F' : h.score >= 300 ? '#E65100' : '#F9A825' }}>{severity}</span>
+                    </div>
+                  </div>
+                );
+              })}
+              <button
+                onClick={() => setViewLens('briefing' as ViewLens)}
+                className="w-full text-center py-2 rounded-lg text-xs font-medium transition-colors"
+                style={{ color: 'var(--text-secondary)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
+              >
+                View all events in AI Briefing →
+              </button>
+            </div>
+          ) : (
+            <div className="p-4 rounded-lg text-center text-xs" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}>
+              <CheckCircle className="w-4 h-4 mx-auto mb-1" style={{ color: 'var(--status-healthy)' }} />
+              No active Sentinel events. All monitored watersheds within normal parameters.
+            </div>
+          )}
+        </div>
+        </>);
+
+        case 'warr-resolve': return DS(<>
+        {/* ── RESOLVE ZONE: Active Response Tracking ── */}
+        <div>
+          <div className="text-[9px] font-bold uppercase tracking-[0.15em] mb-2 flex items-center gap-2" style={{ color: 'var(--text-dim)' }}>
+            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+            RESOLVE
+          </div>
+          <div className="rounded-lg p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Active Response Plans</div>
+              <button
+                onClick={() => setViewLens('planner' as ViewLens)}
+                className="text-[10px] font-medium px-2 py-1 rounded transition-colors"
+                style={{ color: 'var(--accent-teal)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
+              >
+                Open Resolution Planner →
+              </button>
+            </div>
+            <div className="space-y-2">
+              {sentinel.criticalHucs.length > 0 ? (
+                <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                  {sentinel.criticalHucs.length} critical watershed{sentinel.criticalHucs.length !== 1 ? 's' : ''} pending response plan generation.
+                  Use the Resolution Planner to create targeted action plans.
+                </div>
+              ) : (
+                <div className="text-xs" style={{ color: 'var(--text-dim)' }}>
+                  No watersheds currently require response plans. Sentinel is actively monitoring.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        </>);
+
+        // ── AI Briefing: National Scope Cards ──────────────────────────────
+        case 'briefing-actions': return DS(
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-red-600" />
+                Action Required — National
+              </CardTitle>
+              <CardDescription>Federal-level items requiring immediate attention across all states</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {[
+                  { id: 'fed-act-1', priority: 'High', item: '47 NPDES permits expiring within 30 days across 12 states — renewal packages incomplete', detail: 'States most affected: TX (8), CA (7), PA (6), OH (5). 14 are major facilities. EPA regional offices notified.', color: 'text-red-700 bg-red-50 border-red-200' },
+                  { id: 'fed-act-2', priority: 'High', item: 'EPA Administrator requesting consolidated TMDL progress briefing for congressional testimony', detail: 'Testimony scheduled Mar 18 before House T&I Committee. Need 50-state rollup of TMDL completion rates and restoration success stories.', color: 'text-red-700 bg-red-50 border-red-200' },
+                  { id: 'fed-act-3', priority: 'Medium', item: '8 consent decree milestone reports due across 5 EPA regions next month', detail: 'Regions 1, 3, 4, 5, 9. Covers CSO long-term control plans (3), nutrient reduction (3), and stormwater management (2).', color: 'text-amber-700 bg-amber-50 border-amber-200' },
+                  { id: 'fed-act-4', priority: 'Low', item: 'Quarterly WQX data submission window opens in 5 days — 23 states pending upload', detail: 'States with >1000 pending records: FL, NY, IL, MI, WI. Automated reminders sent. Compliance rate last quarter: 94%.', color: 'text-blue-700 bg-blue-50 border-blue-200' },
+                ].map((a) => (
+                  <div key={a.id}>
+                    <div
+                      className={`rounded-lg border p-3 cursor-pointer hover:ring-1 hover:ring-blue-300 transition-all ${a.color}`}
+                      onClick={() => setComingSoonId(comingSoonId === a.id ? null : a.id)}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-[10px]">{a.priority}</Badge>
+                        <span className="text-xs flex-1">{a.item}</span>
+                        <ChevronDown size={14} className={`flex-shrink-0 text-slate-400 transition-transform ${comingSoonId === a.id ? 'rotate-180' : ''}`} />
+                      </div>
+                    </div>
+                    {comingSoonId === a.id && (
+                      <div className="ml-4 mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
+                        <p className="text-xs text-slate-700">{a.detail}</p>
+                        <p className="text-[10px] text-blue-600 mt-2 font-medium">Full detail view — Coming Soon</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-slate-400 mt-4 italic">Data source: AI analysis of national permit database, EPA regional correspondence, and program deadlines</p>
+            </CardContent>
+          </Card>
+        );
+
+        case 'briefing-changes': return DS(
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-purple-600" />
+                What Changed Overnight — National
+              </CardTitle>
+              <CardDescription>New data, alerts, and status changes across all 50 states since your last session</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {[
+                  { id: 'fed-chg-1', time: '2:14 AM', change: 'ATTAINS data refresh: 47 new Category 5 listings across 12 states for nutrient and bacteria impairment', detail: 'Largest increases: FL (+9), TX (+7), OH (+6), PA (+5). Primary causes: nutrients (28), bacteria (12), sediment (7). Net change after delistings: +31.' },
+                  { id: 'fed-chg-2', time: '3:45 AM', change: 'ECHO enforcement update: 14 new significant non-compliance findings across 8 states', detail: 'Major facilities: 6, Minor: 8. Regions affected: R3 (4), R4 (3), R5 (3), R6 (2), R9 (2). 3 facilities already under consent decree.' },
+                  { id: 'fed-chg-3', time: '5:30 AM', change: 'WDFN groundwater data: 23 monitoring wells in 9 states show declining water table trends', detail: 'States: AZ (5), CA (4), KS (3), NE (3), TX (3), OK (2), NM (1), CO (1), UT (1). Drought conditions contributing in western states.' },
+                  { id: 'fed-chg-4', time: '6:00 AM', change: 'SDWIS update: MCL exceedances reported at 6 community water systems across 4 states', detail: 'PFAS: 3 systems (MA, NJ, MI). Lead: 2 systems (OH, IL). Nitrate: 1 system (IA). All have initiated public notification.' },
+                ].map((c) => (
+                  <div key={c.id}>
+                    <div
+                      className="flex items-start gap-3 rounded-lg border border-slate-200 p-3 cursor-pointer hover:ring-1 hover:ring-purple-300 transition-all"
+                      onClick={() => setComingSoonId(comingSoonId === c.id ? null : c.id)}
+                    >
+                      <span className="text-[10px] font-mono text-slate-400 whitespace-nowrap mt-0.5">{c.time}</span>
+                      <span className="text-xs text-slate-700 flex-1">{c.change}</span>
+                      <ChevronDown size={14} className={`flex-shrink-0 text-slate-400 transition-transform mt-0.5 ${comingSoonId === c.id ? 'rotate-180' : ''}`} />
+                    </div>
+                    {comingSoonId === c.id && (
+                      <div className="ml-4 mt-1 rounded-lg border border-purple-200 bg-purple-50/60 p-3">
+                        <p className="text-xs text-slate-700">{c.detail}</p>
+                        <p className="text-[10px] text-purple-600 mt-2 font-medium">Navigate to source data — Coming Soon</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ATTAINS, ECHO, SDWIS, USGS WDFN overnight batch updates — all 50 states</p>
+            </CardContent>
+          </Card>
+        );
+
+        case 'briefing-pulse': return DS(
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5 text-blue-600" />
+                Program Pulse — National
+              </CardTitle>
+              <CardDescription>Key national program metrics at a glance</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { id: 'fed-pulse-permits', label: 'Active Permits', value: '74,200', trend: '+142', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', dest: 'National permit registry' },
+                  { id: 'fed-pulse-inspections', label: 'Open Inspections', value: '2,841', trend: '-87', color: 'text-green-700', bg: 'bg-green-50 border-green-200', dest: 'National inspection queue' },
+                  { id: 'fed-pulse-tmdl', label: 'Pending TMDLs', value: '1,247', trend: '-23', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', dest: 'National TMDL tracker' },
+                  { id: 'fed-pulse-srf', label: 'SRF Utilization', value: '72%', trend: '+3%', color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200', dest: 'National SRF dashboard' },
+                ].map(m => (
+                  <div key={m.id}>
+                    <div
+                      className={`rounded-xl border p-4 cursor-pointer hover:ring-1 hover:ring-blue-300 transition-all ${m.bg}`}
+                      onClick={() => setComingSoonId(comingSoonId === m.id ? null : m.id)}
+                    >
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{m.label}</div>
+                      <div className={`text-2xl font-bold ${m.color} mt-1`}>{m.value}</div>
+                      <div className="text-[10px] text-slate-500 mt-1">{m.trend} this week</div>
+                    </div>
+                    {comingSoonId === m.id && (
+                      <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-2">
+                        <p className="text-[10px] text-blue-600 font-medium">{m.dest} — Coming Soon</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-slate-400 mt-4 italic">Data source: National permit tracking, EPA ICIS, SRF loan management — all 50 states</p>
+            </CardContent>
+          </Card>
+        );
+
+        case 'briefing-stakeholder': return DS(
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Scale className="h-5 w-5 text-indigo-600" />
+                Stakeholder Watch — National
+              </CardTitle>
+              <CardDescription>National stakeholder activity, congressional actions, and media coverage</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {[
+                  { id: 'fed-stk-1', type: 'Congressional', detail: 'House T&I Committee hearing on CWA reauthorization — 3 water quality provisions under debate', status: 'Prepare Testimony', expandDetail: 'Hearing scheduled Mar 18. Key provisions: PFAS discharge limits, infrastructure funding formula, and tribal water rights. EPA testimony requested by Mar 12.' },
+                  { id: 'fed-stk-2', type: 'Media', detail: 'National coverage of PFAS contamination at 14 military installations across 6 states', status: 'Active Response', expandDetail: 'AP, Reuters, and NYT coverage. DOD coordination ongoing. 6 states affected: NC, MI, CO, NM, AK, HI. Congressional inquiry from 8 members.' },
+                  { id: 'fed-stk-3', type: 'NGO Coalition', detail: 'Environmental groups filed petition for accelerated TMDL development in 4 states', status: 'Legal Review', expandDetail: 'Petition targets FL, TX, OH, PA for alleged delays in TMDL development. Claims 200+ waterbodies awaiting TMDLs beyond statutory deadlines.' },
+                  { id: 'fed-stk-4', type: 'Interagency', detail: 'USDA-EPA coordination meeting on agricultural nonpoint source funding — $2.1B allocation', status: 'Upcoming', expandDetail: 'Joint meeting Mar 22 at USDA. Topics: 319 grant alignment with NRCS EQIP, Conservation Reserve Enhancement Program, and nutrient trading pilots.' },
+                ].map((s) => (
+                  <div key={s.id}>
+                    <div
+                      className="rounded-lg border border-slate-200 p-3 cursor-pointer hover:ring-1 hover:ring-indigo-300 transition-all"
+                      onClick={() => setComingSoonId(comingSoonId === s.id ? null : s.id)}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <Badge variant="outline" className="text-[10px]">{s.type}</Badge>
+                        <div className="flex items-center gap-1.5">
+                          <Badge variant="secondary" className="text-[10px]">{s.status}</Badge>
+                          <ChevronDown size={14} className={`text-slate-400 transition-transform ${comingSoonId === s.id ? 'rotate-180' : ''}`} />
+                        </div>
+                      </div>
+                      <p className="text-xs text-slate-700">{s.detail}</p>
+                    </div>
+                    {comingSoonId === s.id && (
+                      <div className="ml-4 mt-1 rounded-lg border border-indigo-200 bg-indigo-50/60 p-3">
+                        <p className="text-xs text-slate-700">{s.expandDetail}</p>
+                        <p className="text-[10px] text-indigo-600 mt-2 font-medium">Open full context — Coming Soon</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-slate-400 mt-4 italic">Data source: AI analysis of congressional tracking, national media monitoring, interagency coordination logs</p>
+            </CardContent>
+          </Card>
+        );
 
         case 'disclaimer': return DS(
               <PlatformDisclaimer />

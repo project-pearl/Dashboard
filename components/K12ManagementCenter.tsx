@@ -102,7 +102,7 @@ const LENS_CONFIG: Record<ViewLens, {
   briefing:    { label: 'AI Briefing', description: 'AI-generated water quality briefing for students',
     sections: new Set(['insights', 'alertfeed', 'disclaimer']) },
   planner:     { label: 'Resolution Planner', description: 'Student-friendly resolution planning',
-    sections: new Set(['resolution-planner', 'restoration-planner', 'disclaimer']) },
+    sections: new Set(['resolution-planner', 'disclaimer']) },
   trends:      { label: 'Trends & Projections', description: 'Water quality trends students can explore',
     sections: new Set(['trends-dashboard', 'disclaimer']) },
   compliance:  { label: 'Compliance', description: 'School drinking water compliance',
@@ -3007,20 +3007,6 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
 
             // ── Shared panels ──
             case 'resolution-planner': return DS(<ResolutionPlanner userRole="k12" scopeContext={{ scope: 'state', data: { abbr: stateAbbr, name: STATE_NAMES[stateAbbr] || stateAbbr, epaRegion: getEpaRegionForState(stateAbbr) || 0, totalWaterbodies: regionData.length, assessed: regionData.length, impaired: regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length, score: Math.round(regionData.reduce((a, r) => a + (r.alertLevel === 'none' ? 95 : r.alertLevel === 'low' ? 75 : r.alertLevel === 'medium' ? 50 : 25), 0) / Math.max(regionData.length, 1)), grade: 'B', cat5: 0, cat4a: 0, cat4b: 0, cat4c: 0, topCauses: [] } }} />);
-            case 'restoration-planner': {
-              const rpRegion = regionData.find(r => r.id === activeDetailId);
-              return DS(
-                <RestorationPlanner
-                  regionId={activeDetailId}
-                  regionName={rpRegion?.name}
-                  stateAbbr={stateAbbr}
-                  waterData={waterData?.parameters ?? null}
-                  alertLevel={rpRegion?.alertLevel}
-                  attainsCategory={attainsCache[activeDetailId ?? '']?.category}
-                  attainsCauses={attainsCache[activeDetailId ?? '']?.causes}
-                />
-              );
-            }
             case 'contaminants-tracker': return DS(<EmergingContaminantsTracker role="k12" selectedState={stateAbbr} />);
             case 'sdwis': return DS(<SDWISCompliancePanel state={stateAbbr} compactMode={false} />);
             case 'trends-dashboard': return DS(

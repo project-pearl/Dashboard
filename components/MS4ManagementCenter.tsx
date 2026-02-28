@@ -137,7 +137,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Resolution Planner',
     description: 'Waterbody-level restoration planning workspace',
     defaultOverlay: 'impairment',
-    sections: new Set(['detail', 'resolution-planner', 'restoration-planner', 'disclaimer']),
+    sections: new Set(['resolution-planner', 'disclaimer']),
   },
   trends: {
     label: 'Trends & Projections',
@@ -1080,6 +1080,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
   const [filterLevel, setFilterLevel] = useState<'all' | 'high' | 'medium' | 'low' | 'impaired' | 'monitored' | 'primary'>('all');
   const [showMS4, setShowMS4] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [comingSoonId, setComingSoonId] = useState<string | null>(null);
 
   const sortedRegions = useMemo(() => {
     let filtered = scopedRegionData;
@@ -4121,139 +4122,171 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
             );
 
             // ── AI Briefing sections ───────────────────────────────────────────
-            case 'briefing-actions': return DS(
+            case 'briefing-actions': { const jName = jurisdictionMeta?.name || 'Municipality'; return DS(
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <AlertCircle className="h-5 w-5 text-red-600" />
-                    Action Required
+                    Action Required — {jName}
                   </CardTitle>
-                  <CardDescription>Items requiring immediate attention from MS4 program staff</CardDescription>
+                  <CardDescription>Items requiring immediate attention from {jName} MS4 program staff</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
                     {[
-                      { priority: 'High', item: 'BMP inspection backlog: 12 facilities overdue by 30+ days', color: 'text-red-700 bg-red-50 border-red-200' },
-                      { priority: 'High', item: 'IDDE investigation #2024-087 — field verification needed within 48 hours', color: 'text-red-700 bg-red-50 border-red-200' },
-                      { priority: 'Medium', item: 'Annual report data compilation deadline in 21 days', color: 'text-amber-700 bg-amber-50 border-amber-200' },
-                      { priority: 'Low', item: 'MCM 1 public education materials due for quarterly update', color: 'text-blue-700 bg-blue-50 border-blue-200' },
-                    ].map((a, i) => (
-                      <div key={i} className={`flex items-center gap-2 text-xs rounded-lg border px-3 py-2 ${a.color}`}>
-                        <Badge variant="outline" className="text-[9px] shrink-0">{a.priority}</Badge>
-                        <span>{a.item}</span>
+                      { id: 'ms4-act-1', priority: 'High', item: `BMP inspection backlog in ${jName}: 12 facilities overdue by 30+ days`, detail: 'Overdue facilities include 4 commercial, 5 institutional, and 3 industrial sites. Oldest inspection gap: 67 days. Schedule field crews this week.', color: 'text-red-700 bg-red-50 border-red-200' },
+                      { id: 'ms4-act-2', priority: 'High', item: `IDDE investigation #2024-087 in ${jName} — field verification needed within 48 hours`, detail: 'Illicit discharge detected at outfall OF-142. Preliminary sample shows elevated E. coli (840 CFU/100mL). Upstream trace required.', color: 'text-red-700 bg-red-50 border-red-200' },
+                      { id: 'ms4-act-3', priority: 'Medium', item: `${jName} annual report data compilation deadline in 21 days`, detail: 'Required data: MCM activity logs, BMP maintenance records, monitoring results, and public education metrics. 3 of 6 MCM sections complete.', color: 'text-amber-700 bg-amber-50 border-amber-200' },
+                      { id: 'ms4-act-4', priority: 'Low', item: `MCM 1 public education materials for ${jName} due for quarterly update`, detail: 'Website content, brochure distribution logs, and social media outreach metrics need refresh for Q1 reporting.', color: 'text-blue-700 bg-blue-50 border-blue-200' },
+                    ].map((a) => (
+                      <div key={a.id}>
+                        <div
+                          className={`flex items-center gap-2 text-xs rounded-lg border px-3 py-2 cursor-pointer hover:ring-1 hover:ring-blue-300 transition-all ${a.color}`}
+                          onClick={() => setComingSoonId(comingSoonId === a.id ? null : a.id)}
+                        >
+                          <Badge variant="outline" className="text-[9px] shrink-0">{a.priority}</Badge>
+                          <span className="flex-1">{a.item}</span>
+                          <ChevronDown size={14} className={`flex-shrink-0 text-slate-400 transition-transform ${comingSoonId === a.id ? 'rotate-180' : ''}`} />
+                        </div>
+                        {comingSoonId === a.id && (
+                          <div className="ml-4 mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
+                            <p className="text-xs text-slate-700">{a.detail}</p>
+                            <p className="text-[10px] text-blue-600 mt-2 font-medium">Full detail view — Coming Soon</p>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-slate-400 mt-3 italic">AI-generated from permit conditions, inspection schedules, and regulatory deadlines</p>
+                  <p className="text-xs text-slate-400 mt-3 italic">AI-generated from {jName} permit conditions, inspection schedules, and regulatory deadlines</p>
                 </CardContent>
               </Card>
-            );
+            ); }
 
-            case 'briefing-changes': return DS(
+            case 'briefing-changes': { const jName = jurisdictionMeta?.name || 'Municipality'; return DS(
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Activity className="h-5 w-5 text-blue-600" />
-                    What Changed Overnight
+                    What Changed Overnight — {jName}
                   </CardTitle>
-                  <CardDescription>Automated detection of changes since last session</CardDescription>
+                  <CardDescription>Automated detection of changes in {jName} since last session</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
                     {[
-                      { change: 'New ATTAINS assessment data published for 3 receiving waters', type: 'Data Update' },
-                      { change: 'EPA ECHO updated enforcement status for 2 permitted facilities', type: 'Compliance' },
-                      { change: 'Weather service issued flash flood watch — potential BMP overflow risk', type: 'Weather' },
-                      { change: 'State regulatory bulletin: proposed nutrient limit revisions posted for comment', type: 'Policy' },
-                    ].map((c, i) => (
-                      <div key={i} className="flex items-start gap-2 text-xs border border-slate-200 rounded-lg px-3 py-2">
-                        <Badge variant="outline" className="text-[9px] shrink-0 mt-0.5">{c.type}</Badge>
-                        <span className="text-slate-700">{c.change}</span>
+                      { id: 'ms4-chg-1', change: `New ATTAINS assessment data published for 3 ${jName} receiving waters`, type: 'Data Update', detail: 'Updated assessment units: Jones Falls (bacteria), Gwynns Falls (sediment), Stony Run (nutrients). Category changes may affect permit benchmarks.' },
+                      { id: 'ms4-chg-2', change: `EPA ECHO updated enforcement status for 2 ${jName} permitted facilities`, type: 'Compliance', detail: 'Facilities: Industrial Park Outfall #3 (returned to compliance) and Retail Center BMP-7 (new maintenance violation). No formal action yet.' },
+                      { id: 'ms4-chg-3', change: `Weather service issued flash flood watch for ${jName} — potential BMP overflow risk`, type: 'Weather', detail: '2-3 inches of rain forecast over 6 hours. 4 bioretention facilities and 2 wet ponds at capacity risk. Pre-storm inspection recommended.' },
+                      { id: 'ms4-chg-4', change: `State regulatory bulletin: proposed nutrient limit revisions affecting ${stateAbbr} MS4 permits`, type: 'Policy', detail: 'Proposed total nitrogen benchmark reduction from 4.0 to 3.2 mg/L for urban stormwater. Comment period closes Apr 15.' },
+                    ].map((c) => (
+                      <div key={c.id}>
+                        <div
+                          className="flex items-start gap-2 text-xs border border-slate-200 rounded-lg px-3 py-2 cursor-pointer hover:ring-1 hover:ring-purple-300 transition-all"
+                          onClick={() => setComingSoonId(comingSoonId === c.id ? null : c.id)}
+                        >
+                          <Badge variant="outline" className="text-[9px] shrink-0 mt-0.5">{c.type}</Badge>
+                          <span className="text-slate-700 flex-1">{c.change}</span>
+                          <ChevronDown size={14} className={`flex-shrink-0 text-slate-400 transition-transform mt-0.5 ${comingSoonId === c.id ? 'rotate-180' : ''}`} />
+                        </div>
+                        {comingSoonId === c.id && (
+                          <div className="ml-4 mt-1 rounded-lg border border-purple-200 bg-purple-50/60 p-3">
+                            <p className="text-xs text-slate-700">{c.detail}</p>
+                            <p className="text-[10px] text-purple-600 mt-2 font-medium">Navigate to source data — Coming Soon</p>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
                 </CardContent>
               </Card>
-            );
+            ); }
 
-            case 'briefing-pulse': return DS(
+            case 'briefing-pulse': { const jName = jurisdictionMeta?.name || 'Municipality'; return DS(
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Gauge className="h-5 w-5 text-emerald-600" />
-                    Program Pulse
+                    Program Pulse — {jName}
                   </CardTitle>
-                  <CardDescription>Overall MS4 program health and performance metrics</CardDescription>
+                  <CardDescription>Overall {jName} MS4 program health and performance metrics</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {[
-                      { label: 'Permit Compliance', value: '94%', trend: '↑ 2%', color: 'text-green-700', bg: 'bg-green-50 border-green-200' },
-                      { label: 'BMP Effectiveness', value: '82%', trend: '↑ 5%', color: 'text-green-700', bg: 'bg-green-50 border-green-200' },
-                      { label: 'Inspection Rate', value: '88%', trend: '— Stable', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
-                      { label: 'IDDE Cases Open', value: '6', trend: '↓ from 9', color: 'text-green-700', bg: 'bg-green-50 border-green-200' },
-                      { label: 'MCM Completion', value: '78%', trend: '↑ 4%', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
-                      { label: 'Public Complaints', value: '3', trend: '↓ from 7', color: 'text-green-700', bg: 'bg-green-50 border-green-200' },
+                      { id: 'ms4-pulse-1', label: 'Permit Compliance', value: '94%', trend: '↑ 2%', color: 'text-green-700', bg: 'bg-green-50 border-green-200', dest: 'Compliance dashboard' },
+                      { id: 'ms4-pulse-2', label: 'BMP Effectiveness', value: '82%', trend: '↑ 5%', color: 'text-green-700', bg: 'bg-green-50 border-green-200', dest: 'BMP performance report' },
+                      { id: 'ms4-pulse-3', label: 'Inspection Rate', value: '88%', trend: '— Stable', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', dest: 'Inspection queue' },
+                      { id: 'ms4-pulse-4', label: 'IDDE Cases Open', value: '6', trend: '↓ from 9', color: 'text-green-700', bg: 'bg-green-50 border-green-200', dest: 'IDDE case tracker' },
+                      { id: 'ms4-pulse-5', label: 'MCM Completion', value: '78%', trend: '↑ 4%', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', dest: 'MCM progress tracker' },
+                      { id: 'ms4-pulse-6', label: 'Public Complaints', value: '3', trend: '↓ from 7', color: 'text-green-700', bg: 'bg-green-50 border-green-200', dest: 'Complaint log' },
                     ].map(m => (
-                      <div key={m.label} className={`rounded-xl border p-3 ${m.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{m.label}</div>
-                        <div className={`text-xl font-bold ${m.color} mt-1`}>{m.value}</div>
-                        <div className="text-[10px] text-slate-500">{m.trend}</div>
+                      <div key={m.id}>
+                        <div
+                          className={`rounded-xl border p-3 cursor-pointer hover:ring-1 hover:ring-blue-300 transition-all ${m.bg}`}
+                          onClick={() => setComingSoonId(comingSoonId === m.id ? null : m.id)}
+                        >
+                          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{m.label}</div>
+                          <div className={`text-xl font-bold ${m.color} mt-1`}>{m.value}</div>
+                          <div className="text-[10px] text-slate-500">{m.trend}</div>
+                        </div>
+                        {comingSoonId === m.id && (
+                          <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-2">
+                            <p className="text-[10px] text-blue-600 font-medium">{m.dest} — Coming Soon</p>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
                 </CardContent>
               </Card>
-            );
+            ); }
 
-            case 'briefing-stakeholder': return DS(
+            case 'briefing-stakeholder': { const jName = jurisdictionMeta?.name || 'Municipality'; return DS(
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Users className="h-5 w-5 text-purple-600" />
-                    Stakeholder Watch
+                    Stakeholder Watch — {jName}
                   </CardTitle>
-                  <CardDescription>Community engagement and stakeholder activity monitoring</CardDescription>
+                  <CardDescription>{jName} community engagement and stakeholder activity monitoring</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
                     {[
-                      { stakeholder: 'County Council', activity: 'Budget hearing for stormwater utility fee scheduled next week', status: 'Action Needed' },
-                      { stakeholder: 'Watershed Association', activity: 'Published water quality report highlighting MS4 receiving waters', status: 'Monitor' },
-                      { stakeholder: 'Developer Coalition', activity: 'Requesting meeting on post-construction BMP requirements', status: 'Pending' },
-                      { stakeholder: 'EPA Region', activity: 'Annual MS4 permit compliance inspection window opens in 60 days', status: 'Prepare' },
-                    ].map((s, i) => (
-                      <div key={i} className="border border-slate-200 rounded-lg p-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold text-slate-800">{s.stakeholder}</span>
-                          <Badge variant="outline" className="text-[9px]">{s.status}</Badge>
+                      { id: 'ms4-stk-1', stakeholder: 'County Council', activity: `Budget hearing for ${jName} stormwater utility fee scheduled next week`, status: 'Action Needed', detail: `Council work session on FY2027 stormwater enterprise fund. Proposed 4% rate increase. Prepare talking points on capital project ROI and BMP cost-effectiveness.` },
+                      { id: 'ms4-stk-2', stakeholder: 'Watershed Association', activity: `Published water quality report highlighting ${jName} MS4 receiving waters`, status: 'Monitor', detail: 'Report covers 2025 volunteer monitoring data for 8 stream sites. Findings generally align with permit monitoring but highlight bacteria concerns in 2 tributaries.' },
+                      { id: 'ms4-stk-3', stakeholder: 'Developer Coalition', activity: `Requesting meeting on ${jName} post-construction BMP requirements`, status: 'Pending', detail: 'Coalition of 6 developers seeking clarification on bioretention sizing requirements and maintenance bond amounts for new subdivisions.' },
+                      { id: 'ms4-stk-4', stakeholder: 'EPA Region', activity: `Annual ${jName} MS4 permit compliance inspection window opens in 60 days`, status: 'Prepare', detail: `EPA Region ${getEpaRegionForState(stateAbbr) || '3'} inspection scheduled May 2026. Focus areas: IDDE program effectiveness, post-construction oversight, and monitoring QA/QC.` },
+                    ].map((s) => (
+                      <div key={s.id}>
+                        <div
+                          className="border border-slate-200 rounded-lg p-3 cursor-pointer hover:ring-1 hover:ring-indigo-300 transition-all"
+                          onClick={() => setComingSoonId(comingSoonId === s.id ? null : s.id)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold text-slate-800">{s.stakeholder}</span>
+                            <div className="flex items-center gap-1.5">
+                              <Badge variant="outline" className="text-[9px]">{s.status}</Badge>
+                              <ChevronDown size={14} className={`text-slate-400 transition-transform ${comingSoonId === s.id ? 'rotate-180' : ''}`} />
+                            </div>
+                          </div>
+                          <p className="text-xs text-slate-500 mt-1">{s.activity}</p>
                         </div>
-                        <p className="text-xs text-slate-500 mt-1">{s.activity}</p>
+                        {comingSoonId === s.id && (
+                          <div className="ml-4 mt-1 rounded-lg border border-indigo-200 bg-indigo-50/60 p-3">
+                            <p className="text-xs text-slate-700">{s.detail}</p>
+                            <p className="text-[10px] text-indigo-600 mt-2 font-medium">Open full context — Coming Soon</p>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
                 </CardContent>
               </Card>
-            );
+            ); }
 
             // ── Resolution Planner section ─────────────────────────────────────
             case 'resolution-planner': return DS(<ResolutionPlanner userRole="ms4" scopeContext={{ scope: 'state', data: { abbr: stateAbbr, name: STATE_NAMES[stateAbbr] || stateAbbr, epaRegion: getEpaRegionForState(stateAbbr) || 0, totalWaterbodies: regionData.length, assessed: regionData.length, impaired: regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length, score: Math.round(regionData.reduce((a, r) => a + (r.alertLevel === 'none' ? 95 : r.alertLevel === 'low' ? 75 : r.alertLevel === 'medium' ? 50 : 25), 0) / Math.max(regionData.length, 1)), grade: 'B', cat5: 0, cat4a: 0, cat4b: 0, cat4c: 0, topCauses: [] } }} />);
-
-            // ── Restoration Planner ─────────────────────────────────────────
-            case 'restoration-planner': {
-              const rpRegion = regionData.find(r => r.id === activeDetailId);
-              return DS(
-                <RestorationPlanner
-                  regionId={activeDetailId}
-                  regionName={rpRegion?.name}
-                  stateAbbr={stateAbbr}
-                  waterData={waterData?.parameters ?? null}
-                  alertLevel={rpRegion?.alertLevel}
-                  attainsCategory={attainsCache[activeDetailId ?? '']?.category}
-                  attainsCauses={attainsCache[activeDetailId ?? '']?.causes}
-                />
-              );
-            }
 
             // ── Policy Tracker sections ────────────────────────────────────────
             case 'policy-federal': return DS(

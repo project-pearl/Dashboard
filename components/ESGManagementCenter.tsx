@@ -134,7 +134,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   planner: {
     label: 'Resolution Planner', description: 'Sustainability resolution planning workspace',
     icon: ClipboardList, ...SHOW_ALL,
-    sections: new Set(['resolution-planner', 'restoration-planner', 'disclaimer']),
+    sections: new Set(['resolution-planner', 'disclaimer']),
   },
   trends: {
     label: 'Trends & Forecasting', description: 'Water risk trajectories, regulatory outlook, and ESG scoring trends',
@@ -2261,13 +2261,6 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
 
             // ── Shared panels ──
             case 'resolution-planner': return DS(<ResolutionPlanner userRole="corporate" scopeContext={{ scope: 'national', data: { totalStates: 50, totalWaterbodies: 0, totalImpaired: 0, averageScore: 0, highAlertStates: 0, topCauses: [], worstStates: [] } }} />);
-            case 'restoration-planner': return DS(
-              <RestorationPlanner
-                regionId={null}
-                stateAbbr=""
-                waterData={null}
-              />
-            );
             case 'policy-tracker': return DS(<PolicyTracker />);
             case 'contaminants-tracker': return DS(<EmergingContaminantsTracker role="corporate" />);
             case 'icis': return DS(<ICISCompliancePanel state="" compactMode={false} />);

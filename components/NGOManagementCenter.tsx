@@ -98,7 +98,7 @@ const LENS_CONFIG: Record<ViewLens, {
   briefing:    { label: 'AI Briefing', description: 'AI-generated conservation intelligence briefing',
     sections: new Set(['insights', 'alertfeed', 'disclaimer']) },
   planner:     { label: 'Resolution Planner', description: 'Conservation-driven resolution planning workspace',
-    sections: new Set(['resolution-planner', 'restoration-planner', 'disclaimer']) },
+    sections: new Set(['resolution-planner', 'disclaimer']) },
   trends:      { label: 'Trends & Projections', description: 'Watershed health trends and conservation projections',
     sections: new Set(['trends-dashboard', 'disclaimer']) },
   policy:      { label: 'Policy Tracker', description: 'Water policy tracking for advocacy',
@@ -2870,20 +2870,6 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
 
             // ── Shared panels ──
             case 'resolution-planner': return DS(<ResolutionPlanner userRole="ngo" scopeContext={{ scope: 'state', data: { abbr: stateAbbr, name: STATE_NAMES[stateAbbr] || stateAbbr, epaRegion: getEpaRegionForState(stateAbbr) || 0, totalWaterbodies: regionData.length, assessed: regionData.length, impaired: regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length, score: Math.round(regionData.reduce((a, r) => a + (r.alertLevel === 'none' ? 95 : r.alertLevel === 'low' ? 75 : r.alertLevel === 'medium' ? 50 : 25), 0) / Math.max(regionData.length, 1)), grade: 'B', cat5: 0, cat4a: 0, cat4b: 0, cat4c: 0, topCauses: [] } }} />);
-            case 'restoration-planner': {
-              const rpRegion = regionData.find(r => r.id === activeDetailId);
-              return DS(
-                <RestorationPlanner
-                  regionId={activeDetailId}
-                  regionName={rpRegion?.name}
-                  stateAbbr={stateAbbr}
-                  waterData={waterData?.parameters ?? null}
-                  alertLevel={rpRegion?.alertLevel}
-                  attainsCategory={attainsCache[activeDetailId ?? '']?.category}
-                  attainsCauses={attainsCache[activeDetailId ?? '']?.causes}
-                />
-              );
-            }
             case 'policy-tracker': return DS(<PolicyTracker />);
             case 'contaminants-tracker': return DS(<EmergingContaminantsTracker role="ngo" selectedState={stateAbbr} />);
             case 'icis': return DS(<ICISCompliancePanel state={stateAbbr} compactMode={false} />);
