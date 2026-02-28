@@ -25,6 +25,7 @@ import { UserManagementPanel } from './UserManagementPanel';
 import WhatIfSimulator from './WhatIfSimulator';
 import { WARRZones } from './WARRZones';
 import type { WARRMetric } from './WARRZones';
+import RestorationPlanner from '@/components/RestorationPlanner';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -1058,6 +1059,27 @@ export function PEARLManagementCenter(props: Props) {
                 );
               })}
             </div>
+
+            {/* ── RESTORATION PLANNER ── */}
+            {(() => {
+              const activeDep = expandedDeployment ? deployments.find(d => d.id === expandedDeployment) : null;
+              const lr = activeDep?.lastReading;
+              const depWaterData: Record<string, { value: number; unit?: string }> | null = lr ? {
+                ...(lr.do_mgl != null ? { DO: { value: lr.do_mgl, unit: 'mg/L' } } : {}),
+                ...(lr.tss_mgl != null ? { TSS: { value: lr.tss_mgl, unit: 'mg/L' } } : {}),
+                ...(lr.turbidity_ntu != null ? { Turbidity: { value: lr.turbidity_ntu, unit: 'NTU' } } : {}),
+                ...(lr.ph != null ? { pH: { value: lr.ph, unit: '' } } : {}),
+              } : null;
+              return (
+                <RestorationPlanner
+                  regionId={activeDep?.id || null}
+                  regionName={activeDep?.name}
+                  stateAbbr={activeDep?.state || 'US'}
+                  waterData={depWaterData}
+                  defaultAllStates
+                />
+              );
+            })()}
           </>
         )}
 
