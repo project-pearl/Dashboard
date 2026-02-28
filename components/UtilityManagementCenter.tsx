@@ -14,9 +14,14 @@ import {
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import LocationReportCard from '@/components/LocationReportCard';
 import ResolutionPlanner from '@/components/ResolutionPlanner';
+import dynamic from 'next/dynamic';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import { WARRZones } from './WARRZones';
+const GrantOpportunityMatcher = dynamic(
+  () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
+  { ssr: false }
+);
 import type { WARRMetric } from './WARRZones';
 
 // ─── View Lens ──────────────────────────────────────────────────────────────
@@ -114,7 +119,7 @@ const LENS_CONFIG: Record<ViewLens, {
   funding: {
     label: 'Funding & Grants',
     description: 'SRF loans, federal funding, revenue planning, debt management, and capital strategy',
-    sections: new Set(['fund-srf', 'fund-federal', 'fund-revenue', 'fund-debt', 'fund-capital-strategy', 'disclaimer']),
+    sections: new Set(['grants', 'fund-srf', 'fund-federal', 'fund-revenue', 'fund-debt', 'fund-capital-strategy', 'disclaimer']),
   },
   warr: {
     label: 'WARR Room',
@@ -1489,6 +1494,16 @@ export default function UtilityManagementCenter({ systemId }: Props) {
             // ══════════════════════════════════════════════════════════════
             // VIEW 18: FUNDING & GRANTS
             // ══════════════════════════════════════════════════════════════
+
+            case 'grants': return DS(
+              <GrantOpportunityMatcher
+                regionId={`${systemId.toLowerCase()}_statewide`}
+                removalEfficiencies={{ TSS: 90, TN: 45, TP: 55, bacteria: 85, DO: 30 }}
+                alertsCount={0}
+                userRole="Utility"
+                stateAbbr={systemId}
+              />
+            );
 
             case 'fund-srf': return DS(
               <PlaceholderSection icon={Landmark} iconColor="text-blue-600" title="SRF Loan Portfolio"

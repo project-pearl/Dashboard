@@ -53,6 +53,10 @@ import { WARRZones } from './WARRZones';
 import type { WARRMetric } from './WARRZones';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
+const GrantOpportunityMatcher = dynamic(
+  () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
+  { ssr: false }
+);
 
 const DataExportHub = dynamic(
   () => import('@/components/DataExportHub').then((mod) => mod.DataExportHub),
@@ -1902,41 +1906,13 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
             );
 
             case 'grants': return DS(
-          <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <button onClick={() => onToggleCollapse('grants')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-              <span className="text-sm font-bold text-slate-800">Grant & Incentive Opportunities</span>
-              <span className="flex items-center gap-1">
-                {isSectionOpen('grants') && <BrandedPrintBtn sectionId="grants" title="Grant & Incentive Opportunities" />}
-                {isSectionOpen('grants') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
-              </span>
-            </button>
-            {isSectionOpen('grants') && (
-              <div id="section-grants" className="p-4">
-                <p className="text-xs text-slate-500 mb-3">
-                  Environmental grants, tax incentives, and sustainability funding that align with your PIN deployments.
-                  Filtered by facility locations and eligible programs.
-                </p>
-                <div className="space-y-2">
-                  {[
-                    { name: 'EPA Clean Water State Revolving Fund', amount: '$500K-$5M', match: 'High', deadline: 'Rolling' },
-                    { name: 'CWA Section 319 Nonpoint Source', amount: '$100K-$500K', match: 'High', deadline: 'Varies by state' },
-                    { name: 'USDA Conservation Innovation Grants', amount: '$150K-$2M', match: 'Medium', deadline: 'Annual' },
-                    { name: 'State Green Infrastructure Tax Credit', amount: 'Up to 50% of cost', match: 'Medium', deadline: 'Varies' },
-                  ].map(g => (
-                    <div key={g.name} className="flex items-center justify-between p-2 rounded-lg border border-slate-100 hover:bg-slate-50">
-                      <div>
-                        <div className="text-xs font-medium text-slate-800">{g.name}</div>
-                        <div className="text-[10px] text-slate-500">{g.amount} · Deadline: {g.deadline}</div>
-                      </div>
-                      <Badge variant="secondary" className={g.match === 'High' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}>
-                        {g.match} Match
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+              <GrantOpportunityMatcher
+                regionId={focusedState !== 'US' ? `${focusedState.toLowerCase()}_statewide` : 'maryland_statewide'}
+                removalEfficiencies={{ TSS: 85, TN: 40, TP: 50, bacteria: 80, DO: 25 }}
+                alertsCount={facilitiesData.filter(f => f.alertLevel === 'high' || f.alertLevel === 'medium').length}
+                userRole="ESG"
+                stateAbbr={focusedState !== 'US' ? focusedState : undefined}
+              />
             );
 
             case 'groundwater': return DS(

@@ -54,6 +54,10 @@ import { WARRZones } from './WARRZones';
 import type { WARRMetric } from './WARRZones';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
+const GrantOpportunityMatcher = dynamic(
+  () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
+  { ssr: false }
+);
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1422,33 +1426,13 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
 
             // ─── GRANTS ─────────────────────────────────────────────────────
             case 'grants': return DS(
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center gap-2"><Star className="h-4 w-4 text-amber-600" /> Grant & Funding Opportunities</CardTitle>
-                  <CardDescription className="text-[11px]">Relevant water quality and manufacturing grants for biotech facilities</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {[
-                      { name: 'EPA Water Infrastructure Finance (WIFIA)', amount: 'Up to $100M', deadline: 'Rolling', relevance: 'Wastewater treatment upgrades' },
-                      { name: 'USDA BioPreferred Program', amount: 'Varies', deadline: 'Annual', relevance: 'Biobased manufacturing processes' },
-                      { name: 'NIH SBIR/STTR Phase II', amount: 'Up to $1.5M', deadline: 'Quarterly', relevance: 'Green chemistry & water recycling R&D' },
-                      { name: 'State Revolving Fund (SRF)', amount: 'State-specific', deadline: 'Rolling', relevance: 'Water system infrastructure' },
-                    ].map((g, i) => (
-                      <div key={i} className="flex items-center justify-between px-3 py-2 rounded-lg border border-slate-100 hover:bg-slate-50">
-                        <div>
-                          <div className="text-[11px] font-semibold text-slate-800">{g.name}</div>
-                          <div className="text-[10px] text-slate-500">{g.relevance}</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-[11px] font-medium text-emerald-700">{g.amount}</div>
-                          <div className="text-[9px] text-slate-400">{g.deadline}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              <GrantOpportunityMatcher
+                regionId={focusedState !== 'US' ? `${focusedState.toLowerCase()}_statewide` : 'maryland_statewide'}
+                removalEfficiencies={{ TSS: 85, TN: 40, TP: 50, bacteria: 80, DO: 25 }}
+                alertsCount={facilitiesData.filter(f => f.alertLevel === 'high' || f.alertLevel === 'medium').length}
+                userRole="Biotech"
+                stateAbbr={focusedState !== 'US' ? focusedState : undefined}
+              />
             );
 
             // ─── FUNDING PANELS ─────────────────────────────────────────────

@@ -18,6 +18,7 @@ import { PlatformDisclaimer } from './PlatformDisclaimer';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
+import { GrantOpportunityMatcher } from '@/components/GrantOpportunityMatcher';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -983,9 +984,13 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             );
 
           case 'grants': return DS(
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">
-              Grant Opportunities — placeholder (shared component)
-            </div>
+            <GrantOpportunityMatcher
+              regionId={`${stateAbbr.toLowerCase()}_${jurisdictionId}`}
+              removalEfficiencies={{ TSS: 85, TN: 40, TP: 50, bacteria: 80, DO: 25 }}
+              alertsCount={0}
+              userRole="Local"
+              stateAbbr={stateAbbr}
+            />
           );
 
           case 'fund-active': return DS(

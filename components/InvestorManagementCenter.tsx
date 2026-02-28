@@ -52,6 +52,10 @@ import { WARRZones } from './WARRZones';
 import type { WARRMetric } from './WARRZones';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
+const GrantOpportunityMatcher = dynamic(
+  () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
+  { ssr: false }
+);
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1438,33 +1442,13 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
 
             // ─── GRANTS ─────────────────────────────────────────────────────
             case 'grants': return DS(
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center gap-2"><Star className="h-4 w-4 text-amber-600" /> Grant & Incentive Opportunities</CardTitle>
-                  <CardDescription className="text-[11px]">Water infrastructure grants and tax incentives applicable to portfolio companies</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {[
-                      { name: 'EPA Water Infrastructure Finance (WIFIA)', amount: 'Up to $100M', deadline: 'Rolling', relevance: 'Wastewater & treatment infrastructure' },
-                      { name: 'USDA Water & Waste Disposal Loans', amount: 'Up to $50M', deadline: 'Annual', relevance: 'Rural water system investments' },
-                      { name: 'State Revolving Fund (SRF)', amount: 'State-specific', deadline: 'Rolling', relevance: 'Water system capex financing' },
-                      { name: 'IRA Section 48C Energy Community Credits', amount: '30% ITC', deadline: '2026', relevance: 'Water treatment energy efficiency upgrades' },
-                    ].map((g, i) => (
-                      <div key={i} className="flex items-center justify-between px-3 py-2 rounded-lg border border-slate-100 hover:bg-slate-50">
-                        <div>
-                          <div className="text-[11px] font-semibold text-slate-800">{g.name}</div>
-                          <div className="text-[10px] text-slate-500">{g.relevance}</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-[11px] font-medium text-emerald-700">{g.amount}</div>
-                          <div className="text-[9px] text-slate-400">{g.deadline}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              <GrantOpportunityMatcher
+                regionId={focusedState !== 'US' ? `${focusedState.toLowerCase()}_statewide` : 'maryland_statewide'}
+                removalEfficiencies={{ TSS: 85, TN: 40, TP: 50, bacteria: 80, DO: 25 }}
+                alertsCount={companiesData.filter(c => c.alertLevel === 'high' || c.alertLevel === 'medium').length}
+                userRole="Investor"
+                stateAbbr={focusedState !== 'US' ? focusedState : undefined}
+              />
             );
 
             // ─── ECONOMIC PERFORMANCE (Financial Impact lens) ────────────────
