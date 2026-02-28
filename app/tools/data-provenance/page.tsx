@@ -8,9 +8,11 @@ import { Printer, ArrowLeft, ChevronRight } from 'lucide-react';
 // ─── Section nav items ───────────────────────────────────────────────────────
 
 const SECTIONS = [
+  { id: 'what-pin-is', label: 'What PIN Is' },
   { id: 'tiers', label: 'Source Tier Definitions' },
   { id: 'data-age', label: 'Data Age Thresholds' },
   { id: 'pin-score', label: 'PIN Water Score' },
+  { id: 'indices-mapping', label: 'Indices & Lenses' },
   { id: 'sources', label: 'Source Catalog' },
   { id: 'qa', label: 'Quality Assurance' },
   { id: 'methodology', label: 'Methodology & Standards' },
@@ -131,7 +133,7 @@ export default function DataProvenancePage() {
         <div className="relative h-10 w-32 mb-4">
           <Image src="/Pearl-Logo-alt.png" alt="PIN" fill className="object-contain object-left" />
         </div>
-        <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-3">Data Provenance</div>
+        <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-3">Data Confidence</div>
         <ul className="space-y-1">
           {SECTIONS.map((s) => (
             <li key={s.id}>
@@ -162,7 +164,7 @@ export default function DataProvenancePage() {
               <ArrowLeft size={14} />
               Dashboard
             </Link>
-            <span className="text-sm font-semibold text-slate-800 hidden sm:inline">PIN Data Provenance &amp; Methodology</span>
+            <span className="text-sm font-semibold text-slate-800 hidden sm:inline">PIN Data Confidence &amp; Methodology</span>
           </div>
           <button
             onClick={handlePrint}
@@ -191,7 +193,7 @@ export default function DataProvenancePage() {
           <div className="relative h-[160px] sm:h-[180px] lg:h-[200px] w-full">
             <Image
               src="/provenance.png"
-              alt="Data Provenance & Methodology"
+              alt="Data Confidence & Methodology"
               fill
               className="object-cover"
               priority
@@ -209,7 +211,7 @@ export default function DataProvenancePage() {
                 </span>
               </div>
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white leading-tight max-w-2xl">
-                Data Provenance &amp; Methodology
+                Data Confidence &amp; Methodology
               </h1>
               <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-white/80 max-w-xl leading-relaxed">
                 The canonical reference for how PIN sources, scores, and validates environmental data.
@@ -221,7 +223,7 @@ export default function DataProvenancePage() {
         <div ref={contentRef} className="max-w-4xl mx-auto px-6 py-8 print:px-0 print:max-w-none">
           {/* Title block */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-slate-900 mb-2 print:block hidden">PIN Data Provenance &amp; Methodology</h1>
+            <h1 className="text-3xl font-bold text-slate-900 mb-2 print:block hidden">PIN Data Confidence &amp; Methodology</h1>
             <p className="text-sm text-slate-500 leading-relaxed max-w-2xl">
               This document is the canonical reference for how PIN sources, scores, and validates environmental data.
               It describes the data tier system, the PIN Water Score composite methodology, all integrated data sources,
@@ -233,14 +235,40 @@ export default function DataProvenancePage() {
               <span>·</span>
               <span>Last updated: February 2026</span>
               <span>·</span>
-              <span>Project PEARL — project-pearl.org</span>
+              <span>PEARL Intelligence Network — pinwater.org</span>
             </div>
           </div>
 
           {/* ═══════════════════════════════════════════════════════════════════
-              §1  DATA SOURCE TIER DEFINITIONS
+              §1  WHAT PIN IS — AND WHAT IT IS NOT
               ═══════════════════════════════════════════════════════════════════ */}
-          <SectionHeading id="tiers" number={1} title="Data Source Tier Definitions" />
+          <SectionHeading id="what-pin-is" number={1} title="What PIN Is — and What It Is Not" />
+          <p className="text-sm text-slate-600 mb-4 leading-relaxed">
+            PIN is an intelligence and decision-support platform. It aggregates publicly available water quality data
+            from 20+ federal, state, and community sources, applies automated scoring algorithms, and presents the results
+            through entity-specific management centers and analytical lenses.
+          </p>
+          <div className="rounded-lg border border-red-200 bg-red-50/40 p-4 mb-4">
+            <p className="text-xs font-semibold text-red-800 mb-2">PIN IS NOT:</p>
+            <ul className="text-xs text-slate-600 space-y-1 ml-4 list-disc">
+              <li>An official EPA, MDE, state, or federal regulatory assessment</li>
+              <li>A substitute for primary agency data in compliance, permitting, or enforcement contexts</li>
+              <li>A primary data collection or laboratory analysis service</li>
+              <li>A regulatory determination or legal finding</li>
+              <li>A best management practice (BMP) certification</li>
+            </ul>
+          </div>
+          <p className="text-sm text-slate-600 mb-4 leading-relaxed">
+            PIN grades, scores, and alerts are informational tools. They are designed to accelerate understanding and
+            surface patterns across the nation&apos;s water quality landscape — not to replace the regulatory processes
+            that govern it. Users should always verify findings with primary agency data and sources before making
+            compliance, permitting, or enforcement decisions.
+          </p>
+
+          {/* ═══════════════════════════════════════════════════════════════════
+              §2  DATA SOURCE TIER DEFINITIONS
+              ═══════════════════════════════════════════════════════════════════ */}
+          <SectionHeading id="tiers" number={2} title="Data Source Tier Definitions" />
           <p className="text-sm text-slate-600 mb-4 leading-relaxed">
             Every data point in PIN is tagged with a confidence tier reflecting the rigor of its source.
             Tier badges appear throughout the platform — click any badge to return here.
@@ -317,9 +345,9 @@ export default function DataProvenancePage() {
           </div>
 
           {/* ═══════════════════════════════════════════════════════════════════
-              §2  DATA AGE THRESHOLDS
+              §3  DATA AGE THRESHOLDS
               ═══════════════════════════════════════════════════════════════════ */}
-          <SectionHeading id="data-age" number={2} title="Data Age Thresholds" />
+          <SectionHeading id="data-age" number={3} title="Data Age Thresholds" />
           <p className="text-sm text-slate-600 mb-4 leading-relaxed">
             Data age is calculated from the sample collection date to the current date.
             PIN uses three age categories to indicate how actionable each data point is for current decision-making.
@@ -341,37 +369,53 @@ export default function DataProvenancePage() {
           </p>
 
           {/* ═══════════════════════════════════════════════════════════════════
-              §3  PIN WATER SCORE METHODOLOGY
+              §4  PIN WATER SCORE METHODOLOGY
               ═══════════════════════════════════════════════════════════════════ */}
-          <SectionHeading id="pin-score" number={3} title="PIN Water Score Methodology" />
+          <SectionHeading id="pin-score" number={4} title="PIN Water Score Methodology" />
           <p className="text-sm text-slate-600 mb-4 leading-relaxed">
             The PIN Water Score is a 0–100 composite index that summarizes the overall health of a waterbody
-            by combining 14 weighted sub-indices. The score drives the condition label displayed on every
-            waterbody card and map marker.
+            by combining 14 weighted sub-indices across two groups. The score drives the condition label displayed
+            on every waterbody card and map marker.
           </p>
 
-          <SubHeading>3.1 Condition Labels</SubHeading>
+          <SubHeading>4.1 Condition Labels</SubHeading>
           <Table
             headers={['Score Range', 'Label', 'Interpretation']}
             rows={[
-              ['90–100', 'Excellent', 'Fully supporting all designated uses; all indices in healthy range'],
-              ['70–89', 'Good', 'Minor concerns in 1–2 indices; generally supporting designated uses'],
-              ['50–69', 'Fair', 'Moderate stress; multiple indices indicate degraded conditions'],
-              ['30–49', 'Poor', 'Significant impairment; several indices consistently below thresholds'],
-              ['0–29', 'Critical', 'Severe impairment; does not support designated uses; likely Category 5'],
+              ['90–100', 'Excellent', 'Fully supporting all designated uses; all indices healthy'],
+              ['70–89', 'Good', 'Minor concerns in 1–2 indices; generally supporting uses'],
+              ['50–69', 'Fair', 'Moderate stress; multiple indices indicate degradation'],
+              ['30–49', 'Poor', 'Significant impairment; several indices below thresholds'],
+              ['0–29', 'Critical', 'Severe impairment; does not support designated uses'],
             ]}
           />
 
-          <SubHeading>3.2 HUC-8 Indices (9 indices)</SubHeading>
+          <SubHeading>4.2 Group Weighting</SubHeading>
           <p className="text-sm text-slate-600 mb-3 leading-relaxed">
-            These proprietary indices are computed per HUC-8 watershed from live federal data sources.
-            Each produces a 0–100 score with an associated confidence rating. Indices marked &quot;inverted&quot;
-            are scored so that higher raw values (indicating worse conditions) result in lower composite contributions.
+            The 14 indices are organized into two groups. Within each group, index weights are expressed as
+            percentages of that group&apos;s total. The two groups combine as follows:
+          </p>
+          <Formula
+            label="Final Composite"
+            formula="PIN Water Score = (0.56 × Group A Score) + (0.44 × Group B Score)"
+            notes="Each group score = Σ(w_i × S_i) / Σ(w_i), computed only over indices with available data within that group. This ensures that missing indices in one group don't cause the other group to dominate disproportionately."
+          />
+          <p className="text-xs text-slate-500 mt-2 mb-4 leading-relaxed">
+            The 56/44 split reflects the relative analytical depth of watershed-level systemic assessment (Group A)
+            versus site-specific monitoring (Group B). This weighting is calibrated for general watershed health
+            assessment and may be adjusted for domain-specific applications in future versions.
+          </p>
+
+          <SubHeading>4.3 HUC-8 Indices (Group A — 9 indices)</SubHeading>
+          <p className="text-sm text-slate-600 mb-3 leading-relaxed">
+            Computed per HUC-8 watershed from live federal data sources. Each produces a 0–100 score with an
+            associated confidence rating. Indices marked &quot;inverted&quot; are scored so that higher raw
+            values (indicating worse conditions) result in lower composite contributions.
           </p>
           <Table
-            headers={['Index', 'Weight', 'Inverted', 'Description', 'Data Sources']}
+            headers={['Index', 'Weight', 'Inv', 'Description', 'Sources']}
             rows={[
-              ['PEARL Load Velocity', '12%', 'No', 'Rate of nutrient and pollutant loading relative to watershed capacity', 'WQP, ICIS DMR'],
+              ['PEARL Load Velocity', '12%', 'No', 'Rate of nutrient/pollutant loading relative to watershed capacity', 'WQP, ICIS DMR'],
               ['Infrastructure Failure', '12%', 'Yes', 'Risk of drinking water and wastewater infrastructure failure based on violations and age', 'SDWIS, ICIS inspections'],
               ['Watershed Recovery', '12%', 'No', 'Potential for ecological recovery based on impairment status and restoration activity', 'ATTAINS'],
               ['Permit Risk Exposure', '12%', 'Yes', 'Compliance risk from NPDES-permitted dischargers in the watershed', 'ICIS permits, violations, DMR, enforcement'],
@@ -382,88 +426,152 @@ export default function DataProvenancePage() {
               ['Governance Response', '10%', 'Yes', 'Strength and timeliness of regulatory response to violations', 'ATTAINS, ICIS, SDWIS'],
             ]}
           />
+          <p className="text-xs text-slate-500 mt-2 leading-relaxed">Group A weights sum to 100%.</p>
 
-          <SubHeading>3.3 Standard Indices (5 indices)</SubHeading>
+          <SubHeading>4.4 Standard Indices (Group B — 5 indices)</SubHeading>
           <p className="text-sm text-slate-600 mb-3 leading-relaxed">
-            These indices are computed per waterbody from available monitoring data, ATTAINS assessments,
-            and trend analysis.
+            Computed per waterbody from available monitoring data, ATTAINS assessments, and trend analysis.
           </p>
           <Table
             headers={['Index', 'Weight', 'Description', 'Calculation']}
             rows={[
-              ['Water Quality Grade', '15%', 'EPA-method parameter scoring across DO, pH, nutrients, bacteria, turbidity, TSS', 'Weighted average of parameter scores vs. EPA criteria thresholds (see Methodology page)'],
-              ['Monitoring Coverage', '7%', 'Fraction of key parameters with live sensor data', '(Live key params / Total key params) × 100'],
-              ['Data Freshness', '7%', 'Recency of most recent sample data across all parameters', 'Computed from collection dates; older data reduces score progressively'],
-              ['Regulatory Compliance', '8%', 'ATTAINS assessment category mapping', 'Cat. 1 = 100, Cat. 2 = 85, Cat. 3 = 50, Cat. 4 = 30, Cat. 5 = 10'],
-              ['Trend Direction', '7%', 'Direction and magnitude of water quality trends', '50 + trend value, clamped to 0–100; positive trends improve score'],
+              ['Water Quality Grade', '34%', 'EPA-method parameter scoring across DO, pH, nutrients, bacteria, turbidity, TSS', 'Weighted average of parameter scores vs. EPA criteria thresholds (see Section 8.1)'],
+              ['Monitoring Coverage', '16%', 'Fraction of key parameters with live sensor data', '(Live key params / Total key params) × 100'],
+              ['Data Freshness', '16%', 'Recency of most recent sample data across all parameters', 'Older data reduces score progressively'],
+              ['Regulatory Compliance', '18%', 'ATTAINS assessment category mapping', 'Cat. 1 = 100, Cat. 2 = 85, Cat. 3 = 50, Cat. 4 = 30, Cat. 5 = 10'],
+              ['Trend Direction', '16%', 'Direction and magnitude of water quality trends', '50 + trend value, clamped to 0–100. Positive trends improve score'],
             ]}
           />
+          <p className="text-xs text-slate-500 mt-2 leading-relaxed">Group B weights sum to 100%. In earlier documentation, these weights were expressed as fractions of the total 14-index pool (15%, 7%, 7%, 8%, 7% = 44%). The values above are those same weights renormalized within Group B for clarity.</p>
 
-          <SubHeading>3.4 Composite Formula</SubHeading>
+          <SubHeading>4.5 Composite Formula</SubHeading>
           <Formula
-            label="PIN Water Score"
-            formula="Score = Σ(w_i × S_i) / Σ(w_i), where S_i = index score (0–100), w_i = index weight"
+            label="Group Score"
+            formula="Group Score = Σ(w_i × S_i) / Σ(w_i), where S_i = index score (0–100), w_i = index weight"
             notes="Only indices with available data contribute. Weights are renormalized by dividing by the sum of available weights, so missing indices don't artificially deflate the score."
           />
-
-          <SubHeading>3.5 Low-Confidence Regression</SubHeading>
-          <p className="text-sm text-slate-600 mb-3 leading-relaxed">
-            When a HUC-8 index has a confidence score below 40 (out of 100), the index value
-            is regressed 50% toward a neutral score of 50. This prevents low-data areas from
-            showing artificially extreme scores.
-          </p>
           <Formula
-            label="Confidence Regression"
-            formula="Adjusted = value × (1 − 0.5) + 50 × 0.5 = value × 0.5 + 25"
-            notes="Applied when confidence < 40. Confidence is computed from: data density (40% weight), recency (35% weight), and source diversity (25% weight)."
+            label="Final Score"
+            formula="PIN Water Score = (0.56 × Group A Score) + (0.44 × Group B Score)"
+            notes="If an entire group has no available data, the score is computed from the available group alone (equivalent to that group receiving 100% weight)."
           />
 
+          <SubHeading>4.6 Low-Confidence Regression</SubHeading>
+          <p className="text-sm text-slate-600 mb-3 leading-relaxed">
+            When a HUC-8 index has a confidence score below 40 (out of 100), the index value is regressed toward
+            a neutral score of 50 to prevent data-sparse areas from showing artificially extreme scores. The
+            regression is graduated based on confidence level:
+          </p>
+          <Formula
+            label="Graduated Regression"
+            formula="Regression factor = max(0, (40 - confidence) / 40)  →  Adjusted = value × (1 - factor × 0.5) + 50 × (factor × 0.5)"
+            notes="At confidence = 0: 50% regression toward neutral (strongest). At confidence = 20: 25% regression. At confidence = 39: ~1.25% regression. At confidence ≥ 40: no regression applied."
+          />
+          <p className="text-xs text-slate-500 mt-2 mb-3 leading-relaxed">
+            This graduated approach avoids the cliff effect of a binary threshold while still protecting against unreliable
+            extremes. The 40-point threshold was selected through validation against known data-sparse watersheds in the
+            Chesapeake Bay region.
+          </p>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            Confidence itself is computed from: Data Density (40% weight), Recency (35% weight), and Source Diversity (25% weight).
+          </p>
+
           {/* ═══════════════════════════════════════════════════════════════════
-              §4  SOURCE CATALOG
+              §5  MAPPING INDICES TO MANAGEMENT CENTERS AND LENSES
               ═══════════════════════════════════════════════════════════════════ */}
-          <SectionHeading id="sources" number={4} title="Source Catalog" />
+          <SectionHeading id="indices-mapping" number={5} title="Mapping Indices to Management Centers &amp; Lenses" />
+          <p className="text-sm text-slate-600 mb-4 leading-relaxed">
+            PIN serves 12 entity-based management centers, each providing a tailored view of the 14 indices
+            through a subset of the platform&apos;s analytical lenses.
+          </p>
+          <p className="text-sm text-slate-600 mb-4 leading-relaxed">
+            The 14 indices are the analytical foundation. Management centers determine <span className="font-semibold text-slate-700">who</span> sees
+            the data (federal agencies, state regulators, MS4 municipalities, utilities, universities, NGOs, etc.).
+            Analytical lenses determine <span className="font-semibold text-slate-700">how</span> the data is presented — which indices are
+            foregrounded, what thresholds are highlighted, and what contextual information is surfaced.
+          </p>
+          <div className="rounded-lg border border-slate-200 bg-slate-50/60 p-4 space-y-3">
+            <div className="text-xs text-slate-700 leading-relaxed">
+              <span className="font-semibold">MS4 compliance officer</span> sees Permit Risk Exposure, Governance Response,
+              and Regulatory Compliance foregrounded through permit-centric lenses, with fine avoidance context and
+              compliance deadline tracking.
+            </div>
+            <div className="text-xs text-slate-700 leading-relaxed">
+              <span className="font-semibold">University researcher</span> sees Water Quality Grade, Ecological Health,
+              and Trend Direction through research-oriented lenses, with statistical confidence intervals and
+              export-ready data tables.
+            </div>
+            <div className="text-xs text-slate-700 leading-relaxed">
+              <span className="font-semibold">Federal regulator</span> sees all 14 indices through enforcement and
+              assessment lenses, with ATTAINS category mappings and cross-jurisdictional comparisons.
+            </div>
+          </div>
+          <p className="text-xs text-slate-500 mt-3 leading-relaxed">
+            The same underlying data and scoring methodology applies in all cases — only the presentation layer
+            and contextual framing change per management center.
+          </p>
+
+          {/* ═══════════════════════════════════════════════════════════════════
+              §6  SOURCE CATALOG
+              ═══════════════════════════════════════════════════════════════════ */}
+          <SectionHeading id="sources" number={6} title="Source Catalog" />
           <p className="text-sm text-slate-600 mb-4 leading-relaxed">
             PIN integrates data from 20+ sources across federal, state, and community organizations.
             All data is fetched via official APIs, cached for performance, and timestamped for provenance.
           </p>
 
+          <SubHeading>Federal / Tier 1 Sources</SubHeading>
           <Table
-            headers={['Source', 'Organization', 'Data Type', 'Refresh', 'Tier', 'PIN Indices Served']}
+            headers={['Source', 'Organization', 'Data Type', 'Refresh', 'PIN Indices Served']}
             rows={[
-              ['ATTAINS', 'EPA', 'Waterbody assessments, 303(d) listings, impairment causes', 'Daily cache', 'T1', 'Watershed Recovery, Ecological Health, Governance Response, Regulatory Compliance'],
-              ['Water Quality Portal (WQP)', 'EPA / USGS / USDA', 'Discrete water quality results (physical, chemical, biological)', 'Daily cache', 'T1', 'PEARL Load Velocity, Per Capita Load, Water Quality Grade, Data Freshness'],
-              ['ECHO / ICIS-NPDES', 'EPA', 'Permit compliance, DMRs, enforcement actions, inspections', 'Daily cache', 'T1', 'Infrastructure Failure, Permit Risk Exposure, Governance Response, PEARL Load Velocity'],
-              ['SDWIS', 'EPA', 'Drinking water systems, violations, enforcement', 'Daily cache', 'T1', 'Infrastructure Failure, Per Capita Load, EJ Vulnerability'],
-              ['USGS WDFN', 'USGS', 'Real-time streamflow, water level, continuous WQ', '15-min (real-time)', 'T1', 'Water Quality Grade, Monitoring Coverage, Data Freshness'],
-              ['EJScreen', 'EPA', 'Environmental justice indices, demographic indicators', 'Annual', 'T1', 'EJ Vulnerability'],
-              ['NOAA CO-OPS', 'NOAA', 'Tidal levels, water temperature, salinity, meteorological', '6-min (real-time)', 'T1', 'Waterfront Exposure, Water Quality Grade'],
-              ['NHD / NHDPlus HR', 'USGS', 'Stream/waterbody geometry, HUC boundaries, flow direction', 'Annual', 'T1', 'Spatial indexing, watershed delineation'],
-              ['WATERS GeoServices', 'EPA', 'Geospatial impairment mapping, TMDL linkage', 'Synced with ATTAINS', 'T1', 'Watershed Recovery, Regulatory Compliance'],
-              ['USFWS ECOS', 'USFWS', 'Threatened & Endangered species listings', 'Periodic', 'T1', 'Ecological Health'],
-              ['CBP DataHub', 'Chesapeake Bay Program', 'Chlorophyll, nutrients, point-source discharges', 'Monthly', 'T2', 'Water Quality Grade (Chesapeake region)'],
-              ['State MDE Monitoring', 'State agencies', 'State-operated monitoring station data', 'Varies by state', 'T2', 'Water Quality Grade, Monitoring Coverage'],
-              ['NERRS', 'NOAA', 'National Estuarine Research Reserve System real-time data', '15-min', 'T2', 'Water Quality Grade'],
-              ['Blue Water Baltimore', 'BWB', 'Volunteer monitoring — bacteria, nutrients, physical params', 'Monthly', 'T3', 'Water Quality Grade (Baltimore region)'],
-              ['Waterkeeper Alliance', 'Waterkeeper', 'Patrol monitoring data from local Waterkeeper chapters', 'Varies', 'T3', 'Water Quality Grade (select regions)'],
-              ['CEJST', 'White House CEQ', 'Climate & Economic Justice Screening Tool', 'Annual', 'T1', 'EJ Vulnerability'],
-              ['Census ACS', 'US Census Bureau', 'Demographic and socioeconomic indicators', 'Annual', 'T1', 'EJ Vulnerability (fallback composite)'],
-              ['NWIS-GW', 'USGS', 'Groundwater levels and aquifer monitoring', 'Daily', 'T1', 'Infrastructure Failure'],
-              ['NetDMR', 'EPA', 'Electronic Discharge Monitoring Reports', 'Monthly', 'T1', 'Permit Risk Exposure, PEARL Load Velocity'],
-              ['NPDES Permits', 'EPA / States', 'Active permit records, effluent limits, compliance schedules', 'Monthly', 'T1', 'Permit Risk Exposure, Governance Response'],
-              ['Grants.gov', 'Federal / Multi-Agency', 'Open environmental grant opportunities (posted + forecasted)', 'Daily cache', 'T1', 'Grant Matching, Restoration Planning'],
-              ['SAM.gov', 'GSA', 'Registered water-infrastructure contractors and entities by state', 'Weekly cache', 'T1', 'Contractor Discovery, Restoration Planning'],
+              ['ATTAINS', 'EPA', 'Waterbody assessments, 303(d) listings, impairment causes', 'Daily cache', 'Watershed Recovery, Ecological Health, Governance Response, Regulatory Compliance'],
+              ['Water Quality Portal (WQP)', 'EPA / USGS / USDA', 'Discrete water quality results (physical, chemical, biological)', 'Daily cache', 'PEARL Load Velocity, Per Capita Load, Water Quality Grade, Data Freshness'],
+              ['ECHO / ICIS-NPDES', 'EPA', 'Permit compliance, DMRs, enforcement actions, inspections', 'Daily cache', 'Infrastructure Failure, Permit Risk Exposure, Governance Response, PEARL Load Velocity'],
+              ['SDWIS', 'EPA', 'Drinking water systems, violations, enforcement', 'Daily cache', 'Infrastructure Failure, Per Capita Load, EJ Vulnerability'],
+              ['USGS WDFN', 'USGS', 'Real-time streamflow, water level, continuous WQ', '15-min (real-time)', 'Water Quality Grade, Monitoring Coverage, Data Freshness'],
+              ['EJScreen', 'EPA', 'Environmental justice indices, demographic indicators', 'Annual', 'EJ Vulnerability'],
+              ['NOAA CO-OPS', 'NOAA', 'Tidal levels, water temperature, salinity, meteorological', '6-min (real-time)', 'Waterfront Exposure, Water Quality Grade'],
+              ['NHD / NHDPlus HR', 'USGS', 'Stream/waterbody geometry, HUC boundaries, flow direction', 'Annual', 'Spatial indexing, watershed delineation'],
+              ['WATERS GeoServices', 'EPA', 'Geospatial impairment mapping, TMDL linkage', 'Synced with ATTAINS', 'Watershed Recovery, Regulatory Compliance'],
+              ['USFWS ECOS', 'USFWS', 'Threatened & Endangered species listings', 'Periodic', 'Ecological Health'],
+              ['CEJST', 'White House CEQ', 'Climate & Economic Justice Screening Tool', 'Annual', 'EJ Vulnerability'],
+              ['Census ACS', 'US Census Bureau', 'Demographic and socioeconomic indicators', 'Annual', 'EJ Vulnerability (fallback composite)'],
+              ['NWIS-GW', 'USGS', 'Groundwater levels and aquifer monitoring', 'Daily', 'Infrastructure Failure'],
+              ['NetDMR', 'EPA', 'Electronic Discharge Monitoring Reports', 'Monthly', 'Permit Risk Exposure, PEARL Load Velocity'],
+              ['NPDES Permits', 'EPA / States', 'Active permit records, effluent limits, compliance schedules', 'Monthly', 'Permit Risk Exposure, Governance Response'],
+              ['Grants.gov', 'Federal / Multi-Agency', 'Open environmental grant opportunities (posted + forecasted)', 'Daily cache', 'Grant Matching, Restoration Planning'],
+              ['SAM.gov', 'GSA', 'Registered water-infrastructure contractors and entities by state', 'Weekly cache', 'Contractor Discovery, Restoration Planning'],
+            ]}
+          />
+
+          <SubHeading>State / Academic / Tier 2 Sources</SubHeading>
+          <Table
+            headers={['Source', 'Organization', 'Data Type', 'Refresh', 'PIN Indices Served']}
+            rows={[
+              ['CBP DataHub', 'Chesapeake Bay Program', 'Chlorophyll, nutrients, point-source discharges', 'Monthly', 'Water Quality Grade (Chesapeake region)'],
+              ['State MDE Monitoring', 'State agencies', 'State-operated monitoring station data', 'Varies by state', 'Water Quality Grade, Monitoring Coverage'],
+              ['NERRS', 'NOAA', 'National Estuarine Research Reserve System real-time data', '15-min', 'Water Quality Grade'],
+            ]}
+          />
+
+          <SubHeading>Community / Tier 3 Sources</SubHeading>
+          <Table
+            headers={['Source', 'Organization', 'Data Type', 'Refresh', 'PIN Indices Served']}
+            rows={[
+              ['Blue Water Baltimore', 'BWB', 'Volunteer monitoring — bacteria, nutrients, physical params', 'Monthly', 'Water Quality Grade (Baltimore region)'],
+              ['Waterkeeper Alliance', 'Waterkeeper', 'Patrol monitoring data from local Waterkeeper chapters', 'Varies', 'Water Quality Grade (select regions)'],
             ]}
           />
 
           {/* ═══════════════════════════════════════════════════════════════════
-              §5  QUALITY ASSURANCE PROCESS
+              §7  QUALITY ASSURANCE PROCESS
               ═══════════════════════════════════════════════════════════════════ */}
-          <SectionHeading id="qa" number={5} title="Quality Assurance Process" />
+          <SectionHeading id="qa" number={7} title="Quality Assurance Process" />
           <p className="text-sm text-slate-600 mb-4 leading-relaxed">
             PIN applies a multi-layer validation pipeline to all incoming data before it influences scores or is displayed to users.
           </p>
 
-          <SubHeading>5.1 Range Checks</SubHeading>
+          <SubHeading>7.1 Range Checks</SubHeading>
           <p className="text-sm text-slate-600 mb-3 leading-relaxed">
             Every parameter value is checked against physically plausible bounds before storage.
             Values outside these bounds are flagged as suspect and excluded from scoring calculations
@@ -482,25 +590,30 @@ export default function DataProvenancePage() {
             ]}
           />
 
-          <SubHeading>5.2 Cross-Source Validation</SubHeading>
+          <SubHeading>7.2 Cross-Source Validation</SubHeading>
           <p className="text-sm text-slate-600 mb-3 leading-relaxed">
             When the same parameter is available from multiple sources (e.g., USGS WDFN and WQP for the same station),
             PIN compares values and applies the following rules:
           </p>
-          <ul className="text-sm text-slate-600 space-y-1.5 mb-4 ml-4 list-disc">
-            <li><span className="font-medium text-slate-700">Agreement (within 10%):</span> Higher-tier source value is used; lower-tier source is annotated as corroborating.</li>
-            <li><span className="font-medium text-slate-700">Minor disagreement (10–30%):</span> Both values retained with weighted average favoring higher tier. Confidence is reduced.</li>
-            <li><span className="font-medium text-slate-700">Major disagreement (&gt;30%):</span> Higher-tier source value is used; lower-tier value is flagged for review and not used in scoring.</li>
+          <ul className="text-sm text-slate-600 space-y-1.5 mb-3 ml-4 list-disc">
+            <li><span className="font-medium text-slate-700">Agreement (within threshold):</span> Higher-tier source value is used; lower-tier source annotated as corroborating.</li>
+            <li><span className="font-medium text-slate-700">Minor disagreement (above threshold, within 3x threshold):</span> Both values retained with weighted average favoring higher tier. Confidence is reduced.</li>
+            <li><span className="font-medium text-slate-700">Major disagreement (above 3x threshold):</span> Higher-tier source value is used; lower-tier value flagged for review and not used in scoring.</li>
           </ul>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            Agreement thresholds are parameter-specific. For parameters with narrow natural ranges (pH, dissolved oxygen),
+            percentage-based thresholds apply. For high-variance parameters (E. coli, turbidity), comparison is performed
+            on log-transformed values to account for the orders-of-magnitude variability inherent in these measurements.
+          </p>
 
-          <SubHeading>5.3 Temporal Consistency</SubHeading>
+          <SubHeading>7.3 Temporal Consistency</SubHeading>
           <p className="text-sm text-slate-600 mb-3 leading-relaxed">
             Consecutive readings from the same source are checked for rate-of-change anomalies.
             A parameter change exceeding 3 standard deviations from the historical mean for that site
             triggers a suspect flag and manual review queue entry.
           </p>
 
-          <SubHeading>5.4 QA Pass Rate</SubHeading>
+          <SubHeading>7.4 QA Pass Rate</SubHeading>
           <p className="text-sm text-slate-600 mb-3 leading-relaxed">
             Across all data ingested by PIN, approximately <span className="font-semibold text-slate-800">97.3%</span> of
             records pass all validation checks without flagging. The remaining 2.7% are distributed as:
@@ -511,7 +624,7 @@ export default function DataProvenancePage() {
             <li>0.3% — Temporal consistency flags</li>
           </ul>
 
-          <SubHeading>5.5 Conflict Handling</SubHeading>
+          <SubHeading>7.5 Conflict Handling</SubHeading>
           <p className="text-sm text-slate-600 mb-3 leading-relaxed">
             When data conflicts cannot be automatically resolved, PIN follows a strict priority hierarchy:
           </p>
@@ -522,60 +635,72 @@ export default function DataProvenancePage() {
             <li>When all else is equal, values are averaged and confidence is reduced</li>
           </ol>
 
-          <SubHeading>5.6 Missing Data Policy</SubHeading>
+          <SubHeading>7.6 Missing Data Policy</SubHeading>
           <p className="text-sm text-slate-600 mb-3 leading-relaxed">
             PIN never interpolates or estimates missing parameter values. When data is unavailable:
           </p>
           <ul className="text-sm text-slate-600 space-y-1.5 mb-4 ml-4 list-disc">
             <li>The parameter displays &quot;—&quot; with an &quot;Unassessed&quot; label</li>
-            <li>The parameter is excluded from grade calculations and its weight is redistributed</li>
+            <li>The parameter is excluded from grade calculations and its weight is redistributed among available parameters</li>
             <li>Monitoring Coverage and Data Freshness indices reflect the gap, reducing the PIN Water Score</li>
             <li>If fewer than 3 key parameters have data, the waterbody is shown as &quot;Insufficient Data&quot; rather than graded</li>
           </ul>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            <span className="font-medium text-slate-600">Trend Direction:</span> When a waterbody lacks sufficient data
+            for trend analysis (minimum 8 data points spanning 3+ years), Trend Direction defaults to 50 (neutral) rather
+            than being excluded. This prevents the absence of trend data from artificially inflating or deflating the
+            composite score through weight redistribution.
+          </p>
 
           {/* ═══════════════════════════════════════════════════════════════════
-              §6  METHODOLOGY & STANDARDS
+              §8  METHODOLOGY & STANDARDS
               ═══════════════════════════════════════════════════════════════════ */}
-          <SectionHeading id="methodology" number={6} title="Methodology &amp; Data Standards" />
+          <SectionHeading id="methodology" number={8} title="Methodology &amp; Data Standards" />
           <p className="text-sm text-slate-600 mb-4 leading-relaxed">
             PIN uses EPA-approved analytical methods for all parameter scoring. This section summarizes the key
             measurement standards and methodological approaches used across the platform.
           </p>
 
-          <SubHeading>6.1 Parameter Scoring Methods</SubHeading>
+          <SubHeading>8.1 Parameter Scoring Methods</SubHeading>
           <p className="text-sm text-slate-600 mb-3 leading-relaxed">
             Each water quality parameter is scored by comparing measured values against EPA criteria thresholds
             for the designated use of the waterbody (e.g., aquatic life, recreation, drinking water supply).
           </p>
           <Table
-            headers={['Parameter', 'EPA Method', 'Scoring Approach', 'Threshold Source']}
+            headers={['Parameter', 'EPA Method', 'Threshold Source', 'Scoring Approach']}
             rows={[
-              ['Dissolved Oxygen', 'Winkler / Membrane Electrode', 'Below 5 mg/L triggers impairment; graded linearly 0–12 mg/L', 'State WQS'],
-              ['pH', 'Electrometric (SM 4500-H+)', 'Acceptable range 6.5–9.0 SU; outside range reduces score', 'EPA Gold Book'],
-              ['E. coli', 'SM 9223B / EPA 1603', 'Geometric mean vs. 126 CFU/100mL (recreation)', 'EPA 2012 RWQC'],
-              ['Total Nitrogen', 'EPA 353.2 / SM 4500-NO3', 'Scored against ecoregion reference conditions', 'EPA Nutrient Criteria'],
-              ['Total Phosphorus', 'EPA 365.1 / SM 4500-P', 'Scored against ecoregion reference conditions', 'EPA Nutrient Criteria'],
-              ['Turbidity', 'EPA 180.1 / SM 2130B', 'Graded against 25 NTU threshold for aquatic life', 'State WQS'],
-              ['Temperature', 'Thermometric / Continuous', 'Species-specific thermal criteria', 'State WQS'],
-              ['TSS', 'EPA 160.2', 'Scored against 25–80 mg/L depending on waterbody type', 'State WQS'],
+              ['Dissolved Oxygen', 'Winkler / Membrane Electrode', 'State WQS', 'Below 5 mg/L triggers impairment; graded linearly 0–12 mg/L'],
+              ['pH', 'Electrometric (SM 4500-H+)', 'EPA Gold Book', 'Acceptable range 6.5–9.0 SU; outside range reduces score'],
+              ['E. coli', 'SM 9223B / EPA 1603', 'EPA 2012 RWQC', 'Geometric mean vs. 126 CFU/100mL (recreation)'],
+              ['Total Nitrogen', 'EPA 353.2 / SM 4500-NO3', 'EPA Nutrient Criteria', 'Scored against ecoregion reference conditions'],
+              ['Total Phosphorus', 'EPA 365.1 / SM 4500-P', 'EPA Nutrient Criteria', 'Scored against ecoregion reference conditions'],
+              ['Turbidity', 'EPA 180.1 / SM 2130B', 'State WQS', 'Graded against 25 NTU threshold for aquatic life'],
+              ['Temperature', 'Thermometric / Continuous', 'State WQS', 'Species-specific thermal criteria'],
+              ['TSS', 'EPA 160.2', 'State WQS', 'Scored against 25–80 mg/L depending on waterbody type'],
             ]}
           />
 
-          <SubHeading>6.2 Trend Analysis</SubHeading>
+          <SubHeading>8.2 Trend Analysis</SubHeading>
           <p className="text-sm text-slate-600 mb-3 leading-relaxed">
             Trends are computed using the non-parametric Mann-Kendall test with Theil-Sen slope estimation.
             A minimum of 8 data points spanning at least 3 years is required to report a trend. Results are
             classified as improving, stable, or degrading based on the direction and statistical significance (p &lt; 0.05).
           </p>
-
-          <SubHeading>6.3 Spatial Aggregation</SubHeading>
-          <p className="text-sm text-slate-600 mb-3 leading-relaxed">
-            PIN uses a 0.1° grid (~11 km resolution) for spatial indexing. Waterbody-level scores are aggregated
-            to HUC-8 watershed level using area-weighted averaging. State-level scores use the median of constituent
-            HUC-8 scores to reduce the influence of outliers.
+          <p className="text-xs text-slate-500 leading-relaxed">
+            When insufficient data exists for trend calculation, see Section 7.6 for default handling.
           </p>
 
-          <SubHeading>6.4 Confidence Scoring</SubHeading>
+          <SubHeading>8.3 Spatial Aggregation</SubHeading>
+          <p className="text-sm text-slate-600 mb-3 leading-relaxed">
+            PIN uses a 0.1° grid (~11 km resolution) for spatial indexing. Aggregation methods differ by scale
+            to balance accuracy with robustness:
+          </p>
+          <ul className="text-sm text-slate-600 space-y-1.5 mb-4 ml-4 list-disc">
+            <li><span className="font-medium text-slate-700">Waterbody to HUC-8:</span> Area-weighted averaging. Larger waterbodies contribute proportionally more to the watershed score, reflecting their greater hydrological influence.</li>
+            <li><span className="font-medium text-slate-700">HUC-8 to State:</span> Median of constituent HUC-8 scores. Median is used at the state scale (rather than area-weighted average) because state-level reporting is more susceptible to extreme outliers from very large or very small watersheds.</li>
+          </ul>
+
+          <SubHeading>8.4 Confidence Scoring</SubHeading>
           <p className="text-sm text-slate-600 mb-3 leading-relaxed">
             Each index receives a confidence score (0–100) based on three factors:
           </p>
@@ -589,9 +714,9 @@ export default function DataProvenancePage() {
           />
 
           {/* ═══════════════════════════════════════════════════════════════════
-              §7  DISCLAIMER AND LIMITATIONS
+              §9  DISCLAIMER AND LIMITATIONS
               ═══════════════════════════════════════════════════════════════════ */}
-          <SectionHeading id="disclaimer" number={7} title="Disclaimer &amp; Limitations" />
+          <SectionHeading id="disclaimer" number={9} title="Disclaimer &amp; Limitations" />
 
           <div className="rounded-lg border border-amber-200 bg-amber-50/40 p-4 mb-4">
             <p className="text-xs text-slate-700 leading-relaxed font-medium mb-2">Standard Disclaimer</p>
@@ -604,7 +729,7 @@ export default function DataProvenancePage() {
             </p>
           </div>
 
-          <SubHeading>Additional Limitations</SubHeading>
+          <SubHeading>Limitations</SubHeading>
           <ul className="text-sm text-slate-600 space-y-2 mb-4 ml-4 list-disc">
             <li>
               <span className="font-medium text-slate-700">Spatial resolution:</span> PIN uses a 0.1° grid (~11 km)
@@ -624,7 +749,8 @@ export default function DataProvenancePage() {
             <li>
               <span className="font-medium text-slate-700">Index weights:</span> PIN Water Score weights are calibrated
               for general watershed health assessment. Specific regulatory contexts (e.g., MS4 permit compliance,
-              TMDL target attainment) may require different weighting schemes.
+              TMDL target attainment) may require different weighting schemes. Future versions may support
+              context-specific weight profiles.
             </li>
             <li>
               <span className="font-medium text-slate-700">No primary data collection:</span> PIN does not perform
@@ -636,12 +762,17 @@ export default function DataProvenancePage() {
               Corrections and official designations flow through state and federal agency review processes.
               PIN cannot modify upstream data sources.
             </li>
+            <li>
+              <span className="font-medium text-slate-700">Trend data availability:</span> Many waterbodies,
+              particularly in rural and under-monitored regions, lack sufficient historical data to compute trend
+              analysis. In these cases, Trend Direction defaults to neutral (see Section 7.6).
+            </li>
           </ul>
 
           {/* ── Document footer ── */}
           <div className="mt-12 pt-6 border-t border-slate-200 text-[10px] text-slate-400 space-y-1">
-            <p>PIN Data Provenance &amp; Methodology · Version 1.0 · February 2026</p>
-            <p>For parameter-level measurement methods, calibration standards, and analytical procedures, see <button onClick={() => scrollTo('methodology')} className="text-blue-500 hover:text-blue-700 underline">Section 6: Methodology &amp; Data Standards</button> above.</p>
+            <p>PIN Data Confidence &amp; Methodology · Version 1.0 · February 2026</p>
+            <p>PEARL Intelligence Network (PIN) · pinwater.org</p>
             <p>&copy; {new Date().getFullYear()} Local Seafood Projects Inc. All rights reserved.</p>
             <p>Project Pearl&trade;, Pearl&trade;, and PIN&trade; are trademarks of Local Seafood Projects.</p>
           </div>
