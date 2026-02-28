@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getExposureData, getAllExposureData } from '@/lib/waterfrontExposure';
+import { getExposureDataLive, getAllExposureDataLive } from '@/lib/waterfrontExposureLive';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,11 +9,11 @@ export async function GET(request: NextRequest) {
   const all = searchParams.get('all');
 
   if (all === 'true') {
-    return NextResponse.json(getAllExposureData());
+    return NextResponse.json(getAllExposureDataLive());
   }
 
   if (state) {
-    const data = getExposureData(state);
+    const data = getExposureDataLive(state);
     if (data.medianHomeValue === 0) {
       return NextResponse.json({ error: `Unknown state: ${state}` }, { status: 404 });
     }
