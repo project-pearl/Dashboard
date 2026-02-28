@@ -25,18 +25,18 @@ const ROLE_PRIMARY_ROUTE: Record<UserRole, string> = {
 // ─── Allowed route prefixes per role ─────────────────────────────────────────
 
 const ROLE_ALLOWED_ROUTES: Record<UserRole, string[]> = {
-  Federal:    ['/dashboard/federal'],
-  State:      ['/dashboard/state'],
-  MS4:        ['/dashboard/ms4'],
-  Corporate:  ['/dashboard/esg'],
-  Utility:    ['/dashboard/utility', '/dashboard/infrastructure'],
-  Agriculture:['/dashboard/infrastructure'],
-  Lab:        ['/dashboard/aqua-lo'],
-  K12:        ['/dashboard/k12'],
-  College:    ['/dashboard/university'],
-  Researcher: ['/dashboard/university'],
-  NGO:        ['/dashboard/ngo'],
-  Temp:       ['/dashboard/k12'],
+  Federal:    ['/dashboard/federal', '/dashboard/site-intelligence'],
+  State:      ['/dashboard/state', '/dashboard/site-intelligence'],
+  MS4:        ['/dashboard/ms4', '/dashboard/site-intelligence'],
+  Corporate:  ['/dashboard/esg', '/dashboard/site-intelligence'],
+  Utility:    ['/dashboard/utility', '/dashboard/infrastructure', '/dashboard/site-intelligence'],
+  Agriculture:['/dashboard/infrastructure', '/dashboard/site-intelligence'],
+  Lab:        ['/dashboard/aqua-lo', '/dashboard/site-intelligence'],
+  K12:        ['/dashboard/k12', '/dashboard/site-intelligence'],
+  College:    ['/dashboard/university', '/dashboard/site-intelligence'],
+  Researcher: ['/dashboard/university', '/dashboard/site-intelligence'],
+  NGO:        ['/dashboard/ngo', '/dashboard/site-intelligence'],
+  Temp:       ['/dashboard/k12', '/dashboard/site-intelligence'],
   Pearl:      [], // special-cased: admin sees everything
 };
 

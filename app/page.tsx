@@ -1180,6 +1180,7 @@ export default function Home() {
     {userRole === 'MS4' && !showNationalView && (
         <MS4ManagementCenter
           stateAbbr={userState}
+          ms4Jurisdiction={(user as any)?.ms4Jurisdiction}
           onSelectRegion={(regionId) => {
             setSelectedRegionId(regionId);
             setUserRegion(regionId);

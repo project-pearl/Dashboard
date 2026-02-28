@@ -46,6 +46,26 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'permits',        label: 'Permits & Enforcement' },
     { id: 'funding',        label: 'Funding & Grants' },
   ],
+  // ── MS4 / Municipal Stormwater (17 items) ──────────────────────────────────
+  '/dashboard/ms4': [
+    { id: 'overview',          label: 'Overview' },
+    { id: 'briefing',          label: 'AI Briefing' },
+    { id: 'trends',            label: 'Trends & Projections' },
+    { id: 'policy',            label: 'Policy Tracker' },
+    { id: 'compliance',        label: 'Compliance' },
+    { id: 'water-quality',     label: 'Water Quality' },
+    { id: 'public-health',     label: 'Public Health & Contaminants' },
+    { id: 'receiving-waters',  label: 'Receiving Waters' },
+    { id: 'stormwater-bmps',   label: 'Stormwater BMPs' },
+    { id: 'infrastructure',    label: 'Infrastructure' },
+    { id: 'monitoring',        label: 'Monitoring' },
+    { id: 'disaster',          label: 'Disaster & Emergency' },
+    { id: 'tmdl-compliance',   label: 'TMDL Compliance' },
+    { id: 'scorecard',         label: 'Scorecard' },
+    { id: 'reports',           label: 'Reports' },
+    { id: 'mcm-manager',       label: 'MCM Manager' },
+    { id: 'funding',           label: 'Funding & Grants' },
+  ],
   // ── Municipal Utility (18 items) ───────────────────────────────────────────
   '/dashboard/utility': [
     { id: 'overview',           label: 'Overview' },
@@ -152,6 +172,15 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'drinking-water-safety',  label: 'Drinking Water Safety' },
     { id: 'reports',                label: 'Reports' },
     { id: 'funding',                label: 'Funding & Grants' },
+  ],
+  // ── Site Intelligence Dashboard (6 items) ──────────────────────────────────
+  '/dashboard/site-intelligence': [
+    { id: 'overview',       label: 'Dashboard' },
+    { id: 'environment',    label: 'Environmental Profile' },
+    { id: 'species',        label: 'Species & Habitat' },
+    { id: 'contamination',  label: 'Contamination' },
+    { id: 'regulatory',     label: 'Regulatory Context' },
+    { id: 'risk',           label: 'Risk Summary' },
   ],
   // ── Aqua-LO Laboratory (5 items) ────────────────────────────────────────────
   '/dashboard/aqua-lo': [

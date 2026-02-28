@@ -18,7 +18,7 @@ export interface SectionDefinition {
 }
 
 export type CCKey = 'K12' | 'State' | 'MS4' | 'Sustainability' | 'NGO' | 'University' | 'FMC' | 'NCC'
-  | 'Utility' | 'Infrastructure' | 'AQUA-LO';
+  | 'Utility' | 'Infrastructure' | 'AQUA-LO' | 'SiteIntel';
 
 // ─── Default Section Orders ────────────────────────────────────────────────
 
@@ -630,6 +630,15 @@ export const DEFAULT_SECTIONS = {
     { id: 'pub-history',        label: 'Publication History',     order: 4, visible: true, defaultExpanded: true },
     { id: 'pin-network',        label: 'PIN Network Status',      order: 5, visible: true, defaultExpanded: true },
     { id: 'disclaimer',         label: 'Platform Disclaimer',     order: 6, visible: true, defaultExpanded: true },
+  ],
+  SiteIntel: [
+    { id: 'location-context',   label: 'Location Context',            order: 0, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'env-profile',        label: 'Environmental Profile',       order: 1, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'species-habitat',    label: 'Species & Habitat',           order: 2, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'contamination',      label: 'Contamination & Enforcement', order: 3, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'regulatory',         label: 'Regulatory Context',          order: 4, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'water-score',        label: 'PIN Water Score',             order: 5, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'disclaimer',         label: 'Disclaimer',                  order: 6, visible: true, defaultExpanded: true },
   ],
 } satisfies Record<Exclude<CCKey, 'NCC'>, SectionDefinition[]> as Record<CCKey, SectionDefinition[]>;
 

@@ -147,6 +147,10 @@ const LENS_ICONS: Record<string, LucideIcon> = {
   'outdoor-classroom': TreePine,
   'student-monitoring': Beaker,
   'drinking-water-safety': GlassWater,
+  // ── Site Intelligence ─────────────────────────────────────────────────────
+  environment: TreePine,
+  species: Leaf,
+  risk: AlertTriangle,
   // ── Aqua-Lo ───────────────────────────────────────────────────────────────
   push: Network,
   qaqc: ClipboardList,
@@ -178,6 +182,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Federal', href: '/dashboard/federal', icon: Landmark, accent: 'text-blue-700', accentBg: 'bg-blue-50 border-blue-200' },
       { label: 'State', href: '/dashboard/state/MD', icon: Map, accent: 'text-cyan-700', accentBg: 'bg-cyan-50 border-cyan-200' },
+      { label: 'MS4', href: '/dashboard/ms4/default', icon: CloudRain, accent: 'text-amber-700', accentBg: 'bg-amber-50 border-amber-200' },
     ],
   },
   {
@@ -185,6 +190,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Sustainability', href: '/dashboard/esg', icon: Factory, accent: 'text-emerald-700', accentBg: 'bg-emerald-50 border-emerald-200' },
       { label: 'Site & Property', href: '/dashboard/infrastructure', icon: MapPin, accent: 'text-slate-700', accentBg: 'bg-slate-100 border-slate-300' },
+      { label: 'Site Intelligence', href: '/dashboard/site-intelligence', icon: Search, accent: 'text-amber-700', accentBg: 'bg-amber-50 border-amber-200' },
     ],
   },
   {
