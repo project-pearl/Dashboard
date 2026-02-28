@@ -2621,7 +2621,7 @@ export function FederalManagementCenter(props: Props) {
           <div className={`space-y-10 ${isEditMode ? 'pl-12' : ''}`}>
 
         {/* Compact impairment summary for lenses where impairmentprofile was removed */}
-        {(viewLens === 'overview' || viewLens === 'compliance' || viewLens === 'monitoring') && !isEditMode && (
+        {(viewLens === 'compliance' || viewLens === 'monitoring') && !isEditMode && (
           <div className="flex items-center gap-2 text-xs text-slate-500 px-4 py-2 bg-slate-50 rounded-lg border border-slate-200">
             <span>National Impairment: {attainsAggregation.totalImpaired?.toLocaleString() ?? '69K'} waterbodies, {attainsAggregation.totalAssessed > 0 ? Math.round((attainsAggregation.totalImpaired / attainsAggregation.totalAssessed) * 100) : 69}% impaired</span>
             <button onClick={() => setViewLens('water-quality')} className="text-blue-600 hover:underline ml-1">
@@ -3094,7 +3094,7 @@ export function FederalManagementCenter(props: Props) {
         {viewLens !== 'monitoring' && (() => {
           const wbRow = stateRollup.find(r => r.abbr === selectedState);
           const wbRegion = getEpaRegionForState(selectedState);
-          const showNationalProfile = viewLens === 'overview' && attainsAggregation.totalAssessed > 0;
+          const showNationalProfile = false;
           return (
             <div className={showNationalProfile ? "grid grid-cols-1 lg:grid-cols-2 gap-6 items-start" : undefined}>
             <Card>
