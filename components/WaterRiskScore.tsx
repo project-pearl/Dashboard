@@ -458,11 +458,11 @@ export default function WaterRiskScore() {
                 Export PDF
               </button>
               <a
-                href={`/dashboard/infrastructure?lens=overview&lat=${data.location.lat}&lng=${data.location.lng}`}
+                href={`/dashboard/infrastructure?lens=overview`}
                 className="inline-flex items-center gap-2 px-5 py-2.5 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors"
               >
                 <ExternalLink className="w-4 h-4" />
-                View Full Location Report
+                Open Full Site Intelligence Dashboard
               </a>
             </div>
 
