@@ -28,6 +28,18 @@ export const QUOTES: Record<string, MissionQuote[]> = {
     { text: "Environmental compliance is the floor, not the ceiling.", attribution: "EPA" },
     { text: "Nature is not a place to visit. It is home.", attribution: "Gary Snyder" },
   ],
+  biotech: [
+    { text: "Water purity is the foundation of pharmaceutical quality.", attribution: "FDA cGMP Guidance" },
+    { text: "The dose makes the poison.", attribution: "Paracelsus" },
+    { text: "What gets measured gets managed.", attribution: "Peter Drucker" },
+    { text: "Environmental compliance is the floor, not the ceiling.", attribution: "EPA" },
+    { text: "Good manufacturing practice is not an option — it is a requirement.", attribution: "ICH Q7" },
+    { text: "Water is the most used raw material in the pharmaceutical industry.", attribution: "USP" },
+    { text: "The cost of prevention is always less than the cost of a recall.", attribution: "FDA" },
+    { text: "Pharmaceuticals in waterways are the next frontier of environmental regulation.", attribution: "OECD" },
+    { text: "Every molecule we release becomes part of someone's drinking water.", attribution: "ACS Green Chemistry" },
+    { text: "Quality must be built into a drug product, not tested into it.", attribution: "FDA Process Validation Guidance" },
+  ],
   public: [
     { text: "Lack of water quality data is a form of environmental injustice.", attribution: "Eos, American Geophysical Union" },
     { text: "We forget that the water cycle and the life cycle are one.", attribution: "Jacques Cousteau" },

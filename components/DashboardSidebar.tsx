@@ -187,14 +187,13 @@ interface NavGroup {
   items: NavItem[];
 }
 
-const NAV_GROUPS: NavGroup[] = [
+function buildNavGroups(stateCode: string): NavGroup[] { return [
   {
     title: 'Government',
     items: [
       { label: 'Federal', href: '/dashboard/federal', icon: Landmark, accent: 'text-blue-700', accentBg: 'bg-blue-50 border-blue-200' },
-      { label: 'State', href: '/dashboard/state/MD', icon: Map, accent: 'text-cyan-700', accentBg: 'bg-cyan-50 border-cyan-200' },
+      { label: 'State', href: `/dashboard/state/${stateCode}`, icon: Map, accent: 'text-cyan-700', accentBg: 'bg-cyan-50 border-cyan-200' },
       { label: 'Local', href: '/dashboard/local/default', icon: Building2, accent: 'text-purple-700', accentBg: 'bg-purple-50 border-purple-200' },
-      { label: 'MS4', href: '/dashboard/ms4/default', icon: CloudRain, accent: 'text-amber-700', accentBg: 'bg-amber-50 border-amber-200' },
     ],
   },
   {
@@ -230,7 +229,7 @@ const NAV_GROUPS: NavGroup[] = [
       { label: 'Data Provenance', href: '/tools/data-provenance', icon: FileCheck, accent: 'text-cyan-700', accentBg: 'bg-cyan-50 border-cyan-200' },
     ],
   },
-];
+]; }
 
 export function DashboardSidebar() {
   const pathname = usePathname();
@@ -243,6 +242,9 @@ export function DashboardSidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedRoles, setExpandedRoles] = useState<Set<string>>(new Set());
 
+  // Build nav groups with dynamic state code for the State link
+  const NAV_GROUPS = useMemo(() => buildNavGroups(adminState), [adminState]);
+
   // Filter nav groups to only show links the user's role can access
   const filteredGroups = useMemo(() => {
     if (!user) return NAV_GROUPS;
@@ -252,7 +254,7 @@ export function DashboardSidebar() {
         items: group.items.filter((item) => canAccessRoute(user, item.href)),
       }))
       .filter((group) => group.items.length > 0);
-  }, [user]);
+  }, [user, NAV_GROUPS]);
 
   // Single-role detection: exactly 1 accessible role across all groups
   const allAccessibleItems = useMemo(() => filteredGroups.flatMap(g => g.items), [filteredGroups]);
@@ -262,7 +264,9 @@ export function DashboardSidebar() {
 
   const isActive = useCallback((href: string) => {
     if (href === '/dashboard/federal') return pathname === '/dashboard/federal';
-    return pathname.startsWith(href.replace('/default', '').replace('/MD', ''));
+    // Strip dynamic segments (/MD, /VA, /default, etc.) to get the base prefix
+    const base = href.replace(/\/[^/]+$/, '');
+    return pathname.startsWith(base);
   }, [pathname]);
 
   // Auto-expand the currently active role on mount and route change
