@@ -60,6 +60,42 @@ export function SDWISCompliancePanel({
   const [violPage, setViolPage] = useState(0);
   const VIOL_PAGE_SIZE = compactMode ? 10 : 25;
 
+  // ── Hooks must be called before any early returns (Rules of Hooks) ───
+  const sysNameMap = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const s of systems) if (s.pwsid && s.name) m.set(s.pwsid, s.name);
+    return m;
+  }, [systems]);
+
+  const sysPopMap = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const s of systems) if (s.pwsid) m.set(s.pwsid, s.population || 0);
+    return m;
+  }, [systems]);
+
+  const sortedViolations = useMemo(() => {
+    let filtered = [...violations];
+    if (filterMajor) filtered = filtered.filter(v => v.isMajor);
+    if (filterHealthBased) filtered = filtered.filter(v => v.isHealthBased);
+
+    const dir = sortDir === 'asc' ? 1 : -1;
+    filtered.sort((a, b) => {
+      switch (sortCol) {
+        case 'pwsid': return dir * (a.pwsid || '').localeCompare(b.pwsid || '');
+        case 'contaminant': return dir * (a.contaminant || a.code || '').localeCompare(b.contaminant || b.code || '');
+        case 'rule': return dir * (a.rule || '').localeCompare(b.rule || '');
+        case 'date': return dir * (a.compliancePeriod || '').localeCompare(b.compliancePeriod || '');
+        case 'status': {
+          const sA = a.isMajor ? 2 : a.isHealthBased ? 1 : 0;
+          const sB = b.isMajor ? 2 : b.isHealthBased ? 1 : 0;
+          return dir * (sA - sB);
+        }
+        default: return 0;
+      }
+    });
+    return filtered;
+  }, [violations, filterMajor, filterHealthBased, sortCol, sortDir]);
+
   if (isLoading) {
     return (
       <div className={`bg-white border border-slate-200 rounded-xl p-6 ${className}`}>
@@ -132,43 +168,6 @@ export function SDWISCompliancePanel({
       status: summary.enforcementActions === 0 ? 'good' : 'warning',
     },
   ];
-
-  // ── System name lookup ────────────────────────────────────────────────
-  const sysNameMap = useMemo(() => {
-    const m = new Map<string, string>();
-    for (const s of systems) if (s.pwsid && s.name) m.set(s.pwsid, s.name);
-    return m;
-  }, [systems]);
-
-  const sysPopMap = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const s of systems) if (s.pwsid) m.set(s.pwsid, s.population || 0);
-    return m;
-  }, [systems]);
-
-  // ── Filtered & sorted violations ───────────────────────────────────────
-  const sortedViolations = useMemo(() => {
-    let filtered = [...violations];
-    if (filterMajor) filtered = filtered.filter(v => v.isMajor);
-    if (filterHealthBased) filtered = filtered.filter(v => v.isHealthBased);
-
-    const dir = sortDir === 'asc' ? 1 : -1;
-    filtered.sort((a, b) => {
-      switch (sortCol) {
-        case 'pwsid': return dir * (a.pwsid || '').localeCompare(b.pwsid || '');
-        case 'contaminant': return dir * (a.contaminant || a.code || '').localeCompare(b.contaminant || b.code || '');
-        case 'rule': return dir * (a.rule || '').localeCompare(b.rule || '');
-        case 'date': return dir * (a.compliancePeriod || '').localeCompare(b.compliancePeriod || '');
-        case 'status': {
-          const sA = a.isMajor ? 2 : a.isHealthBased ? 1 : 0;
-          const sB = b.isMajor ? 2 : b.isHealthBased ? 1 : 0;
-          return dir * (sA - sB);
-        }
-        default: return 0;
-      }
-    });
-    return filtered;
-  }, [violations, filterMajor, filterHealthBased, sortCol, sortDir]);
 
   const violPageCount = Math.max(1, Math.ceil(sortedViolations.length / VIOL_PAGE_SIZE));
   const pagedViolations = sortedViolations.slice(violPage * VIOL_PAGE_SIZE, (violPage + 1) * VIOL_PAGE_SIZE);
