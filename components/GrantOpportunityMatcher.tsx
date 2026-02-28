@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, ExternalLink, Mail } from 'lucide-react';
-import { getStateGrants, STATE_AUTHORITIES } from '@/lib/stateWaterData';
+import { getStateGrants, getLiveGrantOpportunities, STATE_AUTHORITIES } from '@/lib/stateWaterData';
 import type { GrantOpportunity } from '@/lib/stateWaterData';
 
 interface Grant {
@@ -454,10 +454,13 @@ function buildGrantsForRole(stateAbbr: string, role: string): Grant[] {
     roleGrants.push(...MD_SPECIFIC_GRANTS);
   }
 
-  // Merge: role grants first, then state grants, dedup by name
+  // Add live Grants.gov opportunities (fresher data takes priority)
+  const liveGrants = getLiveGrantOpportunities().map(mapStateGrant);
+
+  // Merge: live grants first (freshest), then role grants, then state grants — dedup by name
   const seen = new Set<string>();
   const merged: Grant[] = [];
-  for (const g of [...roleGrants, ...stateGrants]) {
+  for (const g of [...liveGrants, ...roleGrants, ...stateGrants]) {
     const key = g.name.toLowerCase().replace(/[^a-z0-9]/g, '');
     if (!seen.has(key)) {
       seen.add(key);

@@ -32,6 +32,9 @@ import { getNwpsCacheStatus, ensureWarmed as warmNwps } from '@/lib/nwpsCache';
 import { getCoopsCacheStatus, ensureWarmed as warmCoops } from '@/lib/coopsCache';
 import { getSnotelCacheStatus, ensureWarmed as warmSnotel } from '@/lib/snotelCache';
 import { getTriCacheStatus, ensureWarmed as warmTri } from '@/lib/triCache';
+import { getUSAsCacheStatus, ensureWarmed as warmUSAs } from '@/lib/usaSpendingCache';
+import { getGrantsGovCacheStatus, ensureWarmed as warmGrantsGov } from '@/lib/grantsGovCache';
+import { getSamCacheStatus, ensureWarmed as warmSam } from '@/lib/samGovCache';
 import { getHealthSummary, ensureWarmed as warmSentinelHealth } from '@/lib/sentinel/sentinelHealth';
 import { getQueueStats, ensureWarmed as warmSentinelQueue } from '@/lib/sentinel/eventQueue';
 import { getScoredHucsSummary, ensureWarmed as warmSentinelScores } from '@/lib/sentinel/scoringEngine';
@@ -51,7 +54,7 @@ export async function GET() {
     [warmEcho, warmFrs, warmPfas, warmInsights, warmStateReports, warmBwb],
     [warmCdcNwss, warmNdbc, warmNasaCmr, warmNars, warmDataGov, warmUsace],
     [warmNwisIv, warmUsgsAlerts, warmNwsAlerts, warmNwps, warmCoops, warmSnotel],
-    [warmTri, warmSentinelHealth, warmSentinelQueue, warmSentinelScores],
+    [warmTri, warmUSAs, warmGrantsGov, warmSam, warmSentinelHealth, warmSentinelQueue, warmSentinelScores],
   ];
   for (const batch of warmBatches) {
     await Promise.allSettled(batch.map(fn => fn()));
@@ -83,6 +86,9 @@ export async function GET() {
   const coops = getCoopsCacheStatus();
   const snotel = getSnotelCacheStatus();
   const tri = getTriCacheStatus();
+  const usaSpending = getUSAsCacheStatus();
+  const grantsGov = getGrantsGovCacheStatus();
+  const sam = getSamCacheStatus();
 
   const caches = {
     wqp: {
@@ -192,6 +198,18 @@ export async function GET() {
     tri: {
       ...tri,
       ...staleness(tri.loaded ? (tri as any).built : null),
+    },
+    usaSpending: {
+      ...usaSpending,
+      ...staleness(usaSpending.loaded ? (usaSpending as any).built : null),
+    },
+    grantsGov: {
+      ...grantsGov,
+      ...staleness(grantsGov.loaded ? (grantsGov as any).built : null),
+    },
+    sam: {
+      ...sam,
+      ...staleness(sam.loaded ? (sam as any).built : null),
     },
   };
 

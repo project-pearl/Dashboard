@@ -13,6 +13,7 @@ const SECTIONS = [
   { id: 'pin-score', label: 'PIN Water Score' },
   { id: 'sources', label: 'Source Catalog' },
   { id: 'qa', label: 'Quality Assurance' },
+  { id: 'methodology', label: 'Methodology & Standards' },
   { id: 'disclaimer', label: 'Disclaimer & Limitations' },
 ] as const;
 
@@ -128,7 +129,7 @@ export default function DataProvenancePage() {
       {/* ── Fixed sidebar navigation (desktop) ── */}
       <nav className="hidden lg:block fixed left-0 top-0 w-56 h-screen bg-slate-50 border-r border-slate-200 p-5 pt-6 z-40 print:hidden">
         <div className="relative h-10 w-32 mb-4">
-          <Image src="/Pearl-Logo-alt.png" alt="PEARL" fill className="object-contain object-left" />
+          <Image src="/Pearl-Logo-alt.png" alt="PIN" fill className="object-contain object-left" />
         </div>
         <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-3">Data Provenance</div>
         <ul className="space-y-1">
@@ -144,11 +145,7 @@ export default function DataProvenancePage() {
             </li>
           ))}
         </ul>
-        <div className="mt-6 pt-4 border-t border-slate-200 space-y-2">
-          <Link href="/methodology" className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-700 transition-colors">
-            <ChevronRight size={10} />
-            Methodology &amp; Standards
-          </Link>
+        <div className="mt-6 pt-4 border-t border-slate-200">
           <Link href="/" className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 transition-colors">
             <ArrowLeft size={12} />
             Back to Dashboard
@@ -189,15 +186,30 @@ export default function DataProvenancePage() {
           ))}
         </div>
 
+        {/* ── Hero Banner ── */}
+        <div className="bg-gradient-to-r from-slate-800 to-slate-700 rounded-xl mx-6 mt-6 px-8 py-8 print:hidden">
+          <div className="flex items-center gap-3 mb-2">
+            <Link href="/" className="flex items-center gap-1.5 text-sm text-slate-300 hover:text-white transition-colors">
+              <ArrowLeft size={14} />
+              Back to Dashboard
+            </Link>
+          </div>
+          <h1 className="text-2xl font-bold text-white mb-2">Data Provenance &amp; Methodology</h1>
+          <p className="text-sm text-slate-300 max-w-2xl leading-relaxed">
+            The canonical reference for how PIN sources, scores, and validates environmental data.
+            Covers the data tier system, PIN Water Score composite methodology, source catalog, quality assurance, and measurement standards.
+          </p>
+        </div>
+
         <div ref={contentRef} className="max-w-4xl mx-auto px-6 py-8 print:px-0 print:max-w-none">
           {/* Title block */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">PIN Data Provenance &amp; Methodology</h1>
+            <h1 className="text-3xl font-bold text-slate-900 mb-2 print:block hidden">PIN Data Provenance &amp; Methodology</h1>
             <p className="text-sm text-slate-500 leading-relaxed max-w-2xl">
               This document is the canonical reference for how PIN sources, scores, and validates environmental data.
               It describes the data tier system, the PIN Water Score composite methodology, all integrated data sources,
-              and quality assurance processes. For parameter-level measurement methods and analytical procedures, see the
-              companion <Link href="/methodology" className="text-blue-600 hover:text-blue-800 underline">Methodology &amp; Data Standards</Link> page.
+              and quality assurance processes. The <button onClick={() => scrollTo('methodology')} className="text-blue-600 hover:text-blue-800 underline">Methodology &amp; Standards</button> section
+              covers parameter-level measurement methods and analytical procedures.
             </p>
             <div className="mt-3 flex flex-wrap gap-2 text-[10px] text-slate-400">
               <span>Version 1.0</span>
@@ -421,6 +433,8 @@ export default function DataProvenancePage() {
               ['NWIS-GW', 'USGS', 'Groundwater levels and aquifer monitoring', 'Daily', 'T1', 'Infrastructure Failure'],
               ['NetDMR', 'EPA', 'Electronic Discharge Monitoring Reports', 'Monthly', 'T1', 'Permit Risk Exposure, PEARL Load Velocity'],
               ['NPDES Permits', 'EPA / States', 'Active permit records, effluent limits, compliance schedules', 'Monthly', 'T1', 'Permit Risk Exposure, Governance Response'],
+              ['Grants.gov', 'Federal / Multi-Agency', 'Open environmental grant opportunities (posted + forecasted)', 'Daily cache', 'T1', 'Grant Matching, Restoration Planning'],
+              ['SAM.gov', 'GSA', 'Registered water-infrastructure contractors and entities by state', 'Weekly cache', 'T1', 'Contractor Discovery, Restoration Planning'],
             ]}
           />
 
@@ -503,9 +517,64 @@ export default function DataProvenancePage() {
           </ul>
 
           {/* ═══════════════════════════════════════════════════════════════════
-              §6  DISCLAIMER AND LIMITATIONS
+              §6  METHODOLOGY & STANDARDS
               ═══════════════════════════════════════════════════════════════════ */}
-          <SectionHeading id="disclaimer" number={6} title="Disclaimer &amp; Limitations" />
+          <SectionHeading id="methodology" number={6} title="Methodology &amp; Data Standards" />
+          <p className="text-sm text-slate-600 mb-4 leading-relaxed">
+            PIN uses EPA-approved analytical methods for all parameter scoring. This section summarizes the key
+            measurement standards and methodological approaches used across the platform.
+          </p>
+
+          <SubHeading>6.1 Parameter Scoring Methods</SubHeading>
+          <p className="text-sm text-slate-600 mb-3 leading-relaxed">
+            Each water quality parameter is scored by comparing measured values against EPA criteria thresholds
+            for the designated use of the waterbody (e.g., aquatic life, recreation, drinking water supply).
+          </p>
+          <Table
+            headers={['Parameter', 'EPA Method', 'Scoring Approach', 'Threshold Source']}
+            rows={[
+              ['Dissolved Oxygen', 'Winkler / Membrane Electrode', 'Below 5 mg/L triggers impairment; graded linearly 0–12 mg/L', 'State WQS'],
+              ['pH', 'Electrometric (SM 4500-H+)', 'Acceptable range 6.5–9.0 SU; outside range reduces score', 'EPA Gold Book'],
+              ['E. coli', 'SM 9223B / EPA 1603', 'Geometric mean vs. 126 CFU/100mL (recreation)', 'EPA 2012 RWQC'],
+              ['Total Nitrogen', 'EPA 353.2 / SM 4500-NO3', 'Scored against ecoregion reference conditions', 'EPA Nutrient Criteria'],
+              ['Total Phosphorus', 'EPA 365.1 / SM 4500-P', 'Scored against ecoregion reference conditions', 'EPA Nutrient Criteria'],
+              ['Turbidity', 'EPA 180.1 / SM 2130B', 'Graded against 25 NTU threshold for aquatic life', 'State WQS'],
+              ['Temperature', 'Thermometric / Continuous', 'Species-specific thermal criteria', 'State WQS'],
+              ['TSS', 'EPA 160.2', 'Scored against 25–80 mg/L depending on waterbody type', 'State WQS'],
+            ]}
+          />
+
+          <SubHeading>6.2 Trend Analysis</SubHeading>
+          <p className="text-sm text-slate-600 mb-3 leading-relaxed">
+            Trends are computed using the non-parametric Mann-Kendall test with Theil-Sen slope estimation.
+            A minimum of 8 data points spanning at least 3 years is required to report a trend. Results are
+            classified as improving, stable, or degrading based on the direction and statistical significance (p &lt; 0.05).
+          </p>
+
+          <SubHeading>6.3 Spatial Aggregation</SubHeading>
+          <p className="text-sm text-slate-600 mb-3 leading-relaxed">
+            PIN uses a 0.1° grid (~11 km resolution) for spatial indexing. Waterbody-level scores are aggregated
+            to HUC-8 watershed level using area-weighted averaging. State-level scores use the median of constituent
+            HUC-8 scores to reduce the influence of outliers.
+          </p>
+
+          <SubHeading>6.4 Confidence Scoring</SubHeading>
+          <p className="text-sm text-slate-600 mb-3 leading-relaxed">
+            Each index receives a confidence score (0–100) based on three factors:
+          </p>
+          <Table
+            headers={['Factor', 'Weight', 'Description']}
+            rows={[
+              ['Data Density', '40%', 'Number of monitoring stations and data points per watershed area'],
+              ['Recency', '35%', 'Fraction of data less than 2 years old (decision-grade)'],
+              ['Source Diversity', '25%', 'Number of independent data sources contributing to the index'],
+            ]}
+          />
+
+          {/* ═══════════════════════════════════════════════════════════════════
+              §7  DISCLAIMER AND LIMITATIONS
+              ═══════════════════════════════════════════════════════════════════ */}
+          <SectionHeading id="disclaimer" number={7} title="Disclaimer &amp; Limitations" />
 
           <div className="rounded-lg border border-amber-200 bg-amber-50/40 p-4 mb-4">
             <p className="text-xs text-slate-700 leading-relaxed font-medium mb-2">Standard Disclaimer</p>
@@ -555,7 +624,7 @@ export default function DataProvenancePage() {
           {/* ── Document footer ── */}
           <div className="mt-12 pt-6 border-t border-slate-200 text-[10px] text-slate-400 space-y-1">
             <p>PIN Data Provenance &amp; Methodology · Version 1.0 · February 2026</p>
-            <p>For parameter-level measurement methods, calibration standards, and analytical procedures, see <Link href="/methodology" className="text-blue-500 hover:text-blue-700 underline">Methodology &amp; Data Standards</Link>.</p>
+            <p>For parameter-level measurement methods, calibration standards, and analytical procedures, see <button onClick={() => scrollTo('methodology')} className="text-blue-500 hover:text-blue-700 underline">Section 6: Methodology &amp; Data Standards</button> above.</p>
             <p>&copy; {new Date().getFullYear()} Local Seafood Projects Inc. All rights reserved.</p>
             <p>Project Pearl&trade;, Pearl&trade;, and PIN&trade; are trademarks of Local Seafood Projects.</p>
           </div>

@@ -589,6 +589,7 @@ export interface GrantOpportunity {
   deadline?: string;
   description: string;
   url: string;
+  grantsGovId?: string;
 }
 
 
@@ -924,6 +925,34 @@ export function getStateGrants(stateAbbr: string): GrantOpportunity[] {
     const fitOrder = { high: 0, medium: 1, low: 2 };
     return fitOrder[a.fit] - fitOrder[b.fit];
   });
+}
+
+/** Returns live Grants.gov opportunities mapped to GrantOpportunity interface */
+export function getLiveGrantOpportunities(): GrantOpportunity[] {
+  // Lazy import to avoid circular deps — grantsGovCache is server-only
+  try {
+    const { getGrantsGovOpen } = require('./grantsGovCache');
+    const opps = getGrantsGovOpen();
+    return opps.map((o: any): GrantOpportunity => {
+      const floor = o.awardFloor || 0;
+      const ceiling = o.awardCeiling || 0;
+      const fmtDollars = (n: number) => n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(1)}M` : n >= 1_000 ? `$${(n / 1_000).toFixed(0)}K` : `$${n}`;
+      const amount = ceiling > 0 ? (floor > 0 ? `${fmtDollars(floor)}–${fmtDollars(ceiling)}` : `Up to ${fmtDollars(ceiling)}`) : 'See listing';
+      return {
+        name: o.title,
+        source: o.agencyCode || o.agency || 'Grants.gov',
+        amount,
+        maxAmount: Math.round(ceiling / 1000) || 0,
+        fit: 'medium' as const,
+        deadline: o.closeDate || undefined,
+        description: o.description || '',
+        url: o.url,
+        grantsGovId: o.opportunityId,
+      };
+    });
+  } catch {
+    return [];
+  }
 }
 
 

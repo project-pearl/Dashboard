@@ -126,6 +126,7 @@ const phases: Phase[] = [
       { name: "US Desalination", dataType: "Municipal desal plants, capacity", status: "new", loe: "2 hrs", records: "Data.gov" },
       { name: "NEWTS", dataType: "Brackish water treatment for energy", status: "new", loe: "2 hrs", records: "USGS/DOE" },
       { name: "Tribal WQP", dataType: "100+ tribal org submissions", status: "new", loe: "2 hrs", records: "WQP org filter" },
+      { name: "SAM.gov Entity API", dataType: "Registered water-infrastructure contractors per state", status: "new", loe: "3 hrs", records: "NAICS-filtered entities" },
     ],
   },
   {
