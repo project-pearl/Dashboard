@@ -17,7 +17,7 @@ const ROLE_META: Record<UserRole, { icon: typeof Shield; label: string; desc: st
   College:    { icon: GraduationCap,  label: 'College / University',  desc: 'Research data access & academic tools',                       tier: 'explorer' },
   Researcher: { icon: GraduationCap,  label: 'Researcher',            desc: 'Full data export, API access, citation tools',                tier: 'explorer' },
   NGO:        { icon: Users,          label: 'Non-Profit / NGO',      desc: 'Community reporting & advocacy tools',                        tier: 'explorer' },
-  MS4:        { icon: Building2,      label: 'MS4 Compliance',        desc: 'Jurisdiction-specific compliance & reporting',                 tier: 'operator' },
+  MS4:        { icon: Building2,      label: 'Municipal Utility',     desc: 'Jurisdiction-specific compliance & reporting',                 tier: 'operator' },
   State:      { icon: Shield,         label: 'State Regulator',       desc: 'Statewide water quality intelligence',                        tier: 'operator' },
   Federal:    { icon: Shield,         label: 'Federal Agency',        desc: 'National monitoring & Bay-wide analytics',                    tier: 'operator' },
   Corporate:  { icon: Building2,      label: 'Sustainability',        desc: 'Sustainability reporting & compliance dashboards',            tier: 'operator' },
@@ -305,11 +305,11 @@ export function SignupForm({ invitePayload, inviteToken, onSuccess, onSwitchToLo
                 </select>
               </div>
 
-              {/* Jurisdiction (for MS4 role) */}
+              {/* Jurisdiction (for Municipal Utility role) */}
               {(selectedRole === 'MS4' || invitePayload?.jurisdiction) && (
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1">
-                    MS4 Jurisdiction {isInvite ? '' : '(requested)'}
+                    Jurisdiction {isInvite ? '' : '(requested)'}
                   </label>
                   <select
                     value={jurisdiction}
@@ -345,7 +345,7 @@ export function SignupForm({ invitePayload, inviteToken, onSuccess, onSwitchToLo
                   <div>
                     <p className="text-sm font-medium text-amber-800">Account requires approval</p>
                     <p className="text-xs text-amber-700 mt-0.5">
-                      {selectedRole === 'MS4' ? 'MS4 compliance' : selectedRole} accounts need admin verification.
+                      {selectedRole === 'MS4' ? 'Municipal Utility' : selectedRole} accounts need admin verification.
                       You'll receive an email once your access is approved and your jurisdiction is bound.
                     </p>
                   </div>

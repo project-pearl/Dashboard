@@ -11,7 +11,7 @@ import { MOCK_ALERT_SUMMARY } from '@/ams/data/mock-alerts';
 const ROUTE_LABELS: Record<string, string> = {
   federal: 'Federal',
   state: 'State',
-  ms4: 'MS4',
+  ms4: 'Municipal Utility',
   esg: 'Sustainability',
   k12: 'K-12 Education',
   university: 'University Research',

@@ -37,7 +37,7 @@ function PasswordRequirements({ password, touched }: { password: string; touched
 }
 
 const ROLE_LABELS: Record<string, string> = {
-  MS4: 'MS4 Operator',
+  MS4: 'Municipal Utility',
   State: 'State Agency',
   Federal: 'Federal',
   Corporate: 'Sustainability',

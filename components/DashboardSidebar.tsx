@@ -179,7 +179,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Federal', href: '/dashboard/federal', icon: Landmark, accent: 'text-blue-700', accentBg: 'bg-blue-50 border-blue-200' },
       { label: 'State', href: '/dashboard/state/MD', icon: Map, accent: 'text-cyan-700', accentBg: 'bg-cyan-50 border-cyan-200' },
-      { label: 'MS4', href: '/dashboard/ms4/default', icon: CloudRain, accent: 'text-amber-700', accentBg: 'bg-amber-50 border-amber-200' },
+      { label: 'Municipal Utility', href: '/dashboard/ms4/default', icon: CloudRain, accent: 'text-amber-700', accentBg: 'bg-amber-50 border-amber-200' },
       { label: 'Municipal Utility', href: '/dashboard/utility/default', icon: Droplets, accent: 'text-sky-700', accentBg: 'bg-sky-50 border-sky-200' },
       { label: 'Infrastructure', href: '/dashboard/infrastructure', icon: Building2, accent: 'text-slate-700', accentBg: 'bg-slate-100 border-slate-300' },
     ],
@@ -215,6 +215,7 @@ const NAV_GROUPS: NavGroup[] = [
     title: 'Tools',
     items: [
       { label: 'Water Tools', href: '/tools/water-quality-lookup', icon: Search, accent: 'text-sky-700', accentBg: 'bg-sky-50 border-sky-200' },
+      { label: 'Data Provenance', href: '/tools/data-provenance', icon: FileCheck, accent: 'text-cyan-700', accentBg: 'bg-cyan-50 border-cyan-200' },
       { label: 'Data Export Hub', href: '/tools/data-export', icon: Download, accent: 'text-blue-700', accentBg: 'bg-blue-50 border-blue-200' },
       { label: 'Report Builder', href: '/tools/reports', icon: FileText, accent: 'text-slate-700', accentBg: 'bg-slate-100 border-slate-300' },
       { label: 'Templates', href: '/tools/templates', icon: ClipboardList, accent: 'text-amber-700', accentBg: 'bg-amber-50 border-amber-200' },

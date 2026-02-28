@@ -32,7 +32,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   ms4: {
     image: '/images/heroes/MS4.png',
     subtitle: 'PIN — PEARL Intelligence Network',
-    headline: 'Municipal Stormwater Compliance',
+    headline: 'Municipal Utility Operations',
     description:
       'Track BMP performance, monitor outfall discharge, and streamline MS4 permit reporting with real-time water quality data.',
     accentColor: 'text-amber-400',

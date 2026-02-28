@@ -79,7 +79,7 @@ const STAKEHOLDER_TRACKS = [
     icon: Building2,
     accent: 'text-cyan-400',
     accentBg: 'bg-cyan-400/10 border-cyan-400/20',
-    headline: 'MS4 compliance without the complexity',
+    headline: 'Municipal utility compliance without the complexity',
     points: [
       'Automated permit reporting for any state',
       'TMDL progress tracking with live BMP performance',
@@ -484,7 +484,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
             {[
               { icon: Landmark, name: 'Federal', desc: 'Federal-scale oversight across all 50 states', accent: 'bg-blue-50 border-blue-200 text-blue-700' },
               { icon: Shield, name: 'State', desc: 'Statewide ATTAINS dashboards and TMDL tracking', accent: 'bg-indigo-50 border-indigo-200 text-indigo-700' },
-              { icon: Building2, name: 'MS4', desc: 'Permit compliance, BMP performance, storm events', accent: 'bg-cyan-50 border-cyan-200 text-cyan-700' },
+              { icon: Building2, name: 'Municipal Utility', desc: 'Permit compliance, BMP performance, storm events', accent: 'bg-cyan-50 border-cyan-200 text-cyan-700' },
               { icon: Factory, name: 'Utility', desc: 'Infrastructure monitoring and discharge tracking', accent: 'bg-teal-50 border-teal-200 text-teal-700' },
               { icon: LineChart, name: 'ESG', desc: 'GRI 303 & SASB aligned water impact scoring', accent: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
               { icon: Microscope, name: 'University', desc: 'Research tools, data export, and manuscript support', accent: 'bg-violet-50 border-violet-200 text-violet-700' },
@@ -568,7 +568,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
             <div>
               <h4 className="text-xs font-bold tracking-[0.15em] uppercase text-slate-400 mb-4">Dashboards</h4>
               <ul className="space-y-3 text-sm text-slate-500">
-                <li><span className="hover:text-white cursor-pointer transition-colors" onClick={onSignIn}>MS4 Compliance</span></li>
+                <li><span className="hover:text-white cursor-pointer transition-colors" onClick={onSignIn}>Municipal Utility</span></li>
                 <li><span className="hover:text-white cursor-pointer transition-colors" onClick={onSignIn}>State Dashboard</span></li>
                 <li><span className="hover:text-white cursor-pointer transition-colors" onClick={onSignIn}>Federal Overview</span></li>
                 <li><span className="hover:text-white cursor-pointer transition-colors" onClick={onSignIn}>Research Tools</span></li>

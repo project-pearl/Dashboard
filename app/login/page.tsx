@@ -39,7 +39,7 @@ function PasswordRequirements({ password, touched }: { password: string; touched
 }
 
 const ROLES: { value: UserRole; label: string }[] = [
-  { value: 'MS4',        label: 'MS4 Operator' },
+  { value: 'MS4',        label: 'Municipal Utility' },
   { value: 'State',      label: 'State Agency' },
   { value: 'Federal',    label: 'Federal' },
   { value: 'Corporate',  label: 'Sustainability' },

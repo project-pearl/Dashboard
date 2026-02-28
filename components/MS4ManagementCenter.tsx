@@ -125,7 +125,7 @@ const LENS_CONFIG: Record<ViewLens, {
 }> = {
   overview: {
     label: 'Overview',
-    description: 'MS4 operational dashboard — morning check before the day starts',
+    description: 'Municipal Utility operational dashboard — morning check before the day starts',
     defaultOverlay: 'impairment',
     sections: new Set(['identity', 'operational-health', 'alertfeed', 'map-grid', 'detail', 'top10', 'quick-access', 'quickactions', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']),
   },
@@ -229,7 +229,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Funding & Grants',
     description: 'Active grants, opportunity pipeline, and financial analytics',
     defaultOverlay: 'impairment',
-    sections: new Set(['grants', 'fund-active', 'fund-pipeline', 'fund-stormwater', 'fund-analytics', 'disclaimer']),
+    sections: new Set(['grants', 'fund-active', 'fund-srf', 'infra-capital', 'infra-construction', 'fund-pipeline', 'fund-stormwater', 'fund-analytics', 'disclaimer']),
   },
 };
 
@@ -1200,7 +1200,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                 className="inline-flex items-center h-8 px-3 text-xs font-semibold rounded-md border bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 transition-colors cursor-pointer"
               >
                 <Shield className="h-3.5 w-3.5 mr-1.5" />
-                {user.name || (jurisdictionMeta ? jurisdictionMeta.name + ' Operator' : 'MS4 Operator')}
+                {user.name || (jurisdictionMeta ? jurisdictionMeta.name + ' Operator' : 'Municipal Utility')}
                 <span className="ml-1.5 text-indigo-400">▾</span>
               </button>
 
@@ -6015,6 +6015,49 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
             );
 
             // ── Funding sections ─────────────────────────────────────────────────
+            case 'fund-srf': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Banknote className="h-5 w-5 text-blue-600" />
+                    SRF Program
+                  </CardTitle>
+                  <CardDescription>State Revolving Fund loans received, terms, and repayment status</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Capitalization (State Level)</div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'CWSRF Cap Grant', value: '$42M', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'DWSRF Cap Grant', value: '$28M', bg: 'bg-sky-50 border-sky-200' },
+                      { label: 'BIL Supplement', value: '$18M', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Loan Repayments', value: '$31M/yr', bg: 'bg-slate-50 border-slate-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1 mt-4">Municipal Pass-Through</div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'SRF Loans Received', value: '3', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Outstanding Balance', value: '$8.2M', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Interest Rate', value: '1.5%', bg: 'bg-slate-50 border-slate-200' },
+                      { label: 'Repayment Status', value: 'Current', bg: 'bg-emerald-50 border-emerald-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-2 italic">Data source: State SRF program, municipal loan records</p>
+                </CardContent>
+              </Card>
+            );
+
             case 'fund-active': return DS(
               <Card>
                 <CardHeader>

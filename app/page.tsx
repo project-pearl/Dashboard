@@ -1040,7 +1040,7 @@ export default function Home() {
                 <SelectContent>
                   <SelectItem value="Federal">🏛️ Federal Operator (EPA/NOAA/USDA)</SelectItem>
                   <SelectItem value="State">🏢 State Regulator (MDE, FL DEP)</SelectItem>
-                  <SelectItem value="MS4">🏙️ MS4 Operator (Municipal)</SelectItem>
+                  <SelectItem value="MS4">🏙️ Municipal Utility</SelectItem>
                   <SelectItem value="Corporate">🏢 Sustainability</SelectItem>
                   <SelectItem value="Researcher">🔬 Principal Investigator</SelectItem>
                   <SelectItem value="College">🎓 Undergrad (Research)</SelectItem>
