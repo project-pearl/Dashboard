@@ -21,7 +21,7 @@ import type { WARRMetric } from './WARRZones';
 
 // ─── View Lens ──────────────────────────────────────────────────────────────
 
-type ViewLens = 'overview' | 'briefing' | 'planner' | 'trends' | 'policy'
+type ViewLens = 'overview' | 'briefing' | 'trends' | 'policy'
   | 'compliance' | 'water-quality' | 'public-health' | 'source-receiving'
   | 'treatment-process' | 'infrastructure' | 'laboratory' | 'disaster'
   | 'permit-limits' | 'scorecard' | 'reports' | 'asset-management' | 'funding';
@@ -40,11 +40,6 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'AI Briefing',
     description: 'Operator shift report and compliance officer morning update',
     sections: new Set(['briefing-plant', 'briefing-compliance', 'briefing-system', 'briefing-business', 'disclaimer']),
-  },
-  planner: {
-    label: 'Resolution Planner',
-    description: 'Treatment capacity, compliance violations, and infrastructure resolution planning',
-    sections: new Set(['resolution-planner', 'disclaimer']),
   },
   trends: {
     label: 'Trends & Projections',
@@ -94,7 +89,7 @@ const LENS_CONFIG: Record<ViewLens, {
   disaster: {
     label: 'Disaster & Emergency',
     description: 'Infrastructure failures, contamination events, vulnerability, and climate resilience',
-    sections: new Set(['disaster-active', 'disaster-response', 'disaster-vulnerability', 'disaster-recovery', 'disaster-resilience', 'disclaimer']),
+    sections: new Set(['disaster-active', 'disaster-response', 'disaster-vulnerability', 'disaster-recovery', 'disaster-resilience', 'resolution-planner', 'disclaimer']),
   },
   'permit-limits': {
     label: 'Permit Limits & Compliance',
@@ -1574,7 +1569,7 @@ export default function UtilityManagementCenter({ systemId }: Props) {
               <WARRZones zone="warr-respond" role="Utility" stateAbbr={systemId} metrics={[]} events={[]} activeResolutionCount={0} />
             );
             case 'warr-resolve': return DS(
-              <WARRZones zone="warr-resolve" role="Utility" stateAbbr={systemId} metrics={[]} events={[]} activeResolutionCount={0} onOpenPlanner={() => setActiveLens('planner')} />
+              <WARRZones zone="warr-resolve" role="Utility" stateAbbr={systemId} metrics={[]} events={[]} activeResolutionCount={0} onOpenPlanner={() => setActiveLens('disaster')} />
             );
 
             // ══════════════════════════════════════════════════════════════

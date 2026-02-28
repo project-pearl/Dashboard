@@ -85,7 +85,7 @@ type Props = {
 
 // ─── Lenses (18-view architecture) ───────────────────────────────────────────
 
-type ViewLens = 'overview' | 'briefing' | 'planner' | 'trends' | 'policy' | 'compliance' |
+type ViewLens = 'overview' | 'briefing' | 'trends' | 'policy' | 'compliance' |
   'water-quality' | 'public-health' | 'watershed-health' | 'restoration-projects' |
   'infrastructure' | 'monitoring' | 'disaster-emergency' | 'advocacy' |
   'scorecard' | 'reports' | 'volunteer-program' | 'citizen-reporting' | 'funding';
@@ -99,8 +99,6 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set(['regprofile', 'map-grid', 'top10', 'partners', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']) },
   briefing:    { label: 'AI Briefing', description: 'AI-generated conservation intelligence briefing',
     sections: new Set(['insights', 'alertfeed', 'disclaimer']) },
-  planner:     { label: 'Resolution Planner', description: 'Conservation-driven resolution planning workspace',
-    sections: new Set(['resolution-planner', 'disclaimer']) },
   trends:      { label: 'Trends & Projections', description: 'Watershed health trends and conservation projections',
     sections: new Set(['trends-dashboard', 'disclaimer']) },
   policy:      { label: 'Policy Tracker', description: 'Water policy tracking for advocacy',
@@ -120,7 +118,7 @@ const LENS_CONFIG: Record<ViewLens, {
   monitoring:  { label: 'Monitoring', description: 'Community-based monitoring network',
     sections: new Set(['regprofile', 'detail', 'disclaimer']) },
   'disaster-emergency': { label: 'Disaster & Emergency', description: 'Environmental emergency response',
-    sections: new Set(['disaster-emergency-panel', 'disclaimer']) },
+    sections: new Set(['disaster-emergency-panel', 'resolution-planner', 'disclaimer']) },
   advocacy:    { label: 'Advocacy', description: 'Policy advocacy and regulatory engagement',
     sections: new Set(['advocacy-panel', 'policy', 'disclaimer']) },
   scorecard:   { label: 'Scorecard', description: 'Conservation program scorecard',

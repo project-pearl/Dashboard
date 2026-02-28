@@ -112,7 +112,7 @@ type Props = {
   onToggleDevMode?: () => void;
 };
 
-type ViewLens = 'overview' | 'briefing' | 'planner' | 'trends' | 'policy'
+type ViewLens = 'overview' | 'briefing' | 'trends' | 'policy'
   | 'compliance' | 'water-quality' | 'public-health' | 'receiving-waters'
   | 'stormwater-bmps' | 'infrastructure' | 'monitoring' | 'disaster'
   | 'tmdl-compliance' | 'scorecard' | 'reports' | 'mcm-manager' | 'funding';
@@ -134,12 +134,6 @@ const LENS_CONFIG: Record<ViewLens, {
     description: 'AI-generated overnight summary and action items',
     defaultOverlay: 'impairment',
     sections: new Set(['insights', 'briefing-actions', 'briefing-changes', 'briefing-pulse', 'briefing-stakeholder', 'disclaimer']),
-  },
-  planner: {
-    label: 'Resolution Planner',
-    description: 'Waterbody-level restoration planning workspace',
-    defaultOverlay: 'impairment',
-    sections: new Set(['resolution-planner', 'disclaimer']),
   },
   trends: {
     label: 'Trends & Projections',
@@ -199,7 +193,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Disaster & Emergency Response',
     description: 'Active incidents, spill reporting, and preparedness',
     defaultOverlay: 'impairment',
-    sections: new Set(['alertfeed', 'disaster-active', 'disaster-response', 'disaster-spill', 'disaster-prep', 'disclaimer']),
+    sections: new Set(['alertfeed', 'disaster-active', 'disaster-response', 'disaster-spill', 'disaster-prep', 'resolution-planner', 'disclaimer']),
   },
   'tmdl-compliance': {
     label: 'TMDL Compliance',
@@ -1395,7 +1389,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
           <WARRZones zone="warr-respond" role="MS4" stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} />
         );
         case 'warr-resolve': return DS(
-          <WARRZones zone="warr-resolve" role="MS4" stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} onOpenPlanner={() => setViewLens('planner')} />
+          <WARRZones zone="warr-resolve" role="MS4" stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} onOpenPlanner={() => setViewLens('disaster')} />
         );
 
             case 'quickactions': return DS(

@@ -85,7 +85,7 @@ type Props = {
 
 // ─── Lenses (18-view architecture) ───────────────────────────────────────────
 
-type ViewLens = 'overview' | 'briefing' | 'planner' | 'trends' | 'policy' | 'compliance' |
+type ViewLens = 'overview' | 'briefing' | 'trends' | 'policy' | 'compliance' |
   'water-quality' | 'public-health' | 'research-monitoring' | 'campus-stormwater' |
   'infrastructure' | 'monitoring' | 'disaster-emergency' | 'watershed-partnerships' |
   'scorecard' | 'reports' | 'grants-publications' | 'funding';
@@ -99,8 +99,6 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set(['regprofile', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'map-grid', 'top10', 'disclaimer']) },
   briefing:    { label: 'AI Briefing', description: 'AI-generated research intelligence briefing',
     sections: new Set(['insights', 'alertfeed', 'disclaimer']) },
-  planner:     { label: 'Resolution Planner', description: 'Research-driven resolution planning workspace',
-    sections: new Set(['resolution-planner', 'disclaimer']) },
   trends:      { label: 'Trends & Projections', description: 'Water quality trends, research metrics, and data projections',
     sections: new Set(['trends-dashboard', 'disclaimer']) },
   policy:      { label: 'Policy Tracker', description: 'Water policy tracking for research context',
@@ -120,7 +118,7 @@ const LENS_CONFIG: Record<ViewLens, {
   monitoring:  { label: 'Monitoring', description: 'Water quality monitoring network management',
     sections: new Set(['regprofile', 'detail', 'disclaimer']) },
   'disaster-emergency': { label: 'Disaster & Emergency', description: 'Emergency response for campus water systems',
-    sections: new Set(['disaster-emergency-panel', 'disclaimer']) },
+    sections: new Set(['disaster-emergency-panel', 'resolution-planner', 'disclaimer']) },
   'watershed-partnerships': { label: 'Watershed Partnerships', description: 'Community and inter-institutional partnerships',
     sections: new Set(['watershed-partnerships-panel', 'disclaimer']) },
   scorecard:   { label: 'Scorecard', description: 'Campus water program performance scorecard',

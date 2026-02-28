@@ -125,7 +125,7 @@ type OverlayId = 'risk' | 'coverage' | 'bmp' | 'ej';
 
 // ─── View Lens: controls what each view shows/hides ──────────────────────────
 
-type ViewLens = 'overview' | 'briefing' | 'planner' | 'trends' | 'policy'
+type ViewLens = 'overview' | 'briefing' | 'trends' | 'policy'
   | 'compliance' | 'water-quality' | 'public-health' | 'habitat' | 'agriculture'
   | 'infrastructure' | 'monitoring' | 'disaster' | 'tmdl' | 'scorecard'
   | 'reports' | 'permits' | 'funding';
@@ -147,12 +147,6 @@ const LENS_CONFIG: Record<ViewLens, {
     description: 'AI-generated overnight summary and action items',
     defaultOverlay: 'risk',
     sections: new Set(['insights', 'briefing-actions', 'briefing-changes', 'briefing-pulse', 'briefing-stakeholder', 'disclaimer']),
-  },
-  planner: {
-    label: 'Disaster & Emergency',
-    description: 'Emergency response, active incidents, and restoration planning',
-    defaultOverlay: 'risk',
-    sections: new Set(['alertfeed', 'disaster-active', 'disaster-response', 'disaster-spill', 'disaster-prep', 'disaster-cascade', 'resolution-planner', 'disclaimer']),
   },
   trends: {
     label: 'Trends & Projections',
@@ -1030,7 +1024,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
           <WARRZones zone="warr-respond" role="State" stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} />
         );
         case 'warr-resolve': return DS(
-          <WARRZones zone="warr-resolve" role="State" stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} onOpenPlanner={() => setViewLens('planner')} />
+          <WARRZones zone="warr-resolve" role="State" stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} onOpenPlanner={() => setViewLens('disaster')} />
         );
 
             case 'detail': return DS(<>

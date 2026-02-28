@@ -92,7 +92,7 @@ type FacilityRow = {
 
 // ─── Lenses (18-view architecture) ───────────────────────────────────────────
 
-type ViewLens = 'overview' | 'briefing' | 'planner' | 'trends' | 'policy' | 'compliance' |
+type ViewLens = 'overview' | 'briefing' | 'trends' | 'policy' | 'compliance' |
   'water-quality' | 'public-health' | 'water-stewardship' | 'facility-operations' |
   'infrastructure' | 'monitoring' | 'disaster-emergency' | 'esg-reporting' |
   'scorecard' | 'reports' | 'supply-chain-risk' | 'funding';
@@ -132,11 +132,6 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
     label: 'AI Briefing', description: 'AI-generated sustainability intelligence briefing',
     icon: Sparkles, ...SHOW_ALL,
     sections: new Set(['insights', 'disclaimer']),
-  },
-  planner: {
-    label: 'Resolution Planner', description: 'Sustainability resolution planning workspace',
-    icon: ClipboardList, ...SHOW_ALL,
-    sections: new Set(['resolution-planner', 'disclaimer']),
   },
   trends: {
     label: 'Trends & Forecasting', description: 'Water risk trajectories, regulatory outlook, and ESG scoring trends',
@@ -186,7 +181,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   'disaster-emergency': {
     label: 'Disaster & Emergency', description: 'Environmental emergency response',
     icon: AlertTriangle, ...SHOW_ALL,
-    sections: new Set(['disaster-emergency-panel', 'disclaimer']),
+    sections: new Set(['disaster-emergency-panel', 'resolution-planner', 'disclaimer']),
   },
   'esg-reporting': {
     label: 'ESG Reporting', description: 'ESG framework reporting and disclosure readiness',
