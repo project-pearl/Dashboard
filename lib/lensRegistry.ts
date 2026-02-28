@@ -71,7 +71,6 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'overview', label: 'Dashboard' },
     { id: 'developer', label: 'Developer' },
     { id: 'real-estate', label: 'Real Estate' },
-    { id: 'insurance', label: 'Insurance' },
     { id: 'legal', label: 'Legal' },
     { id: 'consultant', label: 'Consultant' },
     { id: 'lender', label: 'Lender' },
@@ -153,17 +152,6 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'drinking-water-safety',  label: 'Drinking Water Safety' },
     { id: 'reports',                label: 'Reports' },
     { id: 'funding',                label: 'Funding & Grants' },
-  ],
-  // ── Insurance / Risk (8 items) ─────────────────────────────────────────────
-  '/dashboard/insurance': [
-    { id: 'overview', label: 'Dashboard' },
-    { id: 'briefing', label: 'AI Briefing' },
-    { id: 'exposure-mapping', label: 'Exposure Mapping' },
-    { id: 'claims', label: 'Claims Correlation' },
-    { id: 'infrastructure-risk', label: 'Infrastructure Risk Index' },
-    { id: 'flood-contamination', label: 'Flood & Contamination Overlay' },
-    { id: 'portfolio-risk', label: 'Portfolio Risk Score' },
-    { id: 'regulatory-changes', label: 'Regulatory Change Tracker' },
   ],
   // ── Aqua-LO Laboratory (5 items) ────────────────────────────────────────────
   '/dashboard/aqua-lo': [

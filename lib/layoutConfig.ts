@@ -18,7 +18,7 @@ export interface SectionDefinition {
 }
 
 export type CCKey = 'K12' | 'State' | 'MS4' | 'Sustainability' | 'NGO' | 'University' | 'FMC' | 'NCC'
-  | 'Utility' | 'Infrastructure' | 'Insurance' | 'AQUA-LO';
+  | 'Utility' | 'Infrastructure' | 'AQUA-LO';
 
 // ─── Default Section Orders ────────────────────────────────────────────────
 
@@ -619,19 +619,6 @@ export const DEFAULT_SECTIONS = {
     { id: 'spi-permits',      label: 'Permit Constraint Snapshot',    order: 4,  visible: true, defaultExpanded: true },
     { id: 'location-report',  label: 'Location Water Quality Report', order: 5,  visible: true, defaultExpanded: false },
     { id: 'disclaimer',       label: 'Platform Disclaimer',           order: 6,  visible: true, defaultExpanded: true },
-  ],
-
-  Insurance: [
-    { id: 'floodrisk',      label: 'Flood Risk Assessment',         order: 0,  visible: true, defaultExpanded: true },
-    { id: 'contamination',  label: 'Contamination Analysis',        order: 1,  visible: true, defaultExpanded: true },
-    { id: 'duediligence',   label: 'Portfolio Due Diligence',       order: 2,  visible: true, defaultExpanded: true },
-    { id: 'propertyvalue',  label: 'Property Value Impact',         order: 3,  visible: true, defaultExpanded: true },
-    { id: 'regulatory',     label: 'Regulatory Exposure',           order: 4,  visible: true, defaultExpanded: true },
-    { id: 'claims',         label: 'Claims Intelligence',           order: 5,  visible: true, defaultExpanded: true },
-    { id: 'groundwater',   label: 'Groundwater & Subsidence Risk',  order: 6,  visible: true, defaultExpanded: false },
-    { id: 'underwriting',   label: 'Underwriting Tools',            order: 7,  visible: true, defaultExpanded: false },
-    { id: 'location-report', label: 'Location Water Quality Report', order: 8, visible: true, defaultExpanded: false },
-    { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 9,  visible: true, defaultExpanded: true },
   ],
 
 
