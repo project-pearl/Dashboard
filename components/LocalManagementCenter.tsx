@@ -17,6 +17,7 @@ import { StatusCard } from './StatusCard';
 import { PlatformDisclaimer } from './PlatformDisclaimer';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
+import { NwisGwPanel } from '@/components/NwisGwPanel';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -925,8 +926,11 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
           );
 
           case 'groundwater': return DS(
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">
-              Groundwater Monitoring (WDFN) — placeholder (shared component)
+            <div id="section-groundwater">
+              <NwisGwPanel
+                state={stateAbbr}
+                compactMode={false}
+              />
             </div>
           );
 
