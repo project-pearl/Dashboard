@@ -160,7 +160,7 @@ type Props = { systemId: string };
 
 export default function UtilityManagementCenter({ systemId }: Props) {
   const [activeLens, setActiveLens] = useLensParam<ViewLens>('overview');
-  const lens = LENS_CONFIG[activeLens];
+  const lens = LENS_CONFIG[activeLens] ?? LENS_CONFIG['overview'];
 
   return (
     <div className="min-h-full">

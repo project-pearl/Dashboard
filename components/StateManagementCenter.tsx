@@ -349,7 +349,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
 
   // ── View Lens ──
   const [viewLens, setViewLens] = useLensParam<ViewLens>('overview');
-  const lens = LENS_CONFIG[viewLens];
+  const lens = LENS_CONFIG[viewLens] ?? LENS_CONFIG['overview'];
   const [overlay, setOverlay] = useState<OverlayId>('risk');
 
   // ── State Data Report Card ──

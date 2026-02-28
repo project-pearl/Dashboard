@@ -899,7 +899,7 @@ export function FederalManagementCenter(props: Props) {
 
   // ── View Lens: controls layout composition ──
   const [viewLens, setViewLens] = useLensParam<ViewLens>(federalMode ? 'overview' : 'overview');
-  const lens = LENS_CONFIG[viewLens];
+  const lens = LENS_CONFIG[viewLens] ?? LENS_CONFIG['overview'];
   const [wqDomain, setWqDomain] = useState<'all' | 'surface-water' | 'stormwater' | 'groundwater' | 'drinking-water' | 'coastal'>('all');
 
   // ── ATTAINS Bulk State Assessment Data ──

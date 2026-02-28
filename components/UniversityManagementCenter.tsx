@@ -286,7 +286,7 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
 
   // ── Lens switching ──
   const [activeLens, setActiveLens] = useLensParam<ViewLens>('overview');
-  const lens = LENS_CONFIG[activeLens];
+  const lens = LENS_CONFIG[activeLens] ?? LENS_CONFIG['overview'];
 
   // ── View state ──
   const [showAccountPanel, setShowAccountPanel] = useState(false);

@@ -460,7 +460,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
 
   // ── View Lens ──
   const [viewLens, setViewLens] = useLensParam<ViewLens>('overview');
-  const lens = LENS_CONFIG[viewLens];
+  const lens = LENS_CONFIG[viewLens] ?? LENS_CONFIG['overview'];
   const [showLensDropdown, setShowLensDropdown] = useState(false);
   const [showAccountPanel, setShowAccountPanel] = useState(false);
 
