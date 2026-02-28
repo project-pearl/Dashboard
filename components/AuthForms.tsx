@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   Waves, Lock, Mail, User, Building2, MapPin, ArrowRight, AlertTriangle,
-  CheckCircle, Clock, Shield, GraduationCap, Users, Globe, ChevronDown,
+  CheckCircle, Clock, Shield, GraduationCap, Users, Globe, ChevronDown, TrendingUp,
 } from 'lucide-react';
 import { MD_JURISDICTIONS, STATES } from '@/lib/jurisdictions';
 
@@ -28,6 +28,7 @@ const ROLE_META: Record<UserRole, { icon: typeof Shield; label: string; desc: st
   Agriculture:{ icon: Building2,      label: 'Agriculture',           desc: 'Agricultural runoff monitoring & best practices',             tier: 'operator' },
   Lab:        { icon: Shield,         label: 'Lab / Testing',         desc: 'Laboratory data submission & QA/QC workflows',               tier: 'operator' },
   Biotech:    { icon: Building2,      label: 'Biotech / Pharma',      desc: 'Process water, pharmaceutical effluent & GMP compliance',    tier: 'operator' },
+  Investor:   { icon: TrendingUp,    label: 'Investor / ESG',        desc: 'ESG risk scoring, portfolio water exposure & disclosure',    tier: 'operator' },
 };
 
 // ─── Component ──────────────────────────────────────────────────────────────

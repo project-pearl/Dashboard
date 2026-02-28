@@ -291,6 +291,7 @@ const ROLE_ROUTES: Record<UserRole, string> = {
   Agriculture: '/dashboard/agriculture',
   Lab: '/dashboard/aqua-lo',
   Biotech: '/dashboard/biotech',
+  Investor: '/dashboard/esg',
 };
 
 export default function Home() {

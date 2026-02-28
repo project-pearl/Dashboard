@@ -765,14 +765,14 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                     </div>
                   </div>
                   <MapboxMapShell
-                    defaultCenter={DEFAULT_CENTER}
-                    defaultZoom={DEFAULT_ZOOM}
+                    center={DEFAULT_CENTER}
+                    zoom={DEFAULT_ZOOM}
                     onMapRef={onMapRef}
                     onMouseMove={onMapMouseMove}
                     onMouseLeave={onMapMouseLeave}
                     onClick={onMapClick}
                   >
-                    <MapboxMarkers markers={facilityMarkerData} />
+                    <MapboxMarkers data={facilityMarkerData} />
                   </MapboxMapShell>
                 </div>
                 {/* Facility list */}
@@ -1449,7 +1449,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
             // ─── SHARED PANELS ──────────────────────────────────────────────
 
             case 'insights': return DS(
-              <AIInsightsEngine key="US" role="Biotech" stateAbbr="US" regionData={facilitiesData as any} />
+              <AIInsightsEngine key="US" role={"Biotech" as any} stateAbbr="US" regionData={facilitiesData as any} />
             );
 
             case 'groundwater': return DS(
