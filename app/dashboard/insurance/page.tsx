@@ -20,6 +20,7 @@ import {
   Ban,
 } from 'lucide-react';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
+import WaterfrontExposurePanel from '@/components/WaterfrontExposurePanel';
 
 const MOCK_PROPERTIES = [
   { address: '1420 Waterfront Dr, Annapolis MD', floodZone: 'AE', riskScore: 82, contamination: 'Low', value: '$425K', claims: 0 },
@@ -155,6 +156,11 @@ export default function InsurancePage() {
               </tbody>
             </table>
           </div>
+        </DashboardSection>
+
+        {/* Waterfront Value Exposure */}
+        <DashboardSection title="Waterfront Value Exposure" subtitle="Hedonic model — waterfront property value at risk from WQ degradation">
+          <WaterfrontExposurePanel selectedState="MD" />
         </DashboardSection>
 
         {/* Regulatory Exposure */}

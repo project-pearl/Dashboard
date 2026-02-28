@@ -20,6 +20,7 @@ import { computeRestorationPlan, resolveAttainsCategory, mergeAttainsCauses, COS
 import { WaterbodyDetailCard } from '@/components/WaterbodyDetailCard';
 import { getEcoScore, getEcoData } from '@/lib/ecologicalSensitivity';
 import { getEJScore, getEJData } from '@/lib/ejVulnerability';
+import { getExposureScore } from '@/lib/waterfrontExposure';
 import { BrandedPDFGenerator } from '@/lib/brandedPdfGenerator';
 import { useAuth } from '@/lib/authContext';
 import { useWaterData, DATA_SOURCES } from '@/lib/useWaterData';
@@ -593,7 +594,7 @@ const OVERLAYS: { id: OverlayId; label: string; description: string; icon: any }
   { id: 'hotspots', label: 'Water Quality Risk', description: 'Impairment severity from EPA 303(d) and state assessments', icon: Droplets },
   { id: 'ms4', label: 'MS4 Jurisdictions', description: 'Municipal Separate Storm Sewer System permit holders — potential ALIA deployment targets', icon: Building2 },
   { id: 'ej', label: 'EJ Vulnerability', description: 'Census ACS demographics + EPA drinking water violations — community environmental burden', icon: Users },
-  { id: 'economy', label: 'Compliance Cost', description: 'Estimated annual MS4 stormwater compliance cost burden', icon: DollarSign },
+  { id: 'economy', label: 'Economic Exposure', description: 'Waterfront property value at risk from water quality degradation (hedonic model)', icon: DollarSign },
   { id: 'wildlife', label: 'Ecological Sensitivity', description: 'USFWS ESA-listed threatened & endangered species density (aquatic-weighted)', icon: Leaf },
   { id: 'trend', label: 'Trends', description: 'Water quality change vs prior assessment period', icon: TrendingUp },
   { id: 'coverage', label: 'Monitoring Coverage', description: 'ALIA deployment and monitoring network gaps', icon: BarChart3 },
@@ -845,7 +846,7 @@ function getStateFill(
 
   if (overlay === 'economy') {
     const v = o?.economy ?? 0;
-    return v >= 80 ? '#1d4ed8' : v >= 60 ? '#3b82f6' : v >= 40 ? '#60a5fa' : v >= 20 ? '#93c5fd' : '#e5e7eb';
+    return v >= 70 ? '#7f1d1d' : v >= 50 ? '#dc2626' : v >= 35 ? '#f59e0b' : v >= 20 ? '#fde68a' : '#d1fae5';
   }
 
   if (overlay === 'wildlife') {
@@ -1490,7 +1491,7 @@ export function FederalManagementCenter(props: Props) {
 
     for (const abbr of states) {
       const ej = getEJScore(abbr); // Census ACS + EPA SDWIS — real EJ vulnerability data
-      const economy = Math.round(pick01(abbr, 'economy') * 100);
+      const economy = getExposureScore(abbr);
       const wildlife = getEcoScore(abbr); // USFWS ECOS — real T&E species data
       const coverage = Math.round(pick01(abbr, 'coverage') * 100);
 
@@ -1645,6 +1646,10 @@ export function FederalManagementCenter(props: Props) {
     return rows;
   }, [regionData]);
 
+  // ── National Summary (single source of truth for planner) ──
+  // Declared early so stateRollup can blend flow scores from the server response
+  const [nationalSummary, setNationalSummary] = useState<NationalSummary | null>(null);
+
   // Feature 1: National Summary Stats — three-tier awareness + ATTAINS
   // Feature 2: State Rollup Data — three-tier system + ATTAINS fallback
   const stateRollup = useMemo(() => {
@@ -1732,6 +1737,13 @@ export function FederalManagementCenter(props: Props) {
       const attainsTotal = stateAttains.length;
       const realWaterbodyCount = Math.max(regions.length, attainsTotal);
 
+      // Blend USGS flow vulnerability into composite score (15% weight)
+      const flowData = nationalSummary?.flowScores?.[abbr];
+      const finalScore = (canGradeState && score >= 0 && flowData)
+        ? Math.round(score * 0.85 + flowData.score * 0.15)
+        : score;
+      const finalGrade = canGradeState ? scoreToGrade(finalScore) : grade;
+
       return {
         abbr, name: STATE_ABBR_TO_NAME[abbr],
         high, medium, low, none, total: totalAlerts,
@@ -1740,7 +1752,8 @@ export function FederalManagementCenter(props: Props) {
         monitored: monitored.length,
         unmonitored: unmonitored.length,
         canGradeState,
-        score, grade, dataSource,
+        score: finalScore, grade: finalGrade, dataSource,
+        flowScore: flowData?.score, flowSites: flowData?.sites,
         cat5, cat4a, cat4b, cat4c,
         totalImpaired: cat5 + cat4a + cat4b + cat4c,
         topCauses: stateTopCauses,
@@ -1753,7 +1766,7 @@ export function FederalManagementCenter(props: Props) {
       if (a.canGradeState && b.canGradeState) return a.score - b.score;
       return a.name.localeCompare(b.name);
     });
-  }, [derived.regionsByState, attainsBulk]);
+  }, [derived.regionsByState, attainsBulk, nationalSummary?.flowScores]);
 
   // Build Mapbox fill-color match expression from state colors
   const fillColorExpr = useMemo(() => {
@@ -1978,9 +1991,6 @@ export function FederalManagementCenter(props: Props) {
       .map(s => ({ abbr: s.abbr, name: s.name, cat5: s.cat5, totalImpaired: s.totalImpaired, topCauses: s.topCauses }));
     return { ...attainsAggregation, worstStates };
   }, [attainsAggregation, stateRollup]);
-
-  // ── National Summary (single source of truth for planner) ──
-  const [nationalSummary, setNationalSummary] = useState<NationalSummary | null>(null);
 
   // ── Response Planner scope context (national default) ──
   const resolutionPlannerScope = useMemo((): ScopeContext => {
