@@ -88,12 +88,13 @@ export function TierBadge({ tier, size = 'sm', showLabel = false, compact = fals
   }
 
   return (
-    <span
-      className={`inline-flex items-center ${cfg.gap} ${cfg.px} ${cfg.py} rounded-full ${meta.bgColor} ${meta.color} ${cfg.text} font-medium leading-none whitespace-nowrap`}
+    <a
+      href="/tools/data-provenance#tiers"
+      className={`inline-flex items-center ${cfg.gap} ${cfg.px} ${cfg.py} rounded-full ${meta.bgColor} ${meta.color} ${cfg.text} font-medium leading-none whitespace-nowrap hover:opacity-80 transition-opacity`}
       title={title}
     >
       <Icon size={cfg.icon} />
       {showLabel ? meta.label : `T${tier}`}
-    </span>
+    </a>
   );
 }

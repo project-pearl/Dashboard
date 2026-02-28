@@ -761,12 +761,9 @@ export function WaterbodyDetailCard({
                         </span>
                       ))}
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className="flex items-center gap-1"><TierIcon tier={1} /><span className="text-[9px] text-slate-500">Regulatory</span></span>
-                      <span className="flex items-center gap-1"><TierIcon tier={2} /><span className="text-[9px] text-slate-500">Research</span></span>
-                      <span className="flex items-center gap-1"><TierIcon tier={3} /><span className="text-[9px] text-slate-500">Community</span></span>
-                      <span className="flex items-center gap-1"><TierIcon tier={4} /><span className="text-[9px] text-slate-500">Observational</span></span>
-                    </div>
+                    <a href="/tools/data-provenance#tiers" className="text-[9px] text-blue-500 hover:text-blue-700 underline">
+                      Tier definitions →
+                    </a>
                   </div>
                 )}
               </div>
@@ -924,29 +921,11 @@ export function WaterbodyDetailCard({
             )}
 
             {/* ── Data Provenance ── */}
-            <div className="rounded-lg border border-slate-200 bg-white p-2.5 space-y-1.5">
-              <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Data Provenance</div>
-              <div className="text-[10px] text-slate-400 italic">
-                This assessment is informational and derived from public sources. It is not an official EPA, state, or federal determination.
-              </div>
-              <div className="text-[11px] text-slate-500 space-y-0.5">
-                <div>• <span className="font-medium">PIN Water Score</span> — Weighted composite of {indices.length} environmental indices computed from live + historical monitoring data</div>
-                <div>• <span className="font-medium">EJ vulnerability index</span> — {ejIsLive
-                  ? <span className="text-green-600 font-medium">EPA EJScreen API (live lookup)</span>
-                  : <>Composite derived from <a href="https://data.census.gov" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Census ACS</a> + EPA SDWIS state-level indicators</>
-                }</div>
-                <div>• <span className="font-medium">Ecological sensitivity</span> — Derived from <a href="https://ecos.fws.gov/ecp/species-reports" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">USFWS ECOS</a> Threatened & Endangered species data</div>
-                <div>• <span className="font-medium">303(d) & TMDL status</span> — {attainsIsLive
-                  ? <span className="text-green-600 font-medium">EPA ATTAINS API (live — cycle {attainsCycle || 'latest'}){attainsCauses.length > 0 ? ` — ${attainsCauses.length} cause${attainsCauses.length !== 1 ? 's' : ''} of impairment` : ''}</span>
-                  : <>Derived from alert logic and public indicators; for official listings consult{' '}
-                    <a href="https://www.epa.gov/waterdata/attains" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">EPA ATTAINS</a></>
-                }</div>
-              </div>
-              <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mt-2">Important Notes</div>
-              <div className="text-[10px] text-slate-400 space-y-0.5">
-                <div>• This card is read-only. Corrections and official designations flow through state agency review processes.</div>
-                <div>• PIN does not perform primary data collection. All scores and indices are automated interpretations of publicly available data.</div>
-              </div>
+            <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-100">
+              <span className="italic">Informational only — not an official regulatory determination.</span>
+              <a href="/tools/data-provenance" className="text-blue-500 hover:text-blue-700 underline whitespace-nowrap ml-2">
+                Data provenance &amp; methodology →
+              </a>
             </div>
 
             {/* ── CBP DataHub Enrichments ── */}
