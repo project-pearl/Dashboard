@@ -91,7 +91,7 @@ type OverlayId = 'hotspots' | 'ms4' | 'ej' | 'economy' | 'wildlife' | 'trend' | 
 type ViewLens = 'overview' | 'briefing' | 'trends' | 'policy' | 'compliance' |
   'water-quality' | 'public-health' | 'habitat-ecology' | 'agricultural-nps' |
   'infrastructure' | 'monitoring' | 'disaster-emergency' | 'military-installations' |
-  'scorecard' | 'reports' | 'interagency' | 'funding';
+  'scorecard' | 'reports' | 'interagency' | 'funding' | 'warr';
 
 // ─── Water Quality Domain Tabs ────────────────────────────────────────────────
 const WQ_DOMAINS = [
@@ -292,6 +292,16 @@ const LENS_CONFIG: Record<ViewLens, {
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
     sections: new Set(['fund-srf', 'infra-capital', 'infra-construction', 'funding-deadlines', 'grant-outcomes', 'funding-gap', 'disclaimer']),
+  },
+  warr: {
+    label: 'WARR Room',
+    description: 'Water Alert & Response Readiness — real-time situation awareness',
+    defaultOverlay: 'hotspots',
+    showTopStrip: false, showPriorityQueue: false, showCoverageGaps: false,
+    showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
+    showHotspots: false, showSituationSummary: false, showTimeRange: false,
+    showSLA: false, showRestorationPlan: false, collapseStateTable: true,
+    sections: new Set(['warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']),
   },
 };
 

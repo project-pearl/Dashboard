@@ -95,7 +95,7 @@ type FacilityRow = {
 type ViewLens = 'overview' | 'briefing' | 'trends' | 'policy' | 'compliance' |
   'water-quality' | 'public-health' | 'water-stewardship' | 'facility-operations' |
   'infrastructure' | 'monitoring' | 'disaster-emergency' | 'esg-reporting' |
-  'scorecard' | 'reports' | 'supply-chain-risk' | 'funding';
+  'scorecard' | 'reports' | 'supply-chain-risk' | 'funding' | 'warr';
 
 // Legacy compat: keep showX booleans so existing inner conditionals work
 // (section filter handles real visibility via sections Set)
@@ -207,6 +207,11 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
     label: 'Funding & Grants', description: 'Sustainability funding opportunities',
     icon: DollarSign, ...SHOW_ALL,
     sections: new Set(['grants', 'disclaimer']),
+  },
+  warr: {
+    label: 'WARR Room', description: 'Water Alert & Response Readiness — real-time situation awareness',
+    icon: Shield, ...SHOW_ALL,
+    sections: new Set(['warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']),
   },
 };
 

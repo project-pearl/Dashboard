@@ -29,14 +29,6 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
       'Comprehensive watershed monitoring, compliance tracking, and assessment analytics across every waterbody in your jurisdiction.',
     accentColor: 'text-cyan-400',
   },
-  ms4: {
-    image: '/images/heroes/MS4.png',
-    subtitle: 'PIN — PEARL Intelligence Network',
-    headline: 'Municipal Utility Operations',
-    description:
-      'Track BMP performance, monitor outfall discharge, and streamline MS4 permit reporting with real-time water quality data.',
-    accentColor: 'text-amber-400',
-  },
   esg: {
     image: '/images/heroes/Industrial.png',
     subtitle: 'PIN — PEARL Intelligence Network',
@@ -88,9 +80,9 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   infrastructure: {
     image: '/images/heroes/MS4.png',
     subtitle: 'PIN — PEARL Intelligence Network',
-    headline: 'Infrastructure Intelligence',
+    headline: 'Site & Property Intelligence',
     description:
-      'Capital project tracking, capacity analysis, and green infrastructure planning for resilient water systems.',
+      'Location-based water quality risk assessment, regulatory exposure, and environmental due diligence for any US property.',
     accentColor: 'text-slate-400',
   },
   insurance: {

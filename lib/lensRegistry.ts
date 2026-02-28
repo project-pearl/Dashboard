@@ -24,6 +24,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'reports', label: 'Reports' },
     { id: 'interagency', label: 'Cross-Agency' },
     { id: 'funding', label: 'Funding & Grants' },
+    { id: 'warr', label: 'WARR Room' },
   ],
   // ── State (18 items) ───────────────────────────────────────────────────────
   '/dashboard/state': [
@@ -44,26 +45,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'reports',        label: 'Reports' },
     { id: 'permits',        label: 'Permits & Enforcement' },
     { id: 'funding',        label: 'Funding & Grants' },
-  ],
-  // ── MS4 / Municipal (18 items) ─────────────────────────────────────────────
-  '/dashboard/ms4': [
-    { id: 'overview',          label: 'Overview' },
-    { id: 'briefing',          label: 'AI Briefing' },
-    { id: 'trends',            label: 'Trends & Projections' },
-    { id: 'policy',            label: 'Policy Tracker' },
-    { id: 'compliance',        label: 'Compliance' },
-    { id: 'water-quality',     label: 'Water Quality' },
-    { id: 'public-health',     label: 'Public Health & Contaminants' },
-    { id: 'receiving-waters',  label: 'Receiving Waters' },
-    { id: 'stormwater-bmps',   label: 'Stormwater BMPs' },
-    { id: 'infrastructure',    label: 'Infrastructure' },
-    { id: 'monitoring',        label: 'Monitoring' },
-    { id: 'disaster',          label: 'Disaster & Emergency' },
-    { id: 'tmdl-compliance',   label: 'TMDL Compliance' },
-    { id: 'scorecard',         label: 'Scorecard' },
-    { id: 'reports',           label: 'Reports' },
-    { id: 'mcm-manager',       label: 'MCM Program Manager' },
-    { id: 'funding',           label: 'Funding & Grants' },
+    { id: 'warr',           label: 'WARR Room' },
   ],
   // ── Municipal Utility (18 items) ───────────────────────────────────────────
   '/dashboard/utility': [
@@ -84,6 +66,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'reports',            label: 'Reports' },
     { id: 'asset-management',   label: 'Asset Management' },
     { id: 'funding',            label: 'Funding & Grants' },
+    { id: 'warr',               label: 'WARR Room' },
   ],
   // ── Site & Property Intelligence (17 lenses) ──────────────────────────────
   '/dashboard/infrastructure': [
@@ -124,6 +107,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'reports',             label: 'Reports' },
     { id: 'supply-chain-risk',   label: 'Supply Chain Risk' },
     { id: 'funding',             label: 'Funding & Grants' },
+    { id: 'warr',                label: 'WARR Room' },
   ],
   // ── University / Research (18 items) ───────────────────────────────────────
   '/dashboard/university': [
@@ -144,6 +128,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'reports',                 label: 'Reports' },
     { id: 'grants-publications',     label: 'Grants & Publications' },
     { id: 'funding',                 label: 'Funding & Grants' },
+    { id: 'warr',                    label: 'WARR Room' },
   ],
   // ── NGO / Conservation (18 items) ──────────────────────────────────────────
   '/dashboard/ngo': [
@@ -165,6 +150,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'volunteer-program',     label: 'Volunteer Program' },
     { id: 'citizen-reporting',     label: 'Citizen Reporting' },
     { id: 'funding',               label: 'Funding & Grants' },
+    { id: 'warr',                  label: 'WARR Room' },
   ],
   // ── K-12 Education (12 items) ──────────────────────────────────────────────
   '/dashboard/k12': [
@@ -181,6 +167,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'drinking-water-safety',  label: 'Drinking Water Safety' },
     { id: 'reports',                label: 'Reports' },
     { id: 'funding',                label: 'Funding & Grants' },
+    { id: 'warr',                   label: 'WARR Room' },
   ],
   // ── Insurance / Risk (8 items) ─────────────────────────────────────────────
   '/dashboard/insurance': [

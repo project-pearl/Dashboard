@@ -88,7 +88,7 @@ type Props = {
 type ViewLens = 'overview' | 'briefing' | 'trends' | 'policy' | 'compliance' |
   'water-quality' | 'public-health' | 'watershed-health' | 'restoration-projects' |
   'infrastructure' | 'monitoring' | 'disaster-emergency' | 'advocacy' |
-  'scorecard' | 'reports' | 'volunteer-program' | 'citizen-reporting' | 'funding';
+  'scorecard' | 'reports' | 'volunteer-program' | 'citizen-reporting' | 'funding' | 'warr';
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -131,6 +131,8 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set(['citizen-reporting-panel', 'volunteer-program-panel', 'community', 'disclaimer']) },
   funding:     { label: 'Funding & Grants', description: 'Conservation funding opportunities',
     sections: new Set(['grants', 'disclaimer']) },
+  warr:        { label: 'WARR Room', description: 'Water Alert & Response Readiness — real-time situation awareness',
+    sections: new Set(['warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']) },
 };
 
 // ─── Constants ───────────────────────────────────────────────────────────────

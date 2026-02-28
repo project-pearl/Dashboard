@@ -88,7 +88,7 @@ type Props = {
 type ViewLens = 'overview' | 'briefing' | 'trends' | 'policy' | 'compliance' |
   'water-quality' | 'public-health' | 'research-monitoring' | 'campus-stormwater' |
   'infrastructure' | 'monitoring' | 'disaster-emergency' | 'watershed-partnerships' |
-  'scorecard' | 'reports' | 'grants-publications' | 'funding';
+  'scorecard' | 'reports' | 'grants-publications' | 'funding' | 'warr';
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -129,6 +129,8 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set(['manuscript', 'grants', 'academic', 'disclaimer']) },
   funding:     { label: 'Funding & Grants', description: 'Research funding opportunities',
     sections: new Set(['grants', 'disclaimer']) },
+  warr:        { label: 'WARR Room', description: 'Water Alert & Response Readiness — real-time situation awareness',
+    sections: new Set(['warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']) },
 };
 
 // ─── Constants ───────────────────────────────────────────────────────────────

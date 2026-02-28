@@ -184,7 +184,6 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Federal', href: '/dashboard/federal', icon: Landmark, accent: 'text-blue-700', accentBg: 'bg-blue-50 border-blue-200' },
       { label: 'State', href: '/dashboard/state/MD', icon: Map, accent: 'text-cyan-700', accentBg: 'bg-cyan-50 border-cyan-200' },
-      { label: 'Municipal Utility', href: '/dashboard/ms4/default', icon: CloudRain, accent: 'text-amber-700', accentBg: 'bg-amber-50 border-amber-200' },
     ],
   },
   {

@@ -11,13 +11,12 @@ import { MOCK_ALERT_SUMMARY } from '@/ams/data/mock-alerts';
 const ROUTE_LABELS: Record<string, string> = {
   federal: 'Federal',
   state: 'State',
-  ms4: 'Municipal Utility',
   esg: 'Sustainability',
   k12: 'K-12 Education',
   university: 'University Research',
   ngo: 'NGO Conservation',
   utility: 'Municipal Utility',
-  infrastructure: 'Infrastructure',
+  infrastructure: 'Site & Property',
   insurance: 'Insurance & Risk',
   agriculture: 'Agriculture',
   'aqua-lo': 'AQUA-LO',
@@ -26,7 +25,6 @@ const ROUTE_LABELS: Record<string, string> = {
 const ROUTE_ACCENTS: Record<string, string> = {
   federal: 'text-blue-600',
   state: 'text-cyan-600',
-  ms4: 'text-amber-600',
   esg: 'text-emerald-600',
   k12: 'text-emerald-600',
   university: 'text-violet-600',

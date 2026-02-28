@@ -187,18 +187,35 @@ export default function DataProvenancePage() {
         </div>
 
         {/* ── Hero Banner ── */}
-        <div className="bg-gradient-to-r from-slate-800 to-slate-700 rounded-xl mx-6 mt-6 px-8 py-8 print:hidden">
-          <div className="flex items-center gap-3 mb-2">
-            <Link href="/" className="flex items-center gap-1.5 text-sm text-slate-300 hover:text-white transition-colors">
-              <ArrowLeft size={14} />
-              Back to Dashboard
-            </Link>
+        <div className="relative overflow-hidden rounded-xl mx-6 mt-6 print:hidden">
+          <div className="relative h-[160px] sm:h-[180px] lg:h-[200px] w-full">
+            <Image
+              src="/images/heroes/Research.png"
+              alt="Data Provenance & Methodology"
+              fill
+              className="object-cover"
+              priority
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1400px"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/30" />
+            <div className="absolute inset-0 flex flex-col justify-center px-6 sm:px-10 lg:px-14">
+              <div className="mb-1.5 sm:mb-2">
+                <span
+                  className="inline-flex items-center gap-1.5 w-fit text-sm sm:text-base font-extrabold uppercase tracking-[0.18em] text-cyan-400"
+                  style={{ textShadow: '0 0 12px currentColor, 0 0 24px currentColor' }}
+                >
+                  <span className="inline-block w-2 h-2 rounded-full bg-current animate-pulse" style={{ boxShadow: '0 0 6px currentColor' }} />
+                  PIN — PEARL Intelligence Network
+                </span>
+              </div>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white leading-tight max-w-2xl">
+                Data Provenance &amp; Methodology
+              </h1>
+              <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-white/80 max-w-xl leading-relaxed">
+                The canonical reference for how PIN sources, scores, and validates environmental data.
+              </p>
+            </div>
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">Data Provenance &amp; Methodology</h1>
-          <p className="text-sm text-slate-300 max-w-2xl leading-relaxed">
-            The canonical reference for how PIN sources, scores, and validates environmental data.
-            Covers the data tier system, PIN Water Score composite methodology, source catalog, quality assurance, and measurement standards.
-          </p>
         </div>
 
         <div ref={contentRef} className="max-w-4xl mx-auto px-6 py-8 print:px-0 print:max-w-none">

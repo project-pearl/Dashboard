@@ -115,7 +115,7 @@ type Props = {
 type ViewLens = 'overview' | 'briefing' | 'trends' | 'policy'
   | 'compliance' | 'water-quality' | 'public-health' | 'receiving-waters'
   | 'stormwater-bmps' | 'infrastructure' | 'monitoring' | 'disaster'
-  | 'tmdl-compliance' | 'scorecard' | 'reports' | 'mcm-manager' | 'funding';
+  | 'tmdl-compliance' | 'scorecard' | 'reports' | 'mcm-manager' | 'funding' | 'warr';
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -224,6 +224,12 @@ const LENS_CONFIG: Record<ViewLens, {
     description: 'Active grants, opportunity pipeline, and financial analytics',
     defaultOverlay: 'impairment',
     sections: new Set(['grants', 'fund-active', 'fund-srf', 'infra-capital', 'infra-construction', 'fund-pipeline', 'fund-stormwater', 'fund-analytics', 'disclaimer']),
+  },
+  warr: {
+    label: 'WARR Room',
+    description: 'Water Alert & Response Readiness — real-time situation awareness',
+    defaultOverlay: 'impairment',
+    sections: new Set(['warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']),
   },
 };
 

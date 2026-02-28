@@ -24,7 +24,7 @@ import type { WARRMetric } from './WARRZones';
 type ViewLens = 'overview' | 'briefing' | 'trends' | 'policy'
   | 'compliance' | 'water-quality' | 'public-health' | 'source-receiving'
   | 'treatment-process' | 'infrastructure' | 'laboratory' | 'disaster'
-  | 'permit-limits' | 'scorecard' | 'reports' | 'asset-management' | 'funding';
+  | 'permit-limits' | 'scorecard' | 'reports' | 'asset-management' | 'funding' | 'warr';
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -115,6 +115,11 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Funding & Grants',
     description: 'SRF loans, federal funding, revenue planning, debt management, and capital strategy',
     sections: new Set(['fund-srf', 'fund-federal', 'fund-revenue', 'fund-debt', 'fund-capital-strategy', 'disclaimer']),
+  },
+  warr: {
+    label: 'WARR Room',
+    description: 'Water Alert & Response Readiness — real-time situation awareness',
+    sections: new Set(['warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']),
   },
 };
 

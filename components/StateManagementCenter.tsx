@@ -129,7 +129,7 @@ type OverlayId = 'risk' | 'coverage' | 'bmp' | 'ej';
 type ViewLens = 'overview' | 'briefing' | 'trends' | 'policy'
   | 'compliance' | 'water-quality' | 'public-health' | 'habitat' | 'agriculture'
   | 'infrastructure' | 'monitoring' | 'disaster' | 'tmdl' | 'scorecard'
-  | 'reports' | 'permits' | 'funding';
+  | 'reports' | 'permits' | 'funding' | 'warr';
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -238,6 +238,12 @@ const LENS_CONFIG: Record<ViewLens, {
     description: 'Active grants, SRF management, and financial analytics',
     defaultOverlay: 'risk',
     sections: new Set(['grants', 'fund-active', 'fund-srf', 'infra-capital', 'infra-construction', 'fund-pipeline', 'fund-passthrough', 'fund-analytics', 'fund-bil', 'fund-j40', 'fund-srf-pipeline', 'fund-grant-compliance', 'fund-trend', 'fund-match', 'disclaimer']),
+  },
+  warr: {
+    label: 'WARR Room',
+    description: 'Water Alert & Response Readiness — real-time situation awareness',
+    defaultOverlay: 'risk',
+    sections: new Set(['warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']),
   },
 };
 
