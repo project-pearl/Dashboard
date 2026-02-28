@@ -258,7 +258,7 @@ export default function MethodologyPage() {
               ['NPDES', 'EPA (via ECHO/ICIS)', 'Monthly', 'Permit limits, effluent guidelines, compliance schedules, MS4 permit status', 'All permitted point-source dischargers'],
               ['NHD (National Hydrography Dataset)', 'USGS', 'Annual refresh; HR version quarterly', 'Stream/waterbody geometry, reach codes, watershed boundaries (HUC-8/10/12), flow direction', 'Nationwide 1:24,000 scale (NHDPlus HR)'],
               ['WATERS (ATTAINS GeoServices)', 'EPA', 'Synced with ATTAINS cycle', 'Geospatial impairment mapping, assessment unit boundaries, TMDL linkage', 'All states with ATTAINS submissions'],
-              ['NWIS', 'USGS', 'Real-time (15-min); daily values updated nightly', 'Streamflow, water level, continuous water quality (DO, pH, turbidity, temperature, conductivity)', '~13,000 active real-time stations nationwide'],
+              ['WDFN', 'USGS', 'Real-time (15-min); daily values updated nightly', 'Streamflow, water level, continuous water quality (DO, pH, turbidity, temperature, conductivity)', '~13,000 active real-time stations nationwide'],
               ['EJScreen', 'EPA', 'Annual (demographic); biennial (environmental)', 'Environmental justice indices, demographic indicators, pollution burden scores per census block group', 'Nationwide at census block group level'],
               ['NOAA CO-OPS', 'NOAA', 'Real-time (6-min tidal); hourly meteorological', 'Tidal water levels, water temperature, salinity, meteorological conditions at coastal stations', '~210 active stations along US coastline and Great Lakes'],
             ]}

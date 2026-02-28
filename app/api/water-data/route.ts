@@ -2153,7 +2153,7 @@ export async function GET(request: NextRequest) {
           const filter = permit
             ? `NPDES_ID/${encodeURIComponent(permit)}`
             : `STATE_ABBR/${state}`;
-          const url = `https://data.epa.gov/efservice/ICIS_PERMITS/${filter}/ROWS/0:${limit}/JSON`;
+          const url = `https://data.epa.gov/efservice/ICIS_PERMIT/${filter}/ROWS/0:${limit}/JSON`;
           console.log('[ICIS-Permits]', url);
           const res = await fetch(url, {
             headers: { 'Accept': 'application/json' },
@@ -2178,7 +2178,7 @@ export async function GET(request: NextRequest) {
           const filter = permit
             ? `NPDES_ID/${encodeURIComponent(permit)}`
             : `STATE_ABBR/${state}`;
-          const url = `https://data.epa.gov/efservice/ICIS_VIOLATIONS/${filter}/ROWS/0:${limit}/JSON`;
+          const url = `https://data.epa.gov/efservice/ICIS_VIOLATION/${filter}/ROWS/0:${limit}/JSON`;
           console.log('[ICIS-Violations]', url);
           const res = await fetch(url, {
             headers: { 'Accept': 'application/json' },
@@ -2203,7 +2203,7 @@ export async function GET(request: NextRequest) {
           const filter = permit
             ? `NPDES_ID/${encodeURIComponent(permit)}`
             : `STATE_ABBR/${state}`;
-          const url = `https://data.epa.gov/efservice/ICIS_DMR_MEASUREMENTS/${filter}/ROWS/0:${limit}/JSON`;
+          const url = `https://data.epa.gov/efservice/ICIS_DMR/${filter}/ROWS/0:${limit}/JSON`;
           console.log('[ICIS-DMR]', url);
           const res = await fetch(url, {
             headers: { 'Accept': 'application/json' },
@@ -2224,7 +2224,7 @@ export async function GET(request: NextRequest) {
         const state = (sp.get('state') || 'MD').toUpperCase();
         const limit = sp.get('limit') || '100';
         try {
-          const url = `https://data.epa.gov/efservice/ICIS_ENFORCEMENT_ACTIONS/STATE_ABBR/${state}/ROWS/0:${limit}/JSON`;
+          const url = `https://data.epa.gov/efservice/ICIS_ENFORCEMENT/STATE_ABBR/${state}/ROWS/0:${limit}/JSON`;
           console.log('[ICIS-Enforcement]', url);
           const res = await fetch(url, {
             headers: { 'Accept': 'application/json' },

@@ -326,7 +326,7 @@ export function DisasterEmergencyPanel({
             )}
           </CardTitle>
           <CardDescription>
-            NWIS groundwater level trends by state — sites grouped by monitoring status
+            WDFN groundwater level trends by state — sites grouped by monitoring status
           </CardDescription>
         </CardHeader>
         <CardContent>
