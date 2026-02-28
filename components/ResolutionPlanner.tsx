@@ -11,7 +11,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { getArchivedSignals, type Signal } from "@/lib/signalArchiveCache";
+import { getArchivedSignals, type Signal } from "@/lib/signalArchiveCacheClient";
 import { scoreModules, type ModuleScoringInput } from "@/lib/resolutionModules";
 import { StrategyModulesSection } from "./StrategyModulesSection";
 // html2pdf.js loaded dynamically in export handler (code-split)

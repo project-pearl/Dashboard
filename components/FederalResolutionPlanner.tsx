@@ -16,7 +16,7 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { getStatesGeoJSONWithAbbr } from "@/lib/mapUtils";
-import { getArchivedSignals, type Signal } from "@/lib/signalArchiveCache";
+import { getArchivedSignals, type Signal } from "@/lib/signalArchiveCacheClient";
 import { scoreModules, type ModuleScoringInput } from "@/lib/resolutionModules";
 import { StrategyModulesSection } from "./StrategyModulesSection";
 
