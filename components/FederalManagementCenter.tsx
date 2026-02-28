@@ -2612,6 +2612,37 @@ export function FederalManagementCenter(props: Props) {
             )}
         </HeroBanner>
 
+        {/* ── Sentinel Events Strip (overview only, above LayoutEditor) ── */}
+        {viewLens === 'overview' && (sentinel.criticalHucs.length > 0 || sentinel.watchHucs.length > 0) && (
+          <Card className="border-0" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
+            <CardHeader className="pb-2 pt-4 px-5">
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4" style={{ color: 'var(--accent-teal)' }} />
+                <CardTitle className="text-sm font-semibold" style={{ color: 'var(--text-bright)' }}>
+                  Sentinel Alerts
+                </CardTitle>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{
+                  background: sentinel.criticalHucs.length > 0 ? 'rgba(211,47,47,0.15)' : 'rgba(249,168,37,0.15)',
+                  color: sentinel.criticalHucs.length > 0 ? '#D32F2F' : '#F9A825',
+                  border: `1px solid ${sentinel.criticalHucs.length > 0 ? 'rgba(211,47,47,0.3)' : 'rgba(249,168,37,0.3)'}`,
+                }}>
+                  {sentinel.criticalHucs.length + sentinel.watchHucs.length} active
+                </span>
+              </div>
+            </CardHeader>
+            <CardContent className="px-5 pb-4">
+              <SentinelBriefingCard
+                criticalHucs={sentinel.criticalHucs}
+                watchHucs={sentinel.watchHucs}
+                recentResolutions={sentinel.recentResolutions}
+                hucNames={hucNames}
+                sources={sentinel.sources}
+                systemStatus={sentinel.systemStatus}
+                lastFetched={sentinel.lastFetched}
+              />
+            </CardContent>
+          </Card>
+        )}
 
         {/* ── LAYOUT EDITOR WRAPPER ── */}
         <LayoutEditor ccKey="FMC">

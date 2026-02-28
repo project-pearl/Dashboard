@@ -191,7 +191,7 @@ export function SentinelBriefingCard({
 
   const activeEvents = allActiveEvents.filter(h => !reviewedIds.has(h.huc8));
   const reviewedEvents = allActiveEvents.filter(h => reviewedIds.has(h.huc8));
-  const visibleEvents = showAllEvents ? activeEvents : activeEvents.slice(0, 3);
+  const visibleEvents = showAllEvents ? activeEvents : activeEvents.slice(0, 5);
 
   const handleMarkReviewed = (huc8: string) => {
     setReviewedIds(prev => {
@@ -262,7 +262,7 @@ export function SentinelBriefingCard({
             {visibleEvents.map(h => (
               <EventRow key={h.huc8} huc={h} hucNames={hucNames} onMarkReviewed={handleMarkReviewed} />
             ))}
-            {activeEvents.length > 3 && (
+            {activeEvents.length > 5 && (
               <button
                 onClick={() => setShowAllEvents(!showAllEvents)}
                 className="w-full flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-medium transition-colors"
@@ -274,13 +274,13 @@ export function SentinelBriefingCard({
               >
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showAllEvents ? 'rotate-180' : ''}`} />
                 {showAllEvents
-                  ? 'Show top 3'
+                  ? 'Show top 5'
                   : `View all ${activeEvents.length} events`}
               </button>
             )}
-            {!showAllEvents && activeEvents.length > 3 && (
+            {!showAllEvents && activeEvents.length > 5 && (
               <div className="text-[10px] text-center" style={{ color: 'var(--text-dim)' }}>
-                Showing 3 of {activeEvents.length} active events
+                Showing 5 of {activeEvents.length} active events
               </div>
             )}
           </div>
