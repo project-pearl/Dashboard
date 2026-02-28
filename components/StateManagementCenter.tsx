@@ -17,7 +17,7 @@ const MapboxMarkers = dynamic(
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, AlertCircle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Building2, Info, LogOut, Waves, Heart, TreePine, Sprout, FileCheck, Scale, Activity, Sparkles, ClipboardList, Trophy, FileText, Banknote, Zap, RadioTower, Wrench, HardHat, FlaskConical, Leaf, Landmark, ShieldCheck, ExternalLink, Bug, Fish, ShieldAlert, Gauge } from 'lucide-react';
+import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, AlertCircle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Building2, Info, LogOut, Waves, Heart, TreePine, Sprout, FileCheck, Scale, Activity, Sparkles, ClipboardList, Trophy, FileText, Banknote, Zap, RadioTower, Wrench, HardHat, FlaskConical, Leaf, Landmark, ShieldCheck, ExternalLink, Bug, Fish, ShieldAlert, Gauge, Clock, Link2 } from 'lucide-react';
 import ResolutionPlanner from '@/components/ResolutionPlanner';
 import { BrandedPrintBtn } from '@/lib/brandedPrint';
 import { useRouter } from 'next/navigation';
@@ -192,7 +192,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Agricultural & Nonpoint Source',
     description: '319 program, watershed plans, and nutrient reduction',
     defaultOverlay: 'risk',
-    sections: new Set(['ag-319', 'ag-wbp', 'ag-nutrient', 'ag-partners', 'disclaimer']),
+    sections: new Set(['ag-319', 'ag-wbp', 'ag-nutrient', 'ag-partners', 'ag-nps-breakdown', 'ag-bmp-effectiveness', 'ag-nps-tmdl', 'ag-nps-funding', 'disclaimer']),
   },
   infrastructure: {
     label: 'Infrastructure',
@@ -204,13 +204,13 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Monitoring',
     description: 'State monitoring network, data management, and optimization',
     defaultOverlay: 'coverage',
-    sections: new Set(['groundwater', 'mon-network', 'mon-data-mgmt', 'mon-optimization', 'mon-continuous', 'disclaimer']),
+    sections: new Set(['groundwater', 'mon-network', 'mon-data-mgmt', 'mon-optimization', 'mon-continuous', 'mon-latency', 'mon-report-card', 'mon-source-health', 'disclaimer']),
   },
   disaster: {
     label: 'Disaster & Emergency Response',
     description: 'Active incidents, spill reporting, and preparedness',
     defaultOverlay: 'risk',
-    sections: new Set(['alertfeed', 'disaster-active', 'disaster-response', 'disaster-spill', 'disaster-prep', 'disclaimer']),
+    sections: new Set(['alertfeed', 'disaster-active', 'disaster-response', 'disaster-spill', 'disaster-prep', 'disaster-cascade', 'disclaimer']),
   },
   tmdl: {
     label: 'TMDL & Restoration',
@@ -3639,6 +3639,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             }
 
             // ── Agriculture sections ───────────────────────────────────────
+            {/* TODO: Future click-throughs for 319 Program Management:
+                - "18 Active 319 Grants" → grant list with project names, amounts, watersheds
+                - "247 BMPs Installed" → BMP inventory
+                - "142K Load Reduction (lbs)" → reduction by pollutant and project */}
             case 'ag-319': return DS(
               <Card>
                 <CardHeader>
@@ -3667,6 +3671,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </Card>
             );
 
+            {/* TODO: Future click-throughs for Watershed-Based Plans:
+                - "14 Accepted Plans" → list plans with implementation status
+                - "6 In Development" → show drafts
+                - "42% Avg Implementation" → plan-by-plan progress */}
             case 'ag-wbp': return DS(
               <Card>
                 <CardHeader>
@@ -3694,6 +3702,9 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </Card>
             );
 
+            {/* TODO: Future click-throughs for Nutrient Reduction Strategy:
+                - All 4 tiles (N Goal 35%, N Achieved 22%, P Goal 25%, P Achieved 18%) →
+                  progress charts showing trend over time and gap analysis */}
             case 'ag-nutrient': return DS(
               <Card>
                 <CardHeader>
@@ -3722,6 +3733,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </Card>
             );
 
+            {/* TODO: Future click-throughs for Agricultural Partner Management:
+                - "24 Partner Organizations" → list partners
+                - "8 Active MOUs" → MOU details
+                - "15 Joint Projects" → project list */}
             case 'ag-partners': return DS(
               <Card>
                 <CardHeader>
@@ -3745,6 +3760,175 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                     ))}
                   </div>
                   <p className="text-xs text-slate-400 mt-4 italic">Data source: State agricultural partnership database, USDA NRCS</p>
+                </CardContent>
+              </Card>
+            );
+
+            {/* ── Fix 17: New NPS/Agriculture cards ── */}
+            case 'ag-nps-breakdown': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Droplets className="h-5 w-5 text-blue-600" />
+                    Nonpoint Source Pollution Breakdown
+                  </CardTitle>
+                  <CardDescription>What is driving NPS pollution in {stateName}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {[
+                      { category: 'Agricultural Runoff', pct: 42, color: 'bg-lime-500' },
+                      { category: 'Urban Stormwater', pct: 24, color: 'bg-slate-500' },
+                      { category: 'Septic Systems', pct: 14, color: 'bg-amber-500' },
+                      { category: 'Atmospheric Deposition', pct: 10, color: 'bg-sky-500' },
+                      { category: 'Forestry / Silviculture', pct: 6, color: 'bg-green-700' },
+                      { category: 'Other', pct: 4, color: 'bg-gray-400' },
+                    ].map(r => (
+                      <div key={r.category}>
+                        <div className="flex items-center justify-between text-xs mb-1">
+                          <span className="text-slate-700 font-medium">{r.category}</span>
+                          <span className="text-slate-500">{r.pct}%</span>
+                        </div>
+                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <div className={`h-full rounded-full ${r.color}`} style={{ width: `${r.pct}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ATTAINS cause/source data, state NPS assessment</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'ag-bmp-effectiveness': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Gauge className="h-5 w-5 text-green-600" />
+                    BMP Effectiveness
+                  </CardTitle>
+                  <CardDescription>Load reduction performance and cost-effectiveness by BMP type</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-200 text-left">
+                          <th className="py-2 pr-3 font-semibold text-slate-600">BMP Type</th>
+                          <th className="py-2 pr-3 font-semibold text-slate-600 text-right">Installed</th>
+                          <th className="py-2 pr-3 font-semibold text-slate-600 text-right">Load Reduced (lbs)</th>
+                          <th className="py-2 pr-3 font-semibold text-slate-600 text-right">$/lb Removed</th>
+                          <th className="py-2 font-semibold text-slate-600">Performance</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[
+                          { type: 'Riparian Buffers', installed: 64, lbs: '48,200', cost: '$12', perf: 'Exceeding' },
+                          { type: 'Cover Crops', installed: 82, lbs: '38,600', cost: '$8', perf: 'Exceeding' },
+                          { type: 'Constructed Wetlands', installed: 18, lbs: '22,400', cost: '$24', perf: 'On Target' },
+                          { type: 'Sediment Basins', installed: 45, lbs: '18,100', cost: '$18', perf: 'On Target' },
+                          { type: 'Nutrient Mgmt Plans', installed: 38, lbs: '14,700', cost: '$15', perf: 'Below Target' },
+                        ].map(b => (
+                          <tr key={b.type} className="border-b border-slate-100">
+                            <td className="py-2 pr-3 text-slate-700 font-medium">{b.type}</td>
+                            <td className="py-2 pr-3 text-slate-600 text-right">{b.installed}</td>
+                            <td className="py-2 pr-3 text-slate-600 text-right">{b.lbs}</td>
+                            <td className="py-2 pr-3 text-slate-600 text-right">{b.cost}</td>
+                            <td className="py-2">
+                              <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                                b.perf === 'Exceeding' ? 'bg-green-100 text-green-700' :
+                                b.perf === 'On Target' ? 'bg-blue-100 text-blue-700' :
+                                'bg-amber-100 text-amber-700'
+                              }`}>{b.perf}</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="mt-3 p-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-600">
+                    Total: 247 BMPs installed · 142K lbs load reduction · Avg $14/lb removed
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA GRTS, state BMP tracking</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'ag-nps-tmdl': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileCheck className="h-5 w-5 text-cyan-600" />
+                    NPS-Specific TMDL Progress
+                  </CardTitle>
+                  <CardDescription>TMDL status for waterbodies impaired by agricultural and urban nonpoint sources</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                    {[
+                      { label: 'NPS TMDLs Total', value: '34', bg: 'bg-cyan-50 border-cyan-200' },
+                      { label: 'Approved', value: '22', bg: 'bg-green-50 border-green-200' },
+                      { label: 'In Development', value: '8', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Milestones Met', value: '65%', bg: 'bg-blue-50 border-blue-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-semibold text-slate-600">TMDLs by Pollutant Category</h4>
+                    {[
+                      { pollutant: 'Nutrients (N/P)', count: 14, approved: 9 },
+                      { pollutant: 'Sediment / Siltation', count: 11, approved: 8 },
+                      { pollutant: 'Pathogens (E. coli / Fecal)', count: 9, approved: 5 },
+                    ].map(p => (
+                      <div key={p.pollutant} className="flex items-center justify-between text-xs px-2 py-1.5 rounded bg-slate-50 border border-slate-100">
+                        <span className="text-slate-700">{p.pollutant}</span>
+                        <span className="text-slate-500">{p.approved}/{p.count} approved</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ATTAINS TMDL tracking</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'ag-nps-funding': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Banknote className="h-5 w-5 text-green-600" />
+                    NPS Funding &amp; Grants Overview
+                  </CardTitle>
+                  <CardDescription>Total funding picture for nonpoint source work in {stateName}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { source: 'CWA §319 Grants', amount: '$2.8M', period: 'FY24-26', icon: '🏛️' },
+                      { source: 'State Revolving Fund (NPS)', amount: '$4.2M', period: 'FY24-26', icon: '💧' },
+                      { source: 'USDA EQIP', amount: '$6.1M', period: 'FY25', icon: '🌾' },
+                      { source: 'USDA CRP', amount: '$3.4M', period: 'FY25', icon: '🌿' },
+                      { source: 'Other Federal NPS', amount: '$1.8M', period: 'FY25', icon: '📋' },
+                    ].map(f => (
+                      <div key={f.source} className="flex items-center justify-between rounded-lg border border-slate-200 p-3 bg-white">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">{f.icon}</span>
+                          <div>
+                            <div className="text-xs font-semibold text-slate-700">{f.source}</div>
+                            <div className="text-[10px] text-slate-400">{f.period}</div>
+                          </div>
+                        </div>
+                        <span className="text-sm font-bold text-slate-800">{f.amount}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3 p-2 rounded-lg bg-green-50 border border-green-200 text-xs text-green-700 font-semibold text-center">
+                    Total NPS Funding: $18.3M across all sources
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA GRTS, state SRF, USDA NRCS</p>
                 </CardContent>
               </Card>
             );
@@ -3863,6 +4047,11 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             );
 
             // ── Monitoring sections ────────────────────────────────────────
+            {/* TODO: Future click-throughs for State Monitoring Network:
+                - "186 Ambient" → filtered station list for ambient monitoring
+                - "342 NPDES DMR" → filtered NPDES discharge monitoring stations
+                - "1,842 SDWA" → filtered SDWA compliance stations
+                - "94 Volunteer" → filtered volunteer monitoring sites */}
             case 'mon-network': return DS(
               <Card>
                 <CardHeader>
@@ -3904,6 +4093,9 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </Card>
             );
 
+            {/* TODO: Future click-throughs for Data Management Operations:
+                - "3 Pending QA" → show which submissions are pending review
+                - "97.3% QA Pass Rate" → show failures and rejection reasons */}
             case 'mon-data-mgmt': return DS(
               <Card>
                 <CardHeader>
@@ -3932,6 +4124,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </Card>
             );
 
+            {/* TODO: Future click-throughs for Network Optimization:
+                - "14 Priority Gaps" → show gap locations on the map (highest priority)
+                - "22 Recommended Stations" → proposed locations with justification
+                - "72% Coverage Score" → coverage model visualization */}
             case 'mon-optimization': return DS(
               <Card>
                 <CardHeader>
@@ -3959,6 +4155,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </Card>
             );
 
+            {/* TODO: Future click-throughs for Continuous Monitoring:
+                - "38 Online Now" → show which stations on a map
+                - "3 Alerts (24H)" → show alert details
+                - "42 Continuous Stations" → list all with status */}
             case 'mon-continuous': return DS(
               <Card>
                 <CardHeader>
@@ -3987,7 +4187,149 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </Card>
             );
 
+            {/* ── Fix 19: New Monitoring cards ── */}
+            case 'mon-latency': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Clock className="h-5 w-5 text-indigo-600" />
+                    Data Latency Tracker
+                  </CardTitle>
+                  <CardDescription>Refresh rates and last-pull timestamps by data source for {stateName}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { source: 'ATTAINS', frequency: 'Quarterly', lastPull: '3 days ago', status: 'fresh' },
+                      { source: 'WDFN', frequency: 'Daily', lastPull: '2 hours ago', status: 'fresh' },
+                      { source: 'WQP', frequency: 'Varies', lastPull: '14 days ago', status: 'stale' },
+                      { source: 'SDWIS', frequency: 'Weekly', lastPull: '5 days ago', status: 'fresh' },
+                      { source: 'ECHO', frequency: 'Weekly', lastPull: '1 day ago', status: 'fresh' },
+                      { source: 'NOAA CO-OPS', frequency: 'Hourly', lastPull: '45 min ago', status: 'fresh' },
+                    ].map(s => (
+                      <div key={s.source} className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 bg-white">
+                        <div className="flex items-center gap-2">
+                          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${s.status === 'fresh' ? 'bg-green-500' : 'bg-red-500'}`} />
+                          <span className="text-xs font-semibold text-slate-700 w-24">{s.source}</span>
+                        </div>
+                        <span className="text-[10px] text-slate-400">{s.frequency}</span>
+                        <span className={`text-xs ${s.status === 'stale' ? 'text-red-600 font-semibold' : 'text-slate-500'}`}>
+                          {s.lastPull}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: PIN internal pipeline health registry</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'mon-report-card': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ClipboardList className="h-5 w-5 text-blue-600" />
+                    Data Report Card
+                  </CardTitle>
+                  <CardDescription>AI Readiness score and data quality assessment for {stateName}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="flex items-center justify-center w-16 h-16 rounded-full bg-red-100 border-2 border-red-300">
+                      <span className="text-xl font-black text-red-600">F</span>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-slate-800">45<span className="text-sm font-normal text-slate-400">/100</span></div>
+                      <div className="text-xs text-slate-500">AI Readiness Score</div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {[
+                      { dim: 'Freshness', score: 0, max: 30, note: 'No WQP records cached' },
+                      { dim: 'Coverage', score: 25, max: 25, note: 'All HUC-8s represented' },
+                      { dim: 'Parameters', score: 0, max: 25, note: 'Missing key parameters' },
+                      { dim: 'Redundancy', score: 20, max: 20, note: 'Multi-source overlap' },
+                    ].map(d => (
+                      <div key={d.dim} className="flex items-center gap-3">
+                        <span className="text-xs text-slate-600 w-20 font-medium">{d.dim}</span>
+                        <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <div className={`h-full rounded-full ${d.score === d.max ? 'bg-green-500' : d.score === 0 ? 'bg-red-400' : 'bg-amber-400'}`} style={{ width: `${(d.score / d.max) * 100}%` }} />
+                        </div>
+                        <span className="text-[10px] text-slate-500 w-12 text-right">{d.score}/{d.max}</span>
+                        <span className="text-[10px] text-slate-400 w-36 truncate">{d.note}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: PIN data quality engine</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'mon-source-health': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5 text-emerald-600" />
+                    Source Health Registry
+                  </CardTitle>
+                  <CardDescription>Live operational status of each data pipeline for {stateName}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-200 text-left">
+                          <th className="py-2 pr-3 font-semibold text-slate-600">Source</th>
+                          <th className="py-2 pr-3 font-semibold text-slate-600">Status</th>
+                          <th className="py-2 pr-3 font-semibold text-slate-600">Last Success</th>
+                          <th className="py-2 pr-3 font-semibold text-slate-600 text-right">Errors (30d)</th>
+                          <th className="py-2 font-semibold text-slate-600 text-right">Records</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[
+                          { source: 'ATTAINS', status: 'Healthy', last: '3 days ago', errors: 0, records: '4,218' },
+                          { source: 'WDFN', status: 'Healthy', last: '2 hours ago', errors: 1, records: '12,840' },
+                          { source: 'WQP', status: 'Stale', last: '14 days ago', errors: 3, records: '0' },
+                          { source: 'SDWIS', status: 'Healthy', last: '5 days ago', errors: 0, records: '1,842' },
+                          { source: 'ECHO', status: 'Healthy', last: '1 day ago', errors: 0, records: '342' },
+                          { source: 'NOAA CO-OPS', status: 'Healthy', last: '45 min ago', errors: 0, records: '2,106' },
+                        ].map(s => (
+                          <tr key={s.source} className="border-b border-slate-100">
+                            <td className="py-2 pr-3 text-slate-700 font-medium">{s.source}</td>
+                            <td className="py-2 pr-3">
+                              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                                s.status === 'Healthy' ? 'bg-green-100 text-green-700' :
+                                s.status === 'Stale' ? 'bg-red-100 text-red-700' :
+                                'bg-amber-100 text-amber-700'
+                              }`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${
+                                  s.status === 'Healthy' ? 'bg-green-500' :
+                                  s.status === 'Stale' ? 'bg-red-500' : 'bg-amber-500'
+                                }`} />
+                                {s.status}
+                              </span>
+                            </td>
+                            <td className="py-2 pr-3 text-slate-500">{s.last}</td>
+                            <td className="py-2 pr-3 text-slate-600 text-right">{s.errors}</td>
+                            <td className="py-2 text-slate-600 text-right">{s.records}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: PIN internal health registry and priority queue system</p>
+                </CardContent>
+              </Card>
+            );
+
             // ── Disaster sections ──────────────────────────────────────────
+            {/* TODO: Future click-throughs for Active Incidents:
+                - Each incident row → Response Planner pre-loaded with that incident context
+                  (type/severity pre-filled, downstream waterbodies auto-identified,
+                   multi-agency contacts pre-populated, response timeline template,
+                   regulatory notification requirements and deadlines)
+                - "Sewage Bypass — Patapsco WWTP" → affected waterbodies, downstream impacts, agency contacts */}
             case 'disaster-active': return DS(
               <Card>
                 <CardHeader>
@@ -4006,7 +4348,13 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       <div key={i} className={`rounded-lg border p-3 ${inc.severity === 'High' ? 'border-red-200 bg-red-50' : 'border-amber-200 bg-amber-50'}`}>
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-xs font-semibold text-slate-800">{inc.incident}</span>
-                          <Badge variant={inc.severity === 'High' ? 'destructive' : 'default'} className="text-[10px]">{inc.status}</Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={inc.severity === 'High' ? 'destructive' : 'default'} className="text-[10px]">{inc.status}</Badge>
+                            <span className="inline-flex items-center gap-1 text-[10px] text-blue-600 font-medium">
+                              <Link2 className="h-3 w-3" />
+                              Response Planner
+                            </span>
+                          </div>
                         </div>
                         <p className="text-[10px] text-slate-500">Since {inc.since} · Severity: {inc.severity}</p>
                       </div>
@@ -4017,6 +4365,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </Card>
             );
 
+            {/* TODO: Future click-throughs for State Response Operations:
+                - "2 Teams Deployed" → deployment locations and assignments
+                - "18 Sampling Sites" → show on map
+                - "3 Advisories Active" → list advisories with detail */}
             case 'disaster-response': return DS(
               <Card>
                 <CardHeader>
@@ -4045,6 +4397,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </Card>
             );
 
+            {/* TODO: Future click-throughs for Spill Reporting:
+                - "14 Reports (30D)" → spill list with locations, materials, volumes
+                - "4 Under Investigation" → investigation status
+                - "3 Cleanup Active" → cleanup progress */}
             case 'disaster-spill': return DS(
               <Card>
                 <CardHeader>
@@ -4073,6 +4429,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </Card>
             );
 
+            {/* TODO: Future click-throughs for Preparedness:
+                - "12 Emergency Plans" → list plans by type
+                - "Last Drill 45 days ago" → show drill report
+                - "94% Equipment Ready" → show inventory status */}
             case 'disaster-prep': return DS(
               <Card>
                 <CardHeader>
@@ -4096,6 +4456,68 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                     ))}
                   </div>
                   <p className="text-xs text-slate-400 mt-4 italic">Data source: State emergency management, EPA CAMEO/ALOHA</p>
+                </CardContent>
+              </Card>
+            );
+
+            {/* ── Fix 21: Cross-Agency Alert Correlation ── */}
+            case 'disaster-cascade': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Link2 className="h-5 w-5 text-purple-600" />
+                    Cross-Agency Alert Correlation
+                  </CardTitle>
+                  <CardDescription>How incidents cascade across water domains in {stateName}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {/* Example cascade: Sewage bypass */}
+                    <div className="rounded-lg border border-red-200 bg-red-50/50 p-3">
+                      <div className="text-xs font-semibold text-red-800 mb-2">Sewage Bypass — Patapsco WWTP</div>
+                      <div className="flex items-stretch gap-0 overflow-x-auto">
+                        {[
+                          { domain: 'Wastewater', event: 'Bypass event', color: 'bg-red-100 border-red-300 text-red-700' },
+                          { domain: 'Surface Water', event: 'Bacteria spike downstream', color: 'bg-orange-100 border-orange-300 text-orange-700' },
+                          { domain: 'Public Health', event: 'Swimming advisory', color: 'bg-amber-100 border-amber-300 text-amber-700' },
+                          { domain: 'Drinking Water', event: 'Intake within impact zone', color: 'bg-blue-100 border-blue-300 text-blue-700' },
+                        ].map((step, idx) => (
+                          <div key={step.domain} className="flex items-center">
+                            <div className={`rounded border px-2 py-2 min-w-[120px] ${step.color}`}>
+                              <div className="text-[9px] font-bold uppercase tracking-wider opacity-70">{step.domain}</div>
+                              <div className="text-[10px] mt-0.5 font-medium">{step.event}</div>
+                            </div>
+                            {idx < 3 && <div className="text-slate-400 px-1 text-sm font-bold">→</div>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Example cascade: Chemical spill */}
+                    <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3">
+                      <div className="text-xs font-semibold text-amber-800 mb-2">Chemical Spill — I-95 Corridor</div>
+                      <div className="flex items-stretch gap-0 overflow-x-auto">
+                        {[
+                          { domain: 'Surface Water', event: 'Contaminant plume detected', color: 'bg-orange-100 border-orange-300 text-orange-700' },
+                          { domain: 'Groundwater', event: 'Well monitoring triggered', color: 'bg-cyan-100 border-cyan-300 text-cyan-700' },
+                          { domain: 'Drinking Water', event: '2 intakes on alert', color: 'bg-blue-100 border-blue-300 text-blue-700' },
+                        ].map((step, idx) => (
+                          <div key={step.domain} className="flex items-center">
+                            <div className={`rounded border px-2 py-2 min-w-[120px] ${step.color}`}>
+                              <div className="text-[9px] font-bold uppercase tracking-wider opacity-70">{step.domain}</div>
+                              <div className="text-[10px] mt-0.5 font-medium">{step.event}</div>
+                            </div>
+                            {idx < 2 && <div className="text-slate-400 px-1 text-sm font-bold">→</div>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="p-2 rounded-lg bg-purple-50 border border-purple-200 text-xs text-purple-700">
+                      <span className="font-semibold">PIN Cross-Domain Cascade:</span> Each incident auto-identifies downstream impacts across wastewater, surface water, groundwater, drinking water, and public health domains.
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: PIN incident correlation engine, waterbody network topology</p>
                 </CardContent>
               </Card>
             );
