@@ -254,6 +254,17 @@ export async function GET(request: NextRequest) {
       ...(hucMatch ? { huc8: hucMatch.huc8, hucDistance: hucMatch.distance } : {}),
     },
     ...result,
+    hucIndices: hucIndices || null,
+    raw: {
+      wqpRecords: wqpRecords || [],
+      sdwis: sdwisVal ? { systems: sdwisVal.systems, violations: sdwisVal.violations } : null,
+      icis: icisVal ? { permits: icisVal.permits, violations: icisVal.violations } : null,
+      echo: echoVal ? { facilities: echoVal.facilities, violations: echoVal.violations } : null,
+      pfas: pfasVal ? { results: pfasVal.results } : null,
+      tri: triVal || [],
+      ejscreen: val(ejscreenR),
+      attains: attainsData,
+    },
     generatedAt: new Date().toISOString(),
   });
 }
