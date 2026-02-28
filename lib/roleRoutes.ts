@@ -9,11 +9,13 @@ import type { PearlUser, UserRole } from './authTypes';
 const ROLE_PRIMARY_ROUTE: Record<UserRole, string> = {
   Federal:    '/dashboard/federal',
   State:      '/dashboard/state/{state}',
+  Local:      '/dashboard/local/{jurisdictionId}',
   MS4:        '/dashboard/ms4/{ms4Jurisdiction}',
   Corporate:  '/dashboard/esg',
   Utility:    '/dashboard/utility/{systemId}',
   Agriculture:'/dashboard/infrastructure',
   Lab:        '/dashboard/aqua-lo',
+  Biotech:    '/dashboard/biotech',
   K12:        '/dashboard/k12',
   College:    '/dashboard/university',
   Researcher: '/dashboard/university',
@@ -27,11 +29,13 @@ const ROLE_PRIMARY_ROUTE: Record<UserRole, string> = {
 const ROLE_ALLOWED_ROUTES: Record<UserRole, string[]> = {
   Federal:    ['/dashboard/federal', '/dashboard/site-intelligence'],
   State:      ['/dashboard/state', '/dashboard/site-intelligence'],
+  Local:      ['/dashboard/local', '/dashboard/site-intelligence'],
   MS4:        ['/dashboard/ms4', '/dashboard/site-intelligence'],
   Corporate:  ['/dashboard/esg', '/dashboard/site-intelligence'],
   Utility:    ['/dashboard/utility', '/dashboard/infrastructure', '/dashboard/site-intelligence'],
   Agriculture:['/dashboard/infrastructure', '/dashboard/site-intelligence'],
   Lab:        ['/dashboard/aqua-lo', '/dashboard/site-intelligence'],
+  Biotech:    ['/dashboard/biotech', '/dashboard/site-intelligence'],
   K12:        ['/dashboard/k12', '/dashboard/site-intelligence'],
   College:    ['/dashboard/university', '/dashboard/site-intelligence'],
   Researcher: ['/dashboard/university', '/dashboard/site-intelligence'],
@@ -48,6 +52,7 @@ export function getPrimaryRoute(user: PearlUser): string {
 
   return template
     .replace('{state}', user.state || 'MD')
+    .replace('{jurisdictionId}', user.ms4Jurisdiction || 'default')
     .replace('{ms4Jurisdiction}', user.ms4Jurisdiction || 'default')
     .replace('{systemId}', 'default');
 }

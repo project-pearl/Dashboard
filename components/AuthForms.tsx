@@ -18,6 +18,7 @@ const ROLE_META: Record<UserRole, { icon: typeof Shield; label: string; desc: st
   Researcher: { icon: GraduationCap,  label: 'Researcher',            desc: 'Full data export, API access, citation tools',                tier: 'explorer' },
   NGO:        { icon: Users,          label: 'Non-Profit / NGO',      desc: 'Community reporting & advocacy tools',                        tier: 'explorer' },
   MS4:        { icon: Building2,      label: 'Municipal Utility',     desc: 'Jurisdiction-specific compliance & reporting',                 tier: 'operator' },
+  Local:      { icon: Building2,      label: 'Local Government',      desc: 'City/county water quality intelligence & political briefings', tier: 'operator' },
   State:      { icon: Shield,         label: 'State Regulator',       desc: 'Statewide water quality intelligence',                        tier: 'operator' },
   Federal:    { icon: Shield,         label: 'Federal Agency',        desc: 'National monitoring & Bay-wide analytics',                    tier: 'operator' },
   Corporate:  { icon: Building2,      label: 'Sustainability',        desc: 'Sustainability reporting & compliance dashboards',            tier: 'operator' },
@@ -26,6 +27,7 @@ const ROLE_META: Record<UserRole, { icon: typeof Shield; label: string; desc: st
   Utility:    { icon: Building2,      label: 'Utility Company',       desc: 'Water/wastewater utility operations & compliance',            tier: 'operator' },
   Agriculture:{ icon: Building2,      label: 'Agriculture',           desc: 'Agricultural runoff monitoring & best practices',             tier: 'operator' },
   Lab:        { icon: Shield,         label: 'Lab / Testing',         desc: 'Laboratory data submission & QA/QC workflows',               tier: 'operator' },
+  Biotech:    { icon: Building2,      label: 'Biotech / Pharma',      desc: 'Process water, pharmaceutical effluent & GMP compliance',    tier: 'operator' },
 };
 
 // ─── Component ──────────────────────────────────────────────────────────────

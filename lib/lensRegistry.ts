@@ -46,6 +46,22 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'permits',        label: 'Permits & Enforcement' },
     { id: 'funding',        label: 'Funding & Grants' },
   ],
+  // ── Local Government (13 items) ────────────────────────────────────────────
+  '/dashboard/local': [
+    { id: 'overview',            label: 'Overview' },
+    { id: 'briefing',            label: 'AI Briefing' },
+    { id: 'political-briefing',  label: 'Political Briefing' },
+    { id: 'water-quality',       label: 'Water Quality' },
+    { id: 'infrastructure',      label: 'Infrastructure' },
+    { id: 'compliance',          label: 'Compliance' },
+    { id: 'stormwater',          label: 'Stormwater / MS4' },
+    { id: 'public-health',       label: 'Public Health' },
+    { id: 'funding',             label: 'Funding & Grants' },
+    { id: 'ej-equity',           label: 'EJ & Equity' },
+    { id: 'emergency',           label: 'Emergency' },
+    { id: 'scorecard',           label: 'Scorecard' },
+    { id: 'reports',             label: 'Reports' },
+  ],
   // ── MS4 / Municipal Stormwater (17 items) ──────────────────────────────────
   '/dashboard/ms4': [
     { id: 'overview',          label: 'Overview' },
@@ -114,6 +130,18 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'policy',              label: 'Policy & Regulatory' },
     { id: 'public-health',       label: 'Emerging Contaminants' },
     { id: 'supply-chain',        label: 'Supply Chain' },
+    { id: 'trends',              label: 'Trends & Outlook' },
+  ],
+  // ── Biotech / Pharma (9 items) ─────────────────────────────────────────────
+  '/dashboard/biotech': [
+    { id: 'overview',            label: 'Executive Overview' },
+    { id: 'process-water',       label: 'Process Water Quality' },
+    { id: 'discharge-effluent',  label: 'Discharge & Effluent' },
+    { id: 'compliance',          label: 'Regulatory Compliance' },
+    { id: 'contaminants',        label: 'Pharma Contaminants' },
+    { id: 'facility-operations', label: 'Facility Operations' },
+    { id: 'gmp-quality',         label: 'GMP & Quality Systems' },
+    { id: 'supply-chain',        label: 'Supply Chain & Risk' },
     { id: 'trends',              label: 'Trends & Outlook' },
   ],
   // ── University / Research (18 items) ───────────────────────────────────────

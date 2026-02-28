@@ -21,6 +21,7 @@ import {
   BookOpen,
   Leaf,
   Landmark,
+  Megaphone,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
@@ -100,6 +101,11 @@ const LENS_ICONS: Record<string, LucideIcon> = {
   disaster: AlertTriangle,
   tmdl: Waves,
   permits: FileCheck,
+  // ── Local Government ───────────────────────────────────────────────────────
+  'political-briefing': Megaphone,
+  stormwater: CloudRain,
+  'ej-equity': Users,
+  emergency: AlertTriangle,
   // ── MS4 ────────────────────────────────────────────────────────────────────
   'receiving-waters': Waves,
   'stormwater-bmps': Wrench,
@@ -133,6 +139,11 @@ const LENS_ICONS: Record<string, LucideIcon> = {
   'esg-reporting': FileCheck,
   'supply-chain-risk': Link2,
   'supply-chain': Link2,
+  // ── Biotech / Pharma ──────────────────────────────────────────────────────
+  'process-water': Droplets,
+  'discharge-effluent': Waves,
+  'gmp-quality': ClipboardList,
+  // contaminants already mapped above
   // ── University ─────────────────────────────────────────────────────────────
   'research-monitoring': Microscope,
   'campus-stormwater': CloudRain,
@@ -182,6 +193,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Federal', href: '/dashboard/federal', icon: Landmark, accent: 'text-blue-700', accentBg: 'bg-blue-50 border-blue-200' },
       { label: 'State', href: '/dashboard/state/MD', icon: Map, accent: 'text-cyan-700', accentBg: 'bg-cyan-50 border-cyan-200' },
+      { label: 'Local', href: '/dashboard/local/default', icon: Building2, accent: 'text-purple-700', accentBg: 'bg-purple-50 border-purple-200' },
       { label: 'MS4', href: '/dashboard/ms4/default', icon: CloudRain, accent: 'text-amber-700', accentBg: 'bg-amber-50 border-amber-200' },
     ],
   },
@@ -189,7 +201,7 @@ const NAV_GROUPS: NavGroup[] = [
     title: 'Industry',
     items: [
       { label: 'Sustainability', href: '/dashboard/esg', icon: Factory, accent: 'text-emerald-700', accentBg: 'bg-emerald-50 border-emerald-200' },
-      { label: 'Site & Property', href: '/dashboard/infrastructure', icon: MapPin, accent: 'text-slate-700', accentBg: 'bg-slate-100 border-slate-300' },
+      { label: 'Biotech / Pharma', href: '/dashboard/biotech', icon: Microscope, accent: 'text-violet-700', accentBg: 'bg-violet-50 border-violet-200' },
       { label: 'Site Intelligence', href: '/dashboard/site-intelligence', icon: Search, accent: 'text-amber-700', accentBg: 'bg-amber-50 border-amber-200' },
     ],
   },

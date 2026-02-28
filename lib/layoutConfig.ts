@@ -17,8 +17,8 @@ export interface SectionDefinition {
   lensControlled?: boolean; // FMC only — visibility driven by ViewLens
 }
 
-export type CCKey = 'K12' | 'State' | 'MS4' | 'Sustainability' | 'NGO' | 'University' | 'FMC' | 'NCC'
-  | 'Utility' | 'Infrastructure' | 'AQUA-LO' | 'SiteIntel';
+export type CCKey = 'K12' | 'State' | 'Local' | 'MS4' | 'Sustainability' | 'NGO' | 'University' | 'FMC' | 'NCC'
+  | 'Utility' | 'Infrastructure' | 'AQUA-LO' | 'SiteIntel' | 'Biotech';
 
 // ─── Default Section Orders ────────────────────────────────────────────────
 
@@ -347,6 +347,52 @@ export const DEFAULT_SECTIONS = {
     { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 31, visible: true, defaultExpanded: true,  lensControlled: true },
   ],
 
+  Biotech: [
+    // ── Shared / multi-lens sections ──
+    { id: 'summary',              label: 'Biotech Summary',                  order: 0,   visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'warr-metrics',         label: 'WARR Metrics Strip',               order: 0.1, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'warr-analyze',         label: 'WARR Analyze Zone',                order: 0.2, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'warr-respond',         label: 'WARR Respond Zone',                order: 0.3, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'warr-resolve',         label: 'WARR Resolve Zone',                order: 0.4, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'kpis',                 label: 'KPI Cards',                        order: 1,   visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'map-grid',             label: 'Map & Facility List',              order: 2,   visible: true, defaultExpanded: true,  lensControlled: true, compound: true },
+    { id: 'insights',             label: 'AI Insights Engine',               order: 3,   visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'gmp-status',           label: 'GMP Regulatory Status',            order: 4,   visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'grants',               label: 'Grant Opportunities',              order: 5,   visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'economic',             label: 'Economic Performance',             order: 6,   visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'groundwater',          label: 'Groundwater Monitoring (WDFN)',    order: 7,   visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'trends-dashboard',     label: 'Trends & Forecasting',            order: 8,   visible: true, defaultExpanded: true,  lensControlled: true },
+    // ── Shared panels ──
+    { id: 'resolution-planner',   label: 'Resolution Plan Workspace',       order: 9,   visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'policy-tracker',       label: 'Policy & Regulatory Tracker',     order: 10,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'contaminants-tracker', label: 'Emerging Contaminants',           order: 11,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'icis',                 label: 'NPDES Compliance & Enforcement',  order: 12,  visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'sdwis',                label: 'Drinking Water (SDWIS)',          order: 13,  visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'disaster-emergency-panel', label: 'Disaster & Emergency',        order: 14,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'reports-hub',          label: 'Reports Hub',                     order: 15,  visible: true, defaultExpanded: true,  lensControlled: true },
+    // ── Biotech-exclusive panels ──
+    { id: 'usp-water-specs',      label: 'USP Water Specifications',        order: 16,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'purified-water-kpis',  label: 'Purified Water KPIs',            order: 17,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'process-water-alerts', label: 'Process Water Alerts',            order: 18,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'discharge-overview',   label: 'Discharge Overview',              order: 19,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'effluent-limits',      label: 'Effluent Limitation Guidelines',  order: 20,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'api-discharge',        label: 'API Discharge Monitoring',        order: 21,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'compliance-overview',  label: 'Compliance Overview',             order: 22,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'permit-status',        label: 'Permit Status',                   order: 23,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'fda-epa-matrix',       label: 'FDA / EPA Dual Regulatory',      order: 24,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'api-tracking',         label: 'API Contaminant Tracking',        order: 25,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'pfas-manufacturing',   label: 'PFAS in Manufacturing',          order: 26,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'facility-operations-panel', label: 'Facility Operations',       order: 27,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'water-stewardship-panel',   label: 'Water Stewardship',         order: 28,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'gmp-frameworks',       label: 'GMP Frameworks',                  order: 29,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'usp-validation',       label: 'USP Validation',                  order: 30,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'quality-audit-log',    label: 'Quality Audit Log',               order: 31,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'batch-water-tracking', label: 'Batch Water Tracking',            order: 32,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'supply-chain-risk-panel', label: 'Supply Chain Risk',            order: 33,  visible: true, defaultExpanded: true,  lensControlled: true },
+    // ── Always visible ──
+    { id: 'disclaimer',           label: 'Platform Disclaimer',             order: 34,  visible: true, defaultExpanded: true,  lensControlled: true },
+  ],
+
   NGO: [
     // ── Shared / multi-lens sections ──
     { id: 'regprofile',  label: 'Region Profile',               order: 0,  visible: true, defaultExpanded: true,  lensControlled: true },
@@ -640,6 +686,108 @@ export const DEFAULT_SECTIONS = {
     { id: 'water-score',        label: 'PIN Water Score',             order: 5, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'disclaimer',         label: 'Disclaimer',                  order: 6, visible: true, defaultExpanded: true },
   ],
+  Local: [
+    // ── Overview (10) ──
+    { id: 'local-identity',   label: 'Jurisdiction Identity',         order: 0,   visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'local-kpi-strip',  label: 'KPI Strip',                     order: 1,   visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'warr-metrics',     label: 'WARR Metrics Strip',            order: 1.1, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'warr-analyze',     label: 'WARR Analyze Zone',             order: 1.2, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'warr-respond',     label: 'WARR Respond Zone',             order: 1.3, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'warr-resolve',     label: 'WARR Resolve Zone',             order: 1.4, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'map-grid',         label: 'Map & Waterbody List',          order: 2,   visible: true, defaultExpanded: true,  lensControlled: true, compound: true },
+    { id: 'local-situation',  label: 'Situation Summary',             order: 3,   visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'local-quick-actions', label: 'Quick Actions',              order: 4,   visible: true, defaultExpanded: true,  lensControlled: true },
+    // ── Briefing (7) ──
+    { id: 'insights',              label: 'AI Insights Engine',        order: 5,   visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'briefing-actions',      label: 'Action Required',           order: 6,   visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'briefing-changes',      label: 'What Changed Overnight',    order: 7,   visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'briefing-pulse',        label: 'Program Pulse',             order: 8,   visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'briefing-stakeholder',  label: 'Stakeholder Watch',         order: 9,   visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'local-constituent-tldr', label: 'Constituent TL;DR',       order: 10,  visible: true, defaultExpanded: true,  lensControlled: true },
+    // ── Political Briefing (10) ──
+    { id: 'pol-talking-points',      label: 'Talking Points',              order: 11,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'pol-constituent-concerns', label: 'Constituent Concerns',      order: 12,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'pol-funding-wins',        label: 'Funding Wins',                order: 13,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'pol-funding-risks',       label: 'Funding Risks',               order: 14,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'pol-regulatory-deadlines', label: 'Regulatory Deadlines',      order: 15,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'pol-ej-exposure',         label: 'EJ Exposure Summary',         order: 16,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'pol-media-ready-grades',  label: 'Media-Ready Grades',          order: 17,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'pol-peer-comparison',     label: 'Peer Comparison',             order: 18,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'pol-council-agenda',      label: 'Council Agenda Suggestions',  order: 19,  visible: true, defaultExpanded: true,  lensControlled: true },
+    // ── Water Quality (7) ──
+    { id: 'local-wq-grade',           label: 'Water Quality Grade',          order: 20,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'detail',                    label: 'Waterbody Detail',             order: 21,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'top10',                     label: 'Top 5 Worsening / Improving', order: 22,  visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'local-impairment-summary',  label: 'Impairment Summary',          order: 23,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'local-wq-trends',          label: 'Water Quality Trends',         order: 24,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'groundwater',              label: 'Groundwater Monitoring',       order: 25,  visible: true, defaultExpanded: false, lensControlled: true },
+    // ── Infrastructure (7) ──
+    { id: 'local-infra-condition',  label: 'Infrastructure Condition',     order: 26,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'local-cso-sso',         label: 'CSO / SSO Events',             order: 27,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'infra-capital',          label: 'Capital Improvement Planning', order: 28,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'infra-construction',     label: 'Construction Project Tracker', order: 29,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'infra-green',            label: 'Green Infrastructure',         order: 30,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'local-asset-age',       label: 'Asset Age Distribution',       order: 31,  visible: true, defaultExpanded: true,  lensControlled: true },
+    // ── Compliance (7) ──
+    { id: 'icis',                       label: 'NPDES Compliance & Enforcement', order: 32,  visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'sdwis',                      label: 'Drinking Water (SDWIS)',         order: 33,  visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'local-permit-status',        label: 'Permit Status',                  order: 34,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'local-violation-timeline',   label: 'Violation Timeline',             order: 35,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'local-enforcement-actions',  label: 'Enforcement Actions',            order: 36,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'fineavoidance',              label: 'Fine Avoidance Calculator',      order: 37,  visible: true, defaultExpanded: true,  lensControlled: true },
+    // ── Stormwater / MS4 (9) ──
+    { id: 'local-ms4-identity',  label: 'MS4 Permit Identity',         order: 38,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'bmp-inventory',       label: 'BMP Inventory',               order: 39,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'bmp-analytics',       label: 'BMP Performance Analytics',   order: 40,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'bmp-maintenance',     label: 'Maintenance Schedule',        order: 41,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'mcm-dashboard',       label: 'MCM Dashboard',               order: 42,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'rw-profiles',         label: 'Waterbody Profiles',          order: 43,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'rw-impairment',       label: 'Impairment Analysis',         order: 44,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'nutrientcredits',     label: 'Nutrient Credit Tracking',    order: 45,  visible: true, defaultExpanded: true,  lensControlled: true },
+    // ── Public Health (6) ──
+    { id: 'ph-contaminants',       label: 'Contaminant Tracking',      order: 46,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'local-dw-systems',     label: 'Drinking Water Systems',     order: 47,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'local-pfas-proximity', label: 'PFAS Proximity',             order: 48,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'ph-advisories',        label: 'Public Advisories',          order: 49,  visible: true, defaultExpanded: true,  lensControlled: true },
+    // ── Funding (8) ──
+    { id: 'grants',                    label: 'Grant Opportunities',         order: 50,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'local-usaspending',         label: 'USASpending Awards',          order: 51,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'fund-active',               label: 'My Active Grants',            order: 52,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'fund-srf',                  label: 'SRF Program',                 order: 53,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'local-match-requirements',  label: 'Match Requirements',          order: 54,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'grant-outcomes',            label: 'Grant Outcomes',              order: 55,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'local-funding-timeline',    label: 'Funding Timeline',            order: 56,  visible: true, defaultExpanded: true,  lensControlled: true },
+    // ── EJ & Equity (7) ──
+    { id: 'local-ej-summary',           label: 'EJ Summary',                   order: 57,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'local-ej-demographics',      label: 'EJ Demographics',              order: 58,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'local-ej-burden-map',        label: 'Environmental Burden Map',     order: 59,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'local-ej-water-disparities', label: 'Water Quality Disparities',    order: 60,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'local-j40-tracker',          label: 'Justice40 Tracker',            order: 61,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'local-ej-recommendations',   label: 'EJ Recommendations',           order: 62,  visible: true, defaultExpanded: true,  lensControlled: true },
+    // ── Emergency (8) ──
+    { id: 'alertfeed',              label: 'Alert Feed',                   order: 63,  visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'disaster-active',       label: 'Active Incidents',             order: 64,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'local-nws-alerts',      label: 'NWS Weather Alerts',           order: 65,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'local-sentinel-events', label: 'Sentinel Events',              order: 66,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'disaster-response',     label: 'Response Operations',          order: 67,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'disaster-prep',         label: 'Preparedness',                 order: 68,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'resolution-planner',    label: 'Resolution Plan Workspace',    order: 69,  visible: true, defaultExpanded: true,  lensControlled: true },
+    // ── Scorecard (6) ──
+    { id: 'local-sc-overall',     label: 'Overall Score',               order: 70,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'local-sc-categories',  label: 'Category Breakdown',          order: 71,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'local-sc-trends',      label: 'Scorecard Trends',            order: 72,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'local-sc-peer',        label: 'Peer Comparison',             order: 73,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'local-sc-sla',         label: 'SLA Metrics',                 order: 74,  visible: true, defaultExpanded: true,  lensControlled: true },
+    // ── Reports (6) ──
+    { id: 'exporthub',                   label: 'Data Export Hub',                order: 75,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'local-rpt-council',           label: 'Council Report',                order: 76,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'local-rpt-state-filing',      label: 'State Filing Report',           order: 77,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'local-rpt-public-disclosure', label: 'Public Disclosure Report',      order: 78,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'local-rpt-annual',            label: 'Annual Report',                 order: 79,  visible: true, defaultExpanded: true,  lensControlled: true },
+    // ── Always visible ──
+    { id: 'disclaimer',  label: 'Platform Disclaimer',  order: 80,  visible: true, defaultExpanded: true,  lensControlled: true },
+  ],
+
 } satisfies Record<Exclude<CCKey, 'NCC'>, SectionDefinition[]> as Record<CCKey, SectionDefinition[]>;
 
 // Backward-compat: NCC alias for legacy persisted layouts

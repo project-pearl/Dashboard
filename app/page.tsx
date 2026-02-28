@@ -278,6 +278,7 @@ class CommandCenterErrorBoundary extends React.Component<
 const ROLE_ROUTES: Record<UserRole, string> = {
   Federal: '/dashboard/federal',
   State: '/dashboard/state/MD',
+  Local: '/dashboard/local/default',
   MS4: '/dashboard/ms4/default',
   Corporate: '/dashboard/esg',
   K12: '/dashboard/k12',
@@ -289,6 +290,7 @@ const ROLE_ROUTES: Record<UserRole, string> = {
   Utility: '/dashboard/utility/default',
   Agriculture: '/dashboard/agriculture',
   Lab: '/dashboard/aqua-lo',
+  Biotech: '/dashboard/biotech',
 };
 
 export default function Home() {

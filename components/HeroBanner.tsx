@@ -37,6 +37,14 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
       'Quantify water risk exposure, benchmark facility performance, and generate audit-ready sustainability disclosures.',
     accentColor: 'text-emerald-400',
   },
+  biotech: {
+    image: '/images/heroes/Industrial.png',
+    subtitle: 'PIN — PEARL Intelligence Network',
+    headline: 'Biotech & Pharma Water Intelligence',
+    description:
+      'Monitor process water purity, track pharmaceutical effluent discharge, and manage dual FDA/EPA regulatory compliance.',
+    accentColor: 'text-violet-400',
+  },
   university: {
     image: '/images/heroes/Research.png',
     subtitle: 'PIN — PEARL Intelligence Network',
@@ -69,6 +77,14 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
       'Deployment tracking, fleet performance, and field diagnostics across all active PIN units.',
     accentColor: 'text-rose-400',
   },
+  local: {
+    image: '/images/heroes/Aerial.png',
+    subtitle: 'PIN — PEARL Intelligence Network',
+    headline: 'Local Government Water Intelligence',
+    description:
+      'Council-ready briefings, funding optics, EJ exposure, and jurisdiction-level compliance for mayors, city managers, and public works directors.',
+    accentColor: 'text-purple-400',
+  },
   utility: {
     image: '/images/heroes/Industrial.png',
     subtitle: 'PIN — PEARL Intelligence Network',
@@ -86,7 +102,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
     accentColor: 'text-slate-400',
   },
   'site-intel': {
-    image: '/site-management.png',
+    image: '/images/heroes/Aerial.png',
     subtitle: 'PIN — PEARL Intelligence Network',
     headline: 'Site Intelligence',
     description:
