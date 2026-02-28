@@ -3,9 +3,11 @@
 import React, { useRef } from "react";
 import {
   CK, CONTAMINANT_LABELS, CONTAMINANT_COLORS, MODULE_CATS, CAT_COLORS,
+  MODULES, CLIMATE_PROJECTIONS,
   fmt, fmtN,
   type Watershed, type CalcResult, type NGO, type CommunityEvent,
   type ModuleCategory, type ContaminantKey,
+  type RcpScenario, type ClimateDecade,
 } from "./treatmentData";
 
 interface ExecutiveOutputProps {
@@ -18,10 +20,15 @@ interface ExecutiveOutputProps {
   ngoValue: number;
   evtCostYr: number;
   onClose: () => void;
+  climateScenario: RcpScenario;
+  climateDecade: ClimateDecade;
+  climateCalc: CalcResult | null;
+  climateWs: Watershed;
 }
 
 export default function ExecutiveOutput({
   ws, calc, timeline, target, selectedNGOs, selectedEvents, ngoValue, evtCostYr, onClose,
+  climateScenario, climateDecade, climateCalc, climateWs,
 }: ExecutiveOutputProps) {
   const pdfRef = useRef<HTMLDivElement>(null);
   const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
@@ -273,6 +280,171 @@ export default function ExecutiveOutput({
           })}
         </section>
 
+        {/* ═══ 4b. Climate-Resilient Portfolio Analysis ═══ */}
+        {climateScenario !== "baseline" && climateCalc && (() => {
+          const proj = CLIMATE_PROJECTIONS[climateScenario][climateDecade];
+          const scenarioLabel = climateScenario === "rcp45" ? "RCP 4.5" : "RCP 8.5";
+          const highVuln = calc.active.filter(m => {
+            const mod = MODULES.find(mm => mm.id === m.id);
+            return mod?.climateVulnerability === "high";
+          });
+          const modVuln = calc.active.filter(m => {
+            const mod = MODULES.find(mm => mm.id === m.id);
+            return mod?.climateVulnerability === "moderate";
+          });
+          const lowVuln = calc.active.filter(m => {
+            const mod = MODULES.find(mm => mm.id === m.id);
+            return !mod?.climateVulnerability || mod.climateVulnerability === "low";
+          });
+          const avgDrop = calc.avg - climateCalc.avg;
+
+          return (
+            <section className="exec-card bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+              <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">
+                Climate-Resilient Portfolio Analysis
+              </h2>
+
+              {/* Scenario header */}
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                <span className="text-sm font-bold text-slate-800">{scenarioLabel} &mdash; {climateDecade} Horizon</span>
+              </div>
+
+              {/* Forcing summary grid */}
+              <div className="text-[9px] text-slate-400 uppercase tracking-wider font-mono mb-2">Climate Forcing Parameters</div>
+              <div className="grid grid-cols-3 gap-3 mb-4">
+                {[
+                  { l: "Temp Increase", v: `+${proj.tempIncrease_F}°F` },
+                  { l: "Precip Intensity", v: `+${proj.precipIntensityPct}%` },
+                  { l: ws.salinity > 0 ? "Sea Level Rise" : "SLR (inland)", v: ws.salinity > 0 ? `+${proj.seaLevelRise_ft} ft` : "N/A" },
+                ].map(x => (
+                  <div key={x.l} className="text-center bg-amber-50 rounded-lg py-2 border border-amber-100">
+                    <div className="text-[8px] text-slate-400 uppercase tracking-wider">{x.l}</div>
+                    <div className="text-sm font-bold font-mono text-amber-700">{x.v}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Watershed impact table */}
+              <div className="text-[9px] text-slate-400 uppercase tracking-wider font-mono mb-2">Watershed Impact</div>
+              <table className="w-full text-[10px] mb-4">
+                <thead>
+                  <tr className="border-b-2 border-slate-200 text-left">
+                    <th className="py-1.5 text-slate-400 font-mono uppercase tracking-wider">Parameter</th>
+                    <th className="py-1.5 text-slate-400 font-mono uppercase tracking-wider text-center">Baseline</th>
+                    <th className="py-1.5 text-slate-400 font-mono uppercase tracking-wider text-center">Climate-Stressed</th>
+                    <th className="py-1.5 text-slate-400 font-mono uppercase tracking-wider text-right">Delta</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b border-slate-100">
+                    <td className="py-1.5 text-slate-700">Dissolved Oxygen</td>
+                    <td className="py-1.5 text-center font-mono text-slate-600">{ws.doMgL} mg/L</td>
+                    <td className="py-1.5 text-center font-mono text-amber-700">{climateWs.doMgL.toFixed(1)} mg/L</td>
+                    <td className="py-1.5 text-right font-mono text-red-600">{(climateWs.doMgL - ws.doMgL).toFixed(1)}</td>
+                  </tr>
+                  <tr className="border-b border-slate-100">
+                    <td className="py-1.5 text-slate-700">Flow</td>
+                    <td className="py-1.5 text-center font-mono text-slate-600">{fmtN(ws.flowMGD)} MGD</td>
+                    <td className="py-1.5 text-center font-mono text-amber-700">{fmtN(Math.round(climateWs.flowMGD))} MGD</td>
+                    <td className="py-1.5 text-right font-mono text-amber-600">+{((climateWs.flowMGD / ws.flowMGD - 1) * 100).toFixed(0)}%</td>
+                  </tr>
+                  {ws.salinity > 0 && (
+                    <tr className="border-b border-slate-100">
+                      <td className="py-1.5 text-slate-700">Salinity</td>
+                      <td className="py-1.5 text-center font-mono text-slate-600">{ws.salinity} ppt</td>
+                      <td className="py-1.5 text-center font-mono text-amber-700">{climateWs.salinity.toFixed(1)} ppt</td>
+                      <td className="py-1.5 text-right font-mono text-amber-600">+{(climateWs.salinity - ws.salinity).toFixed(1)}</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+
+              {/* Performance comparison */}
+              <div className="text-[9px] text-slate-400 uppercase tracking-wider font-mono mb-2">Performance Comparison</div>
+              <table className="w-full text-[10px] mb-4">
+                <thead>
+                  <tr className="border-b-2 border-slate-200 text-left">
+                    <th className="py-1.5 text-slate-400 font-mono uppercase tracking-wider">Contaminant</th>
+                    <th className="py-1.5 text-slate-400 font-mono uppercase tracking-wider text-center">Baseline %</th>
+                    <th className="py-1.5 text-slate-400 font-mono uppercase tracking-wider text-center">Stressed %</th>
+                    <th className="py-1.5 text-slate-400 font-mono uppercase tracking-wider text-right">Delta</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {CK.map(k => {
+                    if (ws.baseline[k] === 0) return null;
+                    const delta = climateCalc.ach[k] - calc.ach[k];
+                    return (
+                      <tr key={k} className="border-b border-slate-100">
+                        <td className="py-1.5 text-slate-700 font-mono">{CONTAMINANT_LABELS[k].split(" / ")[0]}</td>
+                        <td className="py-1.5 text-center font-mono" style={{ color: CONTAMINANT_COLORS[k] }}>{calc.ach[k].toFixed(1)}%</td>
+                        <td className="py-1.5 text-center font-mono text-amber-700">{climateCalc.ach[k].toFixed(1)}%</td>
+                        <td className="py-1.5 text-right font-mono text-red-600">{delta.toFixed(1)}%</td>
+                      </tr>
+                    );
+                  })}
+                  <tr className="border-t-2 border-slate-300">
+                    <td className="py-1.5 font-bold text-slate-800">Average</td>
+                    <td className="py-1.5 text-center font-mono font-bold text-slate-800">{calc.avg.toFixed(1)}%</td>
+                    <td className="py-1.5 text-center font-mono font-bold text-amber-700">{climateCalc.avg.toFixed(1)}%</td>
+                    <td className="py-1.5 text-right font-mono font-bold text-red-600">{(climateCalc.avg - calc.avg).toFixed(1)}%</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              {/* Module vulnerability groupings */}
+              <div className="text-[9px] text-slate-400 uppercase tracking-wider font-mono mb-2">Module Vulnerability Assessment</div>
+              <div className="space-y-2 mb-4">
+                {highVuln.length > 0 && (
+                  <div className="flex items-start gap-2">
+                    <span className="text-[8px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold shrink-0 mt-0.5">HIGH</span>
+                    <span className="text-[10px] text-slate-600">{highVuln.map(m => m.name.trim()).join(", ")}</span>
+                  </div>
+                )}
+                {modVuln.length > 0 && (
+                  <div className="flex items-start gap-2">
+                    <span className="text-[8px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold shrink-0 mt-0.5">MOD</span>
+                    <span className="text-[10px] text-slate-600">{modVuln.map(m => m.name.trim()).join(", ")}</span>
+                  </div>
+                )}
+                {lowVuln.length > 0 && (
+                  <div className="flex items-start gap-2">
+                    <span className="text-[8px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold shrink-0 mt-0.5">LOW</span>
+                    <span className="text-[10px] text-slate-600">{lowVuln.map(m => m.name.trim()).join(", ")}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Climate-vulnerable callout */}
+              {highVuln.length > 0 && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+                  <div className="text-[11px] font-bold text-amber-800 mb-1">Climate Vulnerability Warning</div>
+                  <div className="text-[10px] text-amber-700 leading-relaxed">
+                    {highVuln.length} high-vulnerability module{highVuln.length > 1 ? "s" : ""} in this portfolio.
+                    Average reduction drops {avgDrop.toFixed(1)}% under {scenarioLabel}/{climateDecade}.
+                    Consider supplementing nature-based systems with engineered treatment (ALIA, MBR, DAF)
+                    to maintain performance under climate stress.
+                  </div>
+                </div>
+              )}
+
+              {/* Adaptive management recommendations */}
+              <div className="text-[9px] text-slate-400 uppercase tracking-wider font-mono mb-2">Adaptive Management Recommendations</div>
+              <ul className="text-[10px] text-slate-600 space-y-1.5 list-disc pl-4">
+                <li>Deploy additional ALIA units to compensate for {avgDrop.toFixed(0)}% reduction loss under climate stress</li>
+                <li>Prioritize engineered treatment over nature-based solutions for critical contaminant targets</li>
+                {ws.salinity > 0 && (
+                  <li>Monitor salinity intrusion — {(1.5 * proj.seaLevelRise_ft).toFixed(1)} ppt increase may exceed biological treatment tolerances</li>
+                )}
+                <li>Install supplemental aeration to offset {(0.1 * proj.tempIncrease_F).toFixed(1)} mg/L DO depression from warming</li>
+                <li>Design stormwater infrastructure for +{proj.precipIntensityPct}% precipitation intensity (CSO +{proj.csoFreqIncreasePct}%)</li>
+                <li>Schedule 5-year portfolio review against updated IPCC/NCA projections</li>
+              </ul>
+            </section>
+          );
+        })()}
+
         {/* ═══ 5. Cost Analysis ═══ */}
         <section className="exec-card bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
           <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Cost Analysis</h2>
@@ -480,6 +652,14 @@ export default function ExecutiveOutput({
               maintenance, and environmental conditions. Verify all data with primary agency sources and
               qualified environmental engineers before proceeding with implementation.
             </p>
+            {climateScenario !== "baseline" && (
+              <p>
+                Climate projections are simplified planning-level estimates based on IPCC AR6 and NCA5 scenario
+                data. They do not represent site-specific downscaled climate models. Module vulnerability
+                ratings are generalized and may not reflect local conditions. Consult regional climate
+                assessments for project-level design.
+              </p>
+            )}
             <p className="text-slate-300">
               &copy; {new Date().getFullYear()} Local Seafood Projects Inc. Project PEARL&trade;, ALIA&trade;
               are trademarks of Local Seafood Projects.

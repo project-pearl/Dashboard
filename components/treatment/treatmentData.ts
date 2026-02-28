@@ -61,6 +61,8 @@ export interface TreatmentModule {
   pillars: Pillar[];
   sizeRange: [SizeTier, SizeTier];
   experimental?: boolean;
+  climateVulnerability?: "low" | "moderate" | "high";
+  climateDegradation?: Partial<Record<ContaminantKey, number>>;
 }
 
 export type ModuleCategory =
@@ -117,6 +119,33 @@ export interface Grant {
   maxAmt: number;
   cats: ModuleCategory[];
 }
+
+/* ─── Climate Forcing Types & Constants ────────────────────────────────── */
+
+export type RcpScenario = "baseline" | "rcp45" | "rcp85";
+export type ClimateDecade = 2030 | 2050 | 2080;
+
+export interface ClimateProjection {
+  tempIncrease_F: number;
+  precipIntensityPct: number;
+  seaLevelRise_ft: number;
+  droughtFreqMultiplier: number;
+  csoFreqIncreasePct: number;
+}
+
+/** Baked-in projection constants calibrated to IPCC AR6 / NCA5 scenarios */
+export const CLIMATE_PROJECTIONS: Record<Exclude<RcpScenario, "baseline">, Record<ClimateDecade, ClimateProjection>> = {
+  rcp45: {
+    2030: { tempIncrease_F: 0.9,  precipIntensityPct: 4,  seaLevelRise_ft: 0.3, droughtFreqMultiplier: 1.1, csoFreqIncreasePct: 8  },
+    2050: { tempIncrease_F: 1.8,  precipIntensityPct: 8,  seaLevelRise_ft: 0.7, droughtFreqMultiplier: 1.2, csoFreqIncreasePct: 15 },
+    2080: { tempIncrease_F: 2.7,  precipIntensityPct: 12, seaLevelRise_ft: 1.4, droughtFreqMultiplier: 1.3, csoFreqIncreasePct: 22 },
+  },
+  rcp85: {
+    2030: { tempIncrease_F: 1.2,  precipIntensityPct: 5,  seaLevelRise_ft: 0.4, droughtFreqMultiplier: 1.15, csoFreqIncreasePct: 10  },
+    2050: { tempIncrease_F: 3.2,  precipIntensityPct: 15, seaLevelRise_ft: 1.2, droughtFreqMultiplier: 1.4,  csoFreqIncreasePct: 30  },
+    2080: { tempIncrease_F: 5.4,  precipIntensityPct: 25, seaLevelRise_ft: 2.8, droughtFreqMultiplier: 1.8,  csoFreqIncreasePct: 50  },
+  },
+};
 
 export interface CalcResult {
   active: (TreatmentModule & { units: number; totalCost: number })[];
@@ -240,9 +269,9 @@ export const MODULES: TreatmentModule[] = [
   { id: "sensors",  cat: "Infrastructure", name: "PIN Sensor Array",          icon: "\ud83d\udce1", costPer: 8500,  defUnits: 6,  gpm: 0,   salMax: 99, mo: 1,  doBoost: 0,    tss: 0,  bac: 0,  nit: 0,  pho: 0,  pfas: 0,  trash: 0,  isBMP: true,  alwaysOn: true, desc: "Real-time DO, pH, turbidity, flow, temp monitoring at outfall points.", pillars: ['GW','SW','SurfW','DW','WW'], sizeRange: ['XS','XL'] },
   { id: "pin_ai",   cat: "Infrastructure", name: "PIN AI Engine",            icon: "\ud83e\udd16", costPer: 36000, defUnits: 1,  gpm: 0,   salMax: 99, mo: 1,  doBoost: 0,    tss: 0,  bac: 0,  nit: 0,  pho: 0,  pfas: 0,  trash: 0,  isBMP: true,  alwaysOn: true, boost: 0.12, desc: "Adaptive control, storm response, spill detection. +12% efficacy uplift.", pillars: ['GW','SW','SurfW','DW','WW'], sizeRange: ['S','XL'] },
   // Interception
-  { id: "trash_wheel", cat: "Interception", name: "Trash Wheel Interceptor",  icon: "\u2638\ufe0f", costPer: 300000, defUnits: 2,  gpm: 0,   salMax: 99, mo: 3,  doBoost: 0,    tss: 5,  bac: 0,  nit: 0,  pho: 0,  pfas: 0,  trash: 90, isBMP: true,  desc: "Solar/hydro powered. Removes floatables at CSO outfalls.", pillars: ['SW','SurfW'], sizeRange: ['M','XL'] },
+  { id: "trash_wheel", cat: "Interception", name: "Trash Wheel Interceptor",  icon: "\u2638\ufe0f", costPer: 300000, defUnits: 2,  gpm: 0,   salMax: 99, mo: 3,  doBoost: 0,    tss: 5,  bac: 0,  nit: 0,  pho: 0,  pfas: 0,  trash: 90, isBMP: true,  desc: "Solar/hydro powered. Removes floatables at CSO outfalls.", pillars: ['SW','SurfW'], sizeRange: ['M','XL'], climateVulnerability: "moderate", climateDegradation: { trash: 0.85 } },
   { id: "skimmer",     cat: "Interception", name: "Surface Skimmer",          icon: "\ud83d\udd04", costPer: 28000, defUnits: 3,  gpm: 0,   salMax: 99, mo: 1,  doBoost: 0,    tss: 3,  bac: 0,  nit: 0,  pho: 0,  pfas: 0,  trash: 65, isBMP: true,  desc: "Floating debris/oil removal. Rapid deploy. Pairs with trash wheel.", pillars: ['SW','SurfW'], sizeRange: ['S','XL'] },
-  { id: "screen",      cat: "Interception", name: "Mechanical Screening",     icon: "\u2699\ufe0f", costPer: 48000, defUnits: 2,  gpm: 250, salMax: 99, mo: 2,  doBoost: 0,    tss: 65, bac: 15, nit: 5,  pho: 8,  pfas: 0,  trash: 80, isBMP: true,  desc: "250 GPM/unit. Rapid solids & trash removal upstream of ALIA.", pillars: ['SW','SurfW','WW'], sizeRange: ['M','XL'] },
+  { id: "screen",      cat: "Interception", name: "Mechanical Screening",     icon: "\u2699\ufe0f", costPer: 48000, defUnits: 2,  gpm: 250, salMax: 99, mo: 2,  doBoost: 0,    tss: 65, bac: 15, nit: 5,  pho: 8,  pfas: 0,  trash: 80, isBMP: true,  desc: "250 GPM/unit. Rapid solids & trash removal upstream of ALIA.", pillars: ['SW','SurfW','WW'], sizeRange: ['M','XL'], climateVulnerability: "moderate", climateDegradation: { tss: 0.90, trash: 0.88 } },
   // PEARL ALIA
   { id: "alia_50",     cat: "PEARL ALIA",   name: "ALIA 50 GPM \u2014 Base Unit", icon: "\ud83e\uddea", costPer: 100000, defUnits: 8,  gpm: 50,  salMax: 25, mo: 4,  doBoost: 0.15, tss: 92, bac: 94, nit: 35, pho: 28, pfas: 0,  trash: 0,  isBMP: false, pilotNote: "MDE BMP certification pending \u2014 deploy as monitored pilot.", hasOpex: true, pillars: ['SW','SurfW','WW'], sizeRange: ['S','XL'] },
   { id: "alia_pfas",   cat: "PEARL ALIA",   name: "  + PFAS Adsorption Kit", icon: "\ud83d\udd27", costPer: 30000, defUnits: 8,  gpm: 0,   salMax: 25, mo: 0,  doBoost: 0,    tss: 0,  bac: 0,  nit: 0,  pho: 0,  pfas: 65, trash: 0,  isBMP: false, isAddon: true, desc: "Functionalized resin media per ALIA unit. PFAS adsorption.", pillars: ['SW','SurfW','DW'], sizeRange: ['S','XL'] },
@@ -250,10 +279,10 @@ export const MODULES: TreatmentModule[] = [
   { id: "alia_ozone",  cat: "PEARL ALIA",   name: "  + Ozone Kit",           icon: "\u26a1", costPer: 20000, defUnits: 4,  gpm: 0,   salMax: 25, mo: 0,  doBoost: 0.3,  tss: 0,  bac: 10, nit: 5,  pho: 0,  pfas: 12, trash: 0,  isBMP: false, isAddon: true, desc: "Ozone add-on. DO boost + pathogen polish + partial PFAS oxidation.", pillars: ['SW','SurfW','WW'], sizeRange: ['S','XL'] },
   { id: "alia_25",    cat: "PEARL ALIA",   name: "ALIA 25 GPM \u2014 Standard", icon: "\ud83e\uddea", costPer: 125000, defUnits: 6,  gpm: 25,  salMax: 25, mo: 3,  doBoost: 0.10, tss: 92, bac: 93, nit: 34, pho: 27, pfas: 0,  trash: 0,  isBMP: false, hasOpex: true, pilotNote: "Standard unit \u2014 mid-scale distributed treatment.", desc: "25 GPM ALIA for medium outfalls and tributary treatment networks.", pillars: ['SW','SurfW','WW'], sizeRange: ['S','L'] },
   // Biological
-  { id: "wetland",     cat: "Biological",   name: "Constructed Wetland",      icon: "\ud83c\udf3f", costPer: 175000, defUnits: 2, gpm: 200, salMax: 8,  mo: 14, doBoost: 0.4,  tss: 75, bac: 65, nit: 55, pho: 60, pfas: 0,  trash: 10, isBMP: true,  desc: "200 GPM/cell (~2ac). Habitat + nutrient polish.", pillars: ['SW','SurfW'], sizeRange: ['M','XL'] },
-  { id: "ats",         cat: "Biological",   name: "Algal Turf Scrubber",      icon: "\ud83d\udfe2", costPer: 55000,  defUnits: 3, gpm: 100, salMax: 15, mo: 6,  doBoost: 0.3,  tss: 40, bac: 20, nit: 65, pho: 70, pfas: 0,  trash: 0,  isBMP: true,  desc: "100 GPM/unit. Nutrient capture \u2192 harvestable biomass/fertilizer.", pillars: ['SW','SurfW'], sizeRange: ['S','L'] },
-  { id: "float_wet",   cat: "Biological",   name: "Floating Treatment Wetland", icon: "\ud83c\udf31", costPer: 18000, defUnits: 6, gpm: 0,   salMax: 15, mo: 3,  doBoost: 0.2,  tss: 30, bac: 25, nit: 40, pho: 35, pfas: 0,  trash: 5,  isBMP: true,  desc: "Per island (~100 sq ft). Root uptake. Shading reduces HABs.", pillars: ['SW','SurfW'], sizeRange: ['XS','L'] },
-  { id: "bioretention", cat: "Biological",  name: "Bioretention Cell",        icon: "\ud83c\udf3b", costPer: 35000,  defUnits: 4, gpm: 30,  salMax: 5,  mo: 4,  doBoost: 0.05, tss: 85, bac: 60, nit: 50, pho: 55, pfas: 10, trash: 20, isBMP: true,  desc: "30 GPM/cell. Engineered soil + bio-uptake.", pillars: ['SW','SurfW','GW'], sizeRange: ['XS','M'] },
+  { id: "wetland",     cat: "Biological",   name: "Constructed Wetland",      icon: "\ud83c\udf3f", costPer: 175000, defUnits: 2, gpm: 200, salMax: 8,  mo: 14, doBoost: 0.4,  tss: 75, bac: 65, nit: 55, pho: 60, pfas: 0,  trash: 10, isBMP: true,  desc: "200 GPM/cell (~2ac). Habitat + nutrient polish.", pillars: ['SW','SurfW'], sizeRange: ['M','XL'], climateVulnerability: "high", climateDegradation: { tss: 0.75, bac: 0.78, nit: 0.70, pho: 0.72 } },
+  { id: "ats",         cat: "Biological",   name: "Algal Turf Scrubber",      icon: "\ud83d\udfe2", costPer: 55000,  defUnits: 3, gpm: 100, salMax: 15, mo: 6,  doBoost: 0.3,  tss: 40, bac: 20, nit: 65, pho: 70, pfas: 0,  trash: 0,  isBMP: true,  desc: "100 GPM/unit. Nutrient capture \u2192 harvestable biomass/fertilizer.", pillars: ['SW','SurfW'], sizeRange: ['S','L'], climateVulnerability: "high", climateDegradation: { nit: 0.72, pho: 0.70 } },
+  { id: "float_wet",   cat: "Biological",   name: "Floating Treatment Wetland", icon: "\ud83c\udf31", costPer: 18000, defUnits: 6, gpm: 0,   salMax: 15, mo: 3,  doBoost: 0.2,  tss: 30, bac: 25, nit: 40, pho: 35, pfas: 0,  trash: 5,  isBMP: true,  desc: "Per island (~100 sq ft). Root uptake. Shading reduces HABs.", pillars: ['SW','SurfW'], sizeRange: ['XS','L'], climateVulnerability: "high", climateDegradation: { tss: 0.78, nit: 0.72, pho: 0.74 } },
+  { id: "bioretention", cat: "Biological",  name: "Bioretention Cell",        icon: "\ud83c\udf3b", costPer: 35000,  defUnits: 4, gpm: 30,  salMax: 5,  mo: 4,  doBoost: 0.05, tss: 85, bac: 60, nit: 50, pho: 55, pfas: 10, trash: 20, isBMP: true,  desc: "30 GPM/cell. Engineered soil + bio-uptake.", pillars: ['SW','SurfW','GW'], sizeRange: ['XS','M'], climateVulnerability: "moderate", climateDegradation: { tss: 0.88, nit: 0.85, pho: 0.85 } },
   // Mechanical
   { id: "daf",         cat: "Mechanical",   name: "Dissolved Air Flotation",   icon: "\ud83d\udca8", costPer: 65000,  defUnits: 2, gpm: 150, salMax: 99, mo: 3,  doBoost: 0.1,  tss: 88, bac: 40, nit: 10, pho: 15, pfas: 5,  trash: 30, isBMP: true,  desc: "150 GPM/unit. Microbubble separation \u2014 algae/TSS.", pillars: ['SW','WW'], sizeRange: ['M','XL'] },
   { id: "mbr",         cat: "Mechanical",   name: "Membrane Bioreactor",       icon: "\ud83d\udd2c", costPer: 125000, defUnits: 1, gpm: 500, salMax: 5,  mo: 8,  doBoost: 0,    tss: 99, bac: 99, nit: 70, pho: 75, pfas: 15, trash: 0,  isBMP: true,  desc: "500 GPM/unit. Near-sterile. WWTP point-source polishing.", pillars: ['WW','DW'], sizeRange: ['M','XL'] },
@@ -263,11 +292,11 @@ export const MODULES: TreatmentModule[] = [
   { id: "gac",         cat: "Chemical",     name: "Granular Activated Carbon", icon: "\u2b1b", costPer: 48000,  defUnits: 2, gpm: 100, salMax: 99, mo: 3,  doBoost: 0,    tss: 30, bac: 40, nit: 8,  pho: 5,  pfas: 75, trash: 0,  isBMP: true,  desc: "100 GPM/unit. PFAS adsorption. Media replacement 12\u201318mo.", pillars: ['DW','GW','SW'], sizeRange: ['S','XL'] },
   { id: "resin",       cat: "Chemical",     name: "Ion Exchange Resin",        icon: "\ud83e\uddea", costPer: 78000,  defUnits: 1, gpm: 75,  salMax: 10, mo: 4,  doBoost: 0,    tss: 10, bac: 10, nit: 45, pho: 40, pfas: 90, trash: 0,  isBMP: true,  desc: "75 GPM/unit. Highest PFAS removal + selective nitrate.", pillars: ['DW','GW'], sizeRange: ['S','L'] },
   // Source Control
-  { id: "riparian",    cat: "Source Control", name: "Riparian Buffer Restoration", icon: "\ud83c\udf32", costPer: 8000,  defUnits: 20, gpm: 0, salMax: 99, mo: 3,  doBoost: 0.05, tss: 45, bac: 20, nit: 30, pho: 35, pfas: 0,  trash: 15, isBMP: true, isSrc: true, desc: "Per acre. Intercepts overland flow. Improves with maturity.", pillars: ['SW','SurfW'], sizeRange: ['XS','XL'] },
-  { id: "ag_bmp",      cat: "Source Control", name: "Agricultural BMP Package",  icon: "\ud83c\udf3e", costPer: 12000, defUnits: 15, gpm: 0, salMax: 99, mo: 4,  doBoost: 0,    tss: 40, bac: 15, nit: 50, pho: 45, pfas: 0,  trash: 0,  isBMP: true, isSrc: true, desc: "Per farm. Cover crops, no-till, nutrient management plan.", pillars: ['SW','SurfW','GW'], sizeRange: ['S','XL'] },
-  { id: "green_infra", cat: "Source Control", name: "Green Infrastructure",     icon: "\ud83c\udf33", costPer: 42000, defUnits: 4,  gpm: 0, salMax: 99, mo: 8,  doBoost: 0.05, tss: 55, bac: 25, nit: 30, pho: 35, pfas: 5,  trash: 30, isBMP: true, isSrc: true, desc: "Bioswales, rain gardens, permeable pavement.", pillars: ['SW','SurfW'], sizeRange: ['XS','M'] },
+  { id: "riparian",    cat: "Source Control", name: "Riparian Buffer Restoration", icon: "\ud83c\udf32", costPer: 8000,  defUnits: 20, gpm: 0, salMax: 99, mo: 3,  doBoost: 0.05, tss: 45, bac: 20, nit: 30, pho: 35, pfas: 0,  trash: 15, isBMP: true, isSrc: true, desc: "Per acre. Intercepts overland flow. Improves with maturity.", pillars: ['SW','SurfW'], sizeRange: ['XS','XL'], climateVulnerability: "moderate", climateDegradation: { tss: 0.85, nit: 0.82, pho: 0.84 } },
+  { id: "ag_bmp",      cat: "Source Control", name: "Agricultural BMP Package",  icon: "\ud83c\udf3e", costPer: 12000, defUnits: 15, gpm: 0, salMax: 99, mo: 4,  doBoost: 0,    tss: 40, bac: 15, nit: 50, pho: 45, pfas: 0,  trash: 0,  isBMP: true, isSrc: true, desc: "Per farm. Cover crops, no-till, nutrient management plan.", pillars: ['SW','SurfW','GW'], sizeRange: ['S','XL'], climateVulnerability: "moderate", climateDegradation: { tss: 0.88, nit: 0.82, pho: 0.84 } },
+  { id: "green_infra", cat: "Source Control", name: "Green Infrastructure",     icon: "\ud83c\udf33", costPer: 42000, defUnits: 4,  gpm: 0, salMax: 99, mo: 8,  doBoost: 0.05, tss: 55, bac: 25, nit: 30, pho: 35, pfas: 5,  trash: 30, isBMP: true, isSrc: true, desc: "Bioswales, rain gardens, permeable pavement.", pillars: ['SW','SurfW'], sizeRange: ['XS','M'], climateVulnerability: "moderate", climateDegradation: { tss: 0.85, nit: 0.82, pho: 0.84, trash: 0.88 } },
   { id: "septic",      cat: "Source Control", name: "Septic Upgrade / Connect",  icon: "\ud83d\udebd", costPer: 18000, defUnits: 10, gpm: 0, salMax: 99, mo: 6,  doBoost: 0,    tss: 20, bac: 80, nit: 60, pho: 50, pfas: 10, trash: 0,  isBMP: true, isSrc: true, desc: "Per parcel. Eliminate failing septic \u2014 phosphorus/bacteria source.", pillars: ['GW','SW'], sizeRange: ['XS','S'] },
-  { id: "detention",   cat: "Source Control", name: "Stormwater Detention",      icon: "\ud83c\udfd7\ufe0f", costPer: 65000, defUnits: 3, gpm: 0, salMax: 99, mo: 6, doBoost: 0.1, tss: 70, bac: 30, nit: 20, pho: 25, pfas: 0, trash: 35, isBMP: true, isSrc: true, desc: "Engineered detention. Settles solids before receiving water.", pillars: ['SW','SurfW'], sizeRange: ['S','L'] },
+  { id: "detention",   cat: "Source Control", name: "Stormwater Detention",      icon: "\ud83c\udfd7\ufe0f", costPer: 65000, defUnits: 3, gpm: 0, salMax: 99, mo: 6, doBoost: 0.1, tss: 70, bac: 30, nit: 20, pho: 25, pfas: 0, trash: 35, isBMP: true, isSrc: true, desc: "Engineered detention. Settles solids before receiving water.", pillars: ['SW','SurfW'], sizeRange: ['S','L'], climateVulnerability: "moderate", climateDegradation: { tss: 0.88, trash: 0.85 } },
   // DO Mgmt
   { id: "aerator",     cat: "DO Mgmt",      name: "Mechanical Aeration",       icon: "\ud83e\udee7", costPer: 22000,  defUnits: 4, gpm: 0, salMax: 99, mo: 2,  doBoost: 1.2,  tss: 0,  bac: 0,  nit: 5,  pho: 0,  pfas: 0,  trash: 0,  isBMP: true, isDO: true, desc: "Direct O\u2082 injection. ~5 ac/unit. PIN AI modulates output.", pillars: ['SW','SurfW'], sizeRange: ['XS','L'] },
   { id: "hypo_oxy",    cat: "DO Mgmt",      name: "Hypolimnetic Oxygenation",  icon: "\ud83d\udd35", costPer: 95000,  defUnits: 1, gpm: 0, salMax: 99, mo: 6,  doBoost: 2.0,  tss: 0,  bac: 0,  nit: 10, pho: 5,  pfas: 0,  trash: 0,  isBMP: true, isDO: true, desc: "Deep-water O\u2082. Prevents phosphorus release from sediment.", pillars: ['SW','SurfW'], sizeRange: ['M','XL'] },
@@ -277,7 +306,7 @@ export const MODULES: TreatmentModule[] = [
   { id: "pfas_foam",   cat: "Emerging",     name: "PFAS Foam Fractionation",    icon: "\ud83e\uddeb", costPer: 62000,  defUnits: 1, gpm: 40, salMax: 99, mo: 5,  doBoost: 0,    tss: 5,  bac: 5,  nit: 0,  pho: 0,  pfas: 95, trash: 0,  isBMP: false, trl: 5, pilotNote: "TRL 5 \u2014 requires pilot program.", pillars: ['DW','GW','SW'], sizeRange: ['S','L'] },
   { id: "sed_cap",     cat: "Emerging",     name: "Sediment Capping",           icon: "\ud83e\udea8", costPer: 120000, defUnits: 1, gpm: 0,  salMax: 99, mo: 8,  doBoost: 0,    tss: 10, bac: 5,  nit: 5,  pho: 15, pfas: 30, trash: 0,  isBMP: false, isSrc: true, pilotNote: "Site-specific design required.", pillars: ['SW','SurfW'], sizeRange: ['M','XL'] },
   // New modules
-  { id: "basalt_reef", cat: "Biological",   name: "Basalt Enhanced Oyster Reef", icon: "\ud83e\uddea", costPer: 85000, defUnits: 2, gpm: 0,  salMax: 25, mo: 12, doBoost: 0.3,  tss: 20, bac: 0,  nit: 35, pho: 40, pfas: 0,  trash: 0,  isBMP: false, trl: 5, experimental: true, pilotNote: "TRL 5 \u2014 experimental basalt substrate reef.", desc: "Basalt aggregate oyster reef. Nutrient uptake via biological filtration + mineral weathering.", pillars: ['SurfW','SW'], sizeRange: ['M','XL'] },
+  { id: "basalt_reef", cat: "Biological",   name: "Basalt Enhanced Oyster Reef", icon: "\ud83e\uddea", costPer: 85000, defUnits: 2, gpm: 0,  salMax: 25, mo: 12, doBoost: 0.3,  tss: 20, bac: 0,  nit: 35, pho: 40, pfas: 0,  trash: 0,  isBMP: false, trl: 5, experimental: true, pilotNote: "TRL 5 \u2014 experimental basalt substrate reef.", desc: "Basalt aggregate oyster reef. Nutrient uptake via biological filtration + mineral weathering.", pillars: ['SurfW','SW'], sizeRange: ['M','XL'], climateVulnerability: "high", climateDegradation: { nit: 0.70, pho: 0.68 } },
   { id: "biochar_socks", cat: "Emerging",   name: "Biochar Filter Socks",       icon: "\ud83e\uddf6", costPer: 4500,  defUnits: 6, gpm: 15, salMax: 99, mo: 1,  doBoost: 0,    tss: 55, bac: 0,  nit: 20, pho: 35, pfas: 25, trash: 0,  isBMP: false, trl: 6, experimental: true, pilotNote: "TRL 6 \u2014 field-tested biochar media socks.", desc: "Deployable biochar filter socks for rapid stormwater interception. Low cost, high TSS/phos capture.", pillars: ['SW','SurfW','GW'], sizeRange: ['XS','M'] },
   { id: "alia_5",     cat: "PEARL ALIA",   name: "ALIA 5 GPM \u2014 Compact",  icon: "\ud83d\udd2c", costPer: 50000, defUnits: 4, gpm: 5,  salMax: 25, mo: 2,  doBoost: 0.05, tss: 90, bac: 92, nit: 30, pho: 25, pfas: 0,  trash: 0,  isBMP: false, hasOpex: true, pilotNote: "Compact unit \u2014 included with OpEx for small coverage areas.", desc: "5 GPM compact ALIA for small outfalls, green infrastructure, and pilot sites.", pillars: ['SW','SurfW'], sizeRange: ['XS','S'] },
   { id: "alia_10",    cat: "PEARL ALIA",   name: "ALIA 10 GPM \u2014 Mid",     icon: "\ud83e\uddea", costPer: 75000, defUnits: 4, gpm: 10, salMax: 25, mo: 3,  doBoost: 0.08, tss: 91, bac: 93, nit: 32, pho: 26, pfas: 0,  trash: 0,  isBMP: false, hasOpex: true, pilotNote: "Mid-size unit \u2014 OpEx bundled for moderate coverage.", desc: "10 GPM ALIA for moderate outfalls and distributed treatment networks.", pillars: ['SW','SurfW','WW'], sizeRange: ['XS','M'] },
@@ -359,23 +388,57 @@ export function fmtN(v: number): string {
   return v.toLocaleString();
 }
 
+/* ─── CLIMATE FORCING ───────────────────────────────────────────────────── */
+
+/**
+ * Apply climate forcing to a watershed — returns a NEW Watershed (no mutation).
+ * Models temperature, precipitation, salinity, and contaminant amplification.
+ */
+export function applyClimateForcing(
+  ws: Watershed,
+  scenario: RcpScenario,
+  decade: ClimateDecade,
+): Watershed {
+  if (scenario === "baseline") return ws;
+  const proj = CLIMATE_PROJECTIONS[scenario][decade];
+
+  // DO depression: -0.1 mg/L per °F (warm water holds less O₂)
+  const doMgL = Math.max(0, ws.doMgL - 0.1 * proj.tempIncrease_F);
+
+  // Flow amplification from increased precipitation intensity
+  const flowMGD = ws.flowMGD * (1 + proj.precipIntensityPct / 100);
+
+  // Salinity: +1.5 ppt per ft SLR (tidal watersheds only)
+  const salinity = ws.salinity > 0
+    ? ws.salinity + 1.5 * proj.seaLevelRise_ft
+    : ws.salinity;
+
+  // Contaminant amplification
+  const pPct = proj.precipIntensityPct;
+  const csoPct = proj.csoFreqIncreasePct;
+  const baseline = { ...ws.baseline };
+  baseline.tss   = Math.min(99, ws.baseline.tss   * (1 + 0.015 * pPct));
+  baseline.bac   = Math.min(99, ws.baseline.bac   * (1 + 0.012 * pPct) * (1 + csoPct / 200));
+  baseline.nit   = Math.min(99, ws.baseline.nit   * (1 + 0.010 * pPct));
+  baseline.pho   = Math.min(99, ws.baseline.pho   * (1 + 0.010 * pPct));
+  baseline.pfas  = ws.baseline.pfas; // PFAS unchanged by climate
+  baseline.trash = Math.min(99, ws.baseline.trash * (1 + 0.008 * pPct) * (1 + csoPct / 200));
+
+  // Round to one decimal
+  for (const k of CK) baseline[k] = Math.round(baseline[k] * 10) / 10;
+
+  return { ...ws, doMgL, flowMGD, salinity, baseline };
+}
+
 /* ─── CALCULATOR ENGINE ──────────────────────────────────────────────────── */
 
-export function runCalc(
+/** Inner calc helper — operates on pre-built active array */
+function _calcFromActive(
   ws: Watershed,
-  selectedModules: Set<string>,
-  unitCounts: Record<string, number>,
+  active: (TreatmentModule & { units: number; totalCost: number })[],
   timelineYrs: number,
   targetPct: number,
-): CalcResult | null {
-  if (!ws || !selectedModules.size) return null;
-
-  const active = MODULES.filter(m => selectedModules.has(m.id)).map(m => ({
-    ...m,
-    units: Math.max(1, unitCounts[m.id] ?? m.defUnits),
-    totalCost: (unitCounts[m.id] ?? m.defUnits) * m.costPer,
-  }));
-
+): CalcResult {
   const capex = active.reduce((s, m) => s + m.totalCost, 0);
   let totGPM = 0;
   let totDO = 0;
@@ -396,11 +459,9 @@ export function runCalc(
 
   CK.forEach(k => {
     let rem = 100;
-    // Source-control modules reduce load first
     active.filter(m => m.isSrc && m[k] > 0).forEach(m => {
       rem *= 1 - (m[k] * 0.4) / 100;
     });
-    // Flow-based treatment efficiency
     const eff = ws.flowMGD > 0 ? Math.min(1, (totGPM / 1440) / ws.flowMGD) : 0.6;
     active
       .filter(m => !m.isAddon && !m.isSrc && !m.isInfra && m[k] > 0 && m.gpm > 0)
@@ -408,11 +469,9 @@ export function runCalc(
       .forEach(m => {
         rem *= 1 - (m[k] / 100) * eff;
       });
-    // Add-ons
     active.filter(m => m.isAddon && m[k] > 0).forEach(m => {
       rem *= 1 - m[k] / 100;
     });
-    // Interception modules
     active
       .filter(m => ["trash_wheel", "skimmer"].includes(m.id) && m[k] > 0)
       .forEach(m => {
@@ -454,4 +513,83 @@ export function runCalc(
     grantTotal,
     met: avg >= targetPct * 0.9,
   };
+}
+
+export function runCalc(
+  ws: Watershed,
+  selectedModules: Set<string>,
+  unitCounts: Record<string, number>,
+  timelineYrs: number,
+  targetPct: number,
+): CalcResult | null {
+  if (!ws || !selectedModules.size) return null;
+
+  const active = MODULES.filter(m => selectedModules.has(m.id)).map(m => ({
+    ...m,
+    units: Math.max(1, unitCounts[m.id] ?? m.defUnits),
+    totalCost: (unitCounts[m.id] ?? m.defUnits) * m.costPer,
+  }));
+
+  return _calcFromActive(ws, active, timelineYrs, targetPct);
+}
+
+/* ─── CLIMATE-STRESSED CALCULATOR ───────────────────────────────────────── */
+
+export interface ClimateCalcResult {
+  baseline: CalcResult;
+  stressed: CalcResult | null;
+  climateWs: Watershed;
+}
+
+/**
+ * Run baseline + climate-stressed calc in one call.
+ * When scenario === "baseline", stressed is null and climateWs === ws.
+ */
+export function runClimateCalc(
+  ws: Watershed,
+  selectedModules: Set<string>,
+  unitCounts: Record<string, number>,
+  timelineYrs: number,
+  targetPct: number,
+  scenario: RcpScenario,
+  decade: ClimateDecade,
+): ClimateCalcResult | null {
+  if (!ws || !selectedModules.size) return null;
+
+  const active = MODULES.filter(m => selectedModules.has(m.id)).map(m => ({
+    ...m,
+    units: Math.max(1, unitCounts[m.id] ?? m.defUnits),
+    totalCost: (unitCounts[m.id] ?? m.defUnits) * m.costPer,
+  }));
+
+  const baseline = _calcFromActive(ws, active, timelineYrs, targetPct);
+
+  if (scenario === "baseline") {
+    return { baseline, stressed: null, climateWs: ws };
+  }
+
+  // Apply climate forcing to the watershed
+  const climateWs = applyClimateForcing(ws, scenario, decade);
+  const proj = CLIMATE_PROJECTIONS[scenario][decade];
+
+  // Stress intensity (0–1 scale for interpolating degradation)
+  const stressIntensity = proj.tempIncrease_F / 5.4; // normalized to worst case
+
+  // Apply module degradation — scale each module's removal rates
+  const degradedActive = active.map(m => {
+    if (!m.climateDegradation) return m;
+    const degraded = { ...m };
+    for (const k of CK) {
+      const factor = m.climateDegradation[k];
+      if (factor != null) {
+        // Interpolate between 1.0 (no stress) and factor (full stress)
+        const scaled = 1 - (1 - factor) * stressIntensity;
+        (degraded as Record<string, unknown>)[k] = Math.round(m[k] * scaled * 10) / 10;
+      }
+    }
+    return degraded;
+  });
+
+  const stressed = _calcFromActive(climateWs, degradedActive, timelineYrs, targetPct);
+  return { baseline, stressed, climateWs };
 }

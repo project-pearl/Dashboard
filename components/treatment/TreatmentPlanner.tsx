@@ -5,9 +5,11 @@ import {
   MODULES, MODULE_CATS, CAT_COLORS, NGOS, EVENTS,
   CK, CONTAMINANT_LABELS, CONTAMINANT_COLORS,
   OPEX_TEAM_YEAR, ALIA_PER_TEAM,
-  fmt, fmtN, runCalc,
+  CLIMATE_PROJECTIONS,
+  fmt, fmtN, runCalc, runClimateCalc, applyClimateForcing,
   type Watershed, type TreatmentModule, type NGO, type CommunityEvent,
   type ModuleCategory, type ContaminantKey, type CalcResult,
+  type RcpScenario, type ClimateDecade,
 } from "./treatmentData";
 import ExecutiveOutput from "./ExecutiveOutput";
 
@@ -45,13 +47,14 @@ function Bar({ base, result, colorKey }: { base: number; result?: number; colorK
 
 /* ── Module row ── */
 function ModRow({
-  m, checked, onToggle, units, onUnits,
+  m, checked, onToggle, units, onUnits, climActive,
 }: {
   m: TreatmentModule;
   checked: boolean;
   onToggle: (id: string) => void;
   units: number;
   onUnits: (id: string, v: number) => void;
+  climActive?: boolean;
 }) {
   const cost = units * m.costPer;
   const catColor = CAT_COLORS[m.cat];
@@ -96,6 +99,12 @@ function ModRow({
           )}
           {m.isAddon && (
             <span className="text-[8px] bg-green-50 text-green-800 px-1 rounded">ADD-ON</span>
+          )}
+          {climActive && m.climateVulnerability === "high" && (
+            <span className="text-[8px] bg-red-100 text-red-700 px-1 rounded font-bold">CLIM-VULN</span>
+          )}
+          {climActive && m.climateVulnerability === "moderate" && (
+            <span className="text-[8px] bg-amber-100 text-amber-700 px-1 rounded font-bold">CLIM-MOD</span>
           )}
         </div>
         <div className="text-[9px] text-slate-400 mt-0.5 leading-snug">{m.desc || m.pilotNote || ""}</div>
@@ -279,6 +288,8 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
   const [catOpen, setCatOpen] = useState<Set<string>>(new Set(MODULE_CATS));
   const [leftTab, setLeftTab] = useState<"modules" | "ngo" | "events">("modules");
   const [showExec, setShowExec] = useState(false);
+  const [climScenario, setClimScenario] = useState<RcpScenario>("baseline");
+  const [climDecade, setClimDecade] = useState<ClimateDecade>(2050);
 
   const getU = (id: string) => units[id] ?? MODULES.find(m => m.id === id)?.defUnits ?? 1;
   const toggle = (set: Set<string>, id: string) => {
@@ -291,6 +302,16 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
     () => (ws ? runCalc(ws, selected, units, tl, target) : null),
     [ws, selected, units, tl, target],
   );
+
+  const climResult = useMemo(
+    () => climScenario !== "baseline"
+      ? runClimateCalc(ws, selected, units, tl, target, climScenario, climDecade)
+      : null,
+    [ws, selected, units, tl, target, climScenario, climDecade],
+  );
+
+  const climActive = climScenario !== "baseline";
+  const climProj = climActive ? CLIMATE_PROJECTIONS[climScenario][climDecade] : null;
 
   // Running totals
   const selModules = MODULES.filter(m => selected.has(m.id));
@@ -327,20 +348,24 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
         <span className="font-serif text-[17px] text-slate-800">{ws.name}</span>
         <div className="w-px h-5 bg-slate-200 hidden sm:block" />
         {[
-          { l: "Flow", v: ws.flowMGD.toLocaleString() + " MGD" },
+          { l: "Flow", v: ws.flowMGD.toLocaleString() + " MGD", delta: climActive && climProj ? `+${climProj.precipIntensityPct}%` : undefined },
           { l: "Area", v: ws.acres.toLocaleString() + " ac" },
-          { l: "Salinity", v: ws.salinity + " ppt" },
+          { l: "Salinity", v: ws.salinity + " ppt", delta: climActive && climProj && ws.salinity > 0 ? `+${(1.5 * climProj.seaLevelRise_ft).toFixed(1)}` : undefined },
           {
             l: "DO",
             v: ws.doMgL + " mg/L",
             c: ws.doMgL < 3.5 ? "#c62828" : ws.doMgL < 5 ? "#e65100" : "#2e7d32",
+            delta: climActive && climProj ? `\u2212${(0.1 * climProj.tempIncrease_F).toFixed(1)}` : undefined,
           },
           { l: "Treatable", v: ws.treatable + "%" },
         ].map((x, i) => (
           <div key={i} className="text-center">
             <div className="text-[8px] text-slate-400 uppercase font-mono tracking-wider">{x.l}</div>
-            <div className="text-xs font-semibold font-mono" style={{ color: x.c || "#1b3a5c" }}>
+            <div className="text-xs font-semibold font-mono" style={{ color: (x as { c?: string }).c || "#1b3a5c" }}>
               {x.v}
+              {(x as { delta?: string }).delta && (
+                <span className="text-[8px] text-amber-600 ml-1">({(x as { delta?: string }).delta})</span>
+              )}
             </div>
           </div>
         ))}
@@ -427,6 +452,7 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
                           onToggle={id => setSelected(prev => toggle(prev, id))}
                           units={getU(m.id)}
                           onUnits={(id, v) => setUnits(prev => ({ ...prev, [id]: Math.max(1, v) }))}
+                          climActive={climActive}
                         />
                       ))}
                   </div>
@@ -505,14 +531,27 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { l: "Avg Reduction", v: calc.avg.toFixed(0) + "%", c: calc.met ? "#2e7d32" : "#e65100" },
-                  { l: "DO Projected", v: calc.projDO.toFixed(1) + " mg/L", c: calc.projDO > 5 ? "#2e7d32" : "#e65100" },
+                  {
+                    l: "Avg Reduction", v: calc.avg.toFixed(0) + "%", c: calc.met ? "#2e7d32" : "#e65100",
+                    delta: climResult?.stressed ? (climResult.stressed.avg - calc.avg).toFixed(1) + "%" : undefined,
+                  },
+                  {
+                    l: "DO Projected", v: calc.projDO.toFixed(1) + " mg/L", c: calc.projDO > 5 ? "#2e7d32" : "#e65100",
+                    delta: climResult?.stressed ? (climResult.stressed.projDO - calc.projDO).toFixed(1) : undefined,
+                  },
                   { l: "GPM Deployed", v: fmtN(Math.round(calc.totGPM)), c: "#1565c0" },
                   { l: "Target", v: target + "%", c: "#78909c" },
                 ].map((x, i) => (
                   <div key={i} className="bg-white rounded-lg px-2.5 py-1.5 border border-slate-200">
                     <div className="text-[8px] text-slate-400 uppercase tracking-wide">{x.l}</div>
-                    <div className="text-base font-bold font-mono" style={{ color: x.c }}>{x.v}</div>
+                    <div className="text-base font-bold font-mono" style={{ color: x.c }}>
+                      {x.v}
+                      {(x as { delta?: string }).delta && (
+                        <span className="text-[9px] text-amber-600 font-medium ml-1">
+                          ({(x as { delta?: string }).delta})
+                        </span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -597,6 +636,72 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
                 className="w-full px-2 py-1 border border-slate-200 rounded text-sm font-mono text-slate-800 font-bold outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
             </div>
+          </div>
+
+          {/* climate scenario controls */}
+          <div className="px-4 py-3 border-b border-slate-200 shrink-0">
+            <div className="text-[8px] text-slate-400 uppercase tracking-wider mb-1.5">Climate Scenario</div>
+            <div className="flex gap-1 mb-2">
+              {([
+                { id: "baseline" as RcpScenario, label: "Baseline" },
+                { id: "rcp45" as RcpScenario, label: "RCP 4.5" },
+                { id: "rcp85" as RcpScenario, label: "RCP 8.5" },
+              ]).map(s => (
+                <button
+                  key={s.id}
+                  onClick={() => setClimScenario(s.id)}
+                  className={`flex-1 py-1 rounded text-[11px] font-mono cursor-pointer border transition-all ${
+                    climScenario === s.id
+                      ? "border-slate-800 bg-slate-800 text-white"
+                      : "border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300"
+                  }`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+            {climActive && (
+              <>
+                <div className="text-[8px] text-slate-400 uppercase tracking-wider mb-1">Projection Horizon</div>
+                <div className="flex gap-1 mb-2">
+                  {([2030, 2050, 2080] as ClimateDecade[]).map(d => (
+                    <button
+                      key={d}
+                      onClick={() => setClimDecade(d)}
+                      className={`flex-1 py-1 rounded text-[11px] font-mono cursor-pointer border transition-all ${
+                        climDecade === d
+                          ? "border-slate-800 bg-slate-800 text-white"
+                          : "border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300"
+                      }`}
+                    >
+                      {d}
+                    </button>
+                  ))}
+                </div>
+                {climProj && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-2 space-y-0.5">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                      <span className="text-[9px] font-bold text-amber-700 uppercase tracking-wider">Climate stress active</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[9px] font-mono">
+                      <span className="text-slate-500">Temp</span>
+                      <span className="text-amber-700 text-right">+{climProj.tempIncrease_F}°F</span>
+                      <span className="text-slate-500">Precip</span>
+                      <span className="text-amber-700 text-right">+{climProj.precipIntensityPct}%</span>
+                      {ws.salinity > 0 && (
+                        <>
+                          <span className="text-slate-500">SLR</span>
+                          <span className="text-amber-700 text-right">+{climProj.seaLevelRise_ft} ft</span>
+                        </>
+                      )}
+                      <span className="text-slate-500">CSO</span>
+                      <span className="text-amber-700 text-right">+{climProj.csoFreqIncreasePct}%</span>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
 
           {/* ledger lines */}
@@ -752,6 +857,10 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
           ngoValue={ngoValue}
           evtCostYr={evtCostYr}
           onClose={() => setShowExec(false)}
+          climateScenario={climScenario}
+          climateDecade={climDecade}
+          climateCalc={climResult?.stressed ?? null}
+          climateWs={climResult ? climResult.climateWs : ws}
         />
       )}
     </div>
