@@ -138,8 +138,22 @@ export function useSDWISData(input: SDWISDataInput): UseSDWISDataResult {
         return;
       }
 
-      // Strategy 3: State-level live query (fetches violations + systems + enforcement)
+      // Strategy 3: State-level cache lookup (much faster, no row limit)
       if (state) {
+        const cacheRes = await fetch(`/api/water-data?action=sdwis-cached-state&state=${state}`);
+        if (cacheRes.ok) {
+          const data = await cacheRes.json();
+          if (data.systems?.length || data.violations?.length) {
+            setSystems(data.systems || []);
+            setViolations(data.violations || []);
+            setEnforcement(data.enforcement || []);
+            setFromCache(true);
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        // Fallback: State-level live query (fetches violations + systems + enforcement)
         const res = await fetch(`/api/water-data?action=envirofacts-sdwis&state=${state}&limit=1000`);
         if (res.ok) {
           const data = await res.json();

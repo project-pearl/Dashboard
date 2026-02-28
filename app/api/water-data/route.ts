@@ -2482,6 +2482,24 @@ export async function GET(request: NextRequest) {
         }
       }
 
+      case 'sdwis-cached-state': {
+        const stateParam = (sp.get('state') || '').toUpperCase();
+        if (!stateParam) {
+          return NextResponse.json({ error: 'state required' }, { status: 400 });
+        }
+        try {
+          const { getSdwisForState, ensureWarmed: warmSdwis } = await import('@/lib/sdwisCache');
+          await warmSdwis();
+          const result = getSdwisForState(stateParam);
+          if (!result) {
+            return NextResponse.json({ source: 'sdwis-cached-state', message: 'No cached SDWIS data for this state', systems: [], violations: [], enforcement: [] });
+          }
+          return NextResponse.json({ source: 'sdwis-cached-state', state: stateParam, ...result });
+        } catch (e: any) {
+          return NextResponse.json({ source: 'sdwis-cached-state', error: e.message }, { status: 502 });
+        }
+      }
+
       case 'sdwis-cache-status': {
         try {
           const { getSdwisCacheStatus, ensureWarmed: warmSdwis } = await import('@/lib/sdwisCache');

@@ -263,6 +263,24 @@ export function getSdwisAllData(): { systems: SdwisSystem[]; violations: SdwisVi
 }
 
 /**
+ * Get SDWIS data filtered by state abbreviation (from cache).
+ * Returns null if cache is empty or no data for that state.
+ */
+export function getSdwisForState(stateAbbr: string): { systems: SdwisSystem[]; violations: SdwisViolation[]; enforcement: SdwisEnforcement[]; cacheBuilt: string; fromCache: true } | null {
+  ensureDiskLoaded();
+  if (!_memCache) return null;
+  const upper = stateAbbr.toUpperCase();
+  const all = getSdwisAllData();
+  const systems = all.systems.filter(s => s.state === upper);
+  // Match violations/enforcement to systems in this state via PWSID prefix
+  const statePwsids = new Set(systems.map(s => s.pwsid));
+  const violations = all.violations.filter(v => statePwsids.has(v.pwsid));
+  const enforcement = all.enforcement.filter(e => statePwsids.has(e.pwsid));
+  if (systems.length === 0 && violations.length === 0) return null;
+  return { systems, violations, enforcement, cacheBuilt: _memCache._meta.built, fromCache: true };
+}
+
+/**
  * Get cache metadata (for status/debug endpoints).
  */
 export function getSdwisCacheStatus() {
