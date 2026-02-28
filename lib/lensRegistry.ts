@@ -12,7 +12,6 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
   '/dashboard/federal': [
     { id: 'overview', label: 'Overview' },
     { id: 'briefing', label: 'AI Briefing' },
-    { id: 'planner', label: 'Response Planner' },
     { id: 'trends', label: 'Trends & Projections' },
     { id: 'policy', label: 'Policy Tracker' },
     { id: 'compliance', label: 'Compliance' },
@@ -20,6 +19,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'public-health', label: 'Public Health & Contaminants' },
     { id: 'infrastructure', label: 'Infrastructure' },
     { id: 'monitoring', label: 'Monitoring' },
+    { id: 'disaster-emergency', label: 'Disaster & Emergency' },
     { id: 'scorecard', label: 'Scorecard' },
     { id: 'reports', label: 'Reports' },
     { id: 'interagency', label: 'Cross-Agency' },
@@ -29,7 +29,6 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
   '/dashboard/state': [
     { id: 'overview',       label: 'Overview' },
     { id: 'briefing',       label: 'AI Briefing' },
-    { id: 'planner',        label: 'Response Planner' },
     { id: 'trends',         label: 'Trends & Projections' },
     { id: 'policy',         label: 'Policy Tracker' },
     { id: 'compliance',     label: 'Compliance' },
@@ -39,7 +38,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'agriculture',    label: 'Agricultural & Nonpoint Source' },
     { id: 'infrastructure', label: 'Infrastructure' },
     { id: 'monitoring',     label: 'Monitoring' },
-    { id: 'disaster',       label: 'Disaster & Emergency Response' },
+    { id: 'disaster',       label: 'Disaster & Emergency' },
     { id: 'tmdl',           label: 'TMDL & Restoration' },
     { id: 'scorecard',      label: 'Scorecard' },
     { id: 'reports',        label: 'Reports' },
@@ -50,7 +49,6 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
   '/dashboard/ms4': [
     { id: 'overview',          label: 'Overview' },
     { id: 'briefing',          label: 'AI Briefing' },
-    { id: 'planner',           label: 'Response Planner' },
     { id: 'trends',            label: 'Trends & Projections' },
     { id: 'policy',            label: 'Policy Tracker' },
     { id: 'compliance',        label: 'Compliance' },
@@ -60,7 +58,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'stormwater-bmps',   label: 'Stormwater BMPs' },
     { id: 'infrastructure',    label: 'Infrastructure' },
     { id: 'monitoring',        label: 'Monitoring' },
-    { id: 'disaster',          label: 'Disaster & Emergency Response' },
+    { id: 'disaster',          label: 'Disaster & Emergency' },
     { id: 'tmdl-compliance',   label: 'TMDL Compliance' },
     { id: 'scorecard',         label: 'Scorecard' },
     { id: 'reports',           label: 'Reports' },
@@ -71,7 +69,6 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
   '/dashboard/utility': [
     { id: 'overview',           label: 'Overview' },
     { id: 'briefing',           label: 'AI Briefing' },
-    { id: 'planner',            label: 'Response Planner' },
     { id: 'trends',             label: 'Trends & Projections' },
     { id: 'policy',             label: 'Policy Tracker' },
     { id: 'compliance',         label: 'Compliance' },
@@ -103,7 +100,6 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
   '/dashboard/esg': [
     { id: 'overview',            label: 'Overview' },
     { id: 'briefing',            label: 'AI Briefing' },
-    { id: 'planner',             label: 'Response Planner' },
     { id: 'trends',              label: 'Trends & Projections' },
     { id: 'policy',              label: 'Policy Tracker' },
     { id: 'compliance',          label: 'Compliance' },
@@ -124,7 +120,6 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
   '/dashboard/university': [
     { id: 'overview',                label: 'Overview' },
     { id: 'briefing',                label: 'AI Briefing' },
-    { id: 'planner',                 label: 'Response Planner' },
     { id: 'trends',                  label: 'Trends & Projections' },
     { id: 'policy',                  label: 'Policy Tracker' },
     { id: 'compliance',              label: 'Compliance' },
@@ -145,7 +140,6 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
   '/dashboard/ngo': [
     { id: 'overview',              label: 'Overview' },
     { id: 'briefing',              label: 'AI Briefing' },
-    { id: 'planner',               label: 'Response Planner' },
     { id: 'trends',                label: 'Trends & Projections' },
     { id: 'policy',                label: 'Policy Tracker' },
     { id: 'compliance',            label: 'Compliance' },
