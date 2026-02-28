@@ -10,7 +10,7 @@ import type { MapRef } from 'react-map-gl';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, AlertTriangle, AlertCircle, CheckCircle, MapPin, Droplets, Leaf, DollarSign, Users, TrendingUp, BarChart3, Gauge, Shield, LogOut, Building2, Info, ChevronDown, Minus, Clock, Target, ArrowRight, Eye, Sparkles, Scale, Activity, Banknote, HardHat, Wrench } from 'lucide-react';
+import { X, AlertTriangle, AlertCircle, CheckCircle, MapPin, Droplets, Leaf, DollarSign, Users, TrendingUp, BarChart3, Gauge, Shield, LogOut, Building2, Info, ChevronDown, ChevronLeft, Minus, Clock, Target, ArrowRight, Eye, Sparkles, Scale, Activity, Banknote, HardHat, Wrench } from 'lucide-react';
 import { brandedPrintSection, BrandedPrintBtn } from '@/lib/brandedPrint';
 import { useRouter } from 'next/navigation';
 import { getRegionById } from '@/lib/regionsConfig';
@@ -77,10 +77,6 @@ const MapboxChoropleth = dynamic(
 );
 const SentinelAlertLayer = dynamic(
   () => import('@/components/SentinelAlertLayer').then(m => m.SentinelAlertLayer),
-  { ssr: false }
-);
-const SentinelAlertPanel = dynamic(
-  () => import('@/components/SentinelAlertPanel').then(m => m.SentinelAlertPanel),
   { ssr: false }
 );
 
@@ -1177,6 +1173,7 @@ export function FederalManagementCenter(props: Props) {
   const [reducedMotion, setReducedMotion] = useState(false);
   const [selectedAlertHuc, setSelectedAlertHuc] = useState<string | null>(null);
   const [selectedAlertLevel, setSelectedAlertLevel] = useState<string>('CRITICAL');
+  const [sideCardMode, setSideCardMode] = useState<'alerts' | 'state'>('alerts');
 
   // Play chime when new CRITICAL HUCs appear
   useEffect(() => {
@@ -1621,6 +1618,8 @@ export function FederalManagementCenter(props: Props) {
     setWaterbodySearch('');
     setWaterbodyFilter('all');
     setShowAllWaterbodies(false);
+    setSideCardMode('state');
+    setSelectedAlertHuc(null);
     // Zoom to clicked state
     const map = mapRef.current;
     if (map) {
@@ -2496,6 +2495,13 @@ export function FederalManagementCenter(props: Props) {
     [sentinel, hucNames],
   );
 
+  // ─── Sorted Sentinel PINs for side card ──────────────────────────────────
+  const sortedPins = useMemo(() =>
+    [...sentinel.criticalHucs, ...sentinel.watchHucs, ...sentinel.advisoryHucs]
+      .sort((a, b) => b.score - a.score),
+    [sentinel]
+  );
+
   // ─── National Impact Counter ──────────────────────────────────────────────
   const [impactPeriod, setImpactPeriod] = useState<'all' | string>('all');
 
@@ -2765,23 +2771,15 @@ export function FederalManagementCenter(props: Props) {
                         onHucClick={(huc8, level) => {
                           setSelectedAlertHuc(huc8);
                           setSelectedAlertLevel(level);
+                          setSideCardMode('alerts');
+                          const c = centroids[huc8];
+                          if (c && mapRef.current) {
+                            mapRef.current.flyTo({ center: [c.lng, c.lat], zoom: 8, duration: 800 });
+                          }
                         }}
                         reducedMotion={reducedMotion}
                       />
                     </MapboxMapShell>
-                    {/* Sentinel alert detail panel (overlays map) */}
-                    {selectedAlertHuc && (
-                      <SentinelAlertPanel
-                        huc8={selectedAlertHuc}
-                        level={selectedAlertLevel as any}
-                        hucName={hucNames[selectedAlertHuc] ?? selectedAlertHuc}
-                        scoredHuc={
-                          [...sentinel.criticalHucs, ...sentinel.watchHucs, ...sentinel.advisoryHucs]
-                            .find(h => h.huc8 === selectedAlertHuc)
-                        }
-                        onClose={() => setSelectedAlertHuc(null)}
-                      />
-                    )}
                     {/* Screen reader announcement for new CRITICAL events */}
                     <div aria-live="assertive" className="sr-only">
                       {sentinel.newCriticalHucs.length > 0 &&
@@ -2863,182 +2861,331 @@ export function FederalManagementCenter(props: Props) {
             </CardContent>
           </Card>
 
-          {/* State Detail Panel */}
+          {/* Dual-mode Side Card: Sentinel Alerts / State Detail */}
           <Card style={{ background: 'var(--bg-card)' }}>
-            <CardHeader className="pb-2 pt-4 px-5">
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <MapPin size={15} className="flex-shrink-0" style={{ color: 'var(--text-dim)' }} />
-                <select
-                  value={selectedState}
-                  onChange={(e) => { setSelectedState(e.target.value); setWaterbodySearch(''); setWaterbodyFilter('all'); setShowAllWaterbodies(false); }}
-                  className="px-2 py-1 rounded-md text-sm font-semibold cursor-pointer focus:outline-none"
-                  style={{ background: 'var(--bg-input)', border: '1px solid var(--border-default)', color: 'var(--text-primary)' }}
-                  onFocus={e => { e.currentTarget.style.borderColor = 'var(--accent-teal)'; e.currentTarget.style.boxShadow = '0 0 0 2px var(--accent-teal-glow)'; }}
-                  onBlur={e => { e.currentTarget.style.borderColor = 'var(--border-default)'; e.currentTarget.style.boxShadow = 'none'; }}
-                >
-                  {Object.entries(STATE_ABBR_TO_NAME).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
-                    <option key={abbr} value={abbr}>{name} ({abbr})</option>
-                  ))}
-                </select>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 px-5 pb-5">
-              {/* Quick stats — compact, subordinate to national summary */}
-              {(() => {
-                const assessedCount = selectedStateRegions.filter(r => r.status === 'assessed').length;
-                const monitoredCount = selectedStateRegions.filter(r => r.status === 'monitored').length;
-                const unmonitoredCount = selectedStateRegions.filter(r => r.status === 'unmonitored').length;
-                const severeCount = selectedStateRegions.filter(r => r.status === 'assessed' && r.alertLevel === 'high').length;
-                return (
-                  <div className="flex items-baseline justify-between gap-3 py-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                    <div className="text-center">
-                      <div className="pin-stat-value text-base">{selectedStateRegions.length}</div>
-                      <div className="pin-label mt-0.5">Total</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="pin-stat-secondary text-sm">{assessedCount}</div>
-                      <div className="pin-label mt-0.5">Assessed</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="pin-stat-secondary text-sm">{monitoredCount}</div>
-                      <div className="pin-label mt-0.5">Monitored</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="pin-stat-secondary text-sm" style={{ color: 'var(--text-dim)' }}>{unmonitoredCount}</div>
-                      <div className="pin-label mt-0.5">No Data</div>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {/* Waterbody Filters */}
-              <div className="flex flex-wrap gap-1.5 mb-3">
-                {[
-                  { key: 'all' as const, label: 'All' },
-                  { key: 'impaired' as const, label: 'Impaired' },
-                  { key: 'severe' as const, label: 'Severe' },
-                  { key: 'monitored' as const, label: 'Monitored' },
-                ].map((f) => {
-                  const isActive = waterbodyFilter === f.key;
-                  return (
-                  <button
-                    key={f.key}
-                    onClick={() => { setWaterbodyFilter(f.key); setShowAllWaterbodies(false); }}
-                    className="pin-label rounded-full transition-all"
-                    style={{
-                      padding: '3px 10px',
-                      background: isActive ? 'var(--pill-bg-active)' : 'var(--pill-bg)',
-                      color: isActive ? 'var(--pill-text-active)' : 'var(--pill-text)',
-                      border: `1px solid ${isActive ? 'var(--pill-border-active)' : 'var(--pill-border)'}`,
-                    }}
-                  >
-                    {f.label}
-                    {f.key !== 'all' && (() => {
-                      const count = f.key === 'impaired'
-                        ? selectedStateRegions.filter(r => r.status === 'assessed' && (r.alertLevel === 'high' || r.alertLevel === 'medium')).length
-                        : f.key === 'severe'
-                        ? selectedStateRegions.filter(r => r.status === 'assessed' && r.alertLevel === 'high').length
-                        : selectedStateRegions.filter(r => r.status === 'monitored').length;
-                      return count > 0 ? ` (${count})` : '';
-                    })()}
-                  </button>
-                  );
-                })}
-              </div>
-
-              {/* Waterbody list — height matched to US map (560px) */}
-              <div className="space-y-1.5 max-h-[560px] overflow-y-auto">
-                {selectedStateRegions.length === 0 ? (
-                  <div className="text-sm py-4 text-center" style={{ color: 'var(--text-secondary)' }}>
-                    No monitored waterbodies in this state yet.
-                    <div className="text-xs mt-1" style={{ color: 'var(--text-dim)' }}>Click a colored state on the map to explore.</div>
-                  </div>
-                ) : (
-                  <>
-                    {selectedStateRegions.length > 10 && (
-                      <div className="mb-2">
-                        <input
-                          type="text"
-                          placeholder="Search waterbodies..."
-                          value={waterbodySearch}
-                          onChange={(e) => { setWaterbodySearch(e.target.value); setShowAllWaterbodies(false); }}
-                          className="w-full px-2 py-1.5 text-sm rounded-md focus:outline-none"
-                          style={{ background: 'var(--bg-input)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', boxShadow: 'none' }}
-                          onFocus={e => { e.currentTarget.style.borderColor = 'var(--accent-teal)'; e.currentTarget.style.boxShadow = '0 0 0 2px var(--accent-teal-glow)'; }}
-                          onBlur={e => { e.currentTarget.style.borderColor = 'var(--border-default)'; e.currentTarget.style.boxShadow = 'none'; }}
-                        />
-                        <div className="text-[10px] mt-1" style={{ color: 'var(--text-dim)' }}>
-                          {filteredStateRegions.length} of {selectedStateRegions.length} waterbodies
-                        </div>
-                      </div>
+            {sideCardMode === 'alerts' ? (
+              <>
+                <CardHeader className="pb-2 pt-4 px-5">
+                  <CardTitle className="flex items-center gap-2 text-sm">
+                    <Shield size={15} className="flex-shrink-0" style={{ color: 'var(--accent-teal)' }} />
+                    <span style={{ color: 'var(--text-primary)' }}>Sentinel Alerts</span>
+                    {sortedPins.length > 0 && (
+                      <span className="ml-auto text-xs px-2 py-0.5 rounded-full" style={{
+                        background: sentinel.criticalHucs.length > 0 ? 'rgba(211,47,47,0.12)' : 'rgba(249,168,37,0.12)',
+                        color: sentinel.criticalHucs.length > 0 ? '#D32F2F' : '#F9A825',
+                        fontWeight: 600,
+                      }}>
+                        {sortedPins.length}
+                      </span>
                     )}
-                    {displayedRegions.map((r) => {
-                    const isActive = r.id === activeDetailId;
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="px-5 pb-5">
+                  {sortedPins.length === 0 ? (
+                    <div className="text-sm py-8 text-center" style={{ color: 'var(--text-secondary)' }}>
+                      <Shield size={24} className="mx-auto mb-2" style={{ color: 'var(--text-dim)', opacity: 0.5 }} />
+                      No active sentinel alerts
+                      <div className="text-xs mt-1" style={{ color: 'var(--text-dim)' }}>All monitored watersheds are within normal parameters.</div>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5 max-h-[560px] overflow-y-auto">
+                      {sortedPins.map((pin) => {
+                        const isSelected = selectedAlertHuc === pin.huc8;
+                        const levelColor = pin.level === 'CRITICAL' ? '#D32F2F' : pin.level === 'WATCH' ? '#F9A825' : '#FDD835';
+                        return (
+                          <div key={pin.huc8}>
+                            <div
+                              className="flex items-center gap-2 p-2 cursor-pointer transition-colors"
+                              style={{
+                                borderRadius: '10px',
+                                border: `1px solid ${isSelected ? levelColor : 'var(--border-subtle)'}`,
+                                background: isSelected ? `${levelColor}10` : 'transparent',
+                                borderLeft: `3px solid ${levelColor}`,
+                              }}
+                              onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'var(--bg-hover)'; }}
+                              onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'transparent'; }}
+                              onClick={() => {
+                                setSelectedAlertHuc(isSelected ? null : pin.huc8);
+                                setSelectedAlertLevel(pin.level);
+                                const c = centroids[pin.huc8];
+                                if (c && mapRef.current) {
+                                  mapRef.current.flyTo({ center: [c.lng, c.lat], zoom: 8, duration: 800 });
+                                }
+                              }}
+                            >
+                              <div className="min-w-0 flex-1">
+                                <div className="truncate text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                                  {hucNames[pin.huc8] ?? pin.huc8}
+                                </div>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: levelColor }}>
+                                    {pin.level}
+                                  </span>
+                                  <span className="text-[10px]" style={{ color: 'var(--text-dim)' }}>
+                                    {pin.eventCount} signal{pin.eventCount !== 1 ? 's' : ''}
+                                  </span>
+                                  {pin.patternNames.length > 0 && (
+                                    <div className="flex gap-1 overflow-hidden">
+                                      {pin.patternNames.slice(0, 2).map(p => (
+                                        <span key={p} className="text-[9px] px-1.5 py-0.5 rounded-full truncate max-w-[80px]" style={{
+                                          background: `${levelColor}15`,
+                                          color: levelColor,
+                                        }}>
+                                          {p.replace(/-/g, ' ')}
+                                        </span>
+                                      ))}
+                                      {pin.patternNames.length > 2 && (
+                                        <span className="text-[9px]" style={{ color: 'var(--text-dim)' }}>+{pin.patternNames.length - 2}</span>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              <div
+                                className="sentinel-score-badge flex-shrink-0"
+                                data-level={pin.level}
+                                style={{ fontSize: '12px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' }}
+                              >
+                                {Math.round(pin.score)}
+                              </div>
+                            </div>
+                            {/* Expanded inline detail for selected PIN */}
+                            {isSelected && (
+                              <div className="mt-1 ml-3 p-3 rounded-lg space-y-2" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
+                                <div className="flex items-center gap-3">
+                                  <div
+                                    className="sentinel-score-badge"
+                                    data-level={pin.level}
+                                    style={{ fontSize: '16px', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px' }}
+                                  >
+                                    {Math.round(pin.score)}
+                                  </div>
+                                  <div>
+                                    <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>Composite Score</div>
+                                    <div className="text-xs" style={{ color: 'var(--text-dim)' }}>
+                                      {pin.eventCount} signal{pin.eventCount !== 1 ? 's' : ''} detected
+                                    </div>
+                                  </div>
+                                </div>
+                                {pin.patternNames.length > 0 && (
+                                  <div>
+                                    <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Active Patterns</div>
+                                    <div className="flex flex-wrap gap-1">
+                                      {pin.patternNames.map(p => (
+                                        <span key={p} className="text-xs px-2 py-0.5 rounded-full" style={{
+                                          background: `${levelColor}15`,
+                                          color: levelColor,
+                                        }}>
+                                          {p.replace(/-/g, ' ')}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                {pin.level === 'CRITICAL' && (
+                                  <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                                    Last scored: {new Date(pin.lastScored).toLocaleString()}
+                                  </div>
+                                )}
+                                {pin.level === 'WATCH' && (
+                                  <div className="text-xs p-2 rounded" style={{ background: 'rgba(249,168,37,0.06)' }}>
+                                    <span className="font-medium">Escalation condition: </span>
+                                    Would escalate if additional signals detected in this HUC
+                                  </div>
+                                )}
+                                {pin.level === 'ADVISORY' && (
+                                  <div className="text-xs" style={{ color: 'var(--text-dim)' }}>
+                                    Single signal detected — monitoring for compound patterns
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </CardContent>
+              </>
+            ) : (
+              <>
+                <CardHeader className="pb-2 pt-4 px-5">
+                  <CardTitle className="flex items-center gap-2 text-sm">
+                    <button
+                      onClick={() => { setSideCardMode('alerts'); setSelectedAlertHuc(null); }}
+                      className="flex items-center gap-1 text-xs font-medium transition-colors"
+                      style={{ color: 'var(--accent-teal)' }}
+                      onMouseEnter={e => { e.currentTarget.style.opacity = '0.8'; }}
+                      onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
+                    >
+                      <ChevronLeft size={14} />
+                      Back to Alerts
+                    </button>
+                    <span className="mx-1" style={{ color: 'var(--border-default)' }}>|</span>
+                    <MapPin size={15} className="flex-shrink-0" style={{ color: 'var(--text-dim)' }} />
+                    <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      {STATE_ABBR_TO_NAME[selectedState] ?? selectedState} ({selectedState})
+                    </span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 px-5 pb-5">
+                  {/* Quick stats */}
+                  {(() => {
+                    const assessedCount = selectedStateRegions.filter(r => r.status === 'assessed').length;
+                    const monitoredCount = selectedStateRegions.filter(r => r.status === 'monitored').length;
+                    const unmonitoredCount = selectedStateRegions.filter(r => r.status === 'unmonitored').length;
                     return (
-                    <div key={r.id} className="flex items-center justify-between p-2 cursor-pointer transition-colors"
-                      style={{
-                        borderRadius: '10px',
-                        border: `1px solid ${isActive ? 'var(--accent-teal)' : 'var(--border-subtle)'}`,
-                        background: isActive ? 'var(--accent-teal-glow)' : 'transparent',
-                        boxShadow: isActive ? '0 0 0 1px var(--accent-teal)' : 'none',
-                      }}
-                      onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--bg-hover)'; }}
-                      onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
-                      onClick={() => handleRegionClick(r.id)}>
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-sm font-medium" style={{ color: isActive ? 'var(--accent-teal)' : 'var(--text-primary)' }}>{r.name}</div>
-                        <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-dim)' }}>
-                          {r.status === 'assessed' ? (
-                            <span className="inline-flex items-center gap-1 rounded-full" style={{
-                              padding: '2px 8px',
-                              fontSize: '10px',
-                              fontWeight: 600,
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.04em',
-                              background: r.alertLevel === 'high' ? 'var(--status-severe-bg)' : r.alertLevel === 'medium' ? 'var(--status-impaired-bg)' : r.alertLevel === 'low' ? 'var(--status-watch-bg)' : 'var(--status-healthy-bg)',
-                              color: r.alertLevel === 'high' ? 'var(--status-severe)' : r.alertLevel === 'medium' ? 'var(--status-impaired)' : r.alertLevel === 'low' ? 'var(--status-watch)' : 'var(--status-healthy)',
-                            }}>
-                              {r.alertLevel === 'high' ? 'Severe' : r.alertLevel === 'medium' ? 'Impaired' : r.alertLevel === 'low' ? 'Watch' : 'Healthy'}
-                            </span>
-                          ) : r.status === 'monitored' ? (
-                            <span className="inline-flex items-center gap-1 rounded-full" style={{ padding: '2px 8px', fontSize: '10px', fontWeight: 600, letterSpacing: '0.04em', background: 'var(--accent-teal-glow)', color: 'var(--accent-teal)' }}>
-                              ◐ {r.dataSourceCount} source{r.dataSourceCount !== 1 ? 's' : ''}
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 rounded-full" style={{ padding: '2px 8px', fontSize: '10px', fontWeight: 600, letterSpacing: '0.04em', background: 'var(--bg-hover)', color: 'var(--text-dim)' }}>
-                              — Unmonitored
-                            </span>
-                          )}
-                          {r.activeAlerts > 0 && <span style={{ color: 'var(--text-dim)' }}>{r.activeAlerts} alert{r.activeAlerts !== 1 ? 's' : ''}</span>}
-                          {r.status === 'assessed' && (
-                            <span style={{ fontSize: '9px', color: 'var(--text-dim)' }}>EPA ATTAINS</span>
-                          )}
-                          {r.status === 'monitored' && r.dataSourceCount > 0 && (
-                            <span style={{ fontSize: '9px', color: 'var(--text-dim)' }}>USGS/WQP</span>
-                          )}
+                      <div className="flex items-baseline justify-between gap-3 py-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                        <div className="text-center">
+                          <div className="pin-stat-value text-base">{selectedStateRegions.length}</div>
+                          <div className="pin-label mt-0.5">Total</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="pin-stat-secondary text-sm">{assessedCount}</div>
+                          <div className="pin-label mt-0.5">Assessed</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="pin-stat-secondary text-sm">{monitoredCount}</div>
+                          <div className="pin-label mt-0.5">Monitored</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="pin-stat-secondary text-sm" style={{ color: 'var(--text-dim)' }}>{unmonitoredCount}</div>
+                          <div className="pin-label mt-0.5">No Data</div>
                         </div>
                       </div>
-                      {isActive && (
-                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0 mr-1" />
-                      )}
-                    </div>
                     );
-                  })}
-                  {filteredStateRegions.length > DISPLAY_LIMIT && !showAllWaterbodies && (
-                    <button
-                      onClick={() => setShowAllWaterbodies(true)}
-                      className="w-full py-2 text-xs rounded-md transition-colors"
-                      style={{ color: 'var(--accent-teal)' }}
-                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
-                    >
-                      Show all {filteredStateRegions.length} waterbodies
-                    </button>
-                  )}
-                  </>
-                )}
-              </div>
-            </CardContent>
+                  })()}
+
+                  {/* Waterbody Filters */}
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    {[
+                      { key: 'all' as const, label: 'All' },
+                      { key: 'impaired' as const, label: 'Impaired' },
+                      { key: 'severe' as const, label: 'Severe' },
+                      { key: 'monitored' as const, label: 'Monitored' },
+                    ].map((f) => {
+                      const isActive = waterbodyFilter === f.key;
+                      return (
+                      <button
+                        key={f.key}
+                        onClick={() => { setWaterbodyFilter(f.key); setShowAllWaterbodies(false); }}
+                        className="pin-label rounded-full transition-all"
+                        style={{
+                          padding: '3px 10px',
+                          background: isActive ? 'var(--pill-bg-active)' : 'var(--pill-bg)',
+                          color: isActive ? 'var(--pill-text-active)' : 'var(--pill-text)',
+                          border: `1px solid ${isActive ? 'var(--pill-border-active)' : 'var(--pill-border)'}`,
+                        }}
+                      >
+                        {f.label}
+                        {f.key !== 'all' && (() => {
+                          const count = f.key === 'impaired'
+                            ? selectedStateRegions.filter(r => r.status === 'assessed' && (r.alertLevel === 'high' || r.alertLevel === 'medium')).length
+                            : f.key === 'severe'
+                            ? selectedStateRegions.filter(r => r.status === 'assessed' && r.alertLevel === 'high').length
+                            : selectedStateRegions.filter(r => r.status === 'monitored').length;
+                          return count > 0 ? ` (${count})` : '';
+                        })()}
+                      </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Waterbody list */}
+                  <div className="space-y-1.5 max-h-[560px] overflow-y-auto">
+                    {selectedStateRegions.length === 0 ? (
+                      <div className="text-sm py-4 text-center" style={{ color: 'var(--text-secondary)' }}>
+                        No monitored waterbodies in this state yet.
+                        <div className="text-xs mt-1" style={{ color: 'var(--text-dim)' }}>Click a colored state on the map to explore.</div>
+                      </div>
+                    ) : (
+                      <>
+                        {selectedStateRegions.length > 10 && (
+                          <div className="mb-2">
+                            <input
+                              type="text"
+                              placeholder="Search waterbodies..."
+                              value={waterbodySearch}
+                              onChange={(e) => { setWaterbodySearch(e.target.value); setShowAllWaterbodies(false); }}
+                              className="w-full px-2 py-1.5 text-sm rounded-md focus:outline-none"
+                              style={{ background: 'var(--bg-input)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', boxShadow: 'none' }}
+                              onFocus={e => { e.currentTarget.style.borderColor = 'var(--accent-teal)'; e.currentTarget.style.boxShadow = '0 0 0 2px var(--accent-teal-glow)'; }}
+                              onBlur={e => { e.currentTarget.style.borderColor = 'var(--border-default)'; e.currentTarget.style.boxShadow = 'none'; }}
+                            />
+                            <div className="text-[10px] mt-1" style={{ color: 'var(--text-dim)' }}>
+                              {filteredStateRegions.length} of {selectedStateRegions.length} waterbodies
+                            </div>
+                          </div>
+                        )}
+                        {displayedRegions.map((r) => {
+                        const isActive = r.id === activeDetailId;
+                        return (
+                        <div key={r.id} className="flex items-center justify-between p-2 cursor-pointer transition-colors"
+                          style={{
+                            borderRadius: '10px',
+                            border: `1px solid ${isActive ? 'var(--accent-teal)' : 'var(--border-subtle)'}`,
+                            background: isActive ? 'var(--accent-teal-glow)' : 'transparent',
+                            boxShadow: isActive ? '0 0 0 1px var(--accent-teal)' : 'none',
+                          }}
+                          onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--bg-hover)'; }}
+                          onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
+                          onClick={() => handleRegionClick(r.id)}>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-sm font-medium" style={{ color: isActive ? 'var(--accent-teal)' : 'var(--text-primary)' }}>{r.name}</div>
+                            <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-dim)' }}>
+                              {r.status === 'assessed' ? (
+                                <span className="inline-flex items-center gap-1 rounded-full" style={{
+                                  padding: '2px 8px',
+                                  fontSize: '10px',
+                                  fontWeight: 600,
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.04em',
+                                  background: r.alertLevel === 'high' ? 'var(--status-severe-bg)' : r.alertLevel === 'medium' ? 'var(--status-impaired-bg)' : r.alertLevel === 'low' ? 'var(--status-watch-bg)' : 'var(--status-healthy-bg)',
+                                  color: r.alertLevel === 'high' ? 'var(--status-severe)' : r.alertLevel === 'medium' ? 'var(--status-impaired)' : r.alertLevel === 'low' ? 'var(--status-watch)' : 'var(--status-healthy)',
+                                }}>
+                                  {r.alertLevel === 'high' ? 'Severe' : r.alertLevel === 'medium' ? 'Impaired' : r.alertLevel === 'low' ? 'Watch' : 'Healthy'}
+                                </span>
+                              ) : r.status === 'monitored' ? (
+                                <span className="inline-flex items-center gap-1 rounded-full" style={{ padding: '2px 8px', fontSize: '10px', fontWeight: 600, letterSpacing: '0.04em', background: 'var(--accent-teal-glow)', color: 'var(--accent-teal)' }}>
+                                  ◐ {r.dataSourceCount} source{r.dataSourceCount !== 1 ? 's' : ''}
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 rounded-full" style={{ padding: '2px 8px', fontSize: '10px', fontWeight: 600, letterSpacing: '0.04em', background: 'var(--bg-hover)', color: 'var(--text-dim)' }}>
+                                  — Unmonitored
+                                </span>
+                              )}
+                              {r.activeAlerts > 0 && <span style={{ color: 'var(--text-dim)' }}>{r.activeAlerts} alert{r.activeAlerts !== 1 ? 's' : ''}</span>}
+                              {r.status === 'assessed' && (
+                                <span style={{ fontSize: '9px', color: 'var(--text-dim)' }}>EPA ATTAINS</span>
+                              )}
+                              {r.status === 'monitored' && r.dataSourceCount > 0 && (
+                                <span style={{ fontSize: '9px', color: 'var(--text-dim)' }}>USGS/WQP</span>
+                              )}
+                            </div>
+                          </div>
+                          {isActive && (
+                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0 mr-1" />
+                          )}
+                        </div>
+                        );
+                      })}
+                      {filteredStateRegions.length > DISPLAY_LIMIT && !showAllWaterbodies && (
+                        <button
+                          onClick={() => setShowAllWaterbodies(true)}
+                          className="w-full py-2 text-xs rounded-md transition-colors"
+                          style={{ color: 'var(--accent-teal)' }}
+                          onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                        >
+                          Show all {filteredStateRegions.length} waterbodies
+                        </button>
+                      )}
+                      </>
+                    )}
+                  </div>
+                </CardContent>
+              </>
+            )}
           </Card>
 
         </div>
@@ -4718,103 +4865,11 @@ export function FederalManagementCenter(props: Props) {
         </>); {/* end ai-water-intelligence */}
 
         case 'national-briefing': return DS(<>
-        {/* ── Sentinel Alerts — real-time 3-layer view ── */}
-          <Card id="section-national-briefing">
-            <CardHeader className="pb-2 pt-5 px-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-sm font-semibold flex items-center gap-2" style={{ color: 'var(--text-bright)' }}>
-                    <Shield className="w-4 h-4" style={{ color: 'var(--accent-teal)' }} />
-                    Sentinel Alerts
-                    {(sentinel.criticalHucs.length > 0 || sentinel.watchHucs.length > 0) && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-full font-normal" style={{
-                        background: sentinel.criticalHucs.length > 0 ? 'rgba(211,47,47,0.15)' : 'rgba(249,168,37,0.15)',
-                        color: sentinel.criticalHucs.length > 0 ? '#D32F2F' : '#F9A825',
-                        border: `1px solid ${sentinel.criticalHucs.length > 0 ? 'rgba(211,47,47,0.3)' : 'rgba(249,168,37,0.3)'}`,
-                      }}>
-                        {sentinel.criticalHucs.length + sentinel.watchHucs.length} active
-                      </span>
-                    )}
-                  </CardTitle>
-                  <CardDescription className="text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>
-                    Real-time sentinel monitoring + {aiInsights.length} AI findings from {attainsAggregation.totalAssessed.toLocaleString()} ATTAINS records
-                  </CardDescription>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs gap-1.5"
-                  style={{ color: 'var(--text-secondary)', borderColor: 'var(--border-default)' }}
-                  onClick={async () => {
-                    const pdf = new BrandedPDFGenerator();
-                    await pdf.loadLogo();
-                    pdf.initialize();
-                    pdf.addTitle('Sentinel Alerts');
-                    pdf.addMetadata('Active Alerts', `${sentinel.criticalHucs.length} critical, ${sentinel.watchHucs.length} watch`);
-                    pdf.addMetadata('AI Findings', `${aiInsights.length}`);
-                    pdf.addMetadata('ATTAINS Records', attainsAggregation.totalAssessed.toLocaleString());
-                    pdf.addMetadata('Generated', new Date().toLocaleString());
-                    pdf.addSpacer(5);
-                    if (sentinel.criticalHucs.length > 0) {
-                      pdf.addSubtitle('Active Sentinel Events');
-                      for (const h of [...sentinel.criticalHucs, ...sentinel.watchHucs]) {
-                        pdf.addText(`[${h.level}] ${hucNames[h.huc8] ?? h.huc8} — Score: ${h.score}, ${h.eventCount} signals`);
-                      }
-                      pdf.addSpacer(3);
-                    }
-                    for (const insight of aiInsights) {
-                      const label = insight.type === 'urgent' ? 'URGENT' : insight.type === 'warning' ? 'WARNING' : insight.type === 'success' ? 'SUCCESS' : 'INFO';
-                      pdf.addSubtitle(`[${label}] ${insight.title}`);
-                      pdf.addText(insight.detail);
-                      pdf.addSpacer(3);
-                    }
-                    const dateStr = new Date().toISOString().slice(0, 10);
-                    pdf.download(`PEARL_Sentinel_Alerts_${dateStr}.pdf`);
-                  }}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                  Export PDF
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="px-5">
-              <SentinelBriefingCard
-                criticalHucs={sentinel.criticalHucs}
-                watchHucs={sentinel.watchHucs}
-                recentResolutions={sentinel.recentResolutions}
-                hucNames={hucNames}
-                sources={sentinel.sources}
-                systemStatus={sentinel.systemStatus}
-                lastFetched={sentinel.lastFetched}
-              >
-                {/* Layer 3: Structural context — existing AI insights */}
-                {aiInsights.length > 0 && (
-                  <div className="space-y-2">
-                    {aiInsights.map((insight, idx) => {
-                      const sevColor = insight.type === 'urgent' ? 'var(--status-severe)' :
-                                       insight.type === 'warning' ? 'var(--status-warning)' :
-                                       insight.type === 'success' ? 'var(--status-healthy)' :
-                                       'var(--text-dim)';
-                      return (
-                        <div key={idx} className="py-2.5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: sevColor }} />
-                            <span className="text-xs font-semibold" style={{ color: 'var(--text-bright)' }}>{insight.title}</span>
-                            <span className="pin-label ml-auto">{insight.type}</span>
-                          </div>
-                          <div className="text-xs leading-relaxed pl-4" style={{ color: 'var(--text-secondary)' }}>{insight.detail}</div>
-                          {insight.action && (
-                            <Button size="sm" variant="outline" className="mt-2 ml-4 h-6 text-[10px]">{insight.action}</Button>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </SentinelBriefingCard>
-            </CardContent>
-          </Card>
-
+        {/* ── AMS Alert Monitor ── */}
+        <AMSAlertMonitor
+          summary={amsSummary ?? MOCK_ALERT_SUMMARY}
+          role="FEDERAL_OVERSIGHT"
+        />
         </>); {/* end national-briefing */}
 
         case 'aiinsights': return DS(<>

@@ -530,219 +530,210 @@ function ThreatDashboard({
   const levelColor = active ? LEVEL_COLORS[active.level] : '#64748b';
   const gradientId = active ? `trend-grad-${active.id}` : 'trend-grad-default';
 
-  return (
-    <div className="flex gap-3">
-      {/* Left sidebar - threat list */}
-      <div className="w-56 shrink-0 space-y-2">
-        {threats.map(t => {
-          const ls = LEVEL_STYLES[t.level];
-          const isSel = selected === t.id;
-          const count = role === 'federal' ? t.nationalCount : t.stateData.units;
-          return (
-            <div
-              key={t.id}
-              onClick={() => setSelected(isSel ? null : t.id)}
-              className={`rounded-lg p-3 cursor-pointer border transition-all ${
-                isSel
-                  ? `${ls.bg} ${ls.border} border-2`
-                  : 'bg-white border-slate-200 hover:border-slate-300'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-1.5">
-                <div className="flex items-center gap-1.5">
-                  <span className={`text-sm ${ls.text}`}>{t.icon}</span>
-                  <span className="text-xs font-bold text-slate-800">{t.name}</span>
-                </div>
-                <Badge className={`text-[9px] px-1.5 py-0 ${ls.badge}`}>{t.level}</Badge>
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className={`text-base font-extrabold font-mono ${ls.text}`}>
-                  {count.toLocaleString()}
-                </span>
-                <span className="text-[9px] text-slate-400">
-                  {role === 'federal' ? 'national' : 'in MD'}
-                </span>
-                <span className={`text-[9px] font-bold ml-auto ${t.yoy > 0 ? 'text-red-500' : 'text-green-500'}`}>
-                  {t.yoy > 0 ? '\u25B2' : '\u25BC'}{Math.abs(t.yoy)}%
-                </span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+  // ── Detail view (threat selected) ──
+  if (active && levelStyle) {
+    return (
+      <div className="space-y-3">
+        {/* Back button */}
+        <button
+          onClick={() => setSelected(null)}
+          className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-700 transition-colors"
+        >
+          <ChevronDown className="w-3.5 h-3.5 rotate-90" />
+          Back to all contaminants
+        </button>
 
-      {/* Right detail panel */}
-      <div className="flex-1 min-w-0">
-        {active && levelStyle ? (
-          <div className="space-y-3">
-            {/* Header */}
-            <div className={`rounded-lg p-4 border ${levelStyle.bg} ${levelStyle.border}`}>
-              <div className="flex items-center gap-2 mb-2">
-                <span className={`text-xl ${levelStyle.text}`}>{active.icon}</span>
-                <span className="text-base font-extrabold text-slate-800">{active.name}</span>
-                <Badge className={`${levelStyle.badge} text-[10px]`}>{active.level}</Badge>
-                {role !== 'federal' && (
-                  <span className="text-xs text-slate-500 ml-auto">
-                    {role === 'state'
-                      ? `${active.stateData.state}: ${active.stateData.units} units (Rank #${active.stateData.rank})`
-                      : role === 'ms4'
-                        ? `${active.ms4Data.jurisdiction}: ${active.ms4Data.sites} affected sites`
-                        : `${active.stateData.state}: ${active.stateData.systems} systems`}
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-slate-600 leading-relaxed">{active.summary}</p>
-            </div>
-
-            {/* Key facts */}
-            <div className="grid grid-cols-4 gap-2">
-              {active.keyFacts.map((f, i) => (
-                <div key={i} className="bg-white rounded-lg p-2.5 border border-slate-200">
-                  <div className="text-[9px] text-slate-400 uppercase tracking-wider">{f.label}</div>
-                  <div className={`text-sm font-extrabold font-mono ${levelStyle.text}`}>{f.value}</div>
-                  <div className="text-[9px] text-slate-500">{f.desc}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Charts row */}
-            <div className="grid grid-cols-2 gap-3">
-              {/* Detection trend */}
-              <div className="bg-white rounded-lg p-3 border border-slate-200">
-                <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-2">Detection Trend</div>
-                <div style={{ height: 180 }}>
-                  <ResponsiveContainer>
-                    <AreaChart data={active.trend} margin={{ left: 0, right: 8, top: 4, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={levelColor} stopOpacity={0.3} />
-                          <stop offset="95%" stopColor={levelColor} stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                      <XAxis dataKey="yr" tick={{ fontSize: 9, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize: 9, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                      <Tooltip contentStyle={tooltipStyle} />
-                      <Area type="monotone" dataKey="v" stroke={levelColor} strokeWidth={2} fill={`url(#${gradientId})`} name="Detections" />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              {/* Top 5 states */}
-              <div className="bg-white rounded-lg p-3 border border-slate-200">
-                <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-2">Top 5 States</div>
-                <div style={{ height: 180 }}>
-                  <ResponsiveContainer>
-                    <BarChart data={active.topStates} layout="vertical" margin={{ left: 2, right: 8, top: 0, bottom: 0 }}>
-                      <XAxis type="number" hide />
-                      <YAxis type="category" dataKey="state" width={24} tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                      <Tooltip contentStyle={tooltipStyle} />
-                      <Bar dataKey="units" fill={levelColor} radius={[0, 3, 3, 0]} barSize={14} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </div>
-
-            {/* Waterbodies table */}
-            <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-              <div className="px-3 py-2 border-b border-slate-100">
-                <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Key Waterbodies</span>
-              </div>
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b border-slate-100">
-                    <th className="px-3 py-2 text-left text-[9px] text-slate-400 uppercase tracking-wider font-bold">Waterbody</th>
-                    <th className="px-3 py-2 text-left text-[9px] text-slate-400 uppercase tracking-wider font-bold">Type</th>
-                    <th className="px-3 py-2 text-left text-[9px] text-slate-400 uppercase tracking-wider font-bold">Status</th>
-                    <th className="px-3 py-2 text-left text-[9px] text-slate-400 uppercase tracking-wider font-bold">Level</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {active.waterbodies.map((w, i) => (
-                    <tr key={i} className="border-b border-slate-50 last:border-0">
-                      <td className="px-3 py-2 font-semibold text-slate-700">{w.name}</td>
-                      <td className="px-3 py-2 text-slate-500">{w.type}</td>
-                      <td className="px-3 py-2">
-                        <Badge className={`text-[9px] px-1.5 py-0 border ${waterbodyStatusBadge(w.status)}`}>{w.status}</Badge>
-                      </td>
-                      <td className={`px-3 py-2 font-semibold ${levelStyle.text}`}>{w.level}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* State-specific data */}
-            <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
-              <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-2">State Data: {active.stateData.state}</div>
-              <div className="grid grid-cols-5 gap-2 text-xs">
-                <div><span className="text-slate-400 block text-[9px]">Units</span><span className="font-bold text-slate-700">{active.stateData.units}</span></div>
-                <div><span className="text-slate-400 block text-[9px]">Systems</span><span className="font-bold text-slate-700">{active.stateData.systems}</span></div>
-                <div><span className="text-slate-400 block text-[9px]">Rank</span><span className="font-bold text-slate-700">#{active.stateData.rank}</span></div>
-                <div><span className="text-slate-400 block text-[9px]">Standard</span><span className="font-bold text-slate-700">{active.stateData.stateStandard}</span></div>
-                <div><span className="text-slate-400 block text-[9px]">Trend</span><span className="font-bold text-slate-700">{active.stateData.trend}</span></div>
-              </div>
-            </div>
-
-            {/* MS4 context */}
-            {(role === 'ms4' || role === 'ms4_admin') && (
-              <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
-                <div className="text-[10px] text-blue-400 uppercase tracking-wider font-bold mb-2">MS4 Context: {active.ms4Data.jurisdiction}</div>
-                <div className="grid grid-cols-3 gap-2 text-xs">
-                  <div><span className="text-blue-400 block text-[9px]">Sites</span><span className="font-bold text-blue-700">{active.ms4Data.sites}</span></div>
-                  <div><span className="text-blue-400 block text-[9px]">Runoff Risk</span><span className="font-bold text-blue-700">{active.ms4Data.runoffRisk}</span></div>
-                  <div><span className="text-blue-400 block text-[9px]">BMPs Needed</span><span className="font-bold text-blue-700">{active.ms4Data.bmpsNeeded}</span></div>
-                </div>
-              </div>
+        {/* Header */}
+        <div className={`rounded-lg p-4 border ${levelStyle.bg} ${levelStyle.border}`}>
+          <div className="flex items-center gap-2 mb-2">
+            <span className={`text-xl ${levelStyle.text}`}>{active.icon}</span>
+            <span className="text-base font-extrabold text-slate-800">{active.name}</span>
+            <Badge className={`${levelStyle.badge} text-[10px]`}>{active.level}</Badge>
+            {role !== 'federal' && (
+              <span className="text-xs text-slate-500 ml-auto">
+                {role === 'state'
+                  ? `${active.stateData.state}: ${active.stateData.units} units (Rank #${active.stateData.rank})`
+                  : role === 'ms4'
+                    ? `${active.ms4Data.jurisdiction}: ${active.ms4Data.sites} affected sites`
+                    : `${active.stateData.state}: ${active.stateData.systems} systems`}
+              </span>
             )}
-
-            {/* Expand button */}
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full text-xs"
-              onClick={() => setExpanded(active.id)}
-            >
-              <Expand className="w-3 h-3 mr-1.5" />
-              Expand Full Detail
-            </Button>
           </div>
-        ) : (
-          /* No selection - overview */
-          <div className="space-y-3">
-            <div className="bg-white rounded-lg p-4 border border-slate-200">
-              <div className="text-sm font-bold text-slate-700 mb-3">
-                {role === 'federal' ? 'National Overview' : role === 'state' ? 'Maryland Overview' : role === 'ms4' ? 'Anne Arundel County' : 'Baltimore Metro Utility'} &mdash;{' '}
-                {threats
-                  .reduce((a, t) => a + (role === 'federal' ? t.nationalCount : t.stateData.units), 0)
-                  .toLocaleString()}{' '}
-                assessment units affected
-              </div>
-              <div className="grid grid-cols-6 gap-2">
-                {threats.map(t => {
-                  const ls = LEVEL_STYLES[t.level];
-                  return (
-                    <div
-                      key={t.id}
-                      onClick={() => setSelected(t.id)}
-                      className={`rounded-md p-2 border-l-[3px] cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors`}
-                      style={{ borderLeftColor: LEVEL_COLORS[t.level] }}
-                    >
-                      <div className="text-[10px] font-bold text-slate-700">{t.name}</div>
-                      <div className={`text-base font-extrabold font-mono ${ls.text}`}>
-                        {(role === 'federal' ? t.nationalCount : t.stateData.units).toLocaleString()}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+          <p className="text-xs text-slate-600 leading-relaxed">{active.summary}</p>
+        </div>
+
+        {/* Key facts */}
+        <div className="grid grid-cols-4 gap-2">
+          {active.keyFacts.map((f, i) => (
+            <div key={i} className="bg-white rounded-lg p-2.5 border border-slate-200">
+              <div className="text-[9px] text-slate-400 uppercase tracking-wider">{f.label}</div>
+              <div className={`text-sm font-extrabold font-mono ${levelStyle.text}`}>{f.value}</div>
+              <div className="text-[9px] text-slate-500">{f.desc}</div>
             </div>
-            <p className="text-xs text-slate-400 text-center">Select a contaminant from the left panel to view detailed intelligence.</p>
+          ))}
+        </div>
+
+        {/* Charts row */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-white rounded-lg p-3 border border-slate-200">
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-2">Detection Trend</div>
+            <div style={{ height: 180 }}>
+              <ResponsiveContainer>
+                <AreaChart data={active.trend} margin={{ left: 0, right: 8, top: 4, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={levelColor} stopOpacity={0.3} />
+                      <stop offset="95%" stopColor={levelColor} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis dataKey="yr" tick={{ fontSize: 9, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 9, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Area type="monotone" dataKey="v" stroke={levelColor} strokeWidth={2} fill={`url(#${gradientId})`} name="Detections" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg p-3 border border-slate-200">
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-2">Top 5 States</div>
+            <div style={{ height: 180 }}>
+              <ResponsiveContainer>
+                <BarChart data={active.topStates} layout="vertical" margin={{ left: 2, right: 8, top: 0, bottom: 0 }}>
+                  <XAxis type="number" hide />
+                  <YAxis type="category" dataKey="state" width={24} tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Bar dataKey="units" fill={levelColor} radius={[0, 3, 3, 0]} barSize={14} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        {/* Waterbodies table */}
+        <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+          <div className="px-3 py-2 border-b border-slate-100">
+            <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Key Waterbodies</span>
+          </div>
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-slate-100">
+                <th className="px-3 py-2 text-left text-[9px] text-slate-400 uppercase tracking-wider font-bold">Waterbody</th>
+                <th className="px-3 py-2 text-left text-[9px] text-slate-400 uppercase tracking-wider font-bold">Type</th>
+                <th className="px-3 py-2 text-left text-[9px] text-slate-400 uppercase tracking-wider font-bold">Status</th>
+                <th className="px-3 py-2 text-left text-[9px] text-slate-400 uppercase tracking-wider font-bold">Level</th>
+              </tr>
+            </thead>
+            <tbody>
+              {active.waterbodies.map((w, i) => (
+                <tr key={i} className="border-b border-slate-50 last:border-0">
+                  <td className="px-3 py-2 font-semibold text-slate-700">{w.name}</td>
+                  <td className="px-3 py-2 text-slate-500">{w.type}</td>
+                  <td className="px-3 py-2">
+                    <Badge className={`text-[9px] px-1.5 py-0 border ${waterbodyStatusBadge(w.status)}`}>{w.status}</Badge>
+                  </td>
+                  <td className={`px-3 py-2 font-semibold ${levelStyle.text}`}>{w.level}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* State-specific data */}
+        <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
+          <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-2">State Data: {active.stateData.state}</div>
+          <div className="grid grid-cols-5 gap-2 text-xs">
+            <div><span className="text-slate-400 block text-[9px]">Units</span><span className="font-bold text-slate-700">{active.stateData.units}</span></div>
+            <div><span className="text-slate-400 block text-[9px]">Systems</span><span className="font-bold text-slate-700">{active.stateData.systems}</span></div>
+            <div><span className="text-slate-400 block text-[9px]">Rank</span><span className="font-bold text-slate-700">#{active.stateData.rank}</span></div>
+            <div><span className="text-slate-400 block text-[9px]">Standard</span><span className="font-bold text-slate-700">{active.stateData.stateStandard}</span></div>
+            <div><span className="text-slate-400 block text-[9px]">Trend</span><span className="font-bold text-slate-700">{active.stateData.trend}</span></div>
+          </div>
+        </div>
+
+        {/* MS4 context */}
+        {(role === 'ms4' || role === 'ms4_admin') && (
+          <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+            <div className="text-[10px] text-blue-400 uppercase tracking-wider font-bold mb-2">MS4 Context: {active.ms4Data.jurisdiction}</div>
+            <div className="grid grid-cols-3 gap-2 text-xs">
+              <div><span className="text-blue-400 block text-[9px]">Sites</span><span className="font-bold text-blue-700">{active.ms4Data.sites}</span></div>
+              <div><span className="text-blue-400 block text-[9px]">Runoff Risk</span><span className="font-bold text-blue-700">{active.ms4Data.runoffRisk}</span></div>
+              <div><span className="text-blue-400 block text-[9px]">BMPs Needed</span><span className="font-bold text-blue-700">{active.ms4Data.bmpsNeeded}</span></div>
+            </div>
           </div>
         )}
+
+        {/* Expand button */}
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full text-xs"
+          onClick={() => setExpanded(active.id)}
+        >
+          <Expand className="w-3 h-3 mr-1.5" />
+          Expand Full Detail
+        </Button>
       </div>
+    );
+  }
+
+  // ── Card grid (no selection) — matches Treatment Effectiveness layout ──
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      {threats.map(t => {
+        const ls = LEVEL_STYLES[t.level];
+        const count = role === 'federal' ? t.nationalCount : t.stateData.units;
+        return (
+          <div
+            key={t.id}
+            onClick={() => setSelected(t.id)}
+            className={`bg-white rounded-lg p-3.5 border cursor-pointer transition-all hover:shadow-md ${ls.border}`}
+          >
+            <div className="flex justify-between items-start mb-2.5">
+              <div className="flex gap-2 items-center">
+                <span className={`text-lg ${ls.text}`}>{t.icon}</span>
+                <div>
+                  <div className="text-sm font-extrabold text-slate-800">{t.name}</div>
+                  <Badge className={`text-[9px] px-1.5 py-0 ${ls.badge} border`}>{t.level}</Badge>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className={`text-2xl font-black font-mono ${ls.text}`}>{count.toLocaleString()}</div>
+                <div className="text-[9px] text-slate-400">{role === 'federal' ? 'national' : `in ${t.stateData.state}`}</div>
+              </div>
+            </div>
+
+            <div className="mb-2">
+              <MiniBar pct={Math.min((count / 12000) * 100, 100)} colorClass={
+                t.level === 'REGULATED' ? 'bg-red-500'
+                : t.level === 'PRE-REGULATORY' ? 'bg-amber-500'
+                : t.level === 'ADVISORY' ? 'bg-green-500'
+                : t.level === 'EMERGING' ? 'bg-purple-500'
+                : t.level === 'MONITORING' ? 'bg-cyan-500'
+                : 'bg-pink-500'
+              } />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <div className="bg-slate-50 rounded p-2 border border-slate-200">
+                <div className="text-[9px] text-slate-400 uppercase tracking-wider">MCL</div>
+                <div className="text-[10px] text-slate-700 mt-0.5 font-semibold">{t.mcl}</div>
+              </div>
+              <div className="bg-slate-50 rounded p-2 border border-slate-200">
+                <div className="text-[9px] text-slate-400 uppercase tracking-wider">YoY Change</div>
+                <div className={`text-[10px] mt-0.5 font-bold ${t.yoy > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                  {t.yoy > 0 ? '\u25B2' : '\u25BC'} {Math.abs(t.yoy)}%
+                </div>
+              </div>
+            </div>
+
+            <div className="text-[10px] text-slate-500 leading-relaxed line-clamp-2">
+              {t.summary}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
