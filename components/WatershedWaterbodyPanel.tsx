@@ -44,6 +44,7 @@ interface RegionMeta {
 interface Props {
   stateAbbr: string;
   stateName: string;
+  title?: string;
   regionData: RegionRow[];
   attainsBulk: AttainsBulkEntry[];
   attainsBulkLoaded: boolean;
@@ -56,6 +57,7 @@ interface Props {
 export function WatershedWaterbodyPanel({
   stateAbbr,
   stateName,
+  title,
   regionData,
   attainsBulk,
   attainsBulkLoaded,
@@ -351,7 +353,7 @@ export function WatershedWaterbodyPanel({
           <div>
             <CardTitle className="flex items-center gap-2">
               <MapPin size={18} />
-              <span>{stateName}</span>
+              <span>{title || stateName}</span>
             </CardTitle>
             <CardDescription>
               {activeWatershed

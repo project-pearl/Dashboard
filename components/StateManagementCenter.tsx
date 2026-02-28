@@ -171,7 +171,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Water Quality',
     description: 'Standards, assessment, station data, and field integration',
     defaultOverlay: 'risk',
-    sections: new Set(['regprofile', 'top10', 'groundwater', 'wq-standards', 'wq-assessment', 'wq-aqualo', 'wq-stations', 'disclaimer']),
+    sections: new Set(['regprofile', 'local-panel', 'top10', 'groundwater', 'wq-standards', 'wq-assessment', 'wq-aqualo', 'wq-stations', 'disclaimer']),
   },
   'public-health': {
     label: 'Public Health & Contaminants',
@@ -896,6 +896,19 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             </div>
           );
         })());
+
+            case 'local-panel': return DS(
+              <WatershedWaterbodyPanel
+                stateAbbr={stateAbbr}
+                stateName={stateName}
+                title="Local"
+                regionData={regionData}
+                attainsBulk={attainsBulk}
+                attainsBulkLoaded={attainsBulkLoaded}
+                activeDetailId={activeDetailId}
+                setActiveDetailId={setActiveDetailId}
+              />
+            );
 
             case 'map-grid': return DS(
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

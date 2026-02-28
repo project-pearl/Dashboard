@@ -71,6 +71,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'insights',            label: 'AI Insights Engine',             order: 2,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'alertfeed',           label: 'Statewide Alert Feed',           order: 3,  visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'map-grid',            label: 'Map & Waterbody List',           order: 4,  visible: true, defaultExpanded: true,  lensControlled: true, compound: true },
+    { id: 'local-panel',         label: 'Local',                          order: 4.5, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'detail',              label: 'Waterbody Detail',               order: 5,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'top10',               label: 'Top 5 Worsening / Improving',   order: 6,  visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'ms4jurisdictions',    label: 'MS4 Jurisdictions',              order: 7,  visible: true, defaultExpanded: true,  lensControlled: true },
