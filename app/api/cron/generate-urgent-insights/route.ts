@@ -70,10 +70,10 @@ export async function GET(request: NextRequest) {
 
   // Scan all states for critical conditions
   const allStateAbbrs = Object.keys(states);
-  const crisisStates: { abbr: string; enrichment: ReturnType<typeof getStateEnrichment> }[] = [];
+  const crisisStates: { abbr: string; enrichment: Awaited<ReturnType<typeof getStateEnrichment>> }[] = [];
 
   for (const abbr of allStateAbbrs) {
-    const enrichment = getStateEnrichment(abbr, enrichmentSnapshot);
+    const enrichment = await getStateEnrichment(abbr, enrichmentSnapshot);
     if (enrichment.hasCriticalCondition) {
       crisisStates.push({ abbr, enrichment });
     }
@@ -128,6 +128,7 @@ export async function GET(request: NextRequest) {
         if (enrichmentForLLM.activeAlerts) userMessageObj.activeAlerts = enrichmentForLLM.activeAlerts;
         if (enrichmentForLLM.recentSignals) userMessageObj.recentSignals = enrichmentForLLM.recentSignals;
         if (enrichmentForLLM.weatherAlerts) userMessageObj.weatherAlerts = enrichmentForLLM.weatherAlerts;
+        if (enrichmentForLLM.labAndModelAlerts) userMessageObj.labAndModelAlerts = enrichmentForLLM.labAndModelAlerts;
 
         const userMessage = JSON.stringify(userMessageObj);
         const systemPrompt = buildSystemPrompt(role);

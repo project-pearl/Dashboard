@@ -145,8 +145,8 @@ export function AIInsightsEngine({ role, stateAbbr, selectedWaterbody, regionDat
       cat4c_notPollutant: nationalData.cat4c,
       tmdlGapPct: nationalData.tmdlGapPct,
       topCauses: nationalData.topCauses.slice(0, 15),
-      aliaAddressablePct: nationalData.addressablePct,
-      aliaAddressableCount: nationalData.addressableCount,
+      addressablePct: nationalData.addressablePct,
+      addressableCount: nationalData.addressableCount,
       totalCauseInstances: nationalData.totalCauseInstances,
       worstStates: nationalData.worstStates?.slice(0, 8) || [],
     } : null;
@@ -176,23 +176,34 @@ export function AIInsightsEngine({ role, stateAbbr, selectedWaterbody, regionDat
     // Build system prompt — national or state scope
     const nationalPromptAddendum = isNational ? `
 NATIONAL SCOPE: You are analyzing ALL 50 states + DC. The data includes EPA ATTAINS assessment categories (Cat 1-5), TMDL status, impairment causes, and treatability analysis.
-CRITICAL CONTEXT — POTOMAC/CHESAPEAKE: The Chesapeake Bay TMDL is the LARGEST and most complex Total Maximum Daily Load ever issued by EPA. The Potomac River basin carries the heaviest nutrient and sediment loads into the Bay. This is arguably the biggest water quality crisis in U.S. regulatory history. The January 2026 Potomac Interceptor collapse (200M+ gallons of raw sewage) demonstrates why independent continuous monitoring is critical. Maryland faces the most intense TMDL compliance pressure of any state. ALWAYS lead with or prominently feature the Chesapeake/Potomac crisis in national analysis.
 ATTAINS CATEGORIES: Cat 5 = impaired, NO approved TMDL (on 303(d) list — worst). Cat 4a = impaired, HAS approved TMDL. Cat 4b = impaired, alternative controls. Cat 4c = impaired, not pollutant-caused. Cat 3 = insufficient data. Cat 2 = good with some concerns. Cat 1 = fully meeting standards.
 TREATABLE POLLUTANTS: Sediment/TSS, nutrients (N, P), bacteria (E. coli, Enterococci), dissolved oxygen, and stormwater metals are addressable through treatment technologies. Mercury, PCBs, PFAS, and legacy contaminants require specialized approaches.
-Use the nationalSummary data to provide specific numbers: cat5 count, TMDL gap percentage, top impairment causes with counts, treatable percentage, and worst states by Cat 5 concentration.` : '';
+Use the nationalSummary data to provide specific numbers: cat5 count, TMDL gap percentage, top impairment causes with counts, treatable percentage, and worst states by Cat 5 concentration. Highlight any major infrastructure failures, sewage discharges, or enforcement actions that appear in the data.` : '';
 
     try {
       const res = await fetch('/api/ai-insights', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          systemPrompt: `You are a water quality data analyst for the PEARL platform. Generate actionable insights based on the provided water quality data. Be specific, cite parameter values, and provide early warnings. When analyzing waterbody data near major infrastructure (CSO outfalls, interceptors, treatment plants), flag sudden multi-parameter anomalies (simultaneous E. coli spike + DO crash + turbidity surge) as potential sewage discharge events. Reference the January 2026 Potomac Interceptor collapse as an example of why early detection matters — 200M+ gallons went unmonitored because no independent continuous monitoring existed. If activeSignals are present in the data, incorporate them prominently into your analysis. CRITICAL: If any signal has type "discharge_signature" or "permit_violation", this is a potential sewage spill or illegal discharge — lead with it as your top insight, frame it as urgent, recommend immediate investigation of upstream outfalls, and note that PEARL's multi-parameter correlation detected the pattern (simultaneous DO crash + conductivity spike + turbidity surge = sewage fingerprint). For beach closures or harvest stops, connect them to downstream impact on public health and economy.${nationalPromptAddendum} ${ROLE_TONE[role]} Format your response as a JSON array of exactly ${isNational ? 6 : 4} objects, each with: {type: "predictive"|"anomaly"|"comparison"|"recommendation"|"summary", severity: "info"|"warning"|"critical", title: string, body: string, waterbody?: string, timeframe?: string}. Return ONLY the JSON array, no markdown or extra text.`,
+          systemPrompt: `You are a water quality data analyst. Generate actionable insights based on the provided water quality data. Be specific, cite parameter values, and provide early warnings. When analyzing waterbody data near major infrastructure (CSO outfalls, interceptors, treatment plants), flag sudden multi-parameter anomalies (simultaneous E. coli spike + DO crash + turbidity surge) as potential sewage discharge events. If activeSignals are present in the data, incorporate them prominently into your analysis — these represent active conditions that need immediate attention. Let the data drive the narrative — highlight whatever the most significant patterns, violations, or anomalies are.
+
+Signal type guide for activeSignals:
+- "discharge_signature": Multi-parameter sewage signature (DO crash + conductivity spike + turbidity surge). URGENT — recommend immediate investigation of upstream outfalls and interceptors.
+- "statewide_alert": USGS real-time sensor reading exceeded a statistical threshold statewide. Indicates emerging water quality degradation beyond sentinel sites.
+- "exceedance_probability": USGS NRTWQ modeled prediction of parameter exceedance (probability 0–1). Values >0.8 are high confidence. Recommend preemptive monitoring.
+- "lab_exceedance": Discrete water sample from WQP showing violation of an EPA MCL. Lab-confirmed contamination — cite the exceedance ratio.
+- "state_advisory": Official state-level health or environmental advisory (beach closures, shellfish harvest restrictions). Regulatory action already taken — connect to public health and economic impact.
+- "permit_violation": EPA ECHO facility in significant CWA non-compliance. May indicate ongoing unpermitted discharge.
+- "sensor_alert": Single-parameter threshold exceedance at a sentinel monitoring site.
+- "beach_closure": EPA BEACON beach advisory or closure.
+For beach closures or harvest stops, connect them to downstream impact on public health and economy.${nationalPromptAddendum} ${ROLE_TONE[role]} Format your response as a JSON array of exactly ${isNational ? 6 : 4} objects, each with: {type: "predictive"|"anomaly"|"comparison"|"recommendation"|"summary", severity: "info"|"warning"|"critical", title: string, body: string, waterbody?: string, timeframe?: string}. Return ONLY the JSON array, no markdown or extra text.`,
           userMessage,
         }),
       });
 
       if (!res.ok) {
-        throw new Error(`API error: ${res.status}`);
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || errData.error || `API error: ${res.status}`);
       }
 
       const data = await res.json();
@@ -281,11 +292,8 @@ Use the nationalSummary data to provide specific numbers: cat5 count, TMDL gap p
             {expanded ? <Minus className="h-4 w-4" style={{ color: 'var(--text-dim)' }} /> : <ChevronDown className="h-4 w-4" style={{ color: 'var(--text-dim)' }} />}
           </div>
         </div>
-        <p className="text-[11px] font-medium mt-0.5" style={{ color: 'var(--accent-teal)' }}>What&apos;s going on now?</p>
-        <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-          {isNational
-            ? 'Claude-powered analysis of EPA ATTAINS data, cross-state patterns, impairment trends, and deployment opportunities.'
-            : `AI-generated insights for ${stateAbbr} water quality, impairment causes, and monitoring coverage.`}
+        <p className="text-xs leading-relaxed mt-1" style={{ color: 'var(--text-secondary)' }}>
+          Compiled analysis of the most current data in PIN as well as outside sources.
         </p>
         {/* Preview of loaded insights when collapsed */}
         {!expanded && insights.length > 0 && (
@@ -305,7 +313,10 @@ Use the nationalSummary data to provide specific numbers: cat5 count, TMDL gap p
           </div>
         )}
         {!expanded && insights.length === 0 && (
-          <div className="mt-2 text-[10px]" style={{ color: 'var(--text-dim)' }}>Click to generate AI analysis</div>
+          <div className="mt-2.5 flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'var(--bg-surface)', border: '1px dashed var(--border-default)' }}>
+            <Search className="h-3.5 w-3.5 flex-shrink-0" style={{ color: 'var(--accent-teal)' }} />
+            <span className="text-xs font-semibold" style={{ color: 'var(--accent-teal)' }}>Click here to find out the latest data</span>
+          </div>
         )}
       </button>
 
@@ -364,8 +375,8 @@ Use the nationalSummary data to provide specific numbers: cat5 count, TMDL gap p
 
           {/* Error state */}
           {error && !loading && insights.length > 0 && (
-            <div className="text-[10px] text-amber-600 flex items-center gap-1">
-              <AlertTriangle className="h-3 w-3" /> Using locally generated insights (API unavailable)
+            <div className="text-[10px] text-amber-600 flex items-center gap-1" title={error}>
+              <AlertTriangle className="h-3 w-3" /> Using locally generated insights ({error.length > 80 ? error.slice(0, 80) + '…' : error})
             </div>
           )}
 
@@ -373,7 +384,7 @@ Use the nationalSummary data to provide specific numbers: cat5 count, TMDL gap p
           {!loading && (
             <div className="flex items-center justify-between pt-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
               <div className="text-[10px] leading-tight max-w-[70%]" style={{ color: 'var(--text-dim)' }}>
-                AI-generated analysis based on available data. Verify critical findings independently.
+                Sources: Compiled analysis of EPA ATTAINS, SDWIS, ICIS, USGS, and external regulatory data. Verify critical findings independently.
               </div>
               <button
                 onClick={() => fetchInsights(true)}
@@ -410,17 +421,10 @@ function generateFallbackInsights(
 
     const insights: Insight[] = [
       {
-        type: 'summary',
-        severity: 'critical',
-        title: 'Potomac–Chesapeake: Largest Water Quality Crisis in U.S. Regulatory History',
-        body: `The Chesapeake Bay TMDL is the most complex ever issued by EPA, spanning 7 states and requiring decades of coordinated pollution reduction. The Potomac River basin carries the heaviest nutrient and sediment loads feeding the Bay's chronic dead zones. The January 2026 Potomac Interceptor collapse — 200M+ gallons of raw sewage discharged with no independent monitoring — demonstrated catastrophic infrastructure failure. Maryland faces the most intense TMDL compliance pressure of any state.`,
-        timeframe: 'Ongoing — multi-decade federal mandate',
-      },
-      {
         type: 'anomaly',
         severity: 'critical',
         title: `${nd.cat5.toLocaleString()} Waterbodies on 303(d) List — No Approved TMDL`,
-        body: `Of ${nd.totalImpaired.toLocaleString()} impaired waterbodies nationally, ${nd.tmdlGapPct}% are Category 5 — impaired with NO Total Maximum Daily Load plan. Only ${nd.cat4a.toLocaleString()} have approved TMDLs (Cat 4a), while ${nd.cat4b.toLocaleString()} rely on alternative controls (Cat 4b). States face increasing EPA enforcement pressure to close this regulatory gap.${worstStates.length > 0 ? ` Worst states by Cat 5 concentration: ${worstStates.map(s => `${s.name} (${s.cat5})`).join(', ')}.` : ''}`,
+        body: `Of ${nd.totalImpaired.toLocaleString()} impaired waterbodies nationally, ${nd.tmdlGapPct}% are Category 5 — impaired with no Total Maximum Daily Load plan. Only ${nd.cat4a.toLocaleString()} have approved TMDLs (Cat 4a), while ${nd.cat4b.toLocaleString()} rely on alternative controls (Cat 4b). States face increasing EPA enforcement pressure to close this regulatory gap.${worstStates.length > 0 ? ` Worst states by Cat 5 concentration: ${worstStates.map(s => `${s.name} (${s.cat5})`).join(', ')}.` : ''}`,
       },
       {
         type: 'comparison',
@@ -432,25 +436,22 @@ function generateFallbackInsights(
         type: 'predictive',
         severity: 'warning',
         title: 'Spring Runoff Will Intensify Nutrient Loading Nationwide',
-        body: `Historical patterns show 40-60% of annual nitrogen and phosphorus loads are delivered during March-June storm events. Waterbodies already impaired for nutrients — particularly in the Chesapeake, Gulf of Mexico, and Great Lakes watersheds — will see elevated concentrations. Targeting high-loading outfalls during this window with treatment and monitoring is the most effective strategy for pollutant reduction.`,
+        body: `Historical patterns show 40-60% of annual nitrogen and phosphorus loads are delivered during March-June storm events. Waterbodies already impaired for nutrients will see elevated concentrations. States with large Cat 5 backlogs should anticipate worsening conditions during this window.`,
         timeframe: 'March–June 2026',
+      },
+      {
+        type: 'summary',
+        severity: 'info',
+        title: `National Assessment: ${nd.totalAssessed.toLocaleString()} Waterbodies Evaluated`,
+        body: `EPA ATTAINS data shows ${nd.totalAssessed.toLocaleString()} assessed waterbodies nationwide, with ${nd.totalImpaired.toLocaleString()} (${nd.totalAssessed > 0 ? Math.round((nd.totalImpaired / nd.totalAssessed) * 100) : 0}%) classified as impaired. ${worstStates.length > 0 ? `States with highest impairment concentrations: ${worstStates.map(s => `${s.name} (${s.totalImpaired.toLocaleString()} impaired)`).join(', ')}.` : ''}`,
       },
       {
         type: 'recommendation',
         severity: 'info',
-        title: 'Prioritize Worst Hotspots — Concentrate Resources Where Pollution Is Highest',
-        body: `Effective remediation targets the 3 worst pollutant-loading outfalls per waterbody rather than spreading resources thin across entire flow volumes. Concentrate treatment and monitoring where pollution is most concentrated. ${nd.cat5 > 0 ? `With ${nd.cat5.toLocaleString()} Cat 5 waterbodies lacking TMDLs, measurable pollutant reduction generates the compliance documentation municipalities need for regulatory progress.` : ''}`,
+        title: 'Focus Resources on Highest-Impact Impairments',
+        body: `${nd.cat5 > 0 ? `With ${nd.cat5.toLocaleString()} Cat 5 waterbodies lacking TMDLs, ` : ''}prioritizing the most concentrated pollution sources per waterbody yields the greatest measurable improvement. ${nd.addressablePct}% of impairment causes are treatable with current technologies, making targeted intervention a viable path to compliance progress.`,
       },
     ];
-
-    if (role === 'Federal') {
-      insights.push({
-        type: 'recommendation',
-        severity: 'warning',
-        title: 'Federal Infrastructure Funding Favors Nature-Based Solutions',
-        body: `The Bipartisan Infrastructure Law and State Revolving Fund programs increasingly prioritize nature-based BMPs and environmental justice targeting. Nature-based solutions (living shorelines, constructed wetlands, biofiltration) paired with verifiable sensor data strengthen SRF applications. ${nd.totalImpaired > 0 ? `The ${nd.totalImpaired.toLocaleString()} impaired waterbodies represent a federal intervention backlog that traditional approaches cannot clear at current funding levels.` : ''}`,
-      });
-    }
 
     return insights;
   }

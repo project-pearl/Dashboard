@@ -92,9 +92,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Read API keys at request time (not module scope) so Vercel env vars are always fresh
-    const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
-    const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
-    console.log('[AI-Insights] ENV CHECK:', { hasAnthropicKey: !!ANTHROPIC_API_KEY, hasOpenAIKey: !!OPENAI_API_KEY });
+    const ANTHROPIC_API_KEY = (process.env.ANTHROPIC_API_KEY || '').trim();
+    const OPENAI_API_KEY = (process.env.OPENAI_API_KEY || '').trim();
+    console.log('[AI-Insights] ENV CHECK:', {
+      hasAnthropicKey: !!ANTHROPIC_API_KEY,
+      anthropicKeyLen: ANTHROPIC_API_KEY.length,
+      anthropicKeyPrefix: ANTHROPIC_API_KEY.slice(0, 7),
+      hasOpenAIKey: !!OPENAI_API_KEY,
+    });
 
     const body = await request.json();
     const { systemPrompt, userMessage } = body;
@@ -175,9 +180,9 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (err: any) {
-    console.error('[AI-Insights]', err);
+    console.error('[AI-Insights] Error:', err.message || err);
     return NextResponse.json(
-      { error: err.message || 'Failed to generate insights', insights: [] },
+      { error: err.message || 'Failed to generate insights', insights: [], detail: String(err.message || '').slice(0, 300) },
       { status: 500 }
     );
   }

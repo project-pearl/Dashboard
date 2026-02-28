@@ -8,8 +8,21 @@
 import { fetchAllSignals, type Signal, type SignalResponse } from './signals';
 import { getAlertsForState, type UsgsAlert } from './usgsAlertCache';
 import { getNwsAlerts, type NwsAlert } from './nwsAlertCache';
+import { ALL_STATES_WITH_FIPS } from './constants';
 
 // ── Types ────────────────────────────────────────────────────────────────────
+
+/** Lightweight signal from water-data route sources (NRTWQ, WQP, MD Open Data) */
+export interface WaterDataSignal {
+  type: 'exceedance_probability' | 'lab_exceedance' | 'state_advisory';
+  severity: 'high' | 'medium' | 'low' | 'info';
+  title: string;
+  detail: string;
+  source: string;
+  parameter?: string;
+  value?: number;
+  timestamp: string;
+}
 
 export interface EnrichmentSnapshot {
   signals: Signal[];
@@ -22,6 +35,7 @@ export interface StateEnrichment {
   criticalUsgsAlerts: UsgsAlert[];
   signals: Signal[];
   nwsAlerts: NwsAlert[];
+  waterDataSignals: WaterDataSignal[];
   hasCriticalCondition: boolean;
 }
 
@@ -33,6 +47,7 @@ export interface FormattedEnrichment {
   complianceFlags?: string;
   contaminationAlerts?: string;
   wastewaterSurveillance?: string;
+  labAndModelAlerts?: string;
 }
 
 // ── Snapshot (call once per cron run) ────────────────────────────────────────
@@ -46,12 +61,136 @@ export async function fetchEnrichmentSnapshot(): Promise<EnrichmentSnapshot> {
   };
 }
 
-// ── Per-state filtering (synchronous — uses pre-fetched snapshot) ────────────
+// ── EPA MCL thresholds for WQP lab result comparison ────────────────────────
 
-export function getStateEnrichment(
+const EPA_THRESHOLDS: Record<string, { limit: number; unit: string; label: string; direction: 'above' | 'below' }> = {
+  'Nitrate':          { limit: 10,    unit: 'mg/L',      label: 'Nitrate (NO3)',     direction: 'above' },
+  'Escherichia coli': { limit: 126,   unit: 'CFU/100mL', label: 'E. coli',           direction: 'above' },
+  'Dissolved oxygen': { limit: 5,     unit: 'mg/L',      label: 'Dissolved Oxygen',  direction: 'below' },
+  'Lead':             { limit: 0.015, unit: 'mg/L',      label: 'Lead',              direction: 'above' },
+  'Arsenic':          { limit: 0.01,  unit: 'mg/L',      label: 'Arsenic',           direction: 'above' },
+  'Phosphorus':       { limit: 0.1,   unit: 'mg/L',      label: 'Total Phosphorus',  direction: 'above' },
+};
+
+// ── Fetch NRTWQ + WQP signals for a state (called per-state in cron) ────────
+
+async function fetchWaterDataSignalsForState(stateAbbr: string): Promise<WaterDataSignal[]> {
+  const signals: WaterDataSignal[] = [];
+
+  // 1. NRTWQ exceedance probabilities
+  try {
+    const nrtwqUrl = `https://nrtwq.usgs.gov/explore/datatable?pcode=00300&period=31d_all&state=${stateAbbr}`;
+    const nrtwqRes = await fetch(nrtwqUrl, {
+      headers: { 'Accept': 'application/json' },
+      signal: AbortSignal.timeout(10_000),
+      next: { revalidate: 1800 },
+    });
+    if (nrtwqRes.ok) {
+      const nrtwqData = await nrtwqRes.json();
+      const rows = Array.isArray(nrtwqData) ? nrtwqData : nrtwqData?.data || nrtwqData?.rows || [];
+      for (const row of rows) {
+        const prob = parseFloat(row?.exceedance_probability ?? row?.exceed_prob ?? row?.probability ?? '');
+        if (isNaN(prob) || prob <= 0.5) continue;
+        const siteName = row?.station_nm || row?.site_name || row?.site_no || 'Unknown';
+        signals.push({
+          type: 'exceedance_probability',
+          severity: prob > 0.8 ? 'high' : 'medium',
+          title: `${(prob * 100).toFixed(0)}% probability DO exceedance at ${siteName}`,
+          detail: `Modeled exceedance probability of ${(prob * 100).toFixed(0)}% for dissolved oxygen. Based on continuous sensor regression model.`,
+          source: 'USGS NRTWQ',
+          parameter: 'Dissolved Oxygen',
+          value: prob,
+          timestamp: row?.date || row?.datetime || new Date().toISOString(),
+        });
+      }
+    }
+  } catch (e: any) {
+    console.warn(`[Enrichment] NRTWQ fetch failed for ${stateAbbr}:`, e.message);
+  }
+
+  // 2. WQP lab exceedances
+  try {
+    const fipsPair = ALL_STATES_WITH_FIPS.find(([st]) => st === stateAbbr);
+    if (fipsPair) {
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const pad2 = (n: number) => n.toString().padStart(2, '0');
+      const startDateLo = `${pad2(thirtyDaysAgo.getMonth() + 1)}-${pad2(thirtyDaysAgo.getDate())}-${thirtyDaysAgo.getFullYear()}`;
+
+      const wqpParams = new URLSearchParams({
+        statecode: `US:${fipsPair[1]}`,
+        mimeType: 'application/json',
+        startDateLo,
+        sorted: 'yes',
+        zip: 'no',
+      });
+      for (const c of ['Nitrate', 'Escherichia coli', 'Dissolved oxygen', 'Lead', 'Arsenic', 'Phosphorus']) {
+        wqpParams.append('characteristicName', c);
+      }
+
+      const wqpUrl = `https://www.waterqualitydata.us/data/Result/search?${wqpParams.toString()}`;
+      const wqpRes = await fetch(wqpUrl, {
+        headers: { 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(20_000),
+        next: { revalidate: 3600 },
+      });
+      if (wqpRes.ok) {
+        const wqpData = await wqpRes.json();
+        const results = Array.isArray(wqpData) ? wqpData : wqpData?.results || wqpData?.Result || [];
+        const labSignals: (WaterDataSignal & { _ratio: number })[] = [];
+
+        for (const r of results) {
+          const charName = r?.CharacteristicName || r?.characteristicName || '';
+          const threshold = EPA_THRESHOLDS[charName];
+          if (!threshold) continue;
+
+          const val = parseFloat(r?.ResultMeasureValue || r?.resultMeasureValue || '');
+          if (isNaN(val)) continue;
+
+          let exceeded = false;
+          let ratio = 0;
+          if (threshold.direction === 'below') {
+            exceeded = val < threshold.limit;
+            ratio = exceeded ? threshold.limit / Math.max(val, 0.001) : 0;
+          } else {
+            exceeded = val > threshold.limit;
+            ratio = exceeded ? val / threshold.limit : 0;
+          }
+          if (!exceeded) continue;
+
+          const locName = r?.MonitoringLocationName || r?.monitoringLocationName || 'Unknown Location';
+          labSignals.push({
+            type: 'lab_exceedance',
+            severity: ratio >= 2 ? 'high' : 'medium',
+            title: `${threshold.label} ${val} ${threshold.unit} at ${locName} (limit: ${threshold.limit})`,
+            detail: `Lab sample: ${charName} measured at ${val} ${threshold.unit}, ${threshold.direction === 'below' ? 'below' : 'exceeding'} the ${threshold.limit} ${threshold.unit} threshold by ${ratio.toFixed(1)}x.`,
+            source: 'Water Quality Portal',
+            parameter: threshold.label,
+            value: val,
+            timestamp: r?.ActivityStartDate || r?.activityStartDate || new Date().toISOString(),
+            _ratio: ratio,
+          });
+        }
+
+        // Keep top 10 most severe
+        labSignals.sort((a, b) => b._ratio - a._ratio);
+        for (const { _ratio, ...clean } of labSignals.slice(0, 10)) {
+          signals.push(clean);
+        }
+      }
+    }
+  } catch (e: any) {
+    console.warn(`[Enrichment] WQP lab fetch failed for ${stateAbbr}:`, e.message);
+  }
+
+  return signals;
+}
+
+// ── Per-state filtering (async — fetches water-data signals + uses snapshot) ─
+
+export async function getStateEnrichment(
   stateAbbr: string,
   snapshot: EnrichmentSnapshot,
-): StateEnrichment {
+): Promise<StateEnrichment> {
   const upper = stateAbbr.toUpperCase();
 
   // Filter signals to this state
@@ -64,20 +203,31 @@ export function getStateEnrichment(
   // Get NWS weather alerts from cache
   const nwsAlerts = getNwsAlerts(upper) || [];
 
-  // Critical condition: any critical USGS alert, high-severity signal, or severe NWS alert
+  // Fetch NRTWQ + WQP signals for this state
+  let waterDataSignals: WaterDataSignal[] = [];
+  try {
+    waterDataSignals = await fetchWaterDataSignalsForState(upper);
+  } catch {
+    // Non-fatal — proceed without water-data signals
+  }
+
+  // Critical condition: any critical USGS alert, high-severity signal,
+  // severe NWS alert, or high-severity lab/model signal
   const hasCriticalCondition =
     criticalUsgsAlerts.length > 0 ||
     stateSignals.some(s =>
       s.category === 'spill' || s.category === 'bacteria' ||
       s.category === 'hab' || s.category === 'flood' || s.category === 'contamination'
     ) ||
-    nwsAlerts.some(a => a.severity === 'Extreme' || a.severity === 'Severe');
+    nwsAlerts.some(a => a.severity === 'Extreme' || a.severity === 'Severe') ||
+    waterDataSignals.some(s => s.severity === 'high');
 
   return {
     usgsAlerts,
     criticalUsgsAlerts,
     signals: stateSignals,
     nwsAlerts,
+    waterDataSignals,
     hasCriticalCondition,
   };
 }
@@ -166,6 +316,17 @@ export function formatEnrichmentForLLM(enrichment: StateEnrichment): FormattedEn
       .join('\n');
   }
 
+  // Lab & model alerts: NRTWQ exceedance probabilities + WQP lab exceedances (cap 5)
+  if (enrichment.waterDataSignals.length > 0) {
+    const sorted = [...enrichment.waterDataSignals].sort((a, b) => {
+      const sevOrder: Record<string, number> = { high: 0, medium: 1, low: 2, info: 3 };
+      return (sevOrder[a.severity] ?? 4) - (sevOrder[b.severity] ?? 4);
+    });
+    result.labAndModelAlerts = sorted.slice(0, 5)
+      .map(s => `[${s.source}] ${s.title} — ${s.detail}`)
+      .join('\n');
+  }
+
   return result;
 }
 
@@ -192,6 +353,11 @@ export function buildEnrichedSignals(
     signals.push({ type: 'signal', severity: s.category, title: s.id });
   }
 
+  // Add water-data signals (NRTWQ + WQP) so new lab/model results bust the hash
+  for (const s of enrichment.waterDataSignals) {
+    signals.push({ type: s.type, severity: s.severity, title: s.title });
+  }
+
   return signals;
 }
 
@@ -212,6 +378,14 @@ export function summarizeEnrichment(enrichment: StateEnrichment): string {
   }
   if (enrichment.nwsAlerts.length > 0) {
     parts.push(`${enrichment.nwsAlerts.length} NWS alert${enrichment.nwsAlerts.length > 1 ? 's' : ''}`);
+  }
+  if (enrichment.waterDataSignals.length > 0) {
+    const labCount = enrichment.waterDataSignals.filter(s => s.type === 'lab_exceedance').length;
+    const modelCount = enrichment.waterDataSignals.filter(s => s.type === 'exceedance_probability').length;
+    const subParts: string[] = [];
+    if (labCount > 0) subParts.push(`${labCount} lab exceedance${labCount > 1 ? 's' : ''}`);
+    if (modelCount > 0) subParts.push(`${modelCount} modeled exceedance${modelCount > 1 ? 's' : ''}`);
+    if (subParts.length > 0) parts.push(subParts.join(', '));
   }
   return parts.length > 0 ? parts.join(', ') : 'no real-time alerts';
 }

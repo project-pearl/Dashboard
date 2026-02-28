@@ -8,6 +8,8 @@ import { getWqpCache, getWqpCacheStatus, ensureWarmed as warmWqp } from '@/lib/w
 import { getStateReport, getAllStateReports, getStateReportStatus, ensureWarmed as warmStateReports } from '@/lib/stateReportCache';
 import { buildStateAssessmentData } from '@/lib/stateAssessmentBuilder';
 import { generateReportCard } from '@/lib/stateFindings';
+import { ALL_STATES_WITH_FIPS } from '@/lib/constants';
+import { THRESHOLD_RULES } from '@/lib/usgsAlertEngine';
 
 const WR_BASE = 'https://api.waterreporter.org';
 const CBP_BASE = 'https://datahub.chesapeakebay.net';
@@ -1597,6 +1599,19 @@ export async function GET(request: NextRequest) {
         const stateFilter = (sp.get('statecode') || 'MD').toUpperCase();
         const signals: any[] = [];
 
+        // EPA MCL / water quality threshold constants for WQP lab result comparison
+        const EPA_THRESHOLDS: Record<string, { limit: number; unit: string; label: string; direction: 'above' | 'below' }> = {
+          'Nitrate':          { limit: 10,    unit: 'mg/L',      label: 'Nitrate (NO3)',     direction: 'above' },
+          'Escherichia coli': { limit: 126,   unit: 'CFU/100mL', label: 'E. coli',           direction: 'above' },
+          'Enterococcus':     { limit: 35,    unit: 'CFU/100mL', label: 'Enterococcus',      direction: 'above' },
+          'Dissolved oxygen': { limit: 5,     unit: 'mg/L',      label: 'Dissolved Oxygen',  direction: 'below' },
+          'Phosphorus':       { limit: 0.1,   unit: 'mg/L',      label: 'Total Phosphorus',  direction: 'above' },
+          'Turbidity':        { limit: 50,    unit: 'NTU',       label: 'Turbidity',         direction: 'above' },
+          'pH':               { limit: 9.0,   unit: 'std',       label: 'pH',                direction: 'above' }, // also below 6.5
+          'Lead':             { limit: 0.015, unit: 'mg/L',      label: 'Lead',              direction: 'above' },
+          'Arsenic':          { limit: 0.01,  unit: 'mg/L',      label: 'Arsenic',           direction: 'above' },
+        };
+
         // 1. EPA BEACON — Beach advisories & closures (national)
         try {
           const beaconUrl = `https://watersgeo.epa.gov/beacon2/beaches.json?state=${stateFilter}`;
@@ -1652,6 +1667,39 @@ export async function GET(request: NextRequest) {
           } catch (e: any) {
             console.warn('[Signals] Shellfish status failed:', e.message);
           }
+
+          // 2b. MD Open Data Portal — beach advisories & impaired waterways
+          try {
+            const thirtyDaysAgoMd = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            // MD beach monitoring dataset
+            const mdBeachUrl = `https://opendata.maryland.gov/resource/2d9y-buqg.json?$where=date_sample_collected > '${thirtyDaysAgoMd}'&$limit=20&$order=date_sample_collected DESC`;
+            const mdBeachRes = await fetch(mdBeachUrl, {
+              headers: { 'Accept': 'application/json' },
+              signal: AbortSignal.timeout(10_000),
+              next: { revalidate: 3600 }, // 1 hr cache
+            });
+            if (mdBeachRes.ok) {
+              const mdBeachData = await mdBeachRes.json();
+              for (const row of (Array.isArray(mdBeachData) ? mdBeachData : []).slice(0, 10)) {
+                const status = (row?.beach_status || row?.advisory_status || row?.status || '').toString().toUpperCase();
+                if (!status.includes('CLOS') && !status.includes('ADVIS') && !status.includes('WARNING')) continue;
+                const isClosure = status.includes('CLOS');
+                signals.push({
+                  type: 'state_advisory',
+                  severity: isClosure ? 'high' : 'medium',
+                  title: `MD ${isClosure ? 'Beach Closure' : 'Beach Advisory'}: ${row?.beach_name || row?.beach || 'Unknown Beach'}`,
+                  location: row?.beach_name || row?.beach || '',
+                  county: row?.county || '',
+                  state: 'MD',
+                  source: 'MD Open Data Portal',
+                  reason: row?.reason || row?.advisory_reason || `Beach ${isClosure ? 'closed' : 'under advisory'} — check local health department for details`,
+                  timestamp: row?.date_sample_collected || row?.date || new Date().toISOString(),
+                });
+              }
+            }
+          } catch (e: any) {
+            console.warn('[Signals] MD Open Data fetch failed:', e.message);
+          }
         }
 
         // 3. USGS real-time multi-parameter analysis — threshold alerts + sewage discharge detection
@@ -1661,7 +1709,7 @@ export async function GET(request: NextRequest) {
           MD: '01589440,01585219,01594440',  // Back River, Patapsco, Patuxent
           VA: '01668000,02035000,02037500',  // Rappahannock, James, James at Richmond
           DC: '01646500,01651000',            // Potomac at Georgetown, Anacostia
-          DE: '01483700,01484100',            // St Jones, Murderkill
+          DE: '01483700,01484100,01484553',    // St Jones, Murderkill, Indian River
           PA: '01576000,01570500',            // Susquehanna, Susquehanna at Harrisburg
           CA: '11169025,11162765',            // SF Bay stations
           FL: '02323500,02320500',            // Suwannee, St Johns
@@ -1816,6 +1864,207 @@ export async function GET(request: NextRequest) {
             console.warn('[Signals] USGS multi-parameter analysis failed:', e.message);
           }
         } // end if (sentinelSites)
+
+        // 3a. USGS Continuous Values — statewide real-time sensor alerts (all 50 states)
+        // Complements sentinel sites with broader coverage using daily statistical values
+        try {
+          const sentinelSiteSet = new Set((SENTINEL_SITES[stateFilter] || '').split(',').filter(Boolean));
+          const statewideParamCodes = '00300,00010,63680,00095'; // DO, Temp, Turbidity, Conductivity
+
+          // Try new api.waterdata.usgs.gov first, fall back to legacy waterservices endpoint
+          let statewideData: any = null;
+          try {
+            const swUrl = `https://waterservices.usgs.gov/nwis/iv?format=json&stateCd=${stateFilter}&parameterCd=${statewideParamCodes}&period=PT24H&siteStatus=active`;
+            const swRes = await fetch(swUrl, {
+              headers: { 'Accept': 'application/json' },
+              signal: AbortSignal.timeout(15_000),
+              next: { revalidate: 900 }, // 15 min cache
+            });
+            if (swRes.ok) statewideData = await swRes.json();
+          } catch {
+            // Legacy fallback silently handled
+          }
+
+          if (statewideData) {
+            const timeSeries = statewideData?.value?.timeSeries || [];
+            const statewideAlerts: any[] = [];
+
+            for (const ts of timeSeries) {
+              const siteCode = ts?.sourceInfo?.siteCode?.[0]?.value || '';
+              if (sentinelSiteSet.has(siteCode)) continue; // Skip sentinel sites (already analyzed above)
+
+              const paramCode = ts?.variable?.variableCode?.[0]?.value;
+              const siteName = ts?.sourceInfo?.siteName || 'Unknown';
+              const values = ts?.values?.[0]?.value || [];
+              if (values.length === 0) continue;
+
+              const latest = values[values.length - 1];
+              const val = parseFloat(latest?.value);
+              if (isNaN(val)) continue;
+
+              // Check against THRESHOLD_RULES from usgsAlertEngine
+              const rule = THRESHOLD_RULES.find(r => r.parameterCd === paramCode);
+              if (!rule) continue;
+
+              for (const check of rule.checks) {
+                const exceeded = check.direction === 'below' ? val < check.warning : val > check.warning;
+                const critical = check.direction === 'below' ? val < check.critical : val > check.critical;
+                if (!exceeded) continue;
+
+                statewideAlerts.push({
+                  type: 'statewide_alert',
+                  severity: critical ? 'high' : 'medium',
+                  title: `${critical ? 'Critical ' : ''}${check.titlePrefix}: ${siteName}`,
+                  location: siteName,
+                  state: stateFilter,
+                  source: 'USGS Statewide',
+                  reason: `${rule.parameter} at ${val} ${rule.unit} (${check.direction === 'below' ? 'below' : 'above'} ${check.direction === 'below' ? check.warning : check.warning} ${rule.unit} threshold${critical ? ' — ' + check.riskNote : ''})`,
+                  value: val,
+                  unit: rule.unit,
+                  parameter: rule.parameter,
+                  siteCode,
+                  timestamp: latest?.dateTime || new Date().toISOString(),
+                  _sortVal: critical ? 0 : 1, // for internal sorting before truncation
+                });
+              }
+            }
+
+            // Keep top 10 most severe to avoid flooding the feed
+            statewideAlerts.sort((a, b) => a._sortVal - b._sortVal);
+            for (const alert of statewideAlerts.slice(0, 10)) {
+              const { _sortVal, ...clean } = alert;
+              signals.push(clean);
+            }
+          }
+        } catch (e: any) {
+          console.warn('[Signals] USGS statewide analysis failed:', e.message);
+        }
+
+        // 3b. NRTWQ — Pre-computed exceedance probabilities (sites with regression models)
+        try {
+          const nrtwqUrl = `https://nrtwq.usgs.gov/explore/datatable?pcode=00300&period=31d_all&state=${stateFilter}`;
+          const nrtwqRes = await fetch(nrtwqUrl, {
+            headers: { 'Accept': 'application/json' },
+            signal: AbortSignal.timeout(10_000),
+            next: { revalidate: 1800 }, // 30 min cache
+          });
+          if (nrtwqRes.ok) {
+            const nrtwqData = await nrtwqRes.json();
+            const rows = Array.isArray(nrtwqData) ? nrtwqData : nrtwqData?.data || nrtwqData?.rows || [];
+            const exceedanceSignals: any[] = [];
+
+            for (const row of rows) {
+              const prob = parseFloat(row?.exceedance_probability ?? row?.exceed_prob ?? row?.probability ?? '');
+              if (isNaN(prob) || prob <= 0.5) continue;
+
+              const siteName = row?.station_nm || row?.site_name || row?.site_no || 'Unknown';
+              exceedanceSignals.push({
+                type: 'exceedance_probability',
+                severity: prob > 0.8 ? 'high' : 'medium',
+                title: `${(prob * 100).toFixed(0)}% probability DO exceedance at ${siteName}`,
+                location: siteName,
+                state: stateFilter,
+                source: 'USGS NRTWQ',
+                reason: `Modeled exceedance probability of ${(prob * 100).toFixed(0)}% for dissolved oxygen at this site over the past 31 days. Based on continuous sensor regression model.`,
+                probability: prob,
+                siteCode: row?.site_no || '',
+                parameter: 'Dissolved Oxygen',
+                timestamp: row?.date || row?.datetime || new Date().toISOString(),
+                _sortProb: prob,
+              });
+            }
+
+            exceedanceSignals.sort((a, b) => b._sortProb - a._sortProb);
+            for (const sig of exceedanceSignals.slice(0, 10)) {
+              const { _sortProb, ...clean } = sig;
+              signals.push(clean);
+            }
+          }
+        } catch (e: any) {
+          console.warn('[Signals] NRTWQ exceedance fetch failed:', e.message);
+        }
+
+        // 3c. WQP — Recent discrete lab samples with MCL comparison (all 50 states)
+        try {
+          const fipsPair = ALL_STATES_WITH_FIPS.find(([st]) => st === stateFilter);
+          if (fipsPair) {
+            const thirtyDaysAgoWqp = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+            const pad2 = (n: number) => n.toString().padStart(2, '0');
+            const startDateLo = `${pad2(thirtyDaysAgoWqp.getMonth() + 1)}-${pad2(thirtyDaysAgoWqp.getDate())}-${thirtyDaysAgoWqp.getFullYear()}`;
+
+            const wqpParams = new URLSearchParams({
+              statecode: `US:${fipsPair[1]}`,
+              mimeType: 'application/json',
+              startDateLo,
+              sorted: 'yes',
+              zip: 'no',
+            });
+            // Add multiple characteristicName params
+            const chars = ['Nitrate', 'Escherichia coli', 'Dissolved oxygen', 'Lead', 'Arsenic', 'Phosphorus'];
+            for (const c of chars) wqpParams.append('characteristicName', c);
+
+            const wqpUrl = `https://www.waterqualitydata.us/data/Result/search?${wqpParams.toString()}`;
+            const wqpRes = await fetch(wqpUrl, {
+              headers: { 'Accept': 'application/json' },
+              signal: AbortSignal.timeout(20_000),
+              next: { revalidate: 3600 }, // 1 hr cache
+            });
+            if (wqpRes.ok) {
+              const wqpData = await wqpRes.json();
+              const results = Array.isArray(wqpData) ? wqpData : wqpData?.results || wqpData?.Result || [];
+              const labSignals: any[] = [];
+
+              for (const r of results) {
+                const charName = r?.CharacteristicName || r?.characteristicName || '';
+                const threshold = EPA_THRESHOLDS[charName];
+                if (!threshold) continue;
+
+                const val = parseFloat(r?.ResultMeasureValue || r?.resultMeasureValue || '');
+                if (isNaN(val)) continue;
+
+                let exceeded = false;
+                let ratio = 0;
+                if (threshold.direction === 'below') {
+                  exceeded = val < threshold.limit;
+                  ratio = exceeded ? threshold.limit / Math.max(val, 0.001) : 0;
+                } else {
+                  exceeded = val > threshold.limit;
+                  ratio = exceeded ? val / threshold.limit : 0;
+                }
+                if (!exceeded) continue;
+
+                // Special case: pH also flags below 6.5
+                if (charName === 'pH' && val >= 6.5 && val <= 9.0) continue;
+
+                const locName = r?.MonitoringLocationName || r?.monitoringLocationName || 'Unknown Location';
+                labSignals.push({
+                  type: 'lab_exceedance',
+                  severity: ratio >= 2 ? 'high' : 'medium',
+                  title: `${threshold.label} ${val} ${threshold.unit} at ${locName} (limit: ${threshold.limit})`,
+                  location: locName,
+                  state: stateFilter,
+                  source: 'Water Quality Portal',
+                  reason: `Lab sample: ${charName} measured at ${val} ${threshold.unit}, ${threshold.direction === 'below' ? 'below' : 'exceeding'} the ${threshold.limit} ${threshold.unit} threshold by ${ratio.toFixed(1)}x.`,
+                  value: val,
+                  unit: threshold.unit,
+                  parameter: threshold.label,
+                  exceedanceRatio: ratio,
+                  activityDate: r?.ActivityStartDate || r?.activityStartDate || '',
+                  timestamp: r?.ActivityStartDate || r?.activityStartDate || new Date().toISOString(),
+                  _sortRatio: ratio,
+                });
+              }
+
+              labSignals.sort((a, b) => b._sortRatio - a._sortRatio);
+              for (const sig of labSignals.slice(0, 10)) {
+                const { _sortRatio, ...clean } = sig;
+                signals.push(clean);
+              }
+            }
+          }
+        } catch (e: any) {
+          console.warn('[Signals] WQP lab samples fetch failed:', e.message);
+        }
 
         // 4. EPA ECHO — Recent significant violations / enforcement actions
         // Catches reported spills, permit violations, and enforcement that utilities self-report

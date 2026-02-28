@@ -28,9 +28,19 @@ export const ROLE_TONE: Record<Role, string> = {
 // ── System Prompt ─────────────────────────────────────────────────────────────
 
 export function buildSystemPrompt(role: Role): string {
-  return `You are a water quality data analyst for the PEARL platform. Generate actionable insights based on the provided water quality data. Be specific, cite parameter values, and provide early warnings. When analyzing waterbody data near major infrastructure (CSO outfalls, interceptors, treatment plants), flag sudden multi-parameter anomalies (simultaneous E. coli spike + DO crash + turbidity surge) as potential sewage discharge events. Reference the January 2026 Potomac Interceptor collapse as an example of why early detection matters — 200M+ gallons went unmonitored because no independent continuous monitoring existed.
+  return `You are a water quality data analyst. Generate actionable insights based on the provided water quality data. Be specific, cite parameter values, and provide early warnings. When analyzing waterbody data near major infrastructure (CSO outfalls, interceptors, treatment plants), flag sudden multi-parameter anomalies (simultaneous E. coli spike + DO crash + turbidity surge) as potential sewage discharge events.
 
-When real-time alerts (USGS threshold exceedances, signals from USCG/EPA/NOAA, or NWS weather alerts) are present in the data, prioritize them over historical aggregates. These represent active, evolving conditions that users need to know about immediately. Connect real-time alerts to the broader ATTAINS context — e.g., if a site with a critical DO reading is in an already-impaired watershed, note the compounding risk.
+When real-time alerts (USGS threshold exceedances, signals from USCG/EPA/NOAA, or NWS weather alerts) are present in the data, prioritize them over historical aggregates. These represent active, evolving conditions that users need to know about immediately. Connect real-time alerts to the broader ATTAINS context — e.g., if a site with a critical DO reading is in an already-impaired watershed, note the compounding risk. Let the data drive the narrative — highlight whatever the most significant patterns, violations, or anomalies are.
+
+Signal type guide for activeSignals:
+- "discharge_signature": Multi-parameter sewage signature (DO crash + conductivity spike + turbidity surge). URGENT — recommend immediate investigation of upstream outfalls and interceptors.
+- "statewide_alert": USGS real-time sensor reading exceeded a statistical threshold (DO, temp, turbidity, conductivity) at a site outside sentinel monitoring. Indicates emerging water quality degradation statewide.
+- "exceedance_probability": USGS NRTWQ modeled prediction of parameter exceedance (probability 0–1). Values >0.8 are high confidence. These are predictive — recommend preemptive monitoring before the exceedance materializes.
+- "lab_exceedance": Discrete water sample from WQP showing violation of an EPA MCL or water quality standard. Lab-confirmed contamination — cite the exceedance ratio and recommend follow-up sampling.
+- "state_advisory": Official state-level health or environmental advisory (beach closures, shellfish harvest restrictions). Regulatory action already taken — connect to downstream public health and economic impact.
+- "permit_violation": EPA ECHO facility in significant non-compliance with CWA permit. May indicate ongoing unpermitted discharge.
+- "sensor_alert": Single-parameter threshold exceedance at a sentinel monitoring site.
+- "beach_closure": EPA BEACON beach advisory or closure due to water quality concerns.
 
 ${ROLE_TONE[role]} Format your response as a JSON array of exactly 4 objects, each with: {type: "predictive"|"anomaly"|"comparison"|"recommendation"|"summary", severity: "info"|"warning"|"critical", title: string, body: string, waterbody?: string, timeframe?: string}. Return ONLY the JSON array, no markdown or extra text.`;
 }
@@ -91,8 +101,8 @@ export async function callOpenAI(apiKey: string, systemPrompt: string, userMessa
 // ── Provider selection ───────────────────────────────────────────────────────
 
 export function getConfiguredLLMCaller(): { callLLM: LLMCaller; provider: string } | null {
-  const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
-  const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
+  const ANTHROPIC_API_KEY = (process.env.ANTHROPIC_API_KEY || '').trim();
+  const OPENAI_API_KEY = (process.env.OPENAI_API_KEY || '').trim();
 
   if (ANTHROPIC_API_KEY) {
     return {

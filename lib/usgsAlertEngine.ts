@@ -46,7 +46,7 @@ interface ThresholdRule {
   }[];
 }
 
-const THRESHOLD_RULES: ThresholdRule[] = [
+export const THRESHOLD_RULES: ThresholdRule[] = [
   {
     parameter: 'DO', parameterCd: '00300', unit: 'mg/L',
     checks: [{

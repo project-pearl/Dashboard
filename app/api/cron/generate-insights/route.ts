@@ -168,9 +168,9 @@ export async function GET(request: NextRequest) {
           topCauses: stateData.topCauses?.slice(0, 10) || [],
         };
 
-        // Get per-state enrichment (synchronous filter of pre-fetched snapshot)
+        // Get per-state enrichment (async — fetches NRTWQ + WQP alongside cached data)
         const enrichment = enrichmentSnapshot
-          ? getStateEnrichment(stateAbbr, enrichmentSnapshot)
+          ? await getStateEnrichment(stateAbbr, enrichmentSnapshot)
           : null;
 
         if (enrichment && (enrichment.usgsAlerts.length > 0 || enrichment.signals.length > 0)) {
@@ -232,6 +232,9 @@ export async function GET(request: NextRequest) {
             }
             if (enrichmentForLLM?.wastewaterSurveillance) {
               userMessageObj.wastewaterSurveillance = enrichmentForLLM.wastewaterSurveillance;
+            }
+            if (enrichmentForLLM?.labAndModelAlerts) {
+              userMessageObj.labAndModelAlerts = enrichmentForLLM.labAndModelAlerts;
             }
 
             const userMessage = JSON.stringify(userMessageObj);
