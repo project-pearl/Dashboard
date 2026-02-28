@@ -24,7 +24,8 @@ const RETRY_TIMEOUT_MS = 480_000; // 8 min on retry pass
 const RETRY_DELAY_MS = 5000; // 5s between retries
 
 // Cap per state in memory: keep all impaired, sample healthy up to this count
-const MAX_PER_STATE = 2000;
+// Raised from 2000 → 5000 to avoid truncating large states (CA, TX)
+const MAX_PER_STATE = 5000;
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -397,7 +398,7 @@ async function fetchViaGIS(stateCode: string): Promise<StateSummary | null> {
   for (const catFilter of ["IRCATEGORY LIKE '5%'", "IRCATEGORY LIKE '4%'"]) {
     let offset = 0;
     let keepGoing = true;
-    while (keepGoing && waterbodies.length < MAX_PER_STATE) {
+    while (keepGoing) {
       const data = await gisQuery({
         where: `STATE='${stateCode}' AND ${catFilter}`,
         outFields: `assessmentunitidentifier,assessmentunitname,ircategory,${causeOutFields}`,
@@ -409,7 +410,6 @@ async function fetchViaGIS(stateCode: string): Promise<StateSummary | null> {
       });
       const features = data.features || [];
       for (const f of features) {
-        if (waterbodies.length >= MAX_PER_STATE) break;
         const a = f.attributes || {};
 
         // Attribute casing fallback
@@ -470,7 +470,7 @@ async function fetchViaGIS(stateCode: string): Promise<StateSummary | null> {
       offset += PAGE;
       keepGoing = features.length === PAGE;
     }
-    if (waterbodies.length >= MAX_PER_STATE) break;
+    // Post-processing handles storage cap — fetch all impaired
   }
 
   console.log(

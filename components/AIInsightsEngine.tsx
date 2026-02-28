@@ -4,9 +4,10 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
-  Brain, Sparkles, RefreshCw, ChevronDown, Minus, AlertTriangle,
+  RefreshCw, ChevronDown, Minus, AlertTriangle,
   TrendingUp, Search, Lightbulb, FileText, Info, ShieldAlert, Clock
 } from 'lucide-react';
+import { PearlIcon } from './PearlIcon';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -174,11 +175,11 @@ export function AIInsightsEngine({ role, stateAbbr, selectedWaterbody, regionDat
 
     // Build system prompt — national or state scope
     const nationalPromptAddendum = isNational ? `
-NATIONAL SCOPE: You are analyzing ALL 50 states + DC. The data includes EPA ATTAINS assessment categories (Cat 1-5), TMDL status, impairment causes, and ALIA addressability analysis.
+NATIONAL SCOPE: You are analyzing ALL 50 states + DC. The data includes EPA ATTAINS assessment categories (Cat 1-5), TMDL status, impairment causes, and treatability analysis.
 CRITICAL CONTEXT — POTOMAC/CHESAPEAKE: The Chesapeake Bay TMDL is the LARGEST and most complex Total Maximum Daily Load ever issued by EPA. The Potomac River basin carries the heaviest nutrient and sediment loads into the Bay. This is arguably the biggest water quality crisis in U.S. regulatory history. The January 2026 Potomac Interceptor collapse (200M+ gallons of raw sewage) demonstrates why independent continuous monitoring is critical. Maryland faces the most intense TMDL compliance pressure of any state. ALWAYS lead with or prominently feature the Chesapeake/Potomac crisis in national analysis.
 ATTAINS CATEGORIES: Cat 5 = impaired, NO approved TMDL (on 303(d) list — worst). Cat 4a = impaired, HAS approved TMDL. Cat 4b = impaired, alternative controls. Cat 4c = impaired, not pollutant-caused. Cat 3 = insufficient data. Cat 2 = good with some concerns. Cat 1 = fully meeting standards.
-ALIA ADDRESSABILITY: ALIA treats sediment/TSS, nutrients (N, P), bacteria (E. coli, Enterococci), dissolved oxygen, and stormwater metals. It does NOT treat mercury, PCBs, PFAS, or legacy contaminants.
-Use the nationalSummary data to provide specific numbers: cat5 count, TMDL gap percentage, top impairment causes with counts, ALIA addressable percentage, and worst states by Cat 5 concentration.` : '';
+TREATABLE POLLUTANTS: Sediment/TSS, nutrients (N, P), bacteria (E. coli, Enterococci), dissolved oxygen, and stormwater metals are addressable through treatment technologies. Mercury, PCBs, PFAS, and legacy contaminants require specialized approaches.
+Use the nationalSummary data to provide specific numbers: cat5 count, TMDL gap percentage, top impairment causes with counts, treatable percentage, and worst states by Cat 5 concentration.` : '';
 
     try {
       const res = await fetch('/api/ai-insights', {
@@ -266,11 +267,9 @@ Use the nationalSummary data to provide specific numbers: cat5 count, TMDL gap p
       >
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
-            <Brain className="h-4 w-4 flex-shrink-0" style={{ color: 'var(--accent-teal)' }} />
-            <span className="text-sm font-semibold" style={{ color: 'var(--text-bright)' }}>AI Water Intelligence{isNational ? ' — National' : ` — ${stateAbbr}`}</span>
-            <Badge className="bg-gradient-to-r from-indigo-500 to-violet-500 text-white border-0 text-[9px] px-1.5 py-0">
-              <Sparkles className="h-2.5 w-2.5 mr-0.5" />AI
-            </Badge>
+            <PearlIcon size={18} className="flex-shrink-0" />
+            <span className="text-sm font-semibold" style={{ color: 'var(--text-bright)' }}>PIN Insights{isNational ? ' — National' : ` — ${stateAbbr}`}</span>
+            <PearlIcon size={14} />
           </div>
           <div className="flex items-center gap-2">
             {lastUpdated && (
@@ -282,6 +281,7 @@ Use the nationalSummary data to provide specific numbers: cat5 count, TMDL gap p
             {expanded ? <Minus className="h-4 w-4" style={{ color: 'var(--text-dim)' }} /> : <ChevronDown className="h-4 w-4" style={{ color: 'var(--text-dim)' }} />}
           </div>
         </div>
+        <p className="text-[11px] font-medium mt-0.5" style={{ color: 'var(--accent-teal)' }}>What&apos;s going on now?</p>
         <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
           {isNational
             ? 'Claude-powered analysis of EPA ATTAINS data, cross-state patterns, impairment trends, and deployment opportunities.'
@@ -413,7 +413,7 @@ function generateFallbackInsights(
         type: 'summary',
         severity: 'critical',
         title: 'Potomac–Chesapeake: Largest Water Quality Crisis in U.S. Regulatory History',
-        body: `The Chesapeake Bay TMDL is the most complex ever issued by EPA, spanning 7 states and requiring decades of coordinated pollution reduction. The Potomac River basin carries the heaviest nutrient and sediment loads feeding the Bay's chronic dead zones. The January 2026 Potomac Interceptor collapse — 200M+ gallons of raw sewage discharged with no independent monitoring — demonstrated catastrophic infrastructure failure. Maryland faces the most intense TMDL compliance pressure of any state. This watershed represents the single largest opportunity for ALIA deployment at scale.`,
+        body: `The Chesapeake Bay TMDL is the most complex ever issued by EPA, spanning 7 states and requiring decades of coordinated pollution reduction. The Potomac River basin carries the heaviest nutrient and sediment loads feeding the Bay's chronic dead zones. The January 2026 Potomac Interceptor collapse — 200M+ gallons of raw sewage discharged with no independent monitoring — demonstrated catastrophic infrastructure failure. Maryland faces the most intense TMDL compliance pressure of any state.`,
         timeframe: 'Ongoing — multi-decade federal mandate',
       },
       {
@@ -425,21 +425,21 @@ function generateFallbackInsights(
       {
         type: 'comparison',
         severity: 'warning',
-        title: `${nd.addressablePct}% of National Impairment Causes Are ALIA-Addressable`,
-        body: `Of ${nd.totalCauseInstances.toLocaleString()} cause-instances across all impaired waterbodies, ${nd.addressableCount.toLocaleString()} involve pollutants ALIA directly treats: sediment/TSS, nutrients (N, P), bacteria (E. coli, Enterococci), dissolved oxygen, and stormwater metals. The remaining ${100 - nd.addressablePct}% include mercury, PCBs, PFAS, and legacy contaminants requiring specialized treatment.${topCauses.length > 0 ? ` Top national impairment causes: ${topCauses.map(c => `${c.cause} (${c.count.toLocaleString()})`).join(', ')}.` : ''}`,
+        title: `${nd.addressablePct}% of National Impairment Causes Are Treatable`,
+        body: `Of ${nd.totalCauseInstances.toLocaleString()} cause-instances across all impaired waterbodies, ${nd.addressableCount.toLocaleString()} involve treatable pollutants: sediment/TSS, nutrients (N, P), bacteria (E. coli, Enterococci), dissolved oxygen, and stormwater metals. The remaining ${100 - nd.addressablePct}% include mercury, PCBs, PFAS, and legacy contaminants requiring specialized approaches.${topCauses.length > 0 ? ` Top national impairment causes: ${topCauses.map(c => `${c.cause} (${c.count.toLocaleString()})`).join(', ')}.` : ''}`,
       },
       {
         type: 'predictive',
         severity: 'warning',
         title: 'Spring Runoff Will Intensify Nutrient Loading Nationwide',
-        body: `Historical patterns show 40-60% of annual nitrogen and phosphorus loads are delivered during March-June storm events. Waterbodies already impaired for nutrients — particularly in the Chesapeake, Gulf of Mexico, and Great Lakes watersheds — will see elevated concentrations. ALIA deployments targeting high-loading outfalls during this window capture the most pollutant mass per dollar invested.`,
+        body: `Historical patterns show 40-60% of annual nitrogen and phosphorus loads are delivered during March-June storm events. Waterbodies already impaired for nutrients — particularly in the Chesapeake, Gulf of Mexico, and Great Lakes watersheds — will see elevated concentrations. Targeting high-loading outfalls during this window with treatment and monitoring is the most effective strategy for pollutant reduction.`,
         timeframe: 'March–June 2026',
       },
       {
         type: 'recommendation',
         severity: 'info',
-        title: 'Deploy at the Worst Hotspots First — Not Everywhere',
-        body: `ALIA's strategy: clusters of 4× ALIA-50 units (200 GPM each) targeting the 3 worst pollutant-loading outfalls per waterbody. Don't try to match total stormwater flow — target where pollution concentrates. ${nd.cat5 > 0 ? `With ${nd.cat5.toLocaleString()} Cat 5 waterbodies lacking TMDLs, every ALIA deployment that demonstrates measurable pollutant reduction creates compliance documentation municipalities desperately need.` : ''}`,
+        title: 'Prioritize Worst Hotspots — Concentrate Resources Where Pollution Is Highest',
+        body: `Effective remediation targets the 3 worst pollutant-loading outfalls per waterbody rather than spreading resources thin across entire flow volumes. Concentrate treatment and monitoring where pollution is most concentrated. ${nd.cat5 > 0 ? `With ${nd.cat5.toLocaleString()} Cat 5 waterbodies lacking TMDLs, measurable pollutant reduction generates the compliance documentation municipalities need for regulatory progress.` : ''}`,
       },
     ];
 
@@ -448,7 +448,7 @@ function generateFallbackInsights(
         type: 'recommendation',
         severity: 'warning',
         title: 'Federal Infrastructure Funding Favors Nature-Based Solutions',
-        body: `The Bipartisan Infrastructure Law and State Revolving Fund programs increasingly prioritize nature-based BMPs and environmental justice targeting. ALIA qualifies as a nature-based solution (oyster biofiltration + living habitat creation) while providing the verifiable sensor data SRF applications require. ${nd.totalImpaired > 0 ? `The ${nd.totalImpaired.toLocaleString()} impaired waterbodies represent a federal intervention backlog that traditional approaches cannot clear at current funding levels.` : ''}`,
+        body: `The Bipartisan Infrastructure Law and State Revolving Fund programs increasingly prioritize nature-based BMPs and environmental justice targeting. Nature-based solutions (living shorelines, constructed wetlands, biofiltration) paired with verifiable sensor data strengthen SRF applications. ${nd.totalImpaired > 0 ? `The ${nd.totalImpaired.toLocaleString()} impaired waterbodies represent a federal intervention backlog that traditional approaches cannot clear at current funding levels.` : ''}`,
       });
     }
 

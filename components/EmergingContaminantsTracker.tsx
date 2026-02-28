@@ -948,7 +948,7 @@ function StateVsFederal() {
   );
 }
 
-// ── Tab 4: ALIA Treatment Match ──────────────────────────────────────────────
+// ── Tab 4: Treatment Effectiveness ──────────────────────────────────────────────
 
 function AliaMatch({ role }: { role: string }) {
   const treatable = threats.filter(t => t.aliaCapable);
@@ -972,7 +972,7 @@ function AliaMatch({ role }: { role: string }) {
       {/* Removal chart */}
       <div className="bg-white rounded-lg border border-slate-200 p-4">
         <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-2">
-          ALIA Removal Effectiveness by Contaminant
+          Treatment Removal Effectiveness by Contaminant
         </div>
         <div style={{ height: 200 }}>
           <ResponsiveContainer>
@@ -1012,7 +1012,7 @@ function AliaMatch({ role }: { role: string }) {
                         ? 'bg-blue-100 text-blue-700 border-blue-200'
                         : 'bg-slate-100 text-slate-500 border-slate-200'
                     } border`}>
-                      {t.aliaCapable ? 'ALIA TREATABLE' : 'NOT ADDRESSABLE'}
+                      {t.aliaCapable ? 'PIN TREATABLE' : 'NOT ADDRESSABLE'}
                     </Badge>
                   </div>
                 </div>
@@ -1045,7 +1045,7 @@ function AliaMatch({ role }: { role: string }) {
                   {role !== 'federal' && (
                     <div className="text-[9px] text-blue-500 mt-2 italic">
                       {role === 'ms4'
-                        ? `${t.ms4Data.sites} sites in Anne Arundel could benefit from ALIA deployment`
+                        ? `${t.ms4Data.sites} sites in Anne Arundel could benefit from treatment deployment`
                         : `${t.stateData.units} MD assessment units with ${t.name} detections`}
                     </div>
                   )}
@@ -1061,13 +1061,13 @@ function AliaMatch({ role }: { role: string }) {
       {/* Closed-loop diagram */}
       <div className="bg-white rounded-lg border border-blue-100 p-4">
         <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-4">
-          Closed-Loop: Detect {'\u2192'} Treat {'\u2192'} Verify
+          PIN Closed-Loop: Detect {'\u2192'} Treat {'\u2192'} Verify
         </div>
         <div className="grid grid-cols-4 gap-0 items-center">
           {([
             { step: '1', label: 'PIN Detects', desc: 'ATTAINS data identifies contaminant in waterbody', color: 'text-blue-600', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', iconEl: <Activity className="w-5 h-5 text-blue-600" /> },
-            { step: '2', label: 'ALIA Treats', desc: 'Configurable filtration targets specific contaminant', color: 'text-cyan-600', bgColor: 'bg-cyan-50', borderColor: 'border-cyan-200', iconEl: <FlaskConical className="w-5 h-5 text-cyan-600" /> },
-            { step: '3', label: 'AQUA-Lo Validates', desc: 'Lab results confirm removal effectiveness', color: 'text-green-600', bgColor: 'bg-green-50', borderColor: 'border-green-200', iconEl: <Beaker className="w-5 h-5 text-green-600" /> },
+            { step: '2', label: 'Treatment Applied', desc: 'Configurable filtration targets specific contaminant', color: 'text-cyan-600', bgColor: 'bg-cyan-50', borderColor: 'border-cyan-200', iconEl: <FlaskConical className="w-5 h-5 text-cyan-600" /> },
+            { step: '3', label: 'Lab Validates', desc: 'Lab results confirm removal effectiveness', color: 'text-green-600', bgColor: 'bg-green-50', borderColor: 'border-green-200', iconEl: <Beaker className="w-5 h-5 text-green-600" /> },
             { step: '4', label: 'PIN Documents', desc: 'Compliance record updated, resolution tracked', color: 'text-purple-600', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', iconEl: <FileText className="w-5 h-5 text-purple-600" /> },
           ] as const).map((s, i) => (
             <div key={i} className="text-center relative">
@@ -1196,7 +1196,7 @@ function ExpandedOverlay({
             </div>
             {threat.aliaCapable && (
               <Badge className="bg-blue-100 text-blue-700 border-blue-200 text-[10px] border">
-                ALIA: {threat.aliaRemoval}% removal
+                Treatment: {threat.aliaRemoval}% removal
               </Badge>
             )}
           </div>
@@ -1262,7 +1262,7 @@ export function EmergingContaminantsTracker({
     { id: 'threats', label: 'Threat Dashboard', icon: <AlertTriangle className="w-3.5 h-3.5" /> },
     { id: 'calendar', label: 'Regulatory Calendar', icon: <Calendar className="w-3.5 h-3.5" /> },
     { id: 'states', label: 'State vs Federal', icon: <Shield className="w-3.5 h-3.5" /> },
-    { id: 'alia', label: 'ALIA Treatment Match', icon: <FlaskConical className="w-3.5 h-3.5" /> },
+    { id: 'alia', label: 'Treatment Effectiveness', icon: <FlaskConical className="w-3.5 h-3.5" /> },
   ];
 
   return (

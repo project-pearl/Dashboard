@@ -334,7 +334,7 @@ export function GrantOutcomesCard({ onRunAnalysis }: GrantOutcomesCardProps) {
               </p>
               {onRunAnalysis && (
                 <Button size="sm" className="mt-2 bg-green-700 hover:bg-green-800 text-xs" onClick={onRunAnalysis}>
-                  Run Grant Matching Analysis
+                  View Grant Performance Dashboard
                 </Button>
               )}
             </div>

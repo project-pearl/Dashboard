@@ -51,6 +51,7 @@ import { HabitatEcologyPanel } from './HabitatEcologyPanel';
 import { AgriculturalNPSPanel } from './AgriculturalNPSPanel';
 import { DisasterEmergencyPanel } from './DisasterEmergencyPanel';
 import { MilitaryInstallationsPanel } from './MilitaryInstallationsPanel';
+import { INDEX_WEIGHTS } from '@/lib/indices/config';
 import { useSentinelAlerts } from '@/hooks/useSentinelAlerts';
 import { useSentinelAudio } from '@/hooks/useSentinelAudio';
 import { SentinelStatusBadge } from './SentinelStatusBadge';
@@ -100,7 +101,7 @@ const LENS_CONFIG: Record<ViewLens, {
   showAIInsights: boolean;     // AI narrative cards
   showHotspots: boolean;       // Top 10 worsening/improving
   showSituationSummary: boolean; // 7-tile national summary
-  showTimeRange: boolean;      // Time range + ALIA impact toggle
+  showTimeRange: boolean;      // Time range + treatment impact toggle
   showSLA: boolean;            // SLA compliance tracking
   showRestorationPlan: boolean; // Restoration plan card
   collapseStateTable: boolean; // Collapse behind button vs full
@@ -108,14 +109,14 @@ const LENS_CONFIG: Record<ViewLens, {
   sections: Set<string> | null;
 }> = {
   overview: {
-    label: 'Overview',
+    label: 'The WARR Room',
     description: 'Role landing — KPI strip, map, and national situation',
     defaultOverlay: 'hotspots',
     showTopStrip: true, showPriorityQueue: false, showCoverageGaps: false,
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['usmap', 'impairmentprofile', 'disclaimer']),
+    sections: new Set(['usmap', 'disclaimer']),
   },
   briefing: {
     label: 'AI Briefing',
@@ -135,7 +136,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: true, collapseStateTable: true,
-    sections: new Set(['impairmentprofile', 'icis', 'sdwis', 'priorityqueue', 'disclaimer']),
+    sections: new Set(['icis', 'sdwis', 'priorityqueue', 'disclaimer']),
   },
   'water-quality': {
     label: 'Water Quality',
@@ -165,7 +166,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: true, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: true, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['networkhealth', 'impairmentprofile', 'coveragegaps', 'sla', 'disclaimer']),
+    sections: new Set(['networkhealth', 'coveragegaps', 'sla', 'disclaimer']),
   },
   trends: {
     label: 'Trends & Projections',
@@ -275,7 +276,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['funding-landscape', 'funding-deadlines', 'funding-state', 'funding-matrix', 'grant-outcomes', 'funding-gap', 'disclaimer']),
+    sections: new Set(['funding-deadlines', 'grant-outcomes', 'funding-gap', 'disclaimer']),
   },
   planner: {
     label: 'Response Planner',
@@ -285,7 +286,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['resolution-planner', 'restoration-planner', 'disclaimer']),
+    sections: new Set(['resolution-planner', 'disclaimer']),
   },
 };
 
@@ -592,12 +593,12 @@ const DEPLOYMENT_START = new Date('2025-01-09'); // Milton FL pilot launch
 
 const OVERLAYS: { id: OverlayId; label: string; description: string; icon: any }[] = [
   { id: 'hotspots', label: 'Water Quality Risk', description: 'Impairment severity from EPA 303(d) and state assessments', icon: Droplets },
-  { id: 'ms4', label: 'MS4 Jurisdictions', description: 'Municipal Separate Storm Sewer System permit holders — potential ALIA deployment targets', icon: Building2 },
+  { id: 'ms4', label: 'MS4 Jurisdictions', description: 'Municipal Separate Storm Sewer System permit holders under NPDES stormwater permits', icon: Building2 },
   { id: 'ej', label: 'EJ Vulnerability', description: 'Census ACS demographics + EPA drinking water violations — community environmental burden', icon: Users },
   { id: 'economy', label: 'Economic Exposure', description: 'Waterfront property value at risk from water quality degradation (hedonic model)', icon: DollarSign },
   { id: 'wildlife', label: 'Ecological Sensitivity', description: 'USFWS ESA-listed threatened & endangered species density (aquatic-weighted)', icon: Leaf },
   { id: 'trend', label: 'Trends', description: 'Water quality change vs prior assessment period', icon: TrendingUp },
-  { id: 'coverage', label: 'Monitoring Coverage', description: 'ALIA deployment and monitoring network gaps', icon: BarChart3 },
+  { id: 'coverage', label: 'Monitoring Coverage', description: 'Real-time sensor coverage and monitoring network gaps', icon: BarChart3 },
   { id: 'indices', label: 'Watershed Indices', description: 'Composite HUC-8 risk score from PEARL, Infrastructure, Recovery, and Permit indices', icon: Gauge },
 ];
 
@@ -2282,8 +2283,8 @@ export function FederalManagementCenter(props: Props) {
       insights.push({
         type: 'urgent',
         title: 'Potomac–Chesapeake: Largest water quality crisis in U.S. regulatory history',
-        detail: `The Chesapeake Bay TMDL — the largest and most complex ever issued by EPA — covers MD, VA, DC, and 4 other states. ${chesapeakeCat5.toLocaleString()} waterbodies in MD/VA/DC alone are Cat 5 (no approved TMDL). The Potomac River basin carries the heaviest nutrient and sediment loads feeding the Bay's dead zones. Decades of nitrogen, phosphorus, and sediment from agriculture, urban runoff, and wastewater have driven chronic hypoxia, SAV loss, and fisheries collapse. This watershed represents the single largest opportunity for ALIA deployment at scale.`,
-        action: 'View Chesapeake deployment plan'
+        detail: `The Chesapeake Bay TMDL — the largest and most complex ever issued by EPA — covers MD, VA, DC, and 4 other states. ${chesapeakeCat5.toLocaleString()} waterbodies in MD/VA/DC alone are Cat 5 (no approved TMDL). The Potomac River basin carries the heaviest nutrient and sediment loads feeding the Bay's dead zones. Decades of nitrogen, phosphorus, and sediment from agriculture, urban runoff, and wastewater have driven chronic hypoxia, SAV loss, and fisheries collapse.`,
+        action: 'View Chesapeake TMDL status'
       });
     }
 
@@ -2292,18 +2293,18 @@ export function FederalManagementCenter(props: Props) {
       insights.push({
         type: 'warning',
         title: `${agg.cat5.toLocaleString()} waterbodies on 303(d) list — no approved TMDL`,
-        detail: `Of ${agg.totalImpaired.toLocaleString()} impaired waterbodies nationwide, ${agg.tmdlGapPct}% are Category 5 — impaired with NO approved Total Maximum Daily Load plan. Only ${agg.cat4a.toLocaleString()} have approved TMDLs (Cat 4a). ${agg.cat4b.toLocaleString()} rely on alternative controls (Cat 4b). States face increasing EPA enforcement pressure to close this gap, creating demand for treatment technologies that can demonstrate measurable pollutant reduction.`,
+        detail: `Of ${agg.totalImpaired.toLocaleString()} impaired waterbodies nationwide, ${agg.tmdlGapPct}% are Category 5 — impaired with NO approved Total Maximum Daily Load plan. Only ${agg.cat4a.toLocaleString()} have approved TMDLs (Cat 4a). ${agg.cat4b.toLocaleString()} rely on alternative controls (Cat 4b). States face increasing EPA enforcement pressure to close this gap.`,
         action: 'View TMDL gap by state'
       });
     }
 
-    // ── INSIGHT 3: ALIA addressability — what % of national impairments we can treat ──
-    if (agg.addressablePct > 0) {
+    // ── INSIGHT 3: Pollutant cause breakdown — national impairment profile ──
+    if (agg.topCauses.length > 0) {
       insights.push({
-        type: 'success',
-        title: `${agg.addressablePct}% of impairment causes nationally are ALIA-addressable`,
-        detail: `Of ${agg.totalCauseInstances.toLocaleString()} cause-instances across all impaired waterbodies, ${agg.addressableCount.toLocaleString()} involve sediment, nutrients, bacteria, dissolved oxygen, or stormwater metals — pollutants that ALIA's mechanical + oyster biofiltration system directly targets. The remaining ${100 - agg.addressablePct}% include mercury, PCBs, PFAS, and legacy contaminants requiring specialized treatment. ${agg.topCauses.length > 0 ? `Top national causes: ${agg.topCauses.slice(0, 5).map(c => c.cause).join(', ')}.` : ''}`,
-        action: 'View addressable market'
+        type: 'info',
+        title: `${agg.totalCauseInstances.toLocaleString()} pollutant cause-instances across impaired waterbodies`,
+        detail: `Of ${agg.totalCauseInstances.toLocaleString()} cause-instances nationwide, the dominant pollutants are sediment, nutrients, bacteria, dissolved oxygen, and stormwater metals. Mercury, PCBs, PFAS, and legacy contaminants account for the remainder. ${agg.topCauses.length > 0 ? `Top national causes: ${agg.topCauses.slice(0, 5).map(c => c.cause).join(', ')}.` : ''}`,
+        action: 'View cause breakdown'
       });
     }
 
@@ -2313,7 +2314,7 @@ export function FederalManagementCenter(props: Props) {
       insights.push({
         type: 'info',
         title: `Top impairment causes: ${top3.map(c => c.cause).join(', ')}`,
-        detail: `Across ${agg.totalImpaired.toLocaleString()} impaired waterbodies, ${top3[0].cause} appears ${top3[0].count.toLocaleString()} times, followed by ${top3[1].cause} (${top3[1].count.toLocaleString()}) and ${top3[2].cause} (${top3[2].count.toLocaleString()}). These patterns guide ALIA configuration — high-nutrient watersheds prioritize oyster biofiltration, high-sediment areas lead with mechanical filtration, and bacterial hotspots get UV treatment stages.`,
+        detail: `Across ${agg.totalImpaired.toLocaleString()} impaired waterbodies, ${top3[0].cause} appears ${top3[0].count.toLocaleString()} times, followed by ${top3[1].cause} (${top3[1].count.toLocaleString()}) and ${top3[2].cause} (${top3[2].count.toLocaleString()}). These patterns indicate where restoration and monitoring resources should be concentrated — nutrient-dominated watersheds require different intervention strategies than sediment- or bacteria-driven impairments.`,
       });
     }
 
@@ -2326,7 +2327,7 @@ export function FederalManagementCenter(props: Props) {
       insights.push({
         type: 'warning',
         title: `Highest Cat 5 concentrations: ${worstStates.map(s => `${s.name} (${s.cat5})`).join(', ')}`,
-        detail: `These states carry the greatest density of impaired waterbodies without approved TMDLs. They face the most regulatory pressure and represent the highest-value deployment targets for ALIA. Maryland's Chesapeake Bay TMDL obligations make it uniquely positioned — the state must demonstrate pollution reduction to meet EPA milestones or face federal backstop measures.`,
+        detail: `These states carry the greatest density of impaired waterbodies without approved TMDLs and face the most regulatory pressure to develop restoration plans. Maryland's Chesapeake Bay TMDL obligations are especially significant — the state must demonstrate pollution reduction to meet EPA milestones or face federal backstop measures.`,
         action: 'View state breakdown'
       });
     }
@@ -2336,7 +2337,7 @@ export function FederalManagementCenter(props: Props) {
       insights.push({
         type: 'info',
         title: `${unmonitored.toLocaleString()} waterbodies lack monitoring data`,
-        detail: `Of ${totalWB.toLocaleString()} tracked waterbodies, ${unmonitored.toLocaleString()} have no mapped data sources. ${ungradedStates} states cannot be graded. ALIA deployment creates real-time sensor networks in data-blind freshwater systems where USGS gauges are sparse and ATTAINS listings are stale.`,
+        detail: `Of ${totalWB.toLocaleString()} tracked waterbodies, ${unmonitored.toLocaleString()} have no mapped data sources. ${ungradedStates} states cannot be graded. Expanding real-time sensor coverage in data-blind freshwater systems — where USGS gauges are sparse and ATTAINS listings are stale — is critical for accurate national water quality assessment.`,
         action: 'View data gaps'
       });
     }
@@ -2350,9 +2351,9 @@ export function FederalManagementCenter(props: Props) {
         .slice(0, 5);
       insights.push({
         type: 'info',
-        title: `${totalMS4.toLocaleString()} MS4 jurisdictions nationwide — ALIA compliance market`,
-        detail: `Top markets: ${topMS4States.map(s => `${STATE_ABBR_TO_NAME[s.abbr]} (${s.total})`).join(', ')}. Every MS4 must meet NPDES stormwater discharge requirements. ALIA provides verifiable TSS, nutrient, and bacteria reduction data for permit compliance documentation.`,
-        action: 'View market analysis'
+        title: `${totalMS4.toLocaleString()} MS4 jurisdictions nationwide under NPDES stormwater permits`,
+        detail: `Top jurisdictions: ${topMS4States.map(s => `${STATE_ABBR_TO_NAME[s.abbr]} (${s.total})`).join(', ')}. Every MS4 must meet NPDES stormwater discharge requirements and demonstrate measurable TSS, nutrient, and bacteria reduction for permit compliance documentation.`,
+        action: 'View MS4 breakdown'
       });
     }
 
@@ -2375,7 +2376,7 @@ export function FederalManagementCenter(props: Props) {
         insights.push({
           type: 'warning',
           title: 'Environmental justice communities with elevated pollution burden',
-          detail: `Communities in ${ejHighRisk.map(([abbr]) => STATE_ABBR_TO_NAME[abbr]).join(', ')} face disproportionate water quality impacts. Federal infrastructure funding (BIL, SRF) increasingly requires EJ targeting — ALIA deployments in these areas qualify for priority funding.`,
+          detail: `Communities in ${ejHighRisk.map(([abbr]) => STATE_ABBR_TO_NAME[abbr]).join(', ')} face disproportionate water quality impacts. Federal infrastructure funding (BIL, SRF) increasingly requires EJ targeting — restoration and monitoring projects in these areas qualify for priority funding.`,
           action: 'Generate EJ report'
         });
       }
@@ -2435,6 +2436,9 @@ export function FederalManagementCenter(props: Props) {
       stateCount: stateRollup.length,
       gradedStateCount: gradedStates.length, ungradedStateCount: ungradedStates.length,
       totalAssessed, totalMonitored, totalUnmonitored,
+      severeCount: totalHigh, severeStates: stateRollup.filter(s => s.high > 0).length,
+      impairedCount: totalMed, impairedStates: stateRollup.filter(s => s.medium > 0).length,
+      monitoredCount: totalMonitored, totalCount: stateRollup.reduce((s, r) => s + r.waterbodies, 0),
     };
   }, [stateRollup]);
 
@@ -2571,6 +2575,16 @@ export function FederalManagementCenter(props: Props) {
           const isSectionOpen = (id: string) => !collapsedSections[id];
           return (<>
           <div className={`space-y-10 ${isEditMode ? 'pl-12' : ''}`}>
+
+        {/* Compact impairment summary for lenses where impairmentprofile was removed */}
+        {(viewLens === 'overview' || viewLens === 'compliance' || viewLens === 'monitoring') && !isEditMode && (
+          <div className="flex items-center gap-2 text-xs text-slate-500 px-4 py-2 bg-slate-50 rounded-lg border border-slate-200">
+            <span>National Impairment: {attainsAggregation.totalImpaired?.toLocaleString() ?? '69K'} waterbodies, {attainsAggregation.totalAssessed > 0 ? Math.round((attainsAggregation.totalImpaired / attainsAggregation.totalAssessed) * 100) : 69}% impaired</span>
+            <button onClick={() => setViewLens('water-quality')} className="text-blue-600 hover:underline ml-1">
+              View Details &rarr;
+            </button>
+          </div>
+        )}
 
         {sections.filter(s => {
           // In edit mode, show all sections for drag-and-drop
@@ -2777,7 +2791,7 @@ export function FederalManagementCenter(props: Props) {
                     {overlay === 'coverage' && (
                       <>
                         <span className="pin-label mr-1">Coverage:</span>
-                        {[{ label: 'None', bg: '#d1d5db' }, { label: 'Ambient', bg: '#fde68a' }, { label: 'ALIA', bg: '#22c55e' }, { label: 'Full', bg: '#14532d' }].map(s => (
+                        {[{ label: 'None', bg: '#d1d5db' }, { label: 'Ambient', bg: '#fde68a' }, { label: 'Treatment', bg: '#22c55e' }, { label: 'Full', bg: '#14532d' }].map(s => (
                           <span key={s.label} className="inline-flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: s.bg }} /> {s.label}</span>
                         ))}
                       </>
@@ -4909,21 +4923,46 @@ export function FederalManagementCenter(props: Props) {
               </div>
             </div>
 
-            {/* Drivers strip */}
-            <div className="flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-slate-200/40">
-              <div className="text-[11px] text-slate-400 italic">
-                Average of state-level waterbody health grades
+            {/* Driver stat tiles */}
+            <div className="grid grid-cols-3 gap-3 mt-4">
+              <div className="bg-rose-50 rounded-lg p-3 text-center">
+                <div className="text-2xl font-bold text-rose-700">{networkHealth.severeCount?.toLocaleString()}</div>
+                <div className="text-xs text-rose-600">Severe Waterbodies</div>
+                <div className="text-[10px] text-slate-400">{networkHealth.severeStates} states</div>
               </div>
-              <div className="h-4 w-px bg-slate-200" />
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[11px] text-slate-500 font-medium">Drivers:</span>
-                {networkHealth.drivers.map((driver, i) => (
-                  <Badge key={i} variant="secondary" className="text-[10px] py-0 px-1.5 h-5 bg-slate-100 text-slate-600 border-slate-200">
-                    {driver}
-                  </Badge>
-                ))}
+              <div className="bg-amber-50 rounded-lg p-3 text-center">
+                <div className="text-2xl font-bold text-amber-700">{networkHealth.impairedCount?.toLocaleString()}</div>
+                <div className="text-xs text-amber-600">Impaired Waterbodies</div>
+                <div className="text-[10px] text-slate-400">{networkHealth.impairedStates} states</div>
+              </div>
+              <div className="bg-slate-50 rounded-lg p-3 text-center">
+                <div className="text-2xl font-bold text-slate-700">{networkHealth.monitoredCount?.toLocaleString()}</div>
+                <div className="text-xs text-slate-600">Actively Monitored</div>
+                <div className="text-[10px] text-rose-500 font-medium">of {networkHealth.totalCount?.toLocaleString()} total</div>
               </div>
             </div>
+
+            {/* Index Weight Breakdown */}
+            {showHealthDetails && (
+              <div className="mt-4 pt-4 border-t border-slate-200/60">
+                <div className="text-xs font-semibold text-slate-700 mb-2 uppercase tracking-wide">
+                  Composite Score Breakdown
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {Object.entries(INDEX_WEIGHTS).map(([id, weight]) => {
+                    const label = id.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim();
+                    return (
+                      <div key={id} className="flex items-center gap-2 text-[11px]">
+                        <div className="w-full bg-slate-100 rounded-full h-1.5 flex-1">
+                          <div className="h-full rounded-full bg-blue-400" style={{ width: `${weight * 100}%` }} />
+                        </div>
+                        <span className="text-slate-500 whitespace-nowrap">{label} ({Math.round(weight * 100)}%)</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Inline Details — worst states by grade */}
             {showHealthDetails && networkHealth.worstStates.length > 0 && (
@@ -4986,10 +5025,10 @@ export function FederalManagementCenter(props: Props) {
             <div className="flex items-center justify-between flex-wrap gap-2">
               <CardTitle className="text-base flex items-center gap-2">
                 <Droplets className="h-5 w-5 text-cyan-600" />
-                National Impact — All ALIA Deployments
+                National Treatment Impact — PIN-Tracked Deployments
               </CardTitle>
               <div className="flex items-center gap-1">
-                <BrandedPrintBtn sectionId="nationalimpact" title="National Impact — All ALIA Deployments" />
+                <BrandedPrintBtn sectionId="nationalimpact" title="National Treatment Impact — PIN-Tracked Deployments" />
                 <Button
                   size="sm"
                   variant={impactPeriod === 'all' ? 'default' : 'outline'}
@@ -5072,7 +5111,7 @@ export function FederalManagementCenter(props: Props) {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
                     <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500" />
                   </span>
-                  <span className="text-xs text-slate-500">Updating live from deployed ALIA systems</span>
+                  <span className="text-xs text-slate-500">Updating live from PIN-tracked treatment systems</span>
                 </>
               ) : (
                 <>
@@ -5181,7 +5220,7 @@ export function FederalManagementCenter(props: Props) {
                       onClick={() => {
                         setSelectedState(s.abbr);
                         setWaterbodyFilter('all');
-                        mapSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        setViewLens('water-quality');
                       }}
                       className="flex items-center gap-2 p-2 rounded-md border border-slate-200 hover:bg-amber-50 hover:border-amber-200 cursor-pointer transition-all"
                     >
@@ -5190,12 +5229,13 @@ export function FederalManagementCenter(props: Props) {
                       </div>
                       <div className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold border ${s.grade.bg} ${s.grade.color}`}>
                         {s.grade.letter}
+                        <span className="text-[8px] font-normal ml-0.5">({s.score})</span>
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="text-sm font-medium text-slate-800">{s.name}</div>
                         <div className="text-[10px] text-slate-500">
                           {showImpact
-                            ? `${s.high} severe · ${s.medium} impaired · ${s.waterbodies} total`
+                            ? `${(s.high + s.medium).toLocaleString()} impaired (${s.high} severe, ${s.medium} moderate) · ${s.waterbodies} total`
                             : `${s.unmonitored} blind spots · ${('coveragePct' in s ? (s as any).coveragePct : 0)}% coverage`
                           }
                         </div>
@@ -5222,7 +5262,7 @@ export function FederalManagementCenter(props: Props) {
         </>); {/* end coveragegaps */}
 
         case 'situation': return DS(<>
-        {/* Time Range + ALIA Impact Toggle — lens controlled */}
+        {/* Time Range + Treatment Impact Toggle — lens controlled */}
         {lens.showTimeRange && (
         <div className="flex flex-wrap items-center gap-3 p-3 rounded-lg border border-slate-200 bg-white">
           <div className="flex items-center gap-2">
@@ -5250,12 +5290,12 @@ export function FederalManagementCenter(props: Props) {
             onClick={() => setShowImpact(!showImpact)}
             className={`h-8 ${showImpact ? 'bg-green-600 hover:bg-green-700' : ''}`}
           >
-            {showImpact ? '✓ Showing ALIA Impact' : 'Show ALIA Impact'}
+            {showImpact ? '✓ Showing Treatment Impact' : 'Show Treatment Impact'}
           </Button>
 
           {showImpact && (
             <div className="flex-1 text-xs text-green-700 font-medium">
-              Map shows improvement in ALIA-deployed states (MD, FL) vs ambient baseline
+              Map shows improvement in treatment-deployed states (MD, FL) vs ambient baseline
             </div>
           )}
         </div>
@@ -5475,7 +5515,7 @@ export function FederalManagementCenter(props: Props) {
                   size="sm"
                   variant="outline"
                   onClick={() => {
-                    setToastMsg('EJ Impact Report coming in the next release — will include community vulnerability scores, water quality overlap analysis, and ALIA deployment priorities.');
+                    setToastMsg('EJ Impact Report coming in the next release — will include community vulnerability scores, water quality overlap analysis, and restoration priorities.');
                     setTimeout(() => setToastMsg(null), 5000);
                   }}
                   className="h-7 text-xs"
@@ -5598,23 +5638,10 @@ export function FederalManagementCenter(props: Props) {
 
         case 'groundwater': return DS(
         <div id="section-groundwater">
-          {!lens.sections?.has('usmap') && (
-            <div className="flex items-center gap-2 mb-3 px-1">
-              <span className="text-xs font-medium text-slate-500">State:</span>
-              <select
-                value={selectedState}
-                onChange={(e) => setSelectedState(e.target.value)}
-                className="px-2 py-1 rounded-md border border-slate-300 text-xs bg-white cursor-pointer hover:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-300"
-              >
-                {Object.entries(STATE_ABBR_TO_NAME).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
-                  <option key={abbr} value={abbr}>{name} ({abbr})</option>
-                ))}
-              </select>
-            </div>
-          )}
           <NwisGwPanel
             state={selectedState}
             compactMode={false}
+            federalMode={true}
           />
         </div>
       );
@@ -6098,7 +6125,7 @@ export function FederalManagementCenter(props: Props) {
                 className="text-xs border-blue-300 text-blue-700 hover:bg-blue-100"
                 onClick={() => setShowGrantMatcher(prev => !prev)}
               >
-                {showGrantMatcher ? 'Hide Grant Analysis' : 'Run Grant Matching Analysis'}
+                {showGrantMatcher ? 'Hide Grant Analysis' : 'View Grant Performance Dashboard'}
               </Button>
             </div>
 
@@ -6134,7 +6161,7 @@ export function FederalManagementCenter(props: Props) {
               </CardTitle>
               <BrandedPrintBtn sectionId="funding-deadlines" title="Funding Deadlines" />
             </div>
-            <CardDescription>Federal grant and loan application windows — sortable by deadline</CardDescription>
+            <CardDescription>Active program windows across federal water funding</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -6436,26 +6463,51 @@ export function FederalManagementCenter(props: Props) {
         <Card id="section-funding-gap" className="border-2 border-rose-200 bg-gradient-to-br from-rose-50 to-white">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <DollarSign className="h-5 w-5 text-rose-600" />
-                  Funding Gap Analysis
-                </CardTitle>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <DollarSign className="h-5 w-5 text-rose-600" />
+                Funding Gap Analysis
+              </CardTitle>
+              <BrandedPrintBtn sectionId="funding-gap" title="National Funding Gap" />
+            </div>
+            <CardDescription>Estimated compliance cost vs. available federal funding for impaired waterbodies</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* National Summary Tiles */}
+            <div className="grid grid-cols-4 gap-3 mb-4">
+              <div className="rounded-xl border-2 border-slate-200 bg-slate-50 p-3 text-center">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Need</div>
+                <div className="text-xl font-bold text-slate-800 mt-1">{fmtDollars(natCost)}</div>
+              </div>
+              <div className="rounded-xl border-2 border-green-200 bg-green-50 p-3 text-center">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-green-500">Available</div>
+                <div className="text-xl font-bold text-green-700 mt-1">{fmtDollars(natFunding)}</div>
+              </div>
+              <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-3 text-center">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-amber-600">Coverage</div>
+                <div className="text-xl font-bold text-amber-700 mt-1">{natCoveragePct}%</div>
+              </div>
+              <div className="rounded-xl border-2 border-rose-300 bg-rose-50 p-3 text-center">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-rose-600">Gap</div>
+                <div className="text-xl font-bold text-rose-700 mt-1">{fmtDollars(natGap)}</div>
+              </div>
+            </div>
+
+            {/* Drill Down by State — collapsible */}
+            <details className="border border-slate-200 rounded-lg">
+              <summary className="px-4 py-2.5 cursor-pointer text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-50 select-none">
+                Drill Down by State
+              </summary>
+              <div className="px-4 pb-4 pt-2">
                 <select
                   value={selectedState}
                   onChange={(e) => setSelectedState(e.target.value)}
-                  className="px-2 py-1 rounded-md border border-slate-300 text-xs bg-white cursor-pointer hover:border-rose-400 focus:outline-none focus:ring-1 focus:ring-rose-300"
+                  className="px-2 py-1 rounded-md border border-slate-300 text-xs bg-white cursor-pointer hover:border-rose-400 focus:outline-none focus:ring-1 focus:ring-rose-300 mb-3"
                 >
                   {Object.entries(STATE_ABBR_TO_NAME).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
                     <option key={abbr} value={abbr}>{name} ({abbr})</option>
                   ))}
                 </select>
-              </div>
-              <BrandedPrintBtn sectionId="funding-gap" title={`${gapStateName} Funding Gap`} />
-            </div>
-            <CardDescription>Estimated compliance cost vs. available federal funding for impaired waterbodies</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+
             {/* State Gap Visualization */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="rounded-xl border-2 border-red-200 bg-red-50 p-4 text-center">
@@ -6493,6 +6545,8 @@ export function FederalManagementCenter(props: Props) {
                 />
               </div>
             </div>
+              </div>
+            </details>
 
             {/* National Context */}
             <div className="border border-slate-200 rounded-lg p-4 bg-white">
@@ -6535,7 +6589,7 @@ export function FederalManagementCenter(props: Props) {
                 className="text-xs border-rose-300 text-rose-700 hover:bg-rose-100"
                 onClick={() => setShowGrantMatcher(true)}
               >
-                Find Grants to Close the Gap
+                Compare State Allocations
               </Button>
               <span className="text-[10px] text-slate-400">Methodology: $2.5M avg per impaired waterbody based on EPA TMDL implementation cost studies</span>
             </div>

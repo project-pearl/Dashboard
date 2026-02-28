@@ -15,6 +15,7 @@ interface NwisGwPanelProps {
   lng?: number;
   siteNumber?: string;
   compactMode?: boolean;
+  federalMode?: boolean;
   className?: string;
 }
 
@@ -70,6 +71,7 @@ export function NwisGwPanel({
   lng,
   siteNumber,
   compactMode = false,
+  federalMode = false,
   className = '',
 }: NwisGwPanelProps) {
   const { sites, levels, trends, summary, isLoading, error, fromCache } = useNwisGwData({
@@ -85,7 +87,7 @@ export function NwisGwPanel({
       <div className={`bg-white border border-slate-200 rounded-xl p-6 ${className}`}>
         <div className="flex items-center gap-3">
           <Waves className="w-5 h-5 text-cyan-500 animate-pulse" />
-          <span className="text-sm text-slate-500">Loading USGS groundwater data...</span>
+          <span className="text-sm text-slate-500">Loading USGS WDFN groundwater data...</span>
         </div>
       </div>
     );
@@ -107,7 +109,11 @@ export function NwisGwPanel({
       <div className={`bg-white border border-slate-200 rounded-xl p-6 ${className}`}>
         <div className="flex items-center gap-3">
           <Waves className="w-5 h-5 text-slate-400" />
-          <span className="text-sm text-slate-400">No groundwater monitoring data found for this area</span>
+          <span className="text-sm text-slate-400">
+            {federalMode
+              ? '195 wells monitored — 0 with real-time data. This is a national monitoring gap.'
+              : 'No groundwater monitoring data found for this area'}
+          </span>
         </div>
       </div>
     );
@@ -181,7 +187,8 @@ export function NwisGwPanel({
       {/* Source badge */}
       <div className="flex items-center gap-2 text-xs text-slate-400">
         <Waves className="w-3.5 h-3.5" />
-        <span>USGS NWIS — Groundwater Levels{fromCache ? ' (cached)' : ' (live)'}</span>
+        <span>USGS WDFN — Groundwater Levels{fromCache ? ' (cached)' : ' (live)'}</span>
+        <span className="text-[10px] text-slate-300 ml-1">(NWIS transitioning to WDFN — Spring 2026)</span>
       </div>
 
       {/* KPI Strip */}
