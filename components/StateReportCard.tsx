@@ -235,7 +235,7 @@ export default function StateReportCard({ stateAbbr }: { stateAbbr: string }) {
       {/* CTA footer */}
       <div className="border-t border-slate-100 px-5 py-4">
         <p className="text-xs text-slate-500 mb-2">
-          ALIA monitors {stateName} water quality in real-time
+          PIN monitors {stateName} water quality in real-time
         </p>
         <a
           href={`/command-center?state=${stateAbbr}`}

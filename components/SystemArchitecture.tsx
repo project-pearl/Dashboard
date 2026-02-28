@@ -28,7 +28,7 @@ const SystemArchitecture = () => {
     {
       id: "pearl",
       number: "02",
-      title: "PEARL ALIA",
+      title: "PIN Treatment",
       subtitle: "The Treatment Layer",
       status: "PILOT VALIDATED",
       statusColor: "#B8860B",

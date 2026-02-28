@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 const SYSTEM_PROMPT = `You are a water quality restoration categorizer. Given a custom item (module, partner, or event) with a name and description, return a JSON object with suggested categorization.
 
 For modules, return:
-{ "category": one of "Infrastructure"|"Interception"|"PEARL ALIA"|"Biological"|"Mechanical"|"Chemical"|"Source Control"|"DO Mgmt"|"Emerging", "pillars": array of "GW"|"SW"|"SurfW"|"DW"|"WW" }
+{ "category": one of "Infrastructure"|"Interception"|"PIN"|"Biological"|"Mechanical"|"Chemical"|"Source Control"|"DO Mgmt"|"Emerging", "pillars": array of "GW"|"SW"|"SurfW"|"DW"|"WW" }
 
 For partners, return:
 { "category": a brief partner type like "Research & Science" or "Ecological Engineering", "pillars": array of pillar codes, "strengths": array of "monitoring"|"advocacy"|"habitat"|"engineering"|"education"|"funding"|"legal"|"research" }

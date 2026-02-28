@@ -56,14 +56,14 @@ const OurStorySection: React.FC = () => {
             nearshore zone, where stress is highest and pollution concentrates. Yet our
             tools stop at the shoreline or far upstream. There was no practical system
             focused on cleaning that water in place. That gap is what pushed him to build
-            ALIA.
+            PIN.
           </p>
 
           <p>
             The first pilot made it real. We measured what went in and what came out. We
             saw large drops in suspended solids and bacteria. That turned this from an
             idea into a commitment. Clean water gives ecosystems a fair chance. It gives
-            communities something to believe in. ALIA exists to put working systems in
+            communities something to believe in. PIN exists to put working systems in
             the water, prove results with data, and help these places move from survival
             back to recovery.
           </p>
@@ -106,7 +106,7 @@ const OurStorySection: React.FC = () => {
             <div className="p-6 rounded-xl bg-blue-50 border border-blue-200">
               <h3 className="text-xs font-bold uppercase tracking-wider text-blue-600 mb-3">The Solution</h3>
               <p className="text-sm text-slate-700 leading-relaxed">
-                Deployed ALIA &mdash; a modular, chemical-free treatment platform combining engineered media filtration with biological processes. Continuous 7-day operation treating real stormwater runoff in field conditions.
+                Deployed PIN &mdash; a modular, chemical-free treatment platform combining engineered media filtration with biological processes. Continuous 7-day operation treating real stormwater runoff in field conditions.
               </p>
             </div>
             <div className="p-6 rounded-xl bg-emerald-50 border border-emerald-200">

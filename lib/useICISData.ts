@@ -54,15 +54,38 @@ const EMPTY_SUMMARY: ICISSummary = {
 
 // ── Envirofacts + ECHO CamelCase → typed mappers ────────────────────────────
 
+/**
+ * Find a field value by trying exact names, then case-insensitive matches.
+ * Handles Envirofacts ALL_CAPS, ECHO CamelCase, and normalized field names.
+ */
+function findField(row: any, names: string[], fallback: any = ''): any {
+  for (const n of names) {
+    const v = row[n];
+    if (v !== undefined && v !== null && v !== '') return v;
+  }
+  // Case-insensitive fallback for Envirofacts schema variations
+  const keys = Object.keys(row);
+  const keyMap = new Map<string, string>();
+  for (const k of keys) keyMap.set(k.toLowerCase(), k);
+  for (const n of names) {
+    const actual = keyMap.get(n.toLowerCase());
+    if (actual) {
+      const v = row[actual];
+      if (v !== undefined && v !== null && v !== '') return v;
+    }
+  }
+  return fallback;
+}
+
 function mapPermits(rows: any[]): IcisPermit[] {
   if (!Array.isArray(rows)) return [];
   return rows.map((r: any) => ({
-    permit: r.permit || r.NPDES_ID || r.SourceID || r.EXTERNAL_PERMIT_NMBR || '',
-    facility: r.facility || r.FACILITY_NAME || r.CWPName || r.FACILITY_UIN || '',
-    state: r.state || r.STATE_ABBR || r.CWPState || '',
-    status: r.status || r.PERMIT_STATUS_CODE || r.CWPPermitStatusDesc || r.PERMIT_STATUS || '',
-    type: r.type || r.PERMIT_TYPE_CODE || r.CWPPermitTypeDesc || '',
-    expiration: r.expiration || r.PERMIT_EXPIRATION_DATE || r.CWPExpirationDate || '',
+    permit: findField(r, ['permit', 'NPDES_ID', 'SourceID', 'EXTERNAL_PERMIT_NMBR']),
+    facility: findField(r, ['facility', 'FACILITY_NAME', 'CWPName', 'FACILITY_UIN']),
+    state: findField(r, ['state', 'STATE_ABBR', 'CWPState']),
+    status: findField(r, ['status', 'PERMIT_STATUS_CODE', 'CWPPermitStatusDesc', 'PERMIT_STATUS']),
+    type: findField(r, ['type', 'PERMIT_TYPE_CODE', 'CWPPermitTypeDesc']),
+    expiration: findField(r, ['expiration', 'PERMIT_EXPIRATION_DATE', 'CWPExpirationDate']),
     flow: r.flow ?? (r.DESIGN_FLOW_NMBR != null ? Number(r.DESIGN_FLOW_NMBR)
       : r.CWPActualAverageFlowNmbr != null ? Number(r.CWPActualAverageFlowNmbr) : null),
     lat: r.lat || Number(r.FacLat) || 0,
@@ -72,17 +95,26 @@ function mapPermits(rows: any[]): IcisPermit[] {
 
 function mapViolations(rows: any[]): IcisViolation[] {
   if (!Array.isArray(rows)) return [];
-  return rows.map((r: any) => ({
-    permit: r.permit || r.NPDES_ID || r.SourceID || r.EXTERNAL_PERMIT_NMBR || '',
-    code: r.code || r.VIOLATION_CODE || r.ViolationCode || r.VIOLATION_TYPE_CODE || r.CWPVioStatus || '',
-    desc: r.desc || r.VIOLATION_DESC || r.ViolationDesc || r.VIOLATION_TYPE_DESC || r.CWPVioStatus || '',
-    date: r.date || r.VIOLATION_DETECT_DATE || r.SCHEDULE_DATE || '',
-    rnc: r.rnc === true || r.RNC_DETECTION_CODE === 'Y' || r.RNCDetectionCode === 'Y'
-      || (r.RNC_DETECTION_CODE || '').length > 0 || (r.RNCDetectionCode || '').length > 0,
-    severity: r.severity || r.SEVERITY_CODE || r.ViolationSeverity || r.SEVERITY_IND || '',
-    lat: r.lat || Number(r.FacLat) || 0,
-    lng: r.lng || Number(r.FacLong) || 0,
-  }));
+  return rows.map((r: any) => {
+    const rawSeverity = findField(r, ['severity', 'SEVERITY_CODE', 'ViolationSeverity', 'SEVERITY_IND']);
+    const sncStatus = r.CWPSNCStatus || '';
+    const isSnc = rawSeverity === 'S' || /SNC|significant/i.test(sncStatus) || /significant/i.test(rawSeverity);
+
+    return {
+      permit: findField(r, ['permit', 'NPDES_ID', 'SourceID', 'EXTERNAL_PERMIT_NMBR']),
+      code: findField(r, ['code', 'VIOLATION_CODE', 'ViolationCode', 'VIOLATION_TYPE_CODE',
+        'CWPVioStatus', 'CWPCurrentVioStatus']),
+      desc: findField(r, ['desc', 'VIOLATION_DESC', 'ViolationDesc', 'VIOLATION_TYPE_DESC',
+        'CWPVioStatus', 'CWPCurrentVioStatus']),
+      date: findField(r, ['date', 'VIOLATION_DETECT_DATE', 'SCHEDULE_DATE',
+        'CWPDateLastFormalAction', 'CWPDateLastInspection',
+        'MONITORING_PERIOD_END_DATE', 'COMPL_PER_BEGIN_DATE']),
+      rnc: r.rnc === true || r.RNC_DETECTION_CODE === 'Y' || r.RNCDetectionCode === 'Y' || isSnc,
+      severity: isSnc ? 'S' : (rawSeverity === 'M' ? 'M' : rawSeverity),
+      lat: r.lat || Number(r.FacLat) || 0,
+      lng: r.lng || Number(r.FacLong) || 0,
+    };
+  });
 }
 
 function mapDmr(rows: any[]): IcisDmr[] {
@@ -93,14 +125,14 @@ function mapDmr(rows: any[]): IcisDmr[] {
     const dv = dmrVal != null ? Number(dmrVal) : null;
     const lv = limitVal != null ? Number(limitVal) : null;
     return {
-      permit: r.permit || r.NPDES_ID || r.EXTERNAL_PERMIT_NMBR || '',
-      paramDesc: r.paramDesc || r.PARAMETER_DESC || r.ParameterDesc || r.PARAMETER_CODE || '',
+      permit: findField(r, ['permit', 'NPDES_ID', 'EXTERNAL_PERMIT_NMBR']),
+      paramDesc: findField(r, ['paramDesc', 'PARAMETER_DESC', 'ParameterDesc', 'PARAMETER_CODE']),
       pearlKey: r.pearlKey || '',
       dmrValue: dv,
       limitValue: lv,
-      unit: r.unit || r.STATISTICAL_BASE_TYPE_CODE || r.LIMIT_UNIT_DESC || r.LimitUnitDesc || '',
+      unit: findField(r, ['unit', 'STATISTICAL_BASE_TYPE_CODE', 'LIMIT_UNIT_DESC', 'LimitUnitDesc']),
       exceedance: r.exceedance === true || (dv !== null && lv !== null && lv > 0 && dv > lv),
-      period: r.period || r.MONITORING_PERIOD_END_DATE || r.MonitoringPeriodEndDate || '',
+      period: findField(r, ['period', 'MONITORING_PERIOD_END_DATE', 'MonitoringPeriodEndDate']),
       lat: r.lat || Number(r.FacLat) || 0,
       lng: r.lng || Number(r.FacLong) || 0,
     };
@@ -112,12 +144,17 @@ function mapEnforcement(rows: any[]): IcisEnforcement[] {
   return rows.map((r: any) => {
     const rawPenalty = r.FedPenalty ? String(r.FedPenalty).replace(/[$,]/g, '') : null;
     return {
-      permit: r.permit || r.NPDES_ID || r.SourceID || r.EXTERNAL_PERMIT_NMBR || '',
-      caseNumber: r.caseNumber || r.CASE_NUMBER || r.CaseNumber || r.ENFORCEMENT_ID || '',
-      actionType: r.actionType || r.ENF_TYPE_CODE || r.ENF_TYPE_DESC || r.CaseCategoryDesc || r.ENFORCEMENT_ACTION_TYPE_CODE || '',
-      penaltyAssessed: r.penaltyAssessed || Number(r.PENALTY_ASSESSED_AMT || r.FED_PENALTY_ASSESSED_AMT || rawPenalty || 0),
+      permit: findField(r, ['permit', 'NPDES_ID', 'SourceID', 'EXTERNAL_PERMIT_NMBR']),
+      caseNumber: findField(r, ['caseNumber', 'CASE_NUMBER', 'CaseNumber',
+        'ENFORCEMENT_ID', 'ENFORCEMENT_ACTION_IDENTIFIER']),
+      actionType: findField(r, ['actionType', 'ENF_TYPE_CODE', 'ENF_TYPE_DESC',
+        'CaseCategoryDesc', 'ENFORCEMENT_ACTION_TYPE_CODE']),
+      penaltyAssessed: r.penaltyAssessed || Number(
+        r.PENALTY_ASSESSED_AMT || r.FED_PENALTY_ASSESSED_AMT
+        || r.STATE_LOCAL_PENALTY_AMT || r.PENALTY_AMT || rawPenalty || 0),
       penaltyCollected: r.penaltyCollected || Number(r.PENALTY_COLLECTED_AMT || 0),
-      settlementDate: r.settlementDate || r.SETTLEMENT_ENTERED_DATE || r.SettlementDate || r.ACHIEVED_DATE || '',
+      settlementDate: findField(r, ['settlementDate', 'SETTLEMENT_ENTERED_DATE', 'SettlementDate',
+        'ACHIEVED_DATE', 'FINAL_ORDER_ENTERED_DATE', 'ENFORCEMENT_ACTION_DATE']),
       lat: r.lat || 0,
       lng: r.lng || 0,
     };

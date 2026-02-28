@@ -143,7 +143,7 @@ export function MarylandStateView({ selectedState }: MarylandStateViewProps) {
             <div className="text-2xl font-bold">{avgTMDL}%</div>
           </div>
           <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
-            <div className="text-blue-100 text-xs mb-1">ALIA Sites</div>
+            <div className="text-blue-100 text-xs mb-1">PIN Sites</div>
             <div className="text-2xl font-bold">{pearlDeployments} MS4s</div>
           </div>
           <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
@@ -227,7 +227,7 @@ export function MarylandStateView({ selectedState }: MarylandStateViewProps) {
 
           <div className="mt-4 bg-amber-50 border border-amber-200 rounded p-3">
             <div className="text-xs text-amber-900">
-              <span className="font-semibold">💡 ALIA Impact:</span> Current ALIA deployments (Baltimore City, Anne Arundel) are contributing approximately 125K lbs/year TN reduction and 8.2K lbs/year TP reduction toward statewide targets.
+              <span className="font-semibold">💡 PIN Impact:</span> Current PIN deployments (Baltimore City, Anne Arundel) are contributing approximately 125K lbs/year TN reduction and 8.2K lbs/year TP reduction toward statewide targets.
             </div>
           </div>
         </CardContent>
@@ -264,7 +264,7 @@ export function MarylandStateView({ selectedState }: MarylandStateViewProps) {
                       {ms4.pearlDeployed && (
                         <Badge className="bg-blue-100 text-blue-800 border-blue-200">
                           <Droplets className="h-3 w-3 mr-1" />
-                          ALIA Deployed
+                          PIN Deployed
                         </Badge>
                       )}
                     </div>
@@ -310,7 +310,7 @@ export function MarylandStateView({ selectedState }: MarylandStateViewProps) {
                       </div>
                       {!ms4.pearlDeployed && (
                         <div className="text-blue-600 font-medium">
-                          → Potential ALIA deployment site
+                          → Potential PIN deployment site
                         </div>
                       )}
                     </div>
@@ -391,7 +391,7 @@ export function MarylandStateView({ selectedState }: MarylandStateViewProps) {
 
           <div className="bg-blue-50 border border-blue-200 rounded p-3 mt-4">
             <div className="text-xs text-blue-900">
-              <span className="font-semibold">💡 Real-Time Dashboard:</span> All data updates automatically from ALIA deployments and submitted MS4 reports. MDE can monitor compliance status 24/7 without waiting for annual submissions.
+              <span className="font-semibold">💡 Real-Time Dashboard:</span> All data updates automatically from PIN deployments and submitted MS4 reports. MDE can monitor compliance status 24/7 without waiting for annual submissions.
             </div>
           </div>
         </CardContent>
@@ -484,7 +484,7 @@ export function MarylandStateView({ selectedState }: MarylandStateViewProps) {
             </div>
 
             <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-3">
-              <div className="text-xs text-purple-700 mb-1">ALIA Potential Impact</div>
+              <div className="text-xs text-purple-700 mb-1">PIN Potential Impact</div>
               <div className="text-lg font-bold text-purple-900">+3-5% progress</div>
               <div className="text-xs text-purple-600 mt-1">If deployed to all 8 MD MS4s</div>
             </div>
@@ -492,7 +492,7 @@ export function MarylandStateView({ selectedState }: MarylandStateViewProps) {
 
           <div className="mt-4 bg-amber-50 border border-amber-200 rounded p-3">
             <div className="text-xs text-amber-900">
-              <span className="font-semibold">💡 Competitive Advantage:</span> Maryland is currently ranked #3 out of 6 Chesapeake Bay states. Expanding ALIA deployments to Montgomery, Frederick, and other MS4s could move Maryland to #2 or #1, demonstrating national leadership in innovative stormwater management.
+              <span className="font-semibold">💡 Competitive Advantage:</span> Maryland is currently ranked #3 out of 6 Chesapeake Bay states. Expanding PIN deployments to Montgomery, Frederick, and other MS4s could move Maryland to #2 or #1, demonstrating national leadership in innovative stormwater management.
             </div>
           </div>
         </CardContent>
@@ -505,7 +505,7 @@ export function MarylandStateView({ selectedState }: MarylandStateViewProps) {
             <AlertTriangle className="h-5 w-5" />
             Current Maryland Water Quality Challenges (2024-2026)
           </CardTitle>
-          <CardDescription>Active issues requiring monitoring and intervention - areas where ALIA could provide real-time intelligence</CardDescription>
+          <CardDescription>Active issues requiring monitoring and intervention - areas where PIN could provide real-time intelligence</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -519,7 +519,7 @@ export function MarylandStateView({ selectedState }: MarylandStateViewProps) {
                     DC Water Potomac Interceptor rupture spilling tens of millions of gallons of untreated sewage daily. High E. coli levels near site, public warnings to avoid contact, repairs ongoing.
                   </div>
                   <div className="text-xs text-red-700 bg-red-100 rounded px-2 py-1 inline-block">
-                    💡 ALIA Opportunity: Real-time bacterial monitoring would provide immediate public health alerts vs. delayed lab results
+                    💡 PIN Opportunity: Real-time bacterial monitoring would provide immediate public health alerts vs. delayed lab results
                   </div>
                 </div>
               </div>
@@ -535,7 +535,7 @@ export function MarylandStateView({ selectedState }: MarylandStateViewProps) {
                     MDE continues updating fish consumption advisories statewide due to PFAS (especially PFOS) contamination affecting common sportfish in multiple Maryland waters.
                   </div>
                   <div className="text-xs text-orange-700 bg-orange-100 rounded px-2 py-1 inline-block">
-                    💡 ALIA Opportunity: Continuous PFAS monitoring at stormwater outfalls to track and reduce loadings
+                    💡 PIN Opportunity: Continuous PFAS monitoring at stormwater outfalls to track and reduce loadings
                   </div>
                 </div>
               </div>
@@ -551,7 +551,7 @@ export function MarylandStateView({ selectedState }: MarylandStateViewProps) {
                     UMCES Chesapeake Bay Report Card declined from C+ to C in 2025. Extreme rainfall and heat cited as drivers of nutrient runoff and hypoxic "dead zone" conditions.
                   </div>
                   <div className="text-xs text-amber-700 bg-amber-100 rounded px-2 py-1 inline-block">
-                    💡 ALIA Opportunity: Nutrient load tracking at MS4 outfalls directly addresses root cause of Bay degradation
+                    💡 PIN Opportunity: Nutrient load tracking at MS4 outfalls directly addresses root cause of Bay degradation
                   </div>
                 </div>
               </div>
@@ -567,7 +567,7 @@ export function MarylandStateView({ selectedState }: MarylandStateViewProps) {
                     County health programs continue issuing no-swim advisories after rainfall events due to bacterial indicators (enterococci). Multi-beach advisories common during storm events.
                   </div>
                   <div className="text-xs text-yellow-700 bg-yellow-100 rounded px-2 py-1 inline-block">
-                    💡 ALIA Opportunity: Storm-triggered monitoring provides real-time data for faster, more accurate beach closure decisions
+                    💡 PIN Opportunity: Storm-triggered monitoring provides real-time data for faster, more accurate beach closure decisions
                   </div>
                 </div>
               </div>
@@ -583,7 +583,7 @@ export function MarylandStateView({ selectedState }: MarylandStateViewProps) {
                     WSSC Water issued recreational water-contact health advisory for Triadelphia Reservoir. MDE's 2024 Integrated Report documents ongoing HAB investigations and protective measures statewide.
                   </div>
                   <div className="text-xs text-green-700 bg-green-100 rounded px-2 py-1 inline-block">
-                    💡 ALIA Opportunity: Early detection via chlorophyll-a and nutrient monitoring enables proactive HAB management
+                    💡 PIN Opportunity: Early detection via chlorophyll-a and nutrient monitoring enables proactive HAB management
                   </div>
                 </div>
               </div>
@@ -599,7 +599,7 @@ export function MarylandStateView({ selectedState }: MarylandStateViewProps) {
                     Potomac River Report Card identified polluted runoff as rising pollution source, worsened by tree loss and heavier rainstorms. USGS and ICPRB highlight PFAS as continuing basin-wide challenge.
                   </div>
                   <div className="text-xs text-blue-700 bg-blue-100 rounded px-2 py-1 inline-block">
-                    💡 ALIA Opportunity: MS4 compliance monitoring addresses stormwater runoff at source before reaching Potomac
+                    💡 PIN Opportunity: MS4 compliance monitoring addresses stormwater runoff at source before reaching Potomac
                   </div>
                 </div>
               </div>
@@ -608,7 +608,7 @@ export function MarylandStateView({ selectedState }: MarylandStateViewProps) {
 
           <div className="mt-4 bg-blue-50 border border-blue-200 rounded p-4">
             <div className="text-sm text-blue-900">
-              <span className="font-semibold">🎯 Strategic Context:</span> Each of these challenges requires better monitoring and faster response. ALIA's continuous real-time data provides MDE with the intelligence infrastructure to detect, track, and respond to water quality emergencies more effectively than current grab sampling approaches. Maryland's environmental challenges are accelerating - the monitoring systems need to accelerate too.
+              <span className="font-semibold">🎯 Strategic Context:</span> Each of these challenges requires better monitoring and faster response. PIN's continuous real-time data provides MDE with the intelligence infrastructure to detect, track, and respond to water quality emergencies more effectively than current grab sampling approaches. Maryland's environmental challenges are accelerating - the monitoring systems need to accelerate too.
             </div>
           </div>
         </CardContent>

@@ -51,12 +51,12 @@ export default function WatershedPicker({ onSelect }: WatershedPickerProps) {
           ))}
         </div>
 
-        {/* How ALIA Works expandable */}
+        {/* How PIN Works expandable */}
         <button
           onClick={() => setTechOpen(o => !o)}
           className="text-[11px] text-sky-600 hover:text-emerald-400 transition-colors tracking-wide uppercase font-mono"
         >
-          How ALIA Works {techOpen ? "\u25B4" : "\u25BE"}
+          How PIN Works {techOpen ? "\u25B4" : "\u25BE"}
         </button>
         {techOpen && (
           <div className="mt-3 max-w-[640px] mx-auto text-left grid grid-cols-1 sm:grid-cols-3 gap-3">

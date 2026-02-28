@@ -70,7 +70,7 @@ const DATA_FEEDS = [
   { name: 'Water Quality Portal', desc: 'Multi-agency monitoring results', icon: Search, color: 'from-violet-600 to-purple-800' },
   { name: 'NOAA CO-OPS', desc: 'Tidal & oceanographic observations', icon: Waves, color: 'from-cyan-600 to-sky-800' },
   { name: 'EJScreen', desc: 'Environmental justice mapping overlays', icon: ShieldCheck, color: 'from-amber-600 to-orange-800' },
-  { name: 'ALIA Sensors (In Development)', desc: 'Proprietary continuous monitoring network — hardware integration in progress', icon: Zap, color: 'from-rose-600 to-red-800' },
+  { name: 'PIN Sensors (In Development)', desc: 'Proprietary continuous monitoring network — hardware integration in progress', icon: Zap, color: 'from-rose-600 to-red-800' },
 ];
 
 const STAKEHOLDER_TRACKS = [
@@ -108,7 +108,7 @@ const STAKEHOLDER_TRACKS = [
     headline: 'Continuous high-frequency data for real science',
     points: [
       '15-minute interval sensor data with QAPP-grade QA/QC',
-      'Multi-source data fusion: USGS + WQP + ALIA sensors',
+      'Multi-source data fusion: USGS + WQP + PIN sensors',
       'Bulk export, API access, and citation-ready formats',
       'Manuscript collaboration tools and DOI registration',
     ],
@@ -144,7 +144,7 @@ const STAKEHOLDER_TRACKS = [
 const DIFFERENTIATORS = [
   {
     icon: Beaker,
-    title: 'ALIA Treatment Platform',
+    title: 'PIN Treatment Platform',
     desc: 'Modular, deployable water treatment powered by oyster biofiltration and engineered media. 88-95% TSS removal, 93.8% bacteria reduction \u2014 field validated.',
   },
   {
@@ -170,7 +170,7 @@ const DIFFERENTIATORS = [
   {
     icon: Shield,
     title: 'Closed-Loop Verification',
-    desc: 'PIN detects the problem, ALIA treats it, AQUA-Lo validates the results, PIN documents the outcome. Detection to resolution in a single platform.',
+    desc: 'PIN detects the problem, PIN treats it, AQUA-Lo validates the results, PIN documents the outcome. Detection to resolution in a single platform.',
   },
 ];
 
@@ -255,7 +255,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
         <div className="max-w-4xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-8">
             <h2 className="text-3xl sm:text-4xl font-bold text-white leading-tight" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-              What if PEARL ALIA had been there?
+              What if PIN had been there?
             </h2>
             <p className="mt-3 text-base sm:text-lg text-slate-400 italic">Aquatic Life Improvement Accelerator</p>
           </div>
@@ -264,7 +264,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
           </p>
           <div className="rounded-2xl border border-cyan-500/30 bg-gradient-to-br from-cyan-950/60 to-slate-800/60 p-8 backdrop-blur-sm">
             <p className="text-lg sm:text-xl text-white font-semibold leading-relaxed text-center">
-              In our first pilot, PEARL ALIA achieved <span className="text-cyan-400">93.8% E. coli reduction</span> and <span className="text-cyan-400">90-95% TSS removal</span> &mdash; without even targeting bacteria. Imagine that technology deployed at every overflow point.
+              In our first pilot, PIN achieved <span className="text-cyan-400">93.8% E. coli reduction</span> and <span className="text-cyan-400">90-95% TSS removal</span> &mdash; without even targeting bacteria. Imagine that technology deployed at every overflow point.
             </p>
           </div>
           <div className="mt-10 text-center">
@@ -374,13 +374,13 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center mb-20">
             <div>
-              <p className="text-xs font-bold tracking-[0.2em] uppercase text-slate-400 mb-3">The ALIA Difference</p>
+              <p className="text-xs font-bold tracking-[0.2em] uppercase text-slate-400 mb-3">The PIN Difference</p>
               <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-6" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
                 Not another dashboard.<br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-blue-600">A new category of water intelligence.</span>
               </h2>
               <p className="text-slate-600 leading-relaxed mb-8">
-                Every ALIA unit is a modular treatment platform and high-frequency data node with 8 monitoring points. Paired with AQUA-Lo, our laboratory information management system, every sample is tracked from intake to audit-ready report &mdash; transforming environmental restoration into verified, actionable intelligence.
+                Every PIN unit is a modular treatment platform and high-frequency data node with 8 monitoring points. Paired with AQUA-Lo, our laboratory information management system, every sample is tracked from intake to audit-ready report &mdash; transforming environmental restoration into verified, actionable intelligence.
               </p>
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center p-4 rounded-xl bg-slate-50">
@@ -398,7 +398,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
               </div>
             </div>
             <div className="relative">
-              <Image src="/pearl-barge.jpg" alt="ALIA modular treatment barge" width={700} height={400} className="rounded-2xl shadow-2xl" />
+              <Image src="/pearl-barge.jpg" alt="PIN modular treatment barge" width={700} height={400} className="rounded-2xl shadow-2xl" />
               <div className="absolute -bottom-4 -right-4 bg-white rounded-xl shadow-lg border border-slate-200 px-4 py-3 hidden sm:block">
                 <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Field Validated</div>
                 <div className="text-sm font-bold text-slate-900">Milton, FL &mdash; Jan 2026</div>
@@ -492,7 +492,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
               { icon: GraduationCap, name: 'K-12', desc: 'NGSS-aligned lessons with real sensor data', accent: 'bg-amber-50 border-amber-200 text-amber-700' },
               { icon: HardHat, name: 'Infrastructure', desc: 'Asset monitoring and capacity planning', accent: 'bg-orange-50 border-orange-200 text-orange-700' },
               { icon: FlaskConical, name: 'AQUA-Lo LIMS', desc: 'Lab management from intake to audit-ready report', accent: 'bg-pink-50 border-pink-200 text-pink-700' },
-              { icon: Beaker, name: 'PEARL ALIA', desc: 'Treatment hardware monitoring and verification', accent: 'bg-rose-50 border-rose-200 text-rose-700' },
+              { icon: Beaker, name: 'PIN Treatment', desc: 'Treatment hardware monitoring and verification', accent: 'bg-rose-50 border-rose-200 text-rose-700' },
               { icon: Settings, name: 'Admin Center', desc: 'User management, permissions, and system config', accent: 'bg-slate-50 border-slate-300 text-slate-700' },
             ].map((center) => {
               const Icon = center.icon;
@@ -523,7 +523,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
             Partnership &amp; Discovery
           </h2>
           <p className="text-slate-300 leading-relaxed max-w-xl mx-auto text-[15px]">
-            Project PEARL is more than a technology &mdash; it is a platform for collaboration. We are seeking scientific partners, research institutions, and foundational investors to help scale our impact and unlock the next wave of discoveries in marine restoration.
+            Project PIN is more than a technology &mdash; it is a platform for collaboration. We are seeking scientific partners, research institutions, and foundational investors to help scale our impact and unlock the next wave of discoveries in marine restoration.
           </p>
         </div>
       </section>
@@ -536,7 +536,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
           </h2>
           <p className="text-lg text-slate-600 mb-10 max-w-xl mx-auto">
             Whether you manage stormwater permits, regulate a state&#39;s waters, or research
-            aquatic ecosystems &mdash; PEARL puts actionable intelligence at your fingertips.
+            aquatic ecosystems &mdash; PIN puts actionable intelligence at your fingertips.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <button onClick={onSignIn} className="group inline-flex items-center gap-3 px-8 py-4 text-base font-semibold text-white bg-slate-900 rounded-full hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/20">
@@ -555,10 +555,10 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
           <div className="grid md:grid-cols-5 gap-12">
             <div className="md:col-span-2">
               <div className="flex items-center gap-4 mb-4">
-                <Image src="/Pearl-Intelligence-Network.png" alt="PEARL Intelligence Network" width={200} height={100} className="object-contain rounded-lg opacity-90" />
+                <Image src="/Pearl-Intelligence-Network.png" alt="PIN — PEARL Intelligence Network" width={200} height={100} className="object-contain rounded-lg opacity-90" />
               </div>
               <p className="text-sm text-slate-500 leading-relaxed max-w-sm mb-4">
-                PEARL Intelligence Network (PIN) &mdash; Proactive Engineering for Aquatic Rehabilitation &amp; Legacy.
+                PIN (PEARL Intelligence Network) &mdash; Proactive Engineering for Aquatic Rehabilitation &amp; Legacy.
               </p>
               <div className="flex items-center gap-2 mt-2">
                 <LivePulse />
@@ -595,7 +595,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
             </div>
           </div>
           <div className="mt-12 pt-8 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-xs text-slate-600">&copy; {new Date().getFullYear()} PEARL. All rights reserved.</p>
+            <p className="text-xs text-slate-600">&copy; {new Date().getFullYear()} PIN. All rights reserved.</p>
             <p className="text-xs text-slate-600">Patent Pending &middot; Built in Maryland</p>
           </div>
         </div>

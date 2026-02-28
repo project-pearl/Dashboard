@@ -103,7 +103,7 @@ function K12ImpactCard({ removalEfficiencies, daysRunning, gallonsTreated, oyste
     <Card className="border-2 border-cyan-400 bg-gradient-to-br from-cyan-50 via-blue-50 to-white shadow-lg">
       <CardHeader>
         <CardTitle className="text-xl flex items-center gap-2">
-          🌊 What Has ALIA Cleaned? 
+          🌊 What Has PIN Cleaned?
         </CardTitle>
         <CardDescription>Real water quality impact — made simple!</CardDescription>
       </CardHeader>
@@ -136,7 +136,7 @@ function K12ImpactCard({ removalEfficiencies, daysRunning, gallonsTreated, oyste
         </div>
         <div className="bg-cyan-100 border border-cyan-300 rounded-lg p-3 text-center">
           <p className="text-sm text-cyan-900 font-medium">
-            🌍 ALIA removes dirt, chemicals, and pollution from stormwater before it reaches the Chesapeake Bay watershed — protecting fish, crabs, and the whole ecosystem!
+            🌍 PIN removes dirt, chemicals, and pollution from stormwater before it reaches the Chesapeake Bay watershed — protecting fish, crabs, and the whole ecosystem!
           </p>
         </div>
       </CardContent>
@@ -294,7 +294,7 @@ export function BayImpactCounter({ removalEfficiencies, regionId, userRole }: Ba
         </div>
 
         <p className="text-xs text-blue-500 text-center">
-          Based on ALIA Milton pilot data (Jan 2025). Flow rate and concentrations are representative estimates for demonstration. Chesapeake Bay Watershed states: MD, VA, PA, WV, DE, NY, DC.
+          Based on PIN Milton pilot data (Jan 2025). Flow rate and concentrations are representative estimates for demonstration. Chesapeake Bay Watershed states: MD, VA, PA, WV, DE, NY, DC.
         </p>
       </CardContent>
     </Card>

@@ -215,6 +215,11 @@ const NAV_GROUPS: NavGroup[] = [
     title: 'Tools',
     items: [
       { label: 'Water Tools', href: '/tools/water-quality-lookup', icon: Search, accent: 'text-sky-700', accentBg: 'bg-sky-50 border-sky-200' },
+      { label: 'Data Export Hub', href: '/tools/data-export', icon: Download, accent: 'text-blue-700', accentBg: 'bg-blue-50 border-blue-200' },
+      { label: 'Report Builder', href: '/tools/reports', icon: FileText, accent: 'text-slate-700', accentBg: 'bg-slate-100 border-slate-300' },
+      { label: 'Templates', href: '/tools/templates', icon: ClipboardList, accent: 'text-amber-700', accentBg: 'bg-amber-50 border-amber-200' },
+      { label: 'API Docs', href: '/tools/api', icon: BookOpen, accent: 'text-indigo-700', accentBg: 'bg-indigo-50 border-indigo-200' },
+      { label: 'Methodology', href: '/tools/methodology', icon: Beaker, accent: 'text-teal-700', accentBg: 'bg-teal-50 border-teal-200' },
     ],
   },
 ];
@@ -404,9 +409,9 @@ export function DashboardSidebar() {
       {/* Logo */}
       <div className="p-4 flex items-center justify-center border-b border-slate-200 dark:border-[rgba(58,189,176,0.12)]">
         {collapsed ? (
-          <Image src="/Pearl-Logo-alt.png" alt="PEARL" width={32} height={32} className="rounded-lg flex-shrink-0" />
+          <Image src="/Pearl-Logo-alt.png" alt="PIN" width={32} height={32} className="rounded-lg flex-shrink-0" />
         ) : (
-          <Image src="/Logo_Pearl_as_Headline.JPG" alt="PEARL" width={180} height={40} className="object-contain" />
+          <Image src="/Logo_Pearl_as_Headline.JPG" alt="PIN" width={180} height={40} className="object-contain" />
         )}
       </div>
 

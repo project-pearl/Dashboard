@@ -4,7 +4,7 @@ import React, { useState, useMemo } from "react";
 import {
   MODULES, MODULE_CATS, CAT_COLORS, NGOS, EVENTS,
   CK, CONTAMINANT_LABELS, CONTAMINANT_COLORS,
-  OPEX_TEAM_YEAR, ALIA_PER_TEAM,
+  OPEX_TEAM_YEAR, PIN_PER_TEAM,
   CLIMATE_PROJECTIONS,
   fmt, fmtN, runCalc, runClimateCalc, applyClimateForcing,
   type Watershed, type TreatmentModule, type NGO, type CommunityEvent,
@@ -319,7 +319,7 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
   const ngoValue = NGOS.filter(n => ngoSel.has(n.id)).reduce((s, n) => s + n.value, 0);
   const evtCostYr = EVENTS.filter(e => evtSel.has(e.id)).reduce((s, e) => s + e.cost, 0);
   const aliaCount = selModules.filter(m => m.hasOpex).reduce((s, m) => s + getU(m.id), 0);
-  const estOpexYr = aliaCount > 0 ? Math.max(1, Math.ceil(aliaCount / ALIA_PER_TEAM)) * OPEX_TEAM_YEAR : 0;
+  const estOpexYr = aliaCount > 0 ? Math.max(1, Math.ceil(aliaCount / PIN_PER_TEAM)) * OPEX_TEAM_YEAR : 0;
   const estOpexTotal = estOpexYr * tl;
 
   return (
@@ -747,10 +747,10 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
             {aliaCount > 0 && (
               <>
                 <div className="text-[9px] text-slate-400 uppercase tracking-wider font-mono mb-1.5">
-                  OpEx &mdash; ALIA Operating
+                  OpEx &mdash; PIN Operating
                 </div>
-                <LedgerLine label="ALIA Units" value={String(aliaCount)} />
-                <LedgerLine label="Teams Needed" value={`${Math.ceil(aliaCount / ALIA_PER_TEAM)} \u00D7 $200K`} />
+                <LedgerLine label="PIN Units" value={String(aliaCount)} />
+                <LedgerLine label="Teams Needed" value={`${Math.ceil(aliaCount / PIN_PER_TEAM)} \u00D7 $200K`} />
                 <LedgerLine label="Annual OpEx" value={fmt(estOpexYr)} color="#e65100" />
                 <LedgerLine label={`${tl}-yr OpEx Total`} value={fmt(estOpexTotal)} color="#e65100" bold />
                 <div className="border-t-2 border-slate-200 my-2.5" />

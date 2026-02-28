@@ -56,7 +56,7 @@ export function ROISavingsCalculator({ stormEventsMonitored, regionId }: ROISavi
   // Medium MS4 (4-6 sites): $75K/year  
   // Large City (8-12+ sites): $150K/year - Baltimore Middle Branch deployment
   // Updated: 2026-02-13 for Baltimore Large tier
-  const annualDataSubscription = 150000; // Large MS4 tier: $150K/year (12 ALIA units at Middle Branch + other outfalls)
+  const annualDataSubscription = 150000; // Large MS4 tier: $150K/year (12 PIN units at Middle Branch + other outfalls)
   const annualMaintenanceCost = 0; // No hardware maintenance in data-only model
   
   // Net savings = Cost avoided - PEARL subscription
@@ -71,7 +71,7 @@ export function ROISavingsCalculator({ stormEventsMonitored, regionId }: ROISavi
           Data Intelligence ROI Calculator
         </CardTitle>
         <CardDescription>
-          Cost savings from ALIA's automated compliance reporting vs. traditional manual sampling and consultant fees (hardware costs excluded)
+          Cost savings from PIN's automated compliance reporting vs. traditional manual sampling and consultant fees (hardware costs excluded)
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -129,9 +129,9 @@ export function ROISavingsCalculator({ stormEventsMonitored, regionId }: ROISavi
           </div>
         </div>
 
-        {/* ALIA Pricing Tiers */}
+        {/* PIN Pricing Tiers */}
         <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-lg p-4">
-          <h4 className="font-semibold text-sm text-blue-900 mb-3">ALIA Pricing Tiers</h4>
+          <h4 className="font-semibold text-sm text-blue-900 mb-3">PIN Pricing Tiers</h4>
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs bg-white rounded p-2 border border-blue-100">
               <div>
@@ -156,7 +156,7 @@ export function ROISavingsCalculator({ stormEventsMonitored, regionId }: ROISavi
             </div>
           </div>
           <div className="text-xs text-blue-700 mt-3 leading-relaxed">
-            💡 <span className="font-semibold">Still 52% savings</span> vs current monitoring + consulting costs. Baltimore City (12 ALIA units at Middle Branch) pays $150K Large tier and saves $163K/year.
+            💡 <span className="font-semibold">Still 52% savings</span> vs current monitoring + consulting costs. Baltimore City (12 PIN units at Middle Branch) pays $150K Large tier and saves $163K/year.
           </div>
         </div>
 
@@ -205,7 +205,7 @@ export function ROISavingsCalculator({ stormEventsMonitored, regionId }: ROISavi
               <span className="font-bold text-green-600">${(totalAnnualSavings / 1000).toFixed(0)}K</span>
             </div>
             <div className="flex justify-between text-xs text-slate-500">
-              <span>ALIA data subscription cost:</span>
+              <span>PIN data subscription cost:</span>
               <span>-${(annualDataSubscription / 1000).toFixed(1)}K/year</span>
             </div>
             <div className="flex justify-between text-sm font-bold pt-1">
@@ -216,12 +216,12 @@ export function ROISavingsCalculator({ stormEventsMonitored, regionId }: ROISavi
         </div>
 
         <p className="text-xs text-slate-600 pt-2 border-t leading-relaxed">
-          <span className="font-semibold">Data Intelligence ROI (MDE Approval Required):</span> These savings assume MDE accepts PEARL's continuous real-time data as an equal substitute for required representative sampling under MS4 permits. Based on <span className="font-semibold">actual Baltimore City costs</span>: $124K pooled monitoring + $128K for {totalAnnualSamples} sample sets + ${(totalConsultingSavings / 1000).toFixed(1)}K consulting + ${(staffTimeSavings / 1000).toFixed(1)}K staff time = <span className="font-semibold text-green-700">${(totalAnnualSavings / 1000).toFixed(0)}K total avoided costs</span>. PEARL Large tier (${(annualDataSubscription / 1000).toFixed(0)}K/year) covers 12 ALIA units at Middle Branch plus expansion to other outfalls. <span className="font-semibold text-teal-700">Net savings: ${(netAnnualSavings / 1000).toFixed(0)}K/year ({Math.round((netAnnualSavings / totalAnnualSavings) * 100)}% savings).</span> Hardware costs not included.
+          <span className="font-semibold">Data Intelligence ROI (MDE Approval Required):</span> These savings assume MDE accepts PEARL's continuous real-time data as an equal substitute for required representative sampling under MS4 permits. Based on <span className="font-semibold">actual Baltimore City costs</span>: $124K pooled monitoring + $128K for {totalAnnualSamples} sample sets + ${(totalConsultingSavings / 1000).toFixed(1)}K consulting + ${(staffTimeSavings / 1000).toFixed(1)}K staff time = <span className="font-semibold text-green-700">${(totalAnnualSavings / 1000).toFixed(0)}K total avoided costs</span>. PEARL Large tier (${(annualDataSubscription / 1000).toFixed(0)}K/year) covers 12 PIN units at Middle Branch plus expansion to other outfalls. <span className="font-semibold text-teal-700">Net savings: ${(netAnnualSavings / 1000).toFixed(0)}K/year ({Math.round((netAnnualSavings / totalAnnualSavings) * 100)}% savings).</span> Hardware costs not included.
         </p>
         
         <div className="mt-3 bg-amber-50 border border-amber-200 rounded p-2">
           <p className="text-xs text-amber-900 leading-relaxed">
-            <span className="font-semibold">⚠️ Critical Assumption:</span> Savings are realized only if MDE formally accepts ALIA's continuous data as compliant with permit sampling requirements. Some periodic confirmatory sampling may still be required for sensor validation. Does not include capital restoration costs (the largest MS4 budget item).
+            <span className="font-semibold">⚠️ Critical Assumption:</span> Savings are realized only if MDE formally accepts PIN's continuous data as compliant with permit sampling requirements. Some periodic confirmatory sampling may still be required for sensor validation. Does not include capital restoration costs (the largest MS4 budget item).
           </p>
         </div>
       </CardContent>

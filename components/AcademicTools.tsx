@@ -34,7 +34,7 @@ const LEARNING_PATHS: LearningModule[] = [
     level: 'Intro',
     duration: '2 hours',
     topics: ['pH & dissolved oxygen', 'TSS & turbidity', 'Nutrient loading (N & P)', 'Fecal indicator bacteria'],
-    pearlIntegration: 'Explore live ALIA sensor data for each parameter',
+    pearlIntegration: 'Explore live PIN sensor data for each parameter',
   },
   {
     id: 'epa-methods',
@@ -42,7 +42,7 @@ const LEARNING_PATHS: LearningModule[] = [
     level: 'Intermediate',
     duration: '3 hours',
     topics: ['SM 2540D (TSS)', 'EPA 353.2 (TN)', 'EPA 365.1 (TP)', 'EPA 1603 (E. coli)', 'QA/QC protocols', 'Method detection limits'],
-    pearlIntegration: 'Compare your lab results against ALIA continuous monitoring',
+    pearlIntegration: 'Compare your lab results against PIN continuous monitoring',
   },
   {
     id: 'attains-nav',
@@ -58,7 +58,7 @@ const LEARNING_PATHS: LearningModule[] = [
     level: 'Intermediate',
     duration: '4 hours',
     topics: ['Normality testing for WQ data', 'Mann-Kendall trend detection', 'Seasonal decomposition', 'Regression modeling for pollutant loading'],
-    pearlIntegration: 'Export ALIA datasets to R/Python for hands-on analysis',
+    pearlIntegration: 'Export PIN datasets to R/Python for hands-on analysis',
   },
   {
     id: 'biofiltration',
@@ -66,7 +66,7 @@ const LEARNING_PATHS: LearningModule[] = [
     level: 'Advanced',
     duration: '3 hours',
     topics: ['Crassostrea virginica filtration rates', 'Biofilm ecology', 'Nitrogen assimilation pathways', 'Reef ecosystem services'],
-    pearlIntegration: 'Review ALIA pilot data from Milton, FL (88-95% TSS removal)',
+    pearlIntegration: 'Review PIN pilot data from Milton, FL (88-95% TSS removal)',
   },
   {
     id: 'stormwater',
@@ -74,7 +74,7 @@ const LEARNING_PATHS: LearningModule[] = [
     level: 'Advanced',
     duration: '4 hours',
     topics: ['NPDES permit structure', 'BMP types & effectiveness', 'Impervious surface calculations', 'Green infrastructure design'],
-    pearlIntegration: 'Model ALIA deployment scenarios using the ROI calculator',
+    pearlIntegration: 'Model PIN deployment scenarios using the ROI calculator',
   },
 ];
 
@@ -85,7 +85,7 @@ const LAB_TEMPLATES = [
   { id: 'wq-analysis', title: 'Water Quality Analysis', desc: 'Parameter results, QA/QC flags, method references, data tables', format: 'DOCX / LaTeX' },
   { id: 'bioassay', title: 'Bioassay / Toxicity Report', desc: 'Test organisms, exposure design, LC50/EC50, statistical analysis', format: 'DOCX / LaTeX' },
   { id: 'sensor-cal', title: 'Sensor Calibration Log', desc: 'Pre/post calibration, drift correction, sensor maintenance record', format: 'CSV / PDF' },
-  { id: 'poster', title: 'Research Poster Template', desc: 'Conference poster with PEARL branding, data viz slots, citation blocks', format: 'PPTX / Figma' },
+  { id: 'poster', title: 'Research Poster Template', desc: 'Conference poster with PIN branding, data viz slots, citation blocks', format: 'PPTX / Figma' },
 ];
 
 // ─── Component ─────────────────────────────────────────────────────────────
@@ -162,7 +162,7 @@ export function AcademicTools({ userRole, regionId, stateAbbr }: Props) {
                   </div>
                   {mod.pearlIntegration && (
                     <div className="text-[10px] text-emerald-700 bg-emerald-50 rounded p-1.5 mt-1">
-                      🦪 <strong>ALIA Integration:</strong> {mod.pearlIntegration}
+                      🦪 <strong>PIN Integration:</strong> {mod.pearlIntegration}
                     </div>
                   )}
                 </div>
@@ -200,7 +200,7 @@ export function AcademicTools({ userRole, regionId, stateAbbr }: Props) {
         <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
           <div className="text-xs font-semibold text-indigo-800 mb-1">🏫 Teaching Integration</div>
           <p className="text-[10px] text-indigo-700 leading-relaxed">
-            Assign ALIA datasets to student groups, create custom assessment rubrics tied to waterbody data,
+            Assign PIN datasets to student groups, create custom assessment rubrics tied to waterbody data,
             and track student progress through learning modules. Export classroom-ready CSV subsets with metadata.
           </p>
         </div>

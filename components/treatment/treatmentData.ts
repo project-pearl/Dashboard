@@ -68,7 +68,7 @@ export interface TreatmentModule {
 export type ModuleCategory =
   | "Infrastructure"
   | "Interception"
-  | "PEARL ALIA"
+  | "PIN"
   | "Biological"
   | "Mechanical"
   | "Chemical"
@@ -150,7 +150,7 @@ export const CLIMATE_PROJECTIONS: Record<Exclude<RcpScenario, "baseline">, Recor
 export interface CalcResult {
   active: (TreatmentModule & { units: number; totalCost: number })[];
   capex: number;
-  aliaUnits: number;
+  pinUnits: number;
   teams: number;
   annualOpex: number;
   totalOpex: number;
@@ -169,7 +169,7 @@ export interface CalcResult {
 /* ─── CONSTANTS ─────────────────────────────────────────────────────────── */
 
 export const OPEX_TEAM_YEAR = 200_000;
-export const ALIA_PER_TEAM = 12;
+export const PIN_PER_TEAM = 12;
 
 export const CK: ContaminantKey[] = ["tss", "bac", "nit", "pho", "pfas", "trash"];
 
@@ -271,13 +271,13 @@ export const MODULES: TreatmentModule[] = [
   // Interception
   { id: "trash_wheel", cat: "Interception", name: "Trash Wheel Interceptor",  icon: "\u2638\ufe0f", costPer: 300000, defUnits: 2,  gpm: 0,   salMax: 99, mo: 3,  doBoost: 0,    tss: 5,  bac: 0,  nit: 0,  pho: 0,  pfas: 0,  trash: 90, isBMP: true,  desc: "Solar/hydro powered. Removes floatables at CSO outfalls.", pillars: ['SW','SurfW'], sizeRange: ['M','XL'], climateVulnerability: "moderate", climateDegradation: { trash: 0.85 } },
   { id: "skimmer",     cat: "Interception", name: "Surface Skimmer",          icon: "\ud83d\udd04", costPer: 28000, defUnits: 3,  gpm: 0,   salMax: 99, mo: 1,  doBoost: 0,    tss: 3,  bac: 0,  nit: 0,  pho: 0,  pfas: 0,  trash: 65, isBMP: true,  desc: "Floating debris/oil removal. Rapid deploy. Pairs with trash wheel.", pillars: ['SW','SurfW'], sizeRange: ['S','XL'] },
-  { id: "screen",      cat: "Interception", name: "Mechanical Screening",     icon: "\u2699\ufe0f", costPer: 48000, defUnits: 2,  gpm: 250, salMax: 99, mo: 2,  doBoost: 0,    tss: 65, bac: 15, nit: 5,  pho: 8,  pfas: 0,  trash: 80, isBMP: true,  desc: "250 GPM/unit. Rapid solids & trash removal upstream of ALIA.", pillars: ['SW','SurfW','WW'], sizeRange: ['M','XL'], climateVulnerability: "moderate", climateDegradation: { tss: 0.90, trash: 0.88 } },
-  // PEARL ALIA
-  { id: "alia_50",     cat: "PEARL ALIA",   name: "ALIA 50 GPM \u2014 Base Unit", icon: "\ud83e\uddea", costPer: 100000, defUnits: 8,  gpm: 50,  salMax: 25, mo: 4,  doBoost: 0.15, tss: 92, bac: 94, nit: 35, pho: 28, pfas: 0,  trash: 0,  isBMP: false, pilotNote: "MDE BMP certification pending \u2014 deploy as monitored pilot.", hasOpex: true, pillars: ['SW','SurfW','WW'], sizeRange: ['S','XL'] },
-  { id: "alia_pfas",   cat: "PEARL ALIA",   name: "  + PFAS Adsorption Kit", icon: "\ud83d\udd27", costPer: 30000, defUnits: 8,  gpm: 0,   salMax: 25, mo: 0,  doBoost: 0,    tss: 0,  bac: 0,  nit: 0,  pho: 0,  pfas: 65, trash: 0,  isBMP: false, isAddon: true, desc: "Functionalized resin media per ALIA unit. PFAS adsorption.", pillars: ['SW','SurfW','DW'], sizeRange: ['S','XL'] },
-  { id: "alia_uv",     cat: "PEARL ALIA",   name: "  + UV Disinfection Kit", icon: "\u2600\ufe0f", costPer: 10000, defUnits: 8,  gpm: 0,   salMax: 25, mo: 0,  doBoost: 0,    tss: 0,  bac: 15, nit: 0,  pho: 0,  pfas: 0,  trash: 0,  isBMP: false, isAddon: true, desc: "Add-on UV module per unit. Boosts bac kill to 99%+.", pillars: ['SW','SurfW','WW'], sizeRange: ['S','XL'] },
-  { id: "alia_ozone",  cat: "PEARL ALIA",   name: "  + Ozone Kit",           icon: "\u26a1", costPer: 20000, defUnits: 4,  gpm: 0,   salMax: 25, mo: 0,  doBoost: 0.3,  tss: 0,  bac: 10, nit: 5,  pho: 0,  pfas: 12, trash: 0,  isBMP: false, isAddon: true, desc: "Ozone add-on. DO boost + pathogen polish + partial PFAS oxidation.", pillars: ['SW','SurfW','WW'], sizeRange: ['S','XL'] },
-  { id: "alia_25",    cat: "PEARL ALIA",   name: "ALIA 25 GPM \u2014 Standard", icon: "\ud83e\uddea", costPer: 125000, defUnits: 6,  gpm: 25,  salMax: 25, mo: 3,  doBoost: 0.10, tss: 92, bac: 93, nit: 34, pho: 27, pfas: 0,  trash: 0,  isBMP: false, hasOpex: true, pilotNote: "Standard unit \u2014 mid-scale distributed treatment.", desc: "25 GPM ALIA for medium outfalls and tributary treatment networks.", pillars: ['SW','SurfW','WW'], sizeRange: ['S','L'] },
+  { id: "screen",      cat: "Interception", name: "Mechanical Screening",     icon: "\u2699\ufe0f", costPer: 48000, defUnits: 2,  gpm: 250, salMax: 99, mo: 2,  doBoost: 0,    tss: 65, bac: 15, nit: 5,  pho: 8,  pfas: 0,  trash: 80, isBMP: true,  desc: "250 GPM/unit. Rapid solids & trash removal upstream of PIN.", pillars: ['SW','SurfW','WW'], sizeRange: ['M','XL'], climateVulnerability: "moderate", climateDegradation: { tss: 0.90, trash: 0.88 } },
+  // PIN
+  { id: "alia_50",     cat: "PIN",   name: "PIN 50 GPM \u2014 Base Unit", icon: "\ud83e\uddea", costPer: 100000, defUnits: 8,  gpm: 50,  salMax: 25, mo: 4,  doBoost: 0.15, tss: 92, bac: 94, nit: 35, pho: 28, pfas: 0,  trash: 0,  isBMP: false, pilotNote: "MDE BMP certification pending \u2014 deploy as monitored pilot.", hasOpex: true, pillars: ['SW','SurfW','WW'], sizeRange: ['S','XL'] },
+  { id: "alia_pfas",   cat: "PIN",   name: "  + PFAS Adsorption Kit", icon: "\ud83d\udd27", costPer: 30000, defUnits: 8,  gpm: 0,   salMax: 25, mo: 0,  doBoost: 0,    tss: 0,  bac: 0,  nit: 0,  pho: 0,  pfas: 65, trash: 0,  isBMP: false, isAddon: true, desc: "Functionalized resin media per PIN unit. PFAS adsorption.", pillars: ['SW','SurfW','DW'], sizeRange: ['S','XL'] },
+  { id: "alia_uv",     cat: "PIN",   name: "  + UV Disinfection Kit", icon: "\u2600\ufe0f", costPer: 10000, defUnits: 8,  gpm: 0,   salMax: 25, mo: 0,  doBoost: 0,    tss: 0,  bac: 15, nit: 0,  pho: 0,  pfas: 0,  trash: 0,  isBMP: false, isAddon: true, desc: "Add-on UV module per unit. Boosts bac kill to 99%+.", pillars: ['SW','SurfW','WW'], sizeRange: ['S','XL'] },
+  { id: "alia_ozone",  cat: "PIN",   name: "  + Ozone Kit",           icon: "\u26a1", costPer: 20000, defUnits: 4,  gpm: 0,   salMax: 25, mo: 0,  doBoost: 0.3,  tss: 0,  bac: 10, nit: 5,  pho: 0,  pfas: 12, trash: 0,  isBMP: false, isAddon: true, desc: "Ozone add-on. DO boost + pathogen polish + partial PFAS oxidation.", pillars: ['SW','SurfW','WW'], sizeRange: ['S','XL'] },
+  { id: "alia_25",    cat: "PIN",   name: "PIN 25 GPM \u2014 Standard", icon: "\ud83e\uddea", costPer: 125000, defUnits: 6,  gpm: 25,  salMax: 25, mo: 3,  doBoost: 0.10, tss: 92, bac: 93, nit: 34, pho: 27, pfas: 0,  trash: 0,  isBMP: false, hasOpex: true, pilotNote: "Standard unit \u2014 mid-scale distributed treatment.", desc: "25 GPM PIN for medium outfalls and tributary treatment networks.", pillars: ['SW','SurfW','WW'], sizeRange: ['S','L'] },
   // Biological
   { id: "wetland",     cat: "Biological",   name: "Constructed Wetland",      icon: "\ud83c\udf3f", costPer: 175000, defUnits: 2, gpm: 200, salMax: 8,  mo: 14, doBoost: 0.4,  tss: 75, bac: 65, nit: 55, pho: 60, pfas: 0,  trash: 10, isBMP: true,  desc: "200 GPM/cell (~2ac). Habitat + nutrient polish.", pillars: ['SW','SurfW'], sizeRange: ['M','XL'], climateVulnerability: "high", climateDegradation: { tss: 0.75, bac: 0.78, nit: 0.70, pho: 0.72 } },
   { id: "ats",         cat: "Biological",   name: "Algal Turf Scrubber",      icon: "\ud83d\udfe2", costPer: 55000,  defUnits: 3, gpm: 100, salMax: 15, mo: 6,  doBoost: 0.3,  tss: 40, bac: 20, nit: 65, pho: 70, pfas: 0,  trash: 0,  isBMP: true,  desc: "100 GPM/unit. Nutrient capture \u2192 harvestable biomass/fertilizer.", pillars: ['SW','SurfW'], sizeRange: ['S','L'], climateVulnerability: "high", climateDegradation: { nit: 0.72, pho: 0.70 } },
@@ -308,19 +308,19 @@ export const MODULES: TreatmentModule[] = [
   // New modules
   { id: "basalt_reef", cat: "Biological",   name: "Basalt Enhanced Oyster Reef", icon: "\ud83e\uddea", costPer: 85000, defUnits: 2, gpm: 0,  salMax: 25, mo: 12, doBoost: 0.3,  tss: 20, bac: 0,  nit: 35, pho: 40, pfas: 0,  trash: 0,  isBMP: false, trl: 5, experimental: true, pilotNote: "TRL 5 \u2014 experimental basalt substrate reef.", desc: "Basalt aggregate oyster reef. Nutrient uptake via biological filtration + mineral weathering.", pillars: ['SurfW','SW'], sizeRange: ['M','XL'], climateVulnerability: "high", climateDegradation: { nit: 0.70, pho: 0.68 } },
   { id: "biochar_socks", cat: "Emerging",   name: "Biochar Filter Socks",       icon: "\ud83e\uddf6", costPer: 4500,  defUnits: 6, gpm: 15, salMax: 99, mo: 1,  doBoost: 0,    tss: 55, bac: 0,  nit: 20, pho: 35, pfas: 25, trash: 0,  isBMP: false, trl: 6, experimental: true, pilotNote: "TRL 6 \u2014 field-tested biochar media socks.", desc: "Deployable biochar filter socks for rapid stormwater interception. Low cost, high TSS/phos capture.", pillars: ['SW','SurfW','GW'], sizeRange: ['XS','M'] },
-  { id: "alia_5",     cat: "PEARL ALIA",   name: "ALIA 5 GPM \u2014 Compact",  icon: "\ud83d\udd2c", costPer: 50000, defUnits: 4, gpm: 5,  salMax: 25, mo: 2,  doBoost: 0.05, tss: 90, bac: 92, nit: 30, pho: 25, pfas: 0,  trash: 0,  isBMP: false, hasOpex: true, pilotNote: "Compact unit \u2014 included with OpEx for small coverage areas.", desc: "5 GPM compact ALIA for small outfalls, green infrastructure, and pilot sites.", pillars: ['SW','SurfW'], sizeRange: ['XS','S'] },
-  { id: "alia_10",    cat: "PEARL ALIA",   name: "ALIA 10 GPM \u2014 Mid",     icon: "\ud83e\uddea", costPer: 75000, defUnits: 4, gpm: 10, salMax: 25, mo: 3,  doBoost: 0.08, tss: 91, bac: 93, nit: 32, pho: 26, pfas: 0,  trash: 0,  isBMP: false, hasOpex: true, pilotNote: "Mid-size unit \u2014 OpEx bundled for moderate coverage.", desc: "10 GPM ALIA for moderate outfalls and distributed treatment networks.", pillars: ['SW','SurfW','WW'], sizeRange: ['XS','M'] },
+  { id: "alia_5",     cat: "PIN",   name: "PIN 5 GPM \u2014 Compact",  icon: "\ud83d\udd2c", costPer: 50000, defUnits: 4, gpm: 5,  salMax: 25, mo: 2,  doBoost: 0.05, tss: 90, bac: 92, nit: 30, pho: 25, pfas: 0,  trash: 0,  isBMP: false, hasOpex: true, pilotNote: "Compact unit \u2014 included with OpEx for small coverage areas.", desc: "5 GPM compact PIN for small outfalls, green infrastructure, and pilot sites.", pillars: ['SW','SurfW'], sizeRange: ['XS','S'] },
+  { id: "alia_10",    cat: "PIN",   name: "PIN 10 GPM \u2014 Mid",     icon: "\ud83e\uddea", costPer: 75000, defUnits: 4, gpm: 10, salMax: 25, mo: 3,  doBoost: 0.08, tss: 91, bac: 93, nit: 32, pho: 26, pfas: 0,  trash: 0,  isBMP: false, hasOpex: true, pilotNote: "Mid-size unit \u2014 OpEx bundled for moderate coverage.", desc: "10 GPM PIN for moderate outfalls and distributed treatment networks.", pillars: ['SW','SurfW','WW'], sizeRange: ['XS','M'] },
 ];
 
 export const MODULE_CATS: ModuleCategory[] = [
-  "Infrastructure", "Interception", "PEARL ALIA", "Biological",
+  "Infrastructure", "Interception", "PIN", "Biological",
   "Mechanical", "Chemical", "Source Control", "DO Mgmt", "Emerging",
 ];
 
 export const CAT_COLORS: Record<ModuleCategory, string> = {
   "Infrastructure": "#1565c0",
   "Interception":   "#e53935",
-  "PEARL ALIA":     "#2e7d32",
+  "PIN":     "#2e7d32",
   "Biological":     "#388e3c",
   "Mechanical":     "#0277bd",
   "Chemical":       "#6a1b9a",
@@ -353,12 +353,12 @@ export const NGOS: NGO[] = [
 export const EVENTS: CommunityEvent[] = [
   { id: "shore_clean",  name: "Shoreline Cleanup Day",          icon: "\ud83e\uddf9", cat: "Stewardship",  freq: "Quarterly",   cost: 2500,  volunteers: 40, lbsRemoved: 800,   desc: "Organized trash removal. Feeds trash-reduction metrics." },
   { id: "cit_monitor",  name: "Citizen Science Water Monitoring", icon: "\ud83e\uddea", cat: "Monitoring",  freq: "Monthly",     cost: 1200,  volunteers: 15, samples: 24,       desc: "Community-collected samples submitted to ATTAINS." },
-  { id: "oyster_reefs", name: "Community Oyster Reef Planting",  icon: "\ud83e\uddea", cat: "Habitat",      freq: "Bi-annual",   cost: 4500,  volunteers: 60, lbsFiltered: 500,  desc: "Public reef planting events aligned with ALIA sites." },
+  { id: "oyster_reefs", name: "Community Oyster Reef Planting",  icon: "\ud83e\uddea", cat: "Habitat",      freq: "Bi-annual",   cost: 4500,  volunteers: 60, lbsFiltered: 500,  desc: "Public reef planting events aligned with PIN sites." },
   { id: "tree_plant",   name: "Riparian Tree Planting Day",      icon: "\ud83c\udf33", cat: "Restoration",  freq: "Annual",      cost: 3000,  volunteers: 80, treesPlanted: 200, desc: "Buffer establishment. Aligned with riparian BMP." },
   { id: "rain_garden",  name: "Rain Garden Workshop",            icon: "\ud83c\udf27\ufe0f", cat: "Education", freq: "Semi-annual", cost: 1800, volunteers: 25, gardensBuilt: 8,  desc: "Homeowner training. LID installation + maintenance." },
   { id: "oyster_shell", name: "Oyster Shell Recycling Drive",    icon: "\ud83d\udc1a", cat: "Habitat",      freq: "Bi-annual",   cost: 800,   volunteers: 20, lbsCollected: 2000, desc: "Shell collection for reef substrate. Restaurant partnerships." },
   { id: "storm_drain",  name: "Storm Drain Marking",             icon: "\ud83d\udeab", cat: "Stewardship",  freq: "Annual",      cost: 1500,  volunteers: 30, drainsMarked: 150, desc: "Public education. 'No Dumping \u2014 Drains to Bay' markers." },
-  { id: "school_stem",  name: "School STEM Water Program",       icon: "\ud83d\udcda", cat: "Education",    freq: "Annual",      cost: 5000,  volunteers: 10, students: 300,     desc: "K-12 curriculum. Sensor demos, water testing, PEARL story." },
+  { id: "school_stem",  name: "School STEM Water Program",       icon: "\ud83d\udcda", cat: "Education",    freq: "Annual",      cost: 5000,  volunteers: 10, students: 300,     desc: "K-12 curriculum. Sensor demos, water testing, PIN story." },
   { id: "kayak_survey", name: "Kayak Waterbody Survey",          icon: "\ud83d\udea3", cat: "Monitoring",   freq: "Quarterly",   cost: 2200,  volunteers: 20, milesPatrolled: 8, desc: "Visual survey and floating debris documentation." },
   { id: "pub_meeting",  name: "Community Stakeholder Forum",     icon: "\ud83c\udfdb\ufe0f", cat: "Engagement", freq: "Quarterly", cost: 1500, volunteers: 0,  attendees: 75,    desc: "Regulatory update meetings. Keeps public informed." },
 ];
@@ -368,12 +368,12 @@ export const EVENTS: CommunityEvent[] = [
 export const GRANTS: Grant[] = [
   { id: "cwsrf",     name: "Clean Water SRF",          match: 0.50, maxAmt: 5_000_000,  cats: ["Source Control", "Biological", "Mechanical", "Chemical", "DO Mgmt"] },
   { id: "319h",      name: "EPA 319(h) NPS",           match: 0.60, maxAmt: 500_000,    cats: ["Source Control", "Biological"] },
-  { id: "nfwf",      name: "NFWF Chesapeake Bay",      match: 0.50, maxAmt: 300_000,    cats: ["Source Control", "Biological", "PEARL ALIA", "Interception"] },
-  { id: "glri",      name: "Great Lakes Restoration",   match: 0.75, maxAmt: 2_000_000,  cats: ["Source Control", "Biological", "PEARL ALIA", "DO Mgmt"] },
+  { id: "nfwf",      name: "NFWF Chesapeake Bay",      match: 0.50, maxAmt: 300_000,    cats: ["Source Control", "Biological", "PIN", "Interception"] },
+  { id: "glri",      name: "Great Lakes Restoration",   match: 0.75, maxAmt: 2_000_000,  cats: ["Source Control", "Biological", "PIN", "DO Mgmt"] },
   { id: "usda_eqip", name: "USDA EQIP",               match: 0.75, maxAmt: 450_000,    cats: ["Source Control"] },
-  { id: "noaa_hab",  name: "NOAA Habitat Restoration",  match: 0.65, maxAmt: 1_000_000,  cats: ["Biological", "PEARL ALIA"] },
+  { id: "noaa_hab",  name: "NOAA Habitat Restoration",  match: 0.65, maxAmt: 1_000_000,  cats: ["Biological", "PIN"] },
   { id: "wiin",      name: "WIIN / WIFIA",             match: 0.49, maxAmt: 10_000_000, cats: ["Mechanical", "Chemical", "DO Mgmt"] },
-  { id: "swg",       name: "State Wildlife Grant",      match: 0.50, maxAmt: 200_000,    cats: ["Biological", "PEARL ALIA"] },
+  { id: "swg",       name: "State Wildlife Grant",      match: 0.50, maxAmt: 200_000,    cats: ["Biological", "PIN"] },
 ];
 
 /* ─── HELPERS ────────────────────────────────────────────────────────────── */
@@ -447,8 +447,8 @@ function _calcFromActive(
     totDO += m.doBoost * m.units;
   });
 
-  const aliaUnits = active.filter(m => m.hasOpex).reduce((s, m) => s + m.units, 0);
-  const teams = aliaUnits > 0 ? Math.max(1, Math.ceil(aliaUnits / ALIA_PER_TEAM)) : 0;
+  const pinUnits = active.filter(m => m.hasOpex).reduce((s, m) => s + m.units, 0);
+  const teams = pinUnits > 0 ? Math.max(1, Math.ceil(pinUnits / PIN_PER_TEAM)) : 0;
   const annualOpex = teams * OPEX_TEAM_YEAR;
   const totalOpex = annualOpex * timelineYrs;
   const lifecycle = capex + totalOpex;
@@ -498,7 +498,7 @@ function _calcFromActive(
   return {
     active,
     capex,
-    aliaUnits,
+    pinUnits,
     teams,
     annualOpex,
     totalOpex,

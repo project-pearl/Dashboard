@@ -15,7 +15,7 @@ export interface HeroBannerConfig {
 export const heroConfigs: Record<string, HeroBannerConfig> = {
   k12: {
     image: '/images/heroes/K12.png',
-    subtitle: 'PEARL Intelligence Network',
+    subtitle: 'PIN — PEARL Intelligence Network',
     headline: 'Explore Your Watershed',
     description:
       'Hands-on water quality learning powered by real EPA data. Discover what\'s in your local waterways and why it matters.',
@@ -23,7 +23,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   state: {
     image: '/images/heroes/Aerial.png',
-    subtitle: 'PEARL Intelligence Network',
+    subtitle: 'PIN — PEARL Intelligence Network',
     headline: 'Statewide Water Intelligence',
     description:
       'Comprehensive watershed monitoring, compliance tracking, and assessment analytics across every waterbody in your jurisdiction.',
@@ -31,7 +31,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   ms4: {
     image: '/images/heroes/MS4.png',
-    subtitle: 'PEARL Intelligence Network',
+    subtitle: 'PIN — PEARL Intelligence Network',
     headline: 'Municipal Stormwater Compliance',
     description:
       'Track BMP performance, monitor outfall discharge, and streamline MS4 permit reporting with real-time water quality data.',
@@ -39,7 +39,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   esg: {
     image: '/images/heroes/Industrial.png',
-    subtitle: 'PEARL Intelligence Network',
+    subtitle: 'PIN — PEARL Intelligence Network',
     headline: 'Water Risk & Sustainability Performance',
     description:
       'Quantify water risk exposure, benchmark facility performance, and generate audit-ready sustainability disclosures.',
@@ -47,7 +47,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   university: {
     image: '/images/heroes/Research.png',
-    subtitle: 'PEARL Intelligence Network',
+    subtitle: 'PIN — PEARL Intelligence Network',
     headline: 'Water Quality Research Hub',
     description:
       'Access nationwide water quality datasets, publish findings, and collaborate across institutions with integrated research tools.',
@@ -55,7 +55,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   national: {
     image: '/images/heroes/NCC.png',
-    subtitle: 'PEARL Intelligence Network',
+    subtitle: 'PIN — PEARL Intelligence Network',
     headline: 'Federal Management Center',
     description:
       'Real-time water quality intelligence across 565,000+ monitoring points in every state. Federal-scale oversight, watershed-level precision.',
@@ -63,7 +63,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   ngo: {
     image: '/oyster-restoration.png',
-    subtitle: 'PEARL Intelligence Network',
+    subtitle: 'PIN — PEARL Intelligence Network',
     headline: 'Watershed Conservation Hub',
     description:
       'Advocacy-ready data, grant matching, and restoration intelligence to protect the waterways your community depends on.',
@@ -71,15 +71,15 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   pearl: {
     image: '/images/heroes/underwater-pearl.jpg',
-    subtitle: 'PEARL Intelligence Network',
-    headline: 'PEARL Management Center',
+    subtitle: 'PIN — PEARL Intelligence Network',
+    headline: 'PIN Management Center',
     description:
-      'Deployment tracking, fleet performance, and field diagnostics across all active PEARL units.',
+      'Deployment tracking, fleet performance, and field diagnostics across all active PIN units.',
     accentColor: 'text-rose-400',
   },
   utility: {
     image: '/images/heroes/Industrial.png',
-    subtitle: 'PEARL Intelligence Network',
+    subtitle: 'PIN — PEARL Intelligence Network',
     headline: 'Municipal Water Utility',
     description:
       'Compliance monitoring, treatment optimization, and contaminant tracking for public water systems.',
@@ -87,7 +87,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   infrastructure: {
     image: '/images/heroes/MS4.png',
-    subtitle: 'PEARL Intelligence Network',
+    subtitle: 'PIN — PEARL Intelligence Network',
     headline: 'Infrastructure Intelligence',
     description:
       'Capital project tracking, capacity analysis, and green infrastructure planning for resilient water systems.',
@@ -95,7 +95,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   insurance: {
     image: '/images/heroes/Aerial.png',
-    subtitle: 'PEARL Intelligence Network',
+    subtitle: 'PIN — PEARL Intelligence Network',
     headline: 'Water Risk Intelligence',
     description:
       'Flood risk assessment, contamination analysis, and portfolio due diligence for informed underwriting decisions.',
@@ -103,7 +103,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   agriculture: {
     image: '/images/heroes/Aerial.png',
-    subtitle: 'PEARL Intelligence Network',
+    subtitle: 'PIN — PEARL Intelligence Network',
     headline: 'Agricultural Water Management',
     description:
       'Nutrient tracking, irrigation optimization, and conservation credit management for sustainable agriculture.',
@@ -111,7 +111,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   },
   'aqua-lo': {
     image: '/images/heroes/Research.png',
-    subtitle: 'PEARL Intelligence Network',
+    subtitle: 'PIN — PEARL Intelligence Network',
     headline: 'AQUA-LO Laboratory',
     description:
       'Full-spectrum laboratory information management — sample intake, QA/QC, methods, and chain of custody.',

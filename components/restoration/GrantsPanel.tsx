@@ -13,7 +13,7 @@ import type { GrantOpportunity } from '@/lib/stateWaterData';
 const CATEGORY_KEYWORDS: Record<string, string[]> = {
   Infrastructure: ['sensor', 'monitoring', 'telemetry', 'infrastructure', 'technology'],
   Interception: ['trash', 'debris', 'floatable', 'interception', 'litter'],
-  'PEARL ALIA': ['biofiltration', 'pearl', 'innovative', 'nature-based', 'bmp', 'pilot'],
+  'PIN': ['biofiltration', 'pearl', 'innovative', 'nature-based', 'bmp', 'pilot'],
   Biological: ['wetland', 'habitat', 'restoration', 'biological', 'riparian', 'reef', 'oyster'],
   Mechanical: ['membrane', 'flotation', 'mechanical', 'treatment', 'wwtp'],
   Chemical: ['disinfection', 'carbon', 'ozone', 'pfas', 'chemical'],

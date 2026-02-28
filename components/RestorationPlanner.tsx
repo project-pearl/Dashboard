@@ -5,13 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import {
   Wrench, Target, Clock, DollarSign, TrendingUp, CheckCircle2,
   ChevronDown, ChevronUp, Shield, Zap, Leaf, AlertTriangle,
-  Droplets, Activity, Users, Heart, FileDown, Plus,
+  Droplets, Activity, Users, Heart, FileDown, Plus, Search, MapPin,
 } from 'lucide-react';
 import { calculateGrade, type WaterQualityGrade } from '@/lib/waterQualityScore';
 import {
   MODULES, MODULE_CATS, CAT_COLORS, NGOS, EVENTS, GRANTS,
   CK, CONTAMINANT_LABELS, CONTAMINANT_COLORS,
-  OPEX_TEAM_YEAR, ALIA_PER_TEAM,
+  OPEX_TEAM_YEAR, PIN_PER_TEAM,
   runCalc, fmt, SIZE_TIER_ORDER,
   type Watershed, type TreatmentModule, type ModuleCategory,
   type ContaminantKey, type CalcResult, type NGO, type CommunityEvent,
@@ -306,12 +306,12 @@ export default function RestorationPlanner({
     const selEvents = allEvents.filter(e => selectedEvents.has(e.id));
     return calculateStaffing(
       selectedModules.size,
-      calc?.aliaUnits ?? 0,
+      calc?.pinUnits ?? 0,
       selNGOs,
       selEvents,
       timelineYrs,
     );
-  }, [allNGOs, allEvents, selectedModules.size, calc?.aliaUnits, selectedNGOs, selectedEvents, ngoValueOverrides, timelineYrs]);
+  }, [allNGOs, allEvents, selectedModules.size, calc?.pinUnits, selectedNGOs, selectedEvents, ngoValueOverrides, timelineYrs]);
 
   // ── Sorted partners and events ──
   const sortedNGOs = useMemo(() =>
@@ -438,10 +438,20 @@ export default function RestorationPlanner({
             onSelect={handleWaterbodySelect}
             defaultAllStates={defaultAllStates}
           />
-          <div className="text-center py-6 text-slate-400">
-            <Wrench className="h-10 w-10 mx-auto mb-3 text-slate-300" />
-            <p className="text-sm font-medium">Select a waterbody to begin planning</p>
-            <p className="text-xs mt-1">Search by name, HUC-8, MS4, or coordinates above — or select a monitored waterbody from the management center</p>
+          <div className="p-2">
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search waterbodies to plan restoration..."
+                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400"
+                readOnly
+              />
+            </div>
+            <div className="text-center text-slate-400">
+              <MapPin className="h-8 w-8 mx-auto mb-2 text-slate-300" />
+              <p className="text-xs">Or click a marker on the map to view waterbody details</p>
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -29,7 +29,7 @@ export default function DarkPageShell({ children }: DarkPageShellProps) {
             <Link href="/">
               <Image
                 src="/Pearl-Intelligence-Network.png"
-                alt="PEARL Intelligence Network"
+                alt="PIN — PEARL Intelligence Network"
                 width={140}
                 height={38}
                 className="object-contain"
@@ -110,13 +110,13 @@ export default function DarkPageShell({ children }: DarkPageShellProps) {
             <div className="md:col-span-2">
               <Image
                 src="/Logo_Pearl_with_reef.jpg"
-                alt="PEARL"
+                alt="PIN"
                 width={100}
                 height={100}
                 className="object-contain rounded-lg opacity-80 mb-4"
               />
               <p className="text-sm text-slate-600 leading-relaxed max-w-sm font-mono">
-                PEARL Intelligence Network (PIN) — Proactive Engineering for Aquatic Rehabilitation &amp; Legacy.
+                PIN (PEARL Intelligence Network) — Proactive Engineering for Aquatic Rehabilitation &amp; Legacy.
               </p>
             </div>
 

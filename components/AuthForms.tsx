@@ -22,7 +22,7 @@ const ROLE_META: Record<UserRole, { icon: typeof Shield; label: string; desc: st
   Federal:    { icon: Shield,         label: 'Federal Agency',        desc: 'National monitoring & Bay-wide analytics',                    tier: 'operator' },
   Corporate:  { icon: Building2,      label: 'Sustainability',        desc: 'Sustainability reporting & compliance dashboards',            tier: 'operator' },
   Temp:       { icon: Shield,         label: 'Temp (Breakpoint)',     desc: 'Breakpoint Revenue Group dashboard',                          tier: 'explorer' },
-  Pearl:      { icon: Shield,         label: 'PEARL Admin',           desc: 'Internal PEARL operations dashboard',                         tier: 'operator' },
+  Pearl:      { icon: Shield,         label: 'PIN Admin',             desc: 'Internal PIN operations dashboard',                           tier: 'operator' },
   Utility:    { icon: Building2,      label: 'Utility Company',       desc: 'Water/wastewater utility operations & compliance',            tier: 'operator' },
   Insurance:  { icon: Building2,      label: 'Insurance Provider',    desc: 'Environmental risk assessment & underwriting',                tier: 'operator' },
   Agriculture:{ icon: Building2,      label: 'Agriculture',           desc: 'Agricultural runoff monitoring & best practices',             tier: 'operator' },
@@ -104,7 +104,7 @@ export function SignupForm({ invitePayload, inviteToken, onSuccess, onSwitchToLo
             <Waves className="h-5 w-5 text-white" />
           </div>
           <div>
-            <div className="text-xl font-bold tracking-tight text-slate-900" style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}>PEARL</div>
+            <div className="text-xl font-bold tracking-tight text-slate-900" style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}>PIN</div>
             <div className="text-[9px] font-medium text-slate-400 -mt-1 tracking-widest uppercase">Create Account</div>
           </div>
         </div>
@@ -441,7 +441,7 @@ export function LoginForm({ onSuccess, onSwitchToSignup }: LoginFormProps) {
             <Waves className="h-5 w-5 text-white" />
           </div>
           <div>
-            <div className="text-xl font-bold tracking-tight text-slate-900" style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}>PEARL</div>
+            <div className="text-xl font-bold tracking-tight text-slate-900" style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}>PIN</div>
             <div className="text-[9px] font-medium text-slate-400 -mt-1 tracking-widest uppercase">Sign In</div>
           </div>
         </div>

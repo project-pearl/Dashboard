@@ -800,7 +800,7 @@ export function WaterbodyDetailCard({
 
             {/* ── Sources row ── */}
             <div className="flex items-center justify-end gap-2 text-[10px] text-slate-400 pt-1">
-              <span>Sources: {attainsIsLive ? '✅ ATTAINS' : '⚠ Mock 303(d)'} · {ejIsLive ? '✅ EJScreen' : '✅ Census/SDWIS'} · ALIA monitoring</span>
+              <span>Sources: {attainsIsLive ? '✅ ATTAINS' : '⚠ Mock 303(d)'} · {ejIsLive ? '✅ EJScreen' : '✅ Census/SDWIS'} · PIN monitoring</span>
             </div>
 
             {/* ── Regulatory Context ── */}
@@ -883,12 +883,12 @@ export function WaterbodyDetailCard({
                     conditions with {alerts} active alert{alerts !== 1 ? 's' : ''}.
                     {ejScore >= 60 ? ` EJ vulnerability is elevated (${ejScore}/100), indicating disproportionate community health risk.` : ''}
                     {ecoScore >= 60 ? ` Ecological sensitivity is high (${ecoScore}/100), with critical habitat or species concerns.` : ''}
-                    {' '}ALIA&apos;s multi-stage biofiltration system could address MS4 compliance requirements under the{' '}
+                    {' '}PIN&apos;s multi-stage biofiltration system could address MS4 compliance requirements under the{' '}
                     {agency.ms4Program} permit while providing measurable water quality improvements and aquatic restoration co-benefits.
                   </div>
                   <button
                     onClick={() => {
-                      const text = `${regionName} in ${stateName || stateAbbr} currently shows ${levelToLabel(level).toLowerCase()} conditions with ${alerts} active alert${alerts !== 1 ? 's' : ''}. ALIA's multi-stage biofiltration system could address MS4 compliance requirements under the ${agency.ms4Program} permit while providing measurable water quality improvements and aquatic restoration co-benefits.`;
+                      const text = `${regionName} in ${stateName || stateAbbr} currently shows ${levelToLabel(level).toLowerCase()} conditions with ${alerts} active alert${alerts !== 1 ? 's' : ''}. PIN's multi-stage biofiltration system could address MS4 compliance requirements under the ${agency.ms4Program} permit while providing measurable water quality improvements and aquatic restoration co-benefits.`;
                       navigator.clipboard.writeText(text).then(() => {
                         onToast?.('Outreach summary copied to clipboard');
                       });
@@ -945,7 +945,7 @@ export function WaterbodyDetailCard({
               <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mt-2">Important Notes</div>
               <div className="text-[10px] text-slate-400 space-y-0.5">
                 <div>• This card is read-only. Corrections and official designations flow through state agency review processes.</div>
-                <div>• ALIA does not perform primary data collection. All scores and indices are automated interpretations of publicly available data.</div>
+                <div>• PIN does not perform primary data collection. All scores and indices are automated interpretations of publicly available data.</div>
               </div>
             </div>
 

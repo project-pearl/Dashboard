@@ -20,7 +20,7 @@ export function DataSourceDisclaimer({ dataSource, hasPearlData, regionName }: D
       <span className="mt-0.5 flex-shrink-0">{isPearl ? '🟢' : '🟡'}</span>
       <span>
         <span className={`font-semibold ${isPearl ? 'text-green-700' : 'text-yellow-700'}`}>
-          {isPearl ? 'ALIA sensors — ' : 'Ambient monitoring — '}
+          {isPearl ? 'PIN sensors — ' : 'Ambient monitoring — '}
         </span>
         {regionName && <span className="font-medium">{regionName}</span>}
         {dataSource && !isPearl && (

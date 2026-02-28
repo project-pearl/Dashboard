@@ -93,7 +93,7 @@ export function MDEExportTool({
           content: [
             `Overall Water Quality Score: ${overallScore}/100`,
             '',
-            `This MS4 Annual Compliance Report documents Project PEARL's continuous ALIA stormwater monitoring performance for the ${periodStart} - ${periodEnd} reporting period. ALIA's combined mechanical filtration and oyster biofiltration system achieved ${avgRemoval}% average pollutant removal, supporting permit compliance and Chesapeake Bay TMDL load reduction goals.`,
+            `This MS4 Annual Compliance Report documents Project PEARL's continuous PIN stormwater monitoring performance for the ${periodStart} - ${periodEnd} reporting period. PIN's combined mechanical filtration and oyster biofiltration system achieved ${avgRemoval}% average pollutant removal, supporting permit compliance and Chesapeake Bay TMDL load reduction goals.`,
             '',
             'Key Performance Indicators:',
             `  TSS Removal: ${removalEfficiencies.TSS.toFixed(1)}% - ${removalEfficiencies.TSS >= 80 ? 'MEETS >=80% MS4 target' : 'Below 80% MS4 target'}`,
@@ -128,7 +128,7 @@ export function MDEExportTool({
           title: 'SECTION 5 - COMPLIANCE NOTES & CERTIFICATION',
           content: [
             'MS4 Permit Compliance: ACTIVE - continuous monitoring maintained throughout reporting period.',
-            'NPDES Monitoring: CURRENT - automated data collection per ALIA sensor validation protocol.',
+            'NPDES Monitoring: CURRENT - automated data collection per PIN sensor validation protocol.',
             '',
             'Sections requiring manual supplementation before MDE submission:',
             '  Section 6: Public Education & Outreach Activities',

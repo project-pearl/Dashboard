@@ -2299,14 +2299,22 @@ export async function GET(request: NextRequest) {
             // State-level: ECHO violating facilities
             console.log(`[ICIS-Violations] ECHO facility search (violators) for ${state}`);
             const facilities = await echoFacilitySearch(state, { violatorsOnly: true, limit: parseInt(limit, 10) });
-            const data = facilities.map((f: any) => ({
-              NPDES_ID: f.SourceID || '',
-              VIOLATION_TYPE_DESC: (f.CWPVioStatus || '').trim(),
-              SEVERITY_CODE: (f.CWPSNCStatus || '').trim(),
-              FACILITY_NAME: (f.CWPName || '').trim(),
-              lat: Number(f.FacLat) || 0,
-              lng: Number(f.FacLong) || 0,
-            }));
+            const data = facilities.map((f: any) => {
+              const sncRaw = (f.CWPSNCStatus || '').trim();
+              const isSnc = /SNC|significant/i.test(sncRaw);
+              return {
+                NPDES_ID: f.SourceID || '',
+                VIOLATION_CODE: (f.CWPCurrentVioStatus || f.CWPVioStatus || '').trim(),
+                VIOLATION_TYPE_DESC: (f.CWPVioStatus || f.CWPCurrentVioStatus || '').trim(),
+                VIOLATION_DETECT_DATE: f.CWPDateLastFormalAction || f.CWPDateLastInspection || '',
+                RNC_DETECTION_CODE: isSnc ? 'Y' : '',
+                SEVERITY_CODE: isSnc ? 'S' : (sncRaw ? 'M' : ''),
+                FACILITY_NAME: (f.CWPName || '').trim(),
+                CWPQtrsWithVio: f.CWPQtrsWithVio || '',
+                lat: Number(f.FacLat) || 0,
+                lng: Number(f.FacLong) || 0,
+              };
+            });
             return NextResponse.json({ source: 'icis-violations', via: 'echo', state, count: data.length, data });
           }
         } catch (e: any) {
@@ -2382,8 +2390,19 @@ export async function GET(request: NextRequest) {
             next: { revalidate: 3600 },
           });
           if (!res.ok) throw new Error(`Envirofacts HTTP ${res.status}`);
-          const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
+          const raw = await res.json();
+          if (Array.isArray(raw) && raw.length > 0) {
+            // Normalize Envirofacts column names to standardized fields
+            const data = raw.map((r: any) => ({
+              NPDES_ID: r.NPDES_ID || r.EXTERNAL_PERMIT_NMBR || '',
+              CASE_NUMBER: r.ENFORCEMENT_ACTION_IDENTIFIER || r.CASE_NUMBER || r.ENFORCEMENT_ID || '',
+              ENF_TYPE_DESC: r.ENFORCEMENT_ACTION_TYPE_CODE || r.ENF_TYPE_CODE || r.ENF_TYPE_DESC || '',
+              FED_PENALTY_ASSESSED_AMT: Number(r.FED_PENALTY_ASSESSED_AMT || r.STATE_LOCAL_PENALTY_AMT || r.PENALTY_AMT || 0),
+              SETTLEMENT_ENTERED_DATE: r.FINAL_ORDER_ENTERED_DATE || r.ENFORCEMENT_ACTION_DATE || r.SETTLEMENT_ENTERED_DATE || r.ACHIEVED_DATE || '',
+              FACILITY_NAME: r.FACILITY_NAME || '',
+              lat: 0,
+              lng: 0,
+            }));
             return NextResponse.json({ source: 'icis-enforcement', state, count: data.length, data });
           }
           throw new Error('Envirofacts returned empty');

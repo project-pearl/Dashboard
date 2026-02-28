@@ -36,15 +36,15 @@ function estimateHoursPerYear(freq: string, volunteers: number): number {
 
 export function calculateStaffing(
   selectedModuleCount: number,
-  aliaUnits: number,
+  pinUnits: number,
   selectedNGOs: NGO[],
   selectedEvents: CommunityEvent[],
   _timelineYrs: number,
 ): StaffingResult {
-  // Base staff: 1 per 8 modules + 1 per 12 ALIA units
+  // Base staff: 1 per 8 modules + 1 per 12 PIN units
   const restorationStaff =
     Math.ceil(selectedModuleCount / 8) +
-    (aliaUnits > 0 ? Math.ceil(aliaUnits / 12) : 0);
+    (pinUnits > 0 ? Math.ceil(pinUnits / 12) : 0);
 
   const annualStaffCost = restorationStaff * OPEX_TEAM_YEAR;
 
