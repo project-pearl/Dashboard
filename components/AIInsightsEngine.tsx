@@ -251,6 +251,8 @@ For beach closures or harvest stops, connect them to downstream impact on public
   // On state/role change: clear stale insights so shimmer shows, then fetch
   const isNational = !!nationalData && nationalData.totalAssessed > 0;
   const prevKeyRef = useRef(getCacheKey(role, stateAbbr, selectedWaterbody, isNational));
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   useEffect(() => {
     const key = getCacheKey(role, stateAbbr, selectedWaterbody, isNational);
     const keyChanged = key !== prevKeyRef.current;
@@ -263,9 +265,25 @@ For beach closures or harvest stops, connect them to downstream impact on public
       setError(null);
     }
 
+    // Clear any existing poll
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+
     if (expanded) {
       fetchInsights(keyChanged); // force bypass cache if key changed
+
+      // Poll every 5 minutes while expanded — force cache bypass so fresh signals are fetched
+      pollRef.current = setInterval(() => fetchInsights(true), 5 * 60 * 1000);
     }
+
+    return () => {
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+    };
   }, [expanded, role, stateAbbr, selectedWaterbody, isNational, fetchInsights]);
 
   return (

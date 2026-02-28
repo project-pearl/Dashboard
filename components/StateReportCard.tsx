@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -94,38 +94,41 @@ export default function StateReportCard({ stateAbbr }: { stateAbbr: string }) {
     return () => { cancelled = true; };
   }, [stateAbbr]);
 
-  // ── Fetch signals ──
-  useEffect(() => {
-    let cancelled = false;
+  // ── Fetch signals (poll every 5 min for real-time updates) ──
+  const signalsPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const fetchSignals = useCallback(async () => {
     let attempt = 0;
     const maxRetries = 3;
-
-    async function load() {
-      setSignalsLoading(true);
-      while (attempt < maxRetries && !cancelled) {
-        try {
-          const r = await fetch(`/api/water-data?action=signals&statecode=${stateAbbr}&limit=5`);
-          if (!r.ok) throw new Error(`HTTP ${r.status}`);
-          const data = await r.json();
-          if (!cancelled) {
-            setSignals(data.signals || []);
-            setSignalsLoading(false);
-          }
-          return;
-        } catch (e: any) {
-          attempt++;
-          console.warn(`[ReportCard] Signals attempt ${attempt} failed:`, e.message);
-          if (attempt < maxRetries && !cancelled) {
-            await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));
-          }
+    while (attempt < maxRetries) {
+      try {
+        const r = await fetch(`/api/water-data?action=signals&statecode=${stateAbbr}&limit=5`);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        setSignals(data.signals || []);
+        setSignalsLoading(false);
+        return;
+      } catch (e: any) {
+        attempt++;
+        console.warn(`[ReportCard] Signals attempt ${attempt} failed:`, e.message);
+        if (attempt < maxRetries) {
+          await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));
         }
       }
-      if (!cancelled) setSignalsLoading(false);
     }
-
-    load();
-    return () => { cancelled = true; };
+    setSignalsLoading(false);
   }, [stateAbbr]);
+
+  useEffect(() => {
+    setSignalsLoading(true);
+    fetchSignals();
+
+    // Poll every 5 minutes
+    signalsPollRef.current = setInterval(fetchSignals, 5 * 60 * 1000);
+    return () => {
+      if (signalsPollRef.current) clearInterval(signalsPollRef.current);
+    };
+  }, [fetchSignals]);
 
   // ── Derived values ──
   const { gradeScore, impairedPct, totalAssessed, progressCount, watchCount, actionCount } = useMemo(() => {
