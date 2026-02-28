@@ -2622,38 +2622,6 @@ export function FederalManagementCenter(props: Props) {
             )}
         </HeroBanner>
 
-        {/* ── Sentinel Events Strip (overview only, above LayoutEditor) ── */}
-        {viewLens === 'overview' && (sentinel.criticalHucs.length > 0 || sentinel.watchHucs.length > 0) && (
-          <Card className="border-0" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
-            <CardHeader className="pb-2 pt-4 px-5">
-              <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4" style={{ color: 'var(--accent-teal)' }} />
-                <CardTitle className="text-sm font-semibold" style={{ color: 'var(--text-bright)' }}>
-                  Sentinel Alerts
-                </CardTitle>
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{
-                  background: sentinel.criticalHucs.length > 0 ? 'rgba(211,47,47,0.15)' : 'rgba(249,168,37,0.15)',
-                  color: sentinel.criticalHucs.length > 0 ? '#D32F2F' : '#F9A825',
-                  border: `1px solid ${sentinel.criticalHucs.length > 0 ? 'rgba(211,47,47,0.3)' : 'rgba(249,168,37,0.3)'}`,
-                }}>
-                  {sentinel.criticalHucs.length + sentinel.watchHucs.length} active
-                </span>
-              </div>
-            </CardHeader>
-            <CardContent className="px-5 pb-4">
-              <SentinelBriefingCard
-                criticalHucs={sentinel.criticalHucs}
-                watchHucs={sentinel.watchHucs}
-                recentResolutions={sentinel.recentResolutions}
-                hucNames={hucNames}
-                sources={sentinel.sources}
-                systemStatus={sentinel.systemStatus}
-                lastFetched={sentinel.lastFetched}
-              />
-            </CardContent>
-          </Card>
-        )}
-
         {/* ── LAYOUT EDITOR WRAPPER ── */}
         <LayoutEditor ccKey="FMC">
         {({ sections, isEditMode, onToggleVisibility, onToggleCollapse, collapsedSections }) => {
@@ -4750,13 +4718,23 @@ export function FederalManagementCenter(props: Props) {
         </>); {/* end ai-water-intelligence */}
 
         case 'national-briefing': return DS(<>
-        {/* ── National Intelligence Briefing — Sentinel-powered 3-layer view ── */}
+        {/* ── Sentinel Alerts — real-time 3-layer view ── */}
           <Card id="section-national-briefing">
             <CardHeader className="pb-2 pt-5 px-5">
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-sm font-semibold flex items-center gap-2" style={{ color: 'var(--text-bright)' }}>
-                    National Intelligence Briefing
+                    <Shield className="w-4 h-4" style={{ color: 'var(--accent-teal)' }} />
+                    Sentinel Alerts
+                    {(sentinel.criticalHucs.length > 0 || sentinel.watchHucs.length > 0) && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full font-normal" style={{
+                        background: sentinel.criticalHucs.length > 0 ? 'rgba(211,47,47,0.15)' : 'rgba(249,168,37,0.15)',
+                        color: sentinel.criticalHucs.length > 0 ? '#D32F2F' : '#F9A825',
+                        border: `1px solid ${sentinel.criticalHucs.length > 0 ? 'rgba(211,47,47,0.3)' : 'rgba(249,168,37,0.3)'}`,
+                      }}>
+                        {sentinel.criticalHucs.length + sentinel.watchHucs.length} active
+                      </span>
+                    )}
                   </CardTitle>
                   <CardDescription className="text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>
                     Real-time sentinel monitoring + {aiInsights.length} AI findings from {attainsAggregation.totalAssessed.toLocaleString()} ATTAINS records
@@ -4771,7 +4749,7 @@ export function FederalManagementCenter(props: Props) {
                     const pdf = new BrandedPDFGenerator();
                     await pdf.loadLogo();
                     pdf.initialize();
-                    pdf.addTitle('National Intelligence Briefing');
+                    pdf.addTitle('Sentinel Alerts');
                     pdf.addMetadata('Active Alerts', `${sentinel.criticalHucs.length} critical, ${sentinel.watchHucs.length} watch`);
                     pdf.addMetadata('AI Findings', `${aiInsights.length}`);
                     pdf.addMetadata('ATTAINS Records', attainsAggregation.totalAssessed.toLocaleString());
@@ -4791,7 +4769,7 @@ export function FederalManagementCenter(props: Props) {
                       pdf.addSpacer(3);
                     }
                     const dateStr = new Date().toISOString().slice(0, 10);
-                    pdf.download(`PEARL_National_Intel_Briefing_${dateStr}.pdf`);
+                    pdf.download(`PEARL_Sentinel_Alerts_${dateStr}.pdf`);
                   }}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -4856,13 +4834,13 @@ export function FederalManagementCenter(props: Props) {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-sm font-semibold flex items-center gap-2" style={{ color: 'var(--text-bright)' }}>
-                    National Intelligence Briefing
+                    AI Insights
                   </CardTitle>
                   <CardDescription className="text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>
                     {aiInsights.length} findings from {attainsAggregation.totalAssessed.toLocaleString()} ATTAINS records
                   </CardDescription>
                 </div>
-                <BrandedPrintBtn sectionId="aiinsights" title="National Intelligence Briefing" />
+                <BrandedPrintBtn sectionId="aiinsights" title="AI Insights" />
               </div>
             </CardHeader>
             <CardContent className="px-5">
