@@ -52,71 +52,76 @@ const EMPTY_SUMMARY: ICISSummary = {
   expiringPermits: 0,
 };
 
-// ── Envirofacts → typed mappers ─────────────────────────────────────────────
+// ── Envirofacts + ECHO CamelCase → typed mappers ────────────────────────────
 
 function mapPermits(rows: any[]): IcisPermit[] {
   if (!Array.isArray(rows)) return [];
   return rows.map((r: any) => ({
-    permit: r.permit || r.NPDES_ID || r.EXTERNAL_PERMIT_NMBR || '',
-    facility: r.facility || r.FACILITY_NAME || r.FACILITY_UIN || '',
-    state: r.state || r.STATE_ABBR || '',
-    status: r.status || r.PERMIT_STATUS_CODE || r.PERMIT_STATUS || '',
-    type: r.type || r.PERMIT_TYPE_CODE || '',
-    expiration: r.expiration || r.PERMIT_EXPIRATION_DATE || '',
-    flow: r.flow ?? (r.DESIGN_FLOW_NMBR != null ? Number(r.DESIGN_FLOW_NMBR) : null),
-    lat: r.lat || 0,
-    lng: r.lng || 0,
+    permit: r.permit || r.NPDES_ID || r.SourceID || r.EXTERNAL_PERMIT_NMBR || '',
+    facility: r.facility || r.FACILITY_NAME || r.CWPName || r.FACILITY_UIN || '',
+    state: r.state || r.STATE_ABBR || r.CWPState || '',
+    status: r.status || r.PERMIT_STATUS_CODE || r.CWPPermitStatusDesc || r.PERMIT_STATUS || '',
+    type: r.type || r.PERMIT_TYPE_CODE || r.CWPPermitTypeDesc || '',
+    expiration: r.expiration || r.PERMIT_EXPIRATION_DATE || r.CWPExpirationDate || '',
+    flow: r.flow ?? (r.DESIGN_FLOW_NMBR != null ? Number(r.DESIGN_FLOW_NMBR)
+      : r.CWPActualAverageFlowNmbr != null ? Number(r.CWPActualAverageFlowNmbr) : null),
+    lat: r.lat || Number(r.FacLat) || 0,
+    lng: r.lng || Number(r.FacLong) || 0,
   }));
 }
 
 function mapViolations(rows: any[]): IcisViolation[] {
   if (!Array.isArray(rows)) return [];
   return rows.map((r: any) => ({
-    permit: r.permit || r.NPDES_ID || r.EXTERNAL_PERMIT_NMBR || '',
-    code: r.code || r.VIOLATION_CODE || r.VIOLATION_TYPE_CODE || '',
-    desc: r.desc || r.VIOLATION_DESC || r.VIOLATION_TYPE_DESC || '',
+    permit: r.permit || r.NPDES_ID || r.SourceID || r.EXTERNAL_PERMIT_NMBR || '',
+    code: r.code || r.VIOLATION_CODE || r.ViolationCode || r.VIOLATION_TYPE_CODE || r.CWPVioStatus || '',
+    desc: r.desc || r.VIOLATION_DESC || r.ViolationDesc || r.VIOLATION_TYPE_DESC || r.CWPVioStatus || '',
     date: r.date || r.VIOLATION_DETECT_DATE || r.SCHEDULE_DATE || '',
-    rnc: r.rnc === true || r.RNC_DETECTION_CODE === 'Y' || (r.RNC_DETECTION_CODE || '').length > 0,
-    severity: r.severity || r.SEVERITY_CODE || '',
-    lat: r.lat || 0,
-    lng: r.lng || 0,
+    rnc: r.rnc === true || r.RNC_DETECTION_CODE === 'Y' || r.RNCDetectionCode === 'Y'
+      || (r.RNC_DETECTION_CODE || '').length > 0 || (r.RNCDetectionCode || '').length > 0,
+    severity: r.severity || r.SEVERITY_CODE || r.ViolationSeverity || r.SEVERITY_IND || '',
+    lat: r.lat || Number(r.FacLat) || 0,
+    lng: r.lng || Number(r.FacLong) || 0,
   }));
 }
 
 function mapDmr(rows: any[]): IcisDmr[] {
   if (!Array.isArray(rows)) return [];
   return rows.map((r: any) => {
-    const dmrVal = r.dmrValue ?? r.DMR_VALUE_NMBR ?? r.STATISTICAL_BASE_MONTHLY_AVG;
-    const limitVal = r.limitValue ?? r.LIMIT_VALUE_NMBR ?? r.LIMIT_VALUE_STANDARD_NMBR;
+    const dmrVal = r.dmrValue ?? r.DMR_VALUE_NMBR ?? r.DMRValueNmbr ?? r.STATISTICAL_BASE_MONTHLY_AVG;
+    const limitVal = r.limitValue ?? r.LIMIT_VALUE_NMBR ?? r.LimitValueNmbr ?? r.LIMIT_VALUE_STANDARD_NMBR;
     const dv = dmrVal != null ? Number(dmrVal) : null;
     const lv = limitVal != null ? Number(limitVal) : null;
     return {
       permit: r.permit || r.NPDES_ID || r.EXTERNAL_PERMIT_NMBR || '',
-      paramDesc: r.paramDesc || r.PARAMETER_DESC || r.PARAMETER_CODE || '',
+      paramDesc: r.paramDesc || r.PARAMETER_DESC || r.ParameterDesc || r.PARAMETER_CODE || '',
       pearlKey: r.pearlKey || '',
       dmrValue: dv,
       limitValue: lv,
-      unit: r.unit || r.STATISTICAL_BASE_TYPE_CODE || '',
+      unit: r.unit || r.STATISTICAL_BASE_TYPE_CODE || r.LIMIT_UNIT_DESC || r.LimitUnitDesc || '',
       exceedance: r.exceedance === true || (dv !== null && lv !== null && lv > 0 && dv > lv),
-      period: r.period || r.MONITORING_PERIOD_END_DATE || '',
-      lat: r.lat || 0,
-      lng: r.lng || 0,
+      period: r.period || r.MONITORING_PERIOD_END_DATE || r.MonitoringPeriodEndDate || '',
+      lat: r.lat || Number(r.FacLat) || 0,
+      lng: r.lng || Number(r.FacLong) || 0,
     };
   });
 }
 
 function mapEnforcement(rows: any[]): IcisEnforcement[] {
   if (!Array.isArray(rows)) return [];
-  return rows.map((r: any) => ({
-    permit: r.permit || r.NPDES_ID || r.EXTERNAL_PERMIT_NMBR || '',
-    caseNumber: r.caseNumber || r.CASE_NUMBER || r.ENFORCEMENT_ID || '',
-    actionType: r.actionType || r.ENF_TYPE_CODE || r.ENF_TYPE_DESC || r.ENFORCEMENT_ACTION_TYPE_CODE || '',
-    penaltyAssessed: r.penaltyAssessed || Number(r.PENALTY_ASSESSED_AMT || r.FED_PENALTY_ASSESSED_AMT || 0),
-    penaltyCollected: r.penaltyCollected || Number(r.PENALTY_COLLECTED_AMT || 0),
-    settlementDate: r.settlementDate || r.SETTLEMENT_ENTERED_DATE || r.ACHIEVED_DATE || '',
-    lat: r.lat || 0,
-    lng: r.lng || 0,
-  }));
+  return rows.map((r: any) => {
+    const rawPenalty = r.FedPenalty ? String(r.FedPenalty).replace(/[$,]/g, '') : null;
+    return {
+      permit: r.permit || r.NPDES_ID || r.SourceID || r.EXTERNAL_PERMIT_NMBR || '',
+      caseNumber: r.caseNumber || r.CASE_NUMBER || r.CaseNumber || r.ENFORCEMENT_ID || '',
+      actionType: r.actionType || r.ENF_TYPE_CODE || r.ENF_TYPE_DESC || r.CaseCategoryDesc || r.ENFORCEMENT_ACTION_TYPE_CODE || '',
+      penaltyAssessed: r.penaltyAssessed || Number(r.PENALTY_ASSESSED_AMT || r.FED_PENALTY_ASSESSED_AMT || rawPenalty || 0),
+      penaltyCollected: r.penaltyCollected || Number(r.PENALTY_COLLECTED_AMT || 0),
+      settlementDate: r.settlementDate || r.SETTLEMENT_ENTERED_DATE || r.SettlementDate || r.ACHIEVED_DATE || '',
+      lat: r.lat || 0,
+      lng: r.lng || 0,
+    };
+  });
 }
 
 // ── Hook ────────────────────────────────────────────────────────────────────
