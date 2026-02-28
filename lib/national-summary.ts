@@ -4,6 +4,7 @@
 
 import { getAttainsCacheSummary, type StateSummary } from './attainsCache';
 import { getUsgsIvCacheStatus } from './nwisIvCache';
+import { getAllStateFlowScores, type FlowScore } from './flowVulnerability';
 import { getAlertCacheStatus } from './usgsAlertCache';
 import { getNwpsCacheStatus } from './nwpsCache';
 import { getNwpsAllGauges } from './nwpsCache';
@@ -40,11 +41,13 @@ export interface NationalSummary {
   criticalAlerts: number;
   topCauses: { cause: string; count: number }[];
   worstStates: { abbr: string; score: number; impaired: number }[];
+  flowScores?: Record<string, FlowScore>;
   stateBreakdown: Record<string, {
     total: number;
     impaired: number;
     score: number;
     grade: string;
+    flowScore?: number;
   }>;
   dataSources?: {
     nwpsGauges: number;
@@ -122,6 +125,9 @@ export function getNationalSummary(): NationalSummary {
   const stateScores: { abbr: string; score: number; impaired: number }[] = [];
   const stateBreakdown: NationalSummary['stateBreakdown'] = {};
 
+  // Flow vulnerability scores (NWIS IV discharge data)
+  const flowScores = getAllStateFlowScores();
+
   for (const [abbr, s] of stateEntries) {
     totalWaterbodies += s.total;
     const impaired = s.high + s.medium + s.low;
@@ -133,7 +139,11 @@ export function getNationalSummary(): NationalSummary {
 
     if (s.high > 0) highAlertStates++;
 
-    const score = computeStateScore(s);
+    const attainsScore = computeStateScore(s);
+    const flow = flowScores[abbr];
+    const score = (attainsScore >= 0 && flow)
+      ? Math.round(attainsScore * 0.85 + flow.score * 0.15)
+      : attainsScore;
     const denom = s.none + s.low + s.medium + s.high;
     if (score >= 0 && denom > 0) {
       weightedScoreSum += score * denom;
@@ -146,6 +156,7 @@ export function getNationalSummary(): NationalSummary {
       impaired,
       score,
       grade: scoreToGrade(score),
+      flowScore: flow?.score,
     };
 
     // Merge top causes
@@ -233,6 +244,7 @@ export function getNationalSummary(): NationalSummary {
     topCauses,
     worstStates,
     stateBreakdown,
+    flowScores: Object.keys(flowScores).length > 0 ? flowScores : undefined,
     dataSources: {
       nwpsGauges, nwpsFlooding, coopsStations, ndbcBuoys, snotelStations,
       cdcNwssStates, echoFacilities, echoViolations, pfasDetections,
