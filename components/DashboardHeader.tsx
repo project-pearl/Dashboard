@@ -17,7 +17,6 @@ const ROUTE_LABELS: Record<string, string> = {
   ngo: 'NGO Conservation',
   utility: 'Municipal Utility',
   infrastructure: 'Site & Property',
-  insurance: 'Insurance & Risk',
   'aqua-lo': 'AQUA-LO',
 };
 
@@ -30,7 +29,6 @@ const ROUTE_ACCENTS: Record<string, string> = {
   ngo: 'text-emerald-600',
   utility: 'text-sky-600',
   infrastructure: 'text-slate-600',
-  insurance: 'text-indigo-600',
   'aqua-lo': 'text-teal-600',
 };
 

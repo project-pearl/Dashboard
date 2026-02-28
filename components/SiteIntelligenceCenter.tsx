@@ -23,7 +23,6 @@ type ViewLens =
   | 'overview'
   | 'developer'
   | 'real-estate'
-  | 'insurance'
   | 'legal'
   | 'consultant'
   | 'lender'
@@ -44,7 +43,6 @@ const LENS_LABELS: Record<ViewLens, { risk: string; regulatory: string; ej: stri
   overview:              { risk: 'Waterbody Risk Profile',      regulatory: 'Regulatory Exposure',        ej: 'EJ Vulnerability Screen',     trends: 'Trend Overlay',                permits: 'Permit Constraints'           },
   developer:             { risk: 'Site Water Risk',             regulatory: 'Development Regulatory Risk',ej: 'EJ Screening for Permits',    trends: 'Water Quality Trends',         permits: 'Stormwater Permit Rules'      },
   'real-estate':         { risk: 'Property Water Risk',         regulatory: 'Disclosure Obligations',     ej: 'Environmental Justice Flags',  trends: 'Neighborhood Trends',          permits: 'Discharge Restrictions'       },
-  insurance:             { risk: 'Underwriting Risk Profile',   regulatory: 'Regulatory Exposure',        ej: 'EJ Loss Exposure',             trends: 'Claims Trend Indicators',      permits: 'Permit-Driven Exclusions'     },
   legal:                 { risk: 'Litigation Risk Profile',     regulatory: 'Regulatory History',         ej: 'EJ Liability Factors',         trends: 'Impairment Trend Evidence',    permits: 'Permit Violations & Orders'   },
   consultant:            { risk: 'Site Assessment Profile',     regulatory: 'Regulatory Landscape',       ej: 'EJ Screening Summary',         trends: 'Historical Trends',            permits: 'Applicable Permits'           },
   lender:                { risk: 'Collateral Risk Profile',     regulatory: 'Regulatory Encumbrances',    ej: 'EJ Community Risk',            trends: 'Value Impact Trends',          permits: 'Permit Compliance Status'     },

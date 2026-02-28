@@ -114,7 +114,6 @@ const LENS_ICONS: Record<string, LucideIcon> = {
   // ── Site & Property Intelligence ────────────────────────────────────────────
   developer: HardHat,
   'real-estate': MapPin,
-  'insurance-spi': Shield,
   legal: Scale,
   consultant: Search,
   lender: Banknote,
@@ -148,12 +147,6 @@ const LENS_ICONS: Record<string, LucideIcon> = {
   'outdoor-classroom': TreePine,
   'student-monitoring': Beaker,
   'drinking-water-safety': GlassWater,
-  // ── Insurance ──────────────────────────────────────────────────────────────
-  'exposure-mapping': Map,
-  claims: DollarSign,
-  'flood-contamination': Layers,
-  'portfolio-risk': Shield,
-  'regulatory-changes': Scale,
   // ── Aqua-Lo ───────────────────────────────────────────────────────────────
   push: Network,
   qaqc: ClipboardList,
@@ -191,7 +184,6 @@ const NAV_GROUPS: NavGroup[] = [
     title: 'Industry',
     items: [
       { label: 'Sustainability', href: '/dashboard/esg', icon: Factory, accent: 'text-emerald-700', accentBg: 'bg-emerald-50 border-emerald-200' },
-      { label: 'Insurance', href: '/dashboard/insurance', icon: Shield, accent: 'text-indigo-700', accentBg: 'bg-indigo-50 border-indigo-200' },
       { label: 'Site & Property', href: '/dashboard/infrastructure', icon: MapPin, accent: 'text-slate-700', accentBg: 'bg-slate-100 border-slate-300' },
     ],
   },

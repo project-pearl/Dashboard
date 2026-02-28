@@ -24,7 +24,6 @@ const ROLE_META: Record<UserRole, { icon: typeof Shield; label: string; desc: st
   Temp:       { icon: Shield,         label: 'Temp (Breakpoint)',     desc: 'Breakpoint Revenue Group dashboard',                          tier: 'explorer' },
   Pearl:      { icon: Shield,         label: 'PIN Admin',             desc: 'Internal PIN operations dashboard',                           tier: 'operator' },
   Utility:    { icon: Building2,      label: 'Utility Company',       desc: 'Water/wastewater utility operations & compliance',            tier: 'operator' },
-  Insurance:  { icon: Building2,      label: 'Insurance Provider',    desc: 'Environmental risk assessment & underwriting',                tier: 'operator' },
   Agriculture:{ icon: Building2,      label: 'Agriculture',           desc: 'Agricultural runoff monitoring & best practices',             tier: 'operator' },
   Lab:        { icon: Shield,         label: 'Lab / Testing',         desc: 'Laboratory data submission & QA/QC workflows',               tier: 'operator' },
 };

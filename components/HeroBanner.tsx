@@ -85,14 +85,6 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
       'Location-based water quality risk assessment, regulatory exposure, and environmental due diligence for any US property.',
     accentColor: 'text-slate-400',
   },
-  insurance: {
-    image: '/images/heroes/Aerial.png',
-    subtitle: 'PIN — PEARL Intelligence Network',
-    headline: 'Water Risk Intelligence',
-    description:
-      'Flood risk assessment, contamination analysis, and portfolio due diligence for informed underwriting decisions.',
-    accentColor: 'text-indigo-400',
-  },
   'aqua-lo': {
     image: '/images/heroes/Research.png',
     subtitle: 'PIN — PEARL Intelligence Network',

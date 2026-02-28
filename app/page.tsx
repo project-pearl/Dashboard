@@ -287,7 +287,6 @@ const ROLE_ROUTES: Record<UserRole, string> = {
   Pearl: '/dashboard/federal',
   Temp: '/dashboard/federal',
   Utility: '/dashboard/utility/default',
-  Insurance: '/dashboard/insurance',
   Agriculture: '/dashboard/agriculture',
   Lab: '/dashboard/aqua-lo',
 };
