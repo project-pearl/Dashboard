@@ -2769,8 +2769,8 @@ export function FederalManagementCenter(props: Props) {
                     )}
                     {overlay === 'economy' && (
                       <>
-                        <span className="pin-label mr-1">Compliance Cost:</span>
-                        {[{ label: 'Low', bg: '#d1d5db' }, { label: 'Moderate', bg: '#bfdbfe' }, { label: 'High', bg: '#3b82f6' }, { label: 'Very High', bg: '#1e40af' }].map(s => (
+                        <span className="pin-label mr-1">Economic Exposure:</span>
+                        {[{ label: 'Minimal', bg: '#d1fae5' }, { label: 'Low', bg: '#fde68a' }, { label: 'Moderate', bg: '#f59e0b' }, { label: 'Elevated', bg: '#dc2626' }, { label: 'High', bg: '#7f1d1d' }].map(s => (
                           <span key={s.label} className="inline-flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: s.bg }} /> {s.label}</span>
                         ))}
                       </>
