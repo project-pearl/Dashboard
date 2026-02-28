@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useTransition } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
@@ -209,7 +209,7 @@ function buildNavGroups(stateCode: string): NavGroup[] { return [
       { label: 'Sustainability', href: '/dashboard/esg', icon: Factory, accent: 'text-emerald-700', accentBg: 'bg-emerald-50 border-emerald-200' },
       { label: 'Biotech / Pharma', href: '/dashboard/biotech', icon: Microscope, accent: 'text-violet-700', accentBg: 'bg-violet-50 border-violet-200' },
       { label: 'Investor', href: '/dashboard/investor', icon: TrendingUp, accent: 'text-amber-700', accentBg: 'bg-amber-50 border-amber-200' },
-      { label: 'Property Info', href: '/dashboard/site-intelligence', icon: Search, accent: 'text-amber-700', accentBg: 'bg-amber-50 border-amber-200' },
+      { label: 'Site Intelligence', href: '/dashboard/site-intelligence', icon: Search, accent: 'text-amber-700', accentBg: 'bg-amber-50 border-amber-200' },
     ],
   },
   {
@@ -249,6 +249,21 @@ export function DashboardSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedRoles, setExpandedRoles] = useState<Set<string>>(new Set());
+  const [isPending, startTransition] = useTransition();
+
+  // Navigate to a lens — uses replace for same-page, push for cross-page, wrapped in startTransition
+  const navigateToLens = useCallback((itemHref: string, lensId: string) => {
+    setMobileOpen(false);
+    const target = `${itemHref}?lens=${lensId}`;
+    const isSamePage = pathname.startsWith(itemHref.replace(/\/[^/]+$/, '')) || pathname === itemHref;
+    startTransition(() => {
+      if (isSamePage) {
+        router.replace(target, { scroll: false });
+      } else {
+        router.push(target);
+      }
+    });
+  }, [pathname, router]);
 
   // Build nav groups with dynamic state code for the State link
   const NAV_GROUPS = useMemo(() => buildNavGroups(adminState), [adminState]);
@@ -355,18 +370,17 @@ export function DashboardSidebar() {
               {item.label}
             </div>
             {lenses.map((lens) => (
-              <Link
+              <button
                 key={lens.id}
-                href={`${item.href}?lens=${lens.id}`}
-                onClick={() => setMobileOpen(false)}
-                className={`block px-3 py-1.5 text-xs transition-colors ${
+                onClick={() => navigateToLens(item.href, lens.id)}
+                className={`block w-full text-left px-3 py-1.5 text-xs transition-colors ${
                   isLensActive(item.href, lens.id)
                     ? `${item.accent} font-semibold bg-slate-50`
                     : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 }`}
               >
                 {lens.label}
-              </Link>
+              </button>
             ))}
           </div>
         </div>
@@ -404,18 +418,17 @@ export function DashboardSidebar() {
             {lenses.map((lens) => {
               const lensActive = isLensActive(item.href, lens.id);
               return (
-                <Link
+                <button
                   key={lens.id}
-                  href={`${item.href}?lens=${lens.id}`}
-                  onClick={() => setMobileOpen(false)}
-                  className={`block px-3 py-1.5 rounded-md text-xs transition-all ${
+                  onClick={() => navigateToLens(item.href, lens.id)}
+                  className={`block w-full text-left px-3 py-1.5 rounded-md text-xs transition-all ${
                     lensActive
                       ? `${item.accent} font-semibold bg-slate-50`
                       : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
                   }`}
                 >
                   {lens.label}
-                </Link>
+                </button>
               );
             })}
           </div>
@@ -448,8 +461,17 @@ export function DashboardSidebar() {
         </Link>
       </div>
 
+      {/* Pending navigation indicator */}
+      {isPending && (
+        <div className="mx-3 mb-1">
+          <div className="h-0.5 bg-slate-200 rounded-full overflow-hidden">
+            <div className="h-full bg-blue-500 rounded-full animate-pulse" style={{ width: '60%' }} />
+          </div>
+        </div>
+      )}
+
       {/* Nav groups */}
-      <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-4">
+      <nav className={`flex-1 overflow-y-auto px-2 py-3 space-y-4 ${isPending ? 'opacity-70 pointer-events-none' : ''}`}>
         {isSingleRole && singleRoleItem && singleRoleLenses ? (
           /* ── Single-role mode: lenses as top-level nav items ── */
           <div className="space-y-0.5">
@@ -458,12 +480,11 @@ export function DashboardSidebar() {
               const lensActive = isLensActive(singleRoleItem.href, lens.id)
                 || (lens.id === 'overview' && isActive(singleRoleItem.href) && !currentLensParam);
               return (
-                <Link
+                <button
                   key={lens.id}
-                  href={`${singleRoleItem.href}?lens=${lens.id}`}
-                  onClick={() => setMobileOpen(false)}
+                  onClick={() => navigateToLens(singleRoleItem.href, lens.id)}
                   title={collapsed ? lens.label : undefined}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all w-full text-left ${
                     lensActive
                       ? `${singleRoleItem.accentBg} ${singleRoleItem.accent} font-semibold border shadow-sm`
                       : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
@@ -471,7 +492,7 @@ export function DashboardSidebar() {
                 >
                   <LensIcon className={`w-4 h-4 flex-shrink-0 ${lensActive ? singleRoleItem.accent : 'text-slate-400'}`} />
                   {!collapsed && <span className="truncate">{lens.label}</span>}
-                </Link>
+                </button>
               );
             })}
           </div>

@@ -40,6 +40,18 @@ export const QUOTES: Record<string, MissionQuote[]> = {
     { text: "Every molecule we release becomes part of someone's drinking water.", attribution: "ACS Green Chemistry" },
     { text: "Quality must be built into a drug product, not tested into it.", attribution: "FDA Process Validation Guidance" },
   ],
+  investor: [
+    { text: "Water risk is financial risk.", attribution: "CDP Water Security" },
+    { text: "The cost of inaction on water far exceeds the cost of action.", attribution: "OECD" },
+    { text: "Climate risk is investment risk.", attribution: "Larry Fink, BlackRock" },
+    { text: "What gets measured gets managed.", attribution: "Peter Drucker" },
+    { text: "Water scarcity is the defining crisis of the 21st century.", attribution: "World Economic Forum" },
+    { text: "Stranded assets are not hypothetical — they are already materializing.", attribution: "Carbon Tracker Initiative" },
+    { text: "ESG integration is not about values — it is about value.", attribution: "CFA Institute" },
+    { text: "The economy is a wholly owned subsidiary of the environment.", attribution: "Herman Daly" },
+    { text: "Investors who ignore water risk do so at their own peril.", attribution: "CEO Water Mandate" },
+    { text: "Corporate water stewardship is not philanthropy — it is risk management.", attribution: "CEO Water Mandate" },
+  ],
   public: [
     { text: "Lack of water quality data is a form of environmental injustice.", attribution: "Eos, American Geophysical Union" },
     { text: "We forget that the water cycle and the life cycle are one.", attribution: "Jacques Cousteau" },
