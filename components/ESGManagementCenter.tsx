@@ -26,7 +26,7 @@ import {
   Droplets, BarChart3, Shield, TrendingUp, TrendingDown, AlertTriangle, ChevronDown,
   Gauge, Minus, MapPin, Building2, FileText, Award, Globe, Leaf, Users, Target,
   DollarSign, Eye, Lock, Activity, ArrowRight, ChevronRight, Search, Filter,
-  Download, ExternalLink, Star, Zap, Heart, Scale, X, LogOut,
+  Download, ExternalLink, Star, Zap, Heart, Scale, X,
   CheckCircle2, Circle, AlertCircle, Sparkles, ClipboardList, Link2, PenTool, Package
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -44,13 +44,11 @@ import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
 import { PolicyTracker } from '@/components/PolicyTracker';
 import { EmergingContaminantsTracker } from '@/components/EmergingContaminantsTracker';
 import ResolutionPlanner from '@/components/ResolutionPlanner';
-import RestorationPlanner from '@/components/RestorationPlanner';
 import { DisasterEmergencyPanel } from '@/components/DisasterEmergencyPanel';
 import { WaterStewardshipPanel } from '@/components/WaterStewardshipPanel';
 import { FacilityOperationsPanel } from '@/components/FacilityOperationsPanel';
 import { ESGReportingPanel } from '@/components/ESGReportingPanel';
 import { SupplyChainRiskPanel } from '@/components/SupplyChainRiskPanel';
-import LocationReportCard from '@/components/LocationReportCard';
 import { WARRZones } from './WARRZones';
 import type { WARRMetric } from './WARRZones';
 import { LayoutEditor } from './LayoutEditor';
@@ -90,128 +88,58 @@ type FacilityRow = {
   ejScore?: number;     // 0-100 EJScreen burden
 };
 
-// ─── Lenses (18-view architecture) ───────────────────────────────────────────
+// ─── Lenses (8-view architecture) ────────────────────────────────────────────
 
-type ViewLens = 'overview' | 'briefing' | 'trends' | 'policy' | 'compliance' |
-  'water-quality' | 'public-health' | 'water-stewardship' | 'facility-operations' |
-  'infrastructure' | 'monitoring' | 'disaster-emergency' | 'esg-reporting' |
-  'scorecard' | 'reports' | 'supply-chain-risk' | 'funding' | 'warr';
-
-// Legacy compat: keep showX booleans so existing inner conditionals work
-// (section filter handles real visibility via sections Set)
-const SHOW_ALL = {
-  showMap: true, showImpact: true, showDisclosure: true, showRisk: true,
-  showCompliance: true, showBenchmark: true, showGrants: true, showBrand: true,
-  showShareholder: true, showTrends: true,
-};
+type ViewLens = 'overview' | 'esg-reporting' | 'facility-operations' | 'compliance' |
+  'policy' | 'public-health' | 'supply-chain' | 'trends';
 
 type LensConfig = {
   label: string;
   description: string;
   icon: any;
-  showMap: boolean;
-  showImpact: boolean;
-  showDisclosure: boolean;
-  showRisk: boolean;
-  showCompliance: boolean;
-  showBenchmark: boolean;
-  showGrants: boolean;
-  showBrand: boolean;
-  showShareholder: boolean;
-  showTrends: boolean;
-  sections: Set<string> | null;
+  sections: Set<string>;
 };
 
 const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   overview: {
     label: 'Executive Overview', description: 'Portfolio-level Sustainability summary for leadership',
-    icon: Building2, ...SHOW_ALL,
-    sections: new Set(['summary', 'kpis', 'map-grid', 'insights', 'impact', 'compliance', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']),
-  },
-  briefing: {
-    label: 'AI Briefing', description: 'AI-generated sustainability intelligence briefing',
-    icon: Sparkles, ...SHOW_ALL,
-    sections: new Set(['insights', 'disclaimer']),
-  },
-  trends: {
-    label: 'Trends & Forecasting', description: 'Water risk trajectories, regulatory outlook, and ESG scoring trends',
-    icon: TrendingUp, ...SHOW_ALL,
-    sections: new Set(['trends-dashboard', 'disclaimer']),
-  },
-  policy: {
-    label: 'Policy Tracker', description: 'Environmental policy and regulatory tracking',
-    icon: Scale, ...SHOW_ALL,
-    sections: new Set(['policy-tracker', 'disclaimer']),
-  },
-  compliance: {
-    label: 'Compliance', description: 'Regulatory compliance and enforcement exposure',
-    icon: Shield, ...SHOW_ALL,
-    sections: new Set(['compliance', 'icis', 'sdwis', 'disclaimer']),
-  },
-  'water-quality': {
-    label: 'Water Quality', description: 'Facility water quality assessment',
-    icon: Droplets, ...SHOW_ALL,
-    sections: new Set(['map-grid', 'kpis', 'impact', 'disclaimer']),
-  },
-  'public-health': {
-    label: 'Public Health & Contaminants', description: 'Emerging contaminants and public health',
-    icon: AlertTriangle, ...SHOW_ALL,
-    sections: new Set(['contaminants-tracker', 'disclaimer']),
-  },
-  'water-stewardship': {
-    label: 'Water Stewardship', description: 'Corporate water stewardship tracking',
-    icon: Droplets, ...SHOW_ALL,
-    sections: new Set(['water-stewardship-panel', 'sustainability', 'impact', 'disclaimer']),
-  },
-  'facility-operations': {
-    label: 'Facility Operations', description: 'Facility-level water operations tracking',
-    icon: Building2, ...SHOW_ALL,
-    sections: new Set(['facility-operations-panel', 'map-grid', 'kpis', 'disclaimer']),
-  },
-  infrastructure: {
-    label: 'Infrastructure', description: 'Water infrastructure and groundwater risk',
-    icon: Building2, ...SHOW_ALL,
-    sections: new Set(['groundwater', 'disclaimer']),
-  },
-  monitoring: {
-    label: 'Monitoring', description: 'Environmental monitoring network',
-    icon: Activity, ...SHOW_ALL,
-    sections: new Set(['kpis', 'impact', 'disclaimer']),
-  },
-  'disaster-emergency': {
-    label: 'Disaster & Emergency', description: 'Environmental emergency response',
-    icon: AlertTriangle, ...SHOW_ALL,
-    sections: new Set(['disaster-emergency-panel', 'resolution-planner', 'disclaimer']),
+    icon: Building2,
+    sections: new Set(['summary', 'kpis', 'map-grid', 'sustainability', 'grants', 'disclaimer']),
   },
   'esg-reporting': {
-    label: 'ESG Reporting', description: 'ESG framework reporting and disclosure readiness',
-    icon: FileText, ...SHOW_ALL,
-    sections: new Set(['disclosure', 'shareholder', 'benchmark', 'esg-reporting-panel', 'disclaimer']),
+    label: 'ESG Reporting & Disclosure', description: 'ESG framework reporting, scorecard, and data exports',
+    icon: FileText,
+    sections: new Set(['disclosure', 'shareholder', 'benchmark', 'esg-reporting-panel', 'scorecard-kpis', 'scorecard-grades', 'reports-hub', 'data-export-hub', 'brand', 'disclaimer']),
   },
-  scorecard: {
-    label: 'Scorecard', description: 'ESG performance scorecard',
-    icon: BarChart3, ...SHOW_ALL,
-    sections: new Set(['scorecard-kpis', 'scorecard-grades', 'disclaimer']),
+  'facility-operations': {
+    label: 'Facility Operations', description: 'Facility-level water operations, map, and stewardship',
+    icon: Building2,
+    sections: new Set(['facility-operations-panel', 'map-grid', 'kpis', 'impact', 'chesbay', 'groundwater', 'water-stewardship-panel', 'disclaimer']),
   },
-  reports: {
-    label: 'Reports', description: 'Sustainability reports and data exports',
-    icon: FileText, ...SHOW_ALL,
-    sections: new Set(['reports-hub', 'disclaimer']),
+  compliance: {
+    label: 'Compliance & Risk', description: 'Regulatory compliance, enforcement exposure, and WARR',
+    icon: Shield,
+    sections: new Set(['compliance', 'icis', 'sdwis', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']),
   },
-  'supply-chain-risk': {
-    label: 'Supply Chain Risk', description: 'Supply chain water risk assessment',
-    icon: Link2, ...SHOW_ALL,
+  policy: {
+    label: 'Policy & Regulatory', description: 'Environmental policy and regulatory tracking',
+    icon: Scale,
+    sections: new Set(['policy-tracker', 'disclaimer']),
+  },
+  'public-health': {
+    label: 'Emerging Contaminants', description: 'Emerging contaminants and public health tracking',
+    icon: AlertTriangle,
+    sections: new Set(['contaminants-tracker', 'disclaimer']),
+  },
+  'supply-chain': {
+    label: 'Supply Chain', description: 'Supply chain water risk and economic analysis',
+    icon: Link2,
     sections: new Set(['supplychain', 'economic', 'supply-chain-risk-panel', 'disclaimer']),
   },
-  funding: {
-    label: 'Funding & Grants', description: 'Sustainability funding opportunities',
-    icon: DollarSign, ...SHOW_ALL,
-    sections: new Set(['grants', 'disclaimer']),
-  },
-  warr: {
-    label: 'WARR Room', description: 'Water Alert & Response Readiness — real-time situation awareness',
-    icon: Shield, ...SHOW_ALL,
-    sections: new Set(['warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']),
+  trends: {
+    label: 'Trends & Outlook', description: 'Water risk trajectories, AI insights, disaster response, and resolution planning',
+    icon: TrendingUp,
+    sections: new Set(['trends-dashboard', 'insights', 'disaster-emergency-panel', 'resolution-planner', 'disclaimer']),
   },
 };
 
@@ -466,8 +394,6 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
   // ── View Lens ──
   const [viewLens, setViewLens] = useLensParam<ViewLens>('overview');
   const lens = LENS_CONFIG[viewLens] ?? LENS_CONFIG['overview'];
-  const [showLensDropdown, setShowLensDropdown] = useState(false);
-  const [showAccountPanel, setShowAccountPanel] = useState(false);
 
   // ── Map state ──
   // Auto-detect: if majority of facilities are in CB watershed, start zoomed to Bay
@@ -779,152 +705,41 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
       <div className="max-w-[1600px] mx-auto p-4 space-y-4">
 
         {/* ── HERO BANNER ── */}
-        <HeroBanner role="esg" onDoubleClick={() => onToggleDevMode?.()}>
-            {/* State selector */}
-            <select
-              value={focusedState}
-              onChange={(e) => {
-                const st = e.target.value;
-                setFocusedState(st);
-                setSelectedFacility(null);
-                const geo = STATE_GEO_LEAFLET[st] || STATE_GEO_LEAFLET['US'];
-                setFlyTarget({ center: geo.center, zoom: st === 'US' ? (isCBPortfolio ? CB_ZOOM : 4) : geo.zoom });
-              }}
-              className="h-8 px-3 text-xs font-medium rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 focus:ring-2 focus:ring-emerald-400/50 focus:outline-none transition-colors cursor-pointer"
-            >
-              <option value="US">All States</option>
-              {Object.entries(STATE_NAMES).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
-                <option key={abbr} value={abbr}>{name}</option>
-              ))}
-            </select>
-            {/* Lens selector */}
-            <div className="relative">
-              <button
-                onClick={() => setShowLensDropdown(!showLensDropdown)}
-                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-emerald-200 rounded-lg text-sm font-medium text-emerald-800 hover:bg-emerald-50 transition-colors shadow-sm"
-              >
-                <lens.icon className="h-3.5 w-3.5" />
-                {lens.label}
-                <ChevronDown className="h-3 w-3" />
-              </button>
-              {showLensDropdown && (
-                <div className="absolute right-0 top-full mt-1 w-72 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
-                  {(Object.entries(LENS_CONFIG) as [ViewLens, LensConfig][]).map(([id, cfg]) => (
-                    <button
-                      key={id}
-                      onClick={() => { setViewLens(id); setShowLensDropdown(false); }}
-                      className={`w-full text-left px-3 py-2 hover:bg-slate-50 first:rounded-t-lg last:rounded-b-lg flex items-center gap-2 ${viewLens === id ? 'bg-emerald-50' : ''}`}
-                    >
-                      <cfg.icon className="h-4 w-4 text-emerald-600 flex-shrink-0" />
-                      <div>
-                        <div className="text-sm font-medium text-slate-800">{cfg.label}</div>
-                        <div className="text-[10px] text-slate-500">{cfg.description}</div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+        <HeroBanner role="esg" onDoubleClick={() => onToggleDevMode?.()} />
 
-            {/* Export Sustainability Report */}
-            <button
-              onClick={exportFullESGReport}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors shadow-sm"
-            >
-              <Download className="h-3.5 w-3.5" />
-              Export Report
-            </button>
+        {/* ── TOOLBAR STRIP ── */}
+        <div className="flex items-center justify-between px-4 py-2 bg-white border-b border-slate-200 rounded-lg shadow-sm">
+          <select
+            value={focusedState}
+            onChange={(e) => {
+              const st = e.target.value;
+              setFocusedState(st);
+              setSelectedFacility(null);
+              const geo = STATE_GEO_LEAFLET[st] || STATE_GEO_LEAFLET['US'];
+              setFlyTarget({ center: geo.center, zoom: st === 'US' ? (isCBPortfolio ? CB_ZOOM : 4) : geo.zoom });
+            }}
+            className="h-8 px-3 text-xs font-medium rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 focus:ring-2 focus:ring-emerald-400/50 focus:outline-none transition-colors cursor-pointer"
+          >
+            <option value="US">All States</option>
+            {Object.entries(STATE_NAMES).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
+              <option key={abbr} value={abbr}>{name}</option>
+            ))}
+          </select>
+          <button
+            onClick={exportFullESGReport}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors shadow-sm"
+          >
+            <Download className="h-3.5 w-3.5" />
+            Export Report
+          </button>
+        </div>
 
-            {/* Account */}
-            {user && (
-            <div className="relative">
-              <button
-                onClick={() => setShowAccountPanel(!showAccountPanel)}
-                className="inline-flex items-center h-8 px-3 text-xs font-semibold rounded-md border bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 transition-colors cursor-pointer"
-              >
-                <Leaf className="h-3.5 w-3.5 mr-1.5" />
-                {user.name || 'Sustainability Officer'}
-                <span className="ml-1.5 text-emerald-400">▾</span>
-              </button>
-
-              {showAccountPanel && (
-                <>
-                <div className="fixed inset-0 z-40" onClick={() => setShowAccountPanel(false)} />
-                <div
-                  className="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg border border-slate-200 shadow-xl z-50 overflow-hidden"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {/* Header */}
-                  <div className="px-4 py-3 bg-gradient-to-r from-emerald-50 to-slate-50 border-b border-slate-200">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-9 h-9 rounded-full bg-emerald-600 flex items-center justify-center text-white text-sm font-bold">
-                          {user.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2) || 'ES'}
-                        </div>
-                        <div>
-                          <div className="text-sm font-semibold text-slate-800">{user.name || 'Sustainability Officer'}</div>
-                          <div className="text-[11px] text-slate-500">{user.email || 'esg@project-pearl.org'}</div>
-                        </div>
-                      </div>
-                      <button onClick={() => setShowAccountPanel(false)} className="text-slate-400 hover:text-slate-600">
-                        <X size={14} />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Account info */}
-                  <div className="px-4 py-3 space-y-2 text-xs border-b border-slate-100">
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Role</span>
-                      <span className="font-medium text-slate-700">Sustainability</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Organization</span>
-                      <span className="font-medium text-slate-700 text-right">{user.organization || companyName}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Access Level</span>
-                      <Badge variant="outline" className="text-[10px] h-5 bg-green-50 border-green-200 text-green-700">Full Access</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Facilities</span>
-                      <span className="font-medium text-slate-700">{facilitiesData.length} monitored</span>
-                    </div>
-                  </div>
-
-                  {/* Account actions */}
-                  <div className="px-4 py-2.5 space-y-1">
-                    <button
-                      onClick={() => { setShowAccountPanel(false); router.push('/account'); }}
-                      className="w-full text-left px-3 py-2 rounded-md text-xs text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors"
-                    >
-                      <Shield size={13} className="text-slate-400" />
-                      My Account
-                    </button>
-                    <button
-                      onClick={() => { setShowAccountPanel(false); logout(); }}
-                      className="w-full text-left px-3 py-2 rounded-md text-xs text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
-                    >
-                      <LogOut size={13} />
-                      Sign Out
-                    </button>
-                  </div>
-
-                  {/* Footer */}
-                  <div className="px-4 py-2 border-t border-slate-100 bg-slate-50">
-                    <span className="text-[10px] text-slate-400">PEARL SCC v1.0 · {companyName} · Session {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                  </div>
-                </div>
-                </>
-              )}
-            </div>
-            )}
-        </HeroBanner>
-
-        <MissionQuote role="esg" variant="light" />
-
-        {/* ── COMPANY NAME ── */}
-        <div className="text-7xl font-bold text-emerald-700 text-center pt-3 capitalize">{companyName}</div>
+        {viewLens === 'overview' && (
+          <>
+            <MissionQuote role="esg" variant="light" />
+            <div className="text-7xl font-bold text-emerald-700 text-center pt-3 capitalize">{companyName}</div>
+          </>
+        )}
 
         <LayoutEditor ccKey="Sustainability">
         {({ sections, isEditMode, onToggleVisibility, onToggleCollapse, collapsedSections }) => {
@@ -1068,8 +883,6 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
             );
 
             case 'map-grid': return DS(
-        <>
-        {lens.showMap && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* LEFT: Map (2/3) */}
             <Card className="lg:col-span-2 border-2 border-slate-200">
@@ -1250,9 +1063,6 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
               </CardContent>
             </Card>
           </div>
-        )}
-
-        </>
             );
 
             case 'insights': return DS(
@@ -1260,8 +1070,6 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
             );
 
             case 'impact': return DS(
-        <>
-        {lens.showImpact && (
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
             <button onClick={() => onToggleCollapse('impact')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
               <span className="text-sm font-bold text-slate-800">Environmental Impact Summary</span>
@@ -1354,13 +1162,11 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
               </div>
             )}
           </div>
-        )}
-        </>
             );
 
             case 'chesbay': return DS(
         <>
-        {lens.showImpact && portfolioScores.cbFacs > 0 && (
+        {portfolioScores.cbFacs > 0 && (
           <div className="rounded-xl border border-blue-200 bg-white shadow-sm overflow-hidden">
             <button onClick={() => onToggleCollapse('chesbay')} className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 transition-colors">
               <span className="text-sm font-bold text-blue-900">Chesapeake Bay Watershed Contribution</span>
@@ -1464,8 +1270,6 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
             );
 
             case 'sustainability': return DS(
-        <>
-        {lens.showImpact && (
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
             <button onClick={() => onToggleCollapse('sustainability')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
               <span className="text-sm font-bold text-slate-800">Corporate Sustainability Dashboard</span>
@@ -1510,14 +1314,10 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
               </div>
             )}
           </div>
-        )}
-
-        </>
             );
 
             case 'disclosure': return DS(
         <>
-        {lens.showDisclosure && (
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
             <button onClick={() => onToggleCollapse('disclosure')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
               <span className="text-sm font-bold text-slate-800">Disclosure & Reporting Readiness</span>
@@ -1578,7 +1378,6 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
               </div>
             )}
           </div>
-        )}
 
         {/* ── CLOSE THE GAP WIZARD MODAL ── */}
         {gapWizardFramework && CLOSE_THE_GAP[gapWizardFramework] && (() => {
@@ -1785,13 +1584,10 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
             </div>
           );
         })()}
-
         </>
             );
 
             case 'supplychain': return DS(
-        <>
-        {lens.showRisk && (
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
             <button onClick={() => onToggleCollapse('supplychain')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
               <span className="text-sm font-bold text-slate-800">Supply Chain Water Risk</span>
@@ -1855,14 +1651,9 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
               </div>
             )}
           </div>
-        )}
-
-        </>
             );
 
             case 'economic': return DS(
-        <>
-        {lens.showImpact && (
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
             <button onClick={() => onToggleCollapse('economic')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
               <span className="text-sm font-bold text-slate-800">Economic Co-Benefits</span>
@@ -1914,14 +1705,9 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
               </div>
             )}
           </div>
-        )}
-
-        </>
             );
 
             case 'shareholder': return DS(
-        <>
-        {lens.showShareholder && (
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
             <button onClick={() => onToggleCollapse('shareholder')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
               <span className="text-sm font-bold text-slate-800">Shareholder & Investor Reporting</span>
@@ -1975,14 +1761,9 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
               </div>
             )}
           </div>
-        )}
-
-        </>
             );
 
             case 'benchmark': return DS(
-        <>
-        {lens.showBenchmark && (
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
             <button onClick={() => onToggleCollapse('benchmark')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
               <span className="text-sm font-bold text-slate-800">Industry Sustainability Benchmarking</span>
@@ -2021,14 +1802,9 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
               </div>
             )}
           </div>
-        )}
-
-        </>
             );
 
             case 'compliance': return DS(
-        <>
-        {lens.showCompliance && (
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
             <button onClick={() => onToggleCollapse('compliance')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
               <span className="text-sm font-bold text-slate-800">Regulatory Compliance Status</span>
@@ -2068,14 +1844,9 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
               </div>
             )}
           </div>
-        )}
-
-        </>
             );
 
             case 'brand': return DS(
-        <>
-        {lens.showBrand && (
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
             <button onClick={() => onToggleCollapse('brand')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
               <span className="text-sm font-bold text-slate-800">Brand & Value Trust</span>
@@ -2128,14 +1899,9 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
               </div>
             )}
           </div>
-        )}
-
-        </>
             );
 
             case 'grants': return DS(
-        <>
-        {lens.showGrants && (
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
             <button onClick={() => onToggleCollapse('grants')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
               <span className="text-sm font-bold text-slate-800">Grant & Incentive Opportunities</span>
@@ -2171,8 +1937,6 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
               </div>
             )}
           </div>
-        )}
-        </>
             );
 
             case 'groundwater': return DS(
@@ -2185,7 +1949,6 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
             );
 
             case 'trends-dashboard': return DS(
-        lens.showTrends ? (
         <Card>
           <CardHeader>
             <CardTitle>ESG & Water Risk Trends</CardTitle>
@@ -2259,7 +2022,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
             </div>
           </CardContent>
         </Card>
-        ) : null);
+            );
 
             // ── Shared panels ──
             case 'resolution-planner': return DS(<ResolutionPlanner userRole="corporate" scopeContext={{ scope: 'national', data: { totalStates: 50, totalWaterbodies: 0, totalImpaired: 0, averageScore: 0, highAlertStates: 0, topCauses: [], worstStates: [] } }} />);
@@ -2301,7 +2064,6 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
             case 'esg-reporting-panel': return DS(<ESGReportingPanel stateAbbr="" />);
             case 'supply-chain-risk-panel': return DS(<SupplyChainRiskPanel stateAbbr="" />);
 
-            case 'location-report': return DS(<LocationReportCard />);
 
             case 'warr-metrics': {
               const warrM: WARRMetric[] = [
@@ -2321,6 +2083,10 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
               <WARRZones zone="warr-resolve" role="Corporate" stateAbbr="US" metrics={[]} events={[]} activeResolutionCount={0} />
             );
 
+            case 'data-export-hub': return DS(
+              <DataExportHub context="esg" />
+            );
+
             case 'disclaimer': return DS(
               <PlatformDisclaimer />
             );
@@ -2330,7 +2096,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
         })}
 
         {/* ── WATER RISK DETAIL (selected facility) ── */}
-        {lens.showRisk && selectedFac && (
+        {selectedFac && (
           <div className="rounded-xl border-2 border-emerald-200 bg-white shadow-sm overflow-hidden">
             <div className="px-4 py-3 bg-emerald-50 border-b border-emerald-200 flex items-center justify-between">
               <span className="text-sm font-bold text-emerald-800">{selectedFac.name} — Facility Detail</span>
@@ -2399,21 +2165,6 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
           </div>
         )}
 
-        {/* ── DATA EXPORT HUB ── */}
-        <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <button onClick={() => onToggleCollapse('exporthub')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-            <span className="text-sm font-bold text-slate-800">Data Export Hub</span>
-            <span className="flex items-center gap-1">
-              {isSectionOpen('exporthub') && <BrandedPrintBtn sectionId="exporthub" title="Data Export Hub" />}
-              {isSectionOpen('exporthub') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
-            </span>
-          </button>
-          {isSectionOpen('exporthub') && (
-            <div className="p-4">
-              <DataExportHub context="esg" />
-            </div>
-          )}
-        </div>
 
         </div>
         </>);

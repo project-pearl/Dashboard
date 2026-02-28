@@ -328,7 +328,6 @@ export const DEFAULT_SECTIONS = {
     { id: 'trends-dashboard', label: 'Trends & Forecasting',       order: 16, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Shared panels ──
     { id: 'resolution-planner',    label: 'Resolution Plan Workspace',     order: 17, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'restoration-planner',   label: 'Restoration Planner',           order: 18, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'policy-tracker',        label: 'Policy & Regulatory Tracker',   order: 19, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'contaminants-tracker',  label: 'Emerging Contaminants',         order: 20, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'icis',                  label: 'NPDES Compliance & Enforcement',order: 20, visible: true, defaultExpanded: false, lensControlled: true },
@@ -342,7 +341,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'facility-operations-panel', label: 'Facility Operations',      order: 27, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'esg-reporting-panel',      label: 'ESG Reporting',             order: 28, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'supply-chain-risk-panel',  label: 'Supply Chain Risk',         order: 29, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'location-report',          label: 'Location Water Quality Report', order: 30, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'data-export-hub',           label: 'Data Export Hub',            order: 29.5, visible: true, defaultExpanded: false, lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 31, visible: true, defaultExpanded: true,  lensControlled: true },
   ],
