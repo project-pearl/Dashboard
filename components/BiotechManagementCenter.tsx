@@ -29,7 +29,7 @@ import {
   DollarSign, Eye, Lock, Activity, ArrowRight, ChevronRight, Search, Filter,
   Download, ExternalLink, Star, Zap, Heart, Scale, X, Microscope, Beaker,
   CheckCircle2, Circle, AlertCircle, Sparkles, ClipboardList, Link2, FlaskConical, Package,
-  ShieldCheck, Factory, Waves, Pill, TestTubes, Syringe
+  ShieldCheck, Factory, Waves, Pill, TestTubes, Syringe, Banknote, PieChart
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/authContext';
@@ -91,7 +91,7 @@ type FacilityRow = {
 // ─── Lenses (9-view architecture) ──────────────────────────────────────────
 
 type ViewLens = 'overview' | 'process-water' | 'discharge-effluent' | 'compliance' |
-  'contaminants' | 'facility-operations' | 'gmp-quality' | 'supply-chain' | 'trends';
+  'contaminants' | 'facility-operations' | 'gmp-quality' | 'supply-chain' | 'funding' | 'trends';
 
 type LensConfig = {
   label: string;
@@ -140,6 +140,11 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
     label: 'Supply Chain & Risk', description: 'Supply chain water risk and economic analysis',
     icon: Link2,
     sections: new Set(['supply-chain-risk-panel', 'economic', 'disclaimer']),
+  },
+  funding: {
+    label: 'Funding & Grants', description: 'Active grants, SRF program, opportunity pipeline, and financial analytics',
+    icon: DollarSign,
+    sections: new Set(['grants', 'fund-active', 'fund-srf', 'fund-pipeline', 'fund-analytics', 'disclaimer']),
   },
   trends: {
     label: 'Trends & Outlook', description: 'Water risk trajectories, AI insights, disaster response, and resolution planning',
@@ -1442,6 +1447,147 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                       </div>
                     ))}
                   </div>
+                </CardContent>
+              </Card>
+            );
+
+            // ─── FUNDING PANELS ─────────────────────────────────────────────
+
+            case 'fund-active': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5 text-green-600" />
+                    Active Grants & Funding
+                  </CardTitle>
+                  <CardDescription>Currently active grants and funding sources for biotech operations</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { grant: 'EPA Water Infrastructure Finance (WIFIA)', amount: '$2.5M', period: '2024-2029', remaining: '$2.1M', status: 'Active' },
+                      { grant: 'State SRF Process Water Upgrade Loan', amount: '$1.8M', period: '2024-2028', remaining: '$1.4M', status: 'Active' },
+                      { grant: 'NIH Green Chemistry R&D Grant', amount: '$750,000', period: '2025-2027', remaining: '$750,000', status: 'New' },
+                      { grant: 'State Clean Water Fund', amount: '$400,000', period: '2023-2026', remaining: '$120,000', status: 'Active' },
+                    ].map((g, i) => (
+                      <div key={i} className="flex items-center justify-between text-xs border border-slate-200 rounded-lg px-3 py-2">
+                        <span className="text-slate-700 font-medium">{g.grant}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-slate-500">{g.amount}</span>
+                          <span className="text-slate-400">{g.period}</span>
+                          <span className="text-slate-500">Rem: {g.remaining}</span>
+                          <Badge variant="outline" className={`text-[9px] ${g.status === 'New' ? 'border-blue-300 text-blue-700' : 'border-green-300 text-green-700'}`}>{g.status}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-3 italic">Data source: Grants management system, SAM.gov, state funding portals</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'fund-srf': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Banknote className="h-5 w-5 text-blue-600" />
+                    SRF Program
+                  </CardTitle>
+                  <CardDescription>State Revolving Fund loans received, terms, and repayment status</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Capitalization (State Level)</div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'CWSRF Cap Grant', value: '$42M', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'DWSRF Cap Grant', value: '$28M', bg: 'bg-sky-50 border-sky-200' },
+                      { label: 'BIL Supplement', value: '$18M', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Loan Repayments', value: '$31M/yr', bg: 'bg-slate-50 border-slate-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1 mt-4">Facility Pass-Through</div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'SRF Loans Received', value: '2', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Outstanding Balance', value: '$3.2M', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Interest Rate', value: '1.5%', bg: 'bg-slate-50 border-slate-200' },
+                      { label: 'Repayment Status', value: 'Current', bg: 'bg-emerald-50 border-emerald-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-2 italic">Data source: State SRF program, facility loan records</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'fund-pipeline': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="h-5 w-5 text-blue-600" />
+                    Funding Pipeline
+                  </CardTitle>
+                  <CardDescription>Upcoming funding opportunities and application status</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { opportunity: 'EPA WIFIA Supplemental Funding', amount: 'Up to $5M', deadline: 'Jun 2026', status: 'Preparing' },
+                      { opportunity: 'State Clean Water Infrastructure Grant', amount: '$500,000', deadline: 'Aug 2026', status: 'Eligible' },
+                      { opportunity: 'BIL Emerging Contaminants Fund', amount: '$1M', deadline: 'Nov 2026', status: 'Pre-Application' },
+                      { opportunity: 'USDA BioPreferred Manufacturing Grant', amount: '$250,000', deadline: 'Feb 2027', status: 'Researching' },
+                    ].map((o, i) => (
+                      <div key={i} className="flex items-center justify-between text-xs border border-slate-200 rounded-lg px-3 py-2">
+                        <span className="text-slate-700">{o.opportunity}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-slate-500">{o.amount}</span>
+                          <span className="text-slate-400">Due: {o.deadline}</span>
+                          <Badge variant="outline" className={`text-[9px] ${o.status === 'Preparing' ? 'border-amber-300 text-amber-700' : o.status === 'Pre-Application' ? 'border-blue-300 text-blue-700' : 'border-slate-300 text-slate-600'}`}>{o.status}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'fund-analytics': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <PieChart className="h-5 w-5 text-teal-600" />
+                    Funding Analytics
+                  </CardTitle>
+                  <CardDescription>Financial analysis and ROI metrics for water infrastructure investments</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { metric: 'Cost per gallon treated (USP)', value: '$0.0042/gal', trend: 'Decreasing' },
+                      { metric: 'Water recycling ROI', value: '2.8:1', trend: 'Improving' },
+                      { metric: 'Grant funding leverage ratio', value: '3.5:1', trend: 'Stable' },
+                      { metric: 'Compliance cost avoidance (annual)', value: '$1.2M', trend: 'Increasing' },
+                      { metric: 'Total grant funding secured (FY)', value: '$5.45M', trend: 'Improving' },
+                    ].map((m, i) => (
+                      <div key={i} className="flex items-center justify-between text-xs border border-slate-200 rounded-lg px-3 py-2">
+                        <span className="text-slate-700">{m.metric}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="font-mono font-semibold text-slate-800">{m.value}</span>
+                          <Badge variant="outline" className={`text-[9px] ${m.trend === 'Improving' || m.trend === 'Decreasing' ? 'border-green-300 text-green-700' : m.trend === 'Increasing' ? 'border-amber-300 text-amber-700' : 'border-slate-300 text-slate-600'}`}>{m.trend}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-3 italic">Data source: Financial management system, grant tracking database</p>
                 </CardContent>
               </Card>
             );

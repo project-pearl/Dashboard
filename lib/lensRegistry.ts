@@ -142,6 +142,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'facility-operations', label: 'Facility Operations' },
     { id: 'gmp-quality',         label: 'GMP & Quality Systems' },
     { id: 'supply-chain',        label: 'Supply Chain & Risk' },
+    { id: 'funding',             label: 'Funding & Grants' },
     { id: 'trends',              label: 'Trends & Outlook' },
   ],
   // ── Investor / Financial (9 items) ─────────────────────────────────────────
