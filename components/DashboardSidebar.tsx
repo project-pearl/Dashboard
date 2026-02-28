@@ -117,7 +117,7 @@ const LENS_ICONS: Record<string, LucideIcon> = {
   laboratory: Microscope,
   'permit-limits': FileCheck,
   'asset-management': Wrench,
-  // ── Site & Property Intelligence ────────────────────────────────────────────
+  // ── Site Intelligence ────────────────────────────────────────────────────────
   developer: HardHat,
   'real-estate': MapPin,
   legal: Scale,
@@ -144,6 +144,13 @@ const LENS_ICONS: Record<string, LucideIcon> = {
   'discharge-effluent': Waves,
   'gmp-quality': ClipboardList,
   // contaminants already mapped above
+  // ── Investor ──────────────────────────────────────────────────────
+  'portfolio-risk': BarChart3,
+  'water-stress': Droplets,
+  'esg-disclosure': FileCheck,
+  'climate-resilience': CloudRain,
+  'financial-impact': DollarSign,
+  'due-diligence': Search,
   // ── University ─────────────────────────────────────────────────────────────
   'research-monitoring': Microscope,
   'campus-stormwater': CloudRain,
@@ -201,7 +208,8 @@ function buildNavGroups(stateCode: string): NavGroup[] { return [
     items: [
       { label: 'Sustainability', href: '/dashboard/esg', icon: Factory, accent: 'text-emerald-700', accentBg: 'bg-emerald-50 border-emerald-200' },
       { label: 'Biotech / Pharma', href: '/dashboard/biotech', icon: Microscope, accent: 'text-violet-700', accentBg: 'bg-violet-50 border-violet-200' },
-      { label: 'Site Intelligence', href: '/dashboard/site-intelligence', icon: Search, accent: 'text-amber-700', accentBg: 'bg-amber-50 border-amber-200' },
+      { label: 'Investor', href: '/dashboard/investor', icon: TrendingUp, accent: 'text-amber-700', accentBg: 'bg-amber-50 border-amber-200' },
+      { label: 'Property Info', href: '/dashboard/site-intelligence', icon: Search, accent: 'text-amber-700', accentBg: 'bg-amber-50 border-amber-200' },
     ],
   },
   {

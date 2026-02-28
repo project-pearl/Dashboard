@@ -96,7 +96,7 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   infrastructure: {
     image: '/site-management.png',
     subtitle: 'PIN — PEARL Intelligence Network',
-    headline: 'Site & Property Intelligence',
+    headline: 'Site Intelligence',
     description:
       'Location-based water quality risk assessment, regulatory exposure, and environmental due diligence for any US property.',
     accentColor: 'text-slate-400',
@@ -104,9 +104,17 @@ export const heroConfigs: Record<string, HeroBannerConfig> = {
   'site-intel': {
     image: '/images/heroes/Aerial.png',
     subtitle: 'PIN — PEARL Intelligence Network',
-    headline: 'Site Intelligence',
+    headline: 'Property Information',
     description:
       'Comprehensive environmental, regulatory, and water quality dossier for any US address.',
+    accentColor: 'text-amber-400',
+  },
+  investor: {
+    image: '/images/heroes/Industrial.png',
+    subtitle: 'PIN — PEARL Intelligence Network',
+    headline: 'Water Risk & Investment Intelligence',
+    description:
+      'Portfolio water stress exposure, climate resilience scoring, regulatory cost forecasting, and ESG-aligned water metrics for financial professionals.',
     accentColor: 'text-amber-400',
   },
   'aqua-lo': {

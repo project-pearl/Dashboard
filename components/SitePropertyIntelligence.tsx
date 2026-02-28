@@ -642,7 +642,7 @@ table{width:100%;border-collapse:collapse}th{background:#F1F5F9;padding:5px 8px;
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
             <div style={{ width: 30, height: 30, borderRadius: 8, background: "linear-gradient(135deg, #3B82F6, #1D4ED8)", display: "flex", alignItems: "center", justifyContent: "center" }}><span style={{ color: "#fff", fontSize: 15 }}>{"\u{1F4CD}"}</span></div>
-            <div><div style={{ color: "#F8FAFC", fontWeight: 800, fontSize: 15 }}>Site & Property Intelligence</div><div style={{ color: "#94A3B8", fontSize: 10 }}>PIN Water Score · 9 Indices · Five Domains · Real-Time Data</div></div>
+            <div><div style={{ color: "#F8FAFC", fontWeight: 800, fontSize: 15 }}>Site Intelligence</div><div style={{ color: "#94A3B8", fontSize: 10 }}>PIN Water Score · 9 Indices · Five Domains · Real-Time Data</div></div>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             <input

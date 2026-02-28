@@ -17,7 +17,7 @@ const ROUTE_LABELS: Record<string, string> = {
   university: 'University Research',
   ngo: 'NGO Conservation',
   utility: 'Municipal Utility',
-  infrastructure: 'Site & Property',
+  infrastructure: 'Site Intelligence',
   'aqua-lo': 'AQUA-LO',
 };
 

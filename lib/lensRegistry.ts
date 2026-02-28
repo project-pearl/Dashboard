@@ -102,7 +102,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'asset-management',   label: 'Asset Management' },
     { id: 'funding',            label: 'Funding & Grants' },
   ],
-  // ── Site & Property Intelligence (17 lenses) ──────────────────────────────
+  // ── Site Intelligence (17 lenses) ──────────────────────────────────────────
   '/dashboard/infrastructure': [
     { id: 'overview', label: 'Dashboard' },
     { id: 'developer', label: 'Developer' },
@@ -142,6 +142,18 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'facility-operations', label: 'Facility Operations' },
     { id: 'gmp-quality',         label: 'GMP & Quality Systems' },
     { id: 'supply-chain',        label: 'Supply Chain & Risk' },
+    { id: 'trends',              label: 'Trends & Outlook' },
+  ],
+  // ── Investor / Financial (9 items) ─────────────────────────────────────────
+  '/dashboard/investor': [
+    { id: 'overview',            label: 'Executive Overview' },
+    { id: 'portfolio-risk',      label: 'Portfolio Risk' },
+    { id: 'water-stress',        label: 'Water Stress' },
+    { id: 'compliance',          label: 'Compliance & Regulatory' },
+    { id: 'esg-disclosure',      label: 'ESG Disclosure' },
+    { id: 'climate-resilience',  label: 'Climate Resilience' },
+    { id: 'financial-impact',    label: 'Financial Impact' },
+    { id: 'due-diligence',       label: 'Due Diligence' },
     { id: 'trends',              label: 'Trends & Outlook' },
   ],
   // ── University / Research (18 items) ───────────────────────────────────────

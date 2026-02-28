@@ -305,7 +305,7 @@ function SiteIntelligenceContent() {
               <MapPin className="w-5 h-5 text-slate-600" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-slate-900">Site & Property Intelligence</h1>
+              <h1 className="text-lg font-bold text-slate-900">Site Intelligence</h1>
               <p className="text-xs text-slate-500">Enter an address, ZIP code, or coordinates to assess water quality risk at any location</p>
             </div>
           </div>
