@@ -8,7 +8,7 @@ import { getStatesGeoJSON, geoToAbbr, STATE_GEO_LEAFLET, FIPS_TO_ABBR as _FIPS, 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Info, LogOut, Printer, Users, Heart, Leaf, AlertCircle, Gauge } from 'lucide-react';
+import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Info, LogOut, Printer, Users, Heart, Leaf, AlertCircle, Gauge, Fish, ShieldAlert, Bug } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getRegionById } from '@/lib/regionsConfig';
 import { resolveWaterbodyCoordinates } from '@/lib/waterbodyCentroids';
@@ -19,7 +19,7 @@ import { useTierFilter } from '@/lib/useTierFilter';
 import { computeRestorationPlan, resolveAttainsCategory, mergeAttainsCauses, COST_PER_UNIT_YEAR } from '@/lib/restorationEngine';
 import { BrandedPDFGenerator } from '@/lib/brandedPdfGenerator';
 import { WaterbodyDetailCard } from '@/components/WaterbodyDetailCard';
-import { getEcoScore, getEcoData } from '@/lib/ecologicalSensitivity';
+import { getEcoScore, getEcoData, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
 import { getEJScore, getEJData, ejScoreLabel } from '@/lib/ejVulnerability';
 import { STATE_AUTHORITIES } from '@/lib/stateWaterData';
 import { useAuth } from '@/lib/authContext';
@@ -91,7 +91,7 @@ type Props = {
 // ─── Lenses (18-view architecture) ───────────────────────────────────────────
 
 type ViewLens = 'overview' | 'briefing' | 'trends' | 'policy' | 'compliance' |
-  'water-quality' | 'public-health' | 'watershed-health' | 'restoration-projects' |
+  'water-quality' | 'public-health' | 'habitat' | 'watershed-health' | 'restoration-projects' |
   'infrastructure' | 'monitoring' | 'disaster-emergency' | 'advocacy' |
   'scorecard' | 'reports' | 'volunteer-program' | 'citizen-reporting' | 'funding' | 'warr' | 'initiatives';
 
@@ -136,6 +136,8 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set(['citizen-reporting-panel', 'volunteer-program-panel', 'community', 'disclaimer']) },
   funding:     { label: 'Funding & Grants', description: 'Conservation funding opportunities',
     sections: new Set(['grants', 'disclaimer']) },
+  habitat:     { label: 'Habitat & Ecology', description: 'Ecological sensitivity, T&E species, and habitat impact',
+    sections: new Set(['hab-ecoscore', 'hab-wildlife', 'disclaimer']) },
   warr:        { label: 'WARR Room', description: 'Water Alert & Response Readiness — real-time situation awareness',
     sections: new Set(['warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']) },
   initiatives: { label: 'Initiatives', description: 'Conservation initiative planning and tracking',
@@ -3032,6 +3034,98 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
             case 'warr-resolve': return DS(
               <WARRZones zone="warr-resolve" role="NGO" stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} />
             );
+
+            // ── Habitat & Ecology ──
+            case 'hab-ecoscore': {
+              const ecoData = getEcoData(stateAbbr);
+              const ecoScore = getEcoScore(stateAbbr);
+              const label = ecoScoreLabel(ecoScore);
+              const scoreBg = ecoScore >= 80 ? 'bg-red-50 border-red-200 text-red-700'
+                : ecoScore >= 60 ? 'bg-orange-50 border-orange-200 text-orange-700'
+                : ecoScore >= 40 ? 'bg-amber-50 border-amber-200 text-amber-700'
+                : ecoScore >= 20 ? 'bg-blue-50 border-blue-200 text-blue-700'
+                : 'bg-slate-50 border-slate-200 text-slate-700';
+              return DS(
+                <div className={`rounded-xl border-2 p-5 flex items-center justify-between ${scoreBg}`}>
+                  <div>
+                    <div className="text-[10px] font-bold uppercase tracking-wider opacity-70">Ecological Sensitivity</div>
+                    <div className="text-lg font-bold mt-1">{stateName} Eco Score</div>
+                    <div className="text-xs opacity-80 mt-0.5">
+                      {ecoData ? `${ecoData.totalTE} total T&E species · ${ecoData.aquaticTE} aquatic · ${ecoData.criticalHabitat} critical habitat designations` : 'No T&E data available'}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-4xl font-extrabold">{ecoScore}</div>
+                    <Badge variant="outline" className="text-xs mt-1">{label}</Badge>
+                  </div>
+                </div>
+              );
+            }
+            case 'hab-wildlife': {
+              const teData = getEcoData(stateAbbr);
+              const federalAquatic = teData?.aquaticTE ?? 0;
+              const federalTotal = teData?.totalTE ?? 0;
+              const critHab = teData?.criticalHabitat ?? 0;
+              const aquaticPct = federalTotal > 0 ? ((federalAquatic / federalTotal) * 100).toFixed(0) : '0';
+              const critPct = federalTotal > 0 ? ((critHab / federalTotal) * 100).toFixed(0) : '0';
+              return DS(
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Bug className="h-5 w-5 text-rose-600" />
+                      Threatened & Endangered Species — {stateName}
+                      <Badge variant="secondary" className="ml-1 text-[10px]">USFWS ECOS</Badge>
+                    </CardTitle>
+                    <CardDescription>ESA-listed species with ecological sensitivity for {stateAbbr}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div className="rounded-xl border p-4 bg-slate-50 border-slate-200">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total T&E</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{federalTotal}</div>
+                        <div className="text-[10px] text-slate-400">Federal ESA</div>
+                      </div>
+                      <div className="rounded-xl border p-4 bg-blue-50 border-blue-200">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Aquatic T&E</div>
+                        <div className="text-2xl font-bold text-blue-700 mt-1">{federalAquatic}</div>
+                        <div className="text-[10px] text-slate-400">Freshwater / marine</div>
+                      </div>
+                      <div className="rounded-xl border p-4 bg-rose-50 border-rose-200">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Critical Habitat</div>
+                        <div className="text-2xl font-bold text-rose-700 mt-1">{critHab}</div>
+                        <div className="text-[10px] text-slate-400">Designated areas</div>
+                      </div>
+                      <div className="rounded-xl border p-4 bg-amber-50 border-amber-200">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Eco Score</div>
+                        <div className="text-2xl font-bold text-amber-700 mt-1">{getEcoScore(stateAbbr)}</div>
+                        <div className="text-[10px] text-slate-400">{ecoScoreLabel(getEcoScore(stateAbbr))}</div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="rounded-lg border border-slate-200 p-3">
+                        <div className="flex items-center justify-between text-xs mb-1.5">
+                          <span className="flex items-center gap-1 text-slate-600"><Fish size={12} /> Aquatic species ratio</span>
+                          <span className="font-semibold text-blue-700">{aquaticPct}%</span>
+                        </div>
+                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <div className="h-full rounded-full bg-blue-500 transition-all" style={{ width: `${aquaticPct}%` }} />
+                        </div>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 p-3">
+                        <div className="flex items-center justify-between text-xs mb-1.5">
+                          <span className="flex items-center gap-1 text-slate-600"><ShieldAlert size={12} /> Critical habitat coverage</span>
+                          <span className="font-semibold text-rose-700">{critPct}%</span>
+                        </div>
+                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <div className="h-full rounded-full bg-rose-500 transition-all" style={{ width: `${critPct}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-400 italic">Source: USFWS ECOS — ESA-listed species by state (2024-2025)</p>
+                  </CardContent>
+                </Card>
+              );
+            }
 
             case 'disclaimer': return DS(
               <PlatformDisclaimer />

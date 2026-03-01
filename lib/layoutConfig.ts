@@ -49,6 +49,9 @@ export const DEFAULT_SECTIONS = {
     { id: 'contaminants-tracker', label: 'Emerging Contaminants',        order: 17, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'sdwis',               label: 'Drinking Water (SDWIS)',        order: 17, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'reports-hub',         label: 'Reports Hub',                   order: 18, visible: true, defaultExpanded: true, lensControlled: true },
+    // ── Habitat & Ecology ──
+    { id: 'hab-ecoscore',               label: 'Ecological Sensitivity Score', order: 18.1, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'hab-wildlife',               label: 'Wildlife & T&E Species',      order: 18.2, visible: true, defaultExpanded: true, lensControlled: true },
     // ── K-12 exclusive panels ──
     { id: 'outdoor-classroom-panel',     label: 'Outdoor Classroom',           order: 19, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'student-monitoring-panel',    label: 'Student Monitoring Tools',    order: 20, visible: true, defaultExpanded: true, lensControlled: true },
@@ -87,6 +90,16 @@ export const DEFAULT_SECTIONS = {
     { id: 'briefing-changes',    label: 'What Changed Overnight',        order: 17, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'briefing-pulse',      label: 'Program Pulse',                 order: 18, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'briefing-stakeholder', label: 'Stakeholder Watch',            order: 19, visible: true, defaultExpanded: true,  lensControlled: true },
+    // ── Political Briefing ──
+    { id: 'pol-talking-points',       label: 'Talking Points',              order: 19.41, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-constituent-concerns', label: 'Constituent Concerns',        order: 19.42, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-funding-wins',        label: 'Funding Wins',                order: 19.43, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-funding-risks',       label: 'Funding Risks',               order: 19.44, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-regulatory-deadlines', label: 'Regulatory Deadlines',       order: 19.45, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-ej-exposure',         label: 'EJ Exposure Summary',         order: 19.46, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-media-ready-grades',  label: 'Media-Ready Grades',          order: 19.47, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-peer-comparison',     label: 'Peer Comparison',             order: 19.48, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-council-agenda',      label: 'Council Agenda Suggestions',  order: 19.49, visible: true, defaultExpanded: true, lensControlled: true },
     // ── Emergency Response / Resolution Planner (View 3) ──
     { id: 'fed-emergency-overview', label: 'National Emergency Overview', order: 19.1, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'fed-active-incidents', label: 'Active Incidents',              order: 19.2, visible: true, defaultExpanded: true, lensControlled: true },
@@ -211,6 +224,16 @@ export const DEFAULT_SECTIONS = {
     { id: 'briefing-changes',    label: 'What Changed Overnight',           order: 16, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'briefing-pulse',      label: 'Program Pulse',                    order: 17, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'briefing-stakeholder', label: 'Stakeholder Watch',               order: 18, visible: true, defaultExpanded: true,  lensControlled: true },
+    // ── Political Briefing ──
+    { id: 'pol-talking-points',       label: 'Talking Points',                order: 18.41, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-constituent-concerns', label: 'Constituent Concerns',          order: 18.42, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-funding-wins',        label: 'Funding Wins',                  order: 18.43, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-funding-risks',       label: 'Funding Risks',                 order: 18.44, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-regulatory-deadlines', label: 'Regulatory Deadlines',         order: 18.45, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-ej-exposure',         label: 'EJ Exposure Summary',           order: 18.46, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-media-ready-grades',  label: 'Media-Ready Grades',            order: 18.47, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-peer-comparison',     label: 'Peer Comparison',               order: 18.48, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-council-agenda',      label: 'Council Agenda Suggestions',    order: 18.49, visible: true, defaultExpanded: true, lensControlled: true },
     // ── Resolution Planner (View 3) ──
     { id: 'resolution-planner',  label: 'Resolution Plan Workspace',        order: 19, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'restoration-planner', label: 'Restoration Planner',              order: 20, visible: true, defaultExpanded: true,  lensControlled: true },
@@ -232,6 +255,9 @@ export const DEFAULT_SECTIONS = {
     { id: 'ph-contaminants',     label: 'Contaminant Tracking',             order: 31, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'ph-health-coord',     label: 'Health Department Coordination',   order: 32, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'ph-advisories',       label: 'Public Advisories & Notifications', order: 33, visible: true, defaultExpanded: true, lensControlled: true },
+    // ── Habitat & Ecology ──
+    { id: 'hab-ecoscore',        label: 'Ecological Sensitivity Score',     order: 33.1, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'hab-wildlife',        label: 'Wildlife & T&E Species',           order: 33.2, visible: true, defaultExpanded: true, lensControlled: true },
     // ── Receiving Waters (View 9) ★ ──
     { id: 'rw-map',              label: 'Receiving Water Map',              order: 34, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'rw-profiles',         label: 'Waterbody Profiles',               order: 35, visible: true, defaultExpanded: true,  lensControlled: true },
@@ -334,6 +360,9 @@ export const DEFAULT_SECTIONS = {
     { id: 'scorecard-kpis',        label: 'Scorecard KPIs',               order: 23, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'scorecard-grades',      label: 'Scorecard Grades',             order: 24, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'reports-hub',           label: 'Reports Hub',                   order: 25, visible: true, defaultExpanded: true, lensControlled: true },
+    // ── Habitat & Ecology ──
+    { id: 'hab-ecoscore',               label: 'Ecological Sensitivity Score', order: 25.1, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'hab-wildlife',               label: 'Wildlife & T&E Species',      order: 25.2, visible: true, defaultExpanded: true, lensControlled: true },
     // ── ESG exclusive panels ──
     { id: 'water-stewardship-panel',  label: 'Water Stewardship',         order: 26, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'facility-operations-panel', label: 'Facility Operations',      order: 27, visible: true, defaultExpanded: true, lensControlled: true },
@@ -372,6 +401,9 @@ export const DEFAULT_SECTIONS = {
     { id: 'sdwis',                label: 'Drinking Water (SDWIS)',          order: 13,  visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'disaster-emergency-panel', label: 'Disaster & Emergency',        order: 14,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'reports-hub',          label: 'Reports Hub',                     order: 15,  visible: true, defaultExpanded: true,  lensControlled: true },
+    // ── Habitat & Ecology ──
+    { id: 'hab-ecoscore',           label: 'Ecological Sensitivity Score',   order: 15.1, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'hab-wildlife',           label: 'Wildlife & T&E Species',         order: 15.2, visible: true, defaultExpanded: true, lensControlled: true },
     // ── Biotech-exclusive panels ──
     { id: 'usp-water-specs',      label: 'USP Water Specifications',        order: 16,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'purified-water-kpis',  label: 'Purified Water KPIs',            order: 17,  visible: true, defaultExpanded: true,  lensControlled: true },
@@ -470,6 +502,16 @@ export const DEFAULT_SECTIONS = {
     { id: 'restoration-planner',   label: 'Restoration Planner',           order: 13, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'policy-tracker',        label: 'Policy & Regulatory Tracker',   order: 14, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'contaminants-tracker',  label: 'Emerging Contaminants',         order: 15, visible: true, defaultExpanded: true, lensControlled: true },
+    // ── Political Briefing ──
+    { id: 'pol-talking-points',       label: 'Talking Points',              order: 15.1, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-constituent-concerns', label: 'Constituent Concerns',        order: 15.2, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-funding-wins',        label: 'Funding Wins',                order: 15.3, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-funding-risks',       label: 'Funding Risks',               order: 15.4, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-regulatory-deadlines', label: 'Regulatory Deadlines',       order: 15.5, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-ej-exposure',         label: 'EJ Exposure Summary',         order: 15.6, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-media-ready-grades',  label: 'Media-Ready Grades',          order: 15.7, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-peer-comparison',     label: 'Peer Comparison',             order: 15.8, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-council-agenda',      label: 'Council Agenda Suggestions',  order: 15.9, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'icis',                  label: 'NPDES Compliance & Enforcement',order: 15, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'sdwis',                 label: 'Drinking Water (SDWIS)',        order: 16, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'groundwater',           label: 'Groundwater Monitoring (WDFN)', order: 17, visible: true, defaultExpanded: false, lensControlled: true },
@@ -477,6 +519,9 @@ export const DEFAULT_SECTIONS = {
     { id: 'scorecard-kpis',        label: 'Scorecard KPIs',               order: 19, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'scorecard-grades',      label: 'Scorecard Grades',             order: 20, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'reports-hub',           label: 'Reports Hub',                   order: 21, visible: true, defaultExpanded: true, lensControlled: true },
+    // ── Habitat & Ecology ──
+    { id: 'hab-ecoscore',                label: 'Ecological Sensitivity Score',  order: 21.1, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'hab-wildlife',                label: 'Wildlife & T&E Species',        order: 21.2, visible: true, defaultExpanded: true, lensControlled: true },
     // ── NGO exclusive panels ──
     { id: 'watershed-health-panel',      label: 'Watershed Health',              order: 22, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'restoration-projects-panel',  label: 'Restoration Projects',          order: 23, visible: true, defaultExpanded: true, lensControlled: true },
@@ -520,6 +565,9 @@ export const DEFAULT_SECTIONS = {
     { id: 'scorecard-kpis',        label: 'Scorecard KPIs',               order: 21, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'scorecard-grades',      label: 'Scorecard Grades',             order: 22, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'reports-hub',           label: 'Reports Hub',                   order: 23, visible: true, defaultExpanded: true, lensControlled: true },
+    // ── Habitat & Ecology ──
+    { id: 'hab-ecoscore',                 label: 'Ecological Sensitivity Score', order: 23.1, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'hab-wildlife',                 label: 'Wildlife & T&E Species',      order: 23.2, visible: true, defaultExpanded: true, lensControlled: true },
     // ── University exclusive panels ──
     { id: 'campus-stormwater-panel',      label: 'Campus Stormwater',            order: 24, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'watershed-partnerships-panel', label: 'Watershed Partnerships',       order: 25, visible: true, defaultExpanded: true, lensControlled: true },
@@ -543,6 +591,16 @@ export const DEFAULT_SECTIONS = {
     { id: 'briefing-changes',    label: 'What Changed Overnight',        order: 5.2, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'briefing-pulse',      label: 'Program Pulse',                 order: 5.3, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'briefing-stakeholder', label: 'Stakeholder Watch',            order: 5.4, visible: true, defaultExpanded: true, lensControlled: true },
+    // ── Political Briefing ──
+    { id: 'pol-talking-points',       label: 'Talking Points',              order: 5.51, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-constituent-concerns', label: 'Constituent Concerns',        order: 5.52, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-funding-wins',        label: 'Funding Wins',                order: 5.53, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-funding-risks',       label: 'Funding Risks',               order: 5.54, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-regulatory-deadlines', label: 'Regulatory Deadlines',       order: 5.55, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-ej-exposure',         label: 'EJ Exposure Summary',         order: 5.56, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-media-ready-grades',  label: 'Media-Ready Grades',          order: 5.57, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-peer-comparison',     label: 'Peer Comparison',             order: 5.58, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-council-agenda',      label: 'Council Agenda Suggestions',  order: 5.59, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'aiinsights',         label: 'AI Insights (Combined)',       order: 6,  visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'wq-domain-tabs',     label: 'Water Quality Domain Tabs',   order: 6.5, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'networkhealth',      label: 'Network Health Score',        order: 7,  visible: true, defaultExpanded: true, lensControlled: true },
@@ -605,6 +663,16 @@ export const DEFAULT_SECTIONS = {
     { id: 'briefing-compliance',    label: 'Compliance Status',               order: 8,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'briefing-system',        label: 'System Watch',                    order: 9,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'briefing-business',      label: 'Business & Planning',            order: 10, visible: true, defaultExpanded: true,  lensControlled: true },
+    // ── Political Briefing ──
+    { id: 'pol-talking-points',       label: 'Talking Points',              order: 10.1, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-constituent-concerns', label: 'Constituent Concerns',        order: 10.2, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-funding-wins',        label: 'Funding Wins',                order: 10.3, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-funding-risks',       label: 'Funding Risks',               order: 10.4, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-regulatory-deadlines', label: 'Regulatory Deadlines',       order: 10.5, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-ej-exposure',         label: 'EJ Exposure Summary',         order: 10.6, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-media-ready-grades',  label: 'Media-Ready Grades',          order: 10.7, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-peer-comparison',     label: 'Peer Comparison',             order: 10.8, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'pol-council-agenda',      label: 'Council Agenda Suggestions',  order: 10.9, visible: true, defaultExpanded: true, lensControlled: true },
     // ── Resolution Planner (View 3) ──
     { id: 'resolution-planner',     label: 'Resolution Plan Workspace',       order: 11, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Trends & Projections (View 4) ──
@@ -636,6 +704,9 @@ export const DEFAULT_SECTIONS = {
     { id: 'ph-pfas',                label: 'PFAS & Emerging Contaminants',    order: 33, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'ph-pathogen',            label: 'Pathogen Control',                order: 34, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'ph-effluent-impact',     label: 'Effluent Public Health Impact',   order: 35, visible: true, defaultExpanded: true,  lensControlled: true },
+    // ── Habitat & Ecology ──
+    { id: 'hab-ecoscore',           label: 'Ecological Sensitivity Score',    order: 35.1, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'hab-wildlife',           label: 'Wildlife & T&E Species',          order: 35.2, visible: true, defaultExpanded: true, lensControlled: true },
     // ── Source & Receiving Waters (View 9 — utility-exclusive) ──
     { id: 'sr-source-status',       label: 'Source Water Status',             order: 36, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'sr-protection',          label: 'Source Water Protection',         order: 37, visible: true, defaultExpanded: true,  lensControlled: true },
@@ -799,6 +870,9 @@ export const DEFAULT_SECTIONS = {
     { id: 'nutrientcredits',     label: 'Nutrient Credit Tracking',    order: 45,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'tmdl',                label: 'TMDL Reporter',               order: 46,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'mdeexport',           label: 'MS4 Report Generator',        order: 47,  visible: true, defaultExpanded: true,  lensControlled: true },
+    // ── Habitat & Ecology ──
+    { id: 'hab-ecoscore',          label: 'Ecological Sensitivity Score', order: 45.1, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'hab-wildlife',          label: 'Wildlife & T&E Species',      order: 45.2, visible: true, defaultExpanded: true, lensControlled: true },
     // ── Public Health (6) ──
     { id: 'ph-contaminants',       label: 'Contaminant Tracking',      order: 46,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'local-dw-systems',     label: 'Drinking Water Systems',     order: 47,  visible: true, defaultExpanded: true,  lensControlled: true },

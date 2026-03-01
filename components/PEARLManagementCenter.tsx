@@ -27,10 +27,11 @@ import WhatIfSimulator from './WhatIfSimulator';
 import { WARRZones } from './WARRZones';
 import type { WARRMetric } from './WARRZones';
 import RestorationPlanner from '@/components/RestorationPlanner';
+import PredictiveRiskEngine from './PredictiveRiskEngine';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type ViewLens = 'operations' | 'proposals' | 'scenarios' | 'users';
+type ViewLens = 'operations' | 'proposals' | 'scenarios' | 'predictions' | 'users';
 
 type DeploymentStatus = 'active' | 'maintenance' | 'offline' | 'staging' | 'decommissioned';
 type AlertSeverity = 'critical' | 'warning' | 'info' | 'ok';
@@ -518,6 +519,7 @@ export function PEARLManagementCenter(props: Props) {
                   { lens: 'operations' as ViewLens, label: '⚙ Operations', badge: 0 },
                   { lens: 'proposals' as ViewLens, label: '📋 Proposals', badge: 0 },
                   { lens: 'scenarios' as ViewLens, label: '🔬 What-If', badge: 0 },
+                  { lens: 'predictions' as ViewLens, label: '🎯 Predictions', badge: 0 },
                   ...(isAdmin ? [{ lens: 'users' as ViewLens, label: '👥 Users', badge: pendingUserCount }] : []),
                 ]).map(({ lens, label, badge }) => (
                   <button
@@ -1243,6 +1245,14 @@ export function PEARLManagementCenter(props: Props) {
 
         {viewLens === 'scenarios' && (
           <WhatIfSimulator />
+        )}
+
+        {/* ════════════════════════════════════════════════════════════ */}
+        {/* ── PREDICTIONS LENS ────────────────────────────────────── */}
+        {/* ════════════════════════════════════════════════════════════ */}
+
+        {viewLens === 'predictions' && (
+          <PredictiveRiskEngine />
         )}
 
         {/* ════════════════════════════════════════════════════════════ */}
