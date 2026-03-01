@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { MockDataBadge } from './MockDataBadge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -90,6 +91,7 @@ export function OutdoorClassroomPanel({ stateAbbr }: OutdoorClassroomPanelProps)
         <TreePine className="w-3.5 h-3.5" />
         <span>
           Outdoor Classroom Resources — {stateAbbr || 'All States'}
+          <MockDataBadge />
         </span>
       </div>
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { MockDataBadge } from './MockDataBadge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Scale, AlertTriangle, FileText, Calendar, Megaphone, Shield } from 'lucide-react';
@@ -138,6 +139,7 @@ export function AdvocacyPanel({ stateAbbr }: AdvocacyPanelProps) {
         <span>
           Policy Advocacy Intelligence — Regulatory &amp; Legislative Tracker
           {stateAbbr ? ` (${stateAbbr})` : ' (National)'}
+          <MockDataBadge />
         </span>
       </div>
 

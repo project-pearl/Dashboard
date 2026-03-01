@@ -1,3 +1,6 @@
+// ⚠ MOCK DATA — This entire file contains hardcoded mock alerts.
+// Remove or replace when wiring to live Sentinel system.
+//
 // =============================================================================
 // Mock Data for AMS Components
 // Use this to test rendering before wiring to live Sentinel system.

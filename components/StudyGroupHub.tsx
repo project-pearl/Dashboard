@@ -6,6 +6,7 @@
 'use client';
 
 import { useState } from 'react';
+import { MockDataBadge } from './MockDataBadge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Users, MapPin, Calendar, MessageCircle, Plus, Search } from 'lucide-react';
@@ -95,6 +96,11 @@ export function StudyGroupHub({ stateAbbr, regionId }: Props) {
 
   return (
     <div className="space-y-3">
+      {/* Source badge */}
+      <div className="flex items-center gap-2 text-xs text-slate-400">
+        <Users className="w-3.5 h-3.5" />
+        <span>Study Groups — {stateAbbr || 'All States'}<MockDataBadge /></span>
+      </div>
       {/* Search + Create */}
       <div className="flex items-center gap-2">
         <div className="relative flex-1">

@@ -6,6 +6,7 @@
 'use client';
 
 import { useState } from 'react';
+import { MockDataBadge } from './MockDataBadge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -118,6 +119,11 @@ export function ResearchCollaborationHub({ userRole, stateAbbr }: Props) {
 
   return (
     <div className="space-y-3">
+      {/* Source badge */}
+      <div className="flex items-center gap-2 text-xs text-slate-400">
+        <Users className="w-3.5 h-3.5" />
+        <span>Research Collaboration Hub<MockDataBadge /></span>
+      </div>
       {/* Tab navigation */}
       <div className="flex items-center gap-1 border-b border-slate-200 pb-1">
         {[

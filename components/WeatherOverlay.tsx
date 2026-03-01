@@ -1,6 +1,7 @@
 'use client';
 
 import { Card } from '@/components/ui/card';
+import { MockDataBadge } from './MockDataBadge';
 import { CloudRain, Waves, Thermometer, Info } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
@@ -15,7 +16,7 @@ export function WeatherOverlay() {
     <Card className="border-2 border-sky-200 bg-white/95 backdrop-blur-sm shadow-lg">
       <div className="p-3 space-y-2">
         <div className="flex items-center justify-between mb-2">
-          <h4 className="text-xs font-semibold text-slate-700">Live Conditions</h4>
+          <h4 className="text-xs font-semibold text-slate-700">Live Conditions<MockDataBadge /></h4>
           <Badge variant="secondary" className="text-xs bg-sky-100 text-sky-800">
             Real-time
           </Badge>

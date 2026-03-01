@@ -6,6 +6,7 @@
 'use client';
 
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { MockDataBadge } from './MockDataBadge';
 import MissionQuote from './MissionQuote';
 import { useLensParam } from '@/lib/useLensParam';
 import type { MapRef } from 'react-map-gl';
@@ -1635,7 +1636,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
             case 'trends-dashboard': return DS(
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center gap-2"><TrendingUp className="h-4 w-4 text-indigo-600" /> Trends & Forecasting</CardTitle>
+                  <CardTitle className="text-sm flex items-center gap-2"><TrendingUp className="h-4 w-4 text-indigo-600" /> Trends & Forecasting<MockDataBadge /></CardTitle>
                   <CardDescription className="text-[11px]">Water quality and regulatory compliance trends across the biotech portfolio</CardDescription>
                 </CardHeader>
                 <CardContent>

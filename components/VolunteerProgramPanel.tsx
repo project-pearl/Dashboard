@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { MockDataBadge } from './MockDataBadge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Users, Calendar, ClipboardCheck, GraduationCap, Package, BarChart3 } from 'lucide-react';
@@ -144,6 +145,7 @@ export function VolunteerProgramPanel({ stateAbbr }: VolunteerProgramPanelProps)
         <span>
           Volunteer Monitoring Program — Program Management
           {stateAbbr ? ` (${stateAbbr})` : ' (All Programs)'}
+          <MockDataBadge />
         </span>
       </div>
 

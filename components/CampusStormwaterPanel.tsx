@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { MockDataBadge } from './MockDataBadge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -139,7 +140,7 @@ export function CampusStormwaterPanel({ stateAbbr }: CampusStormwaterPanelProps)
       {/* Source badge */}
       <div className="flex items-center gap-2 text-xs text-slate-400">
         <CloudRain className="w-3.5 h-3.5" />
-        <span>Campus Stormwater Management — {stateAbbr}</span>
+        <span>Campus Stormwater Management — {stateAbbr}<MockDataBadge /></span>
       </div>
 
       {/* ── Section 1: Hero Stats ──────────────────────────────────────────── */}

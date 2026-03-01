@@ -1,3 +1,6 @@
+/* ⚠ MOCK DATA — This entire file contains hardcoded mock data.
+ * Remove or replace when wiring to real APIs.
+ */
 /*
  * PROJECT PEARL - WATER QUALITY MOCK DATA
  *

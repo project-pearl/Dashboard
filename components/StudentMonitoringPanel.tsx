@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { MockDataBadge } from './MockDataBadge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -109,6 +110,7 @@ export function StudentMonitoringPanel({ stateAbbr }: StudentMonitoringPanelProp
         <Beaker className="w-3.5 h-3.5" />
         <span>
           Student Water Quality Monitoring — {stateAbbr || 'All States'}
+          <MockDataBadge />
         </span>
       </div>
 

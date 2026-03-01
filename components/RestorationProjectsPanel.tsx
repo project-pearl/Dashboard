@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { MockDataBadge } from './MockDataBadge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TreePine, Hammer, Clock, DollarSign, Target, CheckCircle } from 'lucide-react';
@@ -111,6 +112,7 @@ export function RestorationProjectsPanel({ stateAbbr }: RestorationProjectsPanel
         <span>
           Restoration Project Tracker — Active Projects
           {stateAbbr ? ` (${stateAbbr})` : ' (All States)'}
+          <MockDataBadge />
         </span>
       </div>
 

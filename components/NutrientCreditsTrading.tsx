@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { MockDataBadge } from './MockDataBadge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -375,7 +376,7 @@ export function NutrientCreditsTrading({
     <div className="space-y-6">
       <Alert className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-300">
         <Leaf className="h-5 w-5 text-green-600" />
-        <AlertTitle className="text-green-900 font-bold">MS4 Nutrient Credit Tracking — Chesapeake Bay TMDL Compliance</AlertTitle>
+        <AlertTitle className="text-green-900 font-bold">MS4 Nutrient Credit Tracking — Chesapeake Bay TMDL Compliance<MockDataBadge /></AlertTitle>
         <AlertDescription className="text-green-800">
           Track nutrient load reductions for NPDES permit TMDL compliance and Chesapeake Bay WIP goals. Generate tradeable credits
           from verified BMP performance. Future integration with Maryland Nutrient Trading Tool and Virginia Nutrient Credit Exchange.

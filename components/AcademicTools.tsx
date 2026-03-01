@@ -5,6 +5,7 @@
 'use client';
 
 import { useState } from 'react';
+import { MockDataBadge } from './MockDataBadge';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -175,7 +176,7 @@ export function AcademicTools({ userRole, regionId, stateAbbr }: Props) {
       {/* ── Lab Report Templates (College priority) ── */}
       {isCollege && (
         <div>
-          <div className="text-xs font-semibold text-slate-700 mb-2">🧪 Lab Report Templates</div>
+          <div className="text-xs font-semibold text-slate-700 mb-2">🧪 Lab Report Templates<MockDataBadge /></div>
           <div className="space-y-1.5">
             {LAB_TEMPLATES.map(t => (
               <div key={t.id} className="flex items-center justify-between bg-white rounded-lg border border-slate-200 p-2.5 hover:border-blue-300 transition-colors">

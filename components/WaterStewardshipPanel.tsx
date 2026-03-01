@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { MockDataBadge } from './MockDataBadge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Droplets, Target, TrendingDown, MapPin, Award, BarChart3 } from 'lucide-react';
@@ -94,7 +95,7 @@ export function WaterStewardshipPanel({ stateAbbr }: WaterStewardshipPanelProps)
       {/* Source badge */}
       <div className="flex items-center gap-2 text-xs text-slate-400">
         <Droplets className="w-3.5 h-3.5" />
-        <span>Corporate Water Stewardship — CDP Water Security + Internal Metrics ({stateAbbr || 'National'})</span>
+        <span>Corporate Water Stewardship — CDP Water Security + Internal Metrics ({stateAbbr || 'National'})<MockDataBadge /></span>
       </div>
 
       {/* Section 1: Hero Stats */}

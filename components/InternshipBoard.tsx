@@ -6,6 +6,7 @@
 'use client';
 
 import { useState } from 'react';
+import { MockDataBadge } from './MockDataBadge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Briefcase, MapPin, Clock, ExternalLink, Filter, Star } from 'lucide-react';
@@ -93,6 +94,11 @@ export function InternshipBoard({ stateAbbr }: Props) {
 
   return (
     <div className="space-y-3">
+      {/* Source badge */}
+      <div className="flex items-center gap-2 text-xs text-slate-400">
+        <Briefcase className="w-3.5 h-3.5" />
+        <span>Internship Board — {stateAbbr || 'All States'}<MockDataBadge /></span>
+      </div>
       {/* Filters */}
       <div className="flex items-center gap-2 flex-wrap">
         <Filter className="h-3.5 w-3.5 text-slate-400" />

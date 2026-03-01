@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { MockDataBadge } from './MockDataBadge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Waves, Heart, AlertTriangle, TreePine, TrendingUp, BarChart3 } from 'lucide-react';
@@ -86,6 +87,7 @@ export function WatershedHealthPanel({ stateAbbr }: WatershedHealthPanelProps) {
         <span>
           EPA ATTAINS + USGS — Watershed Health Assessment
           {stateAbbr ? ` (${stateAbbr})` : ' (National)'}
+          <MockDataBadge />
         </span>
       </div>
 

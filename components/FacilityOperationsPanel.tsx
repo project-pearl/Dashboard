@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { MockDataBadge } from './MockDataBadge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Factory, Droplets, FileCheck, TrendingUp, Recycle, BarChart3 } from 'lucide-react';
@@ -112,7 +113,7 @@ export function FacilityOperationsPanel({ stateAbbr }: FacilityOperationsPanelPr
       {/* Source badge */}
       <div className="flex items-center gap-2 text-xs text-slate-400">
         <Factory className="w-3.5 h-3.5" />
-        <span>Facility Water Operations — NPDES/DMR Data + Internal Monitoring ({stateAbbr || 'National'})</span>
+        <span>Facility Water Operations — NPDES/DMR Data + Internal Monitoring ({stateAbbr || 'National'})<MockDataBadge /></span>
       </div>
 
       {/* Section 1: Hero Stats */}

@@ -1,3 +1,6 @@
+// ⚠ MOCK DATA — This entire file contains hardcoded mock users.
+// Remove or replace when wiring to real auth.
+//
 // lib/mockUsers.ts
 // Demo user accounts for the login page quick-access cards.
 // Must stay in sync with authContext seed accounts.

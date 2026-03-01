@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { MockDataBadge } from './MockDataBadge';
 import HeroBanner from './HeroBanner';
 import { SourceHealthPanel } from './SourceHealthPanel';
 import {
@@ -853,7 +854,7 @@ export function PEARLManagementCenter(props: Props) {
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="flex items-center gap-2 text-base">
-                    <BarChart3 size={16} className="text-blue-600" /> Treatment Performance
+                    <BarChart3 size={16} className="text-blue-600" /> Treatment Performance<MockDataBadge />
                   </CardTitle>
                   <CardDescription>Simulated 30-day sensor trend — Milton FL Pilot</CardDescription>
                 </CardHeader>
@@ -930,7 +931,7 @@ export function PEARLManagementCenter(props: Props) {
             {/* ── DEPLOYMENT CARDS ── */}
             <div className="space-y-3">
               <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-2">
-                <Radio size={14} /> Deployed Fleet ({deployments.length} units)
+                <Radio size={14} /> Deployed Fleet ({deployments.length} units)<MockDataBadge />
               </h2>
 
               {deployments.map((dep) => {

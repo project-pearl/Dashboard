@@ -1,5 +1,6 @@
 'use client';
 
+import { MockDataBadge } from './MockDataBadge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -119,7 +120,7 @@ export function MarylandStateView({ selectedState }: MarylandStateViewProps) {
       <div className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl p-6 shadow-lg">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Maryland Department of Environment</h1>
+            <h1 className="text-3xl font-bold mb-2">Maryland Department of Environment<MockDataBadge /></h1>
             <p className="text-blue-100">Statewide MS4 Compliance & Water Quality Monitoring</p>
           </div>
           <div className="text-right">
