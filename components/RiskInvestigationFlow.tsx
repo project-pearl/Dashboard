@@ -7,6 +7,7 @@ import {
   Minus, BarChart3, FileText, Copy, Share2, Check, Info, Target,
   Users, Clock, Building2, Scale, Layers, CheckCircle2, Circle,
   Waves, Gauge, GitBranch, HeartPulse, MessageSquareText, UserCheck, Package,
+  CreditCard, CalendarClock, ExternalLink, FilePlus2,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -262,6 +263,98 @@ const REPORT_SECTIONS = [
   { id: 'data', label: 'Data Sources & Methodology', requiredStep: null },
 ];
 
+// ─── Compliance Account Summary ─────────────────────────────────────────────
+// Credit-account-style header showing who you are, what IDs apply, and what's due.
+
+type AccountScope = 'National' | 'State' | 'Local Government' | 'Utility' | 'Facility';
+
+interface ComplianceObligation {
+  label: string;
+  dueDate: string | null;      // ISO date or null if conditional
+  status: 'on-track' | 'approaching' | 'overdue' | 'conditional' | 'n/a';
+  amount?: string;              // financial if applicable, otherwise undefined
+  conditionalOn?: string;       // e.g. "Only if SSO event occurs"
+  docType: string;              // what document gets created
+}
+
+interface ComplianceAccount {
+  accountName: string;
+  accountId: string;            // Permit ID, PWSID, or "N/A"
+  accountIdType: string;        // "NPDES Permit", "PWSID", "MS4 Permit", etc.
+  scope: AccountScope;
+  scopeDetail: string;          // e.g. "Anne Arundel County, MD"
+  permitCycle: string;          // e.g. "2024-2029"
+  obligations: ComplianceObligation[];
+  financialOutstanding: string; // "$0" or "$42K penalty pending"
+}
+
+const MOCK_COMPLIANCE_ACCOUNT: ComplianceAccount = {
+  accountName: 'City of Oak Creek',
+  accountId: 'MD0068276',
+  accountIdType: 'NPDES MS4 Phase II Permit',
+  scope: 'Local Government',
+  scopeDetail: 'Anne Arundel County, MD',
+  permitCycle: '2024–2029',
+  obligations: [
+    {
+      label: 'MS4 Annual Report',
+      dueDate: '2026-10-15',
+      status: 'on-track',
+      docType: 'MS4 Annual Report',
+    },
+    {
+      label: 'TMDL Progress Report',
+      dueDate: '2026-12-01',
+      status: 'on-track',
+      docType: 'TMDL Implementation Progress',
+    },
+    {
+      label: 'Stormwater Management Plan Update',
+      dueDate: '2026-07-01',
+      status: 'approaching',
+      docType: 'SWMP Update',
+    },
+    {
+      label: 'SSO Incident Report (5-Day)',
+      dueDate: null,
+      status: 'conditional',
+      conditionalOn: 'Only if SSO event occurs',
+      docType: 'SSO 5-Day Written Report',
+    },
+    {
+      label: 'Corrective Action Plan',
+      dueDate: null,
+      status: 'conditional',
+      conditionalOn: 'Only if NOV is issued',
+      docType: 'Corrective Action Plan',
+    },
+    {
+      label: 'SRF Grant Application',
+      dueDate: '2026-04-15',
+      status: 'approaching',
+      amount: 'Up to $280K eligible',
+      docType: 'SRF Loan/Grant Application',
+    },
+  ],
+  financialOutstanding: '$0 outstanding',
+};
+
+function daysUntil(dateStr: string): number {
+  const now = new Date();
+  const target = new Date(dateStr);
+  return Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function obligationStatusStyle(status: ComplianceObligation['status']): { bg: string; text: string; dot: string } {
+  switch (status) {
+    case 'on-track': return { bg: 'bg-green-50', text: 'text-green-700', dot: 'bg-green-500' };
+    case 'approaching': return { bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-500' };
+    case 'overdue': return { bg: 'bg-red-50', text: 'text-red-700', dot: 'bg-red-500' };
+    case 'conditional': return { bg: 'bg-slate-50', text: 'text-slate-500', dot: 'bg-slate-400' };
+    case 'n/a': return { bg: 'bg-slate-50', text: 'text-slate-400', dot: 'bg-slate-300' };
+  }
+}
+
 // ─── Oversight Talking Points ────────────────────────────────────────────────
 // Each investigation step gets a "babified" card so an oversight person knows
 // exactly: (1) what this means, (2) who to take it to, (3) what to ask for.
@@ -505,6 +598,127 @@ function TalkingPointsCard({ step }: { step: Exclude<InvestigationStep, 'select'
   );
 }
 
+// ─── Compliance Account Summary Card ────────────────────────────────────────
+
+function ComplianceAccountSummary({ completedSteps }: { completedSteps: Set<InvestigationStep> }) {
+  const acct = MOCK_COMPLIANCE_ACCOUNT;
+
+  // Determine which conditional obligations to "activate"
+  const activeObligations = acct.obligations.map(ob => {
+    if (ob.label === 'SSO Incident Report (5-Day)' && completedSteps.has('response')) {
+      return { ...ob, status: 'approaching' as const, dueDate: new Date(Date.now() + 5 * 86400000).toISOString().slice(0, 10) };
+    }
+    if (ob.label === 'Corrective Action Plan' && completedSteps.has('response')) {
+      return { ...ob, status: 'approaching' as const, dueDate: new Date(Date.now() + 60 * 86400000).toISOString().slice(0, 10) };
+    }
+    return ob;
+  });
+
+  return (
+    <Card className="border-2 border-slate-300 bg-white overflow-hidden">
+      {/* Account Header — dark banner like a credit card statement */}
+      <div className="bg-slate-800 px-4 py-3">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center">
+              <CreditCard className="h-4 w-4 text-slate-300" />
+            </div>
+            <div>
+              <div className="text-sm font-bold text-white">{acct.accountName}</div>
+              <div className="text-[10px] text-slate-400">
+                {acct.scope} &middot; {acct.scopeDetail}
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <div className="text-[9px] text-slate-500 uppercase tracking-wider">Account ID</div>
+              <div className="text-xs font-mono font-bold text-slate-200">{acct.accountId}</div>
+              <div className="text-[9px] text-slate-500">{acct.accountIdType}</div>
+            </div>
+            <div className="text-right">
+              <div className="text-[9px] text-slate-500 uppercase tracking-wider">Permit Cycle</div>
+              <div className="text-xs font-mono font-bold text-slate-200">{acct.permitCycle}</div>
+            </div>
+            <div className="text-right">
+              <div className="text-[9px] text-slate-500 uppercase tracking-wider">Financial</div>
+              <div className="text-xs font-mono font-bold text-green-400">{acct.financialOutstanding}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Obligations Table */}
+      <CardContent className="p-0">
+        <div className="divide-y divide-slate-100">
+          {activeObligations.map((ob, i) => {
+            const style = obligationStatusStyle(ob.status);
+            const days = ob.dueDate ? daysUntil(ob.dueDate) : null;
+            const isConditional = ob.status === 'conditional';
+
+            return (
+              <div key={i} className={`flex items-center gap-3 px-4 py-2.5 ${i % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}`}>
+                {/* Status dot */}
+                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${style.dot}`} />
+
+                {/* Obligation name + conditional note */}
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-medium text-slate-700">{ob.label}</div>
+                  {isConditional && ob.conditionalOn && (
+                    <div className="text-[10px] text-slate-400 italic">{ob.conditionalOn}</div>
+                  )}
+                  {ob.amount && (
+                    <div className="text-[10px] text-emerald-600 font-medium">{ob.amount}</div>
+                  )}
+                </div>
+
+                {/* Due date + countdown */}
+                <div className="text-right flex-shrink-0 w-32">
+                  {ob.dueDate ? (
+                    <>
+                      <div className="text-[10px] font-mono text-slate-600">
+                        {new Date(ob.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </div>
+                      <div className={`text-[9px] font-bold ${
+                        days! < 0 ? 'text-red-600' : days! < 30 ? 'text-amber-600' : days! < 90 ? 'text-amber-500' : 'text-slate-400'
+                      }`}>
+                        {days! < 0 ? `${Math.abs(days!)} days overdue` : `${days} days`}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-[10px] text-slate-400">If triggered</div>
+                  )}
+                </div>
+
+                {/* Status badge */}
+                <Badge className={`text-[9px] flex-shrink-0 ${style.bg} ${style.text} border border-current/20`}>
+                  {ob.status === 'on-track' ? 'On Track' :
+                   ob.status === 'approaching' ? 'Approaching' :
+                   ob.status === 'overdue' ? 'Overdue' :
+                   ob.status === 'conditional' ? 'If Triggered' : 'N/A'}
+                </Badge>
+
+                {/* Create Filing button */}
+                <button
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-semibold transition-colors flex-shrink-0 ${
+                    isConditional
+                      ? 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
+                  title={`Create: ${ob.docType}`}
+                >
+                  <FilePlus2 className="h-3 w-3" />
+                  <span className="hidden sm:inline">Prepare Filing</span>
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 // ─── Main Component ─────────────────────────────────────────────────────────
 
 export default function RiskInvestigationFlow({ preSelectedRisk, onBackToForecast }: RiskInvestigationFlowProps) {
@@ -674,6 +888,11 @@ export default function RiskInvestigationFlow({ preSelectedRisk, onBackToForecas
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* ═══ COMPLIANCE ACCOUNT SUMMARY ═══ */}
+      {currentStep !== 'select' && selectedRisk && (
+        <ComplianceAccountSummary completedSteps={completedSteps} />
       )}
 
       {/* ═══ PORTFOLIO VIEW (toggle) ═══ */}
