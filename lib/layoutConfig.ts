@@ -716,7 +716,6 @@ export const DEFAULT_SECTIONS = {
     { id: 'groundwater',            label: 'Groundwater Monitoring (WDFN)',   order: 5.5, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'grants',                 label: 'Grant Opportunities',             order: 5.6, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'contaminants-tracker',   label: 'Emerging Contaminants',           order: 5.7, visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'disclaimer',             label: 'Platform Disclaimer',             order: 6,  visible: true, defaultExpanded: true,  lensControlled: true },
     // ── AI Briefing (View 2) ──
     { id: 'briefing-plant',         label: 'Plant Status',                    order: 7,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'briefing-compliance',    label: 'Compliance Status',               order: 8,  visible: true, defaultExpanded: true,  lensControlled: true },
