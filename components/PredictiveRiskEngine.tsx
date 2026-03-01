@@ -13,7 +13,7 @@ import type { RiskPrediction, RiskLevel, ConfidenceTier, ContributingFactor } fr
 
 // ─── Icon Map ────────────────────────────────────────────────────────────────
 
-const ICON_MAP: Record<string, React.ComponentType<{ className?: string; size?: number }>> = {
+const ICON_MAP: Record<string, React.ComponentType<any>> = {
   Wrench, Waves, Scale, Gauge, GitBranch, Clock, HeartPulse, TrendingUp,
 };
 
@@ -234,12 +234,20 @@ const PREDICTION_CYCLE = [
     feature: 'PIN Water Score dashboard, "What You Missed" digest, automated alerts, risk rankings',
   },
   {
+    phase: 'QUANTIFY',
+    icon: BarChart3,
+    color: 'bg-indigo-50 border-indigo-200 text-indigo-700',
+    iconColor: 'text-indigo-600',
+    categories: ['Expected Loss = Probability \u00d7 Cost', 'Prevention vs. Failure comparison'],
+    feature: 'Scenario Planner \u2014 context-aware cost modeling by role/state/domain, controlled exports for grant apps and budget justifications',
+  },
+  {
     phase: 'RESPOND',
     icon: Zap,
     color: 'bg-amber-50 border-amber-200 text-amber-700',
     iconColor: 'text-amber-600',
     categories: ['Cascading Impact', 'Public Health Exposure (crisis mode)'],
-    feature: 'Response Planner — crisis plans, real-time cascade modeling, resource allocation',
+    feature: 'Response Planner \u2014 crisis plans, real-time cascade modeling, resource allocation',
   },
   {
     phase: 'RESOLVE',
@@ -247,14 +255,14 @@ const PREDICTION_CYCLE = [
     color: 'bg-green-50 border-green-200 text-green-700',
     iconColor: 'text-green-600',
     categories: ['Recovery Timeline', 'Intervention ROI'],
-    feature: 'Resolution Planner — recommended actions, projected outcomes, cost-benefit analysis',
+    feature: 'Resolution Planner \u2014 recommended actions, projected outcomes, cost-benefit analysis',
   },
   {
-    phase: 'PREDICT AGAIN',
+    phase: 'CYCLE RESET',
     icon: RefreshCw,
     color: 'bg-purple-50 border-purple-200 text-purple-700',
     iconColor: 'text-purple-600',
-    categories: ['All 8 categories recalculated with post-intervention data'],
+    categories: ['All 8 categories recalculated', 'Scenario Planner costs recalibrated', 'Forecast accuracy measured vs. actuals'],
     feature: 'Updated PIN Water Score, new baseline, "Your score improved X points" notification',
   },
 ];
@@ -313,12 +321,29 @@ const SEGMENT_EXAMPLES: { segment: string; quote: string }[] = [
 
 // ─── Prediction Card (inline, mirrors RiskForecastPanel pattern) ─────────────
 
+/** Format probability display per confidence tier guardrails */
+function formatProbabilityDisplay(probability: number, confidence: ConfidenceTier, riskLevel: RiskLevel): { label: string; showBar: boolean } {
+  if (confidence === 'HIGH') {
+    const band = Math.round(probability * 0.12); // ±~12% band
+    return { label: `${probability}% (\u00b1${band}%)`, showBar: true };
+  }
+  if (confidence === 'MODERATE') {
+    const lo = Math.max(0, probability - 10);
+    const hi = Math.min(100, probability + 10);
+    return { label: `${lo}\u2013${hi}%`, showBar: true };
+  }
+  // LOW — directional only, no specific numbers
+  const dir = riskLevel === 'red' ? 'Elevated risk' : riskLevel === 'amber' ? 'Trending toward exceedance' : 'Low risk signal';
+  return { label: dir, showBar: false };
+}
+
 function PredictionCard({ prediction, segmentQuote }: { prediction: RiskPrediction; segmentQuote?: string }) {
   const [expanded, setExpanded] = useState(false);
   const [showQuote, setShowQuote] = useState(false);
   const colors = RISK_COLORS[prediction.riskLevel];
   const confBadge = CONFIDENCE_BADGE[prediction.confidence];
   const IconComponent = ICON_MAP[prediction.icon] || AlertTriangle;
+  const display = formatProbabilityDisplay(prediction.probability, prediction.confidence, prediction.riskLevel);
 
   return (
     <div className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
@@ -329,17 +354,19 @@ function PredictionCard({ prediction, segmentQuote }: { prediction: RiskPredicti
           <span className="text-xs font-semibold text-slate-800 leading-tight">{prediction.label}</span>
         </div>
 
-        {/* Probability bar */}
-        <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-all duration-500 ${colors.bar}`}
-            style={{ width: `${prediction.probability}%` }}
-          />
-        </div>
+        {/* Probability bar — hidden at LOW confidence per guardrails */}
+        {display.showBar && (
+          <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${colors.bar}`}
+              style={{ width: `${prediction.probability}%` }}
+            />
+          </div>
+        )}
 
-        {/* Probability + badges */}
+        {/* Probability + badges — tier-formatted */}
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className={`text-sm font-bold ${colors.text}`}>{prediction.probability}%</span>
+          <span className={`text-sm font-bold ${colors.text}`}>{display.label}</span>
           <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">
             {prediction.timeframe}
           </span>
@@ -544,11 +571,11 @@ export default function PredictiveRiskEngine() {
             Prediction Cycle
           </CardTitle>
           <p className="text-xs text-slate-500">
-            4-phase cycle: Predict → Respond → Resolve → Predict Again
+            5-phase cycle: Predict → Quantify → Respond → Resolve → Cycle Reset
           </p>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {PREDICTION_CYCLE.map((phase, i) => {
               const PhaseIcon = phase.icon;
               return (
