@@ -8,7 +8,7 @@ import PublicHeader from '@/components/PublicHeader';
 import { STATE_NAMES } from '@/lib/mapUtils';
 import {
   STATE_AUTHORITIES, STATE_CHALLENGES, STATE_TMDL_CONTEXT,
-  STATE_COMPLAINT_CONTACTS, getComplaintContact,
+  STATE_COMPLAINT_CONTACTS, getComplaintContact, getComplaintSearchUrl,
 } from '@/lib/stateWaterData';
 import { getEpaRegionForState, EPA_REGIONS } from '@/lib/epa-regions';
 import { scoreToGrade } from '@/lib/scoringUtils';
@@ -741,29 +741,41 @@ export default function WaterQualityExplorer() {
               {/* Report Pollution */}
               {(() => {
                 const contact = getComplaintContact(selectedState);
+                const searchUrl = getComplaintSearchUrl(selectedState);
                 return (
-                  <a
-                    href={contact.complaintUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group flex items-start gap-4 p-5 rounded-xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-cyan-300 transition-all"
-                  >
-                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                      <Droplets className="h-5 w-5 text-red-600" />
+                  <div className="rounded-xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-cyan-300 transition-all p-5">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                        <Droplets className="h-5 w-5 text-red-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-semibold text-slate-900">
+                          Report a Pollution Issue
+                        </h3>
+                        <p className="mt-1 text-xs text-slate-500">{contact.reportLabel}</p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-semibold text-slate-900 group-hover:text-cyan-700 transition-colors">
-                        Report a Pollution Issue
-                      </h3>
-                      <p className="mt-1 text-xs text-slate-500">{contact.reportLabel}</p>
+                    <div className="mt-3 flex flex-col gap-2 pl-14">
                       {contact.hotline && (
-                        <p className="mt-1 text-xs text-slate-400 flex items-center gap-1">
-                          <Phone className="h-3 w-3" /> {contact.hotline}
-                        </p>
+                        <a
+                          href={`tel:${contact.hotline.replace(/[^+\d]/g, '')}`}
+                          className="flex items-center gap-2 text-sm font-medium text-cyan-700 hover:text-cyan-900 transition-colors"
+                        >
+                          <Phone className="h-3.5 w-3.5" />
+                          {contact.hotline}
+                        </a>
                       )}
+                      <a
+                        href={searchUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-xs text-cyan-600 hover:text-cyan-800 hover:underline transition-colors"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        Find complaint form on agency website
+                      </a>
                     </div>
-                    <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-cyan-500 flex-shrink-0 mt-0.5" />
-                  </a>
+                  </div>
                 );
               })()}
 
@@ -805,26 +817,35 @@ export default function WaterQualityExplorer() {
                 <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-cyan-500 flex-shrink-0 mt-0.5" />
               </a>
 
-              {/* Agency Resources (conditional) */}
-              {STATE_AUTHORITIES[selectedState]?.website && (
-                <a
-                  href={`https://${STATE_AUTHORITIES[selectedState].website}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex items-start gap-4 p-5 rounded-xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-cyan-300 transition-all"
-                >
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                    <FileText className="h-5 w-5 text-purple-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-semibold text-slate-900 group-hover:text-cyan-700 transition-colors">
-                      Explore Agency Resources
-                    </h3>
-                    <p className="mt-1 text-xs text-slate-500">Visit {STATE_AUTHORITIES[selectedState].abbr}&rsquo;s official website</p>
-                  </div>
-                  <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-cyan-500 flex-shrink-0 mt-0.5" />
-                </a>
-              )}
+              {/* Agency Resources — always shown */}
+              {(() => {
+                const auth = STATE_AUTHORITIES[selectedState];
+                if (!auth) return null;
+                const href = auth.website
+                  ? `https://${auth.website}`
+                  : `https://www.google.com/search?q=${encodeURIComponent(`${auth.name} official website`)}`;
+                return (
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex items-start gap-4 p-5 rounded-xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-cyan-300 transition-all"
+                  >
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+                      <FileText className="h-5 w-5 text-purple-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-semibold text-slate-900 group-hover:text-cyan-700 transition-colors">
+                        Explore Agency Resources
+                      </h3>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {auth.website ? `Visit ${auth.abbr}'s official website` : `Find ${auth.abbr}'s website`}
+                      </p>
+                    </div>
+                    <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-cyan-500 flex-shrink-0 mt-0.5" />
+                  </a>
+                );
+              })()}
             </div>
           </div>
         </section>

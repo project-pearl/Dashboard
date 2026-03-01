@@ -1255,3 +1255,28 @@ export const STATE_COMPLAINT_CONTACTS: Record<string, StateComplaintContact> = {
 export function getComplaintContact(stateAbbr: string): StateComplaintContact {
   return STATE_COMPLAINT_CONTACTS[stateAbbr] || EPA_FALLBACK;
 }
+
+/**
+ * Build a resilient search URL for finding the current complaint page on a state
+ * agency's website. Deep links break when agencies restructure; a Google site-search
+ * against the stable root domain always finds the current page.
+ */
+export function getComplaintSearchUrl(stateAbbr: string): string {
+  // Prefer the stable root domain from STATE_AUTHORITIES
+  const authority = STATE_AUTHORITIES[stateAbbr];
+  if (authority?.website) {
+    return `https://www.google.com/search?q=${encodeURIComponent(`site:${authority.website} report pollution complaint environmental`)}`;
+  }
+  // Fallback: extract hostname from the complaint URL
+  const contact = STATE_COMPLAINT_CONTACTS[stateAbbr];
+  if (contact) {
+    try {
+      const domain = new URL(contact.complaintUrl).hostname.replace(/^www\./, '');
+      return `https://www.google.com/search?q=${encodeURIComponent(`site:${domain} report pollution complaint environmental`)}`;
+    } catch {
+      // malformed URL — fall through
+    }
+  }
+  // Last resort: EPA national reporting page
+  return EPA_FALLBACK.complaintUrl;
+}
