@@ -2548,20 +2548,32 @@ export async function GET(request: NextRequest) {
             // State-level: ECHO violating facilities
             console.log(`[ICIS-Violations] ECHO facility search (violators) for ${state}`);
             const facilities = await echoFacilitySearch(state, { violatorsOnly: true, limit: parseInt(limit, 10) });
+            if (facilities.length > 0) {
+              console.log('[ICIS-Violations] Sample ECHO row keys:', Object.keys(facilities[0]).join(', '));
+            }
             const data = facilities.map((f: any) => {
-              const sncRaw = (f.CWPSNCStatus || '').trim();
+              const sncRaw = (f.CWPSNCStatus || f.SNCStatus || '').trim();
               const isSnc = /SNC|significant/i.test(sncRaw);
+              // Build violation description from available fields
+              const vioStatus = (f.CWPCurrentVioStatus || f.CWPVioStatus || f.CurrentVioStatus || '').trim();
+              const qtrsWithVio = f.CWPQtrsWithVio || f.QtrsWithVio || '';
+              const facilityName = (f.CWPName || f.FacName || '').trim();
+              const vioDesc = vioStatus
+                || (isSnc ? 'Significant Non-Compliance' : '')
+                || (qtrsWithVio ? `${qtrsWithVio} quarters with violations` : '')
+                || (facilityName ? `Violation at ${facilityName}` : '');
               return {
-                NPDES_ID: f.SourceID || '',
-                VIOLATION_CODE: (f.CWPCurrentVioStatus || f.CWPVioStatus || '').trim(),
-                VIOLATION_TYPE_DESC: (f.CWPVioStatus || f.CWPCurrentVioStatus || '').trim(),
-                VIOLATION_DETECT_DATE: f.CWPDateLastFormalAction || f.CWPDateLastInspection || '',
+                NPDES_ID: f.SourceID || f.CWPPermitNmbr || f.NPDES_ID || '',
+                VIOLATION_CODE: vioStatus || (isSnc ? 'SNC' : ''),
+                VIOLATION_TYPE_DESC: vioDesc,
+                VIOLATION_DETECT_DATE: f.CWPDateLastFormalAction || f.CWPDateLastInspection
+                  || f.DateLastFormalAction || f.DateLastInspection || '',
                 RNC_DETECTION_CODE: isSnc ? 'Y' : '',
-                SEVERITY_CODE: isSnc ? 'S' : (sncRaw ? 'M' : ''),
-                FACILITY_NAME: (f.CWPName || '').trim(),
-                CWPQtrsWithVio: f.CWPQtrsWithVio || '',
-                lat: Number(f.FacLat) || 0,
-                lng: Number(f.FacLong) || 0,
+                SEVERITY_CODE: isSnc ? 'S' : (vioStatus ? 'M' : ''),
+                FACILITY_NAME: facilityName,
+                CWPQtrsWithVio: qtrsWithVio,
+                lat: Number(f.FacLat || f.Latitude) || 0,
+                lng: Number(f.FacLong || f.Longitude) || 0,
               };
             });
             return NextResponse.json({ source: 'icis-violations', via: 'echo', state, count: data.length, data });
@@ -2641,14 +2653,20 @@ export async function GET(request: NextRequest) {
           if (!res.ok) throw new Error(`Envirofacts HTTP ${res.status}`);
           const raw = await res.json();
           if (Array.isArray(raw) && raw.length > 0) {
+            console.log('[ICIS-Enforcement] Envirofacts sample row keys:', Object.keys(raw[0]).join(', '));
             // Normalize Envirofacts column names to standardized fields
             const data = raw.map((r: any) => ({
-              NPDES_ID: r.NPDES_ID || r.EXTERNAL_PERMIT_NMBR || '',
-              CASE_NUMBER: r.ENFORCEMENT_ACTION_IDENTIFIER || r.CASE_NUMBER || r.ENFORCEMENT_ID || '',
-              ENF_TYPE_DESC: r.ENFORCEMENT_ACTION_TYPE_CODE || r.ENF_TYPE_CODE || r.ENF_TYPE_DESC || '',
-              FED_PENALTY_ASSESSED_AMT: Number(r.FED_PENALTY_ASSESSED_AMT || r.STATE_LOCAL_PENALTY_AMT || r.PENALTY_AMT || 0),
-              SETTLEMENT_ENTERED_DATE: r.FINAL_ORDER_ENTERED_DATE || r.ENFORCEMENT_ACTION_DATE || r.SETTLEMENT_ENTERED_DATE || r.ACHIEVED_DATE || '',
-              FACILITY_NAME: r.FACILITY_NAME || '',
+              NPDES_ID: r.NPDES_ID || r.EXTERNAL_PERMIT_NMBR || r.npdes_id || r.external_permit_nmbr || '',
+              CASE_NUMBER: r.ENFORCEMENT_ACTION_IDENTIFIER || r.CASE_NUMBER || r.ENFORCEMENT_ID
+                || r.enforcement_action_identifier || r.case_number || '',
+              ENF_TYPE_DESC: r.ENFORCEMENT_ACTION_TYPE_CODE || r.ENF_TYPE_CODE || r.ENF_TYPE_DESC
+                || r.enforcement_action_type_code || r.enf_type_desc || '',
+              FED_PENALTY_ASSESSED_AMT: Number(r.FED_PENALTY_ASSESSED_AMT || r.STATE_LOCAL_PENALTY_AMT
+                || r.PENALTY_AMT || r.fed_penalty_assessed_amt || r.state_local_penalty_amt || 0),
+              SETTLEMENT_ENTERED_DATE: r.FINAL_ORDER_ENTERED_DATE || r.ENFORCEMENT_ACTION_DATE
+                || r.SETTLEMENT_ENTERED_DATE || r.ACHIEVED_DATE
+                || r.final_order_entered_date || r.enforcement_action_date || r.settlement_entered_date || '',
+              FACILITY_NAME: r.FACILITY_NAME || r.facility_name || '',
               lat: 0,
               lng: 0,
             }));
@@ -2660,14 +2678,18 @@ export async function GET(request: NextRequest) {
           try {
             console.log(`[ICIS-Enforcement] Envirofacts failed (${efErr instanceof Error ? efErr.message : efErr}), falling back to ECHO`);
             const cases = await echoEnforcementSearch(state, parseInt(limit, 10));
+            if (cases.length > 0) {
+              console.log('[ICIS-Enforcement] ECHO case sample keys:', Object.keys(cases[0]).join(', '));
+            }
             const data = cases.map((c: any) => {
-              const rawPenalty = String(c.FedPenalty || '0').replace(/[$,]/g, '');
+              const rawPenalty = String(c.FedPenalty || c.FederalPenalty || c.TotalPenalty || c.Penalty || '0').replace(/[$,]/g, '');
               return {
-                NPDES_ID: c.SourceID || '',
-                CASE_NUMBER: c.CaseNumber || '',
-                ENF_TYPE_DESC: (c.CaseCategoryDesc || '').trim(),
+                NPDES_ID: c.SourceID || c.NPDESIds || c.FacilitySourceID || '',
+                CASE_NUMBER: c.CaseNumber || c.CaseId || c.ActivityId || '',
+                ENF_TYPE_DESC: (c.CaseCategoryDesc || c.ActivityName || c.CaseCategory || c.ActivityTypeDesc || '').trim(),
                 FED_PENALTY_ASSESSED_AMT: parseFloat(rawPenalty) || 0,
-                SETTLEMENT_ENTERED_DATE: c.SettlementDate || '',
+                SETTLEMENT_ENTERED_DATE: c.SettlementDate || c.SettlementEnteredDate || c.ActivityDate || '',
+                FACILITY_NAME: (c.CaseName || c.FacilityName || '').trim(),
                 lat: 0,
                 lng: 0,
               };
