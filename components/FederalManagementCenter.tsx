@@ -7266,20 +7266,20 @@ export function FederalManagementCenter(props: Props) {
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <Megaphone size={15} className="text-purple-600" /> Talking Points
               </CardTitle>
-              <CardDescription>Auto-generated for briefings and public comment</CardDescription>
+              <CardDescription>National-level talking points for congressional briefings</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div className="flex items-start gap-2">
                 <Badge className="bg-purple-100 text-purple-800 shrink-0">Lead</Badge>
-                <p>&ldquo;Our jurisdiction has replaced 340 of 1,200 identified lead service lines — 28% complete, ahead of the national average of 18%.&rdquo;</p>
+                <p>&ldquo;EPA estimates 9.2 million lead service lines remain nationwide. The Bipartisan Infrastructure Law allocates $15B over five years — 22% has been disbursed to date.&rdquo;</p>
               </div>
               <div className="flex items-start gap-2">
-                <Badge className="bg-emerald-100 text-emerald-800 shrink-0">Grant</Badge>
-                <p>&ldquo;We secured $2.1M in DWSRF funding this quarter for water main rehabilitation, leveraging a 20% local match.&rdquo;</p>
+                <Badge className="bg-emerald-100 text-emerald-800 shrink-0">BIL</Badge>
+                <p>&ldquo;$50B in total BIL water infrastructure funding is supporting 1,400+ projects across all 50 states — the largest federal water investment in U.S. history.&rdquo;</p>
               </div>
               <div className="flex items-start gap-2">
-                <Badge className="bg-blue-100 text-blue-800 shrink-0">Quality</Badge>
-                <p>&ldquo;Water quality testing shows zero MCL exceedances for the 8th consecutive quarter across all 3 public water systems.&rdquo;</p>
+                <Badge className="bg-blue-100 text-blue-800 shrink-0">PFAS</Badge>
+                <p>&ldquo;The final PFAS National Primary Drinking Water Regulation covers 6 PFAS compounds affecting 66,000+ public water systems, with $5B in dedicated compliance funding.&rdquo;</p>
               </div>
             </CardContent>
           </Card>
@@ -7289,22 +7289,23 @@ export function FederalManagementCenter(props: Props) {
           <Card className="border-purple-200 bg-purple-50/30">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Users size={15} className="text-purple-600" /> Constituent Concerns
+                <Users size={15} className="text-purple-600" /> Congressional Inquiries
               </CardTitle>
-              <CardDescription>Top issues by volume</CardDescription>
+              <CardDescription>Top issues from congressional offices and interagency channels</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
                 {[
-                  { issue: 'Lead service line replacement timeline', calls: 47, trend: '↑ 23%' },
-                  { issue: 'Water rate increase explanation', calls: 31, trend: '↓ 8%' },
-                  { issue: 'Stormwater flooding on Oak Ave', calls: 18, trend: '↑ 45%' },
-                  { issue: 'PFAS in drinking water', calls: 12, trend: '— stable' },
+                  { issue: 'PFAS regulation timeline & compliance cost estimates', inquiries: 142, trend: '↑ 38%' },
+                  { issue: 'SRF reauthorization levels for FY2028+', inquiries: 97, trend: '↑ 15%' },
+                  { issue: 'WOTUS jurisdictional scope (post-Sackett)', inquiries: 64, trend: '↓ 12%' },
+                  { issue: 'Lead & Copper Rule Improvements implementation pace', inquiries: 58, trend: '↑ 22%' },
+                  { issue: 'Environmental justice community designation criteria', inquiries: 41, trend: '— stable' },
                 ].map(c => (
                   <div key={c.issue} className="flex items-center justify-between bg-white border border-slate-200 rounded-lg px-4 py-2.5">
                     <span className="text-sm text-slate-700">{c.issue}</span>
                     <div className="flex items-center gap-3">
-                      <Badge variant="outline">{c.calls} contacts</Badge>
+                      <Badge variant="outline">{c.inquiries} inquiries</Badge>
                       <span className="text-xs text-slate-500">{c.trend}</span>
                     </div>
                   </div>
@@ -7320,13 +7321,14 @@ export function FederalManagementCenter(props: Props) {
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <Banknote size={15} className="text-emerald-600" /> Funding Wins
               </CardTitle>
-              <CardDescription>Recent awards and approvals</CardDescription>
+              <CardDescription>Major federal water funding programs — current allocations</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
               {[
-                { title: '$2.1M DWSRF Award', desc: 'Drinking Water State Revolving Fund — water main rehabilitation project approved Jan 2026.' },
-                { title: '$850K EPA WIIN Grant', desc: 'Water Infrastructure Improvements for the Nation — lead service line inventory and replacement.' },
-                { title: '$340K State 319 Grant', desc: 'Nonpoint source pollution control for Deer Creek watershed — BMP installation.' },
+                { title: '$15B BIL Drinking Water SRF', desc: 'Bipartisan Infrastructure Law — lead service line replacement, emerging contaminants, and general DWSRF supplemental. Disbursed to all 50 states + territories.' },
+                { title: '$11.7B Clean Water SRF', desc: 'BIL Clean Water State Revolving Fund — wastewater infrastructure, stormwater, and nonpoint source. 35% allocated as grants/principal forgiveness.' },
+                { title: '$5B PFAS & Emerging Contaminants', desc: 'Dedicated PFAS/emerging contaminant funding for small and disadvantaged communities — 49 states have received initial allocations.' },
+                { title: '$2.6B Water Recycling & Reuse', desc: 'Western water recycling, desalination, and storage programs under BIL Title IX.' },
               ].map(f => (
                 <div key={f.title} className="flex items-start gap-2 border border-emerald-200 rounded-lg px-4 py-2.5 bg-white">
                   <Badge className="bg-emerald-100 text-emerald-800 shrink-0">&#10003;</Badge>
@@ -7343,16 +7345,20 @@ export function FederalManagementCenter(props: Props) {
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <AlertTriangle size={15} className="text-amber-600" /> Funding Risks
               </CardTitle>
-              <CardDescription>Expiring or at-risk funding</CardDescription>
+              <CardDescription>National-level funding threats and fiscal cliffs</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              <div className="flex items-start gap-2 border border-amber-200 rounded-lg px-4 py-2.5 bg-white">
-                <Badge className="bg-amber-100 text-amber-800 shrink-0">&#9888;</Badge>
-                <div><p className="text-sm font-medium text-slate-800">ARPA Funds Expiring</p><p className="text-xs text-slate-500">$1.2M remaining ARPA allocation must be obligated by Dec 2026. Currently $480K unobligated.</p></div>
-              </div>
               <div className="flex items-start gap-2 border border-red-200 rounded-lg px-4 py-2.5 bg-white">
                 <Badge className="bg-red-100 text-red-800 shrink-0">!</Badge>
-                <div><p className="text-sm font-medium text-slate-800">SRF Match Shortfall</p><p className="text-xs text-slate-500">FY2027 SRF application requires $600K local match. Current reserve: $410K — $190K gap.</p></div>
+                <div><p className="text-sm font-medium text-slate-800">BIL Appropriations Cliff — FY2027</p><p className="text-xs text-slate-500">Bipartisan Infrastructure Law water funding ends FY2026. Without reauthorization, annual SRF capitalization drops ~60% to pre-BIL levels ($2.8B combined).</p></div>
+              </div>
+              <div className="flex items-start gap-2 border border-amber-200 rounded-lg px-4 py-2.5 bg-white">
+                <Badge className="bg-amber-100 text-amber-800 shrink-0">&#9888;</Badge>
+                <div><p className="text-sm font-medium text-slate-800">SRF Capitalization Reduction Risk</p><p className="text-xs text-slate-500">Congressional proposals to reduce base SRF appropriations by 15-20% in FY2027 budget. Would affect all 50 states&rsquo; allotments.</p></div>
+              </div>
+              <div className="flex items-start gap-2 border border-amber-200 rounded-lg px-4 py-2.5 bg-white">
+                <Badge className="bg-amber-100 text-amber-800 shrink-0">&#9888;</Badge>
+                <div><p className="text-sm font-medium text-slate-800">WIFIA Program Uncertainty</p><p className="text-xs text-slate-500">Water Infrastructure Finance and Innovation Act loan authority faces potential rescission in continuing resolution scenarios.</p></div>
               </div>
             </CardContent>
           </Card>
@@ -7362,23 +7368,24 @@ export function FederalManagementCenter(props: Props) {
           <Card className="border-amber-200 bg-amber-50/30">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Clock size={15} className="text-amber-600" /> Regulatory Deadlines
+                <Clock size={15} className="text-amber-600" /> Federal Regulatory Deadlines
               </CardTitle>
-              <CardDescription>Upcoming compliance milestones</CardDescription>
+              <CardDescription>Major national rulemaking and compliance milestones</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
               {[
-                { deadline: 'Mar 15, 2026', item: 'MS4 Annual Report due to state', daysLeft: 15, urgent: true },
-                { deadline: 'Jun 30, 2026', item: 'Lead Service Line Inventory submission', daysLeft: 122, urgent: false },
-                { deadline: 'Oct 1, 2026', item: 'PFAS monitoring results due to EPA', daysLeft: 215, urgent: false },
-                { deadline: 'Dec 31, 2026', item: 'ARPA fund obligation deadline', daysLeft: 306, urgent: true },
+                { deadline: 'Oct 16, 2024', item: 'LCRI Final Rule published — Lead & Copper Rule Improvements (compliance begins)', daysLeft: 0, urgent: false },
+                { deadline: 'Oct 16, 2027', item: 'LCRI: All systems must complete updated lead service line inventories', daysLeft: 595, urgent: false },
+                { deadline: 'Jun 2029', item: 'PFAS NPDWR: Large systems (>10K pop) begin compliance monitoring', daysLeft: 1187, urgent: false },
+                { deadline: 'Jun 2032', item: 'PFAS NPDWR: Small systems (<10K pop) compliance deadline', daysLeft: 2283, urgent: false },
+                { deadline: 'Apr 2026', item: 'CWA 303(d) Integrated Report Cycle — states submit impaired waters lists to EPA', daysLeft: 31, urgent: true },
               ].map(d => (
                 <div key={d.item} className="flex items-center justify-between border border-slate-200 rounded-lg px-4 py-2.5 bg-white">
                   <div>
-                    <p className="text-sm font-medium text-slate-800">{d.deadline} — {d.daysLeft} days</p>
+                    <p className="text-sm font-medium text-slate-800">{d.deadline}{d.daysLeft > 0 ? ` — ${d.daysLeft} days` : ' — Effective'}</p>
                     <p className="text-xs text-slate-500">{d.item}</p>
                   </div>
-                  <Badge className={d.urgent ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}>{d.urgent ? 'Soon' : 'On Track'}</Badge>
+                  <Badge className={d.urgent ? 'bg-amber-100 text-amber-800' : d.daysLeft === 0 ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800'}>{d.urgent ? 'Soon' : d.daysLeft === 0 ? 'Active' : 'On Track'}</Badge>
                 </div>
               ))}
             </CardContent>
@@ -7389,22 +7396,26 @@ export function FederalManagementCenter(props: Props) {
           <Card className="border-purple-200 bg-purple-50/30">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Heart size={15} className="text-purple-600" /> EJ Exposure Summary
+                <Heart size={15} className="text-purple-600" /> National EJ Exposure Summary
               </CardTitle>
-              <CardDescription>Politically sensitive EJ indicators</CardDescription>
+              <CardDescription>Nationwide environmental justice indicators and Justice40 tracking</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
               <div className="flex items-start gap-2 border border-amber-200 rounded-lg px-4 py-2.5 bg-white">
                 <Badge className="bg-amber-100 text-amber-800 shrink-0">&#9888;</Badge>
-                <div><p className="text-sm font-medium text-slate-800">3 EJ Census Tracts</p><p className="text-xs text-slate-500">Tracts 240101, 240105, 240112 exceed 80th percentile on EJScreen composite index. Combined population: 14,200.</p></div>
+                <div><p className="text-sm font-medium text-slate-800">26% of Americans in EJ-Burdened Communities</p><p className="text-xs text-slate-500">~86 million people live in census tracts exceeding the 80th percentile on EPA EJScreen composite index. Highest concentrations in LA, Houston, Chicago, Detroit metro areas.</p></div>
               </div>
               <div className="flex items-start gap-2 border border-red-200 rounded-lg px-4 py-2.5 bg-white">
                 <Badge className="bg-red-100 text-red-800 shrink-0">!</Badge>
-                <div><p className="text-sm font-medium text-slate-800">Disproportionate Impact</p><p className="text-xs text-slate-500">Lead service lines are 3.2x more concentrated in EJ tracts vs. non-EJ areas. Prioritize replacement schedule.</p></div>
+                <div><p className="text-sm font-medium text-slate-800">Disproportionate Lead Exposure</p><p className="text-xs text-slate-500">Lead service lines are 4.1x more concentrated in EJ tracts nationally. 12 states have &gt;70% of LSLs in disadvantaged communities.</p></div>
+              </div>
+              <div className="flex items-start gap-2 border border-blue-200 rounded-lg px-4 py-2.5 bg-white">
+                <Badge className="bg-blue-100 text-blue-800 shrink-0">J40</Badge>
+                <div><p className="text-sm font-medium text-slate-800">Justice40 Tracker</p><p className="text-xs text-slate-500">40% of BIL water benefits must flow to disadvantaged communities. Current tracking: 38.2% of DWSRF funds, 41.7% of CWSRF funds directed to J40-qualifying tracts.</p></div>
               </div>
               <div className="flex items-start gap-2 border border-emerald-200 rounded-lg px-4 py-2.5 bg-white">
                 <Badge className="bg-emerald-100 text-emerald-800 shrink-0">&#10003;</Badge>
-                <div><p className="text-sm font-medium text-slate-800">Justice40 Eligible</p><p className="text-xs text-slate-500">2 of 3 EJ tracts qualify for Justice40 benefits. $1.8M in additional funding potentially available.</p></div>
+                <div><p className="text-sm font-medium text-slate-800">CEJST Coverage</p><p className="text-xs text-slate-500">Climate &amp; Economic Justice Screening Tool identifies 27,251 tracts as disadvantaged. 43 states have incorporated CEJST into SRF project ranking.</p></div>
               </div>
             </CardContent>
           </Card>
@@ -7414,17 +7425,17 @@ export function FederalManagementCenter(props: Props) {
           <Card className="border-purple-200 bg-purple-50/30">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Trophy size={15} className="text-purple-600" /> Media-Ready Grades
+                <Trophy size={15} className="text-purple-600" /> National Average Grades
               </CardTitle>
-              <CardDescription>Simplified report card for press releases</CardDescription>
+              <CardDescription>Aggregated national averages across all 50 states</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
-                  { category: 'Water Quality', grade: 'B+', color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
-                  { category: 'Infrastructure', grade: 'C+', color: 'text-yellow-700 bg-yellow-50 border-yellow-200' },
-                  { category: 'Compliance', grade: 'A-', color: 'text-green-700 bg-green-50 border-green-200' },
-                  { category: 'Equity', grade: 'B-', color: 'text-teal-700 bg-teal-50 border-teal-200' },
+                  { category: 'Water Quality', grade: 'B-', color: 'text-teal-700 bg-teal-50 border-teal-200' },
+                  { category: 'Infrastructure', grade: 'D+', color: 'text-red-700 bg-red-50 border-red-200' },
+                  { category: 'Compliance', grade: 'B', color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
+                  { category: 'Equity', grade: 'C', color: 'text-yellow-700 bg-yellow-50 border-yellow-200' },
                 ].map(g => (
                   <div key={g.category} className={`border rounded-xl p-4 text-center ${g.color}`}>
                     <p className="text-3xl font-bold">{g.grade}</p>
@@ -7432,6 +7443,7 @@ export function FederalManagementCenter(props: Props) {
                   </div>
                 ))}
               </div>
+              <p className="text-xs text-slate-400 mt-3 italic">ASCE Infrastructure Report Card methodology. National water infrastructure grade: D+ (est. $625B investment gap over 20 years).</p>
             </CardContent>
           </Card>
         );
@@ -7440,32 +7452,31 @@ export function FederalManagementCenter(props: Props) {
           <Card className="border-purple-200 bg-purple-50/30">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <BarChart3 size={15} className="text-purple-600" /> Peer Comparison
+                <BarChart3 size={15} className="text-purple-600" /> State-by-State Rankings
               </CardTitle>
-              <CardDescription>How you compare to similar jurisdictions</CardDescription>
+              <CardDescription>Top 5 and bottom 5 states by category</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {[
-                  { metric: 'Water Quality Score', you: 87, peer: 82, unit: '/100' },
-                  { metric: 'Compliance Rate', you: 94, peer: 89, unit: '%' },
-                  { metric: 'Infrastructure Grade', you: 77, peer: 74, unit: '/100' },
-                  { metric: 'Grant $ Per Capita', you: 22.7, peer: 18.3, unit: '' },
-                ].map(m => (
-                  <div key={m.metric} className="flex items-center justify-between bg-white border border-slate-200 rounded-lg px-4 py-2.5">
-                    <span className="text-sm text-slate-700">{m.metric}</span>
-                    <div className="flex items-center gap-4">
-                      <span className="text-sm font-semibold text-purple-700">You: {m.you}{m.unit}</span>
-                      <span className="text-sm text-slate-500">Peers: {m.peer}{m.unit}</span>
-                      {m.you > m.peer ? (
-                        <Badge className="bg-emerald-100 text-emerald-800">Above</Badge>
-                      ) : (
-                        <Badge className="bg-amber-100 text-amber-800">Below</Badge>
-                      )}
+            <CardContent className="space-y-4">
+              {[
+                { category: 'Water Quality', top: ['VT', 'ME', 'OR', 'MN', 'NH'], bottom: ['MS', 'LA', 'TX', 'FL', 'AL'] },
+                { category: 'Compliance Rate', top: ['CT', 'MA', 'WA', 'CO', 'MN'], bottom: ['WV', 'MS', 'NM', 'OK', 'AL'] },
+                { category: 'Infrastructure', top: ['UT', 'CO', 'WA', 'MN', 'VA'], bottom: ['MS', 'WV', 'LA', 'NM', 'AK'] },
+                { category: 'EJ Equity', top: ['VT', 'NH', 'ME', 'OR', 'MN'], bottom: ['LA', 'MS', 'TX', 'IN', 'OH'] },
+              ].map(c => (
+                <div key={c.category} className="bg-white border border-slate-200 rounded-lg px-4 py-3">
+                  <p className="text-sm font-semibold text-slate-800 mb-2">{c.category}</p>
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-1">
+                      <span className="text-emerald-600 font-medium">Top 5:</span>
+                      {c.top.map((s, i) => <Badge key={s} className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px]">{i+1}. {s}</Badge>)}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-red-600 font-medium">Bottom 5:</span>
+                      {c.bottom.map((s, i) => <Badge key={s} className="bg-red-50 text-red-700 border-red-200 text-[10px]">{46+i}. {s}</Badge>)}
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </CardContent>
           </Card>
         );
@@ -7474,26 +7485,26 @@ export function FederalManagementCenter(props: Props) {
           <Card className="border-purple-200 bg-purple-50/30">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Scale size={15} className="text-purple-600" /> Council Agenda Suggestions
+                <Scale size={15} className="text-purple-600" /> Congressional Action Items
               </CardTitle>
-              <CardDescription>Data-driven items for next meeting</CardDescription>
+              <CardDescription>Oversight hearings, rulemaking comments, and budget testimony</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div className="flex items-start gap-2">
-                <Badge className="bg-red-100 text-red-800 shrink-0">Urgent</Badge>
-                <p><strong>ARPA Fund Reallocation:</strong> $480K unobligated — propose allocation to lead service line replacement before Dec 2026 deadline.</p>
+                <Badge className="bg-red-100 text-red-800 shrink-0">Hearing</Badge>
+                <p><strong>Senate EPW Oversight:</strong> BIL water infrastructure implementation progress — prepare testimony on SRF disbursement rates and state allocation equity.</p>
               </div>
               <div className="flex items-start gap-2">
-                <Badge className="bg-amber-100 text-amber-800 shrink-0">Action</Badge>
-                <p><strong>SRF Match Funding:</strong> Authorize $190K from capital reserve to close FY2027 SRF local match gap.</p>
+                <Badge className="bg-amber-100 text-amber-800 shrink-0">Comment</Badge>
+                <p><strong>LCRI Implementation Guidance:</strong> EPA accepting public comments on LCRI compliance guidance through Apr 2026. Coordinate interagency response.</p>
               </div>
               <div className="flex items-start gap-2">
-                <Badge className="bg-blue-100 text-blue-800 shrink-0">Info</Badge>
-                <p><strong>Quarterly Water Quality Update:</strong> 8th consecutive quarter with zero MCL exceedances — recognition opportunity.</p>
+                <Badge className="bg-blue-100 text-blue-800 shrink-0">Budget</Badge>
+                <p><strong>FY2028 Budget Testimony:</strong> Prepare justification for SRF reauthorization at BIL levels ($7.4B/yr DWSRF + CWSRF combined).</p>
               </div>
               <div className="flex items-start gap-2">
-                <Badge className="bg-purple-100 text-purple-800 shrink-0">Equity</Badge>
-                <p><strong>EJ Tract Prioritization:</strong> Present updated lead line replacement schedule prioritizing 3 EJ census tracts.</p>
+                <Badge className="bg-purple-100 text-purple-800 shrink-0">Interagency</Badge>
+                <p><strong>White House Water Council:</strong> Quarterly coordination meeting — agenda includes PFAS MCL compliance timeline and Justice40 scorecard updates.</p>
               </div>
             </CardContent>
           </Card>

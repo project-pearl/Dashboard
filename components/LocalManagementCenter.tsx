@@ -357,29 +357,26 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             Admin: Jurisdiction & MS4 Selector
           </div>
           <div className="flex flex-wrap gap-4">
-            <div className="flex-1 min-w-[200px]">
-              <label className="text-xs font-medium text-slate-500 mb-1 block">Jurisdiction</label>
+            <div className="flex-1 min-w-[280px]">
+              <label className="text-xs font-medium text-slate-500 mb-1 block">Jurisdiction &amp; MS4 Permit</label>
               <select
-                value={selectedJurisdictionId}
-                onChange={(e) => { setSelectedJurisdictionId(e.target.value); setSelectedMS4(null); }}
+                value={selectedMS4 ?? 'default'}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === 'default') {
+                    setSelectedJurisdictionId('default');
+                    setSelectedMS4(null);
+                  } else {
+                    const j = ms4Jurisdictions.find(j => j.permitId === val);
+                    if (j) {
+                      setSelectedJurisdictionId(j.name.toLowerCase().replace(/\s+/g, '_'));
+                      setSelectedMS4(j.permitId);
+                    }
+                  }
+                }}
                 className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-purple-300 focus:border-purple-400 outline-none"
               >
                 <option value="default">All Jurisdictions</option>
-                {ms4Jurisdictions.map(j => (
-                  <option key={j.permitId} value={j.name.toLowerCase().replace(/\s+/g, '_')}>
-                    {j.name} — {j.phase}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex-1 min-w-[200px]">
-              <label className="text-xs font-medium text-slate-500 mb-1 block">MS4 Permit Holder</label>
-              <select
-                value={selectedMS4 ?? ''}
-                onChange={(e) => setSelectedMS4(e.target.value || null)}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-purple-300 focus:border-purple-400 outline-none"
-              >
-                <option value="">All MS4 Permits</option>
                 {ms4Jurisdictions.map(j => (
                   <option key={j.permitId} value={j.permitId}>
                     {j.name} — {j.permitId} ({j.phase})

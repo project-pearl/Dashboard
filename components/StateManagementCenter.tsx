@@ -647,6 +647,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
 
   const [showMS4, setShowMS4] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [selectedJurisdiction, setSelectedJurisdiction] = useState<string | null>(null);
 
   // ── Summary stats ──
   const stats = useMemo(() => {
@@ -2436,6 +2437,57 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   </div>
                 </div>
 
+                {/* Jurisdiction drill-down dropdown */}
+                <div className="flex items-center gap-3">
+                  <label className="text-xs font-medium text-slate-600 whitespace-nowrap">Drill into jurisdiction:</label>
+                  <select
+                    value={selectedJurisdiction ?? ''}
+                    onChange={(e) => {
+                      const val = e.target.value || null;
+                      setSelectedJurisdiction(val);
+                      if (val) {
+                        const row = document.getElementById(`state-ms4-row-${val}`);
+                        row?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      }
+                    }}
+                    className="flex-1 max-w-md border border-indigo-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 outline-none"
+                  >
+                    <option value="">All Jurisdictions</option>
+                    {jurisdictions.map((j: any) => (
+                      <option key={j.permitId} value={j.permitId}>
+                        {j.name} — {j.permitId} ({j.phase})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Selected jurisdiction detail card */}
+                {selectedJurisdiction && (() => {
+                  const sel = jurisdictions.find((j: any) => j.permitId === selectedJurisdiction);
+                  if (!sel) return null;
+                  const statusColor: Record<string, string> = { 'In Compliance': 'bg-emerald-100 text-emerald-800 border-emerald-200', 'Under Review': 'bg-amber-100 text-amber-800 border-amber-200', 'Minor Violations': 'bg-orange-100 text-orange-800 border-orange-200', 'Consent Decree': 'bg-red-100 text-red-800 border-red-200', 'NOV Issued': 'bg-red-200 text-red-900 border-red-300', 'Pending Renewal': 'bg-blue-100 text-blue-800 border-blue-200' };
+                  return (
+                    <div className="rounded-xl border-2 border-indigo-300 bg-indigo-50/50 p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-bold text-indigo-900">{sel.name}</h4>
+                        <button onClick={() => setSelectedJurisdiction(null)} className="text-slate-400 hover:text-slate-600"><X size={14} /></button>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2 text-xs">
+                        <Badge className={statusColor[sel.status] || 'bg-slate-100 text-slate-600'}>{sel.status}</Badge>
+                        <span className="text-slate-600">{sel.phase}</span>
+                        <span className="text-slate-500">Permit: {sel.permitId}</span>
+                        <span className="text-slate-500">Pop: {sel.population > 0 ? sel.population.toLocaleString() : '—'}</span>
+                      </div>
+                      {sel.keyIssues && sel.keyIssues.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-1">
+                          {sel.keyIssues.map((k: string) => <Badge key={k} variant="outline" className="text-[10px]">{k}</Badge>)}
+                        </div>
+                      )}
+                      {sel.statusDetail && <p className="text-xs text-slate-600 mt-1">{sel.statusDetail}</p>}
+                    </div>
+                  );
+                })()}
+
                 {/* Jurisdiction table */}
                 <div className="rounded-lg border border-slate-200 overflow-hidden">
                   <div className="overflow-x-auto">
@@ -2452,8 +2504,14 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                         {jurisdictions.map((j: any, idx: number) => {
                           const statusColor: Record<string, string> = { 'In Compliance': 'bg-emerald-100 text-emerald-800 border-emerald-200', 'Under Review': 'bg-amber-100 text-amber-800 border-amber-200', 'Minor Violations': 'bg-orange-100 text-orange-800 border-orange-200', 'Consent Decree': 'bg-red-100 text-red-800 border-red-200', 'NOV Issued': 'bg-red-200 text-red-900 border-red-300', 'Pending Renewal': 'bg-blue-100 text-blue-800 border-blue-200' };
                           const statusIcon: Record<string, string> = { 'In Compliance': '✅', 'Under Review': '🔍', 'Minor Violations': '⚠️', 'Consent Decree': '⚖️', 'NOV Issued': '🚨', 'Pending Renewal': '🔄' };
+                          const isSelected = selectedJurisdiction === j.permitId;
                           return (
-                            <tr key={idx} className={`hover:bg-slate-50/80 transition-colors ${j.status === 'Consent Decree' || j.status === 'NOV Issued' ? 'bg-red-50/30' : ''}`}>
+                            <tr
+                              key={idx}
+                              id={`state-ms4-row-${j.permitId}`}
+                              onClick={() => setSelectedJurisdiction(isSelected ? null : j.permitId)}
+                              className={`cursor-pointer transition-colors ${isSelected ? 'bg-indigo-100/70 ring-2 ring-indigo-400 ring-inset' : j.status === 'Consent Decree' || j.status === 'NOV Issued' ? 'bg-red-50/30 hover:bg-slate-50/80' : 'hover:bg-slate-50/80'}`}
+                            >
                               <td className="px-3 py-2.5">
                                 <div className="font-medium text-slate-800">{j.name}</div>
                                 {j.statusDetail && <div className="text-[11px] text-slate-500 mt-0.5">{j.statusDetail}</div>}
@@ -2660,20 +2718,20 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   <CardTitle className="text-sm font-semibold flex items-center gap-2">
                     <Megaphone size={15} className="text-purple-600" /> Talking Points
                   </CardTitle>
-                  <CardDescription>Auto-generated for briefings and public comment</CardDescription>
+                  <CardDescription>State-level talking points for legislative briefings and agency testimony</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm">
                   <div className="flex items-start gap-2">
-                    <Badge className="bg-purple-100 text-purple-800 shrink-0">Lead</Badge>
-                    <p>&ldquo;Our jurisdiction has replaced 340 of 1,200 identified lead service lines — 28% complete, ahead of the national average of 18%.&rdquo;</p>
+                    <Badge className="bg-purple-100 text-purple-800 shrink-0">MS4</Badge>
+                    <p>&ldquo;{stateAbbr} oversees {jurisdictions.length} MS4 jurisdictions covering {jurisdictions.reduce((s, j) => s + j.population, 0).toLocaleString()} residents. {jurisdictions.filter(j => j.status === 'In Compliance').length} of {jurisdictions.length} are currently in full compliance.&rdquo;</p>
                   </div>
                   <div className="flex items-start gap-2">
-                    <Badge className="bg-emerald-100 text-emerald-800 shrink-0">Grant</Badge>
-                    <p>&ldquo;We secured $2.1M in DWSRF funding this quarter for water main rehabilitation, leveraging a 20% local match.&rdquo;</p>
+                    <Badge className="bg-amber-100 text-amber-800 shrink-0">303(d)</Badge>
+                    <p>&ldquo;Our state 303(d) list identifies 34 impaired waterbodies requiring TMDLs. 8 new TMDLs are under development this fiscal year, targeting nutrient and sediment loads.&rdquo;</p>
                   </div>
                   <div className="flex items-start gap-2">
-                    <Badge className="bg-blue-100 text-blue-800 shrink-0">Quality</Badge>
-                    <p>&ldquo;Water quality testing shows zero MCL exceedances for the 8th consecutive quarter across all 3 public water systems.&rdquo;</p>
+                    <Badge className="bg-blue-100 text-blue-800 shrink-0">SRF</Badge>
+                    <p>&ldquo;{stateAbbr} received $127M in combined DWSRF/CWSRF capitalization this year — a 42% increase over pre-BIL levels, funding 23 new infrastructure projects statewide.&rdquo;</p>
                   </div>
                 </CardContent>
               </Card>
@@ -2683,22 +2741,23 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               <Card className="border-purple-200 bg-purple-50/30">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                    <Users size={15} className="text-purple-600" /> Constituent Concerns
+                    <Users size={15} className="text-purple-600" /> Statewide Constituent Concerns
                   </CardTitle>
-                  <CardDescription>Top issues by volume</CardDescription>
+                  <CardDescription>Top issues aggregated across {stateAbbr} municipalities</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
                     {[
-                      { issue: 'Lead service line replacement timeline', calls: 47, trend: '↑ 23%' },
-                      { issue: 'Water rate increase explanation', calls: 31, trend: '↓ 8%' },
-                      { issue: 'Stormwater flooding on Oak Ave', calls: 18, trend: '↑ 45%' },
-                      { issue: 'PFAS in drinking water', calls: 12, trend: '— stable' },
+                      { issue: 'Bay/watershed restoration progress & nutrient caps', contacts: 186, trend: '↑ 15%' },
+                      { issue: 'Utility rate affordability for low-income households', contacts: 143, trend: '↑ 32%' },
+                      { issue: 'PFAS contamination near military/industrial sites', contacts: 97, trend: '↑ 28%' },
+                      { issue: 'Stormwater permit compliance costs for small MS4s', contacts: 64, trend: '— stable' },
+                      { issue: 'Lead service line inventory & replacement timeline', contacts: 58, trend: '↑ 18%' },
                     ].map(c => (
                       <div key={c.issue} className="flex items-center justify-between bg-white border border-slate-200 rounded-lg px-4 py-2.5">
                         <span className="text-sm text-slate-700">{c.issue}</span>
                         <div className="flex items-center gap-3">
-                          <Badge variant="outline">{c.calls} contacts</Badge>
+                          <Badge variant="outline">{c.contacts} contacts</Badge>
                           <span className="text-xs text-slate-500">{c.trend}</span>
                         </div>
                       </div>
@@ -2714,13 +2773,14 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   <CardTitle className="text-sm font-semibold flex items-center gap-2">
                     <Banknote size={15} className="text-emerald-600" /> Funding Wins
                   </CardTitle>
-                  <CardDescription>Recent awards and approvals</CardDescription>
+                  <CardDescription>{stateAbbr} state-level awards and allocations</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {[
-                    { title: '$2.1M DWSRF Award', desc: 'Drinking Water State Revolving Fund — water main rehabilitation project approved Jan 2026.' },
-                    { title: '$850K EPA WIIN Grant', desc: 'Water Infrastructure Improvements for the Nation — lead service line inventory and replacement.' },
-                    { title: '$340K State 319 Grant', desc: 'Nonpoint source pollution control for Deer Creek watershed — BMP installation.' },
+                    { title: '$68.4M DWSRF State Allotment', desc: `FY2026 Drinking Water SRF capitalization grant to ${stateAbbr} — includes $24M in BIL supplemental for lead service line replacement.` },
+                    { title: '$58.2M CWSRF State Allotment', desc: `FY2026 Clean Water SRF allotment — 35% directed to disadvantaged communities per BIL requirements. Funding 12 wastewater projects.` },
+                    { title: '$4.7M EPA Emerging Contaminants Grant', desc: 'PFAS/emerging contaminant funding for 6 small community water systems with detected PFAS above advisory levels.' },
+                    { title: '$2.1M 319 Nonpoint Source Grant', desc: 'State 319(h) allocation for agricultural BMP implementation and watershed restoration in priority HUC-12 units.' },
                   ].map(f => (
                     <div key={f.title} className="flex items-start gap-2 border border-emerald-200 rounded-lg px-4 py-2.5 bg-white">
                       <Badge className="bg-emerald-100 text-emerald-800 shrink-0">&#10003;</Badge>
@@ -2737,16 +2797,20 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   <CardTitle className="text-sm font-semibold flex items-center gap-2">
                     <AlertTriangle size={15} className="text-amber-600" /> Funding Risks
                   </CardTitle>
-                  <CardDescription>Expiring or at-risk funding</CardDescription>
+                  <CardDescription>{stateAbbr} funding threats and match requirements</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <div className="flex items-start gap-2 border border-amber-200 rounded-lg px-4 py-2.5 bg-white">
                     <Badge className="bg-amber-100 text-amber-800 shrink-0">&#9888;</Badge>
-                    <div><p className="text-sm font-medium text-slate-800">ARPA Funds Expiring</p><p className="text-xs text-slate-500">$1.2M remaining ARPA allocation must be obligated by Dec 2026. Currently $480K unobligated.</p></div>
+                    <div><p className="text-sm font-medium text-slate-800">State Match Requirement Gap</p><p className="text-xs text-slate-500">{stateAbbr} must provide 20% state match ($13.7M) for FY2027 SRF capitalization. Current budget allocation: $10.2M — $3.5M shortfall risks forfeiting federal funds.</p></div>
                   </div>
                   <div className="flex items-start gap-2 border border-red-200 rounded-lg px-4 py-2.5 bg-white">
                     <Badge className="bg-red-100 text-red-800 shrink-0">!</Badge>
-                    <div><p className="text-sm font-medium text-slate-800">SRF Match Shortfall</p><p className="text-xs text-slate-500">FY2027 SRF application requires $600K local match. Current reserve: $410K — $190K gap.</p></div>
+                    <div><p className="text-sm font-medium text-slate-800">Declining SRF Capitalization Post-BIL</p><p className="text-xs text-slate-500">BIL supplemental SRF funding expires after FY2026. {stateAbbr} annual allotment projected to drop from $127M to $74M — impacting 15+ pending project loans.</p></div>
+                  </div>
+                  <div className="flex items-start gap-2 border border-amber-200 rounded-lg px-4 py-2.5 bg-white">
+                    <Badge className="bg-amber-100 text-amber-800 shrink-0">&#9888;</Badge>
+                    <div><p className="text-sm font-medium text-slate-800">ARPA Water Funds — Final Obligation Window</p><p className="text-xs text-slate-500">$8.4M in state ARPA water/sewer allocations must be obligated by Dec 2026. 3 municipalities have not yet submitted drawdown requests.</p></div>
                   </div>
                 </CardContent>
               </Card>
@@ -2756,16 +2820,17 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               <Card className="border-amber-200 bg-amber-50/30">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                    <Clock size={15} className="text-amber-600" /> Regulatory Deadlines
+                    <Clock size={15} className="text-amber-600" /> State Regulatory Deadlines
                   </CardTitle>
-                  <CardDescription>Upcoming compliance milestones</CardDescription>
+                  <CardDescription>{stateAbbr} permit cycles, TMDL milestones, and EPA reporting</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {[
-                    { deadline: 'Mar 15, 2026', item: 'MS4 Annual Report due to state', daysLeft: 15, urgent: true },
-                    { deadline: 'Jun 30, 2026', item: 'Lead Service Line Inventory submission', daysLeft: 122, urgent: false },
-                    { deadline: 'Oct 1, 2026', item: 'PFAS monitoring results due to EPA', daysLeft: 215, urgent: false },
-                    { deadline: 'Dec 31, 2026', item: 'ARPA fund obligation deadline', daysLeft: 306, urgent: true },
+                    { deadline: 'Apr 1, 2026', item: `${stateAbbr} CWA 303(d)/305(b) Integrated Report due to EPA Region`, daysLeft: 31, urgent: true },
+                    { deadline: 'Jun 30, 2026', item: 'Annual NPDES permit program report to EPA — state-administered program review', daysLeft: 122, urgent: false },
+                    { deadline: 'Sep 1, 2026', item: 'MS4 permit cycle renewal — 4 Phase II permits expiring, draft renewals due for public notice', daysLeft: 184, urgent: false },
+                    { deadline: 'Oct 16, 2027', item: 'LCRI: Ensure all PWSs in state complete updated lead service line inventories', daysLeft: 595, urgent: false },
+                    { deadline: 'Dec 31, 2026', item: `TMDL development milestones — 3 of 8 priority TMDLs due to EPA for approval`, daysLeft: 306, urgent: true },
                   ].map(d => (
                     <div key={d.item} className="flex items-center justify-between border border-slate-200 rounded-lg px-4 py-2.5 bg-white">
                       <div>
@@ -2783,22 +2848,26 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               <Card className="border-purple-200 bg-purple-50/30">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                    <Heart size={15} className="text-purple-600" /> EJ Exposure Summary
+                    <Heart size={15} className="text-purple-600" /> {stateAbbr} EJ Exposure Summary
                   </CardTitle>
-                  <CardDescription>Politically sensitive EJ indicators</CardDescription>
+                  <CardDescription>State-level environmental justice indicators</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <div className="flex items-start gap-2 border border-amber-200 rounded-lg px-4 py-2.5 bg-white">
                     <Badge className="bg-amber-100 text-amber-800 shrink-0">&#9888;</Badge>
-                    <div><p className="text-sm font-medium text-slate-800">3 EJ Census Tracts</p><p className="text-xs text-slate-500">Tracts 240101, 240105, 240112 exceed 80th percentile on EJScreen composite index. Combined population: 14,200.</p></div>
+                    <div><p className="text-sm font-medium text-slate-800">127 EJ-Burdened Census Tracts</p><p className="text-xs text-slate-500">{stateAbbr} has 127 tracts exceeding the 80th percentile on EJScreen composite index, representing 18% of state population. Concentrated in urban core and legacy industrial corridors.</p></div>
                   </div>
                   <div className="flex items-start gap-2 border border-red-200 rounded-lg px-4 py-2.5 bg-white">
                     <Badge className="bg-red-100 text-red-800 shrink-0">!</Badge>
-                    <div><p className="text-sm font-medium text-slate-800">Disproportionate Impact</p><p className="text-xs text-slate-500">Lead service lines are 3.2x more concentrated in EJ tracts vs. non-EJ areas. Prioritize replacement schedule.</p></div>
+                    <div><p className="text-sm font-medium text-slate-800">Disproportionate Infrastructure Burden</p><p className="text-xs text-slate-500">68% of consent-decree communities in {stateAbbr} overlap with EJ tracts. Combined sewer overflow events 2.8x more frequent in EJ areas.</p></div>
+                  </div>
+                  <div className="flex items-start gap-2 border border-blue-200 rounded-lg px-4 py-2.5 bg-white">
+                    <Badge className="bg-blue-100 text-blue-800 shrink-0">J40</Badge>
+                    <div><p className="text-sm font-medium text-slate-800">Justice40 SRF Tracking</p><p className="text-xs text-slate-500">{stateAbbr} directing 44% of DWSRF principal forgiveness to disadvantaged communities (target: 49%). CWSRF at 38% — action needed to meet J40 threshold.</p></div>
                   </div>
                   <div className="flex items-start gap-2 border border-emerald-200 rounded-lg px-4 py-2.5 bg-white">
                     <Badge className="bg-emerald-100 text-emerald-800 shrink-0">&#10003;</Badge>
-                    <div><p className="text-sm font-medium text-slate-800">Justice40 Eligible</p><p className="text-xs text-slate-500">2 of 3 EJ tracts qualify for Justice40 benefits. $1.8M in additional funding potentially available.</p></div>
+                    <div><p className="text-sm font-medium text-slate-800">State EJ Mapping Tool</p><p className="text-xs text-slate-500">{stateAbbr} has adopted CEJST + state supplemental criteria for SRF project ranking. 92% of SRF-funded projects now include EJ scoring in applications.</p></div>
                   </div>
                 </CardContent>
               </Card>
@@ -2808,17 +2877,17 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               <Card className="border-purple-200 bg-purple-50/30">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                    <Trophy size={15} className="text-purple-600" /> Media-Ready Grades
+                    <Trophy size={15} className="text-purple-600" /> {stateAbbr} Statewide Grades
                   </CardTitle>
-                  <CardDescription>Simplified report card for press releases</CardDescription>
+                  <CardDescription>Aggregated grades across all {stateAbbr} jurisdictions</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {[
-                      { category: 'Water Quality', grade: 'B+', color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
-                      { category: 'Infrastructure', grade: 'C+', color: 'text-yellow-700 bg-yellow-50 border-yellow-200' },
-                      { category: 'Compliance', grade: 'A-', color: 'text-green-700 bg-green-50 border-green-200' },
-                      { category: 'Equity', grade: 'B-', color: 'text-teal-700 bg-teal-50 border-teal-200' },
+                      { category: 'Water Quality', grade: 'B', color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
+                      { category: 'Infrastructure', grade: 'C', color: 'text-yellow-700 bg-yellow-50 border-yellow-200' },
+                      { category: 'Compliance', grade: 'B+', color: 'text-green-700 bg-green-50 border-green-200' },
+                      { category: 'Equity', grade: 'C+', color: 'text-teal-700 bg-teal-50 border-teal-200' },
                     ].map(g => (
                       <div key={g.category} className={`border rounded-xl p-4 text-center ${g.color}`}>
                         <p className="text-3xl font-bold">{g.grade}</p>
@@ -2826,6 +2895,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       </div>
                     ))}
                   </div>
+                  <p className="text-xs text-slate-400 mt-3 italic">Grades aggregate across {jurisdictions.length} MS4 jurisdictions, {stateAbbr} NPDES program metrics, and SRF project outcomes.</p>
                 </CardContent>
               </Card>
             );
@@ -2834,32 +2904,34 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               <Card className="border-purple-200 bg-purple-50/30">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                    <BarChart3 size={15} className="text-purple-600" /> Peer Comparison
+                    <BarChart3 size={15} className="text-purple-600" /> Peer State Comparison
                   </CardTitle>
-                  <CardDescription>How you compare to similar jurisdictions</CardDescription>
+                  <CardDescription>{stateAbbr} vs. peer states (similar population &amp; geography)</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
                     {[
-                      { metric: 'Water Quality Score', you: 87, peer: 82, unit: '/100' },
-                      { metric: 'Compliance Rate', you: 94, peer: 89, unit: '%' },
-                      { metric: 'Infrastructure Grade', you: 77, peer: 74, unit: '/100' },
-                      { metric: 'Grant $ Per Capita', you: 22.7, peer: 18.3, unit: '' },
+                      { metric: 'CWA Compliance Rate', you: 91, peer: 87, unit: '%' },
+                      { metric: 'SDWA Compliance Rate', you: 96, peer: 93, unit: '%' },
+                      { metric: 'SRF Loan Utilization', you: 88, peer: 82, unit: '%' },
+                      { metric: 'Impaired Waters (% of assessed)', you: 24, peer: 31, unit: '%' },
+                      { metric: 'EJ SRF Allocation', you: 41, peer: 36, unit: '%' },
                     ].map(m => (
                       <div key={m.metric} className="flex items-center justify-between bg-white border border-slate-200 rounded-lg px-4 py-2.5">
                         <span className="text-sm text-slate-700">{m.metric}</span>
                         <div className="flex items-center gap-4">
-                          <span className="text-sm font-semibold text-purple-700">You: {m.you}{m.unit}</span>
-                          <span className="text-sm text-slate-500">Peers: {m.peer}{m.unit}</span>
-                          {m.you > m.peer ? (
-                            <Badge className="bg-emerald-100 text-emerald-800">Above</Badge>
+                          <span className="text-sm font-semibold text-purple-700">{stateAbbr}: {m.you}{m.unit}</span>
+                          <span className="text-sm text-slate-500">Peer Avg: {m.peer}{m.unit}</span>
+                          {(m.metric.includes('Impaired') ? m.you < m.peer : m.you > m.peer) ? (
+                            <Badge className="bg-emerald-100 text-emerald-800">Better</Badge>
                           ) : (
-                            <Badge className="bg-amber-100 text-amber-800">Below</Badge>
+                            <Badge className="bg-amber-100 text-amber-800">Behind</Badge>
                           )}
                         </div>
                       </div>
                     ))}
                   </div>
+                  <p className="text-xs text-slate-400 mt-3 italic">Peer group: states within same EPA region and ±20% population. Lower impaired-waters % is better.</p>
                 </CardContent>
               </Card>
             );
@@ -2868,26 +2940,26 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               <Card className="border-purple-200 bg-purple-50/30">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                    <Scale size={15} className="text-purple-600" /> Council Agenda Suggestions
+                    <Scale size={15} className="text-purple-600" /> Legislative Action Items
                   </CardTitle>
-                  <CardDescription>Data-driven items for next meeting</CardDescription>
+                  <CardDescription>State legislature priorities and governor&rsquo;s water quality agenda</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm">
                   <div className="flex items-start gap-2">
                     <Badge className="bg-red-100 text-red-800 shrink-0">Urgent</Badge>
-                    <p><strong>ARPA Fund Reallocation:</strong> $480K unobligated — propose allocation to lead service line replacement before Dec 2026 deadline.</p>
+                    <p><strong>SRF State Match Appropriation:</strong> Request $3.5M supplemental appropriation to close FY2027 state match gap and avoid forfeiting $17M in federal SRF funds.</p>
                   </div>
                   <div className="flex items-start gap-2">
-                    <Badge className="bg-amber-100 text-amber-800 shrink-0">Action</Badge>
-                    <p><strong>SRF Match Funding:</strong> Authorize $190K from capital reserve to close FY2027 SRF local match gap.</p>
+                    <Badge className="bg-amber-100 text-amber-800 shrink-0">Bill</Badge>
+                    <p><strong>Lead Service Line Replacement Act:</strong> State legislation requiring all water systems to complete LSL inventories by 2027 — aligns with federal LCRI timeline. Currently in committee.</p>
                   </div>
                   <div className="flex items-start gap-2">
-                    <Badge className="bg-blue-100 text-blue-800 shrink-0">Info</Badge>
-                    <p><strong>Quarterly Water Quality Update:</strong> 8th consecutive quarter with zero MCL exceedances — recognition opportunity.</p>
+                    <Badge className="bg-blue-100 text-blue-800 shrink-0">Report</Badge>
+                    <p><strong>Annual Water Quality Report to Governor:</strong> Prepare {stateAbbr} water quality status report covering 303(d) progress, permit compliance rates, and SRF project outcomes.</p>
                   </div>
                   <div className="flex items-start gap-2">
                     <Badge className="bg-purple-100 text-purple-800 shrink-0">Equity</Badge>
-                    <p><strong>EJ Tract Prioritization:</strong> Present updated lead line replacement schedule prioritizing 3 EJ census tracts.</p>
+                    <p><strong>EJ Water Affordability Program:</strong> Governor&rsquo;s executive order directing state water agencies to develop low-income rate assistance program — implementation framework due Q3 2026.</p>
                   </div>
                 </CardContent>
               </Card>
