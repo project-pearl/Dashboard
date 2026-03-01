@@ -68,10 +68,15 @@ export function LayoutEditor({ ccKey, children }: LayoutEditorProps) {
     if (!user) return;
     fetchLayout(user.role, ccKey).then(saved => {
       if (saved) {
-        setSections(saved);
-        // Re-derive collapsed state from saved definitions
+        // Merge: append any DEFAULT_SECTIONS entries not present in saved layout
+        const savedIds = new Set(saved.map(s => s.id));
+        const defaults = DEFAULT_SECTIONS[ccKey];
+        const missing = defaults.filter(d => !savedIds.has(d.id));
+        const merged = missing.length > 0 ? [...saved, ...missing] : saved;
+        setSections(merged);
+        // Re-derive collapsed state from merged definitions
         const collapsed: Record<string, boolean> = {};
-        saved.forEach(s => {
+        merged.forEach(s => {
           if (!s.defaultExpanded) collapsed[s.id] = true;
         });
         setCollapsedSections(collapsed);
