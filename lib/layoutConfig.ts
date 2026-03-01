@@ -340,6 +340,11 @@ export const DEFAULT_SECTIONS = {
     { id: 'esg-reporting-panel',      label: 'ESG Reporting',             order: 28, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'supply-chain-risk-panel',  label: 'Supply Chain Risk',         order: 29, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'data-export-hub',           label: 'Data Export Hub',            order: 29.5, visible: true, defaultExpanded: false, lensControlled: true },
+    // ── Funding sections ──
+    { id: 'fund-active',    label: 'Active Grants',                 order: 30, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'fund-srf',       label: 'SRF Program',                   order: 30.1, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'fund-pipeline',  label: 'Opportunity Pipeline',          order: 30.2, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'fund-analytics', label: 'Funding Analytics',             order: 30.3, visible: true, defaultExpanded: true, lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',     label: 'Platform Disclaimer',           order: 31, visible: true, defaultExpanded: true,  lensControlled: true },
   ],

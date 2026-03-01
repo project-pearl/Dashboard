@@ -95,7 +95,7 @@ type FacilityRow = {
 // ─── Lenses (8-view architecture) ────────────────────────────────────────────
 
 type ViewLens = 'overview' | 'esg-reporting' | 'facility-operations' | 'compliance' |
-  'policy' | 'public-health' | 'supply-chain' | 'trends';
+  'policy' | 'public-health' | 'supply-chain' | 'trends' | 'funding';
 
 type LensConfig = {
   label: string;
@@ -144,6 +144,11 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
     label: 'Trends & Outlook', description: 'Water risk trajectories, AI insights, disaster response, and resolution planning',
     icon: TrendingUp,
     sections: new Set(['trends-dashboard', 'insights', 'disaster-emergency-panel', 'resolution-planner', 'disclaimer']),
+  },
+  funding: {
+    label: 'Funding & Grants', description: 'Active grants, SRF program, opportunity pipeline, and financial analytics',
+    icon: DollarSign,
+    sections: new Set(['grants', 'fund-active', 'fund-srf', 'fund-pipeline', 'fund-analytics', 'disclaimer']),
   },
 };
 
@@ -1913,6 +1918,126 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                 userRole="ESG"
                 stateAbbr={focusedState !== 'US' ? focusedState : undefined}
               />
+            );
+
+            case 'fund-active': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5 text-green-600" />
+                    Active Grants & Funding
+                  </CardTitle>
+                  <CardDescription>Currently active grants and funding sources for sustainability programs</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { grant: 'EPA Water Infrastructure Finance (WIFIA)', amount: '$2.5M', period: '2024-2029', remaining: '$2.1M', status: 'Active' },
+                      { grant: 'State Clean Water SRF Loan', amount: '$1.8M', period: '2024-2028', remaining: '$1.4M', status: 'Active' },
+                      { grant: 'EPA Environmental Stewardship Grant', amount: '$500,000', period: '2025-2027', remaining: '$500,000', status: 'New' },
+                      { grant: 'State Water Quality Improvement Fund', amount: '$400,000', period: '2023-2026', remaining: '$120,000', status: 'Active' },
+                    ].map((g, i) => (
+                      <div key={i} className="flex items-center justify-between text-xs border border-slate-200 rounded-lg px-3 py-2">
+                        <span className="text-slate-700 font-medium">{g.grant}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-slate-500">{g.amount}</span>
+                          <span className="text-slate-400">{g.period}</span>
+                          <span className="text-slate-500">Rem: {g.remaining}</span>
+                          <Badge variant="outline" className={`text-[9px] ${g.status === 'New' ? 'border-blue-300 text-blue-700' : 'border-green-300 text-green-700'}`}>{g.status}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'fund-srf': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="h-5 w-5 text-blue-600" />
+                    State Revolving Fund (SRF) Program
+                  </CardTitle>
+                  <CardDescription>Clean Water and Drinking Water SRF program status</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                    {[
+                      { label: 'Total Capitalization', value: '$4.2M', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Disbursed', value: '$2.8M', color: 'text-green-700', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Available Balance', value: '$1.4M', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Pass-Through Rate', value: '67%', color: 'text-slate-700', bg: 'bg-slate-50 border-slate-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-lg border p-3 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className={`text-xl font-bold ${k.color} mt-1`}>{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'fund-pipeline': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-purple-600" />
+                    Opportunity Pipeline
+                  </CardTitle>
+                  <CardDescription>Upcoming and pending grant opportunities matched to sustainability priorities</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { name: 'EPA Emerging Contaminants Grant', deadline: 'Apr 2026', amount: '$2M', match: 92, status: 'Drafting' },
+                      { name: 'USDA Water & Waste Disposal Grant', deadline: 'Jun 2026', amount: '$500K', match: 87, status: 'Identified' },
+                      { name: 'State Green Infrastructure Fund', deadline: 'Aug 2026', amount: '$1.2M', match: 78, status: 'Identified' },
+                      { name: 'DOE Industrial Water Efficiency', deadline: 'Oct 2026', amount: '$3M', match: 71, status: 'Evaluating' },
+                    ].map((o, i) => (
+                      <div key={i} className="flex items-center justify-between text-xs border border-slate-200 rounded-lg px-3 py-2">
+                        <div>
+                          <span className="text-slate-700 font-medium">{o.name}</span>
+                          <span className="text-slate-400 ml-2">Due {o.deadline}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-slate-500">{o.amount}</span>
+                          <Badge variant="outline" className="text-[9px] border-purple-300 text-purple-700">{o.match}% match</Badge>
+                          <Badge variant="outline" className="text-[9px]">{o.status}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'fund-analytics': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5 text-indigo-600" />
+                    Funding Analytics
+                  </CardTitle>
+                  <CardDescription>Historical funding performance and sustainability ROI metrics</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'Total Secured (3yr)', value: '$8.4M', color: 'text-green-700', bg: 'bg-green-50 border-green-200' },
+                      { label: 'Win Rate', value: '64%', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Avg Time to Award', value: '4.2 mo', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Pipeline Value', value: '$6.7M', color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200' },
+                    ].map(k => (
+                      <div key={k.label} className={`rounded-lg border p-3 ${k.bg}`}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className={`text-xl font-bold ${k.color} mt-1`}>{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             );
 
             case 'groundwater': return DS(

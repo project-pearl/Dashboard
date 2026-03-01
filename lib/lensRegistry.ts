@@ -121,7 +121,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'brownfield', label: 'Brownfield' },
     { id: 'mining', label: 'Mining' },
   ],
-  // ── Corporate ESG / Sustainability (8 items) ───────────────────────────────
+  // ── Corporate ESG / Sustainability (9 items) ───────────────────────────────
   '/dashboard/esg': [
     { id: 'overview',            label: 'Executive Overview' },
     { id: 'esg-reporting',       label: 'ESG Reporting & Disclosure' },
@@ -131,6 +131,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'public-health',       label: 'Emerging Contaminants' },
     { id: 'supply-chain',        label: 'Supply Chain' },
     { id: 'trends',              label: 'Trends & Outlook' },
+    { id: 'funding',             label: 'Funding & Grants' },
   ],
   // ── Biotech / Pharma (9 items) ─────────────────────────────────────────────
   '/dashboard/biotech': [
