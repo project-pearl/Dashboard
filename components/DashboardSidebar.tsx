@@ -67,6 +67,7 @@ import {
   Microscope,
   Handshake,
   GlassWater,
+  MessageSquare,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -165,6 +166,7 @@ const LENS_ICONS: Record<string, LucideIcon> = {
   'outdoor-classroom': TreePine,
   'student-monitoring': Beaker,
   'drinking-water-safety': GlassWater,
+  debate: MessageSquare,
   // ── Site Intelligence ─────────────────────────────────────────────────────
   environment: TreePine,
   species: Leaf,

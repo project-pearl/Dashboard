@@ -57,6 +57,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'student-monitoring-panel',    label: 'Student Monitoring Tools',    order: 20, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'student-upload-panel',        label: 'Student Data Uploads',        order: 21, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'drinking-water-safety-panel', label: 'Drinking Water Safety',      order: 22, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'debate-topics-panel',       label: 'Debate Topics',              order: 22.3, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'groundwater',                label: 'Groundwater Monitoring (WDFN)', order: 22.5, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'location-report', label: 'Location Water Quality Report', order: 23, visible: true, defaultExpanded: false, lensControlled: true },
     // ── Always visible ──

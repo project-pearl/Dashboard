@@ -36,6 +36,7 @@ import ResolutionPlanner from '@/components/ResolutionPlanner';
 import RestorationPlanner from '@/components/RestorationPlanner';
 import { OutdoorClassroomPanel } from '@/components/OutdoorClassroomPanel';
 import { DrinkingWaterSafetyPanel } from '@/components/DrinkingWaterSafetyPanel';
+import { DebateTopicsPanel } from '@/components/DebateTopicsPanel';
 import { StudentMonitoringPanel } from '@/components/StudentMonitoringPanel';
 import { StudentUploadPanel } from '@/components/StudentUploadPanel';
 import LocationReportCard from '@/components/LocationReportCard';
@@ -93,7 +94,7 @@ type Props = {
 
 type ViewLens = 'overview' | 'briefing' | 'planner' | 'trends' | 'compliance' |
   'water-quality' | 'public-health' | 'habitat' | 'outdoor-classroom' | 'student-monitoring' |
-  'student-uploads' | 'drinking-water-safety' | 'reports' | 'funding' | 'warr';
+  'student-uploads' | 'drinking-water-safety' | 'debate' | 'reports' | 'funding' | 'warr';
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -122,6 +123,8 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set(['student-upload-panel', 'student-monitoring-panel', 'learning', 'disclaimer']) },
   'drinking-water-safety': { label: 'Drinking Water Safety', description: 'School drinking water safety testing',
     sections: new Set(['drinking-water-safety-panel', 'sdwis', 'disclaimer']) },
+  debate: { label: 'Debate Topics', description: 'Water policy debate topics and structured arguments',
+    sections: new Set(['debate-topics-panel', 'disclaimer']) },
   reports:     { label: 'Reports', description: 'Educational reports and teacher resources',
     sections: new Set(['eduhub', 'teacher', 'reports-hub', 'disclaimer']) },
   funding:     { label: 'Funding & Grants', description: 'K-12 education grants for water science',
@@ -3064,6 +3067,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
             case 'student-monitoring-panel': return DS(<StudentMonitoringPanel stateAbbr={stateAbbr} />);
             case 'student-upload-panel': return DS(<StudentUploadPanel stateAbbr={stateAbbr} isTeacher={isTeacher} />);
             case 'drinking-water-safety-panel': return DS(<DrinkingWaterSafetyPanel stateAbbr={stateAbbr} />);
+            case 'debate-topics-panel': return DS(<DebateTopicsPanel stateAbbr={stateAbbr} stateName={stateName} isTeacher={isTeacher} />);
 
             case 'warr-metrics': {
               const warrM: WARRMetric[] = [

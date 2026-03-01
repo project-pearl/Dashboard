@@ -236,6 +236,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'student-monitoring',     label: 'Student Monitoring' },
     { id: 'student-uploads',        label: 'Student Uploads' },
     { id: 'drinking-water-safety',  label: 'Drinking Water Safety' },
+    { id: 'debate',                 label: 'Debate Topics' },
     { id: 'reports',                label: 'Reports' },
     { id: 'funding',                label: 'Funding & Grants' },
   ],
