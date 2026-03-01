@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import {
   Wrench, Waves, Scale, Gauge, GitBranch, Clock, HeartPulse, TrendingUp,
   ChevronDown, ChevronUp, Info, Target, AlertTriangle, Shield, BarChart3,
-  Zap, Eye, RefreshCw,
+  Zap, Eye, RefreshCw, Search,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -34,7 +34,7 @@ const CONFIDENCE_BADGE: Record<ConfidenceTier, { bg: string; text: string }> = {
 
 // ─── Mock Data ───────────────────────────────────────────────────────────────
 
-const MOCK_PREDICTIONS: RiskPrediction[] = [
+export const MOCK_PREDICTIONS: RiskPrediction[] = [
   {
     category: 'infrastructure-failure',
     label: 'Infrastructure Failure Forecast',
@@ -337,7 +337,7 @@ function formatProbabilityDisplay(probability: number, confidence: ConfidenceTie
   return { label: dir, showBar: false };
 }
 
-function PredictionCard({ prediction, segmentQuote }: { prediction: RiskPrediction; segmentQuote?: string }) {
+function PredictionCard({ prediction, segmentQuote, onInvestigate }: { prediction: RiskPrediction; segmentQuote?: string; onInvestigate?: (prediction: RiskPrediction) => void }) {
   const [expanded, setExpanded] = useState(false);
   const [showQuote, setShowQuote] = useState(false);
   const colors = RISK_COLORS[prediction.riskLevel];
@@ -421,6 +421,17 @@ function PredictionCard({ prediction, segmentQuote }: { prediction: RiskPredicti
             )}
           </>
         )}
+
+        {/* Investigate button */}
+        {onInvestigate && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onInvestigate(prediction); }}
+            className="w-full mt-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+          >
+            <Search className="h-3 w-3" />
+            Investigate This Risk
+          </button>
+        )}
       </div>
     </div>
   );
@@ -428,7 +439,7 @@ function PredictionCard({ prediction, segmentQuote }: { prediction: RiskPredicti
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-export default function PredictiveRiskEngine() {
+export default function PredictiveRiskEngine({ onInvestigate }: { onInvestigate?: (prediction: RiskPrediction) => void } = {}) {
   const [highlightedRow, setHighlightedRow] = useState<number | null>(null);
   const [showSegments, setShowSegments] = useState(false);
 
@@ -502,6 +513,7 @@ export default function PredictiveRiskEngine() {
               key={pred.category}
               prediction={pred}
               segmentQuote={i < segmentQuotes.length ? segmentQuotes[i] : undefined}
+              onInvestigate={onInvestigate}
             />
           ))}
         </div>

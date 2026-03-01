@@ -29,10 +29,12 @@ import type { WARRMetric } from './WARRZones';
 import RestorationPlanner from '@/components/RestorationPlanner';
 import PredictiveRiskEngine from './PredictiveRiskEngine';
 import ScenarioPlannerPanel from './ScenarioPlannerPanel';
+import RiskInvestigationFlow from './RiskInvestigationFlow';
+import type { RiskPrediction } from '@/lib/siteIntelTypes';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type ViewLens = 'operations' | 'proposals' | 'scenarios' | 'predictions' | 'scenario-planner' | 'users';
+type ViewLens = 'operations' | 'proposals' | 'scenarios' | 'predictions' | 'scenario-planner' | 'investigation' | 'users';
 
 type DeploymentStatus = 'active' | 'maintenance' | 'offline' | 'staging' | 'decommissioned';
 type AlertSeverity = 'critical' | 'warning' | 'info' | 'ok';
@@ -460,6 +462,7 @@ export function PEARLManagementCenter(props: Props) {
 
   const [viewLens, setViewLens] = useState<ViewLens>('operations');
   const [pendingUserCount, setPendingUserCount] = useState(0);
+  const [investigationRisk, setInvestigationRisk] = useState<RiskPrediction | null>(null);
 
   // Fetch pending count on mount for admin users
   useEffect(() => {
@@ -522,6 +525,7 @@ export function PEARLManagementCenter(props: Props) {
                   { lens: 'scenarios' as ViewLens, label: '🔬 What-If', badge: 0 },
                   { lens: 'predictions' as ViewLens, label: '🎯 Predictions', badge: 0 },
                   { lens: 'scenario-planner' as ViewLens, label: '💰 Scenario Planner', badge: 0 },
+                  { lens: 'investigation' as ViewLens, label: '🔍 Investigation', badge: 0 },
                   ...(isAdmin ? [{ lens: 'users' as ViewLens, label: '👥 Users', badge: pendingUserCount }] : []),
                 ]).map(({ lens, label, badge }) => (
                   <button
@@ -1261,7 +1265,10 @@ export function PEARLManagementCenter(props: Props) {
         {/* ════════════════════════════════════════════════════════════ */}
 
         {viewLens === 'predictions' && (
-          <PredictiveRiskEngine />
+          <PredictiveRiskEngine onInvestigate={(risk) => {
+            setInvestigationRisk(risk);
+            setViewLens('investigation');
+          }} />
         )}
 
         {/* ════════════════════════════════════════════════════════════ */}
@@ -1270,6 +1277,20 @@ export function PEARLManagementCenter(props: Props) {
 
         {viewLens === 'scenario-planner' && (
           <ScenarioPlannerPanel />
+        )}
+
+        {/* ════════════════════════════════════════════════════════════ */}
+        {/* ── INVESTIGATION LENS ──────────────────────────────────── */}
+        {/* ════════════════════════════════════════════════════════════ */}
+
+        {viewLens === 'investigation' && (
+          <RiskInvestigationFlow
+            preSelectedRisk={investigationRisk}
+            onBackToForecast={() => {
+              setInvestigationRisk(null);
+              setViewLens('predictions');
+            }}
+          />
         )}
 
         {/* ════════════════════════════════════════════════════════════ */}
