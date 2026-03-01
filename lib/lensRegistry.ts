@@ -104,7 +104,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
   ],
   // ── Site Intelligence (17 lenses) ──────────────────────────────────────────
   '/dashboard/infrastructure': [
-    { id: 'overview', label: 'Dashboard' },
+    { id: 'overview', label: 'Overview' },
     { id: 'developer', label: 'Developer' },
     { id: 'real-estate', label: 'Real Estate' },
     { id: 'legal', label: 'Legal' },
@@ -218,16 +218,17 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
   ],
   // ── Site Intelligence Dashboard (6 items) ──────────────────────────────────
   '/dashboard/site-intelligence': [
-    { id: 'overview',       label: 'Dashboard' },
+    { id: 'overview',       label: 'Overview' },
     { id: 'environment',    label: 'Environmental Profile' },
     { id: 'species',        label: 'Species & Habitat' },
     { id: 'contamination',  label: 'Contamination' },
     { id: 'regulatory',     label: 'Regulatory Context' },
     { id: 'risk',           label: 'Risk Summary' },
+    { id: 'forecast',       label: 'Risk Forecast' },
   ],
   // ── Aqua-LO Laboratory (5 items) ────────────────────────────────────────────
   '/dashboard/aqua-lo': [
-    { id: 'overview', label: 'Dashboard' },
+    { id: 'overview', label: 'Overview' },
     { id: 'push',     label: 'Submit Data' },
     { id: 'qaqc',     label: 'QA/QC' },
     { id: 'audit',    label: 'Audit Trail' },

@@ -5,8 +5,9 @@ import dynamic from 'next/dynamic';
 import {
   Search, MapPin, Droplets, Shield, AlertTriangle, FileText,
   Loader2, ChevronDown, ChevronUp, ExternalLink, TreePine, Waves,
-  Factory, Bug, Scale, Gauge, Info, Bell,
+  Factory, Bug, Scale, Gauge, Info, Bell, TrendingUp,
 } from 'lucide-react';
+import RiskForecastPanel from '@/components/RiskForecastPanel';
 import HeroBanner from '@/components/HeroBanner';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
@@ -28,12 +29,13 @@ interface LensConfig {
 }
 
 const LENS_SECTIONS: Record<string, Set<string>> = {
-  overview:       new Set(['location-context', 'env-profile', 'species-habitat', 'contamination', 'regulatory', 'water-score', 'disclaimer']),
+  overview:       new Set(['location-context', 'env-profile', 'species-habitat', 'contamination', 'regulatory', 'water-score', 'risk-forecast', 'disclaimer']),
   environment:    new Set(['location-context', 'env-profile', 'disclaimer']),
   species:        new Set(['location-context', 'species-habitat', 'disclaimer']),
   contamination:  new Set(['location-context', 'contamination', 'disclaimer']),
   regulatory:     new Set(['location-context', 'regulatory', 'disclaimer']),
-  risk:           new Set(['location-context', 'water-score', 'disclaimer']),
+  risk:           new Set(['location-context', 'water-score', 'risk-forecast', 'disclaimer']),
+  forecast:       new Set(['location-context', 'risk-forecast', 'disclaimer']),
 };
 
 // ─── Example search chips ───────────────────────────────────────────────────
@@ -626,6 +628,20 @@ export default function SiteIntelDashboard() {
                         ) : (
                           <EmptyState message="Insufficient data to compute a water risk score for this location." />
                         )}
+                      </div>
+                    </div>
+                  );
+
+                  // ── Risk Forecast ─────────────────────────────────────────
+                  case 'risk-forecast': return DS(
+                    <div id="section-risk-forecast" className="rounded-xl border border-slate-200 bg-white shadow-sm">
+                      <div className="p-4 border-b border-slate-100 flex items-center gap-2">
+                        <TrendingUp className="h-4 w-4 text-amber-600" />
+                        <span className="text-sm font-bold text-slate-800">Risk Forecast</span>
+                        <SourceBadge tier="T1+T2" />
+                      </div>
+                      <div className="p-4">
+                        <RiskForecastPanel forecast={report.riskForecast} />
                       </div>
                     </div>
                   );

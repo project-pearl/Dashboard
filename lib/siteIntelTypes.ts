@@ -4,11 +4,12 @@
  */
 
 import type { WqpRecord } from './wqpCache';
-import type { SdwisSystem, SdwisViolation } from './sdwisCache';
-import type { IcisPermit, IcisViolation } from './icisCache';
+import type { SdwisSystem, SdwisViolation, SdwisEnforcement } from './sdwisCache';
+import type { IcisPermit, IcisViolation, IcisDmr, IcisEnforcement, IcisInspection } from './icisCache';
 import type { EchoFacility, EchoViolation } from './echoCache';
 import type { TriFacility } from './triCache';
 import type { WaterRiskScoreResult } from './waterRiskScore';
+import type { FemaDeclaration } from './femaCache';
 
 // ─── Census Geocoder ─────────────────────────────────────────────────────────
 
@@ -106,10 +107,16 @@ export interface SiteIntelligenceReport {
   regulatory: {
     sdwisSystems: SdwisSystem[];
     sdwisViolations: SdwisViolation[];
+    sdwisEnforcement: SdwisEnforcement[];
     icisPermits: IcisPermit[];
     icisViolations: IcisViolation[];
+    icisDmr: IcisDmr[];
+    icisEnforcement: IcisEnforcement[];
+    icisInspections: IcisInspection[];
   };
+  femaDeclarations: FemaDeclaration[];
   waterScore: WaterRiskScoreResult | null;
+  riskForecast: RiskForecastResult | null;
   generatedAt: string;
 }
 
@@ -122,4 +129,44 @@ export interface RiskIndicator {
   level: RiskLevel;
   detail: string;
   panelId: string; // scroll-to target
+}
+
+// ─── Risk Forecast types ────────────────────────────────────────────────────
+
+export type RiskForecastCategory =
+  | 'infrastructure-failure'
+  | 'impairment-breach'
+  | 'enforcement-probability'
+  | 'capacity-exceedance'
+  | 'cascading-impact'
+  | 'recovery-timeline'
+  | 'public-health-exposure'
+  | 'intervention-roi';
+
+export type ConfidenceTier = 'HIGH' | 'MODERATE' | 'LOW';
+
+export interface ContributingFactor {
+  name: string;
+  value: number;
+  weight: number;
+  direction: 'positive' | 'neutral' | 'negative';
+}
+
+export interface RiskPrediction {
+  category: RiskForecastCategory;
+  label: string;
+  probability: number;         // 0-100
+  riskLevel: RiskLevel;
+  timeframe: string;
+  confidence: ConfidenceTier;
+  summary: string;
+  factors: ContributingFactor[];
+  icon: string;                // Lucide icon name
+}
+
+export interface RiskForecastResult {
+  predictions: RiskPrediction[];
+  overallRiskLevel: RiskLevel;
+  generatedAt: string;
+  dataCompleteness: number;    // 0-100
 }

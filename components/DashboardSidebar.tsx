@@ -169,6 +169,7 @@ const LENS_ICONS: Record<string, LucideIcon> = {
   environment: TreePine,
   species: Leaf,
   risk: AlertTriangle,
+  forecast: TrendingUp,
   // ── Aqua-Lo ───────────────────────────────────────────────────────────────
   push: Network,
   qaqc: ClipboardList,

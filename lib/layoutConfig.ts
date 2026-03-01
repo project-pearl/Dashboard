@@ -736,8 +736,9 @@ export const DEFAULT_SECTIONS = {
     { id: 'species-habitat',    label: 'Species & Habitat',           order: 2, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'contamination',      label: 'Contamination & Enforcement', order: 3, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'regulatory',         label: 'Regulatory Context',          order: 4, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'water-score',        label: 'PIN Water Score',             order: 5, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'disclaimer',         label: 'Disclaimer',                  order: 6, visible: true, defaultExpanded: true },
+    { id: 'water-score',        label: 'PIN Water Score',             order: 5,   visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'risk-forecast',      label: 'Risk Forecast',               order: 5.5, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'disclaimer',         label: 'Disclaimer',                  order: 6,   visible: true, defaultExpanded: true },
   ],
   Local: [
     // ── Overview (10) ──

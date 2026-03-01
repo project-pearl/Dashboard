@@ -32,9 +32,11 @@ import { ensureWarmed as warmPfas, getPfasCache } from '@/lib/pfasCache';
 import { ensureWarmed as warmTri, getTriCache } from '@/lib/triCache';
 import { ensureWarmed as warmAttains, getAttainsCache } from '@/lib/attainsCache';
 import { ensureWarmed as warmIndices, getIndicesForHuc } from '@/lib/indices/indicesCache';
+import { ensureWarmed as warmFema, getFemaDeclarations } from '@/lib/femaCache';
 
 // ── Scoring ──────────────────────────────────────────────────────────────────
 import { computeWaterRiskScore, type RiskScoreInput } from '@/lib/waterRiskScore';
+import { computeRiskForecast } from '@/lib/riskForecast';
 import { calculateGrade } from '@/lib/waterQualityScore';
 import { findNearestHuc8 } from '@/lib/hucLookup';
 
@@ -273,6 +275,7 @@ export async function GET(request: NextRequest) {
   await Promise.allSettled([
     warmWqp(), warmSdwis(), warmIcis(), warmEcho(),
     warmPfas(), warmTri(), warmAttains(), warmIndices(),
+    warmFema(),
   ]);
 
   // ── Parallel fan-out: all 3 tiers ──
@@ -390,12 +393,23 @@ export async function GET(request: NextRequest) {
     regulatory: {
       sdwisSystems: sdwisVal?.systems || [],
       sdwisViolations: sdwisVal?.violations || [],
+      sdwisEnforcement: sdwisVal?.enforcement || [],
       icisPermits: icisVal?.permits || [],
       icisViolations: icisVal?.violations || [],
+      icisDmr: icisVal?.dmr || [],
+      icisEnforcement: icisVal?.enforcement || [],
+      icisInspections: icisVal?.inspections || [],
     },
+    femaDeclarations: (state ? getFemaDeclarations(state) : null) || [],
     waterScore,
+    riskForecast: null,
     generatedAt: new Date().toISOString(),
   };
+
+  // ── Risk Forecast ──
+  try {
+    report.riskForecast = computeRiskForecast(report, hucIndices);
+  } catch { /* null */ }
 
   return NextResponse.json(report);
 }
