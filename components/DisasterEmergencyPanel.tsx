@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, Activity, Waves, Gauge, Info, TrendingDown, CloudRain, Shield, FlaskConical, Landmark } from 'lucide-react';
+import { AlertTriangle, Activity, Waves, Gauge, Info, TrendingDown, CloudRain, Shield, FlaskConical, Landmark, Filter, Search } from 'lucide-react';
 
 // ── Props ───────────────────────────────────────────────────────────────────
 
@@ -196,6 +196,28 @@ export function DisasterEmergencyPanel({
   const [triData, setTriData] = useState<TriSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // ── Filter state ──────────────────────────────────────────────────────
+  const [gwSearch, setGwSearch] = useState('');
+  const [gwPage, setGwPage] = useState(0);
+
+  const [nwsSeverityFilter, setNwsSeverityFilter] = useState('all');
+  const [nwsSearch, setNwsSearch] = useState('');
+  const [nwsPage, setNwsPage] = useState(0);
+
+  const [femaTypeFilter, setFemaTypeFilter] = useState('all');
+  const [femaSearch, setFemaSearch] = useState('');
+  const [femaPage, setFemaPage] = useState(0);
+
+  const [sfStatusFilter, setSfStatusFilter] = useState('all');
+  const [sfSearch, setSfSearch] = useState('');
+  const [sfPage, setSfPage] = useState(0);
+
+  const [triCarcinogenOnly, setTriCarcinogenOnly] = useState(false);
+  const [triSearch, setTriSearch] = useState('');
+  const [triPage, setTriPage] = useState(0);
+
+  const PAGE_SIZE = 20;
+
   useEffect(() => {
     async function fetchAll() {
       try {
@@ -281,6 +303,103 @@ export function DisasterEmergencyPanel({
         state: siteStateMap[t.siteNumber] || 'Unknown',
       }));
   }, [trends, sites]);
+
+  // ── Filtered GW monitoring ─────────────────────────────────────────────
+  const filteredGwRows = useMemo(() => {
+    if (!gwSearch) return stateMonitoringRows;
+    const q = gwSearch.toLowerCase();
+    return stateMonitoringRows.filter(r => r.state.toLowerCase().includes(q));
+  }, [stateMonitoringRows, gwSearch]);
+
+  const gwPageCount = Math.max(1, Math.ceil(filteredGwRows.length / PAGE_SIZE));
+  const pagedGwRows = filteredGwRows.slice(gwPage * PAGE_SIZE, (gwPage + 1) * PAGE_SIZE);
+
+  // ── Filtered NWS alerts ───────────────────────────────────────────────
+  const filteredAlerts = useMemo(() => {
+    if (!nwsData) return [];
+    let list = [...nwsData.topAlerts];
+    if (nwsSeverityFilter !== 'all') list = list.filter(a => a.severity === nwsSeverityFilter);
+    if (nwsSearch) {
+      const q = nwsSearch.toLowerCase();
+      list = list.filter(a =>
+        (a.event || '').toLowerCase().includes(q) ||
+        (a.areaDesc || '').toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [nwsData, nwsSeverityFilter, nwsSearch]);
+
+  const nwsPageCount = Math.max(1, Math.ceil(filteredAlerts.length / PAGE_SIZE));
+  const pagedAlerts = filteredAlerts.slice(nwsPage * PAGE_SIZE, (nwsPage + 1) * PAGE_SIZE);
+
+  // ── Filtered FEMA declarations ────────────────────────────────────────
+  const filteredFema = useMemo(() => {
+    if (!femaData) return [];
+    let list = [...femaData.topDeclarations];
+    if (femaTypeFilter !== 'all') list = list.filter(d => d.incidentType === femaTypeFilter);
+    if (femaSearch) {
+      const q = femaSearch.toLowerCase();
+      list = list.filter(d =>
+        (d.declarationTitle || '').toLowerCase().includes(q) ||
+        (d.state || '').toLowerCase().includes(q) ||
+        (d.designatedArea || '').toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [femaData, femaTypeFilter, femaSearch]);
+
+  const femaPageCount = Math.max(1, Math.ceil(filteredFema.length / PAGE_SIZE));
+  const pagedFema = filteredFema.slice(femaPage * PAGE_SIZE, (femaPage + 1) * PAGE_SIZE);
+
+  const femaIncidentTypes = useMemo(() => {
+    if (!femaData) return [];
+    return Object.keys(femaData.byType).sort();
+  }, [femaData]);
+
+  // ── Filtered Superfund sites ──────────────────────────────────────────
+  const filteredSuperfund = useMemo(() => {
+    if (!superfundData) return [];
+    let list = [...superfundData.topBySiteScore];
+    if (sfStatusFilter !== 'all') list = list.filter(s => s.status === sfStatusFilter);
+    if (sfSearch) {
+      const q = sfSearch.toLowerCase();
+      list = list.filter(s =>
+        (s.siteName || '').toLowerCase().includes(q) ||
+        (s.stateAbbr || '').toLowerCase().includes(q) ||
+        (s.city || '').toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [superfundData, sfStatusFilter, sfSearch]);
+
+  const sfPageCount = Math.max(1, Math.ceil(filteredSuperfund.length / PAGE_SIZE));
+  const pagedSuperfund = filteredSuperfund.slice(sfPage * PAGE_SIZE, (sfPage + 1) * PAGE_SIZE);
+
+  const sfStatuses = useMemo(() => {
+    if (!superfundData) return [];
+    const s = new Set<string>();
+    for (const site of superfundData.topBySiteScore) if (site.status) s.add(site.status);
+    return Array.from(s).sort();
+  }, [superfundData]);
+
+  // ── Filtered TRI facilities ───────────────────────────────────────────
+  const filteredTri = useMemo(() => {
+    if (!triData) return [];
+    let list = [...triData.topFacilities];
+    if (triCarcinogenOnly) list = list.filter(f => f.carcinogenReleases > 0);
+    if (triSearch) {
+      const q = triSearch.toLowerCase();
+      list = list.filter(f =>
+        (f.facilityName || '').toLowerCase().includes(q) ||
+        (f.state || '').toLowerCase().includes(q) ||
+        (f.topChemical || '').toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [triData, triCarcinogenOnly, triSearch]);
+
+  const triPageCount = Math.max(1, Math.ceil(filteredTri.length / PAGE_SIZE));
+  const pagedTri = filteredTri.slice(triPage * PAGE_SIZE, (triPage + 1) * PAGE_SIZE);
 
   // ── High-Severity Surface Water (top 20 by cat5) ───────────────────────
   const highSeverityStates = useMemo(
@@ -523,60 +642,95 @@ export function DisasterEmergencyPanel({
               </span>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="text-left text-slate-500 border-b border-slate-200">
-                    <th className="pb-2 font-semibold">State</th>
-                    <th className="pb-2 font-semibold text-right">Sites</th>
-                    <th className="pb-2 font-semibold text-right">
-                      <span className="text-emerald-600">Rising</span>
-                    </th>
-                    <th className="pb-2 font-semibold text-right">
-                      <span className="text-red-600">Falling</span>
-                    </th>
-                    <th className="pb-2 font-semibold text-right">
-                      <span className="text-blue-600">Stable</span>
-                    </th>
-                    <th className="pb-2 font-semibold text-right">
-                      <span className="text-slate-400">Unknown</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stateMonitoringRows.map((row) => (
-                    <tr
-                      key={row.state}
-                      className={`border-b border-slate-50 hover:bg-slate-50 transition-colors ${
-                        selectedState && row.state === selectedState
-                          ? 'bg-blue-50 border-blue-100'
-                          : ''
-                      }`}
-                    >
-                      <td className="py-2 font-semibold text-slate-700">{row.state}</td>
-                      <td className="py-2 text-right text-slate-600">{row.siteCount}</td>
-                      <td className="py-2 text-right">
-                        <span className={row.rising > 0 ? 'text-emerald-600 font-semibold' : 'text-slate-300'}>
-                          {row.rising}
-                        </span>
-                      </td>
-                      <td className="py-2 text-right">
-                        <span className={row.falling > 0 ? 'text-red-600 font-semibold' : 'text-slate-300'}>
-                          {row.falling}
-                        </span>
-                      </td>
-                      <td className="py-2 text-right">
-                        <span className={row.stable > 0 ? 'text-blue-600 font-semibold' : 'text-slate-300'}>
-                          {row.stable}
-                        </span>
-                      </td>
-                      <td className="py-2 text-right">
-                        <span className="text-slate-400">{row.unknown}</span>
-                      </td>
+            <div>
+              {/* Filter bar */}
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                  <Filter className="w-3.5 h-3.5" />
+                </div>
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search state..."
+                    value={gwSearch}
+                    onChange={e => { setGwSearch(e.target.value); setGwPage(0); }}
+                    className="text-xs border border-slate-200 rounded-md pl-7 pr-2 py-1.5 w-36 bg-white text-slate-700 placeholder:text-slate-400 focus:ring-1 focus:ring-cyan-300 focus:border-cyan-300"
+                  />
+                </div>
+                {gwSearch && (
+                  <span className="text-[10px] text-slate-400">
+                    {filteredGwRows.length} of {stateMonitoringRows.length} states
+                  </span>
+                )}
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="text-left text-slate-500 border-b border-slate-200">
+                      <th className="pb-2 font-semibold">State</th>
+                      <th className="pb-2 font-semibold text-right">Sites</th>
+                      <th className="pb-2 font-semibold text-right">
+                        <span className="text-emerald-600">Rising</span>
+                      </th>
+                      <th className="pb-2 font-semibold text-right">
+                        <span className="text-red-600">Falling</span>
+                      </th>
+                      <th className="pb-2 font-semibold text-right">
+                        <span className="text-blue-600">Stable</span>
+                      </th>
+                      <th className="pb-2 font-semibold text-right">
+                        <span className="text-slate-400">Unknown</span>
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {pagedGwRows.map((row) => (
+                      <tr
+                        key={row.state}
+                        className={`border-b border-slate-50 hover:bg-slate-50 transition-colors ${
+                          selectedState && row.state === selectedState
+                            ? 'bg-blue-50 border-blue-100'
+                            : ''
+                        }`}
+                      >
+                        <td className="py-2 font-semibold text-slate-700">{row.state}</td>
+                        <td className="py-2 text-right text-slate-600">{row.siteCount}</td>
+                        <td className="py-2 text-right">
+                          <span className={row.rising > 0 ? 'text-emerald-600 font-semibold' : 'text-slate-300'}>
+                            {row.rising}
+                          </span>
+                        </td>
+                        <td className="py-2 text-right">
+                          <span className={row.falling > 0 ? 'text-red-600 font-semibold' : 'text-slate-300'}>
+                            {row.falling}
+                          </span>
+                        </td>
+                        <td className="py-2 text-right">
+                          <span className={row.stable > 0 ? 'text-blue-600 font-semibold' : 'text-slate-300'}>
+                            {row.stable}
+                          </span>
+                        </td>
+                        <td className="py-2 text-right">
+                          <span className="text-slate-400">{row.unknown}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              {gwPageCount > 1 && (
+                <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
+                  <span>Page {gwPage + 1} of {gwPageCount}</span>
+                  <div className="flex gap-1">
+                    <button className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40" disabled={gwPage === 0} onClick={() => setGwPage(p => p - 1)}>Prev</button>
+                    <button className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40" disabled={gwPage >= gwPageCount - 1} onClick={() => setGwPage(p => p + 1)}>Next</button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
@@ -782,7 +936,8 @@ export function DisasterEmergencyPanel({
               </span>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div>
+              {/* Severity summary badges */}
               <div className="flex items-center gap-2 mb-3">
                 {Object.entries(nwsData.severityCounts)
                   .filter(([, count]) => count > 0)
@@ -799,46 +954,93 @@ export function DisasterEmergencyPanel({
                     </span>
                   ))}
               </div>
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="text-left text-slate-500 border-b border-slate-200">
-                    <th className="pb-2 font-semibold">Event</th>
-                    <th className="pb-2 font-semibold">Severity</th>
-                    <th className="pb-2 font-semibold">Area</th>
-                    <th className="pb-2 font-semibold text-right">Onset</th>
-                    <th className="pb-2 font-semibold text-right">Expires</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {nwsData.topAlerts.map((alert) => (
-                    <tr
-                      key={alert.id}
-                      className="border-b border-slate-50 hover:bg-slate-50 transition-colors"
-                    >
-                      <td className="py-2 font-semibold text-slate-700 max-w-[200px] truncate">
-                        {alert.event}
-                      </td>
-                      <td className="py-2">
-                        <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${SEVERITY_COLORS[alert.severity] || SEVERITY_COLORS.Unknown}`}>
-                          {alert.severity}
-                        </span>
-                      </td>
-                      <td className="py-2 text-slate-600 max-w-[250px] truncate">
-                        {alert.areaDesc}
-                      </td>
-                      <td className="py-2 text-right text-slate-500 tabular-nums">
-                        {alert.onset ? formatDate(alert.onset) : '--'}
-                      </td>
-                      <td className="py-2 text-right text-slate-500 tabular-nums">
-                        {alert.expires ? formatDate(alert.expires) : '--'}
-                      </td>
-                    </tr>
+
+              {/* Filter bar */}
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                  <Filter className="w-3.5 h-3.5" />
+                </div>
+                <select
+                  value={nwsSeverityFilter}
+                  onChange={e => { setNwsSeverityFilter(e.target.value); setNwsPage(0); }}
+                  className="text-xs border border-slate-200 rounded-md px-2 py-1.5 bg-white text-slate-700 focus:ring-1 focus:ring-orange-300 focus:border-orange-300"
+                >
+                  <option value="all">All Severities</option>
+                  {['Extreme', 'Severe', 'Moderate', 'Minor'].map(s => (
+                    <option key={s} value={s}>{s}</option>
                   ))}
-                </tbody>
-              </table>
+                </select>
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search event or area..."
+                    value={nwsSearch}
+                    onChange={e => { setNwsSearch(e.target.value); setNwsPage(0); }}
+                    className="text-xs border border-slate-200 rounded-md pl-7 pr-2 py-1.5 w-44 bg-white text-slate-700 placeholder:text-slate-400 focus:ring-1 focus:ring-orange-300 focus:border-orange-300"
+                  />
+                </div>
+                {(nwsSeverityFilter !== 'all' || nwsSearch) && (
+                  <span className="text-[10px] text-slate-400">
+                    {filteredAlerts.length} of {nwsData.topAlerts.length} alerts
+                  </span>
+                )}
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="text-left text-slate-500 border-b border-slate-200">
+                      <th className="pb-2 font-semibold">Event</th>
+                      <th className="pb-2 font-semibold">Severity</th>
+                      <th className="pb-2 font-semibold">Area</th>
+                      <th className="pb-2 font-semibold text-right">Onset</th>
+                      <th className="pb-2 font-semibold text-right">Expires</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pagedAlerts.map((alert) => (
+                      <tr
+                        key={alert.id}
+                        className="border-b border-slate-50 hover:bg-slate-50 transition-colors"
+                      >
+                        <td className="py-2 font-semibold text-slate-700 max-w-[200px] truncate">
+                          {alert.event}
+                        </td>
+                        <td className="py-2">
+                          <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${SEVERITY_COLORS[alert.severity] || SEVERITY_COLORS.Unknown}`}>
+                            {alert.severity}
+                          </span>
+                        </td>
+                        <td className="py-2 text-slate-600 max-w-[250px] truncate">
+                          {alert.areaDesc}
+                        </td>
+                        <td className="py-2 text-right text-slate-500 tabular-nums">
+                          {alert.onset ? formatDate(alert.onset) : '--'}
+                        </td>
+                        <td className="py-2 text-right text-slate-500 tabular-nums">
+                          {alert.expires ? formatDate(alert.expires) : '--'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              {nwsPageCount > 1 && (
+                <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
+                  <span>Page {nwsPage + 1} of {nwsPageCount}</span>
+                  <div className="flex gap-1">
+                    <button className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40" disabled={nwsPage === 0} onClick={() => setNwsPage(p => p - 1)}>Prev</button>
+                    <button className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40" disabled={nwsPage >= nwsPageCount - 1} onClick={() => setNwsPage(p => p + 1)}>Next</button>
+                  </div>
+                </div>
+              )}
+
               <p className="text-[10px] text-slate-400 mt-3 flex items-center gap-1">
                 <Info size={10} />
-                Showing top {nwsData.topAlerts.length} alerts sorted by severity. Data refreshed every 30 minutes from NWS API.
+                Data refreshed every 30 minutes from NWS API.
               </p>
             </div>
           )}
@@ -870,7 +1072,8 @@ export function DisasterEmergencyPanel({
               </span>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div>
+              {/* Type summary badges */}
               <div className="flex items-center gap-2 mb-3 flex-wrap">
                 {Object.entries(femaData.byType)
                   .sort(([, a], [, b]) => b - a)
@@ -883,50 +1086,99 @@ export function DisasterEmergencyPanel({
                     </span>
                   ))}
               </div>
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="text-left text-slate-500 border-b border-slate-200">
-                    <th className="pb-2 font-semibold">Disaster #</th>
-                    <th className="pb-2 font-semibold">Type</th>
-                    <th className="pb-2 font-semibold">Title</th>
-                    <th className="pb-2 font-semibold">State</th>
-                    <th className="pb-2 font-semibold">Area</th>
-                    <th className="pb-2 font-semibold text-right">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {femaData.topDeclarations.map((d, i) => (
-                    <tr
-                      key={`${d.disasterNumber}-${i}`}
-                      className={`border-b border-slate-50 hover:bg-slate-50 transition-colors ${
-                        selectedState && d.state === selectedState
-                          ? 'bg-blue-50 border-blue-100'
-                          : ''
-                      }`}
-                    >
-                      <td className="py-2 font-mono text-slate-600">{d.disasterNumber}</td>
-                      <td className="py-2">
-                        <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${INCIDENT_TYPE_COLORS[d.incidentType] || 'bg-slate-100 text-slate-600'}`}>
-                          {d.incidentType}
-                        </span>
-                      </td>
-                      <td className="py-2 font-semibold text-slate-700 max-w-[200px] truncate">
-                        {d.declarationTitle}
-                      </td>
-                      <td className="py-2 text-slate-600">{d.state}</td>
-                      <td className="py-2 text-slate-500 max-w-[150px] truncate">
-                        {d.designatedArea}
-                      </td>
-                      <td className="py-2 text-right text-slate-500 tabular-nums">
-                        {formatDate(d.declarationDate)}
-                      </td>
+
+              {/* Filter bar */}
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                  <Filter className="w-3.5 h-3.5" />
+                </div>
+                {femaIncidentTypes.length > 1 && (
+                  <select
+                    value={femaTypeFilter}
+                    onChange={e => { setFemaTypeFilter(e.target.value); setFemaPage(0); }}
+                    className="text-xs border border-slate-200 rounded-md px-2 py-1.5 bg-white text-slate-700 focus:ring-1 focus:ring-indigo-300 focus:border-indigo-300"
+                  >
+                    <option value="all">All Incident Types</option>
+                    {femaIncidentTypes.map(t => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                )}
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search title, state, or area..."
+                    value={femaSearch}
+                    onChange={e => { setFemaSearch(e.target.value); setFemaPage(0); }}
+                    className="text-xs border border-slate-200 rounded-md pl-7 pr-2 py-1.5 w-52 bg-white text-slate-700 placeholder:text-slate-400 focus:ring-1 focus:ring-indigo-300 focus:border-indigo-300"
+                  />
+                </div>
+                {(femaTypeFilter !== 'all' || femaSearch) && (
+                  <span className="text-[10px] text-slate-400">
+                    {filteredFema.length} of {femaData.topDeclarations.length} declarations
+                  </span>
+                )}
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="text-left text-slate-500 border-b border-slate-200">
+                      <th className="pb-2 font-semibold">Disaster #</th>
+                      <th className="pb-2 font-semibold">Type</th>
+                      <th className="pb-2 font-semibold">Title</th>
+                      <th className="pb-2 font-semibold">State</th>
+                      <th className="pb-2 font-semibold">Area</th>
+                      <th className="pb-2 font-semibold text-right">Date</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {pagedFema.map((d, i) => (
+                      <tr
+                        key={`${d.disasterNumber}-${i}`}
+                        className={`border-b border-slate-50 hover:bg-slate-50 transition-colors ${
+                          selectedState && d.state === selectedState
+                            ? 'bg-blue-50 border-blue-100'
+                            : ''
+                        }`}
+                      >
+                        <td className="py-2 font-mono text-slate-600">{d.disasterNumber}</td>
+                        <td className="py-2">
+                          <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${INCIDENT_TYPE_COLORS[d.incidentType] || 'bg-slate-100 text-slate-600'}`}>
+                            {d.incidentType}
+                          </span>
+                        </td>
+                        <td className="py-2 font-semibold text-slate-700 max-w-[200px] truncate">
+                          {d.declarationTitle}
+                        </td>
+                        <td className="py-2 text-slate-600">{d.state}</td>
+                        <td className="py-2 text-slate-500 max-w-[150px] truncate">
+                          {d.designatedArea}
+                        </td>
+                        <td className="py-2 text-right text-slate-500 tabular-nums">
+                          {formatDate(d.declarationDate)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              {femaPageCount > 1 && (
+                <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
+                  <span>Page {femaPage + 1} of {femaPageCount}</span>
+                  <div className="flex gap-1">
+                    <button className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40" disabled={femaPage === 0} onClick={() => setFemaPage(p => p - 1)}>Prev</button>
+                    <button className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40" disabled={femaPage >= femaPageCount - 1} onClick={() => setFemaPage(p => p + 1)}>Next</button>
+                  </div>
+                </div>
+              )}
+
               <p className="text-[10px] text-slate-400 mt-3 flex items-center gap-1">
                 <Info size={10} />
-                Showing top {femaData.topDeclarations.length} declarations sorted by date. Filtered to water-relevant incident types.
+                Filtered to water-relevant incident types.
               </p>
             </div>
           )}
@@ -958,65 +1210,113 @@ export function DisasterEmergencyPanel({
               </span>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="text-left text-slate-500 border-b border-slate-200">
-                    <th className="pb-2 font-semibold">Site Name</th>
-                    <th className="pb-2 font-semibold">State</th>
-                    <th className="pb-2 font-semibold">City</th>
-                    <th className="pb-2 font-semibold">Status</th>
-                    <th className="pb-2 font-semibold text-right">HRS Score</th>
-                    <th className="pb-2 font-semibold text-right">Listed</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {superfundData.topBySiteScore.map((s) => (
-                    <tr
-                      key={s.siteEpaId}
-                      className={`border-b border-slate-50 hover:bg-slate-50 transition-colors ${
-                        selectedState && s.stateAbbr === selectedState
-                          ? 'bg-blue-50 border-blue-100'
-                          : ''
-                      }`}
-                    >
-                      <td className="py-2 font-semibold text-slate-700 max-w-[200px] truncate">
-                        {s.siteName}
-                      </td>
-                      <td className="py-2 text-slate-600">{s.stateAbbr}</td>
-                      <td className="py-2 text-slate-500">{s.city}</td>
-                      <td className="py-2">
-                        <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
-                          s.status.toLowerCase().includes('final') || s.status.toLowerCase() === 'npl site'
-                            ? 'bg-red-100 text-red-700'
-                            : s.status.toLowerCase().includes('proposed')
-                              ? 'bg-amber-100 text-amber-700'
-                              : s.status.toLowerCase().includes('deleted')
-                                ? 'bg-slate-100 text-slate-500'
-                                : 'bg-blue-100 text-blue-700'
-                        }`}>
-                          {s.status}
-                        </span>
-                      </td>
-                      <td className="py-2 text-right">
-                        <span className={`font-bold tabular-nums ${
-                          (s.siteScore ?? 0) >= 50 ? 'text-red-600' :
-                          (s.siteScore ?? 0) >= 28.5 ? 'text-orange-600' :
-                          'text-slate-600'
-                        }`}>
-                          {s.siteScore?.toFixed(2) ?? '--'}
-                        </span>
-                      </td>
-                      <td className="py-2 text-right text-slate-500 tabular-nums">
-                        {s.listingDate ? formatDate(s.listingDate) : '--'}
-                      </td>
+            <div>
+              {/* Filter bar */}
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                  <Filter className="w-3.5 h-3.5" />
+                </div>
+                {sfStatuses.length > 1 && (
+                  <select
+                    value={sfStatusFilter}
+                    onChange={e => { setSfStatusFilter(e.target.value); setSfPage(0); }}
+                    className="text-xs border border-slate-200 rounded-md px-2 py-1.5 bg-white text-slate-700 focus:ring-1 focus:ring-yellow-300 focus:border-yellow-300"
+                  >
+                    <option value="all">All Statuses</option>
+                    {sfStatuses.map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                )}
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search site, state, or city..."
+                    value={sfSearch}
+                    onChange={e => { setSfSearch(e.target.value); setSfPage(0); }}
+                    className="text-xs border border-slate-200 rounded-md pl-7 pr-2 py-1.5 w-48 bg-white text-slate-700 placeholder:text-slate-400 focus:ring-1 focus:ring-yellow-300 focus:border-yellow-300"
+                  />
+                </div>
+                {(sfStatusFilter !== 'all' || sfSearch) && (
+                  <span className="text-[10px] text-slate-400">
+                    {filteredSuperfund.length} of {superfundData.topBySiteScore.length} sites
+                  </span>
+                )}
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="text-left text-slate-500 border-b border-slate-200">
+                      <th className="pb-2 font-semibold">Site Name</th>
+                      <th className="pb-2 font-semibold">State</th>
+                      <th className="pb-2 font-semibold">City</th>
+                      <th className="pb-2 font-semibold">Status</th>
+                      <th className="pb-2 font-semibold text-right">HRS Score</th>
+                      <th className="pb-2 font-semibold text-right">Listed</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {pagedSuperfund.map((s) => (
+                      <tr
+                        key={s.siteEpaId}
+                        className={`border-b border-slate-50 hover:bg-slate-50 transition-colors ${
+                          selectedState && s.stateAbbr === selectedState
+                            ? 'bg-blue-50 border-blue-100'
+                            : ''
+                        }`}
+                      >
+                        <td className="py-2 font-semibold text-slate-700 max-w-[200px] truncate">
+                          {s.siteName}
+                        </td>
+                        <td className="py-2 text-slate-600">{s.stateAbbr}</td>
+                        <td className="py-2 text-slate-500">{s.city}</td>
+                        <td className="py-2">
+                          <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
+                            s.status.toLowerCase().includes('final') || s.status.toLowerCase() === 'npl site'
+                              ? 'bg-red-100 text-red-700'
+                              : s.status.toLowerCase().includes('proposed')
+                                ? 'bg-amber-100 text-amber-700'
+                                : s.status.toLowerCase().includes('deleted')
+                                  ? 'bg-slate-100 text-slate-500'
+                                  : 'bg-blue-100 text-blue-700'
+                          }`}>
+                            {s.status}
+                          </span>
+                        </td>
+                        <td className="py-2 text-right">
+                          <span className={`font-bold tabular-nums ${
+                            (s.siteScore ?? 0) >= 50 ? 'text-red-600' :
+                            (s.siteScore ?? 0) >= 28.5 ? 'text-orange-600' :
+                            'text-slate-600'
+                          }`}>
+                            {s.siteScore?.toFixed(2) ?? '--'}
+                          </span>
+                        </td>
+                        <td className="py-2 text-right text-slate-500 tabular-nums">
+                          {s.listingDate ? formatDate(s.listingDate) : '--'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              {sfPageCount > 1 && (
+                <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
+                  <span>Page {sfPage + 1} of {sfPageCount}</span>
+                  <div className="flex gap-1">
+                    <button className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40" disabled={sfPage === 0} onClick={() => setSfPage(p => p - 1)}>Prev</button>
+                    <button className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40" disabled={sfPage >= sfPageCount - 1} onClick={() => setSfPage(p => p + 1)}>Next</button>
+                  </div>
+                </div>
+              )}
+
               <p className="text-[10px] text-slate-400 mt-3 flex items-center gap-1">
                 <Info size={10} />
-                Top {superfundData.topBySiteScore.length} sites by HRS score. Score of 28.50+ qualifies for NPL listing.
+                Score of 28.50+ qualifies for NPL listing.
               </p>
             </div>
           )}
@@ -1048,53 +1348,97 @@ export function DisasterEmergencyPanel({
               </span>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="text-left text-slate-500 border-b border-slate-200">
-                    <th className="pb-2 font-semibold">Facility</th>
-                    <th className="pb-2 font-semibold">State</th>
-                    <th className="pb-2 font-semibold text-right">Total Releases</th>
-                    <th className="pb-2 font-semibold text-center">Carcinogen</th>
-                    <th className="pb-2 font-semibold">Top Chemical</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {triData.topFacilities.map((f, i) => (
-                    <tr
-                      key={`${f.facilityName}-${i}`}
-                      className={`border-b border-slate-50 hover:bg-slate-50 transition-colors ${
-                        selectedState && f.state === selectedState
-                          ? 'bg-blue-50 border-blue-100'
-                          : ''
-                      }`}
-                    >
-                      <td className="py-2 font-semibold text-slate-700 max-w-[200px] truncate">
-                        {f.facilityName}
-                      </td>
-                      <td className="py-2 text-slate-600">{f.state}</td>
-                      <td className="py-2 text-right font-bold tabular-nums text-slate-700">
-                        {formatWeight(f.totalReleases)}
-                      </td>
-                      <td className="py-2 text-center">
-                        {f.carcinogenReleases > 0 ? (
-                          <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-red-100 text-red-700">
-                            YES
-                          </span>
-                        ) : (
-                          <span className="text-slate-300">--</span>
-                        )}
-                      </td>
-                      <td className="py-2 text-slate-500 max-w-[150px] truncate">
-                        {f.topChemical}
-                      </td>
+            <div>
+              {/* Filter bar */}
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                  <Filter className="w-3.5 h-3.5" />
+                </div>
+                <label className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={triCarcinogenOnly}
+                    onChange={e => { setTriCarcinogenOnly(e.target.checked); setTriPage(0); }}
+                    className="rounded border-slate-300"
+                  />
+                  Carcinogen only
+                </label>
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search facility, state, or chemical..."
+                    value={triSearch}
+                    onChange={e => { setTriSearch(e.target.value); setTriPage(0); }}
+                    className="text-xs border border-slate-200 rounded-md pl-7 pr-2 py-1.5 w-56 bg-white text-slate-700 placeholder:text-slate-400 focus:ring-1 focus:ring-violet-300 focus:border-violet-300"
+                  />
+                </div>
+                {(triCarcinogenOnly || triSearch) && (
+                  <span className="text-[10px] text-slate-400">
+                    {filteredTri.length} of {triData.topFacilities.length} facilities
+                  </span>
+                )}
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="text-left text-slate-500 border-b border-slate-200">
+                      <th className="pb-2 font-semibold">Facility</th>
+                      <th className="pb-2 font-semibold">State</th>
+                      <th className="pb-2 font-semibold text-right">Total Releases</th>
+                      <th className="pb-2 font-semibold text-center">Carcinogen</th>
+                      <th className="pb-2 font-semibold">Top Chemical</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {pagedTri.map((f, i) => (
+                      <tr
+                        key={`${f.facilityName}-${i}`}
+                        className={`border-b border-slate-50 hover:bg-slate-50 transition-colors ${
+                          selectedState && f.state === selectedState
+                            ? 'bg-blue-50 border-blue-100'
+                            : ''
+                        }`}
+                      >
+                        <td className="py-2 font-semibold text-slate-700 max-w-[200px] truncate">
+                          {f.facilityName}
+                        </td>
+                        <td className="py-2 text-slate-600">{f.state}</td>
+                        <td className="py-2 text-right font-bold tabular-nums text-slate-700">
+                          {formatWeight(f.totalReleases)}
+                        </td>
+                        <td className="py-2 text-center">
+                          {f.carcinogenReleases > 0 ? (
+                            <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-red-100 text-red-700">
+                              YES
+                            </span>
+                          ) : (
+                            <span className="text-slate-300">--</span>
+                          )}
+                        </td>
+                        <td className="py-2 text-slate-500 max-w-[150px] truncate">
+                          {f.topChemical}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              {triPageCount > 1 && (
+                <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
+                  <span>Page {triPage + 1} of {triPageCount}</span>
+                  <div className="flex gap-1">
+                    <button className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40" disabled={triPage === 0} onClick={() => setTriPage(p => p - 1)}>Prev</button>
+                    <button className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40" disabled={triPage >= triPageCount - 1} onClick={() => setTriPage(p => p + 1)}>Next</button>
+                  </div>
+                </div>
+              )}
+
               <p className="text-[10px] text-slate-400 mt-3 flex items-center gap-1">
                 <Info size={10} />
-                Top {triData.topFacilities.length} facilities by total release volume.
                 Total releases across all TRI facilities: {formatWeight(triData.totalReleases)}.
               </p>
             </div>

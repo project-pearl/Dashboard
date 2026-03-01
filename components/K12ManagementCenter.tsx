@@ -129,7 +129,7 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set(['eduhub', 'teacher', 'reports-hub', 'disclaimer']) },
   funding:     { label: 'Funding & Grants', description: 'K-12 education grants for water science',
     sections: new Set(['grants', 'disclaimer']) },
-  habitat:     { label: 'Habitat & Ecology', description: 'Ecological sensitivity, T&E species, and habitat impact',
+  habitat:     { label: 'Habitat & Ecology', description: 'Explore the plants and animals that live in and around your local waterways',
     sections: new Set(['hab-ecoscore', 'hab-wildlife', 'disclaimer']) },
   warr:        { label: 'WARR Room', description: 'Water Alert & Response Readiness — real-time situation awareness',
     sections: new Set(['warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']) },
@@ -3102,7 +3102,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
               return DS(
                 <div className={`rounded-xl border-2 p-5 flex items-center justify-between ${scoreBg}`}>
                   <div>
-                    <div className="text-[10px] font-bold uppercase tracking-wider opacity-70">Ecological Sensitivity</div>
+                    <div className="text-[10px] font-bold uppercase tracking-wider opacity-70">Nature Health Score</div>
                     <div className="text-lg font-bold mt-1">{stateName} Eco Score</div>
                     <div className="text-xs opacity-80 mt-0.5">
                       {ecoData ? `${ecoData.totalTE} total T&E species · ${ecoData.aquaticTE} aquatic · ${ecoData.criticalHabitat} critical habitat designations` : 'No T&E data available'}
@@ -3130,7 +3130,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                       Threatened & Endangered Species — {stateName}
                       <Badge variant="secondary" className="ml-1 text-[10px]">USFWS ECOS</Badge>
                     </CardTitle>
-                    <CardDescription>ESA-listed species with ecological sensitivity for {stateAbbr}</CardDescription>
+                    <CardDescription>Animals &amp; plants that need our help near your school&apos;s watershed</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

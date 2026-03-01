@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { Shield, AlertTriangle, FileCheck, Gavel, Activity, ClipboardCheck, Clock } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Shield, AlertTriangle, FileCheck, Gavel, Activity, ClipboardCheck, Clock, ChevronUp, ChevronDown, Filter, Search } from 'lucide-react';
 import { KPIStrip, type KPICard } from '@/components/KPIStrip';
 import { DashboardSection } from '@/components/DashboardSection';
 import { useICISData } from '@/lib/useICISData';
@@ -52,6 +52,95 @@ export function ICISCompliancePanel({
     permitNumber,
     enabled: !!(state || (lat && lng) || permitNumber),
   });
+
+  // ── Filter state ──────────────────────────────────────────────────────
+  const [violSeverity, setViolSeverity] = useState<'all' | 'snc' | 'moderate'>('all');
+  const [violSearch, setViolSearch] = useState('');
+  const [violSortCol, setViolSortCol] = useState<'permit' | 'desc' | 'date' | 'severity'>('date');
+  const [violSortDir, setViolSortDir] = useState<'asc' | 'desc'>('desc');
+  const [violPage, setViolPage] = useState(0);
+
+  const [enfType, setEnfType] = useState('all');
+  const [enfSearch, setEnfSearch] = useState('');
+  const [enfPage, setEnfPage] = useState(0);
+
+  const [dmrParam, setDmrParam] = useState('all');
+  const [dmrSearch, setDmrSearch] = useState('');
+  const [dmrPage, setDmrPage] = useState(0);
+
+  const PAGE_SIZE = compactMode ? 10 : 20;
+
+  // ── Derived filter options ────────────────────────────────────────────
+  const enforcementTypes = useMemo(() => {
+    const types = new Set<string>();
+    for (const e of enforcement) if (e.actionType) types.add(e.actionType);
+    return Array.from(types).sort();
+  }, [enforcement]);
+
+  const dmrParams = useMemo(() => {
+    const params = new Set<string>();
+    for (const d of dmr) if (d.exceedance && d.paramDesc) params.add(d.paramDesc);
+    return Array.from(params).sort();
+  }, [dmr]);
+
+  // ── Filtered + sorted violations ──────────────────────────────────────
+  const filteredViolations = useMemo(() => {
+    let list = [...violations];
+    if (violSeverity === 'snc') list = list.filter(v => v.rnc || v.severity === 'S');
+    else if (violSeverity === 'moderate') list = list.filter(v => v.severity === 'M');
+    if (violSearch) {
+      const q = violSearch.toLowerCase();
+      list = list.filter(v =>
+        (v.permit || '').toLowerCase().includes(q) ||
+        (v.desc || v.code || '').toLowerCase().includes(q)
+      );
+    }
+    const dir = violSortDir === 'asc' ? 1 : -1;
+    list.sort((a, b) => {
+      switch (violSortCol) {
+        case 'permit': return dir * (a.permit || '').localeCompare(b.permit || '');
+        case 'desc': return dir * (a.desc || a.code || '').localeCompare(b.desc || b.code || '');
+        case 'date': return dir * (a.date || '').localeCompare(b.date || '');
+        case 'severity': {
+          const sA = a.rnc || a.severity === 'S' ? 2 : a.severity === 'M' ? 1 : 0;
+          const sB = b.rnc || b.severity === 'S' ? 2 : b.severity === 'M' ? 1 : 0;
+          return dir * (sA - sB);
+        }
+        default: return 0;
+      }
+    });
+    return list;
+  }, [violations, violSeverity, violSearch, violSortCol, violSortDir]);
+
+  // ── Filtered + sorted enforcement ─────────────────────────────────────
+  const filteredEnforcement = useMemo(() => {
+    let list = [...enforcement];
+    if (enfType !== 'all') list = list.filter(e => e.actionType === enfType);
+    if (enfSearch) {
+      const q = enfSearch.toLowerCase();
+      list = list.filter(e =>
+        (e.permit || '').toLowerCase().includes(q) ||
+        (e.caseNumber || '').toLowerCase().includes(q)
+      );
+    }
+    list.sort((a, b) => (b.settlementDate || '').localeCompare(a.settlementDate || ''));
+    return list;
+  }, [enforcement, enfType, enfSearch]);
+
+  // ── Filtered DMR exceedances ──────────────────────────────────────────
+  const filteredDmr = useMemo(() => {
+    let list = dmr.filter(d => d.exceedance);
+    if (dmrParam !== 'all') list = list.filter(d => d.paramDesc === dmrParam);
+    if (dmrSearch) {
+      const q = dmrSearch.toLowerCase();
+      list = list.filter(d =>
+        (d.permit || '').toLowerCase().includes(q) ||
+        (d.paramDesc || '').toLowerCase().includes(q)
+      );
+    }
+    list.sort((a, b) => (b.period || '').localeCompare(a.period || ''));
+    return list;
+  }, [dmr, dmrParam, dmrSearch]);
 
   if (isLoading) {
     return (
@@ -132,19 +221,15 @@ export function ICISCompliancePanel({
     },
   ];
 
-  // ── Sorted lists ────────────────────────────────────────────────────────
-  const recentViolations = [...violations]
-    .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
-    .slice(0, compactMode ? 5 : 15);
+  // ── Paginated slices ────────────────────────────────────────────────────
+  const violPageCount = Math.max(1, Math.ceil(filteredViolations.length / PAGE_SIZE));
+  const pagedViolations = filteredViolations.slice(violPage * PAGE_SIZE, (violPage + 1) * PAGE_SIZE);
 
-  const recentEnforcement = [...enforcement]
-    .sort((a, b) => (b.settlementDate || '').localeCompare(a.settlementDate || ''))
-    .slice(0, compactMode ? 10 : 25);
+  const enfPageCount = Math.max(1, Math.ceil(filteredEnforcement.length / PAGE_SIZE));
+  const pagedEnforcement = filteredEnforcement.slice(enfPage * PAGE_SIZE, (enfPage + 1) * PAGE_SIZE);
 
-  const dmrExceedances = dmr
-    .filter(d => d.exceedance)
-    .sort((a, b) => (b.period || '').localeCompare(a.period || ''))
-    .slice(0, compactMode ? 5 : 15);
+  const dmrPageCount = Math.max(1, Math.ceil(filteredDmr.length / PAGE_SIZE));
+  const pagedDmr = filteredDmr.slice(dmrPage * PAGE_SIZE, (dmrPage + 1) * PAGE_SIZE);
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -158,26 +243,73 @@ export function ICISCompliancePanel({
       <KPIStrip cards={kpiCards} />
 
       {/* Recent Violations */}
-      {recentViolations.length > 0 && (
+      {violations.length > 0 && (
         <DashboardSection
-          title="Recent Violations"
-          subtitle={`${violations.length} total violations found`}
+          title="Violations"
+          subtitle={`${filteredViolations.length}${filteredViolations.length !== violations.length ? ' filtered' : ''} of ${violations.length} violations`}
           accent="red"
           icon={<AlertTriangle className="w-4 h-4" />}
           defaultExpanded={!compactMode}
         >
-          <div className="overflow-x-auto mt-3 rounded-lg border border-slate-200">
+          {/* Filter bar */}
+          <div className="flex flex-wrap items-center gap-2 mt-2 mb-3">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+              <Filter className="w-3.5 h-3.5" />
+            </div>
+            <select
+              value={violSeverity}
+              onChange={e => { setViolSeverity(e.target.value as 'all' | 'snc' | 'moderate'); setViolPage(0); }}
+              className="text-xs border border-slate-200 rounded-md px-2 py-1.5 bg-white text-slate-700 focus:ring-1 focus:ring-indigo-300 focus:border-indigo-300"
+            >
+              <option value="all">All Severities</option>
+              <option value="snc">SNC Only</option>
+              <option value="moderate">Moderate Only</option>
+            </select>
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search permit or violation..."
+                value={violSearch}
+                onChange={e => { setViolSearch(e.target.value); setViolPage(0); }}
+                className="text-xs border border-slate-200 rounded-md pl-7 pr-2 py-1.5 w-48 bg-white text-slate-700 placeholder:text-slate-400 focus:ring-1 focus:ring-indigo-300 focus:border-indigo-300"
+              />
+            </div>
+          </div>
+
+          {/* Sortable table */}
+          <div className="overflow-x-auto rounded-lg border border-slate-200">
             <table className="w-full text-xs">
               <thead>
                 <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-                  <th className="px-2.5 py-2">Permit</th>
-                  <th className="px-2.5 py-2">Violation</th>
-                  <th className="px-2.5 py-2">Date</th>
-                  <th className="px-2.5 py-2">Severity</th>
+                  {([
+                    ['permit', 'Permit'],
+                    ['desc', 'Violation'],
+                    ['date', 'Date'],
+                    ['severity', 'Severity'],
+                  ] as const).map(([col, label]) => (
+                    <th
+                      key={col}
+                      className="px-2.5 py-2 cursor-pointer hover:bg-slate-100 select-none whitespace-nowrap"
+                      onClick={() => {
+                        if (violSortCol === col) setViolSortDir(d => d === 'asc' ? 'desc' : 'asc');
+                        else { setViolSortCol(col); setViolSortDir('desc'); }
+                        setViolPage(0);
+                      }}
+                    >
+                      <span className="inline-flex items-center gap-0.5">
+                        {label}
+                        {violSortCol === col && (violSortDir === 'asc'
+                          ? <ChevronUp className="w-3 h-3" />
+                          : <ChevronDown className="w-3 h-3" />
+                        )}
+                      </span>
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {recentViolations.map((v, i) => (
+                {pagedViolations.map((v, i) => (
                   <tr key={`${v.permit}-${v.code}-${v.date}-${i}`} className="hover:bg-slate-50">
                     <td className="px-2.5 py-2 font-mono text-slate-700">{v.permit || '—'}</td>
                     <td className="px-2.5 py-2 text-slate-700">{v.desc || v.code || '—'}</td>
@@ -198,19 +330,67 @@ export function ICISCompliancePanel({
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          {violPageCount > 1 && (
+            <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
+              <span>Page {violPage + 1} of {violPageCount}</span>
+              <div className="flex gap-1">
+                <button
+                  className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40"
+                  disabled={violPage === 0}
+                  onClick={() => setViolPage(p => p - 1)}
+                >Prev</button>
+                <button
+                  className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40"
+                  disabled={violPage >= violPageCount - 1}
+                  onClick={() => setViolPage(p => p + 1)}
+                >Next</button>
+              </div>
+            </div>
+          )}
         </DashboardSection>
       )}
 
-      {/* Enforcement Actions — TABLE format */}
-      {recentEnforcement.length > 0 && (
+      {/* Enforcement Actions */}
+      {enforcement.length > 0 && (
         <DashboardSection
           title="Enforcement Actions"
-          subtitle={`${enforcement.length} actions, ${formatCurrency(summary.totalPenalties)} in penalties`}
+          subtitle={`${filteredEnforcement.length}${filteredEnforcement.length !== enforcement.length ? ' filtered' : ''} of ${enforcement.length} actions, ${formatCurrency(summary.totalPenalties)} in penalties`}
           accent="amber"
           icon={<Gavel className="w-4 h-4" />}
           defaultExpanded={!compactMode}
         >
-          <div className="overflow-x-auto mt-3 rounded-lg border border-slate-200">
+          {/* Filter bar */}
+          <div className="flex flex-wrap items-center gap-2 mt-2 mb-3">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+              <Filter className="w-3.5 h-3.5" />
+            </div>
+            {enforcementTypes.length > 1 && (
+              <select
+                value={enfType}
+                onChange={e => { setEnfType(e.target.value); setEnfPage(0); }}
+                className="text-xs border border-slate-200 rounded-md px-2 py-1.5 bg-white text-slate-700 focus:ring-1 focus:ring-amber-300 focus:border-amber-300"
+              >
+                <option value="all">All Action Types</option>
+                {enforcementTypes.map(t => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            )}
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search permit or case..."
+                value={enfSearch}
+                onChange={e => { setEnfSearch(e.target.value); setEnfPage(0); }}
+                className="text-xs border border-slate-200 rounded-md pl-7 pr-2 py-1.5 w-44 bg-white text-slate-700 placeholder:text-slate-400 focus:ring-1 focus:ring-amber-300 focus:border-amber-300"
+              />
+            </div>
+          </div>
+
+          <div className="overflow-x-auto rounded-lg border border-slate-200">
             <table className="w-full text-xs">
               <thead>
                 <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
@@ -222,7 +402,7 @@ export function ICISCompliancePanel({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {recentEnforcement.map((e, i) => (
+                {pagedEnforcement.map((e, i) => (
                   <tr key={`${e.caseNumber}-${e.permit}-${i}`} className="hover:bg-slate-50">
                     <td className="px-2.5 py-2 font-mono text-slate-700">{e.permit || '—'}</td>
                     <td className="px-2.5 py-2 text-slate-700">{e.caseNumber || '—'}</td>
@@ -236,19 +416,67 @@ export function ICISCompliancePanel({
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          {enfPageCount > 1 && (
+            <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
+              <span>Page {enfPage + 1} of {enfPageCount}</span>
+              <div className="flex gap-1">
+                <button
+                  className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40"
+                  disabled={enfPage === 0}
+                  onClick={() => setEnfPage(p => p - 1)}
+                >Prev</button>
+                <button
+                  className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40"
+                  disabled={enfPage >= enfPageCount - 1}
+                  onClick={() => setEnfPage(p => p + 1)}
+                >Next</button>
+              </div>
+            </div>
+          )}
         </DashboardSection>
       )}
 
       {/* DMR Exceedances */}
-      {dmrExceedances.length > 0 && (
+      {dmr.filter(d => d.exceedance).length > 0 && (
         <DashboardSection
           title="DMR Exceedances"
-          subtitle={`${summary.dmrExceedanceRate}% exceedance rate`}
+          subtitle={`${filteredDmr.length}${filteredDmr.length !== dmr.filter(d => d.exceedance).length ? ' filtered' : ''} exceedances — ${summary.dmrExceedanceRate}% rate`}
           accent="blue"
           icon={<ClipboardCheck className="w-4 h-4" />}
           defaultExpanded={!compactMode}
         >
-          <div className="overflow-x-auto mt-3 rounded-lg border border-slate-200">
+          {/* Filter bar */}
+          <div className="flex flex-wrap items-center gap-2 mt-2 mb-3">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+              <Filter className="w-3.5 h-3.5" />
+            </div>
+            {dmrParams.length > 1 && (
+              <select
+                value={dmrParam}
+                onChange={e => { setDmrParam(e.target.value); setDmrPage(0); }}
+                className="text-xs border border-slate-200 rounded-md px-2 py-1.5 bg-white text-slate-700 focus:ring-1 focus:ring-blue-300 focus:border-blue-300 max-w-[200px] truncate"
+              >
+                <option value="all">All Parameters</option>
+                {dmrParams.map(p => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
+              </select>
+            )}
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search permit..."
+                value={dmrSearch}
+                onChange={e => { setDmrSearch(e.target.value); setDmrPage(0); }}
+                className="text-xs border border-slate-200 rounded-md pl-7 pr-2 py-1.5 w-36 bg-white text-slate-700 placeholder:text-slate-400 focus:ring-1 focus:ring-blue-300 focus:border-blue-300"
+              />
+            </div>
+          </div>
+
+          <div className="overflow-x-auto rounded-lg border border-slate-200">
             <table className="w-full text-xs">
               <thead>
                 <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
@@ -261,7 +489,7 @@ export function ICISCompliancePanel({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {dmrExceedances.map((d, i) => (
+                {pagedDmr.map((d, i) => (
                   <tr key={`${d.permit}-${d.paramDesc}-${d.period}-${i}`} className="hover:bg-slate-50">
                     <td className="px-2.5 py-2 font-mono text-slate-700">{d.permit || '—'}</td>
                     <td className="px-2.5 py-2 text-slate-700">{d.paramDesc || '—'}</td>
@@ -278,6 +506,25 @@ export function ICISCompliancePanel({
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          {dmrPageCount > 1 && (
+            <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
+              <span>Page {dmrPage + 1} of {dmrPageCount}</span>
+              <div className="flex gap-1">
+                <button
+                  className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40"
+                  disabled={dmrPage === 0}
+                  onClick={() => setDmrPage(p => p - 1)}
+                >Prev</button>
+                <button
+                  className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40"
+                  disabled={dmrPage >= dmrPageCount - 1}
+                  onClick={() => setDmrPage(p => p + 1)}
+                >Next</button>
+              </div>
+            </div>
+          )}
         </DashboardSection>
       )}
     </div>

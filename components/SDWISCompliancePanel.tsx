@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Droplets, AlertTriangle, Users, Gavel, Shield, Beaker, ChevronUp, ChevronDown } from 'lucide-react';
+import { Droplets, AlertTriangle, Users, Gavel, Shield, Beaker, ChevronUp, ChevronDown, Filter, Search } from 'lucide-react';
 import { KPIStrip, type KPICard } from '@/components/KPIStrip';
 import { DashboardSection } from '@/components/DashboardSection';
 import { useSDWISData } from '@/lib/useSDWISData';
@@ -55,10 +55,16 @@ export function SDWISCompliancePanel({
 
   const [filterMajor, setFilterMajor] = useState(false);
   const [filterHealthBased, setFilterHealthBased] = useState(false);
+  const [filterRule, setFilterRule] = useState('all');
+  const [violSearch, setViolSearch] = useState('');
   const [sortCol, setSortCol] = useState<'pwsid' | 'contaminant' | 'rule' | 'date' | 'status'>('date');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [violPage, setViolPage] = useState(0);
   const VIOL_PAGE_SIZE = compactMode ? 10 : 25;
+
+  const [enfSearch, setEnfSearch] = useState('');
+  const [enfPage, setEnfPage] = useState(0);
+  const ENF_PAGE_SIZE = compactMode ? 10 : 20;
 
   // ── Hooks must be called before any early returns (Rules of Hooks) ───
   const sysNameMap = useMemo(() => {
@@ -73,10 +79,25 @@ export function SDWISCompliancePanel({
     return m;
   }, [systems]);
 
+  const ruleTypes = useMemo(() => {
+    const rules = new Set<string>();
+    for (const v of violations) if (v.rule) rules.add(v.rule);
+    return Array.from(rules).sort();
+  }, [violations]);
+
   const sortedViolations = useMemo(() => {
     let filtered = [...violations];
     if (filterMajor) filtered = filtered.filter(v => v.isMajor);
     if (filterHealthBased) filtered = filtered.filter(v => v.isHealthBased);
+    if (filterRule !== 'all') filtered = filtered.filter(v => v.rule === filterRule);
+    if (violSearch) {
+      const q = violSearch.toLowerCase();
+      filtered = filtered.filter(v =>
+        (v.pwsid || '').toLowerCase().includes(q) ||
+        (v.contaminant || v.code || '').toLowerCase().includes(q) ||
+        (sysNameMap.get(v.pwsid) || '').toLowerCase().includes(q)
+      );
+    }
 
     const dir = sortDir === 'asc' ? 1 : -1;
     filtered.sort((a, b) => {
@@ -94,7 +115,7 @@ export function SDWISCompliancePanel({
       }
     });
     return filtered;
-  }, [violations, filterMajor, filterHealthBased, sortCol, sortDir]);
+  }, [violations, filterMajor, filterHealthBased, filterRule, violSearch, sortCol, sortDir, sysNameMap]);
 
   if (isLoading) {
     return (
@@ -178,9 +199,22 @@ export function SDWISCompliancePanel({
   const ntncwsCount = systems.filter(s => s.type === 'NTNCWS').length;
   const totalSys = cwsCount + tncwsCount + ntncwsCount || 1;
 
-  const sortedEnforcement = [...enforcement]
-    .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
-    .slice(0, compactMode ? 5 : 10);
+  const filteredEnforcement = useMemo(() => {
+    let list = [...enforcement];
+    if (enfSearch) {
+      const q = enfSearch.toLowerCase();
+      list = list.filter(e =>
+        (e.pwsid || '').toLowerCase().includes(q) ||
+        (e.actionType || '').toLowerCase().includes(q) ||
+        (sysNameMap.get(e.pwsid) || '').toLowerCase().includes(q)
+      );
+    }
+    list.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    return list;
+  }, [enforcement, enfSearch, sysNameMap]);
+
+  const enfPageCount = Math.max(1, Math.ceil(filteredEnforcement.length / ENF_PAGE_SIZE));
+  const pagedEnforcement = filteredEnforcement.slice(enfPage * ENF_PAGE_SIZE, (enfPage + 1) * ENF_PAGE_SIZE);
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -237,7 +271,10 @@ export function SDWISCompliancePanel({
           defaultExpanded={!compactMode}
         >
           {/* Filters */}
-          <div className="flex items-center gap-3 mt-2 mb-3">
+          <div className="flex flex-wrap items-center gap-2 mt-2 mb-3">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+              <Filter className="w-3.5 h-3.5" />
+            </div>
             <label className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
               <input
                 type="checkbox"
@@ -256,6 +293,28 @@ export function SDWISCompliancePanel({
               />
               Health-based only
             </label>
+            {ruleTypes.length > 1 && (
+              <select
+                value={filterRule}
+                onChange={e => { setFilterRule(e.target.value); setViolPage(0); }}
+                className="text-xs border border-slate-200 rounded-md px-2 py-1.5 bg-white text-slate-700 focus:ring-1 focus:ring-blue-300 focus:border-blue-300 max-w-[180px] truncate"
+              >
+                <option value="all">All Rule Types</option>
+                {ruleTypes.map(r => (
+                  <option key={r} value={r}>{r}</option>
+                ))}
+              </select>
+            )}
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search system or contaminant..."
+                value={violSearch}
+                onChange={e => { setViolSearch(e.target.value); setViolPage(0); }}
+                className="text-xs border border-slate-200 rounded-md pl-7 pr-2 py-1.5 w-52 bg-white text-slate-700 placeholder:text-slate-400 focus:ring-1 focus:ring-blue-300 focus:border-blue-300"
+              />
+            </div>
           </div>
 
           {/* Sortable table */}
@@ -344,16 +403,33 @@ export function SDWISCompliancePanel({
         </DashboardSection>
       )}
 
-      {/* Enforcement Actions — TABLE format */}
-      {sortedEnforcement.length > 0 && (
+      {/* Enforcement Actions */}
+      {enforcement.length > 0 && (
         <DashboardSection
           title="Enforcement Actions"
-          subtitle={`${enforcement.length} actions`}
+          subtitle={`${filteredEnforcement.length}${filteredEnforcement.length !== enforcement.length ? ' filtered' : ''} of ${enforcement.length} actions`}
           accent="amber"
           icon={<Gavel className="w-4 h-4" />}
           defaultExpanded={!compactMode}
         >
-          <div className="overflow-x-auto mt-3 rounded-lg border border-slate-200">
+          {/* Filter bar */}
+          <div className="flex flex-wrap items-center gap-2 mt-2 mb-3">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+              <Filter className="w-3.5 h-3.5" />
+            </div>
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search system or action..."
+                value={enfSearch}
+                onChange={e => { setEnfSearch(e.target.value); setEnfPage(0); }}
+                className="text-xs border border-slate-200 rounded-md pl-7 pr-2 py-1.5 w-48 bg-white text-slate-700 placeholder:text-slate-400 focus:ring-1 focus:ring-amber-300 focus:border-amber-300"
+              />
+            </div>
+          </div>
+
+          <div className="overflow-x-auto rounded-lg border border-slate-200">
             <table className="w-full text-xs">
               <thead>
                 <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
@@ -364,7 +440,7 @@ export function SDWISCompliancePanel({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {sortedEnforcement.map((e, i) => {
+                {pagedEnforcement.map((e, i) => {
                   const sysName = sysNameMap.get(e.pwsid);
                   return (
                     <tr key={`${e.pwsid}-${e.date}-${i}`} className="hover:bg-slate-50">
@@ -378,6 +454,25 @@ export function SDWISCompliancePanel({
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          {enfPageCount > 1 && (
+            <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
+              <span>Page {enfPage + 1} of {enfPageCount}</span>
+              <div className="flex gap-1">
+                <button
+                  className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40"
+                  disabled={enfPage === 0}
+                  onClick={() => setEnfPage(p => p - 1)}
+                >Prev</button>
+                <button
+                  className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40"
+                  disabled={enfPage >= enfPageCount - 1}
+                  onClick={() => setEnfPage(p => p + 1)}
+                >Next</button>
+              </div>
+            </div>
+          )}
         </DashboardSection>
       )}
     </div>

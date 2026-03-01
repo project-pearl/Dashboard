@@ -239,7 +239,7 @@ const LENS_CONFIG: Record<ViewLens, {
   },
   habitat: {
     label: 'Habitat & Ecology',
-    description: 'Ecological sensitivity, T&E species, and habitat impact',
+    description: 'Receiving water ecology and protected species — informs BMP siting and compliance',
     defaultOverlay: 'impairment',
     sections: new Set(['hab-ecoscore', 'hab-wildlife', 'disclaimer']),
   },
@@ -6322,7 +6322,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
               return DS(
                 <div className={`rounded-xl border-2 p-5 flex items-center justify-between ${scoreBg}`}>
                   <div>
-                    <div className="text-[10px] font-bold uppercase tracking-wider opacity-70">Ecological Sensitivity</div>
+                    <div className="text-[10px] font-bold uppercase tracking-wider opacity-70">Receiving Water Ecology</div>
                     <div className="text-lg font-bold mt-1">{stateName} Eco Score</div>
                     <div className="text-xs opacity-80 mt-0.5">
                       {ecoData ? `${ecoData.totalTE} total T&E species · ${ecoData.aquaticTE} aquatic · ${ecoData.criticalHabitat} critical habitat designations` : 'No T&E data available'}
@@ -6350,7 +6350,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       Threatened & Endangered Species — {stateName}
                       <Badge variant="secondary" className="ml-1 text-[10px]">USFWS ECOS</Badge>
                     </CardTitle>
-                    <CardDescription>ESA-listed species with ecological sensitivity for {stateAbbr}</CardDescription>
+                    <CardDescription>ESA-listed species in receiving waters — relevant for MS4 biological assessment requirements</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

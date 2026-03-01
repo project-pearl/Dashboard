@@ -746,7 +746,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                   <CardDescription className="text-[11px]">Holdings by sector with water risk exposure</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 max-h-[240px] overflow-y-auto">
                     {companiesData.map(c => (
                       <div key={c.id} className="flex items-center justify-between px-3 py-1.5 rounded-md bg-white border border-slate-100 text-[11px]">
                         <div>
@@ -1331,7 +1331,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                   <CardDescription className="text-[11px]">Estimated valuation adjustment from water risk materialization</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
+                  <div className="space-y-2 max-h-[240px] overflow-y-auto">
                     {companiesData.map(c => {
                       const impactPct = c.waterRiskScore >= 70 ? -8 : c.waterRiskScore >= 40 ? -3 : -0.5;
                       const impactAmt = (c.aum * impactPct / 100).toFixed(1);

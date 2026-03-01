@@ -2473,23 +2473,53 @@ export async function GET(request: NextRequest) {
         const permit = sp.get('permit') || '';
         const limit = sp.get('limit') || '100';
         try {
-          // Primary: Envirofacts ICIS_PERMIT (still works)
+          // Fetch Envirofacts permits + ECHO facilities in parallel so we can
+          // merge ECHO coordinates onto Envirofacts data (which lacks lat/lng)
           const filter = permit
             ? `NPDES_ID/${encodeURIComponent(permit)}`
             : `STATE_ABBR/${state}`;
           const url = `https://data.epa.gov/efservice/ICIS_PERMIT/${filter}/ROWS/0:${limit}/JSON`;
           console.log('[ICIS-Permits]', url);
-          const res = await fetch(url, {
-            headers: { 'Accept': 'application/json' },
-            signal: AbortSignal.timeout(15_000),
-            next: { revalidate: 3600 },
-          });
-          if (!res.ok) throw new Error(`Envirofacts HTTP ${res.status}`);
-          const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
-            return NextResponse.json({ source: 'icis-permits', state, permit: permit || undefined, count: data.length, data });
+
+          const [efRes, echoFacilities] = await Promise.allSettled([
+            fetch(url, {
+              headers: { 'Accept': 'application/json' },
+              signal: AbortSignal.timeout(15_000),
+              next: { revalidate: 3600 },
+            }),
+            // ECHO facility search for coordinates (state queries only)
+            !permit ? echoFacilitySearch(state, { limit: parseInt(limit, 10) }) : Promise.resolve([]),
+          ]);
+
+          // Build coordinate lookup from ECHO
+          const coordMap = new Map<string, { lat: number; lng: number; facility?: string }>();
+          if (echoFacilities.status === 'fulfilled') {
+            for (const f of echoFacilities.value as any[]) {
+              const id = (f.SourceID || '').trim();
+              const lat = Number(f.FacLat) || 0;
+              const lng = Number(f.FacLong) || 0;
+              if (id && Math.abs(lat) > 1) {
+                coordMap.set(id, { lat, lng, facility: (f.CWPName || '').trim() });
+              }
+            }
           }
-          throw new Error('Envirofacts returned empty');
+
+          if (efRes.status === 'fulfilled' && efRes.value.ok) {
+            const data = await efRes.value.json();
+            if (Array.isArray(data) && data.length > 0) {
+              // Merge ECHO coordinates onto Envirofacts rows
+              for (const row of data) {
+                const id = row.NPDES_ID || row.EXTERNAL_PERMIT_NMBR || '';
+                const coord = coordMap.get(id);
+                if (coord && !row.LATITUDE_MEASURE && !row.FAC_LAT) {
+                  row.LATITUDE_MEASURE = String(coord.lat);
+                  row.LONGITUDE_MEASURE = String(coord.lng);
+                }
+              }
+              return NextResponse.json({ source: 'icis-permits', state, permit: permit || undefined, count: data.length, data });
+            }
+          }
+          throw new Error('Envirofacts returned empty or failed');
         } catch (efErr) {
           // Fallback: ECHO CWA facility search
           try {

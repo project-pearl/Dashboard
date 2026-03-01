@@ -238,10 +238,78 @@ function findPearlKey(paramDesc: string): string {
   return 'other';
 }
 
-// ── ECHO violation fetch (replaces retired ICIS_VIOLATION table) ─────────────
+// ── ECHO facility coordinate fetch (backfills ICIS_PERMIT lat/lng) ───────────
 
 const ECHO_CWA_QUERY = 'https://echodata.epa.gov/echo/cwa_rest_services.get_facilities';
 const ECHO_CWA_QID   = 'https://echodata.epa.gov/echo/cwa_rest_services.get_qid';
+
+/**
+ * Fetch ALL CWA facilities for a state from ECHO to get coordinates.
+ * Returns a Map of permitNumber → {lat, lng} for backfilling Envirofacts
+ * permits which lack coordinate columns.
+ */
+async function fetchEchoFacilityCoords(stateAbbr: string): Promise<Map<string, { lat: number; lng: number }>> {
+  const coords = new Map<string, { lat: number; lng: number }>();
+  try {
+    // Step 1: get QueryID — no p_qiv filter → ALL facilities (not just violators)
+    const queryUrl = `${ECHO_CWA_QUERY}?output=JSON&p_st=${stateAbbr}`;
+    const qRes = await fetch(queryUrl, {
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!qRes.ok) {
+      console.warn(`[ICIS Cron] ECHO coords ${stateAbbr}: HTTP ${qRes.status}`);
+      return coords;
+    }
+    const qJson = await qRes.json();
+    const qid = qJson?.Results?.QueryID;
+    const totalRows = parseInt(qJson?.Results?.QueryRows || '0', 10);
+    if (!qid || totalRows === 0) return coords;
+
+    console.log(`[ICIS Cron] ECHO coords ${stateAbbr}: QID=${qid}, rows=${totalRows}`);
+
+    // Step 2: paginated JSON results
+    let pageNo = 1;
+    const PAGE = 5000;
+    let fetched = 0;
+
+    while (fetched < totalRows) {
+      const qidUrl = `${ECHO_CWA_QID}?output=JSON&qid=${qid}&responseset=${PAGE}&pageno=${pageNo}`;
+      const dRes = await fetch(qidUrl, {
+        headers: { Accept: 'application/json' },
+        signal: AbortSignal.timeout(60_000),
+      });
+      if (!dRes.ok) break;
+      const dJson = await dRes.json();
+      const facilities = dJson?.Results?.Facilities || [];
+      if (facilities.length === 0) break;
+
+      for (const f of facilities) {
+        const lat = parseFloat(f.FacLat || '');
+        const lng = parseFloat(f.FacLong || '');
+        if (isNaN(lat) || isNaN(lng) || Math.abs(lat) < 1) continue;
+        const permitId = (f.SourceID || '').trim();
+        if (permitId) {
+          coords.set(permitId, {
+            lat: Math.round(lat * 100000) / 100000,
+            lng: Math.round(lng * 100000) / 100000,
+          });
+        }
+      }
+
+      fetched += facilities.length;
+      if (facilities.length < PAGE) break;
+      pageNo++;
+    }
+
+    console.log(`[ICIS Cron] ECHO coords ${stateAbbr}: ${coords.size} facilities with coordinates`);
+  } catch (e) {
+    console.warn(`[ICIS Cron] ECHO coords ${stateAbbr}: ${e instanceof Error ? e.message : e}`);
+  }
+  return coords;
+}
+
+// ── ECHO violation fetch (replaces retired ICIS_VIOLATION table) ─────────────
 
 async function fetchEchoViolations(stateAbbr: string): Promise<IcisViolation[]> {
   try {
@@ -371,14 +439,16 @@ export async function GET(request: NextRequest) {
 
               // Fetch tables in parallel: permits/DMR/enforcement from Envirofacts,
               // violations from ECHO (Envirofacts ICIS_VIOLATION is retired),
+              // ECHO coords for backfilling permits/enforcement (Envirofacts lacks lat/lng),
               // inspections skipped (low value, Envirofacts table retired)
-              const [permits, violations, dmr, enforcement, inspections] = await Promise.all([
+              const [permits, violations, dmr, enforcement, inspections, echoCoords] = await Promise.all([
                 fetchTable('ICIS_PERMIT', 'STATE_ABBR', stateAbbr, transformPermit)
                   .then(rows => rows.map(r => ({ ...r, state: r.state || stateAbbr }))),
                 fetchEchoViolations(stateAbbr),
                 fetchTable('ICIS_DMR', 'STATE_ABBR', stateAbbr, transformDmr),
                 fetchTable('ICIS_ENFORCEMENT', 'STATE_ABBR', stateAbbr, transformEnforcement),
                 Promise.resolve([]) as Promise<IcisInspection[]>,  // inspections — retired, skip
+                fetchEchoFacilityCoords(stateAbbr),
               ]);
 
               // Deduplicate permits by permit number
@@ -418,6 +488,25 @@ export async function GET(request: NextRequest) {
                 if (!inspMap.has(key)) inspMap.set(key, i);
               }
               const dedupedInspections = Array.from(inspMap.values());
+
+              // Backfill coordinates from ECHO facility data
+              // (Envirofacts ICIS_PERMIT and ICIS_ENFORCEMENT tables lack lat/lng)
+              let backfilled = 0;
+              for (const p of dedupedPermits) {
+                if (p.lat === 0 && p.lng === 0) {
+                  const coord = echoCoords.get(p.permit);
+                  if (coord) { p.lat = coord.lat; p.lng = coord.lng; backfilled++; }
+                }
+              }
+              for (const e of dedupedEnforcement) {
+                if (e.lat === 0 && e.lng === 0) {
+                  const coord = echoCoords.get(e.permit);
+                  if (coord) { e.lat = coord.lat; e.lng = coord.lng; }
+                }
+              }
+              if (backfilled > 0) {
+                console.log(`[ICIS Cron] ${stateAbbr}: backfilled coords for ${backfilled}/${dedupedPermits.length} permits`);
+              }
 
               allPermits.push(...dedupedPermits);
               allViolations.push(...dedupedViolations);
@@ -463,16 +552,30 @@ export async function GET(request: NextRequest) {
 
       for (const stateAbbr of retryStates) {
         try {
-          const [permits, violations, dmr, enforcement, inspections] = await Promise.all([
+          const [permits, violations, dmr, enforcement, inspections, echoCoords] = await Promise.all([
             fetchTable('ICIS_PERMIT', 'STATE_ABBR', stateAbbr, transformPermit)
               .then(rows => rows.map(r => ({ ...r, state: r.state || stateAbbr }))),
             fetchEchoViolations(stateAbbr),
             fetchTable('ICIS_DMR', 'STATE_ABBR', stateAbbr, transformDmr),
             fetchTable('ICIS_ENFORCEMENT', 'STATE_ABBR', stateAbbr, transformEnforcement),
             Promise.resolve([]) as Promise<IcisInspection[]>,
+            fetchEchoFacilityCoords(stateAbbr),
           ]);
 
           const dedupedPermits = Array.from(new Map(permits.map(p => [p.permit, p])).values());
+          // Backfill coordinates from ECHO
+          for (const p of dedupedPermits) {
+            if (p.lat === 0 && p.lng === 0) {
+              const coord = echoCoords.get(p.permit);
+              if (coord) { p.lat = coord.lat; p.lng = coord.lng; }
+            }
+          }
+          for (const e of enforcement) {
+            if (e.lat === 0 && e.lng === 0) {
+              const coord = echoCoords.get(e.permit);
+              if (coord) { e.lat = coord.lat; e.lng = coord.lng; }
+            }
+          }
           allPermits.push(...dedupedPermits);
           allViolations.push(...violations);
           allDmr.push(...dmr);

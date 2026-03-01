@@ -149,7 +149,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
     sections: new Set(['trends-dashboard', 'insights', 'disaster-emergency-panel', 'resolution-planner', 'disclaimer']),
   },
   habitat: {
-    label: 'Habitat & Ecology', description: 'Ecological sensitivity, T&E species, and habitat impact',
+    label: 'Habitat & Ecology', description: 'Biodiversity risk near operational sites — supports TNFD & ESG disclosure',
     icon: Leaf,
     sections: new Set(['hab-ecoscore', 'hab-wildlife', 'disclaimer']),
   },
@@ -1161,9 +1161,9 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                 {/* Per-facility breakdown */}
                 <div className="rounded-lg border border-slate-200 overflow-hidden">
                   <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-700">Facility Treatment Breakdown</div>
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto max-h-[240px] overflow-y-auto">
                     <table className="w-full text-xs">
-                      <thead>
+                      <thead className="sticky top-0 bg-white z-10">
                         <tr className="border-b border-slate-100 text-slate-500">
                           <th className="text-left px-3 py-1.5 font-medium">Facility</th>
                           <th className="text-right px-3 py-1.5 font-medium">Gallons</th>
@@ -2222,7 +2222,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
               return DS(
                 <div className={`rounded-xl border-2 p-5 flex items-center justify-between ${scoreBg}`}>
                   <div>
-                    <div className="text-[10px] font-bold uppercase tracking-wider opacity-70">Ecological Sensitivity</div>
+                    <div className="text-[10px] font-bold uppercase tracking-wider opacity-70">Biodiversity Exposure</div>
                     <div className="text-lg font-bold mt-1">{STATE_NAMES[focusedState] || focusedState} Eco Score</div>
                     <div className="text-xs opacity-80 mt-0.5">
                       {ecoData ? `${ecoData.totalTE} total T&E species · ${ecoData.aquaticTE} aquatic · ${ecoData.criticalHabitat} critical habitat designations` : 'No T&E data available'}
@@ -2250,7 +2250,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                       Threatened & Endangered Species — {STATE_NAMES[focusedState] || focusedState}
                       <Badge variant="secondary" className="ml-1 text-[10px]">USFWS ECOS</Badge>
                     </CardTitle>
-                    <CardDescription>ESA-listed species with ecological sensitivity for {focusedState}</CardDescription>
+                    <CardDescription>ESA-listed species near facility operations — supports TNFD &amp; GRI 304 disclosure</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

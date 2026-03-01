@@ -832,7 +832,7 @@ export function PEARLManagementCenter(props: Props) {
                   </CardTitle>
                   <CardDescription>Comparing live readings against installation baselines. Anomalies flagged with diagnosis + recommendation.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="space-y-2 max-h-[400px] overflow-y-auto">
                   {allAlerts.map((alert) => (
                     <div key={alert.id} className={`rounded-lg border p-3 ${severityColor(alert.severity)}`}>
                       <div className="flex items-start gap-2">
@@ -1181,7 +1181,7 @@ export function PEARLManagementCenter(props: Props) {
               <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-2">
                 <Target size={14} /> Active Pipeline ({prospects.length})
               </h2>
-
+              <div className="space-y-3 max-h-[600px] overflow-y-auto">
               {prospects.map((p) => {
                 const isExpanded = expandedProspect === p.id;
                 return (
@@ -1248,6 +1248,7 @@ export function PEARLManagementCenter(props: Props) {
                   </Card>
                 );
               })}
+              </div>
             </div>
           </>
         )}

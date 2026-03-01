@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { Waves, TrendingUp, TrendingDown, Minus, Activity, Droplets, Gauge } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Waves, TrendingUp, TrendingDown, Minus, Activity, Droplets, Gauge, Filter, Search } from 'lucide-react';
 import { KPIStrip, type KPICard } from '@/components/KPIStrip';
 import { DashboardSection } from '@/components/DashboardSection';
 import { StatusCard } from '@/components/StatusCard';
@@ -81,6 +81,39 @@ export function NwisGwPanel({
     siteNumber,
     enabled: !!(state || (lat && lng) || siteNumber),
   });
+
+  // ── Filter state ──────────────────────────────────────────────────────
+  const [trendFilter, setTrendFilter] = useState<'all' | 'rising' | 'falling' | 'stable'>('all');
+  const [wellSearch, setWellSearch] = useState('');
+  const [wellPage, setWellPage] = useState(0);
+  const [fallingPage, setFallingPage] = useState(0);
+  const PAGE_SIZE = compactMode ? 10 : 20;
+
+  // ── Filtered + sorted trends ──────────────────────────────────────────
+  const filteredTrends = useMemo(() => {
+    let list = [...trends];
+    if (trendFilter !== 'all') list = list.filter(t => t.trend === trendFilter);
+    if (wellSearch) {
+      const q = wellSearch.toLowerCase();
+      list = list.filter(t =>
+        (t.siteNumber || '').toLowerCase().includes(q) ||
+        (t.siteName || '').toLowerCase().includes(q)
+      );
+    }
+    list.sort((a, b) => {
+      if (a.trend === 'falling' && b.trend !== 'falling') return -1;
+      if (b.trend === 'falling' && a.trend !== 'falling') return 1;
+      return b.trendMagnitude - a.trendMagnitude;
+    });
+    return list;
+  }, [trends, trendFilter, wellSearch]);
+
+  const filteredFalling = useMemo(() =>
+    trends
+      .filter(t => t.trend === 'falling')
+      .sort((a, b) => b.trendMagnitude - a.trendMagnitude),
+    [trends]
+  );
 
   if (isLoading) {
     return (
@@ -172,15 +205,12 @@ export function NwisGwPanel({
   const fallingPct = totalTrended > 0 ? Math.round((summary.sitesFalling / totalTrended) * 100) : 0;
   const stablePct = totalTrended > 0 ? 100 - risingPct - fallingPct : 0;
 
-  // ── Sorted trends ─────────────────────────────────────────────────────
-  const sortedTrends = [...trends]
-    .sort((a, b) => {
-      // Falling first, then by magnitude
-      if (a.trend === 'falling' && b.trend !== 'falling') return -1;
-      if (b.trend === 'falling' && a.trend !== 'falling') return 1;
-      return b.trendMagnitude - a.trendMagnitude;
-    })
-    .slice(0, compactMode ? 8 : 20);
+  // ── Paginated slices ─────────────────────────────────────────────────
+  const wellPageCount = Math.max(1, Math.ceil(filteredTrends.length / PAGE_SIZE));
+  const pagedTrends = filteredTrends.slice(wellPage * PAGE_SIZE, (wellPage + 1) * PAGE_SIZE);
+
+  const fallingPageCount = Math.max(1, Math.ceil(filteredFalling.length / PAGE_SIZE));
+  const pagedFalling = filteredFalling.slice(fallingPage * PAGE_SIZE, (fallingPage + 1) * PAGE_SIZE);
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -229,39 +259,66 @@ export function NwisGwPanel({
       )}
 
       {/* Well Detail Table */}
-      {sortedTrends.length > 0 && (
+      {trends.length > 0 && (
         <DashboardSection
           title="Well Monitoring Detail"
-          subtitle={`${trends.length} wells tracked${sortedTrends.length < trends.length ? ` (showing ${sortedTrends.length})` : ''}`}
+          subtitle={`${filteredTrends.length}${filteredTrends.length !== trends.length ? ' filtered' : ''} of ${trends.length} wells tracked`}
           accent="cyan"
           icon={<Waves className="w-4 h-4" />}
           defaultExpanded={!compactMode}
         >
-          <div className="overflow-x-auto mt-3">
+          {/* Filter bar */}
+          <div className="flex flex-wrap items-center gap-2 mt-2 mb-3">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+              <Filter className="w-3.5 h-3.5" />
+            </div>
+            <select
+              value={trendFilter}
+              onChange={e => { setTrendFilter(e.target.value as 'all' | 'rising' | 'falling' | 'stable'); setWellPage(0); }}
+              className="text-xs border border-slate-200 rounded-md px-2 py-1.5 bg-white text-slate-700 focus:ring-1 focus:ring-cyan-300 focus:border-cyan-300"
+            >
+              <option value="all">All Trends</option>
+              <option value="falling">Falling Only</option>
+              <option value="rising">Rising Only</option>
+              <option value="stable">Stable Only</option>
+            </select>
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search site ID or name..."
+                value={wellSearch}
+                onChange={e => { setWellSearch(e.target.value); setWellPage(0); }}
+                className="text-xs border border-slate-200 rounded-md pl-7 pr-2 py-1.5 w-48 bg-white text-slate-700 placeholder:text-slate-400 focus:ring-1 focus:ring-cyan-300 focus:border-cyan-300"
+              />
+            </div>
+          </div>
+
+          <div className="overflow-x-auto rounded-lg border border-slate-200">
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-left text-slate-500 border-b border-slate-200">
-                  <th className="pb-2 font-semibold">Site</th>
-                  <th className="pb-2 font-semibold text-right">Latest Level</th>
-                  <th className="pb-2 font-semibold text-center">Trend</th>
-                  <th className="pb-2 font-semibold text-right">30d Avg</th>
-                  <th className="pb-2 font-semibold text-right">90d Avg</th>
-                  <th className="pb-2 font-semibold">Last Reading</th>
+                <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                  <th className="px-2.5 py-2">Site</th>
+                  <th className="px-2.5 py-2 text-right">Latest Level</th>
+                  <th className="px-2.5 py-2 text-center">Trend</th>
+                  <th className="px-2.5 py-2 text-right">30d Avg</th>
+                  <th className="px-2.5 py-2 text-right">90d Avg</th>
+                  <th className="px-2.5 py-2">Last Reading</th>
                 </tr>
               </thead>
-              <tbody>
-                {sortedTrends.map((t, i) => (
-                  <tr key={`${t.siteNumber}-${i}`} className="border-b border-slate-50">
-                    <td className="py-2">
+              <tbody className="divide-y divide-slate-100">
+                {pagedTrends.map((t, i) => (
+                  <tr key={`${t.siteNumber}-${i}`} className="hover:bg-slate-50">
+                    <td className="px-2.5 py-2">
                       <div className="font-mono text-slate-700 text-[11px]">{t.siteNumber}</div>
                       {t.siteName && (
                         <div className="text-[10px] text-slate-400 truncate max-w-[200px]">{t.siteName}</div>
                       )}
                     </td>
-                    <td className="py-2 text-right font-semibold text-slate-700">
+                    <td className="px-2.5 py-2 text-right font-semibold text-slate-700">
                       {formatDepth(t.latestLevel)}
                     </td>
-                    <td className="py-2 text-center">
+                    <td className="px-2.5 py-2 text-center">
                       <div className="flex items-center justify-center gap-1">
                         {trendIcon(t.trend)}
                         <span className={`text-[10px] font-medium ${
@@ -273,18 +330,37 @@ export function NwisGwPanel({
                         </span>
                       </div>
                     </td>
-                    <td className="py-2 text-right text-slate-500">
+                    <td className="px-2.5 py-2 text-right text-slate-500">
                       {t.avgLevel30d !== null ? formatDepth(t.avgLevel30d) : '--'}
                     </td>
-                    <td className="py-2 text-right text-slate-500">
+                    <td className="px-2.5 py-2 text-right text-slate-500">
                       {t.avgLevel90d !== null ? formatDepth(t.avgLevel90d) : '--'}
                     </td>
-                    <td className="py-2 text-slate-500">{formatDate(t.latestDate)}</td>
+                    <td className="px-2.5 py-2 text-slate-500">{formatDate(t.latestDate)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          {wellPageCount > 1 && (
+            <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
+              <span>Page {wellPage + 1} of {wellPageCount}</span>
+              <div className="flex gap-1">
+                <button
+                  className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40"
+                  disabled={wellPage === 0}
+                  onClick={() => setWellPage(p => p - 1)}
+                >Prev</button>
+                <button
+                  className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40"
+                  disabled={wellPage >= wellPageCount - 1}
+                  onClick={() => setWellPage(p => p + 1)}
+                >Next</button>
+              </div>
+            </div>
+          )}
         </DashboardSection>
       )}
 
@@ -298,19 +374,34 @@ export function NwisGwPanel({
           defaultExpanded={!compactMode}
         >
           <div className="space-y-2 mt-3">
-            {trends
-              .filter(t => t.trend === 'falling')
-              .sort((a, b) => b.trendMagnitude - a.trendMagnitude)
-              .slice(0, compactMode ? 5 : 10)
-              .map((t, i) => (
-                <StatusCard
-                  key={`${t.siteNumber}-falling-${i}`}
-                  title={`${t.siteNumber} — ${t.siteName || 'Monitoring Well'}`}
-                  description={`Declining ${t.trendMagnitude.toFixed(1)} ft/month | Latest: ${formatDepth(t.latestLevel)} (${formatDate(t.latestDate)})`}
-                  status={t.trendMagnitude > 2 ? 'critical' : 'warning'}
-                />
-              ))}
+            {pagedFalling.map((t, i) => (
+              <StatusCard
+                key={`${t.siteNumber}-falling-${i}`}
+                title={`${t.siteNumber} — ${t.siteName || 'Monitoring Well'}`}
+                description={`Declining ${t.trendMagnitude.toFixed(1)} ft/month | Latest: ${formatDepth(t.latestLevel)} (${formatDate(t.latestDate)})`}
+                status={t.trendMagnitude > 2 ? 'critical' : 'warning'}
+              />
+            ))}
           </div>
+
+          {/* Pagination */}
+          {fallingPageCount > 1 && (
+            <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
+              <span>Page {fallingPage + 1} of {fallingPageCount}</span>
+              <div className="flex gap-1">
+                <button
+                  className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40"
+                  disabled={fallingPage === 0}
+                  onClick={() => setFallingPage(p => p - 1)}
+                >Prev</button>
+                <button
+                  className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40"
+                  disabled={fallingPage >= fallingPageCount - 1}
+                  onClick={() => setFallingPage(p => p + 1)}
+                >Next</button>
+              </div>
+            </div>
+          )}
         </DashboardSection>
       )}
     </div>

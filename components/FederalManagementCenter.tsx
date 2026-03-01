@@ -148,7 +148,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
     sections: new Set([
-      'pol-talking-points', 'pol-constituent-concerns', 'pol-funding-wins', 'pol-funding-risks',
+      'pol-active-situations', 'pol-talking-points', 'pol-constituent-concerns', 'pol-funding-wins', 'pol-funding-risks',
       'pol-regulatory-deadlines', 'pol-ej-exposure', 'pol-media-ready-grades',
       'pol-peer-comparison', 'pol-council-agenda', 'disclaimer',
     ]),
@@ -7260,6 +7260,72 @@ export function FederalManagementCenter(props: Props) {
         // POLITICAL BRIEFING SECTIONS
         // ═══════════════════════════════════════════════════════════════════
 
+        case 'pol-active-situations': return DS(
+          <Card className="border-red-300 bg-gradient-to-br from-red-50/60 to-amber-50/30">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <AlertCircle size={15} className="text-red-600" /> Active Situations — Situational Awareness
+              </CardTitle>
+              <CardDescription>Critical incidents and elevated threat postures affecting water infrastructure</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {/* Potomac Spill */}
+              <div className="rounded-xl border-2 border-red-300 bg-white p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+                    <h4 className="text-sm font-bold text-red-900">Potomac River Industrial Discharge — Ongoing</h4>
+                  </div>
+                  <Badge className="bg-red-100 text-red-800 border-red-200">Day 12</Badge>
+                </div>
+                <p className="text-xs text-slate-700">An industrial discharge of chlorinated solvents from a facility near Shepherdstown, WV has been detected in Potomac River surface water. Trichloroethylene (TCE) concentrations measured at 18 ppb — 3.6x the EPA MCL of 5 ppb. Plume is migrating downstream toward the Washington Aqueduct intake at Great Falls.</p>
+                <div className="flex flex-wrap gap-2 text-[10px]">
+                  <Badge className="bg-red-50 text-red-700 border-red-200">EPA Region 3 — Lead</Badge>
+                  <Badge className="bg-amber-50 text-amber-700 border-amber-200">USACE coordinating boom deployment</Badge>
+                  <Badge className="bg-blue-50 text-blue-700 border-blue-200">DC Water activated alt. intake protocol</Badge>
+                  <Badge className="bg-purple-50 text-purple-700 border-purple-200">3.2M population downstream</Badge>
+                </div>
+                <p className="text-[10px] text-slate-500">Source: NRC Report #1284721 · EPA On-Scene Coordinator deployed · Congressional notification sent to MD, WV, VA, DC delegations</p>
+              </div>
+
+              {/* National Security — Iran */}
+              <div className="rounded-xl border-2 border-amber-300 bg-white p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Shield size={14} className="text-amber-600" />
+                    <h4 className="text-sm font-bold text-amber-900">Elevated Critical Infrastructure Threat — Water Sector</h4>
+                  </div>
+                  <Badge className="bg-amber-100 text-amber-800 border-amber-200">ELEVATED</Badge>
+                </div>
+                <p className="text-xs text-slate-700">Following strikes on Iranian nuclear facilities, CISA has raised the water sector threat level to ELEVATED. Iranian-affiliated cyber actors (IRGC-linked CyberAv3ngers) have previously targeted U.S. water utility SCADA/ICS systems. 2024 Aliquippa, PA municipal water authority intrusion attributed to same group.</p>
+                <div className="flex flex-wrap gap-2 text-[10px]">
+                  <Badge className="bg-amber-50 text-amber-700 border-amber-200">CISA Alert AA24-335A active</Badge>
+                  <Badge className="bg-red-50 text-red-700 border-red-200">46 utilities flagged — exposed Unitronics PLCs</Badge>
+                  <Badge className="bg-blue-50 text-blue-700 border-blue-200">EPA/CISA joint advisory issued</Badge>
+                  <Badge className="bg-purple-50 text-purple-700 border-purple-200">WaterISAC TLP:AMBER briefing 03/03</Badge>
+                </div>
+                <p className="text-[10px] text-slate-500">Source: CISA Water Sector Bulletin · DHS I&amp;A Assessment · WaterISAC member alert · EPA Cybersecurity Division coordination</p>
+              </div>
+
+              {/* Additional situational item */}
+              <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Droplets size={14} className="text-blue-600" />
+                    <h4 className="text-sm font-bold text-slate-800">East Palestine Derailment — Long-term Monitoring</h4>
+                  </div>
+                  <Badge className="bg-blue-100 text-blue-800 border-blue-200">Monitoring</Badge>
+                </div>
+                <p className="text-xs text-slate-700">Year-3 post-derailment monitoring in Leslie Run and Ohio River tributaries. Vinyl chloride non-detect in last 4 quarterly samples. EPA Region 5 transitioning to semi-annual monitoring. Norfolk Southern settlement funds ($600M) disbursing through state programs.</p>
+                <div className="flex flex-wrap gap-2 text-[10px]">
+                  <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">WQ trending toward baseline</Badge>
+                  <Badge className="bg-blue-50 text-blue-700 border-blue-200">Consent decree on track</Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
         case 'pol-talking-points': return DS(
           <Card className="border-purple-200 bg-purple-50/30">
             <CardHeader className="pb-2">
@@ -7270,16 +7336,24 @@ export function FederalManagementCenter(props: Props) {
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div className="flex items-start gap-2">
+                <Badge className="bg-red-100 text-red-800 shrink-0">Potomac</Badge>
+                <p>&ldquo;EPA Region 3 is leading a multi-agency response to the Potomac River industrial discharge. DC Water has activated alternative intake protocols and we are providing daily water quality updates to 3.2 million downstream residents.&rdquo;</p>
+              </div>
+              <div className="flex items-start gap-2">
+                <Badge className="bg-amber-100 text-amber-800 shrink-0">Security</Badge>
+                <p>&ldquo;In light of elevated threat conditions following events in Iran, we are coordinating with CISA and WaterISAC to ensure all large drinking water systems have reviewed cyber hygiene protocols — particularly SCADA and ICS-facing assets.&rdquo;</p>
+              </div>
+              <div className="flex items-start gap-2">
                 <Badge className="bg-purple-100 text-purple-800 shrink-0">Lead</Badge>
-                <p>&ldquo;EPA estimates 9.2 million lead service lines remain nationwide. The Bipartisan Infrastructure Law allocates $15B over five years — 22% has been disbursed to date.&rdquo;</p>
+                <p>&ldquo;EPA estimates 9.2 million lead service lines remain nationwide. The Bipartisan Infrastructure Law allocates $15B over five years — 22% has been disbursed to date across all 50 states.&rdquo;</p>
               </div>
               <div className="flex items-start gap-2">
                 <Badge className="bg-emerald-100 text-emerald-800 shrink-0">BIL</Badge>
-                <p>&ldquo;$50B in total BIL water infrastructure funding is supporting 1,400+ projects across all 50 states — the largest federal water investment in U.S. history.&rdquo;</p>
+                <p>&ldquo;$50B in total BIL water infrastructure funding is supporting 1,400+ projects — the largest federal water investment in U.S. history.&rdquo;</p>
               </div>
               <div className="flex items-start gap-2">
                 <Badge className="bg-blue-100 text-blue-800 shrink-0">PFAS</Badge>
-                <p>&ldquo;The final PFAS National Primary Drinking Water Regulation covers 6 PFAS compounds affecting 66,000+ public water systems, with $5B in dedicated compliance funding.&rdquo;</p>
+                <p>&ldquo;The final PFAS NPDWR covers 6 PFAS compounds affecting 66,000+ public water systems, with $5B in dedicated compliance funding.&rdquo;</p>
               </div>
             </CardContent>
           </Card>
@@ -7296,17 +7370,18 @@ export function FederalManagementCenter(props: Props) {
             <CardContent>
               <div className="space-y-2">
                 {[
-                  { issue: 'PFAS regulation timeline & compliance cost estimates', inquiries: 142, trend: '↑ 38%' },
-                  { issue: 'SRF reauthorization levels for FY2028+', inquiries: 97, trend: '↑ 15%' },
-                  { issue: 'WOTUS jurisdictional scope (post-Sackett)', inquiries: 64, trend: '↓ 12%' },
-                  { issue: 'Lead & Copper Rule Improvements implementation pace', inquiries: 58, trend: '↑ 22%' },
-                  { issue: 'Environmental justice community designation criteria', inquiries: 41, trend: '— stable' },
+                  { issue: 'Potomac River contamination — downstream drinking water safety', inquiries: 214, trend: '↑ NEW', highlight: true },
+                  { issue: 'Water sector cybersecurity posture following Iran strikes', inquiries: 168, trend: '↑ NEW', highlight: true },
+                  { issue: 'PFAS regulation timeline & compliance cost estimates', inquiries: 142, trend: '↑ 38%', highlight: false },
+                  { issue: 'SRF reauthorization levels for FY2028+', inquiries: 97, trend: '↑ 15%', highlight: false },
+                  { issue: 'WOTUS jurisdictional scope (post-Sackett)', inquiries: 64, trend: '↓ 12%', highlight: false },
+                  { issue: 'Lead & Copper Rule Improvements implementation pace', inquiries: 58, trend: '↑ 22%', highlight: false },
                 ].map(c => (
-                  <div key={c.issue} className="flex items-center justify-between bg-white border border-slate-200 rounded-lg px-4 py-2.5">
-                    <span className="text-sm text-slate-700">{c.issue}</span>
+                  <div key={c.issue} className={`flex items-center justify-between rounded-lg px-4 py-2.5 ${c.highlight ? 'bg-red-50 border-2 border-red-200' : 'bg-white border border-slate-200'}`}>
+                    <span className={`text-sm ${c.highlight ? 'text-red-800 font-medium' : 'text-slate-700'}`}>{c.issue}</span>
                     <div className="flex items-center gap-3">
-                      <Badge variant="outline">{c.inquiries} inquiries</Badge>
-                      <span className="text-xs text-slate-500">{c.trend}</span>
+                      <Badge variant="outline" className={c.highlight ? 'border-red-300 text-red-700' : ''}>{c.inquiries} inquiries</Badge>
+                      <span className={`text-xs ${c.highlight ? 'text-red-600 font-semibold' : 'text-slate-500'}`}>{c.trend}</span>
                     </div>
                   </div>
                 ))}
@@ -7329,6 +7404,7 @@ export function FederalManagementCenter(props: Props) {
                 { title: '$11.7B Clean Water SRF', desc: 'BIL Clean Water State Revolving Fund — wastewater infrastructure, stormwater, and nonpoint source. 35% allocated as grants/principal forgiveness.' },
                 { title: '$5B PFAS & Emerging Contaminants', desc: 'Dedicated PFAS/emerging contaminant funding for small and disadvantaged communities — 49 states have received initial allocations.' },
                 { title: '$2.6B Water Recycling & Reuse', desc: 'Western water recycling, desalination, and storage programs under BIL Title IX.' },
+                { title: '$75M Cybersecurity Grants (Active)', desc: 'EPA/CISA joint program for water utility cybersecurity improvements — accelerated disbursement authorized following elevated threat posture.' },
               ].map(f => (
                 <div key={f.title} className="flex items-start gap-2 border border-emerald-200 rounded-lg px-4 py-2.5 bg-white">
                   <Badge className="bg-emerald-100 text-emerald-800 shrink-0">&#10003;</Badge>
@@ -7352,13 +7428,17 @@ export function FederalManagementCenter(props: Props) {
                 <Badge className="bg-red-100 text-red-800 shrink-0">!</Badge>
                 <div><p className="text-sm font-medium text-slate-800">BIL Appropriations Cliff — FY2027</p><p className="text-xs text-slate-500">Bipartisan Infrastructure Law water funding ends FY2026. Without reauthorization, annual SRF capitalization drops ~60% to pre-BIL levels ($2.8B combined).</p></div>
               </div>
+              <div className="flex items-start gap-2 border border-red-200 rounded-lg px-4 py-2.5 bg-white">
+                <Badge className="bg-red-100 text-red-800 shrink-0">!</Badge>
+                <div><p className="text-sm font-medium text-slate-800">Potomac Response — Unfunded Emergency Costs</p><p className="text-xs text-slate-500">Estimated $14M in emergency response costs for Potomac spill containment and alternative water supply. Superfund Emergency Response authority invoked — no dedicated appropriation. Potential supplemental request to Congress.</p></div>
+              </div>
               <div className="flex items-start gap-2 border border-amber-200 rounded-lg px-4 py-2.5 bg-white">
                 <Badge className="bg-amber-100 text-amber-800 shrink-0">&#9888;</Badge>
                 <div><p className="text-sm font-medium text-slate-800">SRF Capitalization Reduction Risk</p><p className="text-xs text-slate-500">Congressional proposals to reduce base SRF appropriations by 15-20% in FY2027 budget. Would affect all 50 states&rsquo; allotments.</p></div>
               </div>
               <div className="flex items-start gap-2 border border-amber-200 rounded-lg px-4 py-2.5 bg-white">
                 <Badge className="bg-amber-100 text-amber-800 shrink-0">&#9888;</Badge>
-                <div><p className="text-sm font-medium text-slate-800">WIFIA Program Uncertainty</p><p className="text-xs text-slate-500">Water Infrastructure Finance and Innovation Act loan authority faces potential rescission in continuing resolution scenarios.</p></div>
+                <div><p className="text-sm font-medium text-slate-800">Cybersecurity Hardening — Unfunded Mandate Concern</p><p className="text-xs text-slate-500">EPA/CISA cybersecurity directives for water systems lack dedicated funding. Estimated $2.6B nationwide compliance cost. Small systems (&lt;10K pop) disproportionately affected.</p></div>
               </div>
             </CardContent>
           </Card>
@@ -7370,22 +7450,22 @@ export function FederalManagementCenter(props: Props) {
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <Clock size={15} className="text-amber-600" /> Federal Regulatory Deadlines
               </CardTitle>
-              <CardDescription>Major national rulemaking and compliance milestones</CardDescription>
+              <CardDescription>Major national rulemaking, compliance milestones, and emergency actions</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
               {[
-                { deadline: 'Oct 16, 2024', item: 'LCRI Final Rule published — Lead & Copper Rule Improvements (compliance begins)', daysLeft: 0, urgent: false },
+                { deadline: 'ACTIVE', item: 'Potomac River Emergency Order — EPA Region 3 On-Scene Coordinator directing containment. Daily WQ sampling at 6 downstream stations. Emergency drinking water advisories for 2 jurisdictions.', daysLeft: -1, urgent: true },
+                { deadline: 'Mar 7, 2026', item: 'CISA Binding Operational Directive — all federal water facilities must complete ICS/SCADA vulnerability scan and report findings within 72 hours of elevated threat designation', daysLeft: 6, urgent: true },
+                { deadline: 'Apr 2026', item: 'CWA 303(d) Integrated Report Cycle — states submit impaired waters lists to EPA', daysLeft: 31, urgent: true },
                 { deadline: 'Oct 16, 2027', item: 'LCRI: All systems must complete updated lead service line inventories', daysLeft: 595, urgent: false },
                 { deadline: 'Jun 2029', item: 'PFAS NPDWR: Large systems (>10K pop) begin compliance monitoring', daysLeft: 1187, urgent: false },
-                { deadline: 'Jun 2032', item: 'PFAS NPDWR: Small systems (<10K pop) compliance deadline', daysLeft: 2283, urgent: false },
-                { deadline: 'Apr 2026', item: 'CWA 303(d) Integrated Report Cycle — states submit impaired waters lists to EPA', daysLeft: 31, urgent: true },
               ].map(d => (
-                <div key={d.item} className="flex items-center justify-between border border-slate-200 rounded-lg px-4 py-2.5 bg-white">
+                <div key={d.item} className={`flex items-center justify-between rounded-lg px-4 py-2.5 ${d.daysLeft < 0 ? 'bg-red-50 border-2 border-red-300' : 'bg-white border border-slate-200'}`}>
                   <div>
-                    <p className="text-sm font-medium text-slate-800">{d.deadline}{d.daysLeft > 0 ? ` — ${d.daysLeft} days` : ' — Effective'}</p>
-                    <p className="text-xs text-slate-500">{d.item}</p>
+                    <p className={`text-sm font-medium ${d.daysLeft < 0 ? 'text-red-800' : 'text-slate-800'}`}>{d.deadline}{d.daysLeft > 0 ? ` — ${d.daysLeft} days` : d.daysLeft === 0 ? ' — Effective' : ''}</p>
+                    <p className={`text-xs ${d.daysLeft < 0 ? 'text-red-700' : 'text-slate-500'}`}>{d.item}</p>
                   </div>
-                  <Badge className={d.urgent ? 'bg-amber-100 text-amber-800' : d.daysLeft === 0 ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800'}>{d.urgent ? 'Soon' : d.daysLeft === 0 ? 'Active' : 'On Track'}</Badge>
+                  <Badge className={d.daysLeft < 0 ? 'bg-red-200 text-red-900' : d.urgent ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}>{d.daysLeft < 0 ? 'Emergency' : d.urgent ? 'Soon' : 'On Track'}</Badge>
                 </div>
               ))}
             </CardContent>
@@ -7398,9 +7478,13 @@ export function FederalManagementCenter(props: Props) {
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <Heart size={15} className="text-purple-600" /> National EJ Exposure Summary
               </CardTitle>
-              <CardDescription>Nationwide environmental justice indicators and Justice40 tracking</CardDescription>
+              <CardDescription>Nationwide environmental justice indicators and active EJ concerns</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
+              <div className="flex items-start gap-2 border-2 border-red-200 rounded-lg px-4 py-2.5 bg-red-50/50">
+                <Badge className="bg-red-100 text-red-800 shrink-0">Active</Badge>
+                <div><p className="text-sm font-medium text-red-800">Potomac Spill — EJ Community Impact</p><p className="text-xs text-red-700">Downstream communities in Prince George&rsquo;s County, MD and Southeast DC include 4 EJ-designated census tracts (90th+ percentile EJScreen). Combined population of 62,000 in tracts reliant on Potomac-sourced drinking water. Emergency bottled water distribution prioritized to these areas.</p></div>
+              </div>
               <div className="flex items-start gap-2 border border-amber-200 rounded-lg px-4 py-2.5 bg-white">
                 <Badge className="bg-amber-100 text-amber-800 shrink-0">&#9888;</Badge>
                 <div><p className="text-sm font-medium text-slate-800">26% of Americans in EJ-Burdened Communities</p><p className="text-xs text-slate-500">~86 million people live in census tracts exceeding the 80th percentile on EPA EJScreen composite index. Highest concentrations in LA, Houston, Chicago, Detroit metro areas.</p></div>
@@ -7412,10 +7496,6 @@ export function FederalManagementCenter(props: Props) {
               <div className="flex items-start gap-2 border border-blue-200 rounded-lg px-4 py-2.5 bg-white">
                 <Badge className="bg-blue-100 text-blue-800 shrink-0">J40</Badge>
                 <div><p className="text-sm font-medium text-slate-800">Justice40 Tracker</p><p className="text-xs text-slate-500">40% of BIL water benefits must flow to disadvantaged communities. Current tracking: 38.2% of DWSRF funds, 41.7% of CWSRF funds directed to J40-qualifying tracts.</p></div>
-              </div>
-              <div className="flex items-start gap-2 border border-emerald-200 rounded-lg px-4 py-2.5 bg-white">
-                <Badge className="bg-emerald-100 text-emerald-800 shrink-0">&#10003;</Badge>
-                <div><p className="text-sm font-medium text-slate-800">CEJST Coverage</p><p className="text-xs text-slate-500">Climate &amp; Economic Justice Screening Tool identifies 27,251 tracts as disadvantaged. 43 states have incorporated CEJST into SRF project ranking.</p></div>
               </div>
             </CardContent>
           </Card>
@@ -7430,12 +7510,13 @@ export function FederalManagementCenter(props: Props) {
               <CardDescription>Aggregated national averages across all 50 states</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                 {[
                   { category: 'Water Quality', grade: 'B-', color: 'text-teal-700 bg-teal-50 border-teal-200' },
                   { category: 'Infrastructure', grade: 'D+', color: 'text-red-700 bg-red-50 border-red-200' },
                   { category: 'Compliance', grade: 'B', color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
                   { category: 'Equity', grade: 'C', color: 'text-yellow-700 bg-yellow-50 border-yellow-200' },
+                  { category: 'Security', grade: 'C-', color: 'text-amber-700 bg-amber-50 border-amber-200' },
                 ].map(g => (
                   <div key={g.category} className={`border rounded-xl p-4 text-center ${g.color}`}>
                     <p className="text-3xl font-bold">{g.grade}</p>
@@ -7443,7 +7524,7 @@ export function FederalManagementCenter(props: Props) {
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-slate-400 mt-3 italic">ASCE Infrastructure Report Card methodology. National water infrastructure grade: D+ (est. $625B investment gap over 20 years).</p>
+              <p className="text-xs text-slate-400 mt-3 italic">ASCE Infrastructure Report Card methodology + EPA/CISA cyber readiness assessment. Security grade reflects 46 utilities with exposed ICS endpoints identified during current threat escalation.</p>
             </CardContent>
           </Card>
         );
@@ -7462,6 +7543,7 @@ export function FederalManagementCenter(props: Props) {
                 { category: 'Compliance Rate', top: ['CT', 'MA', 'WA', 'CO', 'MN'], bottom: ['WV', 'MS', 'NM', 'OK', 'AL'] },
                 { category: 'Infrastructure', top: ['UT', 'CO', 'WA', 'MN', 'VA'], bottom: ['MS', 'WV', 'LA', 'NM', 'AK'] },
                 { category: 'EJ Equity', top: ['VT', 'NH', 'ME', 'OR', 'MN'], bottom: ['LA', 'MS', 'TX', 'IN', 'OH'] },
+                { category: 'Cyber Readiness', top: ['VA', 'CO', 'MA', 'CA', 'WA'], bottom: ['WV', 'MS', 'NM', 'AK', 'WY'] },
               ].map(c => (
                 <div key={c.category} className="bg-white border border-slate-200 rounded-lg px-4 py-3">
                   <p className="text-sm font-semibold text-slate-800 mb-2">{c.category}</p>
@@ -7487,24 +7569,28 @@ export function FederalManagementCenter(props: Props) {
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <Scale size={15} className="text-purple-600" /> Congressional Action Items
               </CardTitle>
-              <CardDescription>Oversight hearings, rulemaking comments, and budget testimony</CardDescription>
+              <CardDescription>Oversight hearings, rulemaking comments, emergency response, and security briefings</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div className="flex items-start gap-2">
-                <Badge className="bg-red-100 text-red-800 shrink-0">Hearing</Badge>
-                <p><strong>Senate EPW Oversight:</strong> BIL water infrastructure implementation progress — prepare testimony on SRF disbursement rates and state allocation equity.</p>
+                <Badge className="bg-red-100 text-red-800 shrink-0">Emergency</Badge>
+                <p><strong>Potomac Response Briefing:</strong> EPA Region 3 On-Scene Coordinator to brief Senate EPW and House T&amp;I committees on containment status, downstream drinking water risk, and EJ community impact. <span className="text-red-600 font-medium">Requested within 48 hours.</span></p>
               </div>
               <div className="flex items-start gap-2">
-                <Badge className="bg-amber-100 text-amber-800 shrink-0">Comment</Badge>
-                <p><strong>LCRI Implementation Guidance:</strong> EPA accepting public comments on LCRI compliance guidance through Apr 2026. Coordinate interagency response.</p>
+                <Badge className="bg-amber-100 text-amber-800 shrink-0">Security</Badge>
+                <p><strong>Water Sector Cyber Threat Briefing:</strong> Joint EPA/CISA classified briefing for HPSCI and SSCI on Iranian cyber threat to water infrastructure. WaterISAC to present TLP:AMBER threat indicators. Coordinate with NSC Water Security Working Group.</p>
+              </div>
+              <div className="flex items-start gap-2">
+                <Badge className="bg-red-100 text-red-800 shrink-0">Hearing</Badge>
+                <p><strong>Senate EPW Oversight — BIL Implementation:</strong> Prepare testimony on SRF disbursement rates and state allocation equity. Include Potomac response as case study for emergency preparedness gaps.</p>
               </div>
               <div className="flex items-start gap-2">
                 <Badge className="bg-blue-100 text-blue-800 shrink-0">Budget</Badge>
-                <p><strong>FY2028 Budget Testimony:</strong> Prepare justification for SRF reauthorization at BIL levels ($7.4B/yr DWSRF + CWSRF combined).</p>
+                <p><strong>FY2028 Budget Testimony:</strong> Prepare justification for SRF reauthorization at BIL levels ($7.4B/yr). Include $500M request for water sector cybersecurity hardening program.</p>
               </div>
               <div className="flex items-start gap-2">
                 <Badge className="bg-purple-100 text-purple-800 shrink-0">Interagency</Badge>
-                <p><strong>White House Water Council:</strong> Quarterly coordination meeting — agenda includes PFAS MCL compliance timeline and Justice40 scorecard updates.</p>
+                <p><strong>White House Water Council — Emergency Session:</strong> Agenda: Potomac response coordination, Iran-related infrastructure threat posture, PFAS MCL compliance timeline, Justice40 scorecard updates.</p>
               </div>
             </CardContent>
           </Card>

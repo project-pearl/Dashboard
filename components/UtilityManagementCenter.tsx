@@ -139,7 +139,7 @@ const LENS_CONFIG: Record<ViewLens, {
   },
   habitat: {
     label: 'Habitat & Ecology',
-    description: 'Ecological sensitivity, T&E species, and habitat impact',
+    description: 'Ecological sensitivity near intake and discharge — supports source water protection',
     sections: new Set(['hab-ecoscore', 'hab-wildlife', 'insights', 'alertfeed', 'disclaimer']),
   },
   warr: {
@@ -1711,7 +1711,7 @@ export default function UtilityManagementCenter({ systemId }: Props) {
               return DS(
                 <div className={`rounded-xl border-2 p-5 flex items-center justify-between ${scoreBg}`}>
                   <div>
-                    <div className="text-[10px] font-bold uppercase tracking-wider opacity-70">Ecological Sensitivity</div>
+                    <div className="text-[10px] font-bold uppercase tracking-wider opacity-70">Source &amp; Discharge Zones</div>
                     <div className="text-lg font-bold mt-1">{systemId} Eco Score</div>
                     <div className="text-xs opacity-80 mt-0.5">
                       {ecoData ? `${ecoData.totalTE} total T&E species · ${ecoData.aquaticTE} aquatic · ${ecoData.criticalHabitat} critical habitat designations` : 'No T&E data available'}
@@ -1739,7 +1739,7 @@ export default function UtilityManagementCenter({ systemId }: Props) {
                       Threatened & Endangered Species — {systemId}
                       <Badge variant="secondary" className="ml-1 text-[10px]">USFWS ECOS</Badge>
                     </CardTitle>
-                    <CardDescription>ESA-listed species with ecological sensitivity for {systemId}</CardDescription>
+                    <CardDescription>ESA-listed species near intake and discharge points — informs source water protection</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

@@ -635,6 +635,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'briefing-pulse',      label: 'Program Pulse',                 order: 5.3, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'briefing-stakeholder', label: 'Stakeholder Watch',            order: 5.4, visible: true, defaultExpanded: true, lensControlled: true },
     // ── Political Briefing ──
+    { id: 'pol-active-situations',    label: 'Active Situations',           order: 5.50, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'pol-talking-points',       label: 'Talking Points',              order: 5.51, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'pol-constituent-concerns', label: 'Constituent Concerns',        order: 5.52, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'pol-funding-wins',        label: 'Funding Wins',                order: 5.53, visible: true, defaultExpanded: true, lensControlled: true },
