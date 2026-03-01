@@ -129,7 +129,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Overview',
     description: 'Municipal Utility operational dashboard — morning check before the day starts',
     defaultOverlay: 'impairment',
-    sections: new Set(['identity', 'operational-health', 'alertfeed', 'map-grid', 'detail', 'top10', 'quick-access', 'quickactions', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']),
+    sections: new Set(['operational-health', 'alertfeed', 'map-grid', 'detail', 'top10', 'quick-access', 'quickactions', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']),
   },
   briefing: {
     label: 'AI Briefing',
@@ -1888,11 +1888,27 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPin size={18} />
-                    <span>{jurisdictionMeta ? jurisdictionMeta.name : stateName}</span>
-                  </CardTitle>
-                  <CardDescription>{jurisdictionMeta ? `${jurisdictionMeta.phase} MS4 permit area` : 'Waterbody monitoring summary'}</CardDescription>
+                  {jurisdictionMeta ? (
+                    <button
+                      onClick={() => toggleSection('entity')}
+                      className="text-left group"
+                    >
+                      <CardTitle className="flex items-center gap-2">
+                        <MapPin size={18} />
+                        <span className="group-hover:text-blue-700 transition-colors">{jurisdictionMeta.name}</span>
+                        <ChevronDown size={14} className={`text-slate-400 transition-transform ${expandedSections['entity'] ? 'rotate-180' : ''}`} />
+                      </CardTitle>
+                      <CardDescription>{jurisdictionMeta.phase} MS4 permit area</CardDescription>
+                    </button>
+                  ) : (
+                    <>
+                      <CardTitle className="flex items-center gap-2">
+                        <MapPin size={18} />
+                        <span>{stateName}</span>
+                      </CardTitle>
+                      <CardDescription>Waterbody monitoring summary</CardDescription>
+                    </>
+                  )}
                 </div>
                 {/* State Grade Circle */}
                 {(() => {
@@ -1919,6 +1935,53 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                   );
                 })()}
               </div>
+
+              {/* Inline entity details — expands below jurisdiction name on click */}
+              {jurisdictionMeta && expandedSections['entity'] && (() => {
+                const impairedCount = scopedRegionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length;
+                const complianceStatus = ms4Summary ? (
+                  jurisdictions.find((j: any) => j.name === jurisdictionMeta.name)?.status || 'Under Review'
+                ) : 'Under Review';
+                const complianceBg = complianceStatus === 'In Compliance' ? 'bg-emerald-100 text-emerald-800 border-emerald-200' :
+                  complianceStatus === 'Consent Decree' || complianceStatus === 'NOV Issued' ? 'bg-red-100 text-red-800 border-red-200' :
+                  'bg-amber-100 text-amber-800 border-amber-200';
+                const ejScore = getEJScore(stateAbbr);
+                const withData = scopedRegionData.filter(r => r.dataSourceCount > 0).length;
+                const freshnessLabel = withData > scopedRegionData.length * 0.7 ? 'Current' : withData > scopedRegionData.length * 0.3 ? 'Moderate' : 'Stale';
+                const freshnessBg = freshnessLabel === 'Current' ? 'bg-green-100 text-green-700 border-green-200' : freshnessLabel === 'Moderate' ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-red-100 text-red-700 border-red-200';
+                return (
+                  <div className="mt-3 rounded-lg border border-blue-200 bg-blue-50/40 p-3 space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-500">NPDES Permit</span>
+                      <span className="font-mono font-semibold text-blue-700">{jurisdictionMeta.permit}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-500">Phase</span>
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${jurisdictionMeta.phase === 'Phase I' ? 'bg-indigo-100 text-indigo-700' : 'bg-violet-100 text-violet-700'}`}>{jurisdictionMeta.phase}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-500">Compliance</span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${complianceBg}`}>{complianceStatus}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-500">Receiving Waters</span>
+                      <span className="font-semibold text-slate-700">{jurisdictionMeta.waterbodies.length}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-500">Impaired</span>
+                      <span className="font-semibold text-amber-700">{impairedCount}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-500">Data Freshness</span>
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border ${freshnessBg}`}>{freshnessLabel}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-500">EJ Burden</span>
+                      <span className="font-semibold" style={{ color: ejScore >= 70 ? '#dc2626' : ejScore >= 50 ? '#ea580c' : ejScore >= 30 ? '#d97706' : '#16a34a' }}>{ejScore}/100</span>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Quick stats — matching NCC 4-tile row */}
               <div className="grid grid-cols-4 gap-1.5 text-center mt-3">
