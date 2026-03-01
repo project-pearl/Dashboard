@@ -117,6 +117,21 @@ export function SDWISCompliancePanel({
     return filtered;
   }, [violations, filterMajor, filterHealthBased, filterRule, violSearch, sortCol, sortDir, sysNameMap]);
 
+  // Must be called before early returns to satisfy Rules of Hooks
+  const filteredEnforcement = useMemo(() => {
+    let list = [...enforcement];
+    if (enfSearch) {
+      const q = enfSearch.toLowerCase();
+      list = list.filter(e =>
+        (e.pwsid || '').toLowerCase().includes(q) ||
+        (e.actionType || '').toLowerCase().includes(q) ||
+        (sysNameMap.get(e.pwsid) || '').toLowerCase().includes(q)
+      );
+    }
+    list.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    return list;
+  }, [enforcement, enfSearch, sysNameMap]);
+
   if (isLoading) {
     return (
       <div className={`bg-white border border-slate-200 rounded-xl p-6 ${className}`}>
@@ -198,20 +213,6 @@ export function SDWISCompliancePanel({
   const tncwsCount = systems.filter(s => s.type === 'TNCWS').length;
   const ntncwsCount = systems.filter(s => s.type === 'NTNCWS').length;
   const totalSys = cwsCount + tncwsCount + ntncwsCount || 1;
-
-  const filteredEnforcement = useMemo(() => {
-    let list = [...enforcement];
-    if (enfSearch) {
-      const q = enfSearch.toLowerCase();
-      list = list.filter(e =>
-        (e.pwsid || '').toLowerCase().includes(q) ||
-        (e.actionType || '').toLowerCase().includes(q) ||
-        (sysNameMap.get(e.pwsid) || '').toLowerCase().includes(q)
-      );
-    }
-    list.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-    return list;
-  }, [enforcement, enfSearch, sysNameMap]);
 
   const enfPageCount = Math.max(1, Math.ceil(filteredEnforcement.length / ENF_PAGE_SIZE));
   const pagedEnforcement = filteredEnforcement.slice(enfPage * ENF_PAGE_SIZE, (enfPage + 1) * ENF_PAGE_SIZE);
