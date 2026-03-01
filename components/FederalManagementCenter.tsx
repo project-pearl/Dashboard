@@ -6501,7 +6501,7 @@ export function FederalManagementCenter(props: Props) {
 
         case 'grant-outcomes': return DS(<>
         {/* ── Historical Grant Outcomes ── */}
-        <GrantOutcomesCard onRunAnalysis={() => setShowGrantMatcher(true)} />
+        <GrantOutcomesCard />
         </>);
 
         case 'funding-gap': {
