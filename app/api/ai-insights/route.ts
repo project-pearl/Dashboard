@@ -114,17 +114,21 @@ export async function POST(request: NextRequest) {
     // ── Cache-first: serve pre-generated insights if available ──
     // Cron job pre-generates for state/role combos every 6 hours
     // Only fall through to on-demand LLM call if cache misses
+    let cacheStatus: 'hit' | 'miss' | 'skipped' | 'error' = 'skipped';
+    let requestState = '';
+    let requestRole = '';
     try {
       const parsed = JSON.parse(userMessage);
-      const state = parsed?.state || '';
-      const role = parsed?.role || '';
+      requestState = parsed?.state || '';
+      requestRole = parsed?.role || '';
       const hasWaterbody = !!parsed?.selectedWaterbody;
 
       // Cache is keyed by state:role — only use for general views (no specific waterbody)
-      if (state && role && !hasWaterbody) {
+      if (requestState && requestRole && !hasWaterbody) {
         await warmInsights();
-        const cached = getInsights(state, role);
+        const cached = getInsights(requestState, requestRole);
         if (cached) {
+          cacheStatus = 'hit';
           return NextResponse.json({
             insights: cached.insights,
             provider: cached.provider,
@@ -132,20 +136,36 @@ export async function POST(request: NextRequest) {
             cached: true,
           });
         }
+        cacheStatus = 'miss';
+        console.log(`[AI-Insights] Cache miss for ${requestState}:${requestRole} — falling through to on-demand LLM`);
       }
-    } catch { /* parse failed — proceed to on-demand */ }
+    } catch (cacheErr: any) {
+      cacheStatus = 'error';
+      console.warn(`[AI-Insights] Cache lookup failed: ${cacheErr.message} — proceeding to on-demand LLM`);
+    }
 
     // Pick provider: Anthropic preferred, OpenAI fallback
-    let rawText = '';
-
-    if (ANTHROPIC_API_KEY) {
-      rawText = await callAnthropic(ANTHROPIC_API_KEY, systemPrompt, userMessage);
-    } else if (OPENAI_API_KEY) {
-      rawText = await callOpenAI(OPENAI_API_KEY, systemPrompt, userMessage);
-    } else {
+    const provider = ANTHROPIC_API_KEY ? 'anthropic' : OPENAI_API_KEY ? 'openai' : null;
+    if (!provider) {
       return NextResponse.json(
-        { error: 'No AI provider configured. Set ANTHROPIC_API_KEY or OPENAI_API_KEY in environment.' },
+        { error: 'No AI provider configured. Set ANTHROPIC_API_KEY or OPENAI_API_KEY in environment.', stage: 'provider-check' },
         { status: 503 }
+      );
+    }
+
+    let rawText = '';
+    try {
+      if (provider === 'anthropic') {
+        rawText = await callAnthropic(ANTHROPIC_API_KEY, systemPrompt, userMessage);
+      } else {
+        rawText = await callOpenAI(OPENAI_API_KEY, systemPrompt, userMessage);
+      }
+    } catch (llmErr: any) {
+      const msg = llmErr.message || 'Unknown LLM error';
+      console.error(`[AI-Insights] ${provider} call failed for ${requestState}:${requestRole}: ${msg}`);
+      return NextResponse.json(
+        { error: `${provider} call failed: ${msg}`, stage: 'llm-call', provider, state: requestState, role: requestRole, cacheStatus, insights: [] },
+        { status: 502 }
       );
     }
 
@@ -160,11 +180,15 @@ export async function POST(request: NextRequest) {
         insights = JSON.parse(jsonMatch[0]);
       }
     } catch (parseErr) {
-      console.warn('[AI-Insights] JSON parse failed, returning raw text');
-      return NextResponse.json({ text: rawText, insights: [] });
+      console.warn(`[AI-Insights] JSON parse failed for ${requestState}:${requestRole}. Raw text (first 200): ${rawText.slice(0, 200)}`);
+      return NextResponse.json(
+        { error: `LLM returned unparseable response from ${provider}`, stage: 'json-parse', provider, state: requestState, role: requestRole, cacheStatus, insights: [] },
+        { status: 502 }
+      );
     }
 
     // Validate insight structure
+    const preFilterCount = insights.length;
     insights = insights.filter(i =>
       i &&
       typeof i.title === 'string' &&
@@ -173,16 +197,21 @@ export async function POST(request: NextRequest) {
       ['info', 'warning', 'critical'].includes(i.severity)
     ).slice(0, 5);
 
+    if (insights.length === 0 && preFilterCount > 0) {
+      console.warn(`[AI-Insights] All ${preFilterCount} insights filtered out for ${requestState}:${requestRole} — invalid structure`);
+    }
+
     return NextResponse.json({
       insights,
-      provider: ANTHROPIC_API_KEY ? 'anthropic' : 'openai',
+      provider,
       generated: new Date().toISOString(),
+      cacheStatus,
     });
 
   } catch (err: any) {
-    console.error('[AI-Insights] Error:', err.message || err);
+    console.error('[AI-Insights] Unhandled error:', err.message || err);
     return NextResponse.json(
-      { error: err.message || 'Failed to generate insights', insights: [], detail: String(err.message || '').slice(0, 300) },
+      { error: err.message || 'Failed to generate insights', stage: 'unhandled', insights: [], detail: String(err.message || '').slice(0, 300) },
       { status: 500 }
     );
   }

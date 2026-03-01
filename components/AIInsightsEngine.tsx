@@ -203,7 +203,10 @@ For beach closures or harvest stops, connect them to downstream impact on public
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.detail || errData.error || `API error: ${res.status}`);
+        const stage = errData.stage ? ` [${errData.stage}]` : '';
+        const prov = errData.provider ? ` (${errData.provider})` : '';
+        const cache = errData.cacheStatus && errData.cacheStatus !== 'skipped' ? ` cache:${errData.cacheStatus}` : '';
+        throw new Error(`${errData.error || `API error: ${res.status}`}${stage}${prov}${cache}`);
       }
 
       const data = await res.json();
@@ -394,7 +397,8 @@ For beach closures or harvest stops, connect them to downstream impact on public
           {/* Error state */}
           {error && !loading && insights.length > 0 && (
             <div className="text-[10px] text-amber-600 flex items-center gap-1" title={error}>
-              <AlertTriangle className="h-3 w-3" /> Using locally generated insights ({error.length > 80 ? error.slice(0, 80) + '…' : error})
+              <AlertTriangle className="h-3 w-3 flex-shrink-0" />
+              <span>Using locally generated insights &mdash; {error}</span>
             </div>
           )}
 
