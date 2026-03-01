@@ -333,7 +333,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
     if (feat?.properties?.id) setHoveredCompany(feat.properties.id as string);
     else setHoveredCompany(null);
   }, []);
-  const onMapMouseLeave = useCallback(() => {
+  const onMapMouseLeave = useCallback((_e: mapboxgl.MapLayerMouseEvent) => {
     setHoveredFeature(null);
     setHoveredCompany(null);
   }, []);
@@ -661,14 +661,15 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                     </div>
                   </div>
                   <MapboxMapShell
-                    defaultCenter={DEFAULT_CENTER}
-                    defaultZoom={DEFAULT_ZOOM}
+                    center={DEFAULT_CENTER}
+                    zoom={DEFAULT_ZOOM}
                     onMapRef={onMapRef}
+                    interactiveLayerIds={['markers-circle']}
                     onMouseMove={onMapMouseMove}
                     onMouseLeave={onMapMouseLeave}
                     onClick={onMapClick}
                   >
-                    <MapboxMarkers markers={companyMarkerData} />
+                    <MapboxMarkers data={companyMarkerData} hoveredFeature={hoveredFeature} />
                   </MapboxMapShell>
                 </div>
                 {/* Company list */}

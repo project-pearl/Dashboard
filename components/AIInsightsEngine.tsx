@@ -11,7 +11,7 @@ import { PearlIcon } from './PearlIcon';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type Role = 'MS4' | 'State' | 'Federal' | 'Corporate' | 'K12' | 'College' | 'Researcher' | 'NGO' | 'Temp';
+type Role = 'MS4' | 'State' | 'Federal' | 'Corporate' | 'K12' | 'College' | 'Researcher' | 'NGO' | 'Temp' | 'Investor';
 type InsightType = 'predictive' | 'anomaly' | 'comparison' | 'recommendation' | 'summary';
 type Severity = 'info' | 'warning' | 'critical';
 
@@ -75,6 +75,7 @@ const ROLE_TONE: Record<Role, string> = {
   College: 'Focus on research-worthy anomalies, data quality assessment, publication-ready findings, and methodology rigor.',
   Researcher: 'Focus on statistical anomalies, research-worthy patterns, data quality, and peer-comparable findings.',
   NGO: 'Focus on community impact, advocacy opportunities, environmental justice, and public health connections.',
+  Investor: 'Focus on portfolio water risk, ESG disclosure readiness, regulatory cost exposure, and climate resilience metrics.',
   Temp: 'Focus on healthcare revenue cycle insights, denial trends, and billing optimization.',
 };
 
