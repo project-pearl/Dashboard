@@ -48,11 +48,13 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'permits',        label: 'Permits & Enforcement' },
     { id: 'funding',        label: 'Funding & Grants' },
   ],
-  // ── Local Government (13 items) ────────────────────────────────────────────
+  // ── Local Government (16 items) ────────────────────────────────────────────
   '/dashboard/local': [
     { id: 'overview',            label: 'Overview' },
     { id: 'briefing',            label: 'AI Briefing' },
     { id: 'political-briefing',  label: 'Political Briefing' },
+    { id: 'trends',              label: 'Trends & Projections' },
+    { id: 'policy',              label: 'Policy Tracker' },
     { id: 'water-quality',       label: 'Water Quality' },
     { id: 'infrastructure',      label: 'Infrastructure' },
     { id: 'compliance',          label: 'Compliance' },
@@ -128,9 +130,10 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'brownfield', label: 'Brownfield' },
     { id: 'mining', label: 'Mining' },
   ],
-  // ── Corporate ESG / Sustainability (9 items) ───────────────────────────────
+  // ── Corporate ESG / Sustainability (10 items) ──────────────────────────────
   '/dashboard/esg': [
     { id: 'overview',            label: 'Executive Overview' },
+    { id: 'briefing',            label: 'AI Briefing' },
     { id: 'esg-reporting',       label: 'ESG Reporting & Disclosure' },
     { id: 'facility-operations', label: 'Facility Operations' },
     { id: 'compliance',          label: 'Compliance & Risk' },
@@ -141,9 +144,10 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'trends',              label: 'Trends & Outlook' },
     { id: 'funding',             label: 'Funding & Grants' },
   ],
-  // ── Biotech / Pharma (9 items) ─────────────────────────────────────────────
+  // ── Biotech / Pharma (11 items) ────────────────────────────────────────────
   '/dashboard/biotech': [
     { id: 'overview',            label: 'Executive Overview' },
+    { id: 'briefing',            label: 'AI Briefing' },
     { id: 'process-water',       label: 'Process Water Quality' },
     { id: 'discharge-effluent',  label: 'Discharge & Effluent' },
     { id: 'compliance',          label: 'Regulatory Compliance' },
@@ -152,12 +156,14 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'facility-operations', label: 'Facility Operations' },
     { id: 'gmp-quality',         label: 'GMP & Quality Systems' },
     { id: 'supply-chain',        label: 'Supply Chain & Risk' },
+    { id: 'scorecard',           label: 'Scorecard' },
     { id: 'funding',             label: 'Funding & Grants' },
     { id: 'trends',              label: 'Trends & Outlook' },
   ],
-  // ── Investor / Financial (9 items) ─────────────────────────────────────────
+  // ── Investor / Financial (13 items) ────────────────────────────────────────
   '/dashboard/investor': [
     { id: 'overview',            label: 'Executive Overview' },
+    { id: 'briefing',            label: 'AI Briefing' },
     { id: 'portfolio-risk',      label: 'Portfolio Risk' },
     { id: 'water-stress',        label: 'Water Stress' },
     { id: 'compliance',          label: 'Compliance & Regulatory' },
@@ -165,7 +171,10 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'climate-resilience',  label: 'Climate Resilience' },
     { id: 'financial-impact',    label: 'Financial Impact' },
     { id: 'due-diligence',       label: 'Due Diligence' },
+    { id: 'habitat',             label: 'Habitat & Ecology' },
+    { id: 'scorecard',           label: 'Scorecard' },
     { id: 'trends',              label: 'Trends & Outlook' },
+    { id: 'funding',             label: 'Funding & Grants' },
   ],
   // ── University / Research (18 items) ───────────────────────────────────────
   '/dashboard/university': [
