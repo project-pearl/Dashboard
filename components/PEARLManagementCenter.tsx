@@ -28,10 +28,11 @@ import { WARRZones } from './WARRZones';
 import type { WARRMetric } from './WARRZones';
 import RestorationPlanner from '@/components/RestorationPlanner';
 import PredictiveRiskEngine from './PredictiveRiskEngine';
+import ScenarioPlannerPanel from './ScenarioPlannerPanel';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type ViewLens = 'operations' | 'proposals' | 'scenarios' | 'predictions' | 'users';
+type ViewLens = 'operations' | 'proposals' | 'scenarios' | 'predictions' | 'scenario-planner' | 'users';
 
 type DeploymentStatus = 'active' | 'maintenance' | 'offline' | 'staging' | 'decommissioned';
 type AlertSeverity = 'critical' | 'warning' | 'info' | 'ok';
@@ -520,6 +521,7 @@ export function PEARLManagementCenter(props: Props) {
                   { lens: 'proposals' as ViewLens, label: '📋 Proposals', badge: 0 },
                   { lens: 'scenarios' as ViewLens, label: '🔬 What-If', badge: 0 },
                   { lens: 'predictions' as ViewLens, label: '🎯 Predictions', badge: 0 },
+                  { lens: 'scenario-planner' as ViewLens, label: '💰 Scenario Planner', badge: 0 },
                   ...(isAdmin ? [{ lens: 'users' as ViewLens, label: '👥 Users', badge: pendingUserCount }] : []),
                 ]).map(({ lens, label, badge }) => (
                   <button
@@ -669,24 +671,31 @@ export function PEARLManagementCenter(props: Props) {
         </Card>
 
         {/* ── AT-A-GLANCE SUMMARY ── */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { label: 'Active Units', value: activeDeployments.length, sub: `${deployments.length} total`, icon: <Radio size={14} />, color: 'text-green-600' },
-            { label: 'Live GPM', value: totalGPM.toFixed(0), sub: 'current throughput', icon: <Droplets size={14} />, color: 'text-blue-600' },
-            { label: 'Gallons Treated', value: formatNumber(totalGallons), sub: 'lifetime', icon: <Activity size={14} />, color: 'text-cyan-600' },
-            { label: 'Avg Uptime', value: `${avgUptime.toFixed(1)}%`, sub: 'active fleet', icon: <Gauge size={14} />, color: 'text-emerald-600' },
-            { label: 'Critical Alerts', value: criticalAlerts.length, sub: warningAlerts.length + ' warnings', icon: <AlertTriangle size={14} />, color: criticalAlerts.length > 0 ? 'text-red-600' : 'text-slate-400' },
-            { label: 'TSS Removal', value: '88–95%', sub: 'Milton validated', icon: <TrendingDown size={14} />, color: 'text-green-600' },
-            { label: 'Pipeline', value: `$${formatNumber(pipelineValue)}`, sub: `${prospects.filter(p => !['closed_won','closed_lost'].includes(p.stage)).length} prospects`, icon: <DollarSign size={14} />, color: 'text-purple-600' },
-            { label: 'Next Deploy', value: 'Apr 15', sub: 'AA County MD', icon: <Truck size={14} />, color: 'text-indigo-600' },
+            { label: 'Active Units', value: activeDeployments.length, sub: `${deployments.length} total`, icon: <Radio size={16} />, color: 'text-green-600', bgColor: 'bg-green-50 border-green-200' },
+            { label: 'Live GPM', value: totalGPM.toFixed(0), sub: 'current throughput', icon: <Droplets size={16} />, color: 'text-blue-600', bgColor: 'bg-blue-50 border-blue-200' },
+            { label: 'Gallons Treated', value: formatNumber(totalGallons), sub: 'lifetime', icon: <Activity size={16} />, color: 'text-cyan-600', bgColor: 'bg-cyan-50 border-cyan-200' },
+            { label: 'Avg Uptime', value: `${avgUptime.toFixed(1)}%`, sub: 'active fleet', icon: <Gauge size={16} />, color: 'text-emerald-600', bgColor: 'bg-emerald-50 border-emerald-200', pct: avgUptime },
+            { label: 'Critical Alerts', value: criticalAlerts.length, sub: warningAlerts.length + ' warnings', icon: <AlertTriangle size={16} />, color: criticalAlerts.length > 0 ? 'text-red-600' : 'text-slate-400', bgColor: criticalAlerts.length > 0 ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200' },
+            { label: 'TSS Removal', value: '88–95%', sub: 'Milton validated', icon: <TrendingDown size={16} />, color: 'text-green-600', bgColor: 'bg-green-50 border-green-200' },
+            { label: 'Pipeline', value: `$${formatNumber(pipelineValue)}`, sub: `${prospects.filter(p => !['closed_won','closed_lost'].includes(p.stage)).length} prospects`, icon: <DollarSign size={16} />, color: 'text-purple-600', bgColor: 'bg-purple-50 border-purple-200' },
+            { label: 'Next Deploy', value: 'Apr 15', sub: 'AA County MD', icon: <Truck size={16} />, color: 'text-indigo-600', bgColor: 'bg-indigo-50 border-indigo-200' },
           ].map((tile) => (
-            <Card key={tile.label} className="p-3">
-              <div className="flex items-center gap-1.5 mb-1">
-                <span className={tile.color}>{tile.icon}</span>
-                <span className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">{tile.label}</span>
+            <Card key={tile.label} className={`p-4 border ${tile.bgColor}`}>
+              <div className="flex items-start gap-2.5">
+                <div className={`rounded-lg p-1.5 bg-white/70 ${tile.color}`}>{tile.icon}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">{tile.label}</div>
+                  <div className="text-xl font-bold text-slate-900 font-mono leading-tight">{tile.value}</div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">{tile.sub}</div>
+                  {tile.pct !== undefined && (
+                    <div className="mt-1.5 h-1.5 rounded-full bg-white/60 overflow-hidden">
+                      <div className="h-full rounded-full bg-emerald-500" style={{ width: `${Math.min(tile.pct, 100)}%` }} />
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="text-xl font-bold text-slate-900 font-mono">{tile.value}</div>
-              <div className="text-[10px] text-slate-400">{tile.sub}</div>
             </Card>
           ))}
         </div>
@@ -1253,6 +1262,14 @@ export function PEARLManagementCenter(props: Props) {
 
         {viewLens === 'predictions' && (
           <PredictiveRiskEngine />
+        )}
+
+        {/* ════════════════════════════════════════════════════════════ */}
+        {/* ── SCENARIO PLANNER LENS ─────────────────────────────────── */}
+        {/* ════════════════════════════════════════════════════════════ */}
+
+        {viewLens === 'scenario-planner' && (
+          <ScenarioPlannerPanel />
         )}
 
         {/* ════════════════════════════════════════════════════════════ */}
