@@ -89,7 +89,7 @@ export function TierBadge({ tier, size = 'sm', showLabel = false, compact = fals
 
   return (
     <a
-      href="/tools/data-provenance#tiers"
+      href="/dashboard/data-provenance#tiers"
       className={`inline-flex items-center ${cfg.gap} ${cfg.px} ${cfg.py} rounded-full ${meta.bgColor} ${meta.color} ${cfg.text} font-medium leading-none whitespace-nowrap hover:opacity-80 transition-opacity`}
       title={title}
     >

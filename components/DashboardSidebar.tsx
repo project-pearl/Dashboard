@@ -237,7 +237,7 @@ function buildNavGroups(stateCode: string): NavGroup[] { return [
   {
     title: 'Resources',
     items: [
-      { label: 'Data Provenance', href: '/tools/data-provenance', icon: FileCheck, accent: 'text-cyan-700', accentBg: 'bg-cyan-50 border-cyan-200' },
+      { label: 'Data Provenance', href: '/dashboard/data-provenance', icon: FileCheck, accent: 'text-cyan-700', accentBg: 'bg-cyan-50 border-cyan-200' },
     ],
   },
 ]; }

@@ -762,7 +762,7 @@ export function WaterbodyDetailCard({
                         </span>
                       ))}
                     </div>
-                    <a href="/tools/data-provenance#tiers" className="text-[9px] text-blue-500 hover:text-blue-700 underline">
+                    <a href="/dashboard/data-provenance#tiers" className="text-[9px] text-blue-500 hover:text-blue-700 underline">
                       Tier definitions →
                     </a>
                   </div>
@@ -924,7 +924,7 @@ export function WaterbodyDetailCard({
             {/* ── Data Provenance ── */}
             <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-100">
               <span className="italic">Informational only — not an official regulatory determination.</span>
-              <a href="/tools/data-provenance" className="text-blue-500 hover:text-blue-700 underline whitespace-nowrap ml-2">
+              <a href="/dashboard/data-provenance" className="text-blue-500 hover:text-blue-700 underline whitespace-nowrap ml-2">
                 Data provenance &amp; methodology →
               </a>
             </div>

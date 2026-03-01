@@ -142,7 +142,7 @@ export default function DarkPageShell({ children }: DarkPageShellProps) {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/tools/data-provenance" className="hover:text-white transition-colors">
+                  <Link href="/dashboard/data-provenance" className="hover:text-white transition-colors">
                     Data Provenance
                   </Link>
                 </li>
