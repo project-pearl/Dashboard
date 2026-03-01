@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
 import { useAuth } from '@/lib/authContext';
+import { useAdminState } from '@/lib/adminStateContext';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const LocalManagementCenter = dynamic(
@@ -15,8 +16,9 @@ export default function LocalPage() {
   const params = useParams();
   const jurisdictionId = (params.jurisdictionId as string) || 'default';
   const { user } = useAuth();
+  const [adminState] = useAdminState();
 
-  const stateAbbr = user?.state || 'MD';
+  const stateAbbr = (user?.role === 'Pearl' || user?.isAdmin) ? adminState : (user?.state || 'MD');
 
   return (
     <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><Skeleton className="w-full h-[400px]" /></div>}>

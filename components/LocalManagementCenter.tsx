@@ -1,8 +1,42 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLensParam } from '@/lib/useLensParam';
 import HeroBanner from './HeroBanner';
+import dynamic from 'next/dynamic';
+import { STATE_GEO_LEAFLET, FIPS_TO_ABBR } from '@/lib/mapUtils';
+import { REGION_META, getWaterbodyDataSources } from '@/lib/useWaterData';
+import { resolveWaterbodyCoordinates } from '@/lib/waterbodyCentroids';
+import { useAuth } from '@/lib/authContext';
+import { useAdminState } from '@/lib/adminStateContext';
+import { getStateMS4Jurisdictions } from '@/lib/stateWaterData';
+import { getRegionMockData, calculateRemovalEfficiency, calculateOverallScore } from '@/lib/mockData';
+
+const MapboxMapShell = dynamic(
+  () => import('@/components/MapboxMapShell').then(m => m.MapboxMapShell),
+  { ssr: false }
+);
+const MapboxMarkers = dynamic(
+  () => import('@/components/MapboxMarkers').then(m => m.MapboxMarkers),
+  { ssr: false }
+);
+const MS4FineAvoidanceCalculator = dynamic(
+  () => import('@/components/MS4FineAvoidanceCalculator').then(m => m.MS4FineAvoidanceCalculator),
+  { ssr: false }
+);
+const TMDLProgressAndReportGenerator = dynamic(
+  () => import('@/components/TMDLProgressAndReportGenerator').then(m => m.TMDLProgressAndReportGenerator),
+  { ssr: false }
+);
+const NutrientCreditsTrading = dynamic(
+  () => import('@/components/NutrientCreditsTrading').then(m => m.NutrientCreditsTrading),
+  { ssr: false }
+);
+const MDEExportTool = dynamic(
+  () => import('@/components/MDEExportTool').then(m => m.MDEExportTool),
+  { ssr: false }
+);
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -22,6 +56,8 @@ import { GrantOpportunityMatcher } from '@/components/GrantOpportunityMatcher';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+type AlertLevel = 'none' | 'low' | 'medium' | 'high';
+
 type ViewLens = 'overview' | 'briefing' | 'political-briefing' | 'water-quality'
   | 'infrastructure' | 'compliance' | 'stormwater' | 'public-health'
   | 'funding' | 'ej-equity' | 'emergency' | 'scorecard' | 'reports';
@@ -32,6 +68,14 @@ type Props = {
   onSelectRegion?: (regionId: string) => void;
   onToggleDevMode?: () => void;
 };
+
+// ─── Marker Color ─────────────────────────────────────────────────────────────
+
+function getMarkerColor(wb: { alertLevel: AlertLevel }): string {
+  return wb.alertLevel === 'high' ? '#ef4444' :
+         wb.alertLevel === 'medium' ? '#f59e0b' :
+         wb.alertLevel === 'low' ? '#eab308' : '#22c55e';
+}
 
 // ─── Lens Config ─────────────────────────────────────────────────────────────
 
@@ -94,7 +138,8 @@ const LENS_CONFIG: Record<ViewLens, {
     description: 'MS4 permit management, BMPs, MCMs, and receiving waters',
     sections: new Set([
       'local-ms4-identity', 'bmp-inventory', 'bmp-analytics', 'bmp-maintenance',
-      'mcm-dashboard', 'rw-profiles', 'rw-impairment', 'nutrientcredits', 'disclaimer',
+      'mcm-dashboard', 'rw-profiles', 'rw-impairment',
+      'nutrientcredits', 'tmdl', 'fineavoidance', 'mdeexport', 'disclaimer',
     ]),
   },
   'public-health': {
@@ -169,11 +214,112 @@ function PlaceholderSection({ title, subtitle, icon, accent = 'purple', children
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegion, onToggleDevMode }: Props) {
-  const jurisdictionLabel = jurisdictionId === 'default' ? `${stateAbbr} Local Government` : jurisdictionId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  const { user, isAdmin } = useAuth();
+  const [adminState] = useAdminState();
+  const effectiveState = (isAdmin || user?.role === 'Pearl') ? adminState : stateAbbr;
+
+  // ── Jurisdiction / MS4 selection ──
+  const ms4Jurisdictions = useMemo(() => getStateMS4Jurisdictions(effectiveState), [effectiveState]);
+  const [selectedJurisdictionId, setSelectedJurisdictionId] = useState(jurisdictionId);
+  const [selectedMS4, setSelectedMS4] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSelectedJurisdictionId('default');
+    setSelectedMS4(null);
+  }, [effectiveState]);
+
+  const jurisdictionLabel = selectedJurisdictionId === 'default'
+    ? `${effectiveState} Local Government`
+    : selectedJurisdictionId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
   // ── View Lens ──
   const [viewLens, setViewLens] = useLensParam<ViewLens>('overview');
   const lens = LENS_CONFIG[viewLens] ?? LENS_CONFIG['overview'];
+
+  // ── Map: waterbody markers ──
+  const leafletGeo = STATE_GEO_LEAFLET[effectiveState] || { center: [39.8, -98.5] as [number, number], zoom: 4 };
+  const localLeafletGeo = useMemo(() => ({
+    center: leafletGeo.center,
+    zoom: (leafletGeo.zoom || 7) + 1,
+  }), [leafletGeo]);
+
+  const regionData = useMemo(() => {
+    const rows: { id: string; name: string; alertLevel: AlertLevel; status: string; dataSourceCount: number }[] = [];
+    for (const [id, meta] of Object.entries(REGION_META)) {
+      const fips = meta.stateCode.replace('US:', '');
+      const abbr = FIPS_TO_ABBR[fips] || fips;
+      if (abbr !== effectiveState) continue;
+      const sources = getWaterbodyDataSources(id);
+      rows.push({
+        id,
+        name: meta.name,
+        alertLevel: (sources.length > 2 ? 'high' : sources.length > 0 ? 'medium' : 'low') as AlertLevel,
+        status: sources.length > 0 ? 'monitored' : 'unmonitored',
+        dataSourceCount: sources.length,
+      });
+    }
+    return rows;
+  }, [effectiveState]);
+
+  const wbMarkers = useMemo(() => {
+    const resolved: { id: string; name: string; lat: number; lon: number; alertLevel: AlertLevel; status: string; dataSourceCount: number }[] = [];
+    for (const r of regionData) {
+      const approx = resolveWaterbodyCoordinates(r.name, effectiveState);
+      if (approx) {
+        resolved.push({ ...r, lat: approx.lat, lon: approx.lon });
+      }
+    }
+    return resolved;
+  }, [regionData, effectiveState]);
+
+  const markerData = useMemo(() =>
+    wbMarkers.map(wb => ({
+      id: wb.id,
+      lat: wb.lat,
+      lon: wb.lon,
+      color: getMarkerColor(wb),
+      name: wb.name,
+    })),
+    [wbMarkers]
+  );
+
+  const [hoveredFeature, setHoveredFeature] = useState<any>(null);
+  const onMarkerMouseMove = useCallback((e: any) => {
+    if (e.features && e.features.length > 0) setHoveredFeature(e.features[0]);
+  }, []);
+  const onMarkerMouseLeave = useCallback(() => setHoveredFeature(null), []);
+
+  // ── Mock data bridge for MS4 cards ──
+  const [activeDetailId, setActiveDetailId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!activeDetailId && wbMarkers.length > 0) setActiveDetailId(wbMarkers[0].id);
+  }, [wbMarkers, activeDetailId]);
+
+  const regionMockData = useMemo(() => {
+    if (!activeDetailId) return null;
+    try { return getRegionMockData(activeDetailId); } catch { return null; }
+  }, [activeDetailId]);
+  const influentData = useMemo(() => regionMockData?.influent ?? null, [regionMockData]);
+  const effluentData = useMemo(() => regionMockData?.effluent ?? null, [regionMockData]);
+  const stormEvents = useMemo(() => regionMockData?.storms ?? [], [regionMockData]);
+  const removalEfficiencies = useMemo(() => {
+    if (!influentData || !effluentData) return { DO: 0, turbidity: 0, TN: 0, TP: 0, TSS: 0, salinity: 0 };
+    try {
+      return {
+        DO: calculateRemovalEfficiency(influentData.parameters.DO.value, effluentData.parameters.DO.value, 'DO'),
+        turbidity: calculateRemovalEfficiency(influentData.parameters.turbidity.value, effluentData.parameters.turbidity.value, 'turbidity'),
+        TN: calculateRemovalEfficiency(influentData.parameters.TN.value, effluentData.parameters.TN.value, 'TN'),
+        TP: calculateRemovalEfficiency(influentData.parameters.TP.value, effluentData.parameters.TP.value, 'TP'),
+        TSS: calculateRemovalEfficiency(influentData.parameters.TSS.value, effluentData.parameters.TSS.value, 'TSS'),
+        salinity: calculateRemovalEfficiency(influentData.parameters.salinity.value, effluentData.parameters.salinity.value, 'salinity'),
+      };
+    } catch { return { DO: 0, turbidity: 0, TN: 0, TP: 0, TSS: 0, salinity: 0 }; }
+  }, [influentData, effluentData]);
+  const displayData = useMemo(() => regionMockData?.ambient ?? null, [regionMockData]);
+  const overallScore = useMemo(() => {
+    if (!displayData) return 0;
+    try { return calculateOverallScore(displayData); } catch { return 0; }
+  }, [displayData]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30">
@@ -182,8 +328,70 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
       {/* ── HERO BANNER ── */}
       <HeroBanner role="local" onDoubleClick={() => onToggleDevMode?.()} />
 
+      {/* ── ADMIN JURISDICTION / MS4 SWITCHER ── */}
+      {(isAdmin || user?.role === 'Pearl') && (
+        <div className="bg-white border border-purple-200 rounded-xl p-4 space-y-3">
+          <div className="flex items-center gap-2 text-sm font-semibold text-purple-800">
+            <Building2 size={15} />
+            Admin: Jurisdiction & MS4 Selector
+          </div>
+          <div className="flex flex-wrap gap-4">
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-xs font-medium text-slate-500 mb-1 block">Jurisdiction</label>
+              <select
+                value={selectedJurisdictionId}
+                onChange={(e) => { setSelectedJurisdictionId(e.target.value); setSelectedMS4(null); }}
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-purple-300 focus:border-purple-400 outline-none"
+              >
+                <option value="default">All Jurisdictions</option>
+                {ms4Jurisdictions.map(j => (
+                  <option key={j.permitId} value={j.name.toLowerCase().replace(/\s+/g, '_')}>
+                    {j.name} — {j.phase}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-xs font-medium text-slate-500 mb-1 block">MS4 Permit Holder</label>
+              <select
+                value={selectedMS4 ?? ''}
+                onChange={(e) => setSelectedMS4(e.target.value || null)}
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-purple-300 focus:border-purple-400 outline-none"
+              >
+                <option value="">All MS4 Permits</option>
+                {ms4Jurisdictions.map(j => (
+                  <option key={j.permitId} value={j.permitId}>
+                    {j.name} — {j.permitId} ({j.phase})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          {selectedMS4 && (() => {
+            const selected = ms4Jurisdictions.find(j => j.permitId === selectedMS4);
+            if (!selected) return null;
+            return (
+              <div className="flex items-center gap-2 text-xs">
+                <Badge className={
+                  selected.status === 'In Compliance' ? 'bg-emerald-100 text-emerald-800' :
+                  selected.status === 'Consent Decree' || selected.status === 'NOV Issued' ? 'bg-red-100 text-red-800' :
+                  'bg-amber-100 text-amber-800'
+                }>
+                  {selected.status}
+                </Badge>
+                <span className="text-slate-500">Pop: {selected.population.toLocaleString()}</span>
+                {selected.keyIssues?.map(k => (
+                  <Badge key={k} variant="outline" className="text-[9px]">{k}</Badge>
+                ))}
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
       <LayoutEditor ccKey="Local">
       {({ sections, isEditMode, onToggleVisibility, onToggleCollapse, collapsedSections }) => {
+        const isSectionOpen = (id: string) => !collapsedSections[id];
         return (<>
       <div className={`space-y-6 ${isEditMode ? 'pl-12' : ''}`}>
 
@@ -211,7 +419,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                 <StatusCard title="Population" description="~185,000 residents" status="good" />
                 <StatusCard title="Water Systems" description="3 public water systems" status="good" />
                 <StatusCard title="MS4 Permit" description="Phase II — Active" status="good" />
-                <StatusCard title="State Agency" description={`${stateAbbr} DEP/DEQ`} status="good" />
+                <StatusCard title="State Agency" description={`${effectiveState} DEP/DEQ`} status="good" />
               </div>
             </PlaceholderSection>
           );
@@ -891,8 +1099,64 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             );
 
           case 'map-grid': return DS(
-            <div className="bg-slate-100 border border-slate-200 rounded-xl h-64 flex items-center justify-center">
-              <p className="text-sm text-slate-500">Map & Waterbody List — placeholder for MapboxMapShell integration</p>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Left: Map (2/3) */}
+              <div className="lg:col-span-2">
+                <div className="w-full overflow-hidden rounded-lg border border-slate-200 bg-white">
+                  <div className="p-2 text-xs text-slate-500 bg-slate-50 border-b border-slate-200">
+                    {jurisdictionLabel} &middot; {wbMarkers.length} waterbodies
+                  </div>
+                  <div className="h-[400px] w-full relative">
+                    <MapboxMapShell
+                      center={localLeafletGeo.center}
+                      zoom={localLeafletGeo.zoom}
+                      height="100%"
+                      mapKey={`${effectiveState}-${selectedJurisdictionId}`}
+                      interactiveLayerIds={['local-markers']}
+                      onMouseMove={onMarkerMouseMove}
+                      onMouseLeave={onMarkerMouseLeave}
+                    >
+                      <MapboxMarkers
+                        data={markerData}
+                        layerId="local-markers"
+                        radius={wbMarkers.length > 100 ? 3 : wbMarkers.length > 30 ? 4 : 5}
+                        hoveredFeature={hoveredFeature}
+                      />
+                    </MapboxMapShell>
+                  </div>
+                  {/* Legend */}
+                  <div className="flex flex-wrap gap-2 p-3 text-xs bg-slate-50 border-t border-slate-200">
+                    <span className="text-slate-500 font-medium self-center mr-1">Impairment:</span>
+                    <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">Healthy</Badge>
+                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">Watch</Badge>
+                    <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-200">Impaired</Badge>
+                    <Badge variant="secondary" className="bg-red-100 text-red-800 border-red-200">Severe</Badge>
+                  </div>
+                </div>
+              </div>
+              {/* Right: Waterbody list (1/3) */}
+              <div className="lg:col-span-1">
+                <div className="border border-slate-200 rounded-lg bg-white h-[400px] flex flex-col">
+                  <div className="p-2 text-xs font-medium text-slate-600 bg-slate-50 border-b border-slate-200">
+                    Waterbodies ({wbMarkers.length})
+                  </div>
+                  <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
+                    {wbMarkers.map(wb => (
+                      <button
+                        key={wb.id}
+                        onClick={() => { setActiveDetailId(wb.id); onSelectRegion?.(wb.id); }}
+                        className={`w-full text-left px-3 py-2 hover:bg-purple-50 transition-colors flex items-center gap-2 ${activeDetailId === wb.id ? 'bg-purple-50 border-l-2 border-purple-500' : ''}`}
+                      >
+                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: getMarkerColor(wb) }} />
+                        <span className="text-xs text-slate-700 truncate">{wb.name}</span>
+                      </button>
+                    ))}
+                    {wbMarkers.length === 0 && (
+                      <div className="p-4 text-center text-xs text-slate-400">No waterbodies found for {effectiveState}</div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           );
 
@@ -929,7 +1193,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
           case 'groundwater': return DS(
             <div id="section-groundwater">
               <NwisGwPanel
-                state={stateAbbr}
+                state={effectiveState}
                 compactMode={false}
               />
             </div>
@@ -947,11 +1211,31 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             </div>
           );
 
-          case 'fineavoidance': return DS(
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">
-              Fine Avoidance Calculator — placeholder (shared component)
-            </div>
-          );
+          case 'fineavoidance': return DS((() => {
+            if (!activeDetailId || !regionMockData || !displayData) return (
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">
+                Select a waterbody from the map to view Fine Avoidance Calculator
+              </div>
+            );
+            return (
+              <div id="section-fineavoidance" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                <button onClick={() => onToggleCollapse('fineavoidance')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+                  <span className="text-sm font-bold text-slate-800">MS4 Compliance & Fine Avoidance</span>
+                  <span>{isSectionOpen('fineavoidance') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}</span>
+                </button>
+                {isSectionOpen('fineavoidance') && (
+                  <div className="p-4">
+                    <MS4FineAvoidanceCalculator
+                      data={displayData as any}
+                      removalEfficiencies={removalEfficiencies as any}
+                      regionId={activeDetailId}
+                      stormEventsMonitored={stormEvents.length}
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })());
 
           case 'infra-capital':
           case 'infra-construction':
@@ -968,12 +1252,96 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
           case 'mcm-dashboard':
           case 'rw-profiles':
           case 'rw-impairment':
-          case 'nutrientcredits':
             return DS(
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">
                 {section.label} — stormwater placeholder (shared with MS4)
               </div>
             );
+
+          case 'nutrientcredits': return DS((() => {
+            if (!activeDetailId || !regionMockData) return (
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">
+                Select a waterbody from the map to view Nutrient Credit Trading
+              </div>
+            );
+            return (
+              <div id="section-nutrientcredits" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                <button onClick={() => onToggleCollapse('nutrientcredits')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+                  <span className="text-sm font-bold text-slate-800">Nutrient Credit Trading — {wbMarkers.find(w => w.id === activeDetailId)?.name || activeDetailId}</span>
+                  <span>{isSectionOpen('nutrientcredits') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}</span>
+                </button>
+                {isSectionOpen('nutrientcredits') && (
+                  <div className="p-4">
+                    <NutrientCreditsTrading
+                      stormEvents={stormEvents}
+                      influentData={influentData}
+                      effluentData={effluentData}
+                      removalEfficiencies={removalEfficiencies}
+                      timeRange={{ start: new Date(Date.now() - 90 * 86400000), end: new Date() }}
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })());
+
+          case 'tmdl': return DS((() => {
+            if (!activeDetailId || !regionMockData) return (
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">
+                Select a waterbody from the map to view TMDL Reporter
+              </div>
+            );
+            const activeAlertCount = regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length;
+            return (
+              <div id="section-tmdl" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                <button onClick={() => onToggleCollapse('tmdl')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+                  <span className="text-sm font-bold text-slate-800">TMDL Compliance & EJ Impact — {wbMarkers.find(w => w.id === activeDetailId)?.name || activeDetailId}</span>
+                  <span>{isSectionOpen('tmdl') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}</span>
+                </button>
+                {isSectionOpen('tmdl') && (
+                  <div className="p-4">
+                    <TMDLProgressAndReportGenerator
+                      regionId={activeDetailId}
+                      removalEfficiencies={removalEfficiencies}
+                      stormEvents={stormEvents}
+                      alertCount={activeAlertCount}
+                      overallScore={overallScore}
+                      dateRange={{ start: new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10), end: new Date().toISOString().slice(0, 10) }}
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })());
+
+          case 'mdeexport': return DS((() => {
+            if (!activeDetailId || !regionMockData || !displayData) return (
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">
+                Select a waterbody from the map to view MS4 Report Generator
+              </div>
+            );
+            const regionName = wbMarkers.find(w => w.id === activeDetailId)?.name || activeDetailId.replace(/_/g, ' ');
+            return (
+              <div id="section-mdeexport" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                <button onClick={() => onToggleCollapse('mdeexport')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+                  <span className="text-sm font-bold text-slate-800">MDE Compliance Report — {regionName}</span>
+                  <span>{isSectionOpen('mdeexport') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}</span>
+                </button>
+                {isSectionOpen('mdeexport') && (
+                  <div className="p-4">
+                    <MDEExportTool
+                      data={displayData}
+                      removalEfficiencies={removalEfficiencies}
+                      regionId={activeDetailId}
+                      regionName={regionName}
+                      stormEvents={stormEvents}
+                      overallScore={overallScore}
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })());
 
           case 'ph-contaminants':
           case 'ph-advisories':
@@ -985,11 +1353,11 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
 
           case 'grants': return DS(
             <GrantOpportunityMatcher
-              regionId={`${stateAbbr.toLowerCase()}_${jurisdictionId}`}
+              regionId={`${effectiveState.toLowerCase()}_${selectedJurisdictionId}`}
               removalEfficiencies={{ TSS: 85, TN: 40, TP: 50, bacteria: 80, DO: 25 }}
               alertsCount={0}
               userRole="Local"
-              stateAbbr={stateAbbr}
+              stateAbbr={effectiveState}
             />
           );
 
