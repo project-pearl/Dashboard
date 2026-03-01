@@ -127,7 +127,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['usmap', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']),
+    sections: new Set(['usmap', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'briefing-changes', 'briefing-stakeholder', 'disclaimer']),
   },
   briefing: {
     label: 'AI Briefing',

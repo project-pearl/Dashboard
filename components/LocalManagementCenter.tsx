@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLensParam } from '@/lib/useLensParam';
+import { WhatChangedOvernight, StakeholderWatch } from './BriefingCards';
 import HeroBanner from './HeroBanner';
 import dynamic from 'next/dynamic';
 import { STATE_GEO_LEAFLET, FIPS_TO_ABBR } from '@/lib/mapUtils';
@@ -36,6 +37,10 @@ const MDEExportTool = dynamic(
   () => import('@/components/MDEExportTool').then(m => m.MDEExportTool),
   { ssr: false }
 );
+const WaterQualityTradingPanel = dynamic(
+  () => import('@/components/WaterQualityTradingPanel').then(m => m.WaterQualityTradingPanel),
+  { ssr: false }
+);
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -54,6 +59,7 @@ import { DraggableSection } from './DraggableSection';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { GrantOpportunityMatcher } from '@/components/GrantOpportunityMatcher';
 import { getEcoData, getEcoScore, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
+import { NUTRIENT_TRADING_STATES } from '@/lib/constants';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -62,7 +68,7 @@ type AlertLevel = 'none' | 'low' | 'medium' | 'high';
 type ViewLens = 'overview' | 'briefing' | 'political-briefing' | 'water-quality'
   | 'infrastructure' | 'compliance' | 'stormwater' | 'public-health' | 'habitat'
   | 'funding' | 'ej-equity' | 'emergency' | 'scorecard' | 'reports'
-  | 'trends' | 'policy';
+  | 'trends' | 'policy' | 'wqt';
 
 type Props = {
   jurisdictionId: string;
@@ -91,7 +97,7 @@ const LENS_CONFIG: Record<ViewLens, {
     description: 'Jurisdiction dashboard — morning check for elected officials',
     sections: new Set([
       'local-identity', 'local-kpi-strip', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve',
-      'map-grid', 'local-situation', 'local-quick-actions', 'disclaimer',
+      'map-grid', 'local-situation', 'local-quick-actions', 'briefing-changes', 'briefing-stakeholder', 'disclaimer',
     ]),
   },
   briefing: {
@@ -210,6 +216,11 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set([
       'policy-tracker', 'insights', 'alertfeed', 'disclaimer',
     ]),
+  },
+  wqt: {
+    label: 'Water Quality Trading',
+    description: 'Nutrient credit marketplace, sector breakdown, and program details',
+    sections: new Set(['wqt', 'nutrientcredits', 'disclaimer']),
   },
 };
 
@@ -1199,9 +1210,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
           );
 
           case 'briefing-actions':
-          case 'briefing-changes':
           case 'briefing-pulse':
-          case 'briefing-stakeholder':
             return DS(
               <PlaceholderSection title={section.label} icon={<Sparkles size={15} />} accent="purple">
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">
@@ -1209,6 +1218,13 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                 </div>
               </PlaceholderSection>
             );
+
+          case 'briefing-changes': return DS(
+            <WhatChangedOvernight entityType="local" entityName={jurisdictionId} stateAbbr={effectiveState} />
+          );
+          case 'briefing-stakeholder': return DS(
+            <StakeholderWatch entityType="local" entityName={jurisdictionId} stateAbbr={effectiveState} />
+          );
 
           case 'detail': return DS(
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">
@@ -1587,6 +1603,11 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
               </Card>
             );
           }
+
+          // ── Water Quality Trading ──
+          case 'wqt': return NUTRIENT_TRADING_STATES.has(effectiveState) ? DS(
+            <WaterQualityTradingPanel stateAbbr={effectiveState} mode="local" />
+          ) : null;
 
           // ── Disclaimer ──
           case 'disclaimer': return DS(<PlatformDisclaimer />);

@@ -249,6 +249,11 @@ export function DashboardSidebar() {
   const { user } = useAuth();
   const router = useRouter();
   const [adminState, setAdminState] = useAdminState();
+  /** Filter out lenses gated to states the user isn't viewing. */
+  const filterGatedLenses = useCallback((lenses: LensDef[] | null) => {
+    if (!lenses) return null;
+    return lenses.filter(l => !l.gateStates || l.gateStates.has(adminState));
+  }, [adminState]);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedRoles, setExpandedRoles] = useState<Set<string>>(new Set());
@@ -286,7 +291,7 @@ export function DashboardSidebar() {
   const allAccessibleItems = useMemo(() => filteredGroups.flatMap(g => g.items), [filteredGroups]);
   const isSingleRole = allAccessibleItems.length === 1;
   const singleRoleItem = isSingleRole ? allAccessibleItems[0] : null;
-  const singleRoleLenses = singleRoleItem ? getLensesForHref(singleRoleItem.href) : null;
+  const singleRoleLenses = singleRoleItem ? filterGatedLenses(getLensesForHref(singleRoleItem.href)) : null;
 
   const isActive = useCallback((href: string) => {
     if (href === '/dashboard/federal') return pathname === '/dashboard/federal';
@@ -328,10 +333,10 @@ export function DashboardSidebar() {
   const renderNavItem = (item: NavItem) => {
     const Icon = item.icon;
     const active = isActive(item.href);
-    const lenses = getLensesForHref(item.href);
+    const lenses = filterGatedLenses(getLensesForHref(item.href));
 
     // No lenses → flat link (unchanged)
-    if (!lenses) {
+    if (!lenses || lenses.length === 0) {
       return (
         <Link
           key={item.href}

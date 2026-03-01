@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import MissionQuote from './MissionQuote';
+import { WhatChangedOvernight, StakeholderWatch } from './BriefingCards';
 import { useLensParam } from '@/lib/useLensParam';
 import Image from 'next/image';
 import { getStatesGeoJSON, geoToAbbr, STATE_GEO_LEAFLET, FIPS_TO_ABBR as _FIPS, STATE_NAMES as _SN } from '@/lib/mapUtils';
@@ -101,7 +102,7 @@ const LENS_CONFIG: Record<ViewLens, {
   sections: Set<string> | null;
 }> = {
   overview:    { label: 'Overview',    description: 'NGO watershed management overview',
-    sections: new Set(['regprofile', 'map-grid', 'top10', 'partners', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']) },
+    sections: new Set(['regprofile', 'map-grid', 'top10', 'partners', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'briefing-changes', 'briefing-stakeholder', 'disclaimer']) },
   briefing:    { label: 'AI Briefing', description: 'AI-generated conservation intelligence briefing',
     sections: new Set(['insights', 'alertfeed', 'disclaimer']) },
   'political-briefing': {
@@ -876,6 +877,13 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
             </div>
           );
         })()
+            );
+
+            case 'briefing-changes': return DS(
+              <WhatChangedOvernight entityType="ngo" entityName={stateName} stateAbbr={stateAbbr} />
+            );
+            case 'briefing-stakeholder': return DS(
+              <StakeholderWatch entityType="ngo" entityName={stateName} stateAbbr={stateAbbr} />
             );
 
             case 'insights': return DS(

@@ -2,9 +2,13 @@
 // Centralized lens metadata for sidebar navigation.
 // Keyed by href prefix (matched via startsWith).
 
+import { NUTRIENT_TRADING_STATES } from './constants';
+
 export interface LensDef {
   id: string;
   label: string;
+  /** If set, only show this lens when user's state is in this Set. */
+  gateStates?: Set<string>;
 }
 
 export const LENS_REGISTRY: Record<string, LensDef[]> = {
@@ -48,6 +52,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'reports',        label: 'Reports' },
     { id: 'permits',        label: 'Permits & Enforcement' },
     { id: 'funding',        label: 'Funding & Grants' },
+    { id: 'wqt',            label: 'Water Quality Trading', gateStates: NUTRIENT_TRADING_STATES },
   ],
   // ── Local Government (16 items) ────────────────────────────────────────────
   '/dashboard/local': [
@@ -67,6 +72,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'emergency',           label: 'Emergency' },
     { id: 'scorecard',           label: 'Scorecard' },
     { id: 'reports',             label: 'Reports' },
+    { id: 'wqt',                 label: 'Water Quality Trading', gateStates: NUTRIENT_TRADING_STATES },
   ],
   // ── MS4 / Municipal Stormwater (17 items) ──────────────────────────────────
   '/dashboard/ms4': [
@@ -89,6 +95,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'reports',           label: 'Reports' },
     { id: 'mcm-manager',       label: 'MCM Manager' },
     { id: 'funding',           label: 'Funding & Grants' },
+    { id: 'wqt',              label: 'Water Quality Trading', gateStates: NUTRIENT_TRADING_STATES },
   ],
   // ── Municipal Utility (18 items) ───────────────────────────────────────────
   '/dashboard/utility': [

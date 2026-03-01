@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLensParam } from '@/lib/useLensParam';
+import { WhatChangedOvernight, StakeholderWatch } from './BriefingCards';
 import Image from 'next/image';
 import HeroBanner from './HeroBanner';
 import { getStatesGeoJSON, geoToAbbr, STATE_GEO_LEAFLET, FIPS_TO_ABBR as _FIPS, STATE_NAMES as _SN } from '@/lib/mapUtils';
@@ -102,7 +103,7 @@ const LENS_CONFIG: Record<ViewLens, {
   sections: Set<string> | null;
 }> = {
   overview:    { label: 'Overview',    description: 'Student water quality dashboard',
-    sections: new Set(['wildlife', 'regprofile', 'map-grid', 'top10', 'goodbye', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']) },
+    sections: new Set(['wildlife', 'regprofile', 'map-grid', 'top10', 'goodbye', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'briefing-changes', 'briefing-stakeholder', 'disclaimer']) },
   briefing:    { label: 'AI Briefing', description: 'AI-generated water quality briefing for students',
     sections: new Set(['insights', 'alertfeed', 'disclaimer']) },
   planner:     { label: 'Resolution Planner', description: 'Student-friendly resolution planning',
@@ -854,6 +855,13 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
             </div>
           );
         })());
+
+            case 'briefing-changes': return DS(
+              <WhatChangedOvernight entityType="k12" entityName={stateName} stateAbbr={stateAbbr} />
+            );
+            case 'briefing-stakeholder': return DS(
+              <StakeholderWatch entityType="k12" entityName={stateName} stateAbbr={stateAbbr} />
+            );
 
             case 'insights': return DS(
               <AIInsightsEngine key={stateAbbr} role="K12" stateAbbr={stateAbbr} regionData={regionData as any} />

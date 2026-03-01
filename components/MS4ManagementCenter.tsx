@@ -5,6 +5,7 @@ import { useLensParam } from '@/lib/useLensParam';
 import Image from 'next/image';
 import { Source, Layer } from 'react-map-gl';
 import HeroBanner from './HeroBanner';
+import { NUTRIENT_TRADING_STATES } from '@/lib/constants';
 import { getStatesGeoJSON, geoToAbbr, STATE_GEO_LEAFLET, FIPS_TO_ABBR as _FIPS, STATE_NAMES as _SN } from '@/lib/mapUtils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -68,6 +69,10 @@ const NutrientCreditsTrading = dynamic(
   () => import('@/components/NutrientCreditsTrading').then((mod) => mod.NutrientCreditsTrading),
   { ssr: false }
 );
+const WaterQualityTradingPanel = dynamic(
+  () => import('@/components/WaterQualityTradingPanel').then((mod) => mod.WaterQualityTradingPanel),
+  { ssr: false }
+);
 const ComplianceEconomics = dynamic(
   () => import('@/components/ComplianceEconomics').then((mod) => mod.ComplianceEconomics),
   { ssr: false }
@@ -117,7 +122,7 @@ type Props = {
 type ViewLens = 'overview' | 'briefing' | 'political-briefing' | 'trends' | 'policy'
   | 'compliance' | 'water-quality' | 'public-health' | 'habitat' | 'receiving-waters'
   | 'stormwater-bmps' | 'infrastructure' | 'monitoring' | 'disaster'
-  | 'tmdl-compliance' | 'scorecard' | 'reports' | 'mcm-manager' | 'funding' | 'warr';
+  | 'tmdl-compliance' | 'scorecard' | 'reports' | 'mcm-manager' | 'funding' | 'warr' | 'wqt';
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -129,7 +134,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Overview',
     description: 'Municipal Utility operational dashboard — morning check before the day starts',
     defaultOverlay: 'impairment',
-    sections: new Set(['operational-health', 'alertfeed', 'map-grid', 'detail', 'top10', 'quick-access', 'quickactions', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']),
+    sections: new Set(['operational-health', 'alertfeed', 'map-grid', 'detail', 'top10', 'quick-access', 'quickactions', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'briefing-changes', 'briefing-stakeholder', 'disclaimer']),
   },
   briefing: {
     label: 'AI Briefing',
@@ -248,6 +253,12 @@ const LENS_CONFIG: Record<ViewLens, {
     description: 'Water Alert & Response Readiness — real-time situation awareness',
     defaultOverlay: 'impairment',
     sections: new Set(['warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']),
+  },
+  wqt: {
+    label: 'Water Quality Trading',
+    description: 'Nutrient credit trading program — marketplace, sectors, compliance',
+    defaultOverlay: 'impairment',
+    sections: new Set(['wqt', 'nutrientcredits', 'disclaimer']),
   },
 };
 
@@ -6657,6 +6668,10 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
               {/* Historical Grant Outcomes */}
               <GrantOutcomesCard />
             </>);
+
+            case 'wqt': return NUTRIENT_TRADING_STATES.has(stateAbbr) ? DS(
+              <WaterQualityTradingPanel stateAbbr={stateAbbr} mode="ms4" />
+            ) : null;
 
             case 'disclaimer': return DS(
               <PlatformDisclaimer />

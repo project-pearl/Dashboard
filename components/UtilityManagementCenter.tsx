@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useLensParam } from '@/lib/useLensParam';
+import { WhatChangedOvernight, StakeholderWatch } from './BriefingCards';
 import HeroBanner from './HeroBanner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -46,7 +47,7 @@ const LENS_CONFIG: Record<ViewLens, {
   overview: {
     label: 'Overview',
     description: 'Utility control room dashboard — real-time plant status, compliance, and alerts',
-    sections: new Set(['system-status', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'operational-stats', 'compliance-calendar', 'weather-source', 'alerts-notifications', 'quick-access', 'insights', 'alertfeed', 'icis', 'sdwis', 'groundwater', 'grants', 'contaminants-tracker', 'disclaimer']),
+    sections: new Set(['system-status', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'operational-stats', 'compliance-calendar', 'weather-source', 'alerts-notifications', 'quick-access', 'insights', 'alertfeed', 'icis', 'sdwis', 'groundwater', 'grants', 'contaminants-tracker', 'briefing-changes', 'briefing-stakeholder', 'disclaimer']),
   },
   briefing: {
     label: 'AI Briefing',
@@ -1793,6 +1794,13 @@ export default function UtilityManagementCenter({ systemId }: Props) {
             // ══════════════════════════════════════════════════════════════
             // SHARED PANELS
             // ══════════════════════════════════════════════════════════════
+
+            case 'briefing-changes': return DS(
+              <WhatChangedOvernight entityType="utility" />
+            );
+            case 'briefing-stakeholder': return DS(
+              <StakeholderWatch entityType="utility" />
+            );
 
             case 'insights': return DS(
               <AIInsightsEngine key={systemId} role="Utility" stateAbbr={systemId} regionData={[] as any} />

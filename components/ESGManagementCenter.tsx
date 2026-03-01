@@ -111,7 +111,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   overview: {
     label: 'Executive Overview', description: 'Portfolio-level Sustainability summary for leadership',
     icon: Building2,
-    sections: new Set(['summary', 'kpis', 'map-grid', 'sustainability', 'grants', 'alertfeed', 'disclaimer']),
+    sections: new Set(['summary', 'kpis', 'map-grid', 'sustainability', 'grants', 'alertfeed', 'briefing-changes', 'briefing-stakeholder', 'disclaimer']),
   },
   'esg-reporting': {
     label: 'ESG Reporting & Disclosure', description: 'ESG framework reporting, scorecard, and data exports',

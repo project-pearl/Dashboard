@@ -7,6 +7,7 @@
 
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { MockDataBadge } from './MockDataBadge';
+import { WhatChangedOvernight, StakeholderWatch } from './BriefingCards';
 import MissionQuote from './MissionQuote';
 import { useLensParam } from '@/lib/useLensParam';
 import type { MapRef } from 'react-map-gl';
@@ -111,7 +112,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   overview: {
     label: 'Executive Overview', description: 'Portfolio-level Biotech/Pharma summary for leadership',
     icon: Building2,
-    sections: new Set(['summary', 'kpis', 'map-grid', 'gmp-status', 'grants', 'alertfeed', 'disclaimer']),
+    sections: new Set(['summary', 'kpis', 'map-grid', 'gmp-status', 'grants', 'alertfeed', 'briefing-changes', 'briefing-stakeholder', 'disclaimer']),
   },
   'process-water': {
     label: 'Process Water Quality', description: 'USP water grades, purification KPIs, and process water monitoring',
@@ -1813,26 +1814,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
             );
 
             case 'briefing-changes': return DS(
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center gap-2"><Activity className="h-4 w-4 text-blue-600" /> What Changed Overnight<MockDataBadge /></CardTitle>
-                  <CardDescription className="text-[11px]">Recent changes to compliance, water quality, and regulatory status.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {[
-                      { change: 'NPDES permit NC0089234 — quarterly DMR submitted successfully', type: 'positive' },
-                      { change: 'EPA updated 40 CFR 439 draft guidance — new API discharge thresholds proposed', type: 'neutral' },
-                      { change: 'NJ facility water risk score increased 74 -> 78 (drought index update)', type: 'negative' },
-                    ].map((item, i) => (
-                      <div key={i} className="flex items-start gap-2 p-2 rounded-lg border border-slate-200">
-                        <div className={`h-2 w-2 rounded-full mt-1 flex-shrink-0 ${item.type === 'positive' ? 'bg-green-500' : item.type === 'negative' ? 'bg-red-500' : 'bg-blue-500'}`} />
-                        <span className="text-[11px] text-slate-700">{item.change}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              <WhatChangedOvernight entityType="biotech" />
             );
 
             case 'briefing-pulse': return DS(
@@ -1861,29 +1843,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
             );
 
             case 'briefing-stakeholder': return DS(
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center gap-2"><Users className="h-4 w-4 text-indigo-600" /> Stakeholder Watch<MockDataBadge /></CardTitle>
-                  <CardDescription className="text-[11px]">Key stakeholder activities and engagement updates.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {[
-                      { stakeholder: 'FDA CDER', update: 'Scheduled pre-approval inspection for RTP Biologics — Q2 2026', icon: Shield },
-                      { stakeholder: 'EPA Region 2', update: 'NJ facility NPDES permit renewal review initiated', icon: FileText },
-                      { stakeholder: 'State DEQ (IN)', update: 'Indianapolis discharge variance request under review', icon: Scale },
-                    ].map((item, i) => (
-                      <div key={i} className="flex items-start gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50">
-                        <item.icon className="h-3.5 w-3.5 text-slate-500 mt-0.5 flex-shrink-0" />
-                        <div>
-                          <div className="text-[11px] font-semibold text-slate-800">{item.stakeholder}</div>
-                          <div className="text-[10px] text-slate-600">{item.update}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              <StakeholderWatch entityType="biotech" />
             );
 
             // ─── SCORECARD PANELS ──────────────────────────────────────────────

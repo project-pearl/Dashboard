@@ -51,7 +51,9 @@ import { useStateReport } from '@/lib/useStateReport';
 import { useUSASpendingData } from '@/lib/useUSASpendingData';
 import { StateDataReportCard } from '@/components/StateDataReportCard';
 import LocationReportCard from '@/components/LocationReportCard';
+import { WaterQualityTradingPanel } from '@/components/WaterQualityTradingPanel';
 import { getEpaRegionForState } from '@/lib/epa-regions';
+import { NUTRIENT_TRADING_STATES } from '@/lib/constants';
 
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
@@ -130,7 +132,7 @@ type OverlayId = 'risk' | 'coverage' | 'bmp' | 'ej';
 type ViewLens = 'overview' | 'briefing' | 'political-briefing' | 'trends' | 'policy'
   | 'compliance' | 'water-quality' | 'public-health' | 'habitat' | 'agriculture'
   | 'infrastructure' | 'monitoring' | 'disaster' | 'tmdl' | 'scorecard'
-  | 'reports' | 'permits' | 'funding' | 'warr';
+  | 'reports' | 'permits' | 'funding' | 'warr' | 'wqt';
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -255,6 +257,12 @@ const LENS_CONFIG: Record<ViewLens, {
     description: 'Water Alert & Response Readiness — real-time situation awareness',
     defaultOverlay: 'risk',
     sections: new Set(['warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']),
+  },
+  wqt: {
+    label: 'Water Quality Trading',
+    description: 'Nutrient credit trading program — all sectors, marketplace, compliance',
+    defaultOverlay: 'risk',
+    sections: new Set(['wqt', 'disclaimer']),
   },
 };
 
@@ -6647,6 +6655,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               {/* Historical Grant Outcomes */}
               <GrantOutcomesCard />
             </>);
+
+            case 'wqt': return NUTRIENT_TRADING_STATES.has(stateAbbr) ? DS(<>
+              <WaterQualityTradingPanel stateAbbr={stateAbbr} mode="state" />
+            </>) : null;
 
             default: return null;
           }

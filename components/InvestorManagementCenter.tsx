@@ -7,6 +7,7 @@
 
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import MissionQuote from './MissionQuote';
+import { WhatChangedOvernight, StakeholderWatch } from './BriefingCards';
 import { useLensParam } from '@/lib/useLensParam';
 import type { MapRef } from 'react-map-gl';
 import HeroBanner from './HeroBanner';
@@ -98,7 +99,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   overview: {
     label: 'Executive Overview', description: 'Portfolio-level water risk summary for investors',
     icon: Building2,
-    sections: new Set(['summary', 'kpis', 'map-grid', 'portfolio-snapshot', 'grants', 'disclaimer']),
+    sections: new Set(['summary', 'kpis', 'map-grid', 'portfolio-snapshot', 'grants', 'briefing-changes', 'briefing-stakeholder', 'disclaimer']),
   },
   'portfolio-risk': {
     label: 'Portfolio Risk', description: 'Water risk exposure across portfolio holdings',
@@ -1600,10 +1601,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
             );
 
             case 'briefing-changes': return DS(
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                <h3 className="text-sm font-semibold text-slate-800 mb-1">What Changed Overnight</h3>
-                <p className="text-xs text-slate-500">Recent changes to compliance, water quality, and regulatory status.</p>
-              </div>
+              <WhatChangedOvernight entityType="investor" />
             );
 
             case 'briefing-pulse': return DS(
@@ -1614,10 +1612,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
             );
 
             case 'briefing-stakeholder': return DS(
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                <h3 className="text-sm font-semibold text-slate-800 mb-1">Stakeholder Watch</h3>
-                <p className="text-xs text-slate-500">Key stakeholder activities and engagement updates.</p>
-              </div>
+              <StakeholderWatch entityType="investor" />
             );
 
             // ─── HABITAT PANELS ─────────────────────────────────────────────
