@@ -44,6 +44,7 @@ import { WARRZones } from './WARRZones';
 import type { WARRMetric } from './WARRZones';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
+import { NwisGwPanel } from '@/components/NwisGwPanel';
 import dynamic from 'next/dynamic';
 
 const GrantOpportunityMatcher = dynamic(
@@ -110,7 +111,7 @@ const LENS_CONFIG: Record<ViewLens, {
   compliance:  { label: 'Compliance', description: 'School drinking water compliance',
     sections: new Set(['sdwis', 'disclaimer']) },
   'water-quality': { label: 'Water Quality', description: 'Explore water quality in your watershed',
-    sections: new Set(['regprofile', 'map-grid', 'detail', 'top10', 'disclaimer']) },
+    sections: new Set(['regprofile', 'map-grid', 'detail', 'top10', 'groundwater', 'disclaimer']) },
   'public-health': { label: 'Public Health & Contaminants', description: 'Learn about water contaminants',
     sections: new Set(['contaminants-tracker', 'disclaimer']) },
   'outdoor-classroom': { label: 'Outdoor Classroom', description: 'Outdoor learning and nature exploration',
@@ -799,36 +800,50 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
               </button>
               {isSectionOpen('regprofile') && (
               <div className="px-4 pb-3 pt-1">
-                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 text-xs">
-                  <div className="rounded-lg bg-blue-50 border border-blue-100 p-2.5 text-center">
-                    <div className="text-2xl font-black text-blue-700">{wbCount}</div>
-                    <div className="text-[10px] text-blue-600 font-medium">Waterbodies</div>
+                <div className="space-y-3 text-xs">
+                  {/* Hero — total with health breakdown bar */}
+                  <div className="rounded-lg bg-blue-50 border border-blue-100 p-4">
+                    <div className="flex items-end gap-3 mb-3">
+                      <div className="text-3xl font-black text-blue-700">{wbCount}</div>
+                      <div className="text-xs text-blue-600 font-medium pb-0.5">Waterbodies in Your Watershed</div>
+                    </div>
+                    {wbCount > 0 && (
+                      <div className="h-3 rounded-full bg-slate-100 overflow-hidden flex">
+                        {impairedCount > 0 && <div className="h-full bg-red-400 rounded-l-full" style={{ width: `${(impairedCount / wbCount) * 100}%` }} />}
+                        <div className="h-full bg-green-400 flex-1 rounded-r-full" />
+                      </div>
+                    )}
+                    <div className="flex items-center gap-4 mt-2 text-[10px]">
+                      <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-red-400" /> {impairedCount} Need Help</span>
+                      <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-green-400" /> {wbCount - impairedCount} Healthy</span>
+                    </div>
                   </div>
-                  <div className="rounded-lg bg-red-50 border border-red-100 p-2.5 text-center">
-                    <div className="text-xl font-bold text-red-700">{impairedCount}</div>
-                    <div className="text-[10px] text-red-500">Need Help 🔴</div>
-                  </div>
-                  <div className="rounded-lg bg-green-50 border border-green-100 p-2.5 text-center">
-                    <div className="text-xl font-bold text-green-700">{wbCount - impairedCount}</div>
-                    <div className="text-[10px] text-green-500">Healthy 🟢</div>
-                  </div>
-                  <div className="rounded-lg bg-cyan-50 border border-cyan-200 p-2.5 text-center">
-                    <div className="text-sm font-bold text-cyan-700 leading-tight">Real Data</div>
-                    <div className="text-[10px] text-cyan-400">From EPA Sensors</div>
-                  </div>
-                  {isTeacher && (
-                  <div className="rounded-lg bg-purple-50 border border-purple-100 p-2.5 text-center">
-                    <div className="text-xl font-bold text-purple-700">{ejScore}<span className="text-xs font-normal text-purple-400">/100</span></div>
-                    <div className="text-[10px] text-purple-500">EJ Score</div>
-                  </div>
-                  )}
-                  <div className="rounded-lg bg-amber-50 border border-amber-100 p-2.5 text-center">
-                    <div className="text-sm font-bold text-amber-700 leading-tight">6</div>
-                    <div className="text-[10px] text-amber-400">Data Sources</div>
-                  </div>
-                  <div className={`rounded-lg border p-2.5 text-center ${trendBg}`}>
-                    <div className={`text-sm font-bold ${trendColor}`}>{trendLabel}</div>
-                    <div className="text-[10px] text-slate-400">WQ Trend</div>
+                  {/* Secondary metrics */}
+                  <div className={`grid grid-cols-1 ${isTeacher ? 'sm:grid-cols-4' : 'sm:grid-cols-3'} gap-2`}>
+                    <div className="rounded-lg bg-cyan-50 border border-cyan-200 p-3 flex items-center gap-2">
+                      <span className="block h-2.5 w-2.5 rounded-full bg-cyan-400" />
+                      <div>
+                        <div className="text-sm font-bold text-cyan-700">Real Data</div>
+                        <div className="text-[10px] text-cyan-400">From EPA Sensors</div>
+                      </div>
+                    </div>
+                    {isTeacher && (
+                    <div className="rounded-lg bg-purple-50 border border-purple-100 p-3 flex items-center gap-3">
+                      <div className="text-xl font-bold text-purple-700">{ejScore}<span className="text-xs font-normal text-purple-400">/100</span></div>
+                      <div>
+                        <div className="text-[10px] text-purple-500">EJ Score</div>
+                        <div className="mt-1 h-1.5 w-14 rounded-full bg-purple-100 overflow-hidden"><div className="h-full rounded-full bg-purple-500" style={{ width: `${ejScore}%` }} /></div>
+                      </div>
+                    </div>
+                    )}
+                    <div className="rounded-lg bg-amber-50 border border-amber-100 p-3 flex items-center gap-2">
+                      <div className="text-xl font-bold text-amber-700">6</div>
+                      <div className="text-[10px] text-amber-400">Data Sources</div>
+                    </div>
+                    <div className={`rounded-lg border p-3 flex items-center gap-2 ${trendBg}`}>
+                      <div className={`text-sm font-bold ${trendColor}`}>{trendLabel}</div>
+                      <div className="text-[10px] text-slate-400">WQ Trend</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -3161,6 +3176,15 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                 </Card>
               );
             }
+
+            case 'groundwater': return DS(
+              <div id="section-groundwater">
+                <NwisGwPanel
+                  state={stateAbbr}
+                  compactMode={false}
+                />
+              </div>
+            );
 
             case 'disclaimer': return DS(
               <PlatformDisclaimer />

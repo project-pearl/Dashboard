@@ -130,7 +130,7 @@ const LENS_CONFIG: Record<ViewLens, {
   habitat:     { label: 'Habitat & Ecology', description: 'Ecological sensitivity, T&E species, and habitat impact',
     sections: new Set(['hab-ecoscore', 'hab-wildlife', 'disclaimer']) },
   funding:     { label: 'Funding & Grants', description: 'Research funding opportunities',
-    sections: new Set(['grants', 'disclaimer']) },
+    sections: new Set(['grants', 'fund-active', 'fund-pipeline', 'disclaimer']) },
   warr:        { label: 'WARR Room', description: 'Water Alert & Response Readiness — real-time situation awareness',
     sections: new Set(['warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']) },
 };
@@ -779,34 +779,48 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
               </button>
               {isSectionOpen('regprofile') && (
               <div className="px-4 pb-3 pt-1">
-                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 text-xs">
-                  <div className="rounded-lg bg-indigo-50 border border-indigo-100 p-2.5 text-center">
-                    <div className="text-4xl font-black text-indigo-700">{wbCount}</div>
-                    <div className="text-[10px] text-indigo-600 font-medium">Waterbodies</div>
+                <div className="space-y-3 text-xs">
+                  {/* Hero — waterbody count with impairment breakdown */}
+                  <div className="rounded-lg bg-indigo-50 border border-indigo-100 p-4">
+                    <div className="flex items-end gap-3 mb-3">
+                      <div className="text-4xl font-black text-indigo-700">{wbCount}</div>
+                      <div className="text-xs text-indigo-600 font-medium pb-0.5">Waterbodies in Study Area</div>
+                    </div>
+                    {wbCount > 0 && (
+                      <div className="h-3 rounded-full bg-slate-100 overflow-hidden flex">
+                        {impairedCount > 0 && <div className="h-full bg-red-400 rounded-l-full" style={{ width: `${(impairedCount / wbCount) * 100}%` }} />}
+                        <div className="h-full bg-cyan-400 flex-1 rounded-r-full" />
+                      </div>
+                    )}
+                    <div className="flex items-center gap-4 mt-2 text-[10px]">
+                      <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-red-400" /> {impairedCount} Impaired (Cat 4/5)</span>
+                      <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-cyan-400" /> {wbCount - impairedCount} Attaining</span>
+                    </div>
                   </div>
-                  <div className="rounded-lg bg-red-50 border border-red-100 p-2.5 text-center">
-                    <div className="text-xl font-bold text-red-700">{impairedCount}</div>
-                    <div className="text-[10px] text-red-500">Impaired (Cat 4/5)</div>
-                  </div>
-                  <div className="rounded-lg bg-cyan-50 border border-cyan-100 p-2.5 text-center">
-                    <div className="text-xl font-bold text-cyan-700">{wbCount - impairedCount}</div>
-                    <div className="text-[10px] text-cyan-500">Attaining / Nominal</div>
-                  </div>
-                  <div className="rounded-lg bg-slate-50 border border-slate-200 p-2.5 text-center">
-                    <div className="text-sm font-bold text-slate-700 leading-tight">{agency?.cwaSec || 'CWA §303(d)'}</div>
-                    <div className="text-[10px] text-slate-400">Primary CWA Section</div>
-                  </div>
-                  <div className="rounded-lg bg-purple-50 border border-purple-100 p-2.5 text-center">
-                    <div className="text-xl font-bold text-purple-700">{ejScore}<span className="text-xs font-normal text-purple-400">/100</span></div>
-                    <div className="text-[10px] text-purple-500">EJ Vulnerability</div>
-                  </div>
-                  <div className="rounded-lg bg-indigo-50 border border-indigo-100 p-2.5 text-center">
-                    <div className="text-sm font-bold text-indigo-700 leading-tight">6 APIs</div>
-                    <div className="text-[10px] text-indigo-400">Data Sources</div>
-                  </div>
-                  <div className={`rounded-lg border p-2.5 text-center ${trendBg}`}>
-                    <div className={`text-sm font-bold ${trendColor}`}>{trendLabel}</div>
-                    <div className="text-[10px] text-slate-400">WQ Trend</div>
+                  {/* Secondary metrics */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <div className="rounded-lg bg-slate-50 border border-slate-200 p-3 flex items-center gap-2">
+                      <span className="block h-2.5 w-2.5 rounded-full bg-slate-400" />
+                      <div>
+                        <div className="text-sm font-bold text-slate-700">{agency?.cwaSec || 'CWA §303(d)'}</div>
+                        <div className="text-[10px] text-slate-400">Primary CWA Section</div>
+                      </div>
+                    </div>
+                    <div className="rounded-lg bg-purple-50 border border-purple-100 p-3 flex items-center gap-3">
+                      <div className="text-xl font-bold text-purple-700">{ejScore}<span className="text-xs font-normal text-purple-400">/100</span></div>
+                      <div>
+                        <div className="text-[10px] text-purple-500">EJ Vulnerability</div>
+                        <div className="mt-1 h-1.5 w-14 rounded-full bg-purple-100 overflow-hidden"><div className="h-full rounded-full bg-purple-500" style={{ width: `${ejScore}%` }} /></div>
+                      </div>
+                    </div>
+                    <div className="rounded-lg bg-indigo-50 border border-indigo-100 p-3 flex items-center gap-2">
+                      <div className="text-xl font-bold text-indigo-700">6</div>
+                      <div className="text-[10px] text-indigo-400">API Data Sources</div>
+                    </div>
+                    <div className={`rounded-lg border p-3 flex items-center gap-2 ${trendBg}`}>
+                      <div className={`text-sm font-bold ${trendColor}`}>{trendLabel}</div>
+                      <div className="text-[10px] text-slate-400">WQ Trend</div>
+                    </div>
                   </div>
                 </div>
                 {(() => {
@@ -2845,6 +2859,69 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                 </Card>
               );
             }
+
+            case 'fund-active': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    My Active Grants
+                  </CardTitle>
+                  <CardDescription>Currently active grant awards and their status.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { grant: 'NSF Water Systems Research', amount: '$380,000', period: '2024-2027', remaining: '$245,000', status: 'Active' },
+                      { grant: 'EPA STAR Fellowship', amount: '$120,000', period: '2025-2027', remaining: '$95,000', status: 'Active' },
+                      { grant: 'USGS 104(b) Research Grant', amount: '$85,000', period: '2025-2026', remaining: '$62,000', status: 'Active' },
+                    ].map((g, i) => (
+                      <div key={i} className="flex items-center justify-between text-xs border border-slate-200 rounded-lg px-3 py-2">
+                        <span className="text-slate-700 font-medium">{g.grant}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-slate-500">{g.amount}</span>
+                          <span className="text-slate-400">{g.period}</span>
+                          <span className="text-slate-500">Rem: {g.remaining}</span>
+                          <Badge variant="outline" className={`text-[9px] ${g.status === 'New' ? 'border-blue-300 text-blue-700' : 'border-green-300 text-green-700'}`}>{g.status}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-3 italic">Data source: University grants management system, NSF Award Search</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'fund-pipeline': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-blue-600" />
+                    Opportunity Pipeline
+                  </CardTitle>
+                  <CardDescription>Upcoming grant opportunities and application pipeline.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { opportunity: 'NSF CBET Water Treatment', amount: 'Up to $500K', deadline: 'Jun 2026', status: 'Preparing' },
+                      { opportunity: 'EPA P3 Phase II', amount: '$75,000', deadline: 'Aug 2026', status: 'Eligible' },
+                      { opportunity: 'NOAA Sea Grant Research', amount: 'Up to $300K', deadline: 'Oct 2026', status: 'Researching' },
+                    ].map((o, i) => (
+                      <div key={i} className="flex items-center justify-between text-xs border border-slate-200 rounded-lg px-3 py-2">
+                        <span className="text-slate-700">{o.opportunity}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-slate-500">{o.amount}</span>
+                          <span className="text-slate-400">Due: {o.deadline}</span>
+                          <Badge variant="outline" className={`text-[9px] ${o.status === 'Preparing' ? 'border-amber-300 text-amber-700' : o.status === 'Eligible' ? 'border-blue-300 text-blue-700' : 'border-slate-300 text-slate-600'}`}>{o.status}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-3 italic">Data source: Grants.gov, NSF program announcements, university research office</p>
+                </CardContent>
+              </Card>
+            );
 
             case 'disclaimer': return DS(
               <PlatformDisclaimer />

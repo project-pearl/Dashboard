@@ -54,6 +54,7 @@ import { WARRZones } from './WARRZones';
 import type { WARRMetric } from './WARRZones';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
+import { GrantOutcomesCard } from './GrantOutcomesCard';
 import { getEcoData, getEcoScore, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
@@ -97,7 +98,7 @@ type FacilityRow = {
 // ─── Lenses (8-view architecture) ────────────────────────────────────────────
 
 type ViewLens = 'overview' | 'esg-reporting' | 'facility-operations' | 'compliance' |
-  'policy' | 'public-health' | 'habitat' | 'supply-chain' | 'trends' | 'funding';
+  'policy' | 'public-health' | 'habitat' | 'supply-chain' | 'trends' | 'funding' | 'briefing';
 
 type LensConfig = {
   label: string;
@@ -110,7 +111,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   overview: {
     label: 'Executive Overview', description: 'Portfolio-level Sustainability summary for leadership',
     icon: Building2,
-    sections: new Set(['summary', 'kpis', 'map-grid', 'sustainability', 'grants', 'disclaimer']),
+    sections: new Set(['summary', 'kpis', 'map-grid', 'sustainability', 'grants', 'alertfeed', 'disclaimer']),
   },
   'esg-reporting': {
     label: 'ESG Reporting & Disclosure', description: 'ESG framework reporting, scorecard, and data exports',
@@ -155,7 +156,12 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   funding: {
     label: 'Funding & Grants', description: 'Active grants, SRF program, opportunity pipeline, and financial analytics',
     icon: DollarSign,
-    sections: new Set(['grants', 'fund-active', 'fund-srf', 'fund-pipeline', 'fund-analytics', 'disclaimer']),
+    sections: new Set(['grants', 'fund-active', 'fund-srf', 'fund-pipeline', 'fund-analytics', 'grant-outcomes', 'disclaimer']),
+  },
+  briefing: {
+    label: 'Daily Briefing', description: 'Morning briefing with priority actions, overnight changes, and program pulse',
+    icon: FileText,
+    sections: new Set(['briefing-actions', 'briefing-changes', 'briefing-pulse', 'briefing-stakeholder', 'insights', 'alertfeed']),
   },
 };
 
@@ -459,6 +465,10 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
   const toggleSection = (id: string) => setExpandedSections(prev => ({ ...prev, [id]: !prev[id] }));
   const isSectionExpanded = (id: string) => expandedSections[id] ?? false;
+
+  // ── Briefing & Alert Feed state ──
+  const [comingSoonId, setComingSoonId] = useState<string | null>(null);
+  const [alertFeedMinimized, setAlertFeedMinimized] = useState(true);
 
   // ── Close the Gap wizard state ──
   const [gapWizardFramework, setGapWizardFramework] = useState<string | null>(null);
@@ -848,50 +858,71 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
             );
 
             case 'kpis': return DS(
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-          <Card className="border-2 border-emerald-200 bg-gradient-to-br from-emerald-50/50 to-white">
-            <CardContent className="p-3 text-center">
-              <div className="text-2xl font-bold text-emerald-700 inline-flex items-center gap-1">{portfolioScores.avgESG}<ProvenanceIcon metricName="Sustainability Score" displayValue={String(portfolioScores.avgESG)} /></div>
-              <div className="text-[10px] text-emerald-600 font-medium">Sustainability Score</div>
-            </CardContent>
-          </Card>
-          <Card className="border border-slate-200">
-            <CardContent className="p-3 text-center">
-              <div className="text-2xl font-bold text-slate-800">{portfolioScores.total}</div>
-              <div className="text-[10px] text-slate-500">Facilities</div>
-            </CardContent>
-          </Card>
-          <Card className="border border-red-200">
-            <CardContent className="p-3 text-center">
-              <div className="text-2xl font-bold text-red-600 inline-flex items-center gap-1">{portfolioScores.highRisk}<ProvenanceIcon metricName="High Risk Facilities" displayValue={String(portfolioScores.highRisk)} /></div>
-              <div className="text-[10px] text-red-500">High Risk</div>
-            </CardContent>
-          </Card>
-          <Card className="border border-amber-200">
-            <CardContent className="p-3 text-center">
-              <div className="text-2xl font-bold text-amber-600">{portfolioScores.medRisk}</div>
-              <div className="text-[10px] text-amber-500">Medium Risk</div>
-            </CardContent>
-          </Card>
-          <Card className="border border-green-200">
-            <CardContent className="p-3 text-center">
-              <div className="text-2xl font-bold text-green-600">{portfolioScores.lowRisk}</div>
-              <div className="text-[10px] text-green-500">Low Risk</div>
-            </CardContent>
-          </Card>
-          <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50/50 to-white">
-            <CardContent className="p-3 text-center">
-              <div className="flex items-center justify-center gap-1 mb-0.5">
-                <Shield className="h-3.5 w-3.5 text-green-600" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {/* Hero — Sustainability Score */}
+          <Card className="md:row-span-2 border-2 border-emerald-200 bg-gradient-to-br from-emerald-50/50 to-white">
+            <CardContent className="p-5 flex flex-col items-center justify-center h-full">
+              <Leaf className="h-7 w-7 text-emerald-500 mb-2" />
+              <div className="text-4xl font-extrabold text-emerald-700 inline-flex items-center gap-1">{portfolioScores.avgESG}<ProvenanceIcon metricName="Sustainability Score" displayValue={String(portfolioScores.avgESG)} /></div>
+              <div className="text-xs text-emerald-600 font-semibold mt-1">Sustainability Score</div>
+              <div className="w-full mt-3 h-2.5 rounded-full bg-emerald-100 overflow-hidden">
+                <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${Math.min(portfolioScores.avgESG, 100)}%` }} />
               </div>
-              <div className="text-2xl font-bold text-green-600 inline-flex items-center gap-1">{portfolioScores.monitored}<ProvenanceIcon metricName="Verified Impact" displayValue={String(portfolioScores.monitored)} /></div>
-              <div className="text-[10px] text-green-600 font-medium">Verified Impact</div>
+              <div className="text-[10px] text-emerald-500 mt-1">{portfolioScores.avgESG}/100</div>
             </CardContent>
           </Card>
+
+          {/* Risk breakdown — stacked vertically */}
           <Card className="border border-slate-200">
-            <CardContent className="p-3 text-center">
-              <div className="text-2xl font-bold text-slate-600 inline-flex items-center gap-1">{portfolioScores.avgRisk}<ProvenanceIcon metricName="Avg Risk Score" displayValue={String(portfolioScores.avgRisk)} /></div>
-              <div className="text-[10px] text-slate-500">Avg Risk Score</div>
+            <CardContent className="p-4">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Portfolio Risk</div>
+              <div className="space-y-2">
+                {[
+                  { label: 'High Risk', val: portfolioScores.highRisk, color: 'bg-red-500', textColor: 'text-red-600', prov: true },
+                  { label: 'Medium Risk', val: portfolioScores.medRisk, color: 'bg-amber-500', textColor: 'text-amber-600', prov: false },
+                  { label: 'Low Risk', val: portfolioScores.lowRisk, color: 'bg-green-500', textColor: 'text-green-600', prov: false },
+                ].map(r => (
+                  <div key={r.label} className="flex items-center gap-2">
+                    <span className={`block h-2.5 w-2.5 rounded-full ${r.color}`} />
+                    <span className="text-xs text-slate-600 flex-1">{r.label}</span>
+                    <span className={`text-lg font-bold ${r.textColor} inline-flex items-center gap-0.5`}>
+                      {r.val}{r.prov && <ProvenanceIcon metricName="High Risk Facilities" displayValue={String(r.val)} />}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 h-2 rounded-full bg-slate-100 overflow-hidden flex">
+                <div className="h-full bg-red-400" style={{ width: `${(portfolioScores.highRisk / Math.max(portfolioScores.total, 1)) * 100}%` }} />
+                <div className="h-full bg-amber-400" style={{ width: `${(portfolioScores.medRisk / Math.max(portfolioScores.total, 1)) * 100}%` }} />
+                <div className="h-full bg-green-400" style={{ width: `${(portfolioScores.lowRisk / Math.max(portfolioScores.total, 1)) * 100}%` }} />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Quick stats */}
+          <Card className="border border-slate-200">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-slate-100 p-2"><Building2 className="h-4 w-4 text-slate-500" /></div>
+                <div>
+                  <div className="text-2xl font-bold text-slate-800">{portfolioScores.total}</div>
+                  <div className="text-[10px] text-slate-500">Total Facilities</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-green-100 p-2"><Shield className="h-4 w-4 text-green-600" /></div>
+                <div>
+                  <div className="text-2xl font-bold text-green-600 inline-flex items-center gap-0.5">{portfolioScores.monitored}<ProvenanceIcon metricName="Verified Impact" displayValue={String(portfolioScores.monitored)} /></div>
+                  <div className="text-[10px] text-green-600 font-medium">Verified Impact</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-slate-100 p-2"><Gauge className="h-4 w-4 text-slate-500" /></div>
+                <div>
+                  <div className="text-2xl font-bold text-slate-600 inline-flex items-center gap-0.5">{portfolioScores.avgRisk}<ProvenanceIcon metricName="Avg Risk Score" displayValue={String(portfolioScores.avgRisk)} /></div>
+                  <div className="text-[10px] text-slate-500">Avg Risk Score</div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -1097,37 +1128,34 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
             {isSectionOpen('impact') && (
               <div id="section-impact" className="p-4 space-y-4">
                 {/* Primary metrics — aggregated from all facilities */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                  <div className="rounded-lg border border-emerald-200 bg-emerald-50/50 p-3 text-center">
-                    <Droplets className="h-5 w-5 text-emerald-600 mx-auto mb-1" />
-                    <div className="text-lg font-bold text-emerald-700">{(portfolioScores.totalGallons / 1_000_000).toFixed(1)}M</div>
-                    <div className="text-[10px] text-emerald-600">Gallons Treated</div>
-                  </div>
-                  <div className="rounded-lg border border-blue-200 bg-blue-50/50 p-3 text-center">
-                    <TrendingDown className="h-5 w-5 text-blue-600 mx-auto mb-1" />
-                    <div className="text-lg font-bold text-blue-700">{portfolioScores.totalTSS.toLocaleString()}</div>
-                    <div className="text-[10px] text-blue-600">lbs TSS Removed</div>
-                  </div>
-                  <div className="rounded-lg border border-indigo-200 bg-indigo-50/50 p-3 text-center">
-                    <Activity className="h-5 w-5 text-indigo-600 mx-auto mb-1" />
-                    <div className="text-lg font-bold text-indigo-700">{portfolioScores.totalTN.toFixed(1)}</div>
-                    <div className="text-[10px] text-indigo-600">lbs TN Reduced (Bay TMDL)</div>
-                  </div>
-                  <div className="rounded-lg border border-purple-200 bg-purple-50/50 p-3 text-center">
-                    <Activity className="h-5 w-5 text-purple-600 mx-auto mb-1" />
-                    <div className="text-lg font-bold text-purple-700">{portfolioScores.totalTP.toFixed(1)}</div>
-                    <div className="text-[10px] text-purple-600">lbs TP Reduced (Bay TMDL)</div>
-                  </div>
-                  <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3 text-center">
-                    <Target className="h-5 w-5 text-amber-600 mx-auto mb-1" />
-                    <div className="text-lg font-bold text-amber-700">{portfolioScores.avgTSSEff > 0 ? `${portfolioScores.avgTSSEff}%` : '--'}</div>
-                    <div className="text-[10px] text-amber-600">Avg TSS Efficiency</div>
-                  </div>
-                  <div className="rounded-lg border border-cyan-200 bg-cyan-50/50 p-3 text-center">
-                    <Heart className="h-5 w-5 text-cyan-600 mx-auto mb-1" />
-                    <div className="text-lg font-bold text-cyan-700">{portfolioScores.monitored}</div>
-                    <div className="text-[10px] text-cyan-600">Active PIN Sites</div>
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {[
+                    { icon: Droplets, value: `${(portfolioScores.totalGallons / 1_000_000).toFixed(1)}M`, label: 'Gallons Treated', sub: 'Total portfolio volume', border: 'border-emerald-200', bg: 'bg-emerald-50/50', iconBg: 'bg-emerald-100', iconTx: 'text-emerald-600', valTx: 'text-emerald-700', lblTx: 'text-emerald-600', subTx: 'text-emerald-400' },
+                    { icon: TrendingDown, value: portfolioScores.totalTSS.toLocaleString(), label: 'lbs TSS Removed', sub: 'Sediment pollution reduction', border: 'border-blue-200', bg: 'bg-blue-50/50', iconBg: 'bg-blue-100', iconTx: 'text-blue-600', valTx: 'text-blue-700', lblTx: 'text-blue-600', subTx: 'text-blue-400' },
+                    { icon: Activity, value: portfolioScores.totalTN.toFixed(1), label: 'lbs TN Reduced', sub: 'Bay TMDL credit-eligible', border: 'border-indigo-200', bg: 'bg-indigo-50/50', iconBg: 'bg-indigo-100', iconTx: 'text-indigo-600', valTx: 'text-indigo-700', lblTx: 'text-indigo-600', subTx: 'text-indigo-400' },
+                    { icon: Activity, value: portfolioScores.totalTP.toFixed(1), label: 'lbs TP Reduced', sub: 'Bay TMDL credit-eligible', border: 'border-purple-200', bg: 'bg-purple-50/50', iconBg: 'bg-purple-100', iconTx: 'text-purple-600', valTx: 'text-purple-700', lblTx: 'text-purple-600', subTx: 'text-purple-400' },
+                    { icon: Target, value: portfolioScores.avgTSSEff > 0 ? `${portfolioScores.avgTSSEff}%` : '--', label: 'Avg TSS Efficiency', sub: portfolioScores.avgTSSEff >= 80 ? 'Exceeds target' : 'Target: 80%', pct: portfolioScores.avgTSSEff, barBg: 'bg-amber-500', border: 'border-amber-200', bg: 'bg-amber-50/50', iconBg: 'bg-amber-100', iconTx: 'text-amber-600', valTx: 'text-amber-700', lblTx: 'text-amber-600', subTx: 'text-amber-400' },
+                    { icon: Heart, value: String(portfolioScores.monitored), label: 'Active PIN Sites', sub: `of ${portfolioScores.total} facilities`, border: 'border-cyan-200', bg: 'bg-cyan-50/50', iconBg: 'bg-cyan-100', iconTx: 'text-cyan-600', valTx: 'text-cyan-700', lblTx: 'text-cyan-600', subTx: 'text-cyan-400' },
+                  ].map(m => {
+                    const I = m.icon;
+                    return (
+                      <div key={m.label} className={`rounded-lg border ${m.border} ${m.bg} p-4 flex items-start gap-3`}>
+                        <div className={`rounded-lg ${m.iconBg} p-2 shrink-0`}>
+                          <I className={`h-5 w-5 ${m.iconTx}`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className={`text-2xl font-extrabold ${m.valTx}`}>{m.value}</div>
+                          <div className={`text-xs font-semibold ${m.lblTx}`}>{m.label}</div>
+                          <div className={`text-[10px] ${m.subTx} mt-0.5`}>{m.sub}</div>
+                          {m.pct !== undefined && m.pct > 0 && (
+                            <div className="mt-2 h-1.5 rounded-full bg-white/60 overflow-hidden">
+                              <div className={`h-full rounded-full ${m.barBg}`} style={{ width: `${Math.min(m.pct, 100)}%` }} />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Per-facility breakdown */}
@@ -1197,43 +1225,29 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                   Aggregate environmental impact from {portfolioScores.cbFacs} facilit{portfolioScores.cbFacs === 1 ? 'y' : 'ies'} within the Chesapeake Bay watershed ({Array.from(new Set(facilitiesData.filter(f => CB_WATERSHED_STATES.has(f.state)).map(f => f.state))).sort().join(', ')})
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                  <div className="rounded-lg border border-blue-200 bg-blue-50/50 p-3 text-center">
-                    <Droplets className="h-5 w-5 text-blue-600 mx-auto mb-1" />
-                    <div className="text-lg font-bold text-blue-700">{(portfolioScores.cbGallons / 1_000_000).toFixed(1)}M</div>
-                    <div className="text-[10px] text-blue-600">Gallons Treated</div>
-                    <div className="text-[9px] text-blue-400">Bay watershed</div>
-                  </div>
-                  <div className="rounded-lg border border-indigo-200 bg-indigo-50/50 p-3 text-center">
-                    <Activity className="h-5 w-5 text-indigo-600 mx-auto mb-1" />
-                    <div className="text-lg font-bold text-indigo-700">{portfolioScores.cbTN.toFixed(1)}</div>
-                    <div className="text-[10px] text-indigo-600">lbs TN Reduced</div>
-                    <div className="text-[9px] text-indigo-400">TMDL credit-eligible</div>
-                  </div>
-                  <div className="rounded-lg border border-purple-200 bg-purple-50/50 p-3 text-center">
-                    <Activity className="h-5 w-5 text-purple-600 mx-auto mb-1" />
-                    <div className="text-lg font-bold text-purple-700">{portfolioScores.cbTP.toFixed(1)}</div>
-                    <div className="text-[10px] text-purple-600">lbs TP Reduced</div>
-                    <div className="text-[9px] text-purple-400">TMDL credit-eligible</div>
-                  </div>
-                  <div className="rounded-lg border border-cyan-200 bg-cyan-50/50 p-3 text-center">
-                    <TrendingDown className="h-5 w-5 text-cyan-600 mx-auto mb-1" />
-                    <div className="text-lg font-bold text-cyan-700">{portfolioScores.cbTSS.toLocaleString()}</div>
-                    <div className="text-[10px] text-cyan-600">lbs TSS Removed</div>
-                    <div className="text-[9px] text-cyan-400">Bay tributaries</div>
-                  </div>
-                  <div className="rounded-lg border border-emerald-200 bg-emerald-50/50 p-3 text-center">
-                    <Leaf className="h-5 w-5 text-emerald-600 mx-auto mb-1" />
-                    <div className="text-lg font-bold text-emerald-700">{portfolioScores.cbMonitored}</div>
-                    <div className="text-[10px] text-emerald-600">PIN Active</div>
-                    <div className="text-[9px] text-emerald-400">of {portfolioScores.cbFacs} Bay facilities</div>
-                  </div>
-                  <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3 text-center">
-                    <DollarSign className="h-5 w-5 text-amber-600 mx-auto mb-1" />
-                    <div className="text-lg font-bold text-amber-700">${(portfolioScores.cbTN * 10 + portfolioScores.cbTP * 85).toLocaleString()}</div>
-                    <div className="text-[10px] text-amber-600">Credit Value (est.)</div>
-                    <div className="text-[9px] text-amber-400">TN + TP market rates</div>
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {[
+                    { icon: Droplets, value: `${(portfolioScores.cbGallons / 1_000_000).toFixed(1)}M`, label: 'Gallons Treated', sub: 'Bay watershed', border: 'border-blue-200', bg: 'bg-blue-50/50', iconBg: 'bg-blue-100', iconTx: 'text-blue-600', valTx: 'text-blue-700', lblTx: 'text-blue-600', subTx: 'text-blue-400' },
+                    { icon: Activity, value: portfolioScores.cbTN.toFixed(1), label: 'lbs TN Reduced', sub: 'TMDL credit-eligible', border: 'border-indigo-200', bg: 'bg-indigo-50/50', iconBg: 'bg-indigo-100', iconTx: 'text-indigo-600', valTx: 'text-indigo-700', lblTx: 'text-indigo-600', subTx: 'text-indigo-400' },
+                    { icon: Activity, value: portfolioScores.cbTP.toFixed(1), label: 'lbs TP Reduced', sub: 'TMDL credit-eligible', border: 'border-purple-200', bg: 'bg-purple-50/50', iconBg: 'bg-purple-100', iconTx: 'text-purple-600', valTx: 'text-purple-700', lblTx: 'text-purple-600', subTx: 'text-purple-400' },
+                    { icon: TrendingDown, value: portfolioScores.cbTSS.toLocaleString(), label: 'lbs TSS Removed', sub: 'Bay tributaries', border: 'border-cyan-200', bg: 'bg-cyan-50/50', iconBg: 'bg-cyan-100', iconTx: 'text-cyan-600', valTx: 'text-cyan-700', lblTx: 'text-cyan-600', subTx: 'text-cyan-400' },
+                    { icon: Leaf, value: String(portfolioScores.cbMonitored), label: 'PIN Active', sub: `of ${portfolioScores.cbFacs} Bay facilities`, border: 'border-emerald-200', bg: 'bg-emerald-50/50', iconBg: 'bg-emerald-100', iconTx: 'text-emerald-600', valTx: 'text-emerald-700', lblTx: 'text-emerald-600', subTx: 'text-emerald-400' },
+                    { icon: DollarSign, value: `$${(portfolioScores.cbTN * 10 + portfolioScores.cbTP * 85).toLocaleString()}`, label: 'Credit Value (est.)', sub: 'TN + TP market rates', border: 'border-amber-200', bg: 'bg-amber-50/50', iconBg: 'bg-amber-100', iconTx: 'text-amber-600', valTx: 'text-amber-700', lblTx: 'text-amber-600', subTx: 'text-amber-400' },
+                  ].map(m => {
+                    const I = m.icon;
+                    return (
+                      <div key={m.label} className={`rounded-lg border ${m.border} ${m.bg} p-4 flex items-start gap-3`}>
+                        <div className={`rounded-lg ${m.iconBg} p-2 shrink-0`}>
+                          <I className={`h-5 w-5 ${m.iconTx}`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className={`text-2xl font-extrabold ${m.valTx}`}>{m.value}</div>
+                          <div className={`text-xs font-semibold ${m.lblTx}`}>{m.label}</div>
+                          <div className={`text-[10px] ${m.subTx} mt-0.5`}>{m.sub}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Bay facilities table */}
@@ -2287,6 +2301,237 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
               );
             }
 
+            case 'briefing-actions': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertCircle className="h-5 w-5 text-red-600" />
+                    Action Required
+                  </CardTitle>
+                  <CardDescription>Priority actions requiring immediate attention.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { id: 'act-1', priority: 'High', item: '3 facility NPDES permits expiring within 30 days — renewal packages incomplete', detail: 'Permits for Baltimore Processing, Cambridge Seafood Plant, and Norfolk Distribution. Deadlines range from Mar 12–Apr 2. Contact EPA Region for extension options.', color: 'text-red-700 bg-red-50 border-red-200' },
+                      { id: 'act-2', priority: 'High', item: 'CDP Water Security Questionnaire response deadline in 2 weeks — coverage at 30%', detail: 'CDP Water response requires W1–W8 sections. Current data coverage from PEARL platform: 30%. Priority gap areas: W1 (water accounting), W2 (business impacts), W8 (targets).', color: 'text-red-700 bg-red-50 border-red-200' },
+                      { id: 'act-3', priority: 'Medium', item: 'ESG rating agency requesting updated water stewardship data for annual review', detail: 'MSCI ESG and S&P Global requesting 2025 water data. Current disclosure readiness across 6 frameworks averages 44%. SASB and GRI 303 sections most complete.', color: 'text-amber-700 bg-amber-50 border-amber-200' },
+                      { id: 'act-4', priority: 'Low', item: 'Quarterly sustainability report draft due for board review in 10 days', detail: 'Q1 2026 sustainability report covers portfolio water risk trends, BMP performance, and TMDL compliance progress. Treatment data from 3 active PIN sites included.', color: 'text-blue-700 bg-blue-50 border-blue-200' },
+                    ].map((a) => (
+                      <div key={a.id}>
+                        <div
+                          className={`rounded-lg border p-3 cursor-pointer hover:ring-1 hover:ring-blue-300 transition-all ${a.color}`}
+                          onClick={() => setComingSoonId(comingSoonId === a.id ? null : a.id)}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-[10px]">{a.priority}</Badge>
+                            <span className="text-xs">{a.item}</span>
+                            <ChevronDown size={14} className={`ml-auto flex-shrink-0 text-slate-400 transition-transform ${comingSoonId === a.id ? 'rotate-180' : ''}`} />
+                          </div>
+                        </div>
+                        {comingSoonId === a.id && (
+                          <div className="ml-4 mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
+                            <p className="text-xs text-slate-700">{a.detail}</p>
+                            <p className="text-[10px] text-blue-600 mt-2 font-medium">Full detail view — Coming Soon</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: AI analysis of ESG portfolio deadlines, permit database, and disclosure requirements</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'briefing-changes': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-purple-600" />
+                    What Changed Overnight
+                  </CardTitle>
+                  <CardDescription>Recent changes to ESG compliance, water quality, and regulatory status.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { id: 'chg-1', time: '2:14 AM', change: 'ATTAINS data refresh: 1 new Category 5 listing added for nutrient impairment affecting portfolio waterbody', detail: 'Choptank River (Cambridge Seafood Plant receiving waterbody) added to 303(d) list for nitrogen impairment. Assessment cycle 2024. May affect facility water risk score.' },
+                      { id: 'chg-2', time: '3:45 AM', change: 'ECHO enforcement update: Baltimore Processing flagged for significant non-compliance review', detail: 'Facility: Baltimore Processing (MD0098765). Potential effluent limit exceedance for total nitrogen. Water risk score currently 78/100. Formal enforcement action pending.' },
+                      { id: 'chg-3', time: '5:30 AM', change: 'ESG scoring methodology update: MSCI increased water risk weighting by 15%', detail: 'MSCI ESG rating methodology revision effective Q2 2026. Water stress and effluent management now weighted 15% higher. Portfolio ESG score impact estimated at -2 to -4 points.' },
+                      { id: 'chg-4', time: '6:00 AM', change: 'New grant opportunity matched: EPA Emerging Contaminants Grant ($2M, 92% match score)', detail: 'Application deadline: Apr 2026. High match score based on portfolio PFAS exposure and treatment infrastructure. Recommended for Cambridge and Baltimore facilities.' },
+                    ].map((c) => (
+                      <div key={c.id}>
+                        <div
+                          className="flex items-start gap-3 rounded-lg border border-slate-200 p-3 cursor-pointer hover:ring-1 hover:ring-purple-300 transition-all"
+                          onClick={() => setComingSoonId(comingSoonId === c.id ? null : c.id)}
+                        >
+                          <span className="text-[10px] font-mono text-slate-400 whitespace-nowrap mt-0.5">{c.time}</span>
+                          <span className="text-xs text-slate-700 flex-1">{c.change}</span>
+                          <ChevronDown size={14} className={`flex-shrink-0 text-slate-400 transition-transform mt-0.5 ${comingSoonId === c.id ? 'rotate-180' : ''}`} />
+                        </div>
+                        {comingSoonId === c.id && (
+                          <div className="ml-4 mt-1 rounded-lg border border-purple-200 bg-purple-50/60 p-3">
+                            <p className="text-xs text-slate-700">{c.detail}</p>
+                            <p className="text-[10px] text-purple-600 mt-2 font-medium">Navigate to source data — Coming Soon</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ATTAINS, ECHO, ESG rating agencies, grant databases overnight batch updates</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'briefing-pulse': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5 text-blue-600" />
+                    Program Pulse
+                  </CardTitle>
+                  <CardDescription>Current pulse of ESG water programs.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { id: 'pulse-risk', label: 'Avg Water Risk', value: `${portfolioScores.avgRisk}`, trend: '+2', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', dest: 'Risk detail' },
+                      { id: 'pulse-esg', label: 'ESG Score', value: `${portfolioScores.avgESG}`, trend: '-1', color: 'text-green-700', bg: 'bg-green-50 border-green-200', dest: 'ESG scorecard' },
+                      { id: 'pulse-disclosure', label: 'Disclosure Ready', value: '44%', trend: '+5%', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', dest: 'Framework tracker' },
+                      { id: 'pulse-sites', label: 'Active PIN Sites', value: `${portfolioScores.monitored}`, trend: '0', color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200', dest: 'Facility list' },
+                    ].map(m => (
+                      <div key={m.id}>
+                        <div
+                          className={`rounded-xl border p-4 cursor-pointer hover:ring-1 hover:ring-blue-300 transition-all ${m.bg}`}
+                          onClick={() => setComingSoonId(comingSoonId === m.id ? null : m.id)}
+                        >
+                          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{m.label}</div>
+                          <div className={`text-2xl font-bold ${m.color} mt-1`}>{m.value}</div>
+                          <div className="text-[10px] text-slate-500 mt-1">{m.trend} this week</div>
+                        </div>
+                        {comingSoonId === m.id && (
+                          <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-2">
+                            <p className="text-[10px] text-blue-600 font-medium">{m.dest} — Coming Soon</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: PEARL portfolio analytics, ESG framework coverage, facility monitoring status</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'briefing-stakeholder': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Scale className="h-5 w-5 text-indigo-600" />
+                    Stakeholder Watch
+                  </CardTitle>
+                  <CardDescription>Key stakeholder activities and engagement updates.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { id: 'stk-1', type: 'Investor', detail: 'Institutional investors requesting updated water stewardship disclosures for proxy season', status: 'Response Needed', expandDetail: '3 institutional investors (combined 8.2% ownership) submitted pre-proxy engagement letters requesting enhanced water risk disclosure. Key asks: facility-level water stress data, TCFD-aligned water scenario analysis, and TNFD pilot disclosure. Response deadline: Mar 15.' },
+                      { id: 'stk-2', type: 'Regulatory', detail: 'EPA Region 3 requesting portfolio-level TMDL compliance progress report', status: 'In Progress', expandDetail: 'Annual TMDL implementation progress report covering Chesapeake Bay watershed facilities. 3 active TMDLs require status update on nutrient load reductions. Current portfolio: 329 lbs TN reduced, 67 lbs TP reduced.' },
+                      { id: 'stk-3', type: 'Community', detail: 'Local advocacy group published report on industrial water discharge in Chesapeake Bay region', status: 'Monitoring', expandDetail: 'Chesapeake Bay Foundation report highlights industrial discharge contributors. Two portfolio facilities (Baltimore Processing, Cambridge Seafood Plant) mentioned. Report recommends enhanced monitoring and public reporting. Communications team reviewing for response strategy.' },
+                    ].map((s) => (
+                      <div key={s.id}>
+                        <div
+                          className="rounded-lg border border-slate-200 p-3 cursor-pointer hover:ring-1 hover:ring-indigo-300 transition-all"
+                          onClick={() => setComingSoonId(comingSoonId === s.id ? null : s.id)}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <Badge variant="outline" className="text-[10px]">{s.type}</Badge>
+                            <div className="flex items-center gap-1.5">
+                              <Badge variant="secondary" className="text-[10px]">{s.status}</Badge>
+                              <ChevronDown size={14} className={`text-slate-400 transition-transform ${comingSoonId === s.id ? 'rotate-180' : ''}`} />
+                            </div>
+                          </div>
+                          <p className="text-xs text-slate-700">{s.detail}</p>
+                        </div>
+                        {comingSoonId === s.id && (
+                          <div className="ml-4 mt-1 rounded-lg border border-indigo-200 bg-indigo-50/60 p-3">
+                            <p className="text-xs text-slate-700">{s.expandDetail}</p>
+                            <p className="text-[10px] text-indigo-600 mt-2 font-medium">Open full context — Coming Soon</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: AI analysis of investor relations, EPA correspondence, media monitoring, and community engagement</p>
+                </CardContent>
+              </Card>
+            );
+
+            case 'alertfeed': return DS(
+              (() => {
+                const alertFacilities = facilitiesData.filter(f => f.alertLevel === 'high' || f.alertLevel === 'medium');
+                if (alertFacilities.length === 0) return null;
+                const criticalCount = alertFacilities.filter(f => f.alertLevel === 'high').length;
+                return (
+                  <div className="rounded-xl border-2 border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50 shadow-sm overflow-hidden">
+                    <div className={`flex items-center justify-between px-4 py-3 ${alertFeedMinimized ? '' : 'border-b border-orange-200'} bg-orange-50`}>
+                      <div className="flex items-center gap-2">
+                        <span className="relative flex h-2.5 w-2.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-orange-500"></span>
+                        </span>
+                        <span className="text-sm font-bold text-orange-900">
+                          Alert Feed — ESG Portfolio
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-orange-200 text-orange-800">
+                          {criticalCount > 0 ? `${criticalCount} Critical` : `${alertFacilities.length} Active`}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-orange-600">{alertFacilities.length} facilities with active alerts</span>
+                        <button
+                          onClick={() => setAlertFeedMinimized(prev => !prev)}
+                          className="p-1 text-orange-700 bg-white border border-orange-300 rounded hover:bg-orange-100 transition-colors"
+                          title={alertFeedMinimized ? 'Expand' : 'Minimize'}
+                        >
+                          {alertFeedMinimized ? <ChevronDown className="h-3.5 w-3.5" /> : <Minus className="h-3.5 w-3.5" />}
+                        </button>
+                      </div>
+                    </div>
+                    {!alertFeedMinimized && (
+                      <div className="divide-y divide-orange-100 max-h-64 overflow-y-auto">
+                        {alertFacilities.map((fac, idx) => (
+                          <div key={idx} className={`flex items-start gap-3 px-4 py-3 hover:bg-orange-50 transition-colors ${
+                            fac.alertLevel === 'high' ? 'bg-red-50/60' : ''
+                          }`}>
+                            <div className={`mt-2 flex-shrink-0 w-2 h-2 rounded-full ${
+                              fac.alertLevel === 'high' ? 'bg-red-500' : 'bg-amber-500'
+                            }`} />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                                <span className="text-xs font-semibold text-slate-800">{fac.name}</span>
+                                <Badge variant="outline" className="text-[9px]">{fac.state}</Badge>
+                                <Badge variant="outline" className={`text-[9px] ${fac.alertLevel === 'high' ? 'border-red-300 text-red-700' : 'border-amber-300 text-amber-700'}`}>
+                                  {fac.alertLevel === 'high' ? 'Critical' : 'Warning'}
+                                </Badge>
+                              </div>
+                              <p className="text-[11px] text-slate-600">
+                                Water risk score: {fac.waterRiskScore}/100 · {fac.activeAlerts} active alert{fac.activeAlerts !== 1 ? 's' : ''}
+                                {fac.receivingWaterbody ? ` · Receiving: ${fac.receivingWaterbody}` : ''}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()
+            );
+
+            case 'grant-outcomes': return DS(<>
+              <GrantOutcomesCard />
+            </>);
+
             case 'disclaimer': return DS(
               <PlatformDisclaimer />
             );
@@ -2303,28 +2548,45 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
               <button onClick={() => setSelectedFacility(null)} className="text-xs text-slate-500 hover:text-slate-700">Close x</button>
             </div>
             <div className="p-4 space-y-3">
-              <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-                <div className="text-center">
-                  <div className="text-xl font-bold text-slate-800">{selectedFac.waterRiskScore}</div>
-                  <div className="text-[10px] text-slate-500">Water Risk</div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 flex items-center gap-2">
+                  <span className={`block h-2.5 w-2.5 rounded-full ${selectedFac.waterRiskScore >= 70 ? 'bg-red-400' : selectedFac.waterRiskScore >= 40 ? 'bg-amber-400' : 'bg-green-400'}`} />
+                  <div>
+                    <div className="text-lg font-bold text-slate-800">{selectedFac.waterRiskScore}</div>
+                    <div className="text-[10px] text-slate-500">Water Risk</div>
+                  </div>
                 </div>
-                <div className="text-center">
-                  <div className="text-xl font-bold text-slate-800">{selectedFac.state}</div>
-                  <div className="text-[10px] text-slate-500">State</div>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 flex items-center gap-2">
+                  <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                  <div>
+                    <div className="text-lg font-bold text-slate-800">{selectedFac.state}</div>
+                    <div className="text-[10px] text-slate-500">State</div>
+                  </div>
                 </div>
-                <div className="text-center">
-                  <div className="text-xl font-bold text-slate-800">{selectedFac.activeAlerts}</div>
-                  <div className="text-[10px] text-slate-500">Alerts</div>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 flex items-center gap-2">
+                  <AlertTriangle className={`h-3.5 w-3.5 shrink-0 ${selectedFac.activeAlerts > 0 ? 'text-amber-500' : 'text-slate-300'}`} />
+                  <div>
+                    <div className="text-lg font-bold text-slate-800">{selectedFac.activeAlerts}</div>
+                    <div className="text-[10px] text-slate-500">Alerts</div>
+                  </div>
                 </div>
-                <div className="text-center">
-                  <div className="text-xl font-bold text-slate-800">{selectedFac.tssEfficiency ? `${selectedFac.tssEfficiency}%` : '--'}</div>
-                  <div className="text-[10px] text-slate-500">TSS Eff.</div>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                  <div className="text-lg font-bold text-slate-800">{selectedFac.tssEfficiency ? `${selectedFac.tssEfficiency}%` : '--'}</div>
+                  <div className="text-[10px] text-slate-500 mb-1">TSS Efficiency</div>
+                  {selectedFac.tssEfficiency && (
+                    <div className="h-1.5 rounded-full bg-slate-200 overflow-hidden">
+                      <div className={`h-full rounded-full ${selectedFac.tssEfficiency >= 80 ? 'bg-green-500' : selectedFac.tssEfficiency >= 50 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${selectedFac.tssEfficiency}%` }} />
+                    </div>
+                  )}
                 </div>
-                <div className="text-center">
-                  <div className="text-xl font-bold text-slate-800">{selectedFac.ejScore ?? '--'}</div>
-                  <div className="text-[10px] text-slate-500">EJ Score</div>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 flex items-center gap-2">
+                  <Heart className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                  <div>
+                    <div className="text-lg font-bold text-slate-800">{selectedFac.ejScore ?? '--'}</div>
+                    <div className="text-[10px] text-slate-500">EJ Score</div>
+                  </div>
                 </div>
-                <div className="text-center">
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 flex items-center gap-2">
                   <Badge variant="secondary" className={
                     selectedFac.status === 'monitored' ? 'bg-green-100 text-green-700' :
                     selectedFac.status === 'assessed' ? 'bg-amber-100 text-amber-700' :
@@ -2332,7 +2594,6 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                   }>
                     {selectedFac.status === 'monitored' ? 'PIN Active' : selectedFac.status === 'assessed' ? 'Assessed Only' : 'Unmonitored'}
                   </Badge>
-                  <div className="text-[10px] text-slate-500 mt-1">Status</div>
                 </div>
               </div>
               {/* Treatment summary for monitored facilities */}

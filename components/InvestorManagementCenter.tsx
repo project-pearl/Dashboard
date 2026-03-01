@@ -84,7 +84,8 @@ type PortfolioCompany = {
 // ─── Lenses (9-view architecture) ──────────────────────────────────────────
 
 type ViewLens = 'overview' | 'portfolio-risk' | 'water-stress' | 'compliance' |
-  'esg-disclosure' | 'climate-resilience' | 'financial-impact' | 'due-diligence' | 'trends';
+  'esg-disclosure' | 'climate-resilience' | 'financial-impact' | 'due-diligence' | 'trends' |
+  'briefing' | 'habitat' | 'scorecard' | 'funding';
 
 type LensConfig = {
   label: string;
@@ -138,6 +139,26 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
     label: 'Trends & Outlook', description: 'Water risk trajectories, AI insights, and policy outlook',
     icon: TrendingUp,
     sections: new Set(['trends-dashboard', 'insights', 'policy-tracker', 'resolution-planner', 'disclaimer']),
+  },
+  briefing: {
+    label: 'Briefing', description: 'Daily briefing with actions, changes, and stakeholder updates',
+    icon: ClipboardList,
+    sections: new Set(['briefing-actions', 'briefing-changes', 'briefing-pulse', 'briefing-stakeholder', 'insights', 'alertfeed']),
+  },
+  habitat: {
+    label: 'Habitat', description: 'Ecological sensitivity and wildlife exposure across portfolio',
+    icon: Leaf,
+    sections: new Set(['hab-ecoscore', 'hab-wildlife', 'insights', 'alertfeed']),
+  },
+  scorecard: {
+    label: 'Scorecard', description: 'KPIs and grades for portfolio environmental performance',
+    icon: Award,
+    sections: new Set(['scorecard-kpis', 'scorecard-grades', 'insights', 'alertfeed']),
+  },
+  funding: {
+    label: 'Funding', description: 'Grant awards, opportunity pipeline, and financial analytics',
+    icon: DollarSign,
+    sections: new Set(['grants', 'fund-active', 'fund-pipeline', 'fund-analytics', 'insights', 'alertfeed']),
   },
 };
 
@@ -1567,6 +1588,100 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                   </div>
                 </CardContent>
               </Card>
+            );
+
+            // ─── BRIEFING PANELS ─────────────────────────────────────────
+
+            case 'briefing-actions': return DS(
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <h3 className="text-sm font-semibold text-slate-800 mb-1">Action Required</h3>
+                <p className="text-xs text-slate-500">Priority actions requiring immediate attention.</p>
+              </div>
+            );
+
+            case 'briefing-changes': return DS(
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <h3 className="text-sm font-semibold text-slate-800 mb-1">What Changed Overnight</h3>
+                <p className="text-xs text-slate-500">Recent changes to compliance, water quality, and regulatory status.</p>
+              </div>
+            );
+
+            case 'briefing-pulse': return DS(
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <h3 className="text-sm font-semibold text-slate-800 mb-1">Program Pulse</h3>
+                <p className="text-xs text-slate-500">Current pulse of portfolio water risk programs.</p>
+              </div>
+            );
+
+            case 'briefing-stakeholder': return DS(
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <h3 className="text-sm font-semibold text-slate-800 mb-1">Stakeholder Watch</h3>
+                <p className="text-xs text-slate-500">Key stakeholder activities and engagement updates.</p>
+              </div>
+            );
+
+            // ─── HABITAT PANELS ─────────────────────────────────────────────
+
+            case 'hab-ecoscore': return DS(
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <h3 className="text-sm font-semibold text-slate-800 mb-1">Ecological Sensitivity Score</h3>
+                <p className="text-xs text-slate-500">Environmental sensitivity assessment for portfolio holdings.</p>
+              </div>
+            );
+
+            case 'hab-wildlife': return DS(
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <h3 className="text-sm font-semibold text-slate-800 mb-1">Wildlife & T&E Species</h3>
+                <p className="text-xs text-slate-500">Threatened and endangered species exposure across portfolio.</p>
+              </div>
+            );
+
+            // ─── SCORECARD PANELS ────────────────────────────────────────────
+
+            case 'scorecard-kpis': return DS(
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <h3 className="text-sm font-semibold text-slate-800 mb-1">Scorecard KPIs</h3>
+                <p className="text-xs text-slate-500">Key performance indicators for water risk management.</p>
+              </div>
+            );
+
+            case 'scorecard-grades': return DS(
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <h3 className="text-sm font-semibold text-slate-800 mb-1">Scorecard Grades</h3>
+                <p className="text-xs text-slate-500">Letter grades for portfolio environmental performance.</p>
+              </div>
+            );
+
+            // ─── ALERT FEED ──────────────────────────────────────────────────
+
+            case 'alertfeed': return DS(
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <h3 className="text-sm font-semibold text-slate-800 mb-1">Alert Feed</h3>
+                <p className="text-xs text-slate-500">Real-time alerts affecting portfolio water risk.</p>
+              </div>
+            );
+
+            // ─── FUNDING PANELS ──────────────────────────────────────────────
+
+            case 'fund-active': return DS(
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <h3 className="text-sm font-semibold text-slate-800 mb-1">My Active Grants</h3>
+                <p className="text-xs text-slate-500">Currently active grant awards and their status.</p>
+              </div>
+            );
+
+            case 'fund-pipeline': return DS(
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <h3 className="text-sm font-semibold text-slate-800 mb-1">Opportunity Pipeline</h3>
+                <p className="text-xs text-slate-500">Upcoming grant opportunities and application pipeline.</p>
+              </div>
+            );
+
+            case 'fund-analytics': return DS(
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <h3 className="text-sm font-semibold text-slate-800 mb-1">Financial Analytics</h3>
+                <p className="text-xs text-slate-500">Analytics on funding utilization and ROI.</p>
+              </div>
             );
 
             // ─── DISCLAIMER ─────────────────────────────────────────────────

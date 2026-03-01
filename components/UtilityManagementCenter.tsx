@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useLensParam } from '@/lib/useLensParam';
 import HeroBanner from './HeroBanner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -10,7 +10,7 @@ import {
   ClipboardList, Clock, Droplets, FileCheck, FileText, FlaskConical,
   Gauge, HardHat, Heart, Landmark, Leaf, Microscope, Scale, Shield,
   ShieldCheck, Sparkles, TrendingUp, Trophy, Waves, Wrench, Zap,
-  ThermometerSun, Beaker, Factory, Settings, Users, Fish, ShieldAlert, Bug,
+  ThermometerSun, Beaker, Factory, Settings, Users, Fish, ShieldAlert, Bug, Megaphone,
 } from 'lucide-react';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import LocationReportCard from '@/components/LocationReportCard';
@@ -25,10 +25,15 @@ const GrantOpportunityMatcher = dynamic(
 );
 import type { WARRMetric } from './WARRZones';
 import { getEcoData, getEcoScore, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
+import { AIInsightsEngine } from '@/components/AIInsightsEngine';
+import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
+import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
+import { NwisGwPanel } from '@/components/NwisGwPanel';
+import { EmergingContaminantsTracker } from '@/components/EmergingContaminantsTracker';
 
 // ─── View Lens ──────────────────────────────────────────────────────────────
 
-type ViewLens = 'overview' | 'briefing' | 'trends' | 'policy'
+type ViewLens = 'overview' | 'briefing' | 'political-briefing' | 'trends' | 'policy'
   | 'compliance' | 'water-quality' | 'public-health' | 'habitat' | 'source-receiving'
   | 'treatment-process' | 'infrastructure' | 'laboratory' | 'disaster'
   | 'permit-limits' | 'scorecard' | 'reports' | 'asset-management' | 'funding' | 'warr';
@@ -41,103 +46,130 @@ const LENS_CONFIG: Record<ViewLens, {
   overview: {
     label: 'Overview',
     description: 'Utility control room dashboard — real-time plant status, compliance, and alerts',
-    sections: new Set(['system-status', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'operational-stats', 'compliance-calendar', 'weather-source', 'alerts-notifications', 'quick-access', 'disclaimer']),
+    sections: new Set(['system-status', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'operational-stats', 'compliance-calendar', 'weather-source', 'alerts-notifications', 'quick-access', 'insights', 'alertfeed', 'icis', 'sdwis', 'groundwater', 'grants', 'contaminants-tracker', 'disclaimer']),
   },
   briefing: {
     label: 'AI Briefing',
     description: 'Operator shift report and compliance officer morning update',
-    sections: new Set(['briefing-plant', 'briefing-compliance', 'briefing-system', 'briefing-business', 'disclaimer']),
+    sections: new Set(['briefing-plant', 'briefing-compliance', 'briefing-system', 'briefing-business', 'insights', 'alertfeed', 'disclaimer']),
+  },
+  'political-briefing': {
+    label: 'Political Briefing',
+    description: 'Talking points, funding optics, EJ exposure, and council agenda suggestions',
+    sections: new Set([
+      'pol-talking-points', 'pol-constituent-concerns', 'pol-funding-wins', 'pol-funding-risks',
+      'pol-regulatory-deadlines', 'pol-ej-exposure', 'pol-media-ready-grades',
+      'pol-peer-comparison', 'pol-council-agenda', 'insights', 'alertfeed', 'disclaimer',
+    ]),
   },
   trends: {
     label: 'Trends & Projections',
     description: 'Treatment performance, capacity, water loss, collection system, and financial trends',
-    sections: new Set(['trends-treatment', 'trends-flow', 'trends-water-loss', 'trends-collection', 'trends-financial', 'disclaimer']),
+    sections: new Set(['trends-treatment', 'trends-flow', 'trends-water-loss', 'trends-collection', 'trends-financial', 'insights', 'alertfeed', 'disclaimer']),
   },
   policy: {
     label: 'Policy Tracker',
     description: 'Regulations affecting utility operations, permits, and funding rules',
-    sections: new Set(['policy-operations', 'policy-permits', 'policy-funding-rules', 'disclaimer']),
+    sections: new Set(['policy-operations', 'policy-permits', 'policy-funding-rules', 'insights', 'alertfeed', 'disclaimer']),
   },
   compliance: {
     label: 'Compliance',
     description: 'Permit-driven continuous compliance — DMR submissions, daily monitoring, process adjustment',
-    sections: new Set(['comp-dashboard', 'comp-effluent', 'comp-drinking-water', 'comp-dmr', 'comp-violations', 'comp-pretreatment', 'disclaimer']),
+    sections: new Set(['comp-dashboard', 'comp-effluent', 'comp-drinking-water', 'comp-dmr', 'comp-violations', 'comp-pretreatment', 'insights', 'alertfeed', 'icis', 'sdwis', 'disclaimer']),
   },
   'water-quality': {
     label: 'Water Quality',
     description: 'Source water, treatment process, finished water, and special monitoring data',
-    sections: new Set(['wq-source', 'wq-process', 'wq-finished', 'wq-special', 'wq-aqualo', 'disclaimer']),
+    sections: new Set(['wq-source', 'wq-process', 'wq-finished', 'wq-special', 'wq-aqualo', 'insights', 'alertfeed', 'groundwater', 'disclaimer']),
   },
   'public-health': {
     label: 'Public Health & Contaminants',
     description: 'MCL compliance, lead & copper, PFAS, pathogen control, and effluent health impact',
-    sections: new Set(['ph-dw-health', 'ph-lead-copper', 'ph-pfas', 'ph-pathogen', 'ph-effluent-impact', 'disclaimer']),
+    sections: new Set(['ph-dw-health', 'ph-lead-copper', 'ph-pfas', 'ph-pathogen', 'ph-effluent-impact', 'insights', 'alertfeed', 'contaminants-tracker', 'disclaimer']),
   },
   'source-receiving': {
     label: 'Source & Receiving Waters',
     description: 'Source water protection and receiving water discharge impact analysis',
-    sections: new Set(['sr-source-status', 'sr-protection', 'sr-threats', 'sr-monitoring', 'sr-receiving-status', 'sr-discharge-impact', 'sr-regulatory-nexus', 'disclaimer']),
+    sections: new Set(['sr-source-status', 'sr-protection', 'sr-threats', 'sr-monitoring', 'sr-receiving-status', 'sr-discharge-impact', 'sr-regulatory-nexus', 'insights', 'alertfeed', 'disclaimer']),
   },
   'treatment-process': {
     label: 'Treatment & Process',
     description: 'Plant operations center — process monitoring, chemical management, energy optimization',
-    sections: new Set(['tp-dw-process-flow', 'tp-dw-performance', 'tp-dw-chemical', 'tp-dw-filter', 'tp-ww-process-flow', 'tp-ww-performance', 'tp-ww-solids', 'tp-ww-chemical', 'tp-energy', 'tp-optimization', 'disclaimer']),
+    sections: new Set(['tp-dw-process-flow', 'tp-dw-performance', 'tp-dw-chemical', 'tp-dw-filter', 'tp-ww-process-flow', 'tp-ww-performance', 'tp-ww-solids', 'tp-ww-chemical', 'tp-energy', 'tp-optimization', 'insights', 'alertfeed', 'disclaimer']),
   },
   infrastructure: {
     label: 'Infrastructure',
     description: 'Treatment plants, distribution/collection systems, pump stations, and storage',
-    sections: new Set(['infra-system-map', 'infra-plant', 'infra-distribution', 'infra-pump-stations', 'infra-storage', 'disclaimer']),
+    sections: new Set(['infra-system-map', 'infra-plant', 'infra-distribution', 'infra-pump-stations', 'infra-storage', 'insights', 'alertfeed', 'disclaimer']),
   },
   laboratory: {
     label: 'Laboratory & Sampling',
     description: 'Aqua-Lo LIMS integration, sample tracking, QA/QC, and lab management',
-    sections: new Set(['lab-tracking', 'lab-results', 'lab-qaqc', 'lab-regulatory', 'lab-management', 'lab-aqualo', 'disclaimer']),
+    sections: new Set(['lab-tracking', 'lab-results', 'lab-qaqc', 'lab-regulatory', 'lab-management', 'lab-aqualo', 'insights', 'alertfeed', 'disclaimer']),
   },
   disaster: {
     label: 'Disaster & Emergency',
     description: 'Infrastructure failures, contamination events, vulnerability, and climate resilience',
-    sections: new Set(['disaster-active', 'disaster-response', 'disaster-vulnerability', 'disaster-recovery', 'disaster-resilience', 'resolution-planner', 'disclaimer']),
+    sections: new Set(['disaster-active', 'disaster-response', 'disaster-vulnerability', 'disaster-recovery', 'disaster-resilience', 'resolution-planner', 'insights', 'alertfeed', 'disclaimer']),
   },
   'permit-limits': {
     label: 'Permit Limits & Compliance',
     description: 'Effluent limits, MCLs, special conditions, and permit renewal preparation',
-    sections: new Set(['pl-effluent-limits', 'pl-dw-standards', 'pl-special-conditions', 'pl-renewal', 'pl-derivation', 'disclaimer']),
+    sections: new Set(['pl-effluent-limits', 'pl-dw-standards', 'pl-special-conditions', 'pl-renewal', 'pl-derivation', 'insights', 'alertfeed', 'disclaimer']),
   },
   scorecard: {
     label: 'Scorecard',
     description: 'Regulatory, operational, infrastructure, financial, and customer service scores',
-    sections: new Set(['sc-regulatory', 'sc-operational', 'sc-infrastructure', 'sc-financial', 'sc-customer', 'sc-benchmarking', 'disclaimer']),
+    sections: new Set(['sc-regulatory', 'sc-operational', 'sc-infrastructure', 'sc-financial', 'sc-customer', 'sc-benchmarking', 'insights', 'alertfeed', 'disclaimer']),
   },
   reports: {
     label: 'Reports',
     description: 'DMR generation, CCR, operational reports, regulatory filings, and financial reports',
-    sections: new Set(['rpt-dmr', 'rpt-ccr', 'rpt-operational', 'rpt-regulatory', 'rpt-financial', 'disclaimer']),
+    sections: new Set(['rpt-dmr', 'rpt-ccr', 'rpt-operational', 'rpt-regulatory', 'rpt-financial', 'insights', 'alertfeed', 'disclaimer']),
   },
   'asset-management': {
     label: 'Asset Management',
     description: 'Enterprise asset management — inventory, condition, maintenance, risk, and capital planning',
-    sections: new Set(['am-inventory', 'am-condition', 'am-maintenance', 'am-risk', 'am-capital', 'am-lifecycle', 'disclaimer']),
+    sections: new Set(['am-inventory', 'am-condition', 'am-maintenance', 'am-risk', 'am-capital', 'am-lifecycle', 'insights', 'alertfeed', 'disclaimer']),
   },
   funding: {
     label: 'Funding & Grants',
     description: 'SRF loans, federal funding, revenue planning, debt management, and capital strategy',
-    sections: new Set(['grants', 'fund-srf', 'fund-federal', 'fund-revenue', 'fund-debt', 'fund-capital-strategy', 'disclaimer']),
+    sections: new Set(['grants', 'fund-srf', 'fund-federal', 'fund-revenue', 'fund-debt', 'fund-capital-strategy', 'insights', 'alertfeed', 'disclaimer']),
   },
   habitat: {
     label: 'Habitat & Ecology',
     description: 'Ecological sensitivity, T&E species, and habitat impact',
-    sections: new Set(['hab-ecoscore', 'hab-wildlife', 'disclaimer']),
+    sections: new Set(['hab-ecoscore', 'hab-wildlife', 'insights', 'alertfeed', 'disclaimer']),
   },
   warr: {
     label: 'WARR Room',
     description: 'Water Alert & Response Readiness — real-time situation awareness',
-    sections: new Set(['warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']),
+    sections: new Set(['warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'insights', 'alertfeed', 'disclaimer']),
   },
 };
 
 // ─── Placeholder section helper ─────────────────────────────────────────────
 
 type KPI = { label: string; value: string; bg: string };
+
+/* ── visual helpers for PlaceholderSection ─────────────────────────────── */
+const parsePercent = (v: string): number | null => {
+  const m = v.match(/^([\d.]+)\s*%/); return m ? parseFloat(m[1]) : null;
+};
+const parseFraction = (v: string): { cur: number; max: number } | null => {
+  const m = v.match(/^([\d.]+)\s*\/\s*([\d.]+)/); return m ? { cur: parseFloat(m[1]), max: parseFloat(m[2]) } : null;
+};
+const barColor = (bg: string) =>
+  bg.includes('green') ? 'bg-green-500' : bg.includes('red') ? 'bg-red-500' :
+  bg.includes('amber') ? 'bg-amber-500' : bg.includes('emerald') ? 'bg-emerald-500' :
+  bg.includes('blue') || bg.includes('sky') || bg.includes('cyan') ? 'bg-blue-500' :
+  bg.includes('purple') || bg.includes('indigo') ? 'bg-purple-500' : 'bg-slate-400';
+const dotColor = (bg: string) =>
+  bg.includes('green') ? 'bg-green-400' : bg.includes('red') ? 'bg-red-400' :
+  bg.includes('amber') ? 'bg-amber-400' : bg.includes('emerald') ? 'bg-emerald-400' :
+  bg.includes('blue') || bg.includes('sky') || bg.includes('cyan') ? 'bg-blue-400' :
+  bg.includes('purple') || bg.includes('indigo') ? 'bg-purple-400' : 'bg-slate-300';
 
 function PlaceholderSection({ icon: Icon, iconColor, title, description, kpis, source }: {
   icon: React.ComponentType<{ className?: string }>;
@@ -147,25 +179,86 @@ function PlaceholderSection({ icon: Icon, iconColor, title, description, kpis, s
   kpis: KPI[];
   source: string;
 }) {
+  const [showRaw, setShowRaw] = useState(false);
+  const hero = kpis[0];
+  const rest = kpis.slice(1);
+  const heroPct = parsePercent(hero.value);
+  const heroFrac = parseFraction(hero.value);
+
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2">
           <Icon className={`h-5 w-5 ${iconColor}`} />
           {title}
         </CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {kpis.map(k => (
-            <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
-              <div className="text-lg font-bold text-slate-800 mt-1">{k.value}</div>
+      <CardContent className="space-y-3">
+        {/* ── Hero KPI ─────────────────────────────────────────── */}
+        <div className={`rounded-xl border-2 p-4 ${hero.bg}`}>
+          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{hero.label}</div>
+          <div className="text-3xl font-extrabold text-slate-800 mt-1">{hero.value}</div>
+          {heroPct !== null && (
+            <div className="mt-2 h-2 rounded-full bg-white/60 overflow-hidden">
+              <div className={`h-full rounded-full transition-all ${barColor(hero.bg)}`} style={{ width: `${Math.min(heroPct, 100)}%` }} />
             </div>
-          ))}
+          )}
+          {heroFrac && (
+            <div className="mt-2 h-2 rounded-full bg-white/60 overflow-hidden">
+              <div className={`h-full rounded-full transition-all ${barColor(hero.bg)}`} style={{ width: `${Math.min((heroFrac.cur / heroFrac.max) * 100, 100)}%` }} />
+            </div>
+          )}
         </div>
-        <p className="text-xs text-slate-400 mt-4 italic">Data source: {source}</p>
+
+        {/* ── Secondary KPIs — vertical list with visual accents ── */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          {rest.map(k => {
+            const pct = parsePercent(k.value);
+            const frac = parseFraction(k.value);
+            return (
+              <div key={k.label} className={`rounded-lg border p-3 flex items-start gap-2.5 ${k.bg}`}>
+                <span className={`mt-1.5 block h-2.5 w-2.5 rounded-full shrink-0 ${dotColor(k.bg)}`} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                  <div className="text-lg font-bold text-slate-800 leading-tight">{k.value}</div>
+                  {pct !== null && (
+                    <div className="mt-1.5 h-1.5 rounded-full bg-white/60 overflow-hidden">
+                      <div className={`h-full rounded-full ${barColor(k.bg)}`} style={{ width: `${Math.min(pct, 100)}%` }} />
+                    </div>
+                  )}
+                  {frac && (
+                    <div className="mt-1.5 h-1.5 rounded-full bg-white/60 overflow-hidden">
+                      <div className={`h-full rounded-full ${barColor(k.bg)}`} style={{ width: `${Math.min((frac.cur / frac.max) * 100, 100)}%` }} />
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ── Source data click-through ────────────────────────── */}
+        <button onClick={() => setShowRaw(!showRaw)}
+          className="text-[11px] text-slate-400 hover:text-slate-600 transition-colors flex items-center gap-1 pt-1">
+          <span className="text-[9px]">{showRaw ? '▾' : '▸'}</span> {showRaw ? 'Hide' : 'View'} source data
+        </button>
+        {showRaw && (
+          <div className="rounded-lg bg-slate-50/80 border border-slate-200 p-3 animate-in fade-in slide-in-from-top-1 duration-200">
+            <table className="w-full text-xs">
+              <tbody>
+                {kpis.map(k => (
+                  <tr key={k.label} className="border-b border-slate-100 last:border-0">
+                    <td className="py-1.5 text-slate-500 font-medium pr-4">{k.label}</td>
+                    <td className="py-1.5 text-right font-mono font-semibold text-slate-800">{k.value}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="text-[10px] text-slate-400 mt-2 italic">Source: {source}</p>
+          </div>
+        )}
+        {!showRaw && <p className="text-[10px] text-slate-400 italic">Data source: {source}</p>}
       </CardContent>
     </Card>
   );
@@ -1696,6 +1789,295 @@ export default function UtilityManagementCenter({ systemId }: Props) {
                 </Card>
               );
             }
+
+            // ══════════════════════════════════════════════════════════════
+            // SHARED PANELS
+            // ══════════════════════════════════════════════════════════════
+
+            case 'insights': return DS(
+              <AIInsightsEngine key={systemId} role="Utility" stateAbbr={systemId} regionData={[] as any} />
+            );
+
+            case 'alertfeed': return DS(
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Megaphone className="h-5 w-5 text-orange-600" />
+                    Alert Feed
+                  </CardTitle>
+                  <CardDescription>Real-time alerts affecting utility operations.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">
+                    No active alerts at this time.
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'icis': return DS(
+              <ICISCompliancePanel state={systemId} compactMode={false} />
+            );
+
+            case 'sdwis': return DS(
+              <SDWISCompliancePanel state={systemId} compactMode={false} />
+            );
+
+            case 'groundwater': return DS(
+              <div id="section-groundwater">
+                <NwisGwPanel
+                  state={systemId}
+                  compactMode={false}
+                />
+              </div>
+            );
+
+            case 'contaminants-tracker': return DS(
+              <EmergingContaminantsTracker role="utility" selectedState={systemId} />
+            );
+
+            // ═══════════════════════════════════════════════════════════════════
+            // POLITICAL BRIEFING SECTIONS
+            // ═══════════════════════════════════════════════════════════════════
+
+            case 'pol-talking-points': return DS(
+              <Card className="border-purple-200 bg-purple-50/30">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <Megaphone size={15} className="text-purple-600" /> Talking Points
+                  </CardTitle>
+                  <CardDescription>Auto-generated for briefings and public comment</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  <div className="flex items-start gap-2">
+                    <Badge className="bg-purple-100 text-purple-800 shrink-0">Lead</Badge>
+                    <p>&ldquo;Our jurisdiction has replaced 340 of 1,200 identified lead service lines — 28% complete, ahead of the national average of 18%.&rdquo;</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Badge className="bg-emerald-100 text-emerald-800 shrink-0">Grant</Badge>
+                    <p>&ldquo;We secured $2.1M in DWSRF funding this quarter for water main rehabilitation, leveraging a 20% local match.&rdquo;</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Badge className="bg-blue-100 text-blue-800 shrink-0">Quality</Badge>
+                    <p>&ldquo;Water quality testing shows zero MCL exceedances for the 8th consecutive quarter across all 3 public water systems.&rdquo;</p>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'pol-constituent-concerns': return DS(
+              <Card className="border-purple-200 bg-purple-50/30">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <Users size={15} className="text-purple-600" /> Constituent Concerns
+                  </CardTitle>
+                  <CardDescription>Top issues by volume</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { issue: 'Lead service line replacement timeline', calls: 47, trend: '↑ 23%' },
+                      { issue: 'Water rate increase explanation', calls: 31, trend: '↓ 8%' },
+                      { issue: 'Stormwater flooding on Oak Ave', calls: 18, trend: '↑ 45%' },
+                      { issue: 'PFAS in drinking water', calls: 12, trend: '— stable' },
+                    ].map(c => (
+                      <div key={c.issue} className="flex items-center justify-between bg-white border border-slate-200 rounded-lg px-4 py-2.5">
+                        <span className="text-sm text-slate-700">{c.issue}</span>
+                        <div className="flex items-center gap-3">
+                          <Badge variant="outline">{c.calls} contacts</Badge>
+                          <span className="text-xs text-slate-500">{c.trend}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'pol-funding-wins': return DS(
+              <Card className="border-emerald-200 bg-emerald-50/30">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <Banknote size={15} className="text-emerald-600" /> Funding Wins
+                  </CardTitle>
+                  <CardDescription>Recent awards and approvals</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {[
+                    { title: '$2.1M DWSRF Award', desc: 'Drinking Water State Revolving Fund — water main rehabilitation project approved Jan 2026.' },
+                    { title: '$850K EPA WIIN Grant', desc: 'Water Infrastructure Improvements for the Nation — lead service line inventory and replacement.' },
+                    { title: '$340K State 319 Grant', desc: 'Nonpoint source pollution control for Deer Creek watershed — BMP installation.' },
+                  ].map(f => (
+                    <div key={f.title} className="flex items-start gap-2 border border-emerald-200 rounded-lg px-4 py-2.5 bg-white">
+                      <Badge className="bg-emerald-100 text-emerald-800 shrink-0">&#10003;</Badge>
+                      <div><p className="text-sm font-medium text-slate-800">{f.title}</p><p className="text-xs text-slate-500">{f.desc}</p></div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            );
+
+            case 'pol-funding-risks': return DS(
+              <Card className="border-amber-200 bg-amber-50/30">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <AlertTriangle size={15} className="text-amber-600" /> Funding Risks
+                  </CardTitle>
+                  <CardDescription>Expiring or at-risk funding</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="flex items-start gap-2 border border-amber-200 rounded-lg px-4 py-2.5 bg-white">
+                    <Badge className="bg-amber-100 text-amber-800 shrink-0">&#9888;</Badge>
+                    <div><p className="text-sm font-medium text-slate-800">ARPA Funds Expiring</p><p className="text-xs text-slate-500">$1.2M remaining ARPA allocation must be obligated by Dec 2026. Currently $480K unobligated.</p></div>
+                  </div>
+                  <div className="flex items-start gap-2 border border-red-200 rounded-lg px-4 py-2.5 bg-white">
+                    <Badge className="bg-red-100 text-red-800 shrink-0">!</Badge>
+                    <div><p className="text-sm font-medium text-slate-800">SRF Match Shortfall</p><p className="text-xs text-slate-500">FY2027 SRF application requires $600K local match. Current reserve: $410K — $190K gap.</p></div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'pol-regulatory-deadlines': return DS(
+              <Card className="border-amber-200 bg-amber-50/30">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <Clock size={15} className="text-amber-600" /> Regulatory Deadlines
+                  </CardTitle>
+                  <CardDescription>Upcoming compliance milestones</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {[
+                    { deadline: 'Mar 15, 2026', item: 'MS4 Annual Report due to state', daysLeft: 15, urgent: true },
+                    { deadline: 'Jun 30, 2026', item: 'Lead Service Line Inventory submission', daysLeft: 122, urgent: false },
+                    { deadline: 'Oct 1, 2026', item: 'PFAS monitoring results due to EPA', daysLeft: 215, urgent: false },
+                    { deadline: 'Dec 31, 2026', item: 'ARPA fund obligation deadline', daysLeft: 306, urgent: true },
+                  ].map(d => (
+                    <div key={d.item} className="flex items-center justify-between border border-slate-200 rounded-lg px-4 py-2.5 bg-white">
+                      <div>
+                        <p className="text-sm font-medium text-slate-800">{d.deadline} — {d.daysLeft} days</p>
+                        <p className="text-xs text-slate-500">{d.item}</p>
+                      </div>
+                      <Badge className={d.urgent ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}>{d.urgent ? 'Soon' : 'On Track'}</Badge>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            );
+
+            case 'pol-ej-exposure': return DS(
+              <Card className="border-purple-200 bg-purple-50/30">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <Heart size={15} className="text-purple-600" /> EJ Exposure Summary
+                  </CardTitle>
+                  <CardDescription>Politically sensitive EJ indicators</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="flex items-start gap-2 border border-amber-200 rounded-lg px-4 py-2.5 bg-white">
+                    <Badge className="bg-amber-100 text-amber-800 shrink-0">&#9888;</Badge>
+                    <div><p className="text-sm font-medium text-slate-800">3 EJ Census Tracts</p><p className="text-xs text-slate-500">Tracts 240101, 240105, 240112 exceed 80th percentile on EJScreen composite index. Combined population: 14,200.</p></div>
+                  </div>
+                  <div className="flex items-start gap-2 border border-red-200 rounded-lg px-4 py-2.5 bg-white">
+                    <Badge className="bg-red-100 text-red-800 shrink-0">!</Badge>
+                    <div><p className="text-sm font-medium text-slate-800">Disproportionate Impact</p><p className="text-xs text-slate-500">Lead service lines are 3.2x more concentrated in EJ tracts vs. non-EJ areas. Prioritize replacement schedule.</p></div>
+                  </div>
+                  <div className="flex items-start gap-2 border border-emerald-200 rounded-lg px-4 py-2.5 bg-white">
+                    <Badge className="bg-emerald-100 text-emerald-800 shrink-0">&#10003;</Badge>
+                    <div><p className="text-sm font-medium text-slate-800">Justice40 Eligible</p><p className="text-xs text-slate-500">2 of 3 EJ tracts qualify for Justice40 benefits. $1.8M in additional funding potentially available.</p></div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'pol-media-ready-grades': return DS(
+              <Card className="border-purple-200 bg-purple-50/30">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <Trophy size={15} className="text-purple-600" /> Media-Ready Grades
+                  </CardTitle>
+                  <CardDescription>Simplified report card for press releases</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { category: 'Water Quality', grade: 'B+', color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
+                      { category: 'Infrastructure', grade: 'C+', color: 'text-yellow-700 bg-yellow-50 border-yellow-200' },
+                      { category: 'Compliance', grade: 'A-', color: 'text-green-700 bg-green-50 border-green-200' },
+                      { category: 'Equity', grade: 'B-', color: 'text-teal-700 bg-teal-50 border-teal-200' },
+                    ].map(g => (
+                      <div key={g.category} className={`border rounded-xl p-4 text-center ${g.color}`}>
+                        <p className="text-3xl font-bold">{g.grade}</p>
+                        <p className="text-xs mt-1 font-medium">{g.category}</p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'pol-peer-comparison': return DS(
+              <Card className="border-purple-200 bg-purple-50/30">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <BarChart3 size={15} className="text-purple-600" /> Peer Comparison
+                  </CardTitle>
+                  <CardDescription>How you compare to similar jurisdictions</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { metric: 'Water Quality Score', you: 87, peer: 82, unit: '/100' },
+                      { metric: 'Compliance Rate', you: 94, peer: 89, unit: '%' },
+                      { metric: 'Infrastructure Grade', you: 77, peer: 74, unit: '/100' },
+                      { metric: 'Grant $ Per Capita', you: 22.7, peer: 18.3, unit: '' },
+                    ].map(m => (
+                      <div key={m.metric} className="flex items-center justify-between bg-white border border-slate-200 rounded-lg px-4 py-2.5">
+                        <span className="text-sm text-slate-700">{m.metric}</span>
+                        <div className="flex items-center gap-4">
+                          <span className="text-sm font-semibold text-purple-700">You: {m.you}{m.unit}</span>
+                          <span className="text-sm text-slate-500">Peers: {m.peer}{m.unit}</span>
+                          {m.you > m.peer ? (
+                            <Badge className="bg-emerald-100 text-emerald-800">Above</Badge>
+                          ) : (
+                            <Badge className="bg-amber-100 text-amber-800">Below</Badge>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'pol-council-agenda': return DS(
+              <Card className="border-purple-200 bg-purple-50/30">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <Scale size={15} className="text-purple-600" /> Council Agenda Suggestions
+                  </CardTitle>
+                  <CardDescription>Data-driven items for next meeting</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  <div className="flex items-start gap-2">
+                    <Badge className="bg-red-100 text-red-800 shrink-0">Urgent</Badge>
+                    <p><strong>ARPA Fund Reallocation:</strong> $480K unobligated — propose allocation to lead service line replacement before Dec 2026 deadline.</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Badge className="bg-amber-100 text-amber-800 shrink-0">Action</Badge>
+                    <p><strong>SRF Match Funding:</strong> Authorize $190K from capital reserve to close FY2027 SRF local match gap.</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Badge className="bg-blue-100 text-blue-800 shrink-0">Info</Badge>
+                    <p><strong>Quarterly Water Quality Update:</strong> 8th consecutive quarter with zero MCL exceedances — recognition opportunity.</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Badge className="bg-purple-100 text-purple-800 shrink-0">Equity</Badge>
+                    <p><strong>EJ Tract Prioritization:</strong> Present updated lead line replacement schedule prioritizing 3 EJ census tracts.</p>
+                  </div>
+                </CardContent>
+              </Card>
+            );
 
             case 'disclaimer': return DS(
               <PlatformDisclaimer />

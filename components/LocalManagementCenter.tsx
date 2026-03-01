@@ -61,7 +61,8 @@ type AlertLevel = 'none' | 'low' | 'medium' | 'high';
 
 type ViewLens = 'overview' | 'briefing' | 'political-briefing' | 'water-quality'
   | 'infrastructure' | 'compliance' | 'stormwater' | 'public-health' | 'habitat'
-  | 'funding' | 'ej-equity' | 'emergency' | 'scorecard' | 'reports';
+  | 'funding' | 'ej-equity' | 'emergency' | 'scorecard' | 'reports'
+  | 'trends' | 'policy';
 
 type Props = {
   jurisdictionId: string;
@@ -115,7 +116,7 @@ const LENS_CONFIG: Record<ViewLens, {
     description: 'Local water quality grades, impairments, and trends',
     sections: new Set([
       'local-wq-grade', 'detail', 'top10', 'local-impairment-summary',
-      'local-wq-trends', 'groundwater', 'disclaimer',
+      'local-wq-trends', 'groundwater', 'contaminants-tracker', 'disclaimer',
     ]),
   },
   infrastructure: {
@@ -131,7 +132,7 @@ const LENS_CONFIG: Record<ViewLens, {
     description: 'Permits, violations, and enforcement actions',
     sections: new Set([
       'icis', 'sdwis', 'local-permit-status', 'local-violation-timeline',
-      'local-enforcement-actions', 'fineavoidance', 'disclaimer',
+      'local-enforcement-actions', 'fineavoidance', 'policy-tracker', 'disclaimer',
     ]),
   },
   stormwater: {
@@ -195,6 +196,20 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Habitat & Ecology',
     description: 'Ecological sensitivity, T&E species, and habitat impact',
     sections: new Set(['hab-ecoscore', 'hab-wildlife', 'disclaimer']),
+  },
+  trends: {
+    label: 'Trends & Forecasting',
+    description: 'Long-term water quality trends, projections, and emerging contaminants',
+    sections: new Set([
+      'trends-dashboard', 'insights', 'alertfeed', 'contaminants-tracker', 'disclaimer',
+    ]),
+  },
+  policy: {
+    label: 'Policy & Regulatory',
+    description: 'Federal and state regulatory actions, rule tracking, and compliance outlook',
+    sections: new Set([
+      'policy-tracker', 'insights', 'alertfeed', 'disclaimer',
+    ]),
   },
 };
 
@@ -421,7 +436,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
 
           case 'local-identity': return DS(
             <PlaceholderSection title={`${jurisdictionLabel} — Jurisdiction Profile`} icon={<Building2 size={15} />} accent="purple">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <StatusCard title="Population" description="~185,000 residents" status="good" />
                 <StatusCard title="Water Systems" description="3 public water systems" status="good" />
                 <StatusCard title="MS4 Permit" description="Phase II — Active" status="good" />
@@ -432,17 +447,31 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
 
           case 'local-kpi-strip': return DS(
             <PlaceholderSection title="Key Performance Indicators" icon={<BarChart3 size={15} />} accent="purple">
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              {/* Hero KPI */}
+              <div className="rounded-xl border-2 border-emerald-200 bg-emerald-50 p-4 mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="text-4xl font-extrabold text-emerald-700">B+</div>
+                  <div>
+                    <div className="text-sm font-semibold text-emerald-700">Water Quality Grade</div>
+                    <div className="text-[10px] text-emerald-500">Composite score across all monitored waterbodies</div>
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
-                  { label: 'Water Quality Grade', value: 'B+', color: 'text-emerald-700' },
-                  { label: 'Compliance Rate', value: '94%', color: 'text-emerald-700' },
-                  { label: 'Active Violations', value: '2', color: 'text-amber-700' },
-                  { label: 'Grant Funding', value: '$4.2M', color: 'text-blue-700' },
-                  { label: 'EJ Communities', value: '3 tracts', color: 'text-purple-700' },
+                  { label: 'Compliance Rate', value: '94%', color: 'text-emerald-700', bgColor: 'bg-emerald-50 border-emerald-200', pct: 94 },
+                  { label: 'Active Violations', value: '2', color: 'text-amber-700', bgColor: 'bg-amber-50 border-amber-200' },
+                  { label: 'Grant Funding', value: '$4.2M', color: 'text-blue-700', bgColor: 'bg-blue-50 border-blue-200' },
+                  { label: 'EJ Communities', value: '3 tracts', color: 'text-purple-700', bgColor: 'bg-purple-50 border-purple-200' },
                 ].map(kpi => (
-                  <div key={kpi.label} className="bg-white border border-slate-200 rounded-lg p-3 text-center">
-                    <p className={`text-xl font-bold ${kpi.color}`}>{kpi.value}</p>
+                  <div key={kpi.label} className={`rounded-lg border p-3 ${kpi.bgColor}`}>
+                    <p className={`text-2xl font-bold ${kpi.color}`}>{kpi.value}</p>
                     <p className="text-xs text-slate-500 mt-1">{kpi.label}</p>
+                    {kpi.pct !== undefined && (
+                      <div className="mt-2 h-1.5 rounded-full bg-white/60 overflow-hidden">
+                        <div className="h-full rounded-full bg-emerald-500" style={{ width: `${kpi.pct}%` }} />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -1564,6 +1593,34 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
 
           // ── Disclaimer ──
           case 'disclaimer': return DS(<PlatformDisclaimer />);
+
+          // ═══════════════════════════════════════════════════════════════════
+          // SHARED PANELS — TRENDS, POLICY, CONTAMINANTS
+          // ═══════════════════════════════════════════════════════════════════
+
+          case 'trends-dashboard': return DS(
+            <PlaceholderSection title="Trends & Forecasting" subtitle="Long-term trends and projections for local water quality." icon={<TrendingUp size={15} />} accent="purple">
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">
+                Trends & Forecasting dashboard — placeholder
+              </div>
+            </PlaceholderSection>
+          );
+
+          case 'policy-tracker': return DS(
+            <PlaceholderSection title="Policy & Regulatory Tracker" subtitle="Federal and state regulatory actions affecting local government." icon={<Scale size={15} />} accent="purple">
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">
+                Policy & Regulatory Tracker — placeholder
+              </div>
+            </PlaceholderSection>
+          );
+
+          case 'contaminants-tracker': return DS(
+            <PlaceholderSection title="Emerging Contaminants" subtitle="Tracking emerging contaminants of concern." icon={<Bug size={15} />} accent="purple">
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">
+                Emerging Contaminants tracker — placeholder
+              </div>
+            </PlaceholderSection>
+          );
 
           default: return DS(
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">

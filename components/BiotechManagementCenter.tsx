@@ -98,7 +98,7 @@ type FacilityRow = {
 // ─── Lenses (9-view architecture) ──────────────────────────────────────────
 
 type ViewLens = 'overview' | 'process-water' | 'discharge-effluent' | 'compliance' |
-  'contaminants' | 'habitat' | 'facility-operations' | 'gmp-quality' | 'supply-chain' | 'funding' | 'trends';
+  'contaminants' | 'habitat' | 'facility-operations' | 'gmp-quality' | 'supply-chain' | 'funding' | 'trends' | 'briefing' | 'scorecard';
 
 type LensConfig = {
   label: string;
@@ -111,7 +111,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   overview: {
     label: 'Executive Overview', description: 'Portfolio-level Biotech/Pharma summary for leadership',
     icon: Building2,
-    sections: new Set(['summary', 'kpis', 'map-grid', 'gmp-status', 'grants', 'disclaimer']),
+    sections: new Set(['summary', 'kpis', 'map-grid', 'gmp-status', 'grants', 'alertfeed', 'disclaimer']),
   },
   'process-water': {
     label: 'Process Water Quality', description: 'USP water grades, purification KPIs, and process water monitoring',
@@ -162,6 +162,16 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
     label: 'Trends & Outlook', description: 'Water risk trajectories, AI insights, disaster response, and resolution planning',
     icon: TrendingUp,
     sections: new Set(['trends-dashboard', 'insights', 'disaster-emergency-panel', 'resolution-planner', 'policy-tracker', 'disclaimer']),
+  },
+  briefing: {
+    label: 'Daily Briefing', description: 'Priority actions, overnight changes, program pulse, and stakeholder watch',
+    icon: FileText,
+    sections: new Set(['briefing-actions', 'briefing-changes', 'briefing-pulse', 'briefing-stakeholder', 'insights', 'alertfeed', 'disclaimer']),
+  },
+  scorecard: {
+    label: 'Scorecard', description: 'Key performance indicators and letter grades for biotech compliance',
+    icon: Award,
+    sections: new Set(['scorecard-kpis', 'scorecard-grades', 'insights', 'alertfeed', 'disclaimer']),
   },
 };
 
@@ -743,21 +753,28 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
 
             // ─── KPIs ────────────────────────────────────────────────────────
             case 'kpis': return DS(
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {[
-                  { label: 'Total Facilities', value: portfolioScores.total, icon: Building2, color: 'text-violet-600', bg: 'bg-violet-50 border-violet-200' },
-                  { label: 'GMP Compliant', value: portfolioScores.gmpCompliantCount, icon: ShieldCheck, color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
-                  { label: 'WFI Capable', value: portfolioScores.wfiCount, icon: Droplets, color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
-                  { label: 'High Risk', value: portfolioScores.highRisk, icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-50 border-red-200' },
-                  { label: 'Avg TSS Eff.', value: `${portfolioScores.avgTSSEff}%`, icon: Gauge, color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' },
-                  { label: 'PIN Verified', value: portfolioScores.monitored, icon: Activity, color: 'text-indigo-600', bg: 'bg-indigo-50 border-indigo-200' },
+                  { label: 'Total Facilities', value: portfolioScores.total, Icon: Building2, bg: 'bg-violet-50 border-violet-200', iconBg: 'bg-violet-100', iconTx: 'text-violet-600', valTx: 'text-violet-600' },
+                  { label: 'GMP Compliant', value: portfolioScores.gmpCompliantCount, Icon: ShieldCheck, bg: 'bg-green-50 border-green-200', iconBg: 'bg-green-100', iconTx: 'text-green-600', valTx: 'text-green-600', pct: portfolioScores.total > 0 ? Math.round((portfolioScores.gmpCompliantCount / portfolioScores.total) * 100) : 0, barBg: 'bg-green-500' },
+                  { label: 'WFI Capable', value: portfolioScores.wfiCount, Icon: Droplets, bg: 'bg-blue-50 border-blue-200', iconBg: 'bg-blue-100', iconTx: 'text-blue-600', valTx: 'text-blue-600' },
+                  { label: 'High Risk', value: portfolioScores.highRisk, Icon: AlertTriangle, bg: 'bg-red-50 border-red-200', iconBg: 'bg-red-100', iconTx: 'text-red-600', valTx: 'text-red-600' },
+                  { label: 'Avg TSS Efficiency', value: `${portfolioScores.avgTSSEff}%`, Icon: Gauge, bg: 'bg-emerald-50 border-emerald-200', iconBg: 'bg-emerald-100', iconTx: 'text-emerald-600', valTx: 'text-emerald-600', pct: portfolioScores.avgTSSEff, barBg: 'bg-emerald-500' },
+                  { label: 'PIN Verified', value: portfolioScores.monitored, Icon: Activity, bg: 'bg-indigo-50 border-indigo-200', iconBg: 'bg-indigo-100', iconTx: 'text-indigo-600', valTx: 'text-indigo-600' },
                 ].map(kpi => (
-                  <div key={kpi.label} className={`rounded-lg border p-3 ${kpi.bg}`}>
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <kpi.icon className={`h-3.5 w-3.5 ${kpi.color}`} />
-                      <span className="text-[10px] text-slate-500 font-medium">{kpi.label}</span>
+                  <div key={kpi.label} className={`rounded-lg border p-4 ${kpi.bg} flex items-start gap-3`}>
+                    <div className={`rounded-lg ${kpi.iconBg} p-2 shrink-0`}>
+                      <kpi.Icon className={`h-5 w-5 ${kpi.iconTx}`} />
                     </div>
-                    <div className={`text-2xl font-bold ${kpi.color}`}>{kpi.value}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className={`text-2xl font-extrabold ${kpi.valTx}`}>{kpi.value}</div>
+                      <div className="text-xs text-slate-500 font-medium">{kpi.label}</div>
+                      {kpi.pct !== undefined && kpi.pct > 0 && (
+                        <div className="mt-2 h-1.5 rounded-full bg-white/60 overflow-hidden">
+                          <div className={`h-full rounded-full ${kpi.barBg}`} style={{ width: `${Math.min(kpi.pct, 100)}%` }} />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1769,6 +1786,197 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
               );
             }
 
+            // ─── BRIEFING PANELS ────────────────────────────────────────────
+
+            case 'briefing-actions': return DS(
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-red-600" /> Action Required<MockDataBadge /></CardTitle>
+                  <CardDescription className="text-[11px]">Priority actions requiring immediate attention.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { label: 'NJ API Plant — Effluent BOD5 exceedance (237 mg/L limit)', level: 'high' as const },
+                      { label: 'Indianapolis — GMP revalidation overdue by 14 days', level: 'high' as const },
+                      { label: 'San Diego — PFAS monitoring results pending review', level: 'medium' as const },
+                    ].map((action, i) => (
+                      <div key={i} className="flex items-center gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50">
+                        <div className={`h-2 w-2 rounded-full flex-shrink-0 ${action.level === 'high' ? 'bg-red-500' : 'bg-amber-500'}`} />
+                        <span className="text-[11px] text-slate-700">{action.label}</span>
+                        <ConcernBadge level={action.level} />
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'briefing-changes': return DS(
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2"><Activity className="h-4 w-4 text-blue-600" /> What Changed Overnight<MockDataBadge /></CardTitle>
+                  <CardDescription className="text-[11px]">Recent changes to compliance, water quality, and regulatory status.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { change: 'NPDES permit NC0089234 — quarterly DMR submitted successfully', type: 'positive' },
+                      { change: 'EPA updated 40 CFR 439 draft guidance — new API discharge thresholds proposed', type: 'neutral' },
+                      { change: 'NJ facility water risk score increased 74 -> 78 (drought index update)', type: 'negative' },
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-start gap-2 p-2 rounded-lg border border-slate-200">
+                        <div className={`h-2 w-2 rounded-full mt-1 flex-shrink-0 ${item.type === 'positive' ? 'bg-green-500' : item.type === 'negative' ? 'bg-red-500' : 'bg-blue-500'}`} />
+                        <span className="text-[11px] text-slate-700">{item.change}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'briefing-pulse': return DS(
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2"><Gauge className="h-4 w-4 text-violet-600" /> Program Pulse<MockDataBadge /></CardTitle>
+                  <CardDescription className="text-[11px]">Current pulse of biotech water compliance programs.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-center">
+                      <div className="text-lg font-bold text-green-800">{portfolioScores.gmpCompliantCount}/{portfolioScores.total}</div>
+                      <div className="text-[10px] text-green-700">GMP Compliant</div>
+                    </div>
+                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-center">
+                      <div className="text-lg font-bold text-blue-800">{portfolioScores.monitored}/{portfolioScores.total}</div>
+                      <div className="text-[10px] text-blue-700">Actively Monitored</div>
+                    </div>
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-center">
+                      <div className="text-lg font-bold text-amber-800">{portfolioScores.avgRisk}</div>
+                      <div className="text-[10px] text-amber-700">Avg Water Risk</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'briefing-stakeholder': return DS(
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2"><Users className="h-4 w-4 text-indigo-600" /> Stakeholder Watch<MockDataBadge /></CardTitle>
+                  <CardDescription className="text-[11px]">Key stakeholder activities and engagement updates.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { stakeholder: 'FDA CDER', update: 'Scheduled pre-approval inspection for RTP Biologics — Q2 2026', icon: Shield },
+                      { stakeholder: 'EPA Region 2', update: 'NJ facility NPDES permit renewal review initiated', icon: FileText },
+                      { stakeholder: 'State DEQ (IN)', update: 'Indianapolis discharge variance request under review', icon: Scale },
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-start gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50">
+                        <item.icon className="h-3.5 w-3.5 text-slate-500 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <div className="text-[11px] font-semibold text-slate-800">{item.stakeholder}</div>
+                          <div className="text-[10px] text-slate-600">{item.update}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            // ─── SCORECARD PANELS ──────────────────────────────────────────────
+
+            case 'scorecard-kpis': return DS(
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2"><Target className="h-4 w-4 text-blue-600" /> Scorecard KPIs<MockDataBadge /></CardTitle>
+                  <CardDescription className="text-[11px]">Key performance indicators for water compliance.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { label: 'GMP Compliance', value: `${Math.round((portfolioScores.gmpCompliantCount / portfolioScores.total) * 100)}%`, trend: 'up' },
+                      { label: 'WFI Capability', value: `${portfolioScores.wfiCount}/${portfolioScores.total}`, trend: 'stable' },
+                      { label: 'Avg TSS Removal', value: `${portfolioScores.avgTSSEff}%`, trend: 'up' },
+                      { label: 'EJ High-Risk Sites', value: `${portfolioScores.ejHighCount}`, trend: 'down' },
+                      { label: 'Active Alerts', value: `${facilitiesData.reduce((s, f) => s + f.activeAlerts, 0)}`, trend: 'down' },
+                      { label: 'Monitored Sites', value: `${portfolioScores.monitored}/${portfolioScores.total}`, trend: 'stable' },
+                      { label: 'Water Risk (Avg)', value: `${portfolioScores.avgRisk}`, trend: 'down' },
+                      { label: 'Total Gallons Treated', value: `${(portfolioScores.totalGallons / 1e6).toFixed(1)}M`, trend: 'up' },
+                    ].map((kpi, i) => (
+                      <div key={i} className="rounded-lg border border-slate-200 p-3 text-center">
+                        <div className="text-lg font-bold text-slate-800">{kpi.value}</div>
+                        <div className="text-[10px] text-slate-500">{kpi.label}</div>
+                        <div className="mt-1">
+                          {kpi.trend === 'up' && <TrendingUp className="h-3 w-3 text-green-500 mx-auto" />}
+                          {kpi.trend === 'down' && <TrendingDown className="h-3 w-3 text-red-500 mx-auto" />}
+                          {kpi.trend === 'stable' && <Minus className="h-3 w-3 text-slate-400 mx-auto" />}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'scorecard-grades': return DS(
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2"><Award className="h-4 w-4 text-amber-600" /> Scorecard Grades<MockDataBadge /></CardTitle>
+                  <CardDescription className="text-[11px]">Letter grades for biotech environmental performance.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {[
+                      { category: 'Process Water Quality', grade: 'A', color: 'text-green-700 bg-green-50 border-green-200' },
+                      { category: 'Discharge Compliance', grade: 'B+', color: 'text-blue-700 bg-blue-50 border-blue-200' },
+                      { category: 'GMP Readiness', grade: 'A-', color: 'text-green-700 bg-green-50 border-green-200' },
+                      { category: 'Environmental Justice', grade: 'B', color: 'text-blue-700 bg-blue-50 border-blue-200' },
+                      { category: 'Contaminant Management', grade: 'B-', color: 'text-blue-700 bg-blue-50 border-blue-200' },
+                      { category: 'Regulatory Response', grade: 'A', color: 'text-green-700 bg-green-50 border-green-200' },
+                    ].map((item, i) => (
+                      <div key={i} className={`rounded-lg border p-3 text-center ${item.color}`}>
+                        <div className="text-2xl font-extrabold">{item.grade}</div>
+                        <div className="text-[10px] font-medium mt-1">{item.category}</div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            // ─── ALERT FEED ────────────────────────────────────────────────────
+
+            case 'alertfeed': return DS(
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2"><Zap className="h-4 w-4 text-orange-600" /> Alert Feed<MockDataBadge /></CardTitle>
+                  <CardDescription className="text-[11px]">Real-time alerts for biotech water compliance.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { time: '2h ago', message: 'NJ API Plant — BOD5 daily max approaching permit limit (228/237 mg/L)', severity: 'high' as const },
+                      { time: '4h ago', message: 'Indianapolis — GMP revalidation deadline passed; escalation triggered', severity: 'high' as const },
+                      { time: '6h ago', message: 'San Diego — Monthly PFAS sampling results received; under review', severity: 'medium' as const },
+                      { time: '8h ago', message: 'RTP Campus — WFI system conductivity within spec (0.8 uS/cm)', severity: 'low' as const },
+                      { time: '12h ago', message: 'Juncos — Quarterly DMR submitted to EPA Region 2', severity: 'low' as const },
+                    ].map((alert, i) => (
+                      <div key={i} className="flex items-start gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50">
+                        <div className={`h-2 w-2 rounded-full mt-1.5 flex-shrink-0 ${alert.severity === 'high' ? 'bg-red-500' : alert.severity === 'medium' ? 'bg-amber-500' : 'bg-green-500'}`} />
+                        <div className="flex-1 min-w-0">
+                          <span className="text-[11px] text-slate-700">{alert.message}</span>
+                        </div>
+                        <span className="text-[9px] text-slate-400 whitespace-nowrap">{alert.time}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
             // ─── DISCLAIMER ─────────────────────────────────────────────────
 
             case 'disclaimer': return DS(
@@ -1787,32 +1995,50 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
               <button onClick={() => setSelectedFacility(null)} className="text-xs text-slate-500 hover:text-slate-700">Close x</button>
             </div>
             <div className="p-4 space-y-3">
-              <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-                <div className="text-center">
-                  <div className="text-xl font-bold text-slate-800">{selectedFac.waterRiskScore}</div>
-                  <div className="text-[10px] text-slate-500">Water Risk</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xl font-bold text-slate-800">{selectedFac.state}</div>
-                  <div className="text-[10px] text-slate-500">State</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xl font-bold text-slate-800">{selectedFac.uspGrade || '--'}</div>
-                  <div className="text-[10px] text-slate-500">USP Grade</div>
-                </div>
-                <div className="text-center">
-                  <div className={`text-xl font-bold ${selectedFac.gmpCompliant ? 'text-green-600' : selectedFac.gmpCompliant === false ? 'text-red-600' : 'text-slate-400'}`}>
-                    {selectedFac.gmpCompliant ? 'Yes' : selectedFac.gmpCompliant === false ? 'No' : '--'}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 flex items-center gap-2">
+                  <span className={`block h-2.5 w-2.5 rounded-full ${selectedFac.waterRiskScore >= 70 ? 'bg-red-400' : selectedFac.waterRiskScore >= 40 ? 'bg-amber-400' : 'bg-green-400'}`} />
+                  <div>
+                    <div className="text-lg font-bold text-slate-800">{selectedFac.waterRiskScore}</div>
+                    <div className="text-[10px] text-slate-500">Water Risk</div>
                   </div>
-                  <div className="text-[10px] text-slate-500">GMP Compliant</div>
                 </div>
-                <div className="text-center">
-                  <div className="text-xl font-bold text-slate-800">{selectedFac.activeAlerts}</div>
-                  <div className="text-[10px] text-slate-500">Active Alerts</div>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 flex items-center gap-2">
+                  <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                  <div>
+                    <div className="text-lg font-bold text-slate-800">{selectedFac.state}</div>
+                    <div className="text-[10px] text-slate-500">State</div>
+                  </div>
                 </div>
-                <div className="text-center">
-                  <div className="text-xl font-bold text-slate-800">{selectedFac.dataSourceCount}</div>
-                  <div className="text-[10px] text-slate-500">Data Sources</div>
+                <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 flex items-center gap-2">
+                  <Droplets className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                  <div>
+                    <div className="text-lg font-bold text-blue-700">{selectedFac.uspGrade || '--'}</div>
+                    <div className="text-[10px] text-slate-500">USP Grade</div>
+                  </div>
+                </div>
+                <div className={`rounded-lg border p-3 flex items-center gap-2 ${selectedFac.gmpCompliant ? 'border-green-200 bg-green-50' : selectedFac.gmpCompliant === false ? 'border-red-200 bg-red-50' : 'border-slate-200 bg-slate-50'}`}>
+                  <ShieldCheck className={`h-3.5 w-3.5 shrink-0 ${selectedFac.gmpCompliant ? 'text-green-500' : selectedFac.gmpCompliant === false ? 'text-red-500' : 'text-slate-400'}`} />
+                  <div>
+                    <div className={`text-lg font-bold ${selectedFac.gmpCompliant ? 'text-green-600' : selectedFac.gmpCompliant === false ? 'text-red-600' : 'text-slate-400'}`}>
+                      {selectedFac.gmpCompliant ? 'Yes' : selectedFac.gmpCompliant === false ? 'No' : '--'}
+                    </div>
+                    <div className="text-[10px] text-slate-500">GMP Compliant</div>
+                  </div>
+                </div>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 flex items-center gap-2">
+                  <AlertTriangle className={`h-3.5 w-3.5 shrink-0 ${selectedFac.activeAlerts > 0 ? 'text-amber-500' : 'text-slate-300'}`} />
+                  <div>
+                    <div className="text-lg font-bold text-slate-800">{selectedFac.activeAlerts}</div>
+                    <div className="text-[10px] text-slate-500">Active Alerts</div>
+                  </div>
+                </div>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 flex items-center gap-2">
+                  <Activity className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                  <div>
+                    <div className="text-lg font-bold text-slate-800">{selectedFac.dataSourceCount}</div>
+                    <div className="text-[10px] text-slate-500">Data Sources</div>
+                  </div>
                 </div>
               </div>
               {(selectedFac.gallonsTreated || 0) > 0 && (

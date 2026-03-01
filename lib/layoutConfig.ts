@@ -57,6 +57,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'student-monitoring-panel',    label: 'Student Monitoring Tools',    order: 20, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'student-upload-panel',        label: 'Student Data Uploads',        order: 21, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'drinking-water-safety-panel', label: 'Drinking Water Safety',      order: 22, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'groundwater',                label: 'Groundwater Monitoring (WDFN)', order: 22.5, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'location-report', label: 'Location Water Quality Report', order: 23, visible: true, defaultExpanded: false, lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',  label: 'Platform Disclaimer',          order: 24, visible: true, defaultExpanded: true,  lensControlled: true },
@@ -193,6 +194,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'fund-pipeline',       label: 'Opportunity Pipeline',         order: 85, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'fund-passthrough',    label: 'Pass-Through Grants',          order: 86, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'fund-analytics',      label: 'Financial Analytics',          order: 87, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'grant-outcomes',      label: 'Grant Outcomes',               order: 87.5, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'location-report',     label: 'Location Water Quality Report', order: 88, visible: true, defaultExpanded: false, lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',          label: 'Platform Disclaimer',          order: 89, visible: true, defaultExpanded: true,  lensControlled: true },
@@ -315,6 +317,8 @@ export const DEFAULT_SECTIONS = {
     { id: 'fund-pipeline',       label: 'Opportunity Pipeline',             order: 77, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'fund-stormwater',     label: 'Stormwater Funding Programs',      order: 78, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'fund-analytics',      label: 'Financial Analytics',              order: 79, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'grant-outcomes',      label: 'Grant Outcomes',                   order: 79.5, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'groundwater',         label: 'Groundwater Monitoring (WDFN)',   order: 79.6, visible: true, defaultExpanded: false, lensControlled: true },
     // ── Legacy preserved ──
     { id: 'boundaryalerts',      label: 'Watershed Boundary Alerts',        order: 80, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'nutrientcredits',     label: 'Nutrient Credit Tracking',         order: 81, visible: true, defaultExpanded: true,  lensControlled: true },
@@ -363,6 +367,13 @@ export const DEFAULT_SECTIONS = {
     // ── Habitat & Ecology ──
     { id: 'hab-ecoscore',               label: 'Ecological Sensitivity Score', order: 25.1, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'hab-wildlife',               label: 'Wildlife & T&E Species',      order: 25.2, visible: true, defaultExpanded: true, lensControlled: true },
+    // ── AI Briefing ──
+    { id: 'briefing-actions',    label: 'Action Required',               order: 25.3, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'briefing-changes',    label: 'What Changed Overnight',        order: 25.4, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'briefing-pulse',      label: 'Program Pulse',                 order: 25.5, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'briefing-stakeholder', label: 'Stakeholder Watch',            order: 25.6, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'alertfeed',           label: 'Alert Feed',                    order: 25.7, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'grant-outcomes',      label: 'Grant Outcomes',                order: 25.8, visible: true, defaultExpanded: true, lensControlled: true },
     // ── ESG exclusive panels ──
     { id: 'water-stewardship-panel',  label: 'Water Stewardship',         order: 26, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'facility-operations-panel', label: 'Facility Operations',      order: 27, visible: true, defaultExpanded: true, lensControlled: true },
@@ -399,7 +410,16 @@ export const DEFAULT_SECTIONS = {
     { id: 'contaminants-tracker', label: 'Emerging Contaminants',           order: 11,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'icis',                 label: 'NPDES Compliance & Enforcement',  order: 12,  visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'sdwis',                label: 'Drinking Water (SDWIS)',          order: 13,  visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'alertfeed',               label: 'Alert Feed',                       order: 13.5, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'disaster-emergency-panel', label: 'Disaster & Emergency',        order: 14,  visible: true, defaultExpanded: true,  lensControlled: true },
+    // ── AI Briefing ──
+    { id: 'briefing-actions',     label: 'Action Required',                  order: 14.1, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'briefing-changes',     label: 'What Changed Overnight',           order: 14.2, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'briefing-pulse',       label: 'Program Pulse',                    order: 14.3, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'briefing-stakeholder', label: 'Stakeholder Watch',                order: 14.4, visible: true, defaultExpanded: true,  lensControlled: true },
+    // ── Scorecard ──
+    { id: 'scorecard-kpis',       label: 'Scorecard KPIs',                   order: 14.5, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'scorecard-grades',     label: 'Scorecard Grades',                  order: 14.6, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'reports-hub',          label: 'Reports Hub',                     order: 15,  visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Habitat & Ecology ──
     { id: 'hab-ecoscore',           label: 'Ecological Sensitivity Score',   order: 15.1, visible: true, defaultExpanded: true, lensControlled: true },
@@ -453,8 +473,20 @@ export const DEFAULT_SECTIONS = {
     { id: 'contaminants-tracker',    label: 'Emerging Contaminants',           order: 11,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'icis',                    label: 'NPDES Compliance & Enforcement',  order: 12,  visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'sdwis',                   label: 'Drinking Water (SDWIS)',          order: 13,  visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'alertfeed',                  label: 'Alert Feed',                      order: 13.5, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'disaster-emergency-panel', label: 'Disaster & Emergency',           order: 14,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'reports-hub',             label: 'Reports Hub',                     order: 15,  visible: true, defaultExpanded: true,  lensControlled: true },
+    // ── AI Briefing ──
+    { id: 'briefing-actions',        label: 'Action Required',                 order: 15.1, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'briefing-changes',        label: 'What Changed Overnight',          order: 15.2, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'briefing-pulse',          label: 'Program Pulse',                   order: 15.3, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'briefing-stakeholder',    label: 'Stakeholder Watch',               order: 15.4, visible: true, defaultExpanded: true,  lensControlled: true },
+    // ── Habitat & Ecology ──
+    { id: 'hab-ecoscore',            label: 'Ecological Sensitivity Score',    order: 15.5, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'hab-wildlife',            label: 'Wildlife & T&E Species',          order: 15.6, visible: true, defaultExpanded: true,  lensControlled: true },
+    // ── Scorecard ──
+    { id: 'scorecard-kpis',          label: 'Scorecard KPIs',                  order: 15.7, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'scorecard-grades',        label: 'Scorecard Grades',                order: 15.8, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Investor-exclusive panels ──
     { id: 'portfolio-risk-matrix',   label: 'Portfolio Risk Matrix',           order: 16,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'risk-factors',            label: 'Water Risk Factors',              order: 17,  visible: true, defaultExpanded: true,  lensControlled: true },
@@ -476,6 +508,10 @@ export const DEFAULT_SECTIONS = {
     { id: 'due-diligence-checklist', label: 'Due Diligence Checklist',        order: 33,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'site-risk-profile',       label: 'Site Risk Profile',              order: 34,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'supply-chain-risk-panel', label: 'Supply Chain Risk',              order: 35,  visible: true, defaultExpanded: true,  lensControlled: true },
+    // ── Funding ──
+    { id: 'fund-active',             label: 'My Active Grants',                order: 35.1, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'fund-pipeline',           label: 'Opportunity Pipeline',            order: 35.2, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'fund-analytics',          label: 'Financial Analytics',             order: 35.3, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',              label: 'Platform Disclaimer',             order: 36,  visible: true, defaultExpanded: true,  lensControlled: true },
   ],
@@ -530,6 +566,9 @@ export const DEFAULT_SECTIONS = {
     { id: 'citizen-reporting-panel',     label: 'Citizen Reporting',             order: 26, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'location-report',            label: 'Location Water Quality Report', order: 27, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'initiatives-panel',          label: 'Initiatives Tracker',           order: 27.5, visible: true, defaultExpanded: true, lensControlled: true },
+    // ── Funding ──
+    { id: 'fund-active',                label: 'My Active Grants',             order: 27.6, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'fund-pipeline',              label: 'Opportunity Pipeline',         order: 27.7, visible: true, defaultExpanded: true, lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',  label: 'Platform Disclaimer',          order: 28, visible: true, defaultExpanded: true,  lensControlled: true },
   ],
@@ -571,6 +610,9 @@ export const DEFAULT_SECTIONS = {
     // ── University exclusive panels ──
     { id: 'campus-stormwater-panel',      label: 'Campus Stormwater',            order: 24, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'watershed-partnerships-panel', label: 'Watershed Partnerships',       order: 25, visible: true, defaultExpanded: true, lensControlled: true },
+    // ── Funding ──
+    { id: 'fund-active',                 label: 'My Active Grants',             order: 25.1, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'fund-pipeline',               label: 'Opportunity Pipeline',         order: 25.2, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'location-report',             label: 'Location Water Quality Report', order: 26, visible: true, defaultExpanded: false, lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',  label: 'Platform Disclaimer',          order: 27, visible: true, defaultExpanded: true,  lensControlled: true },
@@ -657,6 +699,13 @@ export const DEFAULT_SECTIONS = {
     { id: 'weather-source',         label: 'Weather & Source Conditions',      order: 3,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'alerts-notifications',   label: 'Alerts & Notifications',          order: 4,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'quick-access',           label: 'Quick Access Grid',               order: 5,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'insights',               label: 'AI Insights Engine',              order: 5.1, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'alertfeed',              label: 'Alert Feed',                      order: 5.2, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'icis',                   label: 'NPDES Compliance & Enforcement',  order: 5.3, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'sdwis',                  label: 'Drinking Water (SDWIS)',          order: 5.4, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'groundwater',            label: 'Groundwater Monitoring (WDFN)',   order: 5.5, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'grants',                 label: 'Grant Opportunities',             order: 5.6, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'contaminants-tracker',   label: 'Emerging Contaminants',           order: 5.7, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'disclaimer',             label: 'Platform Disclaimer',             order: 6,  visible: true, defaultExpanded: true,  lensControlled: true },
     // ── AI Briefing (View 2) ──
     { id: 'briefing-plant',         label: 'Plant Status',                    order: 7,  visible: true, defaultExpanded: true,  lensControlled: true },
@@ -844,7 +893,10 @@ export const DEFAULT_SECTIONS = {
     { id: 'detail',                    label: 'Waterbody Detail',             order: 21,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'local-impairment-summary',  label: 'Impairment Summary',          order: 23,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'local-wq-trends',          label: 'Water Quality Trends',         order: 24,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'contaminants-tracker',     label: 'Emerging Contaminants',        order: 24.5, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'groundwater',              label: 'Groundwater Monitoring',       order: 25,  visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'trends-dashboard',         label: 'Trends & Forecasting',        order: 25.5, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'policy-tracker',           label: 'Policy & Regulatory Tracker', order: 25.6, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Infrastructure (7) ──
     { id: 'local-infra-condition',  label: 'Infrastructure Condition',     order: 26,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'local-cso-sso',         label: 'CSO / SSO Events',             order: 27,  visible: true, defaultExpanded: true,  lensControlled: true },

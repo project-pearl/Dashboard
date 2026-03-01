@@ -9,7 +9,7 @@ import { getStatesGeoJSON, geoToAbbr, STATE_GEO_LEAFLET, FIPS_TO_ABBR as _FIPS, 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Building2, Info, LogOut, FileCheck, Lock, Database, Activity, Eye, Fingerprint, Cpu, FlaskConical, ArrowRight, DollarSign, FileText, Leaf, AlertCircle, Waves, Wrench, ClipboardList, Scale, Heart, Landmark, HardHat, Radio, Gauge, Zap, Network, Banknote, Users, BookOpen, Calendar, Target , ClipboardCheck, Download, FileSpreadsheet, GraduationCap, LayoutDashboard, PieChart, SearchX, Fish, ShieldAlert, Bug } from 'lucide-react';
+import { X, MapPin, Shield, ChevronDown, ChevronUp, Minus, AlertTriangle, CheckCircle, Search, Filter, Droplets, TrendingUp, BarChart3, Building2, Info, LogOut, FileCheck, Lock, Database, Activity, Eye, Fingerprint, Cpu, FlaskConical, ArrowRight, DollarSign, FileText, Leaf, AlertCircle, Waves, Wrench, ClipboardList, Scale, Heart, Landmark, HardHat, Radio, Gauge, Zap, Network, Banknote, Users, BookOpen, Calendar, Target , ClipboardCheck, Download, FileSpreadsheet, GraduationCap, LayoutDashboard, PieChart, SearchX, Fish, ShieldAlert, Bug, Megaphone, Trophy, Clock } from 'lucide-react';
 import ResolutionPlanner from '@/components/ResolutionPlanner';
 import { BrandedPrintBtn } from '@/lib/brandedPrint';
 import { useRouter } from 'next/navigation';
@@ -36,6 +36,8 @@ import BoundaryAlertsDashboard from '@/components/BoundaryAlertsDashboard';
 import { EXAMPLE_ALERTS } from '@/lib/example-data';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
+import { NwisGwPanel } from '@/components/NwisGwPanel';
+import { GrantOutcomesCard } from './GrantOutcomesCard';
 import dynamic from 'next/dynamic';
 
 const MapboxMapShell = dynamic(
@@ -112,7 +114,7 @@ type Props = {
   onToggleDevMode?: () => void;
 };
 
-type ViewLens = 'overview' | 'briefing' | 'trends' | 'policy'
+type ViewLens = 'overview' | 'briefing' | 'political-briefing' | 'trends' | 'policy'
   | 'compliance' | 'water-quality' | 'public-health' | 'habitat' | 'receiving-waters'
   | 'stormwater-bmps' | 'infrastructure' | 'monitoring' | 'disaster'
   | 'tmdl-compliance' | 'scorecard' | 'reports' | 'mcm-manager' | 'funding' | 'warr';
@@ -134,6 +136,16 @@ const LENS_CONFIG: Record<ViewLens, {
     description: 'AI-generated overnight summary and action items',
     defaultOverlay: 'impairment',
     sections: new Set(['insights', 'briefing-actions', 'briefing-changes', 'briefing-pulse', 'briefing-stakeholder', 'disclaimer']),
+  },
+  'political-briefing': {
+    label: 'Political Briefing',
+    description: 'Talking points, funding optics, EJ exposure, and council agenda suggestions',
+    defaultOverlay: 'impairment',
+    sections: new Set([
+      'pol-talking-points', 'pol-constituent-concerns', 'pol-funding-wins', 'pol-funding-risks',
+      'pol-regulatory-deadlines', 'pol-ej-exposure', 'pol-media-ready-grades',
+      'pol-peer-comparison', 'pol-council-agenda', 'disclaimer',
+    ]),
   },
   trends: {
     label: 'Trends & Projections',
@@ -157,7 +169,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Water Quality',
     description: 'Standards, assessment, station data, and stormwater monitoring',
     defaultOverlay: 'impairment',
-    sections: new Set(['detail', 'top10', 'wq-standards', 'wq-assessment', 'wq-stations', 'wq-stormwater', 'disclaimer']),
+    sections: new Set(['detail', 'top10', 'wq-standards', 'wq-assessment', 'wq-stations', 'wq-stormwater', 'groundwater', 'disclaimer']),
   },
   'public-health': {
     label: 'Public Health & Contaminants',
@@ -223,7 +235,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Funding & Grants',
     description: 'Active grants, opportunity pipeline, and financial analytics',
     defaultOverlay: 'impairment',
-    sections: new Set(['grants', 'fund-active', 'fund-srf', 'infra-capital', 'infra-construction', 'fund-pipeline', 'fund-stormwater', 'fund-analytics', 'disclaimer']),
+    sections: new Set(['grants', 'fund-active', 'fund-srf', 'infra-capital', 'infra-construction', 'fund-pipeline', 'fund-stormwater', 'fund-analytics', 'grant-outcomes', 'disclaimer']),
   },
   habitat: {
     label: 'Habitat & Ecology',
@@ -1345,37 +1357,50 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                 <span className={`px-3 py-1 rounded-full text-xs font-bold border ${complianceBg}`}>{complianceStatus}</span>
               </div>
 
-              {/* Compliance snapshot strip */}
-              <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
-                <div className="bg-white rounded-lg border border-slate-200 px-3 py-2 text-center">
-                  <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Active Alerts</div>
-                  <div className="text-lg font-bold text-red-600 inline-flex items-center justify-center gap-1">{activeAlerts.length}<ProvenanceIcon metricName="Active Alerts" displayValue={String(activeAlerts.length)} /></div>
-                  <div className="text-[10px] text-slate-400">{severeCount > 0 ? `${severeCount} severe` : 'none severe'}</div>
+              {/* Compliance snapshot — hero bar + detail grid */}
+              <div className="space-y-3">
+                {/* Waterbody health bar */}
+                <div className="bg-white rounded-lg border border-slate-200 p-3">
+                  <div className="flex items-end gap-3 mb-2">
+                    <div className="text-2xl font-extrabold text-slate-700 inline-flex items-center gap-1">{scopedRegionData.length}<ProvenanceIcon metricName="Waterbodies" displayValue={String(scopedRegionData.length)} /></div>
+                    <div className="text-xs text-slate-500 pb-0.5">waterbodies in permit boundary</div>
+                  </div>
+                  {scopedRegionData.length > 0 && (
+                    <div className="h-2.5 rounded-full bg-slate-100 overflow-hidden flex">
+                      {impairedCount > 0 && <div className="h-full bg-amber-400" style={{ width: `${(impairedCount / scopedRegionData.length) * 100}%` }} />}
+                      <div className="h-full bg-blue-400" style={{ width: `${(assessedCount / Math.max(scopedRegionData.length, 1)) * 100 - (impairedCount / Math.max(scopedRegionData.length, 1)) * 100}%` }} />
+                      <div className="h-full bg-slate-200 flex-1" />
+                    </div>
+                  )}
+                  <div className="flex items-center gap-4 mt-1.5 text-[10px]">
+                    <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-amber-400" /> {impairedCount} Impaired</span>
+                    <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-blue-400" /> {assessedCount} Assessed ({scopedRegionData.length > 0 ? Math.round(assessedCount / scopedRegionData.length * 100) : 0}%)</span>
+                  </div>
                 </div>
-                <div className="bg-white rounded-lg border border-slate-200 px-3 py-2 text-center">
-                  <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Impaired</div>
-                  <div className="text-lg font-bold text-amber-600 inline-flex items-center justify-center gap-1">{impairedCount}<ProvenanceIcon metricName="Impaired Waterbodies" displayValue={String(impairedCount)} /></div>
-                  <div className="text-[10px] text-slate-400">of {scopedRegionData.length} waterbodies</div>
-                </div>
-                <div className="bg-white rounded-lg border border-slate-200 px-3 py-2 text-center">
-                  <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Assessed</div>
-                  <div className="text-lg font-bold text-blue-600 inline-flex items-center justify-center gap-1">{assessedCount}<ProvenanceIcon metricName="Assessed Waterbodies" displayValue={String(assessedCount)} /></div>
-                  <div className="text-[10px] text-slate-400">{scopedRegionData.length > 0 ? Math.round(assessedCount / scopedRegionData.length * 100) : 0}% coverage</div>
-                </div>
-                <div className="bg-white rounded-lg border border-slate-200 px-3 py-2 text-center">
-                  <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Data Freshness</div>
-                  <div className={`inline-block mt-0.5 px-2 py-0.5 rounded-full text-xs font-bold border ${freshnessBg}`}>{freshnessLabel}</div>
-                  <div className="text-[10px] text-slate-400">{withData}/{scopedRegionData.length} with sensors</div>
-                </div>
-                <div className="bg-white rounded-lg border border-slate-200 px-3 py-2 text-center">
-                  <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">EJ Burden</div>
-                  <div className="text-lg font-bold inline-flex items-center justify-center gap-1" style={{ color: ejScore >= 70 ? '#dc2626' : ejScore >= 50 ? '#ea580c' : ejScore >= 30 ? '#d97706' : '#16a34a' }}>{ejScore}/100<ProvenanceIcon metricName="EJ Burden" displayValue={String(ejScore)} unit="/100" /></div>
-                  <div className="text-[10px] text-slate-400">{ejLabel}</div>
-                </div>
-                <div className="bg-white rounded-lg border border-slate-200 px-3 py-2 text-center">
-                  <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Waterbodies</div>
-                  <div className="text-lg font-bold text-slate-700 inline-flex items-center justify-center gap-1">{scopedRegionData.length}<ProvenanceIcon metricName="Waterbodies" displayValue={String(scopedRegionData.length)} /></div>
-                  <div className="text-[10px] text-slate-400">in permit boundary</div>
+                {/* Secondary metrics */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  <div className={`bg-white rounded-lg border px-3 py-2.5 flex items-center gap-2 ${activeAlerts.length > 0 ? 'border-red-200' : 'border-slate-200'}`}>
+                    <span className={`block h-2.5 w-2.5 rounded-full ${activeAlerts.length > 0 ? 'bg-red-400' : 'bg-green-400'}`} />
+                    <div>
+                      <div className="text-lg font-bold text-red-600 inline-flex items-center gap-0.5">{activeAlerts.length}<ProvenanceIcon metricName="Active Alerts" displayValue={String(activeAlerts.length)} /></div>
+                      <div className="text-[10px] text-slate-500">Active Alerts</div>
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-lg border border-slate-200 px-3 py-2.5">
+                    <div className={`inline-block px-2 py-0.5 rounded-full text-xs font-bold border ${freshnessBg}`}>{freshnessLabel}</div>
+                    <div className="text-[10px] text-slate-400 mt-1">{withData}/{scopedRegionData.length} with sensors</div>
+                  </div>
+                  <div className="bg-white rounded-lg border border-slate-200 px-3 py-2.5">
+                    <div className="text-lg font-bold inline-flex items-center gap-0.5" style={{ color: ejScore >= 70 ? '#dc2626' : ejScore >= 50 ? '#ea580c' : ejScore >= 30 ? '#d97706' : '#16a34a' }}>{ejScore}/100<ProvenanceIcon metricName="EJ Burden" displayValue={String(ejScore)} unit="/100" /></div>
+                    <div className="text-[10px] text-slate-500">EJ Burden</div>
+                    <div className="mt-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                      <div className="h-full rounded-full" style={{ width: `${ejScore}%`, backgroundColor: ejScore >= 70 ? '#dc2626' : ejScore >= 50 ? '#ea580c' : ejScore >= 30 ? '#d97706' : '#16a34a' }} />
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-lg border border-amber-200 px-3 py-2.5">
+                    <div className="text-lg font-bold text-amber-600 inline-flex items-center gap-0.5">{impairedCount}<ProvenanceIcon metricName="Impaired Waterbodies" displayValue={String(impairedCount)} /></div>
+                    <div className="text-[10px] text-slate-500">Impaired Waterbodies</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -6312,6 +6337,263 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                 </Card>
               );
             }
+
+            // ═══════════════════════════════════════════════════════════════════
+            // POLITICAL BRIEFING SECTIONS
+            // ═══════════════════════════════════════════════════════════════════
+
+            case 'pol-talking-points': return DS(
+              <Card className="border-purple-200 bg-purple-50/30">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <Megaphone size={15} className="text-purple-600" /> Talking Points
+                  </CardTitle>
+                  <CardDescription>Auto-generated for briefings and public comment</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  <div className="flex items-start gap-2">
+                    <Badge className="bg-purple-100 text-purple-800 shrink-0">Lead</Badge>
+                    <p>&ldquo;Our jurisdiction has replaced 340 of 1,200 identified lead service lines — 28% complete, ahead of the national average of 18%.&rdquo;</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Badge className="bg-emerald-100 text-emerald-800 shrink-0">Grant</Badge>
+                    <p>&ldquo;We secured $2.1M in DWSRF funding this quarter for water main rehabilitation, leveraging a 20% local match.&rdquo;</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Badge className="bg-blue-100 text-blue-800 shrink-0">Quality</Badge>
+                    <p>&ldquo;Water quality testing shows zero MCL exceedances for the 8th consecutive quarter across all 3 public water systems.&rdquo;</p>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'pol-constituent-concerns': return DS(
+              <Card className="border-purple-200 bg-purple-50/30">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <Users size={15} className="text-purple-600" /> Constituent Concerns
+                  </CardTitle>
+                  <CardDescription>Top issues by volume</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { issue: 'Lead service line replacement timeline', calls: 47, trend: '↑ 23%' },
+                      { issue: 'Water rate increase explanation', calls: 31, trend: '↓ 8%' },
+                      { issue: 'Stormwater flooding on Oak Ave', calls: 18, trend: '↑ 45%' },
+                      { issue: 'PFAS in drinking water', calls: 12, trend: '— stable' },
+                    ].map(c => (
+                      <div key={c.issue} className="flex items-center justify-between bg-white border border-slate-200 rounded-lg px-4 py-2.5">
+                        <span className="text-sm text-slate-700">{c.issue}</span>
+                        <div className="flex items-center gap-3">
+                          <Badge variant="outline">{c.calls} contacts</Badge>
+                          <span className="text-xs text-slate-500">{c.trend}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'pol-funding-wins': return DS(
+              <Card className="border-emerald-200 bg-emerald-50/30">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <Banknote size={15} className="text-emerald-600" /> Funding Wins
+                  </CardTitle>
+                  <CardDescription>Recent awards and approvals</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {[
+                    { title: '$2.1M DWSRF Award', desc: 'Drinking Water State Revolving Fund — water main rehabilitation project approved Jan 2026.' },
+                    { title: '$850K EPA WIIN Grant', desc: 'Water Infrastructure Improvements for the Nation — lead service line inventory and replacement.' },
+                    { title: '$340K State 319 Grant', desc: 'Nonpoint source pollution control for Deer Creek watershed — BMP installation.' },
+                  ].map(f => (
+                    <div key={f.title} className="flex items-start gap-2 border border-emerald-200 rounded-lg px-4 py-2.5 bg-white">
+                      <Badge className="bg-emerald-100 text-emerald-800 shrink-0">&#10003;</Badge>
+                      <div><p className="text-sm font-medium text-slate-800">{f.title}</p><p className="text-xs text-slate-500">{f.desc}</p></div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            );
+
+            case 'pol-funding-risks': return DS(
+              <Card className="border-amber-200 bg-amber-50/30">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <AlertTriangle size={15} className="text-amber-600" /> Funding Risks
+                  </CardTitle>
+                  <CardDescription>Expiring or at-risk funding</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="flex items-start gap-2 border border-amber-200 rounded-lg px-4 py-2.5 bg-white">
+                    <Badge className="bg-amber-100 text-amber-800 shrink-0">&#9888;</Badge>
+                    <div><p className="text-sm font-medium text-slate-800">ARPA Funds Expiring</p><p className="text-xs text-slate-500">$1.2M remaining ARPA allocation must be obligated by Dec 2026. Currently $480K unobligated.</p></div>
+                  </div>
+                  <div className="flex items-start gap-2 border border-red-200 rounded-lg px-4 py-2.5 bg-white">
+                    <Badge className="bg-red-100 text-red-800 shrink-0">!</Badge>
+                    <div><p className="text-sm font-medium text-slate-800">SRF Match Shortfall</p><p className="text-xs text-slate-500">FY2027 SRF application requires $600K local match. Current reserve: $410K — $190K gap.</p></div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'pol-regulatory-deadlines': return DS(
+              <Card className="border-amber-200 bg-amber-50/30">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <Clock size={15} className="text-amber-600" /> Regulatory Deadlines
+                  </CardTitle>
+                  <CardDescription>Upcoming compliance milestones</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {[
+                    { deadline: 'Mar 15, 2026', item: 'MS4 Annual Report due to state', daysLeft: 15, urgent: true },
+                    { deadline: 'Jun 30, 2026', item: 'Lead Service Line Inventory submission', daysLeft: 122, urgent: false },
+                    { deadline: 'Oct 1, 2026', item: 'PFAS monitoring results due to EPA', daysLeft: 215, urgent: false },
+                    { deadline: 'Dec 31, 2026', item: 'ARPA fund obligation deadline', daysLeft: 306, urgent: true },
+                  ].map(d => (
+                    <div key={d.item} className="flex items-center justify-between border border-slate-200 rounded-lg px-4 py-2.5 bg-white">
+                      <div>
+                        <p className="text-sm font-medium text-slate-800">{d.deadline} — {d.daysLeft} days</p>
+                        <p className="text-xs text-slate-500">{d.item}</p>
+                      </div>
+                      <Badge className={d.urgent ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}>{d.urgent ? 'Soon' : 'On Track'}</Badge>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            );
+
+            case 'pol-ej-exposure': return DS(
+              <Card className="border-purple-200 bg-purple-50/30">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <Heart size={15} className="text-purple-600" /> EJ Exposure Summary
+                  </CardTitle>
+                  <CardDescription>Politically sensitive EJ indicators</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="flex items-start gap-2 border border-amber-200 rounded-lg px-4 py-2.5 bg-white">
+                    <Badge className="bg-amber-100 text-amber-800 shrink-0">&#9888;</Badge>
+                    <div><p className="text-sm font-medium text-slate-800">3 EJ Census Tracts</p><p className="text-xs text-slate-500">Tracts 240101, 240105, 240112 exceed 80th percentile on EJScreen composite index. Combined population: 14,200.</p></div>
+                  </div>
+                  <div className="flex items-start gap-2 border border-red-200 rounded-lg px-4 py-2.5 bg-white">
+                    <Badge className="bg-red-100 text-red-800 shrink-0">!</Badge>
+                    <div><p className="text-sm font-medium text-slate-800">Disproportionate Impact</p><p className="text-xs text-slate-500">Lead service lines are 3.2x more concentrated in EJ tracts vs. non-EJ areas. Prioritize replacement schedule.</p></div>
+                  </div>
+                  <div className="flex items-start gap-2 border border-emerald-200 rounded-lg px-4 py-2.5 bg-white">
+                    <Badge className="bg-emerald-100 text-emerald-800 shrink-0">&#10003;</Badge>
+                    <div><p className="text-sm font-medium text-slate-800">Justice40 Eligible</p><p className="text-xs text-slate-500">2 of 3 EJ tracts qualify for Justice40 benefits. $1.8M in additional funding potentially available.</p></div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'pol-media-ready-grades': return DS(
+              <Card className="border-purple-200 bg-purple-50/30">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <Trophy size={15} className="text-purple-600" /> Media-Ready Grades
+                  </CardTitle>
+                  <CardDescription>Simplified report card for press releases</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { category: 'Water Quality', grade: 'B+', color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
+                      { category: 'Infrastructure', grade: 'C+', color: 'text-yellow-700 bg-yellow-50 border-yellow-200' },
+                      { category: 'Compliance', grade: 'A-', color: 'text-green-700 bg-green-50 border-green-200' },
+                      { category: 'Equity', grade: 'B-', color: 'text-teal-700 bg-teal-50 border-teal-200' },
+                    ].map(g => (
+                      <div key={g.category} className={`border rounded-xl p-4 text-center ${g.color}`}>
+                        <p className="text-3xl font-bold">{g.grade}</p>
+                        <p className="text-xs mt-1 font-medium">{g.category}</p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'pol-peer-comparison': return DS(
+              <Card className="border-purple-200 bg-purple-50/30">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <BarChart3 size={15} className="text-purple-600" /> Peer Comparison
+                  </CardTitle>
+                  <CardDescription>How you compare to similar jurisdictions</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { metric: 'Water Quality Score', you: 87, peer: 82, unit: '/100' },
+                      { metric: 'Compliance Rate', you: 94, peer: 89, unit: '%' },
+                      { metric: 'Infrastructure Grade', you: 77, peer: 74, unit: '/100' },
+                      { metric: 'Grant $ Per Capita', you: 22.7, peer: 18.3, unit: '' },
+                    ].map(m => (
+                      <div key={m.metric} className="flex items-center justify-between bg-white border border-slate-200 rounded-lg px-4 py-2.5">
+                        <span className="text-sm text-slate-700">{m.metric}</span>
+                        <div className="flex items-center gap-4">
+                          <span className="text-sm font-semibold text-purple-700">You: {m.you}{m.unit}</span>
+                          <span className="text-sm text-slate-500">Peers: {m.peer}{m.unit}</span>
+                          {m.you > m.peer ? (
+                            <Badge className="bg-emerald-100 text-emerald-800">Above</Badge>
+                          ) : (
+                            <Badge className="bg-amber-100 text-amber-800">Below</Badge>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'pol-council-agenda': return DS(
+              <Card className="border-purple-200 bg-purple-50/30">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <Scale size={15} className="text-purple-600" /> Council Agenda Suggestions
+                  </CardTitle>
+                  <CardDescription>Data-driven items for next meeting</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  <div className="flex items-start gap-2">
+                    <Badge className="bg-red-100 text-red-800 shrink-0">Urgent</Badge>
+                    <p><strong>ARPA Fund Reallocation:</strong> $480K unobligated — propose allocation to lead service line replacement before Dec 2026 deadline.</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Badge className="bg-amber-100 text-amber-800 shrink-0">Action</Badge>
+                    <p><strong>SRF Match Funding:</strong> Authorize $190K from capital reserve to close FY2027 SRF local match gap.</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Badge className="bg-blue-100 text-blue-800 shrink-0">Info</Badge>
+                    <p><strong>Quarterly Water Quality Update:</strong> 8th consecutive quarter with zero MCL exceedances — recognition opportunity.</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Badge className="bg-purple-100 text-purple-800 shrink-0">Equity</Badge>
+                    <p><strong>EJ Tract Prioritization:</strong> Present updated lead line replacement schedule prioritizing 3 EJ census tracts.</p>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            case 'groundwater': return DS(
+              <div id="section-groundwater">
+                <NwisGwPanel
+                  state={stateAbbr}
+                  compactMode={false}
+                />
+              </div>
+            );
+
+            case 'grant-outcomes': return DS(<>
+              {/* Historical Grant Outcomes */}
+              <GrantOutcomesCard />
+            </>);
 
             case 'disclaimer': return DS(
               <PlatformDisclaimer />
