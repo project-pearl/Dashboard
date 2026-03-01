@@ -484,6 +484,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'volunteer-program-panel',     label: 'Volunteer Program Management',  order: 25, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'citizen-reporting-panel',     label: 'Citizen Reporting',             order: 26, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'location-report',            label: 'Location Water Quality Report', order: 27, visible: true, defaultExpanded: false, lensControlled: true },
+    { id: 'initiatives-panel',          label: 'Initiatives Tracker',           order: 27.5, visible: true, defaultExpanded: true, lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',  label: 'Platform Disclaimer',          order: 28, visible: true, defaultExpanded: true,  lensControlled: true },
   ],
@@ -795,6 +796,8 @@ export const DEFAULT_SECTIONS = {
     { id: 'rw-profiles',         label: 'Waterbody Profiles',          order: 43,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'rw-impairment',       label: 'Impairment Analysis',         order: 44,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'nutrientcredits',     label: 'Nutrient Credit Tracking',    order: 45,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'tmdl',                label: 'TMDL Reporter',               order: 46,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'mdeexport',           label: 'MS4 Report Generator',        order: 47,  visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Public Health (6) ──
     { id: 'ph-contaminants',       label: 'Contaminant Tracking',      order: 46,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'local-dw-systems',     label: 'Drinking Water Systems',     order: 47,  visible: true, defaultExpanded: true,  lensControlled: true },

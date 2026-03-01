@@ -53,6 +53,11 @@ const GrantOpportunityMatcher = dynamic(
   { ssr: false }
 );
 
+const InitiativesTrackerPanel = dynamic(
+  () => import('@/components/InitiativesTrackerPanel').then((mod) => mod.InitiativesTrackerPanel),
+  { ssr: false }
+);
+
 const MapboxMapShell = dynamic(
   () => import('@/components/MapboxMapShell').then(m => m.MapboxMapShell),
   { ssr: false }
@@ -88,7 +93,7 @@ type Props = {
 type ViewLens = 'overview' | 'briefing' | 'trends' | 'policy' | 'compliance' |
   'water-quality' | 'public-health' | 'watershed-health' | 'restoration-projects' |
   'infrastructure' | 'monitoring' | 'disaster-emergency' | 'advocacy' |
-  'scorecard' | 'reports' | 'volunteer-program' | 'citizen-reporting' | 'funding' | 'warr';
+  'scorecard' | 'reports' | 'volunteer-program' | 'citizen-reporting' | 'funding' | 'warr' | 'initiatives';
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -133,6 +138,8 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set(['grants', 'disclaimer']) },
   warr:        { label: 'WARR Room', description: 'Water Alert & Response Readiness — real-time situation awareness',
     sections: new Set(['warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']) },
+  initiatives: { label: 'Initiatives', description: 'Conservation initiative planning and tracking',
+    sections: new Set(['initiatives-panel', 'disclaimer']) },
 };
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -326,6 +333,47 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
   // ── ATTAINS bulk for this state ──
   const [attainsBulk, setAttainsBulk] = useState<Array<{ id: string; name: string; category: string; alertLevel: AlertLevel; causes: string[]; cycle: string; lat?: number | null; lon?: number | null }>>([]);
   const [attainsBulkLoaded, setAttainsBulkLoaded] = useState(false);
+
+  // ── Scorecard: citizen sample counts ──
+  const [sampleCounts, setSampleCounts] = useState<{ approved: number; pending: number } | null>(null);
+  useEffect(() => {
+    Promise.all([
+      fetch(`/api/uploads/samples?stateAbbr=${stateAbbr}`).then(r => r.ok ? r.json() : null),
+      fetch(`/api/uploads/pending?stateAbbr=${stateAbbr}&userRole=NGO`).then(r => r.ok ? r.json() : null),
+    ]).then(([approved, pending]) => {
+      setSampleCounts({
+        approved: Array.isArray(approved) ? approved.length : 0,
+        pending: Array.isArray(pending) ? pending.length : 0,
+      });
+    }).catch(() => {});
+  }, [stateAbbr]);
+
+  // ── Scorecard: metrics derived from ATTAINS ──
+  const scorecardMetrics = useMemo(() => {
+    if (!attainsBulkLoaded || attainsBulk.length === 0) return null;
+    const total = attainsBulk.length;
+    const impaired = attainsBulk.filter(w => w.alertLevel === 'high' || w.alertLevel === 'medium').length;
+    const healthy = total - impaired;
+    const watershedHealthPct = Math.round((healthy / total) * 100);
+
+    const cat4a = attainsBulk.filter(w => w.category === '4a').length;
+    const cat5 = attainsBulk.filter(w => w.category === '5').length;
+    const restorationPct = (cat4a + cat5) > 0 ? Math.round((cat4a / (cat4a + cat5)) * 100) : 0;
+
+    const volunteerPct = sampleCounts && (sampleCounts.approved + sampleCounts.pending) > 0
+      ? Math.round((sampleCounts.approved / (sampleCounts.approved + sampleCounts.pending)) * 100)
+      : null;
+
+    const gradeFromPct = (pct: number) =>
+      pct >= 93 ? 'A' : pct >= 90 ? 'A-' : pct >= 87 ? 'B+' : pct >= 83 ? 'B' :
+      pct >= 80 ? 'B-' : pct >= 77 ? 'C+' : pct >= 73 ? 'C' : pct >= 70 ? 'C-' : 'D';
+
+    const avgScore = volunteerPct != null
+      ? Math.round((watershedHealthPct + restorationPct + volunteerPct) / 3)
+      : Math.round((watershedHealthPct + restorationPct) / 2);
+
+    return { watershedHealthPct, restorationPct, volunteerPct, advocacyGrade: gradeFromPct(avgScore), gradeFromPct };
+  }, [attainsBulk, attainsBulkLoaded, sampleCounts]);
 
   // Merge ATTAINS into region data
   const regionData = useMemo(() => {
@@ -2888,24 +2936,66 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
             case 'sdwis': return DS(<SDWISCompliancePanel state={stateAbbr} compactMode={false} />);
             case 'groundwater': return DS(<NwisGwPanel state={stateAbbr} compactMode={false} />);
             case 'disaster-emergency-panel': return DS(<DisasterEmergencyPanel selectedState={stateAbbr} stateRollup={[]} />);
-            case 'scorecard-kpis': return DS(
-              <Card><CardHeader><CardTitle>Conservation Program Scorecard</CardTitle><CardDescription>Key performance indicators for watershed conservation</CardDescription></CardHeader>
-              <CardContent><div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {[{ label: 'Watershed Health', value: '72%', color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
-                  { label: 'Volunteer Engagement', value: '89%', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
-                  { label: 'Restoration Progress', value: '64%', color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200' },
-                  { label: 'Advocacy Impact', value: 'B+', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' }
-                ].map(k => <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}><div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div><div className={`text-2xl font-bold ${k.color} mt-1`}>{k.value}</div></div>)}
-              </div></CardContent></Card>
-            );
-            case 'scorecard-grades': return DS(
-              <Card><CardHeader><CardTitle>Program Grades</CardTitle></CardHeader>
-              <CardContent><div className="grid grid-cols-3 gap-3">
-                {[{ area: 'Watershed Restoration', grade: 'B+' }, { area: 'Community Engagement', grade: 'A' }, { area: 'Policy Advocacy', grade: 'A-' }].map(g =>
-                  <div key={g.area} className="text-center p-4 border rounded-lg"><div className="text-3xl font-bold text-emerald-600">{g.grade}</div><div className="text-xs text-slate-500 mt-1">{g.area}</div></div>
-                )}
-              </div></CardContent></Card>
-            );
+            case 'scorecard-kpis': {
+              const kpis = scorecardMetrics
+                ? [
+                    { label: 'Watershed Health', value: `${scorecardMetrics.watershedHealthPct}%`, color: scorecardMetrics.watershedHealthPct >= 70 ? 'text-green-600' : 'text-amber-600', bg: scorecardMetrics.watershedHealthPct >= 70 ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200' },
+                    { label: 'Volunteer Engagement', value: scorecardMetrics.volunteerPct != null ? `${scorecardMetrics.volunteerPct}%` : '—', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
+                    { label: 'Restoration Progress', value: `${scorecardMetrics.restorationPct}%`, color: scorecardMetrics.restorationPct >= 50 ? 'text-green-600' : 'text-amber-600', bg: scorecardMetrics.restorationPct >= 50 ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200' },
+                    { label: 'Advocacy Impact', value: scorecardMetrics.advocacyGrade, color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' },
+                  ]
+                : null;
+              return DS(
+                <Card><CardHeader><CardTitle>Conservation Program Scorecard</CardTitle><CardDescription>Key performance indicators for watershed conservation</CardDescription></CardHeader>
+                <CardContent>
+                  {!attainsBulkLoaded ? (
+                    <div className="flex items-center justify-center py-8 text-sm text-slate-500"><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-slate-400 mr-2" />Loading ATTAINS data…</div>
+                  ) : kpis ? (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {kpis.map(k => <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}><div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div><div className={`text-2xl font-bold ${k.color} mt-1`}>{k.value}</div></div>)}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {[{ label: 'Watershed Health', value: '—', color: 'text-slate-400', bg: 'bg-slate-50 border-slate-200' },
+                        { label: 'Volunteer Engagement', value: '—', color: 'text-slate-400', bg: 'bg-slate-50 border-slate-200' },
+                        { label: 'Restoration Progress', value: '—', color: 'text-slate-400', bg: 'bg-slate-50 border-slate-200' },
+                        { label: 'Advocacy Impact', value: '—', color: 'text-slate-400', bg: 'bg-slate-50 border-slate-200' }
+                      ].map(k => <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}><div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div><div className={`text-2xl font-bold ${k.color} mt-1`}>{k.value}</div></div>)}
+                    </div>
+                  )}
+                </CardContent></Card>
+              );
+            }
+            case 'scorecard-grades': {
+              const grades = scorecardMetrics
+                ? [
+                    { area: 'Watershed Restoration', grade: scorecardMetrics.gradeFromPct(scorecardMetrics.restorationPct) },
+                    { area: 'Community Engagement', grade: scorecardMetrics.volunteerPct != null ? scorecardMetrics.gradeFromPct(scorecardMetrics.volunteerPct) : '—' },
+                    { area: 'Policy Advocacy', grade: scorecardMetrics.gradeFromPct(scorecardMetrics.watershedHealthPct) },
+                  ]
+                : null;
+              return DS(
+                <Card><CardHeader><CardTitle>Program Grades</CardTitle></CardHeader>
+                <CardContent>
+                  {!attainsBulkLoaded ? (
+                    <div className="flex items-center justify-center py-8 text-sm text-slate-500"><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-slate-400 mr-2" />Loading…</div>
+                  ) : grades ? (
+                    <div className="grid grid-cols-3 gap-3">
+                      {grades.map(g => {
+                        const s = g.grade !== '—' ? scoreToGrade(g.grade === 'A' ? 93 : g.grade === 'A-' ? 90 : g.grade === 'B+' ? 87 : g.grade === 'B' ? 83 : g.grade === 'B-' ? 80 : g.grade === 'C+' ? 77 : g.grade === 'C' ? 73 : g.grade === 'C-' ? 70 : 60) : { color: 'text-slate-400', bg: 'bg-slate-50 border-slate-200' };
+                        return <div key={g.area} className={`text-center p-4 border rounded-lg ${s.bg}`}><div className={`text-3xl font-bold ${s.color}`}>{g.grade}</div><div className="text-xs text-slate-500 mt-1">{g.area}</div></div>;
+                      })}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-3">
+                      {[{ area: 'Watershed Restoration', grade: '—' }, { area: 'Community Engagement', grade: '—' }, { area: 'Policy Advocacy', grade: '—' }].map(g =>
+                        <div key={g.area} className="text-center p-4 border rounded-lg"><div className="text-3xl font-bold text-slate-400">{g.grade}</div><div className="text-xs text-slate-500 mt-1">{g.area}</div></div>
+                      )}
+                    </div>
+                  )}
+                </CardContent></Card>
+              );
+            }
             case 'reports-hub': return DS(
               <Card><CardHeader><CardTitle>Impact Reports</CardTitle><CardDescription>Generated reports and impact documentation</CardDescription></CardHeader>
               <CardContent><div className="space-y-2">
@@ -2921,6 +3011,7 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
             case 'advocacy-panel': return DS(<AdvocacyPanel stateAbbr={stateAbbr} />);
             case 'volunteer-program-panel': return DS(<VolunteerProgramPanel stateAbbr={stateAbbr} />);
             case 'citizen-reporting-panel': return DS(<CitizenReportingPanel stateAbbr={stateAbbr} />);
+            case 'initiatives-panel': return DS(<InitiativesTrackerPanel stateAbbr={stateAbbr} />);
 
             case 'location-report': return DS(<LocationReportCard />);
 

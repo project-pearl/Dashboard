@@ -198,6 +198,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'volunteer-program',     label: 'Volunteer Program' },
     { id: 'citizen-reporting',     label: 'Citizen Reporting' },
     { id: 'funding',               label: 'Funding & Grants' },
+    { id: 'initiatives',           label: 'Initiatives' },
   ],
   // ── K-12 Education (12 items) ──────────────────────────────────────────────
   '/dashboard/k12': [
