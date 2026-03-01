@@ -772,115 +772,8 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
           </div>
         )}
 
-        {/* ── HERO BANNER ── */}
-        <HeroBanner role="ngo" onDoubleClick={() => onToggleDevMode?.()}>
-            {/* State Selector */}
-            <select
-              value={stateAbbr}
-              onChange={(e) => {
-                setStateAbbr(e.target.value);
-                setSelectedWatershed('All Watersheds');
-                setActiveDetailId(null);
-              }}
-              className="h-8 px-3 text-xs font-medium rounded-md border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-400"
-            >
-              {Object.entries(STATE_NAMES).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
-                <option key={abbr} value={abbr}>{name}</option>
-              ))}
-            </select>
-            {/* Watershed Dropdown Selector */}
-            {watershedGroups.length > 1 && (
-              <select
-                value={selectedWatershed}
-                onChange={(e) => setSelectedWatershed(e.target.value)}
-                className="h-8 px-3 text-xs font-medium rounded-md border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-400"
-              >
-                {watershedGroups.map(ws => (
-                  <option key={ws} value={ws}>{ws}</option>
-                ))}
-              </select>
-            )}
-            {user && (
-            <div className="relative">
-              <button
-                onClick={() => setShowAccountPanel(!showAccountPanel)}
-                className="inline-flex items-center h-8 px-3 text-xs font-semibold rounded-md border bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 transition-colors cursor-pointer"
-              >
-                <Shield className="h-3.5 w-3.5 mr-1.5" />
-                {user.name || 'Program Director'}
-                <span className="ml-1.5 text-emerald-400">▾</span>
-              </button>
-
-              {showAccountPanel && (
-                <>
-                <div className="fixed inset-0 z-40" onClick={() => setShowAccountPanel(false)} />
-                <div
-                  className="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg border border-slate-200 shadow-xl z-50 overflow-hidden"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="px-4 py-3 bg-gradient-to-r from-emerald-50 to-slate-50 border-b border-slate-200">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-9 h-9 rounded-full bg-emerald-600 flex items-center justify-center text-white text-sm font-bold">
-                          {user.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
-                        </div>
-                        <div>
-                          <div className="text-sm font-semibold text-slate-800">{user.name}</div>
-                          <div className="text-[11px] text-slate-500">{user.email || 'advocacy@project-pearl.org'}</div>
-                        </div>
-                      </div>
-                      <button onClick={() => setShowAccountPanel(false)} className="text-slate-400 hover:text-slate-600">
-                        <X size={14} />
-                      </button>
-                    </div>
-                  </div>
-                  <div className="px-4 py-3 space-y-2 text-xs border-b border-slate-100">
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Role</span>
-                      <span className="font-medium text-slate-700">{user.role || 'NGO'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500 flex-shrink-0">Organization</span>
-                      <span className="font-medium text-slate-700 text-right">{user.organization || `${stateName} Waterkeepers`}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Access Level</span>
-                      <Badge variant="outline" className="text-[10px] h-5 bg-emerald-50 border-emerald-200 text-emerald-700">Full Access</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Monitoring</span>
-                      <span className="font-medium text-slate-700">{stateName} · {regionData.length.toLocaleString()} waterbodies</span>
-                    </div>
-                  </div>
-                  <div className="px-4 py-2.5 space-y-1">
-                    <button
-                      onClick={() => { setShowAccountPanel(false); router.push('/account'); }}
-                      className="w-full text-left px-3 py-2 rounded-md text-xs text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors"
-                    >
-                      <Shield size={13} className="text-slate-400" />
-                      My Account
-                    </button>
-                    <button
-                      onClick={() => { setShowAccountPanel(false); logout(); }}
-                      className="w-full text-left px-3 py-2 rounded-md text-xs text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
-                    >
-                      <LogOut size={13} />
-                      Sign Out
-                    </button>
-                  </div>
-                  <div className="px-4 py-2 border-t border-slate-100 bg-slate-50">
-                    <span className="text-[10px] text-slate-400">PEARL Conservation Hub v1.0 · Session {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                  </div>
-                </div>
-                </>
-              )}
-            </div>
-            )}
-            <Badge variant="outline" className="text-[10px] h-6 bg-emerald-50 border-emerald-200 text-emerald-700">
-              <Leaf className="h-3 w-3 mr-1" />
-              NGO
-            </Badge>
-        </HeroBanner>
+        {/* ── HERO BANNER (clean — no overlay boxes) ── */}
+        <HeroBanner role="ngo" onDoubleClick={() => onToggleDevMode?.()} />
 
         <MissionQuote role="ngo" variant="light" />
 
@@ -1070,6 +963,40 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
             );
 
             case 'map-grid': return DS(
+        <div className="space-y-4">
+          {/* State & Watershed Lookup */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <MapPin size={14} className="text-emerald-600" />
+              <span className="text-xs font-semibold text-slate-700">Location</span>
+            </div>
+            <select
+              value={stateAbbr}
+              onChange={(e) => {
+                setStateAbbr(e.target.value);
+                setSelectedWatershed('All Watersheds');
+                setActiveDetailId(null);
+              }}
+              className="h-8 px-3 text-xs font-medium rounded-md border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            >
+              {Object.entries(STATE_NAMES).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
+                <option key={abbr} value={abbr}>{name}</option>
+              ))}
+            </select>
+            {watershedGroups.length > 1 && (
+              <select
+                value={selectedWatershed}
+                onChange={(e) => setSelectedWatershed(e.target.value)}
+                className="h-8 px-3 text-xs font-medium rounded-md border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              >
+                {watershedGroups.map(ws => (
+                  <option key={ws} value={ws}>{ws}</option>
+                ))}
+              </select>
+            )}
+            <span className="text-[10px] text-slate-400 ml-auto">{regionData.length.toLocaleString()} waterbodies</span>
+          </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
           {/* LEFT: State Map (2/3 width — matches NCC layout) */}
@@ -1313,6 +1240,7 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
               </div>
             </CardContent>
           </Card>
+        </div>
         </div>
             );
 
