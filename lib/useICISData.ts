@@ -144,16 +144,19 @@ function mapEnforcement(rows: any[]): IcisEnforcement[] {
   return rows.map((r: any) => {
     const rawPenalty = r.FedPenalty ? String(r.FedPenalty).replace(/[$,]/g, '') : null;
     return {
-      permit: findField(r, ['permit', 'NPDES_ID', 'SourceID', 'EXTERNAL_PERMIT_NMBR']),
+      permit: findField(r, ['permit', 'NPDES_ID', 'SourceID', 'EXTERNAL_PERMIT_NMBR',
+        'enf_name', 'FACILITY_NAME']),
       caseNumber: findField(r, ['caseNumber', 'CASE_NUMBER', 'CaseNumber',
-        'ENFORCEMENT_ID', 'ENFORCEMENT_ACTION_IDENTIFIER']),
+        'enf_identifier', 'ENFORCEMENT_ID', 'ENFORCEMENT_ACTION_IDENTIFIER']),
       actionType: findField(r, ['actionType', 'ENF_TYPE_CODE', 'ENF_TYPE_DESC',
-        'CaseCategoryDesc', 'ENFORCEMENT_ACTION_TYPE_CODE']),
+        'enf_outcome_code', 'CaseCategoryDesc', 'ENFORCEMENT_ACTION_TYPE_CODE']),
       penaltyAssessed: r.penaltyAssessed || Number(
-        r.PENALTY_ASSESSED_AMT || r.FED_PENALTY_ASSESSED_AMT
+        r.total_penalty_assessed_amt || r.PENALTY_ASSESSED_AMT || r.FED_PENALTY_ASSESSED_AMT
         || r.STATE_LOCAL_PENALTY_AMT || r.PENALTY_AMT || rawPenalty || 0),
-      penaltyCollected: r.penaltyCollected || Number(r.PENALTY_COLLECTED_AMT || 0),
-      settlementDate: findField(r, ['settlementDate', 'SETTLEMENT_ENTERED_DATE', 'SettlementDate',
+      penaltyCollected: r.penaltyCollected || Number(
+        r.total_cost_recovery_amt || r.PENALTY_COLLECTED_AMT || 0),
+      settlementDate: findField(r, ['settlementDate', 'achieved_date', 'filed_date',
+        'SETTLEMENT_ENTERED_DATE', 'SettlementDate',
         'ACHIEVED_DATE', 'FINAL_ORDER_ENTERED_DATE', 'ENFORCEMENT_ACTION_DATE']),
       lat: r.lat || 0,
       lng: r.lng || 0,

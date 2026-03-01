@@ -2534,8 +2534,12 @@ export async function GET(request: NextRequest) {
                       VIOLATION_CODE: v.ViolationCode || '',
                       VIOLATION_DESC: v.ViolationDesc || '',
                       VIOLATION_TYPE_DESC: v.ViolationDesc || '',
+                      VIOLATION_DETECT_DATE: v.NPDESViolationDate || v.ViolationDetectDate
+                        || dmr.MonitoringPeriodEndDate || '',
                       RNC_DETECTION_CODE: v.RNCDetectionCode || '',
                       SEVERITY_IND: v.ViolationSeverity || '',
+                      SEVERITY_CODE: v.ViolationSeverity === 'SNC' ? 'S'
+                        : (v.ViolationSeverity ? 'M' : ''),
                       lat: Number(feat.FacLat || feat.Latitude) || 0,
                       lng: Number(feat.FacLong || feat.Longitude) || 0,
                     });
@@ -2567,9 +2571,11 @@ export async function GET(request: NextRequest) {
                 VIOLATION_CODE: vioStatus || (isSnc ? 'SNC' : ''),
                 VIOLATION_TYPE_DESC: vioDesc,
                 VIOLATION_DETECT_DATE: f.CWPDateLastFormalAction || f.CWPDateLastInspection
+                  || f.CWPDateLastPenalty || f.CWPLastFormalActionDate
                   || f.DateLastFormalAction || f.DateLastInspection || '',
                 RNC_DETECTION_CODE: isSnc ? 'Y' : '',
                 SEVERITY_CODE: isSnc ? 'S' : (vioStatus ? 'M' : ''),
+                CWPSNCStatus: sncRaw,
                 FACILITY_NAME: facilityName,
                 CWPQtrsWithVio: qtrsWithVio,
                 lat: Number(f.FacLat || f.Latitude) || 0,
@@ -2655,18 +2661,22 @@ export async function GET(request: NextRequest) {
           if (Array.isArray(raw) && raw.length > 0) {
             console.log('[ICIS-Enforcement] Envirofacts sample row keys:', Object.keys(raw[0]).join(', '));
             // Normalize Envirofacts column names to standardized fields
+            // Envirofacts ICIS_ENFORCEMENT uses lowercase column names:
+            // enf_identifier, enf_name, total_penalty_assessed_amt, achieved_date, etc.
             const data = raw.map((r: any) => ({
-              NPDES_ID: r.NPDES_ID || r.EXTERNAL_PERMIT_NMBR || r.npdes_id || r.external_permit_nmbr || '',
-              CASE_NUMBER: r.ENFORCEMENT_ACTION_IDENTIFIER || r.CASE_NUMBER || r.ENFORCEMENT_ID
+              NPDES_ID: r.NPDES_ID || r.EXTERNAL_PERMIT_NMBR || r.npdes_id
+                || r.enf_name || '',
+              CASE_NUMBER: r.enf_identifier || r.ENFORCEMENT_ACTION_IDENTIFIER || r.CASE_NUMBER
                 || r.enforcement_action_identifier || r.case_number || '',
-              ENF_TYPE_DESC: r.ENFORCEMENT_ACTION_TYPE_CODE || r.ENF_TYPE_CODE || r.ENF_TYPE_DESC
-                || r.enforcement_action_type_code || r.enf_type_desc || '',
-              FED_PENALTY_ASSESSED_AMT: Number(r.FED_PENALTY_ASSESSED_AMT || r.STATE_LOCAL_PENALTY_AMT
-                || r.PENALTY_AMT || r.fed_penalty_assessed_amt || r.state_local_penalty_amt || 0),
-              SETTLEMENT_ENTERED_DATE: r.FINAL_ORDER_ENTERED_DATE || r.ENFORCEMENT_ACTION_DATE
-                || r.SETTLEMENT_ENTERED_DATE || r.ACHIEVED_DATE
-                || r.final_order_entered_date || r.enforcement_action_date || r.settlement_entered_date || '',
-              FACILITY_NAME: r.FACILITY_NAME || r.facility_name || '',
+              ENF_TYPE_DESC: r.enf_outcome_code || r.ENFORCEMENT_ACTION_TYPE_CODE
+                || r.ENF_TYPE_CODE || r.ENF_TYPE_DESC || r.hq_division || '',
+              FED_PENALTY_ASSESSED_AMT: Number(r.total_penalty_assessed_amt
+                || r.FED_PENALTY_ASSESSED_AMT || r.STATE_LOCAL_PENALTY_AMT
+                || r.PENALTY_AMT || 0),
+              SETTLEMENT_ENTERED_DATE: r.achieved_date || r.filed_date
+                || r.FINAL_ORDER_ENTERED_DATE || r.ENFORCEMENT_ACTION_DATE
+                || r.SETTLEMENT_ENTERED_DATE || r.ACHIEVED_DATE || '',
+              FACILITY_NAME: r.enf_name || r.FACILITY_NAME || r.facility_name || '',
               lat: 0,
               lng: 0,
             }));

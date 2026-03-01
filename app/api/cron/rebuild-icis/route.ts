@@ -176,22 +176,36 @@ function transformDmr(row: Record<string, any>): IcisDmr | null {
 }
 
 function transformEnforcement(row: Record<string, any>): IcisEnforcement | null {
-  const lat = parseFloat(row.LATITUDE_MEASURE || row.FAC_LAT || '');
-  const lng = parseFloat(row.LONGITUDE_MEASURE || row.FAC_LONG || '');
-  if (isNaN(lat) || isNaN(lng) || lat <= 0) return null;
+  // Envirofacts ICIS_ENFORCEMENT uses lowercase column names:
+  //   enf_identifier, enf_name, total_penalty_assessed_amt, achieved_date,
+  //   activity_id, enf_outcome_code, enf_summary_text, filed_date
+  // No NPDES_ID or lat/lng in this table — those come from permit cross-ref.
+  const caseNumber = row.enf_identifier || row.CASE_NUMBER || row.ACTIVITY_ID
+    || row.ENFORCEMENT_ACTION_IDENTIFIER || row.activity_id || '';
+  const permit = row.NPDES_ID || row.EXTERNAL_PERMIT_NMBR
+    || row.enf_name || '';  // enf_name is the facility/case name
+  if (!permit && !caseNumber) return null;
 
-  const assessed = parseFloat(row.FED_PENALTY_ASSESSED_AMT || row.PENALTY_AMOUNT || '0');
-  const collected = parseFloat(row.FED_PENALTY_COLLECTED_AMT || '0');
+  const assessed = parseFloat(
+    row.total_penalty_assessed_amt || row.FED_PENALTY_ASSESSED_AMT
+    || row.PENALTY_AMOUNT || '0'
+  );
+  const collected = parseFloat(
+    row.total_cost_recovery_amt || row.FED_PENALTY_COLLECTED_AMT || '0'
+  );
 
   return {
-    permit: row.NPDES_ID || row.EXTERNAL_PERMIT_NMBR || '',
-    caseNumber: row.CASE_NUMBER || row.ACTIVITY_ID || '',
-    actionType: row.ENF_TYPE_DESC || row.ENFORCEMENT_ACTION_TYPE || '',
+    permit,
+    caseNumber,
+    actionType: row.enf_outcome_code || row.ENF_TYPE_DESC || row.ENFORCEMENT_ACTION_TYPE
+      || row.ENFORCEMENT_ACTION_TYPE_CODE || row.hq_division || '',
     penaltyAssessed: isNaN(assessed) ? 0 : assessed,
     penaltyCollected: isNaN(collected) ? 0 : collected,
-    settlementDate: row.SETTLEMENT_ENTERED_DATE || row.ACHIEVED_DATE || '',
-    lat: Math.round(lat * 100000) / 100000,
-    lng: Math.round(lng * 100000) / 100000,
+    settlementDate: row.achieved_date || row.filed_date
+      || row.SETTLEMENT_ENTERED_DATE || row.ACHIEVED_DATE
+      || row.FINAL_ORDER_ENTERED_DATE || row.ENFORCEMENT_ACTION_DATE || '',
+    lat: 0,  // ICIS_ENFORCEMENT table has no coordinates
+    lng: 0,
   };
 }
 
@@ -273,13 +287,26 @@ async function fetchEchoViolations(stateAbbr: string): Promise<IcisViolation[]> 
         if (isNaN(lat) || isNaN(lng) || Math.abs(lat) < 1) continue;
 
         const sncStatus = (f.CWPSNCStatus || '').trim();
+        const isSnc = /^S/.test(sncStatus) || /SNC|significant/i.test(sncStatus);
+        // Best available date: last formal action → last inspection → last violation quarter
+        const bestDate = f.CWPDateLastFormalAction || f.CWPDateLastInspection
+          || f.CWPDateLastPenalty || f.CWPLastFormalActionDate || '';
+        // Map severity: S = SNC, Non-SNC violators → M, else raw status
+        const severity = isSnc ? 'S' : (sncStatus || 'M');
+        const vioStatus = (f.CWPVioStatus || f.CWPCurrentVioStatus || '').trim();
+        const qtrsWithVio = f.CWPQtrsWithVio || '';
+        const facilityName = (f.CWPName || f.FacName || '').trim();
+        const desc = vioStatus
+          || (isSnc ? 'Significant Non-Compliance' : '')
+          || (qtrsWithVio ? `${qtrsWithVio} quarters with violations` : '')
+          || (facilityName ? `Violation at ${facilityName}` : 'Violation');
         results.push({
           permit: (f.SourceID || '').trim(),
-          code: (f.CWPVioStatus || '').trim(),
-          desc: (f.CWPVioStatus || '').trim(),
-          date: new Date().toISOString().slice(0, 10), // ECHO gives facility status, not individual dates
-          rnc: sncStatus.startsWith('S'),
-          severity: sncStatus,
+          code: vioStatus || (isSnc ? 'SNC' : ''),
+          desc,
+          date: bestDate,
+          rnc: isSnc,
+          severity,
           lat: Math.round(lat * 100000) / 100000,
           lng: Math.round(lng * 100000) / 100000,
         });
