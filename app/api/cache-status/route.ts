@@ -32,6 +32,8 @@ import { getNwpsCacheStatus, ensureWarmed as warmNwps } from '@/lib/nwpsCache';
 import { getCoopsCacheStatus, ensureWarmed as warmCoops } from '@/lib/coopsCache';
 import { getSnotelCacheStatus, ensureWarmed as warmSnotel } from '@/lib/snotelCache';
 import { getTriCacheStatus, ensureWarmed as warmTri } from '@/lib/triCache';
+import { getFemaCacheStatus, ensureWarmed as warmFema } from '@/lib/femaCache';
+import { getSuperfundCacheStatus, ensureWarmed as warmSuperfund } from '@/lib/superfundCache';
 import { getUSAsCacheStatus, ensureWarmed as warmUSAs } from '@/lib/usaSpendingCache';
 import { getGrantsGovCacheStatus, ensureWarmed as warmGrantsGov } from '@/lib/grantsGovCache';
 import { getSamCacheStatus, ensureWarmed as warmSam } from '@/lib/samGovCache';
@@ -55,6 +57,7 @@ export async function GET() {
     [warmCdcNwss, warmNdbc, warmNasaCmr, warmNars, warmDataGov, warmUsace],
     [warmNwisIv, warmUsgsAlerts, warmNwsAlerts, warmNwps, warmCoops, warmSnotel],
     [warmTri, warmUSAs, warmGrantsGov, warmSam, warmSentinelHealth, warmSentinelQueue, warmSentinelScores],
+    [warmFema, warmSuperfund],
   ];
   for (const batch of warmBatches) {
     await Promise.allSettled(batch.map(fn => fn()));
@@ -89,6 +92,8 @@ export async function GET() {
   const usaSpending = getUSAsCacheStatus();
   const grantsGov = getGrantsGovCacheStatus();
   const sam = getSamCacheStatus();
+  const fema = getFemaCacheStatus();
+  const superfund = getSuperfundCacheStatus();
 
   const caches = {
     wqp: {
@@ -210,6 +215,14 @@ export async function GET() {
     sam: {
       ...sam,
       ...staleness(sam.loaded ? (sam as any).built : null),
+    },
+    fema: {
+      ...fema,
+      ...staleness(fema.loaded ? (fema as any).built : null),
+    },
+    superfund: {
+      ...superfund,
+      ...staleness(superfund.loaded ? (superfund as any).built : null),
     },
   };
 
