@@ -8,14 +8,22 @@
  * save result, return. Any user's refresh benefits all subsequent readers.
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 // ── Supabase admin client (service-role, bypasses RLS) ────────────────────
+// Lazy-initialized to avoid build-time crash when env vars aren't available.
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let _supabaseAdmin: SupabaseClient | null = null;
+
+function supabaseAdmin(): SupabaseClient {
+  if (!_supabaseAdmin) {
+    _supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabaseAdmin;
+}
 
 // ── Staleness thresholds per source ──────────────────────────────────────
 
@@ -70,7 +78,7 @@ export function formatAge(ms: number): string {
 
 async function acquireLock(source: string, scopeKey: string, lockedBy: string): Promise<boolean> {
   // Clean expired locks first
-  await supabaseAdmin
+  await supabaseAdmin()
     .from('data_refresh_locks')
     .delete()
     .eq('source', source)
@@ -78,7 +86,7 @@ async function acquireLock(source: string, scopeKey: string, lockedBy: string): 
     .lt('expires_at', new Date().toISOString());
 
   // Try to insert — PK conflict means lock held
-  const { error } = await supabaseAdmin
+  const { error } = await supabaseAdmin()
     .from('data_refresh_locks')
     .insert({
       source,
@@ -92,7 +100,7 @@ async function acquireLock(source: string, scopeKey: string, lockedBy: string): 
 }
 
 async function releaseLock(source: string, scopeKey: string): Promise<void> {
-  await supabaseAdmin
+  await supabaseAdmin()
     .from('data_refresh_locks')
     .delete()
     .eq('source', source)
@@ -104,7 +112,7 @@ async function releaseLock(source: string, scopeKey: string): Promise<void> {
 async function readSnapshot<T>(source: string, scopeKey: string): Promise<{
   data: T; meta: SnapshotMeta;
 } | null> {
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await supabaseAdmin()
     .from('data_snapshots')
     .select('data_json, fetched_at, record_count, fetch_duration_ms, fetched_by')
     .eq('source', source)
@@ -141,7 +149,7 @@ async function writeSnapshot<T>(
   const jsonStr = JSON.stringify(data);
   const sizeBytes = Buffer.byteLength(jsonStr, 'utf-8');
 
-  await supabaseAdmin
+  await supabaseAdmin()
     .from('data_snapshots')
     .upsert({
       source,
@@ -227,7 +235,7 @@ export async function getOrRefresh<T>(opts: GetOrRefreshOptions<T>): Promise<Get
  * Useful for freshness checks without transferring large payloads.
  */
 export async function getSnapshotMeta(source: string, scopeKey: string): Promise<SnapshotMeta | null> {
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await supabaseAdmin()
     .from('data_snapshots')
     .select('fetched_at, record_count, fetch_duration_ms, fetched_by')
     .eq('source', source)
