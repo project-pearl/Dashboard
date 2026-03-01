@@ -51,6 +51,9 @@ export interface ChangeEvent {
     currentValue?: number;
     threshold?: number;
     facilityId?: string;
+    previousStatus?: string;
+    currentStatus?: string;
+    escalationType?: 'SNC_ENTRY' | 'QTRS_INCREASE' | 'STATUS_CHANGE';
   };
 }
 

@@ -57,6 +57,14 @@ interface CreateInviteParams {
   expiresInDays?: number;
 }
 
+// ─── Prefetch helper ────────────────────────────────────────────────────────
+
+function triggerPrefetch(role: string, state?: string) {
+  const params = new URLSearchParams({ role });
+  if (state) params.set('state', state);
+  fetch(`/api/prefetch?${params}`).catch(() => {});
+}
+
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function useAuth(): AuthContextType {
@@ -115,7 +123,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session?.user && mounted) {
           const profile = await fetchProfile(session.user.id);
           if (profile && mounted) {
-            setUser(profileToPearlUser(profile, session.user));
+            const pearlUser = profileToPearlUser(profile, session.user);
+            setUser(pearlUser);
+            triggerPrefetch(pearlUser.role, pearlUser.state);
           }
         }
       } catch (err) {
@@ -132,7 +142,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (event === 'SIGNED_IN' && session?.user) {
           const profile = await fetchProfile(session.user.id);
           if (profile && mounted) {
-            setUser(profileToPearlUser(profile, session.user));
+            const pearlUser = profileToPearlUser(profile, session.user);
+            setUser(pearlUser);
+            triggerPrefetch(pearlUser.role, pearlUser.state);
           }
         } else if (event === 'SIGNED_OUT') {
           if (mounted) setUser(null);
@@ -174,6 +186,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return { success: false, error: 'Account deactivated' };
         }
         setUser(pearlUser);
+        triggerPrefetch(pearlUser.role, pearlUser.state);
         supabase.from('profiles').update({ last_login_at: new Date().toISOString() }).eq('id', data.user.id).then(() => {});
         return { success: true, user: pearlUser };
       }

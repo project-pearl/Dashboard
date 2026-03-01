@@ -2744,8 +2744,34 @@ export async function GET(request: NextRequest) {
       case 'icis-cached': {
         const lat = parseFloat(sp.get('lat') || '');
         const lng = parseFloat(sp.get('lng') || '');
+        const stateParam = sp.get('state') || '';
+
+        // State-level: route through Supabase shared cache
+        if (stateParam) {
+          try {
+            const { getOrRefresh } = await import('@/lib/supabaseCache');
+            const { fetchIcisForState } = await import('@/lib/icisStateFetcher');
+            const result = await getOrRefresh({
+              source: 'icis',
+              scopeKey: stateParam,
+              fetchFn: () => fetchIcisForState(stateParam),
+              fetchedBy: 'api',
+            });
+            return NextResponse.json({
+              source: 'icis-cached',
+              state: stateParam,
+              ...result.data,
+              fromCache: true,
+              _meta: result.meta,
+            });
+          } catch (e: any) {
+            return NextResponse.json({ source: 'icis-cached', error: e.message }, { status: 502 });
+          }
+        }
+
+        // Spatial lat/lng: use existing in-memory grid cache
         if (isNaN(lat) || isNaN(lng)) {
-          return NextResponse.json({ error: 'lat and lng required' }, { status: 400 });
+          return NextResponse.json({ error: 'lat/lng or state required' }, { status: 400 });
         }
         try {
           const { getIcisCache, ensureWarmed: warmIcis } = await import('@/lib/icisCache');

@@ -5,6 +5,8 @@ import type {
   IcisPermit, IcisViolation, IcisDmr,
   IcisEnforcement, IcisInspection,
 } from '@/lib/icisCache';
+import type { SnapshotMeta } from '@/lib/supabaseCache';
+import { useCachedData } from '@/lib/useCachedData';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -38,6 +40,9 @@ export interface UseICISDataResult {
   isLoading: boolean;
   error: string | null;
   fromCache: boolean;
+  meta: SnapshotMeta | null;
+  refreshInProgress: boolean;
+  refresh: () => Promise<void>;
 }
 
 const EMPTY_SUMMARY: ICISSummary = {
@@ -178,6 +183,11 @@ export function useICISData(input: ICISDataInput): UseICISDataResult {
   const [error, setError] = useState<string | null>(null);
   const [fromCache, setFromCache] = useState(false);
 
+  // Cache age/refresh awareness (only active for state-level queries)
+  const cacheSource = state ? 'icis' : '';
+  const cacheScopeKey = state || '';
+  const { meta, refreshInProgress, refresh, updateMeta } = useCachedData(cacheSource, cacheScopeKey);
+
   const fetchData = useCallback(async () => {
     if (!enabled) return;
     setIsLoading(true);
@@ -196,6 +206,7 @@ export function useICISData(input: ICISDataInput): UseICISDataResult {
             setEnforcement(data.enforcement || []);
             setInspections(data.inspections || []);
             setFromCache(true);
+            if (data._meta) updateMeta(data._meta);
             setIsLoading(false);
             return;
           }
@@ -228,8 +239,26 @@ export function useICISData(input: ICISDataInput): UseICISDataResult {
         return;
       }
 
-      // Strategy 3: State-level live query (Envirofacts → map fields)
+      // Strategy 3: State-level — try Supabase shared cache first, fallback to live query
       if (state) {
+        // Try shared cache (Supabase-backed, includes _meta for age badge)
+        const cachedRes = await fetch(`/api/water-data?action=icis-cached&state=${state}`);
+        if (cachedRes.ok) {
+          const data = await cachedRes.json();
+          if (data.permits?.length || data.violations?.length) {
+            setPermits(data.permits || []);
+            setViolations(data.violations || []);
+            setDmr(data.dmr || []);
+            setEnforcement(data.enforcement || []);
+            setInspections(data.inspections || []);
+            setFromCache(true);
+            if (data._meta) updateMeta(data._meta);
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        // Fallback: live query (Envirofacts → map fields)
         const base = `/api/water-data`;
         const [pRes, vRes, dRes, eRes] = await Promise.allSettled([
           fetch(`${base}?action=icis-permits&state=${state}&limit=500`),
@@ -334,5 +363,8 @@ export function useICISData(input: ICISDataInput): UseICISDataResult {
     isLoading,
     error,
     fromCache,
+    meta: meta ? { ...meta, refreshInProgress } : null,
+    refreshInProgress,
+    refresh,
   };
 }

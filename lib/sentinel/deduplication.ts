@@ -76,6 +76,27 @@ export function shouldDeduplicate(
         return true;
       }
     }
+
+    // Rule 5: ECHO escalation — 24h cooldown per facility
+    //         Allow through if severity increased (escalation detected)
+    if (
+      newEvent.source === 'ECHO_ENFORCEMENT' &&
+      existing.source === 'ECHO_ENFORCEMENT' &&
+      newEvent.metadata.facilityId &&
+      existing.metadata.facilityId &&
+      newEvent.metadata.facilityId === existing.metadata.facilityId
+    ) {
+      const windowMs = DEDUP_WINDOWS.echoEscalationCooldown_hours * 60 * 60 * 1000;
+      if (Math.abs(newTs - existTs) < windowMs) {
+        // Allow through if severity increased
+        if (severityRank(newEvent.severityHint) > severityRank(existing.severityHint)) {
+          existing.severityHint = newEvent.severityHint;
+          existing.payload = { ...existing.payload, ...newEvent.payload };
+          continue;
+        }
+        return true;
+      }
+    }
   }
 
   return false;

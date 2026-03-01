@@ -90,6 +90,18 @@ export const COMPOUND_PATTERNS: CompoundPattern[] = [
       ['ECHO_ENFORCEMENT'],
     ],
   },
+  {
+    id: 'enforcement-cascade',
+    name: 'Enforcement Cascade',
+    multiplier: 2.2,
+    timeWindowHours: 72,
+    requireSameHuc: false,
+    requiredSources: [
+      ['ECHO_ENFORCEMENT'],
+      ['NPDES_DMR'],
+    ],
+    minDistinctSources: 2,
+  },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -100,6 +112,7 @@ export const DEDUP_WINDOWS = {
   sameSourceId_hours: 1,
   sameGeography_hours: 4,
   attainsCooldown_hours: 24,
+  echoEscalationCooldown_hours: 24,
   nwsAlertUpdateOnly: true, // re-score on severity change only
 };
 

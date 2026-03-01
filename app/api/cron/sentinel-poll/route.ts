@@ -132,11 +132,16 @@ export async function GET(request: NextRequest) {
     const pollCount = await loadPollCount();
     const nextCount = pollCount + 1;
 
+    // Support forceSource query param for immediate poll of a specific source
+    const forceSource = request.nextUrl.searchParams.get('forceSource') as ChangeSource | null;
+
     // Determine which adapters should run this cycle
-    const adaptersToRun = ADAPTERS.filter(a => {
-      const interval = POLL_INTERVALS[a.source];
-      return nextCount % interval === 0 || nextCount === 1;
-    });
+    const adaptersToRun = forceSource
+      ? ADAPTERS.filter(a => a.source === forceSource)
+      : ADAPTERS.filter(a => {
+          const interval = POLL_INTERVALS[a.source];
+          return nextCount % interval === 0 || nextCount === 1;
+        });
 
     // Warm relevant existing caches in parallel
     const warmFns = adaptersToRun
@@ -193,7 +198,10 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    await savePollCount(nextCount);
+    // Don't increment poll counter for forced polls (preserve regular schedule)
+    if (!forceSource) {
+      await savePollCount(nextCount);
+    }
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
 

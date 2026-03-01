@@ -5,6 +5,7 @@ import { Shield, AlertTriangle, FileCheck, Gavel, Activity, ClipboardCheck, Cloc
 import { KPIStrip, type KPICard } from '@/components/KPIStrip';
 import { DashboardSection } from '@/components/DashboardSection';
 import { useICISData } from '@/lib/useICISData';
+import { CacheAgeBadge } from '@/components/CacheAgeBadge';
 
 // ── Props ───────────────────────────────────────────────────────────────────
 
@@ -45,7 +46,7 @@ export function ICISCompliancePanel({
   compactMode = false,
   className = '',
 }: ICISCompliancePanelProps) {
-  const { permits, violations, dmr, enforcement, summary, isLoading, error, fromCache } = useICISData({
+  const { permits, violations, dmr, enforcement, summary, isLoading, error, fromCache, meta, refreshInProgress, refresh } = useICISData({
     state,
     lat,
     lng,
@@ -236,7 +237,14 @@ export function ICISCompliancePanel({
       {/* Source badge */}
       <div className="flex items-center gap-2 text-xs text-slate-400">
         <Shield className="w-3.5 h-3.5" />
-        <span>EPA ICIS / NPDES Compliance{fromCache ? ' (cached)' : ''}</span>
+        <span>EPA ICIS / NPDES Compliance</span>
+        <CacheAgeBadge
+          fetchedAt={meta?.fetchedAt}
+          ageLabel={meta?.ageLabel}
+          isStale={meta?.isStale}
+          refreshInProgress={refreshInProgress}
+          onRefresh={fromCache ? refresh : undefined}
+        />
       </div>
 
       {/* KPI Strip */}

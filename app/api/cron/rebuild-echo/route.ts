@@ -315,6 +315,14 @@ export async function GET(request: NextRequest) {
 
     await setEchoCache(cacheData);
 
+    // Fire-and-forget: trigger sentinel poll for ECHO enforcement
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
+    fetch(`${baseUrl}/api/cron/sentinel-poll?forceSource=ECHO_ENFORCEMENT`, {
+      headers: { Authorization: `Bearer ${cronSecret}` },
+      signal: AbortSignal.timeout(10_000),
+    }).catch(() => {});
+
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(
       `[ECHO Cron] Build complete in ${elapsed}s — ` +
