@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { BrandedPrintBtn } from '@/lib/brandedPrint';
-import { ChevronDown, ExternalLink, TrendingUp } from 'lucide-react';
+import { ChevronDown, TrendingUp } from 'lucide-react';
 
 // ─── Grant outcome data (EPA-verified) ──────────────────────────────────────
 
@@ -303,12 +303,6 @@ export function GrantOutcomesCard() {
                         <div className="text-xs text-blue-800 leading-relaxed">{grant.insight}</div>
                       </div>
 
-                      {grant.attainsLink && (
-                        <button className="flex items-center gap-1.5 text-xs text-blue-600 hover:underline">
-                          <ExternalLink className="h-3.5 w-3.5" />
-                          View these waterbodies in PIN
-                        </button>
-                      )}
                     </div>
                   </div>
                 )}
