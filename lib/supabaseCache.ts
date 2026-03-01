@@ -1,46 +1,64 @@
 /**
- * Supabase Shared Cache — Lazy-refresh orchestrator backed by Supabase.
+ * Shared Cache — Lazy-refresh orchestrator.
  *
- * One row per source+state in `data_snapshots`. Concurrent-safe via
- * `data_refresh_locks` table (row-level PK insert = advisory lock).
+ * Primary: Supabase `data_snapshots` table (cross-instance, queryable, lockable).
+ * Fallback: Vercel Blob (proven, always works).
  *
- * Key export: getOrRefresh<T>() — check snapshot, if stale call fetchFn,
- * save result, return. Any user's refresh benefits all subsequent readers.
+ * Every Supabase call is wrapped in try/catch → blob fallback. If Supabase
+ * is misconfigured, missing tables, RLS issues, etc., the system keeps working
+ * via blob. Locks degrade to "no lock" (accept thundering herd) rather than fail.
  */
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
 
-// ── Supabase admin client (service-role, bypasses RLS) ────────────────────
-// Lazy-initialized to avoid build-time crash when env vars aren't available.
+// ── Supabase admin client (lazy, service-role) ──────────────────────────────
 
 let _supabaseAdmin: SupabaseClient | null = null;
+let _supabaseAvailable: boolean | null = null; // null = untested
 
-function supabaseAdmin(): SupabaseClient {
+function getSupabase(): SupabaseClient | null {
+  if (_supabaseAvailable === false) return null;
   if (!_supabaseAdmin) {
-    _supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) {
+      _supabaseAvailable = false;
+      console.warn('[SharedCache] Supabase env vars missing — blob-only mode');
+      return null;
+    }
+    _supabaseAdmin = createClient(url, key);
   }
   return _supabaseAdmin;
 }
 
-// ── Staleness thresholds per source ──────────────────────────────────────
+/** Mark Supabase as unavailable after repeated failures */
+let _supabaseFailures = 0;
+function onSupabaseError(context: string, err: any) {
+  _supabaseFailures++;
+  console.warn(`[SharedCache] Supabase ${context} failed (${_supabaseFailures}x): ${err?.message || err}`);
+  if (_supabaseFailures >= 3) {
+    _supabaseAvailable = false;
+    console.warn('[SharedCache] Supabase disabled after 3 failures — blob-only mode');
+  }
+}
+
+// ── Staleness thresholds per source ──────────────────────────────────────────
 
 const STALENESS_MS: Record<string, number> = {
-  icis:    24 * 60 * 60 * 1000,
-  sdwis:   24 * 60 * 60 * 1000,
-  echo:    24 * 60 * 60 * 1000,
+  icis:      24 * 60 * 60 * 1000,
+  sdwis:     24 * 60 * 60 * 1000,
+  echo:      24 * 60 * 60 * 1000,
   'nwis-gw': 12 * 60 * 60 * 1000,
-  wqp:     24 * 60 * 60 * 1000,
-  pfas:     7 * 24 * 60 * 60 * 1000,
-  attains:  7 * 24 * 60 * 60 * 1000,
+  wqp:       24 * 60 * 60 * 1000,
+  pfas:       7 * 24 * 60 * 60 * 1000,
+  attains:    7 * 24 * 60 * 60 * 1000,
 };
 
 const DEFAULT_STALENESS_MS = 24 * 60 * 60 * 1000;
-const LOCK_TTL_MS = 5 * 60 * 1000; // 5 min lock expiry
+const LOCK_TTL_MS = 5 * 60 * 1000;
 
-// ── Types ────────────────────────────────────────────────────────────────
+// ── Types ────────────────────────────────────────────────────────────────────
 
 export interface SnapshotMeta {
   fetchedAt: string;
@@ -64,31 +82,55 @@ interface GetOrRefreshOptions<T> {
   fetchedBy?: string;
 }
 
-// ── Age formatting ───────────────────────────────────────────────────────
+// ── Blob path convention ─────────────────────────────────────────────────────
+
+function blobPath(source: string, scopeKey: string): string {
+  return `shared-cache/${source}/${scopeKey}.json`;
+}
+
+function blobMetaPath(source: string, scopeKey: string): string {
+  return `shared-cache/${source}/${scopeKey}.meta.json`;
+}
+
+// ── Age formatting ───────────────────────────────────────────────────────────
 
 export function formatAge(ms: number): string {
   if (ms < 60_000) return 'just now';
-  if (ms < 3600_000) return `${Math.floor(ms / 60_000)}m ago`;
+  if (ms < 3_600_000) return `${Math.floor(ms / 60_000)}m ago`;
   if (ms < 86_400_000) return `${Math.floor(ms / 3_600_000)}h ago`;
   const days = Math.floor(ms / 86_400_000);
   return `${days}d old`;
 }
 
-// ── Lock helpers ─────────────────────────────────────────────────────────
+function buildMeta(fetchedAt: string, source: string, recordCount: number, fetchDurationMs?: number, fetchedBy?: string): SnapshotMeta {
+  const ageMs = Date.now() - new Date(fetchedAt).getTime();
+  const threshold = STALENESS_MS[source] ?? DEFAULT_STALENESS_MS;
+  return {
+    fetchedAt,
+    ageLabel: formatAge(ageMs),
+    isStale: ageMs > threshold,
+    recordCount,
+    fetchDurationMs,
+    fetchedBy,
+  };
+}
+
+// ── Lock helpers (Supabase only — degrade to "no lock" on failure) ───────────
 
 async function acquireLock(source: string, scopeKey: string, lockedBy: string): Promise<boolean> {
-  // Clean expired locks first
-  await supabaseAdmin()
-    .from('data_refresh_locks')
-    .delete()
-    .eq('source', source)
-    .eq('scope_key', scopeKey)
-    .lt('expires_at', new Date().toISOString());
+  const sb = getSupabase();
+  if (!sb) return true; // No Supabase → skip locking, proceed with fetch
 
-  // Try to insert — PK conflict means lock held
-  const { error } = await supabaseAdmin()
-    .from('data_refresh_locks')
-    .insert({
+  try {
+    // Clean expired locks first
+    await sb.from('data_refresh_locks')
+      .delete()
+      .eq('source', source)
+      .eq('scope_key', scopeKey)
+      .lt('expires_at', new Date().toISOString());
+
+    // Insert — PK conflict means lock held by another process
+    const { error } = await sb.from('data_refresh_locks').insert({
       source,
       scope_key: scopeKey,
       locked_by: lockedBy,
@@ -96,47 +138,84 @@ async function acquireLock(source: string, scopeKey: string, lockedBy: string): 
       expires_at: new Date(Date.now() + LOCK_TTL_MS).toISOString(),
     });
 
-  return !error;
+    return !error;
+  } catch (err) {
+    onSupabaseError('acquireLock', err);
+    return true; // Degrade: proceed without lock
+  }
 }
 
 async function releaseLock(source: string, scopeKey: string): Promise<void> {
-  await supabaseAdmin()
-    .from('data_refresh_locks')
-    .delete()
-    .eq('source', source)
-    .eq('scope_key', scopeKey);
+  const sb = getSupabase();
+  if (!sb) return;
+
+  try {
+    await sb.from('data_refresh_locks')
+      .delete()
+      .eq('source', source)
+      .eq('scope_key', scopeKey);
+  } catch (err) {
+    onSupabaseError('releaseLock', err);
+  }
 }
 
-// ── Snapshot read/write ──────────────────────────────────────────────────
+// ── Snapshot read: Supabase → blob fallback ──────────────────────────────────
 
 async function readSnapshot<T>(source: string, scopeKey: string): Promise<{
   data: T; meta: SnapshotMeta;
 } | null> {
-  const { data, error } = await supabaseAdmin()
-    .from('data_snapshots')
-    .select('data_json, fetched_at, record_count, fetch_duration_ms, fetched_by')
-    .eq('source', source)
-    .eq('scope_key', scopeKey)
-    .single();
+  // Try Supabase first
+  const sb = getSupabase();
+  if (sb) {
+    try {
+      const { data, error } = await sb
+        .from('data_snapshots')
+        .select('data_json, fetched_at, record_count, fetch_duration_ms, fetched_by')
+        .eq('source', source)
+        .eq('scope_key', scopeKey)
+        .single();
 
-  if (error || !data) return null;
+      if (!error && data) {
+        return {
+          data: data.data_json as T,
+          meta: buildMeta(
+            data.fetched_at,
+            source,
+            data.record_count ?? 0,
+            data.fetch_duration_ms ?? undefined,
+            data.fetched_by ?? undefined,
+          ),
+        };
+      }
+    } catch (err) {
+      onSupabaseError('readSnapshot', err);
+    }
+  }
 
-  const fetchedAt = data.fetched_at as string;
-  const ageMs = Date.now() - new Date(fetchedAt).getTime();
-  const threshold = STALENESS_MS[source] ?? DEFAULT_STALENESS_MS;
+  // Fallback: blob
+  try {
+    const payload = await loadCacheFromBlob<{ data: T; meta: SnapshotMeta }>(blobPath(source, scopeKey));
+    if (payload?.data && payload?.meta) {
+      // Recalculate age/staleness (blob meta may be stale)
+      return {
+        data: payload.data,
+        meta: buildMeta(
+          payload.meta.fetchedAt,
+          source,
+          payload.meta.recordCount,
+          payload.meta.fetchDurationMs,
+          payload.meta.fetchedBy,
+        ),
+      };
+    }
+  } catch {
+    // Both failed — return null
+  }
 
-  return {
-    data: data.data_json as T,
-    meta: {
-      fetchedAt,
-      ageLabel: formatAge(ageMs),
-      isStale: ageMs > threshold,
-      recordCount: data.record_count ?? 0,
-      fetchDurationMs: data.fetch_duration_ms ?? undefined,
-      fetchedBy: data.fetched_by ?? undefined,
-    },
-  };
+  return null;
 }
+
+// ── Snapshot write: Supabase + blob (both, for redundancy) ───────────────────
 
 async function writeSnapshot<T>(
   source: string,
@@ -146,29 +225,41 @@ async function writeSnapshot<T>(
   fetchDurationMs: number,
   fetchedBy: string,
 ): Promise<void> {
-  const jsonStr = JSON.stringify(data);
-  const sizeBytes = Buffer.byteLength(jsonStr, 'utf-8');
+  const fetchedAt = new Date().toISOString();
+  const meta = buildMeta(fetchedAt, source, recordCount, fetchDurationMs, fetchedBy);
 
-  await supabaseAdmin()
-    .from('data_snapshots')
-    .upsert({
-      source,
-      scope_key: scopeKey,
-      data_json: data,
-      record_count: recordCount,
-      size_bytes: sizeBytes,
-      fetched_at: new Date().toISOString(),
-      fetched_by: fetchedBy,
-      fetch_duration_ms: fetchDurationMs,
-    }, { onConflict: 'source,scope_key' });
+  // Write to Supabase (non-blocking failure)
+  const sb = getSupabase();
+  if (sb) {
+    try {
+      const jsonStr = JSON.stringify(data);
+      const sizeBytes = Buffer.byteLength(jsonStr, 'utf-8');
+
+      await sb.from('data_snapshots').upsert({
+        source,
+        scope_key: scopeKey,
+        data_json: data,
+        record_count: recordCount,
+        size_bytes: sizeBytes,
+        fetched_at: fetchedAt,
+        fetched_by: fetchedBy,
+        fetch_duration_ms: fetchDurationMs,
+      }, { onConflict: 'source,scope_key' });
+    } catch (err) {
+      onSupabaseError('writeSnapshot', err);
+    }
+  }
+
+  // Always write to blob as backup
+  await saveCacheToBlob(blobPath(source, scopeKey), { data, meta });
 }
 
-// ── Main orchestrator ────────────────────────────────────────────────────
+// ── Main orchestrator ────────────────────────────────────────────────────────
 
 /**
  * Get cached data for a source+scope. If stale (or force), re-fetch using
- * the provided fetchFn. Lock prevents thundering herd — second caller
- * waits and reads the snapshot the first caller wrote.
+ * the provided fetchFn. Lock prevents thundering herd when Supabase is
+ * available; degrades to unlocked fetch via blob if not.
  */
 export async function getOrRefresh<T>(opts: GetOrRefreshOptions<T>): Promise<GetOrRefreshResult<T>> {
   const { source, scopeKey, fetchFn, forceRefresh = false, fetchedBy = 'cron' } = opts;
@@ -181,21 +272,20 @@ export async function getOrRefresh<T>(opts: GetOrRefreshOptions<T>): Promise<Get
     }
   }
 
-  // 2. Try to acquire lock
+  // 2. Try to acquire lock (Supabase only — degrades to no-lock)
   const gotLock = await acquireLock(source, scopeKey, fetchedBy);
 
   if (!gotLock) {
-    // Another process is refreshing — wait briefly, then return whatever is in the snapshot
+    // Another process is refreshing — wait, then return whatever snapshot exists
     await new Promise(r => setTimeout(r, 2000));
     const snapshot = await readSnapshot<T>(source, scopeKey);
     if (snapshot) return snapshot;
 
-    // No snapshot at all and locked — wait longer and retry once
     await new Promise(r => setTimeout(r, 5000));
     const retrySnapshot = await readSnapshot<T>(source, scopeKey);
     if (retrySnapshot) return retrySnapshot;
 
-    // Fallback: fetch anyway (lock may have expired)
+    // Lock may have expired — fall through to fetch
   }
 
   // 3. Fetch fresh data
@@ -204,25 +294,27 @@ export async function getOrRefresh<T>(opts: GetOrRefreshOptions<T>): Promise<Get
     const data = await fetchFn();
     const durationMs = Date.now() - start;
 
-    // Estimate record count from data shape
+    // Estimate record count
     const recordCount = Array.isArray(data)
       ? data.length
       : typeof data === 'object' && data !== null
-        ? Object.values(data).reduce((sum, v) => sum + (Array.isArray(v) ? v.length : 0), 0)
+        ? Object.values(data as Record<string, unknown>).reduce(
+            (sum: number, v) => sum + (Array.isArray(v) ? v.length : 0), 0)
         : 0;
 
-    await writeSnapshot(source, scopeKey, data, recordCount as number, durationMs, fetchedBy);
+    await writeSnapshot(source, scopeKey, data, recordCount, durationMs, fetchedBy);
 
-    const meta: SnapshotMeta = {
-      fetchedAt: new Date().toISOString(),
-      ageLabel: 'just now',
-      isStale: false,
-      recordCount: recordCount as number,
-      fetchDurationMs: durationMs,
-      fetchedBy,
+    return {
+      data,
+      meta: {
+        fetchedAt: new Date().toISOString(),
+        ageLabel: 'just now',
+        isStale: false,
+        recordCount,
+        fetchDurationMs: durationMs,
+        fetchedBy,
+      },
     };
-
-    return { data, meta };
   } finally {
     if (gotLock) {
       await releaseLock(source, scopeKey);
@@ -231,29 +323,49 @@ export async function getOrRefresh<T>(opts: GetOrRefreshOptions<T>): Promise<Get
 }
 
 /**
- * Check if a snapshot exists and return its metadata (without the data payload).
- * Useful for freshness checks without transferring large payloads.
+ * Check if a snapshot exists and return its metadata (without data payload).
  */
 export async function getSnapshotMeta(source: string, scopeKey: string): Promise<SnapshotMeta | null> {
-  const { data, error } = await supabaseAdmin()
-    .from('data_snapshots')
-    .select('fetched_at, record_count, fetch_duration_ms, fetched_by')
-    .eq('source', source)
-    .eq('scope_key', scopeKey)
-    .single();
+  // Try Supabase
+  const sb = getSupabase();
+  if (sb) {
+    try {
+      const { data, error } = await sb
+        .from('data_snapshots')
+        .select('fetched_at, record_count, fetch_duration_ms, fetched_by')
+        .eq('source', source)
+        .eq('scope_key', scopeKey)
+        .single();
 
-  if (error || !data) return null;
+      if (!error && data) {
+        return buildMeta(
+          data.fetched_at,
+          source,
+          data.record_count ?? 0,
+          data.fetch_duration_ms ?? undefined,
+          data.fetched_by ?? undefined,
+        );
+      }
+    } catch (err) {
+      onSupabaseError('getSnapshotMeta', err);
+    }
+  }
 
-  const fetchedAt = data.fetched_at as string;
-  const ageMs = Date.now() - new Date(fetchedAt).getTime();
-  const threshold = STALENESS_MS[source] ?? DEFAULT_STALENESS_MS;
+  // Fallback: blob meta
+  try {
+    const payload = await loadCacheFromBlob<{ meta: SnapshotMeta }>(blobPath(source, scopeKey));
+    if (payload?.meta) {
+      return buildMeta(
+        payload.meta.fetchedAt,
+        source,
+        payload.meta.recordCount,
+        payload.meta.fetchDurationMs,
+        payload.meta.fetchedBy,
+      );
+    }
+  } catch {
+    // both failed
+  }
 
-  return {
-    fetchedAt,
-    ageLabel: formatAge(ageMs),
-    isStale: ageMs > threshold,
-    recordCount: data.record_count ?? 0,
-    fetchDurationMs: data.fetch_duration_ms ?? undefined,
-    fetchedBy: data.fetched_by ?? undefined,
-  };
+  return null;
 }
