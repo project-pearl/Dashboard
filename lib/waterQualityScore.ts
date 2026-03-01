@@ -390,7 +390,7 @@ export interface WaterQualityGrade {
   gradeSource: 'sensor' | 'attains' | 'none';  // What the grade is based on
 }
 
-function scoreToLetter(score: number): GradeLetter {
+export function scoreToLetter(score: number): GradeLetter {
   if (score >= 97) return 'A+';
   if (score >= 93) return 'A';
   if (score >= 90) return 'A-';

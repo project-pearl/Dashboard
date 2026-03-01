@@ -13,6 +13,7 @@ import { resolveAttainsCategory, mergeAttainsCauses } from '@/lib/restorationEng
 import { TierBadge } from '@/components/TierBadge';
 import { DATA_SOURCES, getTierForSource } from '@/lib/useWaterData';
 import type { DataSourceId, DataConfidenceTier } from '@/lib/useWaterData';
+import { ecoScoreStyle, ejScoreStyle } from '@/lib/scoringUtils';
 
 // ─── Static Config ───────────────────────────────────────────────────────────
 

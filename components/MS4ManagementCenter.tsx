@@ -24,6 +24,7 @@ import RestorationPlanner from '@/components/RestorationPlanner';
 import { WaterbodyDetailCard } from '@/components/WaterbodyDetailCard';
 import { getEcoScore, getEcoData, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
 import { getEJScore, getEJData, ejScoreLabel } from '@/lib/ejVulnerability';
+import { scoreToGrade, alertLevelAvgScore, ALERT_LEVEL_SCORES, ecoScoreStyle, ejScoreStyle } from '@/lib/scoringUtils';
 import { getStateMS4Jurisdictions, getMS4ComplianceSummary, STATE_AUTHORITIES } from '@/lib/stateWaterData';
 import { useAuth } from '@/lib/authContext';
 import { getRegionMockData, calculateRemovalEfficiency, calculateOverallScore } from '@/lib/mockData';
@@ -285,21 +286,6 @@ function levelToLabel(level: string): string {
 
 const SEVERITY_ORDER: Record<string, number> = { high: 3, medium: 2, low: 1, none: 0 };
 
-function scoreToGrade(score: number): { letter: string; color: string; bg: string } {
-  if (score >= 97) return { letter: 'A+', color: 'text-green-700', bg: 'bg-green-100 border-green-300' };
-  if (score >= 93) return { letter: 'A',  color: 'text-green-700', bg: 'bg-green-100 border-green-300' };
-  if (score >= 90) return { letter: 'A-', color: 'text-green-600', bg: 'bg-green-50 border-green-200' };
-  if (score >= 87) return { letter: 'B+', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' };
-  if (score >= 83) return { letter: 'B',  color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' };
-  if (score >= 80) return { letter: 'B-', color: 'text-teal-600', bg: 'bg-teal-50 border-teal-200' };
-  if (score >= 77) return { letter: 'C+', color: 'text-yellow-700', bg: 'bg-yellow-50 border-yellow-300' };
-  if (score >= 73) return { letter: 'C',  color: 'text-yellow-700', bg: 'bg-yellow-50 border-yellow-300' };
-  if (score >= 70) return { letter: 'C-', color: 'text-yellow-600', bg: 'bg-yellow-50 border-yellow-200' };
-  if (score >= 67) return { letter: 'D+', color: 'text-orange-700', bg: 'bg-orange-50 border-orange-300' };
-  if (score >= 63) return { letter: 'D',  color: 'text-orange-600', bg: 'bg-orange-50 border-orange-200' };
-  if (score >= 60) return { letter: 'D-', color: 'text-orange-500', bg: 'bg-orange-50 border-orange-200' };
-  return { letter: 'F', color: 'text-red-700', bg: 'bg-red-50 border-red-300' };
-}
 
 // ─── MS4 View: all panels visible (no lens switching) ─────────────────────────
 
@@ -1402,10 +1388,10 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                     <div className="text-[10px] text-slate-400 mt-1">{withData}/{scopedRegionData.length} with sensors</div>
                   </div>
                   <div className="bg-white rounded-lg border border-slate-200 px-3 py-2.5">
-                    <div className="text-lg font-bold inline-flex items-center gap-0.5" style={{ color: ejScore >= 70 ? '#dc2626' : ejScore >= 50 ? '#ea580c' : ejScore >= 30 ? '#d97706' : '#16a34a' }}>{ejScore}/100<ProvenanceIcon metricName="EJ Burden" displayValue={String(ejScore)} unit="/100" /></div>
+                    <div className="text-lg font-bold inline-flex items-center gap-0.5" style={{ color: ejScoreStyle(ejScore).color }}>{ejScore}/100<ProvenanceIcon metricName="EJ Burden" displayValue={String(ejScore)} unit="/100" /></div>
                     <div className="text-[10px] text-slate-500">EJ Burden</div>
                     <div className="mt-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                      <div className="h-full rounded-full" style={{ width: `${ejScore}%`, backgroundColor: ejScore >= 70 ? '#dc2626' : ejScore >= 50 ? '#ea580c' : ejScore >= 30 ? '#d97706' : '#16a34a' }} />
+                      <div className="h-full rounded-full" style={{ width: `${ejScore}%`, backgroundColor: ejScoreStyle(ejScore).color }} />
                     </div>
                   </div>
                   <div className="bg-white rounded-lg border border-amber-200 px-3 py-2.5">
@@ -1933,7 +1919,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       </div>
                     </div>
                   );
-                  const avgScore = Math.round(assessed.reduce((sum, r) => sum + (r.alertLevel === 'none' ? 100 : r.alertLevel === 'low' ? 85 : r.alertLevel === 'medium' ? 65 : 40), 0) / assessed.length);
+                  const avgScore = alertLevelAvgScore(assessed);
                   const grade = scoreToGrade(avgScore);
                   return (
                     <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 ${grade.bg}`}>
@@ -1988,7 +1974,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                     </div>
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-slate-500">EJ Burden</span>
-                      <span className="font-semibold" style={{ color: ejScore >= 70 ? '#dc2626' : ejScore >= 50 ? '#ea580c' : ejScore >= 30 ? '#d97706' : '#16a34a' }}>{ejScore}/100</span>
+                      <span className="font-semibold" style={{ color: ejScoreStyle(ejScore).color }}>{ejScore}/100</span>
                     </div>
                   </div>
                 );
@@ -4421,7 +4407,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
             ); }
 
             // ── Resolution Planner section ─────────────────────────────────────
-            case 'resolution-planner': return DS(<ResolutionPlanner userRole="ms4" scopeContext={{ scope: 'state', data: { abbr: stateAbbr, name: STATE_NAMES[stateAbbr] || stateAbbr, epaRegion: getEpaRegionForState(stateAbbr) || 0, totalWaterbodies: regionData.length, assessed: regionData.length, impaired: regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length, score: Math.round(regionData.reduce((a, r) => a + (r.alertLevel === 'none' ? 95 : r.alertLevel === 'low' ? 75 : r.alertLevel === 'medium' ? 50 : 25), 0) / Math.max(regionData.length, 1)), grade: 'B', cat5: 0, cat4a: 0, cat4b: 0, cat4c: 0, topCauses: [] } }} />);
+            case 'resolution-planner': return DS(<ResolutionPlanner userRole="ms4" scopeContext={{ scope: 'state', data: { abbr: stateAbbr, name: STATE_NAMES[stateAbbr] || stateAbbr, epaRegion: getEpaRegionForState(stateAbbr) || 0, totalWaterbodies: regionData.length, assessed: regionData.length, impaired: regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length, score: alertLevelAvgScore(regionData), grade: 'B', cat5: 0, cat4a: 0, cat4b: 0, cat4c: 0, topCauses: [] } }} />);
 
             // ── Policy Tracker sections ────────────────────────────────────────
             case 'policy-federal': return DS(
@@ -6325,11 +6311,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
               const ecoData = getEcoData(stateAbbr);
               const ecoScore = getEcoScore(stateAbbr);
               const label = ecoScoreLabel(ecoScore);
-              const scoreBg = ecoScore >= 80 ? 'bg-red-50 border-red-200 text-red-700'
-                : ecoScore >= 60 ? 'bg-orange-50 border-orange-200 text-orange-700'
-                : ecoScore >= 40 ? 'bg-amber-50 border-amber-200 text-amber-700'
-                : ecoScore >= 20 ? 'bg-blue-50 border-blue-200 text-blue-700'
-                : 'bg-slate-50 border-slate-200 text-slate-700';
+              const scoreBg = ecoScoreStyle(ecoScore).bg;
               return DS(
                 <div className={`rounded-xl border-2 p-5 flex items-center justify-between ${scoreBg}`}>
                   <div>

@@ -56,6 +56,7 @@ import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import { GrantOutcomesCard } from './GrantOutcomesCard';
 import { getEcoData, getEcoScore, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
+import { ecoScoreStyle } from '@/lib/scoringUtils';
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
   { ssr: false }
@@ -2214,11 +2215,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
               const ecoData = getEcoData(focusedState);
               const ecoScore = getEcoScore(focusedState);
               const label = ecoScoreLabel(ecoScore);
-              const scoreBg = ecoScore >= 80 ? 'bg-red-50 border-red-200 text-red-700'
-                : ecoScore >= 60 ? 'bg-orange-50 border-orange-200 text-orange-700'
-                : ecoScore >= 40 ? 'bg-amber-50 border-amber-200 text-amber-700'
-                : ecoScore >= 20 ? 'bg-blue-50 border-blue-200 text-blue-700'
-                : 'bg-slate-50 border-slate-200 text-slate-700';
+              const scoreBg = ecoScoreStyle(ecoScore).bg;
               return DS(
                 <div className={`rounded-xl border-2 p-5 flex items-center justify-between ${scoreBg}`}>
                   <div>

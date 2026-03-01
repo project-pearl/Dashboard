@@ -49,6 +49,7 @@ import { DataLatencyTracker } from './DataLatencyTracker';
 import { WARRZones } from './WARRZones';
 import type { WARRMetric, WARREvent } from './WARRZones';
 import { useAdminState, STATE_ABBR_TO_NAME } from '@/lib/adminStateContext';
+import { scoreToGrade, ALERT_LEVEL_SCORES } from '@/lib/scoringUtils';
 
 import { HabitatEcologyPanel } from './HabitatEcologyPanel';
 import { AgriculturalNPSPanel } from './AgriculturalNPSPanel';
@@ -341,23 +342,6 @@ interface GeoFeature {
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-
-// Letter grade scale (0-100 → A+ through F)
-function scoreToGrade(score: number): { letter: string; color: string; bg: string } {
-  if (score >= 97) return { letter: 'A+', color: 'text-green-700', bg: 'bg-green-100 border-green-300' };
-  if (score >= 93) return { letter: 'A',  color: 'text-green-700', bg: 'bg-green-100 border-green-300' };
-  if (score >= 90) return { letter: 'A-', color: 'text-green-600', bg: 'bg-green-50 border-green-200' };
-  if (score >= 87) return { letter: 'B+', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' };
-  if (score >= 83) return { letter: 'B',  color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' };
-  if (score >= 80) return { letter: 'B-', color: 'text-teal-600', bg: 'bg-teal-50 border-teal-200' };
-  if (score >= 77) return { letter: 'C+', color: 'text-yellow-700', bg: 'bg-yellow-50 border-yellow-300' };
-  if (score >= 73) return { letter: 'C',  color: 'text-yellow-700', bg: 'bg-yellow-50 border-yellow-300' };
-  if (score >= 70) return { letter: 'C-', color: 'text-yellow-600', bg: 'bg-yellow-50 border-yellow-200' };
-  if (score >= 67) return { letter: 'D+', color: 'text-orange-700', bg: 'bg-orange-50 border-orange-300' };
-  if (score >= 63) return { letter: 'D',  color: 'text-orange-600', bg: 'bg-orange-50 border-orange-200' };
-  if (score >= 60) return { letter: 'D-', color: 'text-orange-500', bg: 'bg-orange-50 border-orange-200' };
-  return { letter: 'F', color: 'text-red-700', bg: 'bg-red-50 border-red-300' };
-}
 
 const NAME_TO_ABBR: Record<string, string> = Object.entries(STATE_ABBR_TO_NAME).reduce(
   (acc, [abbr, name]) => {
@@ -1688,7 +1672,6 @@ export function FederalManagementCenter(props: Props) {
     // Tier 1: ASSESSED waterbodies (legacy alerts or per-waterbody matches) → direct grading
     // Tier 2: ATTAINS bulk data (EPA 303(d) state counts) → grade from federal data
     // Tier 3: No data → N/A
-    const LEVEL_SCORE: Record<string, number> = { none: 100, low: 85, medium: 65, high: 40 };
     const rows = Array.from(derived.regionsByState.entries()).map(([abbr, regions]) => {
       const assessed = regions.filter(r => r.status === 'assessed');
       const monitored = regions.filter(r => r.status === 'monitored');
@@ -1714,7 +1697,7 @@ export function FederalManagementCenter(props: Props) {
         totalAlerts = assessed.reduce((sum, r) => sum + (r.activeAlerts || 0), 0);
         assessedCount = assessed.length;
         canGradeState = true;
-        score = Math.round(assessed.reduce((s, r) => s + (LEVEL_SCORE[r.alertLevel] ?? 65), 0) / assessed.length);
+        score = Math.round(assessed.reduce((s, r) => s + (ALERT_LEVEL_SCORES[r.alertLevel] ?? 65), 0) / assessed.length);
         dataSource = 'per-waterbody';
       } else if (hasAttains) {
         // Tier 2: No per-waterbody matches, but ATTAINS bulk data exists

@@ -11,6 +11,7 @@ import {
   STATE_COMPLAINT_CONTACTS, getComplaintContact,
 } from '@/lib/stateWaterData';
 import { getEpaRegionForState, EPA_REGIONS } from '@/lib/epa-regions';
+import { scoreToGrade } from '@/lib/scoringUtils';
 import {
   ArrowRight, ChevronDown, Building2, ExternalLink, Phone, Users,
   Droplets, ShieldCheck, FileText, BookOpen, Download,
@@ -89,22 +90,6 @@ function getCauseDescription(cause: string): string {
 }
 
 /* ═══ GRADING ═══ */
-
-function scoreToGrade(score: number): { letter: string; color: string; bg: string; textColor: string } {
-  if (score >= 97) return { letter: 'A+', color: 'text-green-600', bg: 'bg-green-500', textColor: 'text-green-700' };
-  if (score >= 93) return { letter: 'A',  color: 'text-green-600', bg: 'bg-green-500', textColor: 'text-green-700' };
-  if (score >= 90) return { letter: 'A-', color: 'text-green-500', bg: 'bg-green-500', textColor: 'text-green-600' };
-  if (score >= 87) return { letter: 'B+', color: 'text-emerald-600', bg: 'bg-emerald-500', textColor: 'text-emerald-700' };
-  if (score >= 83) return { letter: 'B',  color: 'text-emerald-500', bg: 'bg-emerald-500', textColor: 'text-emerald-600' };
-  if (score >= 80) return { letter: 'B-', color: 'text-teal-500', bg: 'bg-teal-500', textColor: 'text-teal-600' };
-  if (score >= 77) return { letter: 'C+', color: 'text-yellow-600', bg: 'bg-yellow-500', textColor: 'text-yellow-700' };
-  if (score >= 73) return { letter: 'C',  color: 'text-yellow-600', bg: 'bg-yellow-500', textColor: 'text-yellow-700' };
-  if (score >= 70) return { letter: 'C-', color: 'text-yellow-500', bg: 'bg-yellow-500', textColor: 'text-yellow-600' };
-  if (score >= 67) return { letter: 'D+', color: 'text-orange-600', bg: 'bg-orange-500', textColor: 'text-orange-700' };
-  if (score >= 63) return { letter: 'D',  color: 'text-orange-500', bg: 'bg-orange-500', textColor: 'text-orange-600' };
-  if (score >= 60) return { letter: 'D-', color: 'text-orange-500', bg: 'bg-orange-500', textColor: 'text-orange-600' };
-  return { letter: 'F', color: 'text-red-600', bg: 'bg-red-500', textColor: 'text-red-700' };
-}
 
 function computeStateGrade(s: { high: number; medium: number; low: number; none: number; total: number }) {
   if (s.total === 0) return { score: -1, ...scoreToGrade(0) };

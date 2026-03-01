@@ -19,6 +19,7 @@ import { computeRestorationPlan, resolveAttainsCategory, mergeAttainsCauses, COS
 import { BrandedPDFGenerator } from '@/lib/brandedPdfGenerator';
 import { WaterbodyDetailCard } from '@/components/WaterbodyDetailCard';
 import { getEcoScore, getEcoData, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
+import { scoreToGrade, alertLevelAvgScore, ALERT_LEVEL_SCORES, ecoScoreStyle } from '@/lib/scoringUtils';
 import { getEJScore, getEJData } from '@/lib/ejVulnerability';
 import { STATE_AUTHORITIES } from '@/lib/stateWaterData';
 import { useAuth } from '@/lib/authContext';
@@ -160,21 +161,6 @@ function levelToLabel(level: string): string {
 
 const SEVERITY_ORDER: Record<string, number> = { high: 3, medium: 2, low: 1, none: 0 };
 
-function scoreToGrade(score: number): { letter: string; color: string; bg: string } {
-  if (score >= 97) return { letter: 'A+', color: 'text-green-700', bg: 'bg-green-100 border-green-300' };
-  if (score >= 93) return { letter: 'A',  color: 'text-green-700', bg: 'bg-green-100 border-green-300' };
-  if (score >= 90) return { letter: 'A-', color: 'text-green-600', bg: 'bg-green-50 border-green-200' };
-  if (score >= 87) return { letter: 'B+', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' };
-  if (score >= 83) return { letter: 'B',  color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' };
-  if (score >= 80) return { letter: 'B-', color: 'text-teal-600', bg: 'bg-teal-50 border-teal-200' };
-  if (score >= 77) return { letter: 'C+', color: 'text-yellow-700', bg: 'bg-yellow-50 border-yellow-300' };
-  if (score >= 73) return { letter: 'C',  color: 'text-yellow-700', bg: 'bg-yellow-50 border-yellow-300' };
-  if (score >= 70) return { letter: 'C-', color: 'text-yellow-600', bg: 'bg-yellow-50 border-yellow-200' };
-  if (score >= 67) return { letter: 'D+', color: 'text-orange-700', bg: 'bg-orange-50 border-orange-300' };
-  if (score >= 63) return { letter: 'D',  color: 'text-orange-600', bg: 'bg-orange-50 border-orange-200' };
-  if (score >= 60) return { letter: 'D-', color: 'text-orange-500', bg: 'bg-orange-50 border-orange-200' };
-  return { letter: 'F', color: 'text-red-700', bg: 'bg-red-50 border-red-300' };
-}
 
 // ─── View Lens: controls what each view shows/hides ──────────────────────────
 
@@ -1054,7 +1040,7 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                       </div>
                     </div>
                   );
-                  const avgScore = Math.round(assessed.reduce((sum, r) => sum + (r.alertLevel === 'none' ? 100 : r.alertLevel === 'low' ? 85 : r.alertLevel === 'medium' ? 65 : 40), 0) / assessed.length);
+                  const avgScore = alertLevelAvgScore(assessed);
                   const grade = scoreToGrade(avgScore);
                   return (
                     <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 ${grade.bg}`}>
@@ -2718,7 +2704,7 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
         })());
 
             // ── Shared panels ──
-            case 'resolution-planner': return DS(<ResolutionPlanner userRole="university" scopeContext={{ scope: 'state', data: { abbr: stateAbbr, name: STATE_NAMES[stateAbbr] || stateAbbr, epaRegion: getEpaRegionForState(stateAbbr) || 0, totalWaterbodies: regionData.length, assessed: regionData.length, impaired: regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length, score: Math.round(regionData.reduce((a, r) => a + (r.alertLevel === 'none' ? 95 : r.alertLevel === 'low' ? 75 : r.alertLevel === 'medium' ? 50 : 25), 0) / Math.max(regionData.length, 1)), grade: 'B', cat5: 0, cat4a: 0, cat4b: 0, cat4c: 0, topCauses: [] } }} />);
+            case 'resolution-planner': return DS(<ResolutionPlanner userRole="university" scopeContext={{ scope: 'state', data: { abbr: stateAbbr, name: STATE_NAMES[stateAbbr] || stateAbbr, epaRegion: getEpaRegionForState(stateAbbr) || 0, totalWaterbodies: regionData.length, assessed: regionData.length, impaired: regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length, score: alertLevelAvgScore(regionData), grade: 'B', cat5: 0, cat4a: 0, cat4b: 0, cat4c: 0, topCauses: [] } }} />);
             case 'policy-tracker': return DS(<PolicyTracker />);
             case 'contaminants-tracker': return DS(<EmergingContaminantsTracker role="university" selectedState={stateAbbr} />);
             case 'icis': return DS(<ICISCompliancePanel state={stateAbbr} compactMode={false} />);
@@ -2781,11 +2767,7 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
               const ecoData = getEcoData(stateAbbr);
               const ecoScore = getEcoScore(stateAbbr);
               const label = ecoScoreLabel(ecoScore);
-              const scoreBg = ecoScore >= 80 ? 'bg-red-50 border-red-200 text-red-700'
-                : ecoScore >= 60 ? 'bg-orange-50 border-orange-200 text-orange-700'
-                : ecoScore >= 40 ? 'bg-amber-50 border-amber-200 text-amber-700'
-                : ecoScore >= 20 ? 'bg-blue-50 border-blue-200 text-blue-700'
-                : 'bg-slate-50 border-slate-200 text-slate-700';
+              const scoreBg = ecoScoreStyle(ecoScore).bg;
               return DS(
                 <div className={`rounded-xl border-2 p-5 flex items-center justify-between ${scoreBg}`}>
                   <div>

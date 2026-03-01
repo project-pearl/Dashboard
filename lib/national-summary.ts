@@ -22,6 +22,7 @@ import { getNarsCacheStatus } from './narsCache';
 import { getDataGovCacheStatus } from './dataGovCache';
 import { getStateIRCacheStatus } from './stateIRCache';
 import { getFrsCacheStatus } from './frsCache';
+import { ALERT_LEVEL_SCORES, letterGrade } from './scoringUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -73,24 +74,13 @@ export interface NationalSummary {
 
 // ── Scoring ──────────────────────────────────────────────────────────────────
 
-const LEVEL_SCORE: Record<string, number> = { none: 100, low: 85, medium: 65, high: 40 };
-
 function computeStateScore(s: Omit<StateSummary, 'waterbodies'>): number {
   const denom = s.none + s.low + s.medium + s.high;
   if (denom === 0) return -1;
   return Math.round(
-    (s.none * LEVEL_SCORE.none + s.low * LEVEL_SCORE.low +
-     s.medium * LEVEL_SCORE.medium + s.high * LEVEL_SCORE.high) / denom
+    (s.none * ALERT_LEVEL_SCORES.none + s.low * ALERT_LEVEL_SCORES.low +
+     s.medium * ALERT_LEVEL_SCORES.medium + s.high * ALERT_LEVEL_SCORES.high) / denom
   );
-}
-
-function scoreToGrade(score: number): string {
-  if (score < 0) return 'N/A';
-  if (score >= 90) return 'A';
-  if (score >= 80) return 'B';
-  if (score >= 70) return 'C';
-  if (score >= 60) return 'D';
-  return 'F';
 }
 
 // ── Cache ────────────────────────────────────────────────────────────────────
@@ -155,7 +145,7 @@ export function getNationalSummary(): NationalSummary {
       total: s.total,
       impaired,
       score,
-      grade: scoreToGrade(score),
+      grade: letterGrade(score),
       flowScore: flow?.score,
     };
 

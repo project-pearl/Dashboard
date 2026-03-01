@@ -2,6 +2,7 @@
 // No cache reads, no blob writes, no API calls. Pure functions only.
 
 import type { ScenarioEvent, BaselineStateRow } from './scenarioCatalog';
+import { scoreToGrade } from './scoringUtils';
 
 export interface SimulatedState {
   abbr: string;
@@ -33,22 +34,6 @@ export interface NationalSummary {
   totalCat5: number;
   worstStates: { abbr: string; score: number; impaired: number }[];
   topCauses: { cause: string; count: number }[];
-}
-
-function scoreToGrade(score: number): { letter: string; color: string; bg: string } {
-  if (score >= 97) return { letter: 'A+', color: 'text-green-700', bg: 'bg-green-100 border-green-300' };
-  if (score >= 93) return { letter: 'A',  color: 'text-green-700', bg: 'bg-green-100 border-green-300' };
-  if (score >= 90) return { letter: 'A-', color: 'text-green-600', bg: 'bg-green-50 border-green-200' };
-  if (score >= 87) return { letter: 'B+', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' };
-  if (score >= 83) return { letter: 'B',  color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' };
-  if (score >= 80) return { letter: 'B-', color: 'text-teal-600', bg: 'bg-teal-50 border-teal-200' };
-  if (score >= 77) return { letter: 'C+', color: 'text-yellow-700', bg: 'bg-yellow-50 border-yellow-300' };
-  if (score >= 73) return { letter: 'C',  color: 'text-yellow-700', bg: 'bg-yellow-50 border-yellow-300' };
-  if (score >= 70) return { letter: 'C-', color: 'text-yellow-600', bg: 'bg-yellow-50 border-yellow-200' };
-  if (score >= 67) return { letter: 'D+', color: 'text-orange-700', bg: 'bg-orange-50 border-orange-300' };
-  if (score >= 63) return { letter: 'D',  color: 'text-orange-600', bg: 'bg-orange-50 border-orange-200' };
-  if (score >= 60) return { letter: 'D-', color: 'text-orange-500', bg: 'bg-orange-50 border-orange-200' };
-  return { letter: 'F', color: 'text-red-700', bg: 'bg-red-50 border-red-300' };
 }
 
 function applyModification(

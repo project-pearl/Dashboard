@@ -26,6 +26,7 @@ const GrantOpportunityMatcher = dynamic(
 );
 import type { WARRMetric } from './WARRZones';
 import { getEcoData, getEcoScore, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
+import { ecoScoreStyle } from '@/lib/scoringUtils';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
 import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
@@ -1704,11 +1705,7 @@ export default function UtilityManagementCenter({ systemId }: Props) {
               const ecoData = getEcoData(systemId);
               const ecoScore = getEcoScore(systemId);
               const label = ecoScoreLabel(ecoScore);
-              const scoreBg = ecoScore >= 80 ? 'bg-red-50 border-red-200 text-red-700'
-                : ecoScore >= 60 ? 'bg-orange-50 border-orange-200 text-orange-700'
-                : ecoScore >= 40 ? 'bg-amber-50 border-amber-200 text-amber-700'
-                : ecoScore >= 20 ? 'bg-blue-50 border-blue-200 text-blue-700'
-                : 'bg-slate-50 border-slate-200 text-slate-700';
+              const scoreBg = ecoScoreStyle(ecoScore).bg;
               return DS(
                 <div className={`rounded-xl border-2 p-5 flex items-center justify-between ${scoreBg}`}>
                   <div>

@@ -59,6 +59,7 @@ import { DraggableSection } from './DraggableSection';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { GrantOpportunityMatcher } from '@/components/GrantOpportunityMatcher';
 import { getEcoData, getEcoScore, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
+import { ecoScoreStyle } from '@/lib/scoringUtils';
 import { NUTRIENT_TRADING_STATES } from '@/lib/constants';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -1517,11 +1518,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             const ecoData = getEcoData(effectiveState);
             const ecoScore = getEcoScore(effectiveState);
             const label = ecoScoreLabel(ecoScore);
-            const scoreBg = ecoScore >= 80 ? 'bg-red-50 border-red-200 text-red-700'
-              : ecoScore >= 60 ? 'bg-orange-50 border-orange-200 text-orange-700'
-              : ecoScore >= 40 ? 'bg-amber-50 border-amber-200 text-amber-700'
-              : ecoScore >= 20 ? 'bg-blue-50 border-blue-200 text-blue-700'
-              : 'bg-slate-50 border-slate-200 text-slate-700';
+            const scoreBg = ecoScoreStyle(ecoScore).bg;
             return DS(
               <div className={`rounded-xl border-2 p-5 flex items-center justify-between ${scoreBg}`}>
                 <div>

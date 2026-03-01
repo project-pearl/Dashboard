@@ -10,6 +10,7 @@
 import { getAttainsCache, type StateSummary } from './attainsCache';
 import { getWqpAllRecords, type WqpRecord } from './wqpCache';
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+import { letterGrade } from './scoringUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -106,14 +107,6 @@ const ALL_STATES = [
 ];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-
-function letterGrade(pct: number): string {
-  if (pct >= 90) return 'A';
-  if (pct >= 80) return 'B';
-  if (pct >= 70) return 'C';
-  if (pct >= 60) return 'D';
-  return 'F';
-}
 
 function freshnessLabel(ageDays: number): ParameterCoverage['freshness'] {
   if (ageDays <= 1) return 'live';
