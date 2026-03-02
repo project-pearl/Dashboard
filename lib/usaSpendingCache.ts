@@ -128,6 +128,12 @@ export function getUSAsNationalTrend(): USAsCacheData['nationalTrend'] | null {
   return _memCache.nationalTrend;
 }
 
+export function getUSAsAllStateData(): USAsStateData[] {
+  ensureDiskLoaded();
+  if (!_memCache) return [];
+  return Object.values(_memCache.byState);
+}
+
 export async function setUSAsCache(data: USAsCacheData): Promise<void> {
   const prevCounts = _memCache ? { stateCount: _memCache._meta.stateCount } : null;
   const newCounts = { stateCount: data._meta.stateCount };

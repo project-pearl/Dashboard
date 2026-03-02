@@ -193,7 +193,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: true, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: true, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['networkhealth', 'coveragegaps', 'sla', 'sentinel-briefing', 'delta-changelog']),
+    sections: new Set(['networkhealth', 'coveragegaps', 'sla', 'data-latency', 'sentinel-briefing', 'delta-changelog']),
   },
   trends: {
     label: 'Trends & Projections',
@@ -293,7 +293,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['interagency-hub', 'data-latency']),
+    sections: new Set(['interagency-hub']),
   },
   funding: {
     label: 'Funding & Grants',
@@ -5584,12 +5584,13 @@ export function FederalManagementCenter(props: Props) {
             </div>
 
             {/* Drill Down by State — collapsible */}
-            <details className="border border-slate-200 rounded-lg">
+            <details id="funding-gap-state-drilldown" className="border border-slate-200 rounded-lg">
               <summary className="px-4 py-2.5 cursor-pointer text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-50 select-none">
                 Drill Down by State
               </summary>
               <div className="px-4 pb-4 pt-2">
                 <select
+                  id="funding-gap-state-select"
                   value={selectedState}
                   onChange={(e) => setSelectedState(e.target.value)}
                   className="px-2 py-1 rounded-md border border-slate-300 text-xs bg-white cursor-pointer hover:border-rose-400 focus:outline-none focus:ring-1 focus:ring-rose-300 mb-3"
@@ -5678,7 +5679,15 @@ export function FederalManagementCenter(props: Props) {
                 variant="outline"
                 size="sm"
                 className="text-xs border-rose-300 text-rose-700 hover:bg-rose-100"
-                onClick={() => setShowGrantMatcher(true)}
+                onClick={() => {
+                  const drilldown = document.getElementById('funding-gap-state-drilldown') as HTMLDetailsElement | null;
+                  if (drilldown) {
+                    drilldown.open = true;
+                    drilldown.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                  const stateSelect = document.getElementById('funding-gap-state-select') as HTMLSelectElement | null;
+                  stateSelect?.focus();
+                }}
               >
                 Compare State Allocations
               </Button>

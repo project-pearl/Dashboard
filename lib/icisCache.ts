@@ -299,16 +299,22 @@ export function setIcisBuildInProgress(v: boolean): void {
  * Get all ICIS data across all grid cells (flat arrays).
  * Used by stateAssessmentBuilder for state-level aggregation.
  */
-export function getIcisAllData(): { permits: IcisPermit[]; violations: IcisViolation[] } {
+export function getIcisAllData(): {
+  permits: IcisPermit[];
+  violations: IcisViolation[];
+  inspections: IcisInspection[];
+} {
   ensureDiskLoaded();
-  if (!_memCache) return { permits: [], violations: [] };
+  if (!_memCache) return { permits: [], violations: [], inspections: [] };
   const permits: IcisPermit[] = [];
   const violations: IcisViolation[] = [];
+  const inspections: IcisInspection[] = [];
   for (const cell of Object.values(_memCache.grid)) {
     permits.push(...cell.permits);
     violations.push(...cell.violations);
+    inspections.push(...cell.inspections);
   }
-  return { permits, violations };
+  return { permits, violations, inspections };
 }
 
 /**
