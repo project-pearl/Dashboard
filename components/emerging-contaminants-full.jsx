@@ -833,7 +833,7 @@ function EmergingContaminants({ role = "federal" }) {
     { id: "threats", label: "Threat Dashboard", icon: "⬡" },
     { id: "calendar", label: "Regulatory Calendar", icon: "📅" },
     ...(role === "federal" ? [{ id: "states", label: "State vs Federal", icon: "🗺" }] : []),
-    { id: "pearl", label: "PEARL Treatment", icon: "💎" },
+    { id: "pearl", label: "Improvement Accelerator", icon: "💎" },
   ];
 
   return (

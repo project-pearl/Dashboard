@@ -3747,75 +3747,7 @@ export function FederalManagementCenter(props: Props) {
                     </div>
                   )}
 
-                  {/* PIN Immediate Impact Layer, Deployment Roadmap, Deploy Pilot CTA,
-                     Generate Plan PDF, and Cost & Economics panel removed.
-                     All restoration categories now shown equally below. */}
-                  {/* ═══ RESTORATION MEASURES (all categories) ═══ */}
-                  <div className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold px-1 pt-1">Restoration Measures</div>
-                  <div className="text-[11px] text-slate-500 px-1 -mt-2">
-                    Recommended interventions by category.
-                  </div>
-
-                  {categories.map((cat) => {
-                    const warranted = cat.modules.filter(m => m.status === 'warranted');
-                    const recommended = cat.modules.filter(m => m.status === 'recommended' || m.status === 'accelerator');
-                    const coBenefits = cat.modules.filter(m => m.status === 'co-benefit');
-                    return (
-                      <div key={cat.id} className={`rounded-lg border ${cat.color} p-2.5 space-y-1.5`}>
-                        <div className="flex items-center justify-between">
-                          <div className="text-[11px] font-semibold uppercase tracking-wide flex items-center gap-1.5">
-                            <span>{cat.icon}</span> {cat.title}
-                          </div>
-                          <div className="flex items-center gap-1.5 text-[9px]">
-                            {warranted.length > 0 && <span className="bg-red-200 text-red-800 font-bold px-1.5 py-0.5 rounded-full">{warranted.length} warranted</span>}
-                            {recommended.length > 0 && <span className="bg-blue-200 text-blue-800 font-bold px-1.5 py-0.5 rounded-full">{recommended.length} recommended</span>}
-                            {coBenefits.length > 0 && <span className="bg-slate-200 text-slate-600 font-bold px-1.5 py-0.5 rounded-full">{coBenefits.length} co-benefit</span>}
-                          </div>
-                        </div>
-                        <div className="text-[10px] text-slate-500 -mt-0.5">{cat.subtitle}</div>
-                        <div className="space-y-1">
-                          {[...warranted, ...recommended].map((t) => (
-                            <div key={t.id} className={`rounded-md border p-2 ${t.color}`}>
-                              <div className="flex items-start gap-2">
-                                <span className="text-sm flex-shrink-0">{t.icon}</span>
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-xs font-semibold">{t.label}</span>
-                                    <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase ${
-                                      t.status === 'warranted' ? 'bg-red-200 text-red-800' : 'bg-blue-200 text-blue-800'
-                                    }`}>{t.status}</span>
-                                  </div>
-                                  <div className="text-[10px] mt-0.5 leading-relaxed opacity-90">{t.detail}</div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                          {coBenefits.length > 0 && (
-                            <div className="flex flex-wrap gap-1 pt-0.5">
-                              {coBenefits.map((t) => (
-                                <span key={t.id} className="inline-flex items-center gap-1 text-[10px] text-slate-500 bg-white/70 border border-slate-200 rounded px-2 py-1" title={t.detail}>
-                                  {t.icon} {t.label}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-
-                  {/* Threat Assessment */}
-                  <div className="grid grid-cols-3 gap-2">
-                    {threats.map((t) => (
-                      <div key={t.label} className="bg-white rounded-md border border-cyan-100 p-2 text-center">
-                        <div className="text-[10px] text-slate-500 uppercase">{t.label}</div>
-                        <div className={`text-sm font-bold ${t.color}`}>{t.level}</div>
-                        <div className="text-[9px] text-slate-400 mt-0.5">{t.detail}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Sizing footnote */}
+                  {/* Severity methodology footnote */}
                   <div className="text-[10px] text-slate-400 pt-1 border-t border-slate-100">
                     Severity assessment derived from {isMD ? 'MD DNR Shallow Water Monitoring thresholds' : 'EPA National Recommended Water Quality Criteria'} and EPA ATTAINS impairment category. Composite weighted: DO (25%), Bloom/Nutrients (25%), Turbidity (15%), Impairment (20%), Monitoring Gap (15%).
                   </div>

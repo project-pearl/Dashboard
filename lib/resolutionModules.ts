@@ -233,7 +233,7 @@ const NATURE_BASED_MODULES: StrategyModule[] = [
   },
 ];
 
-// ── Category 3: PEARL Treatment Accelerator (3 modules) ──
+// ── Category 3: Improvement Accelerator (3 modules) ──
 
 const PEARL_MODULES: StrategyModule[] = [
   {
@@ -425,7 +425,7 @@ export const ALL_CATEGORIES: StrategyCategory[] = [
   },
   {
     id: 'pearl-accelerator',
-    title: 'PEARL Treatment Accelerator',
+    title: 'Improvement Accelerator',
     icon: '⚡',
     color: 'border-cyan-200 bg-cyan-50/30',
     modules: PEARL_MODULES,

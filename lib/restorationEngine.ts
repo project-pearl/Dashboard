@@ -235,58 +235,58 @@ export function computeRestorationPlan(input: RestorationInput): RestorationResu
     if (classifiedCauses.has(cl)) continue;
     classifiedCauses.add(cl);
 
-    // ── TIER 1: PEARL Primary Target ──
+    // ── TIER 1: Directly Treatable ──
     if (cl.includes('nitrogen') || cl.includes('phosphor') || cl.includes('nutrient')) {
-      impairmentClassification.push({ cause: rawCause, tier: 1, tierLabel: 'PEARL Primary Target',
+      impairmentClassification.push({ cause: rawCause, tier: 1, tierLabel: 'Directly Treatable',
         icon: '✅', pearlAction: 'Biofiltration + ion exchange directly removes N/P from stormwater' });
     } else if (cl.includes('sediment') || cl.includes('turbidity') || cl.includes('total suspended') || cl.includes('siltation') || cl.includes('clarity')) {
-      impairmentClassification.push({ cause: rawCause, tier: 1, tierLabel: 'PEARL Primary Target',
-        icon: '✅', pearlAction: '50μm pre-screening + biofiltration captures suspended solids' });
+      impairmentClassification.push({ cause: rawCause, tier: 1, tierLabel: 'Directly Treatable',
+        icon: '✅', pearlAction: 'Pre-screening + biofiltration captures suspended solids' });
     } else if (cl.includes('pathogen') || cl.includes('e. coli') || cl.includes('escherichia') || cl.includes('enterococ') || cl.includes('fecal') || cl.includes('bacteria')) {
-      impairmentClassification.push({ cause: rawCause, tier: 1, tierLabel: 'PEARL Primary Target',
-        icon: '✅', pearlAction: 'UV disinfection stage provides pathogen reduction' });
+      impairmentClassification.push({ cause: rawCause, tier: 1, tierLabel: 'Directly Treatable',
+        icon: '✅', pearlAction: 'UV disinfection provides pathogen reduction' });
     } else if (cl.includes('lead') || cl.includes('copper') || cl.includes('zinc') || (cl.includes('metal') && !cl.includes('mercury') && !cl.includes('methyl'))) {
-      impairmentClassification.push({ cause: rawCause, tier: 1, tierLabel: 'PEARL Primary Target',
+      impairmentClassification.push({ cause: rawCause, tier: 1, tierLabel: 'Directly Treatable',
         icon: '✅', pearlAction: 'Chelating resin targets dissolved stormwater metals' });
     } else if (cl.includes('trash') || cl.includes('debris') || cl.includes('floatable')) {
-      impairmentClassification.push({ cause: rawCause, tier: 1, tierLabel: 'PEARL Primary Target',
+      impairmentClassification.push({ cause: rawCause, tier: 1, tierLabel: 'Directly Treatable',
         icon: '✅', pearlAction: 'Pre-screening mesh captures debris and floatables' });
 
-    // ── TIER 2: PEARL Contributes ──
+    // ── TIER 2: Indirect / Supporting Treatment ──
     } else if (cl.includes('dissolved oxygen') || cl.includes('oxygen, dissolved') || cl.includes('oxygen')) {
-      impairmentClassification.push({ cause: rawCause, tier: 2, tierLabel: 'PEARL Contributes',
+      impairmentClassification.push({ cause: rawCause, tier: 2, tierLabel: 'Indirect / Supporting',
         icon: '🔶', pearlAction: 'Nutrient removal reduces eutrophication cycle driving low DO' });
     } else if (cl.includes('chlorophyll') || cl.includes('algae') || cl.includes('algal') || cl.includes('cyanobacteria') || cl.includes('harmful algal')) {
-      impairmentClassification.push({ cause: rawCause, tier: 2, tierLabel: 'PEARL Contributes',
+      impairmentClassification.push({ cause: rawCause, tier: 2, tierLabel: 'Indirect / Supporting',
         icon: '🔶', pearlAction: 'Nutrient removal starves bloom cycle at the source' });
     } else if (cl.includes('pfas') || cl.includes('pfoa') || cl.includes('pfos') || cl.includes('perfluor')) {
-      impairmentClassification.push({ cause: rawCause, tier: 2, tierLabel: 'PEARL Planned Capability',
-        icon: '🔶', pearlAction: 'PFAS treatment resin module in development — targeted for PEARL treatment train integration' });
+      impairmentClassification.push({ cause: rawCause, tier: 2, tierLabel: 'Emerging Contaminant',
+        icon: '🔶', pearlAction: 'PFAS treatment via ion exchange resin — emerging treatment technology' });
     } else if (cl.includes('biological') || cl.includes('benthic') || cl.includes('habitat')) {
-      impairmentClassification.push({ cause: rawCause, tier: 2, tierLabel: 'PEARL Contributes',
+      impairmentClassification.push({ cause: rawCause, tier: 2, tierLabel: 'Indirect / Supporting',
         icon: '🔶', pearlAction: 'Improved water quality supports biological community recovery' });
 
-    // ── TIER 3: Outside PEARL Scope ──
+    // ── TIER 3: Requires Different Intervention ──
     } else if (cl.includes('mercury') || cl.includes('methylmercury')) {
-      impairmentClassification.push({ cause: rawCause, tier: 3, tierLabel: 'Outside PEARL Scope',
+      impairmentClassification.push({ cause: rawCause, tier: 3, tierLabel: 'Requires Different Intervention',
         icon: '⚠️', pearlAction: 'Atmospheric deposition source — requires emission controls, not stormwater treatment' });
     } else if (cl.includes('pcb') || cl.includes('polychlorinated')) {
-      impairmentClassification.push({ cause: rawCause, tier: 3, tierLabel: 'Outside PEARL Scope',
+      impairmentClassification.push({ cause: rawCause, tier: 3, tierLabel: 'Requires Different Intervention',
         icon: '⚠️', pearlAction: 'Legacy contamination in sediment — requires dredging or capping, not flow-through treatment' });
     } else if (cl.includes('temperature') || cl.includes('thermal')) {
-      impairmentClassification.push({ cause: rawCause, tier: 3, tierLabel: 'Outside PEARL Scope',
+      impairmentClassification.push({ cause: rawCause, tier: 3, tierLabel: 'Requires Different Intervention',
         icon: '⚠️', pearlAction: 'Thermal pollution — requires canopy restoration, cooling water controls, or discharge limits' });
     } else if (cl.includes('flow') || cl.includes('hydrologic') || cl.includes('alteration')) {
-      impairmentClassification.push({ cause: rawCause, tier: 3, tierLabel: 'Outside PEARL Scope',
+      impairmentClassification.push({ cause: rawCause, tier: 3, tierLabel: 'Requires Different Intervention',
         icon: '⚠️', pearlAction: 'Hydrologic modification — requires dam removal, flow management, or floodplain reconnection' });
     } else if (cl.includes('dioxin') || cl.includes('pesticide') || cl.includes('herbicide') || cl.includes('insecticide')) {
-      impairmentClassification.push({ cause: rawCause, tier: 3, tierLabel: 'Outside PEARL Scope',
+      impairmentClassification.push({ cause: rawCause, tier: 3, tierLabel: 'Requires Different Intervention',
         icon: '⚠️', pearlAction: 'Persistent organic pollutant — requires source elimination and advanced remediation' });
     } else if (cl.includes('cause unknown') || cl.includes('unknown')) {
       // Skip "CAUSE UNKNOWN" — not a real impairment
     } else {
       impairmentClassification.push({ cause: rawCause, tier: 2, tierLabel: 'Under Review',
-        icon: '🔶', pearlAction: 'Cause requires site-specific assessment to determine PEARL applicability' });
+        icon: '🔶', pearlAction: 'Cause requires site-specific assessment to determine treatment applicability' });
     }
   }
 
@@ -359,7 +359,7 @@ export function computeRestorationPlan(input: RestorationInput): RestorationResu
       impairmentClassification.push({
         cause: 'Habitat Degradation (inferred from parameter data)',
         tier: 2,
-        tierLabel: 'PEARL Contributes',
+        tierLabel: 'Indirect / Supporting',
         icon: '🔶',
         pearlAction: 'Improved water quality (DO, clarity, nutrients) supports biological community recovery',
       });
@@ -378,7 +378,7 @@ export function computeRestorationPlan(input: RestorationInput): RestorationResu
   const treatmentPriorities: TreatmentPriority[] = [];
 
   if (bloomSeverity === 'severe' || bloomSeverity === 'significant') {
-    treatmentPriorities.push({ rank: 1, driver: `Algal bloom crisis (chlorophyll ${chlVal} ug/L, >${bloomSeverity === 'severe' ? chlSevere : chlSignificant} ${thresholdSourceShort} threshold)`, action: 'Nutrient interception via PEARL biofiltration + resin', urgency: 'immediate' });
+    treatmentPriorities.push({ rank: 1, driver: `Algal bloom crisis (chlorophyll ${chlVal} ug/L, >${bloomSeverity === 'severe' ? chlSevere : chlSignificant} ${thresholdSourceShort} threshold)`, action: 'Nutrient interception via biofiltration + ion exchange', urgency: 'immediate' });
   } else if (nutrientSeverity === 'excessive') {
     treatmentPriorities.push({ rank: 1, driver: `Excessive nutrient loading (TN ${tnVal?.toFixed(2) ?? '?'}, TP ${tpVal?.toFixed(2) ?? '?'} mg/L)`, action: 'Nutrient removal to prevent bloom cycle', urgency: 'high' });
   } else if (bloomSeverity === 'bloom' || nutrientSeverity === 'elevated') {
@@ -564,11 +564,11 @@ export function computeRestorationPlan(input: RestorationInput): RestorationResu
   // ═══ CATEGORY 5: REGULATORY & PLANNING ═══
   const regulatory: TreatmentModule[] = [];
   if (tmdlStatus === 'needed') {
-    regulatory.push({ id: 'tmdl-dev', label: 'TMDL Development', icon: '📋', status: 'warranted', detail: 'Category 5 waterbody requires Total Maximum Daily Load establishment. PEARL monitoring data can support load allocation modeling and compliance tracking.', color: 'bg-red-50 border-red-200 text-red-800' });
+    regulatory.push({ id: 'tmdl-dev', label: 'TMDL Development', icon: '📋', status: 'warranted', detail: 'Category 5 waterbody requires Total Maximum Daily Load establishment. Continuous monitoring data can support load allocation modeling and compliance tracking.', color: 'bg-red-50 border-red-200 text-red-800' });
   }
   regulatory.push({ id: 'wip', label: 'Watershed Implementation Plan', icon: '🗺️', status: 'recommended', detail: 'Comprehensive plan identifying pollution sources, BMP locations, responsible parties, timelines, and funding. Required for many grant programs.', color: 'bg-indigo-50 border-indigo-200 text-indigo-800' });
-  regulatory.push({ id: 'ms4-credit', label: 'MS4 BMP Credit Documentation', icon: '📊', status: 'recommended', detail: 'Document all implemented BMPs and nature-based solutions for MS4 permit compliance credit. PEARL real-time data provides verifiable performance metrics.', color: 'bg-indigo-50 border-indigo-200 text-indigo-800' });
-  regulatory.push({ id: 'adaptive', label: 'Adaptive Management Plan', icon: '🔄', status: 'recommended', detail: 'Iterative monitoring → assessment → adjustment cycle. Use PEARL continuous data to evaluate BMP effectiveness and adjust treatment train over time.', color: 'bg-indigo-50 border-indigo-200 text-indigo-800' });
+  regulatory.push({ id: 'ms4-credit', label: 'MS4 BMP Credit Documentation', icon: '📊', status: 'recommended', detail: 'Document all implemented BMPs and nature-based solutions for MS4 permit compliance credit. Real-time monitoring data provides verifiable performance metrics.', color: 'bg-indigo-50 border-indigo-200 text-indigo-800' });
+  regulatory.push({ id: 'adaptive', label: 'Adaptive Management Plan', icon: '🔄', status: 'recommended', detail: 'Iterative monitoring → assessment → adjustment cycle. Use continuous data to evaluate BMP effectiveness and adjust treatment train over time.', color: 'bg-indigo-50 border-indigo-200 text-indigo-800' });
   categories.push({ id: 'regulatory', title: 'Regulatory & Planning', icon: '📋', subtitle: 'Compliance pathways and planning frameworks', modules: regulatory, color: 'border-indigo-200 bg-indigo-50/30' });
 
   // ── Threat Assessment ──
@@ -588,7 +588,7 @@ export function computeRestorationPlan(input: RestorationInput): RestorationResu
   const compliancePathway = tmdlStatus === 'needed' ? 'TMDL development candidate'
     : tmdlStatus === 'completed' ? 'TMDL implementation — monitoring phase'
     : tmdlStatus === 'alternative' ? 'Alternative controls in place — enhancement opportunity'
-    : isImpaired ? 'Impaired — restoration candidate' : 'Preventive deployment';
+    : isImpaired ? 'Impaired — restoration candidate' : 'Preventive monitoring';
 
   // ── PEARL Unit Sizing & Cost Model ──
   const attainsAcres = input.attainsAcres ?? null;
@@ -689,7 +689,7 @@ export function computeRestorationPlan(input: RestorationInput): RestorationResu
     whyBullets.push({ icon: '🐟', problem: 'Habitat degradation listed in ATTAINS — poor conditions for aquatic life', implication: 'Improving DO, clarity, and nutrient levels is prerequisite for biological community recovery' });
   }
 
-  if (dataAgeDays !== null && dataAgeDays > 365) whyBullets.push({ icon: '📡', problem: `No monitoring data in ${Math.round(dataAgeDays / 365)} year${dataAgeDays > 730 ? 's' : ''} — site is operating blind`, implication: 'Continuous, compliance-grade monitoring deployment is a priority' });
+  if (dataAgeDays !== null && dataAgeDays > 365) whyBullets.push({ icon: '📡', problem: `No monitoring data in ${Math.round(dataAgeDays / 365)} year${dataAgeDays > 730 ? 's' : ''} — site is operating blind`, implication: 'Continuous, compliance-grade monitoring is a priority' });
   else if (dataAgeDays !== null && dataAgeDays > 30) whyBullets.push({ icon: '📡', problem: `Data is ${dataAgeDays} days old — confidence is ${dataAgeDays > 90 ? 'low' : 'moderate'}`, implication: 'Higher-frequency monitoring (e.g. 15-min intervals) would improve situational awareness' });
 
   if (tmdlStatus === 'needed') whyBullets.push({ icon: '📋', problem: 'No TMDL established — regulatory exposure is open', implication: 'Continuous monitoring data can support TMDL development and load allocation' });
