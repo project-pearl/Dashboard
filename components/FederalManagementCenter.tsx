@@ -183,7 +183,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: true, showNationalImpact: true, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['networkhealth', 'nationalimpact', 'groundwater', 'waterfront-exposure', 'infra-green', 'infra-capital', 'infra-construction']),
+    sections: new Set(['networkhealth', 'groundwater', 'waterfront-exposure', 'infra-green', 'infra-capital', 'infra-construction']),
   },
   monitoring: {
     label: 'Monitoring',
