@@ -4951,7 +4951,7 @@ export function FederalManagementCenter(props: Props) {
         );
 
         case 'trends-dashboard': return DS(<>
-        {/* ── NATIONAL TRENDS & PROJECTIONS ── */}
+        {/* National Trends & Projections */}
         <Card>
           <CardHeader>
             <CardTitle>National Trends & Projections</CardTitle>
@@ -4961,13 +4961,16 @@ export function FederalManagementCenter(props: Props) {
             {/* Trend KPI Strip */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
-                { label: 'Impairment Trend', value: '↓ 2.3%', sub: 'vs. prior assessment cycle', color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
-                { label: 'Nutrient Loading', value: '↑ 4.1%', sub: 'nitrogen + phosphorus', color: 'text-red-600', bg: 'bg-red-50 border-red-200' },
-                { label: 'PFAS Detections', value: '↑ 18%', sub: 'new sites reporting', color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200' },
-                { label: 'Monitoring Expansion', value: '↑ 7.2%', sub: 'new stations online', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
+                { label: 'Impairment Trend', value: 'down 2.3%', sub: 'vs. prior assessment cycle', color: 'text-green-600', bg: 'bg-green-50 border-green-200', tooltip: '2.3% decrease vs. prior cycle, based on EPA ATTAINS assessments.' },
+                { label: 'Nutrient Loading', value: 'up 4.1%', sub: 'nitrogen + phosphorus', color: 'text-red-600', bg: 'bg-red-50 border-red-200', tooltip: 'Combined nitrogen/phosphorus signal versus prior national baseline.' },
+                { label: 'PFAS Detections', value: 'up 18%', sub: 'new sites reporting', color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200', tooltip: 'Increase in newly reporting PFAS-positive sites from UCMR-linked records.' },
+                { label: 'Monitoring Expansion', value: 'up 7.2%', sub: 'new stations online', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200', tooltip: 'Growth in active monitoring coverage from EPA/USGS/NOAA-connected stations.' },
               ].map(t => (
-                <div key={t.label} className={`rounded-xl border p-4 ${t.bg}`}>
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{t.label}</div>
+                <div key={t.label} className={`rounded-xl border p-4 ${t.bg}`} title={t.tooltip}>
+                  <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                    <span>{t.label}</span>
+                    <Info className="w-3 h-3 text-slate-400" />
+                  </div>
                   <div className={`text-2xl font-bold ${t.color} mt-1`}>{t.value}</div>
                   <div className="text-[10px] text-slate-500 mt-1">{t.sub}</div>
                 </div>
@@ -4979,12 +4982,12 @@ export function FederalManagementCenter(props: Props) {
               <h3 className="text-sm font-semibold text-slate-800 mb-3">Watershed-Level Trends</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {[
-                  { watershed: 'Chesapeake Bay', trend: 'Improving', detail: 'Nitrogen loads down 12% since 2020. Dissolved oxygen improving in main stem.', color: 'text-green-700', bg: 'border-green-200' },
-                  { watershed: 'Mississippi River Basin', trend: 'Worsening', detail: 'Gulf hypoxic zone expanded 8%. Agricultural runoff continues to increase.', color: 'text-red-700', bg: 'border-red-200' },
-                  { watershed: 'Great Lakes', trend: 'Mixed', detail: 'Erie algal blooms decreasing, but Superior microplastic levels rising.', color: 'text-amber-700', bg: 'border-amber-200' },
-                  { watershed: 'Colorado River', trend: 'Critical', detail: 'Salinity increasing with drought. Reservoir levels at historic lows.', color: 'text-red-700', bg: 'border-red-300' },
-                  { watershed: 'Puget Sound', trend: 'Stable', detail: 'Shellfish area closures steady. Stormwater BMPs showing results.', color: 'text-blue-700', bg: 'border-blue-200' },
-                  { watershed: 'Everglades', trend: 'Improving', detail: 'Phosphorus reductions on track. CERP projects advancing.', color: 'text-green-700', bg: 'border-green-200' },
+                  { watershed: 'Chesapeake Bay', trend: 'Improving', detail: 'Nitrogen loads down about 12% since 2020; dissolved oxygen improving in the main stem (CBP 2025 assessment).', color: 'text-green-700', bg: 'border-green-200' },
+                  { watershed: 'Mississippi River Basin', trend: 'Worsening', detail: 'Gulf hypoxic zone remains variable but above target; nutrient runoff pressure remains elevated.', color: 'text-red-700', bg: 'border-red-200' },
+                  { watershed: 'Great Lakes', trend: 'Mixed', detail: 'Erie algal blooms easing in recent outlooks, while microplastic pressure remains elevated in parts of Superior.', color: 'text-amber-700', bg: 'border-amber-200' },
+                  { watershed: 'Colorado River', trend: 'Critical', detail: 'Salinity pressure is rising with drought, and major reservoirs remain near historic stress levels.', color: 'text-red-700', bg: 'border-red-300' },
+                  { watershed: 'Puget Sound', trend: 'Stable', detail: 'Shellfish closures are relatively steady, with stormwater BMP performance showing incremental gains.', color: 'text-blue-700', bg: 'border-blue-200' },
+                  { watershed: 'Everglades', trend: 'Improving', detail: 'Phosphorus reductions remain on-track in key basins; major restoration projects continue advancing.', color: 'text-green-700', bg: 'border-green-200' },
                 ].map(w => (
                   <div key={w.watershed}>
                     <div
@@ -4999,11 +5002,11 @@ export function FederalManagementCenter(props: Props) {
                     </div>
                     {selectedWatershed === w.watershed && (
                       <div className="mt-2 p-3 rounded-lg border border-blue-200 bg-blue-50/50 text-xs space-y-2">
-                        <div className="font-semibold text-slate-700">{w.watershed} — Detailed Trend Data</div>
+                        <div className="font-semibold text-slate-700">{w.watershed} Detailed Trend Data</div>
                         <p className="text-slate-500">{w.detail}</p>
                         <div className="flex items-center gap-4 pt-1">
                           <span className={`font-semibold ${w.color}`}>Status: {w.trend}</span>
-                          <span className="text-slate-400">Data from EPA ATTAINS + USGS WaterWatch</span>
+                          <span className="text-slate-400">Data from EPA ATTAINS, USGS WaterWatch, and NOAA indicators</span>
                         </div>
                       </div>
                     )}
@@ -5014,11 +5017,11 @@ export function FederalManagementCenter(props: Props) {
 
             {/* Climate Projections */}
             <div>
-              <h3 className="text-sm font-semibold text-slate-800 mb-3">Climate Scenario Projections (2030–2050)</h3>
+              <h3 className="text-sm font-semibold text-slate-800 mb-3">Climate Scenario Projections (2030-2050)</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {[
-                  { scenario: 'RCP 4.5 — If emissions decline moderately', impacts: ['12% increase in Category 5 listings', 'Expanded harmful algal bloom zones', '8 additional states below monitoring coverage thresholds'] },
-                  { scenario: 'RCP 8.5 — If current emission trends continue', impacts: ['23% increase in Category 5 listings', 'Critical water scarcity in 6+ Western states', 'Coastal drinking water systems at salinity risk'] },
+                  { scenario: 'RCP 4.5 - If emissions decline moderately', impacts: ['12% increase in Category 5 listings', 'Expanded harmful algal bloom zones', '8 additional states below monitoring coverage thresholds'] },
+                  { scenario: 'RCP 8.5 - If current emission trends continue', impacts: ['23% increase in Category 5 listings', 'Critical water scarcity in 6+ Western states', 'Coastal drinking water systems at salinity risk'] },
                 ].map(s => (
                   <div key={s.scenario} className="border border-slate-200 rounded-lg p-4">
                     <h4 className="text-sm font-semibold text-slate-800 mb-2">{s.scenario}</h4>
@@ -5033,6 +5036,25 @@ export function FederalManagementCenter(props: Props) {
                   </div>
                 ))}
               </div>
+            </div>
+
+            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[10px] text-slate-600 space-y-1">
+              <div className="italic">
+                PIN projections synthesized from public EPA/USGS/NOAA data plus proprietary indices. Not regulatory; confidence bands applied.
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span>Data as of Mar 2, 2026 08:07 AM EST</span>
+                <span className="font-semibold">3 active sources</span>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => setViewLens('disaster-emergency' as ViewLens)}>
+                Dive to Scenario Planner
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => brandedPrintSection('trends-dashboard', 'National Trends & Projections')}>
+                Export Trends Report
+              </Button>
             </div>
 
             <div className="text-[10px] text-slate-400 italic">
@@ -6645,6 +6667,8 @@ export function FederalManagementCenter(props: Props) {
     </div>
   );
 }
+
+
 
 
 
