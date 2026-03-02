@@ -42,6 +42,3 @@ export { default as SentinelHealthMonitor } from "./components/SentinelHealthMon
 // Hooks (real API — bridge sentinel-status → AMS types)
 export { useAlertSummary } from "./hooks/useAlertSummary";
 export { useSentinelHealth } from "./hooks/useSentinelHealth";
-
-// Mock data (remove in production)
-export { MOCK_ALERT_SUMMARY, MOCK_SENTINEL_HEALTH } from "./data/mock-alerts";
