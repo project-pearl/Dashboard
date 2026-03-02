@@ -1702,8 +1702,8 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                             <span className="flex-shrink-0 mt-0.5">{b.icon}</span>
                             <div>
                               <span className="text-red-700 font-medium">{b.problem}</span>
-                              <span className="text-slate-400 mx-1">→</span>
-                              <span className="text-green-700">{b.solution}</span>
+                              <span className="text-slate-400 mx-1">—</span>
+                              <span className="text-slate-600">{b.implication}</span>
                             </div>
                           </div>
                         ))}
@@ -1943,7 +1943,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                               const catTitleMap: Record<string, string> = {
                                 source: 'SOURCE CONTROL -- Upstream BMPs',
                                 nature: 'NATURE-BASED SOLUTIONS',
-                                pearl: 'ALIA -- Treatment Accelerator',
+                                pearl: 'Improvement Accelerator',
                                 community: 'COMMUNITY ENGAGEMENT & STEWARDSHIP',
                                 regulatory: 'REGULATORY & PLANNING',
                               };
@@ -2035,7 +2035,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                               pdf.addDivider();
                               for (const b of whyBullets) {
                                 pdf.addText(clean(`- ${b.problem}`), { indent: 5, bold: true });
-                                pdf.addText(clean(`  -> ${b.solution}.`), { indent: 10 });
+                                pdf.addText(clean(`  -> ${b.implication}.`), { indent: 10 });
                               }
                               pdf.addSpacer(3);
 

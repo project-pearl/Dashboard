@@ -78,7 +78,7 @@ export type SeverityLabel = 'CRITICAL' | 'DEGRADED' | 'STRESSED' | 'FAIR';
 export interface WhyBullet {
   icon: string;
   problem: string;
-  solution: string;
+  implication: string;
 }
 
 export interface RestorationResult {
@@ -544,7 +544,7 @@ export function computeRestorationPlan(input: RestorationInput): RestorationResu
       detail: 'PCB contamination identified. Activated carbon adsorption stage required. May also address other organic contaminants.',
       color: 'bg-red-50 border-red-200 text-red-800' });
   }
-  categories.push({ id: 'pearl', title: 'PEARL — Treatment Accelerator', icon: '⚡', subtitle: 'Combines biological filtration + mechanical treatment + real-time data to accelerate restoration outcomes', modules: pearlModules, color: 'border-cyan-200 bg-cyan-50/30' });
+  categories.push({ id: 'pearl', title: 'Improvement Accelerator', icon: '⚡', subtitle: 'Combines biological filtration + mechanical treatment + real-time data to accelerate restoration outcomes', modules: pearlModules, color: 'border-cyan-200 bg-cyan-50/30' });
 
   // ═══ CATEGORY 4: COMMUNITY & STEWARDSHIP ═══
   const community: TreatmentModule[] = [];
@@ -653,48 +653,48 @@ export function computeRestorationPlan(input: RestorationInput): RestorationResu
     : siteSeverityScore >= 25 ? 'Stressed conditions — targeted treatment'
     : 'Monitoring + preventive treatment';
 
-  // ── Why PEARL bullets ──
+  // ── Assessment findings ──
   const whyBullets: WhyBullet[] = [];
 
   if ((bloomSeverity === 'severe' || bloomSeverity === 'significant') && (doSeverity === 'critical' || doSeverity === 'stressed')) {
-    whyBullets.push({ icon: '💀', problem: `Bloom-crash DO cycle: chlorophyll at ${chlVal} ug/L drives DO to ${doVal?.toFixed(1)} mg/L -- lethal to fish and shellfish (${thresholdSourceShort})`, solution: 'PEARL intercepts nutrients upstream of bloom formation, breaking the eutrophication cycle' });
+    whyBullets.push({ icon: '💀', problem: `Bloom-crash DO cycle: chlorophyll at ${chlVal} ug/L drives DO to ${doVal?.toFixed(1)} mg/L -- lethal to fish and shellfish (${thresholdSourceShort})`, implication: 'Upstream nutrient interception needed to break eutrophication cycle' });
   } else {
-    if (doSeverity === 'critical') whyBullets.push({ icon: '🔴', problem: `DO at ${doVal?.toFixed(1)} mg/L -- below ${doCritical} mg/L lethal threshold (${thresholdSourceShort})`, solution: 'PEARL biofiltration improves DO through nutrient removal and aeration' });
-    else if (doSeverity === 'stressed') whyBullets.push({ icon: '🟡', problem: `DO at ${doVal?.toFixed(1)} mg/L -- below ${doStressed} mg/L living resource criteria`, solution: 'PEARL treatment targets nutrient drivers of low DO' });
+    if (doSeverity === 'critical') whyBullets.push({ icon: '🔴', problem: `DO at ${doVal?.toFixed(1)} mg/L -- below ${doCritical} mg/L lethal threshold (${thresholdSourceShort})`, implication: 'Nutrient reduction and aeration required to restore dissolved oxygen' });
+    else if (doSeverity === 'stressed') whyBullets.push({ icon: '🟡', problem: `DO at ${doVal?.toFixed(1)} mg/L -- below ${doStressed} mg/L living resource criteria`, implication: 'Nutrient loading is the likely driver — reduction targets needed' });
 
-    if (bloomSeverity === 'severe') whyBullets.push({ icon: '🟤', problem: `Severe algal bloom: chlorophyll at ${chlVal} ug/L (>${chlSevere} = severe per ${thresholdSourceShort})`, solution: 'PEARL nutrient removal starves bloom cycle at the source' });
-    else if (bloomSeverity === 'significant') whyBullets.push({ icon: '🟠', problem: `Significant bloom: chlorophyll at ${chlVal} ug/L (>${chlSignificant} ${thresholdSourceShort} threshold)`, solution: 'Biofiltration + ion exchange removes N and P driving blooms' });
-    else if (bloomSeverity === 'bloom') whyBullets.push({ icon: '🟡', problem: `Algal bloom detected: chlorophyll at ${chlVal} ug/L (>${chlBloom} ${thresholdSourceShort} threshold)`, solution: 'PEARL monitors bloom dynamics and reduces nutrient loading' });
+    if (bloomSeverity === 'severe') whyBullets.push({ icon: '🟤', problem: `Severe algal bloom: chlorophyll at ${chlVal} ug/L (>${chlSevere} = severe per ${thresholdSourceShort})`, implication: 'Nitrogen and phosphorus source control is critical to interrupt bloom cycle' });
+    else if (bloomSeverity === 'significant') whyBullets.push({ icon: '🟠', problem: `Significant bloom: chlorophyll at ${chlVal} ug/L (>${chlSignificant} ${thresholdSourceShort} threshold)`, implication: 'N and P load reduction needed — biofiltration or ion exchange are proven approaches' });
+    else if (bloomSeverity === 'bloom') whyBullets.push({ icon: '🟡', problem: `Algal bloom detected: chlorophyll at ${chlVal} ug/L (>${chlBloom} ${thresholdSourceShort} threshold)`, implication: 'Continuous bloom monitoring and nutrient load reduction recommended' });
   }
 
   if (nutrientSeverity === 'excessive' && bloomSeverity !== 'severe' && bloomSeverity !== 'significant') {
-    whyBullets.push({ icon: '🧪', problem: `Excessive nutrients: TN ${tnVal?.toFixed(2) ?? '?'} mg/L, TP ${tpVal?.toFixed(2) ?? '?'} mg/L -- eutrophication risk`, solution: 'PEARL biofiltration + resin removes N and P in real time' });
+    whyBullets.push({ icon: '🧪', problem: `Excessive nutrients: TN ${tnVal?.toFixed(2) ?? '?'} mg/L, TP ${tpVal?.toFixed(2) ?? '?'} mg/L -- eutrophication risk`, implication: 'In-situ N and P removal via biofiltration or resin exchange is indicated' });
   } else if (hasNutrients && nutrientSeverity !== 'excessive') {
-    whyBullets.push({ icon: '🧪', problem: 'Nutrient impairment listed in ATTAINS -- eutrophication driver', solution: 'PEARL biofiltration + resin removes N and P in real time' });
+    whyBullets.push({ icon: '🧪', problem: 'Nutrient impairment listed in ATTAINS -- eutrophication driver', implication: 'Targeted N and P removal needed to meet water quality standards' });
   }
 
-  if (turbiditySeverity === 'impaired') whyBullets.push({ icon: '🌫️', problem: `Turbidity at ${turbVal?.toFixed(1)} FNU -- exceeds ${turbImpaired} FNU ${isMD ? 'SAV habitat' : 'aquatic habitat'} threshold (${thresholdSourceShort})`, solution: 'PEARL 50um pre-screen + biofilt captures suspended solids, restoring water clarity' });
-  else if (turbiditySeverity === 'elevated') whyBullets.push({ icon: '🌫️', problem: `Turbidity at ${turbVal?.toFixed(1)} FNU -- exceeds ${turbElevated} FNU ${isMD ? 'SAV growth' : 'habitat'} threshold (${thresholdSourceShort})`, solution: 'PEARL 50um screening captures suspended solids' });
-  else if (hasSediment) whyBullets.push({ icon: '🌫️', problem: 'Sediment/turbidity impairment listed in ATTAINS', solution: 'PEARL 50um screening + biofilt captures suspended solids' });
+  if (turbiditySeverity === 'impaired') whyBullets.push({ icon: '🌫️', problem: `Turbidity at ${turbVal?.toFixed(1)} FNU -- exceeds ${turbImpaired} FNU ${isMD ? 'SAV habitat' : 'aquatic habitat'} threshold (${thresholdSourceShort})`, implication: 'Suspended solids capture required to restore water clarity and habitat' });
+  else if (turbiditySeverity === 'elevated') whyBullets.push({ icon: '🌫️', problem: `Turbidity at ${turbVal?.toFixed(1)} FNU -- exceeds ${turbElevated} FNU ${isMD ? 'SAV growth' : 'habitat'} threshold (${thresholdSourceShort})`, implication: 'Sediment screening recommended to reduce suspended solids' });
+  else if (hasSediment) whyBullets.push({ icon: '🌫️', problem: 'Sediment/turbidity impairment listed in ATTAINS', implication: 'Sediment source control and suspended solids capture needed' });
 
-  if (bacteriaElevated) whyBullets.push({ icon: '🦠', problem: `Bacteria at ${Math.round(params.bacteria?.value ?? 0)} MPN/100mL — exceeds 235 MPN/100mL recreational standard`, solution: 'PEARL UV treatment stage provides immediate pathogen reduction' });
-  else if (hasBacteria) whyBullets.push({ icon: '🦠', problem: 'Pathogen impairment listed in ATTAINS', solution: 'PEARL provides pathogen treatment capacity' });
+  if (bacteriaElevated) whyBullets.push({ icon: '🦠', problem: `Bacteria at ${Math.round(params.bacteria?.value ?? 0)} MPN/100mL — exceeds 235 MPN/100mL recreational standard`, implication: 'UV disinfection or equivalent pathogen reduction is warranted' });
+  else if (hasBacteria) whyBullets.push({ icon: '🦠', problem: 'Pathogen impairment listed in ATTAINS', implication: 'Pathogen treatment capacity should be evaluated' });
 
-  if (hasMetals) whyBullets.push({ icon: '⚙️', problem: 'Metal contamination in water column', solution: 'Chelating resin stage targets dissolved metals' });
+  if (hasMetals) whyBullets.push({ icon: '⚙️', problem: 'Metal contamination in water column', implication: 'Chelating resin or equivalent dissolved-metals treatment indicated' });
 
   if (hasHabitat && !causesLower.some(c => c.includes('habitat'))) {
     // Inferred habitat degradation — not explicitly listed in ATTAINS
-    whyBullets.push({ icon: '🐟', problem: 'Habitat degradation inferred: concurrent low DO, algal blooms, and poor clarity indicate living resource impairment', solution: 'PEARL addresses root causes (nutrients, sediment) to restore conditions for aquatic life' });
+    whyBullets.push({ icon: '🐟', problem: 'Habitat degradation inferred: concurrent low DO, algal blooms, and poor clarity indicate living resource impairment', implication: 'Root-cause nutrient and sediment reduction needed to restore aquatic habitat' });
   } else if (hasHabitat) {
-    whyBullets.push({ icon: '🐟', problem: 'Habitat degradation listed in ATTAINS — poor conditions for aquatic life', solution: 'PEARL improves DO, clarity, and nutrient levels to support biological community recovery' });
+    whyBullets.push({ icon: '🐟', problem: 'Habitat degradation listed in ATTAINS — poor conditions for aquatic life', implication: 'Improving DO, clarity, and nutrient levels is prerequisite for biological community recovery' });
   }
 
-  if (dataAgeDays !== null && dataAgeDays > 365) whyBullets.push({ icon: '📡', problem: `No monitoring data in ${Math.round(dataAgeDays / 365)} year${dataAgeDays > 730 ? 's' : ''} — site is operating blind`, solution: 'PEARL restores continuous, compliance-grade monitoring immediately' });
-  else if (dataAgeDays !== null && dataAgeDays > 30) whyBullets.push({ icon: '📡', problem: `Data is ${dataAgeDays} days old — confidence is ${dataAgeDays > 90 ? 'low' : 'moderate'}`, solution: 'PEARL delivers continuous 15-min interval monitoring' });
+  if (dataAgeDays !== null && dataAgeDays > 365) whyBullets.push({ icon: '📡', problem: `No monitoring data in ${Math.round(dataAgeDays / 365)} year${dataAgeDays > 730 ? 's' : ''} — site is operating blind`, implication: 'Continuous, compliance-grade monitoring deployment is a priority' });
+  else if (dataAgeDays !== null && dataAgeDays > 30) whyBullets.push({ icon: '📡', problem: `Data is ${dataAgeDays} days old — confidence is ${dataAgeDays > 90 ? 'low' : 'moderate'}`, implication: 'Higher-frequency monitoring (e.g. 15-min intervals) would improve situational awareness' });
 
-  if (tmdlStatus === 'needed') whyBullets.push({ icon: '📋', problem: 'No TMDL established — regulatory exposure is open', solution: 'PEARL data supports TMDL development and load allocation' });
+  if (tmdlStatus === 'needed') whyBullets.push({ icon: '📋', problem: 'No TMDL established — regulatory exposure is open', implication: 'Continuous monitoring data can support TMDL development and load allocation' });
 
-  if (whyBullets.length === 0) whyBullets.push({ icon: '🛡️', problem: 'Waterbody at risk without active monitoring', solution: 'PEARL provides early warning and baseline data' });
+  if (whyBullets.length === 0) whyBullets.push({ icon: '🛡️', problem: 'Waterbody at risk without active monitoring', implication: 'Early warning and baseline data collection recommended' });
 
   // ── Healthy waterbody check ──
   const isHealthy = level === 'none'

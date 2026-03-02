@@ -317,7 +317,7 @@ export default function SiteAssessmentCard({
       detail: 'PCB contamination identified. Activated carbon adsorption stage required. May also address other organic contaminants.',
       color: 'bg-red-50 border-red-200 text-red-800' });
   }
-  categories.push({ id: 'pearl', title: 'PIN — Treatment Accelerator', icon: '⚡', subtitle: 'Combines biological filtration + mechanical treatment + real-time data to accelerate restoration outcomes', modules: pearlModules, color: 'border-cyan-200 bg-cyan-50/30' });
+  categories.push({ id: 'pearl', title: 'Improvement Accelerator', icon: '⚡', subtitle: 'Combines biological filtration + mechanical treatment + real-time data to accelerate restoration outcomes', modules: pearlModules, color: 'border-cyan-200 bg-cyan-50/30' });
 
   // ═══ CATEGORY 4: COMMUNITY & STEWARDSHIP ═══
   const community: TreatmentModule[] = [];
@@ -493,41 +493,41 @@ export default function SiteAssessmentCard({
   // (data age, monitoring gap, and siteSeverityScore computed above, before sizing)
 
   // ── Why PEARL bullets (DNR-threshold enriched) ──
-  const whyBullets: Array<{ icon: string; problem: string; solution: string }> = [];
+  const whyBullets: Array<{ icon: string; problem: string; implication: string }> = [];
 
   // Bloom-driven DO crash cycle
   if ((bloomSeverity === 'severe' || bloomSeverity === 'significant') && (doSeverity === 'critical' || doSeverity === 'stressed')) {
-    whyBullets.push({ icon: '💀', problem: `Bloom-crash DO cycle: chlorophyll at ${chlVal} ug/L drives DO to ${doVal?.toFixed(1)} mg/L -- lethal to fish and shellfish (${thresholdSourceShort})`, solution: 'PIN intercepts nutrients upstream of bloom formation, breaking the eutrophication cycle' });
+    whyBullets.push({ icon: '💀', problem: `Bloom-crash DO cycle: chlorophyll at ${chlVal} ug/L drives DO to ${doVal?.toFixed(1)} mg/L -- lethal to fish and shellfish (${thresholdSourceShort})`, implication: 'Upstream nutrient interception needed to break eutrophication cycle' });
   } else {
-    if (doSeverity === 'critical') whyBullets.push({ icon: '🔴', problem: `DO at ${doVal?.toFixed(1)} mg/L -- below ${doCritical} mg/L lethal threshold (${thresholdSourceShort})`, solution: 'PIN biofiltration improves DO through nutrient removal and aeration' });
-    else if (doSeverity === 'stressed') whyBullets.push({ icon: '🟡', problem: `DO at ${doVal?.toFixed(1)} mg/L -- below ${doStressed} mg/L living resource criteria`, solution: 'PIN treatment targets nutrient drivers of low DO' });
+    if (doSeverity === 'critical') whyBullets.push({ icon: '🔴', problem: `DO at ${doVal?.toFixed(1)} mg/L -- below ${doCritical} mg/L lethal threshold (${thresholdSourceShort})`, implication: 'Nutrient reduction and aeration required to restore dissolved oxygen' });
+    else if (doSeverity === 'stressed') whyBullets.push({ icon: '🟡', problem: `DO at ${doVal?.toFixed(1)} mg/L -- below ${doStressed} mg/L living resource criteria`, implication: 'Nutrient loading is the likely driver — reduction targets needed' });
 
-    if (bloomSeverity === 'severe') whyBullets.push({ icon: '🟤', problem: `Severe algal bloom: chlorophyll at ${chlVal} ug/L (>${chlSevere} = severe per ${thresholdSourceShort})`, solution: 'PIN nutrient removal starves bloom cycle at the source' });
-    else if (bloomSeverity === 'significant') whyBullets.push({ icon: '🟠', problem: `Significant bloom: chlorophyll at ${chlVal} ug/L (>${chlSignificant} ${thresholdSourceShort} threshold)`, solution: 'Biofiltration + ion exchange removes N and P driving blooms' });
-    else if (bloomSeverity === 'bloom') whyBullets.push({ icon: '🟡', problem: `Algal bloom detected: chlorophyll at ${chlVal} ug/L (>${chlBloom} ${thresholdSourceShort} threshold)`, solution: 'PIN monitors bloom dynamics and reduces nutrient loading' });
+    if (bloomSeverity === 'severe') whyBullets.push({ icon: '🟤', problem: `Severe algal bloom: chlorophyll at ${chlVal} ug/L (>${chlSevere} = severe per ${thresholdSourceShort})`, implication: 'Nitrogen and phosphorus source control is critical to interrupt bloom cycle' });
+    else if (bloomSeverity === 'significant') whyBullets.push({ icon: '🟠', problem: `Significant bloom: chlorophyll at ${chlVal} ug/L (>${chlSignificant} ${thresholdSourceShort} threshold)`, implication: 'N and P load reduction needed — biofiltration or ion exchange are proven approaches' });
+    else if (bloomSeverity === 'bloom') whyBullets.push({ icon: '🟡', problem: `Algal bloom detected: chlorophyll at ${chlVal} ug/L (>${chlBloom} ${thresholdSourceShort} threshold)`, implication: 'Continuous bloom monitoring and nutrient load reduction recommended' });
   }
 
   if (nutrientSeverity === 'excessive' && bloomSeverity !== 'severe' && bloomSeverity !== 'significant') {
-    whyBullets.push({ icon: '🧪', problem: `Excessive nutrients: TN ${tnVal?.toFixed(2) ?? '?'} mg/L, TP ${tpVal?.toFixed(2) ?? '?'} mg/L -- eutrophication risk`, solution: 'PIN biofiltration + resin removes N and P in real time' });
+    whyBullets.push({ icon: '🧪', problem: `Excessive nutrients: TN ${tnVal?.toFixed(2) ?? '?'} mg/L, TP ${tpVal?.toFixed(2) ?? '?'} mg/L -- eutrophication risk`, implication: 'In-situ N and P removal via biofiltration or resin exchange is indicated' });
   } else if (hasNutrients && nutrientSeverity !== 'excessive') {
-    whyBullets.push({ icon: '🧪', problem: 'Nutrient impairment listed in ATTAINS -- eutrophication driver', solution: 'PIN biofiltration + resin removes N and P in real time' });
+    whyBullets.push({ icon: '🧪', problem: 'Nutrient impairment listed in ATTAINS -- eutrophication driver', implication: 'Targeted N and P removal needed to meet water quality standards' });
   }
 
-  if (turbiditySeverity === 'impaired') whyBullets.push({ icon: '🌫️', problem: `Turbidity at ${turbVal?.toFixed(1)} FNU -- exceeds ${turbImpaired} FNU ${isMD ? 'SAV habitat' : 'aquatic habitat'} threshold (${thresholdSourceShort})`, solution: 'PIN 50um pre-screen + biofilt captures suspended solids, restoring water clarity' });
-  else if (turbiditySeverity === 'elevated') whyBullets.push({ icon: '🌫️', problem: `Turbidity at ${turbVal?.toFixed(1)} FNU -- exceeds ${turbElevated} FNU ${isMD ? 'SAV growth' : 'habitat'} threshold (${thresholdSourceShort})`, solution: 'PIN 50um screening captures suspended solids' });
-  else if (hasSediment) whyBullets.push({ icon: '🌫️', problem: 'Sediment/turbidity impairment listed in ATTAINS', solution: 'PIN 50um screening + biofilt captures suspended solids' });
+  if (turbiditySeverity === 'impaired') whyBullets.push({ icon: '🌫️', problem: `Turbidity at ${turbVal?.toFixed(1)} FNU -- exceeds ${turbImpaired} FNU ${isMD ? 'SAV habitat' : 'aquatic habitat'} threshold (${thresholdSourceShort})`, implication: 'Suspended solids capture required to restore water clarity and habitat' });
+  else if (turbiditySeverity === 'elevated') whyBullets.push({ icon: '🌫️', problem: `Turbidity at ${turbVal?.toFixed(1)} FNU -- exceeds ${turbElevated} FNU ${isMD ? 'SAV growth' : 'habitat'} threshold (${thresholdSourceShort})`, implication: 'Sediment screening recommended to reduce suspended solids' });
+  else if (hasSediment) whyBullets.push({ icon: '🌫️', problem: 'Sediment/turbidity impairment listed in ATTAINS', implication: 'Sediment source control and suspended solids capture needed' });
 
-  if (bacteriaElevated) whyBullets.push({ icon: '🦠', problem: `Bacteria at ${Math.round(params.bacteria?.value ?? 0)} MPN/100mL — exceeds 235 MPN/100mL recreational standard`, solution: 'PIN UV treatment stage provides immediate pathogen reduction' });
-  else if (hasBacteria) whyBullets.push({ icon: '🦠', problem: 'Pathogen impairment listed in ATTAINS', solution: 'PIN provides pathogen treatment capacity' });
+  if (bacteriaElevated) whyBullets.push({ icon: '🦠', problem: `Bacteria at ${Math.round(params.bacteria?.value ?? 0)} MPN/100mL — exceeds 235 MPN/100mL recreational standard`, implication: 'UV disinfection or equivalent pathogen reduction is warranted' });
+  else if (hasBacteria) whyBullets.push({ icon: '🦠', problem: 'Pathogen impairment listed in ATTAINS', implication: 'Pathogen treatment capacity should be evaluated' });
 
-  if (hasMetals) whyBullets.push({ icon: '⚙️', problem: 'Metal contamination in water column', solution: 'Chelating resin stage targets dissolved metals' });
+  if (hasMetals) whyBullets.push({ icon: '⚙️', problem: 'Metal contamination in water column', implication: 'Chelating resin or equivalent dissolved-metals treatment indicated' });
 
-  if (dataAgeDays !== null && dataAgeDays > 365) whyBullets.push({ icon: '📡', problem: `No monitoring data in ${Math.round(dataAgeDays / 365)} year${dataAgeDays > 730 ? 's' : ''} — site is operating blind`, solution: 'PIN restores continuous, compliance-grade monitoring immediately' });
-  else if (dataAgeDays !== null && dataAgeDays > 30) whyBullets.push({ icon: '📡', problem: `Data is ${dataAgeDays} days old — confidence is ${dataAgeDays > 90 ? 'low' : 'moderate'}`, solution: 'PIN delivers continuous 15-min interval monitoring' });
+  if (dataAgeDays !== null && dataAgeDays > 365) whyBullets.push({ icon: '📡', problem: `No monitoring data in ${Math.round(dataAgeDays / 365)} year${dataAgeDays > 730 ? 's' : ''} — site is operating blind`, implication: 'Continuous, compliance-grade monitoring deployment is a priority' });
+  else if (dataAgeDays !== null && dataAgeDays > 30) whyBullets.push({ icon: '📡', problem: `Data is ${dataAgeDays} days old — confidence is ${dataAgeDays > 90 ? 'low' : 'moderate'}`, implication: 'Higher-frequency monitoring (e.g. 15-min intervals) would improve situational awareness' });
 
-  if (tmdlStatus === 'needed') whyBullets.push({ icon: '📋', problem: 'No TMDL established — regulatory exposure is open', solution: 'PIN data supports TMDL development and load allocation' });
+  if (tmdlStatus === 'needed') whyBullets.push({ icon: '📋', problem: 'No TMDL established — regulatory exposure is open', implication: 'Continuous monitoring data can support TMDL development and load allocation' });
 
-  if (whyBullets.length === 0) whyBullets.push({ icon: '🛡️', problem: 'Waterbody at risk without active monitoring', solution: 'PIN provides early warning and baseline data' });
+  if (whyBullets.length === 0) whyBullets.push({ icon: '🛡️', problem: 'Waterbody at risk without active monitoring', implication: 'Early warning and baseline data collection recommended' });
 
   return (
     <Card className="border-2 border-cyan-300 shadow-md">
@@ -679,12 +679,12 @@ export default function SiteAssessmentCard({
                     </div>
                   </div>
 
-                  {/* Why PIN First */}
+                  {/* Priority Findings */}
                   <div className="rounded-md bg-cyan-50 border-2 border-cyan-300 p-3">
-                    <div className="text-[10px] font-bold text-cyan-800 uppercase tracking-wider mb-1.5">Why PIN First</div>
+                    <div className="text-[10px] font-bold text-cyan-800 uppercase tracking-wider mb-1.5">Priority Findings</div>
                     <div className="space-y-1.5 text-xs text-cyan-900 leading-relaxed">
                       {dataAgeDays !== null && dataAgeDays > 30 && (
-                        <div><span className="font-semibold text-red-700">Data is {dataAgeDays} days old.</span> PIN restores continuous, compliance-grade monitoring.</div>
+                        <div><span className="font-semibold text-red-700">Data is {dataAgeDays} days old.</span> Continuous, compliance-grade monitoring is needed.</div>
                       )}
                       {treatmentPriorities.length > 0 && treatmentPriorities[0].urgency === 'immediate' && (
                         <div><span className="font-semibold text-red-700">{treatmentPriorities[0].driver.charAt(0).toUpperCase() + treatmentPriorities[0].driver.slice(1).split('(')[0].trim()}.</span> PIN provides immediate treatment.</div>
@@ -730,16 +730,16 @@ export default function SiteAssessmentCard({
                   </div>
                 </div>
 
-                {/* Why PEARL here — dynamic evidence box */}
+                {/* Site assessment — dynamic evidence box */}
                 <div className="rounded-md border border-cyan-300 bg-white p-3 space-y-2">
-                  <div className="text-[10px] font-bold text-cyan-800 uppercase tracking-wider">Why PIN at this site</div>
+                  <div className="text-[10px] font-bold text-cyan-800 uppercase tracking-wider">Site Assessment</div>
                   <div className="space-y-1.5">
                     {whyBullets.map((b, i) => (
                       <div key={i} className="flex items-start gap-2">
                         <span className="text-sm flex-shrink-0 mt-0.5">{b.icon}</span>
                         <div className="text-[11px] leading-relaxed">
                           <span className="text-red-700 font-medium">{b.problem}.</span>{' '}
-                          <span className="text-cyan-800">→ {b.solution}.</span>
+                          <span className="text-slate-600">{b.implication}.</span>
                         </div>
                       </div>
                     ))}
@@ -1020,7 +1020,7 @@ export default function SiteAssessmentCard({
                         const catTitleMap: Record<string, string> = {
                           source: 'SOURCE CONTROL -- Upstream BMPs',
                           nature: 'NATURE-BASED SOLUTIONS',
-                          pearl: 'PIN -- Treatment Accelerator',
+                          pearl: 'Improvement Accelerator',
                           community: 'COMMUNITY ENGAGEMENT & STEWARDSHIP',
                           regulatory: 'REGULATORY & PLANNING',
                         };
@@ -1107,12 +1107,12 @@ export default function SiteAssessmentCard({
                           pdf.addSpacer(3);
                         }
 
-                        // Why PIN at this site
-                        pdf.addSubtitle('Why PIN at This Site');
+                        // Site assessment
+                        pdf.addSubtitle('Site Assessment');
                         pdf.addDivider();
                         for (const b of whyBullets) {
                           pdf.addText(clean(`- ${b.problem}`), { indent: 5, bold: true });
-                          pdf.addText(clean(`  -> ${b.solution}.`), { indent: 10 });
+                          pdf.addText(clean(`  -> ${b.implication}.`), { indent: 10 });
                         }
                         pdf.addSpacer(3);
 

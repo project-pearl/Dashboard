@@ -1339,14 +1339,14 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
 
                       {/* Why PIN */}
                       <div className="space-y-1.5">
-                        <div className="text-xs font-semibold text-slate-700 uppercase tracking-wide">Why PIN at {regionName}</div>
+                        <div className="text-xs font-semibold text-slate-700 uppercase tracking-wide">Site Assessment — {regionName}</div>
                         {whyBullets.map((b, i) => (
                           <div key={i} className="flex items-start gap-2 text-xs">
                             <span className="flex-shrink-0 mt-0.5">{b.icon}</span>
                             <div>
                               <span className="text-red-700 font-medium">{b.problem}</span>
-                              <span className="text-slate-400 mx-1">→</span>
-                              <span className="text-green-700">{b.solution}</span>
+                              <span className="text-slate-400 mx-1">—</span>
+                              <span className="text-slate-600">{b.implication}</span>
                             </div>
                           </div>
                         ))}
@@ -1585,7 +1585,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                               const catTitleMap: Record<string, string> = {
                                 source: 'SOURCE CONTROL -- Upstream BMPs',
                                 nature: 'NATURE-BASED SOLUTIONS',
-                                pearl: 'PIN -- Treatment Accelerator',
+                                pearl: 'Improvement Accelerator',
                                 community: 'COMMUNITY ENGAGEMENT & STEWARDSHIP',
                                 regulatory: 'REGULATORY & PLANNING',
                               };
@@ -1673,11 +1673,11 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                               }
 
                               // ─── Why PIN ───
-                              pdf.addSubtitle('Why PIN at This Site');
+                              pdf.addSubtitle('Site Assessment');
                               pdf.addDivider();
                               for (const b of whyBullets) {
                                 pdf.addText(clean(`- ${b.problem}`), { indent: 5, bold: true });
-                                pdf.addText(clean(`  -> ${b.solution}.`), { indent: 10 });
+                                pdf.addText(clean(`  -> ${b.implication}.`), { indent: 10 });
                               }
                               pdf.addSpacer(3);
 
