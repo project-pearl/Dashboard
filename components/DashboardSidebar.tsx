@@ -452,7 +452,7 @@ export function DashboardSidebar() {
         {collapsed ? (
           <Image src="/Pearl-Logo-alt.png" alt="PIN" width={32} height={32} className="rounded-lg flex-shrink-0" />
         ) : (
-          <Image src="/Logo_Pearl_as_Headline.JPG" alt="PIN" width={180} height={40} className="object-contain" />
+          <Image src="/Pearl-Intelligence-Network.png" alt="PIN" width={180} height={40} className="object-contain" />
         )}
       </div>
 

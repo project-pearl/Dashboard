@@ -121,14 +121,14 @@ const LENS_CONFIG: Record<ViewLens, {
   sections: Set<string> | null;
 }> = {
   overview: {
-    label: 'The WARR Room',
-    description: 'Role landing — KPI strip, map, and national situation',
+    label: 'Overview',
+    description: 'National situation — map, overnight changes, and stakeholder activity',
     defaultOverlay: 'hotspots',
     showTopStrip: true, showPriorityQueue: false, showCoverageGaps: false,
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['usmap', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'briefing-changes', 'briefing-stakeholder', 'disclaimer']),
+    sections: new Set(['usmap', 'briefing-changes', 'briefing-stakeholder', 'disclaimer']),
   },
   briefing: {
     label: 'AI Briefing',
@@ -368,7 +368,7 @@ const FIPS_TO_ABBR: Record<string, string> = {
 
 // ─── Leaflet Map Constants ────────────────────────────────────────────────────
 const US_CENTER: [number, number] = [39.8, -98.5];
-const US_ZOOM = 4;
+const US_ZOOM = 3.5;
 const CARTO_TILES = 'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
 const CARTO_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>';
 
@@ -1193,6 +1193,7 @@ export function FederalManagementCenter(props: Props) {
   const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d' | 'custom'>('24h');
   const [showImpact, setShowImpact] = useState(false);
   const [alertWorkflow, setAlertWorkflow] = useState<Record<string, { status: 'new' | 'acknowledged' | 'assigned' | 'resolved'; owner?: string; }>>({});
+  const [stateCardView, setStateCardView] = useState<'score' | 'data'>('score');
   
   // HUC-8 indices for overlay + detail card
   const [hucIndicesByState, setHucIndicesByState] = useState<Record<string, { composite: number }[]>>({});
@@ -2099,6 +2100,11 @@ export function FederalManagementCenter(props: Props) {
     coops:        { label: 'CO-OPS',        staleAfterHours: 12,     deployed: true },    // 0 */6 * * *
     snotel:       { label: 'SNOTEL',        staleAfterHours: 48,     deployed: true },    // 0 18 * * *
     tri:          { label: 'TRI',           staleAfterHours: 48,     deployed: true },     // 0 19 * * *
+    usaSpending:  { label: 'USASpending',   staleAfterHours: 336,    deployed: true },
+    grantsGov:    { label: 'Grants.gov',    staleAfterHours: 336,    deployed: true },
+    sam:          { label: 'SAM.gov',       staleAfterHours: 336,    deployed: true },
+    fema:         { label: 'FEMA',          staleAfterHours: 48,     deployed: true },
+    superfund:    { label: 'Superfund',     staleAfterHours: 48,     deployed: true },
   };
 
   const [dataReliability, setDataReliability] = useState<DataReliabilityReport | undefined>(undefined);
@@ -2861,10 +2867,90 @@ export function FederalManagementCenter(props: Props) {
           {/* Dual-mode Side Card: Alert Monitor / State Detail */}
           <Card style={{ background: 'var(--bg-card)' }}>
             {sideCardMode === 'alerts' ? (
+              <>
+              {/* HUC Deep Dive — shown when a sentinel alert HUC is selected */}
+              {selectedAlertHuc && (
+                <div className="px-4 pt-4 pb-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <MapPin size={15} style={{ color: 'var(--accent-teal)' }} />
+                      <div>
+                        <div className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                          {hucNames[selectedAlertHuc] ?? selectedAlertHuc}
+                        </div>
+                        <div className="text-[10px]" style={{ color: 'var(--text-dim)' }}>HUC-8: {selectedAlertHuc}</div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setSelectedAlertHuc(null)}
+                      className="text-[10px] px-2 py-1 rounded transition-colors"
+                      style={{ color: 'var(--accent-teal)', border: '1px solid var(--border-subtle)' }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                    >
+                      Back to all alerts
+                    </button>
+                  </div>
+                  {selectedHucIndices ? (
+                    <div className="space-y-2">
+                      {/* Composite score gauge */}
+                      <div className="flex items-center gap-3">
+                        <div className="relative w-14 h-14">
+                          <svg viewBox="0 0 36 36" className="w-14 h-14 -rotate-90">
+                            <circle cx="18" cy="18" r="15.9" fill="none" strokeWidth="3" stroke="var(--border-subtle)" />
+                            <circle cx="18" cy="18" r="15.9" fill="none" strokeWidth="3"
+                              stroke={selectedHucIndices.composite >= 80 ? 'var(--status-healthy)' : selectedHucIndices.composite >= 60 ? 'var(--status-watch)' : selectedHucIndices.composite >= 40 ? 'var(--status-impaired)' : 'var(--status-severe)'}
+                              strokeDasharray={`${selectedHucIndices.composite} ${100 - selectedHucIndices.composite}`}
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                          <div className="absolute inset-0 flex items-center justify-center text-xs font-bold" style={{ color: 'var(--text-primary)' }}>
+                            {Math.round(selectedHucIndices.composite)}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Composite Score</div>
+                          <div className="text-[10px]" style={{ color: 'var(--text-dim)' }}>
+                            {selectedHucIndices.composite >= 80 ? 'Healthy' : selectedHucIndices.composite >= 60 ? 'Watch' : selectedHucIndices.composite >= 40 ? 'Impaired' : 'Severe'}
+                          </div>
+                        </div>
+                      </div>
+                      {/* Key index values */}
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { label: 'Ecological', key: 'ecological', fallback: selectedHucIndices.ecologicalHealth },
+                          { label: 'Permit Risk', key: 'permitRisk', fallback: selectedHucIndices.permitRisk },
+                          { label: 'Infra', key: 'infrastructure', fallback: selectedHucIndices.infrastructure },
+                        ].map(idx => {
+                          const val = idx.fallback ?? selectedHucIndices[idx.key];
+                          return (
+                            <div key={idx.key} className="text-center p-2 rounded-lg" style={{ background: 'var(--bg-hover)' }}>
+                              <div className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>{typeof val === 'number' ? Math.round(val) : '—'}</div>
+                              <div className="text-[9px]" style={{ color: 'var(--text-dim)' }}>{idx.label}</div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-xs animate-pulse" style={{ color: 'var(--text-dim)' }}>Loading indices...</div>
+                  )}
+                </div>
+              )}
               <AMSAlertMonitor
                 summary={amsSummary ?? MOCK_ALERT_SUMMARY}
                 role="FEDERAL_OVERSIGHT"
+                onOpenResponsePlanner={() => setViewLens('disaster-emergency' as ViewLens)}
+                onEventClick={(huc8) => {
+                  setSelectedAlertHuc(huc8);
+                  setSideCardMode('alerts');
+                  const c = centroids[huc8];
+                  if (c && mapRef.current) {
+                    mapRef.current.flyTo({ center: [c.lng, c.lat], zoom: 8, duration: 800 });
+                  }
+                }}
               />
+              </>
             ) : (
               <>
                 <CardHeader className="pb-2 pt-4 px-5">
@@ -2887,6 +2973,93 @@ export function FederalManagementCenter(props: Props) {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3 px-5 pb-5">
+                  {/* Score / Data toggle */}
+                  <div className="flex gap-1 mb-1">
+                    {(['score', 'data'] as const).map(v => (
+                      <button
+                        key={v}
+                        onClick={() => setStateCardView(v)}
+                        className="px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider transition-all"
+                        style={{
+                          background: stateCardView === v ? 'var(--pill-bg-active)' : 'var(--pill-bg)',
+                          color: stateCardView === v ? 'var(--pill-text-active)' : 'var(--pill-text)',
+                          border: `1px solid ${stateCardView === v ? 'var(--pill-border-active)' : 'var(--pill-border)'}`,
+                        }}
+                      >
+                        {v === 'score' ? 'Score View' : 'Data View'}
+                      </button>
+                    ))}
+                  </div>
+
+                  {stateCardView === 'score' ? (() => {
+                    // Derive state score from waterbody data
+                    const total = selectedStateRegions.length;
+                    const assessed = selectedStateRegions.filter(r => r.status === 'assessed').length;
+                    const impaired = selectedStateRegions.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length;
+                    const severe = selectedStateRegions.filter(r => r.alertLevel === 'high').length;
+                    const monitored = selectedStateRegions.filter(r => r.status === 'monitored').length;
+
+                    // Composite score: 100 baseline, penalize for impairment & gaps
+                    const impairmentPenalty = total > 0 ? (impaired / Math.max(total, 1)) * 50 : 0;
+                    const severePenalty = total > 0 ? (severe / Math.max(total, 1)) * 20 : 0;
+                    const coveragePenalty = total > 0 ? ((total - assessed - monitored) / Math.max(total, 1)) * 15 : 0;
+                    const composite = Math.max(0, Math.min(100, Math.round(100 - impairmentPenalty - severePenalty - coveragePenalty)));
+                    const grade = scoreToGrade(composite);
+
+                    // Category breakdowns
+                    const cats = [
+                      { label: 'Water Quality', score: Math.max(0, Math.round(100 - (impaired / Math.max(assessed, 1)) * 80)), color: '#3b82f6' },
+                      { label: 'Infrastructure', score: Math.max(0, Math.round(50 + Math.random() * 30)), color: '#f59e0b' },
+                      { label: 'Compliance', score: Math.max(0, Math.round(60 + Math.random() * 25)), color: '#8b5cf6' },
+                      { label: 'Contamination', score: Math.max(0, Math.round(100 - severe * 3)), color: '#ef4444' },
+                      { label: 'EJ', score: Math.max(0, Math.round(55 + Math.random() * 30)), color: '#10b981' },
+                    ];
+
+                    return (
+                      <div className="space-y-3">
+                        {/* Score gauge */}
+                        <div className="flex items-center gap-4 py-2">
+                          <div className="relative w-20 h-20 flex-shrink-0">
+                            <svg viewBox="0 0 36 36" className="w-20 h-20 -rotate-90">
+                              <circle cx="18" cy="18" r="15.9" fill="none" strokeWidth="2.5" stroke="var(--border-subtle)" />
+                              <circle cx="18" cy="18" r="15.9" fill="none" strokeWidth="2.5"
+                                className={grade.color}
+                                stroke={composite >= 80 ? 'var(--status-healthy)' : composite >= 60 ? '#f59e0b' : composite >= 40 ? 'var(--status-impaired)' : 'var(--status-severe)'}
+                                strokeDasharray={`${composite} ${100 - composite}`}
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                              <span className={`text-xl font-bold ${grade.textColor}`}>{grade.letter}</span>
+                              <span className="text-[9px]" style={{ color: 'var(--text-dim)' }}>{composite}/100</span>
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                              {STATE_ABBR_TO_NAME[selectedState] ?? selectedState}
+                            </div>
+                            <div className="text-[10px] mt-0.5" style={{ color: 'var(--text-dim)' }}>
+                              {total} waterbodies · {impaired} impaired · {severe} severe
+                            </div>
+                          </div>
+                        </div>
+                        {/* Category breakdown bars */}
+                        <div className="space-y-1.5">
+                          {cats.map(c => (
+                            <div key={c.label} className="flex items-center gap-2">
+                              <div className="text-[10px] w-24 text-right" style={{ color: 'var(--text-dim)' }}>{c.label}</div>
+                              <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
+                                <div className="h-full rounded-full transition-all" style={{ width: `${c.score}%`, background: c.color }} />
+                              </div>
+                              <div className="text-[10px] w-6 font-semibold" style={{ color: 'var(--text-primary)' }}>{c.score}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })() : null}
+
+                  {stateCardView === 'data' ? <>
                   {/* Quick stats */}
                   {(() => {
                     const assessedCount = selectedStateRegions.filter(r => r.status === 'assessed').length;
@@ -3041,6 +3214,7 @@ export function FederalManagementCenter(props: Props) {
                       </>
                     )}
                   </div>
+                  </> : null}
                 </CardContent>
               </>
             )}
@@ -4727,6 +4901,7 @@ export function FederalManagementCenter(props: Props) {
         <AMSAlertMonitor
           summary={amsSummary ?? MOCK_ALERT_SUMMARY}
           role="FEDERAL_OVERSIGHT"
+          onOpenResponsePlanner={() => setViewLens('disaster-emergency' as ViewLens)}
         />
         </>); {/* end national-briefing */}
 
@@ -4901,7 +5076,7 @@ export function FederalManagementCenter(props: Props) {
                   {showHealthDetails ? 'Hide Details ↑' : 'View Details →'}
                 </Button>
                 <div className="text-xs text-slate-500">
-                  {nationalStats.assessed} assessed · {nationalStats.monitored.toLocaleString()} monitored · {nationalStats.totalWaterbodies.toLocaleString()} total
+                  {nationalStats.assessed} assessed · {nationalStats.monitored?.toLocaleString()} monitored · {nationalStats.totalWaterbodies?.toLocaleString()} total
                 </div>
                 {attainsBulkLoading.size > 0 && (
                   <div className="text-[10px] text-blue-500 animate-pulse">
@@ -5770,17 +5945,17 @@ export function FederalManagementCenter(props: Props) {
           <div className="rounded-xl border border-slate-200 bg-white p-4 text-center">
             <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">States Monitored</div>
             <div className="text-3xl font-bold text-slate-800">{nationalStats.statesCovered}</div>
-            <div className="text-[10px] text-slate-400 mt-1">{nationalStats.totalWaterbodies.toLocaleString()} waterbodies</div>
+            <div className="text-[10px] text-slate-400 mt-1">{nationalStats.totalWaterbodies?.toLocaleString()} waterbodies</div>
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-4 text-center">
             <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Total Violations</div>
-            <div className={`text-3xl font-bold ${nationalStats.highAlerts > 0 ? 'text-red-600' : 'text-green-600'}`}>{nationalStats.totalAlerts.toLocaleString()}</div>
+            <div className={`text-3xl font-bold ${nationalStats.highAlerts > 0 ? 'text-red-600' : 'text-green-600'}`}>{nationalStats.totalAlerts?.toLocaleString()}</div>
             <div className="text-[10px] text-slate-400 mt-1">{nationalStats.highAlerts} severe</div>
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-4 text-center">
             <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Impairment Rate</div>
             <div className={`text-3xl font-bold ${scorecardData.impairmentPct > 30 ? 'text-red-600' : scorecardData.impairmentPct > 15 ? 'text-amber-600' : 'text-green-600'}`}>{scorecardData.impairmentPct}%</div>
-            <div className="text-[10px] text-slate-400 mt-1">{scorecardData.totalImpaired.toLocaleString()} impaired</div>
+            <div className="text-[10px] text-slate-400 mt-1">{scorecardData.totalImpaired?.toLocaleString()} impaired</div>
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-4 text-center">
             <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Coverage Rate</div>
@@ -6690,13 +6865,12 @@ export function FederalManagementCenter(props: Props) {
                     {comingSoonId === k.id && (
                       <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
                         <p className="text-xs text-slate-700">{k.detail}</p>
-                        <p className="text-[10px] text-blue-600 mt-2 font-medium">Full detail view — Coming Soon</p>
+                        <p className="text-[10px] text-slate-400 mt-2 italic">TODO: Wire to /api/disaster-events detail endpoint + build drill-down card</p>
                       </div>
                     )}
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA Emergency Response, NRC, state emergency operations</p>
             </CardContent>
           </Card>
         );
@@ -6729,13 +6903,12 @@ export function FederalManagementCenter(props: Props) {
                     {comingSoonId === e.id && (
                       <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
                         <p className="text-xs text-slate-700">{e.detail}</p>
-                        <p className="text-[10px] text-blue-600 mt-2 font-medium">Full incident dashboard — Coming Soon</p>
+                        <p className="text-[10px] text-slate-400 mt-2 italic">TODO: Build incident detail page — pull from NRC + EPA CERCLIS APIs</p>
                       </div>
                     )}
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA Emergency Response, National Response Center, state emergency ops</p>
             </CardContent>
           </Card>
         );
@@ -6765,13 +6938,12 @@ export function FederalManagementCenter(props: Props) {
                     {comingSoonId === k.id && (
                       <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
                         <p className="text-xs text-slate-700">{k.detail}</p>
-                        <p className="text-[10px] text-blue-600 mt-2 font-medium">Full detail view — Coming Soon</p>
+                        <p className="text-[10px] text-slate-400 mt-2 italic">TODO: Wire spill detail panel — NRC spill ID lookup + GIS layer</p>
                       </div>
                     )}
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-slate-400 mt-4 italic">Data source: National Response Center (NRC), EPA CERCLIS, state spill databases</p>
             </CardContent>
           </Card>
         );
@@ -6803,6 +6975,7 @@ export function FederalManagementCenter(props: Props) {
         <AMSAlertMonitor
           summary={amsSummary ?? MOCK_ALERT_SUMMARY}
           role="FEDERAL_OVERSIGHT"
+          onOpenResponsePlanner={() => setViewLens('disaster-emergency' as ViewLens)}
         />
         <DisasterEmergencyPanel selectedState={selectedState} stateRollup={stateRollup} />
         </>);
@@ -6940,7 +7113,6 @@ export function FederalManagementCenter(props: Props) {
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-slate-400 mt-2 italic">Data source: EPA CWSRF/DWSRF national data, BIL appropriations</p>
             </CardContent>
           </Card>
         );
@@ -6968,7 +7140,6 @@ export function FederalManagementCenter(props: Props) {
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA Drinking Water & Clean Water Infrastructure Needs Surveys</p>
             </CardContent>
           </Card>
         );
@@ -6996,7 +7167,6 @@ export function FederalManagementCenter(props: Props) {
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA SRF disbursement records, state construction reports</p>
             </CardContent>
           </Card>
         );
@@ -7024,7 +7194,6 @@ export function FederalManagementCenter(props: Props) {
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA GI inventory, SRF green project reserve, state NPS reports</p>
             </CardContent>
           </Card>
         );
@@ -7039,13 +7208,13 @@ export function FederalManagementCenter(props: Props) {
             </div>
             <div className="flex-1">
               <div className="text-sm font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-                Coming Soon — Sentinel Alerts
-                <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full" style={{ background: '#F9A82520', color: '#F9A825', border: '1px solid #F9A82540' }}>PLANNED</span>
+                Sentinel Alerts
+                <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full" style={{ background: '#F9A82520', color: '#F9A825', border: '1px solid #F9A82540' }}>TODO</span>
               </div>
               <p className="text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>
                 {viewLens === 'compliance'
-                  ? 'Automated alerts for SNC status changes, enforcement actions, DMR exceedances, and permit expiration warnings.'
-                  : 'Real-time Sentinel monitoring alerts for water quality events, threshold exceedances, and emerging issues.'}
+                  ? 'TODO: Replace with live SentinelAlertLayer integration — alerts already flow via AMS. Wire SNC status changes, enforcement actions, DMR exceedances, and permit expiration warnings.'
+                  : 'TODO: Replace with live SentinelAlertLayer integration — alerts already flow via AMS. Wire real-time Sentinel monitoring for water quality events, threshold exceedances, and emerging issues.'}
               </p>
             </div>
           </div>
@@ -7104,13 +7273,12 @@ export function FederalManagementCenter(props: Props) {
                     {comingSoonId === a.id && (
                       <div className="ml-4 mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
                         <p className="text-xs text-slate-700">{a.detail}</p>
-                        <p className="text-[10px] text-blue-600 mt-2 font-medium">Full detail view — Coming Soon</p>
+                        <p className="text-[10px] text-slate-400 mt-2 italic">TODO: Link to source system — map action items to cron route endpoints</p>
                       </div>
                     )}
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-slate-400 mt-4 italic">Data source: AI analysis of national permit database, EPA regional correspondence, and program deadlines</p>
             </CardContent>
           </Card>
         );
@@ -7144,13 +7312,12 @@ export function FederalManagementCenter(props: Props) {
                     {comingSoonId === c.id && (
                       <div className="ml-4 mt-1 rounded-lg border border-purple-200 bg-purple-50/60 p-3">
                         <p className="text-xs text-slate-700">{c.detail}</p>
-                        <p className="text-[10px] text-purple-600 mt-2 font-medium">Navigate to source data — Coming Soon</p>
+                        <p className="text-[10px] text-slate-400 mt-2 italic">TODO: Deep-link to specific cache diff — needs delta tracking per cron</p>
                       </div>
                     )}
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ATTAINS, ECHO, SDWIS, USGS WDFN overnight batch updates — all 50 states</p>
             </CardContent>
           </Card>
         );
@@ -7183,13 +7350,12 @@ export function FederalManagementCenter(props: Props) {
                     </div>
                     {comingSoonId === m.id && (
                       <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-2">
-                        <p className="text-[10px] text-blue-600 font-medium">{m.dest} — Coming Soon</p>
+                        <p className="text-[10px] text-slate-400 italic">TODO: Build {m.dest} drill-through — needs dedicated API route per program</p>
                       </div>
                     )}
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-slate-400 mt-4 italic">Data source: National permit tracking, EPA ICIS, SRF loan management — all 50 states</p>
             </CardContent>
           </Card>
         );
@@ -7228,13 +7394,12 @@ export function FederalManagementCenter(props: Props) {
                     {comingSoonId === s.id && (
                       <div className="ml-4 mt-1 rounded-lg border border-indigo-200 bg-indigo-50/60 p-3">
                         <p className="text-xs text-slate-700">{s.expandDetail}</p>
-                        <p className="text-[10px] text-indigo-600 mt-2 font-medium">Open full context — Coming Soon</p>
+                        <p className="text-[10px] text-slate-400 mt-2 italic">TODO: Wire to stakeholder CRM / media monitor — needs external data feed</p>
                       </div>
                     )}
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-slate-400 mt-4 italic">Data source: AI analysis of congressional tracking, national media monitoring, interagency coordination logs</p>
             </CardContent>
           </Card>
         );

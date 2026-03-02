@@ -184,7 +184,7 @@ function TimeAgo({ timestamp }: { timestamp: string }) {
 // Event Detail (expandable row)
 // ---------------------------------------------------------------------------
 
-function EventDetail({ event }: { event: WatershedScore }) {
+function EventDetail({ event, onOpenResponsePlanner }: { event: WatershedScore; onOpenResponsePlanner?: (event: WatershedScore) => void }) {
   return (
     <div className="px-4 py-3 bg-slate-50 border-t border-slate-100 space-y-3">
       {/* Compound patterns detected */}
@@ -276,7 +276,10 @@ function EventDetail({ event }: { event: WatershedScore }) {
 
       {/* Action button — connects to Response Planner */}
       {event.alertLevel === "ALERT" || event.alertLevel === "ADVISORY" ? (
-        <button className="w-full mt-2 px-4 py-2 bg-slate-800 text-white text-sm font-semibold rounded hover:bg-slate-700 transition-colors">
+        <button
+          className="w-full mt-2 px-4 py-2 bg-slate-800 text-white text-sm font-semibold rounded hover:bg-slate-700 transition-colors"
+          onClick={() => onOpenResponsePlanner?.(event)}
+        >
           Open in Response Planner →
         </button>
       ) : null}
@@ -288,7 +291,7 @@ function EventDetail({ event }: { event: WatershedScore }) {
 // Event Row
 // ---------------------------------------------------------------------------
 
-function EventRow({ event }: { event: WatershedScore }) {
+function EventRow({ event, onOpenResponsePlanner }: { event: WatershedScore; onOpenResponsePlanner?: (event: WatershedScore) => void }) {
   const [expanded, setExpanded] = useState(false);
   const config = LEVEL_CONFIG[event.alertLevel];
 
@@ -345,7 +348,7 @@ function EventRow({ event }: { event: WatershedScore }) {
           </div>
         </div>
       </button>
-      {expanded && <EventDetail event={event} />}
+      {expanded && <EventDetail event={event} onOpenResponsePlanner={onOpenResponsePlanner} />}
     </div>
   );
 }
@@ -382,11 +385,14 @@ interface AMSAlertMonitorProps {
   summary: AlertSummary;
   role: PinRole;
   onOpenResponsePlanner?: (event: WatershedScore) => void;
+  onEventClick?: (huc8: string) => void;
 }
 
 export default function AMSAlertMonitor({
   summary,
   role,
+  onOpenResponsePlanner,
+  onEventClick,
 }: AMSAlertMonitorProps) {
   const [filterLevel, setFilterLevel] = useState<AlertLevel | "ALL">("ALL");
 
@@ -461,7 +467,9 @@ export default function AMSAlertMonitor({
             </div>
           ) : (
             filteredEvents.map((event) => (
-              <EventRow key={event.huc8} event={event} />
+              <div key={event.huc8} onClick={() => onEventClick?.(event.huc8)} className={onEventClick ? 'cursor-pointer' : ''}>
+                <EventRow event={event} onOpenResponsePlanner={onOpenResponsePlanner} />
+              </div>
             ))
           )}
         </div>
