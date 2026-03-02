@@ -13,7 +13,6 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { getArchivedSignals, type Signal } from "@/lib/signalArchiveCacheClient";
 import { scoreModules, type ModuleScoringInput } from "@/lib/resolutionModules";
-import { StrategyModulesSection } from "./StrategyModulesSection";
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 // html2pdf.js loaded dynamically in export handler (code-split)
 
@@ -92,8 +91,6 @@ export interface PlanSections {
   monitoringMobilization: string;
   publicCommunication: string;
   regulatoryPath: string;
-  projectedOutcomes: string;
-  closingSummary: string;
 }
 
 export interface PillarRole {
@@ -314,8 +311,6 @@ const JSON_SCHEMA_INSTRUCTION = `Respond ONLY with valid JSON, no markdown, no b
       "contribution": "..."
     }
   ],
-  "projectedOutcomes": "What improves and by when if this response plan is executed. Focus on response effectiveness: faster detection, broader notification coverage, better inter-agency coordination, improved public awareness. NOT water quality treatment outcomes — the Restoration Planner handles remediation.",
-  "closingSummary": "2-3 sentence closing that ties together the response plan: what was identified, what the coordinated response achieves, and what ongoing vigilance is needed. End with a forward-looking statement about sustained monitoring and readiness."
 }
 
 CRITICAL FRAMING RULES:
@@ -521,9 +516,7 @@ Respond ONLY with valid JSON, same structure as before. The responseSummary MUST
   "interAgencyCoordination": "...",
   "monitoringMobilization": "...",
   "publicCommunication": "...",
-  "regulatoryPath": "...",
-  "projectedOutcomes": "...",
-  "closingSummary": "..."
+  "regulatoryPath": "..."
 }`;
 }
 
@@ -1235,26 +1228,6 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
           <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">Regulatory Notifications</h3>
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 text-sm text-purple-800 whitespace-pre-wrap">{plan!.sections.regulatoryPath}</div>
         </section>
-
-        <section>
-          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">Projected Response Outcomes</h3>
-          <div className="bg-sky-50 border border-sky-200 rounded-lg p-4 text-sm text-sky-800 whitespace-pre-wrap">{plan!.sections.projectedOutcomes}</div>
-        </section>
-
-        {/* Closing Summary */}
-        {plan!.sections.closingSummary && (
-          <section>
-            <div className="bg-gradient-to-r from-slate-50 to-blue-50 border border-slate-200 rounded-lg p-4">
-              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-2">Closing Summary</h3>
-              <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{plan!.sections.closingSummary}</div>
-            </div>
-          </section>
-        )}
-
-        {/* Strategy Modules — algorithmic, not AI-generated */}
-        {scoredCategories.length > 0 && (
-          <StrategyModulesSection categories={scoredCategories} />
-        )}
 
         <PlatformDisclaimer />
       </div>

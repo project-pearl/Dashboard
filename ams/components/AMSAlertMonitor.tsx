@@ -274,15 +274,6 @@ function EventDetail({ event, onOpenResponsePlanner }: { event: WatershedScore; 
         </div>
       )}
 
-      {/* Action button — connects to Response Planner */}
-      {event.alertLevel === "ALERT" || event.alertLevel === "ADVISORY" ? (
-        <button
-          className="w-full mt-2 px-4 py-2 bg-slate-800 text-white text-sm font-semibold rounded hover:bg-slate-700 transition-colors"
-          onClick={() => onOpenResponsePlanner?.(event)}
-        >
-          Open in Response Planner →
-        </button>
-      ) : null}
     </div>
   );
 }
@@ -298,7 +289,7 @@ function EventRow({ event, onOpenResponsePlanner }: { event: WatershedScore; onO
   return (
     <div className={`border rounded-lg overflow-hidden ${config.border}`}>
       <button
-        onClick={() => setExpanded(!expanded)}
+        onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
         className={`w-full px-4 py-3 ${config.bg} hover:brightness-95 transition-all`}
       >
         <div className="flex items-start justify-between">

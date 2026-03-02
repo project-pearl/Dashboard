@@ -683,66 +683,9 @@ function levelToIcon(level: AlertLevel) {
   return <CheckCircle size={16} />;
 }
 
-function levelToLabel(level: AlertLevel) {
-  if (level === 'high') return 'Severe';
-  if (level === 'medium') return 'Impaired';
-  if (level === 'low') return 'Watch';
-  return 'Healthy';
-}
-
 function generateRegionData(): RegionRow[] {
   const now = new Date();
   const iso = now.toISOString();
-
-  // Legacy alert seeds — hand-verified waterbodies with known conditions
-  const LEGACY_ALERTS: Record<string, { alertLevel: AlertLevel; activeAlerts: number }> = {
-    // Maryland
-    maryland_middle_branch:    { alertLevel: 'high',   activeAlerts: 5 },
-    maryland_back_river:       { alertLevel: 'high',   activeAlerts: 4 },
-    maryland_gwynns_falls:     { alertLevel: 'high',   activeAlerts: 4 },
-    maryland_bear_creek:       { alertLevel: 'medium', activeAlerts: 3 },
-    maryland_inner_harbor:     { alertLevel: 'high',   activeAlerts: 4 },
-    maryland_jones_falls:      { alertLevel: 'medium', activeAlerts: 3 },
-    maryland_patapsco_river:   { alertLevel: 'medium', activeAlerts: 2 },
-    maryland_patapsco:         { alertLevel: 'medium', activeAlerts: 2 },
-    maryland_stony_creek:      { alertLevel: 'medium', activeAlerts: 2 },
-    maryland_gunpowder:        { alertLevel: 'low',    activeAlerts: 1 },
-    maryland_potomac:          { alertLevel: 'medium', activeAlerts: 2 },
-    maryland_chester_river:    { alertLevel: 'medium', activeAlerts: 2 },
-    maryland_choptank_river:   { alertLevel: 'medium', activeAlerts: 2 },
-    maryland_patuxent_river:   { alertLevel: 'medium', activeAlerts: 2 },
-    maryland_severn_river:     { alertLevel: 'medium', activeAlerts: 2 },
-    maryland_nanticoke_river:  { alertLevel: 'low',    activeAlerts: 1 },
-    // Virginia
-    virginia_elizabeth:        { alertLevel: 'high',   activeAlerts: 6 },
-    virginia_james_lower:      { alertLevel: 'high',   activeAlerts: 4 },
-    virginia_rappahannock:     { alertLevel: 'medium', activeAlerts: 3 },
-    virginia_york:             { alertLevel: 'medium', activeAlerts: 2 },
-    virginia_lynnhaven:        { alertLevel: 'high',   activeAlerts: 4 },
-    // DC
-    dc_anacostia:              { alertLevel: 'high',   activeAlerts: 6 },
-    dc_rock_creek:             { alertLevel: 'high',   activeAlerts: 4 },
-    dc_potomac:                { alertLevel: 'medium', activeAlerts: 3 },
-    dc_oxon_run:               { alertLevel: 'medium', activeAlerts: 3 },
-    dc_watts_branch:           { alertLevel: 'medium', activeAlerts: 2 },
-    // Pennsylvania
-    pennsylvania_conestoga:    { alertLevel: 'high',   activeAlerts: 5 },
-    pennsylvania_swatara:      { alertLevel: 'high',   activeAlerts: 4 },
-    pennsylvania_codorus:      { alertLevel: 'medium', activeAlerts: 3 },
-    pennsylvania_susquehanna:  { alertLevel: 'medium', activeAlerts: 2 },
-    // Delaware
-    delaware_christina:        { alertLevel: 'high',   activeAlerts: 4 },
-    delaware_brandywine:       { alertLevel: 'medium', activeAlerts: 3 },
-    // Florida — PIN pilot
-    florida_escambia:          { alertLevel: 'high',   activeAlerts: 4 },
-    florida_tampa_bay:         { alertLevel: 'high',   activeAlerts: 5 },
-    florida_charlotte_harbor:  { alertLevel: 'high',   activeAlerts: 4 },
-    florida_pensacola_bay:     { alertLevel: 'medium', activeAlerts: 2 },
-    // West Virginia
-    westvirginia_shenandoah:   { alertLevel: 'high',   activeAlerts: 5 },
-    westvirginia_opequon:      { alertLevel: 'high',   activeAlerts: 4 },
-    westvirginia_potomac_sb:   { alertLevel: 'medium', activeAlerts: 3 },
-  };
 
   // Convert stateCode (US:24) → abbreviation (MD) using FIPS
   function stateCodeToAbbr(stateCode: string): string {
@@ -750,7 +693,8 @@ function generateRegionData(): RegionRow[] {
     return FIPS_TO_ABBR[fips] || fips;
   }
 
-  // Build from registry — every entry has confirmed data
+  // Build from registry — every entry starts unassessed; real alert levels
+  // come from ATTAINS merge (Phase 1/2) and sentinel HUC alerts (hotspots).
   const rows: RegionRow[] = [];
   const seen = new Set<string>();
 
@@ -758,19 +702,17 @@ function generateRegionData(): RegionRow[] {
     if (seen.has(id)) continue;
     seen.add(id);
 
-    const legacy = LEGACY_ALERTS[id];
     const abbr = stateCodeToAbbr(meta.stateCode);
     const sources = getWaterbodyDataSources(id);
-    const hasLegacyAssessment = !!legacy;
 
     rows.push({
       id,
       name: meta.name,
       state: abbr,
-      alertLevel: legacy?.alertLevel ?? 'none',
-      activeAlerts: legacy?.activeAlerts ?? 0,
+      alertLevel: 'none',
+      activeAlerts: 0,
       lastUpdatedISO: iso,
-      status: hasLegacyAssessment ? 'assessed' : sources.length > 0 ? 'monitored' : 'unmonitored',
+      status: sources.length > 0 ? 'monitored' : 'unmonitored',
       dataSourceCount: sources.length,
     });
   }
@@ -2201,24 +2143,37 @@ export function FederalManagementCenter(props: Props) {
   const [showStateTable, setShowStateTable] = useState(false);
   const [showHotspotsSection, setShowHotspotsSection] = useState(false);
 
-  // Feature 3: Hotspots Rankings
+  // Feature 3: Hotspots Rankings — driven by live Sentinel HUC alerts
   const hotspots = useMemo(() => {
-    const worsening = [...regionData]
-      .filter(r => r.activeAlerts > 0)
-      .sort((a, b) => {
-        const scoreA = SEVERITY_SCORE[a.alertLevel] * 10 + a.activeAlerts;
-        const scoreB = SEVERITY_SCORE[b.alertLevel] * 10 + b.activeAlerts;
-        return scoreB - scoreA;
-      })
-      .slice(0, 10);
-    
-    const improving = [...regionData]
-      .filter(r => r.alertLevel === 'none' || r.alertLevel === 'low')
-      .sort((a, b) => SEVERITY_SCORE[a.alertLevel] - SEVERITY_SCORE[b.alertLevel])
-      .slice(0, 10);
-    
+    const hNames = hucNamesData as Record<string, string>;
+
+    // Worsening: sentinel CRITICAL + WATCH HUCs sorted by score descending
+    const worsening = [...sentinel.criticalHucs, ...sentinel.watchHucs]
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10)
+      .map(h => ({
+        id: h.huc8,
+        name: hNames[h.huc8] ?? h.huc8,
+        state: h.stateAbbr,
+        alertLevel: (h.level === 'CRITICAL' ? 'high' : h.level === 'WATCH' ? 'medium' : 'low') as AlertLevel,
+        activeAlerts: h.eventCount,
+        score: h.score,
+      }));
+
+    // Improving: recently resolved HUCs (were elevated, now nominal)
+    const improving = (sentinel.recentResolutions ?? [])
+      .slice(0, 10)
+      .map(r => ({
+        id: r.huc8,
+        name: hNames[r.huc8] ?? r.huc8,
+        state: r.stateAbbr,
+        alertLevel: 'none' as AlertLevel,
+        activeAlerts: 0,
+        score: 0,
+      }));
+
     return { worsening, improving };
-  }, [regionData]);
+  }, [sentinel.criticalHucs, sentinel.watchHucs, sentinel.recentResolutions]);
 
   // Feature 11: SLA/Compliance Tracking
   const slaMetrics = useMemo(() => {
@@ -2668,9 +2623,9 @@ export function FederalManagementCenter(props: Props) {
         case 'usmap': return DS(<div className="space-y-6">
         {/* ── MONITORING NETWORK MAP ──────────────────────────────── */}
 
-        <div ref={mapSectionRef} className="grid grid-cols-1 gap-6 lg:grid-cols-3 items-start">
+        <div ref={mapSectionRef} className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_340px] items-stretch">
           {/* Map Card */}
-          <Card id="section-usmap" className="lg:col-span-2">
+          <Card id="section-usmap">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle style={{ color: 'var(--text-bright)' }}>United States Monitoring Network</CardTitle>
@@ -2775,9 +2730,12 @@ export function FederalManagementCenter(props: Props) {
                           setSelectedAlertHuc(huc8);
                           setSelectedAlertLevel(level);
                           setSideCardMode('alert-detail');
+                          // Look up state from scored HUCs and set selectedState
+                          const scoredHuc = [...sentinel.criticalHucs, ...sentinel.watchHucs, ...sentinel.advisoryHucs].find(h => h.huc8 === huc8);
+                          if (scoredHuc?.stateAbbr) setSelectedState(scoredHuc.stateAbbr);
                           const c = centroids[huc8];
                           if (c && mapRef.current) {
-                            mapRef.current.flyTo({ center: [c.lng, c.lat], zoom: 8, duration: 800 });
+                            mapRef.current.flyTo({ center: [c.lng, c.lat], zoom: 6, duration: 800 });
                           }
                         }}
                         reducedMotion={reducedMotion}
@@ -2865,7 +2823,8 @@ export function FederalManagementCenter(props: Props) {
           </Card>
 
           {/* Dual-mode Side Card: Alert Monitor / State Detail */}
-          <Card style={{ background: 'var(--bg-card)' }}>
+          <Card style={{ background: 'var(--bg-card)' }} className="flex flex-col overflow-hidden">
+           <div className="flex-1 min-h-0 overflow-y-auto">
             {sideCardMode === 'alerts' ? (
               <AMSAlertMonitor
                 summary={amsSummary ?? MOCK_ALERT_SUMMARY}
@@ -2874,9 +2833,12 @@ export function FederalManagementCenter(props: Props) {
                 onEventClick={(huc8) => {
                   setSelectedAlertHuc(huc8);
                   setSideCardMode('alert-detail');
+                  // Look up state from scored HUCs and set selectedState
+                  const scoredHuc = [...sentinel.criticalHucs, ...sentinel.watchHucs, ...sentinel.advisoryHucs].find(h => h.huc8 === huc8);
+                  if (scoredHuc?.stateAbbr) setSelectedState(scoredHuc.stateAbbr);
                   const c = centroids[huc8];
                   if (c && mapRef.current) {
-                    mapRef.current.flyTo({ center: [c.lng, c.lat], zoom: 8, duration: 800 });
+                    mapRef.current.flyTo({ center: [c.lng, c.lat], zoom: 6, duration: 800 });
                   }
                 }}
               />
@@ -2937,17 +2899,20 @@ export function FederalManagementCenter(props: Props) {
                       <div className="space-y-2">
                         <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-dim)' }}>Index Breakdown</div>
                         {[
-                          { label: 'Ecological Health', key: 'ecologicalHealth', color: 'var(--status-healthy)' },
-                          { label: 'Permit Risk', key: 'permitRisk', color: 'var(--status-impaired)' },
-                          { label: 'Infrastructure', key: 'infrastructure', color: 'var(--accent-teal)' },
-                          { label: 'Water Quality', key: 'waterQuality', color: '#3b82f6' },
-                          { label: 'Contamination', key: 'contamination', color: '#ef4444' },
+                          { label: 'Load Velocity', key: 'pearlLoadVelocity', color: '#3b82f6' },
+                          { label: 'Infrastructure', key: 'infrastructureFailure', color: 'var(--accent-teal)' },
+                          { label: 'Watershed Recovery', key: 'watershedRecovery', color: 'var(--status-healthy)' },
+                          { label: 'Permit Risk', key: 'permitRiskExposure', color: 'var(--status-impaired)' },
+                          { label: 'Per Capita Load', key: 'perCapitaLoad', color: '#8b5cf6' },
+                          { label: 'Ecological Health', key: 'ecologicalHealth', color: '#22c55e' },
+                          { label: 'EJ Vulnerability', key: 'ejVulnerability', color: '#ef4444' },
+                          { label: 'Governance', key: 'governanceResponse', color: '#f59e0b' },
                         ].map(idx => {
-                          const val = selectedHucIndices[idx.key];
-                          const score = typeof val === 'number' ? Math.round(val) : null;
+                          const raw = selectedHucIndices[idx.key];
+                          const score = raw != null ? Math.round(typeof raw === 'object' && 'value' in raw ? raw.value : raw) : null;
                           return (
                             <div key={idx.key} className="flex items-center gap-2">
-                              <div className="text-[10px] w-28 text-right" style={{ color: 'var(--text-dim)' }}>{idx.label}</div>
+                              <div className="text-[10px] w-28 text-right truncate" style={{ color: 'var(--text-dim)' }}>{idx.label}</div>
                               <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
                                 <div className="h-full rounded-full transition-all" style={{ width: score != null ? `${score}%` : '0%', background: idx.color }} />
                               </div>
@@ -2970,16 +2935,6 @@ export function FederalManagementCenter(props: Props) {
                         </div>
                       )}
 
-                      {/* Action button */}
-                      <button
-                        onClick={() => setViewLens('disaster-emergency' as ViewLens)}
-                        className="w-full mt-1 px-4 py-2 text-sm font-semibold rounded transition-colors"
-                        style={{ background: 'var(--accent-teal)', color: '#fff' }}
-                        onMouseEnter={e => { e.currentTarget.style.opacity = '0.9'; }}
-                        onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
-                      >
-                        Open in Response Planner →
-                      </button>
                     </div>
                   ) : (
                     <div className="text-xs animate-pulse py-8 text-center" style={{ color: 'var(--text-dim)' }}>Loading watershed indices...</div>
@@ -3027,27 +2982,26 @@ export function FederalManagementCenter(props: Props) {
                   </div>
 
                   {stateCardView === 'score' ? (() => {
-                    // Derive state score from waterbody data
+                    // Use the SAME score as the state table (single source of truth)
+                    const row = stateRollup.find(s => s.abbr === selectedState);
                     const total = selectedStateRegions.length;
-                    const assessed = selectedStateRegions.filter(r => r.status === 'assessed').length;
                     const impaired = selectedStateRegions.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length;
                     const severe = selectedStateRegions.filter(r => r.alertLevel === 'high').length;
+                    const composite = row?.score ?? 0;
+                    const grade = row?.grade ?? scoreToGrade(composite);
+
+                    // Deterministic category breakdowns from waterbody data
                     const monitored = selectedStateRegions.filter(r => r.status === 'monitored').length;
-
-                    // Composite score: 100 baseline, penalize for impairment & gaps
-                    const impairmentPenalty = total > 0 ? (impaired / Math.max(total, 1)) * 50 : 0;
-                    const severePenalty = total > 0 ? (severe / Math.max(total, 1)) * 20 : 0;
-                    const coveragePenalty = total > 0 ? ((total - assessed - monitored) / Math.max(total, 1)) * 15 : 0;
-                    const composite = Math.max(0, Math.min(100, Math.round(100 - impairmentPenalty - severePenalty - coveragePenalty)));
-                    const grade = scoreToGrade(composite);
-
-                    // Category breakdowns
+                    const assessed = selectedStateRegions.filter(r => r.status === 'assessed').length;
+                    const wqScore = total > 0 ? Math.round(100 - (impaired / total) * 50 - (severe / total) * 30) : 0;
+                    const infraScore = total > 0 ? Math.round((monitored + assessed) / total * 100) : 0;
+                    const complianceScore = total > 0 ? Math.round((assessed / total) * 80 + 20) : 0;
+                    const ejScore = total > 0 ? Math.round(100 - (severe / total) * 60 - (impaired / total) * 20) : 0;
                     const cats = [
-                      { label: 'Water Quality', score: Math.max(0, Math.round(100 - (impaired / Math.max(assessed, 1)) * 80)), color: '#3b82f6' },
-                      { label: 'Infrastructure', score: Math.max(0, Math.round(50 + Math.random() * 30)), color: '#f59e0b' },
-                      { label: 'Compliance', score: Math.max(0, Math.round(60 + Math.random() * 25)), color: '#8b5cf6' },
-                      { label: 'Contamination', score: Math.max(0, Math.round(100 - severe * 3)), color: '#ef4444' },
-                      { label: 'EJ', score: Math.max(0, Math.round(55 + Math.random() * 30)), color: '#10b981' },
+                      { label: 'Water Quality', score: Math.min(100, Math.max(0, wqScore)), color: wqScore >= 70 ? 'var(--status-healthy)' : wqScore >= 50 ? '#f59e0b' : 'var(--status-severe)' },
+                      { label: 'Infrastructure', score: Math.min(100, Math.max(0, infraScore)), color: infraScore >= 70 ? 'var(--status-healthy)' : infraScore >= 50 ? '#f59e0b' : 'var(--status-severe)' },
+                      { label: 'Compliance', score: Math.min(100, Math.max(0, complianceScore)), color: complianceScore >= 70 ? 'var(--status-healthy)' : complianceScore >= 50 ? '#f59e0b' : 'var(--status-severe)' },
+                      { label: 'EJ Exposure', score: Math.min(100, Math.max(0, ejScore)), color: ejScore >= 70 ? 'var(--status-healthy)' : ejScore >= 50 ? '#f59e0b' : 'var(--status-severe)' },
                     ];
 
                     return (
@@ -3065,7 +3019,7 @@ export function FederalManagementCenter(props: Props) {
                               />
                             </svg>
                             <div className="absolute inset-0 flex flex-col items-center justify-center">
-                              <span className={`text-xl font-bold ${grade.textColor}`}>{grade.letter}</span>
+                              <span className={`text-xl font-bold ${grade.color}`}>{grade.letter}</span>
                               <span className="text-[9px]" style={{ color: 'var(--text-dim)' }}>{composite}/100</span>
                             </div>
                           </div>
@@ -3253,6 +3207,7 @@ export function FederalManagementCenter(props: Props) {
                 </CardContent>
               </>
             )}
+           </div>
           </Card>
 
         </div>
@@ -3536,7 +3491,7 @@ export function FederalManagementCenter(props: Props) {
                     </div>
                     <div className="text-xs text-green-600 mt-0.5">
                       This waterbody is currently attaining designated uses with no Category 4/5 impairments or parameter exceedances detected.
-                      PIN monitoring recommended for early warning and baseline documentation.
+                      Continuous monitoring recommended for early warning and baseline documentation.
                     </div>
                   </div>
                 </div>
@@ -3738,7 +3693,7 @@ export function FederalManagementCenter(props: Props) {
                             addressabilityPct >= 50 ? 'bg-amber-200 text-amber-800' :
                             'bg-red-200 text-red-800'
                           }`}>
-                            PIN addresses {pearlAddressable} of {totalClassified} impairment{totalClassified !== 1 ? 's' : ''} ({addressabilityPct}%)
+                            {pearlAddressable} of {totalClassified} impairment{totalClassified !== 1 ? 's' : ''} treatable ({addressabilityPct}%)
                           </span>
                         </div>
                       </div>
@@ -3788,890 +3743,21 @@ export function FederalManagementCenter(props: Props) {
                       </div>
 
                       <div className="text-[9px] text-slate-400 pt-1 border-t border-slate-100">
-                        Classification based on EPA ATTAINS impairment causes and PIN treatment train capabilities. Tier 1: directly treated. Tier 2: indirect benefit or planned module. Tier 3: requires different intervention.
+                        Classification based on EPA ATTAINS impairment causes and available treatment technologies. Tier 1: directly treatable. Tier 2: indirect benefit from treatment. Tier 3: requires different intervention.
                       </div>
                     </div>
                   )}
 
-                  {/* ═══ PIN — IMMEDIATE IMPACT LAYER (elevated, shown first) ═══ */}
-                  {(() => {
-                    const pearlCat = categories.find(c => c.id === 'pearl');
-                    if (!pearlCat) return null;
-                    const warranted = pearlCat.modules.filter(m => m.status === 'warranted');
-                    const accelerators = pearlCat.modules.filter(m => m.status === 'accelerator');
-                    const coBenefits = pearlCat.modules.filter(m => m.status === 'co-benefit');
-
-                    return (
-                      <div className="rounded-lg border-2 border-cyan-400 bg-gradient-to-br from-cyan-50 to-blue-50 p-3 space-y-3 shadow-md">
-                        <div className="flex items-center justify-between">
-                          <div className="text-sm font-bold text-cyan-900 uppercase tracking-wide flex items-center gap-2">
-                            ⚡ Fastest Path to Measurable Results
-                          </div>
-                          <div className="flex items-center gap-1.5 text-[9px]">
-                            {warranted.length > 0 && <span className="bg-red-200 text-red-800 font-bold px-1.5 py-0.5 rounded-full">{warranted.length} warranted</span>}
-                            <span className="bg-cyan-200 text-cyan-800 font-bold px-1.5 py-0.5 rounded-full">{totalQuads}Q / {totalUnits} units / {fullGPM} GPM</span>
-                          </div>
-                        </div>
-
-                        {/* Why PIN here — dynamic evidence box */}
-                        <div className="rounded-md border border-cyan-300 bg-white p-3 space-y-2">
-                          <div className="text-[10px] font-bold text-cyan-800 uppercase tracking-wider">Why PIN at this site</div>
-                          <div className="space-y-1.5">
-                            {whyBullets.map((b, i) => (
-                              <div key={i} className="flex items-start gap-2">
-                                <span className="text-sm flex-shrink-0 mt-0.5">{b.icon}</span>
-                                <div className="text-[11px] leading-relaxed">
-                                  <span className="text-red-700 font-medium">{b.problem}.</span>{' '}
-                                  <span className="text-cyan-800">→ {b.solution}.</span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* PIN modules */}
-                        <div className="space-y-1">
-                          {[...warranted, ...accelerators].map((t) => (
-                            <div key={t.id} className={`rounded-md border p-2 ${t.color}`}>
-                              <div className="flex items-start gap-2">
-                                <span className="text-sm flex-shrink-0">{t.icon}</span>
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-xs font-semibold">{t.label}</span>
-                                    <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase ${
-                                      t.status === 'warranted' ? 'bg-red-200 text-red-800' : 'bg-cyan-200 text-cyan-800'
-                                    }`}>{t.status === 'warranted' ? 'WARRANTED' : 'PIN'}</span>
-                                  </div>
-                                  <div className="text-[10px] mt-0.5 leading-relaxed opacity-90">{t.detail}</div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                          {coBenefits.length > 0 && (
-                            <div className="flex flex-wrap gap-1 pt-0.5">
-                              {coBenefits.map((t) => (
-                                <span key={t.id} className="inline-flex items-center gap-1 text-[10px] text-slate-500 bg-white/70 border border-slate-200 rounded px-2 py-1" title={t.detail}>
-                                  {t.icon} {t.label}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* System config + sizing */}
-                        <div className="rounded-md bg-white border border-cyan-200 p-3 space-y-2">
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            <div>
-                              <div className="text-[10px] text-slate-500 uppercase">Configuration</div>
-                              <div className="text-sm font-bold text-cyan-800">{pearlModel}</div>
-                              <div className="text-[10px] text-slate-500">{waterType === 'brackish' ? 'Oyster' : 'Mussel'} Biofilt{categories.find(c => c.id === 'pearl')?.modules.some(t => t.id.startsWith('pearl-resin')) ? ' + Resin' : ''}{categories.find(c => c.id === 'pearl')?.modules.some(t => t.id === 'pearl-uv') ? ' + UV' : ''}{categories.find(c => c.id === 'pearl')?.modules.some(t => t.id === 'pearl-gac') ? ' + GAC' : ''}</div>
-                            </div>
-                            <div>
-                              <div className="text-[10px] text-slate-500 uppercase">Full Build Target</div>
-                              <div className="text-sm font-bold text-cyan-800">{totalQuads} quad{totalQuads > 1 ? 's' : ''} ({totalUnits} units)</div>
-                              <div className="text-[10px] text-slate-500">{fullGPM} GPM total capacity</div>
-                            </div>
-                            <div>
-                              <div className="text-[10px] text-slate-500 uppercase">Full Build Annual</div>
-                              <div className="text-sm font-bold text-cyan-800">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(fullAnnualCost)}/yr</div>
-                              <div className="text-[10px] text-slate-500">$200K/unit/yr</div>
-                            </div>
-                            <div>
-                              <div className="text-[10px] text-slate-500 uppercase">Sizing Basis</div>
-                              <div className={`text-xs font-semibold ${siteSeverityScore >= 75 ? 'text-red-700' : siteSeverityScore >= 50 ? 'text-amber-700' : 'text-slate-700'}`}>Severity {prelimSeverity}/100</div>
-                              <div className="text-[10px] text-slate-500">{sizingBasis}</div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* ═══ DEPLOYMENT ROADMAP ═══ */}
-                        {isPhasedDeployment && (() => {
-                          // Each quad targets a ranked critical zone. Every PIN unit treats AND monitors.
-                          // Monitoring continuity & verification is universal -- not unique to any single phase.
-                          type PhaseInfo = { phase: string; quads: number; units: number; gpm: number; cost: number; mission: string; placement: string; why: string; trigger: string; color: string; bgColor: string };
-                          const phases: PhaseInfo[] = [];
-                          const hasMonitoringGap = dataAgeDays === null || dataAgeDays > 365;
-                          const monitoringNote = hasMonitoringGap
-                            ? `+ Monitoring continuity & verification (restores data record lost for ${dataAgeDays !== null ? Math.round(dataAgeDays / 365) + '+ year' + (Math.round(dataAgeDays / 365) > 1 ? 's' : '') : 'an extended period'})`
-                            : '+ Continuous monitoring, compliance-grade data & treatment verification';
-
-                          // ── PHASE 1: #1 most critical zone ──
-                          const p1Mission = (hasNutrients || bloomSeverity !== 'normal')
-                            ? 'Primary Nutrient Interception'
-                            : hasBacteria ? 'Primary Pathogen Treatment'
-                            : hasSediment ? 'Primary Sediment Capture'
-                            : 'Primary Treatment & Monitoring';
-
-                          const p1Placement = (hasNutrients || bloomSeverity !== 'normal')
-                            ? '#1 critical zone: Highest-load tributary confluence -- intercept nutrient and sediment loading at the dominant inflow before it reaches the receiving waterbody'
-                            : hasBacteria ? '#1 critical zone: Highest-volume discharge point -- treat pathogen loading at the primary outfall or CSO'
-                            : hasSediment ? '#1 critical zone: Primary tributary mouth -- capture suspended solids at the highest-load inflow'
-                            : '#1 critical zone: Highest-priority inflow -- treat and monitor at the most impacted location';
-
-                          const p1Why = bloomSeverity !== 'normal' && bloomSeverity !== 'unknown'
-                            ? `Chlorophyll at ${chlVal} ug/L confirms active bloom cycle. #1 priority -- intercept nutrients at the dominant source before they drive downstream eutrophication. ${monitoringNote}.`
-                            : hasNutrients ? `ATTAINS lists nutrient impairment. #1 priority: treat the primary urban watershed inflow. ${monitoringNote}.`
-                            : hasBacteria ? `Bacteria exceeds recreational standards. #1 priority: treat at highest-volume discharge. ${monitoringNote}.`
-                            : hasSediment ? `Turbidity at ${turbVal?.toFixed(1) ?? '?'} FNU. #1 priority: capture sediment at the dominant tributary. ${monitoringNote}.`
-                            : `#1 priority treatment zone. ${monitoringNote}.`;
-
-                          phases.push({
-                            phase: 'Phase 1', quads: phase1Quads, units: phase1Units, gpm: phase1GPM,
-                            cost: phase1AnnualCost,
-                            mission: p1Mission, placement: p1Placement, why: p1Why,
-                            trigger: 'Immediate -- deploy within 30 days of site assessment',
-                            color: 'border-cyan-400 text-cyan-900', bgColor: 'bg-cyan-50',
-                          });
-
-                          // ── PHASE 2: #2 most critical zone ──
-                          if (totalQuads >= 2) {
-                            const p2Quads = totalQuads === 2 ? (totalQuads - phase1Quads) : 1;
-                            const p2Units = p2Quads * 4;
-
-                            const p2Mission = (hasSediment || turbiditySeverity !== 'clear')
-                              ? 'Secondary Outfall Treatment'
-                              : (hasNutrients || bloomSeverity !== 'normal') ? 'Secondary Nutrient Treatment'
-                              : hasBacteria ? 'Secondary Source Treatment'
-                              : 'Secondary Zone Treatment';
-
-                            const p2Placement = waterType === 'brackish'
-                              ? (hasSediment || turbiditySeverity !== 'clear'
-                                ? '#2 critical zone: MS4 outfall cluster along shoreline -- treat stormwater discharge from adjacent subwatersheds where multiple outfalls concentrate pollutant loading'
-                                : '#2 critical zone: Embayment or low-circulation area -- treat where longest water residence time allows bloom development and DO depletion')
-                              : (hasSediment || turbiditySeverity !== 'clear'
-                                ? '#2 critical zone: Secondary tributary or stormwater outfall cluster -- capture additional loading from adjacent drainage area'
-                                : '#2 critical zone: Secondary inflow or pooling area -- treat where nutrient accumulation drives worst conditions');
-
-                            const p2Why = turbiditySeverity !== 'clear' && turbiditySeverity !== 'unknown'
-                              ? `Turbidity at ${turbVal?.toFixed(1)} FNU indicates sediment loading from multiple sources. Phase 1 intercepts the primary tributary; Phase 2 treats the next-highest loading zone. ${monitoringNote}.`
-                              : hasNutrients && (bloomSeverity !== 'normal')
-                              ? `Bloom conditions persist beyond the primary inflow. Phase 2 treats the #2 nutrient loading zone. ${monitoringNote}.`
-                              : attainsCauses.length >= 3
-                              ? `${attainsCauses.length} impairment causes indicate multiple pollution sources. Phase 2 addresses the #2 priority loading pathway. ${monitoringNote}.`
-                              : `Phase 1 data identifies the second-highest treatment priority. ${monitoringNote}.`;
-
-                            phases.push({
-                              phase: 'Phase 2', quads: p2Quads, units: p2Units, gpm: p2Units * 50,
-                              cost: p2Units * COST_PER_UNIT_YEAR,
-                              mission: p2Mission, placement: p2Placement, why: p2Why,
-                              trigger: 'After 90 days -- Phase 1 data confirms #2 priority zone and optimal placement',
-                              color: 'border-blue-300 text-blue-900', bgColor: 'bg-blue-50',
-                            });
-                          }
-
-                          // ── PHASE 3: #3 most critical zone ──
-                          if (totalQuads >= 3) {
-                            const remainQuads = totalQuads - phase1Quads - (totalQuads === 2 ? totalQuads - phase1Quads : 1);
-                            const remainUnits = remainQuads * 4;
-                            if (remainQuads > 0) {
-                              const p3Mission = waterType === 'brackish'
-                                ? (hasBacteria ? 'Tertiary Outfall Treatment' : 'Tertiary Zone Treatment')
-                                : 'Tertiary Zone Treatment';
-
-                              const p3Placement = waterType === 'brackish'
-                                ? (hasBacteria
-                                  ? '#3 critical zone: Remaining outfall cluster or CSO discharge -- treat pathogen and nutrient loading from the third-highest contributing subwatershed along the tidal corridor'
-                                  : hasNutrients || bloomSeverity !== 'normal'
-                                  ? '#3 critical zone: Remaining tributary or embayment -- treat nutrient loading from the third-highest contributing inflow, capturing pollutants that Phases 1+2 cannot reach'
-                                  : '#3 critical zone: Third-highest loading area along the shoreline -- extend treatment coverage to remaining untreated outfall discharge')
-                                : (hasNutrients
-                                  ? '#3 critical zone: Tertiary inflow or accumulation point -- treat remaining nutrient loading from the third-highest contributing drainage area'
-                                  : '#3 critical zone: Remaining untreated inflow -- extend treatment coverage to the third-highest loading area in the watershed');
-
-                              const p3Why = attainsCauses.length >= 3
-                                ? `${attainsCauses.length} documented impairment causes require treatment across multiple zones. Phases 1+2 address the two highest-load sources. Phase 3 extends to the #3 priority zone -- ${totalUnits} total units providing ${fullGPM} GPM treatment capacity across all major loading points. ${monitoringNote}.`
-                                : `Phase 3 extends treatment to the third-highest loading zone identified by Phases 1+2 data. Full ${totalQuads}-quad deployment ensures coverage across all major pollution sources -- ${totalUnits} units, ${fullGPM} GPM total capacity. ${monitoringNote}.`;
-
-                              phases.push({
-                                phase: totalQuads > 3 ? `Phase 3 (${remainQuads}Q)` : 'Phase 3', quads: remainQuads, units: remainUnits, gpm: remainUnits * 50,
-                                cost: remainUnits * COST_PER_UNIT_YEAR,
-                                mission: p3Mission, placement: p3Placement, why: p3Why,
-                                trigger: 'After 180 days -- Phase 1+2 data identifies #3 priority zone and confirms full-build need',
-                                color: 'border-indigo-300 text-indigo-900', bgColor: 'bg-indigo-50',
-                              });
-                            }
-                          }
-
-                          return (
-                            <div className="rounded-md border border-slate-200 bg-white p-3 space-y-2">
-                              <div className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Deployment Roadmap -- Path to {totalQuads} Quads ({totalUnits} Units)</div>
-
-                              <div className="space-y-2">
-                                {phases.map((p, i) => (
-                                  <div key={i} className={`rounded-md border-2 ${p.color} ${p.bgColor} p-2.5`}>
-                                    <div className="flex items-center justify-between mb-1">
-                                      <div className="flex items-center gap-2">
-                                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${i === 0 ? 'bg-cyan-700 text-white' : i === 1 ? 'bg-blue-600 text-white' : 'bg-indigo-600 text-white'}`}>
-                                          {p.phase}
-                                        </span>
-                                        <span className="text-[10px] font-bold uppercase tracking-wider opacity-70">{p.mission}</span>
-                                      </div>
-                                      <span className="text-xs font-bold">{p.quads} quad{p.quads > 1 ? 's' : ''} ({p.units}U, {p.gpm} GPM) -- {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(p.cost)}/yr</span>
-                                    </div>
-                                    <div className="text-[11px] leading-relaxed">
-                                      <span className="font-semibold">Placement:</span> {p.placement}
-                                    </div>
-                                    <div className="text-[11px] leading-relaxed mt-1">
-                                      <span className="font-semibold">Justification:</span> {p.why}
-                                    </div>
-                                    <div className="text-[10px] text-slate-500 mt-1">
-                                      <span className="font-medium">Trigger:</span> {p.trigger}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-
-                              {/* Running total bar */}
-                              <div className="flex items-center gap-2 pt-1">
-                                {phases.map((p, i) => (
-                                  <div key={i} className={`flex-1 h-2 rounded-full ${i === 0 ? 'bg-cyan-500' : i === 1 ? 'bg-blue-500' : 'bg-indigo-500'}`} title={`${p.phase}: ${p.units} units`} />
-                                ))}
-                              </div>
-                              <div className="flex justify-between text-[9px] text-slate-400">
-                                <span>Day 1</span>
-                                <span>90 days</span>
-                                {phases.length > 2 && <span>180 days</span>}
-                                <span>Full build: {totalUnits} units, {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(fullAnnualCost)}/yr</span>
-                              </div>
-                            </div>
-                          );
-                        })()}
-
-                        {/* CTAs */}
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            onClick={() => {
-                              const subject = encodeURIComponent(`PIN Pilot Deployment Request — ${regionName}, ${stateAbbr}`);
-                              const body = encodeURIComponent(
-                                `PIN Pilot Deployment Request\n` +
-                                `${'='.repeat(40)}\n\n` +
-                                `Site: ${regionName}\n` +
-                                `State: ${STATE_ABBR_TO_NAME[stateAbbr] || stateAbbr}\n` +
-                                `Site Severity: ${siteSeverityLabel} (${siteSeverityScore}/100)\n` +
-                                `EPA Category: ${attainsCategory || 'N/A'}\n` +
-                                `Impairment Causes: ${attainsCauses.join(', ') || 'N/A'}\n` +
-                                `TMDL Status: ${tmdlStatus === 'needed' ? 'Needed — not established' : tmdlStatus === 'completed' ? 'Approved' : tmdlStatus === 'alternative' ? 'Alternative controls' : 'N/A'}\n` +
-                                `Recommended Config: ${pearlModel} (${waterType === 'brackish' ? 'Oyster' : 'Mussel'} Biofiltration)\n` +
-                                `Deployment: ${totalQuads} quad${totalQuads > 1 ? 's' : ''} (${totalUnits} units, ${fullGPM} GPM)${isPhasedDeployment ? `\nPhase 1: ${phase1Quads} quad${phase1Quads > 1 ? 's' : ''} (${phase1Units} units, ${phase1GPM} GPM)` : ''}\n` +
-                                `Estimated Annual Cost: $${fullAnnualCost.toLocaleString()}${isPhasedDeployment ? ` (Phase 1: $${phase1AnnualCost.toLocaleString()}/yr)` : '/yr'}\n` +
-                                `Sizing Basis: ${sizingBasis}\n` +
-                                `Compliance Pathway: ${compliancePathway}\n\n` +
-                                `Requesting organization: \n` +
-                                `Contact name: \n` +
-                                `Contact email: \n` +
-                                `Preferred timeline: \n` +
-                                `Additional notes: \n`
-                              );
-                              window.open(`mailto:info@project-pearl.org?subject=${subject}&body=${body}`, '_blank');
-                            }}
-                            className="flex-1 min-w-[140px] bg-cyan-700 hover:bg-cyan-800 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition-colors shadow-sm"
-                          >
-                            🚀 Deploy PIN Pilot Here
-                          </button>
-                          <button
-                            onClick={async () => {
-                              try {
-                                const pdf = new BrandedPDFGenerator('portrait');
-                                await pdf.loadLogo();
-                                pdf.initialize();
-
-                                // Sanitize text for jsPDF (no emoji, no extended unicode)
-                                const clean = (s: string) => s
-                                  .replace(/[\u{1F000}-\u{1FFFF}]/gu, '')  // emoji block 1
-                                  .replace(/[\u{2600}-\u{27BF}]/gu, '')    // misc symbols
-                                  .replace(/[\u{FE00}-\u{FE0F}]/gu, '')    // variation selectors
-                                  .replace(/[\u{200D}]/gu, '')             // zero-width joiner
-                                  .replace(/[\u{E0020}-\u{E007F}]/gu, '')  // tags
-                                  .replace(/\u00B5/g, 'u')                 // micro sign
-                                  .replace(/\u03BC/g, 'u')                 // greek mu
-                                  .replace(/\u2192/g, '->')                // right arrow
-                                  .replace(/\u2190/g, '<-')                // left arrow
-                                  .replace(/\u2014/g, '--')                // em dash
-                                  .replace(/\u2013/g, '-')                 // en dash
-                                  .replace(/\u00A7/g, 'Section ')          // section sign
-                                  .replace(/\u2022/g, '-')                 // bullet
-                                  .replace(/\u00B0/g, ' deg')              // degree
-                                  .replace(/\u2019/g, "'")                 // right single quote
-                                  .replace(/\u2018/g, "'")                 // left single quote
-                                  .replace(/\u201C/g, '"')                 // left double quote
-                                  .replace(/\u201D/g, '"')                 // right double quote
-                                  .replace(/[^\x00-\x7F]/g, '')           // strip any remaining non-ASCII
-                                  .replace(/\s+/g, ' ')                    // collapse whitespace
-                                  .trim();
-
-                                // Category title map (emoji-free)
-                                const catTitleMap: Record<string, string> = {
-                                  source: 'SOURCE CONTROL -- Upstream BMPs',
-                                  nature: 'NATURE-BASED SOLUTIONS',
-                                  pearl: 'PIN -- Treatment Accelerator',
-                                  community: 'COMMUNITY ENGAGEMENT & STEWARDSHIP',
-                                  regulatory: 'REGULATORY & PLANNING',
-                                };
-
-                                // Title
-                                pdf.addTitle('PIN Deployment Plan');
-                                pdf.addText(clean(`${regionName}, ${STATE_ABBR_TO_NAME[stateAbbr] || stateAbbr}`), { bold: true, fontSize: 12 });
-                                pdf.addText(`Generated ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, { fontSize: 9 });
-                                pdf.addSpacer(5);
-
-                                // Executive Summary
-                                pdf.addSubtitle('Executive Summary');
-                                pdf.addDivider();
-
-                                pdf.addText(`SITE SEVERITY: ${siteSeverityLabel} (${siteSeverityScore}/100)`, { bold: true });
-                                pdf.addText(clean(`Assessment based on ${thresholdSource}: DO (${doSeverity}), Bloom/Nutrients (${bloomSeverity !== 'unknown' ? bloomSeverity : nutrientSeverity}), Turbidity (${turbiditySeverity}), Impairment (${attainsCategory || 'N/A'}).`), { indent: 5, fontSize: 9 });
-                                pdf.addSpacer(3);
-
-                                pdf.addText('SITUATION', { bold: true });
-                                pdf.addText(clean(`${regionName} is ${isCat5 ? 'Category 5 impaired' : attainsCategory.includes('4') ? 'Category 4 impaired' : isImpaired ? 'impaired' : 'under monitoring'}${attainsCauses.length > 0 ? ` for ${attainsCauses.slice(0, 3).join(', ').toLowerCase()}` : ''}.`), { indent: 5 });
-                                if (dataAgeDays !== null) pdf.addText(clean(`Most recent data is ${dataAgeDays} days old. Confidence: ${dataAgeDays > 90 ? 'LOW' : dataAgeDays > 30 ? 'MODERATE' : 'HIGH'}.`), { indent: 5 });
-                                pdf.addText(clean(`TMDL Status: ${tmdlStatus === 'needed' ? 'No approved TMDL in place' : tmdlStatus === 'completed' ? 'Approved TMDL exists' : tmdlStatus === 'alternative' ? 'Alternative controls in place' : 'Not applicable'}.`), { indent: 5 });
-                                pdf.addSpacer(3);
-
-                                pdf.addText('TREATMENT PRIORITIES', { bold: true });
-                                if (treatmentPriorities.length > 0) {
-                                  for (const tp of treatmentPriorities.slice(0, 4)) {
-                                    pdf.addText(clean(`- [${tp.urgency.toUpperCase()}] ${tp.driver}`), { indent: 5 });
-                                    pdf.addText(clean(`  -> ${tp.action}`), { indent: 10, fontSize: 9 });
-                                  }
-                                } else {
-                                  if (hasBacteria) pdf.addText('- Ongoing public health risk from pathogens.', { indent: 5 });
-                                  if (hasNutrients) pdf.addText('- Eutrophication risk from nutrient loading.', { indent: 5 });
-                                  if (isImpaired) pdf.addText('- Regulatory exposure under CWA Section 303(d) and MS4 permits.', { indent: 5 });
-                                  if (dataAgeDays === null || dataAgeDays > 60) pdf.addText('- High uncertainty due to monitoring gaps.', { indent: 5 });
-                                }
-                                pdf.addSpacer(3);
-
-                                pdf.addText('RECOMMENDED ACTION', { bold: true });
-                                pdf.addText(clean(`Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} unit${phase1Units > 1 ? 's' : ''}, ${phase1GPM} GPM)` : `${totalUnits} PIN unit${totalUnits > 1 ? 's' : ''}`} at ${regionName} and begin continuous monitoring within 30 days.`), { indent: 5, bold: true });
-                                pdf.addText('Typical deployment: 30-60 days. Pilot generates continuous data and measurable reductions within the first operating cycle.', { indent: 5, fontSize: 9 });
-                                pdf.addSpacer(5);
-
-                                // Site Profile
-                                pdf.addSubtitle('Site Profile');
-                                pdf.addDivider();
-                                pdf.addTable(
-                                  ['Attribute', 'Value'],
-                                  [
-                                    ['Waterbody', clean(regionName)],
-                                    ['State', STATE_ABBR_TO_NAME[stateAbbr] || stateAbbr],
-                                    ['Water Type', waterType === 'brackish' ? 'Brackish / Estuarine' : 'Freshwater'],
-                                    ['Site Severity', `${siteSeverityLabel} (${siteSeverityScore}/100)`],
-                                    ['EPA IR Category', attainsCategory || 'Not assessed'],
-                                    ['Impairment Causes', clean(attainsCauses.join(', ')) || 'None listed'],
-                                    ['TMDL Status', tmdlStatus === 'needed' ? 'Needed -- not established' : tmdlStatus === 'completed' ? 'Approved' : tmdlStatus === 'alternative' ? 'Alternative controls' : 'N/A'],
-                                    ['Compliance Pathway', clean(compliancePathway)],
-                                    ['Data Age', dataAgeDays !== null ? `${dataAgeDays} days` : 'Unknown'],
-                                    ['Waterbody Size', `~${estimatedAcres} acres (${acresSource})`],
-                                    ['DO Status', `${doSeverity !== 'unknown' ? `${doVal?.toFixed(1)} mg/L (${doSeverity})` : 'No data'}`],
-                                    ['Bloom Status', `${bloomSeverity !== 'unknown' ? `${chlVal} ug/L (${bloomSeverity})` : nutrientSeverity !== 'unknown' ? `Nutrients: ${nutrientSeverity}` : 'No data'}`],
-                                    ['Turbidity Status', `${turbiditySeverity !== 'unknown' ? `${turbVal?.toFixed(1)} FNU (${turbiditySeverity})` : 'No data'}`],
-                                  ],
-                                  [55, 115]
-                                );
-                                pdf.addSpacer(3);
-
-                                // Live Parameters
-                                const paramKeys = Object.keys(params);
-                                if (paramKeys.length > 0) {
-                                  pdf.addSubtitle('Current Water Quality Parameters');
-                                  pdf.addDivider();
-                                  const paramRows = paramKeys.map(key => {
-                                    const p = params[key];
-                                    const val = p.value < 0.01 && p.value > 0 ? p.value.toFixed(3) : p.value < 1 ? p.value.toFixed(2) : p.value < 100 ? p.value.toFixed(1) : Math.round(p.value).toLocaleString();
-                                    return [
-                                      key,
-                                      clean(`${val} ${p.unit || ''}`),
-                                      p.source || '',
-                                      p.lastSampled ? new Date(p.lastSampled).toLocaleDateString() : 'N/A',
-                                    ];
-                                  });
-                                  pdf.addTable(['Parameter', 'Value', 'Source', 'Last Sampled'], paramRows, [40, 45, 35, 50]);
-                                  pdf.addSpacer(3);
-                                }
-
-                                // Why PIN at this site
-                                pdf.addSubtitle('Why PIN at This Site');
-                                pdf.addDivider();
-                                for (const b of whyBullets) {
-                                  pdf.addText(clean(`- ${b.problem}`), { indent: 5, bold: true });
-                                  pdf.addText(clean(`  -> ${b.solution}.`), { indent: 10 });
-                                }
-                                pdf.addSpacer(3);
-
-                                // PIN Configuration
-                                pdf.addSubtitle(`PIN Configuration: ${pearlModel}`);
-                                pdf.addDivider();
-                                pdf.addText(`System Type: ${waterType === 'brackish' ? 'Oyster (C. virginica)' : 'Freshwater Mussel'} Biofiltration`, { indent: 5 });
-                                const pearlCatMods = categories.find(c => c.id === 'pearl');
-                                if (pearlCatMods) {
-                                  const modRows = pearlCatMods.modules
-                                    .filter(m => m.status !== 'co-benefit')
-                                    .map(m => [clean(m.label), m.status.toUpperCase(), clean(m.detail)]);
-                                  pdf.addTable(['Module', 'Status', 'Detail'], modRows, [50, 25, 95]);
-                                }
-                                pdf.addSpacer(3);
-
-                                // Deployment Sizing & Cost
-                                pdf.addSubtitle('Deployment Sizing & Cost Estimate');
-                                pdf.addDivider();
-                                pdf.addTable(
-                                  ['Metric', 'Value'],
-                                  [
-                                    ['Sizing Method', 'Severity-driven treatment need assessment'],
-                                    ['Site Severity Score', `${prelimSeverity}/100 (${siteSeverityLabel})`],
-                                    ['Unit Capacity', '50 GPM per PIN unit (4 units per quad)'],
-                                    ['Waterbody Size', `~${estimatedAcres} acres (${acresSource})`],
-                                    ['Deployment Size', `${totalQuads} quad${totalQuads > 1 ? 's' : ''} (${totalUnits} units, ${fullGPM} GPM)`],
-                                    ...(isPhasedDeployment ? [
-                                      ['Phase 1', `${phase1Quads} quad${phase1Quads > 1 ? 's' : ''} (${phase1Units} units, ${phase1GPM} GPM)`],
-                                      ['Phase 1 Annual Cost', `$${phase1AnnualCost.toLocaleString()}/yr`],
-                                      ['Full Build Annual Cost', `$${fullAnnualCost.toLocaleString()}/yr`],
-                                    ] : [
-                                      ['Annual Cost', `$${fullAnnualCost.toLocaleString()}/yr ($200,000/unit)`],
-                                    ]),
-                                    ['Sizing Basis', clean(sizingBasis)],
-                                  ],
-                                  [55, 115]
-                                );
-                                pdf.addSpacer(2);
-                                pdf.addText('SIZING METHODOLOGY', { bold: true, fontSize: 9 });
-                                pdf.addText(clean(`Site severity score derived from ${thresholdSource}. Thresholds: DO criteria (${doStressed} mg/L avg, ${doCritical} mg/L min), chlorophyll bloom thresholds (${chlBloom}/${chlSignificant}/${chlSevere} ug/L), turbidity ${isMD ? 'SAV' : 'habitat'} threshold (${turbElevated} FNU), and EPA ATTAINS impairment category. Composite score weighted: DO 25%, Bloom/Nutrients 25%, Turbidity 15%, Impairment 20%, Monitoring Gap 15%. Severity floor: impaired + >1yr data gap = minimum DEGRADED; Cat 5 + >180d gap = near-CRITICAL. CRITICAL (>=75): 3 quads. DEGRADED (>=50): 2 quads. STRESSED (>=25): 1 quad. Large waterbodies (>500 acres) add scale modifier.`), { indent: 5, fontSize: 8 });
-                                if (isPhasedDeployment) {
-                                  pdf.addText(clean(`Phased deployment recommended. Deploy Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} units) at highest-priority inflow zone(s), then scale to full ${totalQuads}-quad build based on 90 days of monitoring data.`), { indent: 5, fontSize: 9 });
-                                }
-                                pdf.addSpacer(3);
-
-                                // Phased Deployment Roadmap (matches card detail)
-                                if (isPhasedDeployment) {
-                                  pdf.addSubtitle('Phased Deployment Roadmap');
-                                  pdf.addDivider();
-
-                                  const pdfHasMonitoringGap = dataAgeDays === null || dataAgeDays > 365;
-                                  const pdfMonitoringNote = pdfHasMonitoringGap
-                                    ? `+ Monitoring continuity & verification (restores data record lost for ${dataAgeDays !== null ? Math.round(dataAgeDays / 365) + '+ year' + (Math.round(dataAgeDays / 365) > 1 ? 's' : '') : 'an extended period'})`
-                                    : '+ Continuous monitoring, compliance-grade data & treatment verification';
-
-                                  // Phase 1
-                                  const pdfP1Mission = (hasNutrients || bloomSeverity !== 'normal')
-                                    ? 'Primary Nutrient Interception'
-                                    : hasBacteria ? 'Primary Pathogen Treatment'
-                                    : hasSediment ? 'Primary Sediment Capture'
-                                    : 'Primary Treatment & Monitoring';
-                                  const pdfP1Placement = (hasNutrients || bloomSeverity !== 'normal')
-                                    ? '#1 critical zone: Highest-load tributary confluence -- intercept nutrient and sediment loading at the dominant inflow before it reaches the receiving waterbody'
-                                    : hasBacteria ? '#1 critical zone: Highest-volume discharge point -- treat pathogen loading at the primary outfall or CSO'
-                                    : hasSediment ? '#1 critical zone: Primary tributary mouth -- capture suspended solids at the highest-load inflow'
-                                    : '#1 critical zone: Highest-priority inflow -- treat and monitor at the most impacted location';
-                                  const pdfP1Why = bloomSeverity !== 'normal' && bloomSeverity !== 'unknown'
-                                    ? `Chlorophyll at ${chlVal} ug/L confirms active bloom cycle. #1 priority -- intercept nutrients at the dominant source before they drive downstream eutrophication. ${pdfMonitoringNote}.`
-                                    : hasNutrients ? `ATTAINS lists nutrient impairment. #1 priority: treat the primary urban watershed inflow. ${pdfMonitoringNote}.`
-                                    : hasBacteria ? `Bacteria exceeds recreational standards. #1 priority: treat at highest-volume discharge. ${pdfMonitoringNote}.`
-                                    : hasSediment ? `Turbidity at ${turbVal?.toFixed(1) ?? '?'} FNU. #1 priority: capture sediment at the dominant tributary. ${pdfMonitoringNote}.`
-                                    : `#1 priority treatment zone. ${pdfMonitoringNote}.`;
-
-                                  pdf.addText(`PHASE 1: ${pdfP1Mission.toUpperCase()} -- ${phase1Quads} quad${phase1Quads > 1 ? 's' : ''} (${phase1Units} units, ${phase1GPM} GPM) -- $${phase1AnnualCost.toLocaleString()}/yr`, { bold: true, fontSize: 9 });
-                                  pdf.addText(clean(`Placement: ${pdfP1Placement}`), { indent: 5, fontSize: 9 });
-                                  pdf.addText(clean(`Justification: ${pdfP1Why}`), { indent: 5, fontSize: 8 });
-                                  pdf.addText('Trigger: Immediate -- deploy within 30 days of site assessment', { indent: 5, fontSize: 8 });
-                                  pdf.addSpacer(2);
-
-                                  // Phase 2
-                                  if (totalQuads >= 2) {
-                                    const pdfP2Quads = totalQuads === 2 ? (totalQuads - phase1Quads) : 1;
-                                    const pdfP2Units = pdfP2Quads * 4;
-                                    const pdfP2GPM = pdfP2Units * 50;
-                                    const pdfP2Cost = pdfP2Units * COST_PER_UNIT_YEAR;
-
-                                    const pdfP2Mission = (hasSediment || turbiditySeverity !== 'clear')
-                                      ? 'Secondary Outfall Treatment'
-                                      : (hasNutrients || bloomSeverity !== 'normal') ? 'Secondary Nutrient Treatment'
-                                      : hasBacteria ? 'Secondary Source Treatment'
-                                      : 'Secondary Zone Treatment';
-                                    const pdfP2Placement = waterType === 'brackish'
-                                      ? (hasSediment || turbiditySeverity !== 'clear'
-                                        ? '#2 critical zone: MS4 outfall cluster along shoreline -- treat stormwater discharge from adjacent subwatersheds where multiple outfalls concentrate pollutant loading'
-                                        : '#2 critical zone: Embayment or low-circulation area -- treat where longest water residence time allows bloom development and DO depletion')
-                                      : (hasSediment || turbiditySeverity !== 'clear'
-                                        ? '#2 critical zone: Secondary tributary or stormwater outfall cluster -- capture additional loading from adjacent drainage area'
-                                        : '#2 critical zone: Secondary inflow or pooling area -- treat where nutrient accumulation drives worst conditions');
-                                    const pdfP2Why = turbiditySeverity !== 'clear' && turbiditySeverity !== 'unknown'
-                                      ? `Turbidity at ${turbVal?.toFixed(1)} FNU indicates sediment loading from multiple sources. Phase 1 intercepts the primary tributary; Phase 2 treats the next-highest loading zone. ${pdfMonitoringNote}.`
-                                      : hasNutrients && (bloomSeverity !== 'normal')
-                                      ? `Bloom conditions persist beyond the primary inflow. Phase 2 treats the #2 nutrient loading zone. ${pdfMonitoringNote}.`
-                                      : attainsCauses.length >= 3
-                                      ? `${attainsCauses.length} impairment causes indicate multiple pollution sources. Phase 2 addresses the #2 priority loading pathway. ${pdfMonitoringNote}.`
-                                      : `Phase 1 data identifies the second-highest treatment priority. ${pdfMonitoringNote}.`;
-
-                                    pdf.addText(`PHASE 2: ${pdfP2Mission.toUpperCase()} -- ${pdfP2Quads} quad${pdfP2Quads > 1 ? 's' : ''} (${pdfP2Units} units, ${pdfP2GPM} GPM) -- $${pdfP2Cost.toLocaleString()}/yr`, { bold: true, fontSize: 9 });
-                                    pdf.addText(clean(`Placement: ${pdfP2Placement}`), { indent: 5, fontSize: 9 });
-                                    pdf.addText(clean(`Justification: ${pdfP2Why}`), { indent: 5, fontSize: 8 });
-                                    pdf.addText('Trigger: After 90 days -- Phase 1 data confirms #2 priority zone and optimal placement', { indent: 5, fontSize: 8 });
-                                    pdf.addSpacer(2);
-                                  }
-
-                                  // Phase 3
-                                  if (totalQuads >= 3) {
-                                    const pdfP3RemainQuads = totalQuads - phase1Quads - (totalQuads === 2 ? totalQuads - phase1Quads : 1);
-                                    const pdfP3Units = pdfP3RemainQuads * 4;
-                                    const pdfP3GPM = pdfP3Units * 50;
-                                    const pdfP3Cost = pdfP3Units * COST_PER_UNIT_YEAR;
-                                    if (pdfP3RemainQuads > 0) {
-                                      const pdfP3Mission = waterType === 'brackish'
-                                        ? (hasBacteria ? 'Tertiary Outfall Treatment' : 'Tertiary Zone Treatment')
-                                        : 'Tertiary Zone Treatment';
-                                      const pdfP3Placement = waterType === 'brackish'
-                                        ? (hasBacteria
-                                          ? '#3 critical zone: Remaining outfall cluster or CSO discharge -- treat pathogen and nutrient loading from the third-highest contributing subwatershed along the tidal corridor'
-                                          : hasNutrients || bloomSeverity !== 'normal'
-                                          ? '#3 critical zone: Remaining tributary or embayment -- treat nutrient loading from the third-highest contributing inflow, capturing pollutants that Phases 1+2 cannot reach'
-                                          : '#3 critical zone: Third-highest loading area along the shoreline -- extend treatment coverage to remaining untreated outfall discharge')
-                                        : (hasNutrients
-                                          ? '#3 critical zone: Tertiary inflow or accumulation point -- treat remaining nutrient loading from the third-highest contributing drainage area'
-                                          : '#3 critical zone: Remaining untreated inflow -- extend treatment coverage to the third-highest loading area in the watershed');
-                                      const pdfP3Why = attainsCauses.length >= 3
-                                        ? `${attainsCauses.length} documented impairment causes require treatment across multiple zones. Phases 1+2 address the two highest-load sources. Phase 3 extends to the #3 priority zone -- ${totalUnits} total units providing ${fullGPM} GPM treatment capacity across all major loading points. ${pdfMonitoringNote}.`
-                                        : `Phase 3 extends treatment to the third-highest loading zone identified by Phases 1+2 data. Full ${totalQuads}-quad deployment ensures coverage across all major pollution sources -- ${totalUnits} units, ${fullGPM} GPM total capacity. ${pdfMonitoringNote}.`;
-
-                                      const pdfP3Label = totalQuads > 3 ? `PHASE 3 (${pdfP3RemainQuads}Q)` : 'PHASE 3';
-                                      pdf.addText(`${pdfP3Label}: ${pdfP3Mission.toUpperCase()} -- ${pdfP3RemainQuads} quad${pdfP3RemainQuads > 1 ? 's' : ''} (${pdfP3Units} units, ${pdfP3GPM} GPM) -- $${pdfP3Cost.toLocaleString()}/yr`, { bold: true, fontSize: 9 });
-                                      pdf.addText(clean(`Placement: ${pdfP3Placement}`), { indent: 5, fontSize: 9 });
-                                      pdf.addText(clean(`Justification: ${pdfP3Why}`), { indent: 5, fontSize: 8 });
-                                      pdf.addText('Trigger: After 180 days -- Phase 1+2 data identifies #3 priority zone and confirms full-build need', { indent: 5, fontSize: 8 });
-                                      pdf.addSpacer(2);
-                                    }
-                                  }
-
-                                  pdf.addText(`FULL BUILD: ${totalQuads} quads (${totalUnits} units, ${fullGPM} GPM) -- $${fullAnnualCost.toLocaleString()}/yr`, { bold: true, fontSize: 9 });
-                                  pdf.addSpacer(3);
-                                }
-
-                                // Impairment Classification
-                                if (impairmentClassification.length > 0) {
-                                  pdf.addSubtitle(`Impairment Classification — PIN addresses ${pearlAddressable} of ${totalClassified} (${addressabilityPct}%)`);
-                                  pdf.addDivider();
-                                  pdf.addTable(
-                                    ['Cause', 'Tier', 'PIN Action'],
-                                    impairmentClassification.map(item => [
-                                      clean(item.cause),
-                                      item.tier === 1 ? 'T1 — Primary Target' : item.tier === 2 ? 'T2 — Contributes/Planned' : 'T3 — Outside Scope',
-                                      clean(item.pearlAction)
-                                    ]),
-                                    [45, 40, 85]
-                                  );
-                                  pdf.addSpacer(3);
-                                }
-
-                                // Threat Assessment
-                                pdf.addSubtitle('Threat Assessment');
-                                pdf.addDivider();
-                                pdf.addTable(
-                                  ['Threat', 'Level', 'Detail'],
-                                  threats.map(t => [t.label, t.level, clean(t.detail)]),
-                                  [35, 25, 110]
-                                );
-                                pdf.addSpacer(3);
-
-                                // Full Restoration Plan
-                                pdf.addSubtitle('Full Restoration Plan');
-                                pdf.addDivider();
-                                pdf.addText(`This plan combines ${totalBMPs} conventional BMPs and nature-based solutions with PIN accelerated treatment.`);
-                                pdf.addSpacer(3);
-
-                                for (const cat of categories.filter(c => c.id !== 'pearl')) {
-                                  pdf.addText(catTitleMap[cat.id] || clean(cat.title), { bold: true });
-                                  const activeItems = cat.modules.filter(m => m.status === 'warranted' || m.status === 'recommended');
-                                  const coItems = cat.modules.filter(m => m.status === 'co-benefit');
-                                  for (const m of activeItems) {
-                                    pdf.addText(clean(`- [${m.status.toUpperCase()}] ${m.label} -- ${m.detail}`), { indent: 5, fontSize: 9 });
-                                  }
-                                  if (coItems.length > 0) {
-                                    pdf.addText(clean(`Co-benefits: ${coItems.map(m => m.label).join(', ')}`), { indent: 5, fontSize: 8 });
-                                  }
-                                  pdf.addSpacer(3);
-                                }
-
-                                // Next Steps
-                                pdf.addSubtitle('Recommended Next Steps');
-                                pdf.addDivider();
-                                pdf.addText(clean(`1. Deploy ${isPhasedDeployment ? `Phase 1 (${phase1Quads} quad${phase1Quads > 1 ? 's' : ''}, ${phase1Units} PIN units, ${phase1GPM} GPM) at highest-priority inflow zone${phase1Quads > 1 ? 's' : ''}` : `${totalUnits} PIN unit${totalUnits > 1 ? 's' : ''}`} within 30 days.`), { indent: 5 });
-                                pdf.addText('2. Begin continuous water quality monitoring (15-min intervals, telemetered).', { indent: 5 });
-                                pdf.addText('3. Use 90-day baseline dataset to calibrate treatment priorities and validate severity assessment.', { indent: 5 });
-                                if (isPhasedDeployment) {
-                                  pdf.addText(clean(`4. Scale to full ${totalQuads}-quad (${totalUnits}-unit) deployment based on Phase 1 field data.`), { indent: 5 });
-                                  pdf.addText('5. Coordinate with state agency on compliance pathway and grant eligibility.', { indent: 5 });
-                                  pdf.addText('6. Implement supporting BMPs and nature-based solutions per this restoration plan.', { indent: 5 });
-                                } else {
-                                  pdf.addText('4. Coordinate with state agency on compliance pathway and grant eligibility.', { indent: 5 });
-                                  pdf.addText('5. Implement supporting BMPs and nature-based solutions per this restoration plan.', { indent: 5 });
-                                }
-                                pdf.addSpacer(5);
-
-                                pdf.addText('Contact: info@project-pearl.org | project-pearl.org', { bold: true });
-
-                                const safeName = regionName.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 40);
-                                pdf.download(`PEARL_Deployment_Plan_${safeName}_${stateAbbr}.pdf`);
-                              } catch (err) {
-                                console.error('PDF generation failed:', err);
-                                alert('PDF generation failed. Check console for details.');
-                              }
-                            }}
-                            className="flex-1 min-w-[140px] bg-white hover:bg-cyan-50 text-cyan-800 text-xs font-semibold px-4 py-2.5 rounded-lg border-2 border-cyan-300 transition-colors"
-                          >
-                            📋 Generate Deployment Plan
-                          </button>
-                          <button
-                            onClick={() => setShowCostPanel(prev => !prev)}
-                            className={`flex-1 min-w-[140px] text-xs font-semibold px-4 py-2.5 rounded-lg border-2 transition-colors ${showCostPanel ? 'bg-cyan-700 text-white border-cyan-700' : 'bg-white hover:bg-cyan-50 text-cyan-800 border-cyan-300'}`}
-                          >
-                            {showCostPanel ? '✕ Close' : '💰 Cost & Economics'}
-                          </button>
-                        </div>
-
-                        {/* ═══ ECONOMICS PANEL (toggles open) ═══ */}
-                        {showCostPanel && (() => {
-                          const fmt = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
-
-                          // ═══ COMPLIANCE SAVINGS MODEL ═══
-                          // Framed as: "How much existing compliance cost can PIN replace or compress?"
-                          // NOT fines avoided. This is reduced spend on monitoring, reporting, and BMP execution.
-                          // Partial displacement assumptions — conservative, defensible for city procurement.
-
-                          const unitCost = COST_PER_UNIT_YEAR; // $200,000
-                          const p1Annual = phase1Units * unitCost;
-                          const fullAnnual = totalUnits * unitCost;
-
-                          // ── Traditional compliance costs (per zone, annual) ──
-                          const tradMonitoringLow = 100000;   // Continuous station install amortized + ops + lab QA + data management
-                          const tradMonitoringHigh = 200000;
-                          const tradBMPLow = 150000;          // Constructed wetland or engineered BMP, amortized over 20yr + maintenance
-                          const tradBMPHigh = 400000;         // Urban sites: land, permitting, space constraints
-                          const tradConsultingLow = 75000;    // MS4 program management, lab analysis, quarterly sampling, permit reporting
-                          const tradConsultingHigh = 175000;  // Cat 5: TMDL participation, enhanced documentation, regulatory coordination
-                          const tradTotalLow = (tradMonitoringLow + tradBMPLow + tradConsultingLow) * totalQuads;
-                          const tradTotalHigh = (tradMonitoringHigh + tradBMPHigh + tradConsultingHigh) * totalQuads;
-
-                          // ── Bucket 1: Monitoring & Reporting Efficiency ──
-                          // PIN replaces 50-75% of fixed monitoring station cost
-                          const monStationSavingsLow = Math.round(0.50 * tradMonitoringLow * totalQuads);
-                          const monStationSavingsHigh = Math.round(0.75 * tradMonitoringHigh * totalQuads);
-                          // PIN replaces 40-60% of consulting, lab, and reporting
-                          const consultSavingsLow = Math.round(0.40 * tradConsultingLow * totalQuads);
-                          const consultSavingsHigh = Math.round(0.60 * tradConsultingHigh * totalQuads);
-                          const bucket1Low = monStationSavingsLow + consultSavingsLow;
-                          const bucket1High = monStationSavingsHigh + consultSavingsHigh;
-
-                          // ── Bucket 2: BMP Execution Efficiency ──
-                          // PIN data improves targeting, reduces rework and mis-targeted spend
-                          // Conservative: 5-10% of amortized BMP program
-                          const bucket2Low = Math.round(0.05 * tradBMPLow * totalQuads);
-                          const bucket2High = Math.round(0.10 * tradBMPHigh * totalQuads);
-
-                          // ── Total compliance savings ──
-                          const compSavingsLow = bucket1Low + bucket2Low;
-                          const compSavingsHigh = bucket1High + bucket2High;
-                          // Round for clean presentation
-                          const compSavingsLowRound = Math.round(compSavingsLow / 10000) * 10000;
-                          const compSavingsHighRound = Math.round(compSavingsHigh / 10000) * 10000;
-
-                          // ── What this means relative to PIN cost ──
-                          const offsetPctLow = Math.round((compSavingsLowRound / fullAnnual) * 100);
-                          const offsetPctHigh = Math.round((compSavingsHighRound / fullAnnual) * 100);
-
-                          // ── Grant offset potential ──
-                          const grantOffsetLow = Math.round(fullAnnual * 0.40);
-                          const grantOffsetHigh = Math.round(fullAnnual * 0.75);
-
-                          // ── Combined: compliance savings + grants ──
-                          const combinedOffsetLow = compSavingsLowRound + grantOffsetLow;
-                          const combinedOffsetHigh = compSavingsHighRound + grantOffsetHigh;
-                          const effectiveCostLow = Math.max(0, fullAnnual - combinedOffsetHigh);
-                          const effectiveCostHigh = Math.max(0, fullAnnual - combinedOffsetLow);
-
-                          return (
-                            <div className="rounded-lg border-2 border-green-300 bg-gradient-to-br from-green-50 to-emerald-50 p-3 space-y-3">
-                              <div className="text-[10px] font-bold text-green-800 uppercase tracking-wider">PIN Economics -- {regionName}</div>
-
-                              {/* Unit pricing */}
-                              <div className="space-y-1">
-                                <div className="text-[10px] font-bold text-slate-600 uppercase">PIN Unit Pricing</div>
-                                <div className="rounded-md bg-white border border-slate-200 overflow-hidden">
-                                  <div className="grid grid-cols-[1fr_auto] text-[11px]">
-                                    <div className="px-2 py-1.5 bg-slate-100 font-semibold border-b border-slate-200">PIN Unit (50 GPM)</div>
-                                    <div className="px-2 py-1.5 bg-slate-100 font-bold text-right border-b border-slate-200">{fmt(unitCost)}/unit/year</div>
-                                    <div className="px-2 py-1.5 border-b border-slate-100 text-[10px] text-slate-500" style={{ gridColumn: '1 / -1' }}>
-                                      All-inclusive: hardware, deployment, calibration, continuous monitoring, dashboards, automated reporting, maintenance, and support
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Deployment costs by phase */}
-                              <div className="space-y-1">
-                                <div className="text-[10px] font-bold text-slate-600 uppercase">{isPhasedDeployment ? 'Phased Deployment Costs' : 'Deployment Cost'}</div>
-                                <div className="rounded-md bg-white border border-slate-200 overflow-hidden">
-                                  <div className="grid grid-cols-[1fr_auto_auto_auto] text-[11px]">
-                                    <div className="px-2 py-1 bg-slate-200 font-bold border-b border-slate-300">Phase</div>
-                                    <div className="px-2 py-1 bg-slate-200 font-bold text-right border-b border-slate-300">Units</div>
-                                    <div className="px-2 py-1 bg-slate-200 font-bold text-right border-b border-slate-300">GPM</div>
-                                    <div className="px-2 py-1 bg-slate-200 font-bold text-right border-b border-slate-300">Annual Cost</div>
-
-                                    {isPhasedDeployment ? (
-                                      <>
-                                        <div className="px-2 py-1.5 font-semibold border-b border-slate-100">Phase 1 ({phase1Quads} quad{phase1Quads > 1 ? 's' : ''})</div>
-                                        <div className="px-2 py-1.5 text-right border-b border-slate-100">{phase1Units}</div>
-                                        <div className="px-2 py-1.5 text-right border-b border-slate-100">{phase1GPM}</div>
-                                        <div className="px-2 py-1.5 font-bold text-right border-b border-slate-100">{fmt(p1Annual)}/yr</div>
-
-                                        {totalQuads >= 2 && (() => {
-                                          const p2q = totalQuads === 2 ? totalQuads - phase1Quads : 1;
-                                          const p2u = p2q * 4;
-                                          return (
-                                            <>
-                                              <div className="px-2 py-1.5 bg-slate-50 font-semibold border-b border-slate-100">+ Phase 2 ({p2q}Q)</div>
-                                              <div className="px-2 py-1.5 bg-slate-50 text-right border-b border-slate-100">+{p2u}</div>
-                                              <div className="px-2 py-1.5 bg-slate-50 text-right border-b border-slate-100">+{p2u * 50}</div>
-                                              <div className="px-2 py-1.5 bg-slate-50 font-bold text-right border-b border-slate-100">+{fmt(p2u * unitCost)}/yr</div>
-                                            </>
-                                          );
-                                        })()}
-
-                                        {totalQuads >= 3 && (() => {
-                                          const p3q = totalQuads - phase1Quads - (totalQuads === 2 ? totalQuads - phase1Quads : 1);
-                                          const p3u = p3q * 4;
-                                          return p3q > 0 ? (
-                                            <>
-                                              <div className="px-2 py-1.5 font-semibold border-b border-slate-100">+ Phase 3 ({p3q}Q)</div>
-                                              <div className="px-2 py-1.5 text-right border-b border-slate-100">+{p3u}</div>
-                                              <div className="px-2 py-1.5 text-right border-b border-slate-100">+{p3u * 50}</div>
-                                              <div className="px-2 py-1.5 font-bold text-right border-b border-slate-100">+{fmt(p3u * unitCost)}/yr</div>
-                                            </>
-                                          ) : null;
-                                        })()}
-                                      </>
-                                    ) : (
-                                      <>
-                                        <div className="px-2 py-1.5 font-semibold border-b border-slate-100">Full deployment</div>
-                                        <div className="px-2 py-1.5 text-right border-b border-slate-100">{totalUnits}</div>
-                                        <div className="px-2 py-1.5 text-right border-b border-slate-100">{fullGPM}</div>
-                                        <div className="px-2 py-1.5 font-bold text-right border-b border-slate-100">{fmt(fullAnnual)}/yr</div>
-                                      </>
-                                    )}
-
-                                    <div className="px-2 py-1.5 bg-cyan-100 font-bold text-cyan-800">Full Build</div>
-                                    <div className="px-2 py-1.5 bg-cyan-100 font-bold text-cyan-800 text-right">{totalUnits}</div>
-                                    <div className="px-2 py-1.5 bg-cyan-100 font-bold text-cyan-800 text-right">{fullGPM}</div>
-                                    <div className="px-2 py-1.5 bg-cyan-100 font-bold text-cyan-800 text-right">{fmt(fullAnnual)}/yr</div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Traditional compliance baseline */}
-                              <div className="space-y-1">
-                                <div className="text-[10px] font-bold text-slate-600 uppercase">Current Compliance Cost Baseline ({totalQuads} Zones, Annual)</div>
-                                <div className="rounded-md bg-white border border-slate-200 overflow-hidden">
-                                  <div className="grid grid-cols-[1fr_auto] text-[11px]">
-                                    <div className="px-2 py-1.5 border-b border-slate-100">Continuous monitoring stations (install amortized + ops)</div>
-                                    <div className="px-2 py-1.5 font-bold text-slate-600 text-right border-b border-slate-100">{fmt(tradMonitoringLow * totalQuads)} -- {fmt(tradMonitoringHigh * totalQuads)}/yr</div>
-                                    <div className="px-2 py-1.5 bg-slate-50 border-b border-slate-100">Treatment BMPs (constructed wetland / bioretention, amortized)</div>
-                                    <div className="px-2 py-1.5 bg-slate-50 font-bold text-slate-600 text-right border-b border-slate-100">{fmt(tradBMPLow * totalQuads)} -- {fmt(tradBMPHigh * totalQuads)}/yr</div>
-                                    <div className="px-2 py-1.5 border-b border-slate-100">MS4 consulting, lab work & permit reporting</div>
-                                    <div className="px-2 py-1.5 font-bold text-slate-600 text-right border-b border-slate-100">{fmt(tradConsultingLow * totalQuads)} -- {fmt(tradConsultingHigh * totalQuads)}/yr</div>
-                                    <div className="px-2 py-1.5 bg-slate-200 font-semibold text-slate-700">Traditional Total (separate contracts)</div>
-                                    <div className="px-2 py-1.5 bg-slate-200 font-bold text-slate-700 text-right">{fmt(tradTotalLow)} -- {fmt(tradTotalHigh)}/yr</div>
-                                  </div>
-                                </div>
-                                <div className="text-[9px] text-slate-500 px-1">These are costs Baltimore already pays or would pay to achieve equivalent compliance coverage. PIN does not eliminate all of these -- it partially displaces and compresses them.</div>
-                              </div>
-
-                              {/* Compliance cost savings */}
-                              <div className="space-y-1">
-                                <div className="text-[10px] font-bold text-green-700 uppercase">Compliance Cost Savings From Meeting Permit Requirements</div>
-                                <div className="rounded-md bg-white border border-green-200 overflow-hidden">
-                                  <div className="grid grid-cols-[1fr_auto] text-[11px]">
-                                    <div className="px-2 py-1.5 border-b border-green-100">
-                                      <div className="font-semibold">Monitoring & reporting efficiency</div>
-                                      <div className="text-[9px] text-slate-500">Replaces 50-75% of fixed stations, 40-60% of consulting & lab work</div>
-                                    </div>
-                                    <div className="px-2 py-1.5 font-bold text-green-700 text-right border-b border-green-100">{fmt(bucket1Low)} -- {fmt(bucket1High)}/yr</div>
-                                    <div className="px-2 py-1.5 bg-green-50/50 border-b border-green-100">
-                                      <div className="font-semibold">BMP execution efficiency</div>
-                                      <div className="text-[9px] text-slate-500">Better targeting reduces rework, redesign & mis-targeted spend (5-10% of BMP program)</div>
-                                    </div>
-                                    <div className="px-2 py-1.5 bg-green-50/50 font-bold text-green-700 text-right border-b border-green-100">{fmt(bucket2Low)} -- {fmt(bucket2High)}/yr</div>
-                                    <div className="px-2 py-1.5 bg-green-200 font-bold text-green-900">Total Compliance Savings</div>
-                                    <div className="px-2 py-1.5 bg-green-200 font-bold text-green-900 text-right">{fmt(compSavingsLowRound)} -- {fmt(compSavingsHighRound)}/yr</div>
-                                  </div>
-                                </div>
-                                <div className="text-[9px] text-slate-500 px-1">This is not avoided fines. This is reduced spend on monitoring, reporting, and inefficient BMP execution -- tied directly to Baltimore's existing cost categories.</div>
-                              </div>
-
-                              {/* What this means */}
-                              <div className="grid grid-cols-2 gap-2">
-                                <div className="rounded-md bg-green-100 border border-green-200 text-center py-2">
-                                  <div className="text-[9px] text-green-600">Compliance Savings Offset</div>
-                                  <div className="text-lg font-bold text-green-700">{offsetPctLow}% -- {offsetPctHigh}%</div>
-                                  <div className="text-[9px] text-green-500">of PIN cost offset by reduced compliance spend</div>
-                                </div>
-                                <div className="rounded-md bg-cyan-100 border border-cyan-200 text-center py-2">
-                                  <div className="text-[9px] text-cyan-600">Time to Compliance Data</div>
-                                  <div className="text-lg font-bold text-cyan-700">30 -- 60 days</div>
-                                  <div className="text-[9px] text-cyan-500">vs. 12-24 months traditional BMP</div>
-                                </div>
-                              </div>
-
-                              {/* Grant offset */}
-                              <div className="space-y-1">
-                                <div className="text-[10px] font-bold text-slate-600 uppercase">Grant Funding Offset</div>
-                                <div className="rounded-md bg-white border border-slate-200 overflow-hidden">
-                                  <div className="grid grid-cols-[1fr_auto] text-[11px]">
-                                    <div className="px-2 py-1.5 border-b border-slate-100">Estimated grant-eligible portion (40-75%)</div>
-                                    <div className="px-2 py-1.5 font-bold text-green-700 text-right border-b border-slate-100">{fmt(grantOffsetLow)} -- {fmt(grantOffsetHigh)}/yr</div>
-                                    <div className="px-2 py-1.5 bg-slate-50 border-b border-slate-100">+ Compliance savings</div>
-                                    <div className="px-2 py-1.5 bg-slate-50 font-bold text-green-700 text-right border-b border-slate-100">{fmt(compSavingsLowRound)} -- {fmt(compSavingsHighRound)}/yr</div>
-                                    <div className="px-2 py-1.5 bg-green-200 font-bold text-green-900">Effective Net Cost</div>
-                                    <div className="px-2 py-1.5 bg-green-200 font-bold text-green-900 text-right">{fmt(effectiveCostLow)} -- {fmt(effectiveCostHigh)}/yr</div>
-                                  </div>
-                                </div>
-                                <div className="text-[9px] text-slate-500 px-1">Effective net cost = PIN annual cost minus grant funding minus compliance savings. This is the incremental budget impact for capabilities that would otherwise require {totalQuads} separate monitoring, treatment, and consulting contracts.</div>
-                              </div>
-
-                              {/* Grant alignment */}
-                              <div className="space-y-1">
-                                <div className="text-[10px] font-bold text-slate-600 uppercase">Grant Alignment</div>
-                                <div className="grid grid-cols-3 gap-1 text-[10px]">
-                                  <div className="rounded bg-green-100 border border-green-200 p-1.5 text-center">
-                                    <div className="font-bold text-green-800">Equipment</div>
-                                    <div className="text-green-600 text-[9px]">"Pilot deployment & equipment"</div>
-                                    <div className="font-bold text-green-700 mt-0.5">HIGHLY FUNDABLE</div>
-                                  </div>
-                                  <div className="rounded bg-green-100 border border-green-200 p-1.5 text-center">
-                                    <div className="font-bold text-green-800">Monitoring</div>
-                                    <div className="text-green-600 text-[9px]">"Monitoring, evaluation & data"</div>
-                                    <div className="font-bold text-green-700 mt-0.5">HIGHLY FUNDABLE</div>
-                                  </div>
-                                  <div className="rounded bg-green-100 border border-green-200 p-1.5 text-center">
-                                    <div className="font-bold text-green-800">Treatment</div>
-                                    <div className="text-green-600 text-[9px]">"Nature-based BMP implementation"</div>
-                                    <div className="font-bold text-green-700 mt-0.5">HIGHLY FUNDABLE</div>
-                                  </div>
-                                </div>
-                                <div className="text-[10px] text-slate-500">Eligible: EPA 319, {stateAbbr === 'MD' ? 'MD Bay Restoration Fund, ' : ''}Justice40, CBRAP, NOAA Habitat Restoration, state revolving funds</div>
-                              </div>
-                            </div>
-                          );
-                        })()}
-                      </div>
-                    );
-                  })()}
-
-                  {/* ═══ SUPPORTING LAYERS (source, nature, community, regulatory) ═══ */}
-                  <div className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold px-1 pt-1">Supporting Restoration Layers</div>
+                  {/* PIN Immediate Impact Layer, Deployment Roadmap, Deploy Pilot CTA,
+                     Generate Plan PDF, and Cost & Economics panel removed.
+                     All restoration categories now shown equally below. */}
+                  {/* ═══ RESTORATION MEASURES (all categories) ═══ */}
+                  <div className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold px-1 pt-1">Restoration Measures</div>
                   <div className="text-[11px] text-slate-500 px-1 -mt-2">
-                    PIN accelerates results. These layers provide the long-term foundation.
+                    Recommended interventions by category.
                   </div>
 
-                  {categories.filter(cat => cat.id !== 'pearl').map((cat) => {
+                  {categories.map((cat) => {
                     const warranted = cat.modules.filter(m => m.status === 'warranted');
                     const recommended = cat.modules.filter(m => m.status === 'recommended' || m.status === 'accelerator');
                     const coBenefits = cat.modules.filter(m => m.status === 'co-benefit');
@@ -4730,35 +3816,9 @@ export function FederalManagementCenter(props: Props) {
                     ))}
                   </div>
 
-                  {/* Full Plan Summary */}
-                  <div className="rounded-md bg-white border border-slate-200 p-2.5">
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                      <div>
-                        <div className="text-[10px] text-slate-500 uppercase">Full Plan</div>
-                        <div className="text-sm font-bold text-slate-700">{totalBMPs} BMPs + {pearlModel}</div>
-                      </div>
-                      <div>
-                        <div className="text-[10px] text-slate-500 uppercase">Deployment</div>
-                        <div className="text-sm font-bold text-slate-700">{totalQuads} quad{totalQuads > 1 ? 's' : ''} ({totalUnits} units)</div>
-                        <div className="text-[9px] text-slate-400">{isPhasedDeployment ? `Phase 1: ${phase1Quads}Q / ${phase1Units}U` : `${fullGPM} GPM`}</div>
-                      </div>
-                      <div>
-                        <div className="text-[10px] text-slate-500 uppercase">Annual Cost</div>
-                        <div className="text-sm font-bold text-slate-700">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(fullAnnualCost)}/yr</div>
-                      </div>
-                      <div>
-                        <div className="text-[10px] text-slate-500 uppercase">Severity</div>
-                        <div className={`text-sm font-bold ${siteSeverityScore >= 75 ? 'text-red-700' : siteSeverityScore >= 50 ? 'text-amber-700' : siteSeverityScore >= 25 ? 'text-yellow-700' : 'text-green-700'}`}>{siteSeverityLabel}</div>
-                        <div className="text-[9px] text-slate-400">{siteSeverityScore}/100</div>
-                      </div>
-                      <div>
-                        <div className="text-[10px] text-slate-500 uppercase">Pathway</div>
-                        <div className="text-xs font-semibold text-slate-700">{compliancePathway}</div>
-                      </div>
-                    </div>
-                    <div className="text-[10px] text-slate-400 mt-2 border-t border-slate-100 pt-1.5">
-                      Sizing derived from {isMD ? 'MD DNR Shallow Water Monitoring thresholds: DO (5.0/3.2 mg/L), chlorophyll (15/50/100 ug/L), turbidity (7 FNU)' : 'EPA National Recommended Water Quality Criteria: DO (5.0/4.0 mg/L), chlorophyll (20/40/60 ug/L), turbidity (10/25 FNU)'}, EPA ATTAINS category. PIN is the data backbone -- it measures, verifies, and optimizes every restoration layer from day one.
-                    </div>
+                  {/* Sizing footnote */}
+                  <div className="text-[10px] text-slate-400 pt-1 border-t border-slate-100">
+                    Severity assessment derived from {isMD ? 'MD DNR Shallow Water Monitoring thresholds' : 'EPA National Recommended Water Quality Criteria'} and EPA ATTAINS impairment category. Composite weighted: DO (25%), Bloom/Nutrients (25%), Turbidity (15%), Impairment (20%), Monitoring Gap (15%).
                   </div>
                 </CardContent>
               )}
@@ -5498,12 +4558,13 @@ export function FederalManagementCenter(props: Props) {
         </>); {/* end situation */}
 
         case 'top10': return DS(<>
-        {/* Feature 3: Hotspots Rankings — lens controlled, starts collapsed */}
+        {/* Feature 3: Hotspots Rankings — driven by live Sentinel alerts */}
         {lens.showHotspots && (
         <div id="section-top10" className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border-default)', background: 'var(--bg-card)' }}>
           <button onClick={() => setShowHotspotsSection(prev => !prev)} className="w-full flex items-center justify-between px-4 py-3 transition-colors hover:bg-slate-50" style={{ color: 'var(--text-primary)' }}>
-            <span className="text-sm font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>🔥 Top 10 Worsening / Improving Waterbodies</span>
+            <span className="text-sm font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>🔥 Top 10 Worsening / Improving Watersheds</span>
             <div className="flex items-center gap-1.5">
+              {sentinel.isLoading && <span className="text-xs" style={{ color: 'var(--text-dim)' }}>Loading...</span>}
               {showHotspotsSection ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
             </div>
           </button>
@@ -5518,14 +4579,27 @@ export function FederalManagementCenter(props: Props) {
                 </CardTitle>
                 <BrandedPrintBtn sectionId="worsening" title="Top 10 Worsening" />
               </div>
-              <CardDescription>Highest priority intervention areas</CardDescription>
+              <CardDescription>Sentinel-detected escalations — click to locate on map</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
+                {hotspots.worsening.length === 0 && (
+                  <div className="text-xs py-4 text-center" style={{ color: 'var(--text-dim)' }}>
+                    {sentinel.isLoading ? 'Loading sentinel data...' : 'No active sentinel alerts'}
+                  </div>
+                )}
                 {hotspots.worsening.map((region, idx) => (
                     <div
                       key={region.id}
-                      onClick={() => handleRegionClick(region.id)}
+                      onClick={() => {
+                        setSelectedAlertHuc(region.id);
+                        setSelectedAlertLevel(region.alertLevel === 'high' ? 'CRITICAL' : 'WATCH');
+                        setSideCardMode('alert-detail');
+                        const c = centroids[region.id];
+                        if (c && mapRef.current) {
+                          mapRef.current.flyTo({ center: [c.lng, c.lat], zoom: 8, duration: 800 });
+                        }
+                      }}
                       className="cursor-pointer transition-colors"
                       style={{ borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)' }}
                       onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; }}
@@ -5540,14 +4614,16 @@ export function FederalManagementCenter(props: Props) {
                             <div className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
                               {region.state} · {region.name}
                             </div>
-                            <div className="text-xs" style={{ color: 'var(--text-dim)' }}>{region.activeAlerts} active alert{region.activeAlerts !== 1 ? 's' : ''}</div>
+                            <div className="text-xs" style={{ color: 'var(--text-dim)' }}>
+                              {region.activeAlerts} sentinel event{region.activeAlerts !== 1 ? 's' : ''} · score {region.score}
+                            </div>
                           </div>
                         </div>
                         <span className="pin-label inline-flex items-center rounded-full px-2 py-0.5" style={{
                           background: region.alertLevel === 'high' ? 'var(--status-severe-bg)' : region.alertLevel === 'medium' ? 'var(--status-impaired-bg)' : region.alertLevel === 'low' ? 'var(--status-watch-bg)' : 'var(--status-healthy-bg)',
                           color: region.alertLevel === 'high' ? 'var(--status-severe)' : region.alertLevel === 'medium' ? 'var(--status-impaired)' : region.alertLevel === 'low' ? 'var(--status-watch)' : 'var(--status-healthy)',
                         }}>
-                          {levelToLabel(region.alertLevel)}
+                          {region.alertLevel === 'high' ? 'Critical' : region.alertLevel === 'medium' ? 'Watch' : 'Advisory'}
                         </span>
                       </div>
                     </div>
@@ -5561,20 +4637,30 @@ export function FederalManagementCenter(props: Props) {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-green-600" />
-                  {'Top 10 Improving'}
+                  Recently Resolved
                 </CardTitle>
-                <BrandedPrintBtn sectionId="improving" title="Top 10 Improving" />
+                <BrandedPrintBtn sectionId="improving" title="Recently Resolved" />
               </div>
               <CardDescription>
-                {'Success stories and best performers'}
+                Watersheds that returned to nominal status
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
+                {hotspots.improving.length === 0 && (
+                  <div className="text-xs py-4 text-center" style={{ color: 'var(--text-dim)' }}>
+                    {sentinel.isLoading ? 'Loading sentinel data...' : 'No recent resolutions'}
+                  </div>
+                )}
                 {hotspots.improving.map((region, idx) => (
                   <div
                     key={region.id}
-                    onClick={() => handleRegionClick(region.id)}
+                    onClick={() => {
+                      const c = centroids[region.id];
+                      if (c && mapRef.current) {
+                        mapRef.current.flyTo({ center: [c.lng, c.lat], zoom: 8, duration: 800 });
+                      }
+                    }}
                     className="flex items-center justify-between p-2 cursor-pointer transition-colors"
                     style={{ borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)' }}
                     onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; }}
@@ -5589,7 +4675,7 @@ export function FederalManagementCenter(props: Props) {
                           {region.state} · {region.name}
                         </div>
                         <div className="text-xs" style={{ color: 'var(--text-dim)' }}>
-                          {region.alertLevel === 'none' ? 'No alerts' : `${region.activeAlerts} minor alerts`}
+                          Resolved — returned to nominal
                         </div>
                       </div>
                     </div>
@@ -5597,7 +4683,7 @@ export function FederalManagementCenter(props: Props) {
                       background: 'var(--status-healthy-bg)',
                       color: 'var(--status-healthy)',
                     }}>
-                      Healthy
+                      Resolved
                     </span>
                   </div>
                 ))}

@@ -87,10 +87,6 @@ interface FederalPlanSections {
   coBenefits: CoBenefit[];
   budgetEstimate: string;
   regulatoryAuthority: string;
-  grantPrograms: string;
-  projectedOutcomes: string;
-  congressionalBriefing: string;
-  projectedScoreChanges?: ProjectedScoreChange[];
 }
 
 interface CoBenefit {
@@ -289,14 +285,8 @@ Respond ONLY with valid JSON, no markdown, no backticks:
   "actionsLongTerm": ["1-5 year strategic actions"],
   "coBenefits": [{"solution":"name","surfaceWater":"impact","drinkingWater":"impact","wastewater":"impact","groundwater":"impact","stormwater":"impact"}],
   "budgetEstimate": "Planning-level federal investment estimate by action tier. Reference comparable programs/precedents.",
-  "regulatoryAuthority": "Applicable CWA sections (303(d), 402, 404, 319, 311), Safe Drinking Water Act provisions, state delegation status, federal backstop triggers.",
-  "grantPrograms": "Specific federal programs: CWSRF, DWSRF, EPA 319(h), WIFIA, Chesapeake Bay Program, NOAA, FEMA BRIC. Eligibility, typical ranges, next deadlines.",
-  "projectedOutcomes": "Measurable outcomes at 1yr, 3yr, 5yr if plan is executed. Assessment unit reclassifications, violation reductions, population protected, TMDL completions.",
-  "congressionalBriefing": "2-3 paragraph summary suitable for congressional notification. Policy implications, appropriations needs, constituent impact.",
-  "projectedScoreChanges": [{"state":"XX","currentScore":55,"projectedScore":72,"keyImprovement":"Primary improvement driver for this state"}]
-}
-
-IMPORTANT: The projectedScoreChanges array MUST include one entry for each state in scope (${statesList}). currentScore should be a realistic 0-100 water quality score, projectedScore should reflect realistic improvements from the plan. Be conservative — most improvements should be 5-20 points.`;
+  "regulatoryAuthority": "Applicable CWA sections (303(d), 402, 404, 319, 311), Safe Drinking Water Act provisions, state delegation status, federal backstop triggers."
+}`;
 }
 
 function buildFederalRefinePrompt(scope: ScopeSelection, currentPlan: FederalPlanSections, refinement: string): string {
@@ -320,12 +310,8 @@ Respond ONLY with valid JSON:
   "interagencyCoordination": "...", "enforcementActions": "...",
   "actionsImmediate": ["..."], "actionsShortTerm": ["..."], "actionsLongTerm": ["..."],
   "coBenefits": [{"solution":"...","surfaceWater":"...","drinkingWater":"...","wastewater":"...","groundwater":"...","stormwater":"..."}],
-  "budgetEstimate": "...", "regulatoryAuthority": "...", "grantPrograms": "...",
-  "projectedOutcomes": "...", "congressionalBriefing": "...",
-  "projectedScoreChanges": [{"state":"XX","currentScore":55,"projectedScore":72,"keyImprovement":"..."}]
-}
-
-IMPORTANT: The projectedScoreChanges array MUST include one entry for each state in scope (${statesList}). Adjust scores based on the refinement.`;
+  "budgetEstimate": "...", "regulatoryAuthority": "..."
+}`;
 }
 
 // ── Co-Benefits Matrix ──
@@ -1109,40 +1095,6 @@ export default function FederalResolutionPlanner({ userTier, userId, stateRollup
               <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 text-xs text-purple-800 whitespace-pre-wrap">{plan.regulatoryAuthority}</div>
             </section>
           </div>
-
-          <section>
-            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Grant & Funding Programs</h3>
-            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-sm text-emerald-800 whitespace-pre-wrap">{plan.grantPrograms}</div>
-          </section>
-
-          <section>
-            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Projected Outcomes</h3>
-            <div className="bg-sky-50 border border-sky-200 rounded-lg p-3 text-sm text-sky-800 whitespace-pre-wrap">{plan.projectedOutcomes}</div>
-          </section>
-
-          {/* Before/After Comparison Maps */}
-          {(plan.projectedScoreChanges?.length ?? 0) > 0 && scope.states?.length && (
-            <section>
-              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Projected Impact — Before vs. After</h3>
-              <div className="bg-white border border-gray-200 rounded-lg p-4">
-                <BeforeAfterMaps
-                  stateRollup={stateRollup}
-                  projectedChanges={plan.projectedScoreChanges!}
-                  scopeStates={scope.states}
-                />
-              </div>
-            </section>
-          )}
-
-          <section>
-            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Congressional Briefing Summary</h3>
-            <div className="bg-gray-50 border border-gray-300 rounded-lg p-4 text-sm text-gray-700 whitespace-pre-wrap">{plan.congressionalBriefing}</div>
-          </section>
-
-          {/* Strategy Modules — algorithmic, not AI-generated */}
-          {scoredCategories.length > 0 && (
-            <StrategyModulesSection categories={scoredCategories} />
-          )}
 
           <PlatformDisclaimer />
         </div>
