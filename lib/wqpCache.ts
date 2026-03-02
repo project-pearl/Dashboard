@@ -49,6 +49,19 @@ export interface WqpLookupResult {
   fromCache: true;
 }
 
+// ── Station Summary Types ─────────────────────────────────────────────────────
+
+export interface WqpStationSummary {
+  siteId: string;
+  name: string;
+  lat: number;
+  lng: number;
+  resultCount: number;
+  activityCount: number;
+  lastActivity: string;
+  parameterCount: number;
+}
+
 // ── Cache Singleton ──────────────────────────────────────────────────────────
 
 const GRID_RES = 0.1;
@@ -58,6 +71,33 @@ let _memCache: WqpCacheData | null = null;
 let buildStatus: 'cold' | 'building' | 'ready' | 'stale' = 'cold';
 let _cacheSource: 'disk' | 'memory (cron)' | null = null;
 let _lastDelta: CacheDelta | null = null;
+
+// ── Station Summary Cache ───────────────────────────────────────────────────
+
+const _stationSummaryCache = new Map<string, WqpStationSummary[]>();
+let _summarizedStates = new Set<string>();
+let _summaryRotationIndex = 0;
+
+export function getWqpStationSummaries(stateCode: string): WqpStationSummary[] | null {
+  return _stationSummaryCache.get(stateCode.toUpperCase()) ?? null;
+}
+
+export function setWqpStationSummaries(stateCode: string, summaries: WqpStationSummary[]): void {
+  _stationSummaryCache.set(stateCode.toUpperCase(), summaries);
+  _summarizedStates.add(stateCode.toUpperCase());
+}
+
+export function getSummarizedStates(): string[] {
+  return [..._summarizedStates];
+}
+
+export function getSummaryRotationIndex(): number {
+  return _summaryRotationIndex;
+}
+
+export function setSummaryRotationIndex(idx: number): void {
+  _summaryRotationIndex = idx;
+}
 
 // ── Disk Persistence (follows ATTAINS pattern from lib/attainsCache.ts) ─────
 

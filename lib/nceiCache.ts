@@ -1,41 +1,33 @@
 /**
- * NWPS Cache — Server-side spatial cache for NOAA National Water Prediction Service flood gauges.
+ * NCEI Cache — Server-side state-level cache for NOAA NCEI precipitation climate data.
  *
- * Populated by /api/cron/rebuild-nwps (every 30 min).
- * Grid resolution: 0.1° (~11km). Lookup checks target cell + 8 neighbors.
+ * Populated by /api/cron/rebuild-ncei (daily).
+ * State-level cache (not spatial grid) — keyed by state abbreviation.
+ * Source: Climate at a Glance statewide time series.
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
-import { gridKey, neighborKeys, computeCacheDelta, type CacheDelta } from './cacheUtils';
+import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-export interface NwpsGauge {
-  lid: string;
-  name: string;
+export interface NceiStateClimate {
   state: string;
-  county: string;
-  lat: number;
-  lng: number;
-  wfo: string;
-  status: 'no_flooding' | 'minor' | 'moderate' | 'major' | 'not_defined';
-  observed: { primary: number | null; unit: string; time: string } | null;
-  forecast: { primary: number | null; unit: string; time: string } | null;
-  stageflow: Array<{ time: string; stage: number | null; flow: number | null }> | null;
+  fips: string;
+  recentPrecip: number | null;      // inches, most recent month
+  precipAnomaly: number | null;     // departure from normal
+  precipNormal: number | null;      // 30-year normal
+  period: string;                    // e.g., "2026-02"
 }
 
-interface GridCell {
-  gauges: NwpsGauge[];
-}
-
-interface NwpsCacheData {
-  _meta: { built: string; gaugeCount: number; gridCells: number };
-  grid: Record<string, GridCell>;
+interface NceiCacheData {
+  _meta: { built: string; stateCount: number };
+  states: Record<string, NceiStateClimate>;
 }
 
 // ── Cache Singleton ──────────────────────────────────────────────────────────
 
-let _memCache: NwpsCacheData | null = null;
+let _memCache: NceiCacheData | null = null;
 let _cacheSource: string | null = null;
 let _lastDelta: CacheDelta | null = null;
 
@@ -46,14 +38,14 @@ function loadFromDisk(): boolean {
     if (typeof process === 'undefined') return false;
     const fs = require('fs');
     const path = require('path');
-    const file = path.join(process.cwd(), '.cache', 'nwps.json');
+    const file = path.join(process.cwd(), '.cache', 'ncei.json');
     if (!fs.existsSync(file)) return false;
     const raw = fs.readFileSync(file, 'utf-8');
     const data = JSON.parse(raw);
-    if (!data?.meta || !data?.grid) return false;
-    _memCache = { _meta: data.meta, grid: data.grid };
+    if (!data?.meta || !data?.states) return false;
+    _memCache = { _meta: data.meta, states: data.states };
     _cacheSource = 'disk';
-    console.log(`[NWPS Cache] Loaded from disk (${data.meta.gaugeCount} gauges, built ${data.meta.built})`);
+    console.log(`[NCEI Cache] Loaded from disk (${data.meta.stateCount} states, built ${data.meta.built})`);
     return true;
   } catch {
     return false;
@@ -66,11 +58,11 @@ function saveToDisk(): void {
     const fs = require('fs');
     const path = require('path');
     const dir = path.join(process.cwd(), '.cache');
-    const file = path.join(dir, 'nwps.json');
+    const file = path.join(dir, 'ncei.json');
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    const payload = JSON.stringify({ meta: _memCache._meta, grid: _memCache.grid });
+    const payload = JSON.stringify({ meta: _memCache._meta, states: _memCache.states });
     fs.writeFileSync(file, payload, 'utf-8');
-    console.log(`[NWPS Cache] Saved to disk`);
+    console.log(`[NCEI Cache] Saved to disk`);
   } catch {
     // fail silently
   }
@@ -90,46 +82,37 @@ export async function ensureWarmed(): Promise<void> {
   if (_memCache !== null) return;
   if (_blobChecked) return;
   _blobChecked = true;
-  const data = await loadCacheFromBlob<{ meta: any; grid: any }>('cache/nwps.json');
-  if (data?.meta && data?.grid) {
-    _memCache = { _meta: data.meta, grid: data.grid };
+  const data = await loadCacheFromBlob<{ meta: any; states: any }>('cache/ncei.json');
+  if (data?.meta && data?.states) {
+    _memCache = { _meta: data.meta, states: data.states };
     _cacheSource = 'blob';
-    console.warn(`[NWPS Cache] Loaded from blob (${data.meta.gaugeCount} gauges)`);
+    console.warn(`[NCEI Cache] Loaded from blob (${data.meta.stateCount} states)`);
   }
 }
 
 // ── Public API ───────────────────────────────────────────────────────────────
 
-export function getNwpsCache(lat: number, lng: number): NwpsGauge[] | null {
+export function getNceiByState(stateCode: string): NceiStateClimate | null {
   ensureDiskLoaded();
   if (!_memCache) return null;
-  const gauges: NwpsGauge[] = [];
-  for (const key of neighborKeys(lat, lng)) {
-    const cell = _memCache.grid[key];
-    if (cell) gauges.push(...cell.gauges);
-  }
-  return gauges.length > 0 ? gauges : null;
+  return _memCache.states[stateCode.toUpperCase()] ?? null;
 }
 
-export function getNwpsAllGauges(): NwpsGauge[] {
+export function getNceiAll(): Record<string, NceiStateClimate> {
   ensureDiskLoaded();
-  if (!_memCache) return [];
-  const all: NwpsGauge[] = [];
-  for (const cell of Object.values(_memCache.grid)) {
-    all.push(...cell.gauges);
-  }
-  return all;
+  if (!_memCache) return {};
+  return _memCache.states;
 }
 
-export async function setNwpsCache(data: NwpsCacheData): Promise<void> {
-  const prevCounts = _memCache ? { gaugeCount: _memCache._meta.gaugeCount, gridCells: _memCache._meta.gridCells } : null;
-  const newCounts = { gaugeCount: data._meta.gaugeCount, gridCells: data._meta.gridCells };
+export async function setNceiCache(data: NceiCacheData): Promise<void> {
+  const prevCounts = _memCache ? { stateCount: _memCache._meta.stateCount } : null;
+  const newCounts = { stateCount: data._meta.stateCount };
   _lastDelta = computeCacheDelta(prevCounts, newCounts, _memCache?._meta.built ?? null);
   _memCache = data;
   _cacheSource = 'memory (cron)';
-  console.log(`[NWPS Cache] Updated: ${data._meta.gaugeCount} gauges, ${data._meta.gridCells} cells`);
+  console.log(`[NCEI Cache] Updated: ${data._meta.stateCount} states`);
   saveToDisk();
-  await saveCacheToBlob('cache/nwps.json', { meta: data._meta, grid: data.grid });
+  await saveCacheToBlob('cache/ncei.json', { meta: data._meta, states: data.states });
 }
 
 // ── Build Lock ───────────────────────────────────────────────────────────────
@@ -138,33 +121,30 @@ let _buildInProgress = false;
 let _buildStartedAt = 0;
 const BUILD_LOCK_TIMEOUT_MS = 12 * 60 * 1000;
 
-export function isNwpsBuildInProgress(): boolean {
+export function isNceiBuildInProgress(): boolean {
   if (_buildInProgress && _buildStartedAt > 0 && Date.now() - _buildStartedAt > BUILD_LOCK_TIMEOUT_MS) {
-    console.warn('[NWPS Cache] Auto-clearing stale build lock (>12 min)');
+    console.warn('[NCEI Cache] Auto-clearing stale build lock (>12 min)');
     _buildInProgress = false;
     _buildStartedAt = 0;
   }
   return _buildInProgress;
 }
 
-export function setNwpsBuildInProgress(v: boolean): void {
+export function setNceiBuildInProgress(v: boolean): void {
   _buildInProgress = v;
   _buildStartedAt = v ? Date.now() : 0;
 }
 
 // ── Status ───────────────────────────────────────────────────────────────────
 
-export function getNwpsCacheStatus() {
+export function getNceiCacheStatus() {
   ensureDiskLoaded();
   if (!_memCache) return { loaded: false, source: null as string | null };
   return {
     loaded: true,
     source: _cacheSource || 'memory (cron)',
     built: _memCache._meta.built,
-    gaugeCount: _memCache._meta.gaugeCount,
-    gridCells: _memCache._meta.gridCells,
+    stateCount: _memCache._meta.stateCount,
     lastDelta: _lastDelta,
   };
 }
-
-export { gridKey };

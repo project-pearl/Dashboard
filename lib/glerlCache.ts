@@ -1,8 +1,9 @@
 /**
- * NWPS Cache — Server-side spatial cache for NOAA National Water Prediction Service flood gauges.
+ * GLERL Cache — Server-side spatial cache for Great Lakes surface temperature and ice cover.
  *
- * Populated by /api/cron/rebuild-nwps (every 30 min).
+ * Populated by /api/cron/rebuild-glerl (daily).
  * Grid resolution: 0.1° (~11km). Lookup checks target cell + 8 neighbors.
+ * Source: GLERL CoastWatch ERDDAP (GLSEA_GCS dataset).
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
@@ -10,32 +11,26 @@ import { gridKey, neighborKeys, computeCacheDelta, type CacheDelta } from './cac
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-export interface NwpsGauge {
-  lid: string;
-  name: string;
-  state: string;
-  county: string;
+export interface GlerlPixel {
   lat: number;
   lng: number;
-  wfo: string;
-  status: 'no_flooding' | 'minor' | 'moderate' | 'major' | 'not_defined';
-  observed: { primary: number | null; unit: string; time: string } | null;
-  forecast: { primary: number | null; unit: string; time: string } | null;
-  stageflow: Array<{ time: string; stage: number | null; flow: number | null }> | null;
+  lakeSurfaceTemp: number | null;   // °C
+  iceCover: number | null;           // 0-100%
+  time: string;
 }
 
 interface GridCell {
-  gauges: NwpsGauge[];
+  pixels: GlerlPixel[];
 }
 
-interface NwpsCacheData {
-  _meta: { built: string; gaugeCount: number; gridCells: number };
+interface GlerlCacheData {
+  _meta: { built: string; pixelCount: number; gridCells: number };
   grid: Record<string, GridCell>;
 }
 
 // ── Cache Singleton ──────────────────────────────────────────────────────────
 
-let _memCache: NwpsCacheData | null = null;
+let _memCache: GlerlCacheData | null = null;
 let _cacheSource: string | null = null;
 let _lastDelta: CacheDelta | null = null;
 
@@ -46,14 +41,14 @@ function loadFromDisk(): boolean {
     if (typeof process === 'undefined') return false;
     const fs = require('fs');
     const path = require('path');
-    const file = path.join(process.cwd(), '.cache', 'nwps.json');
+    const file = path.join(process.cwd(), '.cache', 'glerl.json');
     if (!fs.existsSync(file)) return false;
     const raw = fs.readFileSync(file, 'utf-8');
     const data = JSON.parse(raw);
     if (!data?.meta || !data?.grid) return false;
     _memCache = { _meta: data.meta, grid: data.grid };
     _cacheSource = 'disk';
-    console.log(`[NWPS Cache] Loaded from disk (${data.meta.gaugeCount} gauges, built ${data.meta.built})`);
+    console.log(`[GLERL Cache] Loaded from disk (${data.meta.pixelCount} pixels, built ${data.meta.built})`);
     return true;
   } catch {
     return false;
@@ -66,11 +61,11 @@ function saveToDisk(): void {
     const fs = require('fs');
     const path = require('path');
     const dir = path.join(process.cwd(), '.cache');
-    const file = path.join(dir, 'nwps.json');
+    const file = path.join(dir, 'glerl.json');
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     const payload = JSON.stringify({ meta: _memCache._meta, grid: _memCache.grid });
     fs.writeFileSync(file, payload, 'utf-8');
-    console.log(`[NWPS Cache] Saved to disk`);
+    console.log(`[GLERL Cache] Saved to disk`);
   } catch {
     // fail silently
   }
@@ -90,46 +85,46 @@ export async function ensureWarmed(): Promise<void> {
   if (_memCache !== null) return;
   if (_blobChecked) return;
   _blobChecked = true;
-  const data = await loadCacheFromBlob<{ meta: any; grid: any }>('cache/nwps.json');
+  const data = await loadCacheFromBlob<{ meta: any; grid: any }>('cache/glerl.json');
   if (data?.meta && data?.grid) {
     _memCache = { _meta: data.meta, grid: data.grid };
     _cacheSource = 'blob';
-    console.warn(`[NWPS Cache] Loaded from blob (${data.meta.gaugeCount} gauges)`);
+    console.warn(`[GLERL Cache] Loaded from blob (${data.meta.pixelCount} pixels)`);
   }
 }
 
 // ── Public API ───────────────────────────────────────────────────────────────
 
-export function getNwpsCache(lat: number, lng: number): NwpsGauge[] | null {
+export function getGlerlCache(lat: number, lng: number): GlerlPixel[] | null {
   ensureDiskLoaded();
   if (!_memCache) return null;
-  const gauges: NwpsGauge[] = [];
+  const pixels: GlerlPixel[] = [];
   for (const key of neighborKeys(lat, lng)) {
     const cell = _memCache.grid[key];
-    if (cell) gauges.push(...cell.gauges);
+    if (cell) pixels.push(...cell.pixels);
   }
-  return gauges.length > 0 ? gauges : null;
+  return pixels.length > 0 ? pixels : null;
 }
 
-export function getNwpsAllGauges(): NwpsGauge[] {
+export function getGlerlAll(): GlerlPixel[] {
   ensureDiskLoaded();
   if (!_memCache) return [];
-  const all: NwpsGauge[] = [];
+  const all: GlerlPixel[] = [];
   for (const cell of Object.values(_memCache.grid)) {
-    all.push(...cell.gauges);
+    all.push(...cell.pixels);
   }
   return all;
 }
 
-export async function setNwpsCache(data: NwpsCacheData): Promise<void> {
-  const prevCounts = _memCache ? { gaugeCount: _memCache._meta.gaugeCount, gridCells: _memCache._meta.gridCells } : null;
-  const newCounts = { gaugeCount: data._meta.gaugeCount, gridCells: data._meta.gridCells };
+export async function setGlerlCache(data: GlerlCacheData): Promise<void> {
+  const prevCounts = _memCache ? { pixelCount: _memCache._meta.pixelCount, gridCells: _memCache._meta.gridCells } : null;
+  const newCounts = { pixelCount: data._meta.pixelCount, gridCells: data._meta.gridCells };
   _lastDelta = computeCacheDelta(prevCounts, newCounts, _memCache?._meta.built ?? null);
   _memCache = data;
   _cacheSource = 'memory (cron)';
-  console.log(`[NWPS Cache] Updated: ${data._meta.gaugeCount} gauges, ${data._meta.gridCells} cells`);
+  console.log(`[GLERL Cache] Updated: ${data._meta.pixelCount} pixels, ${data._meta.gridCells} cells`);
   saveToDisk();
-  await saveCacheToBlob('cache/nwps.json', { meta: data._meta, grid: data.grid });
+  await saveCacheToBlob('cache/glerl.json', { meta: data._meta, grid: data.grid });
 }
 
 // ── Build Lock ───────────────────────────────────────────────────────────────
@@ -138,30 +133,30 @@ let _buildInProgress = false;
 let _buildStartedAt = 0;
 const BUILD_LOCK_TIMEOUT_MS = 12 * 60 * 1000;
 
-export function isNwpsBuildInProgress(): boolean {
+export function isGlerlBuildInProgress(): boolean {
   if (_buildInProgress && _buildStartedAt > 0 && Date.now() - _buildStartedAt > BUILD_LOCK_TIMEOUT_MS) {
-    console.warn('[NWPS Cache] Auto-clearing stale build lock (>12 min)');
+    console.warn('[GLERL Cache] Auto-clearing stale build lock (>12 min)');
     _buildInProgress = false;
     _buildStartedAt = 0;
   }
   return _buildInProgress;
 }
 
-export function setNwpsBuildInProgress(v: boolean): void {
+export function setGlerlBuildInProgress(v: boolean): void {
   _buildInProgress = v;
   _buildStartedAt = v ? Date.now() : 0;
 }
 
 // ── Status ───────────────────────────────────────────────────────────────────
 
-export function getNwpsCacheStatus() {
+export function getGlerlCacheStatus() {
   ensureDiskLoaded();
   if (!_memCache) return { loaded: false, source: null as string | null };
   return {
     loaded: true,
     source: _cacheSource || 'memory (cron)',
     built: _memCache._meta.built,
-    gaugeCount: _memCache._meta.gaugeCount,
+    pixelCount: _memCache._meta.pixelCount,
     gridCells: _memCache._meta.gridCells,
     lastDelta: _lastDelta,
   };

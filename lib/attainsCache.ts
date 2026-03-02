@@ -60,6 +60,14 @@ export interface StateSummary {
   waterbodies: CachedWaterbody[];
 }
 
+export interface Huc12Summary {
+  huc12: string;
+  assessmentUnitCount: number;
+  impairedCount: number;
+  tmdlCount: number;
+  causeCount: number;
+}
+
 export interface CacheStatus {
   status: "cold" | "building" | "ready" | "stale";
   source: string | null;
@@ -167,6 +175,20 @@ let buildPromise: Promise<void> | null = null;
 let _cacheSource: "disk" | "blob" | "memory (self-build)" | "memory (cron)" | null =
   null;
 let _lastDelta: CacheDelta | null = null;
+
+// ─── HUC-12 Summary Cache ───────────────────────────────────────────────────
+
+const _huc12Cache = new Map<string, Huc12Summary>();
+
+export function getHuc12Summary(huc12: string): Huc12Summary | null {
+  return _huc12Cache.get(huc12) ?? null;
+}
+
+export function setHuc12Summaries(summaries: Huc12Summary[]): void {
+  for (const s of summaries) {
+    _huc12Cache.set(s.huc12, s);
+  }
+}
 
 // ─── Portable timeout helper ───────────────────────────────────────────────────
 
@@ -570,7 +592,7 @@ async function fetchAttainsState(
     const waterTypeMap = new Map<string, string>();
 
     try {
-      const orgIds = Array.from(
+      const orgIds: string[] = Array.from(
         new Set(
           orgItems
             .map((o: any) => (o?.organizationIdentifier || "").trim())

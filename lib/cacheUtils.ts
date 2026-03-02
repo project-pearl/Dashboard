@@ -125,3 +125,21 @@ export function saveCacheToDisk(filename: string, data: unknown): number | null 
     return null;
   }
 }
+
+// ── Delta Export ──────────────────────────────────────────────────────────
+
+/**
+ * Serialize all non-null lastDelta objects from a cache-status response
+ * into a downloadable snapshot. Pure function, no side effects.
+ */
+export function exportDeltaLog(
+  caches: Record<string, { lastDelta?: CacheDelta | null }>
+): { snapshotTimestamp: string; deltas: Array<{ cacheName: string } & CacheDelta> } {
+  const deltas: Array<{ cacheName: string } & CacheDelta> = [];
+  for (const [name, cache] of Object.entries(caches)) {
+    if (cache.lastDelta) {
+      deltas.push({ cacheName: name, ...cache.lastDelta });
+    }
+  }
+  return { snapshotTimestamp: new Date().toISOString(), deltas };
+}

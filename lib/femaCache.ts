@@ -22,6 +22,23 @@ export interface FemaDeclaration {
   fipsCountyCode: string;
 }
 
+export interface NfipCommunity {
+  communityId: string;
+  communityName: string;
+  state: string;
+  countyFips: string;
+  status: string;           // 'Regular' | 'Emergency' | 'Suspended' | 'Sanctioned'
+  crsClass: number | null;  // Community Rating System class (1-10)
+}
+
+export interface StateRiskIndex {
+  state: string;
+  riskScore: number | null;
+  expectedAnnualLoss: number | null;
+  socialVulnerability: number | null;
+  communityResilience: number | null;
+}
+
 interface FemaCacheData {
   built: string;
   declarations: Record<string, { declarations: FemaDeclaration[]; fetched: string }>;
@@ -32,6 +49,43 @@ interface FemaCacheData {
 let _cache: FemaCacheData | null = null;
 let _cacheSource: string | null = null;
 let _lastDelta: CacheDelta | null = null;
+
+// ── NFIP Community Cache ─────────────────────────────────────────────────────
+
+const _nfipCache = new Map<string, NfipCommunity[]>();
+
+/** Get NFIP communities for a specific state. */
+export function getFemaNfipCommunities(state: string): NfipCommunity[] | null {
+  return _nfipCache.get(state.toUpperCase()) ?? null;
+}
+
+/** Get all NFIP communities across all states. */
+export function getFemaNfipCommunitiesAll(): NfipCommunity[] {
+  const all: NfipCommunity[] = [];
+  for (const communities of _nfipCache.values()) {
+    all.push(...communities);
+  }
+  return all;
+}
+
+/** Set NFIP communities for a state. */
+export function setFemaNfipCommunities(state: string, communities: NfipCommunity[]): void {
+  _nfipCache.set(state.toUpperCase(), communities);
+}
+
+// ── State Risk Index Cache ───────────────────────────────────────────────────
+
+const _riskIndexCache = new Map<string, StateRiskIndex>();
+
+/** Get risk index for a specific state. */
+export function getFemaRiskIndex(state: string): StateRiskIndex | null {
+  return _riskIndexCache.get(state.toUpperCase()) ?? null;
+}
+
+/** Set risk index for a state. */
+export function setFemaRiskIndex(state: string, risk: StateRiskIndex): void {
+  _riskIndexCache.set(state.toUpperCase(), risk);
+}
 
 // ── Disk Persistence ────────────────────────────────────────────────────────
 

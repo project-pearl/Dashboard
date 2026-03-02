@@ -23,6 +23,13 @@ export interface CoopsStation {
   waterTemp: number | null;
   windSpeed: number | null;
   windDir: string | null;
+  conductivity: number | null;
+  salinity: number | null;
+  humidity: number | null;
+  visibility: number | null;
+  airPressure: number | null;
+  tidePrediction: number | null;
+  tidePredictionTime: string | null;
 }
 
 interface GridCell {

@@ -24,6 +24,7 @@ export interface NwsAlert {
   expires: string | null;
   senderName: string;
   affectedZones: string[];
+  precipForecast: { total6hr: number | null; total24hr: number | null } | null;
 }
 
 interface NwsAlertCacheData {

@@ -48,6 +48,12 @@ export interface NdbcStation {
   observation: NdbcObservation | null;
   ocean: NdbcOceanParams | null;
   observedAt: string | null;  // ISO timestamp of last observation
+  adcpCurrentSpeed: number | null;
+  adcpCurrentDir: number | null;
+  tideLevel: number | null;
+  waveHeight: number | null;
+  wavePeriod: number | null;
+  waveDir: number | null;
 }
 
 interface GridCell {

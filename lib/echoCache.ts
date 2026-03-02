@@ -19,6 +19,9 @@ export interface EchoFacility {
   lng: number;
   complianceStatus: string;
   qtrsInViolation: number;
+  effluentViolations: number | null;
+  snc: boolean;                          // Significant Non-Compliance
+  quarterlyViolations: number | null;
 }
 
 export interface EchoViolation {
