@@ -59,7 +59,6 @@ import { MilitaryInstallationsPanel } from './MilitaryInstallationsPanel';
 import WaterfrontExposurePanel from './WaterfrontExposurePanel';
 import { INDEX_WEIGHTS } from '@/lib/indices/config';
 import { useSentinelAlerts } from '@/hooks/useSentinelAlerts';
-import { useSentinelHealth } from '@/hooks/useSentinelHealth';
 import { useSentinelAudio } from '@/hooks/useSentinelAudio';
 import { SentinelStatusBadge } from './SentinelStatusBadge';
 import { SentinelBriefingCard } from './SentinelBriefingCard';
@@ -139,7 +138,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: true,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['ai-water-intelligence', 'sentinel-briefing', 'waterfront-exposure', 'briefing-actions', 'briefing-changes', 'delta-changelog', 'briefing-stakeholder']),
+    sections: new Set(['ai-water-intelligence', 'sentinel-briefing', 'briefing-actions', 'briefing-changes', 'delta-changelog', 'briefing-stakeholder']),
   },
   'political-briefing': {
     label: 'Political Briefing',
@@ -1108,7 +1107,6 @@ export function FederalManagementCenter(props: Props) {
 
   // ── Sentinel Alert System ──
   const sentinel = useSentinelAlerts();
-  const sentinelHealth = useSentinelHealth();
   const amsSummary = useAlertSummary();
   const { audioEnabled, toggleAudio, playChime } = useSentinelAudio({ userRole: user?.role });
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -3289,15 +3287,31 @@ export function FederalManagementCenter(props: Props) {
                   </p>
                 ) : (
                   <div className="space-y-4">
-                    {/* Title line: state name + grade + info + print */}
+                    {/* Score gauge + state name */}
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2.5">
-                        <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-[11px] font-bold border ${wbRow.grade.bg} ${wbRow.grade.color}`}>
-                          {wbRow.grade.letter}
-                        </span>
+                      <div className="flex items-center gap-4">
+                        <div className="relative w-20 h-20 flex-shrink-0">
+                          <svg viewBox="0 0 36 36" className="w-20 h-20 -rotate-90">
+                            <circle cx="18" cy="18" r="15.9" fill="none" strokeWidth="2.5" stroke="var(--border-subtle)" />
+                            <circle cx="18" cy="18" r="15.9" fill="none" strokeWidth="2.5"
+                              stroke={wbRow.score >= 80 ? 'var(--status-healthy)' : wbRow.score >= 60 ? '#f59e0b' : wbRow.score >= 40 ? 'var(--status-impaired)' : 'var(--status-severe)'}
+                              strokeDasharray={`${wbRow.score} ${100 - wbRow.score}`}
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <span className={`text-xl font-bold ${wbRow.grade.color}`}>{wbRow.grade.letter}</span>
+                            <span className="text-[9px]" style={{ color: 'var(--text-dim)' }}>{wbRow.score}/100</span>
+                          </div>
+                        </div>
                         <div>
                           <p className="text-sm font-semibold" style={{ color: 'var(--text-bright)' }}>{wbRow.name}</p>
-                          <p className="text-[10px]" style={{ color: 'var(--text-dim)' }}>{wbRow.score}/100 · {wbRow.dataSource === 'per-waterbody' ? 'Per-Waterbody' : 'ATTAINS Bulk'} · EPA Region {wbRegion}</p>
+                          <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-dim)' }}>
+                            {wbRow.dataSource === 'per-waterbody' ? 'Per-Waterbody' : 'ATTAINS Bulk'} · EPA Region {wbRegion}
+                          </p>
+                          <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-dim)' }}>
+                            {wbRow.waterbodies.toLocaleString()} waterbodies · {wbRow.totalImpaired.toLocaleString()} impaired · {wbRow.cat5.toLocaleString()} severe
+                          </p>
                         </div>
                         <div className="relative">
                           <button
@@ -3326,6 +3340,36 @@ export function FederalManagementCenter(props: Props) {
                       </div>
                       <BrandedPrintBtn sectionId="waterbody-inspector-inline" title="Waterbody Assessment" />
                     </div>
+
+                    {/* Category breakdown bars */}
+                    {(() => {
+                      const total = wbRow.waterbodies;
+                      const impaired = wbRow.totalImpaired;
+                      const severe = wbRow.cat5;
+                      const wqScore = total > 0 ? Math.min(100, Math.max(0, Math.round(100 - (impaired / total) * 50 - (severe / total) * 30))) : 0;
+                      const infraScore = total > 0 ? Math.min(100, Math.max(0, Math.round((wbRow.monitored + wbRow.assessed) / total * 100))) : 0;
+                      const complianceScore = total > 0 ? Math.min(100, Math.max(0, Math.round((wbRow.assessed / total) * 80 + 20))) : 0;
+                      const ejScore = total > 0 ? Math.min(100, Math.max(0, Math.round(100 - (severe / total) * 60 - (impaired / total) * 20))) : 0;
+                      const cats = [
+                        { label: 'Water Quality', score: wqScore, color: wqScore >= 70 ? 'var(--status-healthy)' : wqScore >= 50 ? '#f59e0b' : 'var(--status-severe)' },
+                        { label: 'Infrastructure', score: infraScore, color: infraScore >= 70 ? 'var(--status-healthy)' : infraScore >= 50 ? '#f59e0b' : 'var(--status-severe)' },
+                        { label: 'Compliance', score: complianceScore, color: complianceScore >= 70 ? 'var(--status-healthy)' : complianceScore >= 50 ? '#f59e0b' : 'var(--status-severe)' },
+                        { label: 'EJ Exposure', score: ejScore, color: ejScore >= 70 ? 'var(--status-healthy)' : ejScore >= 50 ? '#f59e0b' : 'var(--status-severe)' },
+                      ];
+                      return (
+                        <div className="space-y-1.5">
+                          {cats.map(c => (
+                            <div key={c.label} className="flex items-center gap-2">
+                              <div className="text-[10px] w-24 text-right" style={{ color: 'var(--text-dim)' }}>{c.label}</div>
+                              <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
+                                <div className="h-full rounded-full transition-all" style={{ width: `${c.score}%`, background: c.color }} />
+                              </div>
+                              <div className="text-[10px] w-6 font-semibold" style={{ color: 'var(--text-primary)' }}>{c.score}</div>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
 
                     {/* Top 4 numbers — hero is Total Impaired, Cat 5 gets red if nonzero */}
                     <div className="grid grid-cols-4 gap-3">
@@ -6020,90 +6064,17 @@ export function FederalManagementCenter(props: Props) {
         <MilitaryInstallationsPanel selectedState={selectedState} />
         </>);
 
-        case 'sentinel-briefing': return DS(<>
-        {/* ── SENTINEL SYSTEM HEALTH ── */}
-        <div className="space-y-4">
-          {sentinelHealth.isLoading ? (
-            <div className="animate-pulse space-y-3">
-              <div className="h-4 bg-white/10 rounded w-48" />
-              <div className="h-20 bg-white/5 rounded" />
-            </div>
-          ) : !sentinelHealth.enabled ? (
-            <p className="text-sm text-white/40">Sentinel system is disabled.</p>
-          ) : (
-            <>
-              {/* Overall health badge + uptime */}
-              <div className="flex items-center gap-3 flex-wrap">
-                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${
-                  sentinelHealth.overallHealth === 'healthy'  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                  sentinelHealth.overallHealth === 'degraded' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                  sentinelHealth.overallHealth === 'critical' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                                                                'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'
-                }`}>
-                  <span className={`w-2 h-2 rounded-full ${
-                    sentinelHealth.overallHealth === 'healthy'  ? 'bg-emerald-400' :
-                    sentinelHealth.overallHealth === 'degraded' ? 'bg-amber-400' :
-                    sentinelHealth.overallHealth === 'critical' ? 'bg-red-400' :
-                                                                  'bg-zinc-400'
-                  }`} />
-                  {sentinelHealth.overallHealth.toUpperCase()}
-                </span>
-                <span className="text-xs text-white/50">
-                  Uptime {sentinelHealth.uptimePct.toFixed(0)}%
-                </span>
-                <span className="text-xs text-white/40">
-                  {sentinelHealth.healthyCt} healthy · {sentinelHealth.degradedCt} degraded · {sentinelHealth.offlineCt} offline
-                </span>
-                {sentinelHealth.trend !== 'stable' && (
-                  <span className={`text-xs ${sentinelHealth.trend === 'improving' ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {sentinelHealth.trend === 'improving' ? '↑ Improving' : '↓ Degrading'}
-                  </span>
-                )}
-              </div>
-
-              {/* Per-source status rows */}
-              <div className="grid gap-1.5">
-                {sentinelHealth.sources.map(s => (
-                  <div key={s.source} className="flex items-center gap-2 text-xs px-2 py-1.5 rounded bg-white/[0.03]">
-                    <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                      s.status === 'HEALTHY'  ? 'bg-emerald-400' :
-                      s.status === 'DEGRADED' ? 'bg-amber-400' :
-                                                 'bg-red-400'
-                    }`} />
-                    <span className="text-white/70 w-24 truncate font-mono">{s.source}</span>
-                    <span className="text-white/40 flex-1">
-                      {s.lastPollAt ? `Last poll ${new Date(s.lastPollAt).toLocaleTimeString()}` : 'Never polled'}
-                    </span>
-                    {s.overdue && (
-                      <span className="text-red-400 font-medium">OVERDUE</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              {/* Queue depth */}
-              {sentinelHealth.queue && (
-                <div className="flex items-center gap-3 text-xs text-white/50">
-                  <span>Queue total: <span className="text-white/70 font-medium">{sentinelHealth.queue.total}</span></span>
-                  <span>Last 1h: <span className="text-white/70 font-medium">{sentinelHealth.queue.last1h}</span></span>
-                  <span>Last 24h: <span className="text-white/70 font-medium">{sentinelHealth.queue.last24h}</span></span>
-                </div>
-              )}
-
-              {/* Overdue sources callout */}
-              {sentinelHealth.overdueSources.length > 0 && (
-                <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-xs">
-                  <AlertTriangle className="w-3.5 h-3.5 text-red-400 mt-0.5 flex-shrink-0" />
-                  <span className="text-red-300">
-                    <span className="font-semibold">{sentinelHealth.overdueSources.length} overdue source{sentinelHealth.overdueSources.length > 1 ? 's' : ''}:</span>{' '}
-                    {sentinelHealth.overdueSources.join(', ')}
-                  </span>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-        </>);
+        case 'sentinel-briefing': return DS(
+          <SentinelBriefingCard
+            criticalHucs={sentinel.criticalHucs}
+            watchHucs={sentinel.watchHucs}
+            recentResolutions={sentinel.recentResolutions}
+            hucNames={hucNames}
+            sources={sentinel.sources}
+            systemStatus={sentinel.systemStatus}
+            lastFetched={sentinel.lastFetched}
+          />
+        );
 
         case 'waterfront-exposure': return DS(
           <WaterfrontExposurePanel selectedState={selectedState} stateRollup={stateRollup} />
