@@ -30,7 +30,7 @@ import RestorationPlanner from '@/components/RestorationPlanner';
 import PredictiveRiskEngine from './PredictiveRiskEngine';
 import ScenarioPlannerPanel from './ScenarioPlannerPanel';
 import RiskInvestigationFlow from './RiskInvestigationFlow';
-import type { RiskPrediction } from '@/lib/siteIntelTypes';
+import type { RiskPrediction, RiskForecastResult } from '@/lib/siteIntelTypes';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -476,6 +476,21 @@ export function PEARLManagementCenter(props: Props) {
   const [expandedProspect, setExpandedProspect] = useState<string | null>(null);
   const [showGPMCalc, setShowGPMCalc] = useState(false);
 
+  // ── Demo Mode toggle (persisted in localStorage) ──
+  const [demoMode, setDemoMode] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    const stored = localStorage.getItem('pearl-demo-mode');
+    return stored === null ? true : stored === 'true';
+  });
+
+  const toggleDemoMode = useCallback(() => {
+    setDemoMode(prev => {
+      const next = !prev;
+      localStorage.setItem('pearl-demo-mode', String(next));
+      return next;
+    });
+  }, []);
+
   // GPM Calculator state
   const [gpmInputs, setGpmInputs] = useState<GPMCalcInputs>({
     drainageArea_acres: 50,
@@ -506,8 +521,26 @@ export function PEARLManagementCenter(props: Props) {
   // Baseline: national water quality is poor (~31/100 based on ATTAINS impairment rates)
   // Each active PIN deployment nudges it up. This is the number we're trying to move.
   const baselineHealth = 31; // ~69% of US waterbodies have some impairment (ATTAINS 2022)
-  const pinBoost = activeDeployments.length * 0.8 + (totalGallons / 1e8) * 2;
-  const nationalHealthScore = Math.min(100, Math.round(baselineHealth + pinBoost));
+  const pinBoostRaw = activeDeployments.length * 0.8 + (totalGallons / 1e8) * 2;
+  const pinBoost = demoMode ? pinBoostRaw : 0;
+  const nationalHealthScoreRaw = Math.min(100, Math.round(baselineHealth + pinBoostRaw));
+  const nationalHealthScore = demoMode ? nationalHealthScoreRaw : baselineHealth + 1; // 32 in demo, 32 baseline in live (from ATTAINS)
+
+  // ── Demo vs Live display values ──
+  const displayActiveUnits = demoMode ? activeDeployments.length : 0;
+  const displayTotalUnits = demoMode ? deployments.length : 0;
+  const displayGPM = demoMode ? totalGPM : 0;
+  const displayGallons = demoMode ? totalGallons : 0;
+  const displayUptime = demoMode ? avgUptime : 0;
+  const displayUptimeLabel = demoMode ? `${avgUptime.toFixed(1)}%` : 'N/A';
+  const displayCritical = demoMode ? criticalAlerts.length : 0;
+  const displayWarnings = demoMode ? warningAlerts.length : 0;
+  const displayTSS = demoMode ? '88\u201395%' : 'No deployments';
+  const displayTSSSub = demoMode ? 'Milton validated' : '88\u201395% (Milton pilot, Jan 2026)';
+  const displayPipelineValue = demoMode ? pipelineValue : 0;
+  const displayPipelineProspects = demoMode ? prospects.filter(p => !['closed_won','closed_lost'].includes(p.stage)).length : 0;
+  const displayNextDeploy = demoMode ? 'Apr 15' : 'TBD';
+  const displayNextDeploySub = demoMode ? 'AA County MD' : 'Pending';
 
   // ─── RENDER ──────────────────────────────────────────────────────────────
 
@@ -562,8 +595,41 @@ export function PEARLManagementCenter(props: Props) {
         <SourceHealthPanel collapsible defaultCollapsed />
 
         {/* ── NATIONAL WATER HEALTH GAUGE ── */}
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden relative">
+          {/* Demo Mode watermark */}
+          {demoMode && (
+            <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-10 flex items-start justify-center overflow-hidden">
+              <div className="mt-1 px-3 py-0.5 rounded-b-md text-[10px] font-bold uppercase tracking-widest" style={{ background: 'rgba(254,243,199,0.85)', color: '#92400e', border: '1px solid #fde68a', borderTop: 'none' }}>
+                Demo Data
+              </div>
+            </div>
+          )}
           <CardContent className="p-4 md:p-6">
+            {/* Demo/Live toggle — top-right corner */}
+            <div className="flex justify-end mb-2">
+              <button
+                onClick={toggleDemoMode}
+                className="inline-flex items-center gap-2 select-none focus:outline-none"
+                aria-label={demoMode ? 'Switch to live data' : 'Switch to demo data'}
+              >
+                <span className={`text-[11px] font-semibold transition-colors ${demoMode ? 'text-amber-700' : 'text-slate-400'}`}>Demo</span>
+                <div
+                  className="relative w-9 h-5 rounded-full transition-colors cursor-pointer"
+                  style={{ background: demoMode ? '#f59e0b' : '#22c55e' }}
+                >
+                  <div
+                    className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all"
+                    style={{ left: demoMode ? '2px' : '18px' }}
+                  />
+                </div>
+                <span className={`text-[11px] font-semibold transition-colors ${!demoMode ? 'text-green-700' : 'text-slate-400'}`}>Live</span>
+                {demoMode ? (
+                  <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider" style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a' }}>Demo Mode</span>
+                ) : (
+                  <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider" style={{ background: '#dcfce7', color: '#166534', border: '1px solid #bbf7d0' }}>Live Data</span>
+                )}
+              </button>
+            </div>
             <div className="flex flex-col md:flex-row items-center gap-6">
               {/* SVG Gauge */}
               <div className="relative flex-shrink-0">
@@ -654,8 +720,11 @@ export function PEARLManagementCenter(props: Props) {
                 <div className="text-3xl font-bold text-slate-900 font-mono">{nationalHealthScore}<span className="text-lg text-slate-400">/100</span></div>
                 <p className="text-xs text-slate-500 mt-1 max-w-sm">
                   Based on EPA ATTAINS impairment data across {(116000).toLocaleString()} assessed waterbodies.
-                  {pinBoost > 0 && (
+                  {demoMode && pinBoost > 0 && (
                     <span className="text-green-600 font-semibold"> PIN is contributing +{pinBoost.toFixed(1)} points from {activeDeployments.length} active deployment{activeDeployments.length !== 1 ? 's' : ''} treating {formatNumber(totalGallons)} gallons.</span>
+                  )}
+                  {!demoMode && (
+                    <span className="text-slate-400"> No active PIN deployments contributing to score.</span>
                   )}
                 </p>
                 <div className="flex flex-wrap gap-2 mt-3">
@@ -680,14 +749,14 @@ export function PEARLManagementCenter(props: Props) {
         {/* ── AT-A-GLANCE SUMMARY ── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { label: 'Active Units', value: activeDeployments.length, sub: `${deployments.length} total`, icon: <Radio size={16} />, color: 'text-green-600', bgColor: 'bg-green-50 border-green-200' },
-            { label: 'Live GPM', value: totalGPM.toFixed(0), sub: 'current throughput', icon: <Droplets size={16} />, color: 'text-blue-600', bgColor: 'bg-blue-50 border-blue-200' },
-            { label: 'Gallons Treated', value: formatNumber(totalGallons), sub: 'lifetime', icon: <Activity size={16} />, color: 'text-cyan-600', bgColor: 'bg-cyan-50 border-cyan-200' },
-            { label: 'Avg Uptime', value: `${avgUptime.toFixed(1)}%`, sub: 'active fleet', icon: <Gauge size={16} />, color: 'text-emerald-600', bgColor: 'bg-emerald-50 border-emerald-200', pct: avgUptime },
-            { label: 'Critical Alerts', value: criticalAlerts.length, sub: warningAlerts.length + ' warnings', icon: <AlertTriangle size={16} />, color: criticalAlerts.length > 0 ? 'text-red-600' : 'text-slate-400', bgColor: criticalAlerts.length > 0 ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200' },
-            { label: 'TSS Removal', value: '88–95%', sub: 'Milton validated', icon: <TrendingDown size={16} />, color: 'text-green-600', bgColor: 'bg-green-50 border-green-200' },
-            { label: 'Pipeline', value: `$${formatNumber(pipelineValue)}`, sub: `${prospects.filter(p => !['closed_won','closed_lost'].includes(p.stage)).length} prospects`, icon: <DollarSign size={16} />, color: 'text-purple-600', bgColor: 'bg-purple-50 border-purple-200' },
-            { label: 'Next Deploy', value: 'Apr 15', sub: 'AA County MD', icon: <Truck size={16} />, color: 'text-indigo-600', bgColor: 'bg-indigo-50 border-indigo-200' },
+            { label: 'Active Units', value: displayActiveUnits, sub: `${displayTotalUnits} total`, icon: <Radio size={16} />, color: displayActiveUnits > 0 ? 'text-green-600' : 'text-slate-400', bgColor: displayActiveUnits > 0 ? 'bg-green-50 border-green-200' : 'bg-slate-50 border-slate-200' },
+            { label: 'Live GPM', value: displayGPM.toFixed(0), sub: demoMode ? 'current throughput' : 'no active units', icon: <Droplets size={16} />, color: displayGPM > 0 ? 'text-blue-600' : 'text-slate-400', bgColor: displayGPM > 0 ? 'bg-blue-50 border-blue-200' : 'bg-slate-50 border-slate-200' },
+            { label: 'Gallons Treated', value: displayGallons > 0 ? formatNumber(displayGallons) : '0', sub: 'lifetime', icon: <Activity size={16} />, color: displayGallons > 0 ? 'text-cyan-600' : 'text-slate-400', bgColor: displayGallons > 0 ? 'bg-cyan-50 border-cyan-200' : 'bg-slate-50 border-slate-200' },
+            { label: 'Avg Uptime', value: displayUptimeLabel, sub: demoMode ? 'active fleet' : 'no units deployed', icon: <Gauge size={16} />, color: demoMode ? 'text-emerald-600' : 'text-slate-400', bgColor: demoMode ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200', pct: demoMode ? displayUptime : undefined },
+            { label: 'Critical Alerts', value: displayCritical, sub: displayWarnings + ' warning' + (displayWarnings !== 1 ? 's' : ''), icon: <AlertTriangle size={16} />, color: displayCritical > 0 ? 'text-red-600' : 'text-slate-400', bgColor: displayCritical > 0 ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200' },
+            { label: 'TSS Removal', value: displayTSS, sub: displayTSSSub, icon: <TrendingDown size={16} />, color: demoMode ? 'text-green-600' : 'text-slate-400', bgColor: demoMode ? 'bg-green-50 border-green-200' : 'bg-slate-50 border-slate-200' },
+            { label: 'Pipeline', value: displayPipelineValue > 0 ? `$${formatNumber(displayPipelineValue)}` : '$0', sub: `${displayPipelineProspects} prospect${displayPipelineProspects !== 1 ? 's' : ''}`, icon: <DollarSign size={16} />, color: displayPipelineValue > 0 ? 'text-purple-600' : 'text-slate-400', bgColor: displayPipelineValue > 0 ? 'bg-purple-50 border-purple-200' : 'bg-slate-50 border-slate-200' },
+            { label: 'Next Deploy', value: displayNextDeploy, sub: displayNextDeploySub, icon: <Truck size={16} />, color: demoMode ? 'text-indigo-600' : 'text-slate-400', bgColor: demoMode ? 'bg-indigo-50 border-indigo-200' : 'bg-slate-50 border-slate-200' },
           ].map((tile) => (
             <Card key={tile.label} className={`p-4 border ${tile.bgColor}`}>
               <div className="flex items-start gap-2.5">
