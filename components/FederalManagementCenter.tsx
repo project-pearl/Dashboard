@@ -137,7 +137,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: true,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['ai-water-intelligence', 'sentinel-briefing', 'national-briefing', 'waterfront-exposure', 'briefing-actions', 'briefing-changes', 'briefing-stakeholder']),
+    sections: new Set(['ai-water-intelligence', 'sentinel-briefing', 'waterfront-exposure', 'briefing-actions', 'briefing-changes', 'briefing-stakeholder']),
   },
   'political-briefing': {
     label: 'Political Briefing',
