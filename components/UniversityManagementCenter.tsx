@@ -107,7 +107,7 @@ const LENS_CONFIG: Record<ViewLens, {
   compliance:  { label: 'Compliance', description: 'Campus NPDES and drinking water compliance',
     sections: new Set(['icis', 'sdwis', 'disclaimer']) },
   'water-quality': { label: 'Water Quality', description: 'Water quality data exploration and analysis',
-    sections: new Set(['regprofile', 'detail', 'top10', 'disclaimer']) },
+    sections: new Set(['regprofile', 'detail', 'disclaimer']) },
   'public-health': { label: 'Public Health & Contaminants', description: 'Emerging contaminants and public health research',
     sections: new Set(['contaminants-tracker', 'disclaimer']) },
   'research-monitoring': { label: 'Research & Monitoring', description: 'Research collaboration and dataset management',

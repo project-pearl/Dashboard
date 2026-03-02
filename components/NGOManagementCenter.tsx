@@ -48,6 +48,7 @@ import { LayoutEditor } from './LayoutEditor';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import { DraggableSection } from './DraggableSection';
 import dynamic from 'next/dynamic';
+import { useAdminState } from '@/lib/adminStateContext';
 
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
@@ -121,7 +122,7 @@ const LENS_CONFIG: Record<ViewLens, {
   compliance:  { label: 'Compliance', description: 'Regulatory compliance monitoring',
     sections: new Set(['icis', 'sdwis', 'disclaimer']) },
   'water-quality': { label: 'Water Quality', description: 'Watershed water quality assessment',
-    sections: new Set(['regprofile', 'map-grid', 'detail', 'top10', 'disclaimer']) },
+    sections: new Set(['regprofile', 'map-grid', 'detail', 'disclaimer']) },
   'public-health': { label: 'Public Health & Contaminants', description: 'Emerging contaminants and community health',
     sections: new Set(['contaminants-tracker', 'disclaimer']) },
   'watershed-health': { label: 'Watershed Health', description: 'Comprehensive watershed health assessment',
@@ -300,7 +301,8 @@ function generateStateRegionData(stateAbbr: string): RegionRow[] {
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegion, onToggleDevMode }: Props) {
-  const [stateAbbr, setStateAbbr] = useState(initialStateAbbr);
+  const [adminState, setAdminState] = useAdminState();
+  const [stateAbbr, setStateAbbr] = useState(adminState || initialStateAbbr);
   const stateName = STATE_NAMES[stateAbbr] || stateAbbr;
   const agency = STATE_AGENCIES[stateAbbr] || STATE_AUTHORITIES[stateAbbr] || null;
   const { user, logout } = useAuth();
@@ -315,6 +317,15 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
   const [overlay, setOverlay] = useState<OverlayId>('risk');
   const [selectedWatershed, setSelectedWatershed] = useState('All Watersheds');
   const watershedGroups = useMemo(() => getWatershedGroups(stateAbbr), [stateAbbr]);
+
+  // Keep NGO view aligned with the global state selector in the sidebar.
+  useEffect(() => {
+    if (adminState && adminState !== stateAbbr) {
+      setStateAbbr(adminState);
+      setSelectedWatershed('All Watersheds');
+      setActiveDetailId(null);
+    }
+  }, [adminState, stateAbbr]);
 
   // ── State-filtered region data ──
   const baseRegions = useMemo(() => generateStateRegionData(stateAbbr), [stateAbbr]);
@@ -966,7 +977,9 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
             <select
               value={stateAbbr}
               onChange={(e) => {
-                setStateAbbr(e.target.value);
+                const next = e.target.value;
+                setStateAbbr(next);
+                setAdminState(next);
                 setSelectedWatershed('All Watersheds');
                 setActiveDetailId(null);
               }}

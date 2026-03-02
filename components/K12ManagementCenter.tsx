@@ -113,7 +113,7 @@ const LENS_CONFIG: Record<ViewLens, {
   compliance:  { label: 'Compliance', description: 'School drinking water compliance',
     sections: new Set(['sdwis', 'disclaimer']) },
   'water-quality': { label: 'Water Quality', description: 'Explore water quality in your watershed',
-    sections: new Set(['regprofile', 'map-grid', 'detail', 'top10', 'groundwater', 'disclaimer']) },
+    sections: new Set(['regprofile', 'map-grid', 'detail', 'groundwater', 'disclaimer']) },
   'public-health': { label: 'Public Health & Contaminants', description: 'Learn about water contaminants',
     sections: new Set(['contaminants-tracker', 'disclaimer']) },
   'outdoor-classroom': { label: 'Outdoor Classroom', description: 'Outdoor learning and nature exploration',

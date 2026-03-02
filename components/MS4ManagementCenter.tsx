@@ -174,7 +174,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Water Quality',
     description: 'Standards, assessment, station data, and stormwater monitoring',
     defaultOverlay: 'impairment',
-    sections: new Set(['detail', 'top10', 'wq-standards', 'wq-assessment', 'wq-stations', 'wq-stormwater', 'groundwater', 'disclaimer']),
+    sections: new Set(['detail', 'wq-standards', 'wq-assessment', 'wq-stations', 'wq-stormwater', 'groundwater', 'disclaimer']),
   },
   'public-health': {
     label: 'Public Health & Contaminants',

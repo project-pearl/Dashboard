@@ -169,7 +169,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Water Quality',
     description: 'Standards, assessment, station data, and field integration',
     defaultOverlay: 'risk',
-    sections: new Set(['regprofile', 'local-panel', 'top10', 'groundwater', 'wq-standards', 'wq-assessment', 'wq-aqualo', 'wq-stations', 'disclaimer']),
+    sections: new Set(['regprofile', 'local-panel', 'groundwater', 'wq-standards', 'wq-assessment', 'wq-aqualo', 'wq-stations', 'disclaimer']),
   },
   'public-health': {
     label: 'Public Health & Contaminants',

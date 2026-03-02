@@ -173,7 +173,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: true, showSituationSummary: true, showTimeRange: true,
     showSLA: false, showRestorationPlan: false, collapseStateTable: false,
-    sections: new Set(['wq-domain-tabs', 'networkhealth', 'impairmentprofile', 'coveragegaps', 'situation', 'statebystatesummary', 'top10']),
+    sections: new Set(['wq-domain-tabs', 'networkhealth', 'impairmentprofile', 'coveragegaps', 'situation', 'statebystatesummary']),
   },
   infrastructure: {
     label: 'Infrastructure',
@@ -4543,8 +4543,8 @@ export function FederalManagementCenter(props: Props) {
               <span className="text-slate-500 ml-1">A+ (97+) · A (93) · A- (90) · B+ (87) · B (83) · B- (80) · C+ (77) · C (73) · C- (70) · D+ (67) · D (63) · D- (60) · F (&lt;60)</span>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
+              <table className="w-full text-sm table-fixed">
+                <thead className="table w-full table-fixed">
                   <tr className="border-b border-slate-200">
                     <th className="text-left py-2 px-3 font-semibold text-slate-700">State</th>
                     <th className="text-center py-2 px-3 font-semibold text-slate-700">Grade</th>
@@ -4555,18 +4555,18 @@ export function FederalManagementCenter(props: Props) {
                     <th className="text-center py-2 px-3 font-semibold text-slate-700">Total</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="block max-h-[126px] overflow-y-auto">
                   {stateRollup.map(row => (
                     <tr 
                       key={row.abbr}
+                      className={`table w-full table-fixed border-b border-slate-100 cursor-pointer hover:bg-blue-50 transition-colors ${
+                        selectedState === row.abbr ? 'bg-blue-100' : ''
+                      }`}
                       onClick={() => {
                         setSelectedState(row.abbr);
                         setWaterbodyFilter('all');
                         mapSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                       }}
-                      className={`border-b border-slate-100 cursor-pointer hover:bg-blue-50 transition-colors ${
-                        selectedState === row.abbr ? 'bg-blue-100' : ''
-                      }`}
                     >
                       <td className="py-2 px-3 font-medium text-slate-700">{row.name}</td>
                       <td className="py-2 px-3 text-center">
@@ -5808,7 +5808,7 @@ export function FederalManagementCenter(props: Props) {
 
         case 'habitat-ecology': return DS(<>
         {/* ── HABITAT & ECOLOGY ── */}
-        <HabitatEcologyPanel stateRollup={stateRollup} selectedState={selectedState} attainsData={attainsBulk} />
+        <HabitatEcologyPanel stateRollup={stateRollup} selectedState="" attainsData={attainsBulk} />
         </>);
 
         case 'agricultural-nps': return DS(<>

@@ -123,7 +123,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Water Quality',
     description: 'Local water quality grades, impairments, and trends',
     sections: new Set([
-      'local-wq-grade', 'detail', 'top10', 'local-impairment-summary',
+      'local-wq-grade', 'detail', 'local-impairment-summary',
       'local-wq-trends', 'groundwater', 'contaminants-tracker', 'disclaimer',
     ]),
   },
