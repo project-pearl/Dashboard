@@ -129,7 +129,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['usmap', 'pol-constituent-concerns', 'delta-changelog']),
+    sections: new Set(['usmap', 'pol-constituent-concerns', 'briefing-changes', 'briefing-stakeholder']),
   },
   briefing: {
     label: 'AI Briefing',
@@ -6182,25 +6182,16 @@ export function FederalManagementCenter(props: Props) {
                 <Scale className="h-5 w-5 text-indigo-600" />
                 Stakeholder Watch - National | Federal Management Center
               </CardTitle>
-              <CardDescription>Congressional, media, NGO, and interagency signals with inquiry heat tracking</CardDescription>
+              <CardDescription>Media, NGO, and interagency signals for federal water oversight</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 {[
                   {
-                    id: 'fed-stk-1',
-                    type: 'Congressional',
-                    detail: 'House T&I hearing on WRDA 2026 priorities - water resources provisions under discussion',
-                    status: 'Prepare Testimony',
-                    inquiries: '214 NEW',
-                    expandDetail: 'Potomac downstream drinking water safety remains the top inquiry channel. Recovery update: no overflows since Feb 8, 2026; full restoration targeted mid-March 2026.'
-                  },
-                  {
                     id: 'fed-stk-2',
                     type: 'Media / PFAS',
                     detail: 'DoD PFAS assessments at 723 installations; cleanup timelines extending (e.g., Whidbey Island to 2038)',
                     status: 'Active Response',
-                    inquiries: '142 (+38%)',
                     expandDetail: 'PFAS compliance and timeline pressure is rising in federal and military oversight channels, including long-tail cleanup planning through the 2030s and 2040s.'
                   },
                   {
@@ -6208,7 +6199,6 @@ export function FederalManagementCenter(props: Props) {
                     type: 'Cybersecurity',
                     detail: 'Elevated risk to water sector following Iran strikes; DHS bulletins urge ICS/SCADA hardening',
                     status: 'Active Monitor',
-                    inquiries: '168 NEW',
                     expandDetail: 'Threat posture includes expected low-level retaliatory cyber activity such as DDoS and defacement attempts against critical infrastructure.'
                   },
                   {
@@ -6216,7 +6206,6 @@ export function FederalManagementCenter(props: Props) {
                     type: 'Interagency',
                     detail: 'USDA-EPA coordination on agricultural nonpoint source funding with potential $2.1B alignment',
                     status: 'Upcoming',
-                    inquiries: '97 (+15%)',
                     expandDetail: 'Coordination priority is blending 319, NRCS, and restoration outcomes into a unified targeting approach for nutrient reduction.'
                   },
                 ].map((s) => (
@@ -6228,10 +6217,9 @@ export function FederalManagementCenter(props: Props) {
                       <div className="flex items-center justify-between mb-1 gap-2">
                         <Badge variant="outline" className="text-[10px]">{s.type}</Badge>
                         <div className="flex items-center gap-1.5">
-                          <Badge variant="outline" className="text-[10px] border-slate-300" title="Source: Aggregated congressional/interagency channels">{s.inquiries}</Badge>
                           <Badge
                             variant="secondary"
-                            className={`text-[10px] ${s.status === 'Prepare Testimony' ? 'bg-red-100 text-red-700' : ''}`}
+                            className="text-[10px]"
                           >
                             {s.status}
                           </Badge>
@@ -6244,7 +6232,7 @@ export function FederalManagementCenter(props: Props) {
                       <div className="ml-4 mt-1 rounded-lg border border-indigo-200 bg-indigo-50/60 p-3">
                         <p className="text-xs text-slate-700">{s.expandDetail}</p>
                         <div className="mt-2 flex flex-wrap gap-2">
-                          <Button size="sm" className="h-7 bg-red-600 hover:bg-red-700 text-white">Prepare Testimony</Button>
+                          <Button size="sm" className="h-7 bg-red-600 hover:bg-red-700 text-white">Prepare Response Brief</Button>
                           <Button size="sm" variant="outline" className="h-7">Monitor Impact</Button>
                         </div>
                       </div>
@@ -6268,8 +6256,8 @@ export function FederalManagementCenter(props: Props) {
 
               <div className="rounded-xl border border-slate-300 bg-white p-4">
                 <p className="text-sm font-semibold text-slate-800">Request Demo | See Potomac Scenario in Action | doug@project-pearl.org</p>
-                <p className="text-[11px] text-slate-500 mt-1">AI-aggregated from EPA ECHO/ATTAINS, DC Water, MDE, congressional channels, and media signals | Confidence: Moderate</p>
-                <p className="text-[11px] text-slate-500">PIN synthesizes public EPA/Congressional/media signals into predictive intelligence - not official regulatory or legal advice.</p>
+                <p className="text-[11px] text-slate-500 mt-1">AI-aggregated from EPA ECHO/ATTAINS, DC Water, MDE, and media signals | Confidence: Moderate</p>
+                <p className="text-[11px] text-slate-500">PIN synthesizes public EPA/media signals into predictive intelligence - not official regulatory or legal advice.</p>
               </div>
             </CardContent>
           </Card>
