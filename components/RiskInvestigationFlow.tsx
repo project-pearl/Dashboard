@@ -17,7 +17,6 @@ import {
   BreadcrumbSeparator, BreadcrumbPage,
 } from '@/components/ui/breadcrumb';
 import { MockDataBadge } from './MockDataBadge';
-import { MOCK_PREDICTIONS } from './PredictiveRiskEngine';
 import type { RiskPrediction } from '@/lib/siteIntelTypes';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import { getScenarioById } from '@/lib/scenarioPlanner/scenarios';
@@ -897,6 +896,7 @@ function formatNumber(n: number): string {
 
 interface RiskInvestigationFlowProps {
   preSelectedRisk?: RiskPrediction | null;
+  predictions?: RiskPrediction[] | null;
   onBackToForecast?: () => void;
 }
 
@@ -1131,7 +1131,8 @@ function ComplianceAccountSummary({ completedSteps }: { completedSteps: Set<Inve
 
 // ─── Main Component ─────────────────────────────────────────────────────────
 
-export default function RiskInvestigationFlow({ preSelectedRisk, onBackToForecast }: RiskInvestigationFlowProps) {
+export default function RiskInvestigationFlow({ preSelectedRisk, predictions: predictionsProp, onBackToForecast }: RiskInvestigationFlowProps) {
+  const predictions = predictionsProp ?? [];
   const [selectedRisk, setSelectedRisk] = useState<RiskPrediction | null>(preSelectedRisk ?? null);
   const [currentStep, setCurrentStep] = useState<InvestigationStep>(preSelectedRisk ? 'briefing' : 'select');
   const [completedSteps, setCompletedSteps] = useState<Set<InvestigationStep>>(new Set());
@@ -1222,7 +1223,7 @@ export default function RiskInvestigationFlow({ preSelectedRisk, onBackToForecas
 
   // Dynamic portfolio: run cost engine for every prediction category
   const dynamicPortfolio: PortfolioRisk[] = useMemo(() => {
-    return MOCK_PREDICTIONS.map(pred => {
+    return predictions.map(pred => {
       const mapping = RISK_TO_SCENARIO[pred.category];
       if (!mapping) return null;
       const scenario = getScenarioById(mapping.scenarioId);
@@ -1241,7 +1242,7 @@ export default function RiskInvestigationFlow({ preSelectedRisk, onBackToForecas
         preventionCostHigh: bestOption?.costHigh ?? 0,
       };
     }).filter((r): r is PortfolioRisk => r !== null);
-  }, []);
+  }, [predictions]);
 
   const portfolioTotals = useMemo(() => {
     const t = dynamicPortfolio.reduce((acc, r) => ({
@@ -1451,43 +1452,51 @@ export default function RiskInvestigationFlow({ preSelectedRisk, onBackToForecas
           <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
             <Search size={14} /> Select a Risk to Investigate
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {MOCK_PREDICTIONS.map((pred) => {
-              const PredIcon = ICON_MAP[pred.icon] || AlertTriangle;
-              const riskColors: Record<string, { bg: string; text: string; bar: string }> = {
-                green: { bg: 'bg-green-50', text: 'text-green-700', bar: 'bg-green-500' },
-                amber: { bg: 'bg-amber-50', text: 'text-amber-700', bar: 'bg-amber-500' },
-                red: { bg: 'bg-red-50', text: 'text-red-700', bar: 'bg-red-500' },
-                gray: { bg: 'bg-slate-50', text: 'text-slate-500', bar: 'bg-slate-400' },
-              };
-              const colors = riskColors[pred.riskLevel] || riskColors.gray;
-              return (
-                <div key={pred.category} className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
-                  <div className="p-3 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <PredIcon className={`h-4 w-4 flex-shrink-0 ${colors.text}`} />
-                      <span className="text-xs font-semibold text-slate-800 leading-tight">{pred.label}</span>
+          {predictions.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50/50 p-8 text-center">
+              <AlertTriangle className="h-8 w-8 text-slate-300 mx-auto mb-3" />
+              <p className="text-sm font-medium text-slate-500">Insufficient Data</p>
+              <p className="text-xs text-slate-400 mt-1">Risk predictions require site intelligence data. Select a deployment location to generate forecasts.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {predictions.map((pred) => {
+                const PredIcon = ICON_MAP[pred.icon] || AlertTriangle;
+                const riskColors: Record<string, { bg: string; text: string; bar: string }> = {
+                  green: { bg: 'bg-green-50', text: 'text-green-700', bar: 'bg-green-500' },
+                  amber: { bg: 'bg-amber-50', text: 'text-amber-700', bar: 'bg-amber-500' },
+                  red: { bg: 'bg-red-50', text: 'text-red-700', bar: 'bg-red-500' },
+                  gray: { bg: 'bg-slate-50', text: 'text-slate-500', bar: 'bg-slate-400' },
+                };
+                const colors = riskColors[pred.riskLevel] || riskColors.gray;
+                return (
+                  <div key={pred.category} className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
+                    <div className="p-3 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <PredIcon className={`h-4 w-4 flex-shrink-0 ${colors.text}`} />
+                        <span className="text-xs font-semibold text-slate-800 leading-tight">{pred.label}</span>
+                      </div>
+                      <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
+                        <div className={`h-full rounded-full ${colors.bar}`} style={{ width: `${pred.probability}%` }} />
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className={`text-sm font-bold ${colors.text}`}>{pred.probability}%</span>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-semibold">{pred.timeframe}</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 leading-relaxed line-clamp-2">{pred.summary}</p>
+                      <button
+                        onClick={() => selectRisk(pred)}
+                        className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                      >
+                        <Search className="h-3 w-3" />
+                        Investigate This Risk
+                      </button>
                     </div>
-                    <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
-                      <div className={`h-full rounded-full ${colors.bar}`} style={{ width: `${pred.probability}%` }} />
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className={`text-sm font-bold ${colors.text}`}>{pred.probability}%</span>
-                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-semibold">{pred.timeframe}</span>
-                    </div>
-                    <p className="text-[11px] text-slate-600 leading-relaxed line-clamp-2">{pred.summary}</p>
-                    <button
-                      onClick={() => selectRisk(pred)}
-                      className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-                    >
-                      <Search className="h-3 w-3" />
-                      Investigate This Risk
-                    </button>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 

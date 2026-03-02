@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import type { StateDataReport } from '@/lib/stateReportCache';
 import { ChevronDown, Minus, Database, Activity, Cpu, BarChart3 } from 'lucide-react';
 
@@ -65,6 +65,170 @@ function FreshnessBadge({ freshness }: { freshness: string }) {
   );
 }
 
+// ── Color Helpers ───────────────────────────────────────────────────────────
+
+function lerpColor(a: string, b: string, t: number): string {
+  const ah = parseInt(a.slice(1), 16);
+  const bh = parseInt(b.slice(1), 16);
+  const ar = (ah >> 16) & 0xff, ag = (ah >> 8) & 0xff, ab = ah & 0xff;
+  const br = (bh >> 16) & 0xff, bg = (bh >> 8) & 0xff, bb = bh & 0xff;
+  const rr = Math.round(ar + (br - ar) * t);
+  const rg = Math.round(ag + (bg - ag) * t);
+  const rb = Math.round(ab + (bb - ab) * t);
+  return `rgb(${rr},${rg},${rb})`;
+}
+
+// ── Semicircle Gauge (Canvas) ───────────────────────────────────────────────
+
+function SemicircleGauge({ score }: { score: number }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const clamped = Math.max(0, Math.min(100, score));
+
+  const draw = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const cssW = 280;
+    const cssH = 160;
+    canvas.width = cssW * dpr;
+    canvas.height = cssH * dpr;
+    canvas.style.width = `${cssW}px`;
+    canvas.style.height = `${cssH}px`;
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, cssW, cssH);
+
+    const cx = cssW / 2;
+    const cy = cssH - 20;
+    const r = 110;
+    const lineWidth = 18;
+    const startAngle = Math.PI;
+
+    // Draw gradient arc
+    const steps = 100;
+    for (let i = 0; i < steps; i++) {
+      const t = i / steps;
+      const a1 = startAngle + t * Math.PI;
+      const a2 = startAngle + ((i + 1) / steps) * Math.PI;
+
+      let color: string;
+      if (t < 0.25)      color = lerpColor('#ef4444', '#f59e0b', t / 0.25);
+      else if (t < 0.4)  color = lerpColor('#f59e0b', '#eab308', (t - 0.25) / 0.15);
+      else if (t < 0.6)  color = lerpColor('#eab308', '#22c55e', (t - 0.4) / 0.2);
+      else if (t < 0.8)  color = lerpColor('#22c55e', '#3b82f6', (t - 0.6) / 0.2);
+      else                color = lerpColor('#3b82f6', '#2563eb', (t - 0.8) / 0.2);
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, a1, a2 + 0.02);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineWidth;
+      ctx.lineCap = 'butt';
+      ctx.stroke();
+    }
+
+    // Track shadow
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, startAngle, 2 * Math.PI);
+    ctx.strokeStyle = 'rgba(0,0,0,0.04)';
+    ctx.lineWidth = lineWidth + 4;
+    ctx.stroke();
+
+    // Needle
+    const needleAngle = startAngle + (clamped / 100) * Math.PI;
+    const needleLen = r - 8;
+    const nx = cx + Math.cos(needleAngle) * needleLen;
+    const ny = cy + Math.sin(needleAngle) * needleLen;
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(nx + 1, ny + 1);
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(nx, ny);
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // Center dot
+    ctx.beginPath();
+    ctx.arc(cx, cy, 6, 0, 2 * Math.PI);
+    ctx.fillStyle = '#1e293b';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx, cy, 3, 0, 2 * Math.PI);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+
+    // Scale labels
+    ctx.font = '10px system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.textAlign = 'center';
+    ctx.fillText('0', cx + Math.cos(startAngle) * (r + 16), cy + Math.sin(startAngle) * (r + 16) + 4);
+    ctx.fillText('50', cx + Math.cos(startAngle + Math.PI / 2) * (r + 16), cy + Math.sin(startAngle + Math.PI / 2) * (r + 16) + 4);
+    ctx.fillText('100', cx + Math.cos(2 * Math.PI) * (r + 16), cy + Math.sin(2 * Math.PI) * (r + 16) + 4);
+  }, [clamped]);
+
+  useEffect(() => { draw(); }, [draw]);
+  useEffect(() => {
+    const handler = () => draw();
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, [draw]);
+
+  return <canvas ref={canvasRef} className="mx-auto block" />;
+}
+
+// ── State Health Score Computation ──────────────────────────────────────────
+
+const GRADE_SCORE: Record<string, number> = { A: 95, B: 80, C: 65, D: 50, F: 30 };
+
+function computeStateHealthScore(report: StateDataReport) {
+  const aiReadiness = report.aiReadinessScore;                                  // 30%
+  const coverage = report.monitoredPct;                                         // 25%
+  const total = report.healthyCount + report.impairedCount;                     // 25%
+  const waterHealth = total > 0 ? (report.healthyCount / total) * 100 : 0;
+  const freshness = GRADE_SCORE[report.freshnessGrade] ?? 50;                   // 20%
+
+  return Math.round(aiReadiness * 0.30 + coverage * 0.25 + waterHealth * 0.25 + freshness * 0.20);
+}
+
+function scoreCondition(score: number): { label: string; color: string } {
+  if (score >= 80) return { label: 'Excellent', color: 'text-blue-600' };
+  if (score >= 65) return { label: 'Good', color: 'text-green-600' };
+  if (score >= 50) return { label: 'Fair', color: 'text-yellow-600' };
+  if (score >= 30) return { label: 'Poor', color: 'text-orange-600' };
+  return { label: 'Critical', color: 'text-red-600' };
+}
+
+// ── Index Bar ───────────────────────────────────────────────────────────────
+
+function IndexBar({ name, value, weight }: { name: string; value: number; weight: string }) {
+  const val = Math.max(0, Math.min(100, value));
+  let barColor = 'bg-red-400';
+  if (val >= 80)      barColor = 'bg-blue-500';
+  else if (val >= 60) barColor = 'bg-green-500';
+  else if (val >= 40) barColor = 'bg-amber-400';
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-[10px] text-slate-600 w-[110px] truncate shrink-0" title={name}>{name}</span>
+      <div className="flex-1 h-2.5 bg-slate-100 rounded-full overflow-hidden">
+        <div className={`h-full rounded-full ${barColor} transition-all duration-500`} style={{ width: `${val}%` }} />
+      </div>
+      <span className="text-[10px] font-semibold text-slate-700 w-8 text-right tabular-nums">{Math.round(val)}</span>
+      <span className="text-[9px] text-slate-400 w-8 text-right tabular-nums">{weight}</span>
+    </div>
+  );
+}
+
 // ── Sub-section Toggle ──────────────────────────────────────────────────────
 
 function SubSection({ title, icon, defaultOpen, children }: {
@@ -91,180 +255,241 @@ function SubSection({ title, icon, defaultOpen, children }: {
 // ── Main Component ──────────────────────────────────────────────────────────
 
 export function StateDataReportCard({ report }: { report: StateDataReport }) {
+  const [view, setView] = useState<'score' | 'data'>('score');
+
+  const compositeScore = computeStateHealthScore(report);
+  const condition = scoreCondition(compositeScore);
+
+  // Compute index values for the score breakdown
+  const total = report.healthyCount + report.impairedCount;
+  const waterHealth = total > 0 ? Math.round((report.healthyCount / total) * 100) : 0;
+  const freshnessScore = GRADE_SCORE[report.freshnessGrade] ?? 50;
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
 
-      {/* ── A. Coverage KPIs ──────────────────────────────────────────── */}
-      <SubSection title="Coverage" icon={<Database size={13} className="text-blue-600" />}>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          <div className="rounded-lg bg-blue-50 border border-blue-100 p-2.5 text-center">
-            <div className="text-xl font-black text-blue-700">{report.totalWaterbodies.toLocaleString()}</div>
-            <div className="text-[10px] text-blue-500 font-medium">Total Waterbodies</div>
-          </div>
-          <div className="rounded-lg bg-emerald-50 border border-emerald-100 p-2.5 text-center">
-            <div className="text-xl font-black text-emerald-700">{report.monitoredWaterbodies.toLocaleString()}</div>
-            <div className="text-[10px] text-emerald-500 font-medium">Monitored</div>
-          </div>
-          <div className="rounded-lg bg-red-50 border border-red-100 p-2.5 text-center">
-            <div className="text-xl font-black text-red-700">{report.unmonitoredWaterbodies.toLocaleString()}</div>
-            <div className="text-[10px] text-red-500 font-medium">Unmonitored (Blind Spots)</div>
-          </div>
-          <div className={`rounded-lg border p-2.5 text-center ${gradeColor(report.coverageGrade)}`}>
-            <div className="text-2xl font-black">{report.coverageGrade}</div>
-            <div className="text-[10px] font-medium">{report.monitoredPct}% Coverage</div>
-          </div>
+      {/* ── Semicircle Gauge ───────────────────────────────────────────── */}
+      <div>
+        <SemicircleGauge score={compositeScore} />
+        <div className="text-center mt-1">
+          <span className="text-3xl font-bold text-slate-900 tabular-nums">{compositeScore}</span>
+          <span className="text-sm text-slate-400 ml-1">/100</span>
+          <p className={`text-xs font-semibold mt-0.5 ${condition.color}`}>{condition.label}</p>
         </div>
+      </div>
 
-        {/* ATTAINS summary row */}
-        {(report.impairedCount > 0 || report.healthyCount > 0) && (
-          <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
-            <div className="rounded bg-red-50/70 border border-red-100 p-2 text-center">
-              <div className="text-sm font-bold text-red-700">{report.impairedCount.toLocaleString()}</div>
-              <div className="text-[10px] text-red-500">Impaired</div>
-            </div>
-            <div className="rounded bg-green-50/70 border border-green-100 p-2 text-center">
-              <div className="text-sm font-bold text-green-700">{report.healthyCount.toLocaleString()}</div>
-              <div className="text-[10px] text-green-500">Healthy</div>
-            </div>
-            <div className="rounded bg-amber-50/70 border border-amber-100 p-2 text-center">
-              <div className="text-sm font-bold text-amber-700">{report.tmdlNeeded.toLocaleString()}</div>
-              <div className="text-[10px] text-amber-500">TMDL Needed</div>
-            </div>
+      {/* ── Pill Toggle ────────────────────────────────────────────────── */}
+      <div className="flex justify-center">
+        <div className="inline-flex bg-gray-100 rounded-full p-0.5">
+          {(['score', 'data'] as const).map(tab => (
+            <button
+              key={tab}
+              onClick={() => setView(tab)}
+              className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                view === tab
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              {tab === 'score' ? 'State Score' : 'Current Data'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Score View: Index Bars ──────────────────────────────────────── */}
+      {view === 'score' && (
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[9px] text-slate-400 uppercase tracking-wider font-semibold w-[110px]">Index</span>
+            <span className="flex-1" />
+            <span className="text-[9px] text-slate-400 uppercase tracking-wider font-semibold w-8 text-right">Score</span>
+            <span className="text-[9px] text-slate-400 uppercase tracking-wider font-semibold w-8 text-right">Wt</span>
           </div>
-        )}
+          <IndexBar name="AI Readiness"   value={report.aiReadinessScore} weight="30%" />
+          <IndexBar name="Coverage"       value={report.monitoredPct}     weight="25%" />
+          <IndexBar name="Water Health"   value={waterHealth}             weight="25%" />
+          <IndexBar name="Data Freshness" value={freshnessScore}          weight="20%" />
+        </div>
+      )}
 
-        {report.topCauses.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1">
-            <span className="text-[10px] text-slate-400 mr-1 self-center">Top causes:</span>
-            {report.topCauses.map(c => (
-              <span key={c} className="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px]">{c}</span>
-            ))}
-          </div>
-        )}
+      {/* ── Data View: Existing Subsections ────────────────────────────── */}
+      {view === 'data' && (
+        <div className="space-y-3">
 
-        {/* Source breakdown */}
-        {report.sourceBreakdown.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1">
-            <span className="text-[10px] text-slate-400 mr-1 self-center">{report.activeSourceCount} sources:</span>
-            {report.sourceBreakdown.slice(0, 6).map(s => (
-              <span key={s.source} className="px-1.5 py-0.5 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded text-[10px]">
-                {s.source} ({s.waterbodyCount})
-              </span>
-            ))}
-          </div>
-        )}
-      </SubSection>
-
-      {/* ── B. Data Freshness ─────────────────────────────────────────── */}
-      <SubSection title="Data Freshness" icon={<Activity size={13} className="text-green-600" />}>
-        {report.wqpRecordCount === 0 ? (
-          <div className="text-xs text-slate-400 text-center py-4">No WQP records cached for this state</div>
-        ) : (
-          <>
-            {/* Stacked bar */}
-            <div className="h-4 rounded-full overflow-hidden flex bg-slate-200">
-              {report.freshnessTiers.map((tier, i) => (
-                tier.pct > 0 && (
-                  <div
-                    key={tier.label}
-                    className={`${TIER_COLORS[i]} transition-all`}
-                    style={{ width: `${Math.max(tier.pct, 1)}%` }}
-                    title={`${tier.label}: ${tier.count.toLocaleString()} (${tier.pct}%)`}
-                  />
-                )
-              ))}
-            </div>
-
-            {/* Tier cards */}
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-1.5 mt-2">
-              {report.freshnessTiers.map((tier, i) => (
-                <div key={tier.label} className="rounded bg-white border border-slate-100 p-1.5 text-center">
-                  <div className={`text-sm font-bold ${TIER_TEXT_COLORS[i]}`}>{tier.count.toLocaleString()}</div>
-                  <div className="text-[9px] text-slate-400">{tier.label} ({tier.pct}%)</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Summary row */}
-            <div className="mt-2 flex items-center gap-3 text-xs text-slate-500">
-              <span>{report.wqpRecordCount.toLocaleString()} records from {report.wqpStationCount.toLocaleString()} stations</span>
-              <span>Median age: <strong className="text-slate-700">{report.medianAgeDays}d</strong></span>
-              <span className={`px-1.5 py-0.5 rounded font-semibold border ${gradeColor(report.freshnessGrade)}`}>
-                {report.freshnessGrade}
-              </span>
-            </div>
-          </>
-        )}
-      </SubSection>
-
-      {/* ── C. Parameter Coverage ──────────────────────────────────────── */}
-      <SubSection title={`Parameter Coverage (${report.parameterCount})`} icon={<BarChart3 size={13} className="text-purple-600" />} defaultOpen={false}>
-        {report.parameterCoverage.length === 0 ? (
-          <div className="text-xs text-slate-400 text-center py-4">No parameter data available</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-slate-200 text-left text-[10px] text-slate-400 uppercase">
-                  <th className="py-1 pr-2">Parameter</th>
-                  <th className="py-1 pr-2 text-right">Stations</th>
-                  <th className="py-1 pr-2 text-right">Records</th>
-                  <th className="py-1 pr-2">Latest</th>
-                  <th className="py-1">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {report.parameterCoverage.map(p => (
-                  <tr key={p.key} className="border-b border-slate-100 hover:bg-slate-50">
-                    <td className="py-1 pr-2 font-medium text-slate-700">{p.key}</td>
-                    <td className="py-1 pr-2 text-right text-slate-500">{p.stationCount.toLocaleString()}</td>
-                    <td className="py-1 pr-2 text-right text-slate-500">{p.recordCount.toLocaleString()}</td>
-                    <td className="py-1 pr-2 text-slate-400">{p.latestDate || '—'}</td>
-                    <td className="py-1"><FreshnessBadge freshness={p.freshness} /></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="mt-1 text-right">
-              <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border ${gradeColor(report.parameterGrade)}`}>
-                Parameter Grade: {report.parameterGrade}
-              </span>
-            </div>
-          </div>
-        )}
-      </SubSection>
-
-      {/* ── D. AI Readiness ────────────────────────────────────────────── */}
-      <SubSection title="AI Readiness" icon={<Cpu size={13} className="text-cyan-600" />}>
-        <div className="flex items-center gap-4">
-          {/* Score circle */}
-          <div className={`flex-shrink-0 w-20 h-20 rounded-full border-4 flex flex-col items-center justify-center ${gradeColor(report.aiReadinessGrade)}`}>
-            <div className="text-2xl font-black leading-none">{report.aiReadinessScore}</div>
-            <div className="text-[10px] font-bold">{report.aiReadinessGrade}</div>
-          </div>
-
-          {/* Factor bars */}
-          <div className="flex-1 space-y-2">
-            {([
-              { label: 'Freshness', value: report.aiReadinessFactors.freshness, max: 30 },
-              { label: 'Coverage', value: report.aiReadinessFactors.coverage, max: 25 },
-              { label: 'Parameters', value: report.aiReadinessFactors.parameterBreadth, max: 25 },
-              { label: 'Redundancy', value: report.aiReadinessFactors.sourceRedundancy, max: 20 },
-            ] as const).map(f => (
-              <div key={f.label} className="flex items-center gap-2">
-                <span className="text-[10px] text-slate-500 w-20 text-right">{f.label}</span>
-                <div className="flex-1 h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all ${gradeBg(letterGradeFromFactor(f.value, f.max))}`}
-                    style={{ width: `${(f.value / f.max) * 100}%` }}
-                  />
-                </div>
-                <span className="text-[10px] text-slate-400 w-8">{f.value}/{f.max}</span>
+          {/* ── A. Coverage KPIs ──────────────────────────────────────── */}
+          <SubSection title="Coverage" icon={<Database size={13} className="text-blue-600" />}>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              <div className="rounded-lg bg-blue-50 border border-blue-100 p-2.5 text-center">
+                <div className="text-xl font-black text-blue-700">{report.totalWaterbodies.toLocaleString()}</div>
+                <div className="text-[10px] text-blue-500 font-medium">Total Waterbodies</div>
               </div>
-            ))}
-          </div>
+              <div className="rounded-lg bg-emerald-50 border border-emerald-100 p-2.5 text-center">
+                <div className="text-xl font-black text-emerald-700">{report.monitoredWaterbodies.toLocaleString()}</div>
+                <div className="text-[10px] text-emerald-500 font-medium">Monitored</div>
+              </div>
+              <div className="rounded-lg bg-red-50 border border-red-100 p-2.5 text-center">
+                <div className="text-xl font-black text-red-700">{report.unmonitoredWaterbodies.toLocaleString()}</div>
+                <div className="text-[10px] text-red-500 font-medium">Unmonitored (Blind Spots)</div>
+              </div>
+              <div className={`rounded-lg border p-2.5 text-center ${gradeColor(report.coverageGrade)}`}>
+                <div className="text-2xl font-black">{report.coverageGrade}</div>
+                <div className="text-[10px] font-medium">{report.monitoredPct}% Coverage</div>
+              </div>
+            </div>
+
+            {/* ATTAINS summary row */}
+            {(report.impairedCount > 0 || report.healthyCount > 0) && (
+              <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
+                <div className="rounded bg-red-50/70 border border-red-100 p-2 text-center">
+                  <div className="text-sm font-bold text-red-700">{report.impairedCount.toLocaleString()}</div>
+                  <div className="text-[10px] text-red-500">Impaired</div>
+                </div>
+                <div className="rounded bg-green-50/70 border border-green-100 p-2 text-center">
+                  <div className="text-sm font-bold text-green-700">{report.healthyCount.toLocaleString()}</div>
+                  <div className="text-[10px] text-green-500">Healthy</div>
+                </div>
+                <div className="rounded bg-amber-50/70 border border-amber-100 p-2 text-center">
+                  <div className="text-sm font-bold text-amber-700">{report.tmdlNeeded.toLocaleString()}</div>
+                  <div className="text-[10px] text-amber-500">TMDL Needed</div>
+                </div>
+              </div>
+            )}
+
+            {report.topCauses.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1">
+                <span className="text-[10px] text-slate-400 mr-1 self-center">Top causes:</span>
+                {report.topCauses.map(c => (
+                  <span key={c} className="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px]">{c}</span>
+                ))}
+              </div>
+            )}
+
+            {/* Source breakdown */}
+            {report.sourceBreakdown.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1">
+                <span className="text-[10px] text-slate-400 mr-1 self-center">{report.activeSourceCount} sources:</span>
+                {report.sourceBreakdown.slice(0, 6).map(s => (
+                  <span key={s.source} className="px-1.5 py-0.5 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded text-[10px]">
+                    {s.source} ({s.waterbodyCount})
+                  </span>
+                ))}
+              </div>
+            )}
+          </SubSection>
+
+          {/* ── B. Data Freshness ─────────────────────────────────────── */}
+          <SubSection title="Data Freshness" icon={<Activity size={13} className="text-green-600" />}>
+            {report.wqpRecordCount === 0 ? (
+              <div className="text-xs text-slate-400 text-center py-4">No WQP records cached for this state</div>
+            ) : (
+              <>
+                {/* Stacked bar */}
+                <div className="h-4 rounded-full overflow-hidden flex bg-slate-200">
+                  {report.freshnessTiers.map((tier, i) => (
+                    tier.pct > 0 && (
+                      <div
+                        key={tier.label}
+                        className={`${TIER_COLORS[i]} transition-all`}
+                        style={{ width: `${Math.max(tier.pct, 1)}%` }}
+                        title={`${tier.label}: ${tier.count.toLocaleString()} (${tier.pct}%)`}
+                      />
+                    )
+                  ))}
+                </div>
+
+                {/* Tier cards */}
+                <div className="grid grid-cols-3 md:grid-cols-6 gap-1.5 mt-2">
+                  {report.freshnessTiers.map((tier, i) => (
+                    <div key={tier.label} className="rounded bg-white border border-slate-100 p-1.5 text-center">
+                      <div className={`text-sm font-bold ${TIER_TEXT_COLORS[i]}`}>{tier.count.toLocaleString()}</div>
+                      <div className="text-[9px] text-slate-400">{tier.label} ({tier.pct}%)</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Summary row */}
+                <div className="mt-2 flex items-center gap-3 text-xs text-slate-500">
+                  <span>{report.wqpRecordCount.toLocaleString()} records from {report.wqpStationCount.toLocaleString()} stations</span>
+                  <span>Median age: <strong className="text-slate-700">{report.medianAgeDays}d</strong></span>
+                  <span className={`px-1.5 py-0.5 rounded font-semibold border ${gradeColor(report.freshnessGrade)}`}>
+                    {report.freshnessGrade}
+                  </span>
+                </div>
+              </>
+            )}
+          </SubSection>
+
+          {/* ── C. Parameter Coverage ──────────────────────────────────── */}
+          <SubSection title={`Parameter Coverage (${report.parameterCount})`} icon={<BarChart3 size={13} className="text-purple-600" />} defaultOpen={false}>
+            {report.parameterCoverage.length === 0 ? (
+              <div className="text-xs text-slate-400 text-center py-4">No parameter data available</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-200 text-left text-[10px] text-slate-400 uppercase">
+                      <th className="py-1 pr-2">Parameter</th>
+                      <th className="py-1 pr-2 text-right">Stations</th>
+                      <th className="py-1 pr-2 text-right">Records</th>
+                      <th className="py-1 pr-2">Latest</th>
+                      <th className="py-1">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {report.parameterCoverage.map(p => (
+                      <tr key={p.key} className="border-b border-slate-100 hover:bg-slate-50">
+                        <td className="py-1 pr-2 font-medium text-slate-700">{p.key}</td>
+                        <td className="py-1 pr-2 text-right text-slate-500">{p.stationCount.toLocaleString()}</td>
+                        <td className="py-1 pr-2 text-right text-slate-500">{p.recordCount.toLocaleString()}</td>
+                        <td className="py-1 pr-2 text-slate-400">{p.latestDate || '—'}</td>
+                        <td className="py-1"><FreshnessBadge freshness={p.freshness} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="mt-1 text-right">
+                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border ${gradeColor(report.parameterGrade)}`}>
+                    Parameter Grade: {report.parameterGrade}
+                  </span>
+                </div>
+              </div>
+            )}
+          </SubSection>
+
+          {/* ── D. AI Readiness ────────────────────────────────────────── */}
+          <SubSection title="AI Readiness" icon={<Cpu size={13} className="text-cyan-600" />}>
+            <div className="flex items-center gap-4">
+              {/* Score circle */}
+              <div className={`flex-shrink-0 w-20 h-20 rounded-full border-4 flex flex-col items-center justify-center ${gradeColor(report.aiReadinessGrade)}`}>
+                <div className="text-2xl font-black leading-none">{report.aiReadinessScore}</div>
+                <div className="text-[10px] font-bold">{report.aiReadinessGrade}</div>
+              </div>
+
+              {/* Factor bars */}
+              <div className="flex-1 space-y-2">
+                {([
+                  { label: 'Freshness', value: report.aiReadinessFactors.freshness, max: 30 },
+                  { label: 'Coverage', value: report.aiReadinessFactors.coverage, max: 25 },
+                  { label: 'Parameters', value: report.aiReadinessFactors.parameterBreadth, max: 25 },
+                  { label: 'Redundancy', value: report.aiReadinessFactors.sourceRedundancy, max: 20 },
+                ] as const).map(f => (
+                  <div key={f.label} className="flex items-center gap-2">
+                    <span className="text-[10px] text-slate-500 w-20 text-right">{f.label}</span>
+                    <div className="flex-1 h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${gradeBg(letterGradeFromFactor(f.value, f.max))}`}
+                        style={{ width: `${(f.value / f.max) * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-[10px] text-slate-400 w-8">{f.value}/{f.max}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </SubSection>
         </div>
-      </SubSection>
+      )}
     </div>
   );
 }

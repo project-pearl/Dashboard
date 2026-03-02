@@ -8,7 +8,6 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MockDataBadge } from './MockDataBadge';
 import type { RiskPrediction, RiskLevel, ConfidenceTier, ContributingFactor } from '@/lib/siteIntelTypes';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 
@@ -33,165 +32,17 @@ const CONFIDENCE_BADGE: Record<ConfidenceTier, { bg: string; text: string }> = {
   LOW:      { bg: 'bg-slate-100', text: 'text-slate-500' },
 };
 
-// ─── Mock Data ───────────────────────────────────────────────────────────────
+// ─── Data Pending Card Labels ────────────────────────────────────────────────
 
-export const MOCK_PREDICTIONS: RiskPrediction[] = [
-  {
-    category: 'infrastructure-failure',
-    label: 'Infrastructure Failure Forecast',
-    probability: 68,
-    riskLevel: 'red',
-    timeframe: '12 months',
-    confidence: 'HIGH',
-    summary: 'Your system has a 68% probability of an SSO event in the next 12 months.',
-    icon: 'Wrench',
-    factors: [
-      { name: 'Infrastructure Failure Prob.', value: 82, weight: 0.30, direction: 'negative' },
-      { name: 'Treatment Efficacy Index', value: 45, weight: 0.20, direction: 'negative' },
-      { name: 'Climate Vulnerability Factor', value: 71, weight: 0.20, direction: 'negative' },
-      { name: 'PEARL Load Velocity', value: 58, weight: 0.10, direction: 'negative' },
-      { name: 'Reg. Compliance Trajectory', value: 35, weight: 0.10, direction: 'neutral' },
-      { name: 'Data Confidence Level', value: 88, weight: 0.05, direction: 'positive' },
-      { name: 'Population Exposure Risk', value: 62, weight: 0.05, direction: 'negative' },
-    ],
-  },
-  {
-    category: 'impairment-breach',
-    label: 'Impairment Threshold Breach',
-    probability: 74,
-    riskLevel: 'red',
-    timeframe: 'Q3 2026',
-    confidence: 'HIGH',
-    summary: 'At current loading rates, Mill Creek will cross the impairment threshold for dissolved oxygen by Q3 2026.',
-    icon: 'Waves',
-    factors: [
-      { name: 'PEARL Load Velocity', value: 78, weight: 0.25, direction: 'negative' },
-      { name: 'Climate Vulnerability Factor', value: 71, weight: 0.20, direction: 'negative' },
-      { name: 'Contaminant Interaction', value: 65, weight: 0.20, direction: 'negative' },
-      { name: 'Temporal Trend Severity', value: 72, weight: 0.15, direction: 'negative' },
-      { name: 'Infrastructure Failure Prob.', value: 52, weight: 0.10, direction: 'negative' },
-      { name: 'Treatment Efficacy Index', value: 40, weight: 0.05, direction: 'neutral' },
-      { name: 'Data Confidence Level', value: 85, weight: 0.05, direction: 'positive' },
-    ],
-  },
-  {
-    category: 'enforcement-probability',
-    label: 'Regulatory Enforcement Probability',
-    probability: 55,
-    riskLevel: 'amber',
-    timeframe: 'next permit cycle',
-    confidence: 'MODERATE',
-    summary: 'Based on your compliance trajectory, there is a 55% probability of receiving an NOV within the next permit cycle.',
-    icon: 'Scale',
-    factors: [
-      { name: 'Reg. Compliance Trajectory', value: 68, weight: 0.30, direction: 'negative' },
-      { name: 'Infrastructure Failure Prob.', value: 52, weight: 0.20, direction: 'negative' },
-      { name: 'Population Exposure Risk', value: 62, weight: 0.15, direction: 'negative' },
-      { name: 'Temporal Trend Severity', value: 55, weight: 0.15, direction: 'negative' },
-      { name: 'Contaminant Interaction', value: 40, weight: 0.10, direction: 'neutral' },
-      { name: 'Data Confidence Level', value: 72, weight: 0.05, direction: 'positive' },
-      { name: 'Source Attribution Confidence', value: 60, weight: 0.05, direction: 'neutral' },
-    ],
-  },
-  {
-    category: 'capacity-exceedance',
-    label: 'Capacity Exceedance Risk',
-    probability: 87,
-    riskLevel: 'red',
-    timeframe: 'Q2 2027',
-    confidence: 'HIGH',
-    summary: 'At current growth rates, your WWTP will exceed design capacity by Q2 2027. Assimilative capacity in the receiving stream is already at 87%.',
-    icon: 'Gauge',
-    factors: [
-      { name: 'PEARL Load Velocity', value: 91, weight: 0.25, direction: 'negative' },
-      { name: 'Infrastructure Failure Prob.', value: 75, weight: 0.20, direction: 'negative' },
-      { name: 'Treatment Efficacy Index', value: 38, weight: 0.20, direction: 'negative' },
-      { name: 'Climate Vulnerability Factor', value: 71, weight: 0.15, direction: 'negative' },
-      { name: 'Contaminant Interaction', value: 55, weight: 0.10, direction: 'negative' },
-      { name: 'Data Confidence Level', value: 90, weight: 0.05, direction: 'positive' },
-      { name: 'Temporal Trend Severity', value: 60, weight: 0.05, direction: 'negative' },
-    ],
-  },
-  {
-    category: 'cascading-impact',
-    label: 'Cascading Impact Projection',
-    probability: 41,
-    riskLevel: 'amber',
-    timeframe: '72 hours',
-    confidence: 'MODERATE',
-    summary: 'A failure at the Potomac Interceptor will impact 47 downstream assessment units, 3 drinking water intakes, and 12 MS4 jurisdictions within 72 hours.',
-    icon: 'GitBranch',
-    factors: [
-      { name: 'Cross-Domain Impact', value: 78, weight: 0.25, direction: 'negative' },
-      { name: 'Climate Vulnerability Factor', value: 65, weight: 0.20, direction: 'negative' },
-      { name: 'Contaminant Interaction', value: 60, weight: 0.15, direction: 'negative' },
-      { name: 'PEARL Load Velocity', value: 50, weight: 0.10, direction: 'neutral' },
-      { name: 'Infrastructure Failure Prob.', value: 52, weight: 0.10, direction: 'negative' },
-      { name: 'Population Exposure Risk', value: 62, weight: 0.10, direction: 'negative' },
-      { name: 'Watershed Recovery Rate', value: 35, weight: 0.05, direction: 'neutral' },
-      { name: 'Data Confidence Level', value: 68, weight: 0.05, direction: 'neutral' },
-    ],
-  },
-  {
-    category: 'recovery-timeline',
-    label: 'Recovery Timeline Estimate',
-    probability: 62,
-    riskLevel: 'amber',
-    timeframe: '18-24 months',
-    confidence: 'MODERATE',
-    summary: 'If restoration begins now, this watershed is projected to return to attainment status in 18-24 months. Delay by 12 months extends recovery to 36-48 months.',
-    icon: 'Clock',
-    factors: [
-      { name: 'Watershed Recovery Rate', value: 42, weight: 0.30, direction: 'negative' },
-      { name: 'Treatment Efficacy Index', value: 55, weight: 0.20, direction: 'neutral' },
-      { name: 'Intervention ROI Predictor', value: 70, weight: 0.15, direction: 'positive' },
-      { name: 'Ecosystem Service Valuation', value: 48, weight: 0.10, direction: 'neutral' },
-      { name: 'PEARL Load Velocity', value: 58, weight: 0.10, direction: 'negative' },
-      { name: 'Source Attribution Confidence', value: 60, weight: 0.10, direction: 'neutral' },
-      { name: 'Data Confidence Level', value: 75, weight: 0.05, direction: 'positive' },
-    ],
-  },
-  {
-    category: 'public-health-exposure',
-    label: 'Public Health Exposure Forecast',
-    probability: 48,
-    riskLevel: 'amber',
-    timeframe: '18 months',
-    confidence: 'MODERATE',
-    summary: 'At current contamination trends, an estimated 42,000 residents served by this drinking water system face elevated PFAS exposure risk within 18 months.',
-    icon: 'HeartPulse',
-    factors: [
-      { name: 'Population Exposure Risk', value: 75, weight: 0.25, direction: 'negative' },
-      { name: 'Contaminant Interaction', value: 68, weight: 0.20, direction: 'negative' },
-      { name: 'Cross-Domain Impact', value: 55, weight: 0.15, direction: 'negative' },
-      { name: 'PEARL Load Velocity', value: 58, weight: 0.10, direction: 'negative' },
-      { name: 'Infrastructure Failure Prob.', value: 45, weight: 0.10, direction: 'neutral' },
-      { name: 'Watershed Recovery Rate', value: 40, weight: 0.10, direction: 'neutral' },
-      { name: 'Data Confidence Level', value: 65, weight: 0.05, direction: 'neutral' },
-      { name: 'Source Attribution Confidence', value: 55, weight: 0.05, direction: 'neutral' },
-    ],
-  },
-  {
-    category: 'intervention-roi',
-    label: 'Intervention ROI Forecast',
-    probability: 82,
-    riskLevel: 'green',
-    timeframe: '10 years',
-    confidence: 'HIGH',
-    summary: 'Installing a bioretention system at this location is projected to improve your watershed score by 15 points, reduce enforcement probability by 22%, and deliver a 3.2x return on investment over 10 years.',
-    icon: 'TrendingUp',
-    factors: [
-      { name: 'Intervention ROI Predictor', value: 85, weight: 0.25, direction: 'positive' },
-      { name: 'Source Attribution Confidence', value: 72, weight: 0.20, direction: 'positive' },
-      { name: 'Ecosystem Service Valuation', value: 68, weight: 0.15, direction: 'positive' },
-      { name: 'Watershed Recovery Rate', value: 42, weight: 0.10, direction: 'neutral' },
-      { name: 'Treatment Efficacy Index', value: 55, weight: 0.10, direction: 'positive' },
-      { name: 'PEARL Load Velocity', value: 58, weight: 0.05, direction: 'neutral' },
-      { name: 'Contaminant Interaction', value: 40, weight: 0.05, direction: 'neutral' },
-      { name: 'Data Confidence Level', value: 88, weight: 0.05, direction: 'positive' },
-      { name: 'Reg. Compliance Trajectory', value: 50, weight: 0.05, direction: 'neutral' },
-    ],
-  },
+const RISK_CARD_STUBS: { label: string; icon: string }[] = [
+  { label: 'Infrastructure Failure Forecast', icon: 'Wrench' },
+  { label: 'Impairment Threshold Breach', icon: 'Waves' },
+  { label: 'Regulatory Enforcement Probability', icon: 'Scale' },
+  { label: 'Capacity Exceedance Risk', icon: 'Gauge' },
+  { label: 'Cascading Impact Projection', icon: 'GitBranch' },
+  { label: 'Recovery Timeline Estimate', icon: 'Clock' },
+  { label: 'Public Health Exposure Forecast', icon: 'HeartPulse' },
+  { label: 'Intervention ROI Forecast', icon: 'TrendingUp' },
 ];
 
 // ─── Index → Prediction Matrix (Table 2 from doc) ───────────────────────────
@@ -440,16 +291,26 @@ function PredictionCard({ prediction, segmentQuote, onInvestigate }: { predictio
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-export default function PredictiveRiskEngine({ onInvestigate }: { onInvestigate?: (prediction: RiskPrediction) => void } = {}) {
+interface PredictiveRiskEngineProps {
+  predictions?: RiskPrediction[] | null;
+  dataCompleteness?: number;
+  loading?: boolean;
+  onInvestigate?: (prediction: RiskPrediction) => void;
+}
+
+export default function PredictiveRiskEngine({ predictions = null, dataCompleteness: dataPct, loading = false, onInvestigate }: PredictiveRiskEngineProps) {
   const [highlightedRow, setHighlightedRow] = useState<number | null>(null);
   const [showSegments, setShowSegments] = useState(false);
 
-  // Compute overall risk from mock predictions
-  const redCount = MOCK_PREDICTIONS.filter(p => p.riskLevel === 'red').length;
-  const overallRisk: RiskLevel = redCount >= 3 ? 'red' : redCount >= 1 ? 'amber' : 'green';
+  const preds = predictions ?? [];
+  const hasPredictions = preds.length > 0;
+  const redCount = preds.filter(p => p.riskLevel === 'red').length;
+  const overallRisk: RiskLevel = hasPredictions
+    ? (redCount >= 3 ? 'red' : redCount >= 1 ? 'amber' : 'green')
+    : 'gray';
   const overallColors = RISK_COLORS[overallRisk];
-  const avgProbability = Math.round(MOCK_PREDICTIONS.reduce((s, p) => s + p.probability, 0) / MOCK_PREDICTIONS.length);
-  const dataCompleteness = 78;
+  const avgProbability = hasPredictions ? Math.round(preds.reduce((s, p) => s + p.probability, 0) / preds.length) : 0;
+  const dataCompleteness = dataPct ?? (hasPredictions ? 78 : 0);
 
   // Map a segment quote to each prediction card (first 6 get quotes from segments; 7 & 8 don't)
   const segmentQuotes = SEGMENT_EXAMPLES.map(s => s.quote);
@@ -469,7 +330,7 @@ export default function PredictiveRiskEngine({ onInvestigate }: { onInvestigate?
                 <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                   <Target size={20} className="text-blue-600" />
                   Your Water Risk Forecast
-                  <MockDataBadge />
+                  {loading && <span className="text-xs text-slate-400 font-normal animate-pulse">Loading...</span>}
                 </h2>
               </div>
               <p className="text-xs text-slate-500 max-w-lg">
@@ -509,14 +370,57 @@ export default function PredictiveRiskEngine({ onInvestigate }: { onInvestigate?
           <BarChart3 size={14} /> 8 Risk Predictions
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {MOCK_PREDICTIONS.map((pred, i) => (
-            <PredictionCard
-              key={pred.category}
-              prediction={pred}
-              segmentQuote={i < segmentQuotes.length ? segmentQuotes[i] : undefined}
-              onInvestigate={onInvestigate}
-            />
-          ))}
+          {loading ? (
+            /* Skeleton cards while loading */
+            RISK_CARD_STUBS.map((stub) => {
+              const StubIcon = ICON_MAP[stub.icon] || AlertTriangle;
+              return (
+                <div key={stub.label} className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden animate-pulse">
+                  <div className="p-3 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <StubIcon className="h-4 w-4 flex-shrink-0 text-slate-300" />
+                      <span className="text-xs font-semibold text-slate-400 leading-tight">{stub.label}</span>
+                    </div>
+                    <div className="w-full h-2 rounded-full bg-slate-100" />
+                    <div className="h-4 w-16 rounded bg-slate-100" />
+                    <div className="h-3 w-full rounded bg-slate-100" />
+                  </div>
+                </div>
+              );
+            })
+          ) : !hasPredictions ? (
+            /* Data Pending cards when no predictions available */
+            RISK_CARD_STUBS.map((stub) => {
+              const StubIcon = ICON_MAP[stub.icon] || AlertTriangle;
+              return (
+                <div key={stub.label} className="rounded-lg border border-dashed border-slate-300 bg-slate-50/50 shadow-sm overflow-hidden">
+                  <div className="p-3 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <StubIcon className="h-4 w-4 flex-shrink-0 text-slate-400" />
+                      <span className="text-xs font-semibold text-slate-600 leading-tight">{stub.label}</span>
+                    </div>
+                    <div className="w-full h-2 rounded-full bg-slate-100" />
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-medium text-slate-400">Data Pending</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 leading-relaxed italic">
+                      Insufficient data to compute risk score. Select a deployment location to generate predictions.
+                    </p>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            /* Real prediction cards */
+            preds.map((pred, i) => (
+              <PredictionCard
+                key={pred.category}
+                prediction={pred}
+                segmentQuote={i < segmentQuotes.length ? segmentQuotes[i] : undefined}
+                onInvestigate={onInvestigate}
+              />
+            ))
+          )}
         </div>
       </div>
 

@@ -463,6 +463,8 @@ export function PEARLManagementCenter(props: Props) {
   const [viewLens, setViewLens] = useState<ViewLens>('operations');
   const [pendingUserCount, setPendingUserCount] = useState(0);
   const [investigationRisk, setInvestigationRisk] = useState<RiskPrediction | null>(null);
+  const [riskForecast, setRiskForecast] = useState<RiskForecastResult | null>(null);
+  const [riskLoading, setRiskLoading] = useState(true);
 
   // Fetch pending count on mount for admin users
   useEffect(() => {
@@ -475,6 +477,19 @@ export function PEARLManagementCenter(props: Props) {
   const [expandedDeployment, setExpandedDeployment] = useState<string | null>('dep-milton-fl-001');
   const [expandedProspect, setExpandedProspect] = useState<string | null>(null);
   const [showGPMCalc, setShowGPMCalc] = useState(false);
+
+  // Fetch real risk predictions from site-intelligence API using the first active deployment
+  useEffect(() => {
+    const primary = deployments.find(d => d.status === 'active');
+    if (!primary) { setRiskLoading(false); return; }
+    fetch(`/api/site-intelligence?lat=${primary.lat}&lng=${primary.lon}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.riskForecast) setRiskForecast(data.riskForecast);
+      })
+      .catch(() => {})
+      .finally(() => setRiskLoading(false));
+  }, [deployments]);
 
   // ── Demo Mode toggle (persisted in localStorage) ──
   const [demoMode, setDemoMode] = useState<boolean>(() => {
@@ -1337,10 +1352,15 @@ export function PEARLManagementCenter(props: Props) {
         {/* ════════════════════════════════════════════════════════════ */}
 
         {viewLens === 'predictions' && (
-          <PredictiveRiskEngine onInvestigate={(risk) => {
-            setInvestigationRisk(risk);
-            setViewLens('investigation');
-          }} />
+          <PredictiveRiskEngine
+            predictions={riskForecast?.predictions ?? null}
+            dataCompleteness={riskForecast?.dataCompleteness}
+            loading={riskLoading}
+            onInvestigate={(risk) => {
+              setInvestigationRisk(risk);
+              setViewLens('investigation');
+            }}
+          />
         )}
 
         {/* ════════════════════════════════════════════════════════════ */}
@@ -1358,6 +1378,7 @@ export function PEARLManagementCenter(props: Props) {
         {viewLens === 'investigation' && (
           <RiskInvestigationFlow
             preSelectedRisk={investigationRisk}
+            predictions={riskForecast?.predictions ?? null}
             onBackToForecast={() => {
               setInvestigationRisk(null);
               setViewLens('predictions');
