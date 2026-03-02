@@ -135,6 +135,50 @@
     {
       "path": "/api/cron/sentinel-score",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-usdm",
+      "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-usgs-dv",
+      "schedule": "30 14 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-coops-derived",
+      "schedule": "0 15 * * 0"
+    },
+    {
+      "path": "/api/cron/rebuild-erddap-sat",
+      "schedule": "0 15 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-nasa-stream",
+      "schedule": "30 15 * * 0"
+    },
+    {
+      "path": "/api/cron/rebuild-nwm",
+      "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-ipac",
+      "schedule": "0 16 * * 0"
+    },
+    {
+      "path": "/api/cron/rebuild-ncei",
+      "schedule": "30 16 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-habsos",
+      "schedule": "0 17 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-glerl",
+      "schedule": "30 17 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-hefs",
+      "schedule": "30 */6 * * *"
     }
   ]
 }

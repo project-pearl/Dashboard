@@ -2,6 +2,8 @@
 .next/
 .vercel
 .env*.local
+scripts/ms4-contacts/.env
+scripts/ms4-contacts/output/
 /data/
 
 # Build artifacts & dev dumps

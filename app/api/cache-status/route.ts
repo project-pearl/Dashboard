@@ -37,6 +37,17 @@ import { getSuperfundCacheStatus, ensureWarmed as warmSuperfund } from '@/lib/su
 import { getUSAsCacheStatus, ensureWarmed as warmUSAs } from '@/lib/usaSpendingCache';
 import { getGrantsGovCacheStatus, ensureWarmed as warmGrantsGov } from '@/lib/grantsGovCache';
 import { getSamCacheStatus, ensureWarmed as warmSam } from '@/lib/samGovCache';
+import { getUsdmCacheStatus, ensureWarmed as warmUsdm } from '@/lib/usdmCache';
+import { getUsgsDvCacheStatus, ensureWarmed as warmUsgsDv } from '@/lib/usgsDvCache';
+import { getCoopsDerivedCacheStatus, ensureWarmed as warmCoopsDerived } from '@/lib/coopsDerivedCache';
+import { getErddapSatCacheStatus, ensureWarmed as warmErddapSat } from '@/lib/erddapSatCache';
+import { getNasaStreamCacheStatus, ensureWarmed as warmNasaStream } from '@/lib/nasaStreamCache';
+import { getNwmCacheStatus, ensureWarmed as warmNwm } from '@/lib/nwmCache';
+import { getIpacCacheStatus, ensureWarmed as warmIpac } from '@/lib/ipacCache';
+import { getNceiCacheStatus, ensureWarmed as warmNcei } from '@/lib/nceiCache';
+import { getHabsosCacheStatus, ensureWarmed as warmHabsos } from '@/lib/habsosCache';
+import { getGlerlCacheStatus, ensureWarmed as warmGlerl } from '@/lib/glerlCache';
+import { getHefsCacheStatus, ensureWarmed as warmHefs } from '@/lib/hefsCache';
 import { getHealthSummary, ensureWarmed as warmSentinelHealth } from '@/lib/sentinel/sentinelHealth';
 import { getQueueStats, ensureWarmed as warmSentinelQueue } from '@/lib/sentinel/eventQueue';
 import { getScoredHucsSummary, ensureWarmed as warmSentinelScores } from '@/lib/sentinel/scoringEngine';
@@ -57,7 +68,8 @@ export async function GET() {
     [warmCdcNwss, warmNdbc, warmNasaCmr, warmNars, warmDataGov, warmUsace],
     [warmNwisIv, warmUsgsAlerts, warmNwsAlerts, warmNwps, warmCoops, warmSnotel],
     [warmTri, warmUSAs, warmGrantsGov, warmSam, warmSentinelHealth, warmSentinelQueue, warmSentinelScores],
-    [warmFema, warmSuperfund],
+    [warmFema, warmSuperfund, warmUsdm, warmUsgsDv, warmCoopsDerived, warmErddapSat],
+    [warmNasaStream, warmNwm, warmIpac, warmNcei, warmHabsos, warmGlerl, warmHefs],
   ];
   for (const batch of warmBatches) {
     await Promise.allSettled(batch.map(fn => fn()));
@@ -94,6 +106,17 @@ export async function GET() {
   const sam = getSamCacheStatus();
   const fema = getFemaCacheStatus();
   const superfund = getSuperfundCacheStatus();
+  const usdm = getUsdmCacheStatus();
+  const usgsDv = getUsgsDvCacheStatus();
+  const coopsDerived = getCoopsDerivedCacheStatus();
+  const erddapSat = getErddapSatCacheStatus();
+  const nasaStream = getNasaStreamCacheStatus();
+  const nwm = getNwmCacheStatus();
+  const ipac = getIpacCacheStatus();
+  const ncei = getNceiCacheStatus();
+  const habsos = getHabsosCacheStatus();
+  const glerl = getGlerlCacheStatus();
+  const hefs = getHefsCacheStatus();
 
   const caches = {
     wqp: {
@@ -224,6 +247,50 @@ export async function GET() {
     superfund: {
       ...superfund,
       ...staleness(superfund.loaded ? (superfund as any).built : null),
+    },
+    usdm: {
+      ...usdm,
+      ...staleness(usdm.loaded ? (usdm as any).built : null),
+    },
+    usgsDv: {
+      ...usgsDv,
+      ...staleness(usgsDv.loaded ? (usgsDv as any).built : null),
+    },
+    coopsDerived: {
+      ...coopsDerived,
+      ...staleness(coopsDerived.loaded ? (coopsDerived as any).built : null),
+    },
+    erddapSat: {
+      ...erddapSat,
+      ...staleness(erddapSat.loaded ? (erddapSat as any).built : null),
+    },
+    nasaStream: {
+      ...nasaStream,
+      ...staleness(nasaStream.loaded ? (nasaStream as any).built : null),
+    },
+    nwm: {
+      ...nwm,
+      ...staleness(nwm.loaded ? (nwm as any).built : null),
+    },
+    ipac: {
+      ...ipac,
+      ...staleness(ipac.loaded ? (ipac as any).built : null),
+    },
+    ncei: {
+      ...ncei,
+      ...staleness(ncei.loaded ? (ncei as any).built : null),
+    },
+    habsos: {
+      ...habsos,
+      ...staleness(habsos.loaded ? (habsos as any).built : null),
+    },
+    glerl: {
+      ...glerl,
+      ...staleness(glerl.loaded ? (glerl as any).built : null),
+    },
+    hefs: {
+      ...hefs,
+      ...staleness(hefs.loaded ? (hefs as any).built : null),
     },
   };
 
