@@ -1,11 +1,11 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Activity, AlertTriangle, Database, RefreshCw, Wifi, WifiOff } from 'lucide-react';
+import { Activity, AlertTriangle, ChevronDown, ChevronUp, Database, RefreshCw, Wifi, WifiOff } from 'lucide-react';
 import { useSourceHealth, SourceHealth } from '@/lib/useSourceHealth';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -100,7 +100,14 @@ function SourceCard({ source }: { source: SourceHealth }) {
 
 // ─── Panel ───────────────────────────────────────────────────────────────────
 
-export function SourceHealthPanel() {
+interface SourceHealthPanelProps {
+  /** Enable collapse/expand toggle */
+  collapsible?: boolean;
+  /** Start collapsed (only used when collapsible=true) */
+  defaultCollapsed?: boolean;
+}
+
+export function SourceHealthPanel({ collapsible, defaultCollapsed }: SourceHealthPanelProps = {}) {
   const {
     sources,
     isLoading,
@@ -111,6 +118,14 @@ export function SourceHealthPanel() {
     datapoints,
     refetch,
   } = useSourceHealth();
+
+  const hasUnhealthy = offlineCount > 0 || degradedCount > 0;
+  const [collapsed, setCollapsed] = useState(collapsible ? (defaultCollapsed ?? false) : false);
+
+  // Auto-expand when an unhealthy source appears
+  useEffect(() => {
+    if (collapsible && hasUnhealthy) setCollapsed(false);
+  }, [collapsible, hasUnhealthy]);
 
   const offlineSources = useMemo(
     () =>
@@ -128,6 +143,11 @@ export function SourceHealthPanel() {
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base flex-wrap">
+          {collapsible && (
+            <button onClick={() => setCollapsed(c => !c)} className="p-0.5 -ml-1 rounded hover:bg-slate-100 transition-colors" title={collapsed ? 'Expand' : 'Collapse'}>
+              {collapsed ? <ChevronDown size={16} className="text-slate-500" /> : <ChevronUp size={16} className="text-slate-500" />}
+            </button>
+          )}
           <Activity size={16} className="text-slate-600" />
           Data Source Health
           {sources.length > 0 && (
@@ -155,13 +175,13 @@ export function SourceHealthPanel() {
             <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
           </Button>
         </CardTitle>
-        {lastChecked && (
+        {lastChecked && !collapsed && (
           <p className="text-[10px] text-slate-400">
             Last checked: {new Date(lastChecked).toLocaleTimeString()}
           </p>
         )}
       </CardHeader>
-      <CardContent className="space-y-3">
+      {!collapsed && <CardContent className="space-y-3">
         {/* ─── Summary Bar ─────────────────────────────────────────────── */}
         {sources.length > 0 && (
           <div className="flex items-center gap-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5">
@@ -298,7 +318,7 @@ export function SourceHealthPanel() {
             ))}
           </div>
         )}
-      </CardContent>
+      </CardContent>}
     </Card>
   );
 }

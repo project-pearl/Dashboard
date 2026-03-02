@@ -558,6 +558,9 @@ export function PEARLManagementCenter(props: Props) {
               )}
         </HeroBanner>
 
+        {/* ── DATA SOURCE HEALTH MONITOR ── */}
+        <SourceHealthPanel collapsible defaultCollapsed />
+
         {/* ── NATIONAL WATER HEALTH GAUGE ── */}
         <Card className="overflow-hidden">
           <CardContent className="p-4 md:p-6">
@@ -940,8 +943,7 @@ export function PEARLManagementCenter(props: Props) {
               </Card>
             </div>
 
-            {/* ── DATA SOURCE HEALTH MONITOR ── */}
-            <SourceHealthPanel />
+            {/* (Source Health Panel moved to below hero) */}
 
             {/* ── DEPLOYMENT CARDS ── */}
             <div className="space-y-3">
