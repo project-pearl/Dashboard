@@ -50,16 +50,16 @@ export function DraggableSection({
 
   const canCollapse = !isEditMode && !NO_COLLAPSE.has(id);
 
-  // Click card heading (h3 / CardTitle or its CardHeader parent) to collapse
+  // Only the primary section title should toggle collapse.
   const handleHeaderClick = useCallback((e: MouseEvent) => {
     if (!canCollapse) return;
     const target = e.target as HTMLElement;
-    // Don't interfere with interactive elements inside the header
     if (target.closest(INTERACTIVE)) return;
-    // Only trigger on CardTitle (<h3>) or its CardHeader container (parent div with p-6)
-    const isTitle = !!target.closest('h3');
-    const isHeader = !isTitle && target.closest('[class*="p-6"]')?.querySelector('h3') != null;
-    if (isTitle || isHeader) {
+    const container = e.currentTarget as HTMLElement;
+    const clickedTitle = target.closest('h3');
+    if (!clickedTitle) return;
+    const primaryTitle = container.querySelector('h3');
+    if (primaryTitle && clickedTitle === primaryTitle) {
       setCollapsed(prev => !prev);
     }
   }, [canCollapse]);
