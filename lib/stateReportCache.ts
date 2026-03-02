@@ -9,9 +9,6 @@
 
 import { getAttainsCache, type StateSummary, ensureWarmed as warmAttains } from './attainsCache';
 import { getWqpAllRecords, type WqpRecord, ensureWarmed as warmWqp } from './wqpCache';
-import { getEchoAllData, ensureWarmed as warmEcho } from './echoCache';
-import { getSdwisForState, ensureWarmed as warmSdwis } from './sdwisCache';
-import { getUsgsIvByState, ensureWarmed as warmNwisIv } from './nwisIvCache';
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
 import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 import { letterGrade } from './scoringUtils';
@@ -58,10 +55,15 @@ export interface StateDataReport {
   coverageGrade: string;
 
   // ATTAINS Impairment
+  assessedCount: number;
   impairedCount: number;
   healthyCount: number;
-  tmdlNeeded: number;
+  tmdlNeeded: number;          // Cat 5
+  tmdlCompleted: number;       // Cat 4A
+  tmdlAlternative: number;     // Cat 4B
+  notPollutant: number;        // Cat 4C
   topCauses: string[];
+  topCausesWithCounts: { cause: string; count: number }[];
 
   // WQP Freshness
   wqpRecordCount: number;
@@ -217,7 +219,7 @@ export async function ensureWarmed(): Promise<void> {
 
 export async function buildStateReports(): Promise<StateReportCacheData> {
   // Warm all dependent caches (disk → blob fallback) so data is available
-  await Promise.all([warmAttains(), warmWqp(), warmEcho(), warmSdwis(), warmNwisIv()]);
+  await Promise.all([warmAttains(), warmWqp()]);
 
   const registry = loadStationRegistry();
   const attainsData = getAttainsCache();
@@ -225,15 +227,6 @@ export async function buildStateReports(): Promise<StateReportCacheData> {
 
   const now = Date.now();
   const reports: Record<string, StateDataReport> = {};
-
-  // Pre-load ECHO facilities (all states at once, indexed by state)
-  let echoByState: Record<string, number> = {};
-  try {
-    const echo = getEchoAllData();
-    for (const f of echo.facilities) {
-      if (f.state) echoByState[f.state] = (echoByState[f.state] || 0) + 1;
-    }
-  } catch { /* ECHO cache not loaded */ }
 
   // Index registry regions by state abbreviation
   const regionsByState: Record<string, { id: string; region: RegistryRegion }[]> = {};
@@ -262,96 +255,64 @@ export async function buildStateReports(): Promise<StateReportCacheData> {
   for (const stateAbbr of ALL_STATES) {
     const stateRegions = regionsByState[stateAbbr] || [];
 
+    const totalWaterbodies = stateRegions.length;
+
     // ── ATTAINS ──────────────────────────────────────────────────────────
     const attains: StateSummary | undefined = attainsData.states[stateAbbr];
 
-    // Use ATTAINS total as the real EPA waterbody count (falls back to registry)
-    const totalWaterbodies = attains?.total || stateRegions.length;
-
-    // ── Source Counts (real cache data per state) ─────────────────────────
+    // ── Coverage (per-region from station registry) ───────────────────────
+    let monitoredCount = 0;
     const sourceCounts: Record<string, number> = {};
 
-    // ATTAINS waterbodies
-    if (attains && attains.stored > 0) {
-      sourceCounts['ATTAINS'] = attains.stored;
-    }
-
-    // WQP stations — try records with state field first, fall back to registry
-    const stateWqpEarly = wqpByState[stateAbbr] || [];
-    const wqpStations = new Set(stateWqpEarly.map(r => r.stn));
-    if (wqpStations.size > 0) {
-      sourceCounts['WQP'] = wqpStations.size;
-    } else {
-      // Fallback: count WQP stations from registry (state field may not be set on older blob data)
-      let registryWqpCount = 0;
-      for (const { id } of stateRegions) {
-        if (registry?.wqpStationMap?.[id]) registryWqpCount++;
-      }
-      if (registryWqpCount > 0) sourceCounts['WQP'] = registryWqpCount;
-    }
-
-    // ECHO facilities
-    if (echoByState[stateAbbr]) {
-      sourceCounts['ECHO'] = echoByState[stateAbbr];
-    }
-
-    // SDWIS drinking water systems
-    try {
-      const sdwis = getSdwisForState(stateAbbr);
-      if (sdwis && sdwis.systems.length > 0) {
-        sourceCounts['SDWIS'] = sdwis.systems.length;
-      }
-    } catch { /* cache not loaded */ }
-
-    // USGS-IV real-time gauges
-    try {
-      const usgsIv = getUsgsIvByState(stateAbbr);
-      if (usgsIv.length > 0) {
-        sourceCounts['USGS-IV'] = usgsIv.length;
-      }
-    } catch { /* cache not loaded */ }
-
-    // Registry-based sources (USGS site map, WQP station map)
     for (const { id } of stateRegions) {
+      const cov = registry?.coverage?.[id];
       const hasUsgs = !!registry?.usgsSiteMap?.[id];
-      if (hasUsgs && !sourceCounts['USGS']) sourceCounts['USGS'] = 0;
-      if (hasUsgs) sourceCounts['USGS'] = (sourceCounts['USGS'] || 0) + 1;
+      const hasWqp = !!registry?.wqpStationMap?.[id as keyof typeof registry.wqpStationMap];
+
+      if ((cov && cov.hasData) || hasUsgs || hasWqp) {
+        monitoredCount++;
+        if (cov?.sources) {
+          for (const src of cov.sources) {
+            sourceCounts[src] = (sourceCounts[src] || 0) + 1;
+          }
+        }
+        if (hasUsgs) sourceCounts['USGS'] = (sourceCounts['USGS'] || 0) + 1;
+        if (hasWqp) sourceCounts['WQP'] = (sourceCounts['WQP'] || 0) + 1;
+      }
     }
 
-    // ── Monitored vs Unmonitored (blind spots) ─────────────────────────
-    // Coverage = fraction of the 6 PIN data layers actively feeding this state.
-    // Each layer contributes a weighted share of coverage:
-    //   ATTAINS (25%) — EPA waterbody assessments
-    //   WQP     (20%) — water quality monitoring stations
-    //   USGS-IV (20%) — real-time stream gauges
-    //   ECHO    (15%) — compliance/discharge monitoring
-    //   SDWIS   (10%) — drinking water system tracking
-    //   USGS    (10%) — registry station coverage
-    const layerWeights: [string, number][] = [
-      ['ATTAINS', 25],
-      ['WQP',     20],
-      ['USGS-IV', 20],
-      ['ECHO',    15],
-      ['SDWIS',   10],
-      ['USGS',    10],
-    ];
-    let coveragePts = 0;
-    for (const [key, weight] of layerWeights) {
-      if (sourceCounts[key] && sourceCounts[key] > 0) coveragePts += weight;
-    }
-    const monitoredPct = Math.min(coveragePts, 100);
-    const monitoredCount = totalWaterbodies > 0 ? Math.round(totalWaterbodies * monitoredPct / 100) : 0;
-    const unmonitoredCount = Math.max(0, totalWaterbodies - monitoredCount);
+    const unmonitoredCount = totalWaterbodies - monitoredCount;
+    const monitoredPct = totalWaterbodies > 0 ? Math.round((monitoredCount / totalWaterbodies) * 100) : 0;
 
     // ── ATTAINS Impairment ──────────────────────────────────────────────
     const impairedCount = attains ? (attains.high + attains.medium) : 0;
     const healthyCount = attains ? (attains.low + attains.none) : 0;
+    const assessedCount = impairedCount + healthyCount;
     const tmdlNeeded = attains?.tmdlNeeded || 0;
+    const tmdlCompleted = attains?.tmdlCompleted || 0;
+    const tmdlAlternative = attains?.tmdlAlternative || 0;
+    const notPollutant = attains
+      ? attains.waterbodies.filter(wb => wb.tmdlStatus === 'not-pollutant').length
+      : 0;
     const topCauses = attains?.topCauses || [];
 
+    // Compute cause counts from waterbodies
+    const causeFreqMap: Record<string, number> = {};
+    if (attains) {
+      for (const wb of attains.waterbodies) {
+        for (const cause of wb.causes) {
+          causeFreqMap[cause] = (causeFreqMap[cause] || 0) + 1;
+        }
+      }
+    }
+    const topCausesWithCounts = Object.entries(causeFreqMap)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([cause, count]) => ({ cause, count }));
+
     // ── WQP Freshness ────────────────────────────────────────────────────
-    const stateWqp = stateWqpEarly;
-    const stations = wqpStations;
+    const stateWqp = wqpByState[stateAbbr] || [];
+    const stations = new Set(stateWqp.map(r => r.stn));
 
     // Compute age in days for each record
     const ageDays: number[] = [];
@@ -457,10 +418,15 @@ export async function buildStateReports(): Promise<StateReportCacheData> {
       unmonitoredWaterbodies: unmonitoredCount,
       monitoredPct,
       coverageGrade: letterGrade(monitoredPct),
+      assessedCount,
       impairedCount,
       healthyCount,
       tmdlNeeded,
+      tmdlCompleted,
+      tmdlAlternative,
+      notPollutant,
       topCauses,
+      topCausesWithCounts,
       wqpRecordCount: stateWqp.length,
       wqpStationCount: stations.size,
       freshnessTiers,

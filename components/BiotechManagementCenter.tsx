@@ -53,8 +53,7 @@ import { DisasterEmergencyPanel } from '@/components/DisasterEmergencyPanel';
 import { WaterStewardshipPanel } from '@/components/WaterStewardshipPanel';
 import { FacilityOperationsPanel } from '@/components/FacilityOperationsPanel';
 import { SupplyChainRiskPanel } from '@/components/SupplyChainRiskPanel';
-import { WARRZones } from './WARRZones';
-import type { WARRMetric } from './WARRZones';
+import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import { getEcoData, getEcoScore, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
@@ -1639,23 +1638,10 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
 
             // ─── WARR ZONES ──────────────────────────────────────────────────
 
-            case 'warr-metrics': {
-              const warrM: WARRMetric[] = [
-                { label: 'Process Water Purity', value: '--', icon: Gauge, iconColor: 'var(--status-healthy)', subtitle: 'USP compliance' },
-                { label: 'Discharge Compliance', value: '--', icon: Shield, iconColor: 'var(--accent-teal)', subtitle: 'NPDES status' },
-                { label: 'GMP Score', value: '--', icon: AlertTriangle, iconColor: 'var(--status-warning)', subtitle: 'FDA readiness' },
-              ];
-              return DS(<WARRZones zone="warr-metrics" role="Biotech" stateAbbr="US" metrics={warrM} events={[]} activeResolutionCount={0} />);
-            }
-            case 'warr-analyze': return DS(
-              <WARRZones zone="warr-analyze" role="Biotech" stateAbbr="US" metrics={[]} events={[]} activeResolutionCount={0} />
-            );
-            case 'warr-respond': return DS(
-              <WARRZones zone="warr-respond" role="Biotech" stateAbbr="US" metrics={[]} events={[]} activeResolutionCount={0} />
-            );
-            case 'warr-resolve': return DS(
-              <WARRZones zone="warr-resolve" role="Biotech" stateAbbr="US" metrics={[]} events={[]} activeResolutionCount={0} />
-            );
+            case 'warr-metrics': return null;
+            case 'warr-analyze': return null;
+            case 'warr-respond': return null;
+            case 'warr-resolve': return null;
 
             // ─── TRENDS DASHBOARD (placeholder) ─────────────────────────────
 
@@ -2034,6 +2020,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
         </>);
         }}
         </LayoutEditor>
+        <DataFreshnessFooter />
 
       </div>
     </div>

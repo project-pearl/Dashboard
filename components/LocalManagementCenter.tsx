@@ -56,6 +56,7 @@ import { StatusCard } from './StatusCard';
 import { PlatformDisclaimer } from './PlatformDisclaimer';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
+import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { GrantOpportunityMatcher } from '@/components/GrantOpportunityMatcher';
 import { getEcoData, getEcoScore, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
@@ -1649,6 +1650,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
       </>);
       }}
       </LayoutEditor>
+      <DataFreshnessFooter />
 
       </div>
     </div>

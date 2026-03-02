@@ -19,12 +19,10 @@ import ResolutionPlanner from '@/components/ResolutionPlanner';
 import dynamic from 'next/dynamic';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
-import { WARRZones } from './WARRZones';
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
   { ssr: false }
 );
-import type { WARRMetric } from './WARRZones';
 import { getEcoData, getEcoScore, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
 import { ecoScoreStyle } from '@/lib/scoringUtils';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
@@ -32,6 +30,7 @@ import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
 import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { EmergingContaminantsTracker } from '@/components/EmergingContaminantsTracker';
+import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 
 // ─── View Lens ──────────────────────────────────────────────────────────────
 
@@ -1676,23 +1675,10 @@ export default function UtilityManagementCenter({ systemId }: Props) {
             // WARR ZONES
             // ══════════════════════════════════════════════════════════════
 
-            case 'warr-metrics': {
-              const warrM: WARRMetric[] = [
-                { label: 'Plant Uptime', value: '—', icon: Gauge, iconColor: 'var(--status-healthy)', subtitle: 'Treatment facility status' },
-                { label: 'Effluent Compliance', value: '—', icon: Shield, iconColor: 'var(--accent-teal)', subtitle: 'Permit limit compliance' },
-                { label: 'Service Alerts', value: '—', icon: AlertTriangle, iconColor: 'var(--status-warning)', subtitle: 'Active service notifications' },
-              ];
-              return DS(<WARRZones zone="warr-metrics" role="Utility" stateAbbr={systemId} metrics={warrM} events={[]} activeResolutionCount={0} />);
-            }
-            case 'warr-analyze': return DS(
-              <WARRZones zone="warr-analyze" role="Utility" stateAbbr={systemId} metrics={[]} events={[]} activeResolutionCount={0} />
-            );
-            case 'warr-respond': return DS(
-              <WARRZones zone="warr-respond" role="Utility" stateAbbr={systemId} metrics={[]} events={[]} activeResolutionCount={0} />
-            );
-            case 'warr-resolve': return DS(
-              <WARRZones zone="warr-resolve" role="Utility" stateAbbr={systemId} metrics={[]} events={[]} activeResolutionCount={0} onOpenPlanner={() => setActiveLens('disaster')} />
-            );
+            case 'warr-metrics': return null;
+            case 'warr-analyze': return null;
+            case 'warr-respond': return null;
+            case 'warr-resolve': return null;
 
             // ══════════════════════════════════════════════════════════════
             // DISCLAIMER (always visible)
@@ -2095,6 +2081,7 @@ export default function UtilityManagementCenter({ systemId }: Props) {
           </div>
         )}
         </LayoutEditor>
+        <DataFreshnessFooter />
 
       </div>
     </div>

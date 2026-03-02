@@ -35,8 +35,6 @@ import { PolicyTracker } from '@/components/PolicyTracker';
 import { EmergingContaminantsTracker } from '@/components/EmergingContaminantsTracker';
 import ResolutionPlanner from '@/components/ResolutionPlanner';
 import RestorationPlanner from '@/components/RestorationPlanner';
-import { WARRZones } from './WARRZones';
-import type { WARRMetric } from './WARRZones';
 import { DisasterEmergencyPanel } from '@/components/DisasterEmergencyPanel';
 import { CampusStormwaterPanel } from '@/components/CampusStormwaterPanel';
 import { WatershedPartnershipsPanel } from '@/components/WatershedPartnershipsPanel';
@@ -44,6 +42,7 @@ import LocationReportCard from '@/components/LocationReportCard';
 import { getEpaRegionForState } from '@/lib/epa-regions';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
+import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import dynamic from 'next/dynamic';
 const MapboxMapShell = dynamic(
   () => import('@/components/MapboxMapShell').then(m => m.MapboxMapShell),
@@ -2744,23 +2743,10 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
 
             case 'location-report': return DS(<LocationReportCard />);
 
-            case 'warr-metrics': {
-              const warrM: WARRMetric[] = [
-                { label: 'Research Projects', value: '—', icon: Microscope, iconColor: 'var(--status-healthy)', subtitle: 'Active research studies' },
-                { label: 'Monitoring Stations', value: '—', icon: Gauge, iconColor: 'var(--accent-teal)', subtitle: 'Campus & field stations' },
-                { label: 'Publications', value: '—', icon: Shield, iconColor: 'var(--status-warning)', subtitle: 'Papers & reports' },
-              ];
-              return DS(<WARRZones zone="warr-metrics" role={userRole === 'College' ? 'College' : 'Researcher'} stateAbbr={stateAbbr} metrics={warrM} events={[]} activeResolutionCount={0} />);
-            }
-            case 'warr-analyze': return DS(
-              <WARRZones zone="warr-analyze" role={userRole === 'College' ? 'College' : 'Researcher'} stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} />
-            );
-            case 'warr-respond': return DS(
-              <WARRZones zone="warr-respond" role={userRole === 'College' ? 'College' : 'Researcher'} stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} />
-            );
-            case 'warr-resolve': return DS(
-              <WARRZones zone="warr-resolve" role={userRole === 'College' ? 'College' : 'Researcher'} stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} />
-            );
+            case 'warr-metrics': return null;
+            case 'warr-analyze': return null;
+            case 'warr-respond': return null;
+            case 'warr-resolve': return null;
 
             // ── Habitat & Ecology ──
             case 'hab-ecoscore': {
@@ -2925,6 +2911,7 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
         </>);
         }}
         </LayoutEditor>
+        <DataFreshnessFooter />
 
       </div>
     </div>

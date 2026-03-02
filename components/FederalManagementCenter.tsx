@@ -47,8 +47,6 @@ import { PolicyTracker } from './PolicyTracker';
 import { DataLatencyTracker } from './DataLatencyTracker';
 import { BriefingChangesCard } from './BriefingChangesCard';
 import { DeltaChangelog } from './DeltaChangelog';
-import { WARRZones } from './WARRZones';
-import type { WARRMetric, WARREvent } from './WARRZones';
 import { useAdminState, STATE_ABBR_TO_NAME } from '@/lib/adminStateContext';
 import { scoreToGrade, ALERT_LEVEL_SCORES } from '@/lib/scoringUtils';
 
@@ -66,6 +64,7 @@ import AMSAlertMonitor from '@/ams/components/AMSAlertMonitor';
 import { useAlertSummary } from '@/ams/hooks/useAlertSummary';
 import { StateDataReportCard } from '@/components/StateDataReportCard';
 import { useStateReport } from '@/lib/useStateReport';
+import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 
 import hucNamesData from '@/data/huc8-names.json';
 import centroidsData from '@/data/huc8-centroids.json';
@@ -130,7 +129,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['usmap', 'briefing-pulse', 'briefing-changes', 'delta-changelog', 'briefing-stakeholder']),
+    sections: new Set(['usmap', 'briefing-actions', 'pol-constituent-concerns', 'briefing-pulse', 'briefing-changes', 'delta-changelog', 'briefing-stakeholder']),
   },
   briefing: {
     label: 'AI Briefing',
@@ -5890,19 +5889,19 @@ export function FederalManagementCenter(props: Props) {
         );
 
         case 'warr-metrics': return DS(
-          <WARRZones zone="warr-metrics" role="Federal" stateAbbr={selectedState || 'US'} metrics={warrMetrics} events={warrEvents} activeResolutionCount={sentinel.criticalHucs.length} />
+          null
         );
 
         case 'warr-analyze': return DS(
-          <WARRZones zone="warr-analyze" role="Federal" stateAbbr={selectedState || 'US'} metrics={warrMetrics} aiData={nationalAIData} events={warrEvents} activeResolutionCount={sentinel.criticalHucs.length} />
+          null
         );
 
         case 'warr-respond': return DS(
-          <WARRZones zone="warr-respond" role="Federal" stateAbbr={selectedState || 'US'} metrics={warrMetrics} events={warrEvents} activeResolutionCount={sentinel.criticalHucs.length} onViewAllEvents={() => setViewLens('briefing' as ViewLens)} />
+          null
         );
 
         case 'warr-resolve': return DS(
-          <WARRZones zone="warr-resolve" role="Federal" stateAbbr={selectedState || 'US'} metrics={warrMetrics} events={warrEvents} activeResolutionCount={sentinel.criticalHucs.length} onOpenPlanner={() => setViewLens('disaster-emergency')} />
+          null
         );
 
         // ── AI Briefing: National Scope Cards ──────────────────────────────
@@ -6001,10 +6000,11 @@ export function FederalManagementCenter(props: Props) {
             <CardContent>
               <div className="space-y-2">
                 {[
-                  { id: 'fed-stk-1', type: 'Congressional', detail: 'House T&I Committee hearing on CWA reauthorization — 3 water quality provisions under debate', status: 'Prepare Testimony', expandDetail: 'Hearing scheduled Mar 18. Key provisions: PFAS discharge limits, infrastructure funding formula, and tribal water rights. EPA testimony requested by Mar 12.' },
-                  { id: 'fed-stk-2', type: 'Media', detail: 'National coverage of PFAS contamination at 14 military installations across 6 states', status: 'Active Response', expandDetail: 'AP, Reuters, and NYT coverage. DOD coordination ongoing. 6 states affected: NC, MI, CO, NM, AK, HI. Congressional inquiry from 8 members.' },
+                  { id: 'fed-stk-1', type: 'Congressional', detail: 'House T&I hearing on WRDA 2026 priorities — water resources provisions and PERMIT Act permitting reforms under discussion', status: 'Prepare Testimony', expandDetail: 'Hearing scheduled Mar 18. Key provisions: WRDA 2026 water resource authorizations, PERMIT Act (CWA permitting reforms passed House late 2025), and tribal water rights. EPA testimony requested by Mar 12.' },
+                  { id: 'fed-stk-2', type: 'Media', detail: 'DoD PFAS assessments at 723 military installations — cleanup timelines extending into 2030s', status: 'Active Response', expandDetail: 'AP, Reuters, and NYT coverage. DoD assessing 723 installations through March 2025; some cleanups (e.g., Whidbey Island) now projected to 2038. Congressional inquiry from 8 members. 6 priority states: NC, MI, CO, NM, AK, HI.' },
                   { id: 'fed-stk-3', type: 'NGO Coalition', detail: 'Environmental groups filed petition for accelerated TMDL development in 4 states', status: 'Legal Review', expandDetail: 'Petition targets FL, TX, OH, PA for alleged delays in TMDL development. Claims 200+ waterbodies awaiting TMDLs beyond statutory deadlines.' },
                   { id: 'fed-stk-4', type: 'Interagency', detail: 'USDA-EPA coordination meeting on agricultural nonpoint source funding — $2.1B allocation', status: 'Upcoming', expandDetail: 'Joint meeting Mar 22 at USDA. Topics: 319 grant alignment with NRCS EQIP, Conservation Reserve Enhancement Program, and nutrient trading pilots.' },
+                  { id: 'fed-stk-5', type: 'Cybersecurity', detail: 'Elevated risk to water sector following U.S./Israeli strikes on Iran — DHS bulletins urge ICS/SCADA hardening', status: 'Active Monitor', expandDetail: 'DHS and CISA issued joint advisory for water sector critical infrastructure. Warnings of retaliatory cyber activity including low-level DDoS and defacement targeting SCADA/ICS systems. 47 states issued complementary advisories to water utilities.' },
                 ].map((s) => (
                   <div key={s.id}>
                     <div
@@ -6147,19 +6147,30 @@ export function FederalManagementCenter(props: Props) {
             <CardContent>
               <div className="space-y-2">
                 {[
-                  { issue: 'Potomac River contamination — downstream drinking water safety', inquiries: 214, trend: '↑ NEW', highlight: true },
+                  { issue: 'Potomac River contamination — downstream drinking water safety', inquiries: 214, trend: '↑ NEW', highlight: true, note: 'Ongoing Interceptor recovery — no overflows since Feb 8; mid-March full restoration targeted (per DC Water March 1 update). PIN forecasts reduced enforcement risk post-intervention.' },
                   { issue: 'Water sector cybersecurity posture following Iran strikes', inquiries: 168, trend: '↑ NEW', highlight: true },
                   { issue: 'PFAS regulation timeline & compliance cost estimates', inquiries: 142, trend: '↑ 38%', highlight: false },
                   { issue: 'SRF reauthorization levels for FY2028+', inquiries: 97, trend: '↑ 15%', highlight: false },
                   { issue: 'WOTUS jurisdictional scope (post-Sackett)', inquiries: 64, trend: '↓ 12%', highlight: false },
                   { issue: 'Lead & Copper Rule Improvements implementation pace', inquiries: 58, trend: '↑ 22%', highlight: false },
                 ].map(c => (
-                  <div key={c.issue} className={`flex items-center justify-between rounded-lg px-4 py-2.5 ${c.highlight ? 'bg-red-50 border-2 border-red-200' : 'bg-white border border-slate-200'}`}>
-                    <span className={`text-sm ${c.highlight ? 'text-red-800 font-medium' : 'text-slate-700'}`}>{c.issue}</span>
-                    <div className="flex items-center gap-3">
-                      <Badge variant="outline" className={c.highlight ? 'border-red-300 text-red-700' : ''}>{c.inquiries} inquiries</Badge>
-                      <span className={`text-xs ${c.highlight ? 'text-red-600 font-semibold' : 'text-slate-500'}`}>{c.trend}</span>
+                  <div key={c.issue}>
+                    <div className={`flex items-center justify-between rounded-lg px-4 py-2.5 ${c.highlight ? 'bg-red-50 border-2 border-red-200' : 'bg-white border border-slate-200'}`}>
+                      <span className={`text-sm ${c.highlight ? 'text-red-800 font-medium' : 'text-slate-700'}`}>{c.issue}</span>
+                      <div className="flex items-center gap-3">
+                        <Badge variant="outline" className={c.highlight ? 'border-red-300 text-red-700' : ''} title="Source: Aggregated congressional/interagency channels">{c.inquiries} inquiries</Badge>
+                        {c.trend.includes('NEW') ? (
+                          <span className="text-xs font-bold text-red-600 bg-red-100 px-1.5 py-0.5 rounded animate-pulse">{c.trend}</span>
+                        ) : (
+                          <span className={`text-xs ${c.highlight ? 'text-red-600 font-semibold' : 'text-slate-500'}`}>{c.trend}</span>
+                        )}
+                      </div>
                     </div>
+                    {(c as any).note && (
+                      <div className="ml-4 mt-1 rounded-lg border border-blue-200 bg-blue-50/60 px-3 py-2">
+                        <p className="text-[11px] text-blue-800">{(c as any).note}</p>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -6383,6 +6394,8 @@ export function FederalManagementCenter(props: Props) {
       }}
 
       </LayoutEditor>
+
+      <DataFreshnessFooter />
 
       </div>
 

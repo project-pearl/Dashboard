@@ -1582,6 +1582,96 @@ export async function GET(request: NextRequest) {
       }
 
       // ════════════════════════════════════════════════════════════════════════
+      // USGS Samples Data — Historical lab results from the USGS Samples API
+      // Example: ?action=usgs-samples&monitoringLocationIdentifier=USGS-01589440&usgsPCode=00300&activityStartDateLower=2024-01-01&activityMediaName=Water
+      // Example: ?action=usgs-samples&pointLocationLatitude=39.27&pointLocationLongitude=-76.58&pointLocationWithinMiles=15&usgsPCode=00300
+      // ════════════════════════════════════════════════════════════════════════
+      case 'usgs-samples': {
+        const params = new URLSearchParams();
+        // Pass through all USGS Samples API query parameters
+        const passthroughKeys = [
+          'monitoringLocationIdentifier', 'usgsPCode', 'activityStartDateLower',
+          'activityMediaName', 'pointLocationLatitude', 'pointLocationLongitude',
+          'pointLocationWithinMiles', 'characteristicName',
+        ];
+        for (const key of passthroughKeys) {
+          const val = sp.get(key);
+          if (val) params.set(key, val);
+        }
+        params.set('mimeType', 'text/csv');
+
+        try {
+          const url = `https://api.waterdata.usgs.gov/samples-data/results/narrow?${params.toString()}`;
+          const res = await fetch(url, {
+            signal: AbortSignal.timeout(15_000),
+            headers: { 'Accept': 'text/csv' },
+          });
+          if (!res.ok) {
+            const body = await res.text().catch(() => '');
+            console.error(`[USGS Samples] ${res.status}: ${body.slice(0, 200)}`);
+            return NextResponse.json({ source: 'usgs-samples', error: `USGS API ${res.status}`, data: [] }, { status: 502 });
+          }
+          const csvText = await res.text();
+          const lines = csvText.trim().split('\n');
+          if (lines.length < 2) {
+            return NextResponse.json({ source: 'usgs-samples', data: [], total: 0 });
+          }
+          // RFC 4180 CSV parser (handles quoted fields with commas and escaped quotes)
+          const parseCSVRow = (row: string): string[] => {
+            const result: string[] = [];
+            let i = 0;
+            while (i <= row.length) {
+              if (i === row.length) { result.push(''); break; }
+              if (row[i] === '"') {
+                let val = '';
+                i++; // skip opening quote
+                while (i < row.length) {
+                  if (row[i] === '"' && row[i + 1] === '"') { val += '"'; i += 2; }
+                  else if (row[i] === '"') { i++; break; }
+                  else { val += row[i]; i++; }
+                }
+                result.push(val);
+                i++; // skip comma
+              } else {
+                const next = row.indexOf(',', i);
+                if (next === -1) { result.push(row.slice(i)); break; }
+                result.push(row.slice(i, next));
+                i = next + 1;
+              }
+            }
+            return result;
+          };
+          const headers = parseCSVRow(lines[0]);
+          // Map USGS Samples API column names to the names the client expects
+          const colMap: Record<string, string> = {
+            'Activity_StartDate': 'Activity Start Date',
+            'Result_Measure': 'Result Value',
+            'Result_MeasureUnit': 'Result Unit',
+            'Location_Identifier': 'Monitoring Location Identifier',
+            'Result_Characteristic': 'Characteristic Name',
+            'Location_Name': 'Location Name',
+            'Activity_TypeCode': 'Activity Type',
+            'Result_SampleFraction': 'Sample Fraction',
+            'Result_MeasureStatusIdentifier': 'Result Status',
+          };
+          const data = lines.slice(1).map(row => {
+            const cols = parseCSVRow(row);
+            const obj: Record<string, string> = {};
+            headers.forEach((h, i) => {
+              const key = h.trim();
+              const mappedKey = colMap[key] || key;
+              obj[mappedKey] = (cols[i] || '').trim();
+            });
+            return obj;
+          });
+          return NextResponse.json({ source: 'usgs-samples', data, total: data.length });
+        } catch (e: any) {
+          console.error('[USGS Samples] Error:', e.message || e);
+          return NextResponse.json({ source: 'usgs-samples', error: e.message, data: [] }, { status: 502 });
+        }
+      }
+
+      // ════════════════════════════════════════════════════════════════════════
       // SIGNALS FEED — Beach closures, harvest stops, water quality advisories
       // Aggregates EPA BEACON, state shellfish data, and sensor threshold alerts
       // Example: ?action=signals&limit=30&statecode=MD
@@ -2260,8 +2350,10 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ source: 'mmw', error: 'Could not parse site data from MMW', data: [] }, { status: 502 });
           }
           let allSites: any;
+          // MMW embeds unescaped control characters (newlines/tabs) inside JSON string values — replace with spaces
+          const sanitizedJson = jsonStr.replace(/[\x00-\x1F\x7F]/g, ' ');
           try {
-            allSites = JSON.parse(jsonStr);
+            allSites = JSON.parse(sanitizedJson);
           } catch (parseErr) {
             console.error('[MMW] JSON.parse failed:', parseErr instanceof Error ? parseErr.message : parseErr);
             return NextResponse.json({ source: 'mmw', error: 'MMW returned malformed site data JSON', data: [] }, { status: 502 });

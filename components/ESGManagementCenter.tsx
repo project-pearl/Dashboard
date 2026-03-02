@@ -50,8 +50,7 @@ import { WaterStewardshipPanel } from '@/components/WaterStewardshipPanel';
 import { FacilityOperationsPanel } from '@/components/FacilityOperationsPanel';
 import { ESGReportingPanel } from '@/components/ESGReportingPanel';
 import { SupplyChainRiskPanel } from '@/components/SupplyChainRiskPanel';
-import { WARRZones } from './WARRZones';
-import type { WARRMetric } from './WARRZones';
+import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import { GrantOutcomesCard } from './GrantOutcomesCard';
@@ -2186,23 +2185,10 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
             case 'supply-chain-risk-panel': return DS(<SupplyChainRiskPanel stateAbbr="" />);
 
 
-            case 'warr-metrics': {
-              const warrM: WARRMetric[] = [
-                { label: 'Water Footprint', value: '—', icon: Gauge, iconColor: 'var(--status-healthy)', subtitle: 'Portfolio water usage' },
-                { label: 'Compliance Rate', value: '—', icon: Shield, iconColor: 'var(--accent-teal)', subtitle: 'Regulatory compliance' },
-                { label: 'Sustainability Score', value: '—', icon: AlertTriangle, iconColor: 'var(--status-warning)', subtitle: 'ESG water score' },
-              ];
-              return DS(<WARRZones zone="warr-metrics" role="Corporate" stateAbbr="US" metrics={warrM} events={[]} activeResolutionCount={0} />);
-            }
-            case 'warr-analyze': return DS(
-              <WARRZones zone="warr-analyze" role="Corporate" stateAbbr="US" metrics={[]} events={[]} activeResolutionCount={0} />
-            );
-            case 'warr-respond': return DS(
-              <WARRZones zone="warr-respond" role="Corporate" stateAbbr="US" metrics={[]} events={[]} activeResolutionCount={0} />
-            );
-            case 'warr-resolve': return DS(
-              <WARRZones zone="warr-resolve" role="Corporate" stateAbbr="US" metrics={[]} events={[]} activeResolutionCount={0} />
-            );
+            case 'warr-metrics': return null;
+            case 'warr-analyze': return null;
+            case 'warr-respond': return null;
+            case 'warr-resolve': return null;
 
             case 'data-export-hub': return DS(
               <DataExportHub context="esg" />
@@ -2626,6 +2612,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
         </>);
         }}
         </LayoutEditor>
+        <DataFreshnessFooter />
 
       </div>
     </div>

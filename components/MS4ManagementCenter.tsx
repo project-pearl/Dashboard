@@ -38,6 +38,7 @@ import BoundaryAlertsDashboard from '@/components/BoundaryAlertsDashboard';
 import { EXAMPLE_ALERTS } from '@/lib/example-data';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
+import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { GrantOutcomesCard } from './GrantOutcomesCard';
 import dynamic from 'next/dynamic';
@@ -95,8 +96,6 @@ import { WaterQualityAlerts } from '@/components/WaterQualityAlerts';
 import { MDEExportTool } from '@/components/MDEExportTool';
 import LocationReportCard from '@/components/LocationReportCard';
 import { getEpaRegionForState } from '@/lib/epa-regions';
-import { WARRZones } from './WARRZones';
-import type { WARRMetric } from './WARRZones';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -1408,23 +1407,10 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
               <AIInsightsEngine key={stateAbbr} role="MS4" stateAbbr={stateAbbr} regionData={scopedRegionData as any} />
             );
 
-        case 'warr-metrics': {
-          const warrM: WARRMetric[] = [
-            { label: 'Permit Compliance', value: '—', icon: Gauge, iconColor: 'var(--status-healthy)', subtitle: 'MS4 permit status' },
-            { label: 'BMP Status', value: '—', icon: Shield, iconColor: 'var(--accent-teal)', subtitle: 'Active BMPs tracked' },
-            { label: 'Storm Events', value: '—', icon: AlertTriangle, iconColor: 'var(--status-warning)', subtitle: 'Recent storm activity' },
-          ];
-          return DS(<WARRZones zone="warr-metrics" role="MS4" stateAbbr={stateAbbr} metrics={warrM} events={[]} activeResolutionCount={0} />);
-        }
-        case 'warr-analyze': return DS(
-          <WARRZones zone="warr-analyze" role="MS4" stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} />
-        );
-        case 'warr-respond': return DS(
-          <WARRZones zone="warr-respond" role="MS4" stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} />
-        );
-        case 'warr-resolve': return DS(
-          <WARRZones zone="warr-resolve" role="MS4" stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} onOpenPlanner={() => setViewLens('disaster')} />
-        );
+        case 'warr-metrics': return null;
+        case 'warr-analyze': return null;
+        case 'warr-respond': return null;
+        case 'warr-resolve': return null;
 
             case 'quickactions': return DS(
         <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-3">
@@ -6667,6 +6653,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
         </>);
         }}
         </LayoutEditor>
+        <DataFreshnessFooter />
 
       </div>
     </div>

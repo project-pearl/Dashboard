@@ -43,10 +43,9 @@ import { StudentMonitoringPanel } from '@/components/StudentMonitoringPanel';
 import { StudentUploadPanel } from '@/components/StudentUploadPanel';
 import LocationReportCard from '@/components/LocationReportCard';
 import { getEpaRegionForState } from '@/lib/epa-regions';
-import { WARRZones } from './WARRZones';
-import type { WARRMetric } from './WARRZones';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
+import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
 import dynamic from 'next/dynamic';
 
@@ -3062,23 +3061,10 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
             case 'drinking-water-safety-panel': return DS(<DrinkingWaterSafetyPanel stateAbbr={stateAbbr} />);
             case 'debate-topics-panel': return DS(<DebateTopicsPanel stateAbbr={stateAbbr} stateName={stateName} isTeacher={isTeacher} />);
 
-            case 'warr-metrics': {
-              const warrM: WARRMetric[] = [
-                { label: 'Student Engagement', value: '—', icon: BookOpen, iconColor: 'var(--status-healthy)', subtitle: 'Active student projects' },
-                { label: 'Active Projects', value: '—', icon: Gauge, iconColor: 'var(--accent-teal)', subtitle: 'STEM water projects' },
-                { label: 'Field Trips', value: '—', icon: Shield, iconColor: 'var(--status-warning)', subtitle: 'Scheduled field activities' },
-              ];
-              return DS(<WARRZones zone="warr-metrics" role="K12" stateAbbr={stateAbbr} metrics={warrM} events={[]} activeResolutionCount={0} />);
-            }
-            case 'warr-analyze': return DS(
-              <WARRZones zone="warr-analyze" role="K12" stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} />
-            );
-            case 'warr-respond': return DS(
-              <WARRZones zone="warr-respond" role="K12" stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} />
-            );
-            case 'warr-resolve': return DS(
-              <WARRZones zone="warr-resolve" role="K12" stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} />
-            );
+            case 'warr-metrics': return null;
+            case 'warr-analyze': return null;
+            case 'warr-respond': return null;
+            case 'warr-resolve': return null;
 
             case 'location-report': return DS(<LocationReportCard />);
 
@@ -3191,6 +3177,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
         </>);
         }}
         </LayoutEditor>
+        <DataFreshnessFooter />
 
       </div>
     </div>

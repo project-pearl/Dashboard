@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Eye, EyeOff, Minus, ChevronDown } from 'lucide-react';
-import type { ReactNode } from 'react';
+import type { ReactNode, MouseEvent } from 'react';
 
 interface DraggableSectionProps {
   id: string;
@@ -17,6 +17,9 @@ interface DraggableSectionProps {
 
 // Sections that should not show collapse controls (too small or structural)
 const NO_COLLAPSE = new Set(['disclaimer']);
+
+// Interactive elements that should not trigger collapse
+const INTERACTIVE = 'button, a, input, select, textarea, [role="button"], [data-no-collapse]';
 
 export function DraggableSection({
   id,
@@ -45,7 +48,21 @@ export function DraggableSection({
   // Hidden sections don't render in normal mode
   if (!isVisible && !isEditMode) return null;
 
-  const showCollapseBtn = !isEditMode && !NO_COLLAPSE.has(id);
+  const canCollapse = !isEditMode && !NO_COLLAPSE.has(id);
+
+  // Click card heading (h3 / CardTitle or its CardHeader parent) to collapse
+  const handleHeaderClick = useCallback((e: MouseEvent) => {
+    if (!canCollapse) return;
+    const target = e.target as HTMLElement;
+    // Don't interfere with interactive elements inside the header
+    if (target.closest(INTERACTIVE)) return;
+    // Only trigger on CardTitle (<h3>) or its CardHeader container (parent div with p-6)
+    const isTitle = !!target.closest('h3');
+    const isHeader = !isTitle && target.closest('[class*="p-6"]')?.querySelector('h3') != null;
+    if (isTitle || isHeader) {
+      setCollapsed(prev => !prev);
+    }
+  }, [canCollapse]);
 
   return (
     <div
@@ -76,7 +93,7 @@ export function DraggableSection({
         </div>
       )}
       {/* Collapse toggle — top-right, visible on hover or when collapsed */}
-      {showCollapseBtn && (
+      {canCollapse && (
         <button
           onClick={() => setCollapsed(prev => !prev)}
           className={`absolute top-2 right-2 z-10 p-1 rounded-md border border-slate-200 bg-white/90 shadow-sm transition-all hover:border-blue-300 hover:shadow ${
@@ -89,7 +106,7 @@ export function DraggableSection({
             : <Minus className="h-3.5 w-3.5 text-slate-400" />}
         </button>
       )}
-      {collapsed && showCollapseBtn ? (
+      {collapsed && canCollapse ? (
         <button
           onClick={() => setCollapsed(false)}
           className="w-full py-2 px-4 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-between transition-colors dark:bg-[rgba(14,22,45,0.85)] dark:border-[rgba(58,189,176,0.12)]"
@@ -98,7 +115,10 @@ export function DraggableSection({
           <ChevronDown className="h-4 w-4 text-slate-400" />
         </button>
       ) : (
-        children
+        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
+        <div onClick={handleHeaderClick} className={canCollapse ? '[&_h3]:cursor-pointer' : ''}>
+          {children}
+        </div>
       )}
     </div>
   );

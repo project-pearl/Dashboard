@@ -37,7 +37,14 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query;
 
     if (error) {
-      console.error('[uploads/samples] Supabase error:', error);
+      // Table may not exist yet or schema mismatch — return empty gracefully
+      const msg = error.message || '';
+      const code = error.code || '';
+      if (code === '42P01' || code === 'PGRST204' || code === 'PGRST205' || msg.includes('does not exist') || msg.includes('Could not find')) {
+        console.warn('[uploads/samples] Table not available:', code, msg);
+        return NextResponse.json({ samples: [] });
+      }
+      console.error('[uploads/samples] Supabase error:', JSON.stringify(error));
       return NextResponse.json({ error: 'Failed to fetch samples' }, { status: 500 });
     }
 

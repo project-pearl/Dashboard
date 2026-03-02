@@ -45,9 +45,8 @@ import { CitizenReportingPanel } from '@/components/CitizenReportingPanel';
 import LocationReportCard from '@/components/LocationReportCard';
 import { getEpaRegionForState } from '@/lib/epa-regions';
 import { LayoutEditor } from './LayoutEditor';
+import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import { DraggableSection } from './DraggableSection';
-import { WARRZones } from './WARRZones';
-import type { WARRMetric } from './WARRZones';
 import dynamic from 'next/dynamic';
 
 const GrantOpportunityMatcher = dynamic(
@@ -2956,23 +2955,10 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
 
             case 'location-report': return DS(<LocationReportCard />);
 
-            case 'warr-metrics': {
-              const warrM: WARRMetric[] = [
-                { label: 'Watershed Health', value: '—', icon: Gauge, iconColor: 'var(--status-healthy)', subtitle: 'Monitored watershed score' },
-                { label: 'Volunteer Hours', value: '—', icon: Heart, iconColor: 'var(--accent-teal)', subtitle: 'Community contributions' },
-                { label: 'Restoration Acres', value: '—', icon: Leaf, iconColor: 'var(--status-warning)', subtitle: 'Land restored to date' },
-              ];
-              return DS(<WARRZones zone="warr-metrics" role="NGO" stateAbbr={stateAbbr} metrics={warrM} events={[]} activeResolutionCount={0} />);
-            }
-            case 'warr-analyze': return DS(
-              <WARRZones zone="warr-analyze" role="NGO" stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} />
-            );
-            case 'warr-respond': return DS(
-              <WARRZones zone="warr-respond" role="NGO" stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} />
-            );
-            case 'warr-resolve': return DS(
-              <WARRZones zone="warr-resolve" role="NGO" stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} />
-            );
+            case 'warr-metrics': return null;
+            case 'warr-analyze': return null;
+            case 'warr-respond': return null;
+            case 'warr-resolve': return null;
 
             // ── Habitat & Ecology ──
             case 'hab-ecoscore': {
@@ -3380,6 +3366,7 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
         </>);
         }}
         </LayoutEditor>
+        <DataFreshnessFooter />
 
       </div>
     </div>

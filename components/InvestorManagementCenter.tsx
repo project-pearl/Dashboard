@@ -49,10 +49,9 @@ import { EmergingContaminantsTracker } from '@/components/EmergingContaminantsTr
 import ResolutionPlanner from '@/components/ResolutionPlanner';
 import { DisasterEmergencyPanel } from '@/components/DisasterEmergencyPanel';
 import { SupplyChainRiskPanel } from '@/components/SupplyChainRiskPanel';
-import { WARRZones } from './WARRZones';
-import type { WARRMetric } from './WARRZones';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
+import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
   { ssr: false }
@@ -1534,23 +1533,10 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
 
             // ─── WARR ZONES ──────────────────────────────────────────────────
 
-            case 'warr-metrics': {
-              const warrM: WARRMetric[] = [
-                { label: 'Portfolio Water Risk', value: '--', icon: Gauge, iconColor: 'var(--status-healthy)', subtitle: 'Avg risk score' },
-                { label: 'Regulatory Exposure', value: '--', icon: Shield, iconColor: 'var(--accent-teal)', subtitle: 'Compliance status' },
-                { label: 'ESG Score', value: '--', icon: Leaf, iconColor: 'var(--status-warning)', subtitle: 'Water disclosure' },
-              ];
-              return DS(<WARRZones zone="warr-metrics" role="Investor" stateAbbr="US" metrics={warrM} events={[]} activeResolutionCount={0} />);
-            }
-            case 'warr-analyze': return DS(
-              <WARRZones zone="warr-analyze" role="Investor" stateAbbr="US" metrics={[]} events={[]} activeResolutionCount={0} />
-            );
-            case 'warr-respond': return DS(
-              <WARRZones zone="warr-respond" role="Investor" stateAbbr="US" metrics={[]} events={[]} activeResolutionCount={0} />
-            );
-            case 'warr-resolve': return DS(
-              <WARRZones zone="warr-resolve" role="Investor" stateAbbr="US" metrics={[]} events={[]} activeResolutionCount={0} />
-            );
+            case 'warr-metrics': return null;
+            case 'warr-analyze': return null;
+            case 'warr-respond': return null;
+            case 'warr-resolve': return null;
 
             // ─── TRENDS DASHBOARD ────────────────────────────────────────────
 
@@ -1740,6 +1726,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
         </>);
         }}
         </LayoutEditor>
+        <DataFreshnessFooter />
 
       </div>
     </div>

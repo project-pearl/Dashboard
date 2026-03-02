@@ -38,8 +38,6 @@ import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { resolveWaterbodyCoordinates } from '@/lib/waterbodyCentroids';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
-import { WARRZones } from './WARRZones';
-import type { WARRMetric } from './WARRZones';
 import { WatershedWaterbodyPanel } from '@/components/WatershedWaterbodyPanel';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
@@ -55,6 +53,7 @@ import LocationReportCard from '@/components/LocationReportCard';
 import { WaterQualityTradingPanel } from '@/components/WaterQualityTradingPanel';
 import { getEpaRegionForState } from '@/lib/epa-regions';
 import { NUTRIENT_TRADING_STATES } from '@/lib/constants';
+import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
@@ -1036,23 +1035,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
         <AIInsightsEngine key={stateAbbr} role="State" stateAbbr={stateAbbr} regionData={regionData as any} />
             );
 
-        case 'warr-metrics': {
-          const warrM: WARRMetric[] = [
-            { label: 'Waterbody Health', value: '—', icon: Gauge, iconColor: 'var(--status-healthy)', subtitle: 'ATTAINS assessed waterbodies' },
-            { label: 'Open Violations', value: '—', icon: AlertTriangle, iconColor: 'var(--status-warning)', subtitle: 'Active ICIS violations' },
-            { label: 'Monitoring Coverage', value: '—', icon: Shield, iconColor: 'var(--accent-teal)', subtitle: 'Stations reporting data' },
-          ];
-          return DS(<WARRZones zone="warr-metrics" role="State" stateAbbr={stateAbbr} metrics={warrM} events={[]} activeResolutionCount={0} />);
-        }
-        case 'warr-analyze': return DS(
-          <WARRZones zone="warr-analyze" role="State" stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} />
-        );
-        case 'warr-respond': return DS(
-          <WARRZones zone="warr-respond" role="State" stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} />
-        );
-        case 'warr-resolve': return DS(
-          <WARRZones zone="warr-resolve" role="State" stateAbbr={stateAbbr} metrics={[]} events={[]} activeResolutionCount={0} onOpenPlanner={() => setViewLens('disaster')} />
-        );
+        case 'warr-metrics': return null;
+        case 'warr-analyze': return null;
+        case 'warr-respond': return null;
+        case 'warr-resolve': return null;
 
             case 'detail': return DS(<>
         <div className="space-y-4">
@@ -3026,8 +3012,8 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             case 'briefing-actions': return DS(
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <AlertCircle className="h-5 w-5 text-red-600" />
+                  <CardTitle className="flex items-center gap-2 text-sm">
+                    <AlertCircle className="h-4 w-4 text-red-600" />
                     Action Required — {stateName}
                   </CardTitle>
                   <CardDescription>Items requiring immediate attention from {stateName} program staff</CardDescription>
@@ -3068,8 +3054,8 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             case 'briefing-changes': return DS(
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-purple-600" />
+                  <CardTitle className="flex items-center gap-2 text-sm">
+                    <Sparkles className="h-4 w-4 text-purple-600" />
                     What Changed Overnight — {stateName}
                   </CardTitle>
                   <CardDescription>New data, alerts, and status changes for {stateName} since your last session</CardDescription>
@@ -3108,8 +3094,8 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             case 'briefing-pulse': return DS(
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Activity className="h-5 w-5 text-blue-600" />
+                  <CardTitle className="flex items-center gap-2 text-sm">
+                    <Activity className="h-4 w-4 text-blue-600" />
                     Program Pulse — {stateName}
                   </CardTitle>
                   <CardDescription>Key {stateName} program metrics at a glance</CardDescription>
@@ -6649,6 +6635,8 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
         </>);
         }}
         </LayoutEditor>
+
+        <DataFreshnessFooter />
 
       </div>
     </div>

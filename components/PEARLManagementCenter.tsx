@@ -24,13 +24,12 @@ import {
 import { useAuth } from '@/lib/authContext';
 import { UserManagementPanel } from './UserManagementPanel';
 import WhatIfSimulator from './WhatIfSimulator';
-import { WARRZones } from './WARRZones';
-import type { WARRMetric } from './WARRZones';
 import RestorationPlanner from '@/components/RestorationPlanner';
 import PredictiveRiskEngine from './PredictiveRiskEngine';
 import ScenarioPlannerPanel from './ScenarioPlannerPanel';
 import RiskInvestigationFlow from './RiskInvestigationFlow';
 import type { RiskPrediction, RiskForecastResult } from '@/lib/siteIntelTypes';
+import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -901,10 +900,10 @@ export function PEARLManagementCenter(props: Props) {
               ];
               return (
                 <div className="space-y-4">
-                  <WARRZones zone="warr-metrics" role="PEARL" stateAbbr="US" metrics={pearlMetrics} events={[]} activeResolutionCount={0} />
-                  <WARRZones zone="warr-analyze" role="PEARL" stateAbbr="US" metrics={[]} events={[]} activeResolutionCount={0} />
-                  <WARRZones zone="warr-respond" role="PEARL" stateAbbr="US" metrics={[]} events={[]} activeResolutionCount={0} />
-                  <WARRZones zone="warr-resolve" role="PEARL" stateAbbr="US" metrics={[]} events={[]} activeResolutionCount={0} />
+                  {null}
+                  {null}
+                  {null}
+                  {null}
                 </div>
               );
             })()}
