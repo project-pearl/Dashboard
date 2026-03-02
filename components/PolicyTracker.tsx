@@ -54,6 +54,26 @@ interface SeverityStyle {
   dot: string;
 }
 
+const TRACKER_CONFIDENCE = 'Moderate';
+const TRACKER_PIPELINE_STATUS = '21/42 sources';
+
+function getPolicyTrackerTimestamp() {
+  const now = new Date();
+  const datePart = new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'America/New_York',
+  }).format(now);
+  const timePart = new Intl.DateTimeFormat('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'America/New_York',
+  }).format(now);
+  return `Data as of ${datePart} ${timePart} EST`;
+}
+
 // ── Data ─────────────────────────────────────────────────────────────────────
 
 const rules: Rule[] = [
@@ -63,22 +83,22 @@ const rules: Rule[] = [
     agency: 'EPA',
     status: 'Final Rule',
     statusColor: '#2E7D32',
-    date: 'Effective 2024',
+    date: 'Retained 2025',
     deadline: null,
     pillars: ['Drinking Water', 'Groundwater'],
     summary:
-      'Sets enforceable Maximum Contaminant Levels for 6 PFAS compounds. First-ever federal drinking water limits for PFAS.',
+      'Final PFAS NPDWR retained in 2025 for PFOA/PFOS at 4 ppt; limits for PFHxS, PFNA, and HFPO-DA (GenX) were rescinded.',
     impact:
-      'Affects 66,000+ public water systems. Utilities must monitor, treat, and report. Compliance deadline: 2029.',
+      'Affects 66,000+ public water systems. Utilities must monitor/treat for PFOA/PFOS with federal compliance timeline now extended to 2031.',
     pinConnection:
       'PIN tracks PFAS detections across 12,400+ monitoring stations. Utility management center auto-flags systems exceeding new MCLs.',
     assessmentUnits: 8420,
     statesAffected: 50,
     severity: 'critical',
     keyNumbers: [
-      { label: 'MCL (PFOA/PFOS)', value: '4 ppt' },
+      { label: 'MCL retained', value: '4 ppt (PFOA/PFOS)' },
       { label: 'Systems affected', value: '66,000+' },
-      { label: 'Compliance deadline', value: '2029' },
+      { label: 'Compliance deadline', value: '2031' },
     ],
     commentPeriod: false,
   },
@@ -88,13 +108,13 @@ const rules: Rule[] = [
     agency: 'EPA / Army Corps',
     status: 'Proposed Rule',
     statusColor: '#E65100',
-    date: '2024\u20132025',
-    deadline: 'Comment period open',
+    date: 'Proposed 2025',
+    deadline: 'Comment closed Jan 2026; awaiting final',
     pillars: ['Surface Water', 'Stormwater', 'Groundwater'],
     summary:
-      'Redefines jurisdictional waters under the Clean Water Act following Sackett v. EPA. Narrows federal authority over wetlands and ephemeral streams.',
+      'Further aligns Clean Water Act jurisdiction with Sackett, emphasizing relatively permanent waters and continuous surface connection tests.',
     impact:
-      'Affects CWA Section 404 permits, wetland delineation, and MS4 jurisdiction boundaries nationwide. Could remove federal protections from millions of acres of wetlands.',
+      'Affects CWA Section 404 permits, wetland delineation, and MS4 jurisdiction boundaries nationwide. Potentially narrows federal protections across millions of wetland acres.',
     pinConnection:
       'PIN maps every ATTAINS assessment unit to its jurisdictional status. WOTUS changes will reclassify thousands of units \u2014 PIN tracks the before/after.',
     assessmentUnits: 142000,
@@ -103,9 +123,9 @@ const rules: Rule[] = [
     keyNumbers: [
       { label: 'Wetland acres at risk', value: '~51M' },
       { label: 'Assessment units affected', value: '142K' },
-      { label: 'Status', value: 'In flux' },
+      { label: 'Status', value: 'Awaiting final rule' },
     ],
-    commentPeriod: true,
+    commentPeriod: false,
   },
   {
     id: 3,
@@ -188,11 +208,11 @@ const rules: Rule[] = [
     agency: 'EPA',
     status: 'Draft',
     statusColor: '#9E9E9E',
-    date: '2025 expected',
-    deadline: 'Draft expected Q2 2025',
+    date: 'Proposed 2026 MSGP pending final',
+    deadline: 'Comment closed May 2025; administratively continued since Feb 2026',
     pillars: ['Stormwater'],
     summary:
-      'Updates Multi-Sector General Permit for industrial stormwater. New benchmark monitoring requirements and technology-based limits expected.',
+      'EPA MSGP reissuance updates benchmark monitoring and industrial stormwater controls; next permit issuance is pending final federal action.',
     impact:
       'Affects ~100,000 industrial facilities with stormwater discharge. New monitoring benchmarks could trigger corrective action requirements.',
     pinConnection:
@@ -203,7 +223,7 @@ const rules: Rule[] = [
     keyNumbers: [
       { label: 'Facilities affected', value: '~100K' },
       { label: 'New benchmarks', value: 'Pending' },
-      { label: 'Expected', value: 'Q2 2025' },
+      { label: 'Current status', value: 'Awaiting final' },
     ],
     commentPeriod: false,
   },
@@ -214,10 +234,10 @@ const rules: Rule[] = [
     status: 'Assessment',
     statusColor: '#E65100',
     date: '2025\u20132026',
-    deadline: 'Final assessment 2026',
+    deadline: 'Milestone assessment active in 2026',
     pillars: ['Surface Water', 'Stormwater', 'Wastewater'],
     summary:
-      'EPA evaluating whether 7 Bay jurisdictions met 2025 pollution reduction targets. Backstop federal actions possible for non-compliant states.',
+      'EPA evaluating whether 7 Bay jurisdictions met 2025 pollution reduction targets; backstop actions remain possible for non-compliant jurisdictions.',
     impact:
       '59% of nitrogen goal met, 92% phosphorus, 100% sediment as of 2024. States that miss targets face expanded permit coverage and redirected grants.',
     pinConnection:
@@ -461,6 +481,7 @@ export function PolicyTracker() {
   const [pillarFilter, setPillarFilter] = useState<Pillar | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<SortBy>('impact');
+  const dataAsOf = useMemo(() => getPolicyTrackerTimestamp(), []);
 
   const filtered = useMemo(() => {
     const list = rules.filter((r) => {
@@ -507,14 +528,20 @@ export function PolicyTracker() {
             )}
             <button
               onClick={() => {
-                const csv = ['Title,Agency,Status,Date,Severity,Pillars,Assessment Units,States']
+                const csv = [
+                  '# Controlled Export - Policy & Regulatory Tracker',
+                  `# ${dataAsOf}`,
+                  '# Disclaimer: Tracker aggregates public EPA/Federal Register data; predictive intelligence only, not official regulatory determinations.',
+                  `# Confidence: ${TRACKER_CONFIDENCE} (pipeline active ${TRACKER_PIPELINE_STATUS})`,
+                  'Title,Agency,Status,Date,Severity,Pillars,Assessment Units,States',
+                ]
                   .concat(filtered.map(r =>
                     `"${r.title}","${r.agency}","${r.status}","${r.date}","${r.severity}","${r.pillars.join('; ')}",${r.assessmentUnits},${r.statesAffected}`
                   )).join('\n');
                 const blob = new Blob([csv], { type: 'text/csv' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
-                a.href = url; a.download = 'regulatory-briefing.csv'; a.click();
+                a.href = url; a.download = 'regulatory-briefing-controlled-export.csv'; a.click();
                 URL.revokeObjectURL(url);
               }}
               className="flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors"
@@ -532,6 +559,7 @@ export function PolicyTracker() {
         <CardDescription className="text-xs text-slate-500 mt-1">
           Active and proposed federal rules affecting water quality programs across all five pillars
         </CardDescription>
+        <div className="mt-2 text-[11px] text-slate-600">{dataAsOf}</div>
       </CardHeader>
 
       <CardContent className="space-y-4">
@@ -667,6 +695,9 @@ export function PolicyTracker() {
 
           {/* ── Source Footer ─────────────────────────────────────────── */}
           <div className="col-span-2">
+            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] text-slate-600 mb-2">
+              Tracker aggregates public EPA/Federal Register data - predictive intelligence, not official. Confidence: {TRACKER_CONFIDENCE} (pipeline active {TRACKER_PIPELINE_STATUS}).
+            </div>
             <PlatformDisclaimer />
           </div>
         </div>

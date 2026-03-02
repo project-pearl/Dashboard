@@ -187,6 +187,7 @@ export async function GET(request: NextRequest) {
     sites: nwisGwVal.sites,
     levels: nwisGwVal.levels,
     trends: nwisGwVal.trends,
+    cacheBuilt: nwisGwVal.cacheBuilt,
   } : null;
 
   // Shape NWIS-IV
@@ -194,6 +195,7 @@ export async function GET(request: NextRequest) {
   const nwisIv = nwisIvVal ? {
     sites: nwisIvVal.sites,
     readings: nwisIvVal.readings,
+    cacheBuilt: nwisIvVal.cacheBuilt,
   } : null;
 
   // Shape FRS

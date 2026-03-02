@@ -31,8 +31,8 @@ export interface LocationReport {
     icis: { permits: IcisPermit[]; violations: IcisViolation[] } | null;
     echo: { facilities: EchoFacility[]; violations: EchoViolation[] } | null;
     pfas: { results: PfasResult[] } | null;
-    nwisGw: { sites: NwisGwSite[]; levels: NwisGwLevel[]; trends: NwisGwTrend[] } | null;
-    nwisIv: { sites: UsgsIvSite[]; readings: UsgsIvReading[] } | null;
+    nwisGw: { sites: NwisGwSite[]; levels: NwisGwLevel[]; trends: NwisGwTrend[]; cacheBuilt?: string } | null;
+    nwisIv: { sites: UsgsIvSite[]; readings: UsgsIvReading[]; cacheBuilt?: string } | null;
     frs: { facilities: FrsFacility[] } | null;
     tri: { facilities: TriFacility[] } | null;
     ndbc: { stations: NdbcStation[] } | null;

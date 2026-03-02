@@ -73,6 +73,17 @@ interface LocationData {
     echo: { facilities: Array<{ name: string; registryId: string }>; violations: Array<{ name: string; violationType: string; pollutant: string; qtrsInNc: number }> } | null;
     pfas: { results: Array<{ facilityName: string; contaminant: string; resultValue: number | null; detected: boolean; sampleDate: string }> } | null;
     tri: { facilities: Array<{ facilityName: string; totalReleases: number; topChemicals: string[] }> } | null;
+    nwisGw: {
+      sites: Array<{ siteNumber: string; siteName: string }>;
+      levels: Array<{ siteNumber: string; dateTime: string; value: number; unit: string; parameterName: string }>;
+      trends: Array<{ siteNumber: string; siteName: string; trend: 'rising' | 'falling' | 'stable' | 'unknown'; trendMagnitude: number; latestDate: string }>;
+      cacheBuilt?: string;
+    } | null;
+    nwisIv: {
+      sites: Array<{ siteNumber: string; siteName: string; parameterCodes: string[] }>;
+      readings: Array<{ siteNumber: string; dateTime: string; parameterName: string; value: number; unit: string; qualifier: string }>;
+      cacheBuilt?: string;
+    } | null;
     ejscreen: Record<string, unknown> | null;
     attains: { impaired: number; total: number; topCauses: string[] } | null;
   };
@@ -294,6 +305,15 @@ function SiteIntelligenceContent() {
   const sdwisViolations = src?.sdwis?.violations ?? [];
   const icisPermits = src?.icis?.permits ?? [];
   const icisViolations = src?.icis?.violations ?? [];
+  const nwisGwSites = src?.nwisGw?.sites ?? [];
+  const nwisGwTrends = src?.nwisGw?.trends ?? [];
+  const nwisGwLevels = src?.nwisGw?.levels ?? [];
+  const nwisIvSites = src?.nwisIv?.sites ?? [];
+  const nwisIvReadings = src?.nwisIv?.readings ?? [];
+  const wdfnBuiltCandidates = [src?.nwisGw?.cacheBuilt, src?.nwisIv?.cacheBuilt].filter(Boolean) as string[];
+  const wdfnLastRefresh = wdfnBuiltCandidates.length
+    ? new Date(Math.max(...wdfnBuiltCandidates.map((d) => new Date(d).getTime()))).toLocaleString()
+    : null;
 
   return (
     <div className="min-h-full bg-slate-50">
@@ -531,6 +551,90 @@ function SiteIntelligenceContent() {
             </DashboardSection>
 
             {/* ── Card 2: Regulatory Exposure (SDWIS) ── */}
+            <DashboardSection title="USGS WDFN Monitoring" subtitle="Groundwater trends and real-time USGS station readings near this location">
+              {(nwisGwSites.length > 0 || nwisIvSites.length > 0) ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="rounded-lg border border-slate-200 bg-white p-3">
+                      <div className="text-lg font-bold text-slate-800">{nwisGwSites.length}</div>
+                      <div className="text-[10px] uppercase tracking-wider text-slate-500">GW sites</div>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-3">
+                      <div className="text-lg font-bold text-slate-800">{nwisGwLevels.length}</div>
+                      <div className="text-[10px] uppercase tracking-wider text-slate-500">GW levels</div>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-3">
+                      <div className="text-lg font-bold text-slate-800">{nwisIvSites.length}</div>
+                      <div className="text-[10px] uppercase tracking-wider text-slate-500">IV sites</div>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-3">
+                      <div className="text-lg font-bold text-slate-800">{nwisIvReadings.length}</div>
+                      <div className="text-[10px] uppercase tracking-wider text-slate-500">IV readings</div>
+                    </div>
+                  </div>
+
+                  {wdfnLastRefresh && (
+                    <div className="text-[11px] text-slate-500">
+                      Last WDFN refresh: {wdfnLastRefresh}
+                    </div>
+                  )}
+
+                  {nwisGwTrends.length > 0 && (
+                    <div>
+                      <div className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Groundwater Trend Signals</div>
+                      <div className="space-y-2">
+                        {nwisGwTrends.slice(0, 6).map((t, i) => (
+                          <div key={i} className="flex items-center justify-between bg-white border border-slate-100 rounded-lg px-4 py-3">
+                            <div>
+                              <div className="text-sm font-medium text-slate-800">{t.siteName}</div>
+                              <div className="text-[10px] text-slate-400">{t.siteNumber} · {new Date(t.latestDate).toLocaleDateString()}</div>
+                            </div>
+                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium border ${
+                              t.trend === 'falling' ? 'bg-red-50 text-red-700 border-red-200' :
+                              t.trend === 'rising' ? 'bg-green-50 text-green-700 border-green-200' :
+                              'bg-slate-50 text-slate-700 border-slate-200'
+                            }`}>
+                              {t.trend} ({Math.abs(t.trendMagnitude).toFixed(2)} ft/mo)
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {nwisIvReadings.length > 0 && (
+                    <div>
+                      <div className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Recent Real-Time Readings (NWIS-IV)</div>
+                      <div className="overflow-x-auto -mx-5">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b border-slate-200">
+                              <th className="text-left py-2 px-4 text-slate-500 font-medium text-xs">Site</th>
+                              <th className="text-left py-2 px-4 text-slate-500 font-medium text-xs">Parameter</th>
+                              <th className="text-left py-2 px-4 text-slate-500 font-medium text-xs">Value</th>
+                              <th className="text-left py-2 px-4 text-slate-500 font-medium text-xs">Timestamp</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {nwisIvReadings.slice(0, 10).map((r, i) => (
+                              <tr key={i} className="border-b border-slate-50">
+                                <td className="py-2 px-4 text-slate-700 font-mono text-xs">{r.siteNumber}</td>
+                                <td className="py-2 px-4 text-slate-700">{r.parameterName}</td>
+                                <td className="py-2 px-4 text-slate-600">{r.value} {r.unit}</td>
+                                <td className="py-2 px-4 text-slate-400 text-xs">{new Date(r.dateTime).toLocaleString()}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500">No USGS WDFN stations found near this location in current cache coverage.</p>
+              )}
+            </DashboardSection>
+
             <DashboardSection title={labels.regulatory} subtitle="Drinking water systems, violations, and enforcement at this location">
               <div className="space-y-4">
                 {sdwisSystems.length > 0 && (
