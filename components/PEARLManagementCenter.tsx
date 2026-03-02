@@ -608,19 +608,41 @@ function ctaByRole(role: UserRole): string {
   }
 }
 
+function scoreGrade(score: number): string {
+  if (score >= 97) return 'A+';
+  if (score >= 93) return 'A';
+  if (score >= 90) return 'A-';
+  if (score >= 87) return 'B+';
+  if (score >= 83) return 'B';
+  if (score >= 80) return 'B-';
+  if (score >= 77) return 'C+';
+  if (score >= 73) return 'C';
+  if (score >= 70) return 'C-';
+  if (score >= 67) return 'D+';
+  if (score >= 63) return 'D';
+  if (score >= 60) return 'D-';
+  return 'F';
+}
+
+function scoreBar(score: number, width = 10): string {
+  const clamped = Math.max(0, Math.min(100, score));
+  const filled = Math.round((clamped / 100) * width);
+  return `${'#'.repeat(filled)}${'-'.repeat(width - filled)}`;
+}
+
 function generateRoleInsights(role: UserRole, m: OutreachMetrics): OutreachInsight[] {
   const shared: OutreachInsight[] = [
+    {
+      title: 'KPI snapshot: water quality grade',
+      metric: `Grade ${scoreGrade(m.nationalHealthScore)} | ${m.nationalHealthScore}/100 | [${scoreBar(m.nationalHealthScore)}]`,
+      whyItMatters: 'This gives a quick visual status snapshot you can drop directly into stakeholder updates.',
+      meetingHook: 'We can map your scope to the largest score movers first.',
+    },
     {
       title: "Don't be the next Potomac spill",
       metric: `${m.infraFailureLikelihood}% infrastructure failure likelihood (${m.infraFailureConfidence} confidence)`,
       whyItMatters: 'This quantifies near-term failure pressure before it becomes a visible public incident.',
       meetingHook: 'We can build a prevention-first action list tied to your highest-consequence assets and outfalls.',
-    },
-    {
-      title: 'National water health movement',
-      metric: `${m.nationalHealthScore}/100 composite`,
-      whyItMatters: 'This gives an executive-ready baseline for progress and urgency.',
-      meetingHook: 'We can map your scope to the largest score movers first.',
     },
     {
       title: 'Operational reliability signal',
@@ -640,12 +662,6 @@ function generateRoleInsights(role: UserRole, m: OutreachMetrics): OutreachInsig
       whyItMatters: 'This identifies where delayed action could compound cost and exposure.',
       meetingHook: 'We can prioritize a short list of high-consequence interventions.',
     },
-    {
-      title: 'Commercial readiness indicator',
-      metric: `$${formatNumber(m.pipelineValue)} pipeline; top fit: ${m.topProspectName} ($${formatNumber(m.topProspectAcv)})`,
-      whyItMatters: 'This shows market pull and where stakeholder alignment is already forming.',
-      meetingHook: 'We can use this as a template for your fastest path to adoption.',
-    },
   ];
 
   if (role === 'MS4' || role === 'Local' || role === 'Utility') {
@@ -658,7 +674,7 @@ function generateRoleInsights(role: UserRole, m: OutreachMetrics): OutreachInsig
   }
 
   if (role === 'State' || role === 'Federal') {
-    shared[3] = {
+    shared[4] = {
       title: 'Oversight prioritization',
       metric: `${m.criticalAlerts + m.warningAlerts} total active risk signals`,
       whyItMatters: 'This helps allocate response capacity where impact is highest.',
@@ -667,7 +683,7 @@ function generateRoleInsights(role: UserRole, m: OutreachMetrics): OutreachInsig
   }
 
   if (role === 'NGO' || role === 'Researcher' || role === 'College' || role === 'K12') {
-    shared[2] = {
+    shared[4] = {
       title: 'Program storytelling with evidence',
       metric: `${formatNumber(m.gallonsTreated)} gallons + ${m.tssRemoval} treatment performance`,
       whyItMatters: 'Evidence-backed impact strengthens grants, public trust, and partnerships.',
@@ -675,7 +691,7 @@ function generateRoleInsights(role: UserRole, m: OutreachMetrics): OutreachInsig
     };
   }
 
-  return shared.slice(0, 5);
+  return shared;
 }
 
 function lerpHexColor(a: string, b: string, t: number) {

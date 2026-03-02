@@ -59,6 +59,7 @@ import { DraggableSection } from './DraggableSection';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { GrantOpportunityMatcher } from '@/components/GrantOpportunityMatcher';
+import { RoleBriefingActionsCard, RoleBriefingPulseCard } from '@/components/RoleBriefingCards';
 import { getEcoData, getEcoScore, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
 import { ecoScoreStyle } from '@/lib/scoringUtils';
 import { NUTRIENT_TRADING_STATES } from '@/lib/constants';
@@ -1211,15 +1212,76 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             </div>
           );
 
-          case 'briefing-actions':
-          case 'briefing-pulse':
+          case 'briefing-actions': {
+            const elevatedAlerts = regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length;
+            const severeAlerts = regionData.filter(r => r.alertLevel === 'high').length;
+            const utilization = wbMarkers.length > 0 ? Math.round((regionData.filter(r => r.status === 'active').length / wbMarkers.length) * 100) : 0;
             return DS(
-              <PlaceholderSection title={section.label} icon={<Sparkles size={15} />} accent="purple">
-                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">
-                  {section.label} — AI briefing placeholder
-                </div>
-              </PlaceholderSection>
+              <RoleBriefingActionsCard
+                title={`AI Briefing - Local | ${jurisdictionId}`}
+                description="Local Government Center"
+                dataAsOf={`PIN Intelligence Network | ${new Date().toLocaleDateString()} | ${effectiveState}`}
+                summary={[
+                  { label: 'Jurisdiction PIN Composite', value: `${overallScore}/100`, style: 'bg-amber-50 border-amber-200 text-amber-700' },
+                  { label: 'Monitoring Utilization', value: `${utilization}% active data coverage`, style: 'bg-blue-50 border-blue-200 text-blue-700' },
+                ]}
+                spotlightTitle="Local Operations Spotlight"
+                spotlightBody={`${elevatedAlerts} elevated local alerts currently tracked${severeAlerts > 0 ? `, including ${severeAlerts} high-severity sites` : ''}. Prioritize inspection routing and permit follow-up in the next 24 hours.`}
+                spotlightBadge={severeAlerts > 0 ? 'High Urgency' : 'Monitor'}
+                actions={[
+                  {
+                    id: 'loc-act-1',
+                    priority: 'High',
+                    item: `${severeAlerts || 1} high-severity waterbody alerts requiring field verification`,
+                    detail: `Dispatch inspection team and confirm recent exceedance drivers. Jurisdiction: ${jurisdictionId}, state: ${effectiveState}.`,
+                    color: 'text-red-700 bg-red-50 border-red-200',
+                  },
+                  {
+                    id: 'loc-act-2',
+                    priority: 'High',
+                    item: `Review NPDES/ICIS compliance queue for ${effectiveState} facilities linked to local waters`,
+                    detail: 'Focus on open SNC findings, pending DMR submissions, and permits expiring within the next 30 days.',
+                    color: 'text-red-700 bg-red-50 border-red-200',
+                  },
+                  {
+                    id: 'loc-act-3',
+                    priority: 'Medium',
+                    item: `Update council briefing packet with ${elevatedAlerts} active alert signals`,
+                    detail: 'Include incident status, expected regulatory exposure, and immediate mitigation steps for public works and council staff.',
+                    color: 'text-amber-700 bg-amber-50 border-amber-200',
+                  },
+                  {
+                    id: 'loc-act-4',
+                    priority: 'Low',
+                    item: 'Confirm next weekly data QA/QC cycle across monitored local stations',
+                    detail: 'Validate station uptime, sampling integrity, and timestamp freshness before publication/export.',
+                    color: 'text-blue-700 bg-blue-50 border-blue-200',
+                  },
+                ]}
+                sourceNote="Source: PIN local monitoring, ATTAINS/ICIS overlays, and jurisdiction operations queue"
+              />
             );
+          }
+
+          case 'briefing-pulse': {
+            const elevatedAlerts = regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length;
+            const monitored = regionData.filter(r => r.status === 'active').length;
+            const avgSources = regionData.length > 0 ? (regionData.reduce((sum, r) => sum + (r.dataSourceCount || 0), 0) / regionData.length) : 0;
+            return DS(
+              <RoleBriefingPulseCard
+                title={`Program Pulse - ${jurisdictionId}`}
+                description="Key local program indicators for the current operating window"
+                metrics={[
+                  { id: 'loc-pulse-1', label: 'Active Waterbodies', value: wbMarkers.length.toLocaleString(), trend: `${effectiveState} scope`, color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', dest: 'Waterbody map detail' },
+                  { id: 'loc-pulse-2', label: 'Elevated Alerts', value: elevatedAlerts.toLocaleString(), trend: 'high + medium', color: elevatedAlerts > 0 ? 'text-red-700' : 'text-green-700', bg: elevatedAlerts > 0 ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200', dest: 'Alert response queue' },
+                  { id: 'loc-pulse-3', label: 'PIN Composite', value: `${overallScore}/100`, trend: 'latest cycle', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', dest: 'Score decomposition' },
+                  { id: 'loc-pulse-4', label: 'Avg Sources/Site', value: avgSources.toFixed(1), trend: `${monitored} active stations`, color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200', dest: 'Data provenance detail' },
+                ]}
+                sourceNote="Source: Local map grid, monitoring status, and data provenance counters"
+                refreshNote={`Refresh: ${new Date().toLocaleString()}`}
+              />
+            );
+          }
 
           case 'briefing-changes': return DS(
             <WhatChangedOvernight entityType="local" entityName={jurisdictionId} stateAbbr={effectiveState} />
@@ -1656,3 +1718,4 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
     </div>
   );
 }
+

@@ -54,6 +54,7 @@ import { WaterStewardshipPanel } from '@/components/WaterStewardshipPanel';
 import { FacilityOperationsPanel } from '@/components/FacilityOperationsPanel';
 import { SupplyChainRiskPanel } from '@/components/SupplyChainRiskPanel';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
+import { RoleBriefingActionsCard, RoleBriefingPulseCard } from '@/components/RoleBriefingCards';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import { getEcoData, getEcoScore, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
@@ -1772,57 +1773,73 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
 
             // ─── BRIEFING PANELS ────────────────────────────────────────────
 
-            case 'briefing-actions': return DS(
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-red-600" /> Action Required<MockDataBadge /></CardTitle>
-                  <CardDescription className="text-[11px]">Priority actions requiring immediate attention.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {[
-                      { label: 'NJ API Plant — Effluent BOD5 exceedance (237 mg/L limit)', level: 'high' as const },
-                      { label: 'Indianapolis — GMP revalidation overdue by 14 days', level: 'high' as const },
-                      { label: 'San Diego — PFAS monitoring results pending review', level: 'medium' as const },
-                    ].map((action, i) => (
-                      <div key={i} className="flex items-center gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50">
-                        <div className={`h-2 w-2 rounded-full flex-shrink-0 ${action.level === 'high' ? 'bg-red-500' : 'bg-amber-500'}`} />
-                        <span className="text-[11px] text-slate-700">{action.label}</span>
-                        <ConcernBadge level={action.level} />
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            );
+            case 'briefing-actions': {
+              const highAlerts = facilitiesData.filter(f => f.alertLevel === 'high').length;
+              const totalAlerts = facilitiesData.reduce((sum, f) => sum + f.activeAlerts, 0);
+              return DS(
+                <RoleBriefingActionsCard
+                  title="AI Briefing - Biotech | Compliance Risk"
+                  description="Biotech Management Center"
+                  dataAsOf={`PIN Intelligence Network | ${new Date().toLocaleDateString()} | ${companyName}`}
+                  summary={[
+                    { label: 'Avg Water Risk', value: `${portfolioScores.avgRisk}/100`, style: 'bg-amber-50 border-amber-200 text-amber-700' },
+                    { label: 'GMP Compliance', value: `${portfolioScores.gmpCompliantCount}/${portfolioScores.total} facilities`, style: 'bg-green-50 border-green-200 text-green-700' },
+                  ]}
+                  spotlightTitle="Facility Compliance Spotlight"
+                  spotlightBody={`${highAlerts} facilities currently show high-severity alert conditions with ${totalAlerts} active alert signals across the portfolio. Prioritize GMP-critical and discharge-critical sites first.`}
+                  spotlightBadge={highAlerts > 0 ? 'High Urgency' : 'Monitor'}
+                  actions={[
+                    {
+                      id: 'bio-act-1',
+                      priority: 'High',
+                      item: 'Resolve API discharge exceedance sites flagged above permit thresholds',
+                      detail: 'Validate effluent excursion root cause, confirm treatment controls, and prepare regulator-ready incident documentation.',
+                      color: 'text-red-700 bg-red-50 border-red-200',
+                    },
+                    {
+                      id: 'bio-act-2',
+                      priority: 'High',
+                      item: 'Close overdue GMP water-system revalidation actions',
+                      detail: 'Complete validation evidence package for IQ/OQ/PQ gaps and align with quality-system CAPA deadlines.',
+                      color: 'text-red-700 bg-red-50 border-red-200',
+                    },
+                    {
+                      id: 'bio-act-3',
+                      priority: 'Medium',
+                      item: 'Review PFAS and emerging contaminant monitoring queue for pending results',
+                      detail: 'Finalize lab review, trend direction, and disclosure language for ESG/compliance reporting cycles.',
+                      color: 'text-amber-700 bg-amber-50 border-amber-200',
+                    },
+                    {
+                      id: 'bio-act-4',
+                      priority: 'Low',
+                      item: 'Refresh quarterly board summary with treatment performance and permit posture',
+                      detail: 'Include trend movement for risk score, compliance rate, and monitored-site coverage.',
+                      color: 'text-blue-700 bg-blue-50 border-blue-200',
+                    },
+                  ]}
+                  sourceNote="Source: Facility operations telemetry, GMP status, and regulatory monitoring queues"
+                />
+              );
+            }
 
             case 'briefing-changes': return DS(
               <WhatChangedOvernight entityType="biotech" />
             );
 
             case 'briefing-pulse': return DS(
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center gap-2"><Gauge className="h-4 w-4 text-violet-600" /> Program Pulse<MockDataBadge /></CardTitle>
-                  <CardDescription className="text-[11px]">Current pulse of biotech water compliance programs.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-center">
-                      <div className="text-lg font-bold text-green-800">{portfolioScores.gmpCompliantCount}/{portfolioScores.total}</div>
-                      <div className="text-[10px] text-green-700">GMP Compliant</div>
-                    </div>
-                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-center">
-                      <div className="text-lg font-bold text-blue-800">{portfolioScores.monitored}/{portfolioScores.total}</div>
-                      <div className="text-[10px] text-blue-700">Actively Monitored</div>
-                    </div>
-                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-center">
-                      <div className="text-lg font-bold text-amber-800">{portfolioScores.avgRisk}</div>
-                      <div className="text-[10px] text-amber-700">Avg Water Risk</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <RoleBriefingPulseCard
+                title="Program Pulse - Biotech"
+                description="Portfolio health indicators for biotech water quality and compliance operations"
+                metrics={[
+                  { id: 'bio-pulse-1', label: 'GMP Compliant', value: `${portfolioScores.gmpCompliantCount}/${portfolioScores.total}`, trend: 'portfolio count', color: 'text-green-700', bg: 'bg-green-50 border-green-200', dest: 'GMP compliance detail' },
+                  { id: 'bio-pulse-2', label: 'PIN Monitored', value: `${portfolioScores.monitored}/${portfolioScores.total}`, trend: 'facility coverage', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', dest: 'Monitoring status detail' },
+                  { id: 'bio-pulse-3', label: 'Avg Water Risk', value: `${portfolioScores.avgRisk}`, trend: 'latest cycle', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', dest: 'Risk profile detail' },
+                  { id: 'bio-pulse-4', label: 'Active Alerts', value: facilitiesData.reduce((sum, f) => sum + f.activeAlerts, 0).toLocaleString(), trend: 'open items', color: 'text-red-700', bg: 'bg-red-50 border-red-200', dest: 'Alert queue detail' },
+                ]}
+                sourceNote="Source: Biotech facility telemetry, compliance status, and alert tracking"
+                refreshNote={`Refresh: ${new Date().toLocaleString()}`}
+              />
             );
 
             case 'briefing-stakeholder': return DS(

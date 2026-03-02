@@ -52,6 +52,7 @@ import { SupplyChainRiskPanel } from '@/components/SupplyChainRiskPanel';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
+import { RoleBriefingActionsCard, RoleBriefingPulseCard } from '@/components/RoleBriefingCards';
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
   { ssr: false }
@@ -1579,22 +1580,72 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
 
             // ─── BRIEFING PANELS ─────────────────────────────────────────
 
-            case 'briefing-actions': return DS(
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                <h3 className="text-sm font-semibold text-slate-800 mb-1">Action Required</h3>
-                <p className="text-xs text-slate-500">Priority actions requiring immediate attention.</p>
-              </div>
-            );
+            case 'briefing-actions': {
+              const exposedPct = Math.round((portfolioScores.exposedAUM / Math.max(1, portfolioScores.totalAUM)) * 100);
+              return DS(
+                <RoleBriefingActionsCard
+                  title="AI Briefing - Investor | Portfolio Risk"
+                  description="Investor Management Center"
+                  dataAsOf={`PIN Intelligence Network | ${new Date().toLocaleDateString()} | ${portfolioName}`}
+                  summary={[
+                    { label: 'Portfolio Water Risk', value: `${portfolioScores.avgRisk}/100`, style: 'bg-amber-50 border-amber-200 text-amber-700' },
+                    { label: 'AUM Exposed', value: `$${portfolioScores.exposedAUM}M (${exposedPct}%)`, style: 'bg-red-50 border-red-200 text-red-700' },
+                  ]}
+                  spotlightTitle="Portfolio Exposure Spotlight"
+                  spotlightBody={`${portfolioScores.highRisk} high-risk holdings and ${portfolioScores.extremeStress} in extreme stress basins are driving regulatory and valuation pressure. Prioritize engagement and mitigation plans on the top exposure names this cycle.`}
+                  spotlightBadge={portfolioScores.highRisk > 0 ? 'High Urgency' : 'Monitor'}
+                  actions={[
+                    {
+                      id: 'inv-act-1',
+                      priority: 'High',
+                      item: `Escalate top ${Math.min(3, portfolioScores.highRisk || 1)} high-risk holdings for active stewardship engagement`,
+                      detail: 'Focus on companies with high risk scores, open compliance flags, and high AUM concentration in stressed basins.',
+                      color: 'text-red-700 bg-red-50 border-red-200',
+                    },
+                    {
+                      id: 'inv-act-2',
+                      priority: 'High',
+                      item: `Run downside scenario update for $${portfolioScores.exposedAUM}M exposed AUM`,
+                      detail: 'Refresh base/bear valuation impact assumptions for permit tightening, compliance costs, and water scarcity disruption.',
+                      color: 'text-red-700 bg-red-50 border-red-200',
+                    },
+                    {
+                      id: 'inv-act-3',
+                      priority: 'Medium',
+                      item: `Prepare IC memo for compliance drift in ${companiesData.filter(c => (c.complianceRate || 100) < 95).length} holdings`,
+                      detail: 'Summarize permit risk trend, expected cost profile, and management action adequacy for the next investment committee session.',
+                      color: 'text-amber-700 bg-amber-50 border-amber-200',
+                    },
+                    {
+                      id: 'inv-act-4',
+                      priority: 'Low',
+                      item: 'Update ESG water disclosure tracker before the next reporting cycle',
+                      detail: 'Reconcile framework coverage deltas across GRI, SASB, CDP, and TCFD-aligned reporting for portfolio comparability.',
+                      color: 'text-blue-700 bg-blue-50 border-blue-200',
+                    },
+                  ]}
+                  sourceNote="Source: Portfolio risk model, compliance overlays, and ESG disclosure coverage metrics"
+                />
+              );
+            }
 
             case 'briefing-changes': return DS(
               <WhatChangedOvernight entityType="investor" />
             );
 
             case 'briefing-pulse': return DS(
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                <h3 className="text-sm font-semibold text-slate-800 mb-1">Program Pulse</h3>
-                <p className="text-xs text-slate-500">Current pulse of portfolio water risk programs.</p>
-              </div>
+              <RoleBriefingPulseCard
+                title="Program Pulse - Investor"
+                description="Key portfolio indicators for water risk, compliance, and coverage"
+                metrics={[
+                  { id: 'inv-pulse-1', label: 'Total AUM', value: `$${portfolioScores.totalAUM}M`, trend: `${portfolioScores.total} holdings`, color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', dest: 'Portfolio AUM breakdown' },
+                  { id: 'inv-pulse-2', label: 'Avg Compliance', value: `${portfolioScores.avgCompliance}%`, trend: 'latest cycle', color: 'text-green-700', bg: 'bg-green-50 border-green-200', dest: 'Compliance trend detail' },
+                  { id: 'inv-pulse-3', label: 'High Risk Holdings', value: portfolioScores.highRisk.toLocaleString(), trend: `avg risk ${portfolioScores.avgRisk}/100`, color: 'text-red-700', bg: 'bg-red-50 border-red-200', dest: 'Risk concentration detail' },
+                  { id: 'inv-pulse-4', label: 'PIN Verified', value: portfolioScores.monitored.toLocaleString(), trend: `${Math.round((portfolioScores.monitored / Math.max(1, portfolioScores.total)) * 100)}% coverage`, color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200', dest: 'Monitoring coverage detail' },
+                ]}
+                sourceNote="Source: Investor portfolio holdings, risk/compliance models, and PIN coverage status"
+                refreshNote={`Refresh: ${new Date().toLocaleString()}`}
+              />
             );
 
             case 'briefing-stakeholder': return DS(
