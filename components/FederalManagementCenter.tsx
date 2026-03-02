@@ -129,7 +129,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['usmap', 'briefing-actions', 'pol-constituent-concerns', 'briefing-pulse', 'briefing-changes', 'delta-changelog', 'briefing-stakeholder']),
+    sections: new Set(['usmap', 'pol-constituent-concerns', 'delta-changelog']),
   },
   briefing: {
     label: 'AI Briefing',
@@ -139,7 +139,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: true,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['ai-water-intelligence', 'sentinel-briefing', 'briefing-actions', 'briefing-pulse', 'pol-constituent-concerns', 'briefing-changes', 'delta-changelog', 'briefing-stakeholder']),
+    sections: new Set(['ai-water-intelligence', 'briefing-actions']),
   },
   'political-briefing': {
     label: 'Political Briefing',
@@ -6029,9 +6029,8 @@ export function FederalManagementCenter(props: Props) {
                 Aggregated risk intelligence, program updates, stakeholder signals, and foresight for federal and Chesapeake focus areas.
               </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {[
-                  { label: 'Active Alerts', value: `${briefingLiveStats.criticalAlerts.toLocaleString()} CRITICAL`, style: 'bg-red-50 border-red-200 text-red-700' },
                   { label: 'National PIN Composite', value: `${briefingLiveStats.score}/100 (${scoreToGrade(briefingLiveStats.score).letter})`, style: 'bg-amber-50 border-amber-200 text-amber-700' },
                   { label: 'Potomac Status', value: 'Recovery on track (no overflows 3+ weeks)', style: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
                 ].map((k) => (
@@ -6186,15 +6185,6 @@ export function FederalManagementCenter(props: Props) {
               <CardDescription>Congressional, media, NGO, and interagency signals with inquiry heat tracking</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {briefingLiveStats.highestSignal && (
-                <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2">
-                  <p className="text-[11px] font-semibold text-indigo-700">Live Sentinel Signal</p>
-                  <p className="text-xs text-slate-700 mt-1">
-                    {briefingLiveStats.highestSignal.watershedName} | Score {briefingLiveStats.highestSignal.compositeScore} | Level {briefingLiveStats.highestSignal.alertLevel}
-                  </p>
-                  <p className="text-[10px] text-slate-500 mt-1">Last refresh: {briefingLiveStats.lastRefresh}</p>
-                </div>
-              )}
               <div className="space-y-2">
                 {[
                   {
