@@ -1171,7 +1171,7 @@ export function FederalManagementCenter(props: Props) {
   const [reducedMotion, setReducedMotion] = useState(false);
   const [selectedAlertHuc, setSelectedAlertHuc] = useState<string | null>(null);
   const [selectedAlertLevel, setSelectedAlertLevel] = useState<string>('CRITICAL');
-  const [sideCardMode, setSideCardMode] = useState<'alerts' | 'state'>('alerts');
+  const [sideCardMode, setSideCardMode] = useState<'alerts' | 'state' | 'alert-detail'>('alerts');
 
   // Play chime when new CRITICAL HUCs appear
   useEffect(() => {
@@ -2668,7 +2668,7 @@ export function FederalManagementCenter(props: Props) {
         case 'usmap': return DS(<div className="space-y-6">
         {/* ── MONITORING NETWORK MAP ──────────────────────────────── */}
 
-        <div ref={mapSectionRef} className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div ref={mapSectionRef} className="grid grid-cols-1 gap-6 lg:grid-cols-3 items-start">
           {/* Map Card */}
           <Card id="section-usmap" className="lg:col-span-2">
             <CardHeader>
@@ -2774,7 +2774,7 @@ export function FederalManagementCenter(props: Props) {
                         onHucClick={(huc8, level) => {
                           setSelectedAlertHuc(huc8);
                           setSelectedAlertLevel(level);
-                          setSideCardMode('alerts');
+                          setSideCardMode('alert-detail');
                           const c = centroids[huc8];
                           if (c && mapRef.current) {
                             mapRef.current.flyTo({ center: [c.lng, c.lat], zoom: 8, duration: 800 });
@@ -2867,89 +2867,124 @@ export function FederalManagementCenter(props: Props) {
           {/* Dual-mode Side Card: Alert Monitor / State Detail */}
           <Card style={{ background: 'var(--bg-card)' }}>
             {sideCardMode === 'alerts' ? (
-              <>
-              {/* HUC Deep Dive — shown when a sentinel alert HUC is selected */}
-              {selectedAlertHuc && (
-                <div className="px-4 pt-4 pb-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <MapPin size={15} style={{ color: 'var(--accent-teal)' }} />
-                      <div>
-                        <div className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-                          {hucNames[selectedAlertHuc] ?? selectedAlertHuc}
-                        </div>
-                        <div className="text-[10px]" style={{ color: 'var(--text-dim)' }}>HUC-8: {selectedAlertHuc}</div>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setSelectedAlertHuc(null)}
-                      className="text-[10px] px-2 py-1 rounded transition-colors"
-                      style={{ color: 'var(--accent-teal)', border: '1px solid var(--border-subtle)' }}
-                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
-                    >
-                      Back to all alerts
-                    </button>
-                  </div>
-                  {selectedHucIndices ? (
-                    <div className="space-y-2">
-                      {/* Composite score gauge */}
-                      <div className="flex items-center gap-3">
-                        <div className="relative w-14 h-14">
-                          <svg viewBox="0 0 36 36" className="w-14 h-14 -rotate-90">
-                            <circle cx="18" cy="18" r="15.9" fill="none" strokeWidth="3" stroke="var(--border-subtle)" />
-                            <circle cx="18" cy="18" r="15.9" fill="none" strokeWidth="3"
-                              stroke={selectedHucIndices.composite >= 80 ? 'var(--status-healthy)' : selectedHucIndices.composite >= 60 ? 'var(--status-watch)' : selectedHucIndices.composite >= 40 ? 'var(--status-impaired)' : 'var(--status-severe)'}
-                              strokeDasharray={`${selectedHucIndices.composite} ${100 - selectedHucIndices.composite}`}
-                              strokeLinecap="round"
-                            />
-                          </svg>
-                          <div className="absolute inset-0 flex items-center justify-center text-xs font-bold" style={{ color: 'var(--text-primary)' }}>
-                            {Math.round(selectedHucIndices.composite)}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Composite Score</div>
-                          <div className="text-[10px]" style={{ color: 'var(--text-dim)' }}>
-                            {selectedHucIndices.composite >= 80 ? 'Healthy' : selectedHucIndices.composite >= 60 ? 'Watch' : selectedHucIndices.composite >= 40 ? 'Impaired' : 'Severe'}
-                          </div>
-                        </div>
-                      </div>
-                      {/* Key index values */}
-                      <div className="grid grid-cols-3 gap-2">
-                        {[
-                          { label: 'Ecological', key: 'ecological', fallback: selectedHucIndices.ecologicalHealth },
-                          { label: 'Permit Risk', key: 'permitRisk', fallback: selectedHucIndices.permitRisk },
-                          { label: 'Infra', key: 'infrastructure', fallback: selectedHucIndices.infrastructure },
-                        ].map(idx => {
-                          const val = idx.fallback ?? selectedHucIndices[idx.key];
-                          return (
-                            <div key={idx.key} className="text-center p-2 rounded-lg" style={{ background: 'var(--bg-hover)' }}>
-                              <div className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>{typeof val === 'number' ? Math.round(val) : '—'}</div>
-                              <div className="text-[9px]" style={{ color: 'var(--text-dim)' }}>{idx.label}</div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-xs animate-pulse" style={{ color: 'var(--text-dim)' }}>Loading indices...</div>
-                  )}
-                </div>
-              )}
               <AMSAlertMonitor
                 summary={amsSummary ?? MOCK_ALERT_SUMMARY}
                 role="FEDERAL_OVERSIGHT"
                 onOpenResponsePlanner={() => setViewLens('disaster-emergency' as ViewLens)}
                 onEventClick={(huc8) => {
                   setSelectedAlertHuc(huc8);
-                  setSideCardMode('alerts');
+                  setSideCardMode('alert-detail');
                   const c = centroids[huc8];
                   if (c && mapRef.current) {
                     mapRef.current.flyTo({ center: [c.lng, c.lat], zoom: 8, duration: 800 });
                   }
                 }}
               />
+            ) : sideCardMode === 'alert-detail' ? (
+              <>
+                <CardHeader className="pb-2 pt-4 px-5">
+                  <CardTitle className="flex items-center gap-2 text-sm">
+                    <button
+                      onClick={() => { setSideCardMode('alerts'); setSelectedAlertHuc(null); }}
+                      className="flex items-center gap-1 text-xs font-medium transition-colors"
+                      style={{ color: 'var(--accent-teal)' }}
+                      onMouseEnter={e => { e.currentTarget.style.opacity = '0.8'; }}
+                      onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
+                    >
+                      <ChevronLeft size={14} />
+                      Back to Alerts
+                    </button>
+                    <span className="mx-1" style={{ color: 'var(--border-default)' }}>|</span>
+                    <MapPin size={15} className="flex-shrink-0" style={{ color: 'var(--accent-teal)' }} />
+                    <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      {hucNames[selectedAlertHuc ?? ''] ?? selectedAlertHuc ?? 'Unknown'}
+                    </span>
+                  </CardTitle>
+                  {selectedAlertHuc && (
+                    <div className="text-[10px] mt-0.5 ml-7" style={{ color: 'var(--text-dim)' }}>HUC-8: {selectedAlertHuc}</div>
+                  )}
+                </CardHeader>
+                <CardContent className="space-y-4 px-5 pb-5">
+                  {selectedHucIndices ? (
+                    <div className="space-y-4">
+                      {/* Composite score gauge */}
+                      <div className="flex items-center gap-4 py-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                        <div className="relative w-20 h-20 flex-shrink-0">
+                          <svg viewBox="0 0 36 36" className="w-20 h-20 -rotate-90">
+                            <circle cx="18" cy="18" r="15.9" fill="none" strokeWidth="2.5" stroke="var(--border-subtle)" />
+                            <circle cx="18" cy="18" r="15.9" fill="none" strokeWidth="2.5"
+                              stroke={selectedHucIndices.composite >= 80 ? 'var(--status-healthy)' : selectedHucIndices.composite >= 60 ? 'var(--status-watch)' : selectedHucIndices.composite >= 40 ? 'var(--status-impaired)' : 'var(--status-severe)'}
+                              strokeDasharray={`${selectedHucIndices.composite} ${100 - selectedHucIndices.composite}`}
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <span className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{Math.round(selectedHucIndices.composite)}</span>
+                            <span className="text-[9px]" style={{ color: 'var(--text-dim)' }}>
+                              {selectedHucIndices.composite >= 80 ? 'Healthy' : selectedHucIndices.composite >= 60 ? 'Watch' : selectedHucIndices.composite >= 40 ? 'Impaired' : 'Severe'}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Composite Score</div>
+                          <div className="text-[10px] mt-1" style={{ color: 'var(--text-dim)' }}>
+                            Derived from ecological health, permit risk, and infrastructure indices for this HUC-8 watershed.
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Index breakdown */}
+                      <div className="space-y-2">
+                        <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-dim)' }}>Index Breakdown</div>
+                        {[
+                          { label: 'Ecological Health', key: 'ecologicalHealth', color: 'var(--status-healthy)' },
+                          { label: 'Permit Risk', key: 'permitRisk', color: 'var(--status-impaired)' },
+                          { label: 'Infrastructure', key: 'infrastructure', color: 'var(--accent-teal)' },
+                          { label: 'Water Quality', key: 'waterQuality', color: '#3b82f6' },
+                          { label: 'Contamination', key: 'contamination', color: '#ef4444' },
+                        ].map(idx => {
+                          const val = selectedHucIndices[idx.key];
+                          const score = typeof val === 'number' ? Math.round(val) : null;
+                          return (
+                            <div key={idx.key} className="flex items-center gap-2">
+                              <div className="text-[10px] w-28 text-right" style={{ color: 'var(--text-dim)' }}>{idx.label}</div>
+                              <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
+                                <div className="h-full rounded-full transition-all" style={{ width: score != null ? `${score}%` : '0%', background: idx.color }} />
+                              </div>
+                              <div className="text-[10px] w-6 font-semibold text-right" style={{ color: 'var(--text-primary)' }}>{score ?? '—'}</div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Alert level badge */}
+                      {selectedAlertLevel && (
+                        <div className="flex items-center gap-2 pt-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+                          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-dim)' }}>Alert Level:</span>
+                          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold" style={{
+                            background: selectedAlertLevel === 'CRITICAL' ? 'var(--status-severe-bg)' : selectedAlertLevel === 'WATCH' ? 'var(--status-watch-bg)' : 'var(--status-impaired-bg)',
+                            color: selectedAlertLevel === 'CRITICAL' ? 'var(--status-severe)' : selectedAlertLevel === 'WATCH' ? 'var(--status-watch)' : 'var(--status-impaired)',
+                          }}>
+                            {selectedAlertLevel}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Action button */}
+                      <button
+                        onClick={() => setViewLens('disaster-emergency' as ViewLens)}
+                        className="w-full mt-1 px-4 py-2 text-sm font-semibold rounded transition-colors"
+                        style={{ background: 'var(--accent-teal)', color: '#fff' }}
+                        onMouseEnter={e => { e.currentTarget.style.opacity = '0.9'; }}
+                        onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
+                      >
+                        Open in Response Planner →
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="text-xs animate-pulse py-8 text-center" style={{ color: 'var(--text-dim)' }}>Loading watershed indices...</div>
+                  )}
+                </CardContent>
               </>
             ) : (
               <>
@@ -3322,7 +3357,7 @@ export function FederalManagementCenter(props: Props) {
                               <p><span className="font-medium" style={{ color: 'var(--text-primary)' }}>Base score</span> from parameter readings vs. regulatory targets.</p>
                               <p><span className="font-medium" style={{ color: 'var(--text-primary)' }}>Adjustments</span> for data freshness, active alerts, and ATTAINS status.</p>
                               <p className="text-[10px]" style={{ color: 'var(--text-dim)' }}>Scale: A+ (97+) · A (93) · B (83) · C (73) · D (63) · F (&lt;60)</p>
-                              <p className="text-[9px] italic pt-1" style={{ borderTop: '1px solid var(--border-subtle)', color: 'var(--text-dim)' }}>Informational only — not an official EPA/state assessment.</p>
+                              <p className="text-[9px] italic pt-1" style={{ borderTop: '1px solid var(--border-subtle)', color: 'var(--text-dim)' }}>Informational only — not an official regulatory determination. See disclaimer below.</p>
                             </div>
                           )}
                         </div>
