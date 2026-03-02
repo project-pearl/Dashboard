@@ -288,12 +288,9 @@ function EventRow({ event, onOpenResponsePlanner }: { event: WatershedScore; onO
 
   return (
     <div className={`border rounded-lg overflow-hidden ${config.border}`}>
-      <button
-        onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
-        className={`w-full px-4 py-3 ${config.bg} hover:brightness-95 transition-all`}
-      >
+      <div className={`w-full px-4 py-3 ${config.bg} hover:brightness-95 transition-all`}>
         <div className="flex items-start justify-between">
-          <div className="text-left">
+          <div className="text-left flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <AlertLevelBadge level={event.alertLevel} />
               <span className="text-sm font-semibold text-slate-800">
@@ -323,22 +320,28 @@ function EventRow({ event, onOpenResponsePlanner }: { event: WatershedScore; onO
             <span className="text-xs text-slate-400">
               {event.signalCount} signal{event.signalCount !== 1 ? "s" : ""}
             </span>
-            <svg
-              className={`w-4 h-4 text-slate-400 transition-transform ${expanded ? "rotate-180" : ""}`}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+            <button
+              onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+              className="p-1 rounded hover:bg-black/5 transition-colors"
+              aria-label={expanded ? 'Collapse' : 'Expand'}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
+              <svg
+                className={`w-4 h-4 text-slate-400 transition-transform ${expanded ? "rotate-180" : ""}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
           </div>
         </div>
-      </button>
+      </div>
       {expanded && <EventDetail event={event} onOpenResponsePlanner={onOpenResponsePlanner} />}
     </div>
   );
@@ -373,7 +376,7 @@ function SummaryHeader({ summary }: { summary: AlertSummary }) {
 // ---------------------------------------------------------------------------
 
 interface AMSAlertMonitorProps {
-  summary: AlertSummary;
+  summary: AlertSummary | null;
   role: PinRole;
   onOpenResponsePlanner?: (event: WatershedScore) => void;
   onEventClick?: (huc8: string) => void;
@@ -388,13 +391,25 @@ export default function AMSAlertMonitor({
   const [filterLevel, setFilterLevel] = useState<AlertLevel | "ALL">("ALL");
 
   const filteredEvents = useMemo(() => {
+    if (!summary) return [];
     let events = summary.recentEvents;
     if (filterLevel !== "ALL") {
       events = events.filter((e) => e.alertLevel === filterLevel);
     }
     // Sort by composite score descending
     return [...events].sort((a, b) => b.compositeScore - a.compositeScore);
-  }, [summary.recentEvents, filterLevel]);
+  }, [summary, filterLevel]);
+
+  if (!summary) {
+    return (
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 text-center">
+        <div className="animate-pulse flex flex-col items-center gap-2">
+          <div className="w-6 h-6 rounded-full bg-slate-200" />
+          <div className="text-xs text-slate-400">Loading Sentinel alerts...</div>
+        </div>
+      </div>
+    );
+  }
 
   const hasActiveAlerts =
     summary.byLevel.ALERT > 0 || summary.byLevel.ADVISORY > 0;

@@ -63,7 +63,7 @@ import { SentinelStatusBadge } from './SentinelStatusBadge';
 import { SentinelBriefingCard } from './SentinelBriefingCard';
 import AMSAlertMonitor from '@/ams/components/AMSAlertMonitor';
 import { useAlertSummary } from '@/ams/hooks/useAlertSummary';
-import { MOCK_ALERT_SUMMARY } from '@/ams/data/mock-alerts';
+
 import hucNamesData from '@/data/huc8-names.json';
 import centroidsData from '@/data/huc8-centroids.json';
 
@@ -2826,7 +2826,7 @@ export function FederalManagementCenter(props: Props) {
            <div className="flex-1 min-h-0 overflow-y-auto">
             {sideCardMode === 'alerts' ? (
               <AMSAlertMonitor
-                summary={amsSummary ?? MOCK_ALERT_SUMMARY}
+                summary={amsSummary}
                 role="FEDERAL_OVERSIGHT"
                 onOpenResponsePlanner={() => setViewLens('disaster-emergency' as ViewLens)}
                 onEventClick={(huc8) => {
@@ -3968,7 +3968,7 @@ export function FederalManagementCenter(props: Props) {
         case 'national-briefing': return DS(<>
         {/* ── AMS Alert Monitor ── */}
         <AMSAlertMonitor
-          summary={amsSummary ?? MOCK_ALERT_SUMMARY}
+          summary={amsSummary}
           role="FEDERAL_OVERSIGHT"
           onOpenResponsePlanner={() => setViewLens('disaster-emergency' as ViewLens)}
         />
@@ -6068,7 +6068,7 @@ export function FederalManagementCenter(props: Props) {
         case 'disaster-emergency': return DS(<>
         {/* ── DISASTER & EMERGENCY RESPONSE ── */}
         <AMSAlertMonitor
-          summary={amsSummary ?? MOCK_ALERT_SUMMARY}
+          summary={amsSummary}
           role="FEDERAL_OVERSIGHT"
           onOpenResponsePlanner={() => setViewLens('disaster-emergency' as ViewLens)}
         />

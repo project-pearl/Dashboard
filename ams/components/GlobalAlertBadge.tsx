@@ -10,7 +10,7 @@ import React, { useState } from "react";
 import type { AlertSummary, WatershedScore, AlertLevel } from "../types/sentinel";
 
 interface GlobalAlertBadgeProps {
-  summary: AlertSummary;
+  summary: AlertSummary | null;
   onNavigateToDisaster?: () => void;
 }
 
@@ -20,8 +20,8 @@ export default function GlobalAlertBadge({
 }: GlobalAlertBadgeProps) {
   const [panelOpen, setPanelOpen] = useState(false);
 
-  const alertCount = summary.byLevel.ALERT || 0;
-  const advisoryCount = summary.byLevel.ADVISORY || 0;
+  const alertCount = summary?.byLevel.ALERT || 0;
+  const advisoryCount = summary?.byLevel.ADVISORY || 0;
   const activeCount = alertCount + advisoryCount;
   const hasAlerts = alertCount > 0;
   const hasAdvisories = advisoryCount > 0;
@@ -119,7 +119,7 @@ export default function GlobalAlertBadge({
 
             {/* Scrollable event list */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {summary.recentEvents
+              {(summary?.recentEvents ?? [])
                 .filter(
                   (e) =>
                     e.alertLevel === "ALERT" || e.alertLevel === "ADVISORY"

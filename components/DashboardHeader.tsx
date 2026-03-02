@@ -6,7 +6,7 @@ import UserMenu from '@/components/UserMenu';
 import { Radio } from 'lucide-react';
 import GlobalAlertBadge from '@/ams/components/GlobalAlertBadge';
 import { useAlertSummary } from '@/ams/hooks/useAlertSummary';
-import { MOCK_ALERT_SUMMARY } from '@/ams/data/mock-alerts';
+
 
 const ROUTE_LABELS: Record<string, string> = {
   federal: 'Federal',
@@ -73,7 +73,7 @@ export function DashboardHeader() {
         </div>
 
         {/* Notification bell */}
-        <GlobalAlertBadge summary={alertSummary ?? MOCK_ALERT_SUMMARY} />
+        <GlobalAlertBadge summary={alertSummary} />
 
         {/* User menu */}
         <UserMenu />
