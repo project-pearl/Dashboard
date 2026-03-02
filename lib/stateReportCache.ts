@@ -9,9 +9,13 @@
 
 import { getAttainsCache, type StateSummary } from './attainsCache';
 import { getWqpAllRecords, type WqpRecord } from './wqpCache';
+import { getEchoAllData } from './echoCache';
+import { getSdwisForState } from './sdwisCache';
+import { getUsgsIvByState } from './nwisIvCache';
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
 import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 import { letterGrade } from './scoringUtils';
+import { getEpaRegionForState } from './epa-regions';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -44,6 +48,7 @@ export interface AIReadinessFactors {
 
 export interface StateDataReport {
   stateCode: string;
+  epaRegion: number | null;
 
   // Coverage
   totalWaterbodies: number;
@@ -218,6 +223,15 @@ export async function buildStateReports(): Promise<StateReportCacheData> {
   const now = Date.now();
   const reports: Record<string, StateDataReport> = {};
 
+  // Pre-load ECHO facilities (all states at once, indexed by state)
+  let echoByState: Record<string, number> = {};
+  try {
+    const echo = getEchoAllData();
+    for (const f of echo.facilities) {
+      if (f.state) echoByState[f.state] = (echoByState[f.state] || 0) + 1;
+    }
+  } catch { /* ECHO cache not loaded */ }
+
   // Index registry regions by state abbreviation
   const regionsByState: Record<string, { id: string; region: RegistryRegion }[]> = {};
   if (registry) {
@@ -244,42 +258,73 @@ export async function buildStateReports(): Promise<StateReportCacheData> {
 
   for (const stateAbbr of ALL_STATES) {
     const stateRegions = regionsByState[stateAbbr] || [];
-    const totalWaterbodies = stateRegions.length;
-
-    // ── Coverage ──────────────────────────────────────────────────────────
-    let monitoredCount = 0;
-    const sourceCounts: Record<string, number> = {};
-
-    for (const { id } of stateRegions) {
-      const cov = registry?.coverage?.[id];
-      const hasUsgs = !!registry?.usgsSiteMap?.[id];
-      const hasWqp = !!registry?.wqpStationMap?.[id as keyof typeof registry.wqpStationMap];
-
-      if ((cov && cov.hasData) || hasUsgs || hasWqp) {
-        monitoredCount++;
-        if (cov?.sources) {
-          for (const src of cov.sources) {
-            sourceCounts[src] = (sourceCounts[src] || 0) + 1;
-          }
-        }
-        if (hasUsgs) sourceCounts['USGS'] = (sourceCounts['USGS'] || 0) + 1;
-        if (hasWqp) sourceCounts['WQP'] = (sourceCounts['WQP'] || 0) + 1;
-      }
-    }
-
-    const unmonitoredCount = totalWaterbodies - monitoredCount;
-    const monitoredPct = totalWaterbodies > 0 ? Math.round((monitoredCount / totalWaterbodies) * 100) : 0;
 
     // ── ATTAINS ──────────────────────────────────────────────────────────
     const attains: StateSummary | undefined = attainsData.states[stateAbbr];
+
+    // Use ATTAINS total as the real EPA waterbody count (falls back to registry)
+    const totalWaterbodies = attains?.total || stateRegions.length;
+
+    // "Assessed" = waterbodies with impairment data in ATTAINS
+    const assessedCount = attains ? (attains.high + attains.medium + attains.low + attains.none) : 0;
+
+    // "Monitored" = assessed waterbodies (have real EPA data)
+    const monitoredCount = assessedCount;
+    const unmonitoredCount = Math.max(0, totalWaterbodies - monitoredCount);
+    const monitoredPct = totalWaterbodies > 0 ? Math.round((monitoredCount / totalWaterbodies) * 100) : 0;
+
+    // ── Source Counts (real cache data per state) ─────────────────────────
+    const sourceCounts: Record<string, number> = {};
+
+    // ATTAINS waterbodies
+    if (attains && attains.stored > 0) {
+      sourceCounts['ATTAINS'] = attains.stored;
+    }
+
+    // WQP stations (counted below in WQP freshness section, but pre-count here)
+    const stateWqpEarly = wqpByState[stateAbbr] || [];
+    const wqpStations = new Set(stateWqpEarly.map(r => r.stn));
+    if (wqpStations.size > 0) {
+      sourceCounts['WQP'] = wqpStations.size;
+    }
+
+    // ECHO facilities
+    if (echoByState[stateAbbr]) {
+      sourceCounts['ECHO'] = echoByState[stateAbbr];
+    }
+
+    // SDWIS drinking water systems
+    try {
+      const sdwis = getSdwisForState(stateAbbr);
+      if (sdwis && sdwis.systems.length > 0) {
+        sourceCounts['SDWIS'] = sdwis.systems.length;
+      }
+    } catch { /* cache not loaded */ }
+
+    // USGS-IV real-time gauges
+    try {
+      const usgsIv = getUsgsIvByState(stateAbbr);
+      if (usgsIv.length > 0) {
+        sourceCounts['USGS-IV'] = usgsIv.length;
+      }
+    } catch { /* cache not loaded */ }
+
+    // Registry-based sources (USGS site map, WQP station map)
+    for (const { id } of stateRegions) {
+      const hasUsgs = !!registry?.usgsSiteMap?.[id];
+      if (hasUsgs && !sourceCounts['USGS']) sourceCounts['USGS'] = 0;
+      if (hasUsgs) sourceCounts['USGS'] = (sourceCounts['USGS'] || 0) + 1;
+    }
+
+    // ── ATTAINS Impairment ──────────────────────────────────────────────
     const impairedCount = attains ? (attains.high + attains.medium) : 0;
     const healthyCount = attains ? (attains.low + attains.none) : 0;
     const tmdlNeeded = attains?.tmdlNeeded || 0;
     const topCauses = attains?.topCauses || [];
 
     // ── WQP Freshness ────────────────────────────────────────────────────
-    const stateWqp = wqpByState[stateAbbr] || [];
-    const stations = new Set(stateWqp.map(r => r.stn));
+    const stateWqp = stateWqpEarly;
+    const stations = wqpStations;
 
     // Compute age in days for each record
     const ageDays: number[] = [];
@@ -379,6 +424,7 @@ export async function buildStateReports(): Promise<StateReportCacheData> {
 
     reports[stateAbbr] = {
       stateCode: stateAbbr,
+      epaRegion: getEpaRegionForState(stateAbbr),
       totalWaterbodies,
       monitoredWaterbodies: monitoredCount,
       unmonitoredWaterbodies: unmonitoredCount,

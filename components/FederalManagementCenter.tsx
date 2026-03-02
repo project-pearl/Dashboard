@@ -64,6 +64,8 @@ import { SentinelStatusBadge } from './SentinelStatusBadge';
 import { SentinelBriefingCard } from './SentinelBriefingCard';
 import AMSAlertMonitor from '@/ams/components/AMSAlertMonitor';
 import { useAlertSummary } from '@/ams/hooks/useAlertSummary';
+import { StateDataReportCard } from '@/components/StateDataReportCard';
+import { useStateReport } from '@/lib/useStateReport';
 
 import hucNamesData from '@/data/huc8-names.json';
 import centroidsData from '@/data/huc8-centroids.json';
@@ -1126,6 +1128,9 @@ export function FederalManagementCenter(props: Props) {
   const [selectedState, setSelectedState] = useState<string>(adminState);
   // Sync from sidebar admin state selector
   useEffect(() => { setSelectedState(adminState); }, [adminState]);
+
+  // ── State Data Report (for StateDataReportCard) ──
+  const { report: stateReport, isLoading: stateReportLoading } = useStateReport(selectedState);
 
   const [waterbodySearch, setWaterbodySearch] = useState<string>('');
   const [waterbodyFilter, setWaterbodyFilter] = useState<'all' | 'impaired' | 'severe' | 'monitored'>('all');
@@ -2968,6 +2973,58 @@ export function FederalManagementCenter(props: Props) {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3 px-5 pb-5">
+                  {/* ── Sentinel Alerts for selected state ──────────── */}
+                  {(() => {
+                    const stateAlerts = [
+                      ...sentinel.criticalHucs.filter(h => h.stateAbbr === selectedState),
+                      ...sentinel.watchHucs.filter(h => h.stateAbbr === selectedState),
+                      ...sentinel.advisoryHucs.filter(h => h.stateAbbr === selectedState),
+                    ];
+                    if (stateAlerts.length === 0) return null;
+                    const levelColor = (lvl: string) =>
+                      lvl === 'CRITICAL' ? { bg: 'var(--status-severe-bg)', text: 'var(--status-severe)' }
+                      : lvl === 'WATCH' ? { bg: 'var(--status-watch-bg)', text: 'var(--status-watch)' }
+                      : { bg: 'var(--status-impaired-bg)', text: 'var(--status-impaired)' };
+                    return (
+                      <div style={{ borderBottom: '1px solid var(--border-subtle)' }} className="pb-3 mb-1">
+                        <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-dim)' }}>
+                          Sentinel Alerts ({stateAlerts.length})
+                        </div>
+                        <div className="space-y-1 max-h-[200px] overflow-y-auto">
+                          {stateAlerts.map(h => {
+                            const lc = levelColor(h.level);
+                            return (
+                              <div
+                                key={h.huc8}
+                                className="flex items-center gap-2 p-1.5 rounded-md cursor-pointer transition-colors"
+                                style={{ border: '1px solid var(--border-subtle)' }}
+                                onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                                onClick={() => {
+                                  setSelectedAlertHuc(h.huc8);
+                                  setSelectedAlertLevel(h.level);
+                                  setSideCardMode('alert-detail');
+                                  const c = centroids[h.huc8];
+                                  if (c && mapRef.current) {
+                                    mapRef.current.flyTo({ center: [c.lng, c.lat], zoom: 6, duration: 800 });
+                                  }
+                                }}
+                              >
+                                <span className="inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase" style={{ background: lc.bg, color: lc.text }}>
+                                  {h.level}
+                                </span>
+                                <span className="text-xs truncate flex-1" style={{ color: 'var(--text-primary)' }}>
+                                  {hucNames[h.huc8] ?? h.huc8}
+                                </span>
+                                <span className="text-[10px] tabular-nums" style={{ color: 'var(--text-dim)' }}>{h.score}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                   {/* Score / Data toggle */}
                   <div className="flex gap-1 mb-1">
                     {(['score', 'data'] as const).map(v => (
@@ -3217,6 +3274,23 @@ export function FederalManagementCenter(props: Props) {
 
         </div>
 
+        {/* ── STATE DATA REPORT CARD — under map ── */}
+        {selectedState && (
+          <Card style={{ background: 'var(--bg-card)' }}>
+            <CardContent className="px-5 pt-4 pb-5">
+              {stateReportLoading ? (
+                <div className="text-xs text-center py-8" style={{ color: 'var(--text-dim)' }}>Loading state report...</div>
+              ) : stateReport ? (
+                <StateDataReportCard report={stateReport} stateName={STATE_ABBR_TO_NAME[selectedState] ?? selectedState} />
+              ) : (
+                <div className="text-xs text-center py-8" style={{ color: 'var(--text-dim)' }}>
+                  No data report available for {STATE_ABBR_TO_NAME[selectedState] ?? selectedState}. Run the WQP cron to generate.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* ── AI INSIGHTS — hidden in overview & monitoring lenses ── */}
         {viewLens !== 'monitoring' && viewLens !== 'overview' && (
           <AIInsightsEngine key={selectedState} role="Federal" stateAbbr={selectedState} regionData={selectedStateRegions as any} />
@@ -3270,243 +3344,6 @@ export function FederalManagementCenter(props: Props) {
                 </div>
               </CardContent>
             </Card>
-          );
-        })()}
-
-        {/* ── STATE WATERBODY INSPECTOR + NATIONAL IMPAIRMENT PROFILE ────── */}
-        {viewLens !== 'monitoring' && (() => {
-          const wbRow = stateRollup.find(r => r.abbr === selectedState);
-          const wbRegion = getEpaRegionForState(selectedState);
-          return (
-            <div>
-            <Card>
-              <CardContent className="px-5 pt-4">
-                {!wbRow || !wbRow.canGradeState ? (
-                  <p className="text-sm italic" style={{ color: 'var(--text-dim)' }}>
-                    {wbRow ? `Insufficient data for ${wbRow.name}.` : 'Select a state from the map above.'}
-                  </p>
-                ) : (
-                  <div className="space-y-4">
-                    {/* Header: state name + badges + print */}
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-semibold" style={{ color: 'var(--text-bright)' }}>{wbRow.name}</p>
-                        <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-dim)' }}>
-                          {wbRow.dataSource === 'per-waterbody' ? 'Per-Waterbody' : 'ATTAINS Bulk'} · EPA Region {wbRegion}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {wbRow.cat5 > 0 && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: 'var(--status-severe-bg, #fef2f2)', color: 'var(--status-severe)', border: '1px solid var(--status-severe)' }}>
-                            Cat 5 — Impaired
-                          </span>
-                        )}
-                        <span className={`text-[10px] px-2 py-0.5 rounded font-semibold ${wbRow.grade.bg} ${wbRow.grade.color}`} style={{ border: '1px solid currentColor' }}>
-                          {wbRow.score >= 80 ? 'Excellent' : wbRow.score >= 65 ? 'Good' : wbRow.score >= 45 ? 'Fair' : wbRow.score >= 25 ? 'Poor' : 'Severe'}
-                        </span>
-                        <BrandedPrintBtn sectionId="waterbody-inspector-inline" title="Waterbody Assessment" />
-                      </div>
-                    </div>
-
-                    {/* Semicircular speedometer gauge */}
-                    {(() => {
-                      const sc = wbRow.score;
-                      const cx = 110, cy = 120, r = 90;
-                      const scoreColor = sc >= 85 ? '#22c55e' : sc >= 65 ? '#84cc16' : sc >= 45 ? '#eab308' : sc >= 25 ? '#f97316' : '#ef4444';
-                      const scoreLabel = sc >= 80 ? 'Excellent' : sc >= 65 ? 'Good' : sc >= 45 ? 'Fair' : sc >= 25 ? 'Poor' : 'Severe';
-                      const segments = [
-                        { from: 0, to: 0.25, color: '#ef4444' },
-                        { from: 0.25, to: 0.45, color: '#f97316' },
-                        { from: 0.45, to: 0.65, color: '#eab308' },
-                        { from: 0.65, to: 0.85, color: '#84cc16' },
-                        { from: 0.85, to: 1.0, color: '#22c55e' },
-                      ];
-                      const pct = sc / 100;
-                      const needleAngle = Math.PI - pct * Math.PI;
-                      const needleLen = 70;
-                      const nx = cx + needleLen * Math.cos(needleAngle);
-                      const ny = cy - needleLen * Math.sin(needleAngle);
-
-                      return (
-                        <div className="flex flex-col items-center py-2">
-                          <svg width="220" height="130" viewBox="0 0 220 130">
-                            {segments.map((seg, i) => {
-                              const a1 = Math.PI - seg.from * Math.PI;
-                              const a2 = Math.PI - seg.to * Math.PI;
-                              const x1 = cx + r * Math.cos(a1);
-                              const y1 = cy - r * Math.sin(a1);
-                              const x2 = cx + r * Math.cos(a2);
-                              const y2 = cy - r * Math.sin(a2);
-                              return <path key={i} d={`M ${x1} ${y1} A ${r} ${r} 0 0 0 ${x2} ${y2}`} fill="none" stroke={seg.color} strokeWidth="14" strokeLinecap="round" opacity="0.2" />;
-                            })}
-                            {pct > 0 && (() => {
-                              const sweepEnd = Math.PI - pct * Math.PI;
-                              const sx = cx + r * Math.cos(Math.PI);
-                              const sy = cy - r * Math.sin(Math.PI);
-                              const ex = cx + r * Math.cos(sweepEnd);
-                              const ey = cy - r * Math.sin(sweepEnd);
-                              const largeArc = pct > 0.5 ? 1 : 0;
-                              return <path d={`M ${sx} ${sy} A ${r} ${r} 0 ${largeArc} 0 ${ex} ${ey}`} fill="none" stroke={scoreColor} strokeWidth="14" strokeLinecap="round" />;
-                            })()}
-                            <line x1={cx} y1={cy} x2={nx} y2={ny} stroke="var(--text-primary, #1e293b)" strokeWidth="2.5" strokeLinecap="round" />
-                            <circle cx={cx} cy={cy} r="5" fill="var(--text-primary, #1e293b)" />
-                            <text x="18" y="125" textAnchor="start" fontSize="8" fill="var(--text-dim, #94a3b8)">0</text>
-                            <text x="107" y="22" textAnchor="middle" fontSize="8" fill="var(--text-dim, #94a3b8)">50</text>
-                            <text x="202" y="125" textAnchor="end" fontSize="8" fill="var(--text-dim, #94a3b8)">100</text>
-                          </svg>
-                          <div className="text-center -mt-2">
-                            <span className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>{sc}</span>
-                            <span className="text-sm ml-1" style={{ color: 'var(--text-dim)' }}>/100</span>
-                          </div>
-                          <div className="text-xs font-semibold mt-0.5" style={{ color: scoreColor }}>{scoreLabel}</div>
-                        </div>
-                      );
-                    })()}
-
-                    {/* Index breakdown table */}
-                    {(() => {
-                      const total = wbRow.waterbodies;
-                      const impaired = wbRow.totalImpaired;
-                      const severe = wbRow.cat5;
-                      const indices = [
-                        { label: 'Water Quality Grade', score: total > 0 ? Math.min(100, Math.max(0, Math.round(100 - (impaired / total) * 50 - (severe / total) * 30))) : 0, wt: 15 },
-                        { label: 'Environmental Justice', score: total > 0 ? Math.min(100, Math.max(0, Math.round(100 - (severe / total) * 60 - (impaired / total) * 20))) : 0, wt: 10 },
-                        { label: 'Ecological Sensitivity', score: total > 0 ? Math.min(100, Math.max(0, Math.round((1 - impaired / total) * 50))) : 0, wt: 8 },
-                        { label: 'Monitoring Coverage', score: total > 0 ? Math.min(100, Math.max(0, Math.round(wbRow.monitored / total * 100))) : 0, wt: 7 },
-                        { label: 'Data Freshness', score: total > 0 ? Math.min(100, Math.max(0, Math.round(wbRow.assessed / total * 100))) : 0, wt: 7 },
-                        { label: 'Regulatory Compliance', score: total > 0 ? Math.min(100, Math.max(0, Math.round((wbRow.assessed / total) * 80 + 20))) : 0, wt: 8 },
-                        { label: 'Trend Direction', score: 50, wt: 7 },
-                      ];
-                      return (
-                        <div>
-                          <div className="flex items-center text-[9px] font-bold uppercase tracking-wider py-1 mb-1" style={{ color: 'var(--text-dim)', borderBottom: '1px solid var(--border-subtle)' }}>
-                            <span className="w-32">Index</span>
-                            <span className="flex-1" />
-                            <span className="w-12 text-right">Score</span>
-                            <span className="w-10 text-right">Wt</span>
-                          </div>
-                          {indices.map(idx => {
-                            const barColor = idx.score >= 70 ? '#22c55e' : idx.score >= 45 ? '#f97316' : '#ef4444';
-                            return (
-                              <div key={idx.label} className="flex items-center gap-1 py-1" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                                <span className="text-[10px] w-32 truncate" style={{ color: 'var(--text-secondary)' }}>{idx.label}</span>
-                                <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
-                                  <div className="h-full rounded-full" style={{ width: `${idx.score}%`, background: barColor }} />
-                                </div>
-                                <span className="text-[10px] w-12 text-right font-semibold" style={{ color: 'var(--text-primary)' }}>{idx.score}</span>
-                                <span className="text-[9px] w-10 text-right" style={{ color: 'var(--text-dim)' }}>{idx.wt}%</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      );
-                    })()}
-
-                    {/* How is this calculated? */}
-                    <div className="relative">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setShowMethodology(!showMethodology); }}
-                        className="flex items-center gap-1 text-[10px] font-medium transition-colors"
-                        style={{ color: 'var(--accent-teal, #0ea5e9)' }}
-                      >
-                        <ChevronDown className={`w-3 h-3 transition-transform ${showMethodology ? 'rotate-180' : ''}`} />
-                        How is this calculated?
-                      </button>
-                      {showMethodology && (
-                        <div className="mt-2 rounded-lg p-3 text-xs space-y-1.5"
-                          style={{ background: 'var(--bg-card)', border: '1px solid var(--border-default)', color: 'var(--text-secondary)' }}>
-                          <p><span className="font-medium" style={{ color: 'var(--text-primary)' }}>Base score</span> from parameter readings vs. regulatory targets.</p>
-                          <p><span className="font-medium" style={{ color: 'var(--text-primary)' }}>Adjustments</span> for data freshness, active alerts, and ATTAINS status.</p>
-                          <p className="text-[10px]" style={{ color: 'var(--text-dim)' }}>Scale: A+ (97+) · A (93) · B (83) · C (73) · D (63) · F (&lt;60)</p>
-                          <p className="text-[9px] italic pt-1" style={{ borderTop: '1px solid var(--border-subtle)', color: 'var(--text-dim)' }}>Informational only — not an official regulatory determination.</p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Top 4 numbers — hero is Total Impaired, Cat 5 gets red if nonzero */}
-                    <div className="grid grid-cols-4 gap-3">
-                      <div className="pin-stat-tile">
-                        <div className="pin-stat-secondary text-base">{wbRow.waterbodies.toLocaleString()}</div>
-                        <div className="pin-label mt-0.5">Total</div>
-                      </div>
-                      <div className="pin-stat-tile">
-                        <div className="pin-stat-secondary text-base">{wbRow.assessed.toLocaleString()}</div>
-                        <div className="pin-label mt-0.5">Assessed</div>
-                      </div>
-                      <div className="pin-stat-tile">
-                        <div className="pin-stat-hero text-xl">{wbRow.totalImpaired.toLocaleString()}</div>
-                        <div className="pin-label mt-0.5">Impaired</div>
-                      </div>
-                      <div className="pin-stat-tile">
-                        <div className="pin-stat-value text-base" style={{ color: wbRow.cat5 > 0 ? 'var(--status-severe)' : 'var(--text-bright)' }}>{wbRow.cat5.toLocaleString()}</div>
-                        <div className="pin-label mt-0.5">Cat 5</div>
-                      </div>
-                    </div>
-
-                    {/* Impairment categories — quiet, report-row feel */}
-                    <div>
-                      <h4 className="pin-section-label mb-2">Impairment Categories</h4>
-                      <div className="space-y-1">
-                        {[
-                          { label: 'Cat 5 — Needs TMDL', value: wbRow.cat5 },
-                          { label: 'Cat 4A — TMDL Complete', value: wbRow.cat4a },
-                          { label: 'Cat 4B — Other Control', value: wbRow.cat4b },
-                          { label: 'Cat 4C — Not Pollutant', value: wbRow.cat4c },
-                        ].map(c => (
-                          <div key={c.label} className="flex items-center justify-between py-1" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                            <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{c.label}</span>
-                            <span className="pin-stat-secondary text-xs">{c.value.toLocaleString()}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Top causes — report-table feel */}
-                    {wbRow.topCauses.length > 0 && (
-                      <div>
-                        <h4 className="pin-section-label mb-2">Top Impairment Causes</h4>
-                        <div className="space-y-0.5">
-                          {wbRow.topCauses.slice(0, 8).map((tc, i) => (
-                            <div key={tc.cause} className="flex items-center gap-2 text-xs py-0.5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                              <span className="w-4 text-right" style={{ color: 'var(--text-dim)' }}>{i + 1}.</span>
-                              <span className="flex-1" style={{ color: 'var(--text-secondary)' }}>{tc.cause}</span>
-                              <span className="pin-stat-secondary text-xs">{tc.count.toLocaleString()}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Monitoring coverage — muted bars, neutral tiles */}
-                    <div>
-                      <h4 className="pin-section-label mb-2">Monitoring Coverage</h4>
-                      <div className="flex items-baseline gap-4 mb-2">
-                        <div className="text-center">
-                          <span className="pin-stat-secondary text-sm">{wbRow.monitored.toLocaleString()}</span>
-                          <span className="pin-label ml-1">monitored</span>
-                        </div>
-                        <div className="text-center">
-                          <span className="pin-stat-secondary text-sm">{wbRow.assessed.toLocaleString()}</span>
-                          <span className="pin-label ml-1">assessed</span>
-                        </div>
-                        <div className="text-center">
-                          <span className="pin-stat-secondary text-sm">{wbRow.unmonitored.toLocaleString()}</span>
-                          <span className="pin-label ml-1">unmonitored</span>
-                        </div>
-                      </div>
-                      {wbRow.waterbodies > 0 && (
-                        <div className="h-1.5 rounded-full overflow-hidden flex" style={{ background: 'var(--border-subtle)' }}>
-                          <div style={{ width: `${(wbRow.monitored / wbRow.waterbodies * 100).toFixed(1)}%`, background: 'var(--status-healthy)', opacity: 0.5 }} />
-                          <div style={{ width: `${(wbRow.assessed / wbRow.waterbodies * 100).toFixed(1)}%`, background: 'var(--text-dim)', opacity: 0.3 }} />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            </div>
           );
         })()}
 
