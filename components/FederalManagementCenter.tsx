@@ -33,7 +33,6 @@ import RestorationPlanner from '@/components/RestorationPlanner';
 import type { NationalSummary } from '@/lib/national-summary';
 import NationalStatusCard from '@/components/NationalStatusCard';
 import { EPA_REGIONS, getEpaRegionForState } from '@/lib/epa-regions';
-import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import { useTheme } from '@/lib/useTheme';
 import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
 import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
@@ -128,7 +127,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['usmap', 'briefing-changes', 'briefing-stakeholder', 'disclaimer']),
+    sections: new Set(['usmap', 'briefing-changes', 'briefing-stakeholder']),
   },
   briefing: {
     label: 'AI Briefing',
@@ -138,7 +137,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: true,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['ai-water-intelligence', 'sentinel-briefing', 'national-briefing', 'waterfront-exposure', 'briefing-actions', 'briefing-changes', 'briefing-pulse', 'briefing-stakeholder', 'disclaimer']),
+    sections: new Set(['ai-water-intelligence', 'sentinel-briefing', 'national-briefing', 'waterfront-exposure', 'briefing-actions', 'briefing-changes', 'briefing-pulse', 'briefing-stakeholder']),
   },
   'political-briefing': {
     label: 'Political Briefing',
@@ -151,7 +150,7 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set([
       'pol-active-situations', 'pol-talking-points', 'pol-constituent-concerns', 'pol-funding-wins', 'pol-funding-risks',
       'pol-regulatory-deadlines', 'pol-ej-exposure', 'pol-media-ready-grades',
-      'pol-peer-comparison', 'pol-council-agenda', 'disclaimer',
+      'pol-peer-comparison', 'pol-council-agenda',
     ]),
   },
   compliance: {
@@ -162,7 +161,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: true, collapseStateTable: true,
-    sections: new Set(['networkhealth', 'icis', 'sdwis', 'priorityqueue', 'sentinel-alerts-placeholder', 'disclaimer']),
+    sections: new Set(['networkhealth', 'icis', 'sdwis', 'priorityqueue', 'sentinel-alerts-placeholder']),
   },
   'water-quality': {
     label: 'Water Quality',
@@ -172,7 +171,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: true, showSituationSummary: true, showTimeRange: true,
     showSLA: false, showRestorationPlan: false, collapseStateTable: false,
-    sections: new Set(['wq-domain-tabs', 'networkhealth', 'impairmentprofile', 'coveragegaps', 'situation', 'statebystatesummary', 'top10', 'disclaimer']),
+    sections: new Set(['wq-domain-tabs', 'networkhealth', 'impairmentprofile', 'coveragegaps', 'situation', 'statebystatesummary', 'top10']),
   },
   infrastructure: {
     label: 'Infrastructure',
@@ -182,7 +181,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: true, showNationalImpact: true, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['networkhealth', 'nationalimpact', 'groundwater', 'waterfront-exposure', 'infra-green', 'infra-capital', 'infra-construction', 'disclaimer']),
+    sections: new Set(['networkhealth', 'nationalimpact', 'groundwater', 'waterfront-exposure', 'infra-green', 'infra-capital', 'infra-construction']),
   },
   monitoring: {
     label: 'Monitoring',
@@ -192,7 +191,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: true, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: true, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['networkhealth', 'coveragegaps', 'sla', 'sentinel-briefing', 'disclaimer']),
+    sections: new Set(['networkhealth', 'coveragegaps', 'sla', 'sentinel-briefing']),
   },
   trends: {
     label: 'Trends & Projections',
@@ -202,7 +201,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: true,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['trends-dashboard', 'disclaimer']),
+    sections: new Set(['trends-dashboard']),
   },
   policy: {
     label: 'Policy Tracker',
@@ -212,7 +211,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['policy-tracker', 'disclaimer']),
+    sections: new Set(['policy-tracker']),
   },
   'public-health': {
     label: 'Public Health & Contaminants',
@@ -222,7 +221,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['contaminants-tracker', 'disclaimer']),
+    sections: new Set(['contaminants-tracker']),
   },
   'habitat-ecology': {
     label: 'Habitat & Ecology',
@@ -232,7 +231,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['habitat-ecology', 'disclaimer']),
+    sections: new Set(['habitat-ecology']),
   },
   'agricultural-nps': {
     label: 'Agricultural & NPS',
@@ -242,7 +241,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['agricultural-nps', 'disclaimer']),
+    sections: new Set(['agricultural-nps']),
   },
   'disaster-emergency': {
     label: 'Disaster & Emergency',
@@ -252,7 +251,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['disaster-emergency', 'fed-emergency-overview', 'fed-active-incidents', 'fed-spill-tracker', 'resolution-planner', 'disclaimer']),
+    sections: new Set(['disaster-emergency', 'fed-emergency-overview', 'fed-active-incidents', 'fed-spill-tracker', 'resolution-planner']),
   },
   'military-installations': {
     label: 'Military Installations',
@@ -262,7 +261,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['military-installations', 'disclaimer']),
+    sections: new Set(['military-installations']),
   },
   scorecard: {
     label: 'Scorecard',
@@ -272,7 +271,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['scorecard-kpis', 'scorecard-grades', 'scorecard-choropleth', 'scorecard-rankings', 'scorecard-trends', 'disclaimer']),
+    sections: new Set(['scorecard-kpis', 'scorecard-grades', 'scorecard-choropleth', 'scorecard-rankings', 'scorecard-trends']),
   },
   reports: {
     label: 'Reports',
@@ -282,7 +281,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['reports-hub', 'disclaimer']),
+    sections: new Set(['reports-hub']),
   },
   interagency: {
     label: 'Cross-Agency',
@@ -292,7 +291,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['interagency-hub', 'data-latency', 'disclaimer']),
+    sections: new Set(['interagency-hub', 'data-latency']),
   },
   funding: {
     label: 'Funding & Grants',
@@ -302,7 +301,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['fund-srf', 'infra-capital', 'infra-construction', 'funding-deadlines', 'grant-outcomes', 'funding-gap', 'disclaimer']),
+    sections: new Set(['fund-srf', 'infra-capital', 'infra-construction', 'funding-deadlines', 'grant-outcomes', 'funding-gap']),
   },
   warr: {
     label: 'WARR Room',
@@ -312,7 +311,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']),
+    sections: new Set(['warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve']),
   },
 };
 
@@ -6840,9 +6839,6 @@ export function FederalManagementCenter(props: Props) {
           </Card>
         );
 
-        case 'disclaimer': return DS(
-              <PlatformDisclaimer />
-            );
 
         default: return null;
         } {/* end switch */}

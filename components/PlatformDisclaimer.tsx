@@ -5,7 +5,7 @@ import { Info } from 'lucide-react';
 export function PlatformDisclaimer() {
   return (
     <div className="mt-6 pt-4 border-t border-slate-200">
-      <div className="flex items-start gap-2 text-[10px] text-slate-400 leading-relaxed max-w-4xl">
+      <div className="flex items-start gap-2 text-[10px] text-slate-400 leading-relaxed max-w-4xl mx-auto text-center">
         <Info size={14} className="flex-shrink-0 mt-0.5 text-slate-300" />
         <div>
           <p className="mb-1">
