@@ -22,6 +22,7 @@ import {
   RefreshCw, Download, Send, Plus, Minus, Info, Printer
 } from 'lucide-react';
 import { useAuth } from '@/lib/authContext';
+import type { UserRole } from '@/lib/authTypes';
 import { UserManagementPanel } from './UserManagementPanel';
 import WhatIfSimulator from './WhatIfSimulator';
 import RestorationPlanner from '@/components/RestorationPlanner';
@@ -453,6 +454,221 @@ function stageLabel(s: Prospect['stage']): string {
   return s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
+type OutreachInsight = {
+  title: string;
+  metric: string;
+  whyItMatters: string;
+  meetingHook: string;
+};
+
+type OutreachMetrics = {
+  nationalHealthScore: number;
+  activeUnits: number;
+  gallonsTreated: number;
+  avgUptime: number;
+  criticalAlerts: number;
+  warningAlerts: number;
+  pipelineValue: number;
+  topProspectName: string;
+  topProspectAcv: number;
+  tssRemoval: string;
+};
+
+type OutreachContact = {
+  name: string;
+  title: string;
+  organization: string;
+};
+
+const OUTREACH_ROLE_LABELS: Record<UserRole, string> = {
+  Federal: 'Federal Agency',
+  State: 'State Agency',
+  Local: 'Local Government',
+  MS4: 'MS4 Managers',
+  Corporate: 'Sustainability',
+  Researcher: 'Research & Science',
+  College: 'Higher Education',
+  NGO: 'NGO',
+  K12: 'K-12 Education',
+  Temp: 'Temporary / Pilot',
+  Pearl: 'PIN Admin',
+  Utility: 'Utility Operations',
+  Agriculture: 'Agriculture',
+  Lab: 'Laboratory',
+  Biotech: 'Biotech',
+  Investor: 'Investor',
+};
+
+const OUTREACH_ROLE_ORDER: UserRole[] = [
+  'MS4', 'State', 'Federal', 'NGO', 'Corporate',
+  'Local', 'Utility', 'Agriculture', 'Lab', 'Biotech',
+  'Investor', 'Researcher', 'College', 'K12', 'Temp', 'Pearl',
+];
+
+const OUTREACH_CONTACTS: Record<UserRole, OutreachContact[]> = {
+  MS4: [
+    { name: 'Erik Michelson', title: 'Stormwater Program Manager', organization: 'Anne Arundel County MS4' },
+    { name: 'Nina Alvarez', title: 'MS4 Compliance Lead', organization: 'City of Pensacola Public Works' },
+  ],
+  State: [
+    { name: 'Megan Carter', title: 'Water Standards Program Manager', organization: 'State Agency Water Division' },
+    { name: 'James Patel', title: 'NPDES Oversight Lead', organization: 'State Compliance Bureau' },
+  ],
+  Federal: [
+    { name: 'Taylor Nguyen', title: 'Program Analyst', organization: 'Federal Water Programs Office' },
+    { name: 'Chris Morgan', title: 'Regional Enforcement Coordinator', organization: 'EPA Regional Office' },
+  ],
+  NGO: [
+    { name: 'Ari Johnson', title: 'Watershed Director', organization: 'Regional Watershed Alliance' },
+    { name: 'Maya Brooks', title: 'Policy & Advocacy Lead', organization: 'Clean Water Coalition' },
+  ],
+  Corporate: [
+    { name: 'Jordan Lee', title: 'Director of Sustainability', organization: 'Enterprise ESG Office' },
+    { name: 'Sam Rivera', title: 'Water Stewardship Manager', organization: 'Corporate Sustainability Team' },
+  ],
+  Local: [
+    { name: 'Alex Brown', title: 'Public Works Director', organization: 'City Public Works' },
+    { name: 'Riley Chen', title: 'Environmental Programs Manager', organization: 'County Government' },
+  ],
+  Utility: [
+    { name: 'Morgan White', title: 'Operations Superintendent', organization: 'Regional Utility Authority' },
+    { name: 'Cameron Davis', title: 'Treatment Plant Manager', organization: 'Water Utility Operations' },
+  ],
+  Agriculture: [
+    { name: 'Evan Reed', title: 'Conservation Program Lead', organization: 'Ag Water Stewardship Office' },
+    { name: 'Paige Flores', title: 'Nutrient Management Coordinator', organization: 'Regional Ag Partnership' },
+  ],
+  Lab: [
+    { name: 'Priya Shah', title: 'Lab Director', organization: 'Water Quality Laboratory' },
+    { name: 'Noah Kim', title: 'QA/QC Manager', organization: 'Environmental Testing Lab' },
+  ],
+  Biotech: [
+    { name: 'Harper Green', title: 'R&D Program Manager', organization: 'Biotech Water Innovation Team' },
+    { name: 'Drew Hall', title: 'Pilot Operations Lead', organization: 'Applied Biofiltration Group' },
+  ],
+  Investor: [
+    { name: 'Casey Bell', title: 'Portfolio Risk Lead', organization: 'Infrastructure Investment Group' },
+    { name: 'Reese Moore', title: 'ESG Analyst', organization: 'Water Impact Fund' },
+  ],
+  Researcher: [
+    { name: 'Dr. Ana Kim', title: 'Principal Investigator', organization: 'University Research Lab' },
+    { name: 'Dr. Liam Scott', title: 'Research Program Director', organization: 'Water Science Institute' },
+  ],
+  College: [
+    { name: 'Prof. Dana Wright', title: 'Faculty Lead', organization: 'College Environmental Program' },
+    { name: 'Dr. Theo Price', title: 'Dean of Applied Sciences', organization: 'College of Science' },
+  ],
+  K12: [
+    { name: 'Pat Taylor', title: 'STEM Coordinator', organization: 'K-12 District Office' },
+    { name: 'Jamie Ellis', title: 'Science Curriculum Lead', organization: 'School District Programs' },
+  ],
+  Temp: [
+    { name: 'Chris Lane', title: 'Pilot Coordinator', organization: 'Temporary Program Team' },
+    { name: 'Robin Fox', title: 'Project Associate', organization: 'Field Pilot Operations' },
+  ],
+  Pearl: [
+    { name: 'Doug', title: 'PIN Admin', organization: 'Project PEARL' },
+    { name: 'Gwen', title: 'PIN Ops', organization: 'Project PEARL' },
+  ],
+};
+
+function ctaByRole(role: UserRole): string {
+  switch (role) {
+    case 'MS4':
+    case 'Local':
+      return 'Could we set a 25-minute working session next week to map this directly to permit milestones and outfall priorities?';
+    case 'State':
+    case 'Federal':
+      return 'Would you be open to a 25-minute interagency briefing next week so we can align this dataset with reporting and enforcement priorities?';
+    case 'NGO':
+      return 'Could we schedule a 25-minute strategy call next week to align your advocacy and project pipeline around these top-risk signals?';
+    case 'Corporate':
+    case 'Investor':
+      return 'Would you be open to a 25-minute executive review next week to connect these water risk signals to ESG performance and capital decisions?';
+    case 'Utility':
+      return 'Could we set a 25-minute operations review next week to prioritize the highest-impact treatment and maintenance actions?';
+    case 'Researcher':
+    case 'College':
+    case 'K12':
+      return 'Would you be open to a 25-minute collaboration call next week to scope research, curriculum, or field-study opportunities from this dataset?';
+    case 'Agriculture':
+      return 'Could we set a 25-minute planning call next week to target the highest-impact runoff reduction opportunities from this snapshot?';
+    case 'Lab':
+      return 'Would you be open to a 25-minute QA/QC planning call next week so this dataset can drive urgent sampling priorities?';
+    case 'Biotech':
+      return 'Could we schedule a 25-minute technical meeting next week to map these signals to pilot deployments and measurable outcomes?';
+    case 'Temp':
+    case 'Pearl':
+      return 'Can we lock a 25-minute planning session next week to convert these insights into a prioritized execution plan?';
+    default:
+      return 'Would you be open to a 25-minute meeting next week to review this together and align on next actions?';
+  }
+}
+
+function generateRoleInsights(role: UserRole, m: OutreachMetrics): OutreachInsight[] {
+  const shared: OutreachInsight[] = [
+    {
+      title: 'National water health movement',
+      metric: `${m.nationalHealthScore}/100 composite`,
+      whyItMatters: 'This gives an executive-ready baseline for progress and urgency.',
+      meetingHook: 'We can map your scope to the largest score movers first.',
+    },
+    {
+      title: 'Operational reliability signal',
+      metric: `${m.activeUnits} active units at ${m.avgUptime.toFixed(1)}% avg uptime`,
+      whyItMatters: 'Reliability is what turns pilots into defensible long-term programs.',
+      meetingHook: 'We can review where reliability gains are strongest and where to scale next.',
+    },
+    {
+      title: 'Verified treatment throughput',
+      metric: `${formatNumber(m.gallonsTreated)} gallons treated`,
+      whyItMatters: 'Throughput translates technical performance into real-world impact.',
+      meetingHook: 'We can estimate equivalent impact in your target jurisdiction or program area.',
+    },
+    {
+      title: 'Risk pressure snapshot',
+      metric: `${m.criticalAlerts} critical and ${m.warningAlerts} warning signals`,
+      whyItMatters: 'This identifies where delayed action could compound cost and exposure.',
+      meetingHook: 'We can prioritize a short list of high-consequence interventions.',
+    },
+    {
+      title: 'Commercial readiness indicator',
+      metric: `$${formatNumber(m.pipelineValue)} pipeline; top fit: ${m.topProspectName} ($${formatNumber(m.topProspectAcv)})`,
+      whyItMatters: 'This shows market pull and where stakeholder alignment is already forming.',
+      meetingHook: 'We can use this as a template for your fastest path to adoption.',
+    },
+  ];
+
+  if (role === 'MS4' || role === 'Local' || role === 'Utility') {
+    shared[4] = {
+      title: 'Compliance leverage point',
+      metric: `TSS performance band ${m.tssRemoval}`,
+      whyItMatters: 'This supports permit-facing outcomes while improving service reliability.',
+      meetingHook: 'We can map this directly to annual reporting milestones.',
+    };
+  }
+
+  if (role === 'State' || role === 'Federal') {
+    shared[3] = {
+      title: 'Oversight prioritization',
+      metric: `${m.criticalAlerts + m.warningAlerts} total active risk signals`,
+      whyItMatters: 'This helps allocate response capacity where impact is highest.',
+      meetingHook: 'We can set a triage model by severity and watershed exposure.',
+    };
+  }
+
+  if (role === 'NGO' || role === 'Researcher' || role === 'College' || role === 'K12') {
+    shared[2] = {
+      title: 'Program storytelling with evidence',
+      metric: `${formatNumber(m.gallonsTreated)} gallons + ${m.tssRemoval} treatment performance`,
+      whyItMatters: 'Evidence-backed impact strengthens grants, public trust, and partnerships.',
+      meetingHook: 'We can tailor this into outreach, education, or proposal-ready messaging.',
+    };
+  }
+
+  return shared.slice(0, 5);
+}
+
 // ─── Main Component ─────────────────────────────────────────────────────────
 
 export function PEARLManagementCenter(props: Props) {
@@ -476,6 +692,12 @@ export function PEARLManagementCenter(props: Props) {
   const [expandedDeployment, setExpandedDeployment] = useState<string | null>('dep-milton-fl-001');
   const [expandedProspect, setExpandedProspect] = useState<string | null>(null);
   const [showGPMCalc, setShowGPMCalc] = useState(false);
+  const [outreachRole, setOutreachRole] = useState<UserRole>('MS4');
+  const [outreachContact, setOutreachContact] = useState('');
+  const [outreachRecipient, setOutreachRecipient] = useState('');
+  const [outreachOrg, setOutreachOrg] = useState('');
+  const [outreachSeed, setOutreachSeed] = useState(() => Date.now());
+  const [copyStatus, setCopyStatus] = useState<string | null>(null);
 
   // Fetch real risk predictions from site-intelligence API using the first active deployment
   useEffect(() => {
@@ -514,6 +736,19 @@ export function PEARLManagementCenter(props: Props) {
   });
 
   const gpmResult = useMemo(() => calculateGPM(gpmInputs), [gpmInputs]);
+  const roleContacts = useMemo(() => OUTREACH_CONTACTS[outreachRole] ?? [], [outreachRole]);
+  const selectedContactInfo = useMemo(
+    () => roleContacts.find((c) => c.name === outreachContact) ?? null,
+    [roleContacts, outreachContact]
+  );
+
+  useEffect(() => {
+    const first = roleContacts[0];
+    if (!first) return;
+    setOutreachContact(first.name);
+    setOutreachRecipient(first.name);
+    setOutreachOrg(first.organization);
+  }, [outreachRole, roleContacts]);
 
   // Run delta analysis on active deployments
   const allAlerts = useMemo(() => {
@@ -530,6 +765,12 @@ export function PEARLManagementCenter(props: Props) {
   const totalGallons = deployments.reduce((s, d) => s + d.totalGallonsTreated, 0);
   const avgUptime = activeDeployments.length > 0 ? activeDeployments.reduce((s, d) => s + d.uptime, 0) / activeDeployments.length : 0;
   const pipelineValue = prospects.filter(p => !['closed_won', 'closed_lost'].includes(p.stage)).reduce((s, p) => s + p.estimatedACV, 0);
+  const topOpenProspect = useMemo(
+    () => prospects
+      .filter(p => !['closed_won', 'closed_lost'].includes(p.stage))
+      .sort((a, b) => b.estimatedACV - a.estimatedACV)[0] ?? null,
+    [prospects]
+  );
 
   // ── National Water Health Score ──
   // Baseline: national water quality is poor (~31/100 based on ATTAINS impairment rates)
@@ -555,6 +796,83 @@ export function PEARLManagementCenter(props: Props) {
   const displayPipelineProspects = demoMode ? prospects.filter(p => !['closed_won','closed_lost'].includes(p.stage)).length : 0;
   const displayNextDeploy = demoMode ? 'Apr 15' : 'TBD';
   const displayNextDeploySub = demoMode ? 'AA County MD' : 'Pending';
+  const outreachDatasetId = useMemo(() => {
+    const t = new Date(outreachSeed);
+    const y = t.getUTCFullYear();
+    const m = String(t.getUTCMonth() + 1).padStart(2, '0');
+    const d = String(t.getUTCDate()).padStart(2, '0');
+    const h = String(t.getUTCHours()).padStart(2, '0');
+    const min = String(t.getUTCMinutes()).padStart(2, '0');
+    return `PIN-${y}${m}${d}-${h}${min}`;
+  }, [outreachSeed]);
+
+  const outreachMetrics = useMemo<OutreachMetrics>(() => ({
+    nationalHealthScore,
+    activeUnits: displayActiveUnits,
+    gallonsTreated: displayGallons,
+    avgUptime: displayUptime,
+    criticalAlerts: displayCritical,
+    warningAlerts: displayWarnings,
+    pipelineValue: displayPipelineValue,
+    topProspectName: topOpenProspect?.name ?? 'No active prospect',
+    topProspectAcv: topOpenProspect?.estimatedACV ?? 0,
+    tssRemoval: displayTSS,
+  }), [
+    nationalHealthScore,
+    displayActiveUnits,
+    displayGallons,
+    displayUptime,
+    displayCritical,
+    displayWarnings,
+    displayPipelineValue,
+    topOpenProspect,
+    displayTSS,
+  ]);
+
+  const outreachInsights = useMemo(
+    () => generateRoleInsights(outreachRole, outreachMetrics),
+    [outreachRole, outreachMetrics, outreachSeed]
+  );
+
+  const outreachSubject = useMemo(
+    () => `${OUTREACH_ROLE_LABELS[outreachRole]} briefing | Fresh PIN dataset ${outreachDatasetId}`,
+    [outreachRole, outreachDatasetId]
+  );
+
+  const outreachBody = useMemo(() => {
+    const name = outreachRecipient.trim() || 'there';
+    const org = outreachOrg.trim();
+    const insightLines = outreachInsights.map((insight, idx) =>
+      `${idx + 1}. ${insight.title}: ${insight.metric}. ${insight.whyItMatters} ${insight.meetingHook}`
+    ).join('\n');
+    return `Hi ${name},
+
+Hope your week is going well. We just generated a fresh PIN dataset snapshot (${outreachDatasetId}) for ${OUTREACH_ROLE_LABELS[outreachRole]}${org ? ` at ${org}` : ''}, and these are the top 5 signals we think are most likely to impact your priorities right now:
+
+${insightLines}
+
+${ctaByRole(outreachRole)}
+
+If helpful, we can also bring a one-page summary that is ready to forward internally.
+
+Best,
+Doug and the PIN team`;
+  }, [outreachRecipient, outreachOrg, outreachInsights, outreachRole, outreachDatasetId]);
+
+  const outreachFullText = useMemo(
+    () => `Subject: ${outreachSubject}\n\n${outreachBody}`,
+    [outreachSubject, outreachBody]
+  );
+
+  const copyOutreach = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(outreachFullText);
+      setCopyStatus('Copied');
+    } catch {
+      setCopyStatus('Copy failed');
+    }
+    window.setTimeout(() => setCopyStatus(null), 1400);
+  }, [outreachFullText]);
 
   // ─── RENDER ──────────────────────────────────────────────────────────────
 
@@ -891,6 +1209,102 @@ export function PEARLManagementCenter(props: Props) {
 
         {viewLens === 'operations' && (
           <>
+            <Card className="border-indigo-200 bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/60">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Send size={16} className="text-indigo-600" /> Role-Based Outreach Email Builder
+                </CardTitle>
+                <CardDescription>
+                  Generate a warm, role-specific sample outreach email using a fresh dataset and top 5 high-impact insights.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                  <div>
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Audience</label>
+                    <select
+                      value={outreachRole}
+                      onChange={(e) => setOutreachRole(e.target.value as UserRole)}
+                      className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm"
+                    >
+                      {OUTREACH_ROLE_ORDER.map((role) => (
+                        <option key={role} value={role}>{OUTREACH_ROLE_LABELS[role]}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Recipient</label>
+                    <select
+                      value={outreachContact}
+                      onChange={(e) => {
+                        const name = e.target.value;
+                        const selected = roleContacts.find((c) => c.name === name);
+                        setOutreachContact(name);
+                        setOutreachRecipient(name);
+                        if (selected) setOutreachOrg(selected.organization);
+                      }}
+                      className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm"
+                    >
+                      {roleContacts.map((contact) => (
+                        <option key={contact.name} value={contact.name}>
+                          {contact.name} - {contact.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Organization</label>
+                    <input
+                      value={outreachOrg}
+                      onChange={(e) => setOutreachOrg(e.target.value)}
+                      placeholder="Anne Arundel County"
+                      className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm"
+                    />
+                  </div>
+                  <div className="flex items-end gap-2">
+                    <Button
+                      onClick={() => setOutreachSeed(Date.now())}
+                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+                    >
+                      <RefreshCw size={14} className="mr-1.5" /> Fresh Dataset
+                    </Button>
+                    <Button variant="outline" onClick={copyOutreach}>
+                      <FileText size={14} className="mr-1.5" /> Copy
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-indigo-200 bg-indigo-50/50 px-3 py-2 text-xs text-indigo-800 flex items-center justify-between">
+                  <span>Dataset: <strong>{outreachDatasetId}</strong> | Generated {new Date(outreachSeed).toLocaleString()}</span>
+                  {copyStatus && <span className="font-semibold">{copyStatus}</span>}
+                </div>
+                {selectedContactInfo && (
+                  <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
+                    Sending as sample outreach to <span className="font-semibold text-slate-800">{selectedContactInfo.name}</span> ({selectedContactInfo.title}).
+                  </div>
+                )}
+
+                <div className="rounded-lg border border-slate-200 bg-white p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Top 5 Insights</p>
+                  <div className="space-y-2">
+                    {outreachInsights.map((insight, idx) => (
+                      <div key={insight.title} className="rounded-md border border-slate-200 p-2.5">
+                        <p className="text-sm font-semibold text-slate-800">{idx + 1}. {insight.title}</p>
+                        <p className="text-xs text-slate-700 mt-0.5"><span className="font-semibold">Metric:</span> {insight.metric}</p>
+                        <p className="text-xs text-slate-600 mt-0.5">{insight.whyItMatters}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-slate-200 bg-white p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Email Subject</p>
+                  <p className="text-sm font-medium text-slate-800">{outreachSubject}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mt-3 mb-2">Email Body</p>
+                  <pre className="whitespace-pre-wrap text-sm text-slate-700 leading-relaxed font-sans">{outreachBody}</pre>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* ── ALERT FEED ── */}
             {allAlerts.length > 0 && (
