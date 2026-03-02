@@ -19,7 +19,8 @@ const USGS_OGC_BASE = 'https://api.waterdata.usgs.gov/ogcapi/v0';
 const ATTAINS_BASE = 'https://attains.epa.gov/attains-public/api';
 const ECHO_BASE = 'https://echo.epa.gov/api/rest_services';
 const ECHO_CWA_BASE = 'https://echodata.epa.gov/echo';
-const EJSCREEN_BASE = 'https://ejscreen.epa.gov/mapper/ejscreenRESTbroker1.aspx';
+// NOTE: EPA removed EJScreen from its website on Feb 5, 2025.
+// EJScreen fetch logic now centralized in lib/ejscreenFetch.ts with 3-tier fallback.
 const CEDEN_BASE    = 'https://data.ca.gov/api/3/action';
 
 const getToken = () => process.env.WATER_REPORTER_API_KEY || '';
@@ -472,26 +473,16 @@ async function echoFetch(endpoint: string, params: Record<string, string> = {}) 
 }
 
 // ─── EJScreen Helper (point query) ────────────────────────────────────────────
-async function ejscreenFetch(lat: number, lng: number) {
-  // Primary: EPA EJScreen REST broker (may be offline under current admin)
-  // Fallback: PEDP mirror at pedp-ejscreen.azurewebsites.net
-  const urls = [
-    `${EJSCREEN_BASE}?namestr=&geometry=${lng},${lat}&distance=1&unit=9035&aession=&f=json`,
-    `https://pedp-ejscreen.azurewebsites.net/mapper/ejscreenRESTbroker1.aspx?namestr=&geometry=${lng},${lat}&distance=1&unit=9035&f=json`,
-  ];
-  for (const url of urls) {
-    try {
-      const res = await fetch(url, {
-        headers: { 'Accept': 'application/json' },
-        next: { revalidate: 604800 }, // Cache 7 days — EJScreen is static annually
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data && !data.error) return data;
-      }
-    } catch { /* try next URL */ }
-  }
-  return { error: 'EJScreen unavailable (both EPA and PEDP mirrors failed)' };
+// EPA EJScreen was removed from its website on February 5, 2025.
+// This local wrapper delegates to the shared lib/ejscreenFetch.ts module which
+// implements a 3-tier fallback: EPA -> PEDP mirror -> local Census/SDWIS data.
+// Kept as a thin adapter for backward compatibility with the `ejscreen` action case.
+import { ejscreenFetchData } from '@/lib/ejscreenFetch';
+
+async function ejscreenFetch(lat: number, lng: number, state?: string) {
+  const data = await ejscreenFetchData(lat, lng, state);
+  if (data) return data;
+  return { error: 'EJScreen unavailable — EPA API offline since Feb 2025, no state for local fallback' };
 }
 
 // ─── ECHO CWA Facility Search (2-step QueryID pattern) ──────────────────────
@@ -1115,7 +1106,7 @@ export async function GET(request: NextRequest) {
       // Example: ?action=wqp-cache-status
       case 'wqp-cache-status': {
         await warmWqp();
-        return NextResponse.json({ source: 'wqp-cache', ...getWqpCacheStatus() }, {
+        return NextResponse.json({ ...getWqpCacheStatus(), source: 'wqp-cache' }, {
           headers: { 'Cache-Control': 'no-cache' },
         });
       }
@@ -1556,14 +1547,15 @@ export async function GET(request: NextRequest) {
       // EPA EJSCREEN — EJ Index Point Lookup
       // ════════════════════════════════════════════════════════════════════════
 
-      // Example: ?action=ejscreen&lat=37.6&lng=-122.15
+      // Example: ?action=ejscreen&lat=37.6&lng=-122.15&state=CA
       case 'ejscreen': {
         const lat = parseFloat(sp.get('lat') || '');
         const lng = parseFloat(sp.get('lng') || '');
         if (isNaN(lat) || isNaN(lng)) {
           return NextResponse.json({ error: 'lat and lng required' }, { status: 400 });
         }
-        const data = await ejscreenFetch(lat, lng);
+        const ejState = sp.get('state')?.toUpperCase() || '';
+        const data = await ejscreenFetch(lat, lng, ejState || undefined);
         console.log('[EJScreen Response]', JSON.stringify(data).slice(0, 500));
         console.log('[EJScreen Keys]', data && !data.error ? Object.keys(data).slice(0, 30).join(', ') : 'ERROR or empty');
         return NextResponse.json({ source: 'ejscreen', data });
@@ -2758,9 +2750,9 @@ export async function GET(request: NextRequest) {
               fetchedBy: 'api',
             });
             return NextResponse.json({
+              ...result.data,
               source: 'icis-cached',
               state: stateParam,
-              ...result.data,
               fromCache: true,
               _meta: result.meta,
             });
@@ -2790,7 +2782,7 @@ export async function GET(request: NextRequest) {
         try {
           const { getIcisCacheStatus, ensureWarmed: warmIcis } = await import('@/lib/icisCache');
           await warmIcis();
-          return NextResponse.json({ source: 'icis-cache-status', ...getIcisCacheStatus() });
+          return NextResponse.json({ ...getIcisCacheStatus(), source: 'icis-cache-status' });
         } catch (e: any) {
           return NextResponse.json({ source: 'icis-cache-status', error: e.message }, { status: 502 });
         }
@@ -2841,7 +2833,7 @@ export async function GET(request: NextRequest) {
         try {
           const { getSdwisCacheStatus, ensureWarmed: warmSdwis } = await import('@/lib/sdwisCache');
           await warmSdwis();
-          return NextResponse.json({ source: 'sdwis-cache-status', ...getSdwisCacheStatus() });
+          return NextResponse.json({ ...getSdwisCacheStatus(), source: 'sdwis-cache-status' });
         } catch (e: any) {
           return NextResponse.json({ source: 'sdwis-cache-status', error: e.message }, { status: 502 });
         }
@@ -2874,7 +2866,7 @@ export async function GET(request: NextRequest) {
         try {
           const { getNwisGwCacheStatus, ensureWarmed: warmNwisGw } = await import('@/lib/nwisGwCache');
           await warmNwisGw();
-          return NextResponse.json({ source: 'nwis-gw-cache-status', ...getNwisGwCacheStatus() });
+          return NextResponse.json({ ...getNwisGwCacheStatus(), source: 'nwis-gw-cache-status' });
         } catch (e: any) {
           return NextResponse.json({ source: 'nwis-gw-cache-status', error: e.message }, { status: 502 });
         }
@@ -3217,13 +3209,15 @@ export async function GET(request: NextRequest) {
           };
         } catch (e: any) { debug.sources.attains = { error: e.message }; }
 
-        // 7. Test EJScreen
+        // 7. Test EJScreen (pass state='MD' for local Census/SDWIS fallback)
         try {
-          const r = await ejscreenFetch(39.2644, -76.6264); // Baltimore
+          const r = await ejscreenFetch(39.2644, -76.6264, 'MD'); // Baltimore
           debug.sources.ejscreen = {
             hasData: !!r && !r.error,
             error: r?.error || null,
             sampleFields: r ? Object.keys(r).slice(0, 5) : [],
+            degraded: !!(r as any)?._degraded,
+            source: (r as any)?._source || 'epa-ejscreen',
           };
         } catch (e: any) { debug.sources.ejscreen = { error: e.message }; }
 
@@ -3236,7 +3230,9 @@ export async function GET(request: NextRequest) {
           usgsSamples: debug.sources.usgsSamples?.bodyLength > 100 ? '✅ working' : '❌ no data',
           bwb: debug.sources.bwb?.featureCount > 0 ? '✅ working' : debug.sources.bwb?.hasToken ? '❌ no data' : '⚠️ no token',
           attains: debug.sources.attains?.totalAssessments > 0 ? '✅ working' : debug.sources.attains?.error ? '❌ error' : '❌ no data',
-          ejscreen: debug.sources.ejscreen?.hasData ? '✅ working' : debug.sources.ejscreen?.error ? '⚠️ unavailable' : '❌ no data',
+          ejscreen: debug.sources.ejscreen?.hasData
+            ? (debug.sources.ejscreen?.degraded ? '⚠️ local fallback (Census/SDWIS)' : '✅ working')
+            : debug.sources.ejscreen?.error ? '⚠️ unavailable' : '❌ no data',
         };
 
         return NextResponse.json(debug);
@@ -3265,7 +3261,7 @@ export async function GET(request: NextRequest) {
         try {
           const { getUSAsCacheStatus, ensureWarmed: warmUSAs } = await import('@/lib/usaSpendingCache');
           await warmUSAs();
-          return NextResponse.json({ source: 'usaspending-cache-status', ...getUSAsCacheStatus() });
+          return NextResponse.json({ ...getUSAsCacheStatus(), source: 'usaspending-cache-status' });
         } catch (e: any) {
           return NextResponse.json({ source: 'usaspending-cache-status', error: e.message }, { status: 502 });
         }

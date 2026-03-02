@@ -44,7 +44,8 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
-const EJSCREEN_BASE = 'https://ejscreen.epa.gov/mapper/ejscreenRESTbroker1.aspx';
+// EPA EJScreen was removed from its website on February 5, 2025.
+// See lib/ejscreenFetch.ts for full documentation on the 3-tier fallback strategy.
 
 // ── Shared helpers (same patterns as water-risk-score + location-report) ────
 
@@ -82,21 +83,12 @@ async function reverseGeocodeState(lat: number, lng: number): Promise<string | n
   } catch { return null; }
 }
 
-async function ejscreenFetch(lat: number, lng: number): Promise<EJScreenData | null> {
-  const urls = [
-    `${EJSCREEN_BASE}?namestr=&geometry=${lng},${lat}&distance=1&unit=9035&aession=&f=json`,
-    `https://pedp-ejscreen.azurewebsites.net/mapper/ejscreenRESTbroker1.aspx?namestr=&geometry=${lng},${lat}&distance=1&unit=9035&f=json`,
-  ];
-  for (const url of urls) {
-    try {
-      const res = await fetch(url, { headers: { Accept: 'application/json' }, next: { revalidate: 604800 } });
-      if (res.ok) {
-        const data = await res.json();
-        if (data && !data.error) return data as EJScreenData;
-      }
-    } catch { /* try next */ }
-  }
-  return null;
+// EJScreen fetch delegated to shared module with 3-tier fallback
+import { ejscreenFetchData } from '@/lib/ejscreenFetch';
+
+async function ejscreenFetch(lat: number, lng: number, state?: string): Promise<EJScreenData | null> {
+  const data = await ejscreenFetchData(lat, lng, state);
+  return data as EJScreenData | null;
 }
 
 // ── Haversine distance in miles ─────────────────────────────────────────────
@@ -293,7 +285,7 @@ export async function GET(request: NextRequest) {
     Promise.resolve(getEchoCache(lat, lng)),
     Promise.resolve(getPfasCache(lat, lng)),
     Promise.resolve(getTriCache(lat, lng)),
-    ejscreenFetch(lat, lng),
+    ejscreenFetch(lat, lng, state || undefined),
     fetchCensusGeo(lat, lng),
     fetchFloodZone(lat, lng),
     fetchCriticalHabitat(lat, lng),

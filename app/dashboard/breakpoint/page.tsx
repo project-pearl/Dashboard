@@ -10,6 +10,7 @@ const BreakpointLanding = dynamic(
 export default function BreakpointPage() {
   return (
     <div className="min-h-screen">
+      {/* @ts-expect-error — JSX component has optional onToggleDevMode prop with default */}
       <BreakpointLanding />
     </div>
   );

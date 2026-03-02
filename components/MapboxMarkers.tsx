@@ -56,6 +56,7 @@ export function MapboxMarkers({
 
   const circleLayer: CircleLayer = {
     id: layerId,
+    source: `${layerId}-src`,
     type: 'circle',
     paint: {
       'circle-radius': radius,
@@ -77,7 +78,7 @@ export function MapboxMarkers({
           latitude={(hoveredFeature.geometry as GeoJSON.Point).coordinates[1]}
           closeButton={false}
           closeOnClick={false}
-          offset={[0, -8]}
+          offset={[0, -8] as [number, number]}
         >
           <span className="text-xs font-medium text-slate-800">
             {hoveredFeature.properties?.name || hoveredFeature.properties?.id}

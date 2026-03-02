@@ -478,7 +478,7 @@ function _calcFromActive(
         rem *= 1 - m[k] / 100;
       });
     let v = 100 - rem;
-    if (boost) v = Math.min(99, v * (1 + boost.boost));
+    if (boost && boost.boost) v = Math.min(99, v * (1 + boost.boost));
     ach[k] = Math.min(Math.round(v * 10) / 10, treatable + 10);
   });
 

@@ -60,6 +60,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'debate-topics-panel',       label: 'Debate Topics',              order: 22.3, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'groundwater',                label: 'Groundwater Monitoring (WDFN)', order: 22.5, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'briefing-changes',           label: 'What Changed Overnight',       order: 22.6, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'delta-changelog',            label: 'Data Change Log',              order: 22.65, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'briefing-stakeholder',       label: 'Stakeholder Watch',            order: 22.7, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'location-report', label: 'Location Water Quality Report', order: 23, visible: true, defaultExpanded: false, lensControlled: true },
     // ── Always visible ──
@@ -92,6 +93,7 @@ export const DEFAULT_SECTIONS = {
     // ── AI Briefing (View 2) ──
     { id: 'briefing-actions',    label: 'Action Required',               order: 16, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'briefing-changes',    label: 'What Changed Overnight',        order: 17, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'delta-changelog',     label: 'Data Change Log',               order: 17.1, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'briefing-pulse',      label: 'Program Pulse',                 order: 18, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'briefing-stakeholder', label: 'Stakeholder Watch',            order: 19, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Political Briefing ──
@@ -228,6 +230,7 @@ export const DEFAULT_SECTIONS = {
     // ── AI Briefing (View 2) ──
     { id: 'briefing-actions',    label: 'Action Required',                  order: 15, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'briefing-changes',    label: 'What Changed Overnight',           order: 16, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'delta-changelog',     label: 'Data Change Log',                  order: 16.1, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'briefing-pulse',      label: 'Program Pulse',                    order: 17, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'briefing-stakeholder', label: 'Stakeholder Watch',               order: 18, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Political Briefing ──
@@ -375,6 +378,7 @@ export const DEFAULT_SECTIONS = {
     // ── AI Briefing ──
     { id: 'briefing-actions',    label: 'Action Required',               order: 25.3, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'briefing-changes',    label: 'What Changed Overnight',        order: 25.4, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'delta-changelog',     label: 'Data Change Log',               order: 25.45, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'briefing-pulse',      label: 'Program Pulse',                 order: 25.5, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'briefing-stakeholder', label: 'Stakeholder Watch',            order: 25.6, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'alertfeed',           label: 'Alert Feed',                    order: 25.7, visible: true, defaultExpanded: false, lensControlled: true },
@@ -420,6 +424,7 @@ export const DEFAULT_SECTIONS = {
     // ── AI Briefing ──
     { id: 'briefing-actions',     label: 'Action Required',                  order: 14.1, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'briefing-changes',     label: 'What Changed Overnight',           order: 14.2, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'delta-changelog',      label: 'Data Change Log',                  order: 14.25, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'briefing-pulse',       label: 'Program Pulse',                    order: 14.3, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'briefing-stakeholder', label: 'Stakeholder Watch',                order: 14.4, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Scorecard ──
@@ -484,6 +489,7 @@ export const DEFAULT_SECTIONS = {
     // ── AI Briefing ──
     { id: 'briefing-actions',        label: 'Action Required',                 order: 15.1, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'briefing-changes',        label: 'What Changed Overnight',          order: 15.2, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'delta-changelog',         label: 'Data Change Log',                 order: 15.25, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'briefing-pulse',          label: 'Program Pulse',                   order: 15.3, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'briefing-stakeholder',    label: 'Stakeholder Watch',               order: 15.4, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Habitat & Ecology ──
@@ -570,6 +576,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'volunteer-program-panel',     label: 'Volunteer Program Management',  order: 25, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'citizen-reporting-panel',     label: 'Citizen Reporting',             order: 26, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'briefing-changes',           label: 'What Changed Overnight',       order: 26.6, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'delta-changelog',            label: 'Data Change Log',              order: 26.65, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'briefing-stakeholder',       label: 'Stakeholder Watch',            order: 26.7, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'location-report',            label: 'Location Water Quality Report', order: 27, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'initiatives-panel',          label: 'Initiatives Tracker',           order: 27.5, visible: true, defaultExpanded: true, lensControlled: true },
@@ -621,6 +628,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'fund-active',                 label: 'My Active Grants',             order: 25.1, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'fund-pipeline',               label: 'Opportunity Pipeline',         order: 25.2, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'briefing-changes',            label: 'What Changed Overnight',       order: 25.6, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'delta-changelog',             label: 'Data Change Log',              order: 25.65, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'briefing-stakeholder',        label: 'Stakeholder Watch',            order: 25.7, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'location-report',             label: 'Location Water Quality Report', order: 26, visible: true, defaultExpanded: false, lensControlled: true },
     // ── Always visible ──
@@ -640,6 +648,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'sentinel-briefing',  label: 'Sentinel System Health',      order: 5,  visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'briefing-actions',    label: 'Action Required',               order: 5.1, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'briefing-changes',    label: 'What Changed Overnight',        order: 5.2, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'delta-changelog',     label: 'Data Change Log',               order: 5.25, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'briefing-pulse',      label: 'Program Pulse',                 order: 5.3, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'briefing-stakeholder', label: 'Stakeholder Watch',            order: 5.4, visible: true, defaultExpanded: true, lensControlled: true },
     // ── Political Briefing ──
@@ -884,6 +893,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'insights',              label: 'AI Insights Engine',        order: 5,   visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'briefing-actions',      label: 'Action Required',           order: 6,   visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'briefing-changes',      label: 'What Changed Overnight',    order: 7,   visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'delta-changelog',       label: 'Data Change Log',           order: 7.1, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'briefing-pulse',        label: 'Program Pulse',             order: 8,   visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'briefing-stakeholder',  label: 'Stakeholder Watch',         order: 9,   visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'local-constituent-tldr', label: 'Constituent TL;DR',       order: 10,  visible: true, defaultExpanded: true,  lensControlled: true },

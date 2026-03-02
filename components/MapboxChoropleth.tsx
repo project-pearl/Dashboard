@@ -32,6 +32,7 @@ export function MapboxChoropleth({
 
   const fillLayer: FillLayer = {
     id: fillLayerId,
+    source: sourceId,
     type: 'fill',
     paint: {
       'fill-color': fillColorExpression as any,
@@ -41,6 +42,7 @@ export function MapboxChoropleth({
 
   const lineLayer: LineLayer = {
     id: lineLayerId,
+    source: sourceId,
     type: 'line',
     paint: {
       'line-color': '#94a3b8',
@@ -50,6 +52,7 @@ export function MapboxChoropleth({
 
   const highlightLayer: LineLayer = {
     id: highlightLayerId,
+    source: sourceId,
     type: 'line',
     paint: {
       'line-color': '#3b82f6',

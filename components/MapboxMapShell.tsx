@@ -69,7 +69,7 @@ export function MapboxMapShell({
       onMouseMove={onMouseMove}
       onMouseLeave={onMouseLeave}
       onLoad={handleLoad}
-      className={className}
+      {...{ className } as any}
     >
       <NavigationControl position="top-right" showCompass={false} />
       {children}

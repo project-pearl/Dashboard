@@ -1,34 +1,15 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Clock, RefreshCw } from 'lucide-react';
+import { useCacheStatus } from '@/hooks/useCacheStatus';
+import { CACHE_META } from '@/lib/cacheDeltaDescriber';
 
-interface CacheEntry {
-  name: string;
-  records: number;
-  ageHours: number;
-  lastBuilt: string | null;
-}
-
-interface CacheStatusResponse {
-  caches: Record<string, CacheEntry>;
-  timestamp: string;
-}
-
-const SOURCE_META: Record<string, { friendlyName: string; agency: string; cadence: string }> = {
-  wqp:         { friendlyName: 'Water Quality Portal',     agency: 'EPA / USGS',   cadence: 'Daily' },
-  attains:     { friendlyName: 'EPA ATTAINS',              agency: 'EPA',           cadence: 'Daily' },
-  nwisGw:      { friendlyName: 'USGS WDFN Groundwater',   agency: 'USGS',          cadence: 'Daily' },
-  echo:        { friendlyName: 'EPA ECHO',                 agency: 'EPA',           cadence: 'Weekly' },
-  coops:       { friendlyName: 'NOAA CO-OPS Tides',        agency: 'NOAA',          cadence: 'Daily' },
-  icis:        { friendlyName: 'ICIS-NPDES Enforcement',   agency: 'EPA',           cadence: 'Daily' },
-  sdwis:       { friendlyName: 'SDWIS Drinking Water',     agency: 'EPA',           cadence: 'Daily' },
-  stateReport: { friendlyName: 'State Reports',            agency: 'Multi-agency',  cadence: 'Daily' },
-  sentinel:    { friendlyName: 'Sentinel Monitoring',      agency: 'PIN',           cadence: 'Hourly' },
-  insights:    { friendlyName: 'AI Insights',              agency: 'PIN',           cadence: 'Daily' },
-  hucScoring:  { friendlyName: 'HUC-8 Scoring',           agency: 'PIN',           cadence: 'Daily' },
-  economyOverlay: { friendlyName: 'Economy Overlay',       agency: 'Census / BLS',  cadence: 'Monthly' },
-};
+// Use a subset of CACHE_META keys that are relevant for the latency tracker display
+const TRACKER_KEYS = new Set([
+  'wqp', 'attains', 'nwisGw', 'echo', 'coops', 'icis', 'sdwis',
+  'stateReports', 'insights',
+]);
 
 function ageColor(hours: number): string {
   const days = hours / 24;
@@ -54,20 +35,9 @@ function formatAge(hours: number): string {
 }
 
 export function DataLatencyTracker() {
-  const [caches, setCaches] = useState<Record<string, CacheEntry> | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading } = useCacheStatus();
 
-  useEffect(() => {
-    fetch('/api/cache-status')
-      .then(r => r.json())
-      .then((data: CacheStatusResponse) => {
-        setCaches(data.caches);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="rounded-lg p-6 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
         <RefreshCw className="w-5 h-5 mx-auto mb-2 animate-spin" style={{ color: 'var(--text-dim)' }} />
@@ -76,7 +46,7 @@ export function DataLatencyTracker() {
     );
   }
 
-  if (!caches) {
+  if (!data?.caches) {
     return (
       <div className="rounded-lg p-6 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
         <div className="text-xs" style={{ color: 'var(--text-dim)' }}>Unable to load cache status.</div>
@@ -84,11 +54,16 @@ export function DataLatencyTracker() {
     );
   }
 
-  const entries = Object.entries(caches).map(([key, entry]) => ({
-    key,
-    ...entry,
-    meta: SOURCE_META[key],
-  })).filter(e => e.meta);
+  const entries = Object.entries(data.caches)
+    .filter(([key]) => TRACKER_KEYS.has(key))
+    .map(([key, cache]) => ({
+      key,
+      meta: CACHE_META[key],
+      ageHours: cache.ageHours ?? 0,
+      records: (cache as any).records ?? (cache as any).totalRecords ?? 0,
+      lastBuilt: (cache as any).built ?? (cache as any).lastBuilt ?? null,
+    }))
+    .filter(e => e.meta);
 
   const avgAge = entries.length > 0
     ? Math.round(entries.reduce((s, e) => s + e.ageHours, 0) / entries.length / 24)

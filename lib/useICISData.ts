@@ -40,7 +40,7 @@ export interface UseICISDataResult {
   isLoading: boolean;
   error: string | null;
   fromCache: boolean;
-  meta: SnapshotMeta | null;
+  meta: (SnapshotMeta & { refreshInProgress?: boolean }) | null;
   refreshInProgress: boolean;
   refresh: () => Promise<void>;
 }

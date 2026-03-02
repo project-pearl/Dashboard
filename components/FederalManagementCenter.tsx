@@ -45,6 +45,8 @@ import { GrantOutcomesCard } from './GrantOutcomesCard';
 import { EmergingContaminantsTracker } from './EmergingContaminantsTracker';
 import { PolicyTracker } from './PolicyTracker';
 import { DataLatencyTracker } from './DataLatencyTracker';
+import { BriefingChangesCard } from './BriefingChangesCard';
+import { DeltaChangelog } from './DeltaChangelog';
 import { WARRZones } from './WARRZones';
 import type { WARRMetric, WARREvent } from './WARRZones';
 import { useAdminState, STATE_ABBR_TO_NAME } from '@/lib/adminStateContext';
@@ -127,7 +129,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['usmap', 'briefing-pulse', 'briefing-changes', 'briefing-stakeholder']),
+    sections: new Set(['usmap', 'briefing-pulse', 'briefing-changes', 'delta-changelog', 'briefing-stakeholder']),
   },
   briefing: {
     label: 'AI Briefing',
@@ -137,7 +139,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: true,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['ai-water-intelligence', 'sentinel-briefing', 'waterfront-exposure', 'briefing-actions', 'briefing-changes', 'briefing-stakeholder']),
+    sections: new Set(['ai-water-intelligence', 'sentinel-briefing', 'waterfront-exposure', 'briefing-actions', 'briefing-changes', 'delta-changelog', 'briefing-stakeholder']),
   },
   'political-briefing': {
     label: 'Political Briefing',
@@ -191,7 +193,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: true, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: true, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['networkhealth', 'coveragegaps', 'sla', 'sentinel-briefing']),
+    sections: new Set(['networkhealth', 'coveragegaps', 'sla', 'sentinel-briefing', 'delta-changelog']),
   },
   trends: {
     label: 'Trends & Projections',
@@ -1315,19 +1317,25 @@ export function FederalManagementCenter(props: Props) {
     const coords = getRegionCoords(activeDetailId, nccRegion.state);
     setEjCache(prev => ({ ...prev, [activeDetailId]: { ejIndex: null, loading: true } }));
 
-    fetch(`/api/water-data?action=ejscreen&lat=${coords[0]}&lng=${coords[1]}`)
+    fetch(`/api/water-data?action=ejscreen&lat=${coords[0]}&lng=${coords[1]}&state=${nccRegion.state}`)
       .then(r => r.json())
       .then(json => {
         // EJScreen returns various indicators — extract the EJ index
+        // NOTE: EPA EJScreen API offline since Feb 2025. When using the
+        // Census/SDWIS local fallback, EJINDEX is a state-level score (0-100).
         const data = json?.data;
         let ejIndex: number | null = null;
         if (data && !data.error) {
-          // The REST broker returns demographic + environmental indicators
-          // Try to find the EJ index percentage
-          const raw = data?.RAW_E_PM25 || data?.RAW_EJ_SCORE || data?.P_LDPNT_D2 || null;
-          // Fallback: use the overall percentile if available
-          ejIndex = typeof raw === 'number' ? Math.round(raw) : null;
-          // If we got block-group level data, try the supplemental index
+          // Check for local fallback EJINDEX first (always present in fallback)
+          if (data?.EJINDEX != null && typeof data.EJINDEX === 'number') {
+            ejIndex = Math.round(data.EJINDEX);
+          }
+          // Original EPA REST broker fields
+          if (ejIndex === null) {
+            const raw = data?.RAW_E_PM25 || data?.RAW_EJ_SCORE || data?.P_LDPNT_D2 || null;
+            ejIndex = typeof raw === 'number' ? Math.round(raw) : null;
+          }
+          // Block-group level supplemental index
           if (ejIndex === null && data?.S_P_LDPNT_D2) {
             ejIndex = Math.round(data.S_P_LDPNT_D2);
           }
@@ -6310,44 +6318,9 @@ export function FederalManagementCenter(props: Props) {
           </Card>
         );
 
-        case 'briefing-changes': return DS(
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-purple-600" />
-                What Changed Overnight — National
-              </CardTitle>
-              <CardDescription>New data, alerts, and status changes across all 50 states since your last session</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {[
-                  { id: 'fed-chg-1', time: '2:14 AM', change: 'ATTAINS data refresh: 47 new Category 5 listings across 12 states for nutrient and bacteria impairment', detail: 'Largest increases: FL (+9), TX (+7), OH (+6), PA (+5). Primary causes: nutrients (28), bacteria (12), sediment (7). Net change after delistings: +31.' },
-                  { id: 'fed-chg-2', time: '3:45 AM', change: 'ECHO enforcement update: 14 new significant non-compliance findings across 8 states', detail: 'Major facilities: 6, Minor: 8. Regions affected: R3 (4), R4 (3), R5 (3), R6 (2), R9 (2). 3 facilities already under consent decree.' },
-                  { id: 'fed-chg-3', time: '5:30 AM', change: 'WDFN groundwater data: 23 monitoring wells in 9 states show declining water table trends', detail: 'States: AZ (5), CA (4), KS (3), NE (3), TX (3), OK (2), NM (1), CO (1), UT (1). Drought conditions contributing in western states.' },
-                  { id: 'fed-chg-4', time: '6:00 AM', change: 'SDWIS update: MCL exceedances reported at 6 community water systems across 4 states', detail: 'PFAS: 3 systems (MA, NJ, MI). Lead: 2 systems (OH, IL). Nitrate: 1 system (IA). All have initiated public notification.' },
-                ].map((c) => (
-                  <div key={c.id}>
-                    <div
-                      className="flex items-start gap-3 rounded-lg border border-slate-200 p-3 cursor-pointer hover:ring-1 hover:ring-purple-300 transition-all"
-                      onClick={() => setComingSoonId(comingSoonId === c.id ? null : c.id)}
-                    >
-                      <span className="text-[10px] font-mono text-slate-400 whitespace-nowrap mt-0.5">{c.time}</span>
-                      <span className="text-xs text-slate-700 flex-1">{c.change}</span>
-                      <ChevronDown size={14} className={`flex-shrink-0 text-slate-400 transition-transform mt-0.5 ${comingSoonId === c.id ? 'rotate-180' : ''}`} />
-                    </div>
-                    {comingSoonId === c.id && (
-                      <div className="ml-4 mt-1 rounded-lg border border-purple-200 bg-purple-50/60 p-3">
-                        <p className="text-xs text-slate-700">{c.detail}</p>
-                        <p className="text-[10px] text-slate-400 mt-2 italic">TODO: Deep-link to specific cache diff — needs delta tracking per cron</p>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        );
+        case 'briefing-changes': return DS(<BriefingChangesCard />);
+
+        case 'delta-changelog': return DS(<DeltaChangelog />);
 
         case 'briefing-pulse': return DS(
           <Card>

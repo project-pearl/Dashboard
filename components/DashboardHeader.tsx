@@ -3,9 +3,9 @@
 import React from 'react';
 import { usePathname } from 'next/navigation';
 import UserMenu from '@/components/UserMenu';
-import { Radio } from 'lucide-react';
 import GlobalAlertBadge from '@/ams/components/GlobalAlertBadge';
 import { useAlertSummary } from '@/ams/hooks/useAlertSummary';
+import { PipelineHealthIndicator } from '@/components/PipelineHealthIndicator';
 
 
 const ROUTE_LABELS: Record<string, string> = {
@@ -66,11 +66,8 @@ export function DashboardHeader() {
 
       {/* Right side */}
       <div className="flex items-center gap-3">
-        {/* Live status */}
-        <div className="hidden sm:flex items-center gap-1.5 text-xs text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400">
-          <Radio className="w-3 h-3 animate-pulse" />
-          <span className="font-semibold">Live Data</span>
-        </div>
+        {/* Pipeline health indicator */}
+        <PipelineHealthIndicator />
 
         {/* Notification bell */}
         <GlobalAlertBadge summary={alertSummary} />

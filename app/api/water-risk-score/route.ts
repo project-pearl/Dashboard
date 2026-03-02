@@ -27,7 +27,11 @@ import { findNearestHuc8 } from '@/lib/hucLookup';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
-const EJSCREEN_BASE = 'https://ejscreen.epa.gov/mapper/ejscreenRESTbroker1.aspx';
+// EPA EJScreen was removed from its website on February 5, 2025.
+// Shared module implements 3-tier fallback: EPA -> PEDP mirror -> local Census/SDWIS.
+// See lib/ejscreenFetch.ts for full documentation.
+import { ejscreenFetchData } from '@/lib/ejscreenFetch';
+
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
 
 // ── ZIP centroid resolution ──────────────────────────────────────────────────
@@ -39,28 +43,6 @@ function getZipCentroids(): Record<string, [number, number]> {
     _zipData = require('@/lib/zipCentroids.json') as Record<string, [number, number]>;
   }
   return _zipData;
-}
-
-// ── EJScreen fetch ───────────────────────────────────────────────────────────
-
-async function ejscreenFetch(lat: number, lng: number): Promise<Record<string, unknown> | null> {
-  const urls = [
-    `${EJSCREEN_BASE}?namestr=&geometry=${lng},${lat}&distance=1&unit=9035&aession=&f=json`,
-    `https://pedp-ejscreen.azurewebsites.net/mapper/ejscreenRESTbroker1.aspx?namestr=&geometry=${lng},${lat}&distance=1&unit=9035&f=json`,
-  ];
-  for (const url of urls) {
-    try {
-      const res = await fetch(url, {
-        headers: { Accept: 'application/json' },
-        next: { revalidate: 604800 },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data && !data.error) return data as Record<string, unknown>;
-      }
-    } catch { /* try next URL */ }
-  }
-  return null;
 }
 
 // ── Mapbox reverse geocode for state ─────────────────────────────────────────
@@ -166,7 +148,7 @@ export async function GET(request: NextRequest) {
     Promise.resolve(getEchoCache(lat, lng)),
     Promise.resolve(getPfasCache(lat, lng)),
     Promise.resolve(getTriCache(lat, lng)),
-    ejscreenFetch(lat, lng),
+    ejscreenFetchData(lat, lng, state || undefined),
   ]);
 
   const val = <T,>(r: PromiseSettledResult<T | null>): T | null =>

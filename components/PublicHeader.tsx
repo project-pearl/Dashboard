@@ -6,8 +6,8 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ArrowRight, Menu, X } from 'lucide-react';
 
-const NAV_LINKS = [
-  { href: '/', label: 'Home', anchor: undefined },
+const NAV_LINKS: { href: string; label: string; anchor?: string }[] = [
+  { href: '/', label: 'Home' },
   { href: '/explore', label: 'Explore Data' },
   { href: '/water-risk-score', label: 'Water Risk Score' },
   { href: '/treatment', label: 'Our Technology' },

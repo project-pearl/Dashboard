@@ -100,12 +100,17 @@ function computeRiskIndicators(report: SiteIntelligenceReport): RiskIndicator[] 
     panelId: 'env-profile',
   });
 
-  // EJ Vulnerability
-  const ejDemoIdx = report.environmentalProfile.ejscreen?.demographicIndex;
+  // EJ Vulnerability — handles both live EJScreen and Census/SDWIS fallback
+  const ejRaw = report.environmentalProfile.ejscreen as Record<string, unknown> | null;
+  const ejIsDegraded = !!ejRaw?._degraded;
+  const ejDemoIdx = ejRaw?.demographicIndex as number | undefined
+    ?? (ejRaw?.EJINDEX != null ? ejRaw.EJINDEX as number : undefined);
   indicators.push({
     label: 'EJ Vulnerability',
     level: ejDemoIdx == null ? 'gray' : ejDemoIdx >= 80 ? 'red' : ejDemoIdx >= 50 ? 'amber' : 'green',
-    detail: ejDemoIdx != null ? `Demographic index: ${ejDemoIdx}th percentile` : 'No EJScreen data',
+    detail: ejDemoIdx != null
+      ? (ejIsDegraded ? `EJ score: ${Math.round(ejDemoIdx)} (state-level estimate)` : `Demographic index: ${ejDemoIdx}th percentile`)
+      : 'No EJScreen data',
     panelId: 'env-profile',
   });
 
@@ -357,18 +362,35 @@ export default function SiteIntelDashboard() {
                           </div>
                         )}
 
-                        {/* EJScreen indicators */}
+                        {/* EJScreen indicators — or Census/SDWIS fallback when EPA API offline */}
                         {report.environmentalProfile.ejscreen && (
                           <div>
-                            <div className="text-xs font-semibold text-slate-700 mb-2">EJ Indicators (EJScreen)</div>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                              <EJMetric label="Demographic Index" value={report.environmentalProfile.ejscreen.demographicIndex} suffix="pctl" />
-                              <EJMetric label="PM2.5" value={report.environmentalProfile.ejscreen.pm25} suffix="pctl" />
-                              <EJMetric label="Ozone" value={report.environmentalProfile.ejscreen.ozone} suffix="pctl" />
-                              <EJMetric label="Wastewater" value={report.environmentalProfile.ejscreen.wastewater} suffix="pctl" />
-                              <EJMetric label="Superfund Proximity" value={report.environmentalProfile.ejscreen.superfundProximity} suffix="pctl" />
-                              <EJMetric label="Haz. Waste" value={report.environmentalProfile.ejscreen.hazWaste} suffix="pctl" />
-                            </div>
+                            {(report.environmentalProfile.ejscreen as Record<string, unknown>)?._degraded ? (
+                              <>
+                                <div className="text-xs font-semibold text-slate-700 mb-1">EJ Indicators (Census ACS / SDWIS fallback)</div>
+                                <div className="text-[11px] text-amber-600 mb-2">
+                                  State-level estimate. EPA EJScreen API offline since Feb 2025.
+                                </div>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                  <EJMetric label="EJ Score" value={(report.environmentalProfile.ejscreen as any).EJINDEX} suffix="/100" />
+                                  <EJMetric label="Low Income" value={(report.environmentalProfile.ejscreen as any).LOWINCPCT != null ? Math.round((report.environmentalProfile.ejscreen as any).LOWINCPCT * 100) : null} suffix="%" />
+                                  <EJMetric label="Minority" value={(report.environmentalProfile.ejscreen as any).MINORPCT != null ? Math.round((report.environmentalProfile.ejscreen as any).MINORPCT * 100) : null} suffix="%" />
+                                  <EJMetric label="DW Violations" value={(report.environmentalProfile.ejscreen as any).P_DWATER} suffix="/100" />
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <div className="text-xs font-semibold text-slate-700 mb-2">EJ Indicators (EJScreen)</div>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                  <EJMetric label="Demographic Index" value={report.environmentalProfile.ejscreen.demographicIndex} suffix="pctl" />
+                                  <EJMetric label="PM2.5" value={report.environmentalProfile.ejscreen.pm25} suffix="pctl" />
+                                  <EJMetric label="Ozone" value={report.environmentalProfile.ejscreen.ozone} suffix="pctl" />
+                                  <EJMetric label="Wastewater" value={report.environmentalProfile.ejscreen.wastewater} suffix="pctl" />
+                                  <EJMetric label="Superfund Proximity" value={report.environmentalProfile.ejscreen.superfundProximity} suffix="pctl" />
+                                  <EJMetric label="Haz. Waste" value={report.environmentalProfile.ejscreen.hazWaste} suffix="pctl" />
+                                </div>
+                              </>
+                            )}
                           </div>
                         )}
 

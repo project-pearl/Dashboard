@@ -151,7 +151,7 @@ export function exportEJReport(data: any, regionName: string, regionId: string) 
     `  • Job creation through oyster aquaculture and monitoring operations\n` +
     `  • Educational engagement through K-12 and community programs\n\n` +
     `EJ SCREENING INDICATORS\n${'-'.repeat(40)}\n` +
-    `  EPA EJScreen: Review site-specific indicators at ejscreen.epa.gov\n` +
+    `  EPA EJScreen: screening-tools.com/epa-ejscreen (mirror; EPA original offline since Feb 2025)\n` +
     `  CDC SVI: Social vulnerability assessment recommended for deployment area\n` +
     `  State EJ Policy: Consult state environmental justice plan for compliance\n` +
     PEARL_FOOTER(new Date().getFullYear());

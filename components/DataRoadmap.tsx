@@ -62,7 +62,7 @@ const phases: Phase[] = [
       { name: "Blue Water Baltimore", dataType: "Harbor bacteria, nutrients", status: "live", records: "Water Reporter API" },
       { name: "CA CEDEN", dataType: "California surface water monitoring", status: "live", records: "10K+ sites" },
       { name: "TX TCEQ", dataType: "Texas surface water quality", status: "live", records: "5M+ records" },
-      { name: "EJScreen", dataType: "Environmental justice screening", status: "live", records: "Census tract level" },
+      { name: "EJScreen", dataType: "Environmental justice screening (EPA API offline Feb 2025; Census/SDWIS fallback active)", status: "live", records: "State-level fallback" },
       { name: "CBP DataHub", dataType: "Chesapeake watershed detail", status: "live", records: "Multiple endpoints" },
       { name: "ICIS-NPDES", dataType: "Discharge permits, violations", status: "offline", records: "400K+ permits", fix: "HTTP 404 — verify Envirofacts table names" },
       { name: "ICIS DMR", dataType: "Discharge monitoring measurements", status: "offline", records: "Monthly per permit", fix: "HTTP 404 — correct table name" },

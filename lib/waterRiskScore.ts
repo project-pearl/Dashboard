@@ -494,7 +494,10 @@ export function computeWaterRiskScore(input: RiskScoreInput): WaterRiskScoreResu
   if (input.pfas) dataSources.push('EPA PFAS Analytic Tools');
   if (input.tri) dataSources.push('EPA Toxics Release Inventory');
   if (input.attains) dataSources.push('EPA ATTAINS (Impaired Waters)');
-  if (input.ejscreen) dataSources.push('EPA EJScreen');
+  if (input.ejscreen) {
+    const isDegraded = !!(input.ejscreen as Record<string, unknown>)?._degraded;
+    dataSources.push(isDegraded ? 'Census ACS / SDWIS (EJScreen fallback)' : 'EPA EJScreen');
+  }
   if (input.hucIndices) dataSources.push('PEARL HUC-8 Indices');
 
   return {

@@ -487,13 +487,38 @@ export default function LocationReportCard() {
                 <div className="space-y-1">
                   {(() => {
                     const raw = report.sources.ejscreen as Record<string, unknown>;
-                    // EJScreen returns data nested in various formats — try multiple access paths
+                    const isDegraded = !!raw?._degraded;
+
+                    // Local Census/SDWIS fallback uses LOWINCPCT, MINORPCT, EJINDEX, P_DWATER
+                    if (isDegraded) {
+                      const items: [string, string, unknown][] = [
+                        ['EJ Vulnerability Score', 'Composite EJ score from Census ACS + SDWIS data', raw.EJINDEX],
+                        ['Low Income %', 'State-level poverty rate (Census ACS)', raw.LOWINCPCT != null ? (raw.LOWINCPCT as number) * 100 : null],
+                        ['Minority %', 'State-level non-white population (Census ACS)', raw.MINORPCT != null ? (raw.MINORPCT as number) * 100 : null],
+                        ['Drinking Water Risk', 'Normalized from SDWIS violation rate per 100k pop', raw.P_DWATER],
+                      ];
+                      const filtered = items.filter(([,, v]) => v != null);
+                      return (
+                        <>
+                          <p className="text-amber-600 text-xs italic mb-2">
+                            State-level estimate (Census ACS + SDWIS). EPA EJScreen API offline since Feb 2025.
+                          </p>
+                          {filtered.map(([label, tooltip, v]) => (
+                            <div key={label} className="flex items-center justify-between text-xs">
+                              <span className="cursor-help" title={tooltip}>{label}</span>
+                              <span className="font-medium">{typeof v === 'number' ? `${Math.round(v)}` : String(v)}</span>
+                            </div>
+                          ))}
+                        </>
+                      );
+                    }
+
+                    // Original EPA EJScreen data format
                     const rObj = (raw?.RAW_D_INCOME != null) ? raw
                       : (raw as any)?.data != null ? (raw as any).data
                       : (raw as any)?.results?.[0] ?? null;
                     if (!rObj) {
-                      // Check if there's any useful data in the raw response
-                      const keys = Object.keys(raw).filter(k => k !== 'status' && k !== 'error');
+                      const keys = Object.keys(raw).filter(k => k !== 'status' && k !== 'error' && !k.startsWith('_'));
                       if (keys.length === 0) return <p className="text-muted-foreground text-xs italic">EJScreen returned no data for this location</p>;
                       return <p className="text-xs">EJScreen data received — {keys.length} field(s)</p>;
                     }
@@ -517,7 +542,7 @@ export default function LocationReportCard() {
                 </div>
               ) : (
                 <p className="text-muted-foreground text-xs italic">
-                  EJScreen data unavailable — EPA EJScreen API may be temporarily offline
+                  EJScreen data unavailable — EPA EJScreen API offline since Feb 2025
                 </p>
               )}
             </ReportSection>

@@ -495,7 +495,7 @@ export default function DataProvenancePage() {
               ['ECHO / ICIS-NPDES', 'EPA', 'Permit compliance, DMRs, enforcement actions, inspections', 'Daily cache', 'Infrastructure Failure, Permit Risk Exposure, Governance Response, PEARL Load Velocity'],
               ['SDWIS', 'EPA', 'Drinking water systems, violations, enforcement', 'Daily cache', 'Infrastructure Failure, Per Capita Load, EJ Vulnerability'],
               ['USGS WDFN', 'USGS', 'Real-time streamflow, water level, continuous WQ', '15-min (real-time)', 'Water Quality Grade, Monitoring Coverage, Data Freshness'],
-              ['EJScreen', 'EPA', 'Environmental justice indices, demographic indicators', 'Annual', 'EJ Vulnerability'],
+              ['EJScreen', 'EPA', 'Environmental justice indices, demographic indicators (API offline since Feb 2025; Census ACS/SDWIS fallback active)', 'Annual (when available)', 'EJ Vulnerability'],
               ['NOAA CO-OPS', 'NOAA', 'Tidal levels, water temperature, salinity, meteorological', '6-min (real-time)', 'Waterfront Exposure, Water Quality Grade'],
               ['NHD / NHDPlus HR', 'USGS', 'Stream/waterbody geometry, HUC boundaries, flow direction', 'Annual', 'Spatial indexing, watershed delineation'],
               ['WATERS GeoServices', 'EPA', 'Geospatial impairment mapping, TMDL linkage', 'Synced with ATTAINS', 'Watershed Recovery, Regulatory Compliance'],

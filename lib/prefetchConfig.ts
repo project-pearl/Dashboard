@@ -39,7 +39,7 @@ export const PREFETCH_CONFIG: Partial<Record<UserRole, PrefetchSource[]>> = {
     { source: 'sdwis', scope: 'userState' },
     { source: 'echo', scope: 'userState' },
   ],
-  ESG: [
+  Corporate: [
     { source: 'echo', scope: 'allPriority' },
     { source: 'icis', scope: 'allPriority' },
   ],
@@ -56,7 +56,7 @@ export const PREFETCH_CONFIG: Partial<Record<UserRole, PrefetchSource[]>> = {
     { source: 'wqp', scope: 'userState' },
     { source: 'sdwis', scope: 'userState' },
   ],
-  'K-12': [
+  K12: [
     { source: 'nwis-gw', scope: 'userState' },
     { source: 'wqp', scope: 'userState' },
   ],
