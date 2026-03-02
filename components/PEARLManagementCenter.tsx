@@ -891,22 +891,6 @@ export function PEARLManagementCenter(props: Props) {
 
         {viewLens === 'operations' && (
           <>
-            {/* ── WARR Zones ── */}
-            {(() => {
-              const pearlMetrics: WARRMetric[] = [
-                { label: 'System Status', value: `${activeDeployments.length}/${deployments.length}`, icon: Gauge, iconColor: 'var(--status-healthy)', subtitle: `${activeDeployments.length} active deployments` },
-                { label: 'Active Deployments', value: String(activeDeployments.length), icon: Activity, iconColor: 'var(--accent-teal)', subtitle: `${Math.round(avgUptime)}% avg uptime` },
-                { label: 'Data Quality', value: criticalAlerts.length === 0 ? 'Good' : 'Alert', icon: AlertTriangle, iconColor: criticalAlerts.length === 0 ? 'var(--status-healthy)' : 'var(--status-warning)', subtitle: `${criticalAlerts.length} critical · ${warningAlerts.length} warning` },
-              ];
-              return (
-                <div className="space-y-4">
-                  {null}
-                  {null}
-                  {null}
-                  {null}
-                </div>
-              );
-            })()}
 
             {/* ── ALERT FEED ── */}
             {allAlerts.length > 0 && (

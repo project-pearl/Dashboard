@@ -2517,40 +2517,6 @@ export function FederalManagementCenter(props: Props) {
     };
   }, [stateRollup]);
 
-  // ─── WARR Zone Adapters ────────────────────────────────────────────────────
-  const warrMetrics = useMemo<WARRMetric[]>(() => [
-    {
-      label: 'Network Health', value: networkHealth.percentage >= 0 ? `${networkHealth.percentage}%` : '—',
-      icon: Gauge, iconColor: networkHealth.color === 'green' ? 'var(--status-healthy)' : networkHealth.color === 'yellow' ? 'var(--status-warning)' : 'var(--status-severe)',
-      subtitle: `${networkHealth.grade.letter} grade · ${networkHealth.gradedStateCount ?? 0} states`,
-    },
-    {
-      label: 'Impairment Rate', value: `${scorecardData.impairmentPct}%`,
-      icon: AlertTriangle, iconColor: 'var(--status-warning)',
-      subtitle: `${scorecardData.totalImpaired.toLocaleString()} of ${scorecardData.totalAssessed.toLocaleString()} waterbodies`,
-    },
-    {
-      label: 'Sentinel Events', value: sentinel.criticalHucs.length + sentinel.watchHucs.length,
-      icon: Shield, iconColor: 'var(--accent-teal)',
-      subtitle: `${sentinel.criticalHucs.length} critical · ${sentinel.watchHucs.length} watch`,
-    },
-  ], [networkHealth, scorecardData, sentinel]);
-
-  const warrEvents = useMemo<WARREvent[]>(() =>
-    [...sentinel.criticalHucs, ...sentinel.watchHucs]
-      .sort((a, b) => b.score - a.score)
-      .map(h => ({
-        id: h.huc8,
-        name: hucNames[h.huc8] ?? h.huc8,
-        location: FIPS_TO_ABBR[h.huc8.slice(0, 2)] || undefined,
-        level: h.level as 'CRITICAL' | 'WATCH',
-        score: h.score,
-        signalCount: h.eventCount,
-        patterns: h.patternNames,
-      })),
-    [sentinel, hucNames],
-  );
-
   // ─── Sorted Sentinel PINs for side card ──────────────────────────────────
   const sortedPins = useMemo(() =>
     [...sentinel.criticalHucs, ...sentinel.watchHucs, ...sentinel.advisoryHucs]
