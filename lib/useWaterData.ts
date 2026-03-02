@@ -10,6 +10,7 @@ import {
   findNearestBwbStation,
   type BWBStation,
 } from './useWaterReporter';
+import { FIPS_TO_ABBR } from './mapUtils';
 
 // ─── Station Registry (lazy-loaded at runtime to avoid 5.9MB bundle) ────────
 // Contains 12,000+ confirmed monitoring stations across all 51 states
@@ -2310,7 +2311,10 @@ export function useWaterData(regionId: string | null): UseWaterDataResult {
       // ── Source 9d: User-Uploaded Samples (citizen science / student) ────
       // Fetch ACTIVE samples from the uploads API, fill gaps only
       try {
-        const uploadRes = await fetch(`/api/uploads/samples?stateAbbr=${regionMeta.stateCode}`);
+        const stateAbbr = regionMeta.stateCode.startsWith('US:')
+          ? FIPS_TO_ABBR[regionMeta.stateCode.slice(3)] || regionMeta.stateCode
+          : regionMeta.stateCode;
+        const uploadRes = await fetch(`/api/uploads/samples?stateAbbr=${stateAbbr}`);
         if (uploadRes.ok) {
           const uploadData = await uploadRes.json();
           const uploadSamples: Array<{ parameter: string; value: number; unit: string; sample_date: string; location_name: string | null; provenance: string }> = uploadData.samples || [];
