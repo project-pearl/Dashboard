@@ -109,9 +109,9 @@ export function DraggableSection({
       {collapsed && canCollapse ? (
         <button
           onClick={() => setCollapsed(false)}
-          className="w-full py-2 px-4 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-between transition-colors dark:bg-[rgba(14,22,45,0.85)] dark:border-[rgba(58,189,176,0.12)]"
+          className="inline-flex max-w-full py-2 px-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 items-center gap-2 transition-colors dark:bg-[rgba(14,22,45,0.85)] dark:border-[rgba(58,189,176,0.12)]"
         >
-          <span className="text-sm font-medium text-slate-500">{label}</span>
+          <span className="text-sm font-medium text-slate-500 truncate">{label}</span>
           <ChevronDown className="h-4 w-4 text-slate-400" />
         </button>
       ) : (

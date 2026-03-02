@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, type CSSProperties } from 'react';
 import { Droplets, AlertTriangle, Users, Gavel, Shield, Beaker, ChevronUp, ChevronDown, Filter, Search } from 'lucide-react';
 import { KPIStrip, type KPICard } from '@/components/KPIStrip';
 import { DashboardSection } from '@/components/DashboardSection';
@@ -59,12 +59,15 @@ export function SDWISCompliancePanel({
   const [violSearch, setViolSearch] = useState('');
   const [sortCol, setSortCol] = useState<'pwsid' | 'contaminant' | 'rule' | 'date' | 'status'>('date');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
-  const [violPage, setViolPage] = useState(0);
-  const VIOL_PAGE_SIZE = compactMode ? 10 : 25;
 
   const [enfSearch, setEnfSearch] = useState('');
-  const [enfPage, setEnfPage] = useState(0);
-  const ENF_PAGE_SIZE = compactMode ? 10 : 20;
+  const TABLE_MAX_HEIGHT = 'max-h-[240px]';
+  const TWO_LINE_CLAMP: CSSProperties = {
+    display: '-webkit-box',
+    WebkitBoxOrient: 'vertical',
+    WebkitLineClamp: 2,
+    overflow: 'hidden',
+  };
 
   // ── Hooks must be called before any early returns (Rules of Hooks) ───
   const sysNameMap = useMemo(() => {
@@ -205,17 +208,11 @@ export function SDWISCompliancePanel({
     },
   ];
 
-  const violPageCount = Math.max(1, Math.ceil(sortedViolations.length / VIOL_PAGE_SIZE));
-  const pagedViolations = sortedViolations.slice(violPage * VIOL_PAGE_SIZE, (violPage + 1) * VIOL_PAGE_SIZE);
-
   // ── System type breakdown ──────────────────────────────────────────────
   const cwsCount = systems.filter(s => s.type === 'CWS').length;
   const tncwsCount = systems.filter(s => s.type === 'TNCWS').length;
   const ntncwsCount = systems.filter(s => s.type === 'NTNCWS').length;
   const totalSys = cwsCount + tncwsCount + ntncwsCount || 1;
-
-  const enfPageCount = Math.max(1, Math.ceil(filteredEnforcement.length / ENF_PAGE_SIZE));
-  const pagedEnforcement = filteredEnforcement.slice(enfPage * ENF_PAGE_SIZE, (enfPage + 1) * ENF_PAGE_SIZE);
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -280,7 +277,7 @@ export function SDWISCompliancePanel({
               <input
                 type="checkbox"
                 checked={filterMajor}
-                onChange={e => { setFilterMajor(e.target.checked); setViolPage(0); }}
+                onChange={e => { setFilterMajor(e.target.checked); }}
                 className="rounded border-slate-300"
               />
               Major only
@@ -289,7 +286,7 @@ export function SDWISCompliancePanel({
               <input
                 type="checkbox"
                 checked={filterHealthBased}
-                onChange={e => { setFilterHealthBased(e.target.checked); setViolPage(0); }}
+                onChange={e => { setFilterHealthBased(e.target.checked); }}
                 className="rounded border-slate-300"
               />
               Health-based only
@@ -297,7 +294,7 @@ export function SDWISCompliancePanel({
             {ruleTypes.length > 1 && (
               <select
                 value={filterRule}
-                onChange={e => { setFilterRule(e.target.value); setViolPage(0); }}
+                onChange={e => { setFilterRule(e.target.value); }}
                 className="text-xs border border-slate-200 rounded-md px-2 py-1.5 bg-white text-slate-700 focus:ring-1 focus:ring-blue-300 focus:border-blue-300 max-w-[180px] truncate"
               >
                 <option value="all">All Rule Types</option>
@@ -312,14 +309,14 @@ export function SDWISCompliancePanel({
                 type="text"
                 placeholder="Search system or contaminant..."
                 value={violSearch}
-                onChange={e => { setViolSearch(e.target.value); setViolPage(0); }}
+                onChange={e => { setViolSearch(e.target.value); }}
                 className="text-xs border border-slate-200 rounded-md pl-7 pr-2 py-1.5 w-52 bg-white text-slate-700 placeholder:text-slate-400 focus:ring-1 focus:ring-blue-300 focus:border-blue-300"
               />
             </div>
           </div>
 
           {/* Sortable table */}
-          <div className="overflow-x-auto rounded-lg border border-slate-200">
+          <div className={`overflow-auto rounded-lg border border-slate-200 ${TABLE_MAX_HEIGHT}`}>
             <table className="w-full text-xs">
               <thead>
                 <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
@@ -336,7 +333,6 @@ export function SDWISCompliancePanel({
                       onClick={() => {
                         if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
                         else { setSortCol(col); setSortDir('desc'); }
-                        setViolPage(0);
                       }}
                     >
                       <span className="inline-flex items-center gap-0.5">
@@ -352,7 +348,7 @@ export function SDWISCompliancePanel({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {pagedViolations.map((v, i) => {
+                {sortedViolations.map((v, i) => {
                   const sysName = sysNameMap.get(v.pwsid);
                   const pop = sysPopMap.get(v.pwsid);
                   return (
@@ -361,8 +357,16 @@ export function SDWISCompliancePanel({
                         <div className="font-medium text-slate-700">{sysName || v.pwsid}</div>
                         {sysName && <div className="text-[10px] text-slate-400">{v.pwsid}</div>}
                       </td>
-                      <td className="px-2.5 py-2 text-slate-700">{v.contaminant || v.code || '—'}</td>
-                      <td className="px-2.5 py-2 text-slate-600">{v.rule || '—'}</td>
+                      <td className="px-2.5 py-2 text-slate-700 max-w-[18rem]">
+                        <span style={TWO_LINE_CLAMP} title={v.contaminant || v.code || '—'}>
+                          {v.contaminant || v.code || '—'}
+                        </span>
+                      </td>
+                      <td className="px-2.5 py-2 text-slate-600 max-w-[16rem]">
+                        <span style={TWO_LINE_CLAMP} title={v.rule || '—'}>
+                          {v.rule || '—'}
+                        </span>
+                      </td>
                       <td className="px-2.5 py-2 text-slate-600 whitespace-nowrap">{v.compliancePeriod ? formatDate(v.compliancePeriod) : '—'}</td>
                       <td className="px-2.5 py-2">
                         {v.isMajor ? (
@@ -383,24 +387,6 @@ export function SDWISCompliancePanel({
             </table>
           </div>
 
-          {/* Pagination */}
-          {violPageCount > 1 && (
-            <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
-              <span>Page {violPage + 1} of {violPageCount}</span>
-              <div className="flex gap-1">
-                <button
-                  className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40"
-                  disabled={violPage === 0}
-                  onClick={() => setViolPage(p => p - 1)}
-                >Prev</button>
-                <button
-                  className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40"
-                  disabled={violPage >= violPageCount - 1}
-                  onClick={() => setViolPage(p => p + 1)}
-                >Next</button>
-              </div>
-            </div>
-          )}
         </DashboardSection>
       )}
 
@@ -424,13 +410,13 @@ export function SDWISCompliancePanel({
                 type="text"
                 placeholder="Search system or action..."
                 value={enfSearch}
-                onChange={e => { setEnfSearch(e.target.value); setEnfPage(0); }}
+                onChange={e => { setEnfSearch(e.target.value); }}
                 className="text-xs border border-slate-200 rounded-md pl-7 pr-2 py-1.5 w-48 bg-white text-slate-700 placeholder:text-slate-400 focus:ring-1 focus:ring-amber-300 focus:border-amber-300"
               />
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-lg border border-slate-200">
+          <div className={`overflow-auto rounded-lg border border-slate-200 ${TABLE_MAX_HEIGHT}`}>
             <table className="w-full text-xs">
               <thead>
                 <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
@@ -441,13 +427,21 @@ export function SDWISCompliancePanel({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {pagedEnforcement.map((e, i) => {
+                {filteredEnforcement.map((e, i) => {
                   const sysName = sysNameMap.get(e.pwsid);
                   return (
                     <tr key={`${e.pwsid}-${e.date}-${i}`} className="hover:bg-slate-50">
-                      <td className="px-2.5 py-2 text-slate-700">{sysName || '—'}</td>
+                      <td className="px-2.5 py-2 text-slate-700 max-w-[18rem]">
+                        <span style={TWO_LINE_CLAMP} title={sysName || '—'}>
+                          {sysName || '—'}
+                        </span>
+                      </td>
                       <td className="px-2.5 py-2 font-mono text-slate-600">{e.pwsid || '—'}</td>
-                      <td className="px-2.5 py-2 text-slate-600">{e.actionType || '—'}</td>
+                      <td className="px-2.5 py-2 text-slate-600 max-w-[16rem]">
+                        <span style={TWO_LINE_CLAMP} title={e.actionType || '—'}>
+                          {e.actionType || '—'}
+                        </span>
+                      </td>
                       <td className="px-2.5 py-2 text-slate-600 whitespace-nowrap">{e.date ? formatDate(e.date) : '—'}</td>
                     </tr>
                   );
@@ -456,26 +450,9 @@ export function SDWISCompliancePanel({
             </table>
           </div>
 
-          {/* Pagination */}
-          {enfPageCount > 1 && (
-            <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
-              <span>Page {enfPage + 1} of {enfPageCount}</span>
-              <div className="flex gap-1">
-                <button
-                  className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40"
-                  disabled={enfPage === 0}
-                  onClick={() => setEnfPage(p => p - 1)}
-                >Prev</button>
-                <button
-                  className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40"
-                  disabled={enfPage >= enfPageCount - 1}
-                  onClick={() => setEnfPage(p => p + 1)}
-                >Next</button>
-              </div>
-            </div>
-          )}
         </DashboardSection>
       )}
     </div>
   );
 }
+
