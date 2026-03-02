@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, Activity, Waves, Gauge, Info, TrendingDown, CloudRain, Shield, FlaskConical, Landmark, Filter, Search } from 'lucide-react';
+import { AlertTriangle, Activity, Waves, Info, TrendingDown, CloudRain, Shield, FlaskConical, Landmark, Filter, Search } from 'lucide-react';
 
 // ── Props ───────────────────────────────────────────────────────────────────
 
@@ -164,23 +164,8 @@ const INCIDENT_TYPE_COLORS: Record<string, string> = {
   'Severe Ice Storm': 'bg-sky-100 text-sky-800',
 };
 
-/** Group an array of trends by state (extracted from siteName or falling back to 'Unknown'). */
-function groupTrendsByState(
-  trends: NwisGwTrend[],
-  sites: NwisGwSite[],
-): Record<string, NwisGwTrend[]> {
-  const siteStateMap: Record<string, string> = {};
-  for (const s of sites) {
-    siteStateMap[s.siteNumber] = s.state;
-  }
-  const grouped: Record<string, NwisGwTrend[]> = {};
-  for (const t of trends) {
-    const state = siteStateMap[t.siteNumber] || 'Unknown';
-    if (!grouped[state]) grouped[state] = [];
-    grouped[state].push(t);
-  }
-  return grouped;
-}
+const TABLE_SCROLL_THRESHOLD = 5;
+const TABLE_TOP_THREE_VIEWPORT = 'max-h-[132px]';
 
 // ── Component ───────────────────────────────────────────────────────────────
 
@@ -197,26 +182,17 @@ export function DisasterEmergencyPanel({
   const [loading, setLoading] = useState(true);
 
   // ── Filter state ──────────────────────────────────────────────────────
-  const [gwSearch, setGwSearch] = useState('');
-  const [gwPage, setGwPage] = useState(0);
-
   const [nwsSeverityFilter, setNwsSeverityFilter] = useState('all');
   const [nwsSearch, setNwsSearch] = useState('');
-  const [nwsPage, setNwsPage] = useState(0);
 
   const [femaTypeFilter, setFemaTypeFilter] = useState('all');
   const [femaSearch, setFemaSearch] = useState('');
-  const [femaPage, setFemaPage] = useState(0);
 
   const [sfStatusFilter, setSfStatusFilter] = useState('all');
   const [sfSearch, setSfSearch] = useState('');
-  const [sfPage, setSfPage] = useState(0);
 
   const [triCarcinogenOnly, setTriCarcinogenOnly] = useState(false);
   const [triSearch, setTriSearch] = useState('');
-  const [triPage, setTriPage] = useState(0);
-
-  const PAGE_SIZE = 20;
 
   useEffect(() => {
     async function fetchAll() {
@@ -273,21 +249,6 @@ export function DisasterEmergencyPanel({
     [stateRollup],
   );
 
-  // ── Groundwater Monitoring by State ─────────────────────────────────────
-  const stateMonitoringRows = useMemo(() => {
-    const grouped = groupTrendsByState(trends, sites);
-    return Object.entries(grouped)
-      .map(([state, stateTrends]) => ({
-        state,
-        siteCount: stateTrends.length,
-        rising: stateTrends.filter((t) => t.trend === 'rising').length,
-        falling: stateTrends.filter((t) => t.trend === 'falling').length,
-        stable: stateTrends.filter((t) => t.trend === 'stable').length,
-        unknown: stateTrends.filter((t) => t.trend === 'unknown').length,
-      }))
-      .sort((a, b) => a.state.localeCompare(b.state));
-  }, [trends, sites]);
-
   // ── Critical Groundwater Trends (top 20 fastest declining) ──────────────
   const criticalTrends = useMemo(() => {
     const siteStateMap: Record<string, string> = {};
@@ -304,16 +265,6 @@ export function DisasterEmergencyPanel({
       }));
   }, [trends, sites]);
 
-  // ── Filtered GW monitoring ─────────────────────────────────────────────
-  const filteredGwRows = useMemo(() => {
-    if (!gwSearch) return stateMonitoringRows;
-    const q = gwSearch.toLowerCase();
-    return stateMonitoringRows.filter(r => r.state.toLowerCase().includes(q));
-  }, [stateMonitoringRows, gwSearch]);
-
-  const gwPageCount = Math.max(1, Math.ceil(filteredGwRows.length / PAGE_SIZE));
-  const pagedGwRows = filteredGwRows.slice(gwPage * PAGE_SIZE, (gwPage + 1) * PAGE_SIZE);
-
   // ── Filtered NWS alerts ───────────────────────────────────────────────
   const filteredAlerts = useMemo(() => {
     if (!nwsData) return [];
@@ -328,10 +279,6 @@ export function DisasterEmergencyPanel({
     }
     return list;
   }, [nwsData, nwsSeverityFilter, nwsSearch]);
-
-  const nwsPageCount = Math.max(1, Math.ceil(filteredAlerts.length / PAGE_SIZE));
-  const pagedAlerts = filteredAlerts.slice(nwsPage * PAGE_SIZE, (nwsPage + 1) * PAGE_SIZE);
-
   // ── Filtered FEMA declarations ────────────────────────────────────────
   const filteredFema = useMemo(() => {
     if (!femaData) return [];
@@ -347,10 +294,6 @@ export function DisasterEmergencyPanel({
     }
     return list;
   }, [femaData, femaTypeFilter, femaSearch]);
-
-  const femaPageCount = Math.max(1, Math.ceil(filteredFema.length / PAGE_SIZE));
-  const pagedFema = filteredFema.slice(femaPage * PAGE_SIZE, (femaPage + 1) * PAGE_SIZE);
-
   const femaIncidentTypes = useMemo(() => {
     if (!femaData) return [];
     return Object.keys(femaData.byType).sort();
@@ -371,10 +314,6 @@ export function DisasterEmergencyPanel({
     }
     return list;
   }, [superfundData, sfStatusFilter, sfSearch]);
-
-  const sfPageCount = Math.max(1, Math.ceil(filteredSuperfund.length / PAGE_SIZE));
-  const pagedSuperfund = filteredSuperfund.slice(sfPage * PAGE_SIZE, (sfPage + 1) * PAGE_SIZE);
-
   const sfStatuses = useMemo(() => {
     if (!superfundData) return [];
     const s = new Set<string>();
@@ -397,10 +336,6 @@ export function DisasterEmergencyPanel({
     }
     return list;
   }, [triData, triCarcinogenOnly, triSearch]);
-
-  const triPageCount = Math.max(1, Math.ceil(filteredTri.length / PAGE_SIZE));
-  const pagedTri = filteredTri.slice(triPage * PAGE_SIZE, (triPage + 1) * PAGE_SIZE);
-
   // ── High-Severity Surface Water (top 20 by cat5) ───────────────────────
   const highSeverityStates = useMemo(
     () =>
@@ -470,7 +405,7 @@ export function DisasterEmergencyPanel({
         </span>
       </div>
 
-      {/* ── Section 1: Hero Stats Row ──────────────────────────────────────── */}
+      {/* ── Section 1: Hero Stats Row ─────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
         <Card>
           <CardContent className="p-4">
@@ -617,126 +552,7 @@ export function DisasterEmergencyPanel({
         </Card>
       </div>
 
-      {/* ── Section 2: Groundwater Monitoring Status ───────────────────────── */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Gauge size={16} className="text-cyan-600" />
-            Groundwater Monitoring Status
-            {stateMonitoringRows.length > 0 && (
-              <Badge variant="secondary" className="ml-1 text-[10px]">
-                {stateMonitoringRows.length} states
-              </Badge>
-            )}
-          </CardTitle>
-          <CardDescription>
-            WDFN groundwater level trends by state — sites grouped by monitoring status
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {stateMonitoringRows.length === 0 ? (
-            <div className="flex items-center gap-3 py-6">
-              <Info size={16} className="text-slate-400" />
-              <span className="text-sm text-slate-500">
-                No groundwater monitoring data available.
-              </span>
-            </div>
-          ) : (
-            <div>
-              {/* Filter bar */}
-              <div className="flex flex-wrap items-center gap-2 mb-3">
-                <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                  <Filter className="w-3.5 h-3.5" />
-                </div>
-                <div className="relative">
-                  <Search className="w-3.5 h-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    type="text"
-                    placeholder="Search state..."
-                    value={gwSearch}
-                    onChange={e => { setGwSearch(e.target.value); setGwPage(0); }}
-                    className="text-xs border border-slate-200 rounded-md pl-7 pr-2 py-1.5 w-36 bg-white text-slate-700 placeholder:text-slate-400 focus:ring-1 focus:ring-cyan-300 focus:border-cyan-300"
-                  />
-                </div>
-                {gwSearch && (
-                  <span className="text-[10px] text-slate-400">
-                    {filteredGwRows.length} of {stateMonitoringRows.length} states
-                  </span>
-                )}
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="text-left text-slate-500 border-b border-slate-200">
-                      <th className="pb-2 font-semibold">State</th>
-                      <th className="pb-2 font-semibold text-right">Sites</th>
-                      <th className="pb-2 font-semibold text-right">
-                        <span className="text-emerald-600">Rising</span>
-                      </th>
-                      <th className="pb-2 font-semibold text-right">
-                        <span className="text-red-600">Falling</span>
-                      </th>
-                      <th className="pb-2 font-semibold text-right">
-                        <span className="text-blue-600">Stable</span>
-                      </th>
-                      <th className="pb-2 font-semibold text-right">
-                        <span className="text-slate-400">Unknown</span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pagedGwRows.map((row) => (
-                      <tr
-                        key={row.state}
-                        className={`border-b border-slate-50 hover:bg-slate-50 transition-colors ${
-                          selectedState && row.state === selectedState
-                            ? 'bg-blue-50 border-blue-100'
-                            : ''
-                        }`}
-                      >
-                        <td className="py-2 font-semibold text-slate-700">{row.state}</td>
-                        <td className="py-2 text-right text-slate-600">{row.siteCount}</td>
-                        <td className="py-2 text-right">
-                          <span className={row.rising > 0 ? 'text-emerald-600 font-semibold' : 'text-slate-300'}>
-                            {row.rising}
-                          </span>
-                        </td>
-                        <td className="py-2 text-right">
-                          <span className={row.falling > 0 ? 'text-red-600 font-semibold' : 'text-slate-300'}>
-                            {row.falling}
-                          </span>
-                        </td>
-                        <td className="py-2 text-right">
-                          <span className={row.stable > 0 ? 'text-blue-600 font-semibold' : 'text-slate-300'}>
-                            {row.stable}
-                          </span>
-                        </td>
-                        <td className="py-2 text-right">
-                          <span className="text-slate-400">{row.unknown}</span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination */}
-              {gwPageCount > 1 && (
-                <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
-                  <span>Page {gwPage + 1} of {gwPageCount}</span>
-                  <div className="flex gap-1">
-                    <button className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40" disabled={gwPage === 0} onClick={() => setGwPage(p => p - 1)}>Prev</button>
-                    <button className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40" disabled={gwPage >= gwPageCount - 1} onClick={() => setGwPage(p => p + 1)}>Next</button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* ── Section 3: Critical Groundwater Trends ─────────────────────────── */}
+      {/* Section 2: Critical Groundwater Trends */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
@@ -825,7 +641,7 @@ export function DisasterEmergencyPanel({
         </CardContent>
       </Card>
 
-      {/* ── Section 4: High-Severity Surface Water ─────────────────────────── */}
+      {/* ── Section 3: High-Severity Surface Water ─────────────────────────── */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
@@ -850,7 +666,7 @@ export function DisasterEmergencyPanel({
               </span>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className={`overflow-x-auto ${highSeverityStates.length > TABLE_SCROLL_THRESHOLD ? TABLE_TOP_THREE_VIEWPORT : ''}`}>
               <table className="w-full text-xs">
                 <thead>
                   <tr className="text-left text-slate-500 border-b border-slate-200">
@@ -911,7 +727,7 @@ export function DisasterEmergencyPanel({
         </CardContent>
       </Card>
 
-      {/* ── Section 5: Active Weather Alerts (NWS) ────────────────────────── */}
+      {/* ── Section 4: Active Weather Alerts (NWS) ────────────────────────── */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
@@ -962,7 +778,7 @@ export function DisasterEmergencyPanel({
                 </div>
                 <select
                   value={nwsSeverityFilter}
-                  onChange={e => { setNwsSeverityFilter(e.target.value); setNwsPage(0); }}
+                  onChange={e => { setNwsSeverityFilter(e.target.value); }}
                   className="text-xs border border-slate-200 rounded-md px-2 py-1.5 bg-white text-slate-700 focus:ring-1 focus:ring-orange-300 focus:border-orange-300"
                 >
                   <option value="all">All Severities</option>
@@ -976,7 +792,7 @@ export function DisasterEmergencyPanel({
                     type="text"
                     placeholder="Search event or area..."
                     value={nwsSearch}
-                    onChange={e => { setNwsSearch(e.target.value); setNwsPage(0); }}
+                    onChange={e => { setNwsSearch(e.target.value); }}
                     className="text-xs border border-slate-200 rounded-md pl-7 pr-2 py-1.5 w-44 bg-white text-slate-700 placeholder:text-slate-400 focus:ring-1 focus:ring-orange-300 focus:border-orange-300"
                   />
                 </div>
@@ -987,7 +803,7 @@ export function DisasterEmergencyPanel({
                 )}
               </div>
 
-              <div className="overflow-x-auto">
+              <div className={`overflow-x-auto ${filteredAlerts.length > TABLE_SCROLL_THRESHOLD ? TABLE_TOP_THREE_VIEWPORT : ''}`}>
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="text-left text-slate-500 border-b border-slate-200">
@@ -999,7 +815,7 @@ export function DisasterEmergencyPanel({
                     </tr>
                   </thead>
                   <tbody>
-                    {pagedAlerts.map((alert) => (
+                    {filteredAlerts.map((alert) => (
                       <tr
                         key={alert.id}
                         className="border-b border-slate-50 hover:bg-slate-50 transition-colors"
@@ -1026,18 +842,6 @@ export function DisasterEmergencyPanel({
                   </tbody>
                 </table>
               </div>
-
-              {/* Pagination */}
-              {nwsPageCount > 1 && (
-                <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
-                  <span>Page {nwsPage + 1} of {nwsPageCount}</span>
-                  <div className="flex gap-1">
-                    <button className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40" disabled={nwsPage === 0} onClick={() => setNwsPage(p => p - 1)}>Prev</button>
-                    <button className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40" disabled={nwsPage >= nwsPageCount - 1} onClick={() => setNwsPage(p => p + 1)}>Next</button>
-                  </div>
-                </div>
-              )}
-
               <p className="text-[10px] text-slate-400 mt-3 flex items-center gap-1">
                 <Info size={10} />
                 Data refreshed every 30 minutes from NWS API.
@@ -1047,7 +851,7 @@ export function DisasterEmergencyPanel({
         </CardContent>
       </Card>
 
-      {/* ── Section 6: FEMA Disaster Declarations ─────────────────────────── */}
+      {/* ── Section 5: FEMA Disaster Declarations ─────────────────────────── */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
@@ -1095,7 +899,7 @@ export function DisasterEmergencyPanel({
                 {femaIncidentTypes.length > 1 && (
                   <select
                     value={femaTypeFilter}
-                    onChange={e => { setFemaTypeFilter(e.target.value); setFemaPage(0); }}
+                    onChange={e => { setFemaTypeFilter(e.target.value); }}
                     className="text-xs border border-slate-200 rounded-md px-2 py-1.5 bg-white text-slate-700 focus:ring-1 focus:ring-indigo-300 focus:border-indigo-300"
                   >
                     <option value="all">All Incident Types</option>
@@ -1110,7 +914,7 @@ export function DisasterEmergencyPanel({
                     type="text"
                     placeholder="Search title, state, or area..."
                     value={femaSearch}
-                    onChange={e => { setFemaSearch(e.target.value); setFemaPage(0); }}
+                    onChange={e => { setFemaSearch(e.target.value); }}
                     className="text-xs border border-slate-200 rounded-md pl-7 pr-2 py-1.5 w-52 bg-white text-slate-700 placeholder:text-slate-400 focus:ring-1 focus:ring-indigo-300 focus:border-indigo-300"
                   />
                 </div>
@@ -1121,7 +925,7 @@ export function DisasterEmergencyPanel({
                 )}
               </div>
 
-              <div className="overflow-x-auto">
+              <div className={`overflow-x-auto ${filteredFema.length > TABLE_SCROLL_THRESHOLD ? TABLE_TOP_THREE_VIEWPORT : ''}`}>
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="text-left text-slate-500 border-b border-slate-200">
@@ -1134,7 +938,7 @@ export function DisasterEmergencyPanel({
                     </tr>
                   </thead>
                   <tbody>
-                    {pagedFema.map((d, i) => (
+                    {filteredFema.map((d, i) => (
                       <tr
                         key={`${d.disasterNumber}-${i}`}
                         className={`border-b border-slate-50 hover:bg-slate-50 transition-colors ${
@@ -1164,18 +968,6 @@ export function DisasterEmergencyPanel({
                   </tbody>
                 </table>
               </div>
-
-              {/* Pagination */}
-              {femaPageCount > 1 && (
-                <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
-                  <span>Page {femaPage + 1} of {femaPageCount}</span>
-                  <div className="flex gap-1">
-                    <button className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40" disabled={femaPage === 0} onClick={() => setFemaPage(p => p - 1)}>Prev</button>
-                    <button className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40" disabled={femaPage >= femaPageCount - 1} onClick={() => setFemaPage(p => p + 1)}>Next</button>
-                  </div>
-                </div>
-              )}
-
               <p className="text-[10px] text-slate-400 mt-3 flex items-center gap-1">
                 <Info size={10} />
                 Filtered to water-relevant incident types.
@@ -1185,7 +977,7 @@ export function DisasterEmergencyPanel({
         </CardContent>
       </Card>
 
-      {/* ── Section 7: Superfund NPL Sites ────────────────────────────────── */}
+      {/* ── Section 6: Superfund NPL Sites ────────────────────────────────── */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
@@ -1219,7 +1011,7 @@ export function DisasterEmergencyPanel({
                 {sfStatuses.length > 1 && (
                   <select
                     value={sfStatusFilter}
-                    onChange={e => { setSfStatusFilter(e.target.value); setSfPage(0); }}
+                    onChange={e => { setSfStatusFilter(e.target.value); }}
                     className="text-xs border border-slate-200 rounded-md px-2 py-1.5 bg-white text-slate-700 focus:ring-1 focus:ring-yellow-300 focus:border-yellow-300"
                   >
                     <option value="all">All Statuses</option>
@@ -1234,7 +1026,7 @@ export function DisasterEmergencyPanel({
                     type="text"
                     placeholder="Search site, state, or city..."
                     value={sfSearch}
-                    onChange={e => { setSfSearch(e.target.value); setSfPage(0); }}
+                    onChange={e => { setSfSearch(e.target.value); }}
                     className="text-xs border border-slate-200 rounded-md pl-7 pr-2 py-1.5 w-48 bg-white text-slate-700 placeholder:text-slate-400 focus:ring-1 focus:ring-yellow-300 focus:border-yellow-300"
                   />
                 </div>
@@ -1245,7 +1037,7 @@ export function DisasterEmergencyPanel({
                 )}
               </div>
 
-              <div className="overflow-x-auto">
+              <div className={`overflow-x-auto ${filteredSuperfund.length > TABLE_SCROLL_THRESHOLD ? TABLE_TOP_THREE_VIEWPORT : ''}`}>
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="text-left text-slate-500 border-b border-slate-200">
@@ -1258,7 +1050,7 @@ export function DisasterEmergencyPanel({
                     </tr>
                   </thead>
                   <tbody>
-                    {pagedSuperfund.map((s) => (
+                    {filteredSuperfund.map((s) => (
                       <tr
                         key={s.siteEpaId}
                         className={`border-b border-slate-50 hover:bg-slate-50 transition-colors ${
@@ -1302,18 +1094,6 @@ export function DisasterEmergencyPanel({
                   </tbody>
                 </table>
               </div>
-
-              {/* Pagination */}
-              {sfPageCount > 1 && (
-                <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
-                  <span>Page {sfPage + 1} of {sfPageCount}</span>
-                  <div className="flex gap-1">
-                    <button className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40" disabled={sfPage === 0} onClick={() => setSfPage(p => p - 1)}>Prev</button>
-                    <button className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40" disabled={sfPage >= sfPageCount - 1} onClick={() => setSfPage(p => p + 1)}>Next</button>
-                  </div>
-                </div>
-              )}
-
               <p className="text-[10px] text-slate-400 mt-3 flex items-center gap-1">
                 <Info size={10} />
                 Score of 28.50+ qualifies for NPL listing.
@@ -1323,7 +1103,7 @@ export function DisasterEmergencyPanel({
         </CardContent>
       </Card>
 
-      {/* ── Section 8: Chemical Releases (TRI) ────────────────────────────── */}
+      {/* ── Section 7: Chemical Releases (TRI) ────────────────────────────── */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
@@ -1358,7 +1138,7 @@ export function DisasterEmergencyPanel({
                   <input
                     type="checkbox"
                     checked={triCarcinogenOnly}
-                    onChange={e => { setTriCarcinogenOnly(e.target.checked); setTriPage(0); }}
+                    onChange={e => { setTriCarcinogenOnly(e.target.checked); }}
                     className="rounded border-slate-300"
                   />
                   Carcinogen only
@@ -1369,7 +1149,7 @@ export function DisasterEmergencyPanel({
                     type="text"
                     placeholder="Search facility, state, or chemical..."
                     value={triSearch}
-                    onChange={e => { setTriSearch(e.target.value); setTriPage(0); }}
+                    onChange={e => { setTriSearch(e.target.value); }}
                     className="text-xs border border-slate-200 rounded-md pl-7 pr-2 py-1.5 w-56 bg-white text-slate-700 placeholder:text-slate-400 focus:ring-1 focus:ring-violet-300 focus:border-violet-300"
                   />
                 </div>
@@ -1380,7 +1160,7 @@ export function DisasterEmergencyPanel({
                 )}
               </div>
 
-              <div className="overflow-x-auto">
+              <div className={`overflow-x-auto ${filteredTri.length > TABLE_SCROLL_THRESHOLD ? TABLE_TOP_THREE_VIEWPORT : ''}`}>
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="text-left text-slate-500 border-b border-slate-200">
@@ -1392,7 +1172,7 @@ export function DisasterEmergencyPanel({
                     </tr>
                   </thead>
                   <tbody>
-                    {pagedTri.map((f, i) => (
+                    {filteredTri.map((f, i) => (
                       <tr
                         key={`${f.facilityName}-${i}`}
                         className={`border-b border-slate-50 hover:bg-slate-50 transition-colors ${
@@ -1425,18 +1205,6 @@ export function DisasterEmergencyPanel({
                   </tbody>
                 </table>
               </div>
-
-              {/* Pagination */}
-              {triPageCount > 1 && (
-                <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
-                  <span>Page {triPage + 1} of {triPageCount}</span>
-                  <div className="flex gap-1">
-                    <button className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40" disabled={triPage === 0} onClick={() => setTriPage(p => p - 1)}>Prev</button>
-                    <button className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40" disabled={triPage >= triPageCount - 1} onClick={() => setTriPage(p => p + 1)}>Next</button>
-                  </div>
-                </div>
-              )}
-
               <p className="text-[10px] text-slate-400 mt-3 flex items-center gap-1">
                 <Info size={10} />
                 Total releases across all TRI facilities: {formatWeight(triData.totalReleases)}.
@@ -1448,3 +1216,7 @@ export function DisasterEmergencyPanel({
     </div>
   );
 }
+
+
+
+
