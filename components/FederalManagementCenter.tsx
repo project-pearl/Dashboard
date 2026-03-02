@@ -1115,6 +1115,7 @@ export function FederalManagementCenter(props: Props) {
   const [selectedAlertHuc, setSelectedAlertHuc] = useState<string | null>(null);
   const [selectedAlertLevel, setSelectedAlertLevel] = useState<string>('CRITICAL');
   const [sideCardMode, setSideCardMode] = useState<'alerts' | 'state' | 'alert-detail'>('alerts');
+  const alertDetailReturnRef = useRef<'alerts' | 'state'>('alerts');
 
   // Play chime when new CRITICAL HUCs appear
   useEffect(() => {
@@ -2739,6 +2740,7 @@ export function FederalManagementCenter(props: Props) {
                         onHucClick={(huc8, level) => {
                           setSelectedAlertHuc(huc8);
                           setSelectedAlertLevel(level);
+                          alertDetailReturnRef.current = 'alerts';
                           setSideCardMode('alert-detail');
                           // Look up state from scored HUCs and set selectedState
                           const scoredHuc = [...sentinel.criticalHucs, ...sentinel.watchHucs, ...sentinel.advisoryHucs].find(h => h.huc8 === huc8);
@@ -2749,6 +2751,7 @@ export function FederalManagementCenter(props: Props) {
                           }
                         }}
                         reducedMotion={reducedMotion}
+                        selectedHuc={selectedAlertHuc}
                       />
                     </MapboxMapShell>
                     {/* Screen reader announcement for new CRITICAL events */}
@@ -2842,6 +2845,7 @@ export function FederalManagementCenter(props: Props) {
                 onOpenResponsePlanner={() => setViewLens('disaster-emergency' as ViewLens)}
                 onEventClick={(huc8) => {
                   setSelectedAlertHuc(huc8);
+                  alertDetailReturnRef.current = 'alerts';
                   setSideCardMode('alert-detail');
                   // Look up state from scored HUCs and set selectedState
                   const scoredHuc = [...sentinel.criticalHucs, ...sentinel.watchHucs, ...sentinel.advisoryHucs].find(h => h.huc8 === huc8);
@@ -2857,14 +2861,14 @@ export function FederalManagementCenter(props: Props) {
                 <CardHeader className="pb-2 pt-4 px-5">
                   <CardTitle className="flex items-center gap-2 text-sm">
                     <button
-                      onClick={() => { setSideCardMode('alerts'); setSelectedAlertHuc(null); }}
+                      onClick={() => { setSideCardMode(alertDetailReturnRef.current); setSelectedAlertHuc(null); }}
                       className="flex items-center gap-1 text-xs font-medium transition-colors"
                       style={{ color: 'var(--accent-teal)' }}
                       onMouseEnter={e => { e.currentTarget.style.opacity = '0.8'; }}
                       onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
                     >
                       <ChevronLeft size={14} />
-                      Back to Alerts
+                      {alertDetailReturnRef.current === 'state' ? `Back to ${STATE_ABBR_TO_NAME[selectedState] ?? selectedState}` : 'Back to Alerts'}
                     </button>
                     <span className="mx-1" style={{ color: 'var(--border-default)' }}>|</span>
                     <MapPin size={15} className="flex-shrink-0" style={{ color: 'var(--accent-teal)' }} />
@@ -2980,17 +2984,17 @@ export function FederalManagementCenter(props: Props) {
                       ...sentinel.watchHucs.filter(h => h.stateAbbr === selectedState),
                       ...sentinel.advisoryHucs.filter(h => h.stateAbbr === selectedState),
                     ];
-                    if (stateAlerts.length === 0) return null;
                     const levelColor = (lvl: string) =>
                       lvl === 'CRITICAL' ? { bg: 'var(--status-severe-bg)', text: 'var(--status-severe)' }
                       : lvl === 'WATCH' ? { bg: 'var(--status-watch-bg)', text: 'var(--status-watch)' }
                       : { bg: 'var(--status-impaired-bg)', text: 'var(--status-impaired)' };
-                    return (
-                      <div style={{ borderBottom: '1px solid var(--border-subtle)' }} className="pb-3 mb-1">
-                        <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-dim)' }}>
+
+                    return stateAlerts.length > 0 ? (
+                      <div className="space-y-1.5">
+                        <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-dim)' }}>
                           Sentinel Alerts ({stateAlerts.length})
                         </div>
-                        <div className="space-y-1 max-h-[200px] overflow-y-auto">
+                        <div className="space-y-1 max-h-[500px] overflow-y-auto">
                           {stateAlerts.map(h => {
                             const lc = levelColor(h.level);
                             return (
@@ -3003,6 +3007,7 @@ export function FederalManagementCenter(props: Props) {
                                 onClick={() => {
                                   setSelectedAlertHuc(h.huc8);
                                   setSelectedAlertLevel(h.level);
+                                  alertDetailReturnRef.current = 'state';
                                   setSideCardMode('alert-detail');
                                   const c = centroids[h.huc8];
                                   if (c && mapRef.current) {
@@ -3022,250 +3027,13 @@ export function FederalManagementCenter(props: Props) {
                           })}
                         </div>
                       </div>
-                    );
-                  })()}
-
-                  {/* Score / Data toggle */}
-                  <div className="flex gap-1 mb-1">
-                    {(['score', 'data'] as const).map(v => (
-                      <button
-                        key={v}
-                        onClick={() => setStateCardView(v)}
-                        className="px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider transition-all"
-                        style={{
-                          background: stateCardView === v ? 'var(--pill-bg-active)' : 'var(--pill-bg)',
-                          color: stateCardView === v ? 'var(--pill-text-active)' : 'var(--pill-text)',
-                          border: `1px solid ${stateCardView === v ? 'var(--pill-border-active)' : 'var(--pill-border)'}`,
-                        }}
-                      >
-                        {v === 'score' ? 'Score View' : 'Data View'}
-                      </button>
-                    ))}
-                  </div>
-
-                  {stateCardView === 'score' ? (() => {
-                    // Use the SAME score as the state table (single source of truth)
-                    const row = stateRollup.find(s => s.abbr === selectedState);
-                    const total = selectedStateRegions.length;
-                    const impaired = selectedStateRegions.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length;
-                    const severe = selectedStateRegions.filter(r => r.alertLevel === 'high').length;
-                    const composite = row?.score ?? 0;
-                    const grade = row?.grade ?? scoreToGrade(composite);
-
-                    // Deterministic category breakdowns from waterbody data
-                    const monitored = selectedStateRegions.filter(r => r.status === 'monitored').length;
-                    const assessed = selectedStateRegions.filter(r => r.status === 'assessed').length;
-                    const wqScore = total > 0 ? Math.round(100 - (impaired / total) * 50 - (severe / total) * 30) : 0;
-                    const infraScore = total > 0 ? Math.round((monitored + assessed) / total * 100) : 0;
-                    const complianceScore = total > 0 ? Math.round((assessed / total) * 80 + 20) : 0;
-                    const ejScore = total > 0 ? Math.round(100 - (severe / total) * 60 - (impaired / total) * 20) : 0;
-                    const cats = [
-                      { label: 'Water Quality', score: Math.min(100, Math.max(0, wqScore)), color: wqScore >= 70 ? 'var(--status-healthy)' : wqScore >= 50 ? '#f59e0b' : 'var(--status-severe)' },
-                      { label: 'Infrastructure', score: Math.min(100, Math.max(0, infraScore)), color: infraScore >= 70 ? 'var(--status-healthy)' : infraScore >= 50 ? '#f59e0b' : 'var(--status-severe)' },
-                      { label: 'Compliance', score: Math.min(100, Math.max(0, complianceScore)), color: complianceScore >= 70 ? 'var(--status-healthy)' : complianceScore >= 50 ? '#f59e0b' : 'var(--status-severe)' },
-                      { label: 'EJ Exposure', score: Math.min(100, Math.max(0, ejScore)), color: ejScore >= 70 ? 'var(--status-healthy)' : ejScore >= 50 ? '#f59e0b' : 'var(--status-severe)' },
-                    ];
-
-                    return (
-                      <div className="space-y-3">
-                        {/* Score gauge */}
-                        <div className="flex items-center gap-4 py-2">
-                          <div className="relative w-20 h-20 flex-shrink-0">
-                            <svg viewBox="0 0 36 36" className="w-20 h-20 -rotate-90">
-                              <circle cx="18" cy="18" r="15.9" fill="none" strokeWidth="2.5" stroke="var(--border-subtle)" />
-                              <circle cx="18" cy="18" r="15.9" fill="none" strokeWidth="2.5"
-                                className={grade.color}
-                                stroke={composite >= 80 ? 'var(--status-healthy)' : composite >= 60 ? '#f59e0b' : composite >= 40 ? 'var(--status-impaired)' : 'var(--status-severe)'}
-                                strokeDasharray={`${composite} ${100 - composite}`}
-                                strokeLinecap="round"
-                              />
-                            </svg>
-                            <div className="absolute inset-0 flex flex-col items-center justify-center">
-                              <span className={`text-xl font-bold ${grade.color}`}>{grade.letter}</span>
-                              <span className="text-[9px]" style={{ color: 'var(--text-dim)' }}>{composite}/100</span>
-                            </div>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-                              {STATE_ABBR_TO_NAME[selectedState] ?? selectedState}
-                            </div>
-                            <div className="text-[10px] mt-0.5" style={{ color: 'var(--text-dim)' }}>
-                              {total} waterbodies · {impaired} impaired · {severe} severe
-                            </div>
-                          </div>
-                        </div>
-                        {/* Category breakdown bars */}
-                        <div className="space-y-1.5">
-                          {cats.map(c => (
-                            <div key={c.label} className="flex items-center gap-2">
-                              <div className="text-[10px] w-24 text-right" style={{ color: 'var(--text-dim)' }}>{c.label}</div>
-                              <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
-                                <div className="h-full rounded-full transition-all" style={{ width: `${c.score}%`, background: c.color }} />
-                              </div>
-                              <div className="text-[10px] w-6 font-semibold" style={{ color: 'var(--text-primary)' }}>{c.score}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })() : null}
-
-                  {stateCardView === 'data' ? <>
-                  {/* Quick stats */}
-                  {(() => {
-                    const assessedCount = selectedStateRegions.filter(r => r.status === 'assessed').length;
-                    const monitoredCount = selectedStateRegions.filter(r => r.status === 'monitored').length;
-                    const unmonitoredCount = selectedStateRegions.filter(r => r.status === 'unmonitored').length;
-                    return (
-                      <div className="flex items-baseline justify-between gap-3 py-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                        <div className="text-center">
-                          <div className="pin-stat-value text-base">{selectedStateRegions.length}</div>
-                          <div className="pin-label mt-0.5">Total</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="pin-stat-secondary text-sm">{assessedCount}</div>
-                          <div className="pin-label mt-0.5">Assessed</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="pin-stat-secondary text-sm">{monitoredCount}</div>
-                          <div className="pin-label mt-0.5">Monitored</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="pin-stat-secondary text-sm" style={{ color: 'var(--text-dim)' }}>{unmonitoredCount}</div>
-                          <div className="pin-label mt-0.5">No Data</div>
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                  {/* Waterbody Filters */}
-                  <div className="flex flex-wrap gap-1.5 mb-3">
-                    {[
-                      { key: 'all' as const, label: 'All' },
-                      { key: 'impaired' as const, label: 'Impaired' },
-                      { key: 'severe' as const, label: 'Severe' },
-                      { key: 'monitored' as const, label: 'Monitored' },
-                    ].map((f) => {
-                      const isActive = waterbodyFilter === f.key;
-                      return (
-                      <button
-                        key={f.key}
-                        onClick={() => { setWaterbodyFilter(f.key); setShowAllWaterbodies(false); }}
-                        className="pin-label rounded-full transition-all"
-                        style={{
-                          padding: '3px 10px',
-                          background: isActive ? 'var(--pill-bg-active)' : 'var(--pill-bg)',
-                          color: isActive ? 'var(--pill-text-active)' : 'var(--pill-text)',
-                          border: `1px solid ${isActive ? 'var(--pill-border-active)' : 'var(--pill-border)'}`,
-                        }}
-                      >
-                        {f.label}
-                        {f.key !== 'all' && (() => {
-                          const count = f.key === 'impaired'
-                            ? selectedStateRegions.filter(r => r.status === 'assessed' && (r.alertLevel === 'high' || r.alertLevel === 'medium')).length
-                            : f.key === 'severe'
-                            ? selectedStateRegions.filter(r => r.status === 'assessed' && r.alertLevel === 'high').length
-                            : selectedStateRegions.filter(r => r.status === 'monitored').length;
-                          return count > 0 ? ` (${count})` : '';
-                        })()}
-                      </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Waterbody list */}
-                  <div className="space-y-1.5 max-h-[560px] overflow-y-auto">
-                    {selectedStateRegions.length === 0 ? (
-                      <div className="text-sm py-4 text-center" style={{ color: 'var(--text-secondary)' }}>
-                        No monitored waterbodies in this state yet.
-                        <div className="text-xs mt-1" style={{ color: 'var(--text-dim)' }}>Click a colored state on the map to explore.</div>
-                      </div>
                     ) : (
-                      <>
-                        {selectedStateRegions.length > 10 && (
-                          <div className="mb-2">
-                            <input
-                              type="text"
-                              placeholder="Search waterbodies..."
-                              value={waterbodySearch}
-                              onChange={(e) => { setWaterbodySearch(e.target.value); setShowAllWaterbodies(false); }}
-                              className="w-full px-2 py-1.5 text-sm rounded-md focus:outline-none"
-                              style={{ background: 'var(--bg-input)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', boxShadow: 'none' }}
-                              onFocus={e => { e.currentTarget.style.borderColor = 'var(--accent-teal)'; e.currentTarget.style.boxShadow = '0 0 0 2px var(--accent-teal-glow)'; }}
-                              onBlur={e => { e.currentTarget.style.borderColor = 'var(--border-default)'; e.currentTarget.style.boxShadow = 'none'; }}
-                            />
-                            <div className="text-[10px] mt-1" style={{ color: 'var(--text-dim)' }}>
-                              {filteredStateRegions.length} of {selectedStateRegions.length} waterbodies
-                            </div>
-                          </div>
-                        )}
-                        {displayedRegions.map((r) => {
-                        const isActive = r.id === activeDetailId;
-                        return (
-                        <div key={r.id} className="flex items-center justify-between p-2 cursor-pointer transition-colors"
-                          style={{
-                            borderRadius: '10px',
-                            border: `1px solid ${isActive ? 'var(--accent-teal)' : 'var(--border-subtle)'}`,
-                            background: isActive ? 'var(--accent-teal-glow)' : 'transparent',
-                            boxShadow: isActive ? '0 0 0 1px var(--accent-teal)' : 'none',
-                          }}
-                          onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--bg-hover)'; }}
-                          onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
-                          onClick={() => handleRegionClick(r.id)}>
-                          <div className="min-w-0 flex-1">
-                            <div className="truncate text-sm font-medium" style={{ color: isActive ? 'var(--accent-teal)' : 'var(--text-primary)' }}>{r.name}</div>
-                            <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-dim)' }}>
-                              {r.status === 'assessed' ? (
-                                <span className="inline-flex items-center gap-1 rounded-full" style={{
-                                  padding: '2px 8px',
-                                  fontSize: '10px',
-                                  fontWeight: 600,
-                                  textTransform: 'uppercase',
-                                  letterSpacing: '0.04em',
-                                  background: r.alertLevel === 'high' ? 'var(--status-severe-bg)' : r.alertLevel === 'medium' ? 'var(--status-impaired-bg)' : r.alertLevel === 'low' ? 'var(--status-watch-bg)' : 'var(--status-healthy-bg)',
-                                  color: r.alertLevel === 'high' ? 'var(--status-severe)' : r.alertLevel === 'medium' ? 'var(--status-impaired)' : r.alertLevel === 'low' ? 'var(--status-watch)' : 'var(--status-healthy)',
-                                }}>
-                                  {r.alertLevel === 'high' ? 'Severe' : r.alertLevel === 'medium' ? 'Impaired' : r.alertLevel === 'low' ? 'Watch' : 'Healthy'}
-                                </span>
-                              ) : r.status === 'monitored' ? (
-                                <span className="inline-flex items-center gap-1 rounded-full" style={{ padding: '2px 8px', fontSize: '10px', fontWeight: 600, letterSpacing: '0.04em', background: 'var(--accent-teal-glow)', color: 'var(--accent-teal)' }}>
-                                  ◐ {r.dataSourceCount} source{r.dataSourceCount !== 1 ? 's' : ''}
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-1 rounded-full" style={{ padding: '2px 8px', fontSize: '10px', fontWeight: 600, letterSpacing: '0.04em', background: 'var(--bg-hover)', color: 'var(--text-dim)' }}>
-                                  — Unmonitored
-                                </span>
-                              )}
-                              {r.activeAlerts > 0 && <span style={{ color: 'var(--text-dim)' }}>{r.activeAlerts} alert{r.activeAlerts !== 1 ? 's' : ''}</span>}
-                              {r.status === 'assessed' && (
-                                <span style={{ fontSize: '9px', color: 'var(--text-dim)' }}>EPA ATTAINS</span>
-                              )}
-                              {r.status === 'monitored' && r.dataSourceCount > 0 && (
-                                <span style={{ fontSize: '9px', color: 'var(--text-dim)' }}>USGS/WQP</span>
-                              )}
-                            </div>
-                          </div>
-                          {isActive && (
-                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0 mr-1" />
-                          )}
-                        </div>
-                        );
-                      })}
-                      {filteredStateRegions.length > DISPLAY_LIMIT && !showAllWaterbodies && (
-                        <button
-                          onClick={() => setShowAllWaterbodies(true)}
-                          className="w-full py-2 text-xs rounded-md transition-colors"
-                          style={{ color: 'var(--accent-teal)' }}
-                          onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; }}
-                          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
-                        >
-                          Show all {filteredStateRegions.length} waterbodies
-                        </button>
-                      )}
-                      </>
-                    )}
-                  </div>
-                  </> : null}
+                      <div className="text-center py-8">
+                        <div className="text-xs" style={{ color: 'var(--text-dim)' }}>No active Sentinel alerts for {STATE_ABBR_TO_NAME[selectedState] ?? selectedState}.</div>
+                        <div className="text-[10px] mt-1" style={{ color: 'var(--text-dim)' }}>Sentinel monitors HUC-8 watersheds for anomalous conditions.</div>
+                      </div>
+                    );
+                  })()}
                 </CardContent>
               </>
             )}
@@ -3274,7 +3042,7 @@ export function FederalManagementCenter(props: Props) {
 
         </div>
 
-        {/* ── STATE DATA REPORT CARD — under map ── */}
+        {/* ── STATE DATA REPORT CARD — full width below map ── */}
         {selectedState && (
           <Card style={{ background: 'var(--bg-card)' }}>
             <CardContent className="px-5 pt-4 pb-5">
@@ -3284,7 +3052,7 @@ export function FederalManagementCenter(props: Props) {
                 <StateDataReportCard report={stateReport} stateName={STATE_ABBR_TO_NAME[selectedState] ?? selectedState} />
               ) : (
                 <div className="text-xs text-center py-8" style={{ color: 'var(--text-dim)' }}>
-                  No data report available for {STATE_ABBR_TO_NAME[selectedState] ?? selectedState}. Run the WQP cron to generate.
+                  No data report available for {STATE_ABBR_TO_NAME[selectedState] ?? selectedState}.
                 </div>
               )}
             </CardContent>
@@ -4466,6 +4234,7 @@ export function FederalManagementCenter(props: Props) {
                       onClick={() => {
                         setSelectedAlertHuc(region.id);
                         setSelectedAlertLevel(region.alertLevel === 'high' ? 'CRITICAL' : 'WATCH');
+                        alertDetailReturnRef.current = 'alerts';
                         setSideCardMode('alert-detail');
                         const c = centroids[region.id];
                         if (c && mapRef.current) {

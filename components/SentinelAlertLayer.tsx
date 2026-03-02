@@ -21,6 +21,7 @@ interface SentinelAlertLayerProps {
   hucNames: Record<string, string>;
   onHucClick?: (huc8: string, level: string) => void;
   reducedMotion: boolean;
+  selectedHuc?: string | null;
 }
 
 const MAX_ANIMATED_MARKERS = 10;
@@ -33,6 +34,7 @@ export function SentinelAlertLayer({
   hucNames,
   onHucClick,
   reducedMotion,
+  selectedHuc,
 }: SentinelAlertLayerProps) {
   // Top 10 CRITICAL by score for animated markers
   const animatedCritical = useMemo(
@@ -137,6 +139,27 @@ export function SentinelAlertLayer({
           </Marker>
         );
       })}
+
+      {/* ── Selected HUC pin marker ── */}
+      {selectedHuc && centroids[selectedHuc] && (
+        <Marker
+          key={`sentinel-selected-${selectedHuc}`}
+          longitude={centroids[selectedHuc].lng}
+          latitude={centroids[selectedHuc].lat}
+          anchor="bottom"
+        >
+          <div className="flex flex-col items-center" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>
+            <div className="px-2 py-1 rounded-md text-[10px] font-bold text-white mb-0.5"
+              style={{ background: '#0d9488', whiteSpace: 'nowrap' }}>
+              {hucNames[selectedHuc] ?? selectedHuc}
+            </div>
+            <svg width="20" height="28" viewBox="0 0 20 28">
+              <path d="M10 0C4.5 0 0 4.5 0 10c0 7.5 10 18 10 18s10-10.5 10-18C20 4.5 15.5 0 10 0z" fill="#0d9488" />
+              <circle cx="10" cy="10" r="4" fill="white" />
+            </svg>
+          </div>
+        </Marker>
+      )}
     </>
   );
 }
