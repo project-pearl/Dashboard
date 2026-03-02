@@ -68,11 +68,17 @@ export function LayoutEditor({ ccKey, children }: LayoutEditorProps) {
     if (!user) return;
     fetchLayout(user.role, ccKey).then(saved => {
       if (saved) {
+        // Deduplicate saved layout (keep first occurrence of each id)
+        const seenIds = new Set<string>();
+        const deduped = saved.filter(s => {
+          if (seenIds.has(s.id)) return false;
+          seenIds.add(s.id);
+          return true;
+        });
         // Merge: append any DEFAULT_SECTIONS entries not present in saved layout
-        const savedIds = new Set(saved.map(s => s.id));
         const defaults = DEFAULT_SECTIONS[ccKey];
-        const missing = defaults.filter(d => !savedIds.has(d.id));
-        const merged = missing.length > 0 ? [...saved, ...missing] : saved;
+        const missing = defaults.filter(d => !seenIds.has(d.id));
+        const merged = missing.length > 0 ? [...deduped, ...missing] : deduped;
         setSections(merged);
         // Re-derive collapsed state from merged definitions
         const collapsed: Record<string, boolean> = {};
