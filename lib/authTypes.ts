@@ -5,6 +5,29 @@ export type UserRole = 'Federal' | 'State' | 'Local' | 'MS4' | 'Corporate' | 'Re
   | 'Utility' | 'Agriculture' | 'Lab' | 'Biotech' | 'Investor';
 export type AccountStatus = 'active' | 'pending' | 'rejected' | 'deactivated';
 
+export function normalizeUserRole(role: string | undefined): UserRole {
+  const key = (role || '').trim().toLowerCase();
+  const roleMap: Record<string, UserRole> = {
+    federal: 'Federal',
+    state: 'State',
+    local: 'Local',
+    ms4: 'MS4',
+    corporate: 'Corporate',
+    researcher: 'Researcher',
+    college: 'College',
+    ngo: 'NGO',
+    k12: 'K12',
+    temp: 'Temp',
+    pearl: 'Pearl',
+    utility: 'Utility',
+    agriculture: 'Agriculture',
+    lab: 'Lab',
+    biotech: 'Biotech',
+    investor: 'Investor',
+  };
+  return roleMap[key] ?? 'Federal';
+}
+
 /** Roles that require admin approval + jurisdiction binding */
 export const OPERATOR_ROLES: UserRole[] = ['MS4', 'State', 'Local', 'Federal', 'Corporate', 'Utility', 'Agriculture', 'Lab', 'Biotech', 'Investor'];
 /** Roles that get instant access on self-signup */

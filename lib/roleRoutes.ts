@@ -2,7 +2,7 @@
 // Maps each UserRole to its primary dashboard page and allowed route prefixes.
 // Pearl (admin) bypasses all restrictions.
 
-import type { PearlUser, UserRole } from './authTypes';
+import { normalizeUserRole, type PearlUser, type UserRole } from './authTypes';
 
 // ─── Primary route per role (may contain placeholders resolved at runtime) ───
 
@@ -50,7 +50,8 @@ const ROLE_ALLOWED_ROUTES: Record<UserRole, string[]> = {
 
 /** Resolve the primary dashboard route for a given user, filling in dynamic segments. */
 export function getPrimaryRoute(user: PearlUser): string {
-  const template = ROLE_PRIMARY_ROUTE[user.role] ?? '/dashboard/federal';
+  const normalizedRole = normalizeUserRole(user.role);
+  const template = ROLE_PRIMARY_ROUTE[normalizedRole] ?? '/dashboard/federal';
 
   return template
     .replace('{state}', user.state || 'MD')
@@ -61,12 +62,14 @@ export function getPrimaryRoute(user: PearlUser): string {
 
 /** Check whether a user is allowed to access a given pathname. */
 export function canAccessRoute(user: PearlUser, pathname: string): boolean {
+  const normalizedRole = normalizeUserRole(user.role);
+
   // Admins and Pearl role can access everything
-  if (user.role === 'Pearl' || user.isAdmin) return true;
+  if (normalizedRole === 'Pearl' || user.isAdmin) return true;
 
   // Non-dashboard routes are accessible to everyone
   if (!pathname.startsWith('/dashboard')) return true;
 
-  const allowed = ROLE_ALLOWED_ROUTES[user.role] ?? [];
+  const allowed = ROLE_ALLOWED_ROUTES[normalizedRole] ?? [];
   return allowed.some((prefix) => pathname.startsWith(prefix));
 }

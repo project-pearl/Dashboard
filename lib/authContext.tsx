@@ -4,7 +4,7 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode 
 import { supabase } from './supabase';
 import {
   PearlUser, UserRole, AccountStatus, InvitePayload,
-  isOperatorRole, checkIsAdmin,
+  isOperatorRole, checkIsAdmin, normalizeUserRole,
 } from './authTypes';
 import type { User } from '@supabase/supabase-js';
 
@@ -80,7 +80,7 @@ function profileToPearlUser(profile: any, authUser: User): PearlUser {
     uid: profile.id,
     email: profile.email || authUser.email || '',
     name: profile.name || '',
-    role: (profile.role || 'Public') as UserRole,
+    role: normalizeUserRole(profile.role),
     organization: profile.organization || '',
     state: profile.state || '',
     region: profile.region || '',
@@ -103,6 +103,18 @@ async function fetchProfile(userId: string): Promise<any | null> {
   if (error) {
     console.warn('Profile fetch error:', error.message);
     return null;
+  }
+  if (data) {
+    const normalizedRole = normalizeUserRole(data.role);
+    if (data.role !== normalizedRole) {
+      // Self-heal legacy lowercase/variant roles in Supabase profiles.
+      supabase
+        .from('profiles')
+        .update({ role: normalizedRole })
+        .eq('id', userId)
+        .then(() => {}, () => {});
+      data.role = normalizedRole;
+    }
   }
   return data;
 }
