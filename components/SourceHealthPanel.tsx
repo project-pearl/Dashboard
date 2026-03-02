@@ -4,11 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Activity, AlertTriangle, ChevronDown, ChevronUp, Database, RefreshCw, Wifi, WifiOff } from 'lucide-react';
-import { useSourceHealth, SourceHealth } from '@/lib/useSourceHealth';
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+import { Activity, AlertTriangle, ChevronDown, ChevronUp, Database, RefreshCw, WifiOff } from 'lucide-react';
+import { useSourceHealth } from '@/lib/useSourceHealth';
 
 function formatDuration(isoStart: string): string {
   const ms = Date.now() - new Date(isoStart).getTime();
@@ -28,82 +25,8 @@ function formatNumber(n: number): string {
   return n.toLocaleString();
 }
 
-function responseTimeColor(ms: number): string {
-  if (ms < 0) return 'text-gray-400';
-  if (ms < 500) return 'text-green-600';
-  if (ms < 2000) return 'text-amber-600';
-  if (ms < 5000) return 'text-orange-600';
-  return 'text-red-600';
-}
-
-const STATUS_STYLES = {
-  online: {
-    dot: 'bg-green-500 animate-pulse',
-    bg: 'bg-green-50 border-green-200',
-    text: 'text-green-700',
-  },
-  degraded: {
-    dot: 'bg-amber-500 animate-pulse',
-    bg: 'bg-amber-50 border-amber-200',
-    text: 'text-amber-700',
-  },
-  offline: {
-    dot: 'bg-red-500',
-    bg: 'bg-red-50 border-red-200',
-    text: 'text-red-700',
-  },
-  unknown: {
-    dot: 'bg-gray-400',
-    bg: 'bg-gray-50 border-gray-200',
-    text: 'text-gray-600',
-  },
-};
-
-// ─── Source Card ──────────────────────────────────────────────────────────────
-
-function SourceCard({ source }: { source: SourceHealth }) {
-  const style = STATUS_STYLES[source.status] || STATUS_STYLES.unknown;
-
-  return (
-    <div className={`rounded-lg border p-3 ${style.bg} transition-colors`}>
-      <div className="flex items-center gap-2 mb-1.5">
-        <div className={`w-2 h-2 rounded-full shrink-0 ${style.dot}`} />
-        <span className="text-xs font-semibold text-slate-800 truncate">{source.name}</span>
-      </div>
-
-      <div className="flex items-center justify-between text-[10px]">
-        <span className={`font-medium capitalize ${style.text}`}>
-          {source.status === 'online' && <Wifi size={10} className="inline mr-0.5 -mt-px" />}
-          {source.status === 'offline' && <WifiOff size={10} className="inline mr-0.5 -mt-px" />}
-          {source.status}
-        </span>
-        {source.responseTimeMs >= 0 && (
-          <span className={`font-mono ${responseTimeColor(source.responseTimeMs)}`}>
-            {source.responseTimeMs}ms
-          </span>
-        )}
-      </div>
-
-      {source.status === 'offline' && source.offlineSince && (
-        <p className="text-[10px] text-red-600 mt-1 font-medium">
-          Offline for {formatDuration(source.offlineSince)}
-        </p>
-      )}
-      {source.status === 'offline' && source.error && (
-        <p className="text-[10px] text-red-500 mt-0.5 truncate" title={source.error}>
-          {source.error}
-        </p>
-      )}
-    </div>
-  );
-}
-
-// ─── Panel ───────────────────────────────────────────────────────────────────
-
 interface SourceHealthPanelProps {
-  /** Enable collapse/expand toggle */
   collapsible?: boolean;
-  /** Start collapsed (only used when collapsible=true) */
   defaultCollapsed?: boolean;
 }
 
@@ -121,17 +44,20 @@ export function SourceHealthPanel({ collapsible, defaultCollapsed }: SourceHealt
 
   const hasUnhealthy = offlineCount > 0 || degradedCount > 0;
   const [collapsed, setCollapsed] = useState(collapsible ? (defaultCollapsed ?? false) : false);
+  const totalSourcesDisplay = sources.length > 0 ? sources.length : 34;
+  const healthyDisplay = sources.length > 0 ? String(onlineCount) : '?';
 
-  // Auto-expand when an unhealthy source appears
   useEffect(() => {
-    if (collapsible && hasUnhealthy) setCollapsed(false);
+    if (!collapsible) return;
+    setCollapsed(!hasUnhealthy);
   }, [collapsible, hasUnhealthy]);
 
-  const offlineSources = useMemo(
+  const unhealthySources = useMemo(
     () =>
       sources
-        .filter((s) => s.status === 'offline')
+        .filter((s) => s.status === 'offline' || s.status === 'degraded')
         .sort((a, b) => {
+          if (a.status !== b.status) return a.status === 'offline' ? -1 : 1;
           if (!a.offlineSince) return 1;
           if (!b.offlineSince) return -1;
           return new Date(a.offlineSince).getTime() - new Date(b.offlineSince).getTime();
@@ -144,17 +70,19 @@ export function SourceHealthPanel({ collapsible, defaultCollapsed }: SourceHealt
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base flex-wrap">
           {collapsible && (
-            <button onClick={() => setCollapsed(c => !c)} className="p-0.5 -ml-1 rounded hover:bg-slate-100 transition-colors" title={collapsed ? 'Expand' : 'Collapse'}>
+            <button
+              onClick={() => setCollapsed((c) => !c)}
+              className="p-0.5 -ml-1 rounded hover:bg-slate-100 transition-colors"
+              title={collapsed ? 'Expand' : 'Collapse'}
+            >
               {collapsed ? <ChevronDown size={16} className="text-slate-500" /> : <ChevronUp size={16} className="text-slate-500" />}
             </button>
           )}
           <Activity size={16} className="text-slate-600" />
           Data Source Health
-          {sources.length > 0 && (
-            <Badge variant="secondary" className="ml-1 text-[10px]">
-              {onlineCount}/{sources.length} online
-            </Badge>
-          )}
+          <Badge variant="secondary" className="ml-1 text-[10px]">
+            {healthyDisplay}/{totalSourcesDisplay} healthy
+          </Badge>
           {degradedCount > 0 && (
             <Badge className="bg-amber-100 text-amber-700 text-[10px]">
               {degradedCount} degraded
@@ -181,144 +109,141 @@ export function SourceHealthPanel({ collapsible, defaultCollapsed }: SourceHealt
           </p>
         )}
       </CardHeader>
-      {!collapsed && <CardContent className="space-y-3">
-        {/* ─── Summary Bar ─────────────────────────────────────────────── */}
-        {sources.length > 0 && (
-          <div className="flex items-center gap-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5">
-            {/* Datapoint count */}
-            <div className="flex items-center gap-2 min-w-0">
-              <Database size={14} className="text-blue-600 shrink-0" />
-              <div className="min-w-0">
-                <span className="text-lg font-bold text-slate-800 leading-tight">
-                  {datapoints ? formatNumber(datapoints.total) : '—'}
-                </span>
-                <span className="text-[10px] text-slate-500 ml-1">cached</span>
-                {datapoints?.totalAccessible && (
-                  <>
-                    <span className="text-[10px] text-slate-400 mx-1">&middot;</span>
-                    <span className="text-sm font-semibold text-blue-600">
-                      {formatNumber(datapoints.totalAccessible)}+
-                    </span>
-                    <span className="text-[10px] text-slate-500 ml-1">accessible</span>
-                  </>
-                )}
-              </div>
-            </div>
 
-            {/* Source status */}
-            <div className="flex items-center gap-1.5 text-xs text-slate-600 border-l border-slate-200 pl-4">
-              <div className="w-2 h-2 rounded-full bg-green-500" />
-              <span>
-                <span className="font-semibold text-slate-800">{onlineCount}</span>/{sources.length} sources
-              </span>
-            </div>
-
-            {/* Offline indicator */}
-            {offlineCount > 0 && (
-              <div className="flex items-center gap-1.5 text-xs text-red-600 border-l border-slate-200 pl-4">
-                <AlertTriangle size={12} />
-                <span className="font-semibold">{offlineCount} offline</span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ─── Offline Sources Alert ───────────────────────────────────── */}
-        {offlineSources.length > 0 && (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-            <div className="flex items-center gap-1.5 mb-2">
-              <AlertTriangle size={12} className="text-red-600" />
-              <span className="text-xs font-semibold text-red-700">Offline Sources</span>
-            </div>
-            <div className="space-y-1.5">
-              {offlineSources.map((src) => (
-                <div key={src.id} className="flex items-center justify-between text-[11px]">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <WifiOff size={10} className="text-red-500 shrink-0" />
-                    <span className="font-medium text-red-800 truncate">{src.name}</span>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0 text-right">
-                    {src.offlineSince && (
-                      <span className="text-red-600 font-semibold">
-                        {formatDuration(src.offlineSince)}
+      {!collapsed && (
+        <CardContent className="space-y-3">
+          {sources.length > 0 && (
+            <div className="flex items-center gap-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5">
+              <div className="flex items-center gap-2 min-w-0">
+                <Database size={14} className="text-blue-600 shrink-0" />
+                <div className="min-w-0">
+                  <span className="text-lg font-bold text-slate-800 leading-tight">
+                    {datapoints ? formatNumber(datapoints.total) : '-'}
+                  </span>
+                  <span className="text-[10px] text-slate-500 ml-1">cached</span>
+                  {datapoints?.totalAccessible && (
+                    <>
+                      <span className="text-[10px] text-slate-400 mx-1">&middot;</span>
+                      <span className="text-sm font-semibold text-blue-600">
+                        {formatNumber(datapoints.totalAccessible)}+
                       </span>
-                    )}
-                    {src.error && (
-                      <span className="text-red-400 truncate max-w-[120px]" title={src.error}>
-                        {src.error}
-                      </span>
-                    )}
-                  </div>
+                      <span className="text-[10px] text-slate-500 ml-1">accessible</span>
+                    </>
+                  )}
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
+              </div>
 
-        {/* ─── Dataset Totals ───────────────────────────────────────────── */}
-        {datapoints && (
+              <div className="flex items-center gap-1.5 text-xs text-slate-600 border-l border-slate-200 pl-4">
+                <div className="w-2 h-2 rounded-full bg-green-500" />
+                <span>
+                  <span className="font-semibold text-slate-800">{onlineCount}</span>/{sources.length} healthy
+                </span>
+              </div>
+
+              {offlineCount > 0 && (
+                <div className="flex items-center gap-1.5 text-xs text-red-600 border-l border-slate-200 pl-4">
+                  <AlertTriangle size={12} />
+                  <span className="font-semibold">{offlineCount} offline</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {unhealthySources.length > 0 ? (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+              <div className="flex items-center gap-1.5 mb-2">
+                <AlertTriangle size={12} className="text-red-600" />
+                <span className="text-xs font-semibold text-red-700">Attention Needed Sources</span>
+              </div>
+              <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1">
+                {unhealthySources.map((src) => (
+                  <div key={src.id} className="flex items-center justify-between text-[11px]">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {src.status === 'offline' ? (
+                        <WifiOff size={10} className="text-red-500 shrink-0" />
+                      ) : (
+                        <AlertTriangle size={10} className="text-amber-500 shrink-0" />
+                      )}
+                      <span className={`font-medium truncate ${src.status === 'offline' ? 'text-red-800' : 'text-amber-800'}`}>{src.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0 text-right">
+                      <span className={`uppercase text-[10px] font-semibold ${src.status === 'offline' ? 'text-red-600' : 'text-amber-600'}`}>
+                        {src.status}
+                      </span>
+                      {src.offlineSince && (
+                        <span className="text-red-600 font-semibold">
+                          {formatDuration(src.offlineSince)}
+                        </span>
+                      )}
+                      {src.error && (
+                        <span className="text-red-400 truncate max-w-[120px]" title={src.error}>
+                          {src.error}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-700">
+              All tracked sources are healthy.
+            </div>
+          )}
+
           <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
             <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
               Total Dataset
               <span className="normal-case tracking-normal font-normal text-slate-400 ml-1">
-                — {formatNumber(datapoints.total)} cached of {datapoints.totalAccessible ? `${formatNumber(datapoints.totalAccessible)}+` : '—'} accessible across {sources.length} federal sources
+                {datapoints
+                  ? ` - ${formatNumber(datapoints.total)} cached of ${datapoints.totalAccessible ? `${formatNumber(datapoints.totalAccessible)}+` : '-'} accessible across ${totalSourcesDisplay} federal sources`
+                  : ` - loading cached totals across ${totalSourcesDisplay} federal sources`}
               </span>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-1.5 text-[11px]">
-              {([
-                ['ATTAINS', datapoints.attains.waterbodies, 'waterbodies'],
-                ['ATTAINS Assessed', datapoints.attains.assessments, 'assessments'],
-                ['WQP', datapoints.wqp.records, 'records'],
-                ['ICIS Permits', datapoints.icis.permits, ''],
-                ['ICIS Violations', datapoints.icis.violations, ''],
-                ['ICIS DMR', datapoints.icis.dmr, ''],
-                ['ICIS Enforcement', datapoints.icis.enforcement, ''],
-                ['SDWIS Systems', datapoints.sdwis.systems, ''],
-                ['SDWIS Violations', datapoints.sdwis.violations, ''],
-                ['ECHO Facilities', datapoints.echo.facilities, ''],
-                ['ECHO Violations', datapoints.echo.violations, ''],
-                ['FRS WWTPs', datapoints.frs.facilities, ''],
-                ['WDFN-GW Sites', datapoints.nwisGw.sites, ''],
-                ['WDFN-GW Levels', datapoints.nwisGw.levels, ''],
-                ['PFAS Results', datapoints.pfas.results, ''],
-                ['CEDEN Chem', datapoints.ceden.chemistry, ''],
-                ['CEDEN Tox', datapoints.ceden.toxicity, ''],
-                ['BWB Stations', datapoints.bwb.stations, ''],
-                ['CDC NWSS', datapoints.cdcNwss?.records ?? 0, ''],
-                ['NOAA Buoys', datapoints.ndbc?.stations ?? 0, ''],
-                ['NASA CMR', datapoints.nasaCmr?.collections ?? 0, 'collections'],
-                ['NARS Sites', datapoints.nars?.sites ?? 0, ''],
-                ['Data.gov', datapoints.dataGov?.datasets ?? 0, 'datasets'],
-                ['USACE', datapoints.usace?.locations ?? 0, 'locations'],
-              ] as [string, number, string][])
-                .filter(([, count]) => count > 0)
-                .map(([label, count, unit]) => (
-                  <div key={label} className="flex items-baseline justify-between">
-                    <span className="text-slate-500 truncate mr-2">{label}</span>
-                    <span className="font-semibold text-slate-800 font-mono tabular-nums">
-                      {formatNumber(count)}{unit ? <span className="text-slate-400 font-normal ml-0.5">{unit}</span> : ''}
-                    </span>
-                  </div>
-                ))}
-            </div>
+            {datapoints ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-1.5 text-[11px]">
+                {([
+                  ['ATTAINS', datapoints.attains.waterbodies, 'waterbodies'],
+                  ['ATTAINS Assessed', datapoints.attains.assessments, 'assessments'],
+                  ['WQP', datapoints.wqp.records, 'records'],
+                  ['ICIS Permits', datapoints.icis.permits, ''],
+                  ['ICIS Violations', datapoints.icis.violations, ''],
+                  ['ICIS DMR', datapoints.icis.dmr, ''],
+                  ['ICIS Enforcement', datapoints.icis.enforcement, ''],
+                  ['SDWIS Systems', datapoints.sdwis.systems, ''],
+                  ['SDWIS Violations', datapoints.sdwis.violations, ''],
+                  ['ECHO Facilities', datapoints.echo.facilities, ''],
+                  ['ECHO Violations', datapoints.echo.violations, ''],
+                  ['FRS WWTPs', datapoints.frs.facilities, ''],
+                  ['WDFN-GW Sites', datapoints.nwisGw.sites, ''],
+                  ['WDFN-GW Levels', datapoints.nwisGw.levels, ''],
+                  ['PFAS Results', datapoints.pfas.results, ''],
+                  ['CEDEN Chem', datapoints.ceden.chemistry, ''],
+                  ['CEDEN Tox', datapoints.ceden.toxicity, ''],
+                  ['BWB Stations', datapoints.bwb.stations, ''],
+                  ['CDC NWSS', datapoints.cdcNwss?.records ?? 0, ''],
+                  ['NOAA Buoys', datapoints.ndbc?.stations ?? 0, ''],
+                  ['NASA CMR', datapoints.nasaCmr?.collections ?? 0, 'collections'],
+                  ['NARS Sites', datapoints.nars?.sites ?? 0, ''],
+                  ['Data.gov', datapoints.dataGov?.datasets ?? 0, 'datasets'],
+                  ['USACE', datapoints.usace?.locations ?? 0, 'locations'],
+                ] as [string, number, string][])
+                  .filter(([, count]) => count > 0)
+                  .map(([label, count, unit]) => (
+                    <div key={label} className="flex items-baseline justify-between">
+                      <span className="text-slate-500 truncate mr-2">{label}</span>
+                      <span className="font-semibold text-slate-800 font-mono tabular-nums">
+                        {formatNumber(count)}{unit ? <span className="text-slate-400 font-normal ml-0.5">{unit}</span> : ''}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <div className="text-xs text-slate-400">Loading dataset totals...</div>
+            )}
           </div>
-        )}
-
-        {/* ─── Source Grid ─────────────────────────────────────────────── */}
-        {isLoading && sources.length === 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-            {Array.from({ length: 13 }).map((_, i) => (
-              <Skeleton key={i} className="h-[72px] rounded-lg" />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-            {sources.map((src) => (
-              <SourceCard key={src.id} source={src} />
-            ))}
-          </div>
-        )}
-      </CardContent>}
+        </CardContent>
+      )}
     </Card>
   );
 }

@@ -31,6 +31,7 @@ import ScenarioPlannerPanel from './ScenarioPlannerPanel';
 import RiskInvestigationFlow from './RiskInvestigationFlow';
 import type { RiskPrediction, RiskForecastResult } from '@/lib/siteIntelTypes';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
+import { GrantOpportunityMatcher } from './GrantOpportunityMatcher';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -472,6 +473,8 @@ type OutreachMetrics = {
   topProspectName: string;
   topProspectAcv: number;
   tssRemoval: string;
+  infraFailureLikelihood: number;
+  infraFailureConfidence: string;
 };
 
 type OutreachContact = {
@@ -608,6 +611,12 @@ function ctaByRole(role: UserRole): string {
 function generateRoleInsights(role: UserRole, m: OutreachMetrics): OutreachInsight[] {
   const shared: OutreachInsight[] = [
     {
+      title: "Don't be the next Potomac spill",
+      metric: `${m.infraFailureLikelihood}% infrastructure failure likelihood (${m.infraFailureConfidence} confidence)`,
+      whyItMatters: 'This quantifies near-term failure pressure before it becomes a visible public incident.',
+      meetingHook: 'We can build a prevention-first action list tied to your highest-consequence assets and outfalls.',
+    },
+    {
       title: 'National water health movement',
       metric: `${m.nationalHealthScore}/100 composite`,
       whyItMatters: 'This gives an executive-ready baseline for progress and urgency.',
@@ -669,6 +678,112 @@ function generateRoleInsights(role: UserRole, m: OutreachMetrics): OutreachInsig
   return shared.slice(0, 5);
 }
 
+function lerpHexColor(a: string, b: string, t: number) {
+  const ah = a.replace('#', '');
+  const bh = b.replace('#', '');
+  const ar = parseInt(ah.slice(0, 2), 16), ag = parseInt(ah.slice(2, 4), 16), ab = parseInt(ah.slice(4, 6), 16);
+  const br = parseInt(bh.slice(0, 2), 16), bg = parseInt(bh.slice(2, 4), 16), bb = parseInt(bh.slice(4, 6), 16);
+  const r = Math.round(ar + (br - ar) * t);
+  const g = Math.round(ag + (bg - ag) * t);
+  const bl = Math.round(ab + (bb - ab) * t);
+  return `rgb(${r},${g},${bl})`;
+}
+
+function NationalHealthGauge({ score }: { score: number }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const clamped = Math.max(0, Math.min(100, score));
+
+  const draw = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const cssW = 280;
+    const cssH = 160;
+    canvas.width = cssW * dpr;
+    canvas.height = cssH * dpr;
+    canvas.style.width = `${cssW}px`;
+    canvas.style.height = `${cssH}px`;
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, cssW, cssH);
+
+    const cx = cssW / 2;
+    const cy = cssH - 22;
+    const r = 108;
+    const lineWidth = 16;
+    const startAngle = Math.PI;
+
+    const steps = 120;
+    for (let i = 0; i < steps; i++) {
+      const t = i / steps;
+      const a1 = startAngle + t * Math.PI;
+      const a2 = startAngle + ((i + 1) / steps) * Math.PI;
+
+      let color: string;
+      if (t < 0.25) color = lerpHexColor('#ef4444', '#f59e0b', t / 0.25);
+      else if (t < 0.45) color = lerpHexColor('#f59e0b', '#eab308', (t - 0.25) / 0.20);
+      else if (t < 0.65) color = lerpHexColor('#eab308', '#84cc16', (t - 0.45) / 0.20);
+      else if (t < 0.85) color = lerpHexColor('#84cc16', '#22c55e', (t - 0.65) / 0.20);
+      else color = lerpHexColor('#22c55e', '#16a34a', (t - 0.85) / 0.15);
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, a1, a2 + 0.02);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineWidth;
+      ctx.lineCap = 'butt';
+      ctx.stroke();
+    }
+
+    const needleAngle = startAngle + (clamped / 100) * Math.PI;
+    const needleLen = r - 8;
+    const nx = cx + Math.cos(needleAngle) * needleLen;
+    const ny = cy + Math.sin(needleAngle) * needleLen;
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(nx + 1, ny + 1);
+    ctx.strokeStyle = 'rgba(15,23,42,0.18)';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(nx, ny);
+    ctx.strokeStyle = '#0f172a';
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+    ctx.fillStyle = '#0f172a';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+
+    ctx.font = '10px system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.textAlign = 'center';
+    ctx.fillText('0', cx - r - 8, cy + 6);
+    ctx.fillText('50', cx, cy - r - 8);
+    ctx.fillText('100', cx + r + 8, cy + 6);
+  }, [clamped]);
+
+  useEffect(() => { draw(); }, [draw]);
+  useEffect(() => {
+    const onResize = () => draw();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [draw]);
+
+  return <canvas ref={canvasRef} className="mx-auto block" />;
+}
+
 // ─── Main Component ─────────────────────────────────────────────────────────
 
 export function PEARLManagementCenter(props: Props) {
@@ -698,6 +813,8 @@ export function PEARLManagementCenter(props: Props) {
   const [outreachOrg, setOutreachOrg] = useState('');
   const [outreachSeed, setOutreachSeed] = useState(() => Date.now());
   const [copyStatus, setCopyStatus] = useState<string | null>(null);
+  const [grantAudience, setGrantAudience] = useState<UserRole>('State');
+  const [grantStateAbbr, setGrantStateAbbr] = useState('MD');
 
   // Fetch real risk predictions from site-intelligence API using the first active deployment
   useEffect(() => {
@@ -736,6 +853,12 @@ export function PEARLManagementCenter(props: Props) {
   });
 
   const gpmResult = useMemo(() => calculateGPM(gpmInputs), [gpmInputs]);
+  const adminGrantStateOptions = useMemo(() => {
+    const states = new Set<string>(['MD', 'FL', 'TX', 'LA', 'NY', 'OH', 'CA', 'WA']);
+    deployments.forEach((d) => states.add(d.state));
+    prospects.forEach((p) => states.add(p.state));
+    return [...states].sort();
+  }, [deployments, prospects]);
   const roleContacts = useMemo(() => OUTREACH_CONTACTS[outreachRole] ?? [], [outreachRole]);
   const selectedContactInfo = useMemo(
     () => roleContacts.find((c) => c.name === outreachContact) ?? null,
@@ -807,6 +930,17 @@ export function PEARLManagementCenter(props: Props) {
   }, [outreachSeed]);
 
   const outreachMetrics = useMemo<OutreachMetrics>(() => ({
+    // Prefer model-based infrastructure-failure risk from site-intelligence when available.
+    // Fallback keeps the outreach builder deterministic even when API data is unavailable.
+    infraFailureLikelihood: (() => {
+      const infraPrediction = riskForecast?.predictions?.find(p => p.category === 'infrastructure-failure');
+      if (infraPrediction) return Math.round(infraPrediction.probability);
+      return Math.max(10, Math.min(95, 20 + (displayCritical * 12) + (displayWarnings * 4)));
+    })(),
+    infraFailureConfidence: (() => {
+      const infraPrediction = riskForecast?.predictions?.find(p => p.category === 'infrastructure-failure');
+      return infraPrediction?.confidence ?? 'MODELED';
+    })(),
     nationalHealthScore,
     activeUnits: displayActiveUnits,
     gallonsTreated: displayGallons,
@@ -818,6 +952,7 @@ export function PEARLManagementCenter(props: Props) {
     topProspectAcv: topOpenProspect?.estimatedACV ?? 0,
     tssRemoval: displayTSS,
   }), [
+    riskForecast,
     nationalHealthScore,
     displayActiveUnits,
     displayGallons,
@@ -963,87 +1098,9 @@ Doug and the PIN team`;
               </button>
             </div>
             <div className="flex flex-col md:flex-row items-center gap-6">
-              {/* SVG Gauge */}
+              {/* Gauge */}
               <div className="relative flex-shrink-0">
-                <svg width="220" height="140" viewBox="0 0 220 140">
-                  {/* Gauge arc background segments: Red → Yellow → Green */}
-                  {(() => {
-                    const cx = 110, cy = 120, r = 90;
-                    const startAngle = Math.PI; // 180° (left)
-                    const endAngle = 0;          // 0° (right)
-                    const segments = [
-                      { from: 0, to: 0.25, color: '#ef4444' },   // 0-25: Critical
-                      { from: 0.25, to: 0.45, color: '#f97316' }, // 25-45: Poor
-                      { from: 0.45, to: 0.65, color: '#eab308' }, // 45-65: Fair
-                      { from: 0.65, to: 0.85, color: '#84cc16' }, // 65-85: Good
-                      { from: 0.85, to: 1.0, color: '#22c55e' },  // 85-100: Excellent
-                    ];
-                    return segments.map((seg, i) => {
-                      const a1 = startAngle - seg.from * Math.PI;
-                      const a2 = startAngle - seg.to * Math.PI;
-                      const x1 = cx + r * Math.cos(a1);
-                      const y1 = cy - r * Math.sin(a1);
-                      const x2 = cx + r * Math.cos(a2);
-                      const y2 = cy - r * Math.sin(a2);
-                      const largeArc = (seg.to - seg.from) > 0.5 ? 1 : 0;
-                      return (
-                        <path key={i}
-                          d={`M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 0 ${x2} ${y2}`}
-                          fill="none" stroke={seg.color} strokeWidth="14" strokeLinecap="round" opacity="0.2"
-                        />
-                      );
-                    });
-                  })()}
-
-                  {/* Active gauge fill */}
-                  {(() => {
-                    const cx = 110, cy = 120, r = 90;
-                    const pct = nationalHealthScore / 100;
-                    const startAngle = Math.PI;
-                    const sweepAngle = pct * Math.PI;
-                    const endA = startAngle - sweepAngle;
-                    const x1 = cx + r * Math.cos(startAngle);
-                    const y1 = cy - r * Math.sin(startAngle);
-                    const x2 = cx + r * Math.cos(endA);
-                    const y2 = cy - r * Math.sin(endA);
-                    const largeArc = pct > 0.5 ? 1 : 0;
-                    const color = nationalHealthScore >= 85 ? '#22c55e' : nationalHealthScore >= 65 ? '#84cc16' : nationalHealthScore >= 45 ? '#eab308' : nationalHealthScore >= 25 ? '#f97316' : '#ef4444';
-                    return (
-                      <path
-                        d={`M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 0 ${x2} ${y2}`}
-                        fill="none" stroke={color} strokeWidth="14" strokeLinecap="round"
-                      />
-                    );
-                  })()}
-
-                  {/* Needle */}
-                  {(() => {
-                    const cx = 110, cy = 120;
-                    const pct = nationalHealthScore / 100;
-                    const angle = Math.PI - pct * Math.PI;
-                    const needleLen = 70;
-                    const nx = cx + needleLen * Math.cos(angle);
-                    const ny = cy - needleLen * Math.sin(angle);
-                    return (
-                      <>
-                        <line x1={cx} y1={cy} x2={nx} y2={ny} stroke="#1e293b" strokeWidth="2.5" strokeLinecap="round" />
-                        <circle cx={cx} cy={cy} r="5" fill="#1e293b" />
-                      </>
-                    );
-                  })()}
-
-                  {/* Heart in center */}
-                  <text x="110" y="105" textAnchor="middle" fontSize="28" fill="#ef4444">♥</text>
-
-                  {/* Score */}
-                  <text x="110" y="138" textAnchor="middle" fontSize="11" fontWeight="bold" fill="#334155" fontFamily="monospace">
-                    {nationalHealthScore} / 100
-                  </text>
-
-                  {/* Labels */}
-                  <text x="18" y="128" textAnchor="start" fontSize="8" fill="#94a3b8">Critical</text>
-                  <text x="202" y="128" textAnchor="end" fontSize="8" fill="#94a3b8">Excellent</text>
-                </svg>
+                <NationalHealthGauge score={nationalHealthScore} />
               </div>
 
               {/* Score context */}
@@ -1209,104 +1266,7 @@ Doug and the PIN team`;
 
         {viewLens === 'operations' && (
           <>
-            <Card className="border-indigo-200 bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/60">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Send size={16} className="text-indigo-600" /> Role-Based Outreach Email Builder
-                </CardTitle>
-                <CardDescription>
-                  Generate a warm, role-specific sample outreach email using a fresh dataset and top 5 high-impact insights.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                  <div>
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Audience</label>
-                    <select
-                      value={outreachRole}
-                      onChange={(e) => setOutreachRole(e.target.value as UserRole)}
-                      className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm"
-                    >
-                      {OUTREACH_ROLE_ORDER.map((role) => (
-                        <option key={role} value={role}>{OUTREACH_ROLE_LABELS[role]}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Recipient</label>
-                    <select
-                      value={outreachContact}
-                      onChange={(e) => {
-                        const name = e.target.value;
-                        const selected = roleContacts.find((c) => c.name === name);
-                        setOutreachContact(name);
-                        setOutreachRecipient(name);
-                        if (selected) setOutreachOrg(selected.organization);
-                      }}
-                      className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm"
-                    >
-                      {roleContacts.map((contact) => (
-                        <option key={contact.name} value={contact.name}>
-                          {contact.name} - {contact.title}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Organization</label>
-                    <input
-                      value={outreachOrg}
-                      onChange={(e) => setOutreachOrg(e.target.value)}
-                      placeholder="Anne Arundel County"
-                      className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm"
-                    />
-                  </div>
-                  <div className="flex items-end gap-2">
-                    <Button
-                      onClick={() => setOutreachSeed(Date.now())}
-                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
-                    >
-                      <RefreshCw size={14} className="mr-1.5" /> Fresh Dataset
-                    </Button>
-                    <Button variant="outline" onClick={copyOutreach}>
-                      <FileText size={14} className="mr-1.5" /> Copy
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="rounded-lg border border-indigo-200 bg-indigo-50/50 px-3 py-2 text-xs text-indigo-800 flex items-center justify-between">
-                  <span>Dataset: <strong>{outreachDatasetId}</strong> | Generated {new Date(outreachSeed).toLocaleString()}</span>
-                  {copyStatus && <span className="font-semibold">{copyStatus}</span>}
-                </div>
-                {selectedContactInfo && (
-                  <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
-                    Sending as sample outreach to <span className="font-semibold text-slate-800">{selectedContactInfo.name}</span> ({selectedContactInfo.title}).
-                  </div>
-                )}
-
-                <div className="rounded-lg border border-slate-200 bg-white p-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Top 5 Insights</p>
-                  <div className="space-y-2">
-                    {outreachInsights.map((insight, idx) => (
-                      <div key={insight.title} className="rounded-md border border-slate-200 p-2.5">
-                        <p className="text-sm font-semibold text-slate-800">{idx + 1}. {insight.title}</p>
-                        <p className="text-xs text-slate-700 mt-0.5"><span className="font-semibold">Metric:</span> {insight.metric}</p>
-                        <p className="text-xs text-slate-600 mt-0.5">{insight.whyItMatters}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="rounded-lg border border-slate-200 bg-white p-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Email Subject</p>
-                  <p className="text-sm font-medium text-slate-800">{outreachSubject}</p>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mt-3 mb-2">Email Body</p>
-                  <pre className="whitespace-pre-wrap text-sm text-slate-700 leading-relaxed font-sans">{outreachBody}</pre>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* ── ALERT FEED ── */}
+{/* ── ALERT FEED ── */}
             {allAlerts.length > 0 && (
               <Card>
                 <CardHeader className="pb-2">
@@ -1588,6 +1548,99 @@ Doug and the PIN team`;
 
         {viewLens === 'proposals' && (
           <>
+            <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50/70 via-white to-cyan-50/60">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <DollarSign size={16} className="text-emerald-600" /> Grant Matching
+                </CardTitle>
+                <CardDescription>
+                  Agency-facing grant availability by role and state. No product positioning, just programs and fit.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Role</label>
+                    <select
+                      value={grantAudience}
+                      onChange={(e) => setGrantAudience(e.target.value as UserRole)}
+                      className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm"
+                    >
+                      {(['Federal', 'State', 'Local', 'NGO'] as UserRole[]).map((role) => (
+                        <option key={role} value={role}>{OUTREACH_ROLE_LABELS[role]}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">State</label>
+                    <select
+                      value={grantStateAbbr}
+                      onChange={(e) => setGrantStateAbbr(e.target.value)}
+                      className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm"
+                    >
+                      {adminGrantStateOptions.map((state) => (
+                        <option key={state} value={state}>{state}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <GrantOpportunityMatcher
+                  regionId={`admin_${grantStateAbbr.toLowerCase()}_grant_matching`}
+                  removalEfficiencies={{}}
+                  alertsCount={criticalAlerts.length}
+                  userRole={grantAudience}
+                  stateAbbr={grantStateAbbr}
+                />
+              </CardContent>
+            </Card>
+
+            <Card className="border-indigo-200 bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/60">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Send size={16} className="text-indigo-600" /> Proposal Email Content Creator
+                </CardTitle>
+                <CardDescription>
+                  Build role-specific proposal outreach copy with a fresh dataset and top impact signals.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                  <div>
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Audience</label>
+                    <select value={outreachRole} onChange={(e) => setOutreachRole(e.target.value as UserRole)} className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm">
+                      {OUTREACH_ROLE_ORDER.map((role) => (<option key={role} value={role}>{OUTREACH_ROLE_LABELS[role]}</option>))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Recipient</label>
+                    <select value={outreachContact} onChange={(e) => { const name = e.target.value; const selected = roleContacts.find((c) => c.name === name); setOutreachContact(name); setOutreachRecipient(name); if (selected) setOutreachOrg(selected.organization); }} className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm">
+                      {roleContacts.map((contact) => (<option key={contact.name} value={contact.name}>{contact.name} - {contact.title}</option>))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Organization</label>
+                    <input value={outreachOrg} onChange={(e) => setOutreachOrg(e.target.value)} className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm" />
+                  </div>
+                  <div className="flex items-end gap-2">
+                    <Button onClick={() => setOutreachSeed(Date.now())} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"><RefreshCw size={14} className="mr-1.5" /> Fresh Dataset</Button>
+                    <Button variant="outline" onClick={copyOutreach}><FileText size={14} className="mr-1.5" /> Copy</Button>
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-indigo-200 bg-indigo-50/50 px-3 py-2 text-xs text-indigo-800 flex items-center justify-between">
+                  <span>Dataset: <strong>{outreachDatasetId}</strong> | Generated {new Date(outreachSeed).toLocaleString()}</span>
+                  {copyStatus && <span className="font-semibold">{copyStatus}</span>}
+                </div>
+
+                <div className="rounded-lg border border-slate-200 bg-white p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Email Subject</p>
+                  <p className="text-sm font-medium text-slate-800">{outreachSubject}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mt-3 mb-2">Email Body</p>
+                  <pre className="whitespace-pre-wrap text-sm text-slate-700 leading-relaxed font-sans max-h-64 overflow-y-auto">{outreachBody}</pre>
+                </div>
+              </CardContent>
+            </Card>
             {/* Pipeline Summary — Visual Funnel + Cards */}
             <Card>
               <CardHeader className="pb-2">
@@ -1802,3 +1855,6 @@ Doug and the PIN team`;
     </div>
   );
 }
+
+
+

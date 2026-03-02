@@ -26,6 +26,19 @@ const STATUS_BADGE: Record<string, { bg: string; text: string; label: string }> 
 /** Roles that warrant a free-email-domain warning */
 const PROFESSIONAL_ROLES: UserRole[] = ['Federal', 'State', 'MS4', 'Corporate', 'Utility'];
 
+function accessType(role: UserRole): 'operator' | 'explorer' {
+  return EXPLORER_ROLES.includes(role) ? 'explorer' : 'operator';
+}
+
+function accessScopeSummary(user: PearlUser): string {
+  if (user.status === 'pending') return 'No platform access yet. Waiting for admin approval.';
+  if (user.status === 'rejected') return 'No platform access. Request was rejected.';
+  if (user.status === 'deactivated') return 'No platform access. Account is deactivated.';
+  if (user.isAdmin) return 'Admin access. Full user management and all role views.';
+  if (accessType(user.role) === 'explorer') return 'Explorer access. Read-focused role views with no operator/admin controls.';
+  return 'Operator access. Role-based operational center with action tools where permitted.';
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 interface UserManagementPanelProps {
@@ -135,6 +148,8 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
   }
 
   const pendingCount = pending.length;
+  const activeExplorerCount = allUsers.filter((u) => u.status === 'active' && accessType(u.role) === 'explorer').length;
+  const activeOperatorCount = allUsers.filter((u) => u.status === 'active' && accessType(u.role) === 'operator').length;
 
   return (
     <div className="space-y-4">
@@ -435,6 +450,27 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
               </button>
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
+              <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                <span className="font-semibold">{pendingCount}</span> pending requests
+              </div>
+              <div className="rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs text-cyan-800">
+                <span className="font-semibold">{activeExplorerCount}</span> active explorer/public users
+              </div>
+              <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+                <span className="font-semibold">{activeOperatorCount}</span> active operator users
+              </div>
+            </div>
+
+            {pendingCount > 0 && (
+              <button
+                onClick={() => setTab('pending')}
+                className="w-full text-left rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 hover:bg-amber-100 transition-colors"
+              >
+                {pendingCount} account request{pendingCount !== 1 ? 's' : ''} waiting for approval. Click to open Pending Approvals.
+              </button>
+            )}
+
             {loading ? (
               <div className="text-center py-8 text-sm text-slate-400">Loading...</div>
             ) : (
@@ -472,6 +508,15 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
                               <span className="text-cyan-600">{MD_JURISDICTIONS.find(j => j.key === u.ms4Jurisdiction)?.label || u.ms4Jurisdiction}</span>
                             </>
                           )}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge
+                            variant="secondary"
+                            className={`text-[9px] px-1.5 ${accessType(u.role) === 'explorer' ? 'bg-cyan-100 text-cyan-700' : 'bg-blue-100 text-blue-700'}`}
+                          >
+                            {accessType(u.role) === 'explorer' ? 'Explorer/Public' : 'Operator'}
+                          </Badge>
+                          <span className="text-[10px] text-slate-500">{accessScopeSummary(u)}</span>
                         </div>
                       </div>
 
