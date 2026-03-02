@@ -14,22 +14,11 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import dynamic from "next/dynamic";
-import { getStatesGeoJSONWithAbbr } from "@/lib/mapUtils";
+
 import { getArchivedSignals, type Signal } from "@/lib/signalArchiveCacheClient";
-import { scoreModules, type ModuleScoringInput } from "@/lib/resolutionModules";
-import { StrategyModulesSection } from "./StrategyModulesSection";
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 
 // Lazy-load Mapbox components (SSR-safe)
-const MapboxMapShell = dynamic(
-  () => import('@/components/MapboxMapShell').then(m => m.MapboxMapShell),
-  { ssr: false }
-);
-const MapboxChoropleth = dynamic(
-  () => import('@/components/MapboxChoropleth').then(m => m.MapboxChoropleth),
-  { ssr: false }
-);
 
 // ── Types ──
 
@@ -68,12 +57,6 @@ interface RefineEntry {
   revision: number;
 }
 
-interface ProjectedScoreChange {
-  state: string;
-  currentScore: number;
-  projectedScore: number;
-  keyImprovement: string;
-}
 
 interface FederalPlanSections {
   executiveSummary: string;
@@ -153,26 +136,6 @@ const POLLUTANT_GROUPS = [
   "Nutrients (N/P)", "Bacteria/Pathogens", "Metals/Heavy Metals", "PFAS/PFOA",
   "Sediment/TSS", "Dissolved Oxygen", "Temperature", "pH", "Pesticides",
   "Microplastics", "Emerging Contaminants",
-];
-
-// ── Score-to-color helper ──
-
-function scoreToColor(score: number | undefined): string {
-  if (score === undefined || score < 0) return "#9ca3af"; // gray
-  if (score < 60) return "#ef4444"; // red
-  if (score < 70) return "#f97316"; // orange
-  if (score < 80) return "#eab308"; // yellow
-  if (score < 90) return "#84cc16"; // light green
-  return "#22c55e"; // green
-}
-
-const SCORE_LEGEND = [
-  { label: "90+", color: "#22c55e" },
-  { label: "80–89", color: "#84cc16" },
-  { label: "70–79", color: "#eab308" },
-  { label: "60–69", color: "#f97316" },
-  { label: "<60", color: "#ef4444" },
-  { label: "N/A", color: "#9ca3af" },
 ];
 
 // ── Session Persistence ──
@@ -353,156 +316,6 @@ function CoBenefitsMatrix({ benefits }: { benefits: CoBenefit[] }) {
   );
 }
 
-// ── Before/After Comparison Maps ──
-
-function BeforeAfterMaps({
-  stateRollup,
-  projectedChanges,
-  scopeStates,
-}: {
-  stateRollup: Array<{ abbr: string; score: number; canGradeState: boolean }>;
-  projectedChanges: ProjectedScoreChange[];
-  scopeStates: string[];
-}) {
-  const geoData = useMemo(() => getStatesGeoJSONWithAbbr(), []);
-  const scopeSet = useMemo(() => new Set(scopeStates.map(s => s.toUpperCase())), [scopeStates]);
-
-  const projectedMap = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const c of projectedChanges) m.set(c.state.toUpperCase(), c.projectedScore);
-    return m;
-  }, [projectedChanges]);
-
-  const currentScoreMap = useMemo(() => {
-    const m = new Map<string, number>();
-    // Use projected currentScore if available (from AI), fallback to stateRollup
-    for (const c of projectedChanges) m.set(c.state.toUpperCase(), c.currentScore);
-    for (const s of stateRollup) {
-      if (!m.has(s.abbr) && s.canGradeState) m.set(s.abbr, s.score);
-    }
-    return m;
-  }, [stateRollup, projectedChanges]);
-
-  // Build Mapbox match expression for "before" (current scores) fill color
-  const beforeFillExpr = useMemo(() => {
-    const entries: string[] = [];
-    for (const f of (geoData as any).features) {
-      const abbr = f.properties?.abbr;
-      if (!abbr) continue;
-      const inScope = scopeSet.has(abbr);
-      const score = currentScoreMap.get(abbr);
-      entries.push(abbr, inScope ? scoreToColor(score) : "#d1d5db");
-    }
-    return ['match', ['get', 'abbr'], ...entries, '#d1d5db'] as any;
-  }, [geoData, scopeSet, currentScoreMap]);
-
-  // Build Mapbox match expression for "after" (projected scores) fill color
-  const afterFillExpr = useMemo(() => {
-    const entries: string[] = [];
-    for (const f of (geoData as any).features) {
-      const abbr = f.properties?.abbr;
-      if (!abbr) continue;
-      const inScope = scopeSet.has(abbr);
-      const score = inScope ? projectedMap.get(abbr) : undefined;
-      entries.push(abbr, inScope ? scoreToColor(score) : "#d1d5db");
-    }
-    return ['match', ['get', 'abbr'], ...entries, '#d1d5db'] as any;
-  }, [geoData, scopeSet, projectedMap]);
-
-  // Build Mapbox match expression for fill opacity (in-scope vs out-of-scope)
-  const opacityExpr = useMemo(() => {
-    const entries: (string | number)[] = [];
-    for (const f of (geoData as any).features) {
-      const abbr = f.properties?.abbr;
-      if (!abbr) continue;
-      entries.push(abbr, scopeSet.has(abbr) ? 0.7 : 0.3);
-    }
-    return ['match', ['get', 'abbr'], ...entries, 0.3] as any;
-  }, [geoData, scopeSet]);
-
-  return (
-    <div>
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-2 text-center">Before — Current Scores</h4>
-          <div className="rounded-lg overflow-hidden border border-gray-200" style={{ height: 280 }}>
-            <MapboxMapShell center={[39.8, -98.5]} zoom={3} height="280px">
-              <MapboxChoropleth
-                geoData={geoData as any}
-                fillColorExpression={beforeFillExpr}
-                fillOpacity={opacityExpr}
-                sourceId="before-states"
-              />
-            </MapboxMapShell>
-          </div>
-        </div>
-        <div>
-          <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-2 text-center">After — Projected Scores</h4>
-          <div className="rounded-lg overflow-hidden border border-gray-200" style={{ height: 280 }}>
-            <MapboxMapShell center={[39.8, -98.5]} zoom={3} height="280px">
-              <MapboxChoropleth
-                geoData={geoData as any}
-                fillColorExpression={afterFillExpr}
-                fillOpacity={opacityExpr}
-                sourceId="after-states"
-              />
-            </MapboxMapShell>
-          </div>
-        </div>
-      </div>
-
-      {/* Shared legend */}
-      <div className="flex items-center justify-center gap-3 mt-3">
-        {SCORE_LEGEND.map(s => (
-          <div key={s.label} className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: s.color }} />
-            <span className="text-[10px] text-gray-500">{s.label}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Score change table */}
-      {projectedChanges.length > 0 && (
-        <div className="mt-3 overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left py-1 font-bold text-gray-500 uppercase text-[10px]">State</th>
-                <th className="text-center py-1 font-bold text-gray-500 uppercase text-[10px]">Current</th>
-                <th className="text-center py-1 font-bold text-gray-500 uppercase text-[10px]">Projected</th>
-                <th className="text-center py-1 font-bold text-gray-500 uppercase text-[10px]">Change</th>
-                <th className="text-left py-1 font-bold text-gray-500 uppercase text-[10px]">Key Improvement</th>
-              </tr>
-            </thead>
-            <tbody>
-              {projectedChanges.map((c, i) => {
-                const delta = c.projectedScore - c.currentScore;
-                return (
-                  <tr key={i} className="border-b border-gray-100">
-                    <td className="py-1 font-semibold text-gray-700">{c.state}</td>
-                    <td className="py-1 text-center">
-                      <span className="inline-block w-3 h-3 rounded-sm mr-1 align-middle" style={{ backgroundColor: scoreToColor(c.currentScore) }} />
-                      {c.currentScore}
-                    </td>
-                    <td className="py-1 text-center">
-                      <span className="inline-block w-3 h-3 rounded-sm mr-1 align-middle" style={{ backgroundColor: scoreToColor(c.projectedScore) }} />
-                      {c.projectedScore}
-                    </td>
-                    <td className={`py-1 text-center font-bold ${delta > 0 ? "text-green-600" : delta < 0 ? "text-red-600" : "text-gray-400"}`}>
-                      {delta > 0 ? "+" : ""}{delta}
-                    </td>
-                    <td className="py-1 text-gray-600 text-[11px]">{c.keyImprovement}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ── Conditions Banner ──
 
 function FederalConditionsBanner({ scope }: { scope: ScopeSelection }) {
@@ -559,25 +372,9 @@ function FederalConditionsBanner({ scope }: { scope: ScopeSelection }) {
 interface FederalResolutionPlannerProps {
   userTier: Tier;
   userId: string;
-  stateRollup: Array<{ abbr: string; score: number; canGradeState: boolean }>;
 }
 
-// ── Pollutant group → ATTAINS cause keyword mapping ──
-const POLLUTANT_TO_CAUSES: Record<string, string[]> = {
-  'Nutrients (N/P)': ['nutrient', 'nitrogen', 'phosphor'],
-  'Bacteria/Pathogens': ['pathogen', 'bacteria', 'e. coli', 'fecal', 'enterococ'],
-  'Metals/Heavy Metals': ['metal', 'mercury', 'lead', 'copper', 'zinc'],
-  'PFAS/PFOA': ['pfas', 'pfoa', 'pfos', 'perfluor'],
-  'Sediment/TSS': ['sediment', 'turbidity', 'total suspended', 'siltation'],
-  'Dissolved Oxygen': ['dissolved oxygen', 'oxygen'],
-  'Temperature': ['temperature', 'thermal'],
-  'pH': ['ph', 'acidity'],
-  'Pesticides': ['pesticide', 'herbicide', 'insecticide'],
-  'Microplastics': ['microplastic', 'plastic'],
-  'Emerging Contaminants': ['emerging', 'contaminant'],
-};
-
-export default function FederalResolutionPlanner({ userTier, userId, stateRollup }: FederalResolutionPlannerProps) {
+export default function FederalResolutionPlanner({ userTier, userId }: FederalResolutionPlannerProps) {
   // ── State ──
   const [view, setView] = useState<PlannerView>("scope");
   const [scope, setScope] = useState<ScopeSelection | null>(null);
@@ -610,27 +407,6 @@ export default function FederalResolutionPlanner({ userTier, userId, stateRollup
   const atLimit = plansToday >= limits.dailyPlans;
 
   // ── Strategy Module Scoring ──
-  const scoredCategories = useMemo(() => {
-    if (!scope) return [];
-    const topCauses = (scope.pollutants || []).flatMap(p =>
-      (POLLUTANT_TO_CAUSES[p] || [p.toLowerCase()]).map(c => ({ cause: c, count: 500 }))
-    );
-    if (topCauses.length === 0) {
-      topCauses.push(
-        { cause: 'nutrient', count: 1000 },
-        { cause: 'pathogen', count: 800 },
-        { cause: 'sediment', count: 600 },
-      );
-    }
-    const input: ModuleScoringInput = {
-      topCauses,
-      totalImpaired: scope.assessmentUnitCount || 1000,
-      totalWaterbodies: (scope.assessmentUnitCount || 1000) * 2,
-      tmdlNeeded: scope.requireNoTmdl ? (scope.assessmentUnitCount || 500) : 0,
-    };
-    return scoreModules(input);
-  }, [scope]);
-
   // ── Session Restore ──
   useEffect(() => {
     const session = loadSession();

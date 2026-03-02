@@ -12,7 +12,7 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { getArchivedSignals, type Signal } from "@/lib/signalArchiveCacheClient";
-import { scoreModules, type ModuleScoringInput } from "@/lib/resolutionModules";
+
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 // html2pdf.js loaded dynamically in export handler (code-split)
 
@@ -654,42 +654,6 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
   const roleCtx = ROLE_CONTEXT[userRole];
   const scopeLabel = getScopeLabel(scopeContext);
   const scopeSubtitle = getScopeSubtitle(scopeContext);
-
-  // ── Strategy Module Scoring ──
-  const scoredCategories = useMemo(() => {
-    const ctx = scopeContext;
-    let topCauses: { cause: string; count: number }[] = [];
-    let totalImpaired = 0;
-    let totalWaterbodies = 0;
-    let tmdlNeeded = 0;
-    if (ctx.scope === 'state') {
-      topCauses = ctx.data.topCauses || [];
-      totalImpaired = ctx.data.impaired || 0;
-      totalWaterbodies = ctx.data.totalWaterbodies || 0;
-    } else if (ctx.scope === 'national') {
-      topCauses = ctx.data.topCauses || [];
-      totalImpaired = ctx.data.totalImpaired || 0;
-      totalWaterbodies = ctx.data.totalWaterbodies || 0;
-    } else if (ctx.scope === 'region') {
-      topCauses = ctx.data.topCauses || [];
-      totalImpaired = ctx.data.totalImpaired || 0;
-      totalWaterbodies = ctx.data.totalWaterbodies || 0;
-    }
-    if (topCauses.length === 0) {
-      topCauses = [
-        { cause: 'nutrient', count: 1000 },
-        { cause: 'pathogen', count: 800 },
-        { cause: 'sediment', count: 600 },
-      ];
-    }
-    const input: ModuleScoringInput = {
-      topCauses,
-      totalImpaired: totalImpaired || 1,
-      totalWaterbodies: totalWaterbodies || 1,
-      tmdlNeeded,
-    };
-    return scoreModules(input);
-  }, [scopeContext]);
 
   // ── Generate Initial Plan ──
   const generatePlan = useCallback(async (additionalDirection?: string) => {
