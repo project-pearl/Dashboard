@@ -12,6 +12,8 @@ import {
   buildAttainsChunk,
   getCacheStatus,
   ensureWarmed,
+  setHuc12Summaries,
+  type Huc12Summary,
 } from '@/lib/attainsCache';
 
 // Vercel Pro max is 300s — request 300s, budget 240s (leave margin for response)
@@ -19,6 +21,94 @@ export const maxDuration = 300;
 
 const TIME_BUDGET_MS = 230_000; // ~4 minutes — leave 70s margin for blob load + save + response
 const MAX_CHAIN_DEPTH = 20; // Safety: stop self-chaining after 20 hops
+const HUC12_CONCURRENCY = 3; // Concurrent HUC-12 summary fetches to avoid overwhelming ATTAINS API
+const ATTAINS_BASE = 'https://attains.epa.gov/attains-public/api';
+
+// All states for HUC-12 summary fetch
+const ALL_STATES_ABBR = [
+  'AL','AK','AZ','AR','CA','CO','CT','DE','DC','FL','GA','HI','ID','IL','IN',
+  'IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH',
+  'NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT',
+  'VT','VA','WA','WV','WI','WY',
+];
+
+/**
+ * Fetch HUC-12 summaries for a single state from ATTAINS.
+ */
+async function fetchHuc12Summaries(stateCode: string): Promise<Huc12Summary[]> {
+  try {
+    const url = `${ATTAINS_BASE}/huc12summary?state=${stateCode}&returnCountOnly=false`;
+    const res = await fetch(url, {
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(60_000),
+    });
+    if (!res.ok) {
+      console.warn(`[ATTAINS HUC12] ${stateCode}: HTTP ${res.status}`);
+      return [];
+    }
+    const data = await res.json();
+    const items = data?.items || [];
+    const summaries: Huc12Summary[] = [];
+    for (const item of items) {
+      const huc12 = (item?.huc12 || '').trim();
+      if (!huc12) continue;
+      summaries.push({
+        huc12,
+        assessmentUnitCount: item?.assessmentUnitCount ?? item?.totalAssessmentUnits ?? 0,
+        impairedCount: item?.totalImpairedAssessmentUnits ?? item?.impairedCount ?? 0,
+        tmdlCount: item?.totalTMDL ?? item?.tmdlCount ?? 0,
+        causeCount: item?.totalCauses ?? item?.causeCount ?? 0,
+      });
+    }
+    return summaries;
+  } catch (e: any) {
+    console.warn(`[ATTAINS HUC12] ${stateCode} failed: ${e.message}`);
+    return [];
+  }
+}
+
+/**
+ * Fetch HUC-12 summaries for all states with concurrency limit.
+ */
+async function fetchAllHuc12Summaries(timeBudgetDeadline: number): Promise<{ fetched: number; states: number }> {
+  const queue = [...ALL_STATES_ABBR];
+  let totalFetched = 0;
+  let statesProcessed = 0;
+  let idx = 0;
+
+  while (idx < queue.length) {
+    // Check time budget — stop if less than 20s remaining
+    if (Date.now() > timeBudgetDeadline - 20_000) {
+      console.log(`[ATTAINS HUC12] Time budget reached — processed ${statesProcessed} states`);
+      break;
+    }
+
+    const batch = queue.slice(idx, idx + HUC12_CONCURRENCY);
+    idx += batch.length;
+
+    const results = await Promise.allSettled(batch.map(st => fetchHuc12Summaries(st)));
+
+    for (let i = 0; i < results.length; i++) {
+      const r = results[i];
+      if (r.status === 'fulfilled' && r.value.length > 0) {
+        setHuc12Summaries(r.value);
+        totalFetched += r.value.length;
+        statesProcessed++;
+        console.log(`[ATTAINS HUC12] ${batch[i]}: ${r.value.length} HUC-12 summaries`);
+      } else {
+        const reason = r.status === 'rejected' ? r.reason?.message : 'no data';
+        console.warn(`[ATTAINS HUC12] ${batch[i]}: ${reason}`);
+      }
+    }
+
+    // Small delay between batches
+    if (idx < queue.length && Date.now() < timeBudgetDeadline - 25_000) {
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  }
+
+  return { fetched: totalFetched, states: statesProcessed };
+}
 
 /**
  * Trigger the next chunk — sends the request and waits just long enough (5s)
@@ -105,6 +195,19 @@ export async function GET(request: NextRequest) {
     // Accumulate deferred states: previously deferred + newly failed
     const newDeferred = [...new Set([...deferred, ...result.failed])];
 
+    // Fetch HUC-12 summaries after main state assessments complete
+    // Only run on first chunk (depth 0) or when all states are cached
+    let huc12Result = { fetched: 0, states: 0 };
+    if (remaining === 0 || depth === 0) {
+      const huc12Deadline = Date.now() + Math.max(0, 280_000 - (Date.now() - startTime));
+      try {
+        huc12Result = await fetchAllHuc12Summaries(huc12Deadline);
+        console.log(`[ATTAINS Cron] HUC-12 summaries: ${huc12Result.fetched} from ${huc12Result.states} states`);
+      } catch (e: any) {
+        console.warn(`[ATTAINS Cron] HUC-12 fetch failed: ${e.message}`);
+      }
+    }
+
     // Self-chain: if there are still states remaining, trigger the next chunk
     // Must await to keep function alive until the request reaches Vercel's edge
     const willChain = remaining > 0;
@@ -126,6 +229,8 @@ export async function GET(request: NextRequest) {
       selfChained: willChain,
       savedToDisk: result.savedToDisk,
       savedToBlob: result.savedToBlob,
+      huc12Summaries: huc12Result.fetched,
+      huc12StatesProcessed: huc12Result.states,
       cache: getCacheStatus(),
     });
   } catch (err: any) {

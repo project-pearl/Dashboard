@@ -139,7 +139,7 @@ function transformEnforcement(row: Record<string, any>): SdwisEnforcement | null
 
 // ── ZIP Centroid Lookup (bundled — no API calls needed) ──────────────────────
 
-const ZIP_LOOKUP = zipCentroids as Record<string, [number, number]>;
+const ZIP_LOOKUP = zipCentroids as unknown as Record<string, [number, number]>;
 
 function lookupZips(
   zips: string[],

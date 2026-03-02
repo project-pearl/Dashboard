@@ -8,7 +8,8 @@ import {
   setWqpCache, getWqpCacheStatus,
   isWqpBuildInProgress, setWqpBuildInProgress,
   gridKey,
-  type WqpRecord,
+  setWqpStationSummaries, getSummaryRotationIndex, setSummaryRotationIndex,
+  type WqpRecord, type WqpStationSummary,
 } from '@/lib/wqpCache';
 
 // Allow up to 5 minutes on Vercel Pro
@@ -159,6 +160,112 @@ async function fetchState(stateAbbr: string, fips: string): Promise<WqpRecord[]>
   return records;
 }
 
+// ── Station Summary Fetch ────────────────────────────────────────────────────
+
+const SUMMARY_BASE = 'https://www.waterqualitydata.us/data/summary/monitoringLocation/search';
+const SUMMARY_STATES_PER_RUN = 10; // Only fetch summaries for 10 states per cron run
+
+async function fetchStationSummary(stateAbbr: string, fips: string): Promise<WqpStationSummary[]> {
+  try {
+    const url = `${SUMMARY_BASE}?statecode=US:${fips}&mimeType=json`;
+    const res = await fetch(url, {
+      signal: AbortSignal.timeout(60_000),
+      headers: { Accept: 'application/json' },
+    });
+    if (!res.ok) {
+      console.warn(`[WQP Cron] Summary ${stateAbbr}: HTTP ${res.status}`);
+      return [];
+    }
+    const data = await res.json();
+    // The response may be an array of station summaries or nested under a key
+    const items = Array.isArray(data) ? data : (data?.features || data?.stations || data?.MonitoringLocations || []);
+    const summaries: WqpStationSummary[] = [];
+
+    for (const item of items) {
+      const props = item?.properties || item?.MonitoringLocation || item || {};
+      const siteId = props.MonitoringLocationIdentifier || props.siteId || '';
+      if (!siteId) continue;
+
+      const lat = parseFloat(props.LatitudeMeasure || props.lat || props.latitude || '0');
+      const lng = parseFloat(props.LongitudeMeasure || props.lng || props.longitude || '0');
+      if (isNaN(lat) || isNaN(lng) || lat === 0) continue;
+
+      summaries.push({
+        siteId,
+        name: props.MonitoringLocationName || props.name || siteId,
+        lat: Math.round(lat * 100000) / 100000,
+        lng: Math.round(lng * 100000) / 100000,
+        resultCount: parseInt(props.resultCount || props.ResultCount || '0', 10) || 0,
+        activityCount: parseInt(props.activityCount || props.ActivityCount || '0', 10) || 0,
+        lastActivity: props.lastResultDate || props.LastResultDate || props.lastActivity || '',
+        parameterCount: parseInt(props.parameterCount || props.ParameterCount || '0', 10) || 0,
+      });
+    }
+
+    return summaries;
+  } catch (e: any) {
+    console.warn(`[WQP Cron] Summary ${stateAbbr}: ${e.message}`);
+    return [];
+  }
+}
+
+/**
+ * Fetch station summaries for a rotating window of states.
+ * Each cron run processes SUMMARY_STATES_PER_RUN states, then advances the index.
+ */
+async function fetchRotatingStationSummaries(
+  allStatesWithFips: [string, string][]
+): Promise<{ summariesFetched: number; statesSummarized: string[] }> {
+  const rotationIdx = getSummaryRotationIndex();
+  const startIdx = rotationIdx % allStatesWithFips.length;
+  const statesSummarized: string[] = [];
+  let summariesFetched = 0;
+
+  // Pick up to SUMMARY_STATES_PER_RUN states starting at rotation index
+  const statesToProcess: [string, string][] = [];
+  for (let i = 0; i < SUMMARY_STATES_PER_RUN && i < allStatesWithFips.length; i++) {
+    const idx = (startIdx + i) % allStatesWithFips.length;
+    statesToProcess.push(allStatesWithFips[idx]);
+  }
+
+  // Fetch in parallel (limited concurrency — reuse CONCURRENCY)
+  const queue = [...statesToProcess];
+  let running = 0;
+  let qIdx = 0;
+
+  await new Promise<void>((resolve) => {
+    function next() {
+      if (qIdx >= queue.length && running === 0) return resolve();
+      while (running < 4 && qIdx < queue.length) {
+        const [abbr, fips] = queue[qIdx++];
+        running++;
+        (async () => {
+          try {
+            const summaries = await fetchStationSummary(abbr, fips);
+            if (summaries.length > 0) {
+              setWqpStationSummaries(abbr, summaries);
+              summariesFetched += summaries.length;
+              statesSummarized.push(abbr);
+              console.log(`[WQP Cron] Summary ${abbr}: ${summaries.length} stations`);
+            }
+          } catch (e: any) {
+            console.warn(`[WQP Cron] Summary ${abbr} failed: ${e.message}`);
+          } finally {
+            running--;
+            next();
+          }
+        })();
+      }
+    }
+    next();
+  });
+
+  // Advance rotation index for next run
+  setSummaryRotationIndex(rotationIdx + SUMMARY_STATES_PER_RUN);
+
+  return { summariesFetched, statesSummarized };
+}
+
 // ── GET Handler ──────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
@@ -265,6 +372,17 @@ export async function GET(request: NextRequest) {
 
     await setWqpCache(cacheData);
 
+    // ── Fetch station summaries for rotating window of states ─────────
+    let summaryResult = { summariesFetched: 0, statesSummarized: [] as string[] };
+    try {
+      summaryResult = await fetchRotatingStationSummaries(ALL_STATES_WITH_FIPS);
+      console.log(
+        `[WQP Cron] Station summaries: ${summaryResult.summariesFetched} stations from ${summaryResult.statesSummarized.length} states`
+      );
+    } catch (e: any) {
+      console.warn(`[WQP Cron] Station summary fetch failed: ${e.message}`);
+    }
+
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[WQP Cron] Build complete in ${elapsed}s — ${allRecords.length} records, ${Object.keys(grid).length} cells`);
 
@@ -274,6 +392,8 @@ export async function GET(request: NextRequest) {
       totalRecords: allRecords.length,
       gridCells: Object.keys(grid).length,
       statesProcessed: processedStates.length,
+      stationSummaries: summaryResult.summariesFetched,
+      statesSummarized: summaryResult.statesSummarized,
       states: stateResults,
       cache: getWqpCacheStatus(),
     });

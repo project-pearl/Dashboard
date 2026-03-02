@@ -17,7 +17,9 @@ import { ALL_STATES } from '@/lib/constants';
 
 const NWPS_API = 'https://api.water.noaa.gov/nwps/v1/gauges';
 const CONCURRENCY = 10;
+const STAGEFLOW_CONCURRENCY = 5;
 const FETCH_TIMEOUT_MS = 20_000;
+const STAGEFLOW_TIMEOUT_MS = 10_000;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -75,10 +77,66 @@ async function fetchStateGauges(state: string): Promise<NwpsGauge[]> {
         unit: fcst.primaryUnit ?? fcst.unit ?? 'ft',
         time: fcst.validTime ?? fcst.time ?? '',
       } : null,
+      stageflow: null,
     });
   }
 
   return gauges;
+}
+
+// ── Stageflow Helper ─────────────────────────────────────────────────────
+
+async function fetchStageflow(lid: string): Promise<Array<{ time: string; stage: number | null; flow: number | null }> | null> {
+  try {
+    const url = `${NWPS_API}/${lid}/stageflow`;
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'PEARL-Platform/1.0', 'Accept': 'application/json' },
+      signal: AbortSignal.timeout(STAGEFLOW_TIMEOUT_MS),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    // API may return { stageflow: [...] } or top-level array
+    const raw = data?.stageflow || data || [];
+    const list = Array.isArray(raw) ? raw : [];
+    if (list.length === 0) return null;
+
+    // Take up to 10 most recent entries
+    const entries = list.slice(0, 10).map((entry: any) => ({
+      time: entry.validTime ?? entry.time ?? entry.dateTime ?? '',
+      stage: entry.stage != null ? parseFloat(entry.stage) : null,
+      flow: entry.flow != null ? parseFloat(entry.flow) : null,
+    }));
+
+    // Filter out entries where both stage and flow are null/NaN
+    const valid = entries.filter((e: any) => (e.stage !== null && !isNaN(e.stage)) || (e.flow !== null && !isNaN(e.flow)));
+    return valid.length > 0 ? valid : null;
+  } catch {
+    return null;
+  }
+}
+
+async function enrichGaugesWithStageflow(gauges: NwpsGauge[]): Promise<void> {
+  // Only fetch stageflow for gauges with a lid and status !== 'not_defined'
+  const eligible = gauges.filter(g => g.lid && g.status !== 'not_defined');
+  if (eligible.length === 0) return;
+
+  // Process in batches with STAGEFLOW_CONCURRENCY
+  for (let i = 0; i < eligible.length; i += STAGEFLOW_CONCURRENCY) {
+    const batch = eligible.slice(i, i + STAGEFLOW_CONCURRENCY);
+    const results = await Promise.allSettled(
+      batch.map(async (g) => {
+        const sf = await fetchStageflow(g.lid);
+        return { lid: g.lid, stageflow: sf };
+      })
+    );
+
+    for (const r of results) {
+      if (r.status === 'fulfilled' && r.value.stageflow) {
+        const gauge = gauges.find(g => g.lid === r.value.lid);
+        if (gauge) gauge.stageflow = r.value.stageflow;
+      }
+    }
+  }
 }
 
 // ── GET Handler ──────────────────────────────────────────────────────────────
@@ -112,9 +170,14 @@ export async function GET(request: NextRequest) {
     async function processState(state: string) {
       try {
         const gauges = await fetchStateGauges(state);
+        // Enrich eligible gauges with stageflow data
+        if (gauges.length > 0) {
+          await enrichGaugesWithStageflow(gauges);
+        }
         allGauges.push(...gauges);
         if (gauges.length > 0) {
-          console.log(`[NWPS Cron] ${state}: ${gauges.length} gauges`);
+          const sfCount = gauges.filter(g => g.stageflow !== null).length;
+          console.log(`[NWPS Cron] ${state}: ${gauges.length} gauges (${sfCount} with stageflow)`);
         }
       } catch (err: any) {
         console.warn(`[NWPS Cron] ${state} failed: ${err.message}`);

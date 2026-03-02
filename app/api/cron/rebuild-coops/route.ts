@@ -111,15 +111,27 @@ export async function GET(request: NextRequest) {
             const wl = await fetchLatestData(id, 'water_level');
 
             // Optionally fetch met data — use allSettled to not block on failures
-            const [atResult, wtResult, windResult] = await Promise.allSettled([
+            const [atResult, wtResult, windResult, condResult, salResult, humResult, visResult, apResult, tideResult] = await Promise.allSettled([
               fetchLatestData(id, 'air_temperature'),
               fetchLatestData(id, 'water_temperature'),
               fetchLatestData(id, 'wind'),
+              fetchLatestData(id, 'conductivity'),
+              fetchLatestData(id, 'salinity'),
+              fetchLatestData(id, 'humidity'),
+              fetchLatestData(id, 'visibility'),
+              fetchLatestData(id, 'air_pressure'),
+              fetchLatestData(id, 'predictions'),
             ]);
 
             const at = atResult.status === 'fulfilled' ? atResult.value : null;
             const wt = wtResult.status === 'fulfilled' ? wtResult.value : null;
             const wind = windResult.status === 'fulfilled' ? windResult.value : null;
+            const cond = condResult.status === 'fulfilled' ? condResult.value : null;
+            const sal = salResult.status === 'fulfilled' ? salResult.value : null;
+            const hum = humResult.status === 'fulfilled' ? humResult.value : null;
+            const vis = visResult.status === 'fulfilled' ? visResult.value : null;
+            const ap = apResult.status === 'fulfilled' ? apResult.value : null;
+            const tide = tideResult.status === 'fulfilled' ? tideResult.value : null;
 
             return {
               id,
@@ -133,6 +145,13 @@ export async function GET(request: NextRequest) {
               waterTemp: wt ? parseNum(wt.v) : null,
               windSpeed: wind ? parseNum(wind.s) : null,
               windDir: wind?.dr || null,
+              conductivity: cond ? parseNum(cond.v) : null,
+              salinity: sal ? parseNum(sal.s) : null,
+              humidity: hum ? parseNum(hum.v) : null,
+              visibility: vis ? parseNum(vis.v) : null,
+              airPressure: ap ? parseNum(ap.v) : null,
+              tidePrediction: tide ? parseNum(tide.v) : null,
+              tidePredictionTime: tide?.t || null,
             } as CoopsStation;
           } catch {
             fetchErrors++;
@@ -148,6 +167,13 @@ export async function GET(request: NextRequest) {
               waterTemp: null,
               windSpeed: null,
               windDir: null,
+              conductivity: null,
+              salinity: null,
+              humidity: null,
+              visibility: null,
+              airPressure: null,
+              tidePrediction: null,
+              tidePredictionTime: null,
             } as CoopsStation;
           }
         })

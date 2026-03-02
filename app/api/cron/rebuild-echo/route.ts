@@ -19,6 +19,7 @@ import {
 const ECHO_QUERY = 'https://echodata.epa.gov/echo/cwa_rest_services.get_facilities';
 const ECHO_QID   = 'https://echodata.epa.gov/echo/cwa_rest_services.get_qid';
 const ECHO_DL    = 'https://echodata.epa.gov/echo/cwa_rest_services.get_download';
+const ECHO_NNCOMPLIANCE = 'https://echo.epa.gov/api/rest_services.get_nncompliance';
 const CONCURRENCY = 6;
 // Columns we request: basic info (1-9), coords (24-25), compliance (97-101)
 const DL_QCOLS = '1,2,3,4,5,9,24,25,97,98,99,101';
@@ -103,6 +104,9 @@ async function fetchEchoFacilities(stateAbbr: string): Promise<EchoFacility[]> {
           lng: Math.round(lng * 100000) / 100000,
           complianceStatus: (f.CWPSNCStatus || f.CWPStatus || '').trim(),
           qtrsInViolation: parseInt(f.CWPQtrsWithNC || '0', 10) || 0,
+          effluentViolations: null,
+          snc: false,
+          quarterlyViolations: null,
         });
       }
 
@@ -180,6 +184,103 @@ async function fetchEchoViolations(stateAbbr: string): Promise<EchoViolation[]> 
     console.warn(`[ECHO Cron] Violations ${stateAbbr}: ${e instanceof Error ? e.message : e}`);
     return [];
   }
+}
+
+// ── NPDES Noncompliance Enrichment ───────────────────────────────────────────
+
+interface NncomplianceRecord {
+  registryId: string;
+  effluentViolations: number;
+  snc: boolean;
+  quarterlyViolations: number;
+}
+
+async function fetchNoncompliance(stateAbbr: string): Promise<NncomplianceRecord[]> {
+  try {
+    const url = `${ECHO_NNCOMPLIANCE}?p_st=${stateAbbr}&output=JSON`;
+    const res = await fetch(url, {
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!res.ok) {
+      console.warn(`[ECHO Cron] Noncompliance ${stateAbbr}: HTTP ${res.status}`);
+      return [];
+    }
+    const json = await res.json();
+    const rows = json?.Results?.Facilities || json?.Results?.ClusterOutput?.Facilities || [];
+    const records: NncomplianceRecord[] = [];
+    for (const row of rows) {
+      const regId = (row?.RegistryID || row?.SourceID || '').trim();
+      if (!regId) continue;
+      records.push({
+        registryId: regId,
+        effluentViolations: parseInt(row?.CWPSNCStatus === 'S' ? '1' : row?.CWPEffluentViolations || row?.EffluentViolations || '0', 10) || 0,
+        snc: (row?.CWPSNCStatus || '').toUpperCase() === 'S',
+        quarterlyViolations: parseInt(row?.CWPQtrsWithNC || row?.QtrsWithNC || '0', 10) || 0,
+      });
+    }
+    return records;
+  } catch (e: any) {
+    console.warn(`[ECHO Cron] Noncompliance ${stateAbbr}: ${e.message}`);
+    return [];
+  }
+}
+
+/**
+ * Enrich facilities with noncompliance data — maps results back by registryId.
+ * If the endpoint fails for a state, the new fields remain null.
+ */
+async function enrichWithNoncompliance(
+  facilities: EchoFacility[],
+  processedStates: string[]
+): Promise<number> {
+  // Build lookup by registryId
+  const facByRegistry = new Map<string, EchoFacility[]>();
+  for (const f of facilities) {
+    const existing = facByRegistry.get(f.registryId) || [];
+    existing.push(f);
+    facByRegistry.set(f.registryId, existing);
+  }
+
+  let enrichedCount = 0;
+  // Process states in parallel with concurrency of 6
+  const queue = [...processedStates];
+  let idx = 0;
+  let running = 0;
+
+  await new Promise<void>((resolve) => {
+    function next() {
+      if (idx >= queue.length && running === 0) return resolve();
+      while (running < CONCURRENCY && idx < queue.length) {
+        const st = queue[idx++];
+        running++;
+        (async () => {
+          try {
+            const records = await fetchNoncompliance(st);
+            for (const rec of records) {
+              const facs = facByRegistry.get(rec.registryId);
+              if (facs) {
+                for (const f of facs) {
+                  f.effluentViolations = rec.effluentViolations;
+                  f.snc = rec.snc;
+                  f.quarterlyViolations = rec.quarterlyViolations;
+                  enrichedCount++;
+                }
+              }
+            }
+          } catch {
+            // Leave fields as null if fetch fails
+          } finally {
+            running--;
+            next();
+          }
+        })();
+      }
+    }
+    next();
+  });
+
+  return enrichedCount;
 }
 
 // ── GET Handler ──────────────────────────────────────────────────────────────
@@ -272,6 +373,15 @@ export async function GET(request: NextRequest) {
       }
       next();
     });
+
+    // ── Enrich with NPDES noncompliance data ──────────────────────────────
+    let enrichedCount = 0;
+    try {
+      enrichedCount = await enrichWithNoncompliance(allFacilities, processedStates);
+      console.log(`[ECHO Cron] Noncompliance enrichment: ${enrichedCount} facilities updated`);
+    } catch (e: any) {
+      console.warn(`[ECHO Cron] Noncompliance enrichment failed: ${e.message} — continuing with null fields`);
+    }
 
     // ── Build Grid Index ───────────────────────────────────────────────────
     const grid: Record<string, {

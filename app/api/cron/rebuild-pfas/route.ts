@@ -185,12 +185,12 @@ async function fetchAndParseUcmr5(): Promise<{ rows: Ucmr5Row[]; pwsidToZip: Map
     const zipContent = await zip.files[zipFile].async('string');
     const zipLines = zipContent.split('\n');
     if (zipLines.length > 1) {
-      const zipHeaders = zipLines[0].split('\t').map(h => h.trim().replace(/"/g, ''));
-      const zpwsidCol = zipHeaders.findIndex(h => /pwsid/i.test(h));
-      const zzipCol = zipHeaders.findIndex(h => /zip/i.test(h));
+      const zipHeaders = zipLines[0].split('\t').map((h: string) => h.trim().replace(/"/g, ''));
+      const zpwsidCol = zipHeaders.findIndex((h: string) => /pwsid/i.test(h));
+      const zzipCol = zipHeaders.findIndex((h: string) => /zip/i.test(h));
       if (zpwsidCol >= 0 && zzipCol >= 0) {
         for (let i = 1; i < zipLines.length; i++) {
-          const parts = zipLines[i].split('\t').map(c => c.trim().replace(/"/g, ''));
+          const parts = zipLines[i].split('\t').map((c: string) => c.trim().replace(/"/g, ''));
           const id = parts[zpwsidCol] || '';
           const zc = (parts[zzipCol] || '').replace(/-.*/, '').substring(0, 5);
           if (id && zc && /^\d{5}$/.test(zc)) pwsidToZip.set(id, zc);

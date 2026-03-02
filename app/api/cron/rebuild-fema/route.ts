@@ -9,13 +9,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   setFemaCache, getFemaCacheStatus,
   isFemaBuildInProgress, setFemaBuildInProgress,
-  type FemaDeclaration,
+  setFemaNfipCommunities,
+  type FemaDeclaration, type NfipCommunity,
 } from '@/lib/femaCache';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
 const FEMA_API = 'https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries';
+const NFIP_API = 'https://www.fema.gov/api/open/v2/NfipCommunityStatusBook';
 const FETCH_TIMEOUT_MS = 30_000;
+const NFIP_CONCURRENCY = 6;
 
 /** Incident types relevant to water quality (from sentinel femaAdapter) */
 const WATER_INCIDENT_TYPES = new Set([
@@ -23,6 +26,85 @@ const WATER_INCIDENT_TYPES = new Set([
   'Coastal Storm', 'Dam/Levee Break', 'Tornado',
   'Tropical Storm', 'Severe Ice Storm',
 ]);
+
+import { ALL_STATES } from '@/lib/constants';
+
+// ── NFIP Community Status Fetch ─────────────────────────────────────────────
+
+async function fetchNfipCommunities(stateAbbr: string): Promise<NfipCommunity[]> {
+  try {
+    const params = new URLSearchParams({
+      '$filter': `state eq '${stateAbbr}'`,
+      '$top': '1000',
+      '$select': 'communityIdNumber,communityName,state,countyFipsCode,programEntryDate,communityStatus,crsClassCode',
+    });
+    const res = await fetch(`${NFIP_API}?${params}`, {
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      headers: { Accept: 'application/json' },
+    });
+    if (!res.ok) {
+      console.warn(`[FEMA Cron] NFIP ${stateAbbr}: HTTP ${res.status}`);
+      return [];
+    }
+    const data = await res.json();
+    const items = data?.NfipCommunityStatusBook || data?.items || [];
+    const communities: NfipCommunity[] = [];
+    for (const item of items) {
+      communities.push({
+        communityId: (item.communityIdNumber || item.communityId || '').toString(),
+        communityName: item.communityName || '',
+        state: item.state || stateAbbr,
+        countyFips: item.countyFipsCode || item.countyFips || '',
+        status: item.communityStatus || item.status || 'Unknown',
+        crsClass: item.crsClassCode != null ? parseInt(item.crsClassCode, 10) || null : null,
+      });
+    }
+    return communities;
+  } catch (e: any) {
+    console.warn(`[FEMA Cron] NFIP ${stateAbbr}: ${e.message}`);
+    return [];
+  }
+}
+
+/**
+ * Fetch NFIP community status for all states with concurrency limit.
+ */
+async function fetchAllNfipCommunities(): Promise<{ total: number; states: number }> {
+  const queue = [...ALL_STATES];
+  let totalCommunities = 0;
+  let statesProcessed = 0;
+  let idx = 0;
+  let running = 0;
+
+  await new Promise<void>((resolve) => {
+    function next() {
+      if (idx >= queue.length && running === 0) return resolve();
+      while (running < NFIP_CONCURRENCY && idx < queue.length) {
+        const st = queue[idx++];
+        running++;
+        (async () => {
+          try {
+            const communities = await fetchNfipCommunities(st);
+            if (communities.length > 0) {
+              setFemaNfipCommunities(st, communities);
+              totalCommunities += communities.length;
+              statesProcessed++;
+              console.log(`[FEMA Cron] NFIP ${st}: ${communities.length} communities`);
+            }
+          } catch {
+            // Skip on failure
+          } finally {
+            running--;
+            next();
+          }
+        })();
+      }
+    }
+    next();
+  });
+
+  return { total: totalCommunities, states: statesProcessed };
+}
 
 // ── GET Handler ──────────────────────────────────────────────────────────────
 
@@ -112,6 +194,15 @@ export async function GET(request: NextRequest) {
 
     await setFemaCache(declsByState);
 
+    // ── Fetch NFIP Community Status (paginated, per state) ──────────
+    let nfipResult = { total: 0, states: 0 };
+    try {
+      nfipResult = await fetchAllNfipCommunities();
+      console.log(`[FEMA Cron] NFIP: ${nfipResult.total} communities across ${nfipResult.states} states`);
+    } catch (e: any) {
+      console.warn(`[FEMA Cron] NFIP fetch failed: ${e.message} — continuing without NFIP data`);
+    }
+
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[FEMA Cron] Complete in ${elapsed}s — ${declarations.length} water declarations across ${Object.keys(declsByState).length} states`);
 
@@ -121,6 +212,8 @@ export async function GET(request: NextRequest) {
       totalDeclarations: declarations.length,
       statesFetched: Object.keys(declsByState).length,
       rawCount: rawDeclarations.length,
+      nfipCommunities: nfipResult.total,
+      nfipStatesProcessed: nfipResult.states,
       cache: getFemaCacheStatus(),
     });
 

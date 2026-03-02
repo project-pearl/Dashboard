@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
           const formats = (pkg.resources || [])
             .map((r: any) => (r.format || '').toUpperCase())
             .filter((f: string) => f);
-          const uniqueFormats = [...new Set(formats)];
+          const uniqueFormats = [...new Set(formats)] as string[];
 
           const spatial = pkg.extras?.find((e: any) => e.key === 'spatial')?.value || null;
 

@@ -129,8 +129,8 @@ function parseNum(val: string): number | null {
   return isNaN(n) ? null : n;
 }
 
-function parseLatestObs(text: string): Map<string, { obs: NdbcObservation; lat: number; lng: number; time: string }> {
-  const map = new Map<string, { obs: NdbcObservation; lat: number; lng: number; time: string }>();
+function parseLatestObs(text: string): Map<string, { obs: NdbcObservation; lat: number; lng: number; time: string; mwd: number | null }> {
+  const map = new Map<string, { obs: NdbcObservation; lat: number; lng: number; time: string; mwd: number | null }>();
   const lines = text.split('\n');
 
   for (const line of lines) {
@@ -154,6 +154,7 @@ function parseLatestObs(text: string): Map<string, { obs: NdbcObservation; lat: 
       lat,
       lng,
       time,
+      mwd: parts.length > 14 ? parseNum(parts[14]) : null,
       obs: {
         windDir: parseNum(parts[8]),
         windSpeed: parseNum(parts[9]),
@@ -191,6 +192,35 @@ function parseOceanFile(text: string): NdbcOceanParams | null {
       turbidity: parts.length > 12 ? parseNum(parts[12]) : null,
       ph: parts.length > 13 ? parseNum(parts[13]) : null,
     };
+  }
+  return null;
+}
+
+// ── ADCP / Tide Parsers ─────────────────────────────────────────────────────
+
+function parseAdcpFile(text: string): { speed: number | null; dir: number | null } | null {
+  const lines = text.split('\n');
+  for (const line of lines) {
+    if (line.startsWith('#') || line.trim() === '') continue;
+    const parts = line.trim().split(/\s+/);
+    if (parts.length < 8) continue;
+    // ADCP file format: YY MM DD hh mm DEP DIR SPD
+    return {
+      dir: parseNum(parts[6]),
+      speed: parseNum(parts[7]),
+    };
+  }
+  return null;
+}
+
+function parseTideFile(text: string): number | null {
+  const lines = text.split('\n');
+  for (const line of lines) {
+    if (line.startsWith('#') || line.trim() === '') continue;
+    const parts = line.trim().split(/\s+/);
+    if (parts.length < 6) continue;
+    // Tide file format: YY MM DD hh mm TIDE
+    return parseNum(parts[5]);
   }
   return null;
 }
@@ -291,12 +321,84 @@ export async function GET(request: NextRequest) {
     }
     console.log(`[NDBC Cron] Got ocean data for ${oceanMap.size} stations`);
 
+    // Step 4b: Fetch .adcp files for first 200 stations (ADCP current data)
+    const adcpMap = new Map<string, { speed: number | null; dir: number | null }>();
+    const adcpCandidates = usStations.slice(0, 200);
+    console.log(`[NDBC Cron] Fetching .adcp for up to ${adcpCandidates.length} stations...`);
+
+    for (let i = 0; i < adcpCandidates.length; i += 5) {
+      const batch = adcpCandidates.slice(i, i + 5);
+      const results = await Promise.allSettled(
+        batch.map(async (s) => {
+          try {
+            const url = `${OCEAN_URL_BASE}/${s.id}.adcp`;
+            const res = await fetch(url, {
+              signal: AbortSignal.timeout(OCEAN_FETCH_TIMEOUT_MS),
+              headers: { 'User-Agent': 'PEARL-Platform/1.0' },
+            });
+            if (!res.ok) return null;
+            const text = await res.text();
+            const parsed = parseAdcpFile(text);
+            return parsed ? { id: s.id, ...parsed } : null;
+          } catch {
+            return null;
+          }
+        })
+      );
+
+      for (const r of results) {
+        if (r.status === 'fulfilled' && r.value) {
+          adcpMap.set(r.value.id, { speed: r.value.speed, dir: r.value.dir });
+        }
+      }
+
+      if (i + 5 < adcpCandidates.length) await delay(DELAY_MS);
+    }
+    console.log(`[NDBC Cron] Got ADCP data for ${adcpMap.size} stations`);
+
+    // Step 4c: Fetch .tide files for first 200 stations (tide level)
+    const tideMap = new Map<string, number>();
+    const tideCandidates = usStations.slice(0, 200);
+    console.log(`[NDBC Cron] Fetching .tide for up to ${tideCandidates.length} stations...`);
+
+    for (let i = 0; i < tideCandidates.length; i += 5) {
+      const batch = tideCandidates.slice(i, i + 5);
+      const results = await Promise.allSettled(
+        batch.map(async (s) => {
+          try {
+            const url = `${OCEAN_URL_BASE}/${s.id}.tide`;
+            const res = await fetch(url, {
+              signal: AbortSignal.timeout(OCEAN_FETCH_TIMEOUT_MS),
+              headers: { 'User-Agent': 'PEARL-Platform/1.0' },
+            });
+            if (!res.ok) return null;
+            const text = await res.text();
+            const level = parseTideFile(text);
+            return level !== null ? { id: s.id, level } : null;
+          } catch {
+            return null;
+          }
+        })
+      );
+
+      for (const r of results) {
+        if (r.status === 'fulfilled' && r.value) {
+          tideMap.set(r.value.id, r.value.level);
+        }
+      }
+
+      if (i + 5 < tideCandidates.length) await delay(DELAY_MS);
+    }
+    console.log(`[NDBC Cron] Got tide data for ${tideMap.size} stations`);
+
     // Step 5: Build grid index
     const grid: Record<string, { stations: NdbcStation[] }> = {};
     let stationCount = 0;
 
     for (const s of usStations) {
       const obsData = obsMap.get(s.id);
+      const adcpData = adcpMap.get(s.id);
+      const tideLevelVal = tideMap.get(s.id);
       const station: NdbcStation = {
         id: s.id,
         name: s.name,
@@ -309,6 +411,12 @@ export async function GET(request: NextRequest) {
         observation: obsData?.obs || null,
         ocean: oceanMap.get(s.id) || null,
         observedAt: obsData?.time || null,
+        adcpCurrentSpeed: adcpData?.speed ?? null,
+        adcpCurrentDir: adcpData?.dir ?? null,
+        tideLevel: tideLevelVal ?? null,
+        waveHeight: obsData?.obs?.waveHeight ?? null,
+        wavePeriod: obsData?.obs?.wavePeriod ?? null,
+        waveDir: obsData?.mwd ?? null,
       };
 
       const key = gridKey(s.lat, s.lng);
@@ -348,6 +456,8 @@ export async function GET(request: NextRequest) {
       totalActiveStations: allStations.length,
       usStations: stationCount,
       wqStations: oceanMap.size,
+      adcpStations: adcpMap.size,
+      tideStations: tideMap.size,
       gridCells: Object.keys(grid).length,
       cache: getNdbcCacheStatus(),
     });
