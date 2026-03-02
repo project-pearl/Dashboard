@@ -4188,7 +4188,7 @@ export function FederalManagementCenter(props: Props) {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-1 max-h-[calc(100vh-400px)] min-h-[250px] overflow-y-auto">
+                <div className="space-y-1 max-h-[11.5rem] overflow-y-auto pr-1">
                   {(showImpact ? federalCoverageGaps.mostSevere : federalCoverageGaps.worstCoverage).map((s, i) => (
                     <div
                       key={s.abbr}
@@ -4807,7 +4807,7 @@ export function FederalManagementCenter(props: Props) {
                 return (
                   <button
                     key={s.abbr}
-                    onClick={() => { setSelectedState(s.abbr); setViewLens('overview' as ViewLens); }}
+                    onClick={() => { setSelectedState(s.abbr); }}
                     className={`rounded-lg border p-1.5 text-center transition-all hover:shadow-md hover:scale-105 ${g.bg}`}
                     title={`${STATE_ABBR_TO_NAME[s.abbr] || s.abbr}: ${g.letter} (${s.score >= 0 ? s.score : '?'})`}
                   >
@@ -4900,18 +4900,24 @@ export function FederalManagementCenter(props: Props) {
         );
 
         case 'scorecard-trends': return DS(<>
-        {/* ── Trend Cards (placeholder — needs historical data) ── */}
+        {/* ── Scorecard data context snapshot ── */}
+        <div className="rounded-lg border border-blue-200 bg-blue-50/60 px-3 py-2 mb-3">
+          <p className="text-xs font-semibold text-blue-800">What These Numbers Represent</p>
+          <p className="text-[11px] text-blue-700 mt-0.5">
+            Current national inputs used to calculate scorecard grades (not a separate table and not 30-day trends).
+          </p>
+        </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { label: 'Violations', value: nationalStats.totalAlerts, color: 'text-red-600' },
-            { label: 'Assessments', value: scorecardData.totalAssessed, color: 'text-blue-600' },
-            { label: 'Coverage', value: `${scorecardData.coveragePct}%`, color: 'text-emerald-600' },
-            { label: 'Graded States', value: scorecardData.gradedStates.length, color: 'text-violet-600' },
+            { label: 'Active Alerts (Sentinel)', value: nationalStats.totalAlerts, color: 'text-red-600', sub: `${nationalStats.highAlerts} severe alerts` },
+            { label: 'ATTAINS Assessments', value: scorecardData.totalAssessed, color: 'text-blue-600', sub: 'waterbodies assessed' },
+            { label: 'Monitoring Coverage', value: `${scorecardData.coveragePct}%`, color: 'text-emerald-600', sub: 'assessed + monitored / tracked' },
+            { label: 'States With Grades', value: scorecardData.gradedStates.length, color: 'text-violet-600', sub: 'states with sufficient grading data' },
           ].map(t => (
             <div key={t.label} className="rounded-xl border border-slate-200 bg-white p-4">
               <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{t.label}</div>
               <div className={`text-2xl font-bold ${t.color} mt-1`}>{typeof t.value === 'number' ? t.value.toLocaleString() : t.value}</div>
-              <div className="text-[10px] text-slate-400 mt-2 italic">Trend data available after 30 days</div>
+              <div className="text-[10px] text-slate-500 mt-2">{t.sub}</div>
             </div>
           ))}
         </div>
@@ -5818,11 +5824,6 @@ export function FederalManagementCenter(props: Props) {
 
         case 'disaster-emergency': return DS(<>
         {/* ── DISASTER & EMERGENCY RESPONSE ── */}
-        <AMSAlertMonitor
-          summary={amsSummary}
-          role="FEDERAL_OVERSIGHT"
-          onOpenResponsePlanner={() => setViewLens('disaster-emergency' as ViewLens)}
-        />
         <DisasterEmergencyPanel selectedState={selectedState} stateRollup={stateRollup} />
         </>);
 
