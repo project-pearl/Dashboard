@@ -6,6 +6,7 @@
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 import { type UsgsAlert, deduplicateAlerts, expireAlerts } from './usgsAlertEngine';
 
 // Re-export the alert type for consumers
@@ -19,6 +20,7 @@ interface AlertCacheData {
 }
 
 let _cache: AlertCacheData | null = null;
+let _lastDelta: CacheDelta | null = null;
 
 // ── Disk Persistence ────────────────────────────────────────────────────────
 
@@ -128,6 +130,11 @@ export async function setAlerts(state: string, newAlerts: UsgsAlert[]): Promise<
  */
 export async function setAlertsBulk(alertsByState: Record<string, UsgsAlert[]>): Promise<void> {
   ensureDiskLoaded();
+  const prevCounts = _cache ? {
+    alertCount: Object.values(_cache.alerts).reduce((s, arr) => s + arr.length, 0),
+    statesWithAlerts: Object.keys(_cache.alerts).filter(k => _cache!.alerts[k].length > 0).length,
+  } : null;
+
   if (!_cache) {
     _cache = { built: new Date().toISOString(), alerts: {} };
   }
@@ -138,6 +145,12 @@ export async function setAlertsBulk(alertsByState: Record<string, UsgsAlert[]>):
     const merged = deduplicateAlerts([...existing, ...newAlerts]);
     _cache.alerts[upper] = expireAlerts(merged);
   }
+
+  const newCounts = {
+    alertCount: Object.values(_cache.alerts).reduce((s, arr) => s + arr.length, 0),
+    statesWithAlerts: Object.keys(_cache.alerts).filter(k => _cache!.alerts[k].length > 0).length,
+  };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, prevCounts ? _cache.built : null);
 
   _cache.built = new Date().toISOString();
   saveToDisk();
@@ -162,5 +175,6 @@ export function getAlertCacheStatus() {
     criticalCount: allAlerts.filter(a => a.severity === 'critical').length,
     warningCount: allAlerts.filter(a => a.severity === 'warning').length,
     statesWithAlerts,
+    lastDelta: _lastDelta,
   };
 }

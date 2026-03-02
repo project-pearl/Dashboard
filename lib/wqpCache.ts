@@ -8,6 +8,7 @@
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -56,6 +57,7 @@ const CACHE_TTL_MS = 48 * 60 * 60 * 1000; // 48 hours — buffer past daily cron
 let _memCache: WqpCacheData | null = null;
 let buildStatus: 'cold' | 'building' | 'ready' | 'stale' = 'cold';
 let _cacheSource: 'disk' | 'memory (cron)' | null = null;
+let _lastDelta: CacheDelta | null = null;
 
 // ── Disk Persistence (follows ATTAINS pattern from lib/attainsCache.ts) ─────
 
@@ -188,6 +190,12 @@ export function getWqpCache(lat: number, lng: number): WqpLookupResult | null {
  * Also persists to disk for cold-start recovery.
  */
 export async function setWqpCache(data: WqpCacheData): Promise<void> {
+  const prevCounts = _memCache ? { totalRecords: _memCache._meta.totalRecords, gridCells: _memCache._meta.gridCells } : null;
+  const newCounts = { totalRecords: data._meta.totalRecords, gridCells: Object.keys(data.grid).length };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _memCache?._meta.built ?? null, {
+    prevStates: _memCache?._meta.statesProcessed,
+    newStates: data._meta.statesProcessed,
+  });
   _memCache = data;
   _cacheSource = 'memory (cron)';
   buildStatus = 'ready';
@@ -237,6 +245,7 @@ export function getWqpCacheStatus() {
     gridCells: Object.keys(_memCache.grid).length,
     totalRecords: _memCache._meta.totalRecords,
     statesProcessed: _memCache._meta.statesProcessed,
+    lastDelta: _lastDelta,
   };
 }
 

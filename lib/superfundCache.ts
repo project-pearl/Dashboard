@@ -6,6 +6,7 @@
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -31,6 +32,7 @@ interface SuperfundCacheData {
 
 let _cache: SuperfundCacheData | null = null;
 let _cacheSource: string | null = null;
+let _lastDelta: CacheDelta | null = null;
 
 // ── Disk Persistence ────────────────────────────────────────────────────────
 
@@ -116,6 +118,14 @@ export function getSuperfundSitesAll(): SuperfundSite[] {
 export async function setSuperfundCache(
   sitesByState: Record<string, { sites: SuperfundSite[]; fetched: string }>
 ): Promise<void> {
+  const prevCounts = _cache ? {
+    siteCount: Object.values(_cache.sites).reduce((s, e) => s + e.sites.length, 0),
+    statesWithSites: Object.keys(_cache.sites).filter(k => _cache!.sites[k].sites.length > 0).length,
+  } : null;
+  const newSiteCount = Object.values(sitesByState).reduce((s, e) => s + e.sites.length, 0);
+  const newStatesCount = Object.keys(sitesByState).filter(k => sitesByState[k].sites.length > 0).length;
+  const newCounts = { siteCount: newSiteCount, statesWithSites: newStatesCount };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _cache?.built ?? null);
   _cache = {
     built: new Date().toISOString(),
     sites: sitesByState,
@@ -160,5 +170,6 @@ export function getSuperfundCacheStatus() {
     built: _cache.built,
     siteCount: all.length,
     statesWithSites: statesWithSites.length,
+    lastDelta: _lastDelta,
   };
 }

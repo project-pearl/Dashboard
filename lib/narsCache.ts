@@ -8,6 +8,7 @@
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -63,6 +64,7 @@ const GRID_RES = 0.1;
 
 let _memCache: NarsCacheData | null = null;
 let _cacheSource: 'disk' | 'memory (cron)' | null = null;
+let _lastDelta: CacheDelta | null = null;
 
 function loadFromDisk(): boolean {
   try {
@@ -154,6 +156,9 @@ export function getNarsAllSites(): NarsSite[] {
 }
 
 export async function setNarsCache(data: NarsCacheData): Promise<void> {
+  const prevCounts = _memCache ? { siteCount: _memCache._meta.siteCount, statesWithData: _memCache._meta.statesWithData, gridCells: _memCache._meta.gridCells } : null;
+  const newCounts = { siteCount: data._meta.siteCount, statesWithData: data._meta.statesWithData, gridCells: data._meta.gridCells };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _memCache?._meta.built ?? null);
   _memCache = data;
   _cacheSource = 'memory (cron)';
   console.log(`[NARS Cache] Updated: ${data._meta.siteCount} sites, ${data._meta.gridCells} cells`);
@@ -190,5 +195,6 @@ export function getNarsCacheStatus() {
     surveys: _memCache._meta.surveys,
     statesWithData: _memCache._meta.statesWithData,
     gridCells: _memCache._meta.gridCells,
+    lastDelta: _lastDelta,
   };
 }

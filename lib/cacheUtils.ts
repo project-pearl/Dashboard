@@ -2,6 +2,69 @@
  * Shared cache utilities used across cache modules.
  */
 
+// ── Delta Tracking ──────────────────────────────────────────────────────────
+
+export interface CacheDelta {
+  computedAt: string;
+  previousBuild: string | null;
+  dataChanged: boolean;
+  counts: Record<string, { before: number; after: number; diff: number }>;
+  states?: { added: string[]; removed: string[] };
+  buildDurationSec?: number;
+}
+
+/**
+ * Compare previous and new cache counts to produce a lightweight delta.
+ * Each cache module calls this in its set*Cache() before overwriting _memCache.
+ */
+export function computeCacheDelta(
+  prevCounts: Record<string, number> | null,
+  newCounts: Record<string, number>,
+  previousBuild: string | null,
+  options?: {
+    prevStates?: string[];
+    newStates?: string[];
+    buildStartTime?: number;
+  },
+): CacheDelta {
+  const counts: CacheDelta['counts'] = {};
+  let dataChanged = false;
+
+  for (const key of Object.keys(newCounts)) {
+    const before = prevCounts?.[key] ?? 0;
+    const after = newCounts[key];
+    const diff = after - before;
+    counts[key] = { before, after, diff };
+    if (diff !== 0) dataChanged = true;
+  }
+
+  const delta: CacheDelta = {
+    computedAt: new Date().toISOString(),
+    previousBuild: previousBuild,
+    dataChanged,
+    counts,
+  };
+
+  if (options?.prevStates || options?.newStates) {
+    const prev = new Set(options.prevStates ?? []);
+    const next = new Set(options.newStates ?? []);
+    delta.states = {
+      added: [...next].filter(s => !prev.has(s)),
+      removed: [...prev].filter(s => !next.has(s)),
+    };
+    if (delta.states.added.length > 0 || delta.states.removed.length > 0) {
+      dataChanged = true;
+      delta.dataChanged = true;
+    }
+  }
+
+  if (options?.buildStartTime) {
+    delta.buildDurationSec = Math.round((Date.now() - options.buildStartTime) / 1000);
+  }
+
+  return delta;
+}
+
 const GRID_RES = 0.1;
 
 /**

@@ -7,7 +7,7 @@
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
-import { gridKey, neighborKeys } from './cacheUtils';
+import { gridKey, neighborKeys, computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -38,6 +38,7 @@ interface SnotelCacheData {
 
 let _memCache: SnotelCacheData | null = null;
 let _cacheSource: string | null = null;
+let _lastDelta: CacheDelta | null = null;
 
 // ── Disk Persistence ────────────────────────────────────────────────────────
 
@@ -122,6 +123,9 @@ export function getSnotelAllStations(): SnotelStation[] {
 }
 
 export async function setSnotelCache(data: SnotelCacheData): Promise<void> {
+  const prevCounts = _memCache ? { stationCount: _memCache._meta.stationCount, gridCells: _memCache._meta.gridCells } : null;
+  const newCounts = { stationCount: data._meta.stationCount, gridCells: data._meta.gridCells };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _memCache?._meta.built ?? null);
   _memCache = data;
   _cacheSource = 'memory (cron)';
   console.log(`[SNOTEL Cache] Updated: ${data._meta.stationCount} stations, ${data._meta.gridCells} cells`);
@@ -160,6 +164,7 @@ export function getSnotelCacheStatus() {
     built: _memCache._meta.built,
     stationCount: _memCache._meta.stationCount,
     gridCells: _memCache._meta.gridCells,
+    lastDelta: _lastDelta,
   };
 }
 

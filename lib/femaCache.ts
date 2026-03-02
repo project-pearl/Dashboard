@@ -6,6 +6,7 @@
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -30,6 +31,7 @@ interface FemaCacheData {
 
 let _cache: FemaCacheData | null = null;
 let _cacheSource: string | null = null;
+let _lastDelta: CacheDelta | null = null;
 
 // ── Disk Persistence ────────────────────────────────────────────────────────
 
@@ -115,6 +117,14 @@ export function getFemaDeclarationsAll(): FemaDeclaration[] {
 export async function setFemaCache(
   declsByState: Record<string, { declarations: FemaDeclaration[]; fetched: string }>
 ): Promise<void> {
+  const prevCounts = _cache ? {
+    declarationCount: Object.values(_cache.declarations).reduce((s, e) => s + e.declarations.length, 0),
+    statesWithDeclarations: Object.keys(_cache.declarations).filter(k => _cache!.declarations[k].declarations.length > 0).length,
+  } : null;
+  const newDeclCount = Object.values(declsByState).reduce((s, e) => s + e.declarations.length, 0);
+  const newStatesCount = Object.keys(declsByState).filter(k => declsByState[k].declarations.length > 0).length;
+  const newCounts = { declarationCount: newDeclCount, statesWithDeclarations: newStatesCount };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _cache?.built ?? null);
   _cache = {
     built: new Date().toISOString(),
     declarations: declsByState,
@@ -159,5 +169,6 @@ export function getFemaCacheStatus() {
     built: _cache.built,
     declarationCount: all.length,
     statesWithDeclarations: statesWithDeclarations.length,
+    lastDelta: _lastDelta,
   };
 }

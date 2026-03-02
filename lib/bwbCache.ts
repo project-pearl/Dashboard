@@ -8,6 +8,7 @@
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -60,6 +61,7 @@ const CACHE_TTL_MS = 48 * 60 * 60 * 1000; // 48 hours — buffer past daily cron
 
 let _memCache: BwbCacheData | null = null;
 let _cacheSource: 'disk' | 'blob' | 'memory (cron)' | null = null;
+let _lastDelta: CacheDelta | null = null;
 
 // ── Disk Persistence ────────────────────────────────────────────────────────
 
@@ -196,6 +198,9 @@ export function getBwbAllStations(): BwbStation[] {
  * Replace the in-memory cache (called by cron route after fetching fresh data).
  */
 export async function setBwbCache(data: BwbCacheData): Promise<void> {
+  const prevCounts = _memCache ? { stationCount: _memCache._meta.stationCount, parameterReadings: _memCache._meta.parameterReadings, datasetsScanned: _memCache._meta.datasetsScanned, gridCells: _memCache._meta.gridCells } : null;
+  const newCounts = { stationCount: data._meta.stationCount, parameterReadings: data._meta.parameterReadings, datasetsScanned: data._meta.datasetsScanned, gridCells: data._meta.gridCells };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _memCache?._meta.built ?? null);
   _memCache = data;
   _cacheSource = 'memory (cron)';
   const m = data._meta;
@@ -240,5 +245,6 @@ export function getBwbCacheStatus() {
     stationCount: _memCache._meta.stationCount,
     parameterReadings: _memCache._meta.parameterReadings,
     datasetsScanned: _memCache._meta.datasetsScanned,
+    lastDelta: _lastDelta,
   };
 }

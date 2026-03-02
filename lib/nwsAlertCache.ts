@@ -7,6 +7,7 @@
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -34,6 +35,7 @@ interface NwsAlertCacheData {
 
 let _cache: NwsAlertCacheData | null = null;
 let _cacheSource: string | null = null;
+let _lastDelta: CacheDelta | null = null;
 
 // ── Disk Persistence ────────────────────────────────────────────────────────
 
@@ -127,6 +129,14 @@ export function getNwsAlertsAll(): NwsAlert[] {
 export async function setNwsAlertCache(
   alertsByState: Record<string, { alerts: NwsAlert[]; fetched: string }>
 ): Promise<void> {
+  const prevCounts = _cache ? {
+    alertCount: Object.values(_cache.alerts).reduce((s, e) => s + e.alerts.length, 0),
+    statesWithAlerts: Object.keys(_cache.alerts).filter(k => _cache!.alerts[k].alerts.length > 0).length,
+  } : null;
+  const newAlertCount = Object.values(alertsByState).reduce((s, e) => s + e.alerts.length, 0);
+  const newStatesCount = Object.keys(alertsByState).filter(k => alertsByState[k].alerts.length > 0).length;
+  const newCounts = { alertCount: newAlertCount, statesWithAlerts: newStatesCount };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _cache?.built ?? null);
   _cache = {
     built: new Date().toISOString(),
     alerts: alertsByState,
@@ -171,5 +181,6 @@ export function getNwsAlertCacheStatus() {
     built: _cache.built,
     alertCount: allAlerts.length,
     statesWithAlerts: statesWithAlerts.length,
+    lastDelta: _lastDelta,
   };
 }

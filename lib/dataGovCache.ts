@@ -7,6 +7,7 @@
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -38,6 +39,7 @@ interface DataGovCacheData {
 
 let _memCache: DataGovCacheData | null = null;
 let _cacheSource: 'disk' | 'memory (cron)' | null = null;
+let _lastDelta: CacheDelta | null = null;
 
 function loadFromDisk(): boolean {
   try {
@@ -99,6 +101,9 @@ export function getDataGovDatasets(): DataGovDataset[] | null {
 }
 
 export async function setDataGovCache(data: DataGovCacheData): Promise<void> {
+  const prevCounts = _memCache ? { datasetCount: _memCache._meta.datasetCount } : null;
+  const newCounts = { datasetCount: data._meta.datasetCount };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _memCache?._meta.built ?? null);
   _memCache = data;
   _cacheSource = 'memory (cron)';
   console.log(`[Data.gov Cache] Updated: ${data._meta.datasetCount} datasets`);
@@ -133,5 +138,6 @@ export function getDataGovCacheStatus() {
     built: _memCache._meta.built,
     datasetCount: _memCache._meta.datasetCount,
     organizations: _memCache._meta.organizations,
+    lastDelta: _lastDelta,
   };
 }

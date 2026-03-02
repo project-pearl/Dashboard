@@ -106,6 +106,7 @@ export async function GET() {
       status: attains.status,
       statesLoaded: attains.statesLoaded.length,
       statesMissing: attains.statesMissing.length,
+      lastDelta: attains.lastDelta,
       ...staleness(attains.lastBuilt),
     },
     ceden: {
@@ -229,6 +230,13 @@ export async function GET() {
   const loadedCount = Object.values(caches).filter((c: any) => c.loaded !== false && c.status !== 'cold' && c.status !== 'idle').length;
   const staleCount = Object.values(caches).filter((c: any) => c.stale).length;
 
+  // Delta summary — aggregate lastDelta from all caches
+  const allDeltas = Object.values(caches).map((c: any) => c.lastDelta ?? null);
+  const cachesWithDeltas = allDeltas.filter(d => d !== null).length;
+  const cachesDataChanged = allDeltas.filter(d => d?.dataChanged === true).length;
+  const cachesUnchanged = allDeltas.filter(d => d !== null && d.dataChanged === false).length;
+  const cachesNoDelta = allDeltas.filter(d => d === null).length;
+
   // Sentinel summary (lightweight, no extra warming needed)
   let sentinel = null;
   if (SENTINEL_FLAGS.ENABLED) {
@@ -248,6 +256,12 @@ export async function GET() {
       total: Object.keys(caches).length,
       loaded: loadedCount,
       stale: staleCount,
+      deltaSummary: {
+        cachesWithDeltas,
+        cachesDataChanged,
+        cachesUnchanged,
+        cachesNoDelta,
+      },
     },
     caches,
     sentinel,

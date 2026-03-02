@@ -7,6 +7,7 @@
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -46,6 +47,7 @@ const BLOB_PATH = 'cache/grants-gov.json';
 
 let _memCache: GrantsGovCacheData | null = null;
 let _cacheSource: 'disk' | 'memory (cron)' | null = null;
+let _lastDelta: CacheDelta | null = null;
 
 function loadFromDisk(): boolean {
   try {
@@ -127,6 +129,9 @@ export async function setGrantsGovCache(
   opportunities: Record<string, GrantsGovOpportunity>,
   meta: GrantsGovCacheData['_meta'],
 ): Promise<void> {
+  const prevCounts = _memCache ? { opportunityCount: _memCache._meta.opportunityCount, postedCount: _memCache._meta.postedCount, forecastedCount: _memCache._meta.forecastedCount } : null;
+  const newCounts = { opportunityCount: meta.opportunityCount, postedCount: meta.postedCount, forecastedCount: meta.forecastedCount };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _memCache?._meta.built ?? null);
   _memCache = { _meta: meta, opportunities };
   _cacheSource = 'memory (cron)';
   console.log(`[GrantsGov Cache] Updated: ${meta.opportunityCount} opportunities`);
@@ -162,5 +167,6 @@ export function getGrantsGovCacheStatus() {
     opportunityCount: _memCache._meta.opportunityCount,
     postedCount: _memCache._meta.postedCount,
     forecastedCount: _memCache._meta.forecastedCount,
+    lastDelta: _lastDelta,
   };
 }

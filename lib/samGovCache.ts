@@ -7,6 +7,7 @@
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -44,6 +45,7 @@ const BLOB_PATH = 'cache/sam-entities.json';
 
 let _memCache: SamCacheData | null = null;
 let _cacheSource: 'disk' | 'memory (cron)' | null = null;
+let _lastDelta: CacheDelta | null = null;
 
 function loadFromDisk(): boolean {
   try {
@@ -120,6 +122,9 @@ export async function setSamCache(
   entities: Record<string, SamEntity[]>,
   meta: SamCacheData['_meta'],
 ): Promise<void> {
+  const prevCounts = _memCache ? { entityCount: _memCache._meta.entityCount, statesLoaded: _memCache._meta.statesLoaded, requestCount: _memCache._meta.requestCount } : null;
+  const newCounts = { entityCount: meta.entityCount, statesLoaded: meta.statesLoaded, requestCount: meta.requestCount };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _memCache?._meta.built ?? null);
   _memCache = { _meta: meta, entities };
   _cacheSource = 'memory (cron)';
   console.log(`[SAM Cache] Updated: ${meta.entityCount} entities across ${meta.statesLoaded} states`);
@@ -155,5 +160,6 @@ export function getSamCacheStatus() {
     entityCount: _memCache._meta.entityCount,
     statesLoaded: _memCache._meta.statesLoaded,
     requestCount: _memCache._meta.requestCount,
+    lastDelta: _lastDelta,
   };
 }

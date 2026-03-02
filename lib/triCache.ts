@@ -6,7 +6,7 @@
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
-import { gridKey, neighborKeys } from './cacheUtils';
+import { gridKey, neighborKeys, computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -38,6 +38,7 @@ interface TriCacheData {
 
 let _memCache: TriCacheData | null = null;
 let _cacheSource: string | null = null;
+let _lastDelta: CacheDelta | null = null;
 
 // ── Disk Persistence ────────────────────────────────────────────────────────
 
@@ -122,6 +123,9 @@ export function getTriAllFacilities(): TriFacility[] {
 }
 
 export async function setTriCache(data: TriCacheData): Promise<void> {
+  const prevCounts = _memCache ? { facilityCount: _memCache._meta.facilityCount, gridCells: _memCache._meta.gridCells } : null;
+  const newCounts = { facilityCount: data._meta.facilityCount, gridCells: data._meta.gridCells };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _memCache?._meta.built ?? null);
   _memCache = data;
   _cacheSource = 'memory (cron)';
   console.log(`[TRI Cache] Updated: ${data._meta.facilityCount} facilities, ${data._meta.gridCells} cells`);
@@ -161,6 +165,7 @@ export function getTriCacheStatus() {
     facilityCount: _memCache._meta.facilityCount,
     gridCells: _memCache._meta.gridCells,
     year: _memCache._meta.year,
+    lastDelta: _lastDelta,
   };
 }
 

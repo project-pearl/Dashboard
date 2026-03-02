@@ -7,6 +7,7 @@
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -56,6 +57,7 @@ const CACHE_TTL_MS = 48 * 60 * 60 * 1000;
 
 let _memCache: CdcNwssCacheData | null = null;
 let _cacheSource: 'disk' | 'memory (cron)' | null = null;
+let _lastDelta: CacheDelta | null = null;
 
 // ── Disk Persistence ────────────────────────────────────────────────────────
 
@@ -168,6 +170,9 @@ export function getCdcNwssAllStates(): Record<string, CdcNwssStateData> | null {
  * Replace the in-memory cache (called by cron route after fetching fresh data).
  */
 export async function setCdcNwssCache(data: CdcNwssCacheData): Promise<void> {
+  const prevCounts = _memCache ? { recordCount: _memCache._meta.recordCount, stateCount: _memCache._meta.stateCount, countyCount: _memCache._meta.countyCount, totalPopulationServed: _memCache._meta.totalPopulationServed } : null;
+  const newCounts = { recordCount: data._meta.recordCount, stateCount: data._meta.stateCount, countyCount: data._meta.countyCount, totalPopulationServed: data._meta.totalPopulationServed };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _memCache?._meta.built ?? null);
   _memCache = data;
   _cacheSource = 'memory (cron)';
   const m = data._meta;
@@ -212,5 +217,6 @@ export function getCdcNwssCacheStatus() {
     stateCount: _memCache._meta.stateCount,
     countyCount: _memCache._meta.countyCount,
     totalPopulationServed: _memCache._meta.totalPopulationServed,
+    lastDelta: _lastDelta,
   };
 }

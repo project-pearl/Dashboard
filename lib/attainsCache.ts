@@ -6,6 +6,7 @@
 // - Persists to local disk (.cache/) + Vercel Blob (cross-instance)
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ─── Config ────────────────────────────────────────────────────────────────────
 
@@ -68,6 +69,7 @@ export interface CacheStatus {
   buildStarted: string | null;
   statesLoaded: string[]; // which states are done
   statesMissing: string[]; // which states failed or pending
+  lastDelta: CacheDelta | null;
 }
 
 export interface CacheResponse {
@@ -164,6 +166,7 @@ let buildStarted: Date | null = null;
 let buildPromise: Promise<void> | null = null;
 let _cacheSource: "disk" | "blob" | "memory (self-build)" | "memory (cron)" | null =
   null;
+let _lastDelta: CacheDelta | null = null;
 
 // ─── Portable timeout helper ───────────────────────────────────────────────────
 
@@ -891,6 +894,15 @@ export async function buildAttainsChunk(timeBudgetMs: number, deferredStates: st
     _cacheSource = "memory (cron)";
   }
 
+  // Compute delta
+  if (processed.length > 0) {
+    const newCounts = { stateCount: loadedStates.size };
+    const prevCounts = alreadyCached > 0 ? { stateCount: alreadyCached } : null;
+    _lastDelta = computeCacheDelta(prevCounts, newCounts, lastBuilt ? lastBuilt.toISOString() : null, {
+      buildStartTime: cronStart,
+    });
+  }
+
   // Save progress (disk + Vercel Blob for cross-instance persistence)
   let savedToDisk = false;
   let savedToBlob = false;
@@ -1002,6 +1014,12 @@ async function buildCache(): Promise<void> {
     }${stillMissing.length > 0 ? ` | MISSING: ${stillMissing.join(", ")}` : ""}`
   );
 
+  // Compute delta
+  const newCounts = { stateCount: loadedStates.size };
+  _lastDelta = computeCacheDelta(null, newCounts, null, {
+    buildStartTime: buildStarted!.getTime(),
+  });
+
   // Persist to disk + blob
   saveToDisk();
   await saveToBlob();
@@ -1023,6 +1041,7 @@ export function getCacheStatus(): CacheStatus {
     buildStarted: buildStarted?.toISOString() || null,
     statesLoaded: [...loadedStates],
     statesMissing: ALL_STATES.filter((s) => !loadedStates.has(s)),
+    lastDelta: _lastDelta,
   };
 }
 

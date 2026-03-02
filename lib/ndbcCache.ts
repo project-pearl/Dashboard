@@ -8,6 +8,7 @@
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -77,6 +78,7 @@ const GRID_RES = 0.1;
 
 let _memCache: NdbcCacheData | null = null;
 let _cacheSource: 'disk' | 'memory (cron)' | null = null;
+let _lastDelta: CacheDelta | null = null;
 
 // ── Disk Persistence ────────────────────────────────────────────────────────
 
@@ -188,6 +190,9 @@ export function getNdbcAllStations(): NdbcStation[] {
 }
 
 export async function setNdbcCache(data: NdbcCacheData): Promise<void> {
+  const prevCounts = _memCache ? { stationCount: _memCache._meta.stationCount, wqStationCount: _memCache._meta.wqStationCount, gridCells: _memCache._meta.gridCells } : null;
+  const newCounts = { stationCount: data._meta.stationCount, wqStationCount: data._meta.wqStationCount, gridCells: data._meta.gridCells };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _memCache?._meta.built ?? null);
   _memCache = data;
   _cacheSource = 'memory (cron)';
   console.log(
@@ -230,5 +235,6 @@ export function getNdbcCacheStatus() {
     stationCount: _memCache._meta.stationCount,
     wqStationCount: _memCache._meta.wqStationCount,
     gridCells: _memCache._meta.gridCells,
+    lastDelta: _lastDelta,
   };
 }

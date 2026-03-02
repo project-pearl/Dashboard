@@ -6,6 +6,7 @@
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -64,6 +65,7 @@ const CACHE_TTL_MS = 48 * 60 * 60 * 1000;
 
 let _memCache: EchoCacheData | null = null;
 let _cacheSource: 'disk' | 'memory (cron)' | null = null;
+let _lastDelta: CacheDelta | null = null;
 
 // ── Disk Persistence ────────────────────────────────────────────────────────
 
@@ -196,6 +198,12 @@ export function getEchoCache(lat: number, lng: number): EchoLookupResult | null 
  * Replace the in-memory cache (called by cron route after fetching fresh data).
  */
 export async function setEchoCache(data: EchoCacheData): Promise<void> {
+  const prevCounts = _memCache ? { facilityCount: _memCache._meta.facilityCount, violationCount: _memCache._meta.violationCount, gridCells: _memCache._meta.gridCells } : null;
+  const newCounts = { facilityCount: data._meta.facilityCount, violationCount: data._meta.violationCount, gridCells: data._meta.gridCells };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _memCache?._meta.built ?? null, {
+    prevStates: _memCache?._meta.statesProcessed,
+    newStates: data._meta.statesProcessed,
+  });
   _memCache = data;
   _cacheSource = 'memory (cron)';
   const m = data._meta;
@@ -256,5 +264,6 @@ export function getEchoCacheStatus() {
     facilityCount: _memCache._meta.facilityCount,
     violationCount: _memCache._meta.violationCount,
     statesProcessed: _memCache._meta.statesProcessed,
+    lastDelta: _lastDelta,
   };
 }

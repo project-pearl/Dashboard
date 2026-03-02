@@ -8,6 +8,7 @@
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -52,6 +53,7 @@ const CACHE_TTL_MS = 48 * 60 * 60 * 1000;
 
 let _memCache: PfasCacheData | null = null;
 let _cacheSource: 'disk' | 'memory (cron)' | null = null;
+let _lastDelta: CacheDelta | null = null;
 
 // ── Disk Persistence ────────────────────────────────────────────────────────
 
@@ -177,6 +179,9 @@ export function getPfasCache(lat: number, lng: number): PfasLookupResult | null 
  * Replace the in-memory cache (called by cron route after fetching fresh data).
  */
 export async function setPfasCache(data: PfasCacheData): Promise<void> {
+  const prevCounts = _memCache ? { resultCount: _memCache._meta.resultCount, gridCells: _memCache._meta.gridCells } : null;
+  const newCounts = { resultCount: data._meta.resultCount, gridCells: data._meta.gridCells };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _memCache?._meta.built ?? null);
   _memCache = data;
   _cacheSource = 'memory (cron)';
   const m = data._meta;
@@ -234,5 +239,6 @@ export function getPfasCacheStatus() {
     gridCells: _memCache._meta.gridCells,
     resultCount: _memCache._meta.resultCount,
     tableName: _memCache._meta.tableName,
+    lastDelta: _lastDelta,
   };
 }

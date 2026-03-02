@@ -7,6 +7,7 @@
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -42,6 +43,7 @@ interface NasaCmrCacheData {
 
 let _memCache: NasaCmrCacheData | null = null;
 let _cacheSource: 'disk' | 'memory (cron)' | null = null;
+let _lastDelta: CacheDelta | null = null;
 
 function loadFromDisk(): boolean {
   try {
@@ -109,6 +111,9 @@ export function getNasaCmrByCategory(category: string): NasaCmrCollection[] {
 }
 
 export async function setNasaCmrCache(data: NasaCmrCacheData): Promise<void> {
+  const prevCounts = _memCache ? { collectionCount: _memCache._meta.collectionCount, totalGranules: _memCache._meta.totalGranules } : null;
+  const newCounts = { collectionCount: data._meta.collectionCount, totalGranules: data._meta.totalGranules };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _memCache?._meta.built ?? null);
   _memCache = data;
   _cacheSource = 'memory (cron)';
   console.log(`[NASA CMR Cache] Updated: ${data._meta.collectionCount} collections, ${data._meta.totalGranules} granules`);
@@ -144,5 +149,6 @@ export function getNasaCmrCacheStatus() {
     collectionCount: _memCache._meta.collectionCount,
     totalGranules: _memCache._meta.totalGranules,
     categories: _memCache._meta.categories,
+    lastDelta: _lastDelta,
   };
 }

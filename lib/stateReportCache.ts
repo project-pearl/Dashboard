@@ -10,6 +10,7 @@
 import { getAttainsCache, type StateSummary } from './attainsCache';
 import { getWqpAllRecords, type WqpRecord } from './wqpCache';
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 import { letterGrade } from './scoringUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -149,6 +150,7 @@ function loadStationRegistry(): RegistryData | null {
 // ── Cache Singleton ──────────────────────────────────────────────────────────
 
 let _memCache: StateReportCacheData | null = null;
+let _lastDelta: CacheDelta | null = null;
 
 function loadFromDisk(): boolean {
   try {
@@ -415,6 +417,9 @@ export async function buildStateReports(): Promise<StateReportCacheData> {
     reports,
   };
 
+  const prevCounts = _memCache ? { stateCount: _memCache._meta.stateCount } : null;
+  const newCounts = { stateCount: cacheData._meta.stateCount };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _memCache?._meta.built ?? null);
   _memCache = cacheData;
   saveToDisk();
   await saveCacheToBlob('cache/state-reports.json', cacheData);
@@ -434,11 +439,12 @@ export function getAllStateReports(): StateReportCacheData | null {
   return _memCache;
 }
 
-export function getStateReportStatus(): { loaded: boolean; built: string | null; stateCount: number } {
+export function getStateReportStatus(): { loaded: boolean; built: string | null; stateCount: number; lastDelta: CacheDelta | null } {
   ensureDiskLoaded();
   return {
     loaded: !!_memCache,
     built: _memCache?._meta.built || null,
     stateCount: _memCache?._meta.stateCount || 0,
+    lastDelta: _lastDelta,
   };
 }

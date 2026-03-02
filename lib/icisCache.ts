@@ -6,6 +6,7 @@
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -108,6 +109,7 @@ const CACHE_TTL_MS = 48 * 60 * 60 * 1000; // 48 hours — buffer past daily cron
 
 let _memCache: IcisCacheData | null = null;
 let _cacheSource: 'disk' | 'memory (cron)' | null = null;
+let _lastDelta: CacheDelta | null = null;
 
 // ── Disk Persistence ────────────────────────────────────────────────────────
 
@@ -256,6 +258,12 @@ export function getIcisCache(lat: number, lng: number): IcisLookupResult | null 
  * Replace the in-memory cache (called by cron route after fetching fresh data).
  */
 export async function setIcisCache(data: IcisCacheData): Promise<void> {
+  const prevCounts = _memCache ? { permitCount: _memCache._meta.permitCount, violationCount: _memCache._meta.violationCount, dmrCount: _memCache._meta.dmrCount, enforcementCount: _memCache._meta.enforcementCount, inspectionCount: _memCache._meta.inspectionCount, gridCells: _memCache._meta.gridCells } : null;
+  const newCounts = { permitCount: data._meta.permitCount, violationCount: data._meta.violationCount, dmrCount: data._meta.dmrCount, enforcementCount: data._meta.enforcementCount, inspectionCount: data._meta.inspectionCount, gridCells: data._meta.gridCells };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _memCache?._meta.built ?? null, {
+    prevStates: _memCache?._meta.statesProcessed,
+    newStates: data._meta.statesProcessed,
+  });
   _memCache = data;
   _cacheSource = 'memory (cron)';
   const m = data._meta;
@@ -320,5 +328,6 @@ export function getIcisCacheStatus() {
     enforcementCount: _memCache._meta.enforcementCount,
     inspectionCount: _memCache._meta.inspectionCount,
     statesProcessed: _memCache._meta.statesProcessed,
+    lastDelta: _lastDelta,
   };
 }

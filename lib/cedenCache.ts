@@ -7,6 +7,7 @@
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -70,6 +71,7 @@ const CACHE_TTL_MS = 48 * 60 * 60 * 1000;
 
 let _memCache: CedenCacheData | null = null;
 let _cacheSource: 'disk' | 'memory (cron)' | null = null;
+let _lastDelta: CacheDelta | null = null;
 
 // ── Disk Persistence ────────────────────────────────────────────────────────
 
@@ -197,6 +199,9 @@ export function getCedenCache(lat: number, lng: number): CedenLookupResult | nul
  * Replace the in-memory cache (called by cron route after fetching fresh data).
  */
 export async function setCedenCache(data: CedenCacheData): Promise<void> {
+  const prevCounts = _memCache ? { chemistry_records: _memCache._meta.chemistry_records, toxicity_records: _memCache._meta.toxicity_records, chemistry_stations: _memCache._meta.chemistry_stations, toxicity_stations: _memCache._meta.toxicity_stations } : null;
+  const newCounts = { chemistry_records: data._meta.chemistry_records, toxicity_records: data._meta.toxicity_records, chemistry_stations: data._meta.chemistry_stations, toxicity_stations: data._meta.toxicity_stations };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _memCache?._meta.built ?? null);
   _memCache = data;
   _cacheSource = 'memory (cron)';
   console.log(
@@ -241,5 +246,6 @@ export function getCedenCacheStatus() {
     toxicityRecords: _memCache._meta.toxicity_records,
     chemistryStations: _memCache._meta.chemistry_stations,
     toxicityStations: _memCache._meta.toxicity_stations,
+    lastDelta: _lastDelta,
   };
 }

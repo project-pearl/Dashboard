@@ -7,6 +7,7 @@
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -77,6 +78,7 @@ const CACHE_TTL_MS = 48 * 60 * 60 * 1000;
 
 let _memCache: SdwisCacheData | null = null;
 let _cacheSource: 'disk' | 'memory (cron)' | null = null;
+let _lastDelta: CacheDelta | null = null;
 
 // ── Disk Persistence ────────────────────────────────────────────────────────
 
@@ -214,6 +216,12 @@ export function getSdwisCache(lat: number, lng: number): SdwisLookupResult | nul
  * Replace the in-memory cache (called by cron route after fetching fresh data).
  */
 export async function setSdwisCache(data: SdwisCacheData): Promise<void> {
+  const prevCounts = _memCache ? { systemCount: _memCache._meta.systemCount, violationCount: _memCache._meta.violationCount, enforcementCount: _memCache._meta.enforcementCount, gridCells: _memCache._meta.gridCells } : null;
+  const newCounts = { systemCount: data._meta.systemCount, violationCount: data._meta.violationCount, enforcementCount: data._meta.enforcementCount, gridCells: data._meta.gridCells };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _memCache?._meta.built ?? null, {
+    prevStates: _memCache?._meta.statesProcessed,
+    newStates: data._meta.statesProcessed,
+  });
   _memCache = data;
   _cacheSource = 'memory (cron)';
   const m = data._meta;
@@ -295,5 +303,6 @@ export function getSdwisCacheStatus() {
     violationCount: _memCache._meta.violationCount,
     enforcementCount: _memCache._meta.enforcementCount,
     statesProcessed: _memCache._meta.statesProcessed,
+    lastDelta: _lastDelta,
   };
 }

@@ -7,6 +7,7 @@
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -53,6 +54,7 @@ const GRID_RES = 0.1;
 
 let _memCache: UsaceCacheData | null = null;
 let _cacheSource: 'disk' | 'memory (cron)' | null = null;
+let _lastDelta: CacheDelta | null = null;
 
 function loadFromDisk(): boolean {
   try {
@@ -144,6 +146,9 @@ export function getUsaceAllLocations(): UsaceLocation[] {
 }
 
 export async function setUsaceCache(data: UsaceCacheData): Promise<void> {
+  const prevCounts = _memCache ? { locationCount: _memCache._meta.locationCount, officesQueried: _memCache._meta.officesQueried, withWaterTemp: _memCache._meta.withWaterTemp, gridCells: _memCache._meta.gridCells } : null;
+  const newCounts = { locationCount: data._meta.locationCount, officesQueried: data._meta.officesQueried, withWaterTemp: data._meta.withWaterTemp, gridCells: data._meta.gridCells };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _memCache?._meta.built ?? null);
   _memCache = data;
   _cacheSource = 'memory (cron)';
   console.log(`[USACE Cache] Updated: ${data._meta.locationCount} locations, ${data._meta.gridCells} cells`);
@@ -180,5 +185,6 @@ export function getUsaceCacheStatus() {
     officesQueried: _memCache._meta.officesQueried,
     withWaterTemp: _memCache._meta.withWaterTemp,
     gridCells: _memCache._meta.gridCells,
+    lastDelta: _lastDelta,
   };
 }

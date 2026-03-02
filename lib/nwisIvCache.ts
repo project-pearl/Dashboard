@@ -8,6 +8,7 @@
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -80,6 +81,7 @@ const GRID_RES = 0.1;
 
 let _memCache: NwisIvCacheData | null = null;
 let _cacheSource: 'disk' | 'memory (cron)' | null = null;
+let _lastDelta: CacheDelta | null = null;
 
 // ── Disk Persistence ────────────────────────────────────────────────────────
 
@@ -243,6 +245,12 @@ export function getExistingGrid(): Record<string, GridCell> | null {
  * Replace the in-memory cache (called by cron route after fetching fresh data).
  */
 export async function setUsgsIvCache(data: NwisIvCacheData): Promise<void> {
+  const prevCounts = _memCache ? { siteCount: _memCache._meta.siteCount, readingCount: _memCache._meta.readingCount, gridCells: _memCache._meta.gridCells } : null;
+  const newCounts = { siteCount: data._meta.siteCount, readingCount: data._meta.readingCount, gridCells: data._meta.gridCells };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _memCache?._meta.built ?? null, {
+    prevStates: _memCache?._meta.statesProcessed,
+    newStates: data._meta.statesProcessed,
+  });
   _memCache = data;
   _cacheSource = 'memory (cron)';
   const m = data._meta;
@@ -289,5 +297,6 @@ export function getUsgsIvCacheStatus() {
     siteCount: _memCache._meta.siteCount,
     readingCount: _memCache._meta.readingCount,
     statesProcessed: _memCache._meta.statesProcessed,
+    lastDelta: _lastDelta,
   };
 }

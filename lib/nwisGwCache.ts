@@ -7,6 +7,7 @@
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -84,6 +85,7 @@ const CACHE_TTL_MS = 48 * 60 * 60 * 1000;
 
 let _memCache: NwisGwCacheData | null = null;
 let _cacheSource: 'disk' | 'memory (cron)' | null = null;
+let _lastDelta: CacheDelta | null = null;
 
 // ── Disk Persistence ────────────────────────────────────────────────────────
 
@@ -221,6 +223,12 @@ export function getNwisGwCache(lat: number, lng: number): NwisGwLookupResult | n
  * Replace the in-memory cache (called by cron route after fetching fresh data).
  */
 export async function setNwisGwCache(data: NwisGwCacheData): Promise<void> {
+  const prevCounts = _memCache ? { siteCount: _memCache._meta.siteCount, levelCount: _memCache._meta.levelCount, trendCount: _memCache._meta.trendCount, gridCells: _memCache._meta.gridCells } : null;
+  const newCounts = { siteCount: data._meta.siteCount, levelCount: data._meta.levelCount, trendCount: data._meta.trendCount, gridCells: data._meta.gridCells };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _memCache?._meta.built ?? null, {
+    prevStates: _memCache?._meta.statesProcessed,
+    newStates: data._meta.statesProcessed,
+  });
   _memCache = data;
   _cacheSource = 'memory (cron)';
   const m = data._meta;
@@ -312,5 +320,6 @@ export function getNwisGwCacheStatus() {
     levelCount: _memCache._meta.levelCount,
     trendCount: _memCache._meta.trendCount,
     statesProcessed: _memCache._meta.statesProcessed,
+    lastDelta: _lastDelta,
   };
 }

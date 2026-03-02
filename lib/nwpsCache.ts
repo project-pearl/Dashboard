@@ -6,7 +6,7 @@
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
-import { gridKey, neighborKeys } from './cacheUtils';
+import { gridKey, neighborKeys, computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -36,6 +36,7 @@ interface NwpsCacheData {
 
 let _memCache: NwpsCacheData | null = null;
 let _cacheSource: string | null = null;
+let _lastDelta: CacheDelta | null = null;
 
 // ── Disk Persistence ────────────────────────────────────────────────────────
 
@@ -120,6 +121,9 @@ export function getNwpsAllGauges(): NwpsGauge[] {
 }
 
 export async function setNwpsCache(data: NwpsCacheData): Promise<void> {
+  const prevCounts = _memCache ? { gaugeCount: _memCache._meta.gaugeCount, gridCells: _memCache._meta.gridCells } : null;
+  const newCounts = { gaugeCount: data._meta.gaugeCount, gridCells: data._meta.gridCells };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _memCache?._meta.built ?? null);
   _memCache = data;
   _cacheSource = 'memory (cron)';
   console.log(`[NWPS Cache] Updated: ${data._meta.gaugeCount} gauges, ${data._meta.gridCells} cells`);
@@ -158,6 +162,7 @@ export function getNwpsCacheStatus() {
     built: _memCache._meta.built,
     gaugeCount: _memCache._meta.gaugeCount,
     gridCells: _memCache._meta.gridCells,
+    lastDelta: _lastDelta,
   };
 }
 

@@ -6,6 +6,7 @@
  */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
+import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -47,6 +48,7 @@ export interface USAsCacheData {
 
 let _memCache: USAsCacheData | null = null;
 let _cacheSource: 'disk' | 'memory (cron)' | null = null;
+let _lastDelta: CacheDelta | null = null;
 
 // ── Disk Persistence ────────────────────────────────────────────────────────
 
@@ -127,6 +129,12 @@ export function getUSAsNationalTrend(): USAsCacheData['nationalTrend'] | null {
 }
 
 export async function setUSAsCache(data: USAsCacheData): Promise<void> {
+  const prevCounts = _memCache ? { stateCount: _memCache._meta.stateCount } : null;
+  const newCounts = { stateCount: data._meta.stateCount };
+  _lastDelta = computeCacheDelta(prevCounts, newCounts, _memCache?._meta.built ?? null, {
+    prevStates: _memCache?._meta.statesProcessed,
+    newStates: data._meta.statesProcessed,
+  });
   _memCache = data;
   _cacheSource = 'memory (cron)';
   console.log(
@@ -148,6 +156,7 @@ export function getUSAsCacheStatus() {
     statesProcessed: _memCache._meta.statesProcessed,
     fyRange: _memCache._meta.fyRange,
     nationalTrendYears: _memCache.nationalTrend?.length || 0,
+    lastDelta: _lastDelta,
   };
 }
 
