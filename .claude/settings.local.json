@@ -33,7 +33,10 @@
       "WebFetch(domain:waterservices.usgs.gov)",
       "Bash(git diff:*)",
       "Bash(tasklist:*)",
-      "Bash(netstat:*)"
+      "Bash(netstat:*)",
+      "Bash(curl:*)",
+      "Bash(pkill:*)",
+      "Bash(git stash:*)"
     ]
   }
 }
