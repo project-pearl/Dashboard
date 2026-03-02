@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, ExternalLink, Mail } from 'lucide-react';
+import { DollarSign, ExternalLink } from 'lucide-react';
 import { getStateGrants, getLiveGrantOpportunities, STATE_AUTHORITIES } from '@/lib/stateWaterData';
 import type { GrantOpportunity } from '@/lib/stateWaterData';
 
@@ -64,6 +64,11 @@ const STATE_NAMES: Record<string, string> = {
 // ─── Convert stateWaterData grants → local Grant interface ────────────────────
 
 function mapStateGrant(g: GrantOpportunity): Grant {
+  const neutralDescription = g.description
+    .replace(/Project PEARL/gi, 'the project')
+    .replace(/\bPEARL\b/gi, 'the project')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
   return {
     name: g.name,
     agency: g.source,
@@ -71,7 +76,7 @@ function mapStateGrant(g: GrantOpportunity): Grant {
     amountMax: g.maxAmount * 1000, // stateWaterData stores in thousands
     fit: g.fit === 'high' ? 'High' : g.fit === 'medium' ? 'Good' : 'Review',
     deadline: g.deadline || 'Rolling / Check agency',
-    description: g.description,
+    description: neutralDescription,
     url: g.url,
   };
 }
@@ -87,7 +92,7 @@ const NATIONAL_MS4_GRANTS: Grant[] = [
     url: 'https://www.fisheries.noaa.gov/grant/transformational-habitat-restoration-and-coastal-resilience-grants',
     fit: 'High',
     deadline: 'Annual – Spring (FY26 expected Fall 2025)',
-    description: 'Oyster-based water quality + coastal resilience with measurable outcomes. Strong fit when paired with sanctuary/municipal partners and Justice40 benefits. PEARL = living infrastructure + continuous monitoring.',
+    description: 'Oyster-based water quality and coastal resilience with measurable outcomes. Strong fit when paired with sanctuary and municipal partners and Justice40 benefits.',
     badge: 'BIL - $10M Max',
   },
   {
@@ -98,7 +103,7 @@ const NATIONAL_MS4_GRANTS: Grant[] = [
     url: 'https://www.nfwf.org/programs/national-coastal-resilience-fund',
     fit: 'High',
     deadline: 'Annual – Winter',
-    description: 'Nature-based solutions (oyster reefs, living shorelines) that reduce flood risk and improve habitat. Match not required (encouraged). PEARL vessel-mounted oyster modules qualify as nature-based infrastructure.',
+    description: 'Nature-based solutions (oyster reefs, living shorelines) that reduce flood risk and improve habitat. Match is not required but is encouraged.',
     badge: 'BIL - No Match Required',
   },
   {
@@ -109,7 +114,7 @@ const NATIONAL_MS4_GRANTS: Grant[] = [
     url: 'https://www.eda.gov/funding/programs/american-rescue-plan/build-back-better',
     fit: 'Good',
     deadline: 'Rolling until funds exhausted',
-    description: 'Port/harbor water-quality infrastructure, workforce training around marine restoration tech. Requires disaster-designation nexus and economic development case (jobs, private co-investment). PEARL = blue economy jobs + infrastructure.',
+    description: 'Port and harbor water-quality infrastructure with workforce training around marine restoration technology. Requires a disaster-designation nexus and economic development case.',
     badge: 'Economic Development',
   },
   {
@@ -155,7 +160,7 @@ const NATIONAL_NGO_GRANTS: Grant[] = [
     url: 'https://www.nfwf.org/programs/national-coastal-resilience-fund',
     fit: 'High',
     deadline: 'Annual – Winter',
-    description: 'Nature-based flood risk reduction and habitat restoration. No match required. PEARL living infrastructure approach is a strong fit.',
+    description: 'Nature-based flood risk reduction and habitat restoration. No match required.',
   },
   {
     name: 'NFWF Five Star & Urban Waters Restoration',
@@ -165,7 +170,7 @@ const NATIONAL_NGO_GRANTS: Grant[] = [
     url: 'https://www.nfwf.org/programs/five-star-and-urban-waters-restoration-grant-program',
     fit: 'High',
     deadline: 'Annual – Spring',
-    description: 'On-the-ground restoration and community stewardship for urban waterways. Hands-on volunteer engagement. PEARL monitoring at restoration sites provides measurable outcomes.',
+    description: 'On-the-ground restoration and community stewardship for urban waterways with hands-on volunteer engagement and measurable outcomes.',
   },
   {
     name: 'EPA Environmental Education Grants',
@@ -175,7 +180,7 @@ const NATIONAL_NGO_GRANTS: Grant[] = [
     url: 'https://www.epa.gov/education/grants',
     fit: 'Good',
     deadline: 'Annual – varies',
-    description: 'Environmental education and community engagement. PEARL STEM educational integration with water quality data aligns with EPA education priorities.',
+    description: 'Environmental education and community engagement with water quality data use-cases aligned to EPA education priorities.',
   },
 ];
 
@@ -188,7 +193,7 @@ const NATIONAL_K12_GRANTS: Grant[] = [
     url: 'https://www.nsf.gov/funding/pgm_summ.jsp?pims_id=500047',
     fit: 'High',
     deadline: 'Annual – November',
-    description: 'STEM education research using real environmental data. PEARL live water quality dashboards = real-time science in classrooms.',
+    description: 'STEM education research using real environmental data and classroom-ready water quality datasets.',
     badge: 'STEM Education',
   },
   {
@@ -199,7 +204,7 @@ const NATIONAL_K12_GRANTS: Grant[] = [
     url: 'https://www.noaa.gov/office-education/bwet',
     fit: 'High',
     deadline: 'Annual – varies by region',
-    description: 'Hands-on, place-based watershed education. PEARL monitoring stations as outdoor classroom sensors for real-time data collection.',
+    description: 'Hands-on, place-based watershed education using outdoor sensors and real-time data collection.',
     badge: 'Watershed Education',
   },
   {
@@ -210,7 +215,7 @@ const NATIONAL_K12_GRANTS: Grant[] = [
     url: 'https://www.epa.gov/education/grants',
     fit: 'Good',
     deadline: 'Annual – varies',
-    description: 'Environmental education promoting awareness and stewardship. PEARL dashboards create interactive learning experiences.',
+    description: 'Environmental education promoting awareness and stewardship through interactive water quality learning experiences.',
   },
   {
     name: 'Captain Planet Foundation - ecoSTEM Grants',
@@ -230,7 +235,7 @@ const NATIONAL_K12_GRANTS: Grant[] = [
     url: 'https://www.projectwet.org/',
     fit: 'Good',
     deadline: 'Rolling',
-    description: 'Water education programs and curriculum. PEARL real-time data enhances existing Project WET curricula.',
+    description: 'Water education programs and curriculum with real-time data integration opportunities.',
   },
 ];
 
@@ -243,7 +248,7 @@ const NATIONAL_COLLEGE_GRANTS: Grant[] = [
     url: 'https://www.nsf.gov/funding/pgm_summ.jsp?pims_id=5517',
     fit: 'High',
     deadline: 'Annual – February/October',
-    description: 'Undergraduate research opportunities in environmental engineering and water quality. PEARL monitoring generates publishable datasets for student projects.',
+    description: 'Undergraduate research opportunities in environmental engineering and water quality with publishable student project datasets.',
     badge: 'Undergrad Research',
   },
   {
@@ -254,7 +259,7 @@ const NATIONAL_COLLEGE_GRANTS: Grant[] = [
     url: 'https://www.nsfgrfp.org/',
     fit: 'High',
     deadline: 'Annual – October',
-    description: 'Premier graduate fellowship. Environmental engineering, marine biology, and water quality research topics all eligible. PEARL data supports thesis/dissertation research.',
+    description: 'Premier graduate fellowship covering environmental engineering, marine biology, and water quality research topics.',
     badge: 'Graduate Fellowship',
   },
   {
@@ -275,7 +280,7 @@ const NATIONAL_COLLEGE_GRANTS: Grant[] = [
     url: 'https://www.udall.gov/OurPrograms/Scholarship/Scholarship.aspx',
     fit: 'Good',
     deadline: 'Annual – March',
-    description: 'Undergrad scholarships for students pursuing environmental careers. Involvement with PEARL strengthens applications.',
+    description: 'Undergrad scholarships for students pursuing environmental careers.',
   },
 ];
 
@@ -299,7 +304,7 @@ const NATIONAL_SCIENTIST_GRANTS: Grant[] = [
     url: 'https://seagrant.noaa.gov/funding/',
     fit: 'High',
     deadline: 'Annual – varies by state Sea Grant program',
-    description: 'Coastal and marine research with applied focus. Water quality, aquaculture innovation, and habitat restoration are priority areas. PEARL bridges research and application.',
+    description: 'Coastal and marine research with applied focus. Water quality, aquaculture innovation, and habitat restoration are priority areas.',
   },
   {
     name: 'EPA ORD Water Research Grants',
@@ -309,7 +314,7 @@ const NATIONAL_SCIENTIST_GRANTS: Grant[] = [
     url: 'https://www.epa.gov/research-grants',
     fit: 'High',
     deadline: 'Annual – varies by topic area',
-    description: 'Research on innovative water quality monitoring, treatment technologies, and nutrient management. PEARL continuous monitoring data supports research proposals.',
+    description: 'Research on innovative water quality monitoring, treatment technologies, and nutrient management.',
   },
   {
     name: 'USGS Water Resources Research Act',
@@ -319,7 +324,7 @@ const NATIONAL_SCIENTIST_GRANTS: Grant[] = [
     url: 'https://water.usgs.gov/wrri/',
     fit: 'Good',
     deadline: 'Annual – varies by state',
-    description: 'State-level water research through WRRI network. Each state has an affiliated research institute. PEARL monitoring partnerships eligible.',
+    description: 'State-level water research through the WRRI network. Each state has an affiliated research institute.',
   },
   {
     name: 'NSF SBIR/STTR Phase I',
@@ -329,7 +334,7 @@ const NATIONAL_SCIENTIST_GRANTS: Grant[] = [
     url: 'https://www.nsf.gov/eng/iip/sbir/',
     fit: 'High',
     deadline: 'Rolling',
-    description: 'Technology commercialization for water treatment innovation. Three PEARL provisional patents and Milton FL pilot data = strong Phase I/II candidate.',
+    description: 'Technology commercialization support for water treatment innovation with strong Phase I/II pathways.',
     badge: 'Pilot Validated',
   },
 ];
@@ -354,7 +359,7 @@ const NATIONAL_CORPORATE_GRANTS: Grant[] = [
     url: 'https://www.nfwf.org/who-we-are/corporate-partners',
     fit: 'High',
     deadline: 'Ongoing partnership model',
-    description: 'Corporate-funded conservation matching. sustainability reporting integration, biodiversity credits, and water quality impact metrics from PEARL data.',
+    description: 'Corporate-funded conservation matching with sustainability reporting integration, biodiversity credits, and water quality impact metrics.',
   },
   {
     name: 'World Wildlife Fund - Project Finance for Permanence',
@@ -364,7 +369,7 @@ const NATIONAL_CORPORATE_GRANTS: Grant[] = [
     url: 'https://www.worldwildlife.org/',
     fit: 'Good',
     deadline: 'By invitation',
-    description: 'Large-scale conservation finance. PEARL monitoring provides verification data for nature-based sustainability investments.',
+    description: 'Large-scale conservation finance for nature-based sustainability investments with verification-oriented measurement requirements.',
   },
 ];
 
@@ -401,7 +406,7 @@ const MD_SPECIFIC_GRANTS: Grant[] = [
     url: 'https://cbtrust.org/grants/chesapeake-oyster-innovation/',
     fit: 'High',
     deadline: 'Annual',
-    description: 'Innovation in oyster restoration technology. PEARL biofiltration monitoring integration with oyster reef establishment = direct alignment.',
+    description: 'Innovation in oyster restoration technology with direct alignment to oyster reef establishment and monitoring outcomes.',
     badge: 'Oyster Innovation',
   },
   {
@@ -412,7 +417,7 @@ const MD_SPECIFIC_GRANTS: Grant[] = [
     url: 'https://marbidco.maryland.gov/',
     fit: 'Good',
     deadline: 'Rolling',
-    description: 'Agricultural best management practices in rural Maryland counties. PEARL monitoring at ag-urban interface for nutrient tracking.',
+    description: 'Agricultural best management practices in rural Maryland counties, including nutrient tracking at ag-urban interfaces.',
   },
 ];
 
@@ -491,7 +496,7 @@ function getEconomicContext(stateAbbr: string): { title: string; items: { label:
           { label: 'Oyster + Eelgrass', value: '$5.8M/year', detail: '+ 54 full-time jobs (Morgan State)' },
           { label: 'Mature Reef Systems', value: '$23M/year', detail: '+ 300 jobs in fishing revenue (NOAA)' },
         ],
-        footer: 'Funding Context: Maryland/NOAA investing $19M+ ($10M NOAA sanctuary + $9.1M ORP capital) in oyster restoration infrastructure. PEARL monitoring demonstrates water quality improvements that enable this economic value.',
+        footer: 'Maryland and NOAA are investing $19M+ ($10M NOAA sanctuary + $9.1M ORP capital) in oyster restoration infrastructure.',
       };
     case 'FL':
       return {
@@ -501,7 +506,7 @@ function getEconomicContext(stateAbbr: string): { title: string; items: { label:
           { label: 'Commercial Fishing', value: '$17.5B/year', detail: 'Saltwater fishing economic impact (FWC)' },
           { label: 'Springs Tourism', value: '$1.2B/year', detail: 'Visit Florida springs recreation economy' },
         ],
-        footer: 'Funding Context: FL DEP investing $2.9B+ in water quality improvement grants. PEARL monitoring validates nutrient reduction for BMAP compliance and protects Florida\'s water-dependent economy.',
+        footer: 'FL DEP is investing $2.9B+ in water quality improvement grants tied to nutrient reduction and BMAP compliance outcomes.',
       };
     case 'TX':
       return {
@@ -511,7 +516,7 @@ function getEconomicContext(stateAbbr: string): { title: string; items: { label:
           { label: 'Coastal Recreation', value: '$8.3B/year', detail: 'TX Gulf Coast tourism (TX GLO)' },
           { label: 'Commercial Fishing', value: '$2.1B/year', detail: 'Seafood industry economic impact (TPWD)' },
         ],
-        footer: 'Funding Context: TWDB HB 500 appropriated $1.038B for water infrastructure. RESTORE Act provides additional Gulf restoration funding. PEARL monitoring supports TCEQ CWQMN expansion.',
+        footer: 'TWDB HB 500 appropriated $1.038B for water infrastructure. RESTORE Act provides additional Gulf restoration funding.',
       };
     case 'LA':
       return {
@@ -531,7 +536,7 @@ function getEconomicContext(stateAbbr: string): { title: string; items: { label:
           { label: 'Long Island Shellfish', value: '$42M/year', detail: 'Shellfish harvest value (NY DEC)' },
           { label: 'Recreation & Tourism', value: '$7.5B/year', detail: 'Coastal tourism and recreation (NYS)' },
         ],
-        footer: 'Funding Context: NYC Green City, Clean Waters investing $4.5B in green infrastructure. PEARL monitoring tracks CSO reduction effectiveness.',
+        footer: 'NYC Green City, Clean Waters is investing $4.5B in green infrastructure.',
       };
     case 'OH':
       return {
@@ -588,7 +593,7 @@ export function GrantOpportunityMatcher({
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-yellow-900">
           <DollarSign className="h-6 w-6 text-yellow-600" />
-          {stateName} Grant Opportunities — PEARL Eligible
+          {stateName} Grant Opportunities
           <span className="ml-auto flex items-center gap-2">
             {totalValue && (
               <span className="text-sm font-bold text-yellow-700 bg-yellow-100 border border-yellow-300 px-2.5 py-0.5 rounded-full">
@@ -603,7 +608,7 @@ export function GrantOpportunityMatcher({
         <CardDescription>
           {userRole === 'College' 
             ? `Educational overview of water quality funding programs in ${stateName} — explore the grant landscape in environmental restoration`
-            : `Funding programs matched to your role and PEARL performance data · ${stateAuth?.abbr || stateAbbr} jurisdiction`}
+            : `Funding programs matched to your role · ${stateAuth?.abbr || stateAbbr} jurisdiction`}
         </CardDescription>
         <div className="flex items-center gap-3 text-xs text-yellow-700 mt-1">
           <span className="flex items-center gap-1">🟢 {highFit} High Fit ({formatTotal(grants.filter(g => g.fit === 'High'))})</span>
@@ -664,7 +669,7 @@ export function GrantOpportunityMatcher({
           <div className="border-l-4 border-green-400 pl-3 mb-2">
             <div className="text-xs font-bold text-green-700 uppercase tracking-wide flex items-center gap-2">
               <span className="bg-green-100 text-green-800 border border-green-200 px-1.5 py-0.5 rounded text-[10px]">HIGH FIT</span>
-              Strong alignment with PEARL technology and {stateName} water quality priorities
+              Strong alignment with {stateName} water quality priorities
             </div>
           </div>
         )}
@@ -707,10 +712,6 @@ export function GrantOpportunityMatcher({
               <a href={grant.url} target="_blank" rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 hover:border-blue-300 transition-all">
                 <ExternalLink className="h-3 w-3" /> View Grant
-              </a>
-              <a href={`mailto:info@project-pearl.org?subject=Letter of Support Request - ${encodeURIComponent(grant.name)}&body=Hello Project PEARL Team,%0A%0AI am applying for the ${encodeURIComponent(grant.name)} grant and would like to request a Letter of Support from Project PEARL.%0A%0AOrganization:%0AContact Name:%0AProject Description:%0ADeadline:%0A%0AThank you`}
-                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-md hover:bg-green-100 hover:border-green-300 transition-all">
-                <Mail className="h-3 w-3" /> Request Letter of Support
               </a>
             </div>
           </div>
@@ -777,7 +778,7 @@ export function GrantOpportunityMatcher({
         )}
 
         <p className="text-xs text-slate-500 pt-1 border-t border-yellow-200">
-          Matched to your role and PEARL water quality data for {stateName}. Deadlines are approximate — verify with each agency before applying. Project PEARL can provide a Letter of Support for any grant listed above.
+          Matched to your role for {stateName}. Deadlines are approximate. Verify program details and current eligibility directly with each agency before applying.
         </p>
       </CardContent>
     </Card>
