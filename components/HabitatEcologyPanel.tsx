@@ -7,8 +7,6 @@ import {
   TreePine,
   Fish,
   AlertTriangle,
-  ChevronDown,
-  ChevronUp,
   ArrowUpDown,
   Leaf,
   Bug,
@@ -16,9 +14,13 @@ import {
   Waves,
   BarChart3,
   Info,
+  Search,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { getEcoData, getAllEcoData, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
 import type { EcoStateData } from '@/lib/ecologicalSensitivity';
+import { STATE_ABBR_TO_NAME } from '@/lib/adminStateContext';
 
 // ── Props ───────────────────────────────────────────────────────────────────
 
@@ -107,7 +109,7 @@ export function HabitatEcologyPanel({
 }: HabitatEcologyPanelProps) {
   const [tableSortField, setTableSortField] = useState<SortField>('rate');
   const [tableSortDir, setTableSortDir] = useState<SortDir>('asc');
-  const [showAllStates, setShowAllStates] = useState(false);
+  const [stateSearch, setStateSearch] = useState('');
   const [expandedSpeciesState, setExpandedSpeciesState] = useState<string | null>(null);
 
   // ── Scope-filtered rollup ──────────────────────────────────────────────
@@ -143,6 +145,7 @@ export function HabitatEcologyPanel({
       const eco = getEcoData(s.abbr);
       return {
         abbr: s.abbr,
+        stateName: STATE_ABBR_TO_NAME[s.abbr] || s.abbr,
         assessed,
         impaired,
         waterbodies: s.waterbodies,
@@ -154,7 +157,15 @@ export function HabitatEcologyPanel({
   }, [stateRollup]);
 
   const sortedTableData = useMemo(() => {
-    const sorted = [...tableData].sort((a, b) => {
+    const q = stateSearch.trim().toLowerCase();
+    const filtered = q
+      ? tableData.filter((r) => {
+          const stateName = r.stateName.toLowerCase();
+          return r.abbr.toLowerCase().includes(q) || stateName.includes(q);
+        })
+      : tableData;
+
+    return [...filtered].sort((a, b) => {
       let cmp = 0;
       switch (tableSortField) {
         case 'abbr':
@@ -175,8 +186,7 @@ export function HabitatEcologyPanel({
       }
       return tableSortDir === 'asc' ? cmp : -cmp;
     });
-    return showAllStates ? sorted : sorted.slice(0, 15);
-  }, [tableData, tableSortField, tableSortDir, showAllStates]);
+  }, [tableData, tableSortField, tableSortDir, stateSearch]);
 
   // ── Habitat-related impairment causes aggregation ─────────────────────
   const habitatCauseCounts = useMemo(() => {
@@ -380,7 +390,25 @@ export function HabitatEcologyPanel({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          <div className="mb-3">
+            <div className="relative max-w-xs">
+              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={stateSearch}
+                onChange={(e) => setStateSearch(e.target.value)}
+                placeholder="Search state name or abbr..."
+                className="w-full rounded-md border border-slate-200 bg-white py-1.5 pl-8 pr-2 text-xs text-slate-700 placeholder:text-slate-400 focus:border-emerald-300 focus:outline-none focus:ring-1 focus:ring-emerald-300"
+              />
+            </div>
+            {sortedTableData.length > 3 && (
+              <p className="mt-1 text-[10px] text-slate-500">
+                Showing top 3 rows. Scroll for additional states.
+              </p>
+            )}
+          </div>
+
+          <div className={`overflow-x-auto ${sortedTableData.length > 3 ? 'max-h-[7.25rem] overflow-y-scroll pr-1' : ''}`}>
             <table className="w-full text-xs">
               <thead>
                 <tr className="text-left text-slate-500 border-b border-slate-200">
@@ -482,23 +510,6 @@ export function HabitatEcologyPanel({
               </tbody>
             </table>
           </div>
-
-          {/* Show more / less toggle */}
-          {tableData.length > 15 && (
-            <button
-              onClick={() => setShowAllStates((p) => !p)}
-              className="mt-3 w-full text-center text-xs text-blue-600 hover:text-blue-800 font-medium py-1.5 rounded-md hover:bg-blue-50 transition-colors"
-            >
-              {showAllStates
-                ? `Show fewer states`
-                : `Show all ${tableData.length} states`}
-              {showAllStates ? (
-                <ChevronUp size={12} className="inline ml-1" />
-              ) : (
-                <ChevronDown size={12} className="inline ml-1" />
-              )}
-            </button>
-          )}
         </CardContent>
       </Card>
 
