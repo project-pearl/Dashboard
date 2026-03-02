@@ -110,6 +110,7 @@ export function HabitatEcologyPanel({
   const [tableSortField, setTableSortField] = useState<SortField>('rate');
   const [tableSortDir, setTableSortDir] = useState<SortDir>('asc');
   const [stateSearch, setStateSearch] = useState('');
+  const [speciesSearch, setSpeciesSearch] = useState('');
   const [expandedSpeciesState, setExpandedSpeciesState] = useState<string | null>(null);
 
   // ── Scope-filtered rollup ──────────────────────────────────────────────
@@ -240,6 +241,15 @@ export function HabitatEcologyPanel({
       .filter((d): d is EcoStateData => d !== undefined && d !== null)
       .sort((a, b) => b.score - a.score);
   }, [stateRollup, selectedState]);
+
+  const filteredSpeciesData = useMemo(() => {
+    const q = speciesSearch.trim().toLowerCase();
+    if (!q) return speciesData;
+    return speciesData.filter((eco) => {
+      const stateName = (STATE_ABBR_TO_NAME[eco.abbr] || '').toLowerCase();
+      return eco.abbr.toLowerCase().includes(q) || stateName.includes(q);
+    });
+  }, [speciesData, speciesSearch]);
 
   // ── Sort handler ──────────────────────────────────────────────────────
   function handleSort(field: SortField) {
@@ -604,8 +614,20 @@ export function HabitatEcologyPanel({
               </span>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {speciesData.map((eco) => {
+            <div className="space-y-3">
+              <div className="relative max-w-xs">
+                <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={speciesSearch}
+                  onChange={(e) => setSpeciesSearch(e.target.value)}
+                  placeholder="Search state name or abbr..."
+                  className="w-full rounded-md border border-slate-200 bg-white py-1.5 pl-8 pr-2 text-xs text-slate-700 placeholder:text-slate-400 focus:border-rose-300 focus:outline-none focus:ring-1 focus:ring-rose-300"
+                />
+              </div>
+
+              <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 overflow-y-auto ${filteredSpeciesData.length > 3 ? 'max-h-[360px] pr-1' : ''}`}>
+              {filteredSpeciesData.map((eco) => {
                 const isExpanded = expandedSpeciesState === eco.abbr;
                 const aquaticPct =
                   eco.totalTE > 0
@@ -705,6 +727,7 @@ export function HabitatEcologyPanel({
                   </div>
                 );
               })}
+              </div>
             </div>
           )}
 
