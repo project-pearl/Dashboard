@@ -15,6 +15,8 @@ import {
   ChevronUp,
   Info,
   CheckCircle,
+  ExternalLink,
+  Microscope,
 } from 'lucide-react';
 
 // ── Props ───────────────────────────────────────────────────────────────────
@@ -45,11 +47,28 @@ const FIELD_TRIP_CHECKLIST = [
 ];
 
 const SPECIES_GUIDES = [
-  { name: 'Freshwater Macroinvertebrates', category: 'Aquatic', url: '#', icon: '🦐' },
+  { name: 'Freshwater Macroinvertebrates', category: 'Aquatic', url: 'https://natureforward.org/creek-critters/', icon: '🦐' },
   { name: 'Common Riparian Plants', category: 'Plants', url: '#', icon: '🌿' },
   { name: 'Wetland Bird Species', category: 'Birds', url: '#', icon: '🦆' },
   { name: 'Stream Fish Identification', category: 'Fish', url: '#', icon: '🐟' },
   { name: 'Amphibians & Reptiles', category: 'Herps', url: '#', icon: '🐸' },
+];
+
+const CITIZEN_SCIENCE_TOOLS = [
+  {
+    name: 'Creek Critters',
+    org: 'Nature Forward',
+    url: 'https://natureforward.org/creek-critters/',
+    description: 'Free app for identifying 30+ aquatic macroinvertebrates and generating stream health reports. Students find organisms, ID them with visual keys, and submit findings to the Clean Water Hub.',
+    tags: ['iOS', 'Android', 'Free'],
+  },
+  {
+    name: 'Clean Water Hub',
+    org: 'Izaak Walton League',
+    url: 'https://cleanwaterhub.org/',
+    description: 'National volunteer monitoring database. Submit water quality observations and stream health data from Creek Critters or manual sampling.',
+    tags: ['Data Sharing', 'Free'],
+  },
 ];
 
 const JOURNAL_PROMPTS = [
@@ -202,16 +221,24 @@ export function OutdoorClassroomPanel({ stateAbbr }: OutdoorClassroomPanelProps)
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {SPECIES_GUIDES.map((guide) => (
-                <div key={guide.name} className="flex items-center gap-2 rounded-md border border-slate-200 p-2 hover:bg-blue-50 transition-colors">
-                  <span className="text-base">{guide.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-slate-700 truncate">{guide.name}</p>
-                    <p className="text-[10px] text-slate-400">{guide.category}</p>
-                  </div>
-                  <BookOpen size={12} className="text-blue-500 shrink-0" />
-                </div>
-              ))}
+              {SPECIES_GUIDES.map((guide) => {
+                const isExternal = guide.url !== '#';
+                const Tag = isExternal ? 'a' : 'div';
+                return (
+                  <Tag
+                    key={guide.name}
+                    {...(isExternal ? { href: guide.url, target: '_blank', rel: 'noopener noreferrer' } : {})}
+                    className="flex items-center gap-2 rounded-md border border-slate-200 p-2 hover:bg-blue-50 transition-colors cursor-pointer"
+                  >
+                    <span className="text-base">{guide.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-slate-700 truncate">{guide.name}</p>
+                      <p className="text-[10px] text-slate-400">{guide.category}</p>
+                    </div>
+                    {isExternal ? <ExternalLink size={12} className="text-blue-500 shrink-0" /> : <BookOpen size={12} className="text-blue-500 shrink-0" />}
+                  </Tag>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
@@ -264,6 +291,48 @@ export function OutdoorClassroomPanel({ stateAbbr }: OutdoorClassroomPanelProps)
           </CardContent>
         </Card>
       </div>
+
+      {/* ── Section 3b: Community Science Tools ─────────────────────────── */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Microscope size={16} className="text-teal-600" />
+            Community Science Tools
+          </CardTitle>
+          <CardDescription>
+            Free apps and platforms for student-driven water monitoring and data sharing
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {CITIZEN_SCIENCE_TOOLS.map((tool) => (
+              <a
+                key={tool.name}
+                href={tool.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block rounded-lg border border-teal-200 bg-teal-50/50 p-3 hover:bg-teal-50 transition-colors group"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-xs font-bold text-teal-800">{tool.name}</span>
+                      <ExternalLink size={10} className="text-teal-400 group-hover:text-teal-600 transition-colors shrink-0" />
+                    </div>
+                    <p className="text-[10px] text-teal-600 mb-1">{tool.org}</p>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">{tool.description}</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {tool.tags.map((tag) => (
+                    <Badge key={tag} variant="secondary" className="text-[9px] bg-teal-100 text-teal-700 border-teal-200">{tag}</Badge>
+                  ))}
+                </div>
+              </a>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* ── Section 4: Nature Journaling Prompts ──────────────────────────── */}
       <Card>
