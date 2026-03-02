@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BrandedPrintBtn } from '@/lib/brandedPrint';
+import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import {
   Droplets, CloudRain, FlaskConical, Factory, Mountain,
   ChevronDown, Bell, Scale, AlertTriangle, FileText, Download,
@@ -665,15 +666,8 @@ export function PolicyTracker() {
           </div>
 
           {/* ── Source Footer ─────────────────────────────────────────── */}
-          <div className="col-span-2 pt-3 text-xs text-slate-400 space-y-1">
-            <p>
-              <span className="font-semibold text-slate-500">Data Sources:</span> Federal Register
-              &middot; EPA.gov &middot; USGS &middot; Congress.gov &middot; Chesapeake Bay Program
-            </p>
-            <p>
-              Regulatory tracking is informational only. Always verify with primary agency sources
-              for compliance decisions. Rule status reflects last known update as of the date shown.
-            </p>
+          <div className="col-span-2">
+            <PlatformDisclaimer />
           </div>
         </div>
       </CardContent>

@@ -1661,7 +1661,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
 
                       // ─── Disclaimer ───
                       pdf.addText('DISCLAIMER', { bold: true, fontSize: 8 });
-                      pdf.addText('This ESG summary is generated from PEARL platform data and publicly available EPA datasets. Scores are calculated from real-time water quality measurements and treatment performance metrics. This report is intended for informational purposes and does not constitute a formal ESG audit or rating. Framework alignment is voluntary and approximate.', { fontSize: 8 });
+                      pdf.addText('PIN grades and alerts are informational tools derived from publicly available data and automated analysis. They are not official EPA, MDE, or state assessments and do not constitute regulatory determinations. Always verify with primary agency data for compliance or permitting purposes. © 2026 Local Seafood Projects Inc. All rights reserved.', { fontSize: 8 });
                       pdf.addSpacer(3);
                       pdf.addText('Contact: info@project-pearl.org | project-pearl.org', { bold: true });
 

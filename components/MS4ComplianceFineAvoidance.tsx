@@ -718,8 +718,7 @@ export default function MS4ComplianceFineAvoidance({
           flexWrap: "wrap", gap: 8,
         }}>
           <span style={{ fontSize: 10.5, color: "#cbd5e1" }}>
-            Penalty schedules sourced from EPA ECHO, state enforcement databases, and CWA statutory maximums.
-            Informational only — not legal advice.
+            Informational only — not an official regulatory determination. See disclaimer.
           </span>
           <span style={{ fontSize: 10.5, color: "#cbd5e1" }}>
             Updated: {overview.lastUpdated}

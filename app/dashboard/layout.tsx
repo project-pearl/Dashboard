@@ -5,6 +5,7 @@ import AuthGuard from '@/components/AuthGuard';
 import { AdminStateProvider } from '@/lib/adminStateContext';
 import { DashboardSidebar } from '@/components/DashboardSidebar';
 import { DashboardHeader } from '@/components/DashboardHeader';
+import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -26,12 +27,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {children}
 
             {/* Footer */}
-            <footer className="px-6 py-4 border-t border-slate-200 mt-8 bg-white dark:bg-[rgba(14,22,45,0.85)] dark:border-[rgba(58,189,176,0.12)]">
-              <div className="text-[11px] text-slate-400 text-center space-y-1">
-                <p>Data sourced from EPA ATTAINS, Water Quality Portal, NOAA CO-OPS, USGS WDFN, and state environmental agencies.</p>
-                <p>&copy; {new Date().getFullYear()} Local Seafood Projects Inc. All rights reserved.</p>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500">Project Pearl&trade;, Pearl&trade;, ALIA&trade;, and AQUA-LO&trade; are trademarks of Local Seafood Projects Inc.</p>
-              </div>
+            <footer className="px-6 py-4 mt-8 bg-white dark:bg-[rgba(14,22,45,0.85)]">
+              <PlatformDisclaimer />
             </footer>
           </main>
         </div>

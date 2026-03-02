@@ -3561,7 +3561,7 @@ export function FederalManagementCenter(props: Props) {
                       </span>
                     </div>
                     <div className="text-[11px] text-slate-500">
-                      {pearlModel} × {totalUnits} unit{totalUnits > 1 ? 's' : ''} ({totalQuads} quad{totalQuads > 1 ? 's' : ''}, {fullGPM} GPM) + {totalBMPs} BMPs · {waterType === 'brackish' ? '🦪 Oyster' : '🐚 Mussel'} Biofilt · {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(fullAnnualCost)}/yr
+                      {totalBMPs} recommended BMPs · {attainsCauses.length} impairment cause{attainsCauses.length !== 1 ? 's' : ''} · {compliancePathway}
                     </div>
                     {(attainsCategory || isCat5) && (
                       <div className="text-[10px] mt-0.5 flex items-center gap-1.5 flex-wrap">
@@ -3713,39 +3713,14 @@ export function FederalManagementCenter(props: Props) {
                               <div className="pl-2 space-y-0.5 text-[11px]">
                                 <div>→ Upstream BMPs and source control</div>
                                 <div>→ Nature-based restoration for long-term recovery</div>
+                                <div>→ Continuous monitoring and real-time verification</div>
                                 <div>→ Community programs for compliance and stewardship</div>
-                                <div>→ <span className="font-semibold">PIN for immediate treatment and real-time verification</span></div>
                               </div>
                             </div>
                           </div>
 
-                          {/* Why PIN First */}
-                          <div className="rounded-md bg-cyan-50 border-2 border-cyan-300 p-3">
-                            <div className="text-[10px] font-bold text-cyan-800 uppercase tracking-wider mb-1.5">Why PIN First</div>
-                            <div className="space-y-1.5 text-xs text-cyan-900 leading-relaxed">
-                              {dataAgeDays !== null && dataAgeDays > 30 && (
-                                <div><span className="font-semibold text-red-700">Data is {dataAgeDays} days old.</span> PIN restores continuous, compliance-grade monitoring.</div>
-                              )}
-                              {treatmentPriorities.length > 0 && treatmentPriorities[0].urgency === 'immediate' && (
-                                <div><span className="font-semibold text-red-700">{treatmentPriorities[0].driver.charAt(0).toUpperCase() + treatmentPriorities[0].driver.slice(1).split('(')[0].trim()}.</span> PIN provides immediate treatment.</div>
-                              )}
-                              {treatmentPriorities.length > 0 && treatmentPriorities[0].urgency !== 'immediate' && (
-                                <div><span className="font-semibold">{hasBacteria ? 'Pathogen risk is elevated' : hasNutrients ? 'Nutrient loading is degrading habitat' : hasSediment ? 'Sediment is impairing aquatic life' : 'Conditions are deteriorating'}.</span> PIN begins treatment immediately.</div>
-                              )}
-                              <div><span className="font-semibold">Long-term restoration takes years.</span> PIN delivers measurable results in weeks.</div>
-                            </div>
-                          </div>
                         </div>
 
-                        {/* Action line */}
-                        <div className="rounded-md bg-cyan-700 text-white px-4 py-2.5">
-                          <div className="text-xs font-semibold">
-                            Recommended next step: Deploy {isPhasedDeployment ? `Phase 1 (${phase1Units} unit${phase1Units > 1 ? 's' : ''}, ${phase1GPM} GPM)` : `${totalUnits} PIN unit${totalUnits > 1 ? 's' : ''}`} at {regionName} and begin continuous monitoring within 30 days.
-                          </div>
-                          <div className="text-[10px] text-cyan-200 mt-1">
-                            Typical deployment: 30-60 days. Pilot generates continuous data and measurable reductions within the first operating cycle.
-                          </div>
-                        </div>
                       </div>
                     );
                   })()}
@@ -3771,7 +3746,7 @@ export function FederalManagementCenter(props: Props) {
                       <div className="space-y-1">
                         {/* Tier 1 */}
                         {impairmentClassification.filter(i => i.tier === 1).length > 0 && (
-                          <div className="text-[10px] font-bold text-green-700 uppercase tracking-wider mt-1">Tier 1 — PIN Primary Target</div>
+                          <div className="text-[10px] font-bold text-green-700 uppercase tracking-wider mt-1">Tier 1 — Directly Treatable</div>
                         )}
                         {impairmentClassification.filter(i => i.tier === 1).map((item, i) => (
                           <div key={`t1-${i}`} className="flex items-start gap-2 text-xs py-1 px-2 rounded bg-green-50 border border-green-100">
@@ -3785,7 +3760,7 @@ export function FederalManagementCenter(props: Props) {
 
                         {/* Tier 2 */}
                         {impairmentClassification.filter(i => i.tier === 2).length > 0 && (
-                          <div className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mt-2">Tier 2 — PIN Contributes / Planned</div>
+                          <div className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mt-2">Tier 2 — Indirect / Supporting Treatment</div>
                         )}
                         {impairmentClassification.filter(i => i.tier === 2).map((item, i) => (
                           <div key={`t2-${i}`} className="flex items-start gap-2 text-xs py-1 px-2 rounded bg-amber-50 border border-amber-100">
@@ -3799,7 +3774,7 @@ export function FederalManagementCenter(props: Props) {
 
                         {/* Tier 3 */}
                         {impairmentClassification.filter(i => i.tier === 3).length > 0 && (
-                          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-2">Tier 3 — Outside PIN Scope</div>
+                          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-2">Tier 3 — Requires Different Intervention</div>
                         )}
                         {impairmentClassification.filter(i => i.tier === 3).map((item, i) => (
                           <div key={`t3-${i}`} className="flex items-start gap-2 text-xs py-1 px-2 rounded bg-slate-50 border border-slate-200">

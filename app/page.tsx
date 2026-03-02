@@ -916,8 +916,8 @@ export default function Home() {
       {
         title: 'DISCLAIMER',
         content: [
-          'Alerts are automated interpretations of monitored data. They are not official regulatory findings.',
-          'Contact your state environmental agency for compliance determinations.',
+          'PIN grades and alerts are informational tools derived from publicly available data and automated analysis. They are not official EPA, MDE, or state assessments and do not constitute regulatory determinations. Always verify with primary agency data for compliance or permitting purposes.',
+          '© 2026 Local Seafood Projects Inc. All rights reserved. Project Pearl™, Pearl™, ALIA™, and AQUA-LO™ are trademarks of Local Seafood Projects Inc.',
         ]
       }
     ];

@@ -12,6 +12,7 @@ import {
 } from '@/lib/stateWaterData';
 import { getEpaRegionForState, EPA_REGIONS } from '@/lib/epa-regions';
 import { scoreToGrade } from '@/lib/scoringUtils';
+import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import {
   ArrowRight, ChevronDown, Building2, ExternalLink, Phone, Users,
   Droplets, ShieldCheck, FileText, BookOpen, Download,
@@ -912,12 +913,7 @@ export default function WaterQualityExplorer() {
             </div>
             <p className="text-xs text-slate-400">&copy; {new Date().getFullYear()} Local Seafood Projects Inc. All rights reserved.</p>
           </div>
-          <p className="text-center mt-3 text-[10px] text-slate-400/70">
-            Project Pearl&trade;, Pearl&trade;, ALIA&trade;, and AQUA-LO&trade; are trademarks of Local Seafood Projects.
-          </p>
-          <p className="text-center mt-2 text-[11px] text-slate-400">
-            Data sourced from EPA ATTAINS. Not affiliated with the U.S. Environmental Protection Agency.
-          </p>
+          <PlatformDisclaimer />
         </div>
       </footer>
     </div>

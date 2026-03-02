@@ -14,6 +14,7 @@ import { TierBadge } from '@/components/TierBadge';
 import { DATA_SOURCES, getTierForSource } from '@/lib/useWaterData';
 import type { DataSourceId, DataConfidenceTier } from '@/lib/useWaterData';
 import { ecoScoreStyle, ejScoreStyle } from '@/lib/scoringUtils';
+import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 
 // ─── Static Config ───────────────────────────────────────────────────────────
 
@@ -921,13 +922,7 @@ export function WaterbodyDetailCard({
               </div>
             )}
 
-            {/* ── Data Provenance ── */}
-            <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-100">
-              <span className="italic">Informational only — not an official regulatory determination.</span>
-              <a href="/dashboard/data-provenance" className="text-blue-500 hover:text-blue-700 underline whitespace-nowrap ml-2">
-                Data provenance &amp; methodology →
-              </a>
-            </div>
+            <PlatformDisclaimer />
 
             {/* ── CBP DataHub Enrichments ── */}
             {waterData?.parameters?._cbp_fluorescence && (
@@ -1037,7 +1032,7 @@ export function WaterbodyDetailCard({
             {/* ── Footer ── */}
             <div className="flex items-center gap-1.5 pt-2 border-t border-blue-200/50 text-[10px] text-slate-400">
               <Info size={10} className="flex-shrink-0" />
-              <span>PIN Water Score computed from {indices.length} indices. Derived from {waterData?.activeSources?.filter((s: string) => s !== 'MOCK').join(', ') || 'EPA ATTAINS'}. Informational only — not an official assessment.</span>
+              <span>PIN Water Score computed from {indices.length} indices. Derived from {waterData?.activeSources?.filter((s: string) => s !== 'MOCK').join(', ') || 'EPA ATTAINS'}. Informational only — not an official regulatory determination.</span>
             </div>
           </div>
         )}

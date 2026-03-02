@@ -712,9 +712,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
       // Disclaimer
       pdf.addDivider();
       pdf.addText('DISCLAIMER', { bold: true, fontSize: 8 });
-      pdf.addText(clean('This report is generated for informational and voluntary sustainability disclosure purposes only. It does not constitute a formal sustainability audit. Baseline projections derived from Milton, FL pilot (Jan 2025: 88-95% TSS removal, 50K GPD). PIN-monitored facilities reflect verified continuous data. Non-monitored facilities show modeled estimates only.'), { fontSize: 8 });
-      pdf.addSpacer(2);
-      pdf.addText(clean('Data Sources: PIN continuous monitoring | EPA ATTAINS | EPA ECHO | USGS WDFN | NOAA CO-OPS | WRI Aqueduct | EJScreen'), { fontSize: 8 });
+      pdf.addText(clean('PIN grades and alerts are informational tools derived from publicly available data and automated analysis. They are not official EPA, MDE, or state assessments and do not constitute regulatory determinations. Always verify with primary agency data for compliance or permitting purposes. Data Sources: EPA ATTAINS · Water Quality Portal · NOAA CO-OPS · USGS WDFN · EPA ECHO · state environmental agencies. © 2026 Local Seafood Projects Inc. All rights reserved.'), { fontSize: 8 });
       pdf.addText(clean(`Contact: info@project-pearl.org | ${dateStr}`), { fontSize: 8 });
 
       const safeName = companyName.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_');

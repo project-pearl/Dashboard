@@ -19,6 +19,7 @@ import {
 import { MockDataBadge } from './MockDataBadge';
 import { MOCK_PREDICTIONS } from './PredictiveRiskEngine';
 import type { RiskPrediction } from '@/lib/siteIntelTypes';
+import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import { getScenarioById } from '@/lib/scenarioPlanner/scenarios';
 import { computeScenarioCost } from '@/lib/scenarioPlanner/costEngine';
 import type { ScenarioResult } from '@/lib/scenarioPlanner/types';
@@ -2221,18 +2222,7 @@ export default function RiskInvestigationFlow({ preSelectedRisk, onBackToForecas
         </div>
       )}
 
-      {/* ═══ GUARDRAILS DISCLAIMER ═══ */}
-      <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-500 flex items-start gap-2">
-        <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
-        <div>
-          <span className="font-semibold">Guardrails:</span>
-          <span> Forecasts are intelligence products derived from public data and disclosed models.
-          They do not constitute regulatory determinations. Predictions do not replace professional
-          engineering analysis for capital planning, do not make clinical or epidemiological claims
-          about health outcomes, and represent the best available estimate — not certainty.
-          Cost estimates are modeled ranges, not quotes. Consult licensed engineers for project scoping.</span>
-        </div>
-      </div>
+      <PlatformDisclaimer />
     </div>
   );
 }

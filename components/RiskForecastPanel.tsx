@@ -6,6 +6,7 @@ import {
   ChevronDown, ChevronUp, AlertTriangle, Info,
 } from 'lucide-react';
 import type { RiskForecastResult, RiskPrediction, RiskLevel, ConfidenceTier } from '@/lib/siteIntelTypes';
+import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -66,14 +67,7 @@ export default function RiskForecastPanel({ forecast }: RiskForecastPanelProps) 
         ))}
       </div>
 
-      {/* Disclaimer */}
-      <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-500 flex items-start gap-2">
-        <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
-        <span>
-          Forecasts are intelligence products derived from public data and disclosed models.
-          They do not constitute regulatory determinations.
-        </span>
-      </div>
+      <PlatformDisclaimer />
     </div>
   );
 }

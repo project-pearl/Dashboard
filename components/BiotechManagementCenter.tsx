@@ -591,7 +591,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
       pdf.addSpacer(5);
       pdf.addDivider();
       pdf.addText('DISCLAIMER', { bold: true, fontSize: 8 });
-      pdf.addText(clean('This report is generated for informational purposes only. Data from EPA ECHO, SDWIS, ATTAINS, and USGS. FDA compliance status is illustrative and must be verified against official FDA records.'), { fontSize: 8 });
+      pdf.addText(clean('PIN grades and alerts are informational tools derived from publicly available data and automated analysis. They are not official EPA, MDE, or state assessments and do not constitute regulatory determinations. Always verify with primary agency data for compliance or permitting purposes. © 2026 Local Seafood Projects Inc. All rights reserved.'), { fontSize: 8 });
 
       const safeName = companyName.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_');
       pdf.download(`PEARL_Biotech_Report_${safeName}_${new Date().toISOString().slice(0, 10)}.pdf`);

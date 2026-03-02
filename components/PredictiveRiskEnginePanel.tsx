@@ -8,6 +8,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import {
   Target, Wrench, Waves, Scale, Gauge, GitBranch, Clock, HeartPulse,
   TrendingUp, TrendingDown, ChevronDown, ChevronUp, AlertTriangle,
@@ -772,16 +773,7 @@ export default function PredictiveRiskEnginePanel() {
         ))}
       </div>
 
-      {/* Disclaimer */}
-      <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-500 flex items-start gap-2">
-        <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
-        <div className="space-y-1">
-          <span className="font-semibold">Guardrails:</span>
-          <span> Forecasts are intelligence products derived from public data and disclosed models.
-          They do not constitute regulatory determinations, replace professional engineering analysis,
-          or make clinical claims about health outcomes. Confidence bands must always accompany point estimates.</span>
-        </div>
-      </div>
+      <PlatformDisclaimer />
     </div>
   );
 }

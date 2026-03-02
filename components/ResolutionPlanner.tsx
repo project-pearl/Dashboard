@@ -14,6 +14,7 @@ import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { getArchivedSignals, type Signal } from "@/lib/signalArchiveCacheClient";
 import { scoreModules, type ModuleScoringInput } from "@/lib/resolutionModules";
 import { StrategyModulesSection } from "./StrategyModulesSection";
+import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 // html2pdf.js loaded dynamically in export handler (code-split)
 
 // ── Types ──
@@ -1255,11 +1256,7 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
           <StrategyModulesSection categories={scoredCategories} />
         )}
 
-        {/* Disclaimer */}
-        <div className="pt-4 border-t border-gray-200 text-xs text-gray-400 space-y-2">
-          <p>This response plan is based on currently available data from authoritative federal sources. Data accuracy can be improved by updating source parameters and refreshing data pipelines.</p>
-          <p>Informational only — not an official regulatory determination, legal opinion, or engineering design. Verify with primary agency data and qualified professionals before implementation. Water quality treatment and remediation strategies are available in the Restoration Planner.</p>
-        </div>
+        <PlatformDisclaimer />
       </div>
       </div>{/* end pdfContentRef capture area */}
 
