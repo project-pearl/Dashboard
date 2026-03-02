@@ -7,11 +7,11 @@
  * Persists to disk following the same pattern as attainsCache/wqpCache.
  */
 
-import { getAttainsCache, type StateSummary } from './attainsCache';
-import { getWqpAllRecords, type WqpRecord } from './wqpCache';
-import { getEchoAllData } from './echoCache';
-import { getSdwisForState } from './sdwisCache';
-import { getUsgsIvByState } from './nwisIvCache';
+import { getAttainsCache, type StateSummary, ensureWarmed as warmAttains } from './attainsCache';
+import { getWqpAllRecords, type WqpRecord, ensureWarmed as warmWqp } from './wqpCache';
+import { getEchoAllData, ensureWarmed as warmEcho } from './echoCache';
+import { getSdwisForState, ensureWarmed as warmSdwis } from './sdwisCache';
+import { getUsgsIvByState, ensureWarmed as warmNwisIv } from './nwisIvCache';
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
 import { computeCacheDelta, type CacheDelta } from './cacheUtils';
 import { letterGrade } from './scoringUtils';
@@ -216,6 +216,9 @@ export async function ensureWarmed(): Promise<void> {
 // ── Core Build Logic ─────────────────────────────────────────────────────────
 
 export async function buildStateReports(): Promise<StateReportCacheData> {
+  // Warm all dependent caches (disk → blob fallback) so data is available
+  await Promise.all([warmAttains(), warmWqp(), warmEcho(), warmSdwis(), warmNwisIv()]);
+
   const registry = loadStationRegistry();
   const attainsData = getAttainsCache();
   const wqpRecords = getWqpAllRecords();
@@ -265,14 +268,6 @@ export async function buildStateReports(): Promise<StateReportCacheData> {
     // Use ATTAINS total as the real EPA waterbody count (falls back to registry)
     const totalWaterbodies = attains?.total || stateRegions.length;
 
-    // "Assessed" = waterbodies with impairment data in ATTAINS
-    const assessedCount = attains ? (attains.high + attains.medium + attains.low + attains.none) : 0;
-
-    // "Monitored" = assessed waterbodies (have real EPA data)
-    const monitoredCount = assessedCount;
-    const unmonitoredCount = Math.max(0, totalWaterbodies - monitoredCount);
-    const monitoredPct = totalWaterbodies > 0 ? Math.round((monitoredCount / totalWaterbodies) * 100) : 0;
-
     // ── Source Counts (real cache data per state) ─────────────────────────
     const sourceCounts: Record<string, number> = {};
 
@@ -281,11 +276,18 @@ export async function buildStateReports(): Promise<StateReportCacheData> {
       sourceCounts['ATTAINS'] = attains.stored;
     }
 
-    // WQP stations (counted below in WQP freshness section, but pre-count here)
+    // WQP stations — try records with state field first, fall back to registry
     const stateWqpEarly = wqpByState[stateAbbr] || [];
     const wqpStations = new Set(stateWqpEarly.map(r => r.stn));
     if (wqpStations.size > 0) {
       sourceCounts['WQP'] = wqpStations.size;
+    } else {
+      // Fallback: count WQP stations from registry (state field may not be set on older blob data)
+      let registryWqpCount = 0;
+      for (const { id } of stateRegions) {
+        if (registry?.wqpStationMap?.[id]) registryWqpCount++;
+      }
+      if (registryWqpCount > 0) sourceCounts['WQP'] = registryWqpCount;
     }
 
     // ECHO facilities
@@ -315,6 +317,31 @@ export async function buildStateReports(): Promise<StateReportCacheData> {
       if (hasUsgs && !sourceCounts['USGS']) sourceCounts['USGS'] = 0;
       if (hasUsgs) sourceCounts['USGS'] = (sourceCounts['USGS'] || 0) + 1;
     }
+
+    // ── Monitored vs Unmonitored (blind spots) ─────────────────────────
+    // Coverage = fraction of the 6 PIN data layers actively feeding this state.
+    // Each layer contributes a weighted share of coverage:
+    //   ATTAINS (25%) — EPA waterbody assessments
+    //   WQP     (20%) — water quality monitoring stations
+    //   USGS-IV (20%) — real-time stream gauges
+    //   ECHO    (15%) — compliance/discharge monitoring
+    //   SDWIS   (10%) — drinking water system tracking
+    //   USGS    (10%) — registry station coverage
+    const layerWeights: [string, number][] = [
+      ['ATTAINS', 25],
+      ['WQP',     20],
+      ['USGS-IV', 20],
+      ['ECHO',    15],
+      ['SDWIS',   10],
+      ['USGS',    10],
+    ];
+    let coveragePts = 0;
+    for (const [key, weight] of layerWeights) {
+      if (sourceCounts[key] && sourceCounts[key] > 0) coveragePts += weight;
+    }
+    const monitoredPct = Math.min(coveragePts, 100);
+    const monitoredCount = totalWaterbodies > 0 ? Math.round(totalWaterbodies * monitoredPct / 100) : 0;
+    const unmonitoredCount = Math.max(0, totalWaterbodies - monitoredCount);
 
     // ── ATTAINS Impairment ──────────────────────────────────────────────
     const impairedCount = attains ? (attains.high + attains.medium) : 0;
@@ -412,7 +439,7 @@ export async function buildStateReports(): Promise<StateReportCacheData> {
     const freshnessPts = Math.round(recentPct * 0.3);
 
     // Coverage (25 pts): monitoredPct × 0.25
-    const coveragePts = Math.round(monitoredPct * 0.25);
+    const aiCoveragePts = Math.round(monitoredPct * 0.25);
 
     // Parameter breadth (25 pts): covered params / 10 × 25
     const paramPts = Math.round((coveredParams / CANONICAL_PARAMS.length) * 25);
@@ -420,7 +447,7 @@ export async function buildStateReports(): Promise<StateReportCacheData> {
     // Source redundancy (20 pts): min(activeSourceCount / 3, 1) × 20
     const redundancyPts = Math.round(Math.min(activeSourceCount / 3, 1) * 20);
 
-    const aiReadinessScore = freshnessPts + coveragePts + paramPts + redundancyPts;
+    const aiReadinessScore = freshnessPts + aiCoveragePts + paramPts + redundancyPts;
 
     reports[stateAbbr] = {
       stateCode: stateAbbr,
@@ -448,7 +475,7 @@ export async function buildStateReports(): Promise<StateReportCacheData> {
       aiReadinessGrade: letterGrade(aiReadinessScore),
       aiReadinessFactors: {
         freshness: freshnessPts,
-        coverage: coveragePts,
+        coverage: aiCoveragePts,
         parameterBreadth: paramPts,
         sourceRedundancy: redundancyPts,
       },
