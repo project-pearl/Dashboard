@@ -2,7 +2,6 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLensParam } from '@/lib/useLensParam';
-import { WhatChangedOvernight, StakeholderWatch } from './BriefingCards';
 import HeroBanner from './HeroBanner';
 import dynamic from 'next/dynamic';
 import { STATE_GEO_LEAFLET, FIPS_TO_ABBR } from '@/lib/mapUtils';
@@ -56,10 +55,9 @@ import { StatusCard } from './StatusCard';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
-import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { GrantOpportunityMatcher } from '@/components/GrantOpportunityMatcher';
-import { RoleBriefingActionsCard, RoleBriefingPulseCard } from '@/components/RoleBriefingCards';
+import { RoleBriefingActionsCard } from '@/components/RoleBriefingCards';
 import { getEcoData, getEcoScore, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
 import { ecoScoreStyle } from '@/lib/scoringUtils';
 import { NUTRIENT_TRADING_STATES } from '@/lib/constants';
@@ -99,14 +97,14 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Overview',
     description: 'Jurisdiction dashboard — morning check for elected officials',
     sections: new Set([
-      'local-identity', 'local-kpi-strip', 'map-grid', 'local-situation', 'local-quick-actions', 'disclaimer',
+      'local-identity', 'map-grid', 'local-kpi-strip', 'local-situation', 'local-quick-actions', 'disclaimer',
     ]),
   },
   briefing: {
     label: 'AI Briefing',
     description: 'AI-generated overnight summary and action items',
     sections: new Set([
-      'insights', 'briefing-actions', 'local-constituent-tldr', 'disclaimer',
+      'briefing-actions', 'local-constituent-tldr', 'disclaimer',
     ]),
   },
   'political-briefing': {
@@ -179,7 +177,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Emergency',
     description: 'Active incidents, weather alerts, and response planning',
     sections: new Set([
-      'alertfeed', 'disaster-active', 'local-nws-alerts', 'local-sentinel-events',
+      'disaster-active', 'local-nws-alerts', 'local-sentinel-events',
       'disaster-response', 'disaster-prep', 'resolution-planner', 'disclaimer',
     ]),
   },
@@ -215,7 +213,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Policy & Regulatory',
     description: 'Federal and state regulatory actions, rule tracking, and compliance outlook',
     sections: new Set([
-      'policy-tracker', 'insights', 'alertfeed', 'disclaimer',
+      'policy-tracker', 'disclaimer',
     ]),
   },
   wqt: {
@@ -334,15 +332,98 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
     return { center, zoom };
   }, [selectedJurisdictionId, selectedMS4, ms4Jurisdictions, jurisdictionLabel, wbMarkers]);
 
+  const selectedJurisdiction = useMemo(
+    () => (selectedMS4 ? ms4Jurisdictions.find(j => j.permitId === selectedMS4) ?? null : null),
+    [selectedMS4, ms4Jurisdictions]
+  );
+
+  const jurisdictionScopedWbMarkers = useMemo(() => {
+    if (selectedJurisdictionId === 'default') return wbMarkers;
+    const raw = selectedJurisdiction?.name || jurisdictionLabel;
+    const tokens = raw
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .split(/\s+/)
+      .filter(t => t && !['county', 'city', 'town', 'of', 'the', 'state', 'department', 'administration'].includes(t));
+    if (tokens.length === 0) return wbMarkers;
+    const matched = wbMarkers.filter(wb => {
+      const n = wb.name.toLowerCase();
+      return tokens.some(t => n.includes(t));
+    });
+    return matched.length > 0 ? matched : wbMarkers;
+  }, [selectedJurisdictionId, selectedJurisdiction, jurisdictionLabel, wbMarkers]);
+
+  const jurisdictionScopedRegionData = useMemo(() => {
+    const scopedIds = new Set(jurisdictionScopedWbMarkers.map(wb => wb.id));
+    return regionData.filter(region => scopedIds.has(region.id));
+  }, [regionData, jurisdictionScopedWbMarkers]);
+
+  const localKpi = useMemo(() => {
+    const scope = jurisdictionScopedWbMarkers;
+    const total = scope.length;
+    const severe = scope.filter(w => w.alertLevel === 'high').length;
+    const impaired = scope.filter(w => w.alertLevel === 'medium').length;
+    const watch = scope.filter(w => w.alertLevel === 'low').length;
+
+    const rawScore = total > 0
+      ? Math.round(100 - ((severe * 18 + impaired * 9 + watch * 3) / total))
+      : 82;
+    const score = Math.max(55, Math.min(98, rawScore));
+    const grade = score >= 93 ? 'A' : score >= 89 ? 'A-' : score >= 85 ? 'B+' : score >= 80 ? 'B' : score >= 75 ? 'B-' : score >= 70 ? 'C+' : 'C';
+
+    const complianceByStatus: Record<string, number> = {
+      'In Compliance': 95,
+      'Pending Renewal': 88,
+      'Under Review': 82,
+      'Minor Violations': 76,
+      'Consent Decree': 64,
+      'NOV Issued': 61,
+    };
+    const complianceRate = selectedJurisdiction
+      ? (complianceByStatus[selectedJurisdiction.status] ?? 84)
+      : Math.max(72, Math.min(97, 96 - severe * 5 - impaired * 2));
+
+    const statusViolations: Record<string, number> = {
+      'In Compliance': 0,
+      'Pending Renewal': 1,
+      'Under Review': 2,
+      'Minor Violations': 3,
+      'Consent Decree': 6,
+      'NOV Issued': 4,
+    };
+    const activeViolations = selectedJurisdiction
+      ? (statusViolations[selectedJurisdiction.status] ?? 2)
+      : Math.max(0, severe + Math.round(impaired * 0.5));
+
+    const pop = selectedJurisdiction?.population ?? 0;
+    const grantFundingM = selectedJurisdiction
+      ? Math.max(0.8, Math.min(9.8, Math.round((0.8 + pop / 200000 + Math.max(0, 3 - activeViolations) * 0.4) * 10) / 10))
+      : Math.max(1.2, Math.min(6.5, Math.round((2.0 + (total / 40)) * 10) / 10));
+
+    const ejTracts = selectedJurisdiction
+      ? Math.max(1, Math.min(9, Math.round(pop / 160000) + (severe > 0 ? 1 : 0)))
+      : Math.max(1, Math.min(8, Math.round((severe + impaired) / 2) + 2));
+
+    return {
+      total,
+      score,
+      grade,
+      complianceRate,
+      activeViolations,
+      grantFundingM,
+      ejTracts,
+    };
+  }, [jurisdictionScopedWbMarkers, selectedJurisdiction]);
+
   const filteredWbMarkers = useMemo(() => {
     const q = waterbodySearch.trim().toLowerCase();
-    return wbMarkers.filter(wb => {
+    return jurisdictionScopedWbMarkers.filter(wb => {
       if (severityFilter === 'high' && wb.alertLevel !== 'high') return false;
       if (severityFilter === 'medium' && wb.alertLevel !== 'medium') return false;
       if (q && !wb.name.toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [wbMarkers, waterbodySearch, severityFilter]);
+  }, [jurisdictionScopedWbMarkers, waterbodySearch, severityFilter]);
 
   const markerData = useMemo(() =>
     filteredWbMarkers.map(wb => ({
@@ -363,9 +444,19 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
 
   // ── Mock data bridge for MS4 cards ──
   const [activeDetailId, setActiveDetailId] = useState<string | null>(null);
+  const [policyExpanded, setPolicyExpanded] = useState<Record<string, boolean>>({});
   useEffect(() => {
-    if (!activeDetailId && wbMarkers.length > 0) setActiveDetailId(wbMarkers[0].id);
-  }, [wbMarkers, activeDetailId]);
+    if (jurisdictionScopedWbMarkers.length === 0) {
+      setActiveDetailId(null);
+      return;
+    }
+    const hasActiveInScope = activeDetailId
+      ? jurisdictionScopedWbMarkers.some(wb => wb.id === activeDetailId)
+      : false;
+    if (!hasActiveInScope) {
+      setActiveDetailId(jurisdictionScopedWbMarkers[0].id);
+    }
+  }, [jurisdictionScopedWbMarkers, activeDetailId]);
 
   const regionMockData = useMemo(() => {
     if (!activeDetailId) return null;
@@ -498,19 +589,21 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
               {/* Hero KPI */}
               <div className="rounded-xl border-2 border-emerald-200 bg-emerald-50 p-4 mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="text-4xl font-extrabold text-emerald-700">B+</div>
+                  <div className="text-4xl font-extrabold text-emerald-700">{localKpi.grade}</div>
                   <div>
                     <div className="text-sm font-semibold text-emerald-700">Water Quality Grade</div>
-                    <div className="text-[10px] text-emerald-500">Composite score across all monitored waterbodies</div>
+                    <div className="text-[10px] text-emerald-500">
+                      Composite score {localKpi.score}/100 across {localKpi.total} monitored waterbodies in {jurisdictionLabel}
+                    </div>
                   </div>
                 </div>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
-                  { label: 'Compliance Rate', value: '94%', color: 'text-emerald-700', bgColor: 'bg-emerald-50 border-emerald-200', pct: 94 },
-                  { label: 'Active Violations', value: '2', color: 'text-amber-700', bgColor: 'bg-amber-50 border-amber-200' },
-                  { label: 'Grant Funding', value: '$4.2M', color: 'text-blue-700', bgColor: 'bg-blue-50 border-blue-200' },
-                  { label: 'EJ Communities', value: '3 tracts', color: 'text-purple-700', bgColor: 'bg-purple-50 border-purple-200' },
+                  { label: 'Compliance Rate', value: `${localKpi.complianceRate}%`, color: 'text-emerald-700', bgColor: 'bg-emerald-50 border-emerald-200', pct: localKpi.complianceRate },
+                  { label: 'Active Violations', value: String(localKpi.activeViolations), color: 'text-amber-700', bgColor: 'bg-amber-50 border-amber-200' },
+                  { label: 'Grant Funding', value: `$${localKpi.grantFundingM.toFixed(1)}M`, color: 'text-blue-700', bgColor: 'bg-blue-50 border-blue-200' },
+                  { label: 'EJ Communities', value: `${localKpi.ejTracts} tracts`, color: 'text-purple-700', bgColor: 'bg-purple-50 border-purple-200' },
                 ].map(kpi => (
                   <div key={kpi.label} className={`rounded-lg border p-3 ${kpi.bgColor}`}>
                     <p className={`text-2xl font-bold ${kpi.color}`}>{kpi.value}</p>
@@ -1170,7 +1263,6 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
           // ═══════════════════════════════════════════════════════════════════
           // SHARED / REUSED SECTIONS (rendered as placeholders for scaffold)
           // ═══════════════════════════════════════════════════════════════════
-
           case 'warr-metrics':
           case 'warr-analyze':
           case 'warr-respond':
@@ -1187,7 +1279,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
               <div className="lg:col-span-2">
                 <div className="w-full overflow-hidden rounded-lg border border-slate-200 bg-white">
                   <div className="p-2 text-xs text-slate-500 bg-slate-50 border-b border-slate-200">
-                    {jurisdictionLabel} &middot; {filteredWbMarkers.length} of {wbMarkers.length} waterbodies
+                    {jurisdictionLabel} &middot; {filteredWbMarkers.length} of {jurisdictionScopedWbMarkers.length} waterbodies
                   </div>
                   <div className="h-[400px] w-full relative">
                     <MapboxMapShell
@@ -1272,19 +1364,12 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             </div>
           );
 
-          case 'insights': return DS(
-            <AIInsightsEngine
-              key={`${effectiveState}-${selectedJurisdictionId}`}
-              role={"State" as any}
-              stateAbbr={effectiveState}
-              regionData={regionData as any}
-            />
-          );
-
           case 'briefing-actions': {
-            const elevatedAlerts = regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length;
-            const severeAlerts = regionData.filter(r => r.alertLevel === 'high').length;
-            const utilization = wbMarkers.length > 0 ? Math.round((regionData.filter(r => r.status === 'active').length / wbMarkers.length) * 100) : 0;
+            const elevatedAlerts = jurisdictionScopedRegionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length;
+            const severeAlerts = jurisdictionScopedRegionData.filter(r => r.alertLevel === 'high').length;
+            const utilization = jurisdictionScopedWbMarkers.length > 0
+              ? Math.round((jurisdictionScopedRegionData.filter(r => r.status === 'active').length / jurisdictionScopedWbMarkers.length) * 100)
+              : 0;
             return DS(
               <RoleBriefingActionsCard
                 title={`AI Briefing - Local | ${jurisdictionId}`}
@@ -1421,7 +1506,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             return (
               <div id="section-nutrientcredits" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                 <button onClick={() => onToggleCollapse('nutrientcredits')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-                  <span className="text-sm font-bold text-slate-800">Nutrient Credit Trading — {wbMarkers.find(w => w.id === activeDetailId)?.name || activeDetailId}</span>
+                  <span className="text-sm font-bold text-slate-800">Nutrient Credit Trading — {jurisdictionScopedWbMarkers.find(w => w.id === activeDetailId)?.name || activeDetailId}</span>
                   <span>{isSectionOpen('nutrientcredits') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}</span>
                 </button>
                 {isSectionOpen('nutrientcredits') && (
@@ -1445,11 +1530,11 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                 Select a waterbody from the map to view TMDL Reporter
               </div>
             );
-            const activeAlertCount = regionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length;
+            const activeAlertCount = jurisdictionScopedRegionData.filter(r => r.alertLevel === 'high' || r.alertLevel === 'medium').length;
             return (
               <div id="section-tmdl" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                 <button onClick={() => onToggleCollapse('tmdl')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-                  <span className="text-sm font-bold text-slate-800">TMDL Compliance & EJ Impact — {wbMarkers.find(w => w.id === activeDetailId)?.name || activeDetailId}</span>
+                  <span className="text-sm font-bold text-slate-800">TMDL Compliance & EJ Impact — {jurisdictionScopedWbMarkers.find(w => w.id === activeDetailId)?.name || activeDetailId}</span>
                   <span>{isSectionOpen('tmdl') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}</span>
                 </button>
                 {isSectionOpen('tmdl') && (
@@ -1474,7 +1559,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                 Select a waterbody from the map to view MS4 Report Generator
               </div>
             );
-            const regionName = wbMarkers.find(w => w.id === activeDetailId)?.name || activeDetailId.replace(/_/g, ' ');
+            const regionName = jurisdictionScopedWbMarkers.find(w => w.id === activeDetailId)?.name || activeDetailId.replace(/_/g, ' ');
             return (
               <div id="section-mdeexport" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                 <button onClick={() => onToggleCollapse('mdeexport')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
@@ -1589,12 +1674,6 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                 <p className="text-xs text-slate-400 mt-2 italic">Data source: State SRF program, municipal loan records</p>
               </CardContent>
             </Card>
-          );
-
-          case 'alertfeed': return DS(
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">
-              Alert Feed — placeholder (shared component)
-            </div>
           );
 
           case 'disaster-active':
@@ -1878,13 +1957,131 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             );
           })());
 
-          case 'policy-tracker': return DS(
-            <PlaceholderSection title="Policy & Regulatory Tracker" subtitle="Federal and state regulatory actions affecting local government." icon={<Scale size={15} />} accent="purple">
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">
-                Policy & Regulatory Tracker — placeholder
+          case 'policy-tracker': return DS((() => {
+            const scopeName = selectedJurisdiction?.name || jurisdictionLabel;
+            const federalRows = [
+              {
+                id: 'fed-0',
+                action: 'EPA PFAS Drinking Water Rule',
+                impact: `May trigger additional monitoring and treatment planning for systems serving ${scopeName}`,
+                status: 'Comment Period',
+                date: '2026-03-15',
+                detail: `Federal PFAS rulemaking can increase local sampling, communication, and capital planning workload. Scope currently mapped to ${scopeName}, ${effectiveState}.`,
+              },
+              {
+                id: 'fed-1',
+                action: 'CWA Section 401 Certification Update',
+                impact: `Affects permit timing and interagency review for projects in ${effectiveState}`,
+                status: 'Final Rule',
+                date: '2026-01-10',
+                detail: 'Revised certification timeline and documentation standards can shift local project sequencing and legal review checkpoints.',
+              },
+            ];
+            const stateRows = [
+              {
+                id: 'state-0',
+                action: `${effectiveState} Stormwater / MS4 Guidance Refresh`,
+                impact: `Operational updates for permit reporting and BMP verification in ${scopeName}`,
+                status: 'In Effect',
+                date: '2026-02-01',
+                detail: 'State program guidance update emphasizes inspection traceability, digital evidence retention, and targeted follow-up for elevated outfalls.',
+              },
+              {
+                id: 'state-1',
+                action: `${effectiveState} Nutrient Reduction Implementation Schedule`,
+                impact: `Potential milestone pressure on local implementation plans`,
+                status: 'Proposed',
+                date: '2026-04-30',
+                detail: 'Draft schedule includes updated milestone checkpoints and state-level performance reporting cadence for local jurisdictions.',
+              },
+            ];
+            const localRows = [
+              {
+                id: 'local-0',
+                action: `${scopeName} ordinance and capital alignment`,
+                impact: 'Local code, CIP timing, and permitting sequence should be aligned to current state/federal requirements',
+                status: 'Action Needed',
+                date: 'Next 30 Days',
+                detail: 'Prioritize ordinance crosswalk, project phasing dependencies, and legal review for high-urgency regulatory changes.',
+              },
+              {
+                id: 'local-1',
+                action: `${scopeName} council/board briefing package`,
+                impact: 'Improve executive clarity on compliance exposure, timeline, and budget implications',
+                status: 'Prepare',
+                date: 'Next Meeting',
+                detail: 'Provide concise talking points, exposure summary, deadline calendar, and funding strategy options specific to current jurisdiction scope.',
+              },
+            ];
+
+            const renderPolicyGroup = (title: string, description: string, rows: Array<{ id: string; action: string; impact: string; status: string; date: string; detail: string }>, accent: string) => (
+              <div className={`rounded-xl border p-4 ${accent}`}>
+                <h4 className="text-sm font-semibold text-slate-800">{title}</h4>
+                <p className="text-xs text-slate-500 mt-1">{description}</p>
+                <div className="mt-3 space-y-2">
+                  {rows.map((r) => (
+                    <div key={r.id} className="rounded-lg border border-slate-200 bg-white overflow-hidden">
+                      <button
+                        onClick={() => setPolicyExpanded((prev) => ({ ...prev, [r.id]: !prev[r.id] }))}
+                        className="w-full text-left p-3 hover:bg-slate-50 transition-colors"
+                      >
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <span className="text-xs font-semibold text-slate-800">{r.action}</span>
+                          <Badge variant="outline" className="text-[10px]">{r.status}</Badge>
+                        </div>
+                        <p className="text-xs text-slate-600">{r.impact}</p>
+                        <p className="text-[10px] text-slate-400 mt-1">{r.date}</p>
+                      </button>
+                      {policyExpanded[r.id] && (
+                        <div className="px-3 pb-3">
+                          <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-3">
+                            <p className="text-xs text-slate-700">{r.detail}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </PlaceholderSection>
-          );
+            );
+
+            return (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Scale className="h-5 w-5 text-purple-600" />
+                    Policy & Regulatory Tracker — {scopeName}
+                  </CardTitle>
+                  <CardDescription>
+                    Federal, state, and local policy context for {scopeName} ({effectiveState})
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {renderPolicyGroup(
+                    'Federal Actions',
+                    'National rulemaking and oversight likely to affect local compliance and funding posture.',
+                    federalRows,
+                    'bg-blue-50/40 border-blue-200'
+                  )}
+                  {renderPolicyGroup(
+                    `${effectiveState} State Actions`,
+                    'State program direction and implementation updates relevant to this jurisdiction.',
+                    stateRows,
+                    'bg-violet-50/40 border-violet-200'
+                  )}
+                  {renderPolicyGroup(
+                    'Local Jurisdiction Impacts',
+                    'Near-term execution focus for elected officials and program managers.',
+                    localRows,
+                    'bg-emerald-50/40 border-emerald-200'
+                  )}
+                  <p className="text-xs text-slate-400 italic">
+                    Context scope: {scopeName}. State context follows {effectiveState} and admin jurisdiction selection.
+                  </p>
+                </CardContent>
+              </Card>
+            );
+          })());
 
           case 'contaminants-tracker': return DS(
             <PlaceholderSection title="Emerging Contaminants" subtitle="Tracking emerging contaminants of concern." icon={<Bug size={15} />} accent="purple">
@@ -1912,4 +2109,5 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
     </div>
   );
 }
+
 
