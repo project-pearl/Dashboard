@@ -57,6 +57,7 @@ import { DraggableSection } from './DraggableSection';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { GrantOpportunityMatcher } from '@/components/GrantOpportunityMatcher';
+import { EmergingContaminantsTracker } from '@/components/EmergingContaminantsTracker';
 import { RoleBriefingActionsCard } from '@/components/RoleBriefingCards';
 import { getEcoData, getEcoScore, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
 import { ecoScoreStyle } from '@/lib/scoringUtils';
@@ -2083,15 +2084,22 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             );
           })());
 
-          case 'contaminants-tracker': return DS(
-            <PlaceholderSection title="Emerging Contaminants" subtitle="Tracking emerging contaminants of concern." icon={<Bug size={15} />} accent="purple">
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">
-                Emerging Contaminants tracker — placeholder
-              </div>
-            </PlaceholderSection>
-          );
+                    case 'contaminants-tracker': return DS((() => {
+            const hasJurisdictionScope = selectedJurisdictionId !== 'default';
+            const trackerRole = hasJurisdictionScope
+              ? ((isAdmin || user?.role === 'Pearl') ? 'ms4_admin' : 'ms4')
+              : 'state';
+            const scopeLabel = hasJurisdictionScope ? jurisdictionLabel : ${effectiveState} statewide;
+            return (
+              <EmergingContaminantsTracker
+                key={${effectiveState}--}
+                role={trackerRole}
+                selectedState={${effectiveState} � }
+              />
+            );
+          })());
 
-          default: return DS(
+default: return DS(
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">
               {section.label} — section placeholder
             </div>
@@ -2109,5 +2117,6 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
     </div>
   );
 }
+
 
 
