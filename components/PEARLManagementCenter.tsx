@@ -23,6 +23,7 @@ import {
 import { useAuth } from '@/lib/authContext';
 import type { UserRole } from '@/lib/authTypes';
 import { UserManagementPanel } from './UserManagementPanel';
+import { AlertsManagementPanel } from './AlertsManagementPanel';
 import WhatIfSimulator from './WhatIfSimulator';
 import RestorationPlanner from '@/components/RestorationPlanner';
 import PredictiveRiskEngine from './PredictiveRiskEngine';
@@ -35,7 +36,7 @@ import BudgetPlannerPanel from '@/components/BudgetPlannerPanel';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type ViewLens = 'operations' | 'proposals' | 'scenarios' | 'predictions' | 'scenario-planner' | 'budget-planner' | 'investigation' | 'users';
+type ViewLens = 'operations' | 'proposals' | 'scenarios' | 'predictions' | 'scenario-planner' | 'budget-planner' | 'investigation' | 'users' | 'alerts';
 
 type DeploymentStatus = 'active' | 'maintenance' | 'offline' | 'staging' | 'decommissioned';
 type AlertSeverity = 'critical' | 'warning' | 'info' | 'ok';
@@ -1044,6 +1045,7 @@ Doug and the PIN team`;
                   { lens: 'budget-planner' as ViewLens, label: '📊 Budget Planner', badge: 0 },
                   { lens: 'investigation' as ViewLens, label: '🔍 Investigation', badge: 0 },
                   ...(isAdmin ? [{ lens: 'users' as ViewLens, label: '👥 Users', badge: pendingUserCount }] : []),
+                  ...(isAdmin ? [{ lens: 'alerts' as ViewLens, label: '🔔 Alerts', badge: 0 }] : []),
                 ]).map(({ lens, label, badge }) => (
                   <button
                     key={lens}
@@ -1865,6 +1867,14 @@ Doug and the PIN team`;
 
         {viewLens === 'users' && isAdmin && (
           <UserManagementPanel onRefreshPendingCount={setPendingUserCount} />
+        )}
+
+        {/* ════════════════════════════════════════════════════════════ */}
+        {/* ── ALERTS LENS (admin only) ───────────────────────────────── */}
+        {/* ════════════════════════════════════════════════════════════ */}
+
+        {viewLens === 'alerts' && isAdmin && (
+          <AlertsManagementPanel />
         )}
 
         {/* ── FOOTER ── */}
