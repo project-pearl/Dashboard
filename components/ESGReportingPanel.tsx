@@ -140,7 +140,7 @@ export function ESGReportingPanel({ stateAbbr }: ESGReportingPanelProps) {
       {/* Source badge */}
       <div className="flex items-center gap-2 text-xs text-slate-400">
         <FileText className="w-3.5 h-3.5" />
-        <span>ESG Reporting Readiness — GRI, SASB, CDP, TCFD Framework Compliance ({stateAbbr || 'National'})</span>
+        <span>Reporting and Disclosure Readiness — GRI, SASB, CDP, TCFD Framework Compliance ({stateAbbr || 'National'})</span>
       </div>
 
       {/* Section 1: Hero Stats */}
