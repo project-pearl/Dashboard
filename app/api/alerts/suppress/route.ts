@@ -9,12 +9,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { loadSuppressions, saveSuppressions } from '@/lib/alerts/suppressions';
 import type { AlertSuppression } from '@/lib/alerts/types';
 
+import { isAuthorized } from '@/lib/apiAuth';
+
 function checkAuth(request: NextRequest): boolean {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  const hasCronAuth = cronSecret && authHeader === `Bearer ${cronSecret}`;
-  const hasSessionCookie = request.cookies.has('pin_session');
-  return !!(hasCronAuth || hasSessionCookie);
+  return isAuthorized(request);
 }
 
 // GET — list all suppressions

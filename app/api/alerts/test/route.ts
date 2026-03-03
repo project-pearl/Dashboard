@@ -7,16 +7,11 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { sendAlertEmail } from '@/lib/alerts/channels/email';
+import { isAuthorized } from '@/lib/apiAuth';
 import type { AlertEvent } from '@/lib/alerts/types';
 
 export async function POST(request: NextRequest) {
-  // Auth: require CRON_SECRET or session cookie
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  const hasCronAuth = cronSecret && authHeader === `Bearer ${cronSecret}`;
-  const hasSessionCookie = request.cookies.has('pin_session');
-
-  if (!hasCronAuth && !hasSessionCookie) {
+  if (!isAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

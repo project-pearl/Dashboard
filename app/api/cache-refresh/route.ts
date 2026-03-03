@@ -26,13 +26,9 @@ const FETCHERS: Record<string, FetcherFn> = {
 // ── POST Handler ────────────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
-  // Auth: require either CRON_SECRET or a valid session cookie
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  const hasCronAuth = cronSecret && authHeader === `Bearer ${cronSecret}`;
-  const hasSessionCookie = request.cookies.has('pin_session');
-
-  if (!hasCronAuth && !hasSessionCookie) {
+  // Auth check
+  const { isAuthorized } = await import('@/lib/apiAuth');
+  if (!isAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -62,7 +58,7 @@ export async function POST(request: NextRequest) {
       scopeKey,
       fetchFn: () => fetchFn(scopeKey),
       forceRefresh: true,
-      fetchedBy: hasSessionCookie ? 'user' : 'api',
+      fetchedBy: request.headers.get('origin') ? 'user' : 'api',
     });
 
     return NextResponse.json({
