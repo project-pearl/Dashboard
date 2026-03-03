@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { MockDataBadge } from './MockDataBadge';
 import HeroBanner from './HeroBanner';
-import { SourceHealthPanel } from './SourceHealthPanel';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip,
   ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
@@ -1077,8 +1076,6 @@ Doug and the PIN team`;
         </HeroBanner>
 
         {/* ── DATA SOURCE HEALTH MONITOR ── */}
-        <SourceHealthPanel collapsible defaultCollapsed />
-
         {/* ── NATIONAL WATER HEALTH GAUGE ── */}
         <Card className="overflow-hidden relative">
           {/* Demo Mode watermark */}
