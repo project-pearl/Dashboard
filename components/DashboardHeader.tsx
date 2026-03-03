@@ -6,6 +6,7 @@ import UserMenu from '@/components/UserMenu';
 import GlobalAlertBadge from '@/ams/components/GlobalAlertBadge';
 import { useAlertSummary } from '@/ams/hooks/useAlertSummary';
 import { PipelineHealthIndicator } from '@/components/PipelineHealthIndicator';
+import { JurisdictionScopeSwitcher } from '@/components/JurisdictionScopeSwitcher';
 
 
 const ROUTE_LABELS: Record<string, string> = {
@@ -66,6 +67,8 @@ export function DashboardHeader() {
 
       {/* Right side */}
       <div className="flex items-center gap-3">
+        <JurisdictionScopeSwitcher />
+
         {/* Pipeline health indicator */}
         <PipelineHealthIndicator />
 

@@ -211,6 +211,12 @@ export default function AccountPage() {
               <div className="text-xs text-slate-500 dark:text-white/40 mb-1">State</div>
               <div className="text-sm font-medium text-slate-800 dark:text-white/90">{user.state || '—'}</div>
             </div>
+            <div>
+              <div className="text-xs text-slate-500 dark:text-white/40 mb-1">Assigned Jurisdiction</div>
+              <div className="text-sm font-medium text-slate-800 dark:text-white/90">
+                {(user as any).jurisdictionId || (user as any).jurisdiction_id || user.ms4Jurisdiction || '-'}
+              </div>
+            </div>
           </div>
         </div>
 

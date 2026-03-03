@@ -48,6 +48,8 @@ import { DataLatencyTracker } from './DataLatencyTracker';
 import { DeltaChangelog } from './DeltaChangelog';
 import { useAdminState, STATE_ABBR_TO_NAME } from '@/lib/adminStateContext';
 import { scoreToGrade, ALERT_LEVEL_SCORES } from '@/lib/scoringUtils';
+import { useJurisdictionContext } from '@/lib/jurisdiction-context';
+import { scopeRowsByJurisdiction } from '@/lib/jurisdictions';
 
 import { HabitatEcologyPanel } from './HabitatEcologyPanel';
 import { AgriculturalNPSPanel } from './AgriculturalNPSPanel';
@@ -861,6 +863,7 @@ function formatRefreshAge(input: string | null | undefined): string {
 export function FederalManagementCenter(props: Props) {
   const { onClose, onSelectRegion, federalMode = false } = props;
   const { logout, user } = useAuth();
+  const { activeJurisdiction } = useJurisdictionContext();
   const router = useRouter();
 
   // ── View Lens: controls layout composition ──
@@ -933,7 +936,7 @@ export function FederalManagementCenter(props: Props) {
 
   // Merge base data with ATTAINS bulk assessments → reactive regionData
   // Two-phase: (1) upgrade existing registry entries, (2) ADD new ATTAINS-only waterbodies
-  const regionData = useMemo(() => {
+  const mergedRegionData = useMemo(() => {
     if (Object.keys(attainsBulk).length === 0) return baseRegionData;
 
     try {
@@ -1044,6 +1047,11 @@ export function FederalManagementCenter(props: Props) {
     }
   }, [baseRegionData, attainsBulk]);
 
+  const regionData = useMemo(() => {
+    if (!activeJurisdiction) return mergedRegionData;
+    return scopeRowsByJurisdiction(mergedRegionData, activeJurisdiction);
+  }, [mergedRegionData, activeJurisdiction]);
+
   // ── ATTAINS National Cache Loader ──
   // Reads from server cache if available. Does NOT trigger a build.
   // To build cache: run `npx ts-node scripts/build-attains-cache.ts` in a separate terminal
@@ -1146,7 +1154,13 @@ export function FederalManagementCenter(props: Props) {
   const [adminState] = useAdminState();
   const [selectedState, setSelectedState] = useState<string>(adminState);
   // Sync from sidebar admin state selector
-  useEffect(() => { setSelectedState(adminState); }, [adminState]);
+  useEffect(() => {
+    if (activeJurisdiction?.parent_state) {
+      setSelectedState(activeJurisdiction.parent_state);
+      return;
+    }
+    setSelectedState(adminState);
+  }, [adminState, activeJurisdiction?.parent_state]);
 
   // ── State Data Report (for StateDataReportCard) ──
   const { report: stateReport, isLoading: stateReportLoading } = useStateReport(selectedState);
@@ -1896,7 +1910,13 @@ export function FederalManagementCenter(props: Props) {
     let totalAssessed = 0;
     let totalImpaired = 0; // Cat 4 + Cat 5
 
-    for (const assessments of Object.values(attainsBulk)) {
+    const scopedAttains = activeJurisdiction
+      ? Object.fromEntries(
+        Object.entries(attainsBulk).filter(([abbr]) => abbr === activeJurisdiction.parent_state)
+      )
+      : attainsBulk;
+
+    for (const assessments of Object.values(scopedAttains)) {
       for (const a of assessments) {
         totalAssessed++;
         // Normalize category: "5", "4a", "4A", "4b", etc.
@@ -1947,7 +1967,7 @@ export function FederalManagementCenter(props: Props) {
 
     // Water type breakdown — normalize codes to display labels
     const rawWaterTypeCounts: Record<string, number> = {};
-    for (const assessments of Object.values(attainsBulk)) {
+    for (const assessments of Object.values(scopedAttains)) {
       for (const a of assessments) {
         if (a.waterType) {
           rawWaterTypeCounts[a.waterType] = (rawWaterTypeCounts[a.waterType] || 0) + 1;
@@ -1985,7 +2005,7 @@ export function FederalManagementCenter(props: Props) {
         ? Math.round((addressableCount / Object.values(causeCounts).reduce((s, c) => s + c, 0)) * 100) : 0,
       waterTypeCounts,
     };
-  }, [attainsBulk]);
+  }, [attainsBulk, activeJurisdiction]);
 
   // ── Federal top strip stats ──
   const topStrip = useMemo(() => {

@@ -3,6 +3,7 @@
 import React, { Suspense } from 'react';
 import AuthGuard from '@/components/AuthGuard';
 import { AdminStateProvider } from '@/lib/adminStateContext';
+import { JurisdictionProvider } from '@/lib/jurisdiction-context';
 import { DashboardSidebar } from '@/components/DashboardSidebar';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
@@ -11,6 +12,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <AuthGuard>
       <AdminStateProvider>
+      <JurisdictionProvider>
       <div className="flex h-screen bg-[var(--pin-page-bg)] overflow-hidden">
         {/* Sidebar */}
         <Suspense fallback={<div className="w-64 bg-white dark:bg-[#0D1526] border-r border-slate-200 dark:border-[rgba(58,189,176,0.12)] flex-shrink-0" />}>
@@ -33,6 +35,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </main>
         </div>
       </div>
+      </JurisdictionProvider>
       </AdminStateProvider>
     </AuthGuard>
   );

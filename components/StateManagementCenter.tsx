@@ -54,6 +54,8 @@ import { WaterQualityTradingPanel } from '@/components/WaterQualityTradingPanel'
 import { getEpaRegionForState } from '@/lib/epa-regions';
 import { NUTRIENT_TRADING_STATES } from '@/lib/constants';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
+import { useJurisdictionContext } from '@/lib/jurisdiction-context';
+import { scopeRowsByJurisdiction } from '@/lib/jurisdictions';
 
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
@@ -350,6 +352,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
   const stateName = STATE_NAMES[stateAbbr] || stateAbbr;
   const agency = STATE_AGENCIES[stateAbbr] || STATE_AUTHORITIES[stateAbbr] || null;
   const { user, logout, isAdmin } = useAuth();
+  const { activeJurisdiction } = useJurisdictionContext();
   const router = useRouter();
 
   // ── View Lens ──
@@ -382,7 +385,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
   const [attainsBulkLoaded, setAttainsBulkLoaded] = useState(false);
 
   // Merge ATTAINS into region data
-  const regionData = useMemo(() => {
+  const mergedRegionData = useMemo(() => {
     if (attainsBulk.length === 0) return baseRegions;
 
     const SEVERITY: Record<string, number> = { high: 3, medium: 2, low: 1, none: 0 };
@@ -426,6 +429,18 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
     if (addedCount > 0) console.log(`[SCC] Added ${addedCount} ATTAINS-only Cat 5 waterbodies for ${stateAbbr}`);
     return merged;
   }, [baseRegions, attainsBulk, stateAbbr]);
+
+  const regionData = useMemo(() => {
+    if (!activeJurisdiction) return mergedRegionData;
+    if (activeJurisdiction.parent_state !== stateAbbr) return mergedRegionData;
+    return scopeRowsByJurisdiction(mergedRegionData, activeJurisdiction);
+  }, [mergedRegionData, activeJurisdiction, stateAbbr]);
+
+  const scopedAttainsBulk = useMemo(() => {
+    if (!activeJurisdiction) return attainsBulk;
+    if (activeJurisdiction.parent_state !== stateAbbr) return attainsBulk;
+    return scopeRowsByJurisdiction(attainsBulk as any, activeJurisdiction) as typeof attainsBulk;
+  }, [attainsBulk, activeJurisdiction, stateAbbr]);
 
   // Waterbody marker coordinates — 3-priority resolution (ATTAINS centroid → regionsConfig → name-based)
   const attainsCoordMap = useMemo(() => {
@@ -1000,7 +1015,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                 stateName={stateName}
                 title="Local"
                 regionData={regionData}
-                attainsBulk={attainsBulk}
+                attainsBulk={scopedAttainsBulk}
                 attainsBulkLoaded={attainsBulkLoaded}
                 activeDetailId={activeDetailId}
                 setActiveDetailId={setActiveDetailId}
@@ -1115,7 +1130,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             stateAbbr={stateAbbr}
             stateName={stateName}
             regionData={regionData}
-            attainsBulk={attainsBulk}
+            attainsBulk={scopedAttainsBulk}
             attainsBulkLoaded={attainsBulkLoaded}
             activeDetailId={activeDetailId}
             setActiveDetailId={setActiveDetailId}
