@@ -13,7 +13,6 @@ import {
   ShieldCheck, Sparkles, TrendingUp, Trophy, Waves, Wrench, Zap,
   ThermometerSun, Beaker, Factory, Settings, Users, Fish, ShieldAlert, Bug, Megaphone,
 } from 'lucide-react';
-import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import LocationReportCard from '@/components/LocationReportCard';
 import ResolutionPlanner from '@/components/ResolutionPlanner';
 import dynamic from 'next/dynamic';
@@ -2070,9 +2069,7 @@ export default function UtilityManagementCenter({ systemId }: Props) {
               </Card>
             );
 
-            case 'disclaimer': return DS(
-              <PlatformDisclaimer />
-            );
+            case 'disclaimer': return null;
 
             default: return null;
             }

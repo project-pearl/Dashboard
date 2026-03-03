@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { DollarSign, AlertTriangle, CheckCircle, Shield, Clock, TrendingUp, Sliders, ChevronDown, ChevronUp, ExternalLink, Mail, Zap } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 
 // ── Jurisdiction profiles ────────────────────────────────────────────────────
 
@@ -791,7 +790,6 @@ export function ComplianceEconomics({ regionId, tier: initialTier = 'large', jur
               <span className="font-bold">Assumptions &amp; Risk:</span> Savings assume phased MDE acceptance of continuous monitoring per your QAPP/split-sample validation roadmap. Actuals vary by permit renewal cycle, sensor verification requirements, and MDE policy evolution. Confirmatory sampling retained per slider setting above. Does not include capital restoration costs — the largest MS4 budget item. Cost data sourced from Baltimore City FY24 Financial Assurance Plan, MDE monitoring guidelines, and peer jurisdiction surveys. Hardware costs not included in subscription pricing. Nutrient credit values based on current MD Bay trading rates — subject to market fluctuation.
             </p>
           </div>
-          <PlatformDisclaimer />
         </div>
 
       </CardContent>

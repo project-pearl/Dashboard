@@ -8,7 +8,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import {
   Target, Wrench, Waves, Scale, Gauge, GitBranch, Clock, HeartPulse,
   TrendingUp, TrendingDown, ChevronDown, ChevronUp, AlertTriangle,
@@ -773,7 +772,6 @@ export default function PredictiveRiskEnginePanel() {
         ))}
       </div>
 
-      <PlatformDisclaimer />
     </div>
   );
 }

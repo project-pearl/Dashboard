@@ -11,7 +11,6 @@ import RiskForecastPanel from '@/components/RiskForecastPanel';
 import HeroBanner from '@/components/HeroBanner';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
-import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import { useSearchParams } from 'next/navigation';
 import { getLensesForHref } from '@/lib/lensRegistry';
 import type { SiteIntelligenceReport, RiskIndicator, RiskLevel } from '@/lib/siteIntelTypes';
@@ -669,11 +668,7 @@ export default function SiteIntelDashboard() {
                   );
 
                   // ── Disclaimer ────────────────────────────────────────────
-                  case 'disclaimer': return DS(
-                    <div id="section-disclaimer">
-                      <PlatformDisclaimer />
-                    </div>
-                  );
+                  case 'disclaimer': return null;
 
                   default: return null;
                 }

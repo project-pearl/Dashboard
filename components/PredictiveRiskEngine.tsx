@@ -9,7 +9,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { RiskPrediction, RiskLevel, ConfidenceTier, ContributingFactor } from '@/lib/siteIntelTypes';
-import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 
 // ─── Icon Map ────────────────────────────────────────────────────────────────
 
@@ -602,7 +601,6 @@ export default function PredictiveRiskEngine({ predictions = null, dataCompleten
       {/* G. GUARDRAILS DISCLAIMER */}
       {/* ═══════════════════════════════════════════════════════════════════════ */}
 
-      <PlatformDisclaimer />
     </div>
   );
 }

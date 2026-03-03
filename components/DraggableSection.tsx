@@ -106,20 +106,15 @@ export function DraggableSection({
             : <Minus className="h-3.5 w-3.5 text-slate-400" />}
         </button>
       )}
-      {collapsed && canCollapse ? (
-        <button
-          onClick={() => setCollapsed(false)}
-          className="inline-flex max-w-full py-2 px-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 items-center gap-2 transition-colors dark:bg-[rgba(14,22,45,0.85)] dark:border-[rgba(58,189,176,0.12)]"
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+      <div onClick={handleHeaderClick} className={canCollapse ? '[&_h3]:cursor-pointer' : ''}>
+        <div
+          aria-expanded={!collapsed}
+          className={collapsed && canCollapse ? 'max-h-14 overflow-hidden' : ''}
         >
-          <span className="text-sm font-medium text-slate-500 truncate">{label}</span>
-          <ChevronDown className="h-4 w-4 text-slate-400" />
-        </button>
-      ) : (
-        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
-        <div onClick={handleHeaderClick} className={canCollapse ? '[&_h3]:cursor-pointer' : ''}>
           {children}
         </div>
-      )}
+      </div>
     </div>
   );
 }

@@ -4,7 +4,6 @@ import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BrandedPrintBtn } from '@/lib/brandedPrint';
-import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import {
   Droplets, CloudRain, FlaskConical, Factory, Mountain,
   ChevronDown, Bell, Scale, AlertTriangle, FileText, Download,
@@ -698,7 +697,6 @@ export function PolicyTracker() {
             <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] text-slate-600 mb-2">
               Tracker aggregates public EPA/Federal Register data - predictive intelligence, not official. Confidence: {TRACKER_CONFIDENCE} (pipeline active {TRACKER_PIPELINE_STATUS}).
             </div>
-            <PlatformDisclaimer />
           </div>
         </div>
       </CardContent>

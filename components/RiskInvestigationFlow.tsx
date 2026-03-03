@@ -18,7 +18,6 @@ import {
 } from '@/components/ui/breadcrumb';
 import { MockDataBadge } from './MockDataBadge';
 import type { RiskPrediction } from '@/lib/siteIntelTypes';
-import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import { getScenarioById } from '@/lib/scenarioPlanner/scenarios';
 import { computeScenarioCost } from '@/lib/scenarioPlanner/costEngine';
 import type { ScenarioResult } from '@/lib/scenarioPlanner/types';
@@ -2231,7 +2230,6 @@ export default function RiskInvestigationFlow({ preSelectedRisk, predictions: pr
         </div>
       )}
 
-      <PlatformDisclaimer />
     </div>
   );
 }

@@ -14,7 +14,6 @@ import { TierBadge } from '@/components/TierBadge';
 import { DATA_SOURCES, getTierForSource } from '@/lib/useWaterData';
 import type { DataSourceId, DataConfidenceTier } from '@/lib/useWaterData';
 import { ecoScoreStyle, ejScoreStyle } from '@/lib/scoringUtils';
-import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 
 // ─── Static Config ───────────────────────────────────────────────────────────
 
@@ -922,7 +921,6 @@ export function WaterbodyDetailCard({
               </div>
             )}
 
-            <PlatformDisclaimer />
 
             {/* ── CBP DataHub Enrichments ── */}
             {waterData?.parameters?._cbp_fluorescence && (

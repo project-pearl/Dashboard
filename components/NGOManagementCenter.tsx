@@ -27,7 +27,6 @@ import { useAuth } from '@/lib/authContext';
 import { getRegionMockData, calculateRemovalEfficiency } from '@/lib/mockData';
 import { WaterQualityChallenges } from '@/components/WaterQualityChallenges';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
-import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
 import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
@@ -2674,9 +2673,7 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
               </Card>
             );
 
-            case 'disclaimer': return DS(
-              <PlatformDisclaimer />
-            );
+            case 'disclaimer': return null;
 
             default: return null;
           }

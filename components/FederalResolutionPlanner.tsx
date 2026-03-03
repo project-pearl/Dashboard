@@ -16,7 +16,6 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 
 import { getArchivedSignals, type Signal } from "@/lib/signalArchiveCacheClient";
-import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 
 // Lazy-load Mapbox components (SSR-safe)
 
@@ -872,7 +871,6 @@ export default function FederalResolutionPlanner({ userTier, userId }: FederalRe
             </section>
           </div>
 
-          <PlatformDisclaimer />
         </div>
 
         {/* Refine Bar — at end of output */}

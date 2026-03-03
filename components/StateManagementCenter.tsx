@@ -40,7 +40,6 @@ import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { resolveWaterbodyCoordinates } from '@/lib/waterbodyCentroids';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { WatershedWaterbodyPanel } from '@/components/WatershedWaterbodyPanel';
-import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
 import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
@@ -170,7 +169,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Water Quality',
     description: 'Standards, assessment, station data, and field integration',
     defaultOverlay: 'risk',
-    sections: new Set(['regprofile', 'local-panel', 'groundwater', 'wq-standards', 'wq-assessment', 'wq-aqualo', 'wq-stations', 'disclaimer']),
+    sections: new Set(['regprofile', 'local-panel', 'groundwater', 'wq-standards', 'wq-assessment', 'wq-stations', 'disclaimer']),
   },
   'public-health': {
     label: 'Public Health & Contaminants',
@@ -188,13 +187,13 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Agricultural & Nonpoint Source',
     description: '319 program, watershed plans, and nutrient reduction',
     defaultOverlay: 'risk',
-    sections: new Set(['ag-319', 'ag-wbp', 'infra-green', 'ag-nutrient', 'ag-partners', 'ag-nps-breakdown', 'ag-bmp-effectiveness', 'ag-nps-tmdl', 'ag-nps-funding', 'disclaimer']),
+    sections: new Set(['ag-319', 'ag-partners', 'ag-nps-breakdown', 'ag-nps-tmdl', 'ag-nps-funding', 'disclaimer']),
   },
   infrastructure: {
     label: 'Infrastructure',
     description: 'SRF administration, capital planning, and green infrastructure',
     defaultOverlay: 'risk',
-    sections: new Set(['infra-srf', 'infra-capital', 'infra-construction', 'infra-green', 'disclaimer']),
+    sections: new Set(['infra-srf', 'infra-capital', 'infra-construction', 'infra-green', 'ag-bmp-effectiveness', 'ag-nutrient', 'ag-wbp', 'disclaimer']),
   },
   monitoring: {
     label: 'Monitoring',
@@ -363,10 +362,15 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
   const [viewLens, setViewLens] = useLensParam<ViewLens>('overview');
   const lens = LENS_CONFIG[viewLens] ?? LENS_CONFIG['overview'];
   const [overlay, setOverlay] = useState<OverlayId>('risk');
+  const [icisLoadRequested, setIcisLoadRequested] = useState(false);
 
   // ── State Data Report Card ──
   const { report: stateReport, isLoading: stateReportLoading } = useStateReport(stateAbbr);
   const { data: usasData, isLoading: usasLoading } = useUSASpendingData(stateAbbr);
+
+  useEffect(() => {
+    setIcisLoadRequested(false);
+  }, [stateAbbr]);
 
   // ── State-filtered region data ──
   const baseRegions = useMemo(() => generateStateRegionData(stateAbbr), [stateAbbr]);
@@ -1866,11 +1870,34 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
         ) : null);
 
             case 'icis': return DS(
-        <div id="section-icis">
-          <ICISCompliancePanel
-            state={stateAbbr}
-            compactMode={false}
-          />
+        <div id="section-icis" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+            <div>
+              <div className="text-sm font-bold text-slate-800">NPDES / ICIS Compliance</div>
+              <div className="text-xs text-slate-500">Load-on-demand to keep Compliance lens responsive</div>
+            </div>
+            {!icisLoadRequested && (
+              <Button
+                size="sm"
+                onClick={() => setIcisLoadRequested(true)}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white"
+              >
+                Load NPDES Data
+              </Button>
+            )}
+          </div>
+          <div className="p-4">
+            {icisLoadRequested ? (
+              <ICISCompliancePanel
+                state={stateAbbr}
+                compactMode={false}
+              />
+            ) : (
+              <p className="text-xs text-slate-500">
+                NPDES/ICIS queries can be heavy for state-wide views. Click <span className="font-semibold">Load NPDES Data</span> when you need permit-level details.
+              </p>
+            )}
+          </div>
         </div>
       );
 
@@ -2289,9 +2316,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </Card>
             );
 
-            case 'disclaimer': return DS(
-              <PlatformDisclaimer />
-            );
+            case 'disclaimer': return null;
 
             // ── Overview sections ──────────────────────────────────────────
             case 'operational-health': return DS(
@@ -2924,34 +2949,6 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                     )}
                   </div>
                   <p className="text-xs text-slate-400 mt-4 italic">Data source: State monitoring database, EPA ATTAINS, WQX</p>
-                </CardContent>
-              </Card>
-            );
-
-            case 'wq-aqualo': return DS(
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FlaskConical className="h-5 w-5 text-teal-600" />
-                    Aqua-Lo Integration
-                  </CardTitle>
-                  <CardDescription>Real-time field sensor data from deployed Aqua-Lo units</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {[
-                      { label: 'Deployed Units', value: '—', bg: 'bg-teal-50 border-teal-200' },
-                      { label: 'Active Streams', value: '—', bg: 'bg-teal-50 border-teal-200' },
-                      { label: 'Alerts (24h)', value: '—', bg: 'bg-teal-50 border-teal-200' },
-                      { label: 'Data Points', value: '—', bg: 'bg-teal-50 border-teal-200' },
-                    ].map(k => (
-                      <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
-                        <div className="text-2xl font-bold text-teal-700 mt-1">{k.value}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: Aqua-Lo IoT sensor network (awaiting deployment)</p>
                 </CardContent>
               </Card>
             );

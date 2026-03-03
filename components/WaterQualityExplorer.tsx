@@ -12,7 +12,6 @@ import {
 } from '@/lib/stateWaterData';
 import { getEpaRegionForState, EPA_REGIONS } from '@/lib/epa-regions';
 import { scoreToGrade } from '@/lib/scoringUtils';
-import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import {
   ArrowRight, ChevronDown, Building2, ExternalLink, Phone, Users,
   Droplets, ShieldCheck, FileText, BookOpen, Download,
@@ -913,7 +912,6 @@ export default function WaterQualityExplorer() {
             </div>
             <p className="text-xs text-slate-400">&copy; {new Date().getFullYear()} Local Seafood Projects Inc. All rights reserved.</p>
           </div>
-          <PlatformDisclaimer />
         </div>
       </footer>
     </div>

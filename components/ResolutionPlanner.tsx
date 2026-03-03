@@ -13,7 +13,6 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { getArchivedSignals, type Signal } from "@/lib/signalArchiveCacheClient";
 
-import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 // html2pdf.js loaded dynamically in export handler (code-split)
 
 // ── Types ──
@@ -1193,7 +1192,6 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 text-sm text-purple-800 whitespace-pre-wrap">{plan!.sections.regulatoryPath}</div>
         </section>
 
-        <PlatformDisclaimer />
       </div>
       </div>{/* end pdfContentRef capture area */}
 

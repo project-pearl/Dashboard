@@ -42,7 +42,6 @@ import { BrandedPDFGenerator } from '@/lib/brandedPdfGenerator';
 import { BrandedPrintBtn } from '@/lib/brandedPrint';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
-import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
 import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
@@ -1939,9 +1938,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
 
             // ─── DISCLAIMER ─────────────────────────────────────────────────
 
-            case 'disclaimer': return DS(
-              <PlatformDisclaimer />
-            );
+            case 'disclaimer': return null;
 
             default: return null;
           }

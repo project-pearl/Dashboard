@@ -31,7 +31,6 @@ import { getRegionMockData, calculateRemovalEfficiency, calculateOverallScore } 
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { resolveWaterbodyCoordinates } from '@/lib/waterbodyCentroids';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
-import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import { ICISCompliancePanel } from '@/components/ICISCompliancePanel';
 import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
 import BoundaryAlertsDashboard from '@/components/BoundaryAlertsDashboard';
@@ -5949,9 +5948,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
               <WaterQualityTradingPanel stateAbbr={stateAbbr} mode="ms4" />
             ) : null;
 
-            case 'disclaimer': return DS(
-              <PlatformDisclaimer />
-            );
+            case 'disclaimer': return null;
 
             default: return null;
           }

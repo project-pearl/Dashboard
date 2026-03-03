@@ -29,7 +29,6 @@ import { WildlifeImpactDisclaimer } from '@/components/WildlifeImpactDisclaimer'
 import { K12EducationalHub } from '@/components/K12EducationalHub';
 import { WaterQualityChallenges } from '@/components/WaterQualityChallenges';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
-import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 import { exportK12FieldReport } from '@/components/PearlExports';
 import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
 import { EmergingContaminantsTracker } from '@/components/EmergingContaminantsTracker';
@@ -2470,9 +2469,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
               </div>
             );
 
-            case 'disclaimer': return DS(
-              <PlatformDisclaimer />
-            );
+            case 'disclaimer': return null;
 
             default: return null;
           }

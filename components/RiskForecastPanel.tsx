@@ -6,7 +6,6 @@ import {
   ChevronDown, ChevronUp, AlertTriangle, Info,
 } from 'lucide-react';
 import type { RiskForecastResult, RiskPrediction, RiskLevel, ConfidenceTier } from '@/lib/siteIntelTypes';
-import { PlatformDisclaimer } from '@/components/PlatformDisclaimer';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -67,7 +66,6 @@ export default function RiskForecastPanel({ forecast }: RiskForecastPanelProps) 
         ))}
       </div>
 
-      <PlatformDisclaimer />
     </div>
   );
 }

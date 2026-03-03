@@ -53,7 +53,6 @@ import {
 } from 'lucide-react';
 import { DashboardSection } from './DashboardSection';
 import { StatusCard } from './StatusCard';
-import { PlatformDisclaimer } from './PlatformDisclaimer';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
@@ -1670,7 +1669,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
           ) : null;
 
           // ── Disclaimer ──
-          case 'disclaimer': return DS(<PlatformDisclaimer />);
+          case 'disclaimer': return null;
 
           // ═══════════════════════════════════════════════════════════════════
           // SHARED PANELS — TRENDS, POLICY, CONTAMINANTS
