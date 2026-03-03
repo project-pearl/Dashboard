@@ -291,8 +291,8 @@ export const DEFAULT_SECTIONS = {
     { id: 'mon-continuous',      label: 'Continuous Monitoring',            order: 51, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Disaster (View 13) ──
     { id: 'disaster-active',     label: 'Active Incidents',                 order: 52, visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'disaster-response',   label: 'MS4 Response Operations',          order: 53, visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'disaster-spill',      label: 'Spill Reporting',                  order: 54, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'disaster-spill',      label: 'Spill Reporting',                  order: 53, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'disaster-response',   label: 'MS4 Response Operations',          order: 54, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'disaster-prep',       label: 'Preparedness',                     order: 55, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── TMDL Compliance (View 14) ★ ──
     { id: 'tmdl-inventory',      label: 'TMDL Inventory',                   order: 56, visible: true, defaultExpanded: true,  lensControlled: true },
@@ -808,8 +808,8 @@ export const DEFAULT_SECTIONS = {
     { id: 'lab-aqualo',             label: 'Aqua-Lo LIMS Dashboard',          order: 63, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Disaster & Emergency (View 13) ──
     { id: 'disaster-active',        label: 'Active Emergencies',              order: 64, visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'disaster-response',      label: 'Emergency Response Operations',  order: 65, visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'disaster-vulnerability', label: 'Vulnerability Assessment',       order: 66, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'disaster-vulnerability', label: 'Vulnerability Assessment',       order: 65, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'disaster-response',      label: 'Emergency Response Operations',  order: 66, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'disaster-recovery',      label: 'Event Recovery',                  order: 67, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'disaster-resilience',    label: 'Climate Resilience',              order: 68, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Permit Limits & Compliance (View 14 — utility-exclusive) ──

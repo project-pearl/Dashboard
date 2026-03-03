@@ -110,7 +110,7 @@ const LENS_CONFIG: Record<ViewLens, {
   disaster: {
     label: 'Disaster & Emergency',
     description: 'Infrastructure failures, contamination events, vulnerability, and climate resilience',
-    sections: new Set(['disaster-active', 'disaster-response', 'disaster-vulnerability', 'disaster-recovery', 'disaster-resilience', 'resolution-planner', 'insights', 'alertfeed', 'disclaimer']),
+    sections: new Set(['disaster-active', 'disaster-vulnerability', 'disaster-response', 'disaster-recovery', 'disaster-resilience', 'resolution-planner', 'insights', 'alertfeed', 'disclaimer']),
   },
   'permit-limits': {
     label: 'Permit Limits & Compliance',
@@ -1194,8 +1194,12 @@ export default function UtilityManagementCenter({ systemId }: Props) {
             );
 
             case 'disaster-response': return DS(
-              <PlaceholderSection icon={Shield} iconColor="text-red-600" title="Emergency Response Operations"
-                description="ERP activation, notification checklist, boil water advisories, and mutual aid"
+              <div className="space-y-2">
+                <div className="inline-flex w-fit items-center rounded-full border border-blue-300 bg-blue-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-blue-700">
+                  Action Layer
+                </div>
+                <PlaceholderSection icon={Shield} iconColor="text-blue-700" title="Emergency Response Operations"
+                description="Response playbook, ERP activation, notification checklist, boil water advisories, and mutual aid."
                 kpis={[
                   { label: 'ERP Status', value: 'Standby', bg: 'bg-green-50 border-green-200' },
                   { label: 'Notifications', value: 'None pending', bg: 'bg-green-50 border-green-200' },
@@ -1204,6 +1208,10 @@ export default function UtilityManagementCenter({ systemId }: Props) {
                 ]}
                 source="Utility ERP records, state notification system"
               />
+                <div className="rounded-lg border border-blue-200 bg-blue-50/60 px-3 py-2 text-xs text-blue-900">
+                  Use this section to execute response actions after validating real-world conditions in Active Emergencies and Vulnerability Assessment.
+                </div>
+              </div>
             );
 
             case 'disaster-vulnerability': return DS(

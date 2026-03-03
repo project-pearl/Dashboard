@@ -209,7 +209,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Disaster & Emergency Response',
     description: 'Active incidents, spill reporting, and preparedness',
     defaultOverlay: 'impairment',
-    sections: new Set(['alertfeed', 'disaster-active', 'disaster-response', 'disaster-spill', 'disaster-prep', 'resolution-planner', 'disclaimer']),
+    sections: new Set(['alertfeed', 'disaster-active', 'disaster-spill', 'disaster-response', 'disaster-prep', 'resolution-planner', 'disclaimer']),
   },
   'tmdl-compliance': {
     label: 'TMDL Compliance',
@@ -4684,13 +4684,16 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
             );
 
             case 'disaster-response': return DS(
-              <Card>
+              <Card className="border-blue-300 bg-gradient-to-br from-blue-50 to-white shadow-sm">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Shield className="h-5 w-5 text-blue-600" />
+                  <div className="inline-flex w-fit items-center rounded-full border border-blue-300 bg-white px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-blue-700">
+                    Action Layer
+                  </div>
+                  <CardTitle className="flex items-center gap-2 mt-2">
+                    <Shield className="h-5 w-5 text-blue-700" />
                     MS4 Response Operations
                   </CardTitle>
-                  <CardDescription>Emergency response protocols and resource deployment status</CardDescription>
+                  <CardDescription>Response playbook and resource deployment. Validate against active incidents and spill conditions above.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
@@ -4708,6 +4711,9 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         </div>
                       </div>
                     ))}
+                  </div>
+                  <div className="mt-3 rounded-lg border border-blue-200 bg-white/80 px-3 py-2 text-xs text-blue-900">
+                    Next step: use this playbook to assign owners and timelines in the Resolution Planner section.
                   </div>
                 </CardContent>
               </Card>
