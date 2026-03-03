@@ -323,6 +323,7 @@ export default function LoginPage() {
                   <input
                     type={showLoginPw ? 'text' : 'password'}
                     required
+                    autoComplete="current-password"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     className={`${inputClass} pr-11`}
@@ -390,6 +391,7 @@ export default function LoginPage() {
                     type={showSignupPw ? 'text' : 'password'}
                     required
                     minLength={8}
+                    autoComplete="new-password"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     onFocus={() => setPwTouched(true)}
@@ -414,6 +416,7 @@ export default function LoginPage() {
                     type={showConfirmPw ? 'text' : 'password'}
                     required
                     minLength={8}
+                    autoComplete="new-password"
                     value={confirmPassword}
                     onChange={e => setConfirmPassword(e.target.value)}
                     onFocus={() => setConfirmTouched(true)}

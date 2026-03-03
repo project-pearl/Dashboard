@@ -49,7 +49,7 @@ import { DeltaChangelog } from './DeltaChangelog';
 import { useAdminState, STATE_ABBR_TO_NAME } from '@/lib/adminStateContext';
 import { scoreToGrade, ALERT_LEVEL_SCORES } from '@/lib/scoringUtils';
 import { useJurisdictionContext } from '@/lib/jurisdiction-context';
-import { scopeRowsByJurisdiction } from '@/lib/jurisdictions';
+import { scopeRowsByJurisdiction } from '@/lib/jurisdictions/index';
 
 import { HabitatEcologyPanel } from './HabitatEcologyPanel';
 import { AgriculturalNPSPanel } from './AgriculturalNPSPanel';

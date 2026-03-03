@@ -7,7 +7,7 @@ import {
   getAssignedJurisdictions,
   getJurisdictionById,
   getJurisdictionsForState,
-} from '@/lib/jurisdictions';
+} from '@/lib/jurisdictions/index';
 
 type JurisdictionContextValue = {
   activeJurisdiction: JurisdictionScope | null;

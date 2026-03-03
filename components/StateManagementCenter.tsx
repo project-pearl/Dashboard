@@ -55,7 +55,7 @@ import { getEpaRegionForState } from '@/lib/epa-regions';
 import { NUTRIENT_TRADING_STATES } from '@/lib/constants';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import { useJurisdictionContext } from '@/lib/jurisdiction-context';
-import { scopeRowsByJurisdiction } from '@/lib/jurisdictions';
+import { scopeRowsByJurisdiction } from '@/lib/jurisdictions/index';
 
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
