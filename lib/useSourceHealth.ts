@@ -110,7 +110,8 @@ export function useSourceHealth(): UseSourceHealthResult {
     for (const s of sources) {
       if (s.status === 'online') online++;
       else if (s.status === 'degraded') degraded++;
-      else offline++;
+      else if (s.status === 'offline') offline++;
+      // 'unknown' status is not counted as offline
     }
     return { onlineCount: online, degradedCount: degraded, offlineCount: offline };
   }, [sources]);

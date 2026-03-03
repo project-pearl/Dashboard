@@ -49,7 +49,8 @@ export function SourceHealthPanel({ collapsible, defaultCollapsed }: SourceHealt
 
   useEffect(() => {
     if (!collapsible) return;
-    setCollapsed(!hasUnhealthy);
+    // Only auto-collapse when healthy; never force-expand when unhealthy
+    if (!hasUnhealthy) setCollapsed(true);
   }, [collapsible, hasUnhealthy]);
 
   const unhealthySources = useMemo(

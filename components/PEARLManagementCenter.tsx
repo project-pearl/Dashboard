@@ -32,10 +32,11 @@ import RiskInvestigationFlow from './RiskInvestigationFlow';
 import type { RiskPrediction, RiskForecastResult } from '@/lib/siteIntelTypes';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import { GrantOpportunityMatcher } from './GrantOpportunityMatcher';
+import BudgetPlannerPanel from '@/components/BudgetPlannerPanel';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type ViewLens = 'operations' | 'proposals' | 'scenarios' | 'predictions' | 'scenario-planner' | 'investigation' | 'users';
+type ViewLens = 'operations' | 'proposals' | 'scenarios' | 'predictions' | 'scenario-planner' | 'budget-planner' | 'investigation' | 'users';
 
 type DeploymentStatus = 'active' | 'maintenance' | 'offline' | 'staging' | 'decommissioned';
 type AlertSeverity = 'critical' | 'warning' | 'info' | 'ok';
@@ -1041,6 +1042,7 @@ Doug and the PIN team`;
                   { lens: 'scenarios' as ViewLens, label: '🔬 What-If', badge: 0 },
                   { lens: 'predictions' as ViewLens, label: '🎯 Predictions', badge: 0 },
                   { lens: 'scenario-planner' as ViewLens, label: '💰 Scenario Planner', badge: 0 },
+                  { lens: 'budget-planner' as ViewLens, label: '📊 Budget Planner', badge: 0 },
                   { lens: 'investigation' as ViewLens, label: '🔍 Investigation', badge: 0 },
                   ...(isAdmin ? [{ lens: 'users' as ViewLens, label: '👥 Users', badge: pendingUserCount }] : []),
                 ]).map(({ lens, label, badge }) => (
@@ -1835,6 +1837,14 @@ Doug and the PIN team`;
 
         {viewLens === 'scenario-planner' && (
           <ScenarioPlannerPanel />
+        )}
+
+        {/* ════════════════════════════════════════════════════════════ */}
+        {/* ── BUDGET PLANNER LENS ─────────────────────────────────── */}
+        {/* ════════════════════════════════════════════════════════════ */}
+
+        {viewLens === 'budget-planner' && (
+          <BudgetPlannerPanel />
         )}
 
         {/* ════════════════════════════════════════════════════════════ */}
