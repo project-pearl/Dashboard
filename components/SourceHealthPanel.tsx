@@ -267,6 +267,7 @@ export function SourceHealthPanel({ collapsible, defaultCollapsed }: SourceHealt
                   ['NARS Sites', datapoints.nars?.sites ?? 0, ''],
                   ['Data.gov', datapoints.dataGov?.datasets ?? 0, 'datasets'],
                   ['USACE', datapoints.usace?.locations ?? 0, 'locations'],
+                  ['MDE IR', datapoints.mde?.assessmentUnits ?? 0, 'units'],
                 ] as [string, number, string][])
                   .filter(([, count]) => count > 0)
                   .map(([label, count, unit]) => (

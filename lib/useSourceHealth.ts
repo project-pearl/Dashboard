@@ -34,6 +34,7 @@ export interface DatapointSummary {
   nars: { sites: number };
   dataGov: { datasets: number };
   usace: { locations: number };
+  mde: { assessmentUnits: number };
   total: number;
   totalAccessible: number;
 }

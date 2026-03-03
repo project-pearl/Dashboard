@@ -664,6 +664,31 @@
       "backoff_minutes": 5,
       "first_failure": null,
       "next_check_after": "2026-03-03T07:38:52.656598Z"
+    },
+    {
+      "id": "md-mde-arcgis",
+      "name": "MD MDE ArcGIS (Integrated Report / TMDLs)",
+      "health_id": "MDE_ARCGIS",
+      "type": "state",
+      "url": "https://mde.geodata.md.gov/arcgis/rest/services",
+      "probe_url": "https://mde.geodata.md.gov/arcgis/rest/services?f=json",
+      "alt_urls": [
+        "https://mdewin64.mde.state.md.us/arcgis/rest/services",
+        "https://services.arcgis.com/njFNhDsUCentVYJW/ArcGIS/rest/services"
+      ],
+      "format": "json",
+      "status": "degraded",
+      "priority": 2,
+      "last_fetch": null,
+      "last_success": null,
+      "last_checked": null,
+      "error_count": 0,
+      "staleness_days": null,
+      "record_estimate": "unknown",
+      "notes": "MD Integrated Report (303d/305b), TMDLs, pollutant layers. State servers intermittently down — ArcGIS Online fallback available.",
+      "backoff_minutes": 60,
+      "first_failure": null,
+      "next_check_after": null
     }
   ],
   "wqp_states": {

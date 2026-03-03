@@ -16,6 +16,7 @@ import { getNasaCmrCacheStatus, ensureWarmed as warmNasaCmr } from '@/lib/nasaCm
 import { getNarsCacheStatus, ensureWarmed as warmNars } from '@/lib/narsCache';
 import { getDataGovCacheStatus, ensureWarmed as warmDataGov } from '@/lib/dataGovCache';
 import { getUsaceCacheStatus, ensureWarmed as warmUsace } from '@/lib/usaceCache';
+import { getMdeCacheStatus, ensureWarmed as warmMde } from '@/lib/mdeCache';
 
 // ─── Federal Source Totals (conservative public figures, updated ~yearly) ────
 
@@ -97,6 +98,7 @@ export async function GET() {
     warmAttains(), warmWqp(), warmCeden(), warmIcis(), warmSdwis(),
     warmNwisGw(), warmEcho(), warmFrs(), warmPfas(), warmBwb(),
     warmCdcNwss(), warmNdbc(), warmNasaCmr(), warmNars(), warmDataGov(), warmUsace(),
+    warmMde(),
   ]);
 
   const bwbToken = process.env.WATER_REPORTER_API_KEY || '';
@@ -354,6 +356,13 @@ export async function GET() {
       'https://api.water.usgs.gov/nldi/linked-data',
       8_000,
     ),
+    // Source 35: MD MDE ArcGIS (Integrated Report / TMDLs)
+    check(
+      'MDE_ARCGIS',
+      'MD MDE ArcGIS',
+      'https://mde.geodata.md.gov/arcgis/rest/services?f=json',
+      10_000,
+    ),
   ]);
 
   const sources: SourceHealthEntry[] = [];
@@ -424,6 +433,9 @@ export async function GET() {
   const usaceStatus = getUsaceCacheStatus();
   const usaceLocations = usaceStatus.loaded ? (usaceStatus as { locationCount: number }).locationCount : 0;
 
+  const mdeStatus = getMdeCacheStatus();
+  const mdeUnits = mdeStatus.loaded ? mdeStatus.assessmentUnits : 0;
+
   const datapoints = {
     attains: { states: attainsStates.length, waterbodies: attainsWaterbodies, assessments: attainsAssessments },
     wqp: { records: wqpRecords, states: wqpStates },
@@ -441,7 +453,8 @@ export async function GET() {
     nars: { sites: narsSites },
     dataGov: { datasets: dataGovDatasets },
     usace: { locations: usaceLocations },
-    total: attainsWaterbodies + wqpRecords + cedenChem + cedenTox + icisPermits + icisViolations + icisDmr + icisEnforcement + nwisGwSites + nwisGwLevels + sdwisSystems + sdwisViolations + sdwisEnforcement + echoFacilities + echoViolations + frsFacilities + pfasResults + bwbStations + bwbReadings + cdcNwssRecords + ndbcStations + narsSites + usaceLocations,
+    mde: { assessmentUnits: mdeUnits },
+    total: attainsWaterbodies + wqpRecords + cedenChem + cedenTox + icisPermits + icisViolations + icisDmr + icisEnforcement + nwisGwSites + nwisGwLevels + sdwisSystems + sdwisViolations + sdwisEnforcement + echoFacilities + echoViolations + frsFacilities + pfasResults + bwbStations + bwbReadings + cdcNwssRecords + ndbcStations + narsSites + usaceLocations + mdeUnits,
     totalAccessible: TOTAL_ACCESSIBLE,
   };
 

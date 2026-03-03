@@ -421,6 +421,134 @@ def fetch_nasa_cmr(dry_run=False):
         return None
 
 
+def fetch_mde_arcgis(dry_run=False):
+    """Fetch MDE ArcGIS water quality assessment data for Maryland.
+    Tries three endpoints in order until one works."""
+    endpoints = [
+        ("MDE GeoData", "https://mde.geodata.md.gov/arcgis/rest/services/Water_Quality"),
+        ("MDE Win64", "https://mdewin64.mde.state.md.us/arcgis/rest/services"),
+        ("ArcGIS Online", "https://services.arcgis.com/njFNhDsUCentVYJW/ArcGIS/rest/services"),
+    ]
+    service_keywords = ["water", "quality", "tmdl", "303d", "ir", "assessment", "impair"]
+
+    if dry_run:
+        for label, url in endpoints:
+            print(f"  [DRY RUN] md-mde-arcgis ({label}): would probe {url}?f=json")
+            try:
+                r = requests.get(f"{url}?f=json", timeout=15)
+                if r.ok:
+                    data = r.json()
+                    services = data.get("services", [])
+                    matched = [s for s in services if any(kw in s.get("name", "").lower() for kw in service_keywords)]
+                    print(f"    Found {len(services)} services, {len(matched)} matching WQ keywords")
+                    return None
+                else:
+                    print(f"    HTTP {r.status_code}")
+            except Exception as e:
+                print(f"    Unreachable: {str(e)[:80]}")
+        return None
+
+    all_rows = []
+    for label, base_url in endpoints:
+        print(f"  Trying {label}: {base_url}")
+        try:
+            r = requests.get(f"{base_url}?f=json", timeout=30)
+            if not r.ok:
+                print(f"    HTTP {r.status_code} — skipping")
+                continue
+            data = r.json()
+            services = data.get("services", [])
+            matched = [s for s in services
+                       if s.get("type") in ("MapServer", "FeatureServer")
+                       and any(kw in s.get("name", "").lower() for kw in service_keywords)]
+
+            # Also check folders
+            for folder in data.get("folders", []):
+                if any(kw in folder.lower() for kw in service_keywords):
+                    try:
+                        fr = requests.get(f"{base_url}/{folder}?f=json", timeout=15)
+                        if fr.ok:
+                            for s in fr.json().get("services", []):
+                                if s.get("type") in ("MapServer", "FeatureServer"):
+                                    matched.append(s)
+                    except Exception:
+                        pass
+
+            if not matched:
+                print(f"    No matching WQ services — skipping")
+                continue
+
+            print(f"    Found {len(matched)} WQ services")
+
+            for svc in matched:
+                svc_url = f"{base_url}/{svc['name']}/{svc['type']}"
+                try:
+                    lr = requests.get(f"{svc_url}?f=json", timeout=15)
+                    if not lr.ok:
+                        continue
+                    layers = lr.json().get("layers", [])
+                    for layer in layers:
+                        lid = layer["id"]
+                        lname = layer.get("name", f"Layer {lid}")
+                        offset = 0
+                        page_count = 0
+                        while True:
+                            qurl = (f"{svc_url}/{lid}/query?where=1%3D1&outFields=*"
+                                    f"&returnGeometry=true&resultOffset={offset}"
+                                    f"&resultRecordCount=2000&f=json")
+                            qr = requests.get(qurl, timeout=60)
+                            if not qr.ok:
+                                break
+                            qdata = qr.json()
+                            features = qdata.get("features", [])
+                            if not features:
+                                break
+                            for feat in features:
+                                attrs = feat.get("attributes", {})
+                                geom = feat.get("geometry", {})
+                                lat = geom.get("y") or attrs.get("LATITUDE") or attrs.get("LAT")
+                                lon = geom.get("x") or attrs.get("LONGITUDE") or attrs.get("LON")
+                                row = {
+                                    "au_id": (attrs.get("AU_ID") or attrs.get("ASSESSMENT_UNIT_ID")
+                                              or attrs.get("AUID") or str(attrs.get("OBJECTID", ""))),
+                                    "au_name": (attrs.get("AU_NAME") or attrs.get("WATER_NAME")
+                                                or attrs.get("NAME") or ""),
+                                    "water_type": attrs.get("WATER_TYPE", attrs.get("AU_TYPE", "unknown")),
+                                    "category": (attrs.get("IR_CATEGORY") or attrs.get("CATEGORY") or ""),
+                                    "cause": (attrs.get("CAUSE") or attrs.get("CAUSES")
+                                              or attrs.get("POLLUTANT") or ""),
+                                    "tmdl_status": attrs.get("TMDL_STATUS", "na"),
+                                    "tmdl_date": attrs.get("TMDL_DATE") or attrs.get("TMDL_APPROVAL_DATE"),
+                                    "lat": lat,
+                                    "lon": lon,
+                                    "source_layer": lname,
+                                }
+                                all_rows.append(row)
+                            offset += len(features)
+                            page_count += 1
+                            if qdata.get("exceededTransferLimit") is False or len(features) < 2000:
+                                break
+                            time.sleep(2)
+                        if page_count > 0:
+                            print(f"      {lname}: {offset} features ({page_count} pages)")
+                except Exception as e:
+                    print(f"      Error on {svc['name']}: {str(e)[:80]}")
+                time.sleep(5)
+
+            if all_rows:
+                break  # Success — stop trying other endpoints
+        except Exception as e:
+            print(f"    {label} failed: {str(e)[:80]}")
+
+    if not all_rows:
+        print(f"    ⚠ md-mde-arcgis: no features from any endpoint")
+        return None
+
+    df = pd.DataFrame(all_rows)
+    print(f"    ✅ md-mde-arcgis: {len(df):,} total features")
+    return df
+
+
 def fetch_socrata_state(source_id, base_url, dry_run=False):
     """Fetch Socrata-based state open data. Generic handler for NY, NJ, PA, VA."""
     url = f"{base_url}?$limit=10000&$order=:id"
@@ -466,6 +594,7 @@ FETCHER_MAP = {
     "nps_wq":           (fetch_nps_wq,           False, False),
     "datagov_wq":       (fetch_datagov_wq,       False, False),
     "nasa_cmr":         (fetch_nasa_cmr,         False, False),
+    "md-mde-arcgis":    (fetch_mde_arcgis,       False, False),
     # State Socrata sources use the generic handler
     "state_ny":         (None,                   False, False),  # dispatched via STATE_SOCRATA_URLS
     "state_nj":         (None,                   False, False),

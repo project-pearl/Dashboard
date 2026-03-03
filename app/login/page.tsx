@@ -110,9 +110,13 @@ export default function LoginPage() {
     e.preventDefault();
     setIsSubmitting(true);
     clearError();
-    const result = await loginAsync(email, password);
-    if (result.success && result.user) {
-      router.replace(getPrimaryRoute(result.user));
+    try {
+      const result = await loginAsync(email, password);
+      if (result.success && result.user) {
+        router.replace(getPrimaryRoute(result.user));
+      }
+    } catch (err) {
+      console.error('Login submit error:', err);
     }
     setIsSubmitting(false);
   };

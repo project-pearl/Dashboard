@@ -142,6 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (err) {
         console.warn('Auth init error:', err);
+        if (mounted) setError('Authentication service unavailable. Please try again.');
       } finally {
         if (mounted) setLoading(false);
       }
@@ -151,15 +152,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (event === 'SIGNED_IN' && session?.user) {
-          const profile = await fetchProfile(session.user.id);
-          if (profile && mounted) {
-            const pearlUser = profileToPearlUser(profile, session.user);
-            setUser(pearlUser);
-            triggerPrefetch(pearlUser.role, pearlUser.state);
+        try {
+          if (event === 'SIGNED_IN' && session?.user) {
+            const profile = await fetchProfile(session.user.id);
+            if (profile && mounted) {
+              const pearlUser = profileToPearlUser(profile, session.user);
+              setUser(pearlUser);
+              triggerPrefetch(pearlUser.role, pearlUser.state);
+            }
+          } else if (event === 'SIGNED_OUT') {
+            if (mounted) setUser(null);
           }
-        } else if (event === 'SIGNED_OUT') {
-          if (mounted) setUser(null);
+        } catch (err) {
+          console.warn('Auth state change error:', err);
+          if (mounted) setError('Session update failed. Please sign in again.');
         }
       }
     );
@@ -172,39 +178,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginAsync = useCallback(async (email: string, password: string) => {
     setError(null);
-    const { data, error: authError } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
-      password,
-    });
-    if (authError) {
-      const msg = authError.message === 'Invalid login credentials'
-        ? 'Invalid email or password'
-        : authError.message;
+    try {
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+      if (authError) {
+        const msg = authError.message === 'Invalid login credentials'
+          ? 'Invalid email or password'
+          : authError.message;
+        setError(msg);
+        return { success: false, error: msg };
+      }
+      if (data.user) {
+        const profile = await fetchProfile(data.user.id);
+        if (profile) {
+          const pearlUser = profileToPearlUser(profile, data.user);
+          if (pearlUser.status === 'pending') {
+            setError('Your account is pending approval.');
+            await supabase.auth.signOut();
+            return { success: false, error: 'Account pending approval' };
+          }
+          if (pearlUser.status === 'deactivated' || pearlUser.status === 'rejected') {
+            setError('Your account has been deactivated.');
+            await supabase.auth.signOut();
+            return { success: false, error: 'Account deactivated' };
+          }
+          setUser(pearlUser);
+          triggerPrefetch(pearlUser.role, pearlUser.state);
+          supabase.from('profiles').update({ last_login_at: new Date().toISOString() }).eq('id', data.user.id).then(() => {});
+          return { success: true, user: pearlUser };
+        }
+      }
+      setError('Login failed');
+      return { success: false, error: 'Login failed' };
+    } catch (err: any) {
+      const msg = err?.message || 'Authentication request failed. Please try again.';
+      console.warn('Login runtime error:', err);
       setError(msg);
       return { success: false, error: msg };
     }
-    if (data.user) {
-      const profile = await fetchProfile(data.user.id);
-      if (profile) {
-        const pearlUser = profileToPearlUser(profile, data.user);
-        if (pearlUser.status === 'pending') {
-          setError('Your account is pending approval.');
-          await supabase.auth.signOut();
-          return { success: false, error: 'Account pending approval' };
-        }
-        if (pearlUser.status === 'deactivated' || pearlUser.status === 'rejected') {
-          setError('Your account has been deactivated.');
-          await supabase.auth.signOut();
-          return { success: false, error: 'Account deactivated' };
-        }
-        setUser(pearlUser);
-        triggerPrefetch(pearlUser.role, pearlUser.state);
-        supabase.from('profiles').update({ last_login_at: new Date().toISOString() }).eq('id', data.user.id).then(() => {});
-        return { success: true, user: pearlUser };
-      }
-    }
-    setError('Login failed');
-    return { success: false, error: 'Login failed' };
   }, []);
 
   const login = useCallback((email: string, password: string): boolean => {
@@ -215,47 +228,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signup = useCallback(async (params: SignupParams) => {
     setError(null);
     const { email, password, name, role, organization, state, requestedJurisdiction, useCase } = params;
+    try {
+      const { data, error: authError } = await supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
+        password,
+        options: {
+          data: { name },
+        },
+      });
 
-    const { data, error: authError } = await supabase.auth.signUp({
-      email: email.trim().toLowerCase(),
-      password,
-      options: {
-        data: { name },
-      },
-    });
+      if (authError) {
+        setError(authError.message);
+        return { success: false, error: authError.message };
+      }
 
-    if (authError) {
-      setError(authError.message);
-      return { success: false, error: authError.message };
+      if (data.user) {
+        // All new accounts require admin approval
+        const status: AccountStatus = 'pending';
+        const isAdmin = checkIsAdmin(email);
+
+        await supabase
+          .from('profiles')
+          .update({
+            name,
+            role,
+            organization: organization || '',
+            state: state || '',
+            ms4_jurisdiction: requestedJurisdiction || '',
+            status,
+            is_admin: isAdmin,
+            use_case: useCase || '',
+          })
+          .eq('id', data.user.id);
+
+        const profile = await fetchProfile(data.user.id);
+        const pearlUser = profile ? profileToPearlUser(profile, data.user) : null;
+
+        // Do not auto-login — all accounts start as pending
+        return { success: true, user: pearlUser || undefined };
+      }
+
+      return { success: false, error: 'Signup failed' };
+    } catch (err: any) {
+      const msg = err?.message || 'Signup request failed. Please try again.';
+      console.warn('Signup runtime error:', err);
+      setError(msg);
+      return { success: false, error: msg };
     }
-
-    if (data.user) {
-      // All new accounts require admin approval
-      const status: AccountStatus = 'pending';
-      const isAdmin = checkIsAdmin(email);
-
-      await supabase
-        .from('profiles')
-        .update({
-          name,
-          role,
-          organization: organization || '',
-          state: state || '',
-          ms4_jurisdiction: requestedJurisdiction || '',
-          status,
-          is_admin: isAdmin,
-          use_case: useCase || '',
-        })
-        .eq('id', data.user.id);
-
-      const profile = await fetchProfile(data.user.id);
-      const pearlUser = profile ? profileToPearlUser(profile, data.user) : null;
-
-      // Do not auto-login — all accounts start as pending
-      return { success: true, user: pearlUser || undefined };
-    }
-
-    return { success: false, error: 'Signup failed' };
   }, []);
 
   const logout = useCallback(() => {

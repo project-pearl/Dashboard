@@ -41,6 +41,10 @@
       "schedule": "0 9 * * *"
     },
     {
+      "path": "/api/cron/rebuild-mde",
+      "schedule": "30 9 * * *"
+    },
+    {
       "path": "/api/cron/rebuild-frs",
       "schedule": "0 10 * * *"
     },
