@@ -2937,7 +2937,6 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { standard: 'Nitrogen (Total)', criteria: '≤ 3.0 mg/L', use: 'Nutrient Criteria', status: 'Under Review' },
                       { standard: 'Phosphorus (Total)', criteria: '≤ 0.1 mg/L', use: 'Nutrient Criteria', status: 'Current' },
                       { standard: 'E. coli', criteria: '≤ 126 CFU/100mL (GM)', use: 'Primary Contact', status: 'Current' },
-                      { standard: 'PFOS/PFOA', criteria: '≤ 4 ng/L', use: 'Human Health', status: 'Proposed' },
                     ].map(s => (
                       <div key={s.standard} className="flex items-center justify-between rounded-lg border border-slate-200 p-3">
                         <div>
@@ -3042,6 +3041,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
+                  </div>
+                  <div className="mt-4 rounded-lg border border-red-200 bg-red-50/40 p-3">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-red-700 mb-1">Drinking Water Health Thresholds</div>
+                    <div className="text-xs text-slate-700">PFOS/PFOA MCL: &lt;= 4 ng/L (federal drinking water standard)</div>
                   </div>
                   <p className="text-xs text-slate-400 mt-4 italic">Data source: State lab results, EPA UCMR, SDWIS contaminant monitoring</p>
                 </CardContent>
@@ -6022,3 +6025,5 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
     </div>
   );
 }
+
+

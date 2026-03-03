@@ -1782,7 +1782,10 @@ export function useWaterData(regionId: string | null): UseWaterDataResult {
 
           if (cacheRes?.ok) {
             const cacheJson = await cacheRes.json();
-            if (cacheJson.cached === true && Array.isArray(cacheJson.data) && cacheJson.data.length > 0) {
+            const cacheBuiltMs = cacheJson?.cacheBuilt ? new Date(cacheJson.cacheBuilt).getTime() : NaN;
+            const cacheAgeHours = Number.isFinite(cacheBuiltMs) ? ((Date.now() - cacheBuiltMs) / (1000 * 60 * 60)) : Number.POSITIVE_INFINITY;
+            const cacheIsFresh = cacheAgeHours <= 48;
+            if (cacheJson.cached === true && Array.isArray(cacheJson.data) && cacheJson.data.length > 0 && cacheIsFresh) {
               for (const rec of cacheJson.data) {
                 if (rec.key && !allParams[rec.key]) {
                   allParams[rec.key] = {
@@ -1809,6 +1812,10 @@ export function useWaterData(regionId: string | null): UseWaterDataResult {
                 });
                 console.log(`[PEARL Source 7] WQP cache hit: filled ${cachedCount} params`);
               }
+            } else if (cacheJson.cached === true && !cacheIsFresh) {
+              console.warn(
+                `[PEARL Source 7] WQP cache stale (${Number.isFinite(cacheAgeHours) ? cacheAgeHours.toFixed(1) : 'unknown'}h old) — falling back to live fetch`
+              );
             }
           }
         } catch { /* cache miss — fall through to live */ }
