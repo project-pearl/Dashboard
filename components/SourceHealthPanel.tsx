@@ -66,21 +66,61 @@ export function SourceHealthPanel({ collapsible, defaultCollapsed }: SourceHealt
     [sources],
   );
 
+  // ── COLLAPSED: thin single-line bar ──────────────────────────────────────
+  if (collapsed) {
+    return (
+      <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-4 py-1.5">
+        <div className="flex items-center gap-2">
+          {hasUnhealthy ? (
+            <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+          ) : (
+            <div className="w-2 h-2 rounded-full bg-green-500" />
+          )}
+          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Sentinel Health</span>
+          <span className="text-xs text-slate-400">
+            {hasUnhealthy
+              ? `${offlineCount > 0 ? `${offlineCount} offline` : ''}${offlineCount > 0 && degradedCount > 0 ? ' · ' : ''}${degradedCount > 0 ? `${degradedCount} degraded` : ''} — ${onlineCount}/${sources.length || totalSourcesDisplay} healthy`
+              : `${healthyDisplay}/${totalSourcesDisplay} healthy`}
+          </span>
+        </div>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={refetch}
+            className="h-6 w-6 p-0"
+            title="Refresh health checks"
+          >
+            <RefreshCw size={12} className={isLoading ? 'animate-spin text-slate-400' : 'text-slate-400'} />
+          </Button>
+          <button
+            onClick={() => setCollapsed(false)}
+            className="p-0.5 rounded hover:bg-slate-100 transition-colors"
+            title="Expand"
+          >
+            <ChevronDown size={14} className="text-slate-400" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── EXPANDED: full card ────────────────────────────────────────────────────
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base flex-wrap">
           {collapsible && (
             <button
-              onClick={() => setCollapsed((c) => !c)}
+              onClick={() => setCollapsed(true)}
               className="p-0.5 -ml-1 rounded hover:bg-slate-100 transition-colors"
-              title={collapsed ? 'Expand' : 'Collapse'}
+              title="Collapse"
             >
-              {collapsed ? <ChevronDown size={16} className="text-slate-500" /> : <ChevronUp size={16} className="text-slate-500" />}
+              <ChevronUp size={16} className="text-slate-500" />
             </button>
           )}
           <Activity size={16} className="text-slate-600" />
-          Data Source Health
+          Sentinel Health
           <Badge variant="secondary" className="ml-1 text-[10px]">
             {healthyDisplay}/{totalSourcesDisplay} healthy
           </Badge>
@@ -104,15 +144,14 @@ export function SourceHealthPanel({ collapsible, defaultCollapsed }: SourceHealt
             <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
           </Button>
         </CardTitle>
-        {lastChecked && !collapsed && (
+        {lastChecked && (
           <p className="text-[10px] text-slate-400">
             Last checked: {new Date(lastChecked).toLocaleTimeString()}
           </p>
         )}
       </CardHeader>
 
-      {!collapsed && (
-        <CardContent className="space-y-3">
+      <CardContent className="space-y-3">
           {sources.length > 0 && (
             <div className="flex items-center gap-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5">
               <div className="flex items-center gap-2 min-w-0">
@@ -244,7 +283,6 @@ export function SourceHealthPanel({ collapsible, defaultCollapsed }: SourceHealt
             )}
           </div>
         </CardContent>
-      )}
     </Card>
   );
 }
