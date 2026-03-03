@@ -65,12 +65,14 @@ const PLATFORM_STATS = [
 ];
 
 const DATA_FEEDS = [
-  { name: 'EPA ATTAINS', desc: 'National assessment & impairment database', icon: Database, color: 'from-blue-600 to-blue-800' },
-  { name: 'USGS WDFN', desc: 'Real-time streamflow & water quality gauges', icon: Activity, color: 'from-emerald-600 to-teal-800' },
-  { name: 'Water Quality Portal', desc: 'Multi-agency monitoring results', icon: Search, color: 'from-violet-600 to-purple-800' },
-  { name: 'NOAA CO-OPS', desc: 'Tidal & oceanographic observations', icon: Waves, color: 'from-cyan-600 to-sky-800' },
-  { name: 'EJScreen', desc: 'Environmental justice mapping overlays', icon: ShieldCheck, color: 'from-amber-600 to-orange-800' },
-  { name: 'PIN Sensors (In Development)', desc: 'Proprietary continuous monitoring network — hardware integration in progress', icon: Zap, color: 'from-rose-600 to-red-800' },
+  { name: 'EPA ATTAINS', desc: 'National assessment & impairment database — 430M+ records across surface water, groundwater, and wetlands', icon: Database, color: 'from-blue-600 to-blue-800' },
+  { name: 'USGS Real-Time', desc: 'Instantaneous values from 19 states — surface water, groundwater levels, and discharge monitoring', icon: Activity, color: 'from-emerald-600 to-teal-800' },
+  { name: 'Water Quality Portal', desc: 'Multi-agency monitoring results across all water body types', icon: Search, color: 'from-violet-600 to-purple-800' },
+  { name: 'SDWIS & ECHO', desc: 'Drinking water system violations, facility compliance, and enforcement actions', icon: ShieldCheck, color: 'from-amber-600 to-orange-800' },
+  { name: 'CDC NWSS', desc: 'Wastewater pathogen surveillance — COVID, influenza, RSV, and emerging threats', icon: Beaker, color: 'from-rose-600 to-red-800' },
+  { name: 'NOAA & NWS', desc: 'Tidal observations, weather alerts, and storm event correlation', icon: Waves, color: 'from-cyan-600 to-sky-800' },
+  { name: 'EJScreen', desc: 'Environmental justice mapping and vulnerability overlays', icon: Globe, color: 'from-orange-600 to-amber-800' },
+  { name: 'PIN Sensors', desc: 'Proprietary continuous monitoring network — hardware integration in progress', icon: Zap, color: 'from-pink-600 to-rose-800' },
 ];
 
 const STAKEHOLDER_TRACKS = [
@@ -79,12 +81,12 @@ const STAKEHOLDER_TRACKS = [
     icon: Building2,
     accent: 'text-cyan-400',
     accentBg: 'bg-cyan-400/10 border-cyan-400/20',
-    headline: 'Municipal utility compliance without the complexity',
+    headline: 'Municipal water compliance without the complexity',
     points: [
-      'Automated permit reporting for any state',
+      'Stormwater, drinking water, and wastewater permit tracking',
       'TMDL progress tracking with live BMP performance',
       'Nutrient credit documentation and ROI analysis',
-      'Storm event capture with real-time removal metrics',
+      'Coordinated anomaly alerts across your watershed',
     ],
   },
   {
@@ -92,12 +94,12 @@ const STAKEHOLDER_TRACKS = [
     icon: Shield,
     accent: 'text-blue-400',
     accentBg: 'bg-blue-400/10 border-blue-400/20',
-    headline: 'Every waterbody. Every jurisdiction. One view.',
+    headline: 'Surface water. Groundwater. Drinking water. One view.',
     points: [
-      'Statewide ATTAINS assessment dashboard',
-      'Cross-jurisdiction benchmarking and peer comparison',
-      'Impaired waterbody prioritization with EJ overlays',
-      'Real-time compliance status across all permittees',
+      'Statewide assessments across all water body types',
+      'Drinking water violations and enforcement tracking',
+      'Wastewater pathogen surveillance integration',
+      'Coordinated threat detection across watersheds',
     ],
   },
   {
@@ -105,10 +107,10 @@ const STAKEHOLDER_TRACKS = [
     icon: Microscope,
     accent: 'text-violet-400',
     accentBg: 'bg-violet-400/10 border-violet-400/20',
-    headline: 'Continuous high-frequency data for real science',
+    headline: 'Multi-domain water data for real science',
     points: [
-      '15-minute interval sensor data with QAPP-grade QA/QC',
-      'Multi-source data fusion: USGS + WQP + PIN sensors',
+      '15-minute sensor data across surface, ground, and drinking water',
+      'Multi-source fusion: USGS + WQP + SDWIS + CDC NWSS + PIN sensors',
       'Bulk export, API access, and citation-ready formats',
       'Manuscript collaboration tools and DOI registration',
     ],
@@ -155,7 +157,7 @@ const DIFFERENTIATORS = [
   {
     icon: Database,
     title: 'Federal Data Integration',
-    desc: 'ATTAINS, USGS WDFN, WQP, NOAA CO-OPS, EJScreen \u2014 all normalized, cross-referenced, and queryable from a single platform.',
+    desc: 'ATTAINS, USGS, WQP, SDWIS, ECHO, CDC NWSS, NOAA, NWS, EJScreen \u2014 surface water, groundwater, drinking water, and wastewater all normalized and queryable from a single platform.',
   },
   {
     icon: Microscope,
@@ -214,9 +216,9 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
                 Your water data is scattered across a dozen systems.
               </h1>
               <p className="mt-4 sm:mt-5 text-base sm:text-lg lg:text-xl text-slate-300 leading-relaxed max-w-2xl font-light">
-                Manual reporting. Siloed databases. Quarterly grab samples that miss everything between visits.
-                There&rsquo;s a better way &mdash; one platform that connects EPA datasets, live sensors, and
-                treatment verification into decision-ready intelligence.
+                Surface water. Groundwater. Drinking water. Wastewater. Your data is scattered across a dozen
+                federal systems. There&rsquo;s a better way &mdash; one platform that fuses real-time monitoring,
+                regulatory compliance, pathogen surveillance, and treatment verification into decision-ready intelligence.
               </p>
 
               <div className="mt-8 sm:mt-10 flex flex-wrap gap-3 sm:gap-4">
@@ -286,9 +288,10 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
             {[
-              { name: 'EPA', full: 'Environmental Protection Agency', datasets: 'ATTAINS + EJScreen' },
-              { name: 'USGS', full: 'U.S. Geological Survey', datasets: 'WDFN Real-Time Gauges' },
-              { name: 'NOAA', full: 'National Oceanic & Atmospheric Administration', datasets: 'CO-OPS + NDBC Buoys' },
+              { name: 'EPA', full: 'Environmental Protection Agency', datasets: 'ATTAINS + SDWIS + ECHO + EJScreen' },
+              { name: 'USGS', full: 'U.S. Geological Survey', datasets: 'Surface Water + Groundwater' },
+              { name: 'CDC', full: 'Centers for Disease Control', datasets: 'NWSS Wastewater Surveillance' },
+              { name: 'NOAA', full: 'National Oceanic & Atmospheric Administration', datasets: 'CO-OPS + NWS Alerts' },
               { name: 'WQP', full: 'Water Quality Portal', datasets: 'Multi-Agency Monitoring' },
             ].map(agency => (
               <div key={agency.name} className="flex items-center gap-3 group">
@@ -303,7 +306,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
             ))}
           </div>
           <p className="text-center text-[11px] text-slate-400 mt-5">
-            430M+ federal datapoints aggregated &middot; 565,000+ assessment units &middot; Field validated in Milton, FL (Jan 2025)
+            430M+ federal datapoints aggregated &middot; 565,000+ assessment units &middot; 19 states real-time monitoring &middot; Field validated in Milton, FL (Jan 2025)
           </p>
         </div>
       </section>
@@ -344,14 +347,14 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
           <div className="max-w-2xl mb-16">
             <p className="text-xs font-bold tracking-[0.2em] uppercase text-cyan-400 mb-3">Integrated Data</p>
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-              Six federal and proprietary data streams. One unified view.
+              Eight federal and proprietary data streams. One unified view.
             </h2>
             <p className="text-slate-300 leading-relaxed">
               We don&#39;t just aggregate data &mdash; we normalize, cross-reference, and contextualize it.
               Every measurement is traceable to its source, QA/QC verified, and available through a single API.
             </p>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {DATA_FEEDS.map((feed, i) => {
               const Icon = feed.icon;
               return (
@@ -380,7 +383,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-blue-600">A new category of water intelligence.</span>
               </h2>
               <p className="text-slate-600 leading-relaxed mb-8">
-                Every PIN unit is a modular treatment platform and high-frequency data node with 8 monitoring points. Paired with AQUA-Lo, our laboratory information management system, every sample is tracked from intake to audit-ready report &mdash; transforming environmental restoration into verified, actionable intelligence.
+                PIN fuses real-time monitoring across surface water, groundwater, drinking water, and wastewater into a single threat detection and compliance platform. Every PIN treatment unit is a modular data node with 8 monitoring points. Paired with AQUA-Lo LIMS, every sample is tracked from intake to audit-ready report &mdash; transforming environmental monitoring into verified, actionable intelligence.
               </p>
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center p-4 rounded-xl bg-slate-50">
@@ -535,8 +538,8 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
             Water quality data should work as hard as you do.
           </h2>
           <p className="text-lg text-slate-600 mb-10 max-w-xl mx-auto">
-            Whether you manage stormwater permits, regulate a state&#39;s waters, or research
-            aquatic ecosystems &mdash; PIN puts actionable intelligence at your fingertips.
+            Whether you manage drinking water systems, regulate surface and groundwater, track
+            wastewater pathogens, or research aquatic ecosystems &mdash; PIN puts actionable intelligence at your fingertips.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <button onClick={onSignIn} className="group inline-flex items-center gap-3 px-8 py-4 text-base font-semibold text-white bg-slate-900 rounded-full hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/20">
