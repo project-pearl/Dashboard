@@ -88,7 +88,7 @@ type OverlayId = 'hotspots' | 'ms4' | 'ej' | 'economy' | 'wildlife' | 'trend' | 
 type ViewLens = 'overview' | 'briefing' | 'political-briefing' | 'trends' | 'policy' | 'compliance' |
   'water-quality' | 'public-health' | 'habitat-ecology' | 'agricultural-nps' |
   'infrastructure' | 'monitoring' | 'disaster-emergency' | 'military-installations' |
-  'scorecard' | 'reports' | 'interagency' | 'funding' | 'warr';
+  'scorecard' | 'reports' | 'interagency' | 'funding';
 
 // ─── Water Quality Domain Tabs ────────────────────────────────────────────────
 const WQ_DOMAINS = [
@@ -303,16 +303,6 @@ const LENS_CONFIG: Record<ViewLens, {
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
     sections: new Set(['fund-srf', 'infra-capital', 'infra-construction', 'funding-deadlines', 'grant-outcomes', 'funding-gap']),
-  },
-  warr: {
-    label: 'WARR Room',
-    description: 'Water Alert & Response Readiness — real-time situation awareness',
-    defaultOverlay: 'hotspots',
-    showTopStrip: false, showPriorityQueue: false, showCoverageGaps: false,
-    showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
-    showHotspots: false, showSituationSummary: false, showTimeRange: false,
-    showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['warr-resolve']),
   },
 };
 
@@ -5999,24 +5989,6 @@ export function FederalManagementCenter(props: Props) {
         case 'data-latency': return DS(
           <DataLatencyTracker />
         );
-
-        case 'warr-metrics': return DS(
-          null
-        );
-
-        case 'warr-analyze': return DS(
-          null
-        );
-
-        case 'warr-respond': return DS(
-          null
-        );
-
-        case 'warr-resolve': return DS(
-          null
-        );
-
-        // ── AI Briefing: National Scope Cards ──────────────────────────────
         case 'briefing-actions': return DS(
           <Card>
             <CardHeader>
@@ -6057,7 +6029,7 @@ export function FederalManagementCenter(props: Props) {
                   PIN forecasts reduced enforcement risk post-intervention despite elevated infrastructure failure pressure.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white" onClick={() => setViewLens('warr' as ViewLens)}>
+                  <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white" onClick={() => setViewLens('disaster-emergency' as ViewLens)}>
                     Run Scenario: Expected Loss if Delayed
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => setViewLens('overview')}>
@@ -6454,7 +6426,7 @@ export function FederalManagementCenter(props: Props) {
                 <Button size="sm" variant="outline" onClick={() => setViewLens('reports')}>
                   Export Political Briefing Template
                 </Button>
-                <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white" onClick={() => setViewLens('warr')}>
+                <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white" onClick={() => setViewLens('disaster-emergency')}>
                   Run Scenario: Potomac + Cyber Cascade
                 </Button>
               </div>

@@ -93,7 +93,7 @@ type Props = {
 type ViewLens = 'overview' | 'briefing' | 'political-briefing' | 'trends' | 'policy' | 'compliance' |
   'water-quality' | 'public-health' | 'habitat' | 'watershed-health' | 'restoration-projects' |
   'infrastructure' | 'monitoring' | 'disaster-emergency' | 'advocacy' |
-  'scorecard' | 'reports' | 'volunteer-program' | 'citizen-reporting' | 'funding' | 'warr' | 'initiatives';
+  'scorecard' | 'reports' | 'volunteer-program' | 'citizen-reporting' | 'funding' | 'initiatives';
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -147,8 +147,6 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set(['grants', 'fund-active', 'fund-pipeline', 'disclaimer']) },
   habitat:     { label: 'Habitat & Ecology', description: 'Species conservation status and habitat health — supports advocacy and restoration',
     sections: new Set(['hab-ecoscore', 'hab-wildlife', 'disclaimer']) },
-  warr:        { label: 'WARR Room', description: 'Water Alert & Response Readiness — real-time situation awareness',
-    sections: new Set(['disclaimer']) },
   initiatives: { label: 'Initiatives', description: 'Conservation initiative planning and tracking',
     sections: new Set(['initiatives-panel', 'disclaimer']) },
 };
@@ -2266,11 +2264,6 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
             case 'initiatives-panel': return DS(<InitiativesTrackerPanel stateAbbr={stateAbbr} />);
 
             case 'location-report': return DS(<LocationReportCard />);
-
-            case 'warr-metrics': return null;
-            case 'warr-analyze': return null;
-            case 'warr-respond': return null;
-            case 'warr-resolve': return null;
 
             // ── Habitat & Ecology ──
             case 'hab-ecoscore': {

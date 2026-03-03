@@ -36,7 +36,7 @@ import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 type ViewLens = 'overview' | 'briefing' | 'political-briefing' | 'trends' | 'policy'
   | 'compliance' | 'water-quality' | 'public-health' | 'habitat' | 'source-receiving'
   | 'treatment-process' | 'infrastructure' | 'laboratory' | 'disaster'
-  | 'permit-limits' | 'scorecard' | 'reports' | 'asset-management' | 'funding' | 'warr';
+  | 'permit-limits' | 'scorecard' | 'reports' | 'asset-management' | 'funding' ;
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -141,11 +141,6 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Habitat & Ecology',
     description: 'Ecological sensitivity near intake and discharge — supports source water protection',
     sections: new Set(['hab-ecoscore', 'hab-wildlife', 'insights', 'alertfeed', 'disclaimer']),
-  },
-  warr: {
-    label: 'WARR Room',
-    description: 'Water Alert & Response Readiness — real-time situation awareness',
-    sections: new Set(['insights', 'alertfeed', 'disclaimer']),
   },
 };
 
@@ -1681,11 +1676,6 @@ export default function UtilityManagementCenter({ systemId }: Props) {
             // ══════════════════════════════════════════════════════════════
             // WARR ZONES
             // ══════════════════════════════════════════════════════════════
-
-            case 'warr-metrics': return null;
-            case 'warr-analyze': return null;
-            case 'warr-respond': return null;
-            case 'warr-resolve': return null;
 
             // ══════════════════════════════════════════════════════════════
             // DISCLAIMER (always visible)

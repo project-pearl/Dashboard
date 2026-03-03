@@ -117,7 +117,7 @@ type OverlayId = 'risk' | 'coverage' | 'bmp' | 'ej';
 type ViewLens = 'overview' | 'briefing' | 'political-briefing' | 'trends' | 'policy'
   | 'compliance' | 'water-quality' | 'public-health' | 'habitat' | 'agriculture'
   | 'infrastructure' | 'monitoring' | 'disaster' | 'tmdl' | 'scorecard'
-  | 'reports' | 'permits' | 'funding' | 'warr' | 'wqt';
+  | 'reports' | 'permits' | 'funding' | 'wqt';
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -129,7 +129,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Overview',
     description: 'State operational dashboard — morning check before the day starts',
     defaultOverlay: 'risk',
-    sections: new Set(['regprofile', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'operational-health', 'alertfeed', 'map-grid', 'detail', 'top10', 'quick-access', 'briefing-actions', 'briefing-changes', 'briefing-pulse', 'briefing-stakeholder']),
+    sections: new Set(['regprofile', 'operational-health', 'alertfeed', 'map-grid', 'detail', 'top10', 'quick-access', 'briefing-actions', 'briefing-changes', 'briefing-pulse', 'briefing-stakeholder']),
   },
   briefing: {
     label: 'AI Briefing',
@@ -236,12 +236,6 @@ const LENS_CONFIG: Record<ViewLens, {
     description: 'Active grants, SRF management, and financial analytics',
     defaultOverlay: 'risk',
     sections: new Set(['grants', 'fund-active', 'fund-srf', 'infra-capital', 'infra-construction', 'fund-pipeline', 'fund-passthrough', 'fund-analytics', 'fund-bil', 'fund-j40', 'fund-srf-pipeline', 'fund-grant-compliance', 'fund-trend', 'fund-match', 'grant-outcomes', 'disclaimer']),
-  },
-  warr: {
-    label: 'WARR Room',
-    description: 'Water Alert & Response Readiness — real-time situation awareness',
-    defaultOverlay: 'risk',
-    sections: new Set(['warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']),
   },
   wqt: {
     label: 'Water Quality Trading',
@@ -1132,11 +1126,6 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             case 'insights': return DS(
         <AIInsightsEngine key={stateAbbr} role="State" stateAbbr={stateAbbr} regionData={regionData as any} />
             );
-
-        case 'warr-metrics': return null;
-        case 'warr-analyze': return null;
-        case 'warr-respond': return null;
-        case 'warr-resolve': return null;
 
             case 'detail': return DS(<>
         <div className="space-y-4">
@@ -2477,7 +2466,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       Current highest-pressure queue: {hotspots.worsening.slice(0, 3).map((h) => h.name).join(', ') || 'No priority hotspots flagged'}.
                     </p>
                     <div className="mt-3 flex flex-wrap gap-2">
-                      <Button size="sm" className="bg-red-600 text-white hover:bg-red-700" onClick={() => setViewLens('warr' as ViewLens)}>
+                      <Button size="sm" className="bg-red-600 text-white hover:bg-red-700" onClick={() => setViewLens('disaster' as ViewLens)}>
                         Run Scenario: Delay Impact
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => setViewLens('overview')}>

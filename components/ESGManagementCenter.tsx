@@ -2183,12 +2183,6 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
             case 'esg-reporting-panel': return DS(<ESGReportingPanel stateAbbr="" />);
             case 'supply-chain-risk-panel': return DS(<SupplyChainRiskPanel stateAbbr="" />);
 
-
-            case 'warr-metrics': return null;
-            case 'warr-analyze': return null;
-            case 'warr-respond': return null;
-            case 'warr-resolve': return null;
-
             case 'data-export-hub': return DS(
               <DataExportHub context="esg" />
             );

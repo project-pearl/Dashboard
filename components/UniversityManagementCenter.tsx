@@ -87,7 +87,7 @@ type Props = {
 type ViewLens = 'overview' | 'briefing' | 'trends' | 'policy' | 'compliance' |
   'water-quality' | 'public-health' | 'habitat' | 'research-monitoring' | 'campus-stormwater' |
   'infrastructure' | 'monitoring' | 'disaster-emergency' | 'watershed-partnerships' |
-  'scorecard' | 'reports' | 'grants-publications' | 'funding' | 'warr';
+  'scorecard' | 'reports' | 'grants-publications' | 'funding';
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -130,8 +130,6 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set(['hab-ecoscore', 'hab-wildlife', 'disclaimer']) },
   funding:     { label: 'Funding & Grants', description: 'Research funding opportunities',
     sections: new Set(['grants', 'fund-active', 'fund-pipeline', 'disclaimer']) },
-  warr:        { label: 'WARR Room', description: 'Water Alert & Response Readiness — real-time situation awareness',
-    sections: new Set(['disclaimer']) },
 };
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -2041,11 +2039,6 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
             case 'watershed-partnerships-panel': return DS(<WatershedPartnershipsPanel stateAbbr={stateAbbr} />);
 
             case 'location-report': return DS(<LocationReportCard />);
-
-            case 'warr-metrics': return null;
-            case 'warr-analyze': return null;
-            case 'warr-respond': return null;
-            case 'warr-resolve': return null;
 
             // ── Habitat & Ecology ──
             case 'hab-ecoscore': {

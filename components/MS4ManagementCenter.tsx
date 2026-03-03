@@ -121,7 +121,7 @@ type Props = {
 type ViewLens = 'overview' | 'briefing' | 'political-briefing' | 'trends' | 'policy'
   | 'compliance' | 'water-quality' | 'public-health' | 'habitat' | 'receiving-waters'
   | 'stormwater-bmps' | 'infrastructure' | 'monitoring' | 'disaster'
-  | 'tmdl-compliance' | 'scorecard' | 'reports' | 'mcm-manager' | 'funding' | 'warr' | 'wqt';
+  | 'tmdl-compliance' | 'scorecard' | 'reports' | 'mcm-manager' | 'funding' | 'wqt';
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -246,12 +246,6 @@ const LENS_CONFIG: Record<ViewLens, {
     description: 'Receiving water ecology and protected species — informs BMP siting and compliance',
     defaultOverlay: 'impairment',
     sections: new Set(['hab-ecoscore', 'hab-wildlife', 'disclaimer']),
-  },
-  warr: {
-    label: 'WARR Room',
-    description: 'Water Alert & Response Readiness — real-time situation awareness',
-    defaultOverlay: 'impairment',
-    sections: new Set(['disclaimer']),
   },
   wqt: {
     label: 'Water Quality Trading',
@@ -1404,11 +1398,6 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
             case 'insights': return DS(
               <AIInsightsEngine key={stateAbbr} role="MS4" stateAbbr={stateAbbr} regionData={scopedRegionData as any} />
             );
-
-        case 'warr-metrics': return null;
-        case 'warr-analyze': return null;
-        case 'warr-respond': return null;
-        case 'warr-resolve': return null;
 
             case 'quickactions': return DS(
         <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-3">

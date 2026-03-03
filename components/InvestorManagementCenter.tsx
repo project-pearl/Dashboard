@@ -1533,11 +1533,6 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
 
             // ─── WARR ZONES ──────────────────────────────────────────────────
 
-            case 'warr-metrics': return null;
-            case 'warr-analyze': return null;
-            case 'warr-respond': return null;
-            case 'warr-resolve': return null;
-
             // ─── TRENDS DASHBOARD ────────────────────────────────────────────
 
             case 'trends-dashboard': return DS(

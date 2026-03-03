@@ -93,7 +93,7 @@ type Props = {
 
 type ViewLens = 'overview' | 'briefing' | 'planner' | 'trends' | 'compliance' |
   'water-quality' | 'public-health' | 'habitat' | 'outdoor-classroom' | 'student-monitoring' |
-  'student-uploads' | 'drinking-water-safety' | 'debate' | 'reports' | 'funding' | 'warr';
+  'student-uploads' | 'drinking-water-safety' | 'debate' | 'reports' | 'funding';
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -130,8 +130,6 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set(['grants', 'disclaimer']) },
   habitat:     { label: 'Habitat & Ecology', description: 'Explore the plants and animals that live in and around your local waterways',
     sections: new Set(['hab-ecoscore', 'hab-wildlife', 'disclaimer']) },
-  warr:        { label: 'WARR Room', description: 'Water Alert & Response Readiness — real-time situation awareness',
-    sections: new Set(['disclaimer']) },
 };
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -2357,11 +2355,6 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
             case 'student-upload-panel': return DS(<StudentUploadPanel stateAbbr={stateAbbr} isTeacher={isTeacher} />);
             case 'drinking-water-safety-panel': return DS(<DrinkingWaterSafetyPanel stateAbbr={stateAbbr} />);
             case 'debate-topics-panel': return DS(<DebateTopicsPanel stateAbbr={stateAbbr} stateName={stateName} isTeacher={isTeacher} />);
-
-            case 'warr-metrics': return null;
-            case 'warr-analyze': return null;
-            case 'warr-respond': return null;
-            case 'warr-resolve': return null;
 
             case 'location-report': return DS(<LocationReportCard />);
 
