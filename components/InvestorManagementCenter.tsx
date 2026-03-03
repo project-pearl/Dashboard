@@ -98,7 +98,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   overview: {
     label: 'Executive Overview', description: 'Portfolio-level water risk summary for investors',
     icon: Building2,
-    sections: new Set(['summary', 'kpis', 'map-grid', 'portfolio-snapshot', 'grants', 'briefing-changes', 'briefing-stakeholder', 'disclaimer']),
+    sections: new Set(['summary', 'kpis', 'map-grid', 'portfolio-snapshot', 'grants', 'disclaimer']),
   },
   'portfolio-risk': {
     label: 'Portfolio Risk', description: 'Water risk exposure across portfolio holdings',
@@ -113,7 +113,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   compliance: {
     label: 'Compliance & Regulatory', description: 'Regulatory compliance risk and cost forecasting',
     icon: Shield,
-    sections: new Set(['compliance-overview', 'regulatory-cost-forecast', 'icis', 'sdwis', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']),
+    sections: new Set(['compliance-overview', 'regulatory-cost-forecast', 'icis', 'sdwis', 'disclaimer']),
   },
   'esg-disclosure': {
     label: 'ESG Disclosure', description: 'ESG water metrics readiness and disclosure scoring',
@@ -143,7 +143,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   briefing: {
     label: 'Briefing', description: 'Daily briefing with actions, changes, and stakeholder updates',
     icon: ClipboardList,
-    sections: new Set(['briefing-actions', 'briefing-changes', 'briefing-pulse', 'briefing-stakeholder', 'insights', 'alertfeed']),
+    sections: new Set(['briefing-actions', 'insights', 'alertfeed']),
   },
   habitat: {
     label: 'Habitat', description: 'Ecological sensitivity and wildlife exposure across portfolio',
@@ -1627,31 +1627,6 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                 />
               );
             }
-
-            case 'briefing-changes': return DS(
-              <WhatChangedOvernight entityType="investor" />
-            );
-
-            case 'briefing-pulse': return DS(
-              <RoleBriefingPulseCard
-                title="Program Pulse - Investor"
-                description="Key portfolio indicators for water risk, compliance, and coverage"
-                metrics={[
-                  { id: 'inv-pulse-1', label: 'Total AUM', value: `$${portfolioScores.totalAUM}M`, trend: `${portfolioScores.total} holdings`, color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', dest: 'Portfolio AUM breakdown' },
-                  { id: 'inv-pulse-2', label: 'Avg Compliance', value: `${portfolioScores.avgCompliance}%`, trend: 'latest cycle', color: 'text-green-700', bg: 'bg-green-50 border-green-200', dest: 'Compliance trend detail' },
-                  { id: 'inv-pulse-3', label: 'High Risk Holdings', value: portfolioScores.highRisk.toLocaleString(), trend: `avg risk ${portfolioScores.avgRisk}/100`, color: 'text-red-700', bg: 'bg-red-50 border-red-200', dest: 'Risk concentration detail' },
-                  { id: 'inv-pulse-4', label: 'PIN Verified', value: portfolioScores.monitored.toLocaleString(), trend: `${Math.round((portfolioScores.monitored / Math.max(1, portfolioScores.total)) * 100)}% coverage`, color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200', dest: 'Monitoring coverage detail' },
-                ]}
-                sourceNote="Source: Investor portfolio holdings, risk/compliance models, and PIN coverage status"
-                refreshNote={`Refresh: ${new Date().toLocaleString()}`}
-              />
-            );
-
-            case 'briefing-stakeholder': return DS(
-              <StakeholderWatch entityType="investor" />
-            );
-
-            // ─── HABITAT PANELS ─────────────────────────────────────────────
 
             case 'hab-ecoscore': return DS(
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">

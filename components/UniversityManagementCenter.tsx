@@ -95,7 +95,7 @@ const LENS_CONFIG: Record<ViewLens, {
   sections: Set<string> | null;
 }> = {
   overview:    { label: 'Overview',    description: 'University water quality dashboard overview',
-    sections: new Set(['regprofile', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'map-grid', 'top10', 'briefing-changes', 'briefing-stakeholder', 'disclaimer']) },
+    sections: new Set(['regprofile', 'map-grid', 'top10', 'disclaimer']) },
   briefing:    { label: 'AI Briefing', description: 'AI-generated research intelligence briefing',
     sections: new Set(['insights', 'alertfeed', 'disclaimer']) },
   trends:      { label: 'Trends & Projections', description: 'Water quality trends, research metrics, and data projections',
@@ -131,7 +131,7 @@ const LENS_CONFIG: Record<ViewLens, {
   funding:     { label: 'Funding & Grants', description: 'Research funding opportunities',
     sections: new Set(['grants', 'fund-active', 'fund-pipeline', 'disclaimer']) },
   warr:        { label: 'WARR Room', description: 'Water Alert & Response Readiness — real-time situation awareness',
-    sections: new Set(['warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']) },
+    sections: new Set(['disclaimer']) },
 };
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -895,13 +895,6 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
             </div>
           );
         })());
-
-            case 'briefing-changes': return DS(
-              <WhatChangedOvernight entityType="university" entityName={stateName} stateAbbr={stateAbbr} />
-            );
-            case 'briefing-stakeholder': return DS(
-              <StakeholderWatch entityType="university" entityName={stateName} stateAbbr={stateAbbr} />
-            );
 
             case 'insights': return DS(
               <AIInsightsEngine key={stateAbbr} role={userRole === 'College' ? 'College' : 'Researcher'} stateAbbr={stateAbbr} regionData={regionData as any} />

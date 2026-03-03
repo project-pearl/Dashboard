@@ -52,7 +52,6 @@ export const SECTION_TO_CACHES: Record<string, string[]> = {
   'habitat-ecology':     ['attains', 'nars'],
   'data-latency':        ['wqp', 'attains', 'icis', 'sdwis', 'nwisGw', 'echo', 'coops'],
   'sentinel-briefing':   ['nwisIv', 'usgsAlerts', 'nwsAlerts'],
-  'briefing-changes':    ['wqp', 'attains', 'icis', 'sdwis', 'nwisGw', 'echo', 'pfas'],
   'funding-landscape':   ['usaSpending', 'grantsGov', 'sam'],
   'disaster-emergency':  ['fema', 'nwsAlerts', 'usgsAlerts'],
 };

@@ -45,7 +45,6 @@ import { GrantOutcomesCard } from './GrantOutcomesCard';
 import { EmergingContaminantsTracker } from './EmergingContaminantsTracker';
 import { PolicyTracker } from './PolicyTracker';
 import { DataLatencyTracker } from './DataLatencyTracker';
-import { BriefingChangesCard } from './BriefingChangesCard';
 import { DeltaChangelog } from './DeltaChangelog';
 import { useAdminState, STATE_ABBR_TO_NAME } from '@/lib/adminStateContext';
 import { scoreToGrade, ALERT_LEVEL_SCORES } from '@/lib/scoringUtils';
@@ -129,7 +128,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['usmap', 'pol-constituent-concerns', 'briefing-changes', 'briefing-stakeholder']),
+    sections: new Set(['usmap', 'pol-constituent-concerns']),
   },
   briefing: {
     label: 'AI Briefing',
@@ -313,7 +312,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve']),
+    sections: new Set(['warr-resolve']),
   },
 };
 
@@ -6103,172 +6102,7 @@ export function FederalManagementCenter(props: Props) {
           </Card>
         );
 
-        case 'briefing-changes': return DS(<BriefingChangesCard />);
-
         case 'delta-changelog': return DS(<DeltaChangelog />);
-
-        case 'briefing-pulse': return DS(
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5 text-blue-600" />
-                Program Pulse - National
-              </CardTitle>
-              <CardDescription>Key national program metrics (live where available, proxy where direct feeds are not yet exposed)</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {[
-                  {
-                    id: 'fed-pulse-permits',
-                    label: 'Active Permits',
-                    value: briefingLiveStats.activePermits ? briefingLiveStats.activePermits.toLocaleString() : '74,200',
-                    trend: briefingLiveStats.activePermits ? 'live (ICIS)' : 'fallback',
-                    color: 'text-blue-700',
-                    bg: 'bg-blue-50 border-blue-200',
-                    dest: 'National permit registry',
-                  },
-                  {
-                    id: 'fed-pulse-inspections',
-                    label: 'Open Inspections',
-                    value: briefingLiveStats.activeAlerts.toLocaleString(),
-                    trend: 'live (ICIS)',
-                    color: 'text-green-700',
-                    bg: 'bg-green-50 border-green-200',
-                    dest: 'National inspection queue',
-                  },
-                  {
-                    id: 'fed-pulse-tmdl',
-                    label: 'Pending TMDLs',
-                    value: briefingLiveStats.pendingTmdls.toLocaleString(),
-                    trend: 'live',
-                    color: 'text-amber-700',
-                    bg: 'bg-amber-50 border-amber-200',
-                    dest: 'National TMDL tracker',
-                  },
-                  {
-                    id: 'fed-pulse-srf',
-                    label: 'SRF Utilization',
-                    value: `${briefingLiveStats.utilization}%`,
-                    trend: 'live (USAspending)',
-                    color: 'text-purple-700',
-                    bg: 'bg-purple-50 border-purple-200',
-                    dest: 'National SRF dashboard',
-                  },
-                ].map(m => (
-                  <div key={m.id}>
-                    <div
-                      className={`rounded-xl border p-4 cursor-pointer hover:ring-1 hover:ring-blue-300 transition-all ${m.bg}`}
-                      onClick={() => setComingSoonId(comingSoonId === m.id ? null : m.id)}
-                    >
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{m.label}</div>
-                      <div className={`text-2xl font-bold ${m.color} mt-1`}>{m.value}</div>
-                      <div className="text-[10px] text-slate-500 mt-1">{m.trend}</div>
-                    </div>
-                    {comingSoonId === m.id && (
-                      <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-2">
-                        <p className="text-[10px] text-slate-500">Source: {m.dest}</p>
-                        <p className="text-[10px] text-slate-400 italic">Refresh: {briefingLiveStats.lastRefresh}</p>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        );
-
-        case 'briefing-stakeholder': return DS(
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Scale className="h-5 w-5 text-indigo-600" />
-                Stakeholder Watch - National | Federal Management Center
-              </CardTitle>
-              <CardDescription>Media, NGO, and interagency signals for federal water oversight</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                {[
-                  {
-                    id: 'fed-stk-2',
-                    type: 'Media / PFAS',
-                    detail: 'DoD PFAS assessments at 723 installations; cleanup timelines extending (e.g., Whidbey Island to 2038)',
-                    status: 'Active Response',
-                    expandDetail: 'PFAS compliance and timeline pressure is rising in federal and military oversight channels, including long-tail cleanup planning through the 2030s and 2040s.'
-                  },
-                  {
-                    id: 'fed-stk-3',
-                    type: 'Cybersecurity',
-                    detail: 'Elevated risk to water sector following Iran strikes; DHS bulletins urge ICS/SCADA hardening',
-                    status: 'Active Monitor',
-                    expandDetail: 'Threat posture includes expected low-level retaliatory cyber activity such as DDoS and defacement attempts against critical infrastructure.'
-                  },
-                  {
-                    id: 'fed-stk-4',
-                    type: 'Interagency',
-                    detail: 'USDA-EPA coordination on agricultural nonpoint source funding with potential $2.1B alignment',
-                    status: 'Upcoming',
-                    expandDetail: 'Coordination priority is blending 319, NRCS, and restoration outcomes into a unified targeting approach for nutrient reduction.'
-                  },
-                ].map((s) => (
-                  <div key={s.id}>
-                    <div
-                      className="rounded-lg border border-slate-200 p-3 cursor-pointer hover:ring-1 hover:ring-indigo-300 transition-all"
-                      onClick={() => setComingSoonId(comingSoonId === s.id ? null : s.id)}
-                    >
-                      <div className="flex items-center justify-between mb-1 gap-2">
-                        <Badge variant="outline" className="text-[10px]">{s.type}</Badge>
-                        <div className="flex items-center gap-1.5">
-                          <Badge
-                            variant="secondary"
-                            className="text-[10px]"
-                          >
-                            {s.status}
-                          </Badge>
-                          <ChevronDown size={14} className={`text-slate-400 transition-transform ${comingSoonId === s.id ? 'rotate-180' : ''}`} />
-                        </div>
-                      </div>
-                      <p className="text-xs text-slate-700">{s.detail}</p>
-                    </div>
-                    {comingSoonId === s.id && (
-                      <div className="ml-4 mt-1 rounded-lg border border-indigo-200 bg-indigo-50/60 p-3">
-                        <p className="text-xs text-slate-700">{s.expandDetail}</p>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          <Button size="sm" className="h-7 bg-red-600 hover:bg-red-700 text-white">Prepare Response Brief</Button>
-                          <Button size="sm" variant="outline" className="h-7">Monitor Impact</Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Regional Lens - Maryland</p>
-                  <p className="text-sm font-semibold text-slate-800 mt-1">MD PIN Water Score: 51/100 (Fair)</p>
-                  <p className="text-xs text-slate-700 mt-2">Highest pressure indices: Infrastructure Failure 74 and EJ Vulnerability 77. Chesapeake Bay nutrient trends are improving, with clarity challenges still present. Shellfish reopening target: March 10, 2026.</p>
-                </div>
-                <div className="rounded-xl border border-violet-200 bg-violet-50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">Foresight Engine</p>
-                  <p className="text-sm font-semibold text-slate-800 mt-1">3-6 Month Outlook</p>
-                  <p className="text-xs text-slate-700 mt-2">Elevated regulatory enforcement probability remains for Potomac-adjacent systems until restoration milestones close. Recommended quick action: monitor Iran-related cyber risk posture for water utilities and pre-stage SSO cascade scenarios.</p>
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-slate-300 bg-white p-4">
-                <p className="text-sm font-semibold text-slate-800">Request Demo | See Potomac Scenario in Action | doug@project-pearl.org</p>
-                <p className="text-[11px] text-slate-500 mt-1">AI-aggregated from EPA ECHO/ATTAINS, DC Water, MDE, and media signals | Confidence: Moderate</p>
-                <p className="text-[11px] text-slate-500">PIN synthesizes public EPA/media signals into predictive intelligence - not official regulatory or legal advice.</p>
-              </div>
-            </CardContent>
-          </Card>
-        );
-
-        // ═══════════════════════════════════════════════════════════════════
-        // POLITICAL BRIEFING SECTIONS
-        // ═══════════════════════════════════════════════════════════════════
 
         case 'pol-active-situations': return DS(
           <Card className="border-red-300 bg-gradient-to-br from-red-50/60 to-amber-50/30">

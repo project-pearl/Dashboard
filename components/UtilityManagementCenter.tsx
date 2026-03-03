@@ -46,7 +46,7 @@ const LENS_CONFIG: Record<ViewLens, {
   overview: {
     label: 'Overview',
     description: 'Utility control room dashboard — real-time plant status, compliance, and alerts',
-    sections: new Set(['system-status', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'operational-stats', 'compliance-calendar', 'weather-source', 'alerts-notifications', 'quick-access', 'insights', 'alertfeed', 'icis', 'sdwis', 'groundwater', 'grants', 'contaminants-tracker', 'briefing-changes', 'briefing-stakeholder', 'disclaimer']),
+    sections: new Set(['system-status', 'operational-stats', 'compliance-calendar', 'weather-source', 'alerts-notifications', 'quick-access', 'insights', 'alertfeed', 'icis', 'sdwis', 'groundwater', 'grants', 'contaminants-tracker', 'disclaimer']),
   },
   briefing: {
     label: 'AI Briefing',
@@ -145,7 +145,7 @@ const LENS_CONFIG: Record<ViewLens, {
   warr: {
     label: 'WARR Room',
     description: 'Water Alert & Response Readiness — real-time situation awareness',
-    sections: new Set(['warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'insights', 'alertfeed', 'disclaimer']),
+    sections: new Set(['insights', 'alertfeed', 'disclaimer']),
   },
 };
 
@@ -1784,13 +1784,6 @@ export default function UtilityManagementCenter({ systemId }: Props) {
             // ══════════════════════════════════════════════════════════════
             // SHARED PANELS
             // ══════════════════════════════════════════════════════════════
-
-            case 'briefing-changes': return DS(
-              <WhatChangedOvernight entityType="utility" />
-            );
-            case 'briefing-stakeholder': return DS(
-              <StakeholderWatch entityType="utility" />
-            );
 
             case 'insights': return DS(
               <AIInsightsEngine key={systemId} role="Utility" stateAbbr={systemId} regionData={[] as any} />

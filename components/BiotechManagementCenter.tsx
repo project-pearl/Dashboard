@@ -112,7 +112,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   overview: {
     label: 'Executive Overview', description: 'Portfolio-level Biotech/Pharma summary for leadership',
     icon: Building2,
-    sections: new Set(['summary', 'kpis', 'map-grid', 'gmp-status', 'grants', 'alertfeed', 'briefing-changes', 'briefing-stakeholder', 'disclaimer']),
+    sections: new Set(['summary', 'kpis', 'map-grid', 'gmp-status', 'grants', 'alertfeed', 'disclaimer']),
   },
   'process-water': {
     label: 'Process Water Quality', description: 'USP water grades, purification KPIs, and process water monitoring',
@@ -127,7 +127,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   compliance: {
     label: 'Regulatory Compliance', description: 'Dual FDA/EPA regulatory compliance and permit management',
     icon: Shield,
-    sections: new Set(['compliance-overview', 'permit-status', 'fda-epa-matrix', 'icis', 'sdwis', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']),
+    sections: new Set(['compliance-overview', 'permit-status', 'fda-epa-matrix', 'icis', 'sdwis', 'disclaimer']),
   },
   contaminants: {
     label: 'Pharma Contaminants', description: 'API contaminant tracking and PFAS in manufacturing',
@@ -167,7 +167,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   briefing: {
     label: 'Daily Briefing', description: 'Priority actions, overnight changes, program pulse, and stakeholder watch',
     icon: FileText,
-    sections: new Set(['briefing-actions', 'briefing-changes', 'briefing-pulse', 'briefing-stakeholder', 'insights', 'alertfeed', 'disclaimer']),
+    sections: new Set(['briefing-actions', 'insights', 'alertfeed', 'disclaimer']),
   },
   scorecard: {
     label: 'Scorecard', description: 'Key performance indicators and letter grades for biotech compliance',
@@ -1821,31 +1821,6 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                 />
               );
             }
-
-            case 'briefing-changes': return DS(
-              <WhatChangedOvernight entityType="biotech" />
-            );
-
-            case 'briefing-pulse': return DS(
-              <RoleBriefingPulseCard
-                title="Program Pulse - Biotech"
-                description="Portfolio health indicators for biotech water quality and compliance operations"
-                metrics={[
-                  { id: 'bio-pulse-1', label: 'GMP Compliant', value: `${portfolioScores.gmpCompliantCount}/${portfolioScores.total}`, trend: 'portfolio count', color: 'text-green-700', bg: 'bg-green-50 border-green-200', dest: 'GMP compliance detail' },
-                  { id: 'bio-pulse-2', label: 'PIN Monitored', value: `${portfolioScores.monitored}/${portfolioScores.total}`, trend: 'facility coverage', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', dest: 'Monitoring status detail' },
-                  { id: 'bio-pulse-3', label: 'Avg Water Risk', value: `${portfolioScores.avgRisk}`, trend: 'latest cycle', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', dest: 'Risk profile detail' },
-                  { id: 'bio-pulse-4', label: 'Active Alerts', value: facilitiesData.reduce((sum, f) => sum + f.activeAlerts, 0).toLocaleString(), trend: 'open items', color: 'text-red-700', bg: 'bg-red-50 border-red-200', dest: 'Alert queue detail' },
-                ]}
-                sourceNote="Source: Biotech facility telemetry, compliance status, and alert tracking"
-                refreshNote={`Refresh: ${new Date().toLocaleString()}`}
-              />
-            );
-
-            case 'briefing-stakeholder': return DS(
-              <StakeholderWatch entityType="biotech" />
-            );
-
-            // ─── SCORECARD PANELS ──────────────────────────────────────────────
 
             case 'scorecard-kpis': return DS(
               <Card>

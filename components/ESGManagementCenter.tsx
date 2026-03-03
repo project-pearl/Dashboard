@@ -110,7 +110,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   overview: {
     label: 'Executive Overview', description: 'Portfolio-level Sustainability summary for leadership',
     icon: Building2,
-    sections: new Set(['summary', 'kpis', 'map-grid', 'sustainability', 'grants', 'alertfeed', 'briefing-changes', 'briefing-stakeholder', 'disclaimer']),
+    sections: new Set(['summary', 'kpis', 'map-grid', 'sustainability', 'grants', 'alertfeed', 'disclaimer']),
   },
   'esg-reporting': {
     label: 'ESG Reporting & Disclosure', description: 'ESG framework reporting, scorecard, and data exports',
@@ -125,7 +125,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   compliance: {
     label: 'Compliance & Risk', description: 'Regulatory compliance, enforcement exposure, and WARR',
     icon: Shield,
-    sections: new Set(['compliance', 'icis', 'sdwis', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']),
+    sections: new Set(['compliance', 'icis', 'sdwis', 'disclaimer']),
   },
   policy: {
     label: 'Policy & Regulatory', description: 'Environmental policy and regulatory tracking',
@@ -160,7 +160,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   briefing: {
     label: 'Daily Briefing', description: 'Morning briefing with priority actions, overnight changes, and program pulse',
     icon: FileText,
-    sections: new Set(['briefing-actions', 'briefing-changes', 'briefing-pulse', 'briefing-stakeholder', 'insights', 'alertfeed']),
+    sections: new Set(['briefing-actions', 'insights', 'alertfeed']),
   },
 };
 
@@ -2319,129 +2319,6 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                     ))}
                   </div>
                   <p className="text-xs text-slate-400 mt-4 italic">Data source: AI analysis of ESG portfolio deadlines, permit database, and disclosure requirements</p>
-                </CardContent>
-              </Card>
-            );
-
-            case 'briefing-changes': return DS(
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-purple-600" />
-                    What Changed Overnight
-                  </CardTitle>
-                  <CardDescription>Recent changes to ESG compliance, water quality, and regulatory status.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {[
-                      { id: 'chg-1', time: '2:14 AM', change: 'ATTAINS data refresh: 1 new Category 5 listing added for nutrient impairment affecting portfolio waterbody', detail: 'Choptank River (Cambridge Seafood Plant receiving waterbody) added to 303(d) list for nitrogen impairment. Assessment cycle 2024. May affect facility water risk score.' },
-                      { id: 'chg-2', time: '3:45 AM', change: 'ECHO enforcement update: Baltimore Processing flagged for significant non-compliance review', detail: 'Facility: Baltimore Processing (MD0098765). Potential effluent limit exceedance for total nitrogen. Water risk score currently 78/100. Formal enforcement action pending.' },
-                      { id: 'chg-3', time: '5:30 AM', change: 'ESG scoring methodology update: MSCI increased water risk weighting by 15%', detail: 'MSCI ESG rating methodology revision effective Q2 2026. Water stress and effluent management now weighted 15% higher. Portfolio ESG score impact estimated at -2 to -4 points.' },
-                      { id: 'chg-4', time: '6:00 AM', change: 'New grant opportunity matched: EPA Emerging Contaminants Grant ($2M, 92% match score)', detail: 'Application deadline: Apr 2026. High match score based on portfolio PFAS exposure and treatment infrastructure. Recommended for Cambridge and Baltimore facilities.' },
-                    ].map((c) => (
-                      <div key={c.id}>
-                        <div
-                          className="flex items-start gap-3 rounded-lg border border-slate-200 p-3 cursor-pointer hover:ring-1 hover:ring-purple-300 transition-all"
-                          onClick={() => setComingSoonId(comingSoonId === c.id ? null : c.id)}
-                        >
-                          <span className="text-[10px] font-mono text-slate-400 whitespace-nowrap mt-0.5">{c.time}</span>
-                          <span className="text-xs text-slate-700 flex-1">{c.change}</span>
-                          <ChevronDown size={14} className={`flex-shrink-0 text-slate-400 transition-transform mt-0.5 ${comingSoonId === c.id ? 'rotate-180' : ''}`} />
-                        </div>
-                        {comingSoonId === c.id && (
-                          <div className="ml-4 mt-1 rounded-lg border border-purple-200 bg-purple-50/60 p-3">
-                            <p className="text-xs text-slate-700">{c.detail}</p>
-                            <p className="text-[10px] text-purple-600 mt-2 font-medium">Navigate to source data — Coming Soon</p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ATTAINS, ECHO, ESG rating agencies, grant databases overnight batch updates</p>
-                </CardContent>
-              </Card>
-            );
-
-            case 'briefing-pulse': return DS(
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Activity className="h-5 w-5 text-blue-600" />
-                    Program Pulse
-                  </CardTitle>
-                  <CardDescription>Current pulse of ESG water programs.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {[
-                      { id: 'pulse-risk', label: 'Avg Water Risk', value: `${portfolioScores.avgRisk}`, trend: '+2', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', dest: 'Risk detail' },
-                      { id: 'pulse-esg', label: 'ESG Score', value: `${portfolioScores.avgESG}`, trend: '-1', color: 'text-green-700', bg: 'bg-green-50 border-green-200', dest: 'ESG scorecard' },
-                      { id: 'pulse-disclosure', label: 'Disclosure Ready', value: '44%', trend: '+5%', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', dest: 'Framework tracker' },
-                      { id: 'pulse-sites', label: 'Active PIN Sites', value: `${portfolioScores.monitored}`, trend: '0', color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200', dest: 'Facility list' },
-                    ].map(m => (
-                      <div key={m.id}>
-                        <div
-                          className={`rounded-xl border p-4 cursor-pointer hover:ring-1 hover:ring-blue-300 transition-all ${m.bg}`}
-                          onClick={() => setComingSoonId(comingSoonId === m.id ? null : m.id)}
-                        >
-                          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{m.label}</div>
-                          <div className={`text-2xl font-bold ${m.color} mt-1`}>{m.value}</div>
-                          <div className="text-[10px] text-slate-500 mt-1">{m.trend} this week</div>
-                        </div>
-                        {comingSoonId === m.id && (
-                          <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-2">
-                            <p className="text-[10px] text-blue-600 font-medium">{m.dest} — Coming Soon</p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: PEARL portfolio analytics, ESG framework coverage, facility monitoring status</p>
-                </CardContent>
-              </Card>
-            );
-
-            case 'briefing-stakeholder': return DS(
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Scale className="h-5 w-5 text-indigo-600" />
-                    Stakeholder Watch
-                  </CardTitle>
-                  <CardDescription>Key stakeholder activities and engagement updates.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {[
-                      { id: 'stk-1', type: 'Investor', detail: 'Institutional investors requesting updated water stewardship disclosures for proxy season', status: 'Response Needed', expandDetail: '3 institutional investors (combined 8.2% ownership) submitted pre-proxy engagement letters requesting enhanced water risk disclosure. Key asks: facility-level water stress data, TCFD-aligned water scenario analysis, and TNFD pilot disclosure. Response deadline: Mar 15.' },
-                      { id: 'stk-2', type: 'Regulatory', detail: 'EPA Region 3 requesting portfolio-level TMDL compliance progress report', status: 'In Progress', expandDetail: 'Annual TMDL implementation progress report covering Chesapeake Bay watershed facilities. 3 active TMDLs require status update on nutrient load reductions. Current portfolio: 329 lbs TN reduced, 67 lbs TP reduced.' },
-                      { id: 'stk-3', type: 'Community', detail: 'Local advocacy group published report on industrial water discharge in Chesapeake Bay region', status: 'Monitoring', expandDetail: 'Chesapeake Bay Foundation report highlights industrial discharge contributors. Two portfolio facilities (Baltimore Processing, Cambridge Seafood Plant) mentioned. Report recommends enhanced monitoring and public reporting. Communications team reviewing for response strategy.' },
-                    ].map((s) => (
-                      <div key={s.id}>
-                        <div
-                          className="rounded-lg border border-slate-200 p-3 cursor-pointer hover:ring-1 hover:ring-indigo-300 transition-all"
-                          onClick={() => setComingSoonId(comingSoonId === s.id ? null : s.id)}
-                        >
-                          <div className="flex items-center justify-between mb-1">
-                            <Badge variant="outline" className="text-[10px]">{s.type}</Badge>
-                            <div className="flex items-center gap-1.5">
-                              <Badge variant="secondary" className="text-[10px]">{s.status}</Badge>
-                              <ChevronDown size={14} className={`text-slate-400 transition-transform ${comingSoonId === s.id ? 'rotate-180' : ''}`} />
-                            </div>
-                          </div>
-                          <p className="text-xs text-slate-700">{s.detail}</p>
-                        </div>
-                        {comingSoonId === s.id && (
-                          <div className="ml-4 mt-1 rounded-lg border border-indigo-200 bg-indigo-50/60 p-3">
-                            <p className="text-xs text-slate-700">{s.expandDetail}</p>
-                            <p className="text-[10px] text-indigo-600 mt-2 font-medium">Open full context — Coming Soon</p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: AI analysis of investor relations, EPA correspondence, media monitoring, and community engagement</p>
                 </CardContent>
               </Card>
             );

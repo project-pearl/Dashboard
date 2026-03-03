@@ -101,7 +101,7 @@ const LENS_CONFIG: Record<ViewLens, {
   sections: Set<string> | null;
 }> = {
   overview:    { label: 'Overview',    description: 'NGO watershed management overview',
-    sections: new Set(['regprofile', 'map-grid', 'top10', 'partners', 'warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'briefing-changes', 'briefing-stakeholder', 'disclaimer']) },
+    sections: new Set(['regprofile', 'map-grid', 'top10', 'partners', 'disclaimer']) },
   briefing:    { label: 'AI Briefing', description: 'AI-generated conservation intelligence briefing',
     sections: new Set(['insights', 'alertfeed', 'disclaimer']) },
   'political-briefing': {
@@ -148,7 +148,7 @@ const LENS_CONFIG: Record<ViewLens, {
   habitat:     { label: 'Habitat & Ecology', description: 'Species conservation status and habitat health — supports advocacy and restoration',
     sections: new Set(['hab-ecoscore', 'hab-wildlife', 'disclaimer']) },
   warr:        { label: 'WARR Room', description: 'Water Alert & Response Readiness — real-time situation awareness',
-    sections: new Set(['warr-metrics', 'warr-analyze', 'warr-respond', 'warr-resolve', 'disclaimer']) },
+    sections: new Set(['disclaimer']) },
   initiatives: { label: 'Initiatives', description: 'Conservation initiative planning and tracking',
     sections: new Set(['initiatives-panel', 'disclaimer']) },
 };
@@ -870,13 +870,6 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
             </div>
           );
         })()
-            );
-
-            case 'briefing-changes': return DS(
-              <WhatChangedOvernight entityType="ngo" entityName={stateName} stateAbbr={stateAbbr} />
-            );
-            case 'briefing-stakeholder': return DS(
-              <StakeholderWatch entityType="ngo" entityName={stateName} stateAbbr={stateAbbr} />
             );
 
             case 'insights': return DS(

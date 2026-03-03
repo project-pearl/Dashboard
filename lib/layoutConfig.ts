@@ -26,10 +26,10 @@ export const DEFAULT_SECTIONS = {
   K12: [
     // ── Shared / multi-lens sections ──
     { id: 'wildlife',    label: 'Wildlife Impact',              order: 0,  visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'warr-metrics',  label: 'WARR Metrics Strip',  order: 0.1, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'warr-analyze',  label: 'WARR Analyze Zone',   order: 0.2, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'warr-respond',  label: 'WARR Respond Zone',   order: 0.3, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'warr-resolve',  label: 'WARR Resolve Zone',   order: 0.4, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-metrics', label: 'WARR Metrics Strip',  order: 0.1, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-analyze', label: 'WARR Analyze Zone',   order: 0.2, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-respond', label: 'WARR Respond Zone',   order: 0.3, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-resolve', label: 'WARR Resolve Zone',   order: 0.4, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'regprofile',  label: 'Water Health Dashboard',       order: 1,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'insights',    label: 'AI Insights Engine',           order: 2,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'alertfeed',   label: 'Statewide Alert Feed',         order: 3,  visible: true, defaultExpanded: false, lensControlled: true },
@@ -59,9 +59,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'drinking-water-safety-panel', label: 'Drinking Water Safety',      order: 22, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'debate-topics-panel',       label: 'Debate Topics',              order: 22.3, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'groundwater',                label: 'Groundwater Monitoring (WDFN)', order: 22.5, visible: true, defaultExpanded: false, lensControlled: true },
-    { id: 'briefing-changes',           label: 'What Changed Overnight',       order: 22.6, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'delta-changelog',            label: 'Data Change Log',              order: 22.65, visible: true, defaultExpanded: false, lensControlled: true },
-    { id: 'briefing-stakeholder',       label: 'Stakeholder Watch',            order: 22.7, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'location-report', label: 'Location Water Quality Report', order: 23, visible: true, defaultExpanded: false, lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',  label: 'Platform Disclaimer',          order: 24, visible: true, defaultExpanded: true,  lensControlled: true },
@@ -71,10 +69,10 @@ export const DEFAULT_SECTIONS = {
     // ── Shared / multi-lens sections ──
     { id: 'regprofile',          label: 'Water Health Dashboard',          order: 0,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'datareport',          label: 'Data Report Card',               order: 1,  visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'warr-metrics',  label: 'WARR Metrics Strip',  order: 1.1, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'warr-analyze',  label: 'WARR Analyze Zone',   order: 1.2, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'warr-respond',  label: 'WARR Respond Zone',   order: 1.3, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'warr-resolve',  label: 'WARR Resolve Zone',   order: 1.4, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-metrics', label: 'WARR Metrics Strip',  order: 1.1, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-analyze', label: 'WARR Analyze Zone',   order: 1.2, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-respond', label: 'WARR Respond Zone',   order: 1.3, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-resolve', label: 'WARR Resolve Zone',   order: 1.4, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'insights',            label: 'AI Insights Engine',             order: 2,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'alertfeed',           label: 'Statewide Alert Feed',           order: 3,  visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'map-grid',            label: 'Map & Waterbody List',           order: 4,  visible: true, defaultExpanded: true,  lensControlled: true, compound: true },
@@ -92,10 +90,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'quick-access',        label: 'Quick Access Grid',             order: 15, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── AI Briefing (View 2) ──
     { id: 'briefing-actions',    label: 'Action Required',               order: 16, visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'briefing-changes',    label: 'What Changed Overnight',        order: 17, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'delta-changelog',     label: 'Data Change Log',               order: 17.1, visible: true, defaultExpanded: false, lensControlled: true },
-    { id: 'briefing-pulse',      label: 'Program Pulse',                 order: 18, visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'briefing-stakeholder', label: 'Stakeholder Watch',            order: 19, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Political Briefing ──
     { id: 'pol-talking-points',       label: 'Talking Points',              order: 19.41, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'pol-constituent-concerns', label: 'Constituent Concerns',        order: 19.42, visible: true, defaultExpanded: true, lensControlled: true },
@@ -209,10 +204,10 @@ export const DEFAULT_SECTIONS = {
   MS4: [
     // ── Shared / multi-lens sections ──
     { id: 'identity',            label: 'Jurisdiction Identity',            order: 0,  visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'warr-metrics',  label: 'WARR Metrics Strip',  order: 0.1, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'warr-analyze',  label: 'WARR Analyze Zone',   order: 0.2, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'warr-respond',  label: 'WARR Respond Zone',   order: 0.3, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'warr-resolve',  label: 'WARR Resolve Zone',   order: 0.4, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-metrics', label: 'WARR Metrics Strip',  order: 0.1, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-analyze', label: 'WARR Analyze Zone',   order: 0.2, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-respond', label: 'WARR Respond Zone',   order: 0.3, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-resolve', label: 'WARR Resolve Zone',   order: 0.4, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'insights',            label: 'AI Insights Engine',               order: 1,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'alertfeed',           label: 'Alert Feed',                       order: 2,  visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'map-grid',            label: 'Map & Waterbody List',             order: 3,  visible: true, defaultExpanded: true,  lensControlled: true, compound: true },
@@ -229,10 +224,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'quick-access',        label: 'Quick Access Grid',                order: 14, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── AI Briefing (View 2) ──
     { id: 'briefing-actions',    label: 'Action Required',                  order: 15, visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'briefing-changes',    label: 'What Changed Overnight',           order: 16, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'delta-changelog',     label: 'Data Change Log',                  order: 16.1, visible: true, defaultExpanded: false, lensControlled: true },
-    { id: 'briefing-pulse',      label: 'Program Pulse',                    order: 17, visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'briefing-stakeholder', label: 'Stakeholder Watch',               order: 18, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Political Briefing ──
     { id: 'pol-talking-points',       label: 'Talking Points',                order: 18.41, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'pol-constituent-concerns', label: 'Constituent Concerns',          order: 18.42, visible: true, defaultExpanded: true, lensControlled: true },
@@ -342,10 +334,10 @@ export const DEFAULT_SECTIONS = {
   Sustainability: [
     // ── Shared / multi-lens sections ──
     { id: 'summary',        label: 'Sustainability Summary',        order: 0,  visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'warr-metrics',  label: 'WARR Metrics Strip',  order: 0.1, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'warr-analyze',  label: 'WARR Analyze Zone',   order: 0.2, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'warr-respond',  label: 'WARR Respond Zone',   order: 0.3, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'warr-resolve',  label: 'WARR Resolve Zone',   order: 0.4, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-metrics', label: 'WARR Metrics Strip',  order: 0.1, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-analyze', label: 'WARR Analyze Zone',   order: 0.2, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-respond', label: 'WARR Respond Zone',   order: 0.3, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-resolve', label: 'WARR Resolve Zone',   order: 0.4, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'kpis',           label: 'KPI Cards',                     order: 1,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'map-grid',       label: 'Map & Facility List',           order: 2,  visible: true, defaultExpanded: true,  lensControlled: true, compound: true },
     { id: 'insights',       label: 'AI Insights Engine',            order: 3,  visible: true, defaultExpanded: true,  lensControlled: true },
@@ -377,10 +369,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'hab-wildlife',               label: 'Wildlife & T&E Species',      order: 25.2, visible: true, defaultExpanded: true, lensControlled: true },
     // ── AI Briefing ──
     { id: 'briefing-actions',    label: 'Action Required',               order: 25.3, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'briefing-changes',    label: 'What Changed Overnight',        order: 25.4, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'delta-changelog',     label: 'Data Change Log',               order: 25.45, visible: true, defaultExpanded: false, lensControlled: true },
-    { id: 'briefing-pulse',      label: 'Program Pulse',                 order: 25.5, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'briefing-stakeholder', label: 'Stakeholder Watch',            order: 25.6, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'alertfeed',           label: 'Alert Feed',                    order: 25.7, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'grant-outcomes',      label: 'Grant Outcomes',                order: 25.8, visible: true, defaultExpanded: true, lensControlled: true },
     // ── ESG exclusive panels ──
@@ -401,10 +390,10 @@ export const DEFAULT_SECTIONS = {
   Biotech: [
     // ── Shared / multi-lens sections ──
     { id: 'summary',              label: 'Biotech Summary',                  order: 0,   visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'warr-metrics',         label: 'WARR Metrics Strip',               order: 0.1, visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'warr-analyze',         label: 'WARR Analyze Zone',                order: 0.2, visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'warr-respond',         label: 'WARR Respond Zone',                order: 0.3, visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'warr-resolve',         label: 'WARR Resolve Zone',                order: 0.4, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'warr-metrics', label: 'WARR Metrics Strip',               order: 0.1, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'warr-analyze', label: 'WARR Analyze Zone',                order: 0.2, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'warr-respond', label: 'WARR Respond Zone',                order: 0.3, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'warr-resolve', label: 'WARR Resolve Zone',                order: 0.4, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'kpis',                 label: 'KPI Cards',                        order: 1,   visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'map-grid',             label: 'Map & Facility List',              order: 2,   visible: true, defaultExpanded: true,  lensControlled: true, compound: true },
     { id: 'insights',             label: 'AI Insights Engine',               order: 3,   visible: true, defaultExpanded: true,  lensControlled: true },
@@ -423,10 +412,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'disaster-emergency-panel', label: 'Disaster & Emergency',        order: 14,  visible: true, defaultExpanded: true,  lensControlled: true },
     // ── AI Briefing ──
     { id: 'briefing-actions',     label: 'Action Required',                  order: 14.1, visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'briefing-changes',     label: 'What Changed Overnight',           order: 14.2, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'delta-changelog',      label: 'Data Change Log',                  order: 14.25, visible: true, defaultExpanded: false, lensControlled: true },
-    { id: 'briefing-pulse',       label: 'Program Pulse',                    order: 14.3, visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'briefing-stakeholder', label: 'Stakeholder Watch',                order: 14.4, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Scorecard ──
     { id: 'scorecard-kpis',       label: 'Scorecard KPIs',                   order: 14.5, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'scorecard-grades',     label: 'Scorecard Grades',                  order: 14.6, visible: true, defaultExpanded: true,  lensControlled: true },
@@ -465,10 +451,10 @@ export const DEFAULT_SECTIONS = {
   Investor: [
     // ── Shared / multi-lens sections ──
     { id: 'summary',                 label: 'Investor Summary',                 order: 0,   visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'warr-metrics',            label: 'WARR Metrics Strip',               order: 0.1, visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'warr-analyze',            label: 'WARR Analyze Zone',                order: 0.2, visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'warr-respond',            label: 'WARR Respond Zone',                order: 0.3, visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'warr-resolve',            label: 'WARR Resolve Zone',                order: 0.4, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'warr-metrics', label: 'WARR Metrics Strip',               order: 0.1, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'warr-analyze', label: 'WARR Analyze Zone',                order: 0.2, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'warr-respond', label: 'WARR Respond Zone',                order: 0.3, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'warr-resolve', label: 'WARR Resolve Zone',                order: 0.4, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'kpis',                    label: 'KPI Cards',                        order: 1,   visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'map-grid',                label: 'Map & Portfolio List',             order: 2,   visible: true, defaultExpanded: true,  lensControlled: true, compound: true },
     { id: 'portfolio-snapshot',      label: 'Portfolio Snapshot',               order: 3,   visible: true, defaultExpanded: true,  lensControlled: true },
@@ -488,10 +474,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'reports-hub',             label: 'Reports Hub',                     order: 15,  visible: true, defaultExpanded: true,  lensControlled: true },
     // ── AI Briefing ──
     { id: 'briefing-actions',        label: 'Action Required',                 order: 15.1, visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'briefing-changes',        label: 'What Changed Overnight',          order: 15.2, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'delta-changelog',         label: 'Data Change Log',                 order: 15.25, visible: true, defaultExpanded: false, lensControlled: true },
-    { id: 'briefing-pulse',          label: 'Program Pulse',                   order: 15.3, visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'briefing-stakeholder',    label: 'Stakeholder Watch',               order: 15.4, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Habitat & Ecology ──
     { id: 'hab-ecoscore',            label: 'Ecological Sensitivity Score',    order: 15.5, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'hab-wildlife',            label: 'Wildlife & T&E Species',          order: 15.6, visible: true, defaultExpanded: true,  lensControlled: true },
@@ -530,10 +513,10 @@ export const DEFAULT_SECTIONS = {
   NGO: [
     // ── Shared / multi-lens sections ──
     { id: 'regprofile',  label: 'Region Profile',               order: 0,  visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'warr-metrics',  label: 'WARR Metrics Strip',  order: 0.1, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'warr-analyze',  label: 'WARR Analyze Zone',   order: 0.2, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'warr-respond',  label: 'WARR Respond Zone',   order: 0.3, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'warr-resolve',  label: 'WARR Resolve Zone',   order: 0.4, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-metrics', label: 'WARR Metrics Strip',  order: 0.1, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-analyze', label: 'WARR Analyze Zone',   order: 0.2, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-respond', label: 'WARR Respond Zone',   order: 0.3, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-resolve', label: 'WARR Resolve Zone',   order: 0.4, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'insights',    label: 'AI Insights Engine',            order: 1,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'alertfeed',   label: 'Alert Feed',                   order: 2,  visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'map-grid',    label: 'Map & Waterbody List',         order: 3,  visible: true, defaultExpanded: true,  lensControlled: true, compound: true },
@@ -575,9 +558,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'advocacy-panel',              label: 'Advocacy Center',               order: 24, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'volunteer-program-panel',     label: 'Volunteer Program Management',  order: 25, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'citizen-reporting-panel',     label: 'Citizen Reporting',             order: 26, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'briefing-changes',           label: 'What Changed Overnight',       order: 26.6, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'delta-changelog',            label: 'Data Change Log',              order: 26.65, visible: true, defaultExpanded: false, lensControlled: true },
-    { id: 'briefing-stakeholder',       label: 'Stakeholder Watch',            order: 26.7, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'location-report',            label: 'Location Water Quality Report', order: 27, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'initiatives-panel',          label: 'Initiatives Tracker',           order: 27.5, visible: true, defaultExpanded: true, lensControlled: true },
     // ── Funding ──
@@ -590,10 +571,10 @@ export const DEFAULT_SECTIONS = {
   University: [
     // ── Shared / multi-lens sections ──
     { id: 'regprofile',  label: 'Region Profile',               order: 0,  visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'warr-metrics',  label: 'WARR Metrics Strip',  order: 0.1, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'warr-analyze',  label: 'WARR Analyze Zone',   order: 0.2, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'warr-respond',  label: 'WARR Respond Zone',   order: 0.3, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'warr-resolve',  label: 'WARR Resolve Zone',   order: 0.4, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-metrics', label: 'WARR Metrics Strip',  order: 0.1, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-analyze', label: 'WARR Analyze Zone',   order: 0.2, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-respond', label: 'WARR Respond Zone',   order: 0.3, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-resolve', label: 'WARR Resolve Zone',   order: 0.4, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'alertfeed',   label: 'Alert Feed',                   order: 1,  visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'insights',    label: 'AI Insights Engine',            order: 2,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'map-grid',    label: 'Map & Waterbody List',         order: 3,  visible: true, defaultExpanded: true,  lensControlled: true, compound: true },
@@ -627,9 +608,7 @@ export const DEFAULT_SECTIONS = {
     // ── Funding ──
     { id: 'fund-active',                 label: 'My Active Grants',             order: 25.1, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'fund-pipeline',               label: 'Opportunity Pipeline',         order: 25.2, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'briefing-changes',            label: 'What Changed Overnight',       order: 25.6, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'delta-changelog',             label: 'Data Change Log',              order: 25.65, visible: true, defaultExpanded: false, lensControlled: true },
-    { id: 'briefing-stakeholder',        label: 'Stakeholder Watch',            order: 25.7, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'location-report',             label: 'Location Water Quality Report', order: 26, visible: true, defaultExpanded: false, lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',  label: 'Platform Disclaimer',          order: 27, visible: true, defaultExpanded: true,  lensControlled: true },
@@ -637,20 +616,17 @@ export const DEFAULT_SECTIONS = {
 
   FMC: [
     { id: 'usmap',              label: 'US Map',                      order: 0,  visible: true, defaultExpanded: true, compound: true, lensControlled: true },
-    { id: 'warr-metrics',       label: 'WARR Metrics Strip',          order: 0.1, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'warr-analyze',       label: 'WARR Analyze Zone',           order: 0.2, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'warr-respond',       label: 'WARR Respond Zone',           order: 0.3, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'warr-resolve',       label: 'WARR Resolve Zone',           order: 0.4, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-metrics', label: 'WARR Metrics Strip',          order: 0.1, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-analyze', label: 'WARR Analyze Zone',           order: 0.2, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-respond', label: 'WARR Respond Zone',           order: 0.3, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-resolve', label: 'WARR Resolve Zone',           order: 0.4, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'situation',          label: 'Situation Summary',           order: 1,  visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'impairmentprofile',  label: 'Waterbody & Impairment Profile', order: 2,  visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'ai-water-intelligence', label: 'PIN Insights',              order: 3,  visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'national-briefing',  label: 'National Intelligence Briefing', order: 4, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'sentinel-briefing',  label: 'Sentinel System Health',      order: 5,  visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'briefing-actions',    label: 'Action Required',               order: 5.1, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'briefing-changes',    label: 'What Changed Overnight',        order: 5.2, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'delta-changelog',     label: 'Data Change Log',               order: 5.25, visible: true, defaultExpanded: false, lensControlled: true },
-    { id: 'briefing-pulse',      label: 'Program Pulse',                 order: 5.3, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'briefing-stakeholder', label: 'Stakeholder Watch',            order: 5.4, visible: true, defaultExpanded: true, lensControlled: true },
     // ── Political Briefing ──
     { id: 'pol-active-situations',    label: 'Active Situations',           order: 5.50, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'pol-talking-points',       label: 'Talking Points',              order: 5.51, visible: true, defaultExpanded: true, lensControlled: true },
@@ -709,10 +685,10 @@ export const DEFAULT_SECTIONS = {
   Utility: [
     // ── Shared / multi-lens sections ──
     { id: 'system-status',          label: 'System Status Hero',               order: 0,  visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'warr-metrics',       label: 'WARR Metrics Strip',             order: 0.1, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'warr-analyze',       label: 'WARR Analyze Zone',              order: 0.2, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'warr-respond',       label: 'WARR Respond Zone',              order: 0.3, visible: true, defaultExpanded: true, lensControlled: true },
-    { id: 'warr-resolve',       label: 'WARR Resolve Zone',              order: 0.4, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-metrics', label: 'WARR Metrics Strip',             order: 0.1, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-analyze', label: 'WARR Analyze Zone',              order: 0.2, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-respond', label: 'WARR Respond Zone',              order: 0.3, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'warr-resolve', label: 'WARR Resolve Zone',              order: 0.4, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'operational-stats',      label: 'Operational Quick Stats',          order: 1,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'compliance-calendar',    label: 'Compliance Calendar Strip',        order: 2,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'weather-source',         label: 'Weather & Source Conditions',      order: 3,  visible: true, defaultExpanded: true,  lensControlled: true },
@@ -882,20 +858,17 @@ export const DEFAULT_SECTIONS = {
     // ── Overview (10) ──
     { id: 'local-identity',   label: 'Jurisdiction Identity',         order: 0,   visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'local-kpi-strip',  label: 'KPI Strip',                     order: 1,   visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'warr-metrics',     label: 'WARR Metrics Strip',            order: 1.1, visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'warr-analyze',     label: 'WARR Analyze Zone',             order: 1.2, visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'warr-respond',     label: 'WARR Respond Zone',             order: 1.3, visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'warr-resolve',     label: 'WARR Resolve Zone',             order: 1.4, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'warr-metrics', label: 'WARR Metrics Strip',            order: 1.1, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'warr-analyze', label: 'WARR Analyze Zone',             order: 1.2, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'warr-respond', label: 'WARR Respond Zone',             order: 1.3, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'warr-resolve', label: 'WARR Resolve Zone',             order: 1.4, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'map-grid',         label: 'Map & Waterbody List',          order: 2,   visible: true, defaultExpanded: true,  lensControlled: true, compound: true },
     { id: 'local-situation',  label: 'Situation Summary',             order: 3,   visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'local-quick-actions', label: 'Quick Actions',              order: 4,   visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Briefing (7) ──
     { id: 'insights',              label: 'AI Insights Engine',        order: 5,   visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'briefing-actions',      label: 'Action Required',           order: 6,   visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'briefing-changes',      label: 'What Changed Overnight',    order: 7,   visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'delta-changelog',       label: 'Data Change Log',           order: 7.1, visible: true, defaultExpanded: false, lensControlled: true },
-    { id: 'briefing-pulse',        label: 'Program Pulse',             order: 8,   visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'briefing-stakeholder',  label: 'Stakeholder Watch',         order: 9,   visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'local-constituent-tldr', label: 'Constituent TL;DR',       order: 10,  visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Political Briefing (10) ──
     { id: 'pol-talking-points',      label: 'Talking Points',              order: 11,  visible: true, defaultExpanded: true,  lensControlled: true },
