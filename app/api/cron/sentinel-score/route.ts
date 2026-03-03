@@ -6,12 +6,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { ScoredHuc } from '@/lib/sentinel/types';
 import { SENTINEL_FLAGS } from '@/lib/sentinel/config';
-import { ensureWarmed as ensureQueueWarmed } from '@/lib/sentinel/eventQueue';
+import { ensureWarmed as ensureQueueWarmed, getAllEvents } from '@/lib/sentinel/eventQueue';
 import { ensureWarmed as ensureHealthWarmed } from '@/lib/sentinel/sentinelHealth';
 import {
   scoreAllHucs,
   ensureWarmed as ensureScoreWarmed,
 } from '@/lib/sentinel/scoringEngine';
+import { detectCoordination } from '@/lib/sentinel/coordinationEngine';
+import { classifyEvent, gatherConfounders } from '@/lib/sentinel/classificationEngine';
+import { correlateNwssWithWQ } from '@/lib/sentinel/nwssCorrelationEngine';
+import { ensureWarmed as ensureBaselinesWarmed } from '@/lib/sentinel/parameterBaselines';
+import { ensureWarmed as ensureNwssWarmed, getNwssAnomalies } from '@/lib/nwss/nwssCache';
+import type { NwssCorrelation } from '@/lib/sentinel/types';
+import { evaluateCoordinationAlerts } from '@/lib/alerts/triggers/coordinationTrigger';
+import { dispatchAlerts } from '@/lib/alerts/engine';
+import { ALERT_FLAGS } from '@/lib/alerts/config';
+import type { AttackClassification } from '@/lib/sentinel/types';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
@@ -39,6 +49,8 @@ export async function GET(request: NextRequest) {
       ensureQueueWarmed(),
       ensureHealthWarmed(),
       ensureScoreWarmed(),
+      ensureBaselinesWarmed(),
+      ensureNwssWarmed(),
     ]);
 
     // Run Tier-2 scoring
@@ -47,6 +59,50 @@ export async function GET(request: NextRequest) {
     const criticalHucs = scored.filter(h => h.level === 'CRITICAL');
     const watchHucs = scored.filter(h => h.level === 'WATCH');
     const advisoryHucs = scored.filter(h => h.level === 'ADVISORY');
+
+    // Coordination detection
+    let coordinationResults: { detected: number; dispatched: number } = { detected: 0, dispatched: 0 };
+    try {
+      const allEvents = getAllEvents();
+      const coordinated = detectCoordination(allEvents);
+      coordinationResults.detected = coordinated.length;
+
+      if (coordinated.length > 0 && ALERT_FLAGS.ENABLED) {
+        const alertEvents = await evaluateCoordinationAlerts(coordinated);
+        if (alertEvents.length > 0) {
+          const result = await dispatchAlerts(alertEvents);
+          coordinationResults.dispatched = result.sent;
+        }
+      }
+    } catch (err: any) {
+      console.warn(`[sentinel-score] Coordination detection error: ${err.message}`);
+    }
+
+    // Classification — only for WATCH+ HUCs
+    const classifications: { huc8: string; classification: AttackClassification }[] = [];
+    try {
+      const allEvents = getAllEvents();
+      const watchPlusHucs = scored.filter(h => h.level === 'WATCH' || h.level === 'CRITICAL');
+      for (const huc of watchPlusHucs) {
+        const confounders = gatherConfounders(huc.huc8, allEvents);
+        const result = classifyEvent(huc, confounders);
+        classifications.push({ huc8: huc.huc8, classification: result });
+      }
+    } catch (err: any) {
+      console.warn(`[sentinel-score] Classification error: ${err.message}`);
+    }
+
+    // NWSS correlation
+    let nwssCorrelations: NwssCorrelation[] = [];
+    try {
+      const nwssAnomalies = getNwssAnomalies();
+      if (nwssAnomalies.length > 0) {
+        const allEvents = getAllEvents();
+        nwssCorrelations = correlateNwssWithWQ(nwssAnomalies, allEvents);
+      }
+    } catch (err: any) {
+      console.warn(`[sentinel-score] NWSS correlation error: ${err.message}`);
+    }
 
     // LLM escalation
     let llmTriggered = 0;
@@ -85,6 +141,26 @@ export async function GET(request: NextRequest) {
           level: h.level,
           events: h.events.length,
           patterns: h.activePatterns.map(p => p.patternId),
+        })),
+      },
+      coordination: coordinationResults,
+      classification: {
+        evaluated: classifications.length,
+        results: classifications.map(c => ({
+          huc8: c.huc8,
+          classification: c.classification.classification,
+          threatScore: c.classification.threatScore,
+        })),
+      },
+      nwssCorrelation: {
+        anomaliesChecked: getNwssAnomalies().length,
+        correlationsFound: nwssCorrelations.length,
+        correlations: nwssCorrelations.map(c => ({
+          pathogen: c.nwssAnomaly.pathogen,
+          sigma: c.nwssAnomaly.sigma,
+          score: c.correlationScore,
+          spatialMatch: c.spatialMatch,
+          wqEvents: c.wqEvents.length,
         })),
       },
       llm: {

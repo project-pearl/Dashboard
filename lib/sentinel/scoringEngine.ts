@@ -342,3 +342,11 @@ export function getResolvedHucs(): ResolvedHuc[] {
   ensureDiskLoaded();
   return _resolvedHucs;
 }
+
+/** Force-clear for testing */
+export function _resetScoring(): void {
+  _scoredHucs = [];
+  _resolvedHucs = [];
+  _diskLoaded = false;
+  _blobChecked = false;
+}

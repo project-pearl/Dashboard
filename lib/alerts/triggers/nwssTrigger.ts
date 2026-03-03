@@ -8,10 +8,18 @@
 /* ------------------------------------------------------------------ */
 
 import type { AlertEvent } from '../types';
+import type { NwssCorrelation } from '../../sentinel/types';
 import { BLOB_PATHS } from '../config';
 import { saveCacheToBlob, loadCacheFromBlob } from '../../blobPersistence';
 import { ensureWarmed, getNwssAnomalies } from '../../nwss/nwssCache';
 import type { NWSSAnomaly } from '../../nwss/types';
+
+/** Optional correlation data injected by sentinel-score cron */
+let _correlationCache: NwssCorrelation[] = [];
+
+export function setNwssCorrelations(correlations: NwssCorrelation[]): void {
+  _correlationCache = correlations;
+}
 
 /* ------------------------------------------------------------------ */
 /*  Snapshot — tracks which anomalies we've already alerted on        */
@@ -87,6 +95,7 @@ export async function evaluateNwssAlerts(): Promise<AlertEvent[]> {
         populationServed: anomaly.populationServed,
         sampleDate: anomaly.date,
         jurisdiction: anomaly.jurisdiction,
+        ...getCorrelationMetadata(anomaly),
       },
     });
 
@@ -100,4 +109,25 @@ export async function evaluateNwssAlerts(): Promise<AlertEvent[]> {
   });
 
   return events;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Correlation Metadata Helper                                       */
+/* ------------------------------------------------------------------ */
+
+function getCorrelationMetadata(anomaly: NWSSAnomaly): Record<string, unknown> {
+  const match = _correlationCache.find(
+    c => c.nwssAnomaly.sewershedId === anomaly.sewershedId &&
+         c.nwssAnomaly.pathogen === anomaly.pathogen,
+  );
+
+  if (!match) return {};
+
+  return {
+    correlationScore: match.correlationScore,
+    correlatedWqEvents: match.wqEvents.length,
+    parameterMatches: match.parameterMatches,
+    spatialMatch: match.spatialMatch,
+    temporalGapHours: match.temporalGapHours,
+  };
 }

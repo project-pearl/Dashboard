@@ -8,6 +8,7 @@ import { COOLDOWNS, MAX_EMAILS_PER_HOUR, MAX_ALERT_LOG_SIZE, BLOB_PATHS, DISK_PA
 import { loadRecipients, getRecipientsForAlert } from './recipients';
 import { loadSuppressions, isSuppressed } from './suppressions';
 import { sendAlertEmail } from './channels/email';
+import { enrichAlertPayload } from './enrichment';
 import { saveCacheToBlob, loadCacheFromBlob } from '../blobPersistence';
 import { loadCacheFromDisk, saveCacheToDisk } from '../cacheUtils';
 
@@ -122,7 +123,18 @@ export async function dispatchAlerts(candidateEvents: AlertEvent[]): Promise<Dis
         recipientEmail: recipient.email,
       };
 
-      const sendResult = await sendAlertEmail(event);
+      // Enrich sentinel/usgs/coordination alerts with contextual data
+      const enrichableTypes = new Set(['sentinel', 'usgs', 'coordination', 'nwss']);
+      let enrichment;
+      try {
+        if (enrichableTypes.has(event.type)) {
+          enrichment = enrichAlertPayload(event);
+        }
+      } catch {
+        // Enrichment is best-effort — don't block dispatch
+      }
+
+      const sendResult = await sendAlertEmail(event, enrichment);
 
       event.sent = sendResult.success;
       event.sentAt = sendResult.success ? new Date().toISOString() : null;
