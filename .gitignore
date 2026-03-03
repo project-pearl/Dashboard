@@ -14,3 +14,11 @@ station-discovery.json
 nul
 pin-pipeline/__pycache__/
 .cache/
+
+# Local workspace / session artifacts
+.claude/settings.local.json
+.claude/worktrees/
+tsconfig.tsbuildinfo
+.next-dev.out.log
+.next-dev.err.log
+public/PIN_Overview.mp4
