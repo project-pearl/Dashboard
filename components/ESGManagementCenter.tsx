@@ -10,7 +10,8 @@ import { useLensParam } from '@/lib/useLensParam';
 import type { MapRef } from 'react-map-gl';
 import HeroBanner from './HeroBanner';
 import dynamic from 'next/dynamic';
-import { STATE_GEO_LEAFLET, FIPS_TO_ABBR, STATE_NAMES as _SN } from '@/lib/mapUtils';
+import { STATE_GEO_LEAFLET, FIPS_TO_ABBR, STATE_NAMES as _SN, getStatesGeoJSONWithAbbr } from '@/lib/mapUtils';
+import { useAdminState } from '@/lib/adminStateContext';
 
 const MapboxMapShell = dynamic(
   () => import('@/components/MapboxMapShell').then(m => m.MapboxMapShell),
@@ -18,6 +19,10 @@ const MapboxMapShell = dynamic(
 );
 const MapboxMarkers = dynamic(
   () => import('@/components/MapboxMarkers').then(m => m.MapboxMarkers),
+  { ssr: false }
+);
+const MapboxChoropleth = dynamic(
+  () => import('@/components/MapboxChoropleth').then(m => m.MapboxChoropleth),
   { ssr: false }
 );
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -53,15 +58,12 @@ import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import { GrantOutcomesCard } from './GrantOutcomesCard';
+import { WhatChangedOvernight, StakeholderWatch } from './BriefingCards';
+import { RoleBriefingActionsCard } from '@/components/RoleBriefingCards';
 import { getEcoData, getEcoScore, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
 import { ecoScoreStyle } from '@/lib/scoringUtils';
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
-  { ssr: false }
-);
-
-const DataExportHub = dynamic(
-  () => import('@/components/DataExportHub').then((mod) => mod.DataExportHub),
   { ssr: false }
 );
 
@@ -110,12 +112,12 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   overview: {
     label: 'Executive Overview', description: 'Portfolio-level Sustainability summary for leadership',
     icon: Building2,
-    sections: new Set(['summary', 'kpis', 'map-grid', 'sustainability', 'grants', 'alertfeed', 'disclaimer']),
+    sections: new Set(['summary', 'kpis', 'map-grid', 'sustainability', 'briefing-actions', 'briefing-changes', 'briefing-stakeholders', 'disclaimer']),
   },
   'esg-reporting': {
-    label: 'ESG Reporting & Disclosure', description: 'ESG framework reporting, scorecard, and data exports',
+    label: 'Reporting and Disclosure', description: 'ESG framework reporting, scorecard, and disclosures',
     icon: FileText,
-    sections: new Set(['disclosure', 'shareholder', 'benchmark', 'esg-reporting-panel', 'scorecard-kpis', 'scorecard-grades', 'reports-hub', 'data-export-hub', 'brand', 'disclaimer']),
+    sections: new Set(['disclosure', 'shareholder', 'benchmark', 'esg-reporting-panel', 'scorecard-kpis', 'scorecard-grades', 'reports-hub', 'brand', 'disclaimer']),
   },
   'facility-operations': {
     label: 'Facility Operations', description: 'Facility-level water operations, map, and stewardship',
@@ -160,7 +162,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   briefing: {
     label: 'Daily Briefing', description: 'Morning briefing with priority actions, overnight changes, and program pulse',
     icon: FileText,
-    sections: new Set(['briefing-actions', 'insights', 'alertfeed']),
+    sections: new Set(['briefing-actions', 'briefing-changes', 'briefing-stakeholders', 'insights']),
   },
 };
 
@@ -411,6 +413,7 @@ type Props = {
 export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilities: propFacilities, onBack, onToggleDevMode }: Props) {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const [adminState, setAdminState] = useAdminState();
 
   // ── View Lens ──
   const [viewLens, setViewLens] = useLensParam<ViewLens>('overview');
@@ -428,9 +431,19 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
   const [flyTarget, setFlyTarget] = useState<{ center: [number, number]; zoom: number } | null>(null);
   const [selectedFacility, setSelectedFacility] = useState<string | null>(null);
   const [hoveredFacility, setHoveredFacility] = useState<string | null>(null);
-  const [focusedState, setFocusedState] = useState<string>('US');
+  const [focusedState, setFocusedState] = useState<string>(adminState || 'MD');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterLevel, setFilterLevel] = useState<'all' | 'high' | 'medium' | 'low'>('all');
+  const usCenter = STATE_GEO_LEAFLET['US'].center;
+  const usZoom = 4;
+
+  const setStateScope = useCallback((st: string, syncAdmin = true) => {
+    setFocusedState(st);
+    setSelectedFacility(null);
+    const geo = STATE_GEO_LEAFLET[st] || STATE_GEO_LEAFLET['US'];
+    setFlyTarget({ center: geo.center, zoom: st === 'US' ? (isCBPortfolio ? CB_ZOOM : usZoom) : geo.zoom });
+    if (syncAdmin && st !== 'US' && st !== adminState) setAdminState(st);
+  }, [adminState, isCBPortfolio, setAdminState, usZoom]);
 
   // ── Mapbox map ref + flyTo ──
   const mapRef = useRef<MapRef | null>(null);
@@ -440,6 +453,11 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
       mapRef.current.flyTo({ center: [flyTarget.center[1], flyTarget.center[0]], zoom: flyTarget.zoom });
     }
   }, [flyTarget]);
+
+  useEffect(() => {
+    if (!adminState) return;
+    if (focusedState !== adminState) setStateScope(adminState, false);
+  }, [adminState, focusedState, setStateScope]);
 
   // ── Mapbox hover state ──
   const [hoveredFeature, setHoveredFeature] = useState<mapboxgl.MapboxGeoJSONFeature | null>(null);
@@ -466,8 +484,6 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
   const isSectionExpanded = (id: string) => expandedSections[id] ?? false;
 
   // ── Briefing & Alert Feed state ──
-  const [comingSoonId, setComingSoonId] = useState<string | null>(null);
-  const [alertFeedMinimized, setAlertFeedMinimized] = useState(true);
 
   // ── Close the Gap wizard state ──
   const [gapWizardFramework, setGapWizardFramework] = useState<string | null>(null);
@@ -487,6 +503,58 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
       { id: 'fac_dc_office', name: 'DC Government Affairs', state: 'DC', type: 'office' as const, alertLevel: 'none' as AlertLevel, activeAlerts: 0, lastUpdatedISO: new Date().toISOString(), status: 'unmonitored' as const, dataSourceCount: 0, waterRiskScore: 15, lat: 38.905, lon: -77.035, gallonsTreated: 0, tnReduced: 0, tpReduced: 0, tssReduced: 0, tssEfficiency: 0, receivingWaterbody: 'Anacostia River', ejScore: 54 },
     ];
   }, [propFacilities]);
+
+  const stateChoropleth = useMemo(() => {
+    try {
+      return getStatesGeoJSONWithAbbr() as GeoJSON.FeatureCollection;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const avgRiskByState = useMemo(() => {
+    const totals: Record<string, { total: number; count: number }> = {};
+    for (const f of facilitiesData) {
+      if (!STATE_NAMES[f.state]) continue;
+      if (!totals[f.state]) totals[f.state] = { total: 0, count: 0 };
+      totals[f.state].total += f.waterRiskScore;
+      totals[f.state].count += 1;
+    }
+    return Object.fromEntries(
+      Object.entries(totals).map(([abbr, t]) => [abbr, Math.round(t.total / Math.max(t.count, 1))])
+    ) as Record<string, number>;
+  }, [facilitiesData]);
+
+  const stateFillExpr = useMemo(() => {
+    const expr: any[] = ['match', ['get', 'abbr']];
+    for (const abbr of Object.keys(STATE_NAMES)) {
+      const score = avgRiskByState[abbr];
+      const color = score == null
+        ? '#e2e8f0'
+        : score >= 70 ? '#ef4444'
+        : score >= 40 ? '#f59e0b'
+        : score >= 20 ? '#facc15'
+        : '#22c55e';
+      expr.push(abbr, color);
+    }
+    expr.push('#e2e8f0');
+    return expr as any;
+  }, [avgRiskByState]);
+
+  const onStateMapClick = useCallback((e: mapboxgl.MapLayerMouseEvent) => {
+    const feat = e.features?.find((f) => String((f.layer as any)?.id || '').includes('esg-state-choropleth-fill'));
+    const abbr = String((feat?.properties as any)?.abbr || '').toUpperCase();
+    if (abbr && STATE_NAMES[abbr]) setStateScope(abbr);
+  }, [setStateScope]);
+
+  const alertFacilities = useMemo(
+    () => facilitiesData.filter((f) => f.alertLevel === 'high' || f.alertLevel === 'medium'),
+    [facilitiesData]
+  );
+  const criticalAlertCount = useMemo(
+    () => alertFacilities.filter((f) => f.alertLevel === 'high').length,
+    [alertFacilities]
+  );
 
   // ── Waterbody markers for focused state (from REGION_META, same as other CCs) ──
   const stateWaterbodies = useMemo(() => {
@@ -735,15 +803,10 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
           <select
             value={focusedState}
             onChange={(e) => {
-              const st = e.target.value;
-              setFocusedState(st);
-              setSelectedFacility(null);
-              const geo = STATE_GEO_LEAFLET[st] || STATE_GEO_LEAFLET['US'];
-              setFlyTarget({ center: geo.center, zoom: st === 'US' ? (isCBPortfolio ? CB_ZOOM : 4) : geo.zoom });
+              setStateScope(e.target.value);
             }}
             className="h-8 px-3 text-xs font-medium rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 focus:ring-2 focus:ring-emerald-400/50 focus:outline-none transition-colors cursor-pointer"
           >
-            <option value="US">All States</option>
             {Object.entries(STATE_NAMES).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
               <option key={abbr} value={abbr}>{name}</option>
             ))}
@@ -757,8 +820,65 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
           </button>
         </div>
 
-        {viewLens === 'overview' && (
+        <Card className="border-2 border-slate-200">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center justify-between">
+              <span>Portfolio State Selector</span>
+              <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 border-emerald-200">
+                Active: {STATE_NAMES[focusedState] || focusedState}
+              </Badge>
+            </CardTitle>
+            <CardDescription>Click a state on the map to apply scope across sustainability cards.</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {stateChoropleth ? (
+              <div className="rounded-lg overflow-hidden border border-slate-200">
+                <div className="h-[240px]">
+                  <MapboxMapShell
+                    center={usCenter}
+                    zoom={usZoom}
+                    height="100%"
+                    interactiveLayerIds={['esg-state-choropleth-fill']}
+                    onClick={onStateMapClick}
+                  >
+                    <MapboxChoropleth
+                      geoData={stateChoropleth}
+                      fillColorExpression={stateFillExpr}
+                      selectedState={focusedState}
+                      fillOpacity={0.72}
+                      sourceId="esg-state-choropleth"
+                    />
+                  </MapboxMapShell>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-slate-200 p-3 text-xs text-slate-500">
+                Map data unavailable.
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+                {viewLens === 'overview' && (
           <>
+            {alertFacilities.length > 0 && (
+              <Card className="border-orange-200 bg-orange-50/70">
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-orange-600" />
+                      <span className="text-sm font-semibold text-orange-900">Alerts</span>
+                    </div>
+                    <Badge className="bg-orange-100 text-orange-800 border-orange-200">
+                      {criticalAlertCount > 0 ? `${criticalAlertCount} critical` : `${alertFacilities.length} active`}
+                    </Badge>
+                  </div>
+                  <p className="mt-1 text-xs text-orange-700">
+                    {alertFacilities.length} facilities currently flagged in the active state scope.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
             <MissionQuote role="esg" variant="light" />
             <div className="text-7xl font-bold text-emerald-700 text-center pt-3 capitalize">{companyName}</div>
           </>
@@ -955,15 +1075,10 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                     <select
                       value={focusedState}
                       onChange={(e) => {
-                        const st = e.target.value;
-                        setFocusedState(st);
-                        setSelectedFacility(null);
-                        const geo = STATE_GEO_LEAFLET[st] || STATE_GEO_LEAFLET['US'];
-                        setFlyTarget({ center: geo.center, zoom: st === 'US' ? (isCBPortfolio ? CB_ZOOM : 4) : geo.zoom });
+                        setStateScope(e.target.value);
                       }}
                       className="h-7 px-2 text-xs font-semibold rounded-md border bg-white border-emerald-300 text-emerald-800 hover:border-emerald-400 focus:ring-2 focus:ring-emerald-400/50 focus:outline-none transition-colors cursor-pointer"
                     >
-                      <option value="US">All States (Portfolio)</option>
                       {Object.entries(STATE_NAMES).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
                         <option key={abbr} value={abbr}>{abbr} — {name}</option>
                       ))}
@@ -2180,12 +2295,23 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
             // ── ESG exclusive panels ──
             case 'water-stewardship-panel': return DS(<WaterStewardshipPanel stateAbbr="" />);
             case 'facility-operations-panel': return DS(<FacilityOperationsPanel stateAbbr="" />);
-            case 'esg-reporting-panel': return DS(<ESGReportingPanel stateAbbr="" />);
-            case 'supply-chain-risk-panel': return DS(<SupplyChainRiskPanel stateAbbr="" />);
-
-            case 'data-export-hub': return DS(
-              <DataExportHub context="esg" />
+            case 'esg-reporting-panel': return DS(
+              <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                <button onClick={() => onToggleCollapse('esg-reporting-panel')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+                  <span className="text-sm font-bold text-slate-800">Reporting and Disclosure Readiness</span>
+                  <span className="flex items-center gap-1">
+                    {isSectionOpen('esg-reporting-panel') && <BrandedPrintBtn sectionId="esg-reporting-panel" title="Reporting and Disclosure Readiness" />}
+                    {isSectionOpen('esg-reporting-panel') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+                  </span>
+                </button>
+                {isSectionOpen('esg-reporting-panel') && (
+                  <div id="section-esg-reporting-panel" className="p-4">
+                    <ESGReportingPanel stateAbbr="" />
+                  </div>
+                )}
+              </div>
             );
+            case 'supply-chain-risk-panel': return DS(<SupplyChainRiskPanel stateAbbr="" />);
 
             // ── Habitat & Ecology ──
             case 'hab-ecoscore': {
@@ -2274,111 +2400,68 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                 </Card>
               );
             }
-
             case 'briefing-actions': return DS(
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <AlertCircle className="h-5 w-5 text-red-600" />
-                    Action Required
-                  </CardTitle>
-                  <CardDescription>Priority actions requiring immediate attention.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {[
-                      { id: 'act-1', priority: 'High', item: '3 facility NPDES permits expiring within 30 days — renewal packages incomplete', detail: 'Permits for Baltimore Processing, Cambridge Seafood Plant, and Norfolk Distribution. Deadlines range from Mar 12–Apr 2. Contact EPA Region for extension options.', color: 'text-red-700 bg-red-50 border-red-200' },
-                      { id: 'act-2', priority: 'High', item: 'CDP Water Security Questionnaire response deadline in 2 weeks — coverage at 30%', detail: 'CDP Water response requires W1–W8 sections. Current data coverage from PEARL platform: 30%. Priority gap areas: W1 (water accounting), W2 (business impacts), W8 (targets).', color: 'text-red-700 bg-red-50 border-red-200' },
-                      { id: 'act-3', priority: 'Medium', item: 'ESG rating agency requesting updated water stewardship data for annual review', detail: 'MSCI ESG and S&P Global requesting 2025 water data. Current disclosure readiness across 6 frameworks averages 44%. SASB and GRI 303 sections most complete.', color: 'text-amber-700 bg-amber-50 border-amber-200' },
-                      { id: 'act-4', priority: 'Low', item: 'Quarterly sustainability report draft due for board review in 10 days', detail: 'Q1 2026 sustainability report covers portfolio water risk trends, BMP performance, and TMDL compliance progress. Treatment data from 3 active PIN sites included.', color: 'text-blue-700 bg-blue-50 border-blue-200' },
-                    ].map((a) => (
-                      <div key={a.id}>
-                        <div
-                          className={`rounded-lg border p-3 cursor-pointer hover:ring-1 hover:ring-blue-300 transition-all ${a.color}`}
-                          onClick={() => setComingSoonId(comingSoonId === a.id ? null : a.id)}
-                        >
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-[10px]">{a.priority}</Badge>
-                            <span className="text-xs">{a.item}</span>
-                            <ChevronDown size={14} className={`ml-auto flex-shrink-0 text-slate-400 transition-transform ${comingSoonId === a.id ? 'rotate-180' : ''}`} />
-                          </div>
-                        </div>
-                        {comingSoonId === a.id && (
-                          <div className="ml-4 mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
-                            <p className="text-xs text-slate-700">{a.detail}</p>
-                            <p className="text-[10px] text-blue-600 mt-2 font-medium">Full detail view — Coming Soon</p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: AI analysis of ESG portfolio deadlines, permit database, and disclosure requirements</p>
-                </CardContent>
-              </Card>
+              <RoleBriefingActionsCard
+                title="AI Briefing - Sustainability | Corporate Portfolio"
+                description={`PIN Intelligence Network | ${new Date().toLocaleString()}`}
+                dataAsOf="Entity-scoped intelligence combining overnight changes, current risk posture, and immediate sustainability priorities."
+                summary={[
+                  {
+                    label: 'Portfolio Composite',
+                    value: `${Math.max(0, Math.round(100 - portfolioScores.avgRisk))}/100 (${Math.max(0, Math.round(100 - portfolioScores.avgRisk)) >= 80 ? 'A' : Math.max(0, Math.round(100 - portfolioScores.avgRisk)) >= 70 ? 'B' : 'C'})`,
+                    style: 'border-amber-200 bg-amber-50 text-amber-700',
+                  },
+                  {
+                    label: 'Current Risk Snapshot',
+                    value: `${portfolioScores.highRisk} severe · ${portfolioScores.medRisk} impaired · ${portfolioScores.lowRisk} watch`,
+                    style: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+                  },
+                ]}
+                spotlightTitle="Sustainability Priority Focus"
+                spotlightBody={`Top portfolio pressure points are ranked by severity and active signal count. Current highest-pressure facilities: ${facilitiesData.filter((f) => f.alertLevel === 'high' || f.alertLevel === 'medium').slice(0, 3).map((f) => f.name).join(', ') || 'No priority facilities flagged'}.`}
+                spotlightBadge="High Urgency"
+                actions={[
+                  {
+                    id: 'esg-ai-act-1',
+                    priority: 'High',
+                    item: `${facilitiesData.filter((f) => f.alertLevel === 'high').length} critical facilities need immediate permit-risk triage`,
+                    detail: 'Escalate critical facilities for permit review, corrective action tracking, and executive visibility before next disclosure cycle.',
+                    color: 'text-red-700 bg-red-50 border-red-200',
+                  },
+                  {
+                    id: 'esg-ai-act-2',
+                    priority: 'Medium',
+                    item: 'CDP and framework disclosures are partially complete',
+                    detail: 'Prioritize water accounting and business impact fields to improve disclosure readiness for CDP Water, GRI 303, and SASB.',
+                    color: 'text-amber-700 bg-amber-50 border-amber-200',
+                  },
+                  {
+                    id: 'esg-ai-act-3',
+                    priority: 'Medium',
+                    item: 'Top-risk facilities should be sequenced into next operations review',
+                    detail: 'Use severity-ranked facility queue to sequence field verification, permit follow-ups, and BMP optimization planning this week.',
+                    color: 'text-blue-700 bg-blue-50 border-blue-200',
+                  },
+                ]}
+                sourceNote="Data source: AI analysis of portfolio facility monitoring, permit signals, and disclosure readiness inputs."
+              />
             );
 
-            case 'alertfeed': return DS(
-              (() => {
-                const alertFacilities = facilitiesData.filter(f => f.alertLevel === 'high' || f.alertLevel === 'medium');
-                if (alertFacilities.length === 0) return null;
-                const criticalCount = alertFacilities.filter(f => f.alertLevel === 'high').length;
-                return (
-                  <div className="rounded-xl border-2 border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50 shadow-sm overflow-hidden">
-                    <div className={`flex items-center justify-between px-4 py-3 ${alertFeedMinimized ? '' : 'border-b border-orange-200'} bg-orange-50`}>
-                      <div className="flex items-center gap-2">
-                        <span className="relative flex h-2.5 w-2.5">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-orange-500"></span>
-                        </span>
-                        <span className="text-sm font-bold text-orange-900">
-                          Alert Feed — ESG Portfolio
-                        </span>
-                        <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-orange-200 text-orange-800">
-                          {criticalCount > 0 ? `${criticalCount} Critical` : `${alertFacilities.length} Active`}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-orange-600">{alertFacilities.length} facilities with active alerts</span>
-                        <button
-                          onClick={() => setAlertFeedMinimized(prev => !prev)}
-                          className="p-1 text-orange-700 bg-white border border-orange-300 rounded hover:bg-orange-100 transition-colors"
-                          title={alertFeedMinimized ? 'Expand' : 'Minimize'}
-                        >
-                          {alertFeedMinimized ? <ChevronDown className="h-3.5 w-3.5" /> : <Minus className="h-3.5 w-3.5" />}
-                        </button>
-                      </div>
-                    </div>
-                    {!alertFeedMinimized && (
-                      <div className="divide-y divide-orange-100 max-h-64 overflow-y-auto">
-                        {alertFacilities.map((fac, idx) => (
-                          <div key={idx} className={`flex items-start gap-3 px-4 py-3 hover:bg-orange-50 transition-colors ${
-                            fac.alertLevel === 'high' ? 'bg-red-50/60' : ''
-                          }`}>
-                            <div className={`mt-2 flex-shrink-0 w-2 h-2 rounded-full ${
-                              fac.alertLevel === 'high' ? 'bg-red-500' : 'bg-amber-500'
-                            }`} />
-                            <div className="flex-1 min-w-0">
-                              <div className="flex flex-wrap items-center gap-2 mb-0.5">
-                                <span className="text-xs font-semibold text-slate-800">{fac.name}</span>
-                                <Badge variant="outline" className="text-[9px]">{fac.state}</Badge>
-                                <Badge variant="outline" className={`text-[9px] ${fac.alertLevel === 'high' ? 'border-red-300 text-red-700' : 'border-amber-300 text-amber-700'}`}>
-                                  {fac.alertLevel === 'high' ? 'Critical' : 'Warning'}
-                                </Badge>
-                              </div>
-                              <p className="text-[11px] text-slate-600">
-                                Water risk score: {fac.waterRiskScore}/100 · {fac.activeAlerts} active alert{fac.activeAlerts !== 1 ? 's' : ''}
-                                {fac.receivingWaterbody ? ` · Receiving: ${fac.receivingWaterbody}` : ''}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })()
+            case 'briefing-changes': return DS(
+              <WhatChangedOvernight
+                entityType="esg"
+                entityName={companyName || 'Corporate Portfolio'}
+                stateAbbr={focusedState}
+              />
             );
 
+            case 'briefing-stakeholders': return DS(
+              <StakeholderWatch
+                entityType="esg"
+                entityName={companyName || 'Corporate Portfolio'}
+                stateAbbr={focusedState}
+              />
+            );
             case 'grant-outcomes': return DS(<>
               <GrantOutcomesCard />
             </>);
@@ -2486,3 +2569,10 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
     </div>
   );
 }
+
+
+
+
+
+
+
