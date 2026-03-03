@@ -5,6 +5,7 @@
 
 import type { AdapterResult, ChangeEvent, SeverityHint, SentinelSourceState } from '../types';
 import { getIcisAllData, type IcisViolation } from '../../icisCache';
+import { findNearestHuc8 } from '../../hucLookup';
 
 const SOURCE = 'NPDES_DMR' as const;
 
@@ -33,6 +34,8 @@ export function pollNpdes(prevState: SentinelSourceState): AdapterResult {
     const key = currentKeys[i];
 
     if (!previousKeys.has(key)) {
+      const hucMatch = v.lat && v.lng ? findNearestHuc8(v.lat, v.lng) : null;
+
       events.push({
         eventId: `npdes-${v.permit.replace(/[^a-zA-Z0-9]/g, '')}-${Date.now().toString(36)}`,
         source: SOURCE,
@@ -43,6 +46,8 @@ export function pollNpdes(prevState: SentinelSourceState): AdapterResult {
           stateAbbr: undefined, // violations don't carry state directly
           lat: v.lat,
           lng: v.lng,
+          huc8: hucMatch?.huc8,
+          huc6: hucMatch?.huc8.slice(0, 6),
         },
         severityHint: mapSeverity(v),
         payload: {

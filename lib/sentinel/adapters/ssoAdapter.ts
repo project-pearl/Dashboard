@@ -5,6 +5,7 @@
 /* ------------------------------------------------------------------ */
 
 import type { AdapterResult, ChangeEvent, SeverityHint, SentinelSourceState } from '../types';
+import { findNearestHuc8 } from '../../hucLookup';
 
 const SOURCE = 'SSO_CSO' as const;
 const FETCH_TIMEOUT = 20_000;
@@ -69,6 +70,9 @@ export async function pollSso(prevState: SentinelSourceState): Promise<AdapterRe
       if (!previousIds.has(key)) {
         const durationHours = parseFloat(sso.SSODuration ?? sso.duration ?? '0') || 0;
         const volumeGallons = parseFloat(sso.SSOVolume ?? sso.volume ?? '0') || 0;
+        const lat = parseFloat(sso.FacLat ?? '0') || undefined;
+        const lng = parseFloat(sso.FacLong ?? '0') || undefined;
+        const hucMatch = lat && lng ? findNearestHuc8(lat, lng) : null;
 
         events.push({
           eventId: `sso-${permitId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 12)}-${Date.now().toString(36)}`,
@@ -78,8 +82,10 @@ export async function pollSso(prevState: SentinelSourceState): Promise<AdapterRe
           changeType: 'NEW_RECORD',
           geography: {
             stateAbbr: sso.FacState ?? sso.state ?? undefined,
-            lat: parseFloat(sso.FacLat ?? '0') || undefined,
-            lng: parseFloat(sso.FacLong ?? '0') || undefined,
+            lat,
+            lng,
+            huc8: hucMatch?.huc8,
+            huc6: hucMatch?.huc8.slice(0, 6),
           },
           severityHint: mapSeverity(durationHours, volumeGallons),
           payload: {
