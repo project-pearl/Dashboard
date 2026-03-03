@@ -135,7 +135,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'AI Briefing',
     description: 'AI-generated overnight summary and action items',
     defaultOverlay: 'risk',
-    sections: new Set(['insights', 'briefing-actions', 'briefing-changes', 'briefing-pulse', 'briefing-stakeholder', 'disclaimer']),
+    sections: new Set(['insights', 'briefing-actions']),
   },
   'political-briefing': {
     label: 'Political Briefing',
@@ -2382,41 +2382,79 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             case 'briefing-actions': return DS(
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-sm">
-                    <AlertCircle className="h-4 w-4 text-red-600" />
-                    Action Required — {stateName}
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-indigo-600" />
+                    AI Briefing - {stateName} | State Management Center
                   </CardTitle>
-                  <CardDescription>Items requiring immediate attention from {stateName} program staff</CardDescription>
+                  <CardDescription>{`PIN Intelligence Network | ${new Date().toLocaleString()}`}</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {[
-                      { id: 'act-1', priority: 'High', item: `3 NPDES permits expiring within 30 days in ${stateName} — renewal packages incomplete`, detail: 'Permit IDs: MD0012345, MD0023456, MD0034567. Deadlines range from Mar 12–Apr 2. Contact EPA Region for extension options.', color: 'text-red-700 bg-red-50 border-red-200' },
-                      { id: 'act-2', priority: 'High', item: `EPA Region ${getEpaRegionForState(stateAbbr) || '3'} requesting TMDL progress update for ${stateAbbr} by end of week`, detail: 'Annual TMDL implementation progress report due. 14 active TMDLs require status update on pollutant load reductions.', color: 'text-red-700 bg-red-50 border-red-200' },
-                      { id: 'act-3', priority: 'Medium', item: `2 consent decree milestone reports for ${stateAbbr} due next month`, detail: 'Consent decrees CD-2024-001 and CD-2024-008. Milestone reports cover CSO long-term control plan progress and nutrient reduction targets.', color: 'text-amber-700 bg-amber-50 border-amber-200' },
-                      { id: 'act-4', priority: 'Low', item: `Quarterly monitoring data upload window for ${stateAbbr} opens in 5 days`, detail: 'WQX submission window opens Mar 4. 48 stations pending upload. Coordinate with lab for QA/QC sign-off before deadline.', color: 'text-blue-700 bg-blue-50 border-blue-200' },
-                    ].map((a) => (
-                      <div key={a.id}>
-                        <div
-                          className={`rounded-lg border p-3 cursor-pointer hover:ring-1 hover:ring-blue-300 transition-all ${a.color}`}
-                          onClick={() => setComingSoonId(comingSoonId === a.id ? null : a.id)}
-                        >
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-[10px]">{a.priority}</Badge>
-                            <span className="text-xs">{a.item}</span>
-                            <ChevronDown size={14} className={`ml-auto flex-shrink-0 text-slate-400 transition-transform ${comingSoonId === a.id ? 'rotate-180' : ''}`} />
-                          </div>
-                        </div>
-                        {comingSoonId === a.id && (
-                          <div className="ml-4 mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
-                            <p className="text-xs text-slate-700">{a.detail}</p>
-                            <p className="text-[10px] text-blue-600 mt-2 font-medium">Full detail view — Coming Soon</p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                <CardContent className="space-y-5">
+                  <p className="text-xs text-slate-600">
+                    Entity-scoped intelligence for {stateName} combining overnight changes, current risk posture, and immediate program priorities.
+                  </p>
+
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-700">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide">{stateName} PIN Composite</p>
+                      <p className="mt-1 text-sm font-semibold">
+                        {alertLevelAvgScore(regionData)}/100 ({scoreToGrade(alertLevelAvgScore(regionData)).letter})
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-700">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide">Current Risk Snapshot</p>
+                      <p className="mt-1 text-sm font-semibold">
+                        {stats.high} severe · {stats.medium} impaired · {stats.low} watch
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: AI analysis of {stateAbbr} permit database, EPA correspondence, and program deadlines</p>
+
+                  <div className="rounded-xl border border-red-200 bg-gradient-to-r from-red-50 to-amber-50 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-red-800">State Priority Focus</p>
+                      <Badge className="border-red-200 bg-red-100 text-red-800">High Urgency</Badge>
+                    </div>
+                    <p className="mt-2 text-xs text-slate-700">
+                      Top worsening waterbodies in {stateName} are prioritized by alert severity and active signal count.
+                      Current highest-pressure queue: {hotspots.worsening.slice(0, 3).map((h) => h.name).join(', ') || 'No priority hotspots flagged'}.
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Button size="sm" className="bg-red-600 text-white hover:bg-red-700" onClick={() => setViewLens('warr' as ViewLens)}>
+                        Run Scenario: Delay Impact
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setViewLens('overview')}>
+                        Open State Overview
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Action Required</p>
+                    <div className="space-y-2">
+                      {[
+                        { id: 'state-ai-act-1', priority: 'High', item: `${stats.high} severe waterbody alerts require immediate triage in ${stateAbbr}`, detail: `Prioritize high-severity queue with EPA Region ${getEpaRegionForState(stateAbbr) || '-'} coordination for time-sensitive actions.`, color: 'text-red-700 bg-red-50 border-red-200' },
+                        { id: 'state-ai-act-2', priority: 'Medium', item: `${stats.monitored}/${stats.total} monitored coverage — target unmonitored backlog`, detail: 'Queue assessment-only and no-data waterbodies for field confirmation and data refresh to reduce blind spots.', color: 'text-amber-700 bg-amber-50 border-amber-200' },
+                        { id: 'state-ai-act-3', priority: 'Medium', item: `Top hotspot set: ${hotspots.worsening.slice(0, 2).map((h) => h.name).join(', ') || 'None'}`, detail: 'Use hotspot ranking to sequence inspections, permit follow-ups, and restoration actions this week.', color: 'text-blue-700 bg-blue-50 border-blue-200' },
+                      ].map((a) => (
+                        <div key={a.id}>
+                          <div
+                            className={`cursor-pointer rounded-lg border p-3 transition-all hover:ring-1 hover:ring-blue-300 ${a.color}`}
+                            onClick={() => setComingSoonId(comingSoonId === a.id ? null : a.id)}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="text-[10px]">{a.priority}</Badge>
+                              <span className="flex-1 text-xs">{a.item}</span>
+                              <ChevronDown size={14} className={`flex-shrink-0 text-slate-400 transition-transform ${comingSoonId === a.id ? 'rotate-180' : ''}`} />
+                            </div>
+                          </div>
+                          {comingSoonId === a.id && (
+                            <div className="ml-4 mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
+                              <p className="text-xs text-slate-700">{a.detail}</p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             );
