@@ -1690,19 +1690,29 @@ export default function UtilityManagementCenter({ systemId }: Props) {
               const label = ecoScoreLabel(ecoScore);
               const scoreBg = ecoScoreStyle(ecoScore).bg;
               return DS(
-                <div className={`rounded-xl border-2 p-5 flex items-center justify-between ${scoreBg}`}>
-                  <div>
-                    <div className="text-[10px] font-bold uppercase tracking-wider opacity-70">Source &amp; Discharge Zones</div>
-                    <div className="text-lg font-bold mt-1">{systemId} Eco Score</div>
-                    <div className="text-xs opacity-80 mt-0.5">
-                      {ecoData ? `${ecoData.totalTE} total T&E species · ${ecoData.aquaticTE} aquatic · ${ecoData.criticalHabitat} critical habitat designations` : 'No T&E data available'}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Fish className="h-5 w-5 text-emerald-600" />
+                      Ecological Sensitivity — {systemId}
+                    </CardTitle>
+                    <CardDescription>T&amp;E species in source &amp; discharge zones</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className={`rounded-xl border p-4 flex items-center justify-between ${scoreBg}`}>
+                      <div>
+                        <div className="text-[10px] font-bold uppercase tracking-wider opacity-70">Eco Score</div>
+                        <div className="text-xs opacity-80 mt-1">
+                          {ecoData ? `${ecoData.totalTE} T&E species · ${ecoData.aquaticTE} aquatic · ${ecoData.criticalHabitat} critical habitat` : 'No T&E data available'}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold">{ecoScore}</div>
+                        <Badge variant="outline" className="text-[10px] mt-1">{label}</Badge>
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-4xl font-extrabold">{ecoScore}</div>
-                    <Badge variant="outline" className="text-xs mt-1">{label}</Badge>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               );
             }
             case 'hab-wildlife': {

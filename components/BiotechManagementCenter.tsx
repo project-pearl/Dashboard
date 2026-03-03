@@ -112,7 +112,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   overview: {
     label: 'Executive Overview', description: 'Portfolio-level Biotech/Pharma summary for leadership',
     icon: Building2,
-    sections: new Set(['summary', 'kpis', 'map-grid', 'gmp-status', 'grants', 'alertfeed', 'disclaimer']),
+    sections: new Set(['summary', 'kpis', 'map-grid', 'gmp-status', 'disclaimer']),
   },
   'process-water': {
     label: 'Process Water Quality', description: 'USP water grades, purification KPIs, and process water monitoring',
@@ -122,7 +122,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   'discharge-effluent': {
     label: 'Discharge & Effluent', description: 'Pharmaceutical effluent discharge and NPDES compliance',
     icon: Waves,
-    sections: new Set(['discharge-overview', 'effluent-limits', 'api-discharge', 'icis', 'map-grid', 'disclaimer']),
+    sections: new Set(['discharge-overview', 'effluent-limits', 'api-discharge', 'icis', 'facility-selector', 'disclaimer']),
   },
   compliance: {
     label: 'Regulatory Compliance', description: 'Dual FDA/EPA regulatory compliance and permit management',
@@ -142,7 +142,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   'facility-operations': {
     label: 'Facility Operations', description: 'Facility-level water operations, map, and stewardship',
     icon: Factory,
-    sections: new Set(['facility-operations-panel', 'map-grid', 'kpis', 'water-stewardship-panel', 'disclaimer']),
+    sections: new Set(['facility-operations-panel', 'facility-selector', 'kpis', 'water-stewardship-panel', 'disclaimer']),
   },
   'gmp-quality': {
     label: 'GMP & Quality Systems', description: 'Good manufacturing practice frameworks and quality systems',
@@ -162,17 +162,17 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   trends: {
     label: 'Trends & Outlook', description: 'Water risk trajectories, AI insights, disaster response, and resolution planning',
     icon: TrendingUp,
-    sections: new Set(['trends-dashboard', 'insights', 'disaster-emergency-panel', 'resolution-planner', 'policy-tracker', 'disclaimer']),
+    sections: new Set(['trends-dashboard', 'disaster-emergency-panel', 'disclaimer']),
   },
   briefing: {
     label: 'Daily Briefing', description: 'Priority actions, overnight changes, program pulse, and stakeholder watch',
     icon: FileText,
-    sections: new Set(['briefing-actions', 'insights', 'alertfeed', 'disclaimer']),
+    sections: new Set(['briefing-actions', 'insights', 'disclaimer']),
   },
   scorecard: {
     label: 'Scorecard', description: 'Key performance indicators and letter grades for biotech compliance',
     icon: Award,
-    sections: new Set(['scorecard-kpis', 'scorecard-grades', 'insights', 'alertfeed', 'disclaimer']),
+    sections: new Set(['scorecard-kpis', 'scorecard-grades', 'disclaimer']),
   },
 };
 
@@ -854,6 +854,52 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                   </div>
                 </div>
               </div>
+            );
+
+            // ─── FACILITY SELECTOR (Discharge & Facility Ops lenses) ─────────
+            case 'facility-selector': return DS(
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2"><Building2 className="h-4 w-4 text-violet-600" /> Select Facility</CardTitle>
+                  <CardDescription className="text-[11px]">Choose a facility to view detailed data</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <select
+                    value={selectedFacility ?? ''}
+                    onChange={e => setSelectedFacility(e.target.value || null)}
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-violet-400 focus:ring-1 focus:ring-violet-200 outline-none"
+                  >
+                    <option value="">All facilities</option>
+                    {facilitiesData.map(f => (
+                      <option key={f.id} value={f.id}>{f.name} — {f.state} ({f.alertLevel})</option>
+                    ))}
+                  </select>
+                  {selectedFac && (
+                    <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2">
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 text-center">
+                        <div className="text-[10px] font-bold uppercase text-slate-500">Risk Score</div>
+                        <div className="text-lg font-bold text-slate-800">{selectedFac.waterRiskScore}</div>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 text-center">
+                        <div className="text-[10px] font-bold uppercase text-slate-500">Alert</div>
+                        <div className={`text-lg font-bold ${selectedFac.alertLevel === 'high' ? 'text-red-700' : selectedFac.alertLevel === 'medium' ? 'text-amber-700' : 'text-green-700'}`}>{selectedFac.alertLevel}</div>
+                      </div>
+                      {selectedFac.uspGrade && (
+                        <div className="rounded-lg border border-blue-200 bg-blue-50 p-2 text-center">
+                          <div className="text-[10px] font-bold uppercase text-blue-600">USP Grade</div>
+                          <div className="text-lg font-bold text-blue-700">{selectedFac.uspGrade}</div>
+                        </div>
+                      )}
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 text-center">
+                        <div className="text-[10px] font-bold uppercase text-slate-500">GMP</div>
+                        <div className={`text-lg font-bold ${selectedFac.gmpCompliant ? 'text-green-700' : 'text-red-700'}`}>
+                          {selectedFac.gmpCompliant ? 'Compliant' : 'Gap'}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             );
 
             // ─── GMP STATUS (Overview lens) ──────────────────────────────────
@@ -1620,9 +1666,9 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
             case 'resolution-planner': return DS(<ResolutionPlanner userRole="corporate" scopeContext={{ scope: 'national', data: { totalStates: 50, totalWaterbodies: 0, totalImpaired: 0, averageScore: 0, highAlertStates: 0, topCauses: [], worstStates: [] } }} />);
             case 'policy-tracker': return DS(<PolicyTracker />);
             case 'contaminants-tracker': return DS(<EmergingContaminantsTracker role="corporate" />);
-            case 'icis': return DS(<ICISCompliancePanel state="" compactMode={false} />);
-            case 'sdwis': return DS(<SDWISCompliancePanel state="" compactMode={false} />);
-            case 'disaster-emergency-panel': return DS(<DisasterEmergencyPanel selectedState="" stateRollup={[]} />);
+            case 'icis': return DS(<ICISCompliancePanel state={focusedState !== 'US' ? focusedState : undefined} compactMode={false} />);
+            case 'sdwis': return DS(<SDWISCompliancePanel state={focusedState !== 'US' ? focusedState : undefined} compactMode={false} />);
+            case 'disaster-emergency-panel': return DS(<DisasterEmergencyPanel selectedState={focusedState !== 'US' ? focusedState : ''} stateRollup={[]} />);
             case 'reports-hub': return DS(
               <Card><CardHeader><CardTitle>Biotech Reports</CardTitle><CardDescription>Generated biotech/pharma compliance reports</CardDescription></CardHeader>
               <CardContent><div className="space-y-2">
@@ -1632,9 +1678,9 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
               </div></CardContent></Card>
             );
 
-            case 'water-stewardship-panel': return DS(<WaterStewardshipPanel stateAbbr="" />);
-            case 'facility-operations-panel': return DS(<FacilityOperationsPanel stateAbbr="" />);
-            case 'supply-chain-risk-panel': return DS(<SupplyChainRiskPanel stateAbbr="" />);
+            case 'water-stewardship-panel': return DS(<WaterStewardshipPanel stateAbbr={focusedState !== 'US' ? focusedState : ''} />);
+            case 'facility-operations-panel': return DS(<FacilityOperationsPanel stateAbbr={focusedState !== 'US' ? focusedState : ''} />);
+            case 'supply-chain-risk-panel': return DS(<SupplyChainRiskPanel stateAbbr={focusedState !== 'US' ? focusedState : ''} />);
 
             // ─── WARR ZONES ──────────────────────────────────────────────────
 
@@ -1684,19 +1730,29 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
               const label = ecoScoreLabel(ecoScore);
               const scoreBg = ecoScoreStyle(ecoScore).bg;
               return DS(
-                <div className={`rounded-xl border-2 p-5 flex items-center justify-between ${scoreBg}`}>
-                  <div>
-                    <div className="text-[10px] font-bold uppercase tracking-wider opacity-70">Near Manufacturing Sites</div>
-                    <div className="text-lg font-bold mt-1">{STATE_NAMES[focusedState] || focusedState} Eco Score</div>
-                    <div className="text-xs opacity-80 mt-0.5">
-                      {ecoData ? `${ecoData.totalTE} total T&E species · ${ecoData.aquaticTE} aquatic · ${ecoData.criticalHabitat} critical habitat designations` : 'No T&E data available'}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Fish className="h-5 w-5 text-emerald-600" />
+                      Ecological Sensitivity — {STATE_NAMES[focusedState] || focusedState}
+                    </CardTitle>
+                    <CardDescription>T&amp;E species near manufacturing sites</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className={`rounded-xl border p-4 flex items-center justify-between ${scoreBg}`}>
+                      <div>
+                        <div className="text-[10px] font-bold uppercase tracking-wider opacity-70">Eco Score</div>
+                        <div className="text-xs opacity-80 mt-1">
+                          {ecoData ? `${ecoData.totalTE} T&E species · ${ecoData.aquaticTE} aquatic · ${ecoData.criticalHabitat} critical habitat` : 'No T&E data available'}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold">{ecoScore}</div>
+                        <Badge variant="outline" className="text-[10px] mt-1">{label}</Badge>
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-4xl font-extrabold">{ecoScore}</div>
-                    <Badge variant="outline" className="text-xs mt-1">{label}</Badge>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               );
             }
             case 'hab-wildlife': {

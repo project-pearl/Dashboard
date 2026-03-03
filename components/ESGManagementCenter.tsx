@@ -112,7 +112,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   overview: {
     label: 'Executive Overview', description: 'Portfolio-level Sustainability summary for leadership',
     icon: Building2,
-    sections: new Set(['summary', 'kpis', 'map-grid', 'sustainability', 'briefing-actions', 'briefing-changes', 'briefing-stakeholders', 'disclaimer']),
+    sections: new Set(['summary', 'map-grid', 'sustainability', 'briefing-actions', 'briefing-changes', 'briefing-stakeholders', 'disclaimer']),
   },
   'esg-reporting': {
     label: 'Reporting and Disclosure', description: 'ESG framework reporting, scorecard, and disclosures',
@@ -122,7 +122,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   'facility-operations': {
     label: 'Facility Operations', description: 'Facility-level water operations, map, and stewardship',
     icon: Building2,
-    sections: new Set(['facility-operations-panel', 'map-grid', 'kpis', 'impact', 'chesbay', 'groundwater', 'water-stewardship-panel', 'disclaimer']),
+    sections: new Set(['facility-operations-panel', 'facility-selector', 'kpis', 'impact', 'chesbay', 'groundwater', 'water-stewardship-panel', 'disclaimer']),
   },
   compliance: {
     label: 'Compliance & Risk', description: 'Regulatory compliance, enforcement exposure, and WARR',
@@ -147,7 +147,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   trends: {
     label: 'Trends & Outlook', description: 'Water risk trajectories, AI insights, disaster response, and resolution planning',
     icon: TrendingUp,
-    sections: new Set(['trends-dashboard', 'insights', 'disaster-emergency-panel', 'resolution-planner', 'disclaimer']),
+    sections: new Set(['trends-dashboard', 'disaster-emergency-panel', 'disclaimer']),
   },
   habitat: {
     label: 'Habitat & Ecology', description: 'Biodiversity risk near operational sites — supports TNFD & ESG disclosure',
@@ -1224,6 +1224,50 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
           </div>
             );
 
+            // ─── FACILITY SELECTOR (Facility Ops lens) ──────────────────────
+            case 'facility-selector': return DS(
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Building2 size={16} className="text-emerald-600" /> Select Facility
+                  </CardTitle>
+                  <CardDescription>Choose a facility to view detailed operational data</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <select
+                    value={selectedFacility ?? ''}
+                    onChange={e => setSelectedFacility(e.target.value || null)}
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200 outline-none"
+                  >
+                    <option value="">All facilities</option>
+                    {facilitiesData.map(f => (
+                      <option key={f.id} value={f.id}>{f.name} — {f.state} (Risk: {f.waterRiskScore})</option>
+                    ))}
+                  </select>
+                  {selectedFac && (
+                    <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2">
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 text-center">
+                        <div className="text-[10px] font-bold uppercase text-slate-500">Risk Score</div>
+                        <div className="text-lg font-bold text-slate-800">{selectedFac.waterRiskScore}</div>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 text-center">
+                        <div className="text-[10px] font-bold uppercase text-slate-500">Alert</div>
+                        <div className={`text-lg font-bold ${selectedFac.alertLevel === 'high' ? 'text-red-700' : selectedFac.alertLevel === 'medium' ? 'text-amber-700' : 'text-green-700'}`}>{selectedFac.alertLevel}</div>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 text-center">
+                        <div className="text-[10px] font-bold uppercase text-slate-500">Type</div>
+                        <div className="text-sm font-bold text-slate-700">{selectedFac.type}</div>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 text-center">
+                        <div className="text-[10px] font-bold uppercase text-slate-500">Status</div>
+                        <div className="text-sm font-bold text-slate-700 capitalize">{selectedFac.status}</div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+
             case 'insights': return DS(
               <AIInsightsEngine key="US" role="Corporate" stateAbbr="US" regionData={facilitiesData as any} />
             );
@@ -2262,9 +2306,9 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
             case 'resolution-planner': return DS(<ResolutionPlanner userRole="corporate" scopeContext={{ scope: 'national', data: { totalStates: 50, totalWaterbodies: 0, totalImpaired: 0, averageScore: 0, highAlertStates: 0, topCauses: [], worstStates: [] } }} />);
             case 'policy-tracker': return DS(<PolicyTracker />);
             case 'contaminants-tracker': return DS(<EmergingContaminantsTracker role="corporate" />);
-            case 'icis': return DS(<ICISCompliancePanel state="" compactMode={false} />);
-            case 'sdwis': return DS(<SDWISCompliancePanel state="" compactMode={false} />);
-            case 'disaster-emergency-panel': return DS(<DisasterEmergencyPanel selectedState="" stateRollup={[]} />);
+            case 'icis': return DS(<ICISCompliancePanel state={focusedState !== 'US' ? focusedState : undefined} compactMode={false} />);
+            case 'sdwis': return DS(<SDWISCompliancePanel state={focusedState !== 'US' ? focusedState : undefined} compactMode={false} />);
+            case 'disaster-emergency-panel': return DS(<DisasterEmergencyPanel selectedState={focusedState !== 'US' ? focusedState : ''} stateRollup={[]} />);
             case 'scorecard-kpis': return DS(
               <Card><CardHeader><CardTitle>ESG Scorecard</CardTitle><CardDescription>Key sustainability performance indicators</CardDescription></CardHeader>
               <CardContent><div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -2293,8 +2337,8 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
             );
 
             // ── ESG exclusive panels ──
-            case 'water-stewardship-panel': return DS(<WaterStewardshipPanel stateAbbr="" />);
-            case 'facility-operations-panel': return DS(<FacilityOperationsPanel stateAbbr="" />);
+            case 'water-stewardship-panel': return DS(<WaterStewardshipPanel stateAbbr={focusedState !== 'US' ? focusedState : ''} />);
+            case 'facility-operations-panel': return DS(<FacilityOperationsPanel stateAbbr={focusedState !== 'US' ? focusedState : ''} />);
             case 'esg-reporting-panel': return DS(
               <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                 <button onClick={() => onToggleCollapse('esg-reporting-panel')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
@@ -2311,7 +2355,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                 )}
               </div>
             );
-            case 'supply-chain-risk-panel': return DS(<SupplyChainRiskPanel stateAbbr="" />);
+            case 'supply-chain-risk-panel': return DS(<SupplyChainRiskPanel stateAbbr={focusedState !== 'US' ? focusedState : ''} />);
 
             // ── Habitat & Ecology ──
             case 'hab-ecoscore': {
@@ -2320,19 +2364,29 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
               const label = ecoScoreLabel(ecoScore);
               const scoreBg = ecoScoreStyle(ecoScore).bg;
               return DS(
-                <div className={`rounded-xl border-2 p-5 flex items-center justify-between ${scoreBg}`}>
-                  <div>
-                    <div className="text-[10px] font-bold uppercase tracking-wider opacity-70">Biodiversity Exposure</div>
-                    <div className="text-lg font-bold mt-1">{STATE_NAMES[focusedState] || focusedState} Eco Score</div>
-                    <div className="text-xs opacity-80 mt-0.5">
-                      {ecoData ? `${ecoData.totalTE} total T&E species · ${ecoData.aquaticTE} aquatic · ${ecoData.criticalHabitat} critical habitat designations` : 'No T&E data available'}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Leaf className="h-5 w-5 text-emerald-600" />
+                      Biodiversity Exposure — {STATE_NAMES[focusedState] || focusedState}
+                    </CardTitle>
+                    <CardDescription>ESA-listed species and ecological sensitivity near operational sites</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className={`rounded-xl border p-4 flex items-center justify-between ${scoreBg}`}>
+                      <div>
+                        <div className="text-[10px] font-bold uppercase tracking-wider opacity-70">Eco Score</div>
+                        <div className="text-xs opacity-80 mt-1">
+                          {ecoData ? `${ecoData.totalTE} T&E species · ${ecoData.aquaticTE} aquatic · ${ecoData.criticalHabitat} critical habitat` : 'No T&E data available'}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold">{ecoScore}</div>
+                        <Badge variant="outline" className="text-[10px] mt-1">{label}</Badge>
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-4xl font-extrabold">{ecoScore}</div>
-                    <Badge variant="outline" className="text-xs mt-1">{label}</Badge>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               );
             }
             case 'hab-wildlife': {

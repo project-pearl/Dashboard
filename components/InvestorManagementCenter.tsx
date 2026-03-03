@@ -98,7 +98,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   overview: {
     label: 'Executive Overview', description: 'Portfolio-level water risk summary for investors',
     icon: Building2,
-    sections: new Set(['summary', 'kpis', 'map-grid', 'portfolio-snapshot', 'grants', 'disclaimer']),
+    sections: new Set(['summary', 'kpis', 'map-grid', 'portfolio-snapshot', 'disclaimer']),
   },
   'portfolio-risk': {
     label: 'Portfolio Risk', description: 'Water risk exposure across portfolio holdings',
@@ -138,27 +138,27 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   trends: {
     label: 'Trends & Outlook', description: 'Water risk trajectories, AI insights, and policy outlook',
     icon: TrendingUp,
-    sections: new Set(['trends-dashboard', 'insights', 'policy-tracker', 'resolution-planner', 'disclaimer']),
+    sections: new Set(['trends-dashboard', 'disaster-emergency-panel', 'disclaimer']),
   },
   briefing: {
     label: 'Briefing', description: 'Daily briefing with actions, changes, and stakeholder updates',
     icon: ClipboardList,
-    sections: new Set(['briefing-actions', 'insights', 'alertfeed']),
+    sections: new Set(['briefing-actions', 'insights', 'disclaimer']),
   },
   habitat: {
     label: 'Habitat', description: 'Ecological sensitivity and wildlife exposure across portfolio',
     icon: Leaf,
-    sections: new Set(['hab-ecoscore', 'hab-wildlife', 'insights', 'alertfeed']),
+    sections: new Set(['hab-ecoscore', 'hab-wildlife', 'disclaimer']),
   },
   scorecard: {
     label: 'Scorecard', description: 'KPIs and grades for portfolio environmental performance',
     icon: Award,
-    sections: new Set(['scorecard-kpis', 'scorecard-grades', 'insights', 'alertfeed']),
+    sections: new Set(['scorecard-kpis', 'scorecard-grades', 'disclaimer']),
   },
   funding: {
     label: 'Funding', description: 'Grant awards, opportunity pipeline, and financial analytics',
     icon: DollarSign,
-    sections: new Set(['grants', 'fund-active', 'fund-pipeline', 'fund-analytics', 'insights', 'alertfeed']),
+    sections: new Set(['grants', 'fund-active', 'fund-pipeline', 'fund-analytics', 'disclaimer']),
   },
 };
 
@@ -1517,9 +1517,9 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
             case 'resolution-planner': return DS(<ResolutionPlanner userRole="corporate" scopeContext={{ scope: 'national', data: { totalStates: 50, totalWaterbodies: 0, totalImpaired: 0, averageScore: 0, highAlertStates: 0, topCauses: [], worstStates: [] } }} />);
             case 'policy-tracker': return DS(<PolicyTracker />);
             case 'contaminants-tracker': return DS(<EmergingContaminantsTracker role="corporate" />);
-            case 'icis': return DS(<ICISCompliancePanel state="" compactMode={false} />);
-            case 'sdwis': return DS(<SDWISCompliancePanel state="" compactMode={false} />);
-            case 'disaster-emergency-panel': return DS(<DisasterEmergencyPanel selectedState="" stateRollup={[]} />);
+            case 'icis': return DS(<ICISCompliancePanel state={focusedState !== 'US' ? focusedState : undefined} compactMode={false} />);
+            case 'sdwis': return DS(<SDWISCompliancePanel state={focusedState !== 'US' ? focusedState : undefined} compactMode={false} />);
+            case 'disaster-emergency-panel': return DS(<DisasterEmergencyPanel selectedState={focusedState !== 'US' ? focusedState : ''} stateRollup={[]} />);
             case 'reports-hub': return DS(
               <Card><CardHeader><CardTitle>Investor Reports</CardTitle><CardDescription>Generated water risk & ESG reports</CardDescription></CardHeader>
               <CardContent><div className="space-y-2">
