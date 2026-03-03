@@ -4,7 +4,7 @@
 
 export type AlertSeverity = 'critical' | 'warning' | 'info';
 export type AlertChannel = 'email';
-export type AlertTriggerType = 'sentinel' | 'delta' | 'attains' | 'custom';
+export type AlertTriggerType = 'sentinel' | 'delta' | 'attains' | 'nwss' | 'custom';
 
 export interface AlertEvent {
   id: string;                    // uuid

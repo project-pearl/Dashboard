@@ -46,6 +46,7 @@ export const BLOB_PATHS = {
   suppressions:      'alerts/suppressions.json',
   attainsSnapshot:   'alerts/attains-snapshot.json',
   sentinelSnapshot:  'alerts/sentinel-snapshot.json',
+  nwssSnapshot:      'alerts/nwss-snapshot.json',
 };
 
 export const DISK_PATHS = {

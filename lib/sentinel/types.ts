@@ -12,7 +12,8 @@ export type ChangeSource =
   | 'ATTAINS'
   | 'STATE_DISCHARGE'
   | 'FEMA_DISASTER'
-  | 'ECHO_ENFORCEMENT';
+  | 'ECHO_ENFORCEMENT'
+  | 'CDC_NWSS';
 
 export type ChangeType =
   | 'NEW_RECORD'

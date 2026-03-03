@@ -19,6 +19,7 @@ export const BASE_SCORES: Record<ChangeSource, Record<SeverityHint, number>> = {
   STATE_DISCHARGE:  { LOW: 10, MODERATE: 20, HIGH: 35, CRITICAL: 50 },
   FEMA_DISASTER:    { LOW: 15, MODERATE: 30, HIGH: 50, CRITICAL: 70 },
   ECHO_ENFORCEMENT: { LOW: 10, MODERATE: 25, HIGH: 40, CRITICAL: 55 },
+  CDC_NWSS:         { LOW:  5, MODERATE: 15, HIGH: 35, CRITICAL: 55 },
 };
 
 /* ------------------------------------------------------------------ */
@@ -102,6 +103,18 @@ export const COMPOUND_PATTERNS: CompoundPattern[] = [
     ],
     minDistinctSources: 2,
   },
+  {
+    id: 'bio-threat-correlation',
+    name: 'Bio-Threat Correlation',
+    multiplier: 3.5,
+    timeWindowHours: 168,           // 7 days (NWSS data is weekly)
+    requireSameHuc: false,
+    requiredSources: [
+      ['CDC_NWSS'],
+      ['USGS_IV', 'SSO_CSO', 'NPDES_DMR'],
+    ],
+    minDistinctSources: 2,
+  },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -140,6 +153,7 @@ export const POLL_INTERVALS: Record<ChangeSource, number> = {
   STATE_DISCHARGE: 288,  // once/day
   FEMA_DISASTER:   12,   // every hour
   ECHO_ENFORCEMENT: 288, // once/day
+  CDC_NWSS:        2016, // weekly (2016 × 5 min ≈ 7 days)
 };
 
 /* ------------------------------------------------------------------ */

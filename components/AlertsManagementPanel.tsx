@@ -23,7 +23,7 @@ const SEVERITY_COLORS: Record<AlertSeverity, { bg: string; border: string; text:
   info:     { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-800', icon: Info },
 };
 
-const TRIGGER_TYPES: AlertTriggerType[] = ['sentinel', 'delta', 'attains', 'custom'];
+const TRIGGER_TYPES: AlertTriggerType[] = ['sentinel', 'delta', 'attains', 'nwss', 'custom'];
 const SEVERITIES: AlertSeverity[] = ['critical', 'warning', 'info'];
 const OPERATORS = [
   { value: 'gt', label: '>' },

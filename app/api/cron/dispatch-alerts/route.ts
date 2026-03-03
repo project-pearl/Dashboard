@@ -9,6 +9,7 @@ import { ALERT_FLAGS, BUILD_LOCK_TIMEOUT_MS } from '@/lib/alerts/config';
 import { dispatchAlerts } from '@/lib/alerts/engine';
 import { evaluateSentinelAlerts } from '@/lib/alerts/triggers/sentinelTrigger';
 import { evaluateDeltaAlerts } from '@/lib/alerts/triggers/deltaTrigger';
+import { evaluateNwssAlerts } from '@/lib/alerts/triggers/nwssTrigger';
 import { loadRules, evaluateRules } from '@/lib/alerts/rules';
 import type { AlertEvent } from '@/lib/alerts/types';
 
@@ -76,7 +77,16 @@ export async function GET(request: NextRequest) {
       console.warn(`[dispatch-alerts] Delta trigger error: ${err.message}`);
     }
 
-    // 3. Custom rules
+    // 3. NWSS pathogen anomaly trigger
+    try {
+      const nwssEvents = await evaluateNwssAlerts();
+      candidates.push(...nwssEvents);
+      console.warn(`[dispatch-alerts] NWSS: ${nwssEvents.length} candidates`);
+    } catch (err: any) {
+      console.warn(`[dispatch-alerts] NWSS trigger error: ${err.message}`);
+    }
+
+    // 4. Custom rules
     try {
       const rules = await loadRules();
       if (rules.length > 0) {
