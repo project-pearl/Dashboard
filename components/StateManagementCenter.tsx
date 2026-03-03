@@ -680,6 +680,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
   const [showMS4, setShowMS4] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [selectedJurisdiction, setSelectedJurisdiction] = useState<string | null>(null);
+  const [scorecardSearch, setScorecardSearch] = useState('');
 
   // ── Summary stats ──
   const stats = useMemo(() => {
@@ -693,6 +694,64 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
   // ── MS4 jurisdictions ──
   const jurisdictions = useMemo(() => getStateMS4Jurisdictions(stateAbbr), [stateAbbr]);
   const ms4Summary = useMemo(() => jurisdictions.length > 0 ? getMS4ComplianceSummary(jurisdictions) : null, [jurisdictions]);
+  const jurisdictionScoreRows = useMemo(() => {
+    const statusBaseScore: Record<string, number> = {
+      'In Compliance': 92,
+      'Pending Renewal': 82,
+      'Under Review': 74,
+      'Minor Violations': 61,
+      'Consent Decree': 45,
+      'NOV Issued': 38,
+    };
+    return jurisdictions.map((j: any) => {
+      const base = statusBaseScore[j.status] ?? 65;
+      const phaseAdj = j.phase === 'Phase I' ? 3 : 0;
+      const pop = Number(j.population || 0);
+      const popAdj = pop >= 500000 ? 2 : pop >= 100000 ? 1 : 0;
+      const score = Math.max(30, Math.min(98, base + phaseAdj + popAdj));
+      const grade = scoreToGrade(score);
+      const trend = j.status === 'In Compliance'
+        ? 'Improving'
+        : j.status === 'Pending Renewal' || j.status === 'Under Review'
+        ? 'Stable'
+        : 'Declining';
+      const trendColor = trend === 'Improving' ? 'text-green-600' : trend === 'Declining' ? 'text-red-600' : 'text-slate-500';
+      const trendIcon = trend === 'Improving' ? '↑' : trend === 'Declining' ? '↓' : '→';
+      const needsAttention = j.status === 'Minor Violations' || j.status === 'Consent Decree' || j.status === 'NOV Issued';
+      return {
+        permitId: j.permitId,
+        name: j.name,
+        phase: j.phase,
+        status: j.status,
+        statusDetail: j.statusDetail,
+        population: pop,
+        score,
+        grade,
+        trend,
+        trendColor,
+        trendIcon,
+        needsAttention,
+      };
+    }).sort((a: any, b: any) => a.name.localeCompare(b.name));
+  }, [jurisdictions]);
+  const jurisdictionScoreSummary = useMemo(() => {
+    if (jurisdictionScoreRows.length === 0) {
+      return {
+        avgScore: 0,
+        avgGrade: scoreToGrade(0),
+        attentionCount: 0,
+        inComplianceRate: 0,
+        asOf: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      };
+    }
+    const avgScore = Math.round(jurisdictionScoreRows.reduce((s: number, r: any) => s + r.score, 0) / jurisdictionScoreRows.length);
+    const avgGrade = scoreToGrade(avgScore);
+    const attentionCount = jurisdictionScoreRows.filter((r: any) => r.needsAttention).length;
+    const inCompliance = jurisdictionScoreRows.filter((r: any) => r.status === 'In Compliance').length;
+    const inComplianceRate = Math.round((inCompliance / jurisdictionScoreRows.length) * 100);
+    const asOf = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return { avgScore, avgGrade, attentionCount, inComplianceRate, asOf };
+  }, [jurisdictionScoreRows]);
 
   // ── Hotspots: Top 5 worsening / improving (state-scoped) ──
   const hotspots = useMemo(() => {
@@ -4661,15 +4720,15 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                     <Trophy className="h-5 w-5 text-amber-600" />
                     State Self-Assessment
                   </CardTitle>
-                  <CardDescription>Program performance self-evaluation against state goals</CardDescription>
+                  <CardDescription>Jurisdiction-level grade summary across {stateAbbr} MS4 program data</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {[
-                      { label: 'Overall Score', value: 'B+', bg: 'bg-emerald-50 border-emerald-200' },
-                      { label: 'Permit Timeliness', value: 'A-', bg: 'bg-green-50 border-green-200' },
-                      { label: 'Monitoring Coverage', value: 'B', bg: 'bg-blue-50 border-blue-200' },
-                      { label: 'Enforcement Resolve', value: 'B-', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Overall Grade', value: jurisdictionScoreSummary.avgGrade.letter, bg: jurisdictionScoreSummary.avgGrade.bg },
+                      { label: 'Jurisdictions Graded', value: `${jurisdictionScoreRows.length}`, bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'In Compliance', value: `${jurisdictionScoreSummary.inComplianceRate}%`, bg: 'bg-green-50 border-green-200' },
+                      { label: 'Needs Attention', value: `${jurisdictionScoreSummary.attentionCount}`, bg: 'bg-amber-50 border-amber-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
                         <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
@@ -4677,30 +4736,29 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State program performance metrics, EPA GPRA measures</p>
+                  <p className="text-xs text-slate-400 mt-4 italic">Data source: State MS4 jurisdiction registry, program compliance status ({jurisdictionScoreSummary.asOf})</p>
                 </CardContent>
               </Card>
             );
 
             case 'sc-watershed': {
-              const defaultWatersheds = [
-                { id: 'ws-1', name: 'Patapsco River — Lower North Branch', huc: '02060003', grade: 'C+', trend: 'improving', impaired: 4, total: 12, pct: 33 },
-                { id: 'ws-2', name: 'Gunpowder Falls', huc: '02060004', grade: 'B-', trend: 'stable', impaired: 2, total: 9, pct: 22 },
-                { id: 'ws-3', name: 'Back River', huc: '02060005', grade: 'D', trend: 'declining', impaired: 7, total: 8, pct: 88 },
-                { id: 'ws-4', name: 'Chester River', huc: '02060006', grade: 'B', trend: 'improving', impaired: 3, total: 14, pct: 21 },
-                { id: 'ws-5', name: 'Choptank River', huc: '02060007', grade: 'C', trend: 'stable', impaired: 5, total: 11, pct: 45 },
-              ];
-              const trendIcon = (t: string) => t === 'improving' ? '↑' : t === 'declining' ? '↓' : '→';
-              const trendColor = (t: string) => t === 'improving' ? 'text-green-600' : t === 'declining' ? 'text-red-600' : 'text-slate-500';
-              const gradeColor = (g: string) => g.startsWith('A') ? 'bg-green-100 text-green-800 border-green-300' : g.startsWith('B') ? 'bg-blue-100 text-blue-800 border-blue-300' : g.startsWith('C') ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-red-100 text-red-800 border-red-300';
+              const filteredJurisdictions = jurisdictionScoreRows.filter((j: any) => {
+                const q = scorecardSearch.trim().toLowerCase();
+                if (!q) return true;
+                return (
+                  j.name.toLowerCase().includes(q) ||
+                  (j.permitId || '').toLowerCase().includes(q) ||
+                  (j.status || '').toLowerCase().includes(q)
+                );
+              });
               return DS(
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Waves className="h-5 w-5 text-blue-600" />
-                      Watershed Scorecards
+                      Jurisdiction Scorecards
                     </CardTitle>
-                    <CardDescription>Per-watershed health grades and trend indicators</CardDescription>
+                    <CardDescription>All {jurisdictionScoreRows.length} {stateAbbr} jurisdictions, graded with federal-style scorecard view</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
@@ -4708,42 +4766,34 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                         <input
                           type="text"
-                          placeholder={`Search ${stateName} watersheds by name or HUC code...`}
+                          value={scorecardSearch}
+                          onChange={(e) => setScorecardSearch(e.target.value)}
+                          placeholder={`Search ${stateName} jurisdictions by name, permit ID, or status...`}
                           className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400"
-                          onClick={() => setComingSoonId(comingSoonId === 'ws-search' ? null : 'ws-search')}
-                          readOnly
                         />
                       </div>
-                      {comingSoonId === 'ws-search' && (
-                        <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-3">
-                          <p className="text-xs text-slate-700">Search by watershed name or HUC-8/HUC-12 code to view health scorecard, impairment breakdown, and restoration progress.</p>
-                          <p className="text-[10px] text-blue-600 mt-2 font-medium">Watershed search — Coming Soon</p>
-                        </div>
-                      )}
-                      <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Top Watersheds by Need</div>
-                      <div className="space-y-1.5">
-                        {defaultWatersheds.map(w => (
-                          <button key={w.id} onClick={() => setComingSoonId(comingSoonId === w.id ? null : w.id)} className="w-full flex items-center gap-3 rounded-lg border border-slate-200 p-3 hover:bg-slate-50 transition-all cursor-pointer text-left">
-                            <span className={`inline-flex items-center justify-center w-8 h-8 rounded-lg border text-sm font-bold ${gradeColor(w.grade)}`}>{w.grade}</span>
+                      <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                        Jurisdiction Grades ({filteredJurisdictions.length} shown)
+                      </div>
+                      <div className="max-h-[420px] overflow-auto space-y-1.5 pr-1">
+                        {filteredJurisdictions.map((j: any) => (
+                          <div key={j.permitId} className="w-full flex items-center gap-3 rounded-lg border border-slate-200 p-3 hover:bg-slate-50 transition-all">
+                            <span className={`inline-flex items-center justify-center w-8 h-8 rounded-lg border text-sm font-bold ${j.grade.bg} ${j.grade.color}`}>{j.grade.letter}</span>
                             <div className="flex-1 min-w-0">
-                              <div className="text-xs font-semibold text-slate-800 truncate">{w.name}</div>
-                              <div className="text-[10px] text-slate-400">HUC-8: {w.huc} · {w.impaired}/{w.total} impaired ({w.pct}%)</div>
+                              <div className="text-xs font-semibold text-slate-800 truncate">{j.name}</div>
+                              <div className="text-[10px] text-slate-400">
+                                {j.phase} · {j.status} · {j.permitId} · {j.population > 0 ? `${j.population.toLocaleString()} pop` : 'population n/a'}
+                              </div>
                             </div>
-                            <span className={`text-sm font-bold ${trendColor(w.trend)}`}>{trendIcon(w.trend)}</span>
-                          </button>
+                            <div className="text-right">
+                              <div className="text-xs font-bold text-slate-700">{j.score}/100</div>
+                              <div className={`text-[10px] font-semibold ${j.trendColor}`}>{j.trendIcon} {j.trend}</div>
+                            </div>
+                          </div>
                         ))}
                       </div>
-                      {defaultWatersheds.some(w => comingSoonId === w.id) && (() => {
-                        const w = defaultWatersheds.find(w => comingSoonId === w.id)!;
-                        return (
-                          <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-3">
-                            <p className="text-xs text-slate-700"><strong>{w.name}</strong> — Grade {w.grade}, {w.trend}. {w.impaired} of {w.total} waterbodies impaired. View full scorecard with cause breakdown, TMDL coverage, and restoration timeline.</p>
-                            <p className="text-[10px] text-blue-600 mt-2 font-medium">Watershed scorecard — Coming Soon</p>
-                          </div>
-                        );
-                      })()}
                     </div>
-                    <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ATTAINS, state monitoring database, NHDPlus</p>
+                    <p className="text-xs text-slate-400 mt-4 italic">Data source: State MS4/NPDES jurisdiction records; grades computed from current compliance phase/status and permit posture ({jurisdictionScoreSummary.asOf})</p>
                   </CardContent>
                 </Card>
               );
@@ -4812,20 +4862,33 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                     <FileText className="h-5 w-5 text-blue-600" />
                     Integrated Report Workspace
                   </CardTitle>
-                  <CardDescription>CWA 305(b)/303(d) integrated report development and submission</CardDescription>
+                  <CardDescription>State 305(b)/303(d) report development, validation, and EPA submission workflow</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                    <p className="text-[11px] font-semibold text-slate-700">Home / Reporting / 2026 Cycle</p>
+                    <p className="text-[10px] text-slate-600 mt-0.5">
+                      State workspace for integrated report assembly, QA checks, and federal submission readiness.
+                    </p>
+                  </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {[
-                      { label: 'Report Cycle', value: '2026', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Report Cycle', value: '2026', bg: 'bg-slate-50 border-slate-200' },
                       { label: 'Assessments Done', value: '78%', bg: 'bg-green-50 border-green-200' },
                       { label: 'EPA Review Status', value: 'Pending', bg: 'bg-amber-50 border-amber-200' },
-                      { label: 'Public Comment', value: 'Upcoming', bg: 'bg-slate-50 border-slate-200' },
+                      { label: 'Public Comment', value: 'Not Started', bg: 'bg-slate-50 border-slate-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
                         <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-lg font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {['Start Report', 'Resume Draft', 'Validate Submission', 'Submit to EPA'].map((label) => (
+                      <Button key={label} size="sm" variant={label === 'Submit to EPA' ? 'default' : 'outline'} className={label === 'Submit to EPA' ? 'bg-blue-600 hover:bg-blue-700 text-white' : ''}>
+                        {label}
+                      </Button>
                     ))}
                   </div>
                   <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ATTAINS, state integrated reporting system</p>
@@ -4842,19 +4905,32 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   </CardTitle>
                   <CardDescription>Required regulatory submissions and compliance reporting deadlines</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-3">
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                    <p className="text-[10px] text-slate-600">Workflow focus: track deadlines, validate packets, and submit complete reports on time.</p>
+                  </div>
                   <div className="space-y-2">
                     {[
-                      { report: 'Annual NPDES Program Report', due: '2026-03-31', status: 'In Progress' },
+                      { report: 'Annual NPDES Program Report', due: '2026-03-31', status: 'Pending' },
                       { report: 'SRF Annual Report', due: '2026-06-30', status: 'Not Started' },
                       { report: 'Drinking Water Program Report', due: '2026-07-01', status: 'Not Started' },
-                      { report: 'NPS Annual Report (319)', due: '2026-10-01', status: 'Not Started' },
+                      { report: 'NPS Annual Report (319)', due: '2026-10-01', status: 'Due Soon' },
                     ].map((r, i) => (
                       <div key={i} className="flex items-center justify-between rounded-lg border border-slate-200 p-3">
                         <span className="text-xs font-medium text-slate-700">{r.report}</span>
                         <div className="flex items-center gap-2">
                           <span className="text-[10px] text-slate-400">Due: {r.due}</span>
-                          <Badge variant={r.status === 'In Progress' ? 'default' : 'secondary'} className="text-[10px]">{r.status}</Badge>
+                          <Badge
+                            className={
+                              r.status === 'Complete' ? 'text-[10px] bg-green-100 text-green-800 border-green-200' :
+                              r.status === 'Pending' || r.status === 'Due Soon' ? 'text-[10px] bg-amber-100 text-amber-800 border-amber-200' :
+                              r.status === 'Overdue' ? 'text-[10px] bg-red-100 text-red-800 border-red-200' :
+                              'text-[10px] bg-slate-100 text-slate-700 border-slate-200'
+                            }
+                            variant="outline"
+                          >
+                            {r.status}
+                          </Badge>
                         </div>
                       </div>
                     ))}
@@ -4878,11 +4954,18 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <FileText className="h-5 w-5 text-slate-600" />
-                      Report Builder
+                      Report Builder & Submission Actions
                     </CardTitle>
-                    <CardDescription>Choose a template or build a custom report from available data</CardDescription>
+                    <CardDescription>Build, validate, export, and route regulatory report packages</CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="space-y-3">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                      {['Build', 'Validate', 'Submit', 'Export', 'Track Deadlines'].map((label) => (
+                        <button key={label} className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1.5 text-[10px] font-semibold text-slate-700 hover:bg-slate-100 transition-colors text-left">
+                          {label}
+                        </button>
+                      ))}
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                       {reportTemplates.map(t => (
                         <div key={t.id}>

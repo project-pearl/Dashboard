@@ -4891,32 +4891,59 @@ export function FederalManagementCenter(props: Props) {
 
         case 'reports-hub': return DS(
         <Card>
-          <CardHeader>
-            <CardTitle>Federal Reports</CardTitle>
-            <CardDescription>Generate and export data in role-specific formats</CardDescription>
+          <CardHeader className="border-b border-slate-200/80 bg-slate-50/70">
+            <CardTitle className="text-slate-900">Federal Reports</CardTitle>
+            <CardDescription>Read-only oversight exports for national program management, regional coordination, and analysis teams</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[
-                { title: 'National Compliance Summary', desc: 'NPDES + SDWIS violation trends across all states with enforcement actions', formats: ['PDF', 'CSV'] },
-                { title: 'Impairment Report', desc: 'ATTAINS Category 5 listings, impairment causes, and restoration status by state', formats: ['PDF', 'Excel'] },
-                { title: 'TMDL Progress Report', desc: 'Total Maximum Daily Load development status and pollutant reduction targets', formats: ['PDF', 'CSV'] },
-                { title: 'Coverage Analysis', desc: 'Monitoring network gaps, data freshness, and state-by-state coverage metrics', formats: ['PDF', 'Excel'] },
-                { title: 'Drinking Water Quality', desc: 'SDWIS system violations, enforcement timeline, and compliance rates', formats: ['PDF', 'CSV'] },
-                { title: 'Groundwater Status', desc: 'WDFN groundwater levels, aquifer trends, and monitoring well inventory', formats: ['PDF', 'Excel'] },
-              ].map((report) => (
-                <div key={report.title} className="border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-sm transition-all">
-                  <h3 className="text-sm font-semibold text-slate-800">{report.title}</h3>
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">{report.desc}</p>
-                  <div className="flex items-center gap-2 mt-3">
-                    {report.formats.map((fmt) => (
-                      <Button key={fmt} variant="outline" size="sm" className="text-xs h-7">
-                        {fmt}
-                      </Button>
-                    ))}
-                  </div>
+          <CardContent className="space-y-4">
+            <div className="rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-[11px] text-slate-700 flex flex-wrap items-center justify-between gap-2">
+              <span className="font-semibold">Data freshness: Mar 2, 2026 08:07 AM EST</span>
+              <span>Coverage: 3 active national source streams</span>
+            </div>
+            {[
+              {
+                group: 'Compliance',
+                reports: [
+                  { title: 'National Compliance Summary', desc: 'Nationwide NPDES and SDWIS compliance posture with enforcement trends.', formats: ['PDF', 'CSV'] },
+                  { title: 'Drinking Water Quality', desc: 'SDWIS system violations, enforcement timeline, and state compliance rates.', formats: ['PDF', 'CSV'] },
+                ],
+              },
+              {
+                group: 'Water Program Oversight',
+                reports: [
+                  { title: 'Impairment Report', desc: 'Nationwide 303(d) listings, impairment causes, and restoration status by state.', formats: ['PDF', 'Excel'] },
+                  { title: 'Coverage Analysis', desc: 'Monitoring network gaps, data freshness, and state-by-state coverage metrics.', formats: ['PDF', 'Excel'] },
+                  { title: 'Groundwater Status', desc: 'WDFN groundwater levels, aquifer trends, and monitoring well inventory.', formats: ['PDF', 'Excel'] },
+                ],
+              },
+              {
+                group: 'Planning & TMDLs',
+                reports: [
+                  { title: 'TMDL Progress Report', desc: 'TMDL development milestones and pollutant reduction target progress.', formats: ['PDF', 'CSV'] },
+                ],
+              },
+            ].map((section) => (
+              <div key={section.group} className="rounded-lg border border-slate-200 bg-white p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">{section.group}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {section.reports.map((report) => (
+                    <div key={report.title} className="border border-slate-200 rounded-lg p-4 hover:border-slate-400 hover:shadow-sm transition-all">
+                      <h3 className="text-sm font-semibold text-slate-800">{report.title}</h3>
+                      <p className="text-xs text-slate-500 mt-1 leading-relaxed">{report.desc}</p>
+                      <div className="flex items-center gap-2 mt-3">
+                        {report.formats.map((fmt) => (
+                          <Button key={fmt} variant="outline" size="sm" className="text-xs h-7 border-slate-300">
+                            {fmt}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+            ))}
+            <div className="text-[10px] text-slate-500">
+              Federal view is oversight-oriented. State data-production workflows remain in state role workspaces.
             </div>
           </CardContent>
         </Card>
