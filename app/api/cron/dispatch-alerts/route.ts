@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ALERT_FLAGS, BUILD_LOCK_TIMEOUT_MS } from '@/lib/alerts/config';
 import { dispatchAlerts } from '@/lib/alerts/engine';
 import { evaluateSentinelAlerts } from '@/lib/alerts/triggers/sentinelTrigger';
+import { evaluateUsgsAlerts } from '@/lib/alerts/triggers/usgsTrigger';
 import { evaluateDeltaAlerts } from '@/lib/alerts/triggers/deltaTrigger';
 import { evaluateNwssAlerts } from '@/lib/alerts/triggers/nwssTrigger';
 import { loadRules, evaluateRules } from '@/lib/alerts/rules';
@@ -66,7 +67,16 @@ export async function GET(request: NextRequest) {
       console.warn(`[dispatch-alerts] Sentinel trigger error: ${err.message}`);
     }
 
-    // 2. Delta trigger
+    // 2. USGS IV threshold trigger
+    try {
+      const usgsEvents = await evaluateUsgsAlerts();
+      candidates.push(...usgsEvents);
+      console.warn(`[dispatch-alerts] USGS: ${usgsEvents.length} candidates`);
+    } catch (err: any) {
+      console.warn(`[dispatch-alerts] USGS trigger error: ${err.message}`);
+    }
+
+    // 3. Delta trigger
     let ruleContext = { deltas: {} as Record<string, Record<string, number>>, sourceHealth: {} as Record<string, string> };
     try {
       const deltaResult = await evaluateDeltaAlerts();

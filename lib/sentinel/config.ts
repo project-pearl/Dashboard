@@ -172,17 +172,21 @@ export const SENTINEL_FLAGS = {
 /* ------------------------------------------------------------------ */
 
 export const BLOB_PATHS = {
-  eventQueue:    'sentinel/event-queue.json',
-  sourceHealth:  'sentinel/source-health.json',
-  scoredHucs:    'sentinel/scored-hucs.json',
-  pollCounter:   'sentinel/poll-counter.json',
-  resolvedHucs:  'sentinel/resolved-hucs.json',
+  eventQueue:      'sentinel/event-queue.json',
+  sourceHealth:    'sentinel/source-health.json',
+  scoredHucs:      'sentinel/scored-hucs.json',
+  pollCounter:     'sentinel/poll-counter.json',
+  resolvedHucs:    'sentinel/resolved-hucs.json',
+  baselines:       'sentinel/parameter-baselines.json',
+  coordination:    'sentinel/coordination-state.json',
 };
 
 export const DISK_PATHS = {
-  eventQueue:    '.cache/sentinel-event-queue.json',
-  sourceHealth:  '.cache/sentinel-source-health.json',
-  scoredHucs:    '.cache/sentinel-scored-hucs.json',
-  pollCounter:   '.cache/sentinel-poll-counter.json',
-  resolvedHucs:  '.cache/sentinel-resolved-hucs.json',
+  eventQueue:      '.cache/sentinel-event-queue.json',
+  sourceHealth:    '.cache/sentinel-source-health.json',
+  scoredHucs:      '.cache/sentinel-scored-hucs.json',
+  pollCounter:     '.cache/sentinel-poll-counter.json',
+  resolvedHucs:    '.cache/sentinel-resolved-hucs.json',
+  baselines:       '.cache/sentinel-baselines.json',
+  coordination:    '.cache/sentinel-coordination.json',
 };

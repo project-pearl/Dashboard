@@ -181,3 +181,94 @@ export interface ScoredHucClient {
   patternNames: string[];
   lastScored: string;
 }
+
+/* ------------------------------------------------------------------ */
+/*  Coordination Engine Types                                         */
+/* ------------------------------------------------------------------ */
+
+export interface CoordinatedEvent {
+  id: string;
+  huc6: string;
+  memberHucs: string[];
+  memberEvents: ChangeEvent[];
+  coordinationScore: number;
+  parameterBreadth: number;
+  temporalSpread: number;         // ms between earliest and latest event
+  detectedAt: string;
+}
+
+export interface ParameterDeviation {
+  huc8: string;
+  paramCd: string;
+  value: number;
+  zScore: number;
+  baseline: { mean: number; stdDev: number };
+}
+
+/* ------------------------------------------------------------------ */
+/*  Attack Classification Types                                       */
+/* ------------------------------------------------------------------ */
+
+export type AttackClassificationType =
+  | 'likely_attack'
+  | 'possible_attack'
+  | 'likely_benign'
+  | 'insufficient_data';
+
+export interface ConfounderCheck {
+  rule: string;
+  matched: boolean;
+  detail: string;
+}
+
+export interface ClassificationReasoning {
+  rule: string;
+  effect: 'reduce' | 'boost';
+  magnitude: number;
+  detail: string;
+}
+
+export interface AttackClassification {
+  classification: AttackClassificationType;
+  threatScore: number;
+  confounders: ConfounderCheck[];
+  reasoning: ClassificationReasoning[];
+}
+
+/* ------------------------------------------------------------------ */
+/*  NWSS Correlation Types                                            */
+/* ------------------------------------------------------------------ */
+
+export interface NwssCorrelation {
+  nwssAnomaly: {
+    sewershedId: string;
+    pathogen: string;
+    sigma: number;
+    concentration: number;
+    date: string;
+  };
+  wqEvents: ChangeEvent[];
+  correlationScore: number;
+  parameterMatches: { paramCd: string; matchStrength: number }[];
+  spatialMatch: 'same_huc' | 'adjacent_huc' | 'none';
+  temporalGapHours: number;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Enriched Alert Types                                              */
+/* ------------------------------------------------------------------ */
+
+export interface EnrichedAlert {
+  affectedHucs: { huc8: string; name: string; state: string }[];
+  parameterDeviations: ParameterDeviation[];
+  coordinationContext: {
+    coordinationScore: number;
+    clusterSize: number;
+    memberHucs: string[];
+    temporalSpread: number;
+  } | null;
+  classification: AttackClassification | null;
+  mapUrl: string;
+  relatedEvents: ChangeEvent[];
+  sourceHealth: { source: string; status: string }[];
+}

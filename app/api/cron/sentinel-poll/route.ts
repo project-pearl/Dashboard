@@ -31,6 +31,8 @@ import { pollAttains } from '@/lib/sentinel/adapters/attainsAdapter';
 import { pollFema }    from '@/lib/sentinel/adapters/femaAdapter';
 import { pollQpe }     from '@/lib/sentinel/adapters/qpeAdapter';
 import { pollSso }     from '@/lib/sentinel/adapters/ssoAdapter';
+import { pollNwss }    from '@/lib/sentinel/adapters/nwssAdapter';
+import { pollStateDischarge } from '@/lib/sentinel/adapters/stateDischargeAdapter';
 
 // Existing caches (need warming for adapters that read them)
 import { ensureWarmed as warmNws }     from '@/lib/nwsAlertCache';
@@ -38,6 +40,7 @@ import { ensureWarmed as warmNwisIv }  from '@/lib/nwisIvCache';
 import { ensureWarmed as warmIcis }    from '@/lib/icisCache';
 import { ensureWarmed as warmEcho }    from '@/lib/echoCache';
 import { ensureWarmed as warmAttains } from '@/lib/attainsCache';
+import { ensureWarmed as warmNwss }    from '@/lib/nwss/nwssCache';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
@@ -105,6 +108,8 @@ const ADAPTERS: AdapterEntry[] = [
   { source: 'FEMA_DISASTER',    poll: pollFema,    isAsync: true },
   { source: 'QPE_RAINFALL',     poll: pollQpe,     isAsync: true },
   { source: 'SSO_CSO',          poll: pollSso,     isAsync: true },
+  { source: 'CDC_NWSS',         poll: pollNwss,    isAsync: true,  warmFn: warmNwss },
+  { source: 'STATE_DISCHARGE',  poll: pollStateDischarge, isAsync: false },
 ];
 
 /* ------------------------------------------------------------------ */
