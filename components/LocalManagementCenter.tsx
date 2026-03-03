@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLensParam } from '@/lib/useLensParam';
@@ -65,7 +65,7 @@ import { getEcoData, getEcoScore, ecoScoreLabel } from '@/lib/ecologicalSensitiv
 import { ecoScoreStyle } from '@/lib/scoringUtils';
 import { NUTRIENT_TRADING_STATES } from '@/lib/constants';
 
-// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Types -------------------------------------------------------------------
 
 type AlertLevel = 'none' | 'low' | 'medium' | 'high';
 
@@ -81,7 +81,7 @@ type Props = {
   onToggleDevMode?: () => void;
 };
 
-// â”€â”€â”€ Marker Color â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Marker Color -------------------------------------------------------------
 
 function getMarkerColor(wb: { alertLevel: AlertLevel }): string {
   return wb.alertLevel === 'high' ? '#ef4444' :
@@ -91,15 +91,11 @@ function getMarkerColor(wb: { alertLevel: AlertLevel }): string {
 
 function cleanMojibake(value: string): string {
   return value
-    .replace(/â€”/g, '-')
-    .replace(/â€“/g, '-')
-    .replace(/â€˜|â€™/g, "'")
-    .replace(/â€œ|â€�/g, '"')
-    .replace(/Â/g, '')
+    .replace(/\s+/g, ' ')
     .trim();
 }
 
-// â”€â”€â”€ Lens Config â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Lens Config -------------------------------------------------------------
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -108,7 +104,7 @@ const LENS_CONFIG: Record<ViewLens, {
 }> = {
   overview: {
     label: 'Overview',
-    description: 'Jurisdiction dashboard â€” morning check for elected officials',
+    description: 'Jurisdiction dashboard - morning check for elected officials',
     sections: new Set([
       'local-identity', 'map-grid', 'local-kpi-strip', 'local-situation', 'local-quick-actions', 'disclaimer',
     ]),
@@ -212,7 +208,7 @@ const LENS_CONFIG: Record<ViewLens, {
   },
   habitat: {
     label: 'Habitat & Ecology',
-    description: 'Protected species and habitat sensitivity â€” relevant for development review',
+    description: 'Protected species and habitat sensitivity - relevant for development review',
     sections: new Set(['hab-ecoscore', 'hab-wildlife', 'disclaimer']),
   },
   trends: {
@@ -236,7 +232,7 @@ const LENS_CONFIG: Record<ViewLens, {
   },
 };
 
-// â”€â”€â”€ Placeholder Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Placeholder Card --------------------------------------------------------
 // Reusable mock-data section wrapper for scaffold
 
 function PlaceholderSection({ title, subtitle, icon, accent = 'purple', children }: {
@@ -255,14 +251,14 @@ function PlaceholderSection({ title, subtitle, icon, accent = 'purple', children
   );
 }
 
-// â”€â”€â”€ Main Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Main Component ----------------------------------------------------------
 
 export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegion, onToggleDevMode }: Props) {
   const { user, isAdmin } = useAuth();
   const [adminState] = useAdminState();
   const effectiveState = (isAdmin || user?.role === 'Pearl') ? adminState : stateAbbr;
 
-  // â”€â”€ Jurisdiction / MS4 selection â”€â”€
+  // -- Jurisdiction / MS4 selection --
   const ms4Jurisdictions = useMemo(() => getStateMS4Jurisdictions(effectiveState), [effectiveState]);
   const [selectedJurisdictionId, setSelectedJurisdictionId] = useState(jurisdictionId);
   const [selectedMS4, setSelectedMS4] = useState<string | null>(null);
@@ -278,11 +274,11 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
     ? `${effectiveState} Local Government`
     : selectedJurisdictionId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
-  // â”€â”€ View Lens â”€â”€
+  // -- View Lens --
   const [viewLens, setViewLens] = useLensParam<ViewLens>('overview');
   const lens = LENS_CONFIG[viewLens] ?? LENS_CONFIG['overview'];
 
-  // â”€â”€ Map: waterbody markers â”€â”€
+  // -- Map: waterbody markers --
   const leafletGeo = STATE_GEO_LEAFLET[effectiveState] || { center: [39.8, -98.5] as [number, number], zoom: 4 };
   const localLeafletGeo = useMemo(() => ({
     center: leafletGeo.center,
@@ -463,7 +459,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
   }, []);
   const onMarkerMouseLeave = useCallback(() => setHoveredFeature(null), []);
 
-  // â”€â”€ Mock data bridge for MS4 cards â”€â”€
+  // -- Mock data bridge for MS4 cards --
   const [activeDetailId, setActiveDetailId] = useState<string | null>(null);
   const [policyExpanded, setPolicyExpanded] = useState<Record<string, boolean>>({});
   useEffect(() => {
@@ -509,10 +505,10 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30">
       <div className="max-w-[1600px] mx-auto p-4 space-y-4">
 
-      {/* â”€â”€ HERO BANNER â”€â”€ */}
+      {/* -- HERO BANNER -- */}
       <HeroBanner role="local" onDoubleClick={() => onToggleDevMode?.()} />
 
-      {/* â”€â”€ ADMIN JURISDICTION / MS4 SWITCHER â”€â”€ */}
+      {/* -- ADMIN JURISDICTION / MS4 SWITCHER -- */}
       {(isAdmin || user?.role === 'Pearl') && (
         <div className="bg-white border border-purple-200 rounded-xl p-4 space-y-3">
           <div className="flex items-center gap-2 text-sm font-semibold text-purple-800">
@@ -590,16 +586,16 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
         );
         switch (section.id) {
 
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          // ===================================================================
           // OVERVIEW SECTIONS
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          // ===================================================================
 
           case 'local-identity': return DS(
-            <PlaceholderSection title={`${jurisdictionLabel} â€” Jurisdiction Profile`} icon={<Building2 size={15} />} accent="purple">
+            <PlaceholderSection title={`${jurisdictionLabel} - Jurisdiction Profile`} icon={<Building2 size={15} />} accent="purple">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <StatusCard title="Population" description="~185,000 residents" status="good" />
                 <StatusCard title="Water Systems" description="3 public water systems" status="good" />
-                <StatusCard title="MS4 Permit" description="Phase II â€” Active" status="good" />
+                <StatusCard title="MS4 Permit" description="Phase II - Active" status="good" />
                 <StatusCard title="State Agency" description={`${effectiveState} DEP/DEQ`} status="good" />
               </div>
             </PlaceholderSection>
@@ -643,7 +639,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
           case 'local-situation': return DS(
             <PlaceholderSection title="Situation Summary" subtitle="What you need to know today" icon={<Info size={15} />} accent="purple">
               <StatusCard title="No Active Emergencies" description="All systems operating normally. Last incident resolved 12 days ago." status="good" />
-              <StatusCard title="Permit Renewal Due" description="MS4 Phase II permit renewal due in 45 days â€” draft submitted to state." status="warning" />
+              <StatusCard title="Permit Renewal Due" description="MS4 Phase II permit renewal due in 45 days - draft submitted to state." status="warning" />
               <StatusCard title="Boil Water Advisory" description="Lifted 3 days ago for Elm Street corridor. System cleared all tests." status="good" />
             </PlaceholderSection>
           );
@@ -660,9 +656,9 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             </PlaceholderSection>
           );
 
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          // ===================================================================
           // BRIEFING SECTIONS
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          // ===================================================================
 
           case 'local-constituent-tldr': return DS(
             <PlaceholderSection title="Constituent TL;DR" subtitle="What residents are asking about" icon={<Users size={15} />} accent="purple">
@@ -672,9 +668,9 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             </PlaceholderSection>
           );
 
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          // ===================================================================
           // POLITICAL BRIEFING SECTIONS (the killer feature)
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          // ===================================================================
 
           case 'pol-talking-points': return DS(
             <PlaceholderSection title="Talking Points" subtitle="Auto-generated for council meetings" icon={<Megaphone size={15} />} accent="purple">
@@ -682,7 +678,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                 <CardContent className="pt-4 space-y-3 text-sm">
                   <div className="flex items-start gap-2">
                     <Badge className="bg-purple-100 text-purple-800 shrink-0">Lead</Badge>
-                    <p>&ldquo;Our jurisdiction has replaced 340 of 1,200 identified lead service lines â€” 28% complete, ahead of the national average of 18%.&rdquo;</p>
+                    <p>&ldquo;Our jurisdiction has replaced 340 of 1,200 identified lead service lines - 28% complete, ahead of the national average of 18%.&rdquo;</p>
                   </div>
                   <div className="flex items-start gap-2">
                     <Badge className="bg-emerald-100 text-emerald-800 shrink-0">Grant</Badge>
@@ -701,10 +697,10 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             <PlaceholderSection title="Constituent Concerns" subtitle="Top issues by volume" icon={<Users size={15} />} accent="purple">
               <div className="space-y-2">
                 {[
-                  { issue: 'Lead service line replacement timeline', calls: 47, trend: 'â†‘ 23%' },
-                  { issue: 'Water rate increase explanation', calls: 31, trend: 'â†“ 8%' },
-                  { issue: 'Stormwater flooding on Oak Ave', calls: 18, trend: 'â†‘ 45%' },
-                  { issue: 'PFAS in drinking water', calls: 12, trend: 'â€” stable' },
+                  { issue: 'Lead service line replacement timeline', calls: 47, trend: 'up  23%' },
+                  { issue: 'Water rate increase explanation', calls: 31, trend: 'down  8%' },
+                  { issue: 'Stormwater flooding on Oak Ave', calls: 18, trend: 'up  45%' },
+                  { issue: 'PFAS in drinking water', calls: 12, trend: '- stable' },
                 ].map(c => (
                   <div key={c.issue} className="flex items-center justify-between bg-white border border-slate-200 rounded-lg px-4 py-2.5">
                     <span className="text-sm text-slate-700">{c.issue}</span>
@@ -720,16 +716,16 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
 
           case 'pol-funding-wins': return DS(
             <PlaceholderSection title="Funding Wins" subtitle="Recent awards and approvals" icon={<Banknote size={15} />} accent="emerald">
-              <StatusCard title="$2.1M DWSRF Award" description="Drinking Water State Revolving Fund â€” water main rehabilitation project approved Jan 2026." status="good" />
-              <StatusCard title="$850K EPA WIIN Grant" description="Water Infrastructure Improvements for the Nation â€” lead service line inventory and replacement." status="good" />
-              <StatusCard title="$340K State 319 Grant" description="Nonpoint source pollution control for Deer Creek watershed â€” BMP installation." status="good" />
+              <StatusCard title="$2.1M DWSRF Award" description="Drinking Water State Revolving Fund - water main rehabilitation project approved Jan 2026." status="good" />
+              <StatusCard title="$850K EPA WIIN Grant" description="Water Infrastructure Improvements for the Nation - lead service line inventory and replacement." status="good" />
+              <StatusCard title="$340K State 319 Grant" description="Nonpoint source pollution control for Deer Creek watershed - BMP installation." status="good" />
             </PlaceholderSection>
           );
 
           case 'pol-funding-risks': return DS(
             <PlaceholderSection title="Funding Risks" subtitle="Expiring or at-risk funding" icon={<AlertTriangle size={15} />} accent="amber">
               <StatusCard title="ARPA Funds Expiring" description="$1.2M remaining ARPA allocation must be obligated by Dec 2026. Currently $480K unobligated." status="warning" />
-              <StatusCard title="SRF Match Shortfall" description="FY2027 SRF application requires $600K local match. Current reserve: $410K â€” $190K gap." status="critical" />
+              <StatusCard title="SRF Match Shortfall" description="FY2027 SRF application requires $600K local match. Current reserve: $410K - $190K gap." status="critical" />
             </PlaceholderSection>
           );
 
@@ -742,7 +738,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                   { deadline: 'Oct 1, 2026', item: 'PFAS monitoring results due to EPA', daysLeft: 215, status: 'good' as const },
                   { deadline: 'Dec 31, 2026', item: 'ARPA fund obligation deadline', daysLeft: 306, status: 'warning' as const },
                 ].map(d => (
-                  <StatusCard key={d.item} title={`${d.deadline} â€” ${d.daysLeft} days`} description={d.item} status={d.status} />
+                  <StatusCard key={d.item} title={`${d.deadline} - ${d.daysLeft} days`} description={d.item} status={d.status} />
                 ))}
               </div>
             </PlaceholderSection>
@@ -806,7 +802,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                 <CardContent className="pt-4 space-y-3 text-sm">
                   <div className="flex items-start gap-2">
                     <Badge className="bg-red-100 text-red-800 shrink-0">Urgent</Badge>
-                    <p><strong>ARPA Fund Reallocation:</strong> $480K unobligated â€” propose allocation to lead service line replacement before Dec 2026 deadline.</p>
+                    <p><strong>ARPA Fund Reallocation:</strong> $480K unobligated - propose allocation to lead service line replacement before Dec 2026 deadline.</p>
                   </div>
                   <div className="flex items-start gap-2">
                     <Badge className="bg-amber-100 text-amber-800 shrink-0">Action</Badge>
@@ -814,7 +810,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                   </div>
                   <div className="flex items-start gap-2">
                     <Badge className="bg-blue-100 text-blue-800 shrink-0">Info</Badge>
-                    <p><strong>Quarterly Water Quality Update:</strong> 8th consecutive quarter with zero MCL exceedances â€” recognition opportunity.</p>
+                    <p><strong>Quarterly Water Quality Update:</strong> 8th consecutive quarter with zero MCL exceedances - recognition opportunity.</p>
                   </div>
                   <div className="flex items-start gap-2">
                     <Badge className="bg-purple-100 text-purple-800 shrink-0">Equity</Badge>
@@ -825,9 +821,9 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             </PlaceholderSection>
           );
 
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          // ===================================================================
           // WATER QUALITY SECTIONS
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          // ===================================================================
 
           case 'local-wq-grade': return DS(
             <PlaceholderSection title="Water Quality Grade" icon={<Waves size={15} />} accent="blue">
@@ -841,7 +837,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                 <div className="space-y-2 flex-1">
                   <StatusCard title="Surface Water" description="14 of 18 assessed waterbodies meeting standards (78%)" status="good" />
                   <StatusCard title="Groundwater" description="All 3 aquifer monitoring wells within normal parameters" status="good" />
-                  <StatusCard title="Impairments" description="4 waterbodies on 303(d) list â€” bacteria (2), nutrients (1), sediment (1)" status="warning" />
+                  <StatusCard title="Impairments" description="4 waterbodies on 303(d) list - bacteria (2), nutrients (1), sediment (1)" status="warning" />
                 </div>
               </div>
             </PlaceholderSection>
@@ -861,7 +857,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                       <span className="text-sm font-semibold text-slate-800">{w.waterbody}</span>
                       <Badge variant="outline">{w.status}</Badge>
                     </div>
-                    <p className="text-xs text-slate-500 mt-1">{w.cause} â€” {w.source}</p>
+                    <p className="text-xs text-slate-500 mt-1">{w.cause} - {w.source}</p>
                   </div>
                 ))}
               </div>
@@ -870,22 +866,22 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
 
           case 'local-wq-trends': return DS(
             <PlaceholderSection title="Water Quality Trends" subtitle="5-year trajectory" icon={<TrendingUp size={15} />} accent="blue">
-              <StatusCard title="Improving" description="Overall water quality index improved 4.2 points over 5 years (74.8 â†’ 79.0). Bacteria levels declining in 3 of 4 impaired waterbodies." status="good" />
+              <StatusCard title="Improving" description="Overall water quality index improved 4.2 points over 5 years (74.8 -> 79.0). Bacteria levels declining in 3 of 4 impaired waterbodies." status="good" />
               <StatusCard title="Watch: Nutrients" description="Total phosphorus trending upward in Lake Pleasant (+0.8 mg/L/yr). Stormwater BMP effectiveness may need reassessment." status="warning" />
             </PlaceholderSection>
           );
 
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          // ===================================================================
           // INFRASTRUCTURE SECTIONS
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          // ===================================================================
 
           case 'local-infra-condition': return DS(
             <PlaceholderSection title="Infrastructure Condition" icon={<Wrench size={15} />} accent="slate">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <StatusCard title="Water Mains" description="142 mi â€” 23% beyond useful life" status="warning" />
-                <StatusCard title="Sewer Lines" description="98 mi â€” 15% needing rehab" status="warning" />
-                <StatusCard title="Treatment Plant" description="12 MGD capacity â€” operating at 74%" status="good" />
-                <StatusCard title="Storage Tanks" description="3 tanks â€” all inspected 2025" status="good" />
+                <StatusCard title="Water Mains" description="142 mi - 23% beyond useful life" status="warning" />
+                <StatusCard title="Sewer Lines" description="98 mi - 15% needing rehab" status="warning" />
+                <StatusCard title="Treatment Plant" description="12 MGD capacity - operating at 74%" status="good" />
+                <StatusCard title="Storage Tanks" description="3 tanks - all inspected 2025" status="good" />
               </div>
             </PlaceholderSection>
           );
@@ -901,9 +897,9 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             <PlaceholderSection title="Asset Age Distribution" icon={<Clock size={15} />} accent="slate">
               <div className="space-y-2">
                 {[
-                  { range: '0â€“20 years', pct: 22, color: 'bg-emerald-500' },
-                  { range: '20â€“40 years', pct: 35, color: 'bg-blue-500' },
-                  { range: '40â€“60 years', pct: 28, color: 'bg-amber-500' },
+                  { range: '0-20 years', pct: 22, color: 'bg-emerald-500' },
+                  { range: '20-40 years', pct: 35, color: 'bg-blue-500' },
+                  { range: '40-60 years', pct: 28, color: 'bg-amber-500' },
                   { range: '60+ years', pct: 15, color: 'bg-red-500' },
                 ].map(a => (
                   <div key={a.range} className="flex items-center gap-3">
@@ -918,9 +914,9 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             </PlaceholderSection>
           );
 
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          // ===================================================================
           // COMPLIANCE SECTIONS
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          // ===================================================================
 
           case 'local-permit-status': return DS(
             <PlaceholderSection title={`Permit Status - ${cleanMojibake(selectedJurisdiction?.name || jurisdictionLabel)}`} icon={<ShieldCheck size={15} />} accent="blue">
@@ -1001,9 +997,9 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             </PlaceholderSection>
           );
 
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          // ===================================================================
           // STORMWATER / MS4 SECTIONS
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          // ===================================================================
 
           case 'local-ms4-identity': return DS(
             <PlaceholderSection title="MS4 Permit Identity" icon={<CloudRain size={15} />} accent="amber">
@@ -1016,9 +1012,9 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             </PlaceholderSection>
           );
 
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          // ===================================================================
           // PUBLIC HEALTH SECTIONS
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          // ===================================================================
 
           case 'local-dw-systems': return DS(
             <PlaceholderSection title={`Drinking Water Systems - ${cleanMojibake(selectedJurisdiction?.name || jurisdictionLabel)}`} icon={<Droplets size={15} />} accent="blue">
@@ -1055,9 +1051,9 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             </PlaceholderSection>
           );
 
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          // ===================================================================
           // FUNDING SECTIONS
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          // ===================================================================
 
           case 'local-usaspending': return DS(
             <PlaceholderSection title="USASpending Awards" subtitle="Federal awards to jurisdiction" icon={<Banknote size={15} />} accent="emerald">
@@ -1065,13 +1061,13 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                 {[
                   { program: 'DWSRF', amount: '$2.1M', year: '2026', agency: 'EPA' },
                   { program: 'WIIN Act', amount: '$850K', year: '2025', agency: 'EPA' },
-                  { program: 'ARPA â€” Water', amount: '$3.4M', year: '2022', agency: 'Treasury' },
+                  { program: 'ARPA - Water', amount: '$3.4M', year: '2022', agency: 'Treasury' },
                   { program: 'FEMA BRIC', amount: '$420K', year: '2025', agency: 'FEMA' },
                 ].map(a => (
                   <div key={a.program} className="flex items-center justify-between bg-white border border-slate-200 rounded-lg px-4 py-2.5">
                     <div>
                       <p className="text-sm font-medium text-slate-800">{a.program}</p>
-                      <p className="text-xs text-slate-500">{a.agency} â€” {a.year}</p>
+                      <p className="text-xs text-slate-500">{a.agency} - {a.year}</p>
                     </div>
                     <span className="text-sm font-bold text-emerald-700">{a.amount}</span>
                   </div>
@@ -1090,7 +1086,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
           case 'grant-outcomes': return DS(
             <PlaceholderSection title="Grant Outcomes" subtitle="Performance on active grants" icon={<CheckCircle size={15} />} accent="emerald">
               <StatusCard title="On Track" description="DWSRF project: 340 of 1,200 lead lines replaced (28%). Milestone 2 complete. Expenditure rate: 62%." status="good" />
-              <StatusCard title="Behind Schedule" description="319 Grant: BMP installation 45% complete vs 65% target. Contractor delay â€” revised timeline submitted." status="warning" />
+              <StatusCard title="Behind Schedule" description="319 Grant: BMP installation 45% complete vs 65% target. Contractor delay - revised timeline submitted." status="warning" />
             </PlaceholderSection>
           );
 
@@ -1113,9 +1109,9 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             </PlaceholderSection>
           );
 
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          // ===================================================================
           // EJ & EQUITY SECTIONS
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          // ===================================================================
 
           case 'local-ej-summary': return DS(
             <PlaceholderSection title="Environmental Justice Summary" icon={<Heart size={15} />} accent="purple">
@@ -1136,7 +1132,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                   { tract: '240112', pop: '4,200', minority: '58%', poverty: '31%', linguistic: '8%' },
                 ].map(t => (
                   <div key={t.tract} className="bg-white border border-slate-200 rounded-lg px-4 py-3">
-                    <p className="text-sm font-semibold text-slate-800">Tract {t.tract} â€” Pop: {t.pop}</p>
+                    <p className="text-sm font-semibold text-slate-800">Tract {t.tract} - Pop: {t.pop}</p>
                     <div className="flex gap-4 mt-1">
                       <span className="text-xs text-slate-500">Minority: {t.minority}</span>
                       <span className="text-xs text-slate-500">Poverty: {t.poverty}</span>
@@ -1151,7 +1147,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
           case 'local-ej-burden-map': return DS(
             <PlaceholderSection title="Environmental Burden Map" icon={<MapPin size={15} />} accent="purple">
               <div className="bg-slate-100 border border-slate-200 rounded-xl h-48 flex items-center justify-center">
-                <p className="text-sm text-slate-500">EJScreen burden map â€” placeholder for interactive map integration</p>
+                <p className="text-sm text-slate-500">EJScreen burden map - placeholder for interactive map integration</p>
               </div>
             </PlaceholderSection>
           );
@@ -1183,9 +1179,9 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             </PlaceholderSection>
           );
 
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          // ===================================================================
           // EMERGENCY SECTIONS
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          // ===================================================================
 
           case 'local-nws-alerts': return DS(
             <PlaceholderSection title="NWS Weather Alerts" icon={<CloudRain size={15} />} accent="amber">
@@ -1195,14 +1191,14 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
 
           case 'local-sentinel-events': return DS(
             <PlaceholderSection title="Sentinel Events" subtitle="Early warning indicators" icon={<Activity size={15} />} accent="amber">
-              <StatusCard title="Turbidity Spike" description="Intake monitor detected 8.2 NTU spike at 03:00 AM â€” returned to 1.4 NTU by 05:30. Auto-logged, no action required." status="warning" />
+              <StatusCard title="Turbidity Spike" description="Intake monitor detected 8.2 NTU spike at 03:00 AM - returned to 1.4 NTU by 05:30. Auto-logged, no action required." status="warning" />
               <StatusCard title="Pressure Drop" description="Zone 3 pressure dropped below 30 PSI for 4 minutes during peak demand (6:45 PM). Normal range restored." status="warning" />
             </PlaceholderSection>
           );
 
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          // ===================================================================
           // SCORECARD SECTIONS
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          // ===================================================================
 
           case 'local-sc-overall': return DS(
             <PlaceholderSection title="Overall Score" icon={<Trophy size={15} />} accent="purple">
@@ -1215,7 +1211,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                 </div>
                 <div className="text-sm text-slate-600 space-y-1">
                   <p>Ranking: <strong className="text-purple-700">14th of 62</strong> similar jurisdictions</p>
-                  <p>Trend: <strong className="text-emerald-700">â†‘ 3.5 pts</strong> over 12 months</p>
+                  <p>Trend: <strong className="text-emerald-700">up  3.5 pts</strong> over 12 months</p>
                   <p>National percentile: <strong>77th</strong></p>
                 </div>
               </div>
@@ -1248,7 +1244,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
           case 'local-sc-trends': return DS(
             <PlaceholderSection title="Scorecard Trends" subtitle="12-month trajectory" icon={<TrendingUp size={15} />} accent="purple">
               <StatusCard title="Improving Categories" description="Water Quality (+4.2), Compliance (+2.8), Public Health (+1.5)" status="good" />
-              <StatusCard title="Declining Categories" description="Infrastructure (-1.2) â€” driven by aging asset backlog" status="warning" />
+              <StatusCard title="Declining Categories" description="Infrastructure (-1.2) - driven by aging asset backlog" status="warning" />
             </PlaceholderSection>
           );
 
@@ -1282,9 +1278,9 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             </PlaceholderSection>
           );
 
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          // ===================================================================
           // REPORTS SECTIONS
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          // ===================================================================
 
           case 'local-rpt-council': return DS(
             <PlaceholderSection title="Council Report" subtitle="Auto-generated briefing for elected officials" icon={<FileText size={15} />} accent="purple">
@@ -1299,7 +1295,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
 
           case 'local-rpt-state-filing': return DS(
             <PlaceholderSection title="State Filing Report" icon={<FileText size={15} />} accent="blue">
-              <StatusCard title="MS4 Annual Report" description="Due Mar 15, 2026. Draft 85% complete â€” MCM narratives need final review." status="warning" />
+              <StatusCard title="MS4 Annual Report" description="Due Mar 15, 2026. Draft 85% complete - MCM narratives need final review." status="warning" />
               <StatusCard title="CCR" description="Consumer Confidence Report due Jul 1, 2026. Data compilation in progress." status="good" />
             </PlaceholderSection>
           );
@@ -1315,23 +1311,23 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             <PlaceholderSection title="Annual Report" icon={<FileText size={15} />} accent="blue">
               <Card className="border-slate-200">
                 <CardContent className="pt-4 text-sm text-slate-600">
-                  <p>Comprehensive annual report combining all lenses â€” water quality, compliance, infrastructure, funding, and equity â€” into a single document for public distribution and state filing.</p>
+                  <p>Comprehensive annual report combining all lenses - water quality, compliance, infrastructure, funding, and equity - into a single document for public distribution and state filing.</p>
                   <Badge variant="outline" className="mt-3 cursor-pointer hover:bg-blue-50">Generate Annual Report</Badge>
                 </CardContent>
               </Card>
             </PlaceholderSection>
           );
 
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          // ===================================================================
           // SHARED / REUSED SECTIONS (rendered as placeholders for scaffold)
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          // ===================================================================
           case 'warr-metrics':
           case 'warr-analyze':
           case 'warr-respond':
           case 'warr-resolve':
             return DS(
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">
-                {section.label} â€” WARR zone placeholder (shared component)
+                {section.label} - WARR zone placeholder (shared component)
               </div>
             );
 
@@ -1481,13 +1477,13 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
 
           case 'detail': return DS(
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">
-              Waterbody Detail â€” placeholder (shared component)
+              Waterbody Detail - placeholder (shared component)
             </div>
           );
 
           case 'top10': return DS(
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">
-              Top 5 Worsening / Improving â€” placeholder (shared component)
+              Top 5 Worsening / Improving - placeholder (shared component)
             </div>
           );
 
@@ -1686,7 +1682,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
           case 'rw-impairment':
             return DS(
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">
-                {section.label} â€” stormwater placeholder (shared with MS4)
+                {section.label} - stormwater placeholder (shared with MS4)
               </div>
             );
 
@@ -1699,7 +1695,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             return (
               <div id="section-nutrientcredits" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                 <button onClick={() => onToggleCollapse('nutrientcredits')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-                  <span className="text-sm font-bold text-slate-800">Nutrient Credit Trading â€” {jurisdictionScopedWbMarkers.find(w => w.id === activeDetailId)?.name || activeDetailId}</span>
+                  <span className="text-sm font-bold text-slate-800">Nutrient Credit Trading - {jurisdictionScopedWbMarkers.find(w => w.id === activeDetailId)?.name || activeDetailId}</span>
                   <span>{isSectionOpen('nutrientcredits') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}</span>
                 </button>
                 {isSectionOpen('nutrientcredits') && (
@@ -1727,7 +1723,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             return (
               <div id="section-tmdl" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                 <button onClick={() => onToggleCollapse('tmdl')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-                  <span className="text-sm font-bold text-slate-800">TMDL Compliance & EJ Impact â€” {jurisdictionScopedWbMarkers.find(w => w.id === activeDetailId)?.name || activeDetailId}</span>
+                  <span className="text-sm font-bold text-slate-800">TMDL Compliance & EJ Impact - {jurisdictionScopedWbMarkers.find(w => w.id === activeDetailId)?.name || activeDetailId}</span>
                   <span>{isSectionOpen('tmdl') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}</span>
                 </button>
                 {isSectionOpen('tmdl') && (
@@ -1756,7 +1752,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             return (
               <div id="section-mdeexport" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                 <button onClick={() => onToggleCollapse('mdeexport')} className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors">
-                  <span className="text-sm font-bold text-slate-800">MDE Compliance Report â€” {regionName}</span>
+                  <span className="text-sm font-bold text-slate-800">MDE Compliance Report - {regionName}</span>
                   <span>{isSectionOpen('mdeexport') ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}</span>
                 </button>
                 {isSectionOpen('mdeexport') && (
@@ -1779,7 +1775,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
           case 'ph-advisories':
             return DS(
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">
-                {section.label} â€” public health placeholder (shared component)
+                {section.label} - public health placeholder (shared component)
               </div>
             );
 
@@ -1874,23 +1870,23 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
           case 'disaster-prep':
             return DS(
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">
-                {section.label} â€” emergency placeholder (shared component)
+                {section.label} - emergency placeholder (shared component)
               </div>
             );
 
           case 'resolution-planner': return DS(
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">
-              Resolution Plan Workspace â€” placeholder (shared component)
+              Resolution Plan Workspace - placeholder (shared component)
             </div>
           );
 
           case 'exporthub': return DS(
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">
-              Data Export Hub â€” placeholder (shared component)
+              Data Export Hub - placeholder (shared component)
             </div>
           );
 
-          // â”€â”€ Habitat & Ecology â”€â”€
+          // -- Habitat & Ecology --
           case 'hab-ecoscore': {
             const ecoData = getEcoData(effectiveState);
             const ecoScore = getEcoScore(effectiveState);
@@ -1902,7 +1898,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                   <div className="text-[10px] font-bold uppercase tracking-wider opacity-70">In Your Jurisdiction</div>
                   <div className="text-lg font-bold mt-1">{effectiveState} Eco Score</div>
                   <div className="text-xs opacity-80 mt-0.5">
-                    {ecoData ? `${ecoData.totalTE} total T&E species Â· ${ecoData.aquaticTE} aquatic Â· ${ecoData.criticalHabitat} critical habitat designations` : 'No T&E data available'}
+                    {ecoData ? `${ecoData.totalTE} total T&E species - ${ecoData.aquaticTE} aquatic - ${ecoData.criticalHabitat} critical habitat designations` : 'No T&E data available'}
                   </div>
                 </div>
                 <div className="text-right">
@@ -1924,10 +1920,10 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Bug className="h-5 w-5 text-rose-600" />
-                    Threatened & Endangered Species â€” {effectiveState}
+                    Threatened & Endangered Species - {effectiveState}
                     <Badge variant="secondary" className="ml-1 text-[10px]">USFWS ECOS</Badge>
                   </CardTitle>
-                  <CardDescription>Protected species near local development areas â€” informs planning and zoning decisions</CardDescription>
+                  <CardDescription>Protected species near local development areas - informs planning and zoning decisions</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -1972,23 +1968,30 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                       </div>
                     </div>
                   </div>
-                  <p className="text-xs text-slate-400 italic">Source: USFWS ECOS â€” ESA-listed species by state (2024-2025)</p>
+                  <p className="text-xs text-slate-400 italic">Source: USFWS ECOS - ESA-listed species by state (2024-2025)</p>
                 </CardContent>
               </Card>
             );
           }
 
-          // â”€â”€ Water Quality Trading â”€â”€
+          // -- Water Quality Trading --
           case 'wqt': return NUTRIENT_TRADING_STATES.has(effectiveState) ? DS(
-            <WaterQualityTradingPanel stateAbbr={effectiveState} mode="local" />
+            <WaterQualityTradingPanel
+              stateAbbr={effectiveState}
+              mode="local"
+              jurisdictionName={selectedJurisdiction?.name || jurisdictionLabel}
+              permitNumber={selectedJurisdiction?.permitId}
+              permitType={selectedJurisdiction?.phase}
+              watersheds={jurisdictionScopedWbMarkers.slice(0, 4).map((w) => w.name)}
+            />
           ) : null;
 
-          // â”€â”€ Disclaimer â”€â”€
+          // -- Disclaimer --
           case 'disclaimer': return null;
 
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-          // SHARED PANELS â€” TRENDS, POLICY, CONTAMINANTS
-          // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          // ===================================================================
+          // SHARED PANELS - TRENDS, POLICY, CONTAMINANTS
+          // ===================================================================
 
           case 'trends-dashboard': return DS((() => {
             const scopedWaterbodies = jurisdictionScopedWbMarkers;
@@ -2007,7 +2010,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
             return (
               <Card>
                 <CardHeader>
-                  <CardTitle>Local Trends & Projections â€” {scopeLabel}</CardTitle>
+                  <CardTitle>Local Trends & Projections - {scopeLabel}</CardTitle>
                   <CardDescription>
                     Same trend model used in state/federal dashboards, scoped to the selected jurisdiction profile.
                   </CardDescription>
@@ -2017,7 +2020,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                     {[
                       {
                         label: 'Impairment Trend',
-                        value: `â†“ ${impairmentDelta.toFixed(1)}%`,
+                        value: `down  ${impairmentDelta.toFixed(1)}%`,
                         sub: 'vs. recent local baseline',
                         color: 'text-green-600',
                         bg: 'bg-green-50 border-green-200',
@@ -2241,7 +2244,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Scale className="h-5 w-5 text-purple-600" />
-                    Policy & Regulatory Tracker â€” {scopeName}
+                    Policy & Regulatory Tracker - {scopeName}
                   </CardTitle>
                   <CardDescription>
                     Federal, state, and local policy context for {scopeName} ({effectiveState})
@@ -2291,7 +2294,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
 
           default: return DS(
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">
-              {section.label} â€” section placeholder
+              {section.label} - section placeholder
             </div>
           );
         }

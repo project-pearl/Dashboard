@@ -45,7 +45,48 @@ interface MarketListing {
 interface WaterQualityTradingPanelProps {
   stateAbbr: string;
   mode?: 'state' | 'ms4' | 'local' | 'utility';
+  jurisdictionName?: string;
+  permitNumber?: string;
+  permitType?: 'Phase I' | 'Phase II' | string;
+  watersheds?: string[];
   className?: string;
+}
+
+type Nutrient = 'TN' | 'TP' | 'Sediment';
+
+interface ObligationRow {
+  nutrient: Nutrient;
+  required: number;
+  achieved: number;
+  remaining: number;
+  owned: number;
+  needed: number;
+  marketRate: number;
+  buildRateLow: number;
+  buildRateHigh: number;
+}
+
+interface PortfolioRow {
+  source: string;
+  sector: CreditSector;
+  nutrient: Nutrient;
+  credits: number;
+  status: 'Active' | 'Pending Verification' | 'Expiring';
+  expiration: string;
+  notes: string;
+}
+
+interface LocalMarketRow extends MarketListing {
+  watershed: string;
+  distance: 'Same Watershed' | 'Adjacent' | 'Regional';
+  relevance: number;
+}
+
+interface PriceHistoryPoint {
+  month: string;
+  TN: number;
+  TP: number;
+  Sediment: number;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -60,6 +101,30 @@ function formatNumber(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(n >= 10_000 ? 0 : 1)}K`;
   return n.toLocaleString();
+}
+
+function obligationStatus(required: number, achieved: number): 'green' | 'yellow' | 'red' {
+  if (required <= 0 || achieved >= required) return 'green';
+  const pct = achieved / required;
+  if (pct >= 0.8) return 'yellow';
+  return 'red';
+}
+
+function confidenceTier(required: number, achieved: number): 'High' | 'Moderate' | 'Low' {
+  if (required > 0 && achieved > 0) return 'High';
+  if (required > 0) return 'Moderate';
+  return 'Low';
+}
+
+function shortWatershedName(raw: string): string {
+  return raw
+    .replace(/^maryland_/i, '')
+    .replace(/^virginia_/i, '')
+    .replace(/^dc_/i, '')
+    .replace(/^pennsylvania_/i, '')
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .replace(/\s+River$/i, ' River');
 }
 
 const SECTOR_META: Record<CreditSector, { label: string; icon: React.ElementType; iconBg: string; iconTx: string; borderColor: string; description: string }> = {
@@ -137,11 +202,120 @@ function generateMarketListings(stateAbbr: string): MarketListing[] {
   return listings;
 }
 
+function generateLocalObligations(): ObligationRow[] {
+  return [
+    {
+      nutrient: 'TN',
+      required: 2400,
+      achieved: 1680,
+      remaining: 720,
+      owned: 520,
+      needed: 200,
+      marketRate: 49,
+      buildRateLow: 45,
+      buildRateHigh: 65,
+    },
+    {
+      nutrient: 'TP',
+      required: 340,
+      achieved: 290,
+      remaining: 50,
+      owned: 28,
+      needed: 22,
+      marketRate: 74,
+      buildRateLow: 65,
+      buildRateHigh: 90,
+    },
+    {
+      nutrient: 'Sediment',
+      required: 4200,
+      achieved: 3800,
+      remaining: 400,
+      owned: 230,
+      needed: 170,
+      marketRate: 26,
+      buildRateLow: 22,
+      buildRateHigh: 36,
+    },
+  ];
+}
+
+function generateLocalPortfolio(): PortfolioRow[] {
+  return [
+    {
+      source: 'Magothy Run Stream Restoration',
+      sector: 'stormwater',
+      nutrient: 'TN',
+      credits: 142,
+      status: 'Active',
+      expiration: '2028',
+      notes: 'County CIP project',
+    },
+    {
+      source: 'Lake Waterford BMP Retrofit',
+      sector: 'stormwater',
+      nutrient: 'TP',
+      credits: 87,
+      status: 'Active',
+      expiration: '2029',
+      notes: 'Grant-funded',
+    },
+    {
+      source: 'Purchased: Regional WWTP Authority',
+      sector: 'wastewater',
+      nutrient: 'TN',
+      credits: 200,
+      status: 'Active',
+      expiration: '2027',
+      notes: 'Traded Q2 2025',
+    },
+    {
+      source: 'Septic BAT Conversion Bundle',
+      sector: 'septic',
+      nutrient: 'TN',
+      credits: 95,
+      status: 'Pending Verification',
+      expiration: '2028',
+      notes: 'Verification package in review',
+    },
+    {
+      source: 'South River Shoreline Wetland',
+      sector: 'aquaculture',
+      nutrient: 'Sediment',
+      credits: 230,
+      status: 'Active',
+      expiration: '2030',
+      notes: 'Joint project with local land trust',
+    },
+  ];
+}
+
+function generateLocalPriceHistory(): PriceHistoryPoint[] {
+  return [
+    { month: 'Apr', TN: 43, TP: 69, Sediment: 24 },
+    { month: 'May', TN: 44, TP: 71, Sediment: 24 },
+    { month: 'Jun', TN: 45, TP: 72, Sediment: 25 },
+    { month: 'Jul', TN: 47, TP: 74, Sediment: 25 },
+    { month: 'Aug', TN: 48, TP: 76, Sediment: 26 },
+    { month: 'Sep', TN: 47, TP: 75, Sediment: 26 },
+    { month: 'Oct', TN: 49, TP: 77, Sediment: 26 },
+    { month: 'Nov', TN: 50, TP: 79, Sediment: 27 },
+    { month: 'Dec', TN: 51, TP: 80, Sediment: 27 },
+    { month: 'Jan', TN: 50, TP: 79, Sediment: 26 },
+    { month: 'Feb', TN: 49, TP: 78, Sediment: 26 },
+    { month: 'Mar', TN: 49, TP: 74, Sediment: 26 },
+  ];
+}
+
 // ── Component ────────────────────────────────────────────────────────────────
 
 export function WaterQualityTradingPanel({
   stateAbbr,
   mode = 'state',
+  jurisdictionName,
+  permitNumber,
+  permitType,
+  watersheds,
   className = '',
 }: WaterQualityTradingPanelProps) {
   const [sectorFilter, setSectorFilter] = useState<CreditSector | 'all'>('all');
@@ -183,6 +357,353 @@ export function WaterQualityTradingPanel({
     }
     return { tn, tp, sed, facilities, traded, value };
   }, [sectors]);
+
+  const jurisdictionLabel = jurisdictionName || 'Anne Arundel County';
+  const permitLabel = permitNumber || '20-DP-3310';
+  const permitPhase = permitType || 'Phase I MS4';
+  const localWatersheds = (watersheds && watersheds.length > 0
+    ? watersheds.map(shortWatershedName)
+    : ['Severn River', 'South River', 'Patuxent River']);
+
+  const localObligations = useMemo(() => generateLocalObligations(), []);
+  const localPortfolio = useMemo(() => generateLocalPortfolio(), []);
+  const localPriceHistory = useMemo(() => generateLocalPriceHistory(), []);
+
+  const localTotals = useMemo(() => {
+    const byNutrient: Record<Nutrient, number> = { TN: 0, TP: 0, Sediment: 0 };
+    for (const row of localPortfolio) byNutrient[row.nutrient] += row.credits;
+    const marketGapCost = localObligations.reduce((sum, o) => sum + o.needed * o.marketRate, 0);
+    return { byNutrient, marketGapCost };
+  }, [localPortfolio, localObligations]);
+
+  const localMarket = useMemo<LocalMarketRow[]>(() => {
+    const seeded = generateMarketListings(stateAbbr).slice(0, 10);
+    const watershedCycle = [...localWatersheds, 'Patapsco River', 'Chesapeake Bay Mainstem'];
+    const neededNutrients = new Set(localObligations.filter(o => o.needed > 0).map(o => o.nutrient));
+    const enriched = seeded.map((row, idx) => {
+      const distance: LocalMarketRow['distance'] =
+        idx % 3 === 0 ? 'Same Watershed' : idx % 3 === 1 ? 'Adjacent' : 'Regional';
+      const relevance = (distance === 'Same Watershed' ? 90 : distance === 'Adjacent' ? 75 : 58)
+        + (neededNutrients.has(row.nutrient) ? 8 : -12)
+        + (row.verified ? 4 : -4);
+      return {
+        ...row,
+        watershed: watershedCycle[idx % watershedCycle.length],
+        distance,
+        relevance: Math.max(40, Math.min(99, relevance)),
+      };
+    });
+    return enriched
+      .filter((row) => neededNutrients.has(row.nutrient))
+      .filter((row) => row.distance !== 'Regional' || row.verified)
+      .sort((a, b) => (b.relevance - a.relevance) || (a.pricePerCredit - b.pricePerCredit))
+      .slice(0, 7);
+  }, [stateAbbr, localWatersheds, localObligations]);
+
+  const buildVsBuy = useMemo(() => {
+    return localObligations
+      .filter((o) => o.needed > 0)
+      .map((o) => {
+        const buildRateMid = (o.buildRateLow + o.buildRateHigh) / 2;
+        const buildCost = o.needed * buildRateMid;
+        const buyCost = o.needed * o.marketRate;
+        const blendedCost = buildCost * 0.6 + buyCost * 0.4;
+        const buildFiveYear = buildCost + (Math.max(0.06 * buildCost, 12000) * 5);
+        const buyFiveYear = buyCost * 1.15;
+        const blendedSavings = Math.round(Math.max(0, Math.min(buildFiveYear, buyFiveYear) - blendedCost));
+        return {
+          nutrient: o.nutrient,
+          needed: o.needed,
+          buildRateMid,
+          buildCost,
+          buyCost,
+          blendedCost,
+          blendedSavings,
+        };
+      });
+  }, [localObligations]);
+
+  const trendDirection = useMemo(() => {
+    const head = localPriceHistory[0];
+    const tail = localPriceHistory[localPriceHistory.length - 1];
+    const avgDelta = ((tail.TN - head.TN) + (tail.TP - head.TP) + (tail.Sediment - head.Sediment)) / 3;
+    if (avgDelta > 1.5) return 'up';
+    if (avgDelta < -1.5) return 'down';
+    return 'stable';
+  }, [localPriceHistory]);
+
+  if (mode !== 'state') {
+    return (
+      <div className={`space-y-4 ${className}`}>
+        <div className="flex items-center gap-2 text-xs text-slate-400">
+          <ArrowRightLeft className="w-3.5 h-3.5" />
+          <span>{info?.name || 'Water Quality Trading Program'}</span>
+          <MockDataBadge />
+        </div>
+
+        <div className="rounded-xl border border-slate-200 bg-white p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="text-base font-bold text-slate-800">{jurisdictionLabel}</h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Permit <span className="font-mono font-semibold text-slate-700">{permitLabel}</span>
+                <span className="mx-1.5">|</span>
+                <span className="inline-flex rounded-full bg-indigo-100 text-indigo-700 px-2 py-0.5 text-[10px] font-semibold">{permitPhase}</span>
+                <span className="mx-1.5">|</span>
+                {localWatersheds.join(', ')}
+              </p>
+            </div>
+            <a
+              href={info?.url || '#'}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100"
+            >
+              <ExternalLink className="w-3 h-3" />
+              MDE Trading Program
+            </a>
+          </div>
+        </div>
+
+        <DashboardSection title="TMDL Obligation Summary" subtitle="Jurisdiction-specific reduction gap and planning costs" icon={<TrendingUp className="w-4 h-4" />} accent="blue" defaultExpanded>
+          <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-3 mt-3">
+            {[
+              ...localObligations.map((o) => {
+                const status = obligationStatus(o.required, o.achieved);
+                const style = status === 'green'
+                  ? 'bg-green-50 border-green-200 text-green-700'
+                  : status === 'yellow'
+                    ? 'bg-amber-50 border-amber-200 text-amber-700'
+                    : 'bg-red-50 border-red-200 text-red-700';
+                return {
+                  key: o.nutrient,
+                  label: `${o.nutrient} Required`,
+                  value: `${formatNumber(o.remaining)} left`,
+                  sub: `${formatNumber(o.achieved)} of ${formatNumber(o.required)} achieved`,
+                  style,
+                };
+              }),
+              {
+                key: 'owned',
+                label: 'Credits Owned',
+                value: formatNumber(localTotals.byNutrient.TN + localTotals.byNutrient.TP + localTotals.byNutrient.Sediment),
+                sub: `TN ${formatNumber(localTotals.byNutrient.TN)} | TP ${formatNumber(localTotals.byNutrient.TP)} | Sed ${formatNumber(localTotals.byNutrient.Sediment)}`,
+                style: 'bg-slate-50 border-slate-200 text-slate-700',
+              },
+              {
+                key: 'needed',
+                label: 'Credits Needed',
+                value: formatNumber(localObligations.reduce((s, o) => s + o.needed, 0)),
+                sub: 'Gap between owned and required',
+                style: 'bg-amber-50 border-amber-200 text-amber-700',
+              },
+              {
+                key: 'cost',
+                label: 'Est. Cost to Close Gap',
+                value: formatCurrency(localTotals.marketGapCost),
+                sub: 'At current market rates',
+                style: 'bg-indigo-50 border-indigo-200 text-indigo-700',
+              },
+            ].map((card) => (
+              <div key={card.key} className={`rounded-lg border p-3 ${card.style}`}>
+                <div className="text-lg font-bold">{card.value}</div>
+                <div className="text-[10px] font-semibold uppercase tracking-wide">{card.label}</div>
+                <div className="text-[10px] mt-1 opacity-80">{card.sub}</div>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-2 mt-3 text-[10px] text-slate-500">
+            <Info className="w-3 h-3" />
+            {localObligations.map((o) => (
+              <span key={o.nutrient} className="inline-flex items-center rounded-full border border-slate-200 bg-white px-2 py-0.5">
+                {o.nutrient} confidence: {confidenceTier(o.required, o.achieved)}
+              </span>
+            ))}
+          </div>
+        </DashboardSection>
+
+        <DashboardSection title="Your Credit Portfolio" subtitle="Credits currently held or generated by jurisdiction projects" icon={<ShieldCheck className="w-4 h-4" />} accent="green" defaultExpanded>
+          <div className="overflow-x-auto rounded-lg border border-slate-200 mt-3">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                  <th className="px-2.5 py-2">Source</th>
+                  <th className="px-2.5 py-2">Sector</th>
+                  <th className="px-2.5 py-2">Nutrient</th>
+                  <th className="px-2.5 py-2 text-right">Credits</th>
+                  <th className="px-2.5 py-2">Status</th>
+                  <th className="px-2.5 py-2">Expiration</th>
+                  <th className="px-2.5 py-2">Notes</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {localPortfolio.map((row, idx) => {
+                  const sectorMeta = SECTOR_META[row.sector];
+                  return (
+                    <tr key={`${row.source}-${idx}`} className="hover:bg-slate-50">
+                      <td className="px-2.5 py-2 font-medium text-slate-700">{row.source}</td>
+                      <td className="px-2.5 py-2">
+                        <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${sectorMeta.iconBg} ${sectorMeta.iconTx}`}>
+                          {sectorMeta.label}
+                        </span>
+                      </td>
+                      <td className="px-2.5 py-2">{row.nutrient}</td>
+                      <td className="px-2.5 py-2 text-right font-semibold">{row.credits.toLocaleString()}</td>
+                      <td className="px-2.5 py-2">{row.status}</td>
+                      <td className="px-2.5 py-2">{row.expiration}</td>
+                      <td className="px-2.5 py-2 text-slate-500">{row.notes}</td>
+                    </tr>
+                  );
+                })}
+                <tr className="bg-slate-50 font-semibold text-slate-700">
+                  <td className="px-2.5 py-2" colSpan={3}>Portfolio Totals</td>
+                  <td className="px-2.5 py-2 text-right">
+                    TN {localTotals.byNutrient.TN.toLocaleString()} | TP {localTotals.byNutrient.TP.toLocaleString()} | Sed {localTotals.byNutrient.Sediment.toLocaleString()}
+                  </td>
+                  <td className="px-2.5 py-2" colSpan={3}>Planning intelligence only</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </DashboardSection>
+
+        <DashboardSection title="Build vs. Buy Comparison" subtitle="Close nutrient gaps using project delivery, market purchases, or blended strategy" icon={<DollarSign className="w-4 h-4" />} accent="indigo" defaultExpanded>
+          <div className="space-y-3 mt-3">
+            {buildVsBuy.map((row) => (
+              <div key={row.nutrient} className="rounded-lg border border-slate-200 bg-white p-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-semibold text-slate-800">{row.nutrient} Gap: {row.needed.toLocaleString()} credits</h4>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Scenario Planner ready</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                  <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
+                    <div className="text-xs font-semibold text-blue-700 mb-1">Build Your Own BMPs</div>
+                    <div className="text-[11px] text-slate-600 space-y-1">
+                      <div>Estimated cost per credit: ${row.buildRateMid.toFixed(0)} (${localObligations.find(o => o.nutrient === row.nutrient)?.buildRateLow}-${localObligations.find(o => o.nutrient === row.nutrient)?.buildRateHigh})</div>
+                      <div>Timeline: 18-30 months (design, permitting, construction, certification)</div>
+                      <div>Total cost to close gap: <span className="font-semibold">{formatCurrency(row.buildCost)}</span></div>
+                      <div>Maintenance: {formatCurrency(Math.max(12000, row.buildCost * 0.06))}/yr</div>
+                      <div>Co-benefits: flood reduction, habitat gains, property value resilience, permit margin</div>
+                    </div>
+                  </div>
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+                    <div className="text-xs font-semibold text-emerald-700 mb-1">Buy Credits on Market</div>
+                    <div className="text-[11px] text-slate-600 space-y-1">
+                      <div>Current market rate per credit: ${row.buildCost > 0 ? (row.buyCost / row.needed).toFixed(0) : '0'}</div>
+                      <div>Available credits: {localMarket.filter(m => m.nutrient === row.nutrient).reduce((s, m) => s + m.credits, 0).toLocaleString()} in eligible watersheds</div>
+                      <div>Total cost to close gap: <span className="font-semibold">{formatCurrency(row.buyCost)}</span></div>
+                      <div>Timeline: immediate once purchased and certified</div>
+                      <div>Risks: availability, price volatility, credit expiration windows</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-3 rounded-lg border border-indigo-200 bg-indigo-50 p-3 text-[11px] text-slate-700">
+                  <span className="font-semibold text-indigo-700">Blended strategy recommendation:</span> Build 60% / Buy 40% at an estimated {formatCurrency(row.blendedCost)} now, with potential 5-year savings of {formatCurrency(row.blendedSavings)} versus build-only.
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-[10px] text-amber-900">
+            Export guardrail: Build vs. Buy values are planning-level intelligence and are excluded from PDF export. Use Controlled Export templates for grant or budget packets.
+          </div>
+        </DashboardSection>
+
+        <DashboardSection title="Available Market (Jurisdiction-Relevant)" subtitle="Filtered to needed nutrients and trading-eligible watershed proximity" icon={<CircleDollarSign className="w-4 h-4" />} accent="teal" defaultExpanded>
+          <div className="overflow-x-auto rounded-lg border border-slate-200 mt-3">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                  <th className="px-2.5 py-2">Seller</th>
+                  <th className="px-2.5 py-2">Sector</th>
+                  <th className="px-2.5 py-2">Nutrient</th>
+                  <th className="px-2.5 py-2 text-right">Credits</th>
+                  <th className="px-2.5 py-2 text-right">$/Credit</th>
+                  <th className="px-2.5 py-2 text-right">Total</th>
+                  <th className="px-2.5 py-2">BMP Type</th>
+                  <th className="px-2.5 py-2">Watershed</th>
+                  <th className="px-2.5 py-2">Distance</th>
+                  <th className="px-2.5 py-2 text-right">Relevance</th>
+                  <th className="px-2.5 py-2 text-center">Verified</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {localMarket.map((row) => (
+                  <tr key={row.id} className="hover:bg-slate-50">
+                    <td className="px-2.5 py-2 font-medium text-slate-700">{row.seller}</td>
+                    <td className="px-2.5 py-2">{SECTOR_META[row.sector].label}</td>
+                    <td className="px-2.5 py-2">{row.nutrient}</td>
+                    <td className="px-2.5 py-2 text-right">{row.credits.toLocaleString()}</td>
+                    <td className="px-2.5 py-2 text-right">${row.pricePerCredit}</td>
+                    <td className="px-2.5 py-2 text-right">{formatCurrency(row.credits * row.pricePerCredit)}</td>
+                    <td className="px-2.5 py-2 text-slate-500">{row.bmpType}</td>
+                    <td className="px-2.5 py-2 text-slate-500">{row.watershed}</td>
+                    <td className="px-2.5 py-2">{row.distance}</td>
+                    <td className="px-2.5 py-2 text-right font-semibold text-indigo-700">{row.relevance}</td>
+                    <td className="px-2.5 py-2 text-center">{row.verified ? 'Yes' : 'Pending'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </DashboardSection>
+
+        <DashboardSection title="Compliance Timeline" subtitle="Permit milestones, credit expirations, and projected gap exposure" icon={<TrendingUp className="w-4 h-4" />} accent="purple" defaultExpanded>
+          <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
+            <div className="relative h-10">
+              <div className="absolute left-0 right-0 top-5 h-1 bg-slate-200 rounded-full" />
+              <div className="absolute left-[8%] top-4.5 h-2 w-2 rounded-full bg-green-500" title="Permit year 1 start" />
+              <div className="absolute left-[32%] top-4.5 h-2 w-2 rounded-full bg-blue-500" title="TMDL Milestone A" />
+              <div className="absolute left-[56%] top-4.5 h-2 w-2 rounded-full bg-amber-500" title="Credit expiration cluster" />
+              <div className="absolute left-[76%] top-4.5 h-2 w-2 rounded-full bg-indigo-500" title="Planned BMP online" />
+              <div className="absolute left-[92%] top-4.5 h-2 w-2 rounded-full bg-red-500" title="Permit closeout milestone" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-2 text-[10px] text-slate-600 mt-1">
+              <div>2026 Q2 Permit Year 1</div>
+              <div>2027 Q2 Mid-Term TMDL Check</div>
+              <div>2028 Q1 Credit Expiration Risk</div>
+              <div>2028 Q4 BMP On-line Milestone</div>
+              <div>2030 Permit Closeout</div>
+            </div>
+            <div className="mt-3 rounded border border-red-200 bg-red-50 p-2 text-[10px] text-red-800">
+              Gap exposure window projected in 2028 if replacement TN credits are not secured before current purchased credits expire.
+            </div>
+          </div>
+        </DashboardSection>
+
+        <DashboardSection title="Cost History & Trends" subtitle="12-month market prices with jurisdiction purchase context" icon={<BarChart3 className="w-4 h-4" />} accent="cyan" defaultExpanded={false}>
+          <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-[10px] mb-3">
+              <div className="rounded border border-green-200 bg-green-50 p-2">TN trend: {trendDirection === 'up' ? 'Up' : trendDirection === 'down' ? 'Down' : 'Stable'}</div>
+              <div className="rounded border border-blue-200 bg-blue-50 p-2">TP latest: ${localPriceHistory[localPriceHistory.length - 1].TP}/credit</div>
+              <div className="rounded border border-amber-200 bg-amber-50 p-2">Sediment latest: ${localPriceHistory[localPriceHistory.length - 1].Sediment}/credit</div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-[10px]">
+                <thead>
+                  <tr className="text-slate-500">
+                    <th className="text-left py-1">Month</th>
+                    <th className="text-right py-1">TN</th>
+                    <th className="text-right py-1">TP</th>
+                    <th className="text-right py-1">Sediment</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {localPriceHistory.map((p) => (
+                    <tr key={p.month}>
+                      <td className="py-1 text-slate-600">{p.month}</td>
+                      <td className="py-1 text-right">{p.TN}</td>
+                      <td className="py-1 text-right">{p.TP}</td>
+                      <td className="py-1 text-right">{p.Sediment}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </DashboardSection>
+      </div>
+    );
+  }
 
   if (!hasProgram) {
     return (
@@ -489,7 +1010,7 @@ export function WaterQualityTradingPanel({
       </DashboardSection>
 
       {/* ── PIN Integration Note (MS4/Local mode) ─────────────────────── */}
-      {(mode === 'ms4' || mode === 'local') && (
+      {false && (
         <DashboardSection
           title="PIN Credit Certification Status"
           subtitle="Pathway to generating tradeable credits"

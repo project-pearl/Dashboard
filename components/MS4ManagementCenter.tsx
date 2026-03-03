@@ -5815,7 +5815,17 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
             </>);
 
             case 'wqt': return NUTRIENT_TRADING_STATES.has(stateAbbr) ? DS(
-              <WaterQualityTradingPanel stateAbbr={stateAbbr} mode="ms4" />
+              <WaterQualityTradingPanel
+                stateAbbr={stateAbbr}
+                mode="ms4"
+                jurisdictionName={jurisdictionMeta?.name}
+                permitNumber={jurisdictionMeta?.permit}
+                permitType={jurisdictionMeta?.phase}
+                watersheds={jurisdictionMeta?.waterbodies?.map((wbId) => {
+                  const match = scopedRegionData.find((r) => r.id === wbId);
+                  return match?.name || wbId;
+                })}
+              />
             ) : null;
 
             case 'disclaimer': return null;
