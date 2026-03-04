@@ -75,14 +75,6 @@ function FadeIn({ children, className = "", delay = 0 }: {
    ═══════════════════════════════════════════════════════════════════════ */
 
 const TreatmentSection: React.FC = () => {
-  /* Hero parallax-lite: translate image on scroll */
-  const [scrollY, setScrollY] = useState(0);
-  useEffect(() => {
-    const onScroll = () => setScrollY(window.scrollY);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   return (
     <section className="min-h-screen bg-white">
       <PublicHeader />
@@ -90,41 +82,31 @@ const TreatmentSection: React.FC = () => {
       {/* ════════════════════════════════════════════════════════════════
           HERO — Full-viewport, cinematic
           ════════════════════════════════════════════════════════════════ */}
-      <div className="relative h-[100vh] min-h-[600px] overflow-hidden flex items-end">
-        {/* Hero image */}
-        <Image
-          src="/Waterway Restoration.jpg"
-          alt="PEARL waterway restoration system deployed in a coastal environment"
-          width={2400}
-          height={1400}
-          priority
-          className="absolute inset-0 h-full w-full object-cover"
-          style={{ transform: `translateY(${scrollY * 0.25}px) scale(1.1)` }}
-        />
-        {/* Gradient overlay — dark at bottom for text */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
-
-        {/* Hero copy */}
-        <div className="relative z-10 max-w-7xl mx-auto px-8 pb-24 md:pb-32 w-full">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-emerald-300/90 mb-5">
+      <div className="max-w-7xl mx-auto px-8 pt-24 md:pt-28 pb-14">
+        <div className="rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/10">
+          <Image
+            src="/Waterway Restoration.jpg"
+            alt="PEARL waterway restoration system deployed in a coastal environment"
+            width={2400}
+            height={1400}
+            priority
+            className="w-full h-[55vh] md:h-[68vh] object-cover"
+          />
+        </div>
+        <div className="mt-10">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-teal-700 mb-5">
             Treatment Technology
           </p>
-          <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-white leading-[1.05] max-w-4xl">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-slate-900 leading-[1.05] max-w-4xl">
             Cleaning the water{" "}
-            <span className="bg-gradient-to-r from-emerald-300 to-teal-200 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">
               where it matters most.
             </span>
           </h1>
-          <p className="mt-6 text-lg md:text-xl text-white/70 max-w-2xl leading-relaxed">
+          <p className="mt-6 text-lg md:text-xl text-slate-600 max-w-2xl leading-relaxed">
             PEARL systems deploy directly in the waterway — treating pollution at the source
             with oyster biofiltration and multi-stage mechanical filtration.
           </p>
-
-          {/* Scroll indicator */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-60">
-            <span className="text-[10px] uppercase tracking-[0.3em] text-white/60">Scroll</span>
-            <div className="w-px h-8 bg-gradient-to-b from-white/50 to-transparent animate-pulse" />
-          </div>
         </div>
       </div>
 
