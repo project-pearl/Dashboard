@@ -8,7 +8,7 @@ import { ArrowRight, Menu, X } from 'lucide-react';
 
 const NAV_LINKS = [
   { href: '/', label: 'Home' },
-  { href: '/treatment', label: 'Our Technology' },
+  { href: '/story', label: 'Our Technology' },
   { href: '/story', label: 'Our Story' },
 ];
 
@@ -132,7 +132,7 @@ export default function DarkPageShell({ children }: DarkPageShellProps) {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/treatment" className="hover:text-white transition-colors">
+                  <Link href="/story" className="hover:text-white transition-colors">
                     Our Technology
                   </Link>
                 </li>

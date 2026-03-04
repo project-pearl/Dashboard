@@ -116,11 +116,11 @@ const STAKEHOLDER_TRACKS = [
     ],
   },
   {
-    role: 'Corporate & ESG',
+    role: 'Corporate & Sustainability',
     icon: LineChart,
     accent: 'text-emerald-400',
     accentBg: 'bg-emerald-400/10 border-emerald-400/20',
-    headline: 'Quantified water impact for ESG disclosure',
+    headline: 'Quantified water impact for sustainability disclosure',
     points: [
       'GRI 303 and SASB aligned water impact scoring',
       'Portfolio-wide environmental risk assessment',
@@ -146,7 +146,7 @@ const STAKEHOLDER_TRACKS = [
 const DIFFERENTIATORS = [
   {
     icon: Beaker,
-    title: 'PIN Treatment Platform',
+    title: 'ALIA Treatment Platform',
     desc: 'Modular, deployable water treatment powered by oyster biofiltration and engineered media. 88-95% TSS removal, 93.8% bacteria reduction \u2014 field validated.',
   },
   {
@@ -162,7 +162,7 @@ const DIFFERENTIATORS = [
   {
     icon: Microscope,
     title: 'AQUA-Lo Laboratory Intelligence',
-    desc: 'Full-spectrum LIMS for water quality labs \u2014 sample intake, chain of custody, QA/QC workflows, method management, and audit-ready reporting in one system.',
+    desc: 'Unified lab data platform for water quality \u2014 sample tracking, chain of custody, QA/QC workflows, method management, and audit-ready reporting in one system.',
   },
   {
     icon: BarChart3,
@@ -172,7 +172,7 @@ const DIFFERENTIATORS = [
   {
     icon: Shield,
     title: 'Closed-Loop Verification',
-    desc: 'PIN detects the problem, PIN treats it, AQUA-Lo validates the results, PIN documents the outcome. Detection to resolution in a single platform.',
+    desc: 'PIN detects the problem, ALIA treats it, AQUA-Lo validates the results, and PIN documents the outcome. Detection to resolution in a single platform.',
   },
 ];
 
@@ -266,7 +266,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
           </p>
           <div className="rounded-2xl border border-cyan-500/30 bg-gradient-to-br from-cyan-950/60 to-slate-800/60 p-8 backdrop-blur-sm">
             <p className="text-lg sm:text-xl text-white font-semibold leading-relaxed text-center">
-              In our first pilot, PIN achieved <span className="text-cyan-400">93.8% E. coli reduction</span> and <span className="text-cyan-400">90-95% TSS removal</span> &mdash; without even targeting bacteria. Imagine that technology deployed at every overflow point.
+              In our first pilot, ALIA achieved <span className="text-cyan-400">93.8% E. coli reduction</span> and <span className="text-cyan-400">90-95% TSS removal</span> &mdash; without even targeting bacteria. Imagine that technology deployed at every overflow point.
             </p>
           </div>
           <div className="mt-10 text-center">
@@ -383,7 +383,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-blue-600">A new category of water intelligence.</span>
               </h2>
               <p className="text-slate-600 leading-relaxed mb-8">
-                PIN fuses real-time monitoring across surface water, groundwater, drinking water, and wastewater into a single threat detection and compliance platform. Every PIN treatment unit is a modular data node with 8 monitoring points. Paired with AQUA-Lo LIMS, every sample is tracked from intake to audit-ready report &mdash; transforming environmental monitoring into verified, actionable intelligence.
+                PIN fuses real-time monitoring across surface water, groundwater, drinking water, and wastewater into a single threat detection and compliance platform. Every ALIA treatment unit is a modular data node with 8 monitoring points. Paired with AQUA-Lo, every sample is tracked from intake to audit-ready report &mdash; transforming environmental monitoring into verified, actionable intelligence.
               </p>
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center p-4 rounded-xl bg-slate-50">
@@ -401,7 +401,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
               </div>
             </div>
             <div className="relative">
-              <Image src="/pearl-barge.jpg" alt="PIN modular treatment barge" width={700} height={400} className="rounded-2xl shadow-2xl" />
+              <Image src="/pearl-barge.jpg" alt="ALIA modular treatment barge" width={700} height={400} className="rounded-2xl shadow-2xl" />
               <div className="absolute -bottom-4 -right-4 bg-white rounded-xl shadow-lg border border-slate-200 px-4 py-3 hidden sm:block">
                 <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Field Validated</div>
                 <div className="text-sm font-bold text-slate-900">Milton, FL &mdash; Jan 2026</div>
@@ -428,7 +428,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
             })}
           </div>
           <div className="mt-10 text-center">
-            <Link href="/treatment" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors">
+            <Link href="/story" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors">
               Deep dive into the treatment technology <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -489,13 +489,13 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
               { icon: Shield, name: 'State', desc: 'Statewide ATTAINS dashboards and TMDL tracking', accent: 'bg-indigo-50 border-indigo-200 text-indigo-700' },
               { icon: Building2, name: 'Municipal Utility', desc: 'Permit compliance, BMP performance, storm events', accent: 'bg-cyan-50 border-cyan-200 text-cyan-700' },
               { icon: Factory, name: 'Utility', desc: 'Infrastructure monitoring and discharge tracking', accent: 'bg-teal-50 border-teal-200 text-teal-700' },
-              { icon: LineChart, name: 'ESG', desc: 'GRI 303 & SASB aligned water impact scoring', accent: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
+              { icon: LineChart, name: 'Sustainability', desc: 'GRI 303 & SASB aligned water impact scoring', accent: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
               { icon: Microscope, name: 'University', desc: 'Research tools, data export, and manuscript support', accent: 'bg-violet-50 border-violet-200 text-violet-700' },
               { icon: Leaf, name: 'NGO', desc: 'Conservation impact tracking and grant matching', accent: 'bg-green-50 border-green-200 text-green-700' },
               { icon: GraduationCap, name: 'K-12', desc: 'NGSS-aligned lessons with real sensor data', accent: 'bg-amber-50 border-amber-200 text-amber-700' },
               { icon: HardHat, name: 'Infrastructure', desc: 'Asset monitoring and capacity planning', accent: 'bg-orange-50 border-orange-200 text-orange-700' },
-              { icon: FlaskConical, name: 'AQUA-Lo LIMS', desc: 'Lab management from intake to audit-ready report', accent: 'bg-pink-50 border-pink-200 text-pink-700' },
-              { icon: Beaker, name: 'PIN Treatment', desc: 'Treatment hardware monitoring and verification', accent: 'bg-rose-50 border-rose-200 text-rose-700' },
+              { icon: FlaskConical, name: 'AQUA-Lo', desc: 'Lab data platform from intake to audit-ready report', accent: 'bg-pink-50 border-pink-200 text-pink-700' },
+              { icon: Beaker, name: 'ALIA Treatment', desc: 'Treatment hardware monitoring and verification', accent: 'bg-rose-50 border-rose-200 text-rose-700' },
               { icon: Settings, name: 'Admin Center', desc: 'User management, permissions, and system config', accent: 'bg-slate-50 border-slate-300 text-slate-700' },
             ].map((center) => {
               const Icon = center.icon;
@@ -575,13 +575,13 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
                 <li><span className="hover:text-white cursor-pointer transition-colors" onClick={onSignIn}>State Dashboard</span></li>
                 <li><span className="hover:text-white cursor-pointer transition-colors" onClick={onSignIn}>Federal Overview</span></li>
                 <li><span className="hover:text-white cursor-pointer transition-colors" onClick={onSignIn}>Research Tools</span></li>
-                <li><span className="hover:text-white cursor-pointer transition-colors" onClick={onSignIn}>ESG Reporting</span></li>
+                <li><span className="hover:text-white cursor-pointer transition-colors" onClick={onSignIn}>Sustainability</span></li>
               </ul>
             </div>
             <div>
               <h4 className="text-xs font-bold tracking-[0.15em] uppercase text-slate-400 mb-4">About</h4>
               <ul className="space-y-3 text-sm text-slate-500">
-                <li><Link href="/treatment" className="hover:text-white transition-colors">Our Technology</Link></li>
+                <li><Link href="/story" className="hover:text-white transition-colors">Our Technology</Link></li>
                 <li><Link href="/story" className="hover:text-white transition-colors">Our Story</Link></li>
                 <li><Link href="/methodology" className="hover:text-white transition-colors">Methodology</Link></li>
                 <li><Link href="/explore" className="hover:text-white transition-colors">Explore Data</Link></li>
