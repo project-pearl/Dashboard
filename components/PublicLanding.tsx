@@ -428,7 +428,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
             })}
           </div>
           <div className="mt-10 text-center">
-            <Link href="/story" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors">
+            <Link href="/treatment" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors">
               Deep dive into the treatment technology <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -581,7 +581,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
             <div>
               <h4 className="text-xs font-bold tracking-[0.15em] uppercase text-slate-400 mb-4">About</h4>
               <ul className="space-y-3 text-sm text-slate-500">
-                <li><Link href="/story" className="hover:text-white transition-colors">Our Technology</Link></li>
+                <li><Link href="/treatment" className="hover:text-white transition-colors">Our Technology</Link></li>
                 <li><Link href="/story" className="hover:text-white transition-colors">Our Story</Link></li>
                 <li><Link href="/methodology" className="hover:text-white transition-colors">Methodology</Link></li>
                 <li><Link href="/explore" className="hover:text-white transition-colors">Explore Data</Link></li>

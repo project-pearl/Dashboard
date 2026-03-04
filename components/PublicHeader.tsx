@@ -9,7 +9,7 @@ import { ArrowRight, Menu, X } from 'lucide-react';
 const NAV_LINKS: { href: string; label: string; anchor?: string }[] = [
   { href: '/', label: 'Home' },
   { href: '/explore', label: 'Explore Data' },
-  { href: '/story', label: 'Our Technology' },
+  { href: '/treatment', label: 'Our Technology' },
   { href: '/story', label: 'Our Story' },
 ];
 
