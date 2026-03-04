@@ -31,6 +31,7 @@ import { pollAttains } from '@/lib/sentinel/adapters/attainsAdapter';
 import { pollFema }    from '@/lib/sentinel/adapters/femaAdapter';
 import { pollQpe }     from '@/lib/sentinel/adapters/qpeAdapter';
 import { pollSso }     from '@/lib/sentinel/adapters/ssoAdapter';
+import { pollNwpsFlood } from '@/lib/sentinel/adapters/nwpsFloodAdapter';
 import { pollNwss }    from '@/lib/sentinel/adapters/nwssAdapter';
 import { pollStateDischarge } from '@/lib/sentinel/adapters/stateDischargeAdapter';
 
@@ -101,6 +102,7 @@ interface AdapterEntry {
 
 const ADAPTERS: AdapterEntry[] = [
   { source: 'NWS_ALERTS',       poll: pollNws,     isAsync: false, warmFn: warmNws },
+  { source: 'NWPS_FLOOD',       poll: pollNwpsFlood, isAsync: false, warmFn: warmNws },
   { source: 'USGS_IV',          poll: pollUsgs,    isAsync: false, warmFn: warmNwisIv },
   { source: 'NPDES_DMR',        poll: pollNpdes,   isAsync: false, warmFn: warmIcis },
   { source: 'ECHO_ENFORCEMENT', poll: pollEcho,    isAsync: false, warmFn: warmEcho },
