@@ -110,6 +110,16 @@ interface Prospect {
   proposalReady: boolean;
 }
 
+interface SourceHealthEntry {
+  id: string;
+  name: string;
+  status: 'online' | 'degraded' | 'offline';
+  responseTimeMs: number;
+  httpStatus: number | null;
+  error: string | null;
+  checkedAt: string;
+}
+
 type Props = {
   onClose: () => void;
   onToggleDevMode?: () => void;
@@ -832,6 +842,9 @@ export function PEARLManagementCenter(props: Props) {
   const [copyStatus, setCopyStatus] = useState<string | null>(null);
   const [grantAudience, setGrantAudience] = useState<UserRole>('State');
   const [grantStateAbbr, setGrantStateAbbr] = useState('MD');
+  const [sourceHealth, setSourceHealth] = useState<SourceHealthEntry[]>([]);
+  const [sourceHealthLoading, setSourceHealthLoading] = useState<boolean>(true);
+  const [sourceHealthError, setSourceHealthError] = useState<string | null>(null);
 
   // Fetch real risk predictions from site-intelligence API using the first active deployment
   useEffect(() => {
@@ -845,6 +858,28 @@ export function PEARLManagementCenter(props: Props) {
       .catch(() => {})
       .finally(() => setRiskLoading(false));
   }, [deployments]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setSourceHealthLoading(true);
+    fetch('/api/source-health', { cache: 'no-store' })
+      .then((r) => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
+      .then((data) => {
+        if (cancelled) return;
+        const list = Array.isArray(data?.sources) ? data.sources : [];
+        setSourceHealth(list);
+        setSourceHealthError(null);
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        setSourceHealth([]);
+        setSourceHealthError(e instanceof Error ? e.message : 'Failed to load source health');
+      })
+      .finally(() => {
+        if (!cancelled) setSourceHealthLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   // ── Demo Mode toggle (persisted in localStorage) ──
   const [demoMode, setDemoMode] = useState<boolean>(() => {
@@ -936,6 +971,13 @@ export function PEARLManagementCenter(props: Props) {
   const displayPipelineProspects = demoMode ? prospects.filter(p => !['closed_won','closed_lost'].includes(p.stage)).length : 0;
   const displayNextDeploy = demoMode ? 'Apr 15' : 'TBD';
   const displayNextDeploySub = demoMode ? 'AA County MD' : 'Pending';
+  const totalSourceCount = sourceHealth.length;
+  const onlineSourceCount = sourceHealth.filter((s) => s.status === 'online').length;
+  const degradedSourceCount = sourceHealth.filter((s) => s.status === 'degraded').length;
+  const offlineSourceCount = sourceHealth.filter((s) => s.status === 'offline').length;
+  const unhealthySources = sourceHealth
+    .filter((s) => s.status !== 'online')
+    .sort((a, b) => (a.status === 'offline' ? -1 : 1) - (b.status === 'offline' ? -1 : 1));
   const outreachDatasetId = useMemo(() => {
     const t = new Date(outreachSeed);
     const y = t.getUTCFullYear();
@@ -1078,6 +1120,65 @@ Doug and the PIN team`;
         </HeroBanner>
 
         {/* ── DATA SOURCE HEALTH MONITOR ── */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between gap-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Activity size={16} className="text-slate-700" />
+                Data Source Health
+              </CardTitle>
+              <Badge variant="outline" className="text-xs">
+                {sourceHealthLoading ? 'Checking...' : `${onlineSourceCount}/${totalSourceCount || 34} Online`}
+              </Badge>
+            </div>
+            <CardDescription>
+              {sourceHealthError
+                ? `Health monitor unavailable (${sourceHealthError}).`
+                : `${offlineSourceCount} offline, ${degradedSourceCount} degraded, ${onlineSourceCount} online.`}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {sourceHealthLoading ? (
+              <div className="text-sm text-slate-500">Loading data source checks...</div>
+            ) : sourceHealthError ? (
+              <div className="text-sm text-red-600">Unable to load source health right now.</div>
+            ) : unhealthySources.length === 0 ? (
+              <div className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md px-3 py-2">
+                All monitored sources are online.
+              </div>
+            ) : (
+              <div className="max-h-56 overflow-y-auto border rounded-md">
+                <table className="w-full text-sm">
+                  <thead className="sticky top-0 bg-slate-50 text-slate-600">
+                    <tr className="text-left border-b">
+                      <th className="px-3 py-2 font-medium">Source</th>
+                      <th className="px-3 py-2 font-medium">Status</th>
+                      <th className="px-3 py-2 font-medium">Latency</th>
+                      <th className="px-3 py-2 font-medium">Checked</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {unhealthySources.map((s) => (
+                      <tr key={s.id} className="border-b last:border-b-0">
+                        <td className="px-3 py-2 text-slate-800">{s.name}</td>
+                        <td className="px-3 py-2">
+                          <Badge className={s.status === 'offline' ? 'bg-red-100 text-red-800 hover:bg-red-100' : 'bg-amber-100 text-amber-800 hover:bg-amber-100'}>
+                            {s.status}
+                          </Badge>
+                        </td>
+                        <td className="px-3 py-2 text-slate-600">
+                          {typeof s.responseTimeMs === 'number' ? `${Math.round(s.responseTimeMs)} ms` : 'n/a'}
+                        </td>
+                        <td className="px-3 py-2 text-slate-500">{new Date(s.checkedAt).toLocaleTimeString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* ── NATIONAL WATER HEALTH GAUGE ── */}
         <Card className="overflow-hidden relative">
           {/* Demo Mode watermark */}
