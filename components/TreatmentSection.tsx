@@ -91,19 +91,16 @@ const TreatmentSection: React.FC = () => {
           HERO — Full-viewport, cinematic
           ════════════════════════════════════════════════════════════════ */}
       <div className="relative h-[100vh] min-h-[600px] overflow-hidden flex items-end">
-        {/* Background image with parallax offset */}
-        <div
-          className="absolute inset-0 scale-110"
+        {/* Hero image */}
+        <Image
+          src="/Waterway Restoration.jpg"
+          alt="PEARL waterway restoration system deployed in a coastal environment"
+          width={2400}
+          height={1400}
+          priority
+          className="absolute inset-0 h-full w-full object-cover"
           style={{ transform: `translateY(${scrollY * 0.25}px) scale(1.1)` }}
-        >
-          <Image
-            src="/Waterway Restoration.jpg"
-            alt="PEARL waterway restoration system deployed in a coastal environment"
-            fill
-            className="object-cover"
-            priority
-          />
-        </div>
+        />
         {/* Gradient overlay — dark at bottom for text */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
 
