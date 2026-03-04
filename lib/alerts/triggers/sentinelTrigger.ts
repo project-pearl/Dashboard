@@ -10,6 +10,8 @@ import { BLOB_PATHS as SENTINEL_BLOB_PATHS } from '../../sentinel/config';
 import { saveCacheToBlob, loadCacheFromBlob } from '../../blobPersistence';
 import { getScoredHucs, ensureWarmed as warmScoring } from '../../sentinel/scoringEngine';
 import { getAllStatuses, ensureWarmed as warmHealth } from '../../sentinel/sentinelHealth';
+import { classifyEvent, gatherConfounders } from '../../sentinel/classificationEngine';
+import { getAllEvents, ensureWarmed as warmQueue } from '../../sentinel/eventQueue';
 
 /* ------------------------------------------------------------------ */
 /*  Snapshot Types                                                    */
@@ -26,8 +28,7 @@ interface SentinelSnapshot {
 /* ------------------------------------------------------------------ */
 
 export async function evaluateSentinelAlerts(): Promise<AlertEvent[]> {
-  await warmScoring();
-  await warmHealth();
+  await Promise.all([warmScoring(), warmHealth(), warmQueue()]);
 
   const scoredHucs = getScoredHucs();
   const sourceStates = getAllStatuses();
@@ -38,15 +39,38 @@ export async function evaluateSentinelAlerts(): Promise<AlertEvent[]> {
   const prevHucLevels = previousSnapshot?.hucLevels ?? {};
   const prevSourceStatuses = previousSnapshot?.sourceStatuses ?? {};
 
-  // --- HUC level changes ---
+  // Pre-fetch events once for classification
+  const allEvents = getAllEvents();
+
+  // --- HUC level changes (with classification gate) ---
   for (const huc of scoredHucs) {
     const prevLevel = prevHucLevels[huc.huc8];
 
-    if (huc.level === 'CRITICAL' && prevLevel !== 'CRITICAL') {
-      events.push(makeHucAlert(huc, 'critical', 'escalated to CRITICAL', now));
-    } else if (huc.level === 'WATCH' && prevLevel !== 'WATCH' && prevLevel !== 'CRITICAL') {
-      events.push(makeHucAlert(huc, 'warning', 'escalated to WATCH', now));
+    const isNewCritical = huc.level === 'CRITICAL' && prevLevel !== 'CRITICAL';
+    const isNewWatch = huc.level === 'WATCH' && prevLevel !== 'WATCH' && prevLevel !== 'CRITICAL';
+
+    if (!isNewCritical && !isNewWatch) continue;
+
+    // Run classification — suppress likely_benign (weather-correlated noise)
+    const confounders = gatherConfounders(huc.huc8, allEvents);
+    const classification = classifyEvent(huc, confounders);
+
+    if (classification.classification === 'likely_benign') {
+      console.warn(
+        `[sentinel-trigger] Suppressed ${huc.huc8} (${huc.level}) — classified likely_benign ` +
+        `(threat=${classification.threatScore}, confounders: ${confounders.filter(c => c.matched).map(c => c.rule).join(', ')})`,
+      );
+      continue;
     }
+
+    const severity = isNewCritical ? 'critical' as const : 'warning' as const;
+    const action = isNewCritical ? 'escalated to CRITICAL' : 'escalated to WATCH';
+    const alert = makeHucAlert(huc, severity, action, now);
+
+    // Attach classification to metadata for downstream enrichment
+    alert.metadata.classification = classification;
+
+    events.push(alert);
   }
 
   // --- Source health transitions ---

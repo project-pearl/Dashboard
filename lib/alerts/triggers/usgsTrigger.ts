@@ -12,6 +12,9 @@ import { BLOB_PATHS } from '../config';
 import { saveCacheToBlob, loadCacheFromBlob } from '../../blobPersistence';
 import { getAllAlerts, ensureWarmed } from '../../usgsAlertCache';
 import type { UsgsAlert } from '../../usgsAlertEngine';
+import { gatherConfounders } from '../../sentinel/classificationEngine';
+import { getAllEvents, ensureWarmed as warmQueue } from '../../sentinel/eventQueue';
+import { getExistingGrid } from '../../nwisIvCache';
 
 /* ------------------------------------------------------------------ */
 /*  Snapshot — tracks which USGS alerts we've already dispatched      */
@@ -41,8 +44,11 @@ function mapSeverity(usgsLevel: 'critical' | 'warning'): AlertSeverity {
 /*  Evaluate                                                          */
 /* ------------------------------------------------------------------ */
 
+/** Weather-sensitive parameter codes — suppress when confounders match */
+const WEATHER_SENSITIVE_PARAMS = new Set(['63680', '00095', '00065']); // turbidity, conductivity, gage height
+
 export async function evaluateUsgsAlerts(): Promise<AlertEvent[]> {
-  await ensureWarmed();
+  await Promise.all([ensureWarmed(), warmQueue()]);
 
   const allAlerts = getAllAlerts();
   if (allAlerts.length === 0) return [];
@@ -54,6 +60,13 @@ export async function evaluateUsgsAlerts(): Promise<AlertEvent[]> {
   const events: AlertEvent[] = [];
   const newDispatched: Record<string, string> = { ...prevDispatched };
 
+  // Build site→HUC lookup from nwisIvCache
+  const siteHucMap = buildSiteHucMap();
+  // Pre-fetch sentinel events once for confounder checks
+  const sentinelEvents = getAllEvents();
+  // Cache confounder results per HUC (avoid redundant checks)
+  const confounderCache = new Map<string, ReturnType<typeof gatherConfounders>>();
+
   for (const alert of allAlerts) {
     const dedupKey = `usgs-iv-${alert.siteNumber}-${alert.parameterCd}-${alert.severity}`;
 
@@ -61,6 +74,27 @@ export async function evaluateUsgsAlerts(): Promise<AlertEvent[]> {
     const lastDispatched = prevDispatched[dedupKey];
     if (lastDispatched && (now.getTime() - new Date(lastDispatched).getTime()) < COOLDOWN_MS) {
       continue;
+    }
+
+    // Weather exclusion — suppress weather-sensitive parameters during active confounders
+    if (WEATHER_SENSITIVE_PARAMS.has(alert.parameterCd)) {
+      const huc8 = siteHucMap.get(alert.siteNumber);
+      if (huc8) {
+        if (!confounderCache.has(huc8)) {
+          confounderCache.set(huc8, gatherConfounders(huc8, sentinelEvents));
+        }
+        const confounders = confounderCache.get(huc8)!;
+        const rainfallActive = confounders.some(c => c.rule === 'RAINFALL_CONFOUNDER' && c.matched);
+        const floodActive = confounders.some(c => c.rule === 'FLOOD_CONFOUNDER' && c.matched);
+
+        if (rainfallActive || floodActive) {
+          console.warn(
+            `[usgs-trigger] Suppressed ${alert.siteNumber} ${alert.parameter} (${alert.parameterCd}) — ` +
+            `weather confounder active (${rainfallActive ? 'rainfall' : 'flood'}) in HUC ${huc8}`,
+          );
+          continue;
+        }
+      }
     }
 
     const severity = mapSeverity(alert.severity);
@@ -112,4 +146,22 @@ export async function evaluateUsgsAlerts(): Promise<AlertEvent[]> {
   });
 
   return events;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                           */
+/* ------------------------------------------------------------------ */
+
+/** Build siteNumber → HUC-8 lookup from the nwisIvCache grid */
+function buildSiteHucMap(): Map<string, string> {
+  const map = new Map<string, string>();
+  const grid = getExistingGrid();
+  if (!grid) return map;
+
+  for (const cell of Object.values(grid)) {
+    for (const site of cell.sites) {
+      if (site.huc) map.set(site.siteNumber, site.huc);
+    }
+  }
+  return map;
 }
