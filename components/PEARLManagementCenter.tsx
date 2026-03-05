@@ -36,7 +36,7 @@ import BudgetPlannerPanel from '@/components/BudgetPlannerPanel';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type ViewLens = 'operations' | 'proposals' | 'scenarios' | 'predictions' | 'scenario-planner' | 'budget-planner' | 'investigation' | 'users' | 'alerts';
+type ViewLens = 'operations' | 'restoration' | 'proposals' | 'scenarios' | 'predictions' | 'scenario-planner' | 'budget-planner' | 'investigation' | 'users' | 'alerts';
 
 type DeploymentStatus = 'active' | 'maintenance' | 'offline' | 'staging' | 'decommissioned';
 type AlertSeverity = 'critical' | 'warning' | 'info' | 'ok';
@@ -1080,6 +1080,7 @@ Doug and the PIN team`;
               <div className="flex rounded-lg border border-slate-200 overflow-hidden">
                 {([
                   { lens: 'operations' as ViewLens, label: '⚙ Operations', badge: 0 },
+                  { lens: 'restoration' as ViewLens, label: '🌿 Restoration', badge: 0 },
                   { lens: 'proposals' as ViewLens, label: '📋 Proposals', badge: 0 },
                   { lens: 'scenarios' as ViewLens, label: '🔬 What-If', badge: 0 },
                   { lens: 'predictions' as ViewLens, label: '🎯 Predictions', badge: 0 },
@@ -1637,27 +1638,33 @@ Doug and the PIN team`;
               })}
             </div>
 
-            {/* ── RESTORATION PLANNER ── */}
-            {(() => {
-              const activeDep = expandedDeployment ? deployments.find(d => d.id === expandedDeployment) : null;
-              const lr = activeDep?.lastReading;
-              const depWaterData: Record<string, { value: number; unit?: string }> | null = lr ? {
-                ...(lr.do_mgl != null ? { DO: { value: lr.do_mgl, unit: 'mg/L' } } : {}),
-                ...(lr.tss_mgl != null ? { TSS: { value: lr.tss_mgl, unit: 'mg/L' } } : {}),
-                ...(lr.turbidity_ntu != null ? { Turbidity: { value: lr.turbidity_ntu, unit: 'NTU' } } : {}),
-                ...(lr.ph != null ? { pH: { value: lr.ph, unit: '' } } : {}),
-              } : null;
-              return (
-                <RestorationPlanner
-                  regionId={activeDep?.id || null}
-                  regionName={activeDep?.name}
-                  stateAbbr={activeDep?.state || 'US'}
-                  waterData={depWaterData}
-                  defaultAllStates
-                />
-              );
-            })()}
           </>
+        )}
+
+        {/* ════════════════════════════════════════════════════════════ */}
+        {/* ── RESTORATION LENS ─────────────────────────────────────── */}
+        {/* ════════════════════════════════════════════════════════════ */}
+
+        {viewLens === 'restoration' && (
+          (() => {
+            const activeDep = expandedDeployment ? deployments.find(d => d.id === expandedDeployment) : null;
+            const lr = activeDep?.lastReading;
+            const depWaterData: Record<string, { value: number; unit?: string }> | null = lr ? {
+              ...(lr.do_mgl != null ? { DO: { value: lr.do_mgl, unit: 'mg/L' } } : {}),
+              ...(lr.tss_mgl != null ? { TSS: { value: lr.tss_mgl, unit: 'mg/L' } } : {}),
+              ...(lr.turbidity_ntu != null ? { Turbidity: { value: lr.turbidity_ntu, unit: 'NTU' } } : {}),
+              ...(lr.ph != null ? { pH: { value: lr.ph, unit: '' } } : {}),
+            } : null;
+            return (
+              <RestorationPlanner
+                regionId={activeDep?.id || null}
+                regionName={activeDep?.name}
+                stateAbbr={activeDep?.state || 'US'}
+                waterData={depWaterData}
+                defaultAllStates
+              />
+            );
+          })()
         )}
 
         {/* ════════════════════════════════════════════════════════════ */}
