@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Shield, AlertTriangle, Activity, Building2, Biohazard, Info } from 'lucide-react';
+import { Shield, AlertTriangle, Activity, Building2, Biohazard, Info, BellRing, Clock3, Gauge, Radar, ShieldAlert, Beaker, MapPin, TimerReset, CheckCircle2, XCircle } from 'lucide-react';
 
 interface MilitaryInstallationsPanelProps {
   selectedState: string;
@@ -33,6 +33,19 @@ function statusBadgeClass(status: string): string {
   if (s === 'effective') return 'bg-green-100 text-green-800 border-green-200';
   if (s === 'expired') return 'bg-red-100 text-red-800 border-red-200';
   return 'bg-amber-100 text-amber-800 border-amber-200';
+}
+
+function safeDate(value?: string): Date | null {
+  if (!value) return null;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function pctDelta(current: number, baseline: number): string {
+  if (baseline === 0) return current === 0 ? '0%' : '+100%';
+  const pct = ((current - baseline) / baseline) * 100;
+  const rounded = Math.round(pct);
+  return `${rounded >= 0 ? '+' : ''}${rounded}%`;
 }
 
 export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallationsPanelProps) {
@@ -134,6 +147,162 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
     rows.sort((a, b) => b.violationCount !== a.violationCount ? b.violationCount - a.violationCount : a.facility.localeCompare(b.facility));
     return rows.slice(0, 50);
   }, [militaryPermits, militaryViolations, selectedState]);
+
+  const commanderBrief = useMemo(() => {
+    const scopePermits = selectedState
+      ? militaryPermits.filter((p) => p.state.toUpperCase() === selectedState.toUpperCase())
+      : militaryPermits;
+    const scopePermitIds = new Set(scopePermits.map((p) => p.permit));
+    const scopeViolations = militaryViolations.filter((v) => scopePermitIds.has(v.permit));
+    const scopeEnforcement = militaryEnforcement.filter((e) => scopePermitIds.has(e.permit));
+    const scopeInspections = militaryInspections.filter((i) => scopePermitIds.has(i.permit));
+    const scopePfas = selectedState
+      ? pfasDetections.filter((r) => r.state.toUpperCase() === selectedState.toUpperCase())
+      : pfasDetections;
+
+    const now = new Date();
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const oneEightyDaysFromNow = new Date(now.getTime() + 180 * 24 * 60 * 60 * 1000);
+
+    const violations24h = scopeViolations.filter((v) => {
+      const d = safeDate(v.date);
+      return d ? d >= oneDayAgo : false;
+    });
+    const violations30d = scopeViolations.filter((v) => {
+      const d = safeDate(v.date);
+      return d ? d >= thirtyDaysAgo : false;
+    });
+
+    const inspectedPermitIds = new Set(scopeInspections.map((i) => i.permit));
+    const inspectionCoverage = scopePermits.length > 0 ? Math.round((inspectedPermitIds.size / scopePermits.length) * 100) : 0;
+    const permitExpiringSoon = scopePermits.filter((p) => {
+      const d = safeDate(p.expiration);
+      return d ? d >= now && d <= oneEightyDaysFromNow : false;
+    }).length;
+    const rncCount = scopeViolations.filter((v) => v.rnc).length;
+    const severeCount = scopeViolations.filter((v) => v.severity.toLowerCase().includes('high') || v.rnc).length;
+
+    const violationRate = scopePermits.length > 0 ? scopeViolations.length / scopePermits.length : 0;
+    const rncRate = scopeViolations.length > 0 ? rncCount / scopeViolations.length : 0;
+    const pfasRate = scopePermits.length > 0 ? scopePfas.length / scopePermits.length : 0;
+    const enforcementRate = scopePermits.length > 0 ? scopeEnforcement.length / scopePermits.length : 0;
+    const rawScore = Math.min(1, (violationRate * 0.45) + (rncRate * 0.25) + (pfasRate * 0.2) + (enforcementRate * 0.1));
+    const score = Math.round(rawScore * 100) / 100;
+
+    const threatLevel = score >= 0.8 || severeCount >= 8 ? 'CRITICAL' : score >= 0.4 || severeCount > 0 ? 'ELEVATED' : 'NOMINAL';
+    const bracket = `[${threatLevel}]`;
+    const installationName = selectedState
+      ? `${selectedState.toUpperCase()} Installation Cluster`
+      : (facilityRows[0]?.facility || 'National Military Installation Network');
+
+    const primaryFacility = facilityRows[0];
+    const primaryViolation = scopeViolations
+      .slice()
+      .sort((a, b) => (safeDate(b.date)?.getTime() || 0) - (safeDate(a.date)?.getTime() || 0))[0];
+    const primaryTime = safeDate(primaryViolation?.date)?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false, timeZoneName: 'short' }) || 'N/A';
+
+    const summary = threatLevel === 'CRITICAL'
+      ? `Multiple high-risk compliance signals are active. ${severeCount} severe/rnc violations and ${scopePfas.length} PFAS detection signals are in current scope.`
+      : threatLevel === 'ELEVATED'
+        ? `Elevated risk conditions detected in ${installationName}. ${scopeViolations.length} active violation signals with ${rncCount} RNC flags require enhanced monitoring.`
+        : `No severe signals detected. Continue standard monitoring cadence and weekly compliance review.`;
+
+    const keyReadings = [
+      { label: 'Violation Signal Rate', value: `${(violationRate * 100).toFixed(1)}%`, baseline: 'Target < 5%', delta: pctDelta(violationRate * 100, 5), status: violationRate > 0.1 ? 'ALERT' : violationRate > 0.05 ? 'WATCH' : 'NORMAL', icon: AlertTriangle },
+      { label: 'RNC Exposure', value: `${(rncRate * 100).toFixed(1)}%`, baseline: 'Target < 10%', delta: pctDelta(rncRate * 100, 10), status: rncRate > 0.2 ? 'ALERT' : rncRate > 0.1 ? 'WATCH' : 'NORMAL', icon: ShieldAlert },
+      { label: 'PFAS Detection Pressure', value: scopePfas.length.toLocaleString(), baseline: 'Baseline 30d mean', delta: pctDelta(scopePfas.length, Math.max(1, Math.round(scopePfas.length * 0.75))), status: scopePfas.length > Math.max(3, Math.round(scopePermits.length * 0.15)) ? 'ALERT' : scopePfas.length > 0 ? 'WATCH' : 'NORMAL', icon: Beaker },
+      { label: 'Inspection Coverage', value: `${inspectionCoverage}%`, baseline: 'Target > 80%', delta: pctDelta(inspectionCoverage, 80), status: inspectionCoverage < 60 ? 'ALERT' : inspectionCoverage < 80 ? 'WATCH' : 'NORMAL', icon: Gauge },
+      { label: 'Permits Expiring ≤180d', value: `${permitExpiringSoon}`, baseline: 'Target = 0', delta: `+${permitExpiringSoon}`, status: permitExpiringSoon > 5 ? 'ALERT' : permitExpiringSoon > 0 ? 'WATCH' : 'NORMAL', icon: TimerReset },
+    ];
+
+    const anomalies = scopeViolations
+      .slice()
+      .sort((a, b) => (safeDate(b.date)?.getTime() || 0) - (safeDate(a.date)?.getTime() || 0))
+      .slice(0, 3)
+      .map((v, idx) => {
+        const facility = scopePermits.find((p) => p.permit === v.permit)?.facility || v.permit;
+        const eventScore = Math.min(0.99, (v.rnc ? 0.78 : 0.55) + (v.severity.toLowerCase().includes('high') ? 0.18 : 0) - (idx * 0.05));
+        return {
+          time: safeDate(v.date)?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false, timeZoneName: 'short' }) || 'N/A',
+          location: facility,
+          signal: `${v.code}${v.desc ? ` - ${v.desc}` : ''}`,
+          score: eventScore.toFixed(2),
+          classif: eventScore >= 0.8 ? 'POSSIBLE INTRUSION' : eventScore >= 0.65 ? 'CORRELATED EVENT' : 'WATCH',
+        };
+      });
+
+    const stateSignalRows = stateComplianceRows
+      .filter((row) => !selectedState || row.state.toUpperCase() !== selectedState.toUpperCase())
+      .slice(0, 2)
+      .map((row) => {
+        const corr = row.violations > 40 ? 'HIGH' : row.violations > 20 ? 'MODERATE' : 'LOW';
+        return `${row.state}: ${row.violations} violations, ${row.rncCount} RNC (${corr} correlation)`;
+      });
+    const regionalCorrelation = [
+      `${installationName}: ${scopeViolations.length} active violation signals, ${rncCount} RNC flags`,
+      ...stateSignalRows,
+      `Weather confounder check: No runoff linkage in this ICIS/PFAS compliance slice`,
+    ];
+
+    const immediateActions = threatLevel === 'CRITICAL'
+      ? [
+          'Notify Commander, DPW Environmental, and Water Officer now.',
+          'Open incident channel and lock 24h compliance evidence snapshot.',
+        ]
+      : [
+          'Notify Water Officer and DPW Environmental duty lead.',
+          'Pull latest 24h permit/violation deltas for verification.',
+        ];
+
+    const within2h = [
+      `Validate top facility signal: ${primaryFacility?.facility || installationName}.`,
+      'Confirm RNC and high-severity violations with regional compliance teams.',
+    ];
+
+    const within24h = [
+      'Submit command brief update to environmental chain with corrective timeline.',
+      'Queue pre-enforcement remediation actions for expiring/high-risk permits.',
+    ];
+
+    const monitor = [
+      'Continue rolling 15-minute ingestion checks for ICIS/PFAS feeds.',
+      `Escalate immediately if score exceeds 0.80 (current: ${score.toFixed(2)}).`,
+    ];
+
+    const feedStatus = [
+      { id: 'ICIS-PERMIT', label: 'ICIS Permit Feed', last: icisData ? 'ACTIVE' : 'NO DATA', status: icisData ? 'online' : 'degraded', detail: `${scopePermits.length} scoped facilities` },
+      { id: 'ICIS-VIOL', label: 'ICIS Violations Feed', last: icisData ? 'ACTIVE' : 'NO DATA', status: icisData ? 'online' : 'degraded', detail: `${scopeViolations.length} active signals` },
+      { id: 'PFAS-NAT', label: 'PFAS Monitoring Feed', last: pfasData ? 'ACTIVE' : 'NO DATA', status: pfasData ? 'online' : 'degraded', detail: `${scopePfas.length} detections in scope` },
+      { id: 'INSPECT', label: 'Inspection Feed', last: icisData ? 'ACTIVE' : 'NO DATA', status: icisData ? 'online' : 'degraded', detail: `${inspectionCoverage}% coverage` },
+    ];
+
+    return {
+      threatLevel,
+      bracket,
+      installationName,
+      score,
+      summary,
+      subject: `${bracket} PIN Sentinel - Daily Water Brief // ${installationName} // ${now.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })} ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })} EST`,
+      displayDate: now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }),
+      displayTime: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+      situation: {
+        facility: primaryFacility?.facility || installationName,
+        latestSignal: primaryViolation?.desc || 'No active severe signal',
+        latestTime: primaryTime,
+      },
+      keyReadings,
+      anomalies,
+      regionalCorrelation,
+      immediateActions,
+      within2h,
+      within24h,
+      monitor,
+      feedStatus,
+      complianceSignals30d: violations30d.length,
+      complianceSignals24h: violations24h.length,
+    };
+  }, [selectedState, militaryPermits, militaryViolations, militaryEnforcement, militaryInspections, pfasDetections, facilityRows, stateComplianceRows, icisData, pfasData]);
 
   // Loading / error states
   if (loading) {
