@@ -68,6 +68,7 @@ export interface AlertLog {
   totalSent: number;
   totalSuppressed: number;
   totalErrors: number;
+  totalLogged: number;
 }
 
 export interface DispatchResult {
@@ -75,4 +76,5 @@ export interface DispatchResult {
   suppressed: number;
   errors: number;
   rateLimited: number;
+  logged: number;
 }

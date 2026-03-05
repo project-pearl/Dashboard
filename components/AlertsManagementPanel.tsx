@@ -41,7 +41,7 @@ export function AlertsManagementPanel() {
 
   // ── History state ──
   const [events, setEvents] = useState<AlertEvent[]>([]);
-  const [historyStats, setHistoryStats] = useState({ totalSent: 0, totalSuppressed: 0, totalErrors: 0, lastDispatchAt: null as string | null });
+  const [historyStats, setHistoryStats] = useState({ totalSent: 0, totalSuppressed: 0, totalErrors: 0, totalLogged: 0, lastDispatchAt: null as string | null });
   const [severityFilter, setSeverityFilter] = useState<AlertSeverity | 'all'>('all');
 
   // ── Recipients state ──
@@ -73,7 +73,7 @@ export function AlertsManagementPanel() {
       if (res.ok) {
         const data = await res.json();
         setEvents(data.events || []);
-        setHistoryStats({ totalSent: data.totalSent, totalSuppressed: data.totalSuppressed, totalErrors: data.totalErrors, lastDispatchAt: data.lastDispatchAt });
+        setHistoryStats({ totalSent: data.totalSent, totalSuppressed: data.totalSuppressed, totalErrors: data.totalErrors, totalLogged: data.totalLogged || 0, lastDispatchAt: data.lastDispatchAt });
       }
     } catch { /* ignore */ }
     setLoading(false);
@@ -328,7 +328,10 @@ export function AlertsManagementPanel() {
       {tab === 'history' && (
         <div className="space-y-3">
           {/* Stats bar */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+            <div className="rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs text-cyan-800">
+              <span className="font-semibold">{historyStats.totalLogged}</span> logged
+            </div>
             <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
               <span className="font-semibold">{historyStats.totalSent}</span> sent
             </div>
@@ -390,6 +393,8 @@ export function AlertsManagementPanel() {
                         <Badge variant="secondary" className="text-[9px]">{evt.type}</Badge>
                         {evt.sent ? (
                           <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 text-[9px]">Sent</Badge>
+                        ) : evt.error === 'log_only' ? (
+                          <Badge variant="secondary" className="bg-cyan-100 text-cyan-700 text-[9px]">Logged</Badge>
                         ) : evt.error ? (
                           <Badge variant="secondary" className="bg-red-100 text-red-700 text-[9px]">Error</Badge>
                         ) : null}

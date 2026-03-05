@@ -21,7 +21,7 @@ let _logDiskLoaded = false;
 let _logBlobChecked = false;
 
 function defaultLog(): AlertLog {
-  return { events: [], lastDispatchAt: null, totalSent: 0, totalSuppressed: 0, totalErrors: 0 };
+  return { events: [], lastDispatchAt: null, totalSent: 0, totalSuppressed: 0, totalErrors: 0, totalLogged: 0 };
 }
 
 function ensureLogDiskLoaded(): void {
@@ -88,7 +88,7 @@ export async function dispatchAlerts(candidateEvents: AlertEvent[]): Promise<Dis
   const suppressions = await loadSuppressions();
   const recipients = await loadRecipients();
 
-  const result: DispatchResult = { sent: 0, suppressed: 0, errors: 0, rateLimited: 0 };
+  const result: DispatchResult = { sent: 0, suppressed: 0, errors: 0, rateLimited: 0, logged: 0 };
   let sentThisHour = countSentThisHour(log);
 
   for (const candidate of candidateEvents) {
@@ -136,20 +136,29 @@ export async function dispatchAlerts(candidateEvents: AlertEvent[]): Promise<Dis
 
       const sendResult = await sendAlertEmail(event, enrichment);
 
-      event.sent = sendResult.success;
-      event.sentAt = sendResult.success ? new Date().toISOString() : null;
-      event.error = sendResult.error || null;
-
-      log.events.push(event);
-
-      if (sendResult.success) {
+      if (sendResult.logOnly) {
+        // LOG_ONLY mode: mark as "logged" — not sent, not an error
+        event.sent = false;
+        event.sentAt = new Date().toISOString();
+        event.error = 'log_only';
+        result.logged++;
+        log.totalLogged = (log.totalLogged || 0) + 1;
+      } else if (sendResult.success) {
+        event.sent = true;
+        event.sentAt = new Date().toISOString();
+        event.error = null;
         result.sent++;
         log.totalSent++;
         sentThisHour++;
       } else {
+        event.sent = false;
+        event.sentAt = null;
+        event.error = sendResult.error || null;
         result.errors++;
         log.totalErrors++;
       }
+
+      log.events.push(event);
     }
   }
 

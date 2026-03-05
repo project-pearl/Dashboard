@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
     } catch (parseErr) {
       console.warn(`[AI-Insights] JSON parse failed for ${requestState}:${requestRole}. Raw text (first 200): ${rawText.slice(0, 200)}`);
       return NextResponse.json(
-        { error: `LLM returned unparseable response from ${provider}`, stage: 'json-parse', provider, state: requestState, role: requestRole, cacheStatus, insights: [] },
+        { error: 'LLM returned unparseable response', stage: 'json-parse', provider: 'openai', state: requestState, role: requestRole, cacheStatus, insights: [] },
         { status: 502 }
       );
     }

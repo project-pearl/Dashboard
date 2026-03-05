@@ -26,5 +26,6 @@ export async function GET(request: NextRequest) {
     totalSent: log.totalSent,
     totalSuppressed: log.totalSuppressed,
     totalErrors: log.totalErrors,
+    totalLogged: log.totalLogged || 0,
   });
 }

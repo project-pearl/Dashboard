@@ -20,7 +20,7 @@ const SEVERITY_COLORS: Record<string, string> = {
 export async function sendAlertEmail(
   event: AlertEvent,
   enrichment?: EnrichedAlert,
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; logOnly?: boolean }> {
   if (!RESEND_API_KEY) {
     console.warn(`[Alerts] No RESEND_API_KEY — email not sent: "${event.title}" to ${event.recipientEmail}`);
     return { success: false, error: 'RESEND_API_KEY is not configured — add it to your environment variables' };
@@ -28,7 +28,7 @@ export async function sendAlertEmail(
 
   if (ALERT_FLAGS.LOG_ONLY) {
     console.warn(`[Alerts] LOG_ONLY — would send "${event.title}" to ${event.recipientEmail}`);
-    return { success: false, error: 'Alerts are in LOG_ONLY mode — set PIN_ALERTS_LOG_ONLY=false to send emails' };
+    return { success: true, logOnly: true };
   }
 
   try {
