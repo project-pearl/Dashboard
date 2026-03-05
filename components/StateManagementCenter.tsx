@@ -30,7 +30,9 @@ import { extractHuc8 } from '@/lib/huc8Utils';
 import type { HucIndices } from '@/lib/indices/types';
 import RestorationPlanner from '@/components/RestorationPlanner';
 import { useFloodForecast } from '@/hooks/useFloodForecast';
+import { useFloodRiskOverview } from '@/hooks/useFloodRiskOverview';
 import { FloodForecastCard, FloodStatusSummary } from './FloodForecastCard';
+import { FloodRiskOverviewCard, FloodRiskSummary } from './FloodRiskOverviewCard';
 import { WaterbodyDetailCard } from '@/components/WaterbodyDetailCard';
 import { scoreToGrade, alertLevelAvgScore, ALERT_LEVEL_SCORES, ecoScoreStyle, ejScoreStyle } from '@/lib/scoringUtils';
 import { getEcoScore, getEcoData, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
@@ -203,13 +205,13 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Monitoring',
     description: 'State monitoring network, data management, and optimization',
     defaultOverlay: 'coverage',
-    sections: new Set(['groundwater', 'mon-network', 'mon-data-mgmt', 'mon-optimization', 'mon-continuous', 'mon-latency', 'mon-report-card', 'mon-source-health', 'flood-status', 'disclaimer']),
+    sections: new Set(['groundwater', 'mon-network', 'mon-data-mgmt', 'mon-optimization', 'mon-continuous', 'mon-latency', 'mon-report-card', 'mon-source-health', 'flood-status', 'flood-risk-summary', 'disclaimer']),
   },
   disaster: {
     label: 'Disaster & Emergency Response',
     description: 'Active incidents, spill reporting, and preparedness — redirects to merged planner view',
     defaultOverlay: 'risk',
-    sections: new Set(['alertfeed', 'disaster-active', 'disaster-response', 'disaster-spill', 'disaster-prep', 'disaster-cascade', 'flood-forecast', 'resolution-planner', 'disclaimer']),
+    sections: new Set(['alertfeed', 'disaster-active', 'disaster-response', 'disaster-spill', 'disaster-prep', 'disaster-cascade', 'flood-forecast', 'flood-risk-overview', 'resolution-planner', 'disclaimer']),
   },
   tmdl: {
     label: 'TMDL & Restoration',
@@ -557,6 +559,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
   const { waterData: rawWaterData, isLoading: waterLoading, hasRealData } = useWaterData(activeDetailId);
   const waterData = useTierFilter(rawWaterData, 'State');
   const floodForecast = useFloodForecast();
+  const floodRisk = useFloodRiskOverview();
 
   // ── Mock data bridge: supplies removalEfficiencies, stormEvents, displayData to child components ──
   // getRegionMockData only has data for pre-configured demo regions — wrap defensively
@@ -4176,6 +4179,16 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               />
             );
 
+            case 'flood-risk-summary': return DS(
+              <FloodRiskSummary
+                basins={floodRisk.basins}
+                national={floodRisk.national}
+                updatedAt={floodRisk.updatedAt}
+                isLoading={floodRisk.isLoading}
+                onViewDetails={() => setViewLens('disaster' as ViewLens)}
+              />
+            );
+
             // ── Disaster sections ──────────────────────────────────────────
             {/* TODO: Future click-throughs for Active Incidents:
                 - Each incident row → Response Planner pre-loaded with that incident context
@@ -4383,6 +4396,17 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                 isLoading={floodForecast.isLoading}
                 error={floodForecast.error}
                 onRefresh={floodForecast.refetch}
+              />
+            );
+
+            case 'flood-risk-overview': return DS(
+              <FloodRiskOverviewCard
+                basins={floodRisk.basins}
+                national={floodRisk.national}
+                updatedAt={floodRisk.updatedAt}
+                isLoading={floodRisk.isLoading}
+                error={floodRisk.error}
+                onRefresh={floodRisk.refetch}
               />
             );
 

@@ -65,11 +65,12 @@ export function shouldDeduplicate(
       continue;
     }
 
-    // Rule 4: ATTAINS — 24h cooldown per assessment unit
+    // Rule 4: ATTAINS — 120h cooldown (assessment data changes slowly)
+    //         Matches any ATTAINS→ATTAINS pair regardless of geography
+    //         since adapter now emits a single aggregate event per rebuild
     if (
       newEvent.source === 'ATTAINS' &&
-      existing.source === 'ATTAINS' &&
-      sameGeography(newEvent, existing)
+      existing.source === 'ATTAINS'
     ) {
       const windowMs = DEDUP_WINDOWS.attainsCooldown_hours * 60 * 60 * 1000;
       if (Math.abs(newTs - existTs) < windowMs) {

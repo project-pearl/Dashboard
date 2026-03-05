@@ -9,7 +9,8 @@
 /* ------------------------------------------------------------------ */
 
 import type { AdapterResult, ChangeEvent, SeverityHint, SentinelSourceState } from '../types';
-import { getNwsAlertsAll, type NwsAlert } from '../../nwsAlertCache';
+import { getNwsAlertsByState, type NwsAlert } from '../../nwsAlertCache';
+import { US_STATES } from '../stateValidation';
 
 const SOURCE = 'NWPS_FLOOD' as const;
 
@@ -54,12 +55,14 @@ function mapFloodSeverity(alert: NwsAlert): SeverityHint {
   return 'LOW';
 }
 
-/** Extract state from senderName or areaDesc */
+/** Extract state from senderName or areaDesc, validated against known codes */
 function extractState(alert: NwsAlert): string | undefined {
-  const m = alert.senderName?.match(/\b([A-Z]{2})\b/);
-  if (m) return m[1];
-  const m2 = alert.areaDesc?.match(/\b([A-Z]{2})\b/);
-  if (m2) return m2[1];
+  for (const m of alert.senderName?.matchAll(/\b([A-Z]{2})\b/g) ?? []) {
+    if (US_STATES.has(m[1])) return m[1];
+  }
+  for (const m of alert.areaDesc?.matchAll(/\b([A-Z]{2})\b/g) ?? []) {
+    if (US_STATES.has(m[1])) return m[1];
+  }
   return undefined;
 }
 
@@ -68,40 +71,44 @@ function extractState(alert: NwsAlert): string | undefined {
 /* ------------------------------------------------------------------ */
 
 export function pollNwpsFlood(prevState: SentinelSourceState): AdapterResult {
-  const allAlerts = getNwsAlertsAll();
-  const floodAlerts = allAlerts.filter(a => isFloodEvent(a.event));
-
-  const currentIds = new Set(floodAlerts.map(a => a.id));
+  const alertsByState = getNwsAlertsByState();
+  const currentIds = new Set<string>();
   const previousIds = new Set(prevState.knownIds);
 
   const events: ChangeEvent[] = [];
   const now = new Date().toISOString();
 
-  for (const alert of floodAlerts) {
-    if (previousIds.has(alert.id)) continue;
+  for (const [state, alerts] of alertsByState) {
+    for (const alert of alerts) {
+      if (!isFloodEvent(alert.event)) continue;
+      currentIds.add(alert.id);
+      if (previousIds.has(alert.id)) continue;
 
-    events.push({
-      eventId: `nwps-${alert.id.replace(/[^a-zA-Z0-9]/g, '').slice(-20)}-${Date.now().toString(36)}`,
-      source: SOURCE,
-      detectedAt: now,
-      sourceTimestamp: alert.onset ?? null,
-      changeType: 'NEW_RECORD',
-      geography: {
-        stateAbbr: extractState(alert),
-      },
-      severityHint: mapFloodSeverity(alert),
-      payload: {
-        event: alert.event,
-        headline: alert.headline,
-        areaDesc: alert.areaDesc,
-        certainty: alert.certainty,
-        urgency: alert.urgency,
-        precipForecast: alert.precipForecast,
-      },
-      metadata: {
-        sourceRecordId: alert.id,
-      },
-    });
+      const stateAbbr = US_STATES.has(state) ? state : extractState(alert);
+
+      events.push({
+        eventId: `nwps-${alert.id.replace(/[^a-zA-Z0-9]/g, '').slice(-20)}-${Date.now().toString(36)}`,
+        source: SOURCE,
+        detectedAt: now,
+        sourceTimestamp: alert.onset ?? null,
+        changeType: 'NEW_RECORD',
+        geography: {
+          stateAbbr,
+        },
+        severityHint: mapFloodSeverity(alert),
+        payload: {
+          event: alert.event,
+          headline: alert.headline,
+          areaDesc: alert.areaDesc,
+          certainty: alert.certainty,
+          urgency: alert.urgency,
+          precipForecast: alert.precipForecast,
+        },
+        metadata: {
+          sourceRecordId: alert.id,
+        },
+      });
+    }
   }
 
   return {

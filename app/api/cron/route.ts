@@ -1,12 +1,10 @@
-// app/api/ai-insights/route.ts
-// LLM-powered water quality insights — serves pre-generated cache when available,
-// falls back to on-demand generation. Receives context from AIInsightsEngine.
+// app/api/cron/route.ts
+// Legacy insights cron — LLM-powered water quality insights with cache-first strategy.
 import { NextRequest, NextResponse } from 'next/server';
 import { getInsights } from '@/lib/insightsCache';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
 
 // Rate limit: simple in-memory throttle (per-deployment, resets on cold start)
@@ -24,35 +22,7 @@ function checkRateLimit(key: string): boolean {
   return true;
 }
 
-// ─── Anthropic Claude ────────────────────────────────────────────────────────
-
-async function callAnthropic(systemPrompt: string, userMessage: string): Promise<string> {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1500,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userMessage }],
-    }),
-  });
-
-  if (!res.ok) {
-    const errBody = await res.text().catch(() => '');
-    console.error(`[AI-Insights] Anthropic error ${res.status}: ${errBody.slice(0, 300)}`);
-    throw new Error(`Anthropic API error: ${res.status}`);
-  }
-
-  const data = await res.json();
-  return data?.content?.[0]?.text || '';
-}
-
-// ─── OpenAI Fallback ─────────────────────────────────────────────────────────
+// ─── OpenAI ──────────────────────────────────────────────────────────────────
 
 async function callOpenAI(systemPrompt: string, userMessage: string): Promise<string> {
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -105,15 +75,12 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Cache-first: serve pre-generated insights if available ──
-    // Cron job pre-generates for state/role combos every 6 hours
-    // Only fall through to on-demand LLM call if cache misses
     try {
       const parsed = JSON.parse(userMessage);
       const state = parsed?.state || '';
       const role = parsed?.role || '';
       const hasWaterbody = !!parsed?.selectedWaterbody;
 
-      // Cache is keyed by state:role — only use for general views (no specific waterbody)
       if (state && role && !hasWaterbody) {
         const cached = getInsights(state, role);
         if (cached) {
@@ -127,25 +94,19 @@ export async function POST(request: NextRequest) {
       }
     } catch { /* parse failed — proceed to on-demand */ }
 
-    // Pick provider: Anthropic preferred, OpenAI fallback
-    let rawText = '';
-
-    if (ANTHROPIC_API_KEY) {
-      rawText = await callAnthropic(systemPrompt, userMessage);
-    } else if (OPENAI_API_KEY) {
-      rawText = await callOpenAI(systemPrompt, userMessage);
-    } else {
+    if (!OPENAI_API_KEY) {
       return NextResponse.json(
-        { error: 'No AI provider configured. Set ANTHROPIC_API_KEY or OPENAI_API_KEY in environment.' },
+        { error: 'OPENAI_API_KEY not configured.' },
         { status: 503 }
       );
     }
+
+    const rawText = await callOpenAI(systemPrompt, userMessage);
 
     // Parse JSON array from response — LLM may wrap in markdown fences
     let insights: any[] = [];
 
     try {
-      // Strip markdown fences if present
       const cleaned = rawText.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
       const jsonMatch = cleaned.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
@@ -167,7 +128,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       insights,
-      provider: ANTHROPIC_API_KEY ? 'anthropic' : 'openai',
+      provider: 'openai',
       generated: new Date().toISOString(),
     });
 

@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
   const llmConfig = getConfiguredLLMCaller();
   if (!llmConfig) {
     return NextResponse.json(
-      { error: 'No AI provider configured. Set ANTHROPIC_API_KEY or OPENAI_API_KEY.' },
+      { error: 'OPENAI_API_KEY not configured.' },
       { status: 503 },
     );
   }

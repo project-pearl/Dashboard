@@ -16,7 +16,7 @@ export const BASE_SCORES: Record<ChangeSource, Record<SeverityHint, number>> = {
   SSO_CSO:          { LOW: 15, MODERATE: 30, HIGH: 50, CRITICAL: 70 },
   NPDES_DMR:        { LOW: 10, MODERATE: 20, HIGH: 35, CRITICAL: 50 },
   QPE_RAINFALL:     { LOW:  5, MODERATE: 15, HIGH: 30, CRITICAL: 45 },
-  ATTAINS:          { LOW:  5, MODERATE: 10, HIGH: 20, CRITICAL: 30 },
+  ATTAINS:          { LOW:  1, MODERATE:  3, HIGH:  8, CRITICAL: 15 },
   STATE_DISCHARGE:  { LOW: 10, MODERATE: 20, HIGH: 35, CRITICAL: 50 },
   FEMA_DISASTER:    { LOW: 15, MODERATE: 30, HIGH: 50, CRITICAL: 70 },
   ECHO_ENFORCEMENT: { LOW: 10, MODERATE: 25, HIGH: 40, CRITICAL: 55 },
@@ -149,7 +149,7 @@ export const COMPOUND_PATTERNS: CompoundPattern[] = [
 export const DEDUP_WINDOWS = {
   sameSourceId_hours: 1,
   sameGeography_hours: 4,
-  attainsCooldown_hours: 24,
+  attainsCooldown_hours: 120,
   echoEscalationCooldown_hours: 24,
   nwsAlertUpdateOnly: true, // re-score on severity change only
 };

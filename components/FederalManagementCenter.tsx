@@ -59,10 +59,12 @@ import WaterfrontExposurePanel from './WaterfrontExposurePanel';
 import { INDEX_WEIGHTS } from '@/lib/indices/config';
 import { useSentinelAlerts } from '@/hooks/useSentinelAlerts';
 import { useFloodForecast } from '@/hooks/useFloodForecast';
+import { useFloodRiskOverview } from '@/hooks/useFloodRiskOverview';
 import { useSentinelAudio } from '@/hooks/useSentinelAudio';
 import { SentinelStatusBadge } from './SentinelStatusBadge';
 import { SentinelBriefingCard } from './SentinelBriefingCard';
 import { FloodForecastCard, FloodStatusSummary } from './FloodForecastCard';
+import { FloodRiskOverviewCard, FloodRiskSummary } from './FloodRiskOverviewCard';
 import AMSAlertMonitor from '@/ams/components/AMSAlertMonitor';
 import { useAlertSummary } from '@/ams/hooks/useAlertSummary';
 import { StateDataReportCard } from '@/components/StateDataReportCard';
@@ -196,7 +198,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: true, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: true, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['networkhealth', 'coveragegaps', 'sla', 'data-latency', 'sentinel-briefing', 'flood-status', 'delta-changelog']),
+    sections: new Set(['networkhealth', 'coveragegaps', 'sla', 'data-latency', 'sentinel-briefing', 'flood-status', 'flood-risk-summary', 'delta-changelog']),
   },
   'sentinel-monitoring': {
     label: 'Sentinel Monitoring',
@@ -206,7 +208,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['sentinel-briefing', 'flood-status', 'sentinel-alerts-placeholder']),
+    sections: new Set(['sentinel-briefing', 'flood-status', 'flood-risk-summary', 'sentinel-alerts-placeholder']),
   },
   trends: {
     label: 'Trends & Projections',
@@ -266,7 +268,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['disaster-emergency', 'fed-emergency-overview', 'fed-active-incidents', 'fed-spill-tracker', 'flood-forecast', 'resolution-planner']),
+    sections: new Set(['disaster-emergency', 'fed-emergency-overview', 'fed-active-incidents', 'fed-spill-tracker', 'flood-forecast', 'flood-risk-overview', 'resolution-planner']),
   },
   'military-installations': {
     label: 'Military Installations',
@@ -1148,6 +1150,7 @@ export function FederalManagementCenter(props: Props) {
   // ── Sentinel Alert System ──
   const sentinel = useSentinelAlerts();
   const floodForecast = useFloodForecast();
+  const floodRisk = useFloodRiskOverview();
   const amsSummary = useAlertSummary();
   const { audioEnabled, toggleAudio, playChime } = useSentinelAudio({ userRole: user?.role });
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -5835,6 +5838,17 @@ export function FederalManagementCenter(props: Props) {
           />
         );
 
+        case 'flood-risk-overview': return DS(
+          <FloodRiskOverviewCard
+            basins={floodRisk.basins}
+            national={floodRisk.national}
+            updatedAt={floodRisk.updatedAt}
+            isLoading={floodRisk.isLoading}
+            error={floodRisk.error}
+            onRefresh={floodRisk.refetch}
+          />
+        );
+
         case 'resolution-planner': return DS(<>
         {/* ── Response Planner — AI-powered action planning ── */}
         <div id="section-resolution-planner">
@@ -5885,6 +5899,16 @@ export function FederalManagementCenter(props: Props) {
             summary={floodForecast.summary}
             updatedAt={floodForecast.updatedAt}
             isLoading={floodForecast.isLoading}
+            onViewDetails={() => setViewLens('disaster-emergency' as ViewLens)}
+          />
+        );
+
+        case 'flood-risk-summary': return DS(
+          <FloodRiskSummary
+            basins={floodRisk.basins}
+            national={floodRisk.national}
+            updatedAt={floodRisk.updatedAt}
+            isLoading={floodRisk.isLoading}
             onViewDetails={() => setViewLens('disaster-emergency' as ViewLens)}
           />
         );

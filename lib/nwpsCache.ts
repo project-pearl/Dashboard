@@ -18,6 +18,7 @@ export interface NwpsGauge {
   lat: number;
   lng: number;
   wfo: string;
+  rfc: { abbreviation: string; name: string } | null;
   status: 'no_flooding' | 'minor' | 'moderate' | 'major' | 'not_defined';
   observed: { primary: number | null; unit: string; time: string } | null;
   forecast: { primary: number | null; unit: string; time: string } | null;

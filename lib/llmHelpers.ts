@@ -47,32 +47,7 @@ ${ROLE_TONE[role]} Format your response as a JSON array of exactly 4 objects, ea
 
 // ── LLM Callers ──────────────────────────────────────────────────────────────
 
-export async function callAnthropic(apiKey: string, systemPrompt: string, userMessage: string): Promise<string> {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1500,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userMessage }],
-    }),
-  });
-
-  if (!res.ok) {
-    const errBody = await res.text().catch(() => '');
-    throw new Error(`Anthropic ${res.status}: ${errBody.slice(0, 200)}`);
-  }
-
-  const data = await res.json();
-  return data?.content?.[0]?.text || '';
-}
-
-export async function callOpenAI(apiKey: string, systemPrompt: string, userMessage: string): Promise<string> {
+export async function callOpenAI(apiKey: string, systemPrompt: string, userMessage: string, model = 'gpt-4o-mini', maxTokens = 1500): Promise<string> {
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -80,8 +55,8 @@ export async function callOpenAI(apiKey: string, systemPrompt: string, userMessa
       'Authorization': `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      max_tokens: 1500,
+      model,
+      max_tokens: maxTokens,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage },
@@ -101,15 +76,8 @@ export async function callOpenAI(apiKey: string, systemPrompt: string, userMessa
 // ── Provider selection ───────────────────────────────────────────────────────
 
 export function getConfiguredLLMCaller(): { callLLM: LLMCaller; provider: string } | null {
-  const ANTHROPIC_API_KEY = (process.env.ANTHROPIC_API_KEY || '').trim();
   const OPENAI_API_KEY = (process.env.OPENAI_API_KEY || '').trim();
 
-  if (ANTHROPIC_API_KEY) {
-    return {
-      callLLM: (sys, msg) => callAnthropic(ANTHROPIC_API_KEY, sys, msg),
-      provider: 'anthropic',
-    };
-  }
   if (OPENAI_API_KEY) {
     return {
       callLLM: (sys, msg) => callOpenAI(OPENAI_API_KEY, sys, msg),

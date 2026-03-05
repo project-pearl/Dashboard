@@ -58,6 +58,11 @@ async function fetchStateGauges(state: string): Promise<NwpsGauge[]> {
     const obs = g.status?.observed || g.observed || null;
     const fcst = g.status?.forecast || g.forecast || null;
 
+    const rfcRaw = g.rfc || null;
+    const rfc = rfcRaw && rfcRaw.abbreviation
+      ? { abbreviation: rfcRaw.abbreviation, name: rfcRaw.name || rfcRaw.abbreviation }
+      : null;
+
     gauges.push({
       lid: g.lid || g.gaugeId || g.id || '',
       name: g.name || g.gaugeName || '',
@@ -65,7 +70,8 @@ async function fetchStateGauges(state: string): Promise<NwpsGauge[]> {
       county: g.county || '',
       lat,
       lng,
-      wfo: g.wfo || '',
+      wfo: typeof g.wfo === 'string' ? g.wfo : g.wfo?.abbreviation || '',
+      rfc,
       status: parseStatus(g.status?.floodStatus || g.floodStatus || g.status),
       observed: obs ? {
         primary: obs.primary ?? obs.value ?? null,

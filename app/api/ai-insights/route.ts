@@ -21,35 +21,7 @@ function checkRateLimit(key: string): boolean {
   return true;
 }
 
-// ─── Anthropic Claude ────────────────────────────────────────────────────────
-
-async function callAnthropic(apiKey: string, systemPrompt: string, userMessage: string): Promise<string> {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1500,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userMessage }],
-    }),
-  });
-
-  if (!res.ok) {
-    const errBody = await res.text().catch(() => '');
-    console.error(`[AI-Insights] Anthropic error ${res.status}: ${errBody.slice(0, 300)}`);
-    throw new Error(`Anthropic API error: ${res.status} — ${errBody.slice(0, 200)}`);
-  }
-
-  const data = await res.json();
-  return data?.content?.[0]?.text || '';
-}
-
-// ─── OpenAI Fallback ─────────────────────────────────────────────────────────
+// ─── OpenAI ──────────────────────────────────────────────────────────────────
 
 async function callOpenAI(apiKey: string, systemPrompt: string, userMessage: string): Promise<string> {
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -91,15 +63,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Read API keys at request time (not module scope) so Vercel env vars are always fresh
-    const ANTHROPIC_API_KEY = (process.env.ANTHROPIC_API_KEY || '').trim();
+    // Read API key at request time (not module scope) so Vercel env vars are always fresh
     const OPENAI_API_KEY = (process.env.OPENAI_API_KEY || '').trim();
-    console.log('[AI-Insights] ENV CHECK:', {
-      hasAnthropicKey: !!ANTHROPIC_API_KEY,
-      anthropicKeyLen: ANTHROPIC_API_KEY.length,
-      anthropicKeyPrefix: ANTHROPIC_API_KEY.slice(0, 7),
-      hasOpenAIKey: !!OPENAI_API_KEY,
-    });
 
     const body = await request.json();
     const { systemPrompt, userMessage } = body;
@@ -144,27 +109,21 @@ export async function POST(request: NextRequest) {
       console.warn(`[AI-Insights] Cache lookup failed: ${cacheErr.message} — proceeding to on-demand LLM`);
     }
 
-    // Pick provider: Anthropic preferred, OpenAI fallback
-    const provider = ANTHROPIC_API_KEY ? 'anthropic' : OPENAI_API_KEY ? 'openai' : null;
-    if (!provider) {
+    if (!OPENAI_API_KEY) {
       return NextResponse.json(
-        { error: 'No AI provider configured. Set ANTHROPIC_API_KEY or OPENAI_API_KEY in environment.', stage: 'provider-check' },
+        { error: 'OPENAI_API_KEY not configured.', stage: 'provider-check' },
         { status: 503 }
       );
     }
 
     let rawText = '';
     try {
-      if (provider === 'anthropic') {
-        rawText = await callAnthropic(ANTHROPIC_API_KEY, systemPrompt, userMessage);
-      } else {
-        rawText = await callOpenAI(OPENAI_API_KEY, systemPrompt, userMessage);
-      }
+      rawText = await callOpenAI(OPENAI_API_KEY, systemPrompt, userMessage);
     } catch (llmErr: any) {
       const msg = llmErr.message || 'Unknown LLM error';
-      console.error(`[AI-Insights] ${provider} call failed for ${requestState}:${requestRole}: ${msg}`);
+      console.error(`[AI-Insights] OpenAI call failed for ${requestState}:${requestRole}: ${msg}`);
       return NextResponse.json(
-        { error: `${provider} call failed: ${msg}`, stage: 'llm-call', provider, state: requestState, role: requestRole, cacheStatus, insights: [] },
+        { error: `OpenAI call failed: ${msg}`, stage: 'llm-call', provider: 'openai', state: requestState, role: requestRole, cacheStatus, insights: [] },
         { status: 502 }
       );
     }
@@ -203,7 +162,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       insights,
-      provider,
+      provider: 'openai',
       generated: new Date().toISOString(),
       cacheStatus,
     });

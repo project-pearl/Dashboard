@@ -23,36 +23,37 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing type or name' }, { status: 400 });
     }
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       return NextResponse.json({ error: 'API key not configured' }, { status: 500 });
     }
 
     const userMessage = `Type: ${type}\nName: ${name}\nDescription: ${description || 'N/A'}`;
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'gpt-4o-mini',
         max_tokens: 256,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: userMessage }],
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: userMessage },
+        ],
       }),
     });
 
     if (!res.ok) {
       const errText = await res.text();
-      console.error('Anthropic API error:', errText);
+      console.error('OpenAI API error:', errText);
       return NextResponse.json({ error: 'AI categorization failed' }, { status: 502 });
     }
 
     const data = await res.json();
-    const text = data.content?.[0]?.text || '{}';
+    const text = data?.choices?.[0]?.message?.content || '{}';
 
     // Parse the JSON response
     const parsed = JSON.parse(text);

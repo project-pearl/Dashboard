@@ -126,6 +126,21 @@ export function getNwsAlertsAll(): NwsAlert[] {
   return all;
 }
 
+/** Return non-expired alerts grouped by the state they were fetched for */
+export function getNwsAlertsByState(): Map<string, NwsAlert[]> {
+  ensureDiskLoaded();
+  const result = new Map<string, NwsAlert[]>();
+  if (!_cache) return result;
+  const now = Date.now();
+  for (const [state, entry] of Object.entries(_cache.alerts)) {
+    const active = entry.alerts.filter(
+      a => !a.expires || new Date(a.expires).getTime() > now
+    );
+    if (active.length > 0) result.set(state, active);
+  }
+  return result;
+}
+
 /** Bulk-set alerts for all states (single blob write). */
 export async function setNwsAlertCache(
   alertsByState: Record<string, { alerts: NwsAlert[]; fetched: string }>

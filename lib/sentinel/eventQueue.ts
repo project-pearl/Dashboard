@@ -9,6 +9,7 @@ import type { ChangeEvent, ChangeSource, QueueStats } from './types';
 import { TIME_DECAY_WINDOW_HOURS, BLOB_PATHS, DISK_PATHS } from './config';
 import { shouldDeduplicate } from './deduplication';
 import { saveCacheToBlob, loadCacheFromBlob } from '../blobPersistence';
+import { getStateForHuc } from './hucAdjacency';
 
 /* ------------------------------------------------------------------ */
 /*  Internal State                                                    */
@@ -131,6 +132,13 @@ export async function enqueueEvents(incoming: ChangeEvent[]): Promise<ChangeEven
     // Derive huc6 from huc8 if not set
     if (evt.geography.huc8 && !evt.geography.huc6) {
       evt.geography.huc6 = evt.geography.huc8.slice(0, 6);
+    }
+
+    // Enrich stateAbbr from authoritative huc8-adjacency table
+    // This overrides potentially wrong adapter-provided states
+    if (evt.geography.huc8) {
+      const authState = getStateForHuc(evt.geography.huc8);
+      if (authState) evt.geography.stateAbbr = authState;
     }
 
     if (shouldDeduplicate(evt, q.events)) continue;

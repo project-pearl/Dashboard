@@ -20,11 +20,11 @@
 // Setup:
 //   1. Get API key from Synthesia dashboard → Account → API Keys
 //   2. Set environment variable: export SYNTHESIA_API_KEY=your_key_here
-//   3. Optional: export ANTHROPIC_API_KEY=your_key (for --prompt mode)
+//   3. Optional: export OPENAI_API_KEY=your_key (for --prompt mode)
 //      — or place it in Dashboard/.env.local and run from the project dir
 //   4. Run: node scripts/synthesia-cli.js create --script "Hello world"
 //
-// The --prompt flag uses Claude to write a multi-scene script FOR you,
+// The --prompt flag uses OpenAI to write a multi-scene script FOR you,
 // returning structured JSON with per-scene avatar, background, and
 // transition settings. Pair with --yes for fully autonomous operation.
 // =============================================================
@@ -36,8 +36,8 @@ const path = require("path");
 // ── .env.local fallback ──
 
 function loadEnvFallback() {
-  // If ANTHROPIC_API_KEY is already set, skip
-  if (process.env.ANTHROPIC_API_KEY) return;
+  // If OPENAI_API_KEY is already set, skip
+  if (process.env.OPENAI_API_KEY) return;
 
   // Try loading from .env.local in the project root (Dashboard/)
   const candidates = [
@@ -55,7 +55,7 @@ function loadEnvFallback() {
         if (eqIdx === -1) continue;
         const key = trimmed.slice(0, eqIdx).trim();
         const val = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, "");
-        if (key === "ANTHROPIC_API_KEY" && !process.env[key]) {
+        if (key === "OPENAI_API_KEY" && !process.env[key]) {
           process.env[key] = val;
         }
       }
@@ -69,7 +69,7 @@ loadEnvFallback();
 // ── Config ──
 
 const SYNTHESIA_API_KEY = process.env.SYNTHESIA_API_KEY;
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const SYNTHESIA_BASE = "https://api.synthesia.io/v2";
 
 // Default avatar/voice — change to match your Synthesia account
@@ -118,22 +118,23 @@ function apiRequest(method, path, body) {
   });
 }
 
-function anthropicRequest(systemPrompt, userPrompt) {
+function openaiRequest(systemPrompt, userPrompt) {
   return new Promise((resolve, reject) => {
     const body = JSON.stringify({
-      model: "claude-sonnet-4-6",
+      model: "gpt-4o",
       max_tokens: 4000,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userPrompt }],
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
     });
 
     const options = {
-      hostname: "api.anthropic.com",
-      path: "/v1/messages",
+      hostname: "api.openai.com",
+      path: "/v1/chat/completions",
       method: "POST",
       headers: {
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
+        "Authorization": `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json",
         "Content-Length": Buffer.byteLength(body),
       },
@@ -146,13 +147,13 @@ function anthropicRequest(systemPrompt, userPrompt) {
         try {
           const parsed = JSON.parse(data);
           if (res.statusCode >= 400) {
-            reject(new Error(`Anthropic API HTTP ${res.statusCode}: ${JSON.stringify(parsed)}`));
+            reject(new Error(`OpenAI API HTTP ${res.statusCode}: ${JSON.stringify(parsed)}`));
             return;
           }
-          const text = parsed.content?.map((c) => c.text || "").join("\n") || "";
+          const text = parsed.choices?.[0]?.message?.content || "";
           resolve(text);
         } catch (e) {
-          reject(new Error(`Anthropic API error: ${data}`));
+          reject(new Error(`OpenAI API error: ${data}`));
         }
       });
     });
@@ -403,14 +404,14 @@ async function downloadVideo(videoId) {
 // ── AI Multi-Scene Script Generator ──
 
 async function generateScenes(prompt) {
-  if (!ANTHROPIC_API_KEY) {
-    console.error("❌ ANTHROPIC_API_KEY not set. Required for --prompt mode.");
-    console.error("   Set it: export ANTHROPIC_API_KEY=your_key");
+  if (!OPENAI_API_KEY) {
+    console.error("OPENAI_API_KEY not set. Required for --prompt mode.");
+    console.error("   Set it: export OPENAI_API_KEY=your_key");
     console.error("   Or add it to Dashboard/.env.local");
     process.exit(1);
   }
 
-  console.log("\n🤖 Generating multi-scene script via Claude...");
+  console.log("\nGenerating multi-scene script via OpenAI...");
   console.log(`   Prompt: ${prompt.slice(0, 100)}...\n`);
 
   const systemPrompt = `You are a scriptwriter for the PEARL Intelligence Network (PIN) — a national water quality intelligence platform powered by PEARL ALIA (Autonomous Legislative & Infrastructure Analyst).
@@ -447,7 +448,7 @@ EXAMPLE OUTPUT:
 ]`;
 
   try {
-    const raw = await anthropicRequest(systemPrompt, prompt);
+    const raw = await openaiRequest(systemPrompt, prompt);
 
     // Extract JSON array — handle possible markdown fences
     let jsonStr = raw.trim();
@@ -458,7 +459,7 @@ EXAMPLE OUTPUT:
     const startIdx = jsonStr.indexOf("[");
     const endIdx = jsonStr.lastIndexOf("]");
     if (startIdx === -1 || endIdx === -1) {
-      throw new Error("Claude did not return a valid JSON array");
+      throw new Error("OpenAI did not return a valid JSON array");
     }
     jsonStr = jsonStr.slice(startIdx, endIdx + 1);
 
@@ -607,7 +608,7 @@ COMMANDS:
       --script "text"       Single-scene script text
       --file path.txt       Read script from file (use --- to separate scenes)
       --scenes path.json    Multi-scene JSON file (array of scene objects)
-      --prompt "desc"       AI-generates multi-scene script via Claude
+      --prompt "desc"       AI-generates multi-scene script via OpenAI
 
     VIDEO OPTIONS:
       --title "name"        Video title (default: auto-generated)
@@ -633,7 +634,7 @@ COMMANDS:
 
 ENVIRONMENT:
   SYNTHESIA_API_KEY     Required. From Synthesia dashboard.
-  ANTHROPIC_API_KEY     For --prompt mode. Falls back to Dashboard/.env.local.
+  OPENAI_API_KEY        For --prompt mode. Falls back to Dashboard/.env.local.
   SYNTHESIA_AVATAR_ID   Default avatar ID.
   SYNTHESIA_VOICE_ID    Default voice ID.
   SYNTHESIA_BACKGROUND  Default background color.
