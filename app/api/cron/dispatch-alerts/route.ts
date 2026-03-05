@@ -12,6 +12,7 @@ import { evaluateUsgsAlerts } from '@/lib/alerts/triggers/usgsTrigger';
 import { evaluateDeltaAlerts } from '@/lib/alerts/triggers/deltaTrigger';
 import { evaluateNwssAlerts } from '@/lib/alerts/triggers/nwssTrigger';
 import { evaluateFloodForecasts } from '@/lib/alerts/triggers/floodForecastTrigger';
+import { evaluateDeploymentAlerts, type DeploymentInput } from '@/lib/alerts/triggers/deploymentTrigger';
 import { loadRules, evaluateRules } from '@/lib/alerts/rules';
 import type { AlertEvent } from '@/lib/alerts/types';
 
@@ -106,7 +107,26 @@ export async function GET(request: NextRequest) {
       console.warn(`[dispatch-alerts] Flood forecast trigger error: ${err.message}`);
     }
 
-    // 6. Custom rules
+    // 6. Deployment sensor trigger
+    try {
+      // Fetch current deployment readings from the deployments API
+      const depRes = await fetch(new URL('/api/deployments/readings', request.url).toString(), {
+        headers: cronSecret ? { authorization: `Bearer ${cronSecret}` } : {},
+      }).catch(() => null);
+      if (depRes?.ok) {
+        const depData = await depRes.json();
+        const deploymentInputs: DeploymentInput[] = depData.deployments || [];
+        if (deploymentInputs.length > 0) {
+          const deploymentEvents = await evaluateDeploymentAlerts(deploymentInputs);
+          candidates.push(...deploymentEvents);
+          console.warn(`[dispatch-alerts] Deployment: ${deploymentEvents.length} candidates`);
+        }
+      }
+    } catch (err: any) {
+      console.warn(`[dispatch-alerts] Deployment trigger error: ${err.message}`);
+    }
+
+    // 7. Custom rules
     try {
       const rules = await loadRules();
       if (rules.length > 0) {
@@ -118,7 +138,7 @@ export async function GET(request: NextRequest) {
       console.warn(`[dispatch-alerts] Rules engine error: ${err.message}`);
     }
 
-    // 7. Dispatch all candidates
+    // 8. Dispatch all candidates
     const result = await dispatchAlerts(candidates);
     const durationMs = Date.now() - _buildStartedAt;
 

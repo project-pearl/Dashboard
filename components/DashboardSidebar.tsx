@@ -68,6 +68,9 @@ import {
   Handshake,
   GlassWater,
   MessageSquare,
+  Target,
+  Calculator,
+  HandCoins,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -172,6 +175,18 @@ const LENS_ICONS: Record<string, LucideIcon> = {
   species: Leaf,
   risk: AlertTriangle,
   forecast: TrendingUp,
+  // ── PEARL ─────────────────────────────────────────────────────────────────
+  operations: Settings,
+  restoration: TreePine,
+  opportunities: HandCoins,
+  proposals: FileText,
+  scenarios: FlaskConical,
+  predictions: Target,
+  'scenario-planner': Calculator,
+  'budget-planner': BarChart3,
+  investigation: Search,
+  users: Users,
+  alerts: Bell,
   // ── Aqua-Lo ───────────────────────────────────────────────────────────────
   push: Network,
   qaqc: ClipboardList,
@@ -235,6 +250,12 @@ function buildNavGroups(stateCode: string): NavGroup[] { return [
     ],
   },
   {
+    title: 'PEARL',
+    items: [
+      { label: 'PEARL Admin', href: '/dashboard/pearl', icon: Crown, accent: 'text-purple-700', accentBg: 'bg-purple-50 border-purple-200' },
+    ],
+  },
+  {
     title: 'Resources',
     items: [
       { label: 'Data Provenance', href: '/dashboard/data-provenance', icon: FileCheck, accent: 'text-cyan-700', accentBg: 'bg-cyan-50 border-cyan-200' },
@@ -252,8 +273,12 @@ export function DashboardSidebar() {
   /** Filter out lenses gated to states the user isn't viewing. */
   const filterGatedLenses = useCallback((lenses: LensDef[] | null) => {
     if (!lenses) return null;
-    return lenses.filter(l => !l.gateStates || l.gateStates.has(adminState));
-  }, [adminState]);
+    return lenses.filter((l) => {
+      if (l.gateStates && !l.gateStates.has(adminState)) return false;
+      if ((l.id === 'users' || l.id === 'alerts') && !(user?.isAdmin || user?.role === 'Pearl')) return false;
+      return true;
+    });
+  }, [adminState, user]);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedRoles, setExpandedRoles] = useState<Set<string>>(new Set());
@@ -550,19 +575,6 @@ export function DashboardSidebar() {
               <span className="text-[9px] font-bold text-purple-600">{adminState}</span>
             </div>
           )}
-          <Link
-            href="/dashboard/admin"
-            onClick={() => setMobileOpen(false)}
-            title={collapsed ? 'Pearl Admin Center' : undefined}
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
-              pathname === '/dashboard/admin'
-                ? 'bg-purple-50 border-purple-200 text-purple-700 font-semibold border shadow-sm'
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-            }`}
-          >
-            <Crown className={`w-4 h-4 flex-shrink-0 ${pathname === '/dashboard/admin' ? 'text-purple-700' : 'text-slate-400'}`} />
-            {!collapsed && <span className="truncate">Pearl Admin Center</span>}
-          </Link>
           <Link
             href="/dashboard/breakpoint"
             onClick={() => setMobileOpen(false)}

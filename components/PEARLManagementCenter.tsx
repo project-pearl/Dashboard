@@ -17,7 +17,7 @@ import {
   Gauge, TrendingUp, TrendingDown, BarChart3, DollarSign, Users,
   MapPin, Wrench, Shell, Zap, Clock, ThermometerSun, Wind,
   ChevronDown, ChevronUp, ChevronRight, Search, Filter, FileText,
-  Calculator, Truck, Radio, Eye, Target, Building2, LogOut,
+  Calculator, Truck, Radio, Eye, Target, Building2,
   RefreshCw, Download, Send, Plus, Minus, Info, Printer
 } from 'lucide-react';
 import { useAuth } from '@/lib/authContext';
@@ -33,10 +33,13 @@ import type { RiskPrediction, RiskForecastResult } from '@/lib/siteIntelTypes';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import { GrantOpportunityMatcher } from './GrantOpportunityMatcher';
 import BudgetPlannerPanel from '@/components/BudgetPlannerPanel';
+import { useLensParam } from '@/lib/useLensParam';
+import { usePearlFunding } from '@/lib/usePearlFunding';
+import { AlertDeepDive, type DeepDiveAlert } from './AlertDeepDive';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type ViewLens = 'operations' | 'restoration' | 'proposals' | 'scenarios' | 'predictions' | 'scenario-planner' | 'budget-planner' | 'investigation' | 'users' | 'alerts';
+type ViewLens = 'operations' | 'restoration' | 'opportunities' | 'proposals' | 'scenarios' | 'predictions' | 'scenario-planner' | 'budget-planner' | 'investigation' | 'users' | 'alerts';
 
 type DeploymentStatus = 'active' | 'maintenance' | 'offline' | 'staging' | 'decommissioned';
 type AlertSeverity = 'critical' | 'warning' | 'info' | 'ok';
@@ -815,13 +818,20 @@ function NationalHealthGauge({ score }: { score: number }) {
 
 export function PEARLManagementCenter(props: Props) {
   const { onClose } = props;
-  const { logout, user, isAdmin, listPendingUsers } = useAuth();
+  const { user, isAdmin, listPendingUsers } = useAuth();
 
-  const [viewLens, setViewLens] = useState<ViewLens>('operations');
+  const [viewLens, setViewLens] = useLensParam<ViewLens>('operations');
+  const { grants: pearlGrants, funders: pearlFunders, loading: pearlFundingLoading } = usePearlFunding();
   const [pendingUserCount, setPendingUserCount] = useState(0);
   const [investigationRisk, setInvestigationRisk] = useState<RiskPrediction | null>(null);
   const [riskForecast, setRiskForecast] = useState<RiskForecastResult | null>(null);
   const [riskLoading, setRiskLoading] = useState(true);
+
+  useEffect(() => {
+    if (!isAdmin && (viewLens === 'users' || viewLens === 'alerts')) {
+      setViewLens('operations');
+    }
+  }, [isAdmin, viewLens, setViewLens]);
 
   // Fetch pending count on mount for admin users
   useEffect(() => {
@@ -833,6 +843,7 @@ export function PEARLManagementCenter(props: Props) {
   const [prospects] = useState<Prospect[]>(() => generateProspects());
   const [expandedDeployment, setExpandedDeployment] = useState<string | null>('dep-milton-fl-001');
   const [expandedProspect, setExpandedProspect] = useState<string | null>(null);
+  const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null);
   const [showGPMCalc, setShowGPMCalc] = useState(false);
   const [outreachRole, setOutreachRole] = useState<UserRole>('MS4');
   const [outreachContact, setOutreachContact] = useState('');
@@ -1075,50 +1086,7 @@ Doug and the PIN team`;
       <div className="max-w-[1600px] mx-auto px-4 py-4 space-y-4">
 
         {/* ── HERO BANNER ── */}
-        <HeroBanner role="pearl" onDoubleClick={() => props.onToggleDevMode?.()}>
-              {/* Lens Switcher */}
-              <div className="flex rounded-lg border border-slate-200 overflow-hidden">
-                {([
-                  { lens: 'operations' as ViewLens, label: '⚙ Operations', badge: 0 },
-                  { lens: 'restoration' as ViewLens, label: '🌿 Restoration', badge: 0 },
-                  { lens: 'proposals' as ViewLens, label: '📋 Proposals', badge: 0 },
-                  { lens: 'scenarios' as ViewLens, label: '🔬 What-If', badge: 0 },
-                  { lens: 'predictions' as ViewLens, label: '🎯 Predictions', badge: 0 },
-                  { lens: 'scenario-planner' as ViewLens, label: '💰 Scenario Planner', badge: 0 },
-                  { lens: 'budget-planner' as ViewLens, label: '📊 Budget Planner', badge: 0 },
-                  { lens: 'investigation' as ViewLens, label: '🔍 Investigation', badge: 0 },
-                  ...(isAdmin ? [{ lens: 'users' as ViewLens, label: '👥 Users', badge: pendingUserCount }] : []),
-                  ...(isAdmin ? [{ lens: 'alerts' as ViewLens, label: '🔔 Alerts', badge: 0 }] : []),
-                ]).map(({ lens, label, badge }) => (
-                  <button
-                    key={lens}
-                    onClick={() => setViewLens(lens)}
-                    className={`px-3 py-1.5 text-xs font-semibold transition-all relative ${
-                      viewLens === lens
-                        ? 'bg-slate-900 text-white'
-                        : 'bg-white text-slate-500 hover:bg-slate-50'
-                    }`}
-                  >
-                    {label}
-                    {badge > 0 && (
-                      <span className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-amber-500 text-white text-[9px] font-bold">
-                        {badge}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-
-              <Button variant="outline" size="sm" onClick={() => setShowGPMCalc(!showGPMCalc)}>
-                <Calculator size={14} className="mr-1" /> GPM Calc
-              </Button>
-
-              {logout && (
-                <Button variant="ghost" size="sm" onClick={logout}>
-                  <LogOut size={14} />
-                </Button>
-              )}
-        </HeroBanner>
+        <HeroBanner role="pearl" onDoubleClick={() => props.onToggleDevMode?.()} />
 
         {/* ── DATA SOURCE HEALTH MONITOR ── */}
         <Card>
@@ -1385,44 +1353,92 @@ Doug and the PIN team`;
 
         {viewLens === 'operations' && (
           <>
-{/* ── ALERT FEED ── */}
+            {/* GPM Calculator toggle */}
+            <div className="flex justify-end">
+              <Button variant="outline" size="sm" onClick={() => setShowGPMCalc(!showGPMCalc)}>
+                <Calculator size={14} className="mr-1" /> GPM Calc
+              </Button>
+            </div>
+{/* ── SENSOR ALERTS ── */}
             {allAlerts.length > 0 && (
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="flex items-center gap-2 text-base">
-                    <Activity size={16} /> AI Delta Analysis
-                    <Badge variant="secondary" className="ml-2">{allAlerts.length} signals</Badge>
+                    <Activity size={16} /> Deployment Sensor Alerts
+                    <Badge variant="secondary" className="ml-2">{allAlerts.length} signal{allAlerts.length !== 1 ? 's' : ''}</Badge>
+                    {criticalAlerts.length > 0 && (
+                      <Badge className="bg-red-100 text-red-700 text-[10px]">{criticalAlerts.length} critical</Badge>
+                    )}
+                    {warningAlerts.length > 0 && (
+                      <Badge className="bg-amber-100 text-amber-700 text-[10px]">{warningAlerts.length} warning</Badge>
+                    )}
                   </CardTitle>
-                  <CardDescription>Comparing live readings against installation baselines. Anomalies flagged with diagnosis + recommendation.</CardDescription>
+                  <CardDescription>Live sensor readings compared against installation baselines. Click any alert for full analysis.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-2 max-h-[400px] overflow-y-auto">
-                  {allAlerts.map((alert) => (
-                    <div key={alert.id} className={`rounded-lg border p-3 ${severityColor(alert.severity)}`}>
-                      <div className="flex items-start gap-2">
-                        {severityIcon(alert.severity)}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-xs font-bold">{(alert as any).deploymentName}</span>
-                            <span className="text-[10px] font-mono opacity-60">·</span>
-                            <span className="text-xs font-semibold">{alert.parameter}</span>
-                          </div>
-                          <p className="text-xs mt-1 font-medium">{alert.message}</p>
-                          <div className="flex gap-3 mt-1 text-[10px] font-mono opacity-70">
-                            <span>Baseline: {alert.baseline} {alert.unit}</span>
-                            <span>Current: {alert.current} {alert.unit}</span>
-                            <span>Δ {alert.delta > 0 ? '+' : ''}{alert.delta.toFixed(1)}{alert.unit === '%' ? '' : ` ${alert.unit}`}</span>
-                          </div>
-                          <details className="mt-2">
-                            <summary className="text-[10px] cursor-pointer font-semibold opacity-70 hover:opacity-100">Diagnosis & Recommendation</summary>
-                            <div className="mt-1 text-xs space-y-1 opacity-80">
-                              <p><strong>Diagnosis:</strong> {alert.diagnosis}</p>
-                              <p><strong>Action:</strong> {alert.recommendation}</p>
+                <CardContent className="space-y-2">
+                  {allAlerts.map((alert) => {
+                    const isExpanded = expandedAlertId === alert.id;
+                    const sevStyle = severityColor(alert.severity);
+
+                    if (isExpanded) {
+                      // Convert to DeepDiveAlert format for the shared component
+                      const deepDive: DeepDiveAlert = {
+                        id: alert.id,
+                        deployment_id: (alert as any).deploymentId || '',
+                        deploymentName: (alert as any).deploymentName || '',
+                        parameter: alert.parameter,
+                        value: alert.current,
+                        baseline: alert.baseline,
+                        delta: alert.delta,
+                        unit: alert.unit,
+                        severity: alert.severity === 'ok' ? 'info' : alert.severity,
+                        status: 'open',
+                        title: `${(alert as any).deploymentName}: ${alert.message}`,
+                        diagnosis: alert.diagnosis,
+                        recommendation: alert.recommendation,
+                        created_at: alert.timestamp,
+                      };
+                      return (
+                        <AlertDeepDive
+                          key={alert.id}
+                          alert={deepDive}
+                          inlineTimeline={[]}
+                          inlineAcknowledgments={[]}
+                          onClose={() => setExpandedAlertId(null)}
+                        />
+                      );
+                    }
+
+                    return (
+                      <button
+                        key={alert.id}
+                        onClick={() => setExpandedAlertId(alert.id)}
+                        className={`w-full text-left rounded-lg border p-3 transition-all hover:shadow-md cursor-pointer ${sevStyle}`}
+                      >
+                        <div className="flex items-start gap-2">
+                          {severityIcon(alert.severity)}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-xs font-bold">{(alert as any).deploymentName}</span>
+                              <Badge className={`text-[9px] ${alert.severity === 'critical' ? 'bg-red-200 text-red-900' : alert.severity === 'warning' ? 'bg-amber-200 text-amber-900' : 'bg-blue-200 text-blue-900'}`}>
+                                {alert.severity}
+                              </Badge>
+                              <span className="text-xs font-semibold">{alert.parameter}</span>
                             </div>
-                          </details>
+                            <p className="text-xs mt-1 font-medium">{alert.message}</p>
+                            <div className="flex gap-3 mt-1 text-[10px] font-mono opacity-70">
+                              <span>Baseline: {alert.baseline} {alert.unit}</span>
+                              <span>Current: {alert.current} {alert.unit}</span>
+                              <span>Δ {alert.delta > 0 ? '+' : ''}{alert.delta.toFixed(1)}{alert.unit === '%' ? '' : ''}</span>
+                            </div>
+                            <div className="mt-1.5 text-[10px] text-slate-500 font-medium">
+                              Click for deep dive &rarr;
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  ))}
+                      </button>
+                    );
+                  })}
                 </CardContent>
               </Card>
             )}
@@ -1663,6 +1679,223 @@ Doug and the PIN team`;
                 waterData={depWaterData}
                 defaultAllStates
               />
+            );
+          })()
+        )}
+
+        {/* ════════════════════════════════════════════════════════════ */}
+        {/* ── OPPORTUNITIES LENS ────────────────────────────────────── */}
+        {/* ════════════════════════════════════════════════════════════ */}
+
+        {viewLens === 'opportunities' && (
+          (() => {
+            const now = new Date();
+            const highFitGrants = pearlGrants.filter(g => g.fit >= 0.9);
+            const activePursuitGrants = pearlGrants.filter(g => g.eligible === 'Yes' || g.eligible === 'Co-Sponsor');
+            const activePursuitFunders = pearlFunders.filter(f => f.prospect === 'Yes');
+            const upcomingGrants = pearlGrants
+              .filter(g => g.closes && new Date(g.closes) > now)
+              .sort((a, b) => new Date(a.closes!).getTime() - new Date(b.closes!).getTime());
+            const nearestDeadline = upcomingGrants[0];
+            const sixtyDaysOut = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
+            const urgentGrants = upcomingGrants.filter(g => new Date(g.closes!) <= sixtyDaysOut);
+
+            // Potential sources: not yet pursued, high fit
+            const potentialFunders = pearlFunders.filter(f => f.prospect !== 'Yes' && f.fit >= 0.7);
+            const potentialGrants = pearlGrants.filter(g => g.eligible !== 'Yes' && g.eligible !== 'Co-Sponsor' && g.fit >= 0.7)
+              .sort((a, b) => b.fit - a.fit);
+
+            const fitBadge = (fit: number) => {
+              if (fit >= 0.9) return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-800 border border-green-200">High</span>;
+              if (fit >= 0.7) return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">Good</span>;
+              return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">Review</span>;
+            };
+
+            const isUrgent = (closes: string | null) => {
+              if (!closes) return false;
+              return new Date(closes) <= sixtyDaysOut;
+            };
+
+            if (pearlFundingLoading) {
+              return <Card><CardContent className="py-12 text-center text-slate-500">Loading funding data...</CardContent></Card>;
+            }
+
+            return (
+              <>
+                {/* Pipeline Summary */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Target size={16} className="text-purple-600" /> Pipeline Summary
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                      <div className="bg-slate-50 rounded-lg p-3 border text-center">
+                        <div className="text-2xl font-bold text-slate-900">{pearlGrants.length}</div>
+                        <div className="text-[11px] text-slate-500 font-medium">Total Grants</div>
+                      </div>
+                      <div className="bg-slate-50 rounded-lg p-3 border text-center">
+                        <div className="text-2xl font-bold text-slate-900">{pearlFunders.length}</div>
+                        <div className="text-[11px] text-slate-500 font-medium">Total Funders</div>
+                      </div>
+                      <div className="bg-green-50 rounded-lg p-3 border border-green-200 text-center">
+                        <div className="text-2xl font-bold text-green-700">{highFitGrants.length}</div>
+                        <div className="text-[11px] text-green-600 font-medium">High-Fit Grants</div>
+                      </div>
+                      <div className="bg-blue-50 rounded-lg p-3 border border-blue-200 text-center">
+                        <div className="text-2xl font-bold text-blue-700">{activePursuitGrants.length + activePursuitFunders.length}</div>
+                        <div className="text-[11px] text-blue-600 font-medium">Active Pursuits</div>
+                      </div>
+                      <div className={`rounded-lg p-3 border text-center ${nearestDeadline ? 'bg-amber-50 border-amber-200' : 'bg-slate-50'}`}>
+                        <div className="text-sm font-bold text-amber-700">
+                          {nearestDeadline ? new Date(nearestDeadline.closes!).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
+                        </div>
+                        <div className="text-[11px] text-amber-600 font-medium">Nearest Deadline</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Active Pursuits */}
+                <Card className="border-blue-200">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Activity size={16} className="text-blue-600" /> Active Pursuits
+                      <Badge variant="secondary" className="ml-2">{activePursuitGrants.length + activePursuitFunders.length}</Badge>
+                    </CardTitle>
+                    <CardDescription>Grants and funders currently being pursued</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="max-h-[500px] overflow-y-auto border rounded-md">
+                      <table className="w-full text-sm">
+                        <thead className="sticky top-0 bg-slate-50 text-slate-600">
+                          <tr className="text-left border-b">
+                            <th className="px-3 py-2 font-medium">Name</th>
+                            <th className="px-3 py-2 font-medium">Source</th>
+                            <th className="px-3 py-2 font-medium">Fit</th>
+                            <th className="px-3 py-2 font-medium">Status / Notes</th>
+                            <th className="px-3 py-2 font-medium">Deadline</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {activePursuitFunders.map((f) => (
+                            <tr key={`f-${f.name}`} className="border-b last:border-b-0 hover:bg-slate-50">
+                              <td className="px-3 py-2 text-slate-800 font-medium">
+                                {f.website ? <a href={f.website} target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline">{f.name}</a> : f.name}
+                              </td>
+                              <td className="px-3 py-2 text-slate-500 text-xs">{f.source}</td>
+                              <td className="px-3 py-2">{fitBadge(f.fit)}</td>
+                              <td className="px-3 py-2 text-xs text-slate-600 max-w-xs truncate">{f.notes}</td>
+                              <td className="px-3 py-2 text-xs text-slate-400">Funder</td>
+                            </tr>
+                          ))}
+                          {activePursuitGrants.map((g) => (
+                            <tr key={`g-${g.name}`} className={`border-b last:border-b-0 hover:bg-slate-50 ${isUrgent(g.closes) ? 'bg-amber-50/50' : ''}`}>
+                              <td className="px-3 py-2 text-slate-800 font-medium">{g.name}</td>
+                              <td className="px-3 py-2 text-slate-500 text-xs">{g.source}</td>
+                              <td className="px-3 py-2">{fitBadge(g.fit)}</td>
+                              <td className="px-3 py-2 text-xs text-slate-600 max-w-xs truncate">
+                                {g.eligible === 'Co-Sponsor' && g.coSponsor && <Badge variant="outline" className="mr-1 text-[9px]">Co-sponsor: {g.coSponsor}</Badge>}
+                                {g.notes}
+                              </td>
+                              <td className="px-3 py-2 text-xs">
+                                {g.closes ? (
+                                  <span className={isUrgent(g.closes) ? 'font-bold text-amber-700' : 'text-slate-600'}>
+                                    {new Date(g.closes).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                    {isUrgent(g.closes) && ' !'}
+                                  </span>
+                                ) : <span className="text-slate-400">Open</span>}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    {urgentGrants.length > 0 && (
+                      <div className="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-1.5">
+                        {urgentGrants.length} grant{urgentGrants.length > 1 ? 's' : ''} with deadline within 60 days
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Potential Sources */}
+                <Card className="border-emerald-200">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Search size={16} className="text-emerald-600" /> Potential Sources
+                      <Badge variant="secondary" className="ml-2">{potentialFunders.length + Math.min(potentialGrants.length, 50)}</Badge>
+                    </CardTitle>
+                    <CardDescription>High-fit funders and grants not yet pursued (fit &ge; 0.7)</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {potentialFunders.length > 0 && (
+                      <>
+                        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Funders ({potentialFunders.length})</div>
+                        <div className="max-h-[300px] overflow-y-auto border rounded-md mb-4">
+                          <table className="w-full text-sm">
+                            <thead className="sticky top-0 bg-slate-50 text-slate-600">
+                              <tr className="text-left border-b">
+                                <th className="px-3 py-2 font-medium">Name</th>
+                                <th className="px-3 py-2 font-medium">Source</th>
+                                <th className="px-3 py-2 font-medium">Fit</th>
+                                <th className="px-3 py-2 font-medium">Notes</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {potentialFunders.sort((a, b) => b.fit - a.fit).map((f) => (
+                                <tr key={f.name} className="border-b last:border-b-0 hover:bg-slate-50">
+                                  <td className="px-3 py-2 text-slate-800 font-medium">
+                                    {f.website ? <a href={f.website} target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline">{f.name}</a> : f.name}
+                                  </td>
+                                  <td className="px-3 py-2 text-slate-500 text-xs">{f.source}</td>
+                                  <td className="px-3 py-2">{fitBadge(f.fit)}</td>
+                                  <td className="px-3 py-2 text-xs text-slate-600 max-w-xs truncate">{f.notes}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </>
+                    )}
+                    <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Grants ({potentialGrants.length})</div>
+                    <div className="max-h-[400px] overflow-y-auto border rounded-md">
+                      <table className="w-full text-sm">
+                        <thead className="sticky top-0 bg-slate-50 text-slate-600">
+                          <tr className="text-left border-b">
+                            <th className="px-3 py-2 font-medium">Name</th>
+                            <th className="px-3 py-2 font-medium">Source</th>
+                            <th className="px-3 py-2 font-medium">Fit</th>
+                            <th className="px-3 py-2 font-medium">Notes</th>
+                            <th className="px-3 py-2 font-medium">Deadline</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {potentialGrants.slice(0, 50).map((g) => (
+                            <tr key={g.name} className="border-b last:border-b-0 hover:bg-slate-50">
+                              <td className="px-3 py-2 text-slate-800 font-medium">{g.name}</td>
+                              <td className="px-3 py-2 text-slate-500 text-xs">{g.source}</td>
+                              <td className="px-3 py-2">{fitBadge(g.fit)}</td>
+                              <td className="px-3 py-2 text-xs text-slate-600 max-w-xs truncate">{g.notes}</td>
+                              <td className="px-3 py-2 text-xs">
+                                {g.closes ? (
+                                  <span className="text-slate-600">{new Date(g.closes).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                ) : <span className="text-slate-400">Open</span>}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      {potentialGrants.length > 50 && (
+                        <div className="px-3 py-2 text-xs text-slate-400 bg-slate-50 border-t">
+                          Showing 50 of {potentialGrants.length} grants
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
             );
           })()
         )}

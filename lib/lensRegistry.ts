@@ -248,6 +248,29 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'reports',                label: 'Reports' },
     { id: 'funding',                label: 'Funding & Grants' },
   ],
+  // ── PEARL Admin (11 items) ──────────────────────────────────────────────────
+  '/dashboard/pearl': [
+    { id: 'operations',       label: 'Operations' },
+    { id: 'proposals',        label: 'Proposals' },
+    { id: 'scenarios',        label: 'What-If' },
+    { id: 'predictions',      label: 'Predictions' },
+    { id: 'scenario-planner', label: 'Scenario Planner' },
+    { id: 'budget-planner',   label: 'Budget Planner' },
+    { id: 'investigation',    label: 'Investigation' },
+    { id: 'users',            label: 'Users' },
+    { id: 'alerts',           label: 'Alerts' },
+  ],
+  '/dashboard/admin': [
+    { id: 'operations',       label: 'Operations' },
+    { id: 'proposals',        label: 'Proposals' },
+    { id: 'scenarios',        label: 'What-If' },
+    { id: 'predictions',      label: 'Predictions' },
+    { id: 'scenario-planner', label: 'Scenario Planner' },
+    { id: 'budget-planner',   label: 'Budget Planner' },
+    { id: 'investigation',    label: 'Investigation' },
+    { id: 'users',            label: 'Users' },
+    { id: 'alerts',           label: 'Alerts' },
+  ],
   // ── Site Intelligence Dashboard (6 items) ──────────────────────────────────
   '/dashboard/site-intelligence': [
     { id: 'overview',       label: 'Overview' },

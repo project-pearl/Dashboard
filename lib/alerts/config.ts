@@ -50,6 +50,7 @@ export const BLOB_PATHS = {
   usgsSnapshot:      'alerts/usgs-alert-snapshot.json',
   coordinationSnapshot: 'alerts/coordination-snapshot.json',
   floodForecastSnapshot: 'alerts/flood-forecast-snapshot.json',
+  deploymentSnapshot:    'alerts/deployment-snapshot.json',
 };
 
 export const DISK_PATHS = {

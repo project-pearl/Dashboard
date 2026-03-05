@@ -22,7 +22,7 @@ const ROLE_PRIMARY_ROUTE: Record<UserRole, string> = {
   Researcher: '/dashboard/university',
   NGO:        '/dashboard/ngo',
   Temp:       '/dashboard/k12',
-  Pearl:      '/dashboard/federal', // admin default landing
+  Pearl:      '/dashboard/pearl',
 };
 
 // ─── Allowed route prefixes per role ─────────────────────────────────────────

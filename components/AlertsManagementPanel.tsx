@@ -6,12 +6,14 @@ import { Badge } from '@/components/ui/badge';
 import {
   Bell, Mail, Shield, ShieldOff, Plus, Trash2, Send,
   CheckCircle, XCircle, AlertTriangle, AlertCircle, Info,
-  Clock, RefreshCw, Filter,
+  Clock, RefreshCw, Filter, ChevronRight, ExternalLink,
 } from 'lucide-react';
 import type {
   AlertEvent, AlertRecipient, AlertRule, AlertSuppression,
   AlertSeverity, AlertTriggerType,
 } from '@/lib/alerts/types';
+import { AlertDeepDive } from './AlertDeepDive';
+import type { DeepDiveAlert } from './AlertDeepDive';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -23,7 +25,7 @@ const SEVERITY_COLORS: Record<AlertSeverity, { bg: string; border: string; text:
   info:     { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-800', icon: Info },
 };
 
-const TRIGGER_TYPES: AlertTriggerType[] = ['sentinel', 'usgs', 'delta', 'attains', 'nwss', 'coordination', 'fusion', 'flood_forecast', 'custom'];
+const TRIGGER_TYPES: AlertTriggerType[] = ['sentinel', 'usgs', 'delta', 'attains', 'nwss', 'coordination', 'fusion', 'flood_forecast', 'deployment', 'custom'];
 const SEVERITIES: AlertSeverity[] = ['critical', 'warning', 'info'];
 const OPERATORS = [
   { value: 'gt', label: '>' },
@@ -43,6 +45,7 @@ export function AlertsManagementPanel() {
   const [events, setEvents] = useState<AlertEvent[]>([]);
   const [historyStats, setHistoryStats] = useState({ totalSent: 0, totalSuppressed: 0, totalErrors: 0, totalLogged: 0, lastDispatchAt: null as string | null });
   const [severityFilter, setSeverityFilter] = useState<AlertSeverity | 'all'>('all');
+  const [selectedEvent, setSelectedEvent] = useState<AlertEvent | null>(null);
 
   // ── Recipients state ──
   const [recipients, setRecipients] = useState<AlertRecipient[]>([]);
@@ -276,6 +279,30 @@ export function AlertsManagementPanel() {
     setTestSending(false);
   }
 
+  // ─── Helpers ──────────────────────────────────────────────────────────────
+
+  /** Convert a deployment AlertEvent into a DeepDiveAlert for the deep-dive panel. */
+  function eventToDeepDive(evt: AlertEvent): DeepDiveAlert {
+    const m = evt.metadata || {};
+    return {
+      id: m.pipeline_event_id as string || evt.id,
+      deployment_id: evt.entityId,
+      deploymentName: evt.entityLabel,
+      parameter: (m.parameter as string) || 'unknown',
+      value: (m.value as number) ?? 0,
+      baseline: (m.baseline as number) ?? 0,
+      delta: (m.delta as number) ?? 0,
+      unit: (m.unit as string) || '',
+      severity: evt.severity,
+      status: 'open',
+      title: evt.title,
+      diagnosis: (m.diagnosis as string) || null,
+      recommendation: (m.recommendation as string) || null,
+      pipeline_event_id: evt.id,
+      created_at: evt.createdAt,
+    };
+  }
+
   // ─── Derived ───────────────────────────────────────────────────────────────
 
   const filteredEvents = severityFilter === 'all' ? events : events.filter(e => e.severity === severityFilter);
@@ -380,36 +407,97 @@ export function AlertsManagementPanel() {
               </CardContent>
             </Card>
           ) : (
-            [...filteredEvents].reverse().map(evt => {
-              const sev = SEVERITY_COLORS[evt.severity] || SEVERITY_COLORS.info;
-              const SevIcon = sev.icon;
-              return (
-                <div key={evt.id} className={`rounded-lg border p-3 ${sev.bg} ${sev.border}`}>
-                  <div className="flex items-start gap-3">
-                    <SevIcon className={`h-4 w-4 mt-0.5 flex-shrink-0 ${sev.text}`} />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className={`text-sm font-semibold ${sev.text}`}>{evt.title}</span>
-                        <Badge variant="secondary" className="text-[9px]">{evt.type}</Badge>
-                        {evt.sent ? (
-                          <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 text-[9px]">Sent</Badge>
-                        ) : evt.error === 'log_only' ? (
-                          <Badge variant="secondary" className="bg-cyan-100 text-cyan-700 text-[9px]">Logged</Badge>
-                        ) : evt.error ? (
-                          <Badge variant="secondary" className="bg-red-100 text-red-700 text-[9px]">Error</Badge>
-                        ) : null}
+            <>
+              {/* ── Deep-dive panel (shown above list when event selected) ── */}
+              {selectedEvent && selectedEvent.type === 'deployment' && (
+                <div className="mb-3">
+                  <AlertDeepDive
+                    alert={eventToDeepDive(selectedEvent)}
+                    onClose={() => setSelectedEvent(null)}
+                    onStatusChange={() => setSelectedEvent(null)}
+                  />
+                </div>
+              )}
+
+              {/* ── Non-deployment detail panel ── */}
+              {selectedEvent && selectedEvent.type !== 'deployment' && (
+                <Card className="mb-3 border-2 border-slate-300">
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-slate-800">{selectedEvent.title}</span>
+                          <Badge variant="secondary" className="text-[9px]">{selectedEvent.type}</Badge>
+                          <Badge className={`text-[9px] ${SEVERITY_COLORS[selectedEvent.severity].bg} ${SEVERITY_COLORS[selectedEvent.severity].text}`}>
+                            {selectedEvent.severity}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-slate-600 mt-2 leading-relaxed">{selectedEvent.body}</p>
+                        <div className="flex items-center gap-3 mt-2 text-xs text-slate-500">
+                          <span>{selectedEvent.entityLabel}</span>
+                          <span>{new Date(selectedEvent.createdAt).toLocaleString()}</span>
+                          <span>{selectedEvent.recipientEmail}</span>
+                        </div>
+                        {selectedEvent.ruleId && (
+                          <div className="text-xs text-slate-500 mt-1">Rule: <span className="font-mono">{selectedEvent.ruleId}</span></div>
+                        )}
                       </div>
-                      <p className="text-xs text-slate-600 mt-0.5 line-clamp-2">{evt.body}</p>
-                      <div className="flex items-center gap-3 mt-1.5 text-[10px] text-slate-500">
-                        <span>{evt.entityLabel}</span>
-                        <span>{new Date(evt.createdAt).toLocaleString()}</span>
-                        <span>{evt.recipientEmail}</span>
+                      <button onClick={() => setSelectedEvent(null)} className="text-slate-400 hover:text-slate-600 p-1">
+                        <XCircle className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* ── Event list ── */}
+              {[...filteredEvents].reverse().map(evt => {
+                const sev = SEVERITY_COLORS[evt.severity] || SEVERITY_COLORS.info;
+                const SevIcon = sev.icon;
+                const isDeployment = evt.type === 'deployment';
+                const isSelected = selectedEvent?.id === evt.id;
+                return (
+                  <button
+                    key={evt.id}
+                    onClick={() => setSelectedEvent(isSelected ? null : evt)}
+                    className={`w-full text-left rounded-lg border p-3 transition-all ${sev.bg} ${sev.border} ${
+                      isSelected ? 'ring-2 ring-slate-400 ring-offset-1' : 'hover:ring-1 hover:ring-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <SevIcon className={`h-4 w-4 mt-0.5 flex-shrink-0 ${sev.text}`} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-sm font-semibold ${sev.text}`}>{evt.title}</span>
+                          <Badge variant="secondary" className="text-[9px]">{evt.type}</Badge>
+                          {evt.sent ? (
+                            <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 text-[9px]">Sent</Badge>
+                          ) : evt.error === 'log_only' ? (
+                            <Badge variant="secondary" className="bg-cyan-100 text-cyan-700 text-[9px]">Logged</Badge>
+                          ) : evt.error ? (
+                            <Badge variant="secondary" className="bg-red-100 text-red-700 text-[9px]">Error</Badge>
+                          ) : null}
+                        </div>
+                        <p className="text-xs text-slate-600 mt-0.5 line-clamp-2">{evt.body}</p>
+                        <div className="flex items-center gap-3 mt-1.5 text-[10px] text-slate-500">
+                          <span>{evt.entityLabel}</span>
+                          <span>{new Date(evt.createdAt).toLocaleString()}</span>
+                          <span>{evt.recipientEmail}</span>
+                          {isDeployment && (
+                            <span className="flex items-center gap-0.5 text-purple-600 font-medium">
+                              <ExternalLink className="h-2.5 w-2.5" /> Deep dive
+                            </span>
+                          )}
+                          {!isDeployment && (
+                            <ChevronRight className={`h-3 w-3 ml-auto transition-transform ${isSelected ? 'rotate-90' : ''}`} />
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              );
-            })
+                  </button>
+                );
+              })}
+            </>
           )}
         </div>
       )}

@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { DollarSign, ExternalLink } from 'lucide-react';
 import { getStateGrants, getLiveGrantOpportunities, STATE_AUTHORITIES } from '@/lib/stateWaterData';
 import type { GrantOpportunity } from '@/lib/stateWaterData';
+import { usePearlFunding, type PearlGrant } from '@/lib/usePearlFunding';
 
 interface Grant {
   name: string;
@@ -568,6 +569,37 @@ function formatTotal(grants: Grant[]): string {
   return total > 0 ? `$${total.toLocaleString()}+` : '';
 }
 
+// ─── Map pearl-funding.json grant → local Grant interface ───────────────────
+
+function mapPearlGrant(g: PearlGrant): Grant {
+  const fit: Grant['fit'] = g.fit >= 0.9 ? 'High' : g.fit >= 0.7 ? 'Good' : 'Review';
+  // Parse dollar amounts from notes (e.g. "$100K", "$5M", "up to $75K")
+  const amountMatch = g.notes.match(/\$[\d,.]+[KkMmBb]?/);
+  const amount = amountMatch ? amountMatch[0] : 'See details';
+  let amountMax = 0;
+  if (amountMatch) {
+    const raw = amountMatch[0].replace(/[$,]/g, '');
+    const num = parseFloat(raw);
+    if (/[Mm]/.test(raw)) amountMax = num * 1_000_000;
+    else if (/[Kk]/.test(raw)) amountMax = num * 1_000;
+    else if (/[Bb]/.test(raw)) amountMax = num * 1_000_000_000;
+    else amountMax = num;
+  }
+  const deadline = g.closes
+    ? new Date(g.closes).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : 'Check source';
+  return {
+    name: g.name,
+    agency: g.source,
+    amount,
+    amountMax,
+    fit,
+    deadline,
+    description: g.notes,
+    url: '',
+  };
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function GrantOpportunityMatcher({
@@ -581,7 +613,23 @@ export function GrantOpportunityMatcher({
   const stateName = STATE_NAMES[stateAbbr] || stateAbbr;
   const stateAuth = STATE_AUTHORITIES[stateAbbr];
 
-  const grants = buildGrantsForRole(stateAbbr, userRole);
+  const { grants: pearlGrants } = usePearlFunding();
+
+  // Merge pearl-funding grants with role-based grants, dedup by name
+  const baseGrants = buildGrantsForRole(stateAbbr, userRole);
+  const pearlMapped = pearlGrants.map(mapPearlGrant);
+  const seen = new Set<string>();
+  const grants: Grant[] = [];
+  for (const g of [...baseGrants, ...pearlMapped]) {
+    const key = g.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (!seen.has(key)) {
+      seen.add(key);
+      grants.push(g);
+    }
+  }
+  // Re-sort: High first, then Good, then Review
+  const fitOrder = { High: 0, Good: 1, Review: 2 };
+  grants.sort((a, b) => fitOrder[a.fit] - fitOrder[b.fit]);
   const highFit = grants.filter(g => g.fit === 'High').length;
   const goodFit = grants.filter(g => g.fit === 'Good').length;
   const totalValue = formatTotal(grants);
