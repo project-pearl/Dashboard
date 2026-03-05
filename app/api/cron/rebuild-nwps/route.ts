@@ -100,8 +100,8 @@ async function fetchStageflow(lid: string): Promise<Array<{ time: string; stage:
     const list = Array.isArray(raw) ? raw : [];
     if (list.length === 0) return null;
 
-    // Take up to 10 most recent entries
-    const entries = list.slice(0, 10).map((entry: any) => ({
+    // Take up to 28 entries (7 days at 6h intervals) for flood prediction
+    const entries = list.slice(0, 28).map((entry: any) => ({
       time: entry.validTime ?? entry.time ?? entry.dateTime ?? '',
       stage: entry.stage != null ? parseFloat(entry.stage) : null,
       flow: entry.flow != null ? parseFloat(entry.flow) : null,

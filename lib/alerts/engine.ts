@@ -124,7 +124,7 @@ export async function dispatchAlerts(candidateEvents: AlertEvent[]): Promise<Dis
       };
 
       // Enrich sentinel/usgs/coordination alerts with contextual data
-      const enrichableTypes = new Set(['sentinel', 'usgs', 'coordination', 'nwss']);
+      const enrichableTypes = new Set(['sentinel', 'usgs', 'coordination', 'nwss', 'flood_forecast']);
       let enrichment;
       try {
         if (enrichableTypes.has(event.type)) {

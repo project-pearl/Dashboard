@@ -58,9 +58,11 @@ import { MilitaryInstallationsPanel } from './MilitaryInstallationsPanel';
 import WaterfrontExposurePanel from './WaterfrontExposurePanel';
 import { INDEX_WEIGHTS } from '@/lib/indices/config';
 import { useSentinelAlerts } from '@/hooks/useSentinelAlerts';
+import { useFloodForecast } from '@/hooks/useFloodForecast';
 import { useSentinelAudio } from '@/hooks/useSentinelAudio';
 import { SentinelStatusBadge } from './SentinelStatusBadge';
 import { SentinelBriefingCard } from './SentinelBriefingCard';
+import { FloodForecastCard, FloodStatusSummary } from './FloodForecastCard';
 import AMSAlertMonitor from '@/ams/components/AMSAlertMonitor';
 import { useAlertSummary } from '@/ams/hooks/useAlertSummary';
 import { StateDataReportCard } from '@/components/StateDataReportCard';
@@ -89,7 +91,7 @@ type AlertLevel = 'none' | 'low' | 'medium' | 'high';
 type OverlayId = 'hotspots' | 'ms4' | 'ej' | 'economy' | 'wildlife' | 'trend' | 'coverage' | 'indices';
 type ViewLens = 'overview' | 'briefing' | 'political-briefing' | 'trends' | 'policy' | 'compliance' |
   'water-quality' | 'public-health' | 'habitat-ecology' | 'agricultural-nps' |
-  'infrastructure' | 'monitoring' | 'disaster-emergency' | 'military-installations' |
+  'infrastructure' | 'monitoring' | 'sentinel-monitoring' | 'disaster-emergency' | 'military-installations' |
   'scorecard' | 'reports' | 'interagency' | 'funding';
 
 // ─── Water Quality Domain Tabs ────────────────────────────────────────────────
@@ -194,7 +196,17 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: true, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: true, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['networkhealth', 'coveragegaps', 'sla', 'data-latency', 'sentinel-briefing', 'delta-changelog']),
+    sections: new Set(['networkhealth', 'coveragegaps', 'sla', 'data-latency', 'sentinel-briefing', 'flood-status', 'delta-changelog']),
+  },
+  'sentinel-monitoring': {
+    label: 'Sentinel Monitoring',
+    description: 'Real-time watershed monitoring with active alerts and event tracking',
+    defaultOverlay: 'hotspots',
+    showTopStrip: false, showPriorityQueue: false, showCoverageGaps: false,
+    showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
+    showHotspots: false, showSituationSummary: false, showTimeRange: false,
+    showSLA: false, showRestorationPlan: false, collapseStateTable: true,
+    sections: new Set(['sentinel-briefing', 'flood-status', 'sentinel-alerts-placeholder']),
   },
   trends: {
     label: 'Trends & Projections',
@@ -254,7 +266,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['disaster-emergency', 'fed-emergency-overview', 'fed-active-incidents', 'fed-spill-tracker', 'resolution-planner']),
+    sections: new Set(['disaster-emergency', 'fed-emergency-overview', 'fed-active-incidents', 'fed-spill-tracker', 'flood-forecast', 'resolution-planner']),
   },
   'military-installations': {
     label: 'Military Installations',
@@ -1135,6 +1147,7 @@ export function FederalManagementCenter(props: Props) {
 
   // ── Sentinel Alert System ──
   const sentinel = useSentinelAlerts();
+  const floodForecast = useFloodForecast();
   const amsSummary = useAlertSummary();
   const { audioEnabled, toggleAudio, playChime } = useSentinelAudio({ userRole: user?.role });
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -5811,6 +5824,17 @@ export function FederalManagementCenter(props: Props) {
           </Card>
         );
 
+        case 'flood-forecast': return DS(
+          <FloodForecastCard
+            forecasts={floodForecast.forecasts}
+            summary={floodForecast.summary}
+            updatedAt={floodForecast.updatedAt}
+            isLoading={floodForecast.isLoading}
+            error={floodForecast.error}
+            onRefresh={floodForecast.refetch}
+          />
+        );
+
         case 'resolution-planner': return DS(<>
         {/* ── Response Planner — AI-powered action planning ── */}
         <div id="section-resolution-planner">
@@ -5852,6 +5876,16 @@ export function FederalManagementCenter(props: Props) {
             sources={sentinel.sources}
             systemStatus={sentinel.systemStatus}
             lastFetched={sentinel.lastFetched}
+          />
+        );
+
+        case 'flood-status': return DS(
+          <FloodStatusSummary
+            forecasts={floodForecast.forecasts}
+            summary={floodForecast.summary}
+            updatedAt={floodForecast.updatedAt}
+            isLoading={floodForecast.isLoading}
+            onViewDetails={() => setViewLens('disaster-emergency' as ViewLens)}
           />
         );
 

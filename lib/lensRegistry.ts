@@ -25,6 +25,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'habitat-ecology', label: 'Habitat & Ecology' },
     { id: 'infrastructure', label: 'Infrastructure' },
     { id: 'monitoring', label: 'Monitoring' },
+    { id: 'sentinel-monitoring', label: 'Sentinel Monitoring' },
     { id: 'disaster-emergency', label: 'Disaster & Emergency' },
     { id: 'scorecard', label: 'Scorecard' },
     { id: 'reports', label: 'Reports' },

@@ -32,8 +32,11 @@ Each adapter reads from an existing cache or live API and produces `ChangeEvent[
 | `qpeAdapter` | QPE_RAINFALL | NRCS AWDB SNOTEL (live) | 30 min |
 | `ssoAdapter` | SSO_CSO | ECHO SSO endpoint (live) | 30 min |
 | `stateDischargeAdapter` | STATE_DISCHARGE | Stub (TODO) | Daily |
+| `nwpsForecastAdapter` | NWPS_FORECAST | `nwpsCache` + `nwpsGaugeLookup` | 30 min |
 
 Each source cache is populated by its own rebuild cron (e.g., `rebuild-nws-alerts`, `rebuild-nwis-iv`). The sentinel adapters read from these caches — they do not fetch external data themselves (except FEMA, QPE, SSO which call live APIs).
+
+The **NWPS_FORECAST adapter** is the flood prediction engine. It reads stageflow forecast data from `nwpsCache` (populated every 30 min by `rebuild-nwps`) and compares predicted stage heights against flood thresholds from `nwpsGaugeLookup` (parsed from the NWPS all-gauges CSV report). It emits `THRESHOLD_CROSSED` events when a gauge is predicted to exceed action/minor/moderate/major flood stage, along with lead time estimates.
 
 ### Phase 2: Scoring (sentinel-score cron, every 5 min)
 
@@ -113,6 +116,7 @@ Each candidate goes through: suppression check → cooldown check → recipient 
 | `nwssTrigger` | `nwss` | NWSS pathogen anomalies ≥3σ | No (but includes correlation metadata) |
 | `coordinationTrigger` | `coordination` | Multi-site coordinated anomalies (score >0.6) | No (inherently high-signal) |
 | `attainsTrigger` | `attains` | ATTAINS impairment status changes | No |
+| `floodForecastTrigger` | `flood_forecast` | Predicted flood stage exceedances from NWPS forecasts | No |
 | Custom rules | `custom` | User-defined metric thresholds | No |
 
 ### Delta Trigger
@@ -195,6 +199,7 @@ When a sentinel, USGS, coordination, or NWSS alert fires, the email includes:
 - `lib/sentinel/adapters/qpeAdapter.ts` — QPE_RAINFALL
 - `lib/sentinel/adapters/ssoAdapter.ts` — SSO_CSO
 - `lib/sentinel/adapters/stateDischargeAdapter.ts` — STATE_DISCHARGE (stub)
+- `lib/sentinel/adapters/nwpsForecastAdapter.ts` — NWPS_FORECAST (flood prediction)
 
 ### Alert Pipeline
 - `lib/alerts/types.ts` — AlertEvent, AlertTriggerType (sentinel|usgs|delta|attains|nwss|coordination|fusion|custom)
@@ -213,6 +218,7 @@ When a sentinel, USGS, coordination, or NWSS alert fires, the email includes:
 - `lib/alerts/triggers/nwssTrigger.ts` — NWSS pathogen anomalies with correlation metadata
 - `lib/alerts/triggers/coordinationTrigger.ts` — Coordinated multi-site anomalies
 - `lib/alerts/triggers/attainsTrigger.ts` — ATTAINS impairment changes
+- `lib/alerts/triggers/floodForecastTrigger.ts` — Flood forecast predictions from NWPS
 - `app/api/alerts/fusion-ingest/route.ts` — Fusion engine webhook receiver
 
 ### Cron Routes
@@ -226,6 +232,10 @@ When a sentinel, USGS, coordination, or NWSS alert fires, the email includes:
 - `components/SentinelAlertPanel.tsx` — HUC detail overlay
 - `components/AlertsManagementPanel.tsx` — Admin UI (recipients, rules, suppressions, history)
 - `hooks/useSentinelAlerts.ts` — Polls `/api/sentinel-status` every 60s
+- `components/FloodForecastCard.tsx` — Predicted flood exceedances with sparklines and lead times
+- `hooks/useFloodForecast.ts` — Polls `/api/flood-forecast` every 2 min
+- `app/api/flood-forecast/route.ts` — Returns predicted flood exceedances from NWPS gauge forecasts
+- `lib/nwpsGaugeLookup.ts` — Flood stage thresholds from NWPS CSV (action/minor/moderate/major)
 
 ### Test Infrastructure
 - `lib/sentinel/__tests__/attackSimulator.ts` — Generates simulated attack events

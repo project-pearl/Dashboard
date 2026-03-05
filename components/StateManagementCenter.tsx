@@ -29,6 +29,8 @@ import { computeRestorationPlan, resolveAttainsCategory, mergeAttainsCauses, COS
 import { extractHuc8 } from '@/lib/huc8Utils';
 import type { HucIndices } from '@/lib/indices/types';
 import RestorationPlanner from '@/components/RestorationPlanner';
+import { useFloodForecast } from '@/hooks/useFloodForecast';
+import { FloodForecastCard, FloodStatusSummary } from './FloodForecastCard';
 import { WaterbodyDetailCard } from '@/components/WaterbodyDetailCard';
 import { scoreToGrade, alertLevelAvgScore, ALERT_LEVEL_SCORES, ecoScoreStyle, ejScoreStyle } from '@/lib/scoringUtils';
 import { getEcoScore, getEcoData, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
@@ -201,13 +203,13 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Monitoring',
     description: 'State monitoring network, data management, and optimization',
     defaultOverlay: 'coverage',
-    sections: new Set(['groundwater', 'mon-network', 'mon-data-mgmt', 'mon-optimization', 'mon-continuous', 'mon-latency', 'mon-report-card', 'mon-source-health', 'disclaimer']),
+    sections: new Set(['groundwater', 'mon-network', 'mon-data-mgmt', 'mon-optimization', 'mon-continuous', 'mon-latency', 'mon-report-card', 'mon-source-health', 'flood-status', 'disclaimer']),
   },
   disaster: {
     label: 'Disaster & Emergency Response',
     description: 'Active incidents, spill reporting, and preparedness — redirects to merged planner view',
     defaultOverlay: 'risk',
-    sections: new Set(['alertfeed', 'disaster-active', 'disaster-response', 'disaster-spill', 'disaster-prep', 'disaster-cascade', 'resolution-planner', 'disclaimer']),
+    sections: new Set(['alertfeed', 'disaster-active', 'disaster-response', 'disaster-spill', 'disaster-prep', 'disaster-cascade', 'flood-forecast', 'resolution-planner', 'disclaimer']),
   },
   tmdl: {
     label: 'TMDL & Restoration',
@@ -554,6 +556,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
 
   const { waterData: rawWaterData, isLoading: waterLoading, hasRealData } = useWaterData(activeDetailId);
   const waterData = useTierFilter(rawWaterData, 'State');
+  const floodForecast = useFloodForecast();
 
   // ── Mock data bridge: supplies removalEfficiencies, stormEvents, displayData to child components ──
   // getRegionMockData only has data for pre-configured demo regions — wrap defensively
@@ -4163,6 +4166,16 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </Card>
             );
 
+            case 'flood-status': return DS(
+              <FloodStatusSummary
+                forecasts={floodForecast.forecasts}
+                summary={floodForecast.summary}
+                updatedAt={floodForecast.updatedAt}
+                isLoading={floodForecast.isLoading}
+                onViewDetails={() => setViewLens('disaster' as ViewLens)}
+              />
+            );
+
             // ── Disaster sections ──────────────────────────────────────────
             {/* TODO: Future click-throughs for Active Incidents:
                 - Each incident row → Response Planner pre-loaded with that incident context
@@ -4360,6 +4373,17 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   <p className="text-xs text-slate-400 mt-4 italic">Data source: PIN incident correlation engine, waterbody network topology</p>
                 </CardContent>
               </Card>
+            );
+
+            case 'flood-forecast': return DS(
+              <FloodForecastCard
+                forecasts={floodForecast.forecasts}
+                summary={floodForecast.summary}
+                updatedAt={floodForecast.updatedAt}
+                isLoading={floodForecast.isLoading}
+                error={floodForecast.error}
+                onRefresh={floodForecast.refetch}
+              />
             );
 
             // ── TMDL sections ──────────────────────────────────────────────

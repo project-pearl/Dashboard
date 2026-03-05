@@ -49,6 +49,7 @@ export const BLOB_PATHS = {
   nwssSnapshot:      'alerts/nwss-snapshot.json',
   usgsSnapshot:      'alerts/usgs-alert-snapshot.json',
   coordinationSnapshot: 'alerts/coordination-snapshot.json',
+  floodForecastSnapshot: 'alerts/flood-forecast-snapshot.json',
 };
 
 export const DISK_PATHS = {

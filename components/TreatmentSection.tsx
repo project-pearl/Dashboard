@@ -90,7 +90,7 @@ const TreatmentSection: React.FC = () => {
             width={2400}
             height={1400}
             priority
-            className="w-full h-[55vh] md:h-[68vh] object-cover"
+            className="w-full h-[55vh] md:h-[68vh] object-contain bg-slate-100"
           />
         </div>
         <div className="mt-10">

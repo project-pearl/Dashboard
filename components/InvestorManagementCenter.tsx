@@ -28,16 +28,15 @@ import {
   Droplets, BarChart3, Shield, TrendingUp, TrendingDown, AlertTriangle, ChevronDown,
   Gauge, Minus, MapPin, Building2, FileText, Award, Globe, Leaf, Users, Target,
   DollarSign, Eye, Lock, Activity, ArrowRight, ChevronRight, Search, Filter,
-  Download, ExternalLink, Star, Zap, Heart, Scale, X, Microscope, Beaker,
+  ExternalLink, Star, Zap, Heart, Scale, X, Microscope, Beaker,
   CheckCircle2, Circle, AlertCircle, Sparkles, ClipboardList, Link2,
   ShieldCheck, Factory, Waves, CloudRain, Landmark, Briefcase, PieChart
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/authContext';
+import { useAdminState } from '@/lib/adminStateContext';
 import { getRegionById } from '@/lib/regionsConfig';
 import { REGION_META, getWaterbodyDataSources } from '@/lib/useWaterData';
-import { BrandedPDFGenerator } from '@/lib/brandedPdfGenerator';
-import { BrandedPrintBtn } from '@/lib/brandedPrint';
 import { ProvenanceIcon } from '@/components/DataProvenanceAudit';
 import { AIInsightsEngine } from '@/components/AIInsightsEngine';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
@@ -52,6 +51,8 @@ import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import { RoleBriefingActionsCard, RoleBriefingPulseCard } from '@/components/RoleBriefingCards';
+import { getEcoData, getEcoScore, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
+import { ecoScoreStyle } from '@/lib/scoringUtils';
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
   { ssr: false }
@@ -85,13 +86,50 @@ type PortfolioCompany = {
 
 type ViewLens = 'overview' | 'portfolio-risk' | 'water-stress' | 'compliance' |
   'esg-disclosure' | 'climate-resilience' | 'financial-impact' | 'due-diligence' | 'trends' |
-  'briefing' | 'habitat' | 'scorecard' | 'funding';
+  'briefing' | 'habitat' | 'scorecard';
 
 type LensConfig = {
   label: string;
   description: string;
   icon: any;
   sections: Set<string>;
+};
+
+const SECTION_DESCRIPTIONS: Record<string, string> = {
+  summary: 'Portfolio-level investor summary for scoped water risk, compliance, and exposure.',
+  kpis: 'Core KPIs for risk, compliance, AUM exposure, and verified monitoring coverage.',
+  'map-grid': 'Interactive map and ranked portfolio list for rapid risk triage.',
+  'portfolio-snapshot': 'Scoped holdings snapshot with sector, state, and risk posture.',
+  'portfolio-risk-matrix': 'Risk versus AUM concentration matrix for investment prioritization.',
+  'risk-factors': 'Primary water risk drivers and financial impact channels.',
+  'asset-exposure': 'AUM distribution by risk tier across scoped holdings.',
+  'water-stress-map': 'Water stress exposure summary for scoped holdings by stress tier.',
+  'stressed-assets-table': 'Holdings in stressed basins ranked by risk and exposure.',
+  'basin-analysis': 'Basin-level outlook affecting holdings and long-horizon water availability.',
+  'compliance-overview': 'Compliance posture, violations, and threshold tracking across holdings.',
+  'regulatory-cost-forecast': 'Projected cost exposure from regulatory tightening and new standards.',
+  'esg-scoring': 'Water-related ESG scoring distribution for scoped holdings.',
+  'disclosure-readiness': 'Framework coverage for water disclosure and reporting readiness.',
+  'water-metrics-table': 'Benchmark comparison across investor-relevant water metrics.',
+  'climate-scenarios': 'Scenario-based climate/water exposure assumptions and downside risk.',
+  'physical-risk-panel': 'Physical climate-water risk concentration and prioritized exposures.',
+  'transition-risk-panel': 'Policy and market transition risks impacting water-dependent assets.',
+  'financial-impact-summary': 'Topline financial exposure and savings opportunities.',
+  'valuation-impact': 'Estimated valuation impact from water risk materialization.',
+  'cost-of-inaction': 'Projected losses under delayed mitigation and response.',
+  'due-diligence-checklist': 'Standardized investor due-diligence controls for water risk.',
+  'site-risk-profile': 'Holding-level risk profiles for diligence and engagement.',
+  economic: 'Economic implications and scenario-adjusted performance outlook.',
+  insights: 'AI-generated investor insights from scoped data and trend signals.',
+  groundwater: 'Groundwater signals relevant to portfolio exposure and resilience.',
+  icis: 'NPDES/ICIS compliance panel scoped to selected state context.',
+  sdwis: 'Drinking water compliance panel scoped to selected state context.',
+  'disaster-emergency-panel': 'Acute disruption and emergency response exposure context.',
+  'briefing-actions': 'Priority actions and morning intelligence for investor operations.',
+  'hab-ecoscore': 'Ecological sensitivity exposure context for scoped holdings.',
+  'hab-wildlife': 'Threatened and aquatic species context tied to holding states.',
+  'scorecard-kpis': 'Investor scorecard KPIs for risk, compliance, ESG, and exposure.',
+  'scorecard-grades': 'Letter-grade view of investor water performance dimensions.',
 };
 
 const LENS_CONFIG: Record<ViewLens, LensConfig> = {
@@ -108,7 +146,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   'water-stress': {
     label: 'Water Stress', description: 'Basin-level water stress analysis for portfolio assets',
     icon: Droplets,
-    sections: new Set(['water-stress-map', 'stressed-assets-table', 'basin-analysis', 'sdwis', 'groundwater', 'disclaimer']),
+    sections: new Set(['water-stress-map', 'stressed-assets-table', 'basin-analysis', 'groundwater', 'disclaimer']),
   },
   compliance: {
     label: 'Compliance & Regulatory', description: 'Regulatory compliance risk and cost forecasting',
@@ -118,7 +156,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   'esg-disclosure': {
     label: 'ESG Disclosure', description: 'ESG water metrics readiness and disclosure scoring',
     icon: FileText,
-    sections: new Set(['esg-scoring', 'disclosure-readiness', 'water-metrics-table', 'reports-hub', 'disclaimer']),
+    sections: new Set(['esg-scoring', 'disclosure-readiness', 'water-metrics-table', 'disclaimer']),
   },
   'climate-resilience': {
     label: 'Climate Resilience', description: 'Climate scenario analysis and physical/transition risk',
@@ -138,7 +176,7 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
   trends: {
     label: 'Trends & Outlook', description: 'Water risk trajectories, AI insights, and policy outlook',
     icon: TrendingUp,
-    sections: new Set(['trends-dashboard', 'disaster-emergency-panel', 'disclaimer']),
+    sections: new Set(['trends-dashboard', 'disclaimer']),
   },
   briefing: {
     label: 'Briefing', description: 'Daily briefing with actions, changes, and stakeholder updates',
@@ -154,11 +192,6 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
     label: 'Scorecard', description: 'KPIs and grades for portfolio environmental performance',
     icon: Award,
     sections: new Set(['scorecard-kpis', 'scorecard-grades', 'disclaimer']),
-  },
-  funding: {
-    label: 'Funding', description: 'Grant awards, opportunity pipeline, and financial analytics',
-    icon: DollarSign,
-    sections: new Set(['grants', 'fund-active', 'fund-pipeline', 'fund-analytics', 'disclaimer']),
   },
 };
 
@@ -323,6 +356,7 @@ type Props = {
 export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Portfolio', companies: propCompanies, onBack, onToggleDevMode }: Props) {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const [adminState, setAdminState] = useAdminState();
 
   // ── View Lens ──
   const [viewLens, setViewLens] = useLensParam<ViewLens>('overview');
@@ -333,8 +367,9 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
   const [flyTarget, setFlyTarget] = useState<{ center: [number, number]; zoom: number } | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
   const [hoveredCompany, setHoveredCompany] = useState<string | null>(null);
-  const [focusedState, setFocusedState] = useState<string>('US');
+  const [focusedState, setFocusedState] = useState<string>(adminState || 'US');
   const [searchQuery, setSearchQuery] = useState('');
+  const [climateSearch, setClimateSearch] = useState('');
   const [filterLevel, setFilterLevel] = useState<'all' | 'high' | 'medium' | 'low'>('all');
 
   // ── Mapbox map ref + flyTo ──
@@ -345,6 +380,12 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
       mapRef.current.flyTo({ center: [flyTarget.center[1], flyTarget.center[0]], zoom: flyTarget.zoom });
     }
   }, [flyTarget]);
+
+  useEffect(() => {
+    if (adminState && focusedState !== adminState) {
+      setFocusedState(adminState);
+    }
+  }, [adminState, focusedState]);
 
   // ── Mapbox hover state ──
   const [hoveredFeature, setHoveredFeature] = useState<mapboxgl.MapboxGeoJSONFeature | null>(null);
@@ -370,10 +411,14 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
   const toggleSection = (id: string) => setExpandedSections(prev => ({ ...prev, [id]: !prev[id] }));
 
   // ── Demo companies ──
-  const companiesData: PortfolioCompany[] = useMemo(() => {
+  const allCompaniesData: PortfolioCompany[] = useMemo(() => {
     if (propCompanies && propCompanies.length > 0) return propCompanies;
     return DEMO_PORTFOLIO;
   }, [propCompanies]);
+  const companiesData: PortfolioCompany[] = useMemo(() => {
+    if (focusedState === 'US') return allCompaniesData;
+    return allCompaniesData.filter((c) => c.state === focusedState);
+  }, [allCompaniesData, focusedState]);
 
   // ── Mapbox marker data ──
   const companyMarkerData = useMemo(() =>
@@ -403,6 +448,15 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
     return filtered.sort((a, b) => b.waterRiskScore - a.waterRiskScore);
   }, [companiesData, searchQuery, filterLevel]);
 
+  const climateRows = useMemo(() => {
+    const q = climateSearch.trim().toLowerCase();
+    const rows = companiesData
+      .filter((c) => c.stressLevel === 'extreme' || c.stressLevel === 'high' || c.stressLevel === 'medium-high')
+      .filter((c) => !q || c.name.toLowerCase().includes(q) || c.sector.toLowerCase().includes(q) || c.state.toLowerCase().includes(q))
+      .sort((a, b) => b.waterRiskScore - a.waterRiskScore);
+    return rows;
+  }, [companiesData, climateSearch]);
+
   // ── Aggregate portfolio scores ──
   const portfolioScores = useMemo(() => {
     const total = companiesData.length;
@@ -423,75 +477,6 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
   const selectedComp = companiesData.find(c => c.id === selectedCompany) || null;
 
   // ── Text sanitizer for PDF ──
-  const clean = (s: string) => s
-    .replace(/[\u{1F000}-\u{1FFFF}]/gu, '')
-    .replace(/[\u{2600}-\u{27BF}]/gu, '')
-    .replace(/[\u{FE00}-\u{FE0F}]/gu, '')
-    .replace(/[\u{200D}]/gu, '')
-    .replace(/[\u{E0020}-\u{E007F}]/gu, '')
-    .replace(/\u00B5/g, 'u').replace(/\u03BC/g, 'u')
-    .replace(/\u2192/g, '->').replace(/\u2190/g, '<-')
-    .replace(/\u2014/g, '--').replace(/\u2013/g, '-')
-    .replace(/\u00A7/g, 'Section ').replace(/\u2022/g, '-')
-    .replace(/\u00B0/g, ' deg')
-    .replace(/\u2019/g, "'").replace(/\u2018/g, "'")
-    .replace(/\u201C/g, '"').replace(/\u201D/g, '"')
-    .replace(/[^\x00-\x7F]/g, '')
-    .replace(/\s+/g, ' ').trim();
-
-  // ── Branded PDF export ──
-  const exportInvestorReport = async () => {
-    try {
-      const pdf = new BrandedPDFGenerator('portrait');
-      await pdf.loadLogo();
-      pdf.initialize();
-      const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-
-      pdf.addTitle('Water Risk & Investment Intelligence Report');
-      pdf.addText(clean(portfolioName), { bold: true, fontSize: 14 });
-      pdf.addText(clean(`Generated ${dateStr}`), { fontSize: 9 });
-      pdf.addSpacer(5);
-
-      pdf.addSubtitle('Portfolio Summary');
-      pdf.addDivider();
-      pdf.addText(clean(`Portfolio: ${portfolioScores.total} companies | $${portfolioScores.totalAUM}M AUM | ${portfolioScores.monitored} PIN-verified`), { bold: true });
-      pdf.addText(clean(`Water Risk: ${portfolioScores.highRisk} high | ${portfolioScores.medRisk} medium | ${portfolioScores.lowRisk} low`), { indent: 5 });
-      pdf.addText(clean(`Exposed AUM: $${portfolioScores.exposedAUM}M (${Math.round(portfolioScores.exposedAUM / Math.max(portfolioScores.totalAUM, 1) * 100)}%)`), { indent: 5 });
-      pdf.addSpacer(3);
-
-      pdf.addSubtitle('Water Risk Factors');
-      pdf.addDivider();
-      pdf.addTable(
-        ['Category', 'Severity', 'Financial Impact'],
-        WATER_RISK_FACTORS.map(rf => [rf.category, rf.severity, clean(rf.financialImpact)])
-      );
-      pdf.addSpacer(3);
-
-      pdf.addSubtitle('Portfolio Holdings');
-      pdf.addDivider();
-      pdf.addTable(
-        ['Company', 'Sector', 'AUM ($M)', 'Risk', 'ESG', 'Compliance'],
-        companiesData.map(c => [
-          clean(c.name), c.sector, String(c.aum),
-          String(c.waterRiskScore), c.esgRating || '--',
-          c.complianceRate ? `${c.complianceRate}%` : '--',
-        ])
-      );
-
-      pdf.addSpacer(5);
-      pdf.addDivider();
-      pdf.addText('DISCLAIMER', { bold: true, fontSize: 8 });
-      pdf.addText(clean('PIN grades and alerts are informational tools derived from publicly available data and automated analysis. They are not official EPA, MDE, or state assessments and do not constitute regulatory determinations. Always verify with primary agency data for compliance or permitting purposes. © 2026 Local Seafood Projects Inc. All rights reserved.'), { fontSize: 8 });
-
-      const safeName = portfolioName.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_');
-      pdf.download(`PEARL_Investor_Report_${safeName}_${new Date().toISOString().slice(0, 10)}.pdf`);
-    } catch (err) {
-      console.error('Investor PDF export failed:', err);
-      alert('PDF export failed. Please try again.');
-    }
-  };
-
-  // ─── Helper: severity badge ────────────────────────────────────────────────
 
   const SeverityBadge = ({ level }: { level: 'high' | 'medium' | 'low' }) => (
     <Badge variant="outline" className={`text-[9px] ${
@@ -535,6 +520,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
             onChange={(e) => {
               const st = e.target.value;
               setFocusedState(st);
+              if (st !== 'US' && st !== adminState) setAdminState(st);
               setSelectedCompany(null);
               const geo = STATE_GEO_LEAFLET[st] || STATE_GEO_LEAFLET['US'];
               setFlyTarget({ center: geo.center, zoom: st === 'US' ? DEFAULT_ZOOM : geo.zoom });
@@ -546,13 +532,9 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
               <option key={abbr} value={abbr}>{name}</option>
             ))}
           </select>
-          <button
-            onClick={exportInvestorReport}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition-colors shadow-sm"
-          >
-            <Download className="h-3.5 w-3.5" />
-            Export Report
-          </button>
+          <div className="text-xs font-medium text-slate-500">
+            {focusedState === 'US' ? 'National scope' : `${STATE_NAMES[focusedState] || focusedState} scope`}
+          </div>
         </div>
 
         {viewLens === 'overview' && (
@@ -563,8 +545,8 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
         )}
 
         <LayoutEditor ccKey="Investor">
-        {({ sections, isEditMode, onToggleVisibility, onToggleCollapse, collapsedSections }) => {
-          const isSectionOpen = (id: string) => !collapsedSections[id];
+        {({ sections, isEditMode, onToggleVisibility }) => {
+          const isSectionBodyOpen = (id: string) => expandedSections[id] ?? true;
           return (<>
           <div className={`space-y-4 ${isEditMode ? 'pl-12' : ''}`}>
 
@@ -574,10 +556,33 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
           if (s.lensControlled && lens.sections) return lens.sections.has(s.id);
           return true;
         }).map(section => {
+          const sectionDescription = SECTION_DESCRIPTIONS[section.id] || '';
           const DS = (children: React.ReactNode) => (
             <DraggableSection key={section.id} id={section.id} label={section.label}
               isEditMode={isEditMode} isVisible={section.visible} onToggleVisibility={onToggleVisibility}>
-              {children}
+              <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                <button
+                  onClick={() => toggleSection(section.id)}
+                  className="w-full px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors border-b border-slate-200 text-left"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="text-base font-bold text-slate-800 leading-tight">{section.label}</div>
+                      <div className="mt-1 min-h-[32px] text-[11px] text-slate-500 leading-4 line-clamp-2">
+                        {sectionDescription || '\u00A0'}
+                      </div>
+                    </div>
+                    <div className="pt-0.5 text-slate-400">
+                      {isSectionBodyOpen(section.id) ? <Minus className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </div>
+                  </div>
+                </button>
+                {isSectionBodyOpen(section.id) && (
+                  <div className="p-4 text-[11px] leading-5 text-slate-700">
+                    {children}
+                  </div>
+                )}
+              </div>
             </DraggableSection>
           );
           switch (section.id) {
@@ -1241,24 +1246,67 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-orange-600" /> Physical Risk Assessment</CardTitle>
-                  <CardDescription className="text-[11px]">Acute and chronic physical water risks across portfolio locations</CardDescription>
+                  <CardDescription className="text-[11px]">Acute and chronic climate-water risks across portfolio holdings</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-                      <div className="text-[11px] font-semibold text-red-800 mb-1">Acute Risks</div>
-                      <div className="text-[10px] text-red-700 space-y-1">
-                        <div>- 2 holdings in FEMA flood zones (100-yr)</div>
-                        <div>- 1 holding in hurricane landfall corridor</div>
-                        <div>- 1 holding exposed to wildfire watershed impact</div>
+                  <div className="space-y-3">
+                    <div className="rounded-lg border border-orange-200 bg-orange-50 p-3">
+                      <div className="text-xs font-semibold text-orange-800">Climate Resilience KPI</div>
+                      <div className="text-[11px] text-orange-700 mt-1">
+                        {portfolioScores.extremeStress + companiesData.filter((c) => c.stressLevel === 'high').length} holdings are in high/extreme stress zones ({portfolioScores.total > 0 ? Math.round(((portfolioScores.extremeStress + companiesData.filter((c) => c.stressLevel === 'high').length) / portfolioScores.total) * 100) : 0}% of scoped portfolio).
                       </div>
                     </div>
-                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-                      <div className="text-[11px] font-semibold text-amber-800 mb-1">Chronic Risks</div>
-                      <div className="text-[10px] text-amber-700 space-y-1">
-                        <div>- 2 holdings in drought-prone basins (trend worsening)</div>
-                        <div>- 3 holdings face rising water temperatures</div>
-                        <div>- 1 holding vulnerable to saltwater intrusion</div>
+
+                    <div className="rounded-lg border border-slate-200 bg-white p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="text-xs font-semibold text-slate-800">Most Exposed Holdings</div>
+                        <div className="text-[10px] text-slate-500">Showing first 5, scroll for more</div>
+                      </div>
+                      <div className="mt-2 flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-1.5">
+                        <Search className="h-3.5 w-3.5 text-slate-400" />
+                        <input
+                          value={climateSearch}
+                          onChange={(e) => setClimateSearch(e.target.value)}
+                          placeholder="Search holding, sector, or state..."
+                          className="w-full bg-transparent text-xs text-slate-700 outline-none placeholder:text-slate-400"
+                        />
+                      </div>
+                      <div className="mt-2 space-y-1.5">
+                        {climateRows.length === 0 && (
+                          <div className="text-xs text-slate-500 px-1 py-2">No holdings match your climate filter.</div>
+                        )}
+                        {climateRows.slice(0, 5).map((c) => (
+                          <div
+                            key={c.id}
+                            className="px-2.5 py-2 rounded-md border text-[11px] border-red-200 bg-red-50/40"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-semibold text-slate-800">{c.name}</span>
+                              <Badge variant="outline" className="text-[9px] border-red-300 bg-red-50 text-red-700">
+                                {c.stressLevel || 'n/a'}
+                              </Badge>
+                            </div>
+                            <div className="text-[10px] text-slate-600 mt-0.5">
+                              {c.sector} · {c.state} · Risk {c.waterRiskScore} · AUM ${c.aum}M
+                            </div>
+                          </div>
+                        ))}
+                        {climateRows.length > 5 && (
+                          <div className="rounded-md border border-slate-200 bg-slate-50 p-2.5">
+                            <div className="text-[10px] font-semibold text-slate-600 mb-1.5">More results ({climateRows.length - 5})</div>
+                            <div className="max-h-40 overflow-y-auto space-y-1.5 pr-1">
+                              {climateRows.slice(5).map((c) => (
+                                <div key={`${c.id}-more`} className="px-2 py-1.5 rounded border border-slate-200 bg-white text-[10px]">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <span className="font-semibold text-slate-700">{c.name}</span>
+                                    <span className="text-slate-500">{c.stressLevel}</span>
+                                  </div>
+                                  <div className="text-slate-500">{c.sector} · {c.state} · Risk {c.waterRiskScore}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1520,14 +1568,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
             case 'icis': return DS(<ICISCompliancePanel state={focusedState !== 'US' ? focusedState : undefined} compactMode={false} />);
             case 'sdwis': return DS(<SDWISCompliancePanel state={focusedState !== 'US' ? focusedState : undefined} compactMode={false} />);
             case 'disaster-emergency-panel': return DS(<DisasterEmergencyPanel selectedState={focusedState !== 'US' ? focusedState : ''} stateRollup={[]} />);
-            case 'reports-hub': return DS(
-              <Card><CardHeader><CardTitle>Investor Reports</CardTitle><CardDescription>Generated water risk & ESG reports</CardDescription></CardHeader>
-              <CardContent><div className="space-y-2">
-                {['Portfolio Water Risk Summary', 'ESG Water Disclosure Report', 'Regulatory Cost Forecast', 'Climate Scenario Analysis', 'Due Diligence Dossier'].map(r =>
-                  <div key={r} className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50"><span className="text-sm text-slate-700">{r}</span><Badge variant="outline" className="text-[10px]">Generate</Badge></div>
-                )}
-              </div></CardContent></Card>
-            );
+            case 'reports-hub': return null;
 
             case 'supply-chain-risk-panel': return DS(<SupplyChainRiskPanel stateAbbr="" />);
 
@@ -1624,33 +1665,119 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
             }
 
             case 'hab-ecoscore': return DS(
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                <h3 className="text-sm font-semibold text-slate-800 mb-1">Ecological Sensitivity Score</h3>
-                <p className="text-xs text-slate-500">Environmental sensitivity assessment for portfolio holdings.</p>
-              </div>
+              (() => {
+                const scoreRows = companiesData.map((c) => ({ ...c, eco: getEcoScore(c.state) }));
+                const avgEco = scoreRows.length > 0 ? Math.round(scoreRows.reduce((s, c) => s + c.eco, 0) / scoreRows.length) : 0;
+                const style = ecoScoreStyle(avgEco);
+                return (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm flex items-center gap-2"><Leaf className="h-4 w-4 text-emerald-600" /> Ecological Sensitivity</CardTitle>
+                      <CardDescription className="text-[11px]">State-level biodiversity sensitivity exposure across scoped holdings</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className={`rounded-lg border p-3 ${style.bg}`}>
+                        <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-600">Scoped Portfolio Eco Score</div>
+                        <div className="text-2xl font-bold text-slate-800 mt-1">{avgEco}</div>
+                        <div className="text-[10px] text-slate-500">{ecoScoreLabel(avgEco)}</div>
+                      </div>
+                      <div className="space-y-1.5 max-h-56 overflow-y-auto">
+                        {scoreRows.sort((a, b) => b.eco - a.eco).map((c) => (
+                          <div key={c.id} className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[11px] font-semibold text-slate-800">{c.name}</span>
+                              <span className="text-[10px] font-semibold text-slate-700">{c.eco}</span>
+                            </div>
+                            <div className="text-[10px] text-slate-500">{c.state} · {c.sector}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })()
             );
 
             case 'hab-wildlife': return DS(
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                <h3 className="text-sm font-semibold text-slate-800 mb-1">Wildlife & T&E Species</h3>
-                <p className="text-xs text-slate-500">Threatened and endangered species exposure across portfolio.</p>
-              </div>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2"><Microscope className="h-4 w-4 text-rose-600" /> Wildlife & T&E Exposure</CardTitle>
+                  <CardDescription className="text-[11px]">Threatened/aquatic species context derived from scoped holding states</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {companiesData.map((c) => {
+                    const eco = getEcoData(c.state);
+                    return (
+                      <div key={c.id} className="rounded-md border border-slate-200 bg-white px-3 py-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-semibold text-slate-800">{c.name}</span>
+                          <Badge variant="outline" className="text-[9px]">{c.state}</Badge>
+                        </div>
+                        <div className="text-[10px] text-slate-600 mt-0.5">
+                          {eco ? `${eco.totalTE} T&E · ${eco.aquaticTE} aquatic · ${eco.criticalHabitat} critical habitat` : 'No ecological sensitivity data available'}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
             );
 
             // ─── SCORECARD PANELS ────────────────────────────────────────────
 
             case 'scorecard-kpis': return DS(
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                <h3 className="text-sm font-semibold text-slate-800 mb-1">Scorecard KPIs</h3>
-                <p className="text-xs text-slate-500">Key performance indicators for water risk management.</p>
-              </div>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2"><Award className="h-4 w-4 text-amber-600" /> Scorecard KPIs</CardTitle>
+                  <CardDescription className="text-[11px]">Core investor water KPIs for the current scoped portfolio</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-center">
+                      <div className="text-xl font-bold text-amber-700">{portfolioScores.avgRisk}</div>
+                      <div className="text-[10px] text-slate-600">Water Risk Index</div>
+                    </div>
+                    <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-center">
+                      <div className="text-xl font-bold text-red-700">${portfolioScores.exposedAUM}M</div>
+                      <div className="text-[10px] text-slate-600">Exposed AUM</div>
+                    </div>
+                    <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-center">
+                      <div className="text-xl font-bold text-green-700">{portfolioScores.avgCompliance}%</div>
+                      <div className="text-[10px] text-slate-600">Compliance KPI</div>
+                    </div>
+                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-center">
+                      <div className="text-xl font-bold text-blue-700">{portfolioScores.esgACount}</div>
+                      <div className="text-[10px] text-slate-600">ESG A Holdings</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             );
 
             case 'scorecard-grades': return DS(
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                <h3 className="text-sm font-semibold text-slate-800 mb-1">Scorecard Grades</h3>
-                <p className="text-xs text-slate-500">Letter grades for portfolio environmental performance.</p>
-              </div>
+              (() => {
+                const riskGrade = portfolioScores.avgRisk < 35 ? 'A' : portfolioScores.avgRisk < 50 ? 'B' : portfolioScores.avgRisk < 70 ? 'C' : 'D';
+                const compGrade = portfolioScores.avgCompliance >= 97 ? 'A' : portfolioScores.avgCompliance >= 93 ? 'B' : portfolioScores.avgCompliance >= 88 ? 'C' : 'D';
+                const esgGrade = portfolioScores.esgACount >= Math.max(1, Math.round(portfolioScores.total * 0.5)) ? 'A' : portfolioScores.esgACount >= Math.max(1, Math.round(portfolioScores.total * 0.33)) ? 'B' : 'C';
+                const exposurePct = Math.round((portfolioScores.exposedAUM / Math.max(1, portfolioScores.totalAUM)) * 100);
+                const exposureGrade = exposurePct <= 20 ? 'A' : exposurePct <= 35 ? 'B' : exposurePct <= 50 ? 'C' : 'D';
+                return (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm flex items-center gap-2"><PieChart className="h-4 w-4 text-indigo-600" /> Scorecard Grades</CardTitle>
+                      <CardDescription className="text-[11px]">Investor grading across risk, compliance, ESG quality, and exposure concentration</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-center"><div className="text-2xl font-bold text-slate-800">{riskGrade}</div><div className="text-[10px] text-slate-500">Risk Grade</div></div>
+                        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-center"><div className="text-2xl font-bold text-slate-800">{compGrade}</div><div className="text-[10px] text-slate-500">Compliance Grade</div></div>
+                        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-center"><div className="text-2xl font-bold text-slate-800">{esgGrade}</div><div className="text-[10px] text-slate-500">ESG Grade</div></div>
+                        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-center"><div className="text-2xl font-bold text-slate-800">{exposureGrade}</div><div className="text-[10px] text-slate-500">Exposure Grade</div></div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })()
             );
 
             // ─── ALERT FEED ──────────────────────────────────────────────────

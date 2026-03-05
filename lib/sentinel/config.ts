@@ -11,6 +11,7 @@ import type { ChangeSource, SeverityHint, CompoundPattern, ScoreLevel } from './
 export const BASE_SCORES: Record<ChangeSource, Record<SeverityHint, number>> = {
   NWS_ALERTS:       { LOW: 10, MODERATE: 25, HIGH: 40, CRITICAL: 60 },
   NWPS_FLOOD:       { LOW: 10, MODERATE: 20, HIGH: 35, CRITICAL: 50 },
+  NWPS_FORECAST:    { LOW:  5, MODERATE: 20, HIGH: 40, CRITICAL: 55 },
   USGS_IV:          { LOW:  5, MODERATE: 15, HIGH: 45, CRITICAL: 60 },
   SSO_CSO:          { LOW: 15, MODERATE: 30, HIGH: 50, CRITICAL: 70 },
   NPDES_DMR:        { LOW: 10, MODERATE: 20, HIGH: 35, CRITICAL: 50 },
@@ -115,6 +116,30 @@ export const COMPOUND_PATTERNS: CompoundPattern[] = [
     ],
     minDistinctSources: 2,
   },
+  {
+    id: 'flood-prediction-cascade',
+    name: 'Flood Prediction Cascade',
+    multiplier: 3.0,
+    timeWindowHours: 24,
+    requireSameHuc: false,
+    requiredSources: [
+      ['NWPS_FORECAST'],
+      ['QPE_RAINFALL', 'NWPS_FLOOD'],   // rainfall or active flood warning
+    ],
+    minDistinctSources: 2,
+  },
+  {
+    id: 'predicted-infrastructure-failure',
+    name: 'Predicted Infrastructure Failure',
+    multiplier: 2.5,
+    timeWindowHours: 24,
+    requireSameHuc: true,
+    requiredSources: [
+      ['NWPS_FORECAST'],
+      ['SSO_CSO', 'NPDES_DMR'],          // infrastructure stress during predicted flood
+    ],
+    minDistinctSources: 2,
+  },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -145,6 +170,7 @@ export const ADJACENT_HUC_BONUS = 1.5;
 export const POLL_INTERVALS: Record<ChangeSource, number> = {
   NWS_ALERTS:       1,   // every 5 min
   NWPS_FLOOD:       1,   // every 5 min
+  NWPS_FORECAST:    6,   // every 30 min (matches rebuild-nwps cron)
   USGS_IV:          3,   // every 15 min
   SSO_CSO:          6,   // every 30 min
   NPDES_DMR:        6,   // every 30 min

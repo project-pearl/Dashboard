@@ -11,6 +11,7 @@ import { evaluateSentinelAlerts } from '@/lib/alerts/triggers/sentinelTrigger';
 import { evaluateUsgsAlerts } from '@/lib/alerts/triggers/usgsTrigger';
 import { evaluateDeltaAlerts } from '@/lib/alerts/triggers/deltaTrigger';
 import { evaluateNwssAlerts } from '@/lib/alerts/triggers/nwssTrigger';
+import { evaluateFloodForecasts } from '@/lib/alerts/triggers/floodForecastTrigger';
 import { loadRules, evaluateRules } from '@/lib/alerts/rules';
 import type { AlertEvent } from '@/lib/alerts/types';
 
@@ -87,7 +88,7 @@ export async function GET(request: NextRequest) {
       console.warn(`[dispatch-alerts] Delta trigger error: ${err.message}`);
     }
 
-    // 3. NWSS pathogen anomaly trigger
+    // 4. NWSS pathogen anomaly trigger
     try {
       const nwssEvents = await evaluateNwssAlerts();
       candidates.push(...nwssEvents);
@@ -96,7 +97,16 @@ export async function GET(request: NextRequest) {
       console.warn(`[dispatch-alerts] NWSS trigger error: ${err.message}`);
     }
 
-    // 4. Custom rules
+    // 5. Flood forecast trigger
+    try {
+      const forecastEvents = await evaluateFloodForecasts();
+      candidates.push(...forecastEvents);
+      console.warn(`[dispatch-alerts] Flood forecast: ${forecastEvents.length} candidates`);
+    } catch (err: any) {
+      console.warn(`[dispatch-alerts] Flood forecast trigger error: ${err.message}`);
+    }
+
+    // 6. Custom rules
     try {
       const rules = await loadRules();
       if (rules.length > 0) {
@@ -108,7 +118,7 @@ export async function GET(request: NextRequest) {
       console.warn(`[dispatch-alerts] Rules engine error: ${err.message}`);
     }
 
-    // 4. Dispatch all candidates
+    // 7. Dispatch all candidates
     const result = await dispatchAlerts(candidates);
     const durationMs = Date.now() - _buildStartedAt;
 

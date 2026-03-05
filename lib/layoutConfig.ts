@@ -97,6 +97,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'fed-emergency-overview', label: 'National Emergency Overview', order: 19.1, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'fed-active-incidents', label: 'Active Incidents',              order: 19.2, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'fed-spill-tracker',   label: 'Federal Spill Tracker',         order: 19.3, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'flood-forecast',     label: 'Flood Forecast',                order: 19.4, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'resolution-planner',  label: 'Resolution Plan Workspace',     order: 20, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'restoration-planner', label: 'Restoration Planner',           order: 21, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Policy Tracker (View 5) ──
@@ -147,12 +148,14 @@ export const DEFAULT_SECTIONS = {
     { id: 'mon-latency',         label: 'Data Latency Tracker',         order: 55, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'mon-report-card',     label: 'Data Report Card',             order: 56, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'mon-source-health',   label: 'Source Health Registry',       order: 57, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'flood-status',        label: 'River Flood Status',           order: 57.5, visible: true, defaultExpanded: true, lensControlled: true },
     // ── Disaster (View 13) ──
     { id: 'disaster-active',     label: 'Active Incidents',             order: 58, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'disaster-response',   label: 'State Response Operations',    order: 59, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'disaster-spill',      label: 'Spill Reporting',              order: 60, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'disaster-prep',       label: 'Preparedness',                 order: 61, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'disaster-cascade',    label: 'Cross-Agency Alert Correlation', order: 62, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'flood-forecast',     label: 'Flood Forecast',                order: 62.5, visible: true, defaultExpanded: true, lensControlled: true },
     // ── TMDL (View 14) ──
     { id: 'tmdl-status',         label: 'TMDL Program Status',          order: 63, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'tmdl-303d',           label: '303(d) List Management',       order: 64, visible: true, defaultExpanded: true,  lensControlled: true },
@@ -591,6 +594,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'ai-water-intelligence', label: 'PIN Insights',              order: 3,  visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'national-briefing',  label: 'National Intelligence Briefing', order: 4, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'sentinel-briefing',  label: 'Sentinel System Health',      order: 5,  visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'flood-status',       label: 'River Flood Status',           order: 5.05, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'briefing-actions',    label: 'Action Required',               order: 5.1, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'delta-changelog',     label: 'Data Change Log',               order: 5.25, visible: true, defaultExpanded: false, lensControlled: true },
     // ── Political Briefing ──
