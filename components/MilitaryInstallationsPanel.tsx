@@ -338,6 +338,166 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
 
   return (
     <div className="space-y-6">
+      {/* Section 0: PIN Sentinel Commander Brief */}
+      <Card className="border-slate-300 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-slate-100 overflow-hidden">
+        <CardHeader className="pb-3 border-b border-slate-700/60">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="space-y-1">
+              <div className="text-[11px] tracking-[0.16em] text-slate-300 uppercase">For Official Use</div>
+              <CardTitle className="text-lg md:text-xl text-white flex items-center gap-2">
+                <Radar className="w-5 h-5 text-cyan-300" />
+                PIN Sentinel Commander Water Threat Brief
+              </CardTitle>
+              <CardDescription className="text-slate-300">
+                {commanderBrief.installationName} | {commanderBrief.displayDate} | {commanderBrief.displayTime} EST
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge className={`${commanderBrief.threatLevel === 'CRITICAL' ? 'bg-red-600 text-white border-red-400' : commanderBrief.threatLevel === 'ELEVATED' ? 'bg-amber-500 text-slate-900 border-amber-300' : 'bg-emerald-500 text-slate-900 border-emerald-300'} text-xs px-3 py-1`}>
+                THREAT LEVEL: {commanderBrief.threatLevel}
+              </Badge>
+              <Badge variant="outline" className="border-cyan-400/60 text-cyan-200 bg-cyan-500/10">
+                Score {commanderBrief.score.toFixed(2)}
+              </Badge>
+            </div>
+          </div>
+          <div className="mt-3 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-xs text-slate-200 font-mono">
+            SUBJECT: {commanderBrief.subject}
+          </div>
+        </CardHeader>
+        <CardContent className="pt-4 space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2 rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+              <div className="text-xs uppercase tracking-wider text-cyan-300 mb-2 flex items-center gap-2">
+                <BellRing className="w-4 h-4" />
+                Situation Summary
+              </div>
+              <p className="text-sm text-slate-100 leading-relaxed">{commanderBrief.summary}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-3">
+                <div className="rounded border border-slate-700 p-2">
+                  <div className="text-[11px] text-slate-400 uppercase">Primary Site</div>
+                  <div className="text-xs text-slate-100 mt-1 line-clamp-2">{commanderBrief.situation.facility}</div>
+                </div>
+                <div className="rounded border border-slate-700 p-2">
+                  <div className="text-[11px] text-slate-400 uppercase">Latest Signal</div>
+                  <div className="text-xs text-slate-100 mt-1 line-clamp-2">{commanderBrief.situation.latestSignal}</div>
+                </div>
+                <div className="rounded border border-slate-700 p-2">
+                  <div className="text-[11px] text-slate-400 uppercase">Last Detection</div>
+                  <div className="text-xs text-slate-100 mt-1">{commanderBrief.situation.latestTime}</div>
+                </div>
+              </div>
+            </div>
+            <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4 space-y-2">
+              <div className="text-xs uppercase tracking-wider text-cyan-300 mb-2 flex items-center gap-2">
+                <Clock3 className="w-4 h-4" />
+                Signal Snapshot
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400">Signals (24h)</span>
+                <span className="font-semibold text-white">{commanderBrief.complianceSignals24h}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400">Signals (30d)</span>
+                <span className="font-semibold text-white">{commanderBrief.complianceSignals30d}</span>
+              </div>
+              <div className="text-[11px] text-slate-400 pt-1">Automated threshold logic:</div>
+              <div className="text-[11px] text-slate-300">`[NOMINAL]` score &lt; 0.40, `[ELEVATED]` 0.40-0.79, `[CRITICAL]` ≥ 0.80</div>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">
+            <div className="text-xs uppercase tracking-wider text-cyan-300 mb-2">Key Readings (vs target baseline)</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
+              {commanderBrief.keyReadings.map((reading) => (
+                <div key={reading.label} className="rounded-lg border border-slate-700 bg-slate-950/60 p-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <reading.icon className="w-4 h-4 text-cyan-300" />
+                      <div className="text-xs text-slate-200">{reading.label}</div>
+                    </div>
+                    <Badge className={`${reading.status === 'ALERT' ? 'bg-red-600 text-white border-red-400' : reading.status === 'WATCH' ? 'bg-amber-500 text-slate-900 border-amber-300' : 'bg-emerald-500 text-slate-900 border-emerald-300'} text-[10px]`}>
+                      {reading.status}
+                    </Badge>
+                  </div>
+                  <div className="mt-2 text-sm font-semibold text-white">{reading.value}</div>
+                  <div className="text-[11px] text-slate-400">{reading.baseline}</div>
+                  <div className="text-[11px] text-slate-300 mt-0.5">Delta: {reading.delta}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">
+              <div className="text-xs uppercase tracking-wider text-cyan-300 mb-2">Anomalies Detected</div>
+              <div className="space-y-2">
+                {commanderBrief.anomalies.length === 0 && (
+                  <div className="text-xs text-slate-400">No anomaly rows detected in current scope.</div>
+                )}
+                {commanderBrief.anomalies.map((a, idx) => (
+                  <div key={`${a.time}-${idx}`} className="rounded border border-slate-700 bg-slate-950/60 p-2 text-xs">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-slate-300">{a.time}</span>
+                      <Badge className={`${a.classif === 'POSSIBLE INTRUSION' ? 'bg-red-600 text-white border-red-400' : a.classif === 'CORRELATED EVENT' ? 'bg-amber-500 text-slate-900 border-amber-300' : 'bg-blue-500 text-white border-blue-300'} text-[10px]`}>{a.classif}</Badge>
+                    </div>
+                    <div className="text-slate-100 mt-1 flex items-center gap-1"><MapPin className="w-3 h-3 text-cyan-300" />{a.location}</div>
+                    <div className="text-slate-300 mt-0.5">{a.signal}</div>
+                    <div className="text-slate-400 mt-0.5">Score: {a.score}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">
+              <div className="text-xs uppercase tracking-wider text-cyan-300 mb-2">Regional Correlation</div>
+              <div className="space-y-2">
+                {commanderBrief.regionalCorrelation.map((line, idx) => (
+                  <div key={`${line}-${idx}`} className="rounded border border-slate-700 bg-slate-950/60 px-2 py-1.5 text-xs text-slate-200">
+                    {line}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+            <div className="rounded-xl border border-red-500/40 bg-red-900/20 p-3">
+              <div className="text-xs uppercase tracking-wider text-red-200 mb-2">Immediate</div>
+              <div className="space-y-1.5 text-xs text-red-100">{commanderBrief.immediateActions.map((a) => <div key={a}>{a}</div>)}</div>
+            </div>
+            <div className="rounded-xl border border-amber-500/40 bg-amber-900/20 p-3">
+              <div className="text-xs uppercase tracking-wider text-amber-100 mb-2">Within 2 Hrs</div>
+              <div className="space-y-1.5 text-xs text-amber-50">{commanderBrief.within2h.map((a) => <div key={a}>{a}</div>)}</div>
+            </div>
+            <div className="rounded-xl border border-blue-500/40 bg-blue-900/20 p-3">
+              <div className="text-xs uppercase tracking-wider text-blue-100 mb-2">Within 24 Hrs</div>
+              <div className="space-y-1.5 text-xs text-blue-50">{commanderBrief.within24h.map((a) => <div key={a}>{a}</div>)}</div>
+            </div>
+            <div className="rounded-xl border border-emerald-500/40 bg-emerald-900/20 p-3">
+              <div className="text-xs uppercase tracking-wider text-emerald-100 mb-2">Monitor</div>
+              <div className="space-y-1.5 text-xs text-emerald-50">{commanderBrief.monitor.map((a) => <div key={a}>{a}</div>)}</div>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">
+            <div className="text-xs uppercase tracking-wider text-cyan-300 mb-2">Sensor / Feed Status</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2">
+              {commanderBrief.feedStatus.map((f) => (
+                <div key={f.id} className="rounded border border-slate-700 bg-slate-950/60 p-2">
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs text-slate-200">{f.label}</div>
+                    {f.status === 'online' ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <XCircle className="w-3.5 h-3.5 text-amber-400" />}
+                  </div>
+                  <div className="text-[11px] text-slate-400 mt-1">{f.last}</div>
+                  <div className="text-[11px] text-slate-300 mt-0.5">{f.detail}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Section 1: Hero Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {heroStats.map((s) => (
