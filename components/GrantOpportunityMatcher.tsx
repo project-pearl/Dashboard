@@ -574,7 +574,7 @@ function formatTotal(grants: Grant[]): string {
 function mapPearlGrant(g: PearlGrant): Grant {
   const fit: Grant['fit'] = g.fit >= 0.9 ? 'High' : g.fit >= 0.7 ? 'Good' : 'Review';
   // Parse dollar amounts from notes (e.g. "$100K", "$5M", "up to $75K")
-  const amountMatch = g.notes.match(/\$[\d,.]+[KkMmBb]?/);
+  const amountMatch = (g.notes ?? '').match(/\$[\d,.]+[KkMmBb]?/);
   const amount = amountMatch ? amountMatch[0] : 'See details';
   let amountMax = 0;
   if (amountMatch) {
