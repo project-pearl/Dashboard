@@ -317,33 +317,33 @@ function SiteIntelligenceContent() {
 
   return (
     <div className="min-h-full bg-slate-50">
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         {/* ── Location Search Header ── */}
-        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-              <MapPin className="w-5 h-5 text-slate-600" />
+        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm max-w-3xl mx-auto">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center">
+              <MapPin className="w-4.5 h-4.5 text-slate-600" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-slate-900">Site Intelligence</h1>
-              <p className="text-xs text-slate-500">Enter an address, ZIP code, or coordinates to assess water quality risk at any location</p>
+              <h1 className="text-base font-bold text-slate-900">Site Intelligence</h1>
+              <p className="text-xs text-slate-500">Enter an address, ZIP code, or coordinates to assess water quality risk</p>
             </div>
           </div>
-          <form onSubmit={handleSearch} className="flex gap-3">
+          <form onSubmit={handleSearch} className="flex gap-2">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="123 Main St, Baltimore, MD 21201  or  39.2904, -76.6122  or  21201"
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
+                placeholder="123 Main St, Baltimore, MD  or  39.29, -76.61  or  21201"
+                className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
               />
             </div>
             <button
               type="submit"
               disabled={fetchState === 'loading'}
-              className="px-5 py-2.5 rounded-lg bg-slate-800 text-white text-sm font-medium hover:bg-slate-700 transition-colors disabled:opacity-50"
+              className="px-4 py-2 rounded-lg bg-slate-800 text-white text-sm font-medium hover:bg-slate-700 transition-colors disabled:opacity-50"
             >
               {fetchState === 'loading' ? 'Analyzing...' : 'Assess Site'}
             </button>
@@ -357,7 +357,7 @@ function SiteIntelligenceContent() {
 
         {/* ── Loading state ── */}
         {fetchState === 'loading' && (
-          <div className="bg-white border border-slate-200 rounded-xl p-12 text-center">
+          <div className="bg-white border border-slate-200 rounded-xl p-12 text-center max-w-3xl mx-auto">
             <Droplets className="w-10 h-10 text-blue-500 mx-auto mb-4 animate-pulse" />
             <h2 className="text-base font-semibold text-slate-700 mb-1">Analyzing Site</h2>
             <p className="text-sm text-slate-500">Querying EPA databases, HUC-8 indices, and environmental data...</p>
@@ -366,7 +366,7 @@ function SiteIntelligenceContent() {
 
         {/* ── Empty state ── */}
         {fetchState === 'idle' && (
-          <div className="bg-white border border-slate-200 rounded-xl p-12 text-center">
+          <div className="bg-white border border-slate-200 rounded-xl p-12 text-center max-w-3xl mx-auto">
             <MapPin className="w-12 h-12 text-slate-300 mx-auto mb-4" />
             <h2 className="text-lg font-semibold text-slate-700 mb-2">Search for a location to begin</h2>
             <p className="text-sm text-slate-500 max-w-md mx-auto">
@@ -391,7 +391,7 @@ function SiteIntelligenceContent() {
         {fetchState === 'loaded' && (scoreData || locationData) && (
           <div id="site-intelligence-report" className="space-y-6">
             {/* Location summary strip */}
-            <div className="bg-white border border-slate-200 rounded-xl px-5 py-3 flex items-center justify-between">
+            <div className="bg-white border border-slate-200 rounded-xl px-5 py-3 flex items-center justify-between max-w-3xl mx-auto">
               <div className="flex items-center gap-3">
                 <MapPin className="w-4 h-4 text-blue-600" />
                 <div>
@@ -420,8 +420,8 @@ function SiteIntelligenceContent() {
 
             {/* ── Water Risk Score Hero ── */}
             {scoreData && (
-              <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
-                <div className="flex flex-col md:flex-row items-center gap-6">
+              <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-5 max-w-3xl mx-auto">
+                <div className="flex flex-col sm:flex-row items-center gap-5">
                   {/* Gauge */}
                   <div className="text-center shrink-0">
                     <ScoreGauge score={scoreData.composite.score} letter={scoreData.composite.letter} />
@@ -469,6 +469,9 @@ function SiteIntelligenceContent() {
                 )}
               </div>
             )}
+
+            {/* ── Data Cards Grid ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
             {/* ── Card 1: Risk Profile (ATTAINS + WQP) ── */}
             <DashboardSection title={labels.risk} subtitle="Impairment status and water quality data for nearby waterbodies">
@@ -841,6 +844,8 @@ function SiteIntelligenceContent() {
                 </div>
               )}
             </DashboardSection>
+
+            </div>{/* end grid */}
 
             {/* Data source footer */}
             <div className="text-[10px] text-slate-400 px-1">
