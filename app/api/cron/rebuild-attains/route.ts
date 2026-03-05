@@ -195,10 +195,10 @@ export async function GET(request: NextRequest) {
     // Accumulate deferred states: previously deferred + newly failed
     const newDeferred = [...new Set([...deferred, ...result.failed])];
 
-    // Fetch HUC-12 summaries after main state assessments complete
-    // Only run on first chunk (depth 0) or when all states are cached
+    // Fetch HUC-12 summaries only when all states are cached (don't steal
+    // time budget from remaining state fetches — CA/MI/OR need every second)
     let huc12Result = { fetched: 0, states: 0 };
-    if (remaining === 0 || depth === 0) {
+    if (remaining === 0) {
       const huc12Deadline = Date.now() + Math.max(0, 280_000 - (Date.now() - startTime));
       try {
         huc12Result = await fetchAllHuc12Summaries(huc12Deadline);

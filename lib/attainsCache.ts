@@ -28,6 +28,9 @@ const RETRY_DELAY_MS = 5000; // 5s between retries
 // Raised from 2000 → 5000 to avoid truncating large states (CA, TX)
 const MAX_PER_STATE = 5000;
 
+// Auto-clear stuck build locks after 5 minutes (Vercel maxDuration is 300s)
+const BUILD_LOCK_TIMEOUT_MS = 5 * 60_000;
+
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
 export interface CachedWaterbody {
@@ -415,10 +418,12 @@ async function fetchViaGIS(stateCode: string): Promise<StateSummary | null> {
     .slice(0, 5)
     .map(([name]) => name);
 
-  // Fetch impaired waterbodies with pagination
+  // Fetch impaired waterbodies WITHOUT geometry (geometry causes 60s+ timeouts
+  // on large states like CA/MI/OR — the GIS server chokes on polygon exports).
+  // Centroids are fetched in a separate lightweight pass.
   const causeOutFields = causeFields.join(",");
   const waterbodies: CachedWaterbody[] = [];
-  const PAGE = 1000;
+  const PAGE = 2000; // Safe without geometry — response is ~250KB per 2000
 
   for (const catFilter of ["IRCATEGORY LIKE '5%'", "IRCATEGORY LIKE '4%'"]) {
     let offset = 0;
@@ -429,9 +434,7 @@ async function fetchViaGIS(stateCode: string): Promise<StateSummary | null> {
         outFields: `assessmentunitidentifier,assessmentunitname,ircategory,${causeOutFields}`,
         resultRecordCount: String(PAGE),
         resultOffset: String(offset),
-        returnGeometry: "true",
-        returnCentroid: "true",
-        outSR: "4326",
+        returnGeometry: "false",
       });
       const features = data.features || [];
       for (const f of features) {
@@ -462,24 +465,6 @@ async function fetchViaGIS(stateCode: string): Promise<StateSummary | null> {
         if (cat.startsWith("4B")) tmdlStatus = "alternative";
         else if (cat.startsWith("4C")) tmdlStatus = "not-pollutant";
 
-        // Centroid/geom
-        const centroid = f.centroid || f.geometry?.centroid;
-        const geom = f.geometry;
-        let lat: number | null = null;
-        let lon: number | null = null;
-        if (centroid) {
-          lat = centroid.y ?? centroid.lat ?? null;
-          lon = centroid.x ?? centroid.lon ?? centroid.lng ?? null;
-        } else if (geom) {
-          if (geom.y != null && geom.x != null) {
-            lat = geom.y;
-            lon = geom.x;
-          } else if (geom.points?.[0]) {
-            lat = geom.points[0][1];
-            lon = geom.points[0][0];
-          }
-        }
-
         waterbodies.push({
           id,
           name: nm,
@@ -488,15 +473,19 @@ async function fetchViaGIS(stateCode: string): Promise<StateSummary | null> {
           tmdlStatus,
           causes,
           causeCount: causes.length,
-          lat,
-          lon,
+          lat: null,
+          lon: null,
         });
       }
       offset += PAGE;
       keepGoing = features.length === PAGE;
     }
-    // Post-processing handles storage cap — fetch all impaired
   }
+
+  // Note: GIS MapServer features are polylines (18KB+ each) — fetching geometry
+  // for 1000+ features causes 60s+ server timeouts. Coordinates for GIS-path states
+  // will be null. The REST API assessmentUnits endpoint also lacks coordinates for
+  // many large states (CA, OR). Impairment/TMDL data is the critical payload.
 
   console.log(
     `[ATTAINS Cache] ${stateCode}: GIS complete — ${total} total, ${waterbodies.length} stored`
@@ -862,9 +851,11 @@ export async function buildAttainsChunk(timeBudgetMs: number, deferredStates: st
 
   const processed: string[] = [];
   const failed: string[] = [];
-  const CONCURRENCY = 2; // Fetch 2 states in parallel to maximize throughput
+  // Use concurrency=1 when few states remain — large GIS states (CA, MI, OR)
+  // need the full time budget each, not competing in parallel
+  const CONCURRENCY = toFetch.length <= 5 ? 1 : 2;
 
-  // Process states in pairs for better throughput
+  // Process states (serially for stragglers, pairs for bulk)
   let i = 0;
   while (i < toFetch.length) {
     // Check time budget — leave 30s for save + response
@@ -1054,6 +1045,15 @@ async function buildCache(): Promise<void> {
  */
 export function getCacheStatus(): CacheStatus {
   ensureDiskLoaded();
+  // Auto-clear stuck build locks (serverless instances can die mid-build)
+  if (buildStatus === 'building' && buildStarted) {
+    const lockAge = Date.now() - buildStarted.getTime();
+    if (lockAge > BUILD_LOCK_TIMEOUT_MS) {
+      console.warn(`[ATTAINS Cache] Clearing stale build lock (age: ${(lockAge / 60_000).toFixed(1)}m)`);
+      buildStatus = loadedStates.size > 0 ? 'ready' : 'cold';
+      buildStarted = null;
+    }
+  }
   return {
     status: buildStatus,
     source: _cacheSource,
