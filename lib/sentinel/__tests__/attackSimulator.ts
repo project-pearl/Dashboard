@@ -42,6 +42,8 @@ export interface AttackScenario {
     concentration: number;
     countyFips: string;
   };
+  /** Optional: confounders to inject (weather, rainfall, etc.) */
+  confounders?: { source: ChangeSource; huc8s: string[]; value: number }[];
 }
 
 /* ------------------------------------------------------------------ */

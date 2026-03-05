@@ -237,3 +237,36 @@ export function _resetQueue(): void {
   _diskLoaded = false;
   _blobChecked = false;
 }
+
+/**
+ * Force-enqueue events without dedup (for validation suite).
+ * Mirrors enqueueEvents but skips shouldDeduplicate checks so
+ * multi-parameter attack scenarios aren't suppressed.
+ */
+export async function _enqueueWithoutDedup(incoming: ChangeEvent[]): Promise<ChangeEvent[]> {
+  const q = ensureQueue();
+  expireOldEvents(q);
+
+  for (const evt of incoming) {
+    if (evt.geography.huc8 && !evt.geography.huc6) {
+      evt.geography.huc6 = evt.geography.huc8.slice(0, 6);
+    }
+    if (evt.geography.huc8) {
+      const authState = getStateForHuc(evt.geography.huc8);
+      if (authState) evt.geography.stateAbbr = authState;
+    }
+    q.events.push(evt);
+    const huc = evt.geography.huc8;
+    if (huc) {
+      if (!q.hucIndex[huc]) q.hucIndex[huc] = [];
+      q.hucIndex[huc].push(evt.eventId);
+    }
+  }
+
+  q.events.sort((a, b) =>
+    new Date(b.detectedAt).getTime() - new Date(a.detectedAt).getTime()
+  );
+
+  await persist();
+  return incoming;
+}
