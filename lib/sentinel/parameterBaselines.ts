@@ -21,6 +21,7 @@ export interface BaselineEntry {
 }
 
 type BaselineMap = Record<string, BaselineEntry>; // key: "huc8|paramCd"
+const ROLLING_WINDOW_SAMPLES = 2880; // ~30 days at 15-min cadence
 
 /* ------------------------------------------------------------------ */
 /*  State                                                             */
@@ -101,21 +102,32 @@ export function updateBaseline(huc8: string, paramCd: string, value: number): vo
     return;
   }
 
+  const prevVar = Math.max(0, entry.stdDev * entry.stdDev);
   const newCount = entry.count + 1;
-  const delta = value - entry.mean;
-  const newMean = entry.mean + delta / newCount;
-  const delta2 = value - newMean;
+  let nextMean = entry.mean;
+  let nextStdDev = entry.stdDev;
+  let cappedCount = Math.min(newCount, ROLLING_WINDOW_SAMPLES);
 
-  // Running variance (Welford's)
-  const m2 = (entry.stdDev * entry.stdDev) * (entry.count - 1) + delta * delta2;
-  const newStdDev = newCount > 1 ? Math.sqrt(m2 / (newCount - 1)) : 0;
-
-  // Cap at 30 days of samples (~2880 for 15-min USGS data)
-  const cappedCount = Math.min(newCount, 2880);
+  if (entry.count < ROLLING_WINDOW_SAMPLES) {
+    // Warm-up phase: Welford's online update
+    const delta = value - entry.mean;
+    nextMean = entry.mean + delta / newCount;
+    const delta2 = value - nextMean;
+    const m2 = prevVar * Math.max(0, entry.count - 1) + delta * delta2;
+    nextStdDev = newCount > 1 ? Math.sqrt(Math.max(0, m2 / (newCount - 1))) : 0;
+  } else {
+    // Rolling/adaptive phase: exponentially weighted update over window horizon
+    const alpha = 2 / (ROLLING_WINDOW_SAMPLES + 1);
+    const delta = value - entry.mean;
+    nextMean = entry.mean + alpha * delta;
+    const nextVar = (1 - alpha) * (prevVar + alpha * delta * delta);
+    nextStdDev = Math.sqrt(Math.max(0, nextVar));
+    cappedCount = ROLLING_WINDOW_SAMPLES;
+  }
 
   _baselines[key] = {
-    mean: newMean,
-    stdDev: newStdDev,
+    mean: nextMean,
+    stdDev: nextStdDev,
     count: cappedCount,
     lastUpdated: new Date().toISOString(),
   };

@@ -21,6 +21,10 @@ import {
 } from '@/lib/sentinel/sentinelHealth';
 import { ensureWarmed as ensureQueueWarmed } from '@/lib/sentinel/eventQueue';
 import { saveCacheToBlob, loadCacheFromBlob } from '@/lib/blobPersistence';
+import {
+  ensureWarmed as ensureBaselinesWarmed,
+  persistBaselines,
+} from '@/lib/sentinel/parameterBaselines';
 
 // Adapters
 import { pollNws }     from '@/lib/sentinel/adapters/nwsAdapter';
@@ -34,6 +38,7 @@ import { pollSso }     from '@/lib/sentinel/adapters/ssoAdapter';
 import { pollNwpsFlood } from '@/lib/sentinel/adapters/nwpsFloodAdapter';
 import { pollNwss }    from '@/lib/sentinel/adapters/nwssAdapter';
 import { pollStateDischarge } from '@/lib/sentinel/adapters/stateDischargeAdapter';
+import { pollNwpsForecast } from '@/lib/sentinel/adapters/nwpsForecastAdapter';
 
 // Existing caches (need warming for adapters that read them)
 import { ensureWarmed as warmNws }     from '@/lib/nwsAlertCache';
@@ -42,6 +47,8 @@ import { ensureWarmed as warmIcis }    from '@/lib/icisCache';
 import { ensureWarmed as warmEcho }    from '@/lib/echoCache';
 import { ensureWarmed as warmAttains } from '@/lib/attainsCache';
 import { ensureWarmed as warmNwss }    from '@/lib/nwss/nwssCache';
+import { ensureWarmed as warmNwps }    from '@/lib/nwpsCache';
+import { ensureWarmed as warmGaugeLookup } from '@/lib/nwpsGaugeLookup';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
@@ -112,6 +119,7 @@ const ADAPTERS: AdapterEntry[] = [
   { source: 'SSO_CSO',          poll: pollSso,     isAsync: true },
   { source: 'CDC_NWSS',         poll: pollNwss,    isAsync: true,  warmFn: warmNwss },
   { source: 'STATE_DISCHARGE',  poll: pollStateDischarge, isAsync: false },
+  { source: 'NWPS_FORECAST',   poll: pollNwpsForecast,  isAsync: false, warmFn: async () => { await Promise.all([warmNwps(), warmGaugeLookup()]); } },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -134,7 +142,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Warm sentinel state + event queue
-    await Promise.all([ensureHealthWarmed(), ensureQueueWarmed()]);
+    await Promise.all([ensureHealthWarmed(), ensureQueueWarmed(), ensureBaselinesWarmed()]);
 
     const pollCount = await loadPollCount();
     const nextCount = pollCount + 1;
@@ -209,6 +217,9 @@ export async function GET(request: NextRequest) {
     if (!forceSource) {
       await savePollCount(nextCount);
     }
+
+    // Persist any adaptive baseline updates produced by USGS polling.
+    await persistBaselines();
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
 

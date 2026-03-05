@@ -5,6 +5,7 @@
 export type ChangeSource =
   | 'NWS_ALERTS'
   | 'NWPS_FLOOD'
+  | 'NWPS_FORECAST'
   | 'USGS_IV'
   | 'SSO_CSO'
   | 'NPDES_DMR'
@@ -24,6 +25,13 @@ export type ChangeType =
 export type SeverityHint = 'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL';
 export type SourceStatus = 'HEALTHY' | 'DEGRADED' | 'OFFLINE';
 export type ScoreLevel = 'NOMINAL' | 'ADVISORY' | 'WATCH' | 'CRITICAL';
+
+export interface BedSiteState {
+  streak: number;
+  lastProbability: number;
+  lastSeverity?: SeverityHint;
+  updatedAt: string;
+}
 
 /* ------------------------------------------------------------------ */
 /*  Change Events                                                     */
@@ -74,6 +82,7 @@ export interface SentinelSourceState {
   lastModified?: string;
   lastValues?: Record<string, number>;
   lastTimestamps?: Record<string, string>;
+  bedState?: Record<string, BedSiteState>; // key: siteNumber
 }
 
 /* ------------------------------------------------------------------ */
