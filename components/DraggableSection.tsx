@@ -5,6 +5,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Eye, EyeOff, Minus, ChevronDown } from 'lucide-react';
 import type { ReactNode, MouseEvent } from 'react';
+import { CardAssistBar } from './CardAssistBar';
 
 interface DraggableSectionProps {
   id: string;
@@ -12,6 +13,8 @@ interface DraggableSectionProps {
   isEditMode: boolean;
   isVisible: boolean;
   label: string;
+  description?: string;
+  userKey?: string;
   onToggleVisibility: (id: string) => void;
 }
 
@@ -27,6 +30,8 @@ export function DraggableSection({
   isEditMode,
   isVisible,
   label,
+  description,
+  userKey,
   onToggleVisibility,
 }: DraggableSectionProps) {
   const [collapsed, setCollapsed] = useState(false);
@@ -112,6 +117,14 @@ export function DraggableSection({
           aria-expanded={!collapsed}
           className={collapsed && canCollapse ? 'max-h-14 overflow-hidden' : ''}
         >
+          {!isEditMode && id !== 'disclaimer' && (
+            <CardAssistBar
+              sectionId={id}
+              label={label}
+              description={description}
+              userKey={userKey}
+            />
+          )}
           {children}
         </div>
       </div>

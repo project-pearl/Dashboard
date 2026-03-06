@@ -90,6 +90,13 @@ export function LayoutEditor({ ccKey, children }: LayoutEditorProps) {
     }).catch(() => { /* table empty or unreachable — keep defaults */ });
   }, [user, ccKey]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (user?.uid) {
+      window.localStorage.setItem('pin-user-key', user.uid);
+    }
+  }, [user?.uid]);
+
   // ── DnD sensors ──
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
