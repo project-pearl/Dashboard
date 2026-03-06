@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:huc8-routing": "node scripts/build-huc8-flow-routing.js"
   },
   "dependencies": {
     "@babel/runtime": "^7.28.6",
