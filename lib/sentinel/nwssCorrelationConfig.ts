@@ -5,6 +5,23 @@
 /** Look-back window for WQ signals after NWSS anomaly */
 export const CORRELATION_WINDOW_HOURS = 72;
 
+/**
+ * HUC flow-time approximation settings.
+ * Used to estimate expected lag between NWSS anomalies and WQ events.
+ */
+export const FLOW_TIME_CONFIG = {
+  preferDirectedRouting: true,
+  strictDirectedRouting: false,
+  maxHops: 6,
+  avgFlowKmh: 2.5,
+  defaultEdgeKm: 35,
+  hoursPerHop: 14,
+  baseDelayHours: 6,
+  windowBufferHours: 18,
+  minWindowHours: 12,
+  maxWindowHours: 120,
+} as const;
+
 /* ------------------------------------------------------------------ */
 /*  Bio-Proxy Parameter Links                                         */
 /*  Which NWSS pathogens correlate with which WQ parameters.          */

@@ -264,6 +264,14 @@ export interface NwssCorrelation {
   parameterMatches: { paramCd: string; matchStrength: number }[];
   spatialMatch: 'same_huc' | 'adjacent_huc' | 'none';
   temporalGapHours: number;
+  hucFlowTiming?: {
+    expectedHours: number;
+    windowHours: number;
+    hops: number;
+    distanceKm: number | null;
+    routingMode: 'directed' | 'adjacency';
+    lagDirection: 'downstream_lag' | 'reverse_lead';
+  };
 }
 
 /* ------------------------------------------------------------------ */
