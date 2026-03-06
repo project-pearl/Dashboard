@@ -23,10 +23,19 @@ const SESSION_KEY = 'pin.jurisdiction.override';
 
 const JurisdictionContext = createContext<JurisdictionContextValue | null>(null);
 
+const FALLBACK: JurisdictionContextValue = {
+  activeJurisdiction: null,
+  roleDefaultJurisdiction: null,
+  overrideJurisdiction: null,
+  availableJurisdictions: [],
+  canOverride: false,
+  setJurisdictionOverride: () => {},
+  clearJurisdictionOverride: () => {},
+};
+
 export function useJurisdictionContext(): JurisdictionContextValue {
   const ctx = useContext(JurisdictionContext);
-  if (!ctx) throw new Error('useJurisdictionContext must be used within JurisdictionProvider');
-  return ctx;
+  return ctx ?? FALLBACK;
 }
 
 export function JurisdictionProvider({ children }: { children: React.ReactNode }) {

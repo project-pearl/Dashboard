@@ -102,7 +102,11 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated && user) {
-      router.replace(getPrimaryRoute(user));
+      if (user.status === 'pending') {
+        router.replace('/dashboard');
+      } else if (user.status === 'active') {
+        router.replace(getPrimaryRoute(user));
+      }
     }
   }, [isAuthenticated, isLoading, router, user]);
 
@@ -113,7 +117,12 @@ export default function LoginPage() {
     try {
       const result = await loginAsync(email, password);
       if (result.success && result.user) {
-        router.replace(getPrimaryRoute(result.user));
+        // Pending users → AuthGuard shows pending screen with auto-approval polling
+        if (result.user.status === 'pending') {
+          router.replace('/dashboard');
+        } else {
+          router.replace(getPrimaryRoute(result.user));
+        }
       }
     } catch (err) {
       console.error('Login submit error:', err);

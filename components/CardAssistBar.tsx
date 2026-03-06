@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { BookOpen, CheckCircle2, Lightbulb, MessageSquare, Send } from 'lucide-react';
+import { BookOpen, CheckCircle2, Lightbulb, MessageSquare } from 'lucide-react';
 
 type FeedbackType = 'bug' | 'improvement' | 'ease-of-use';
 
@@ -15,14 +15,40 @@ interface CardAssistBarProps {
 interface TrainingModule {
   id: string;
   title: string;
+  takeaway: string;
+  detail: string;
   minutes: number;
 }
 
 const TRAINING_MODULES: TrainingModule[] = [
-  { id: 'orient', title: 'Platform Orientation', minutes: 5 },
-  { id: 'filters', title: 'Filters and Scope Controls', minutes: 7 },
-  { id: 'cards', title: 'Card Reading and Prioritization', minutes: 6 },
-  { id: 'actions', title: 'Actions and Follow-ups', minutes: 6 },
+  {
+    id: 'orient',
+    title: 'What You Are Looking At',
+    takeaway: 'This page is a decision snapshot, not raw data dump.',
+    detail: 'The top cards summarize current status, risk pressure, and where attention is needed first. Treat it like a briefing screen.',
+    minutes: 2,
+  },
+  {
+    id: 'filters',
+    title: 'How Scope Changes Results',
+    takeaway: 'State/jurisdiction filters change the story.',
+    detail: 'When you switch scope, all scores, counts, and priorities recalculate for that slice. Always confirm scope before acting.',
+    minutes: 2,
+  },
+  {
+    id: 'cards',
+    title: 'How To Read Priority Cards',
+    takeaway: 'Red/amber cards indicate immediate risk and workflow load.',
+    detail: 'Start with high-severity indicators first, then check trend cards to see whether risk is improving or compounding.',
+    minutes: 2,
+  },
+  {
+    id: 'actions',
+    title: 'What To Do Next',
+    takeaway: 'Use this page to decide the next concrete step.',
+    detail: 'Pick one high-priority follow-up: inspection routing, permit/compliance closure, or funding/project escalation.',
+    minutes: 2,
+  },
 ];
 
 function safeParse<T>(raw: string | null, fallback: T): T {
@@ -41,20 +67,28 @@ export function CardAssistBar({
   userKey = 'anonymous',
 }: CardAssistBarProps) {
   const [resolvedUserKey, setResolvedUserKey] = useState(userKey);
-  const [question, setQuestion] = useState('');
-  const [copied, setCopied] = useState(false);
   const [trainingOpen, setTrainingOpen] = useState(false);
   const [suggestionOpen, setSuggestionOpen] = useState(false);
   const [feedbackType, setFeedbackType] = useState<FeedbackType>('improvement');
   const [feedback, setFeedback] = useState('');
   const [feedbackSaved, setFeedbackSaved] = useState(false);
   const [completedModules, setCompletedModules] = useState<Record<string, boolean>>({});
+  const [activeModuleId, setActiveModuleId] = useState<string>(TRAINING_MODULES[0]?.id || 'orient');
 
   const explanation = useMemo(() => {
     const trimmed = (description || '').trim();
     if (trimmed) return trimmed;
     return `This card is showing current signals, trends, and decision support for ${label}.`;
   }, [description, label]);
+
+  const plainLanguageSummary = useMemo(() => {
+    const base = explanation
+      .replace(/jurisdiction/gi, 'area')
+      .replace(/compliance/gi, 'whether requirements are being met')
+      .replace(/analytics/gi, 'patterns')
+      .replace(/impairment/gi, 'water quality problems');
+    return `In plain language: ${base} This helps you understand what is okay, what is at risk, and what should be handled next.`;
+  }, [explanation]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -89,22 +123,6 @@ export function CardAssistBar({
     });
   }
 
-  async function handleAskPin() {
-    const prompt = [
-      `Card: ${label} (${sectionId})`,
-      `Context: ${explanation}`,
-      `Question: ${question.trim() || 'What should I focus on first in this card?'}`,
-    ].join('\n');
-
-    try {
-      await navigator.clipboard.writeText(prompt);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1600);
-    } catch {
-      // noop
-    }
-  }
-
   function saveSuggestion() {
     if (!feedback.trim() || typeof window === 'undefined') return;
     const existing = safeParse<any[]>(window.localStorage.getItem(feedbackStorageKey), []);
@@ -128,7 +146,7 @@ export function CardAssistBar({
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="text-[11px] font-semibold uppercase tracking-wide text-blue-700">Ask PIN</div>
-          <p className="mt-0.5 text-xs text-slate-700">{explanation}</p>
+          <p className="mt-0.5 text-xs text-slate-700">{plainLanguageSummary}</p>
         </div>
         <div className="flex flex-wrap gap-1.5">
           <button
@@ -150,43 +168,52 @@ export function CardAssistBar({
         </div>
       </div>
 
-      <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-        <input
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          placeholder="Ask about this card (copied to clipboard for PIN)"
-          className="h-8 flex-1 rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-700 outline-none focus:border-blue-300"
-        />
-        <button
-          type="button"
-          onClick={handleAskPin}
-          className="inline-flex h-8 items-center justify-center gap-1 rounded-md bg-blue-600 px-3 text-xs font-semibold text-white hover:bg-blue-700"
-        >
-          <Send className="h-3.5 w-3.5" />
-          {copied ? 'Prompt Copied' : 'Ask PIN'}
-        </button>
+      <div className="mt-2 rounded-md border border-blue-200 bg-white px-2.5 py-2 text-xs text-slate-700">
+        <span className="font-semibold text-blue-700">Page purpose:</span>{' '}
+        This section is here to give you quick context, highlight risk, and point you to the next best action.
       </div>
 
       {trainingOpen && (
         <div className="mt-2 rounded-md border border-slate-200 bg-white p-2.5">
           <div className="mb-1.5 flex items-center justify-between">
-            <div className="text-xs font-semibold text-slate-800">Training Path</div>
+            <div className="text-xs font-semibold text-slate-800">Guided Walkthrough</div>
             <div className="text-[11px] text-slate-500">{completionPct}% complete</div>
           </div>
           <div className="space-y-1.5">
             {TRAINING_MODULES.map((m) => (
-              <label key={m.id} className="flex cursor-pointer items-center justify-between rounded border border-slate-100 px-2 py-1.5 text-xs">
-                <span className="text-slate-700">{m.title} ({m.minutes}m)</span>
-                <span className="inline-flex items-center gap-1 text-slate-500">
-                  <input
-                    type="checkbox"
-                    checked={!!completedModules[m.id]}
-                    onChange={() => toggleModule(m.id)}
-                    className="h-3.5 w-3.5"
-                  />
-                  {completedModules[m.id] && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />}
-                </span>
-              </label>
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => {
+                  setActiveModuleId(m.id);
+                  if (!completedModules[m.id]) toggleModule(m.id);
+                }}
+                className={`w-full text-left rounded border px-2 py-2 text-xs ${
+                  activeModuleId === m.id ? 'border-blue-200 bg-blue-50/40' : 'border-slate-100 bg-white'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-slate-700 font-medium">{m.title} ({m.minutes}m)</span>
+                  <span className="inline-flex items-center gap-1 text-slate-500">
+                    <input
+                      type="checkbox"
+                      checked={!!completedModules[m.id]}
+                      onChange={() => {
+                        setActiveModuleId(m.id);
+                        toggleModule(m.id);
+                      }}
+                      className="h-3.5 w-3.5"
+                    />
+                    {completedModules[m.id] && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />}
+                  </span>
+                </div>
+                {activeModuleId === m.id && (
+                  <div className="mt-1.5 space-y-1">
+                    <div className="text-[11px] font-semibold text-blue-700">{m.takeaway}</div>
+                    <div className="text-[11px] text-slate-600 leading-relaxed">{m.detail}</div>
+                  </div>
+                )}
+              </button>
             ))}
           </div>
         </div>

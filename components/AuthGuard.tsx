@@ -82,7 +82,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
             </div>
             <h2 className="text-xl font-bold text-white mb-3">Account Pending Review</h2>
             <p className="text-sm text-white/70 leading-relaxed mb-6">
-              Your account is pending review. We&#39;ll notify you when access is granted.
+              Your account is pending review. This page will automatically update when an admin approves your access — no need to refresh.
             </p>
             <div className="bg-white/5 rounded-lg border border-white/10 p-4 mb-6">
               <div className="text-xs text-white/50 mb-1">Signed in as</div>

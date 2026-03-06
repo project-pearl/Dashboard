@@ -9,16 +9,18 @@
 /*  copies/person/day (flow-population normalized).                   */
 /* ------------------------------------------------------------------ */
 
-export type PathogenType = 'sars-cov-2' | 'influenza-a' | 'mpox' | 'rsv';
+export type PathogenType = 'sars-cov-2' | 'influenza-a' | 'mpox' | 'rsv' | 'norovirus' | 'hepatitis-a';
 
-export const ALL_PATHOGENS: PathogenType[] = ['sars-cov-2', 'influenza-a', 'mpox', 'rsv'];
+export const ALL_PATHOGENS: PathogenType[] = ['sars-cov-2', 'influenza-a', 'mpox', 'rsv', 'norovirus', 'hepatitis-a'];
 
 /** Socrata dataset IDs — verified live as of March 2026 */
 export const DATASET_IDS: Record<PathogenType, string> = {
-  'sars-cov-2':  'j9g8-acpt',
-  'influenza-a': 'ymmh-divb',
-  'mpox':        'xpxn-rzgz',
-  'rsv':         '45cq-cw4i',
+  'sars-cov-2':   'j9g8-acpt',
+  'influenza-a':  'ymmh-divb',
+  'mpox':         'xpxn-rzgz',
+  'rsv':          '45cq-cw4i',
+  'norovirus':    '2ew6-ywp6',
+  'hepatitis-a':  'f7j2-g3q5',
 };
 
 /** Region 3 EPA jurisdictions for validation scope */

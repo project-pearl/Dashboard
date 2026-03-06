@@ -51,6 +51,8 @@ export const BLOB_PATHS = {
   coordinationSnapshot: 'alerts/coordination-snapshot.json',
   floodForecastSnapshot: 'alerts/flood-forecast-snapshot.json',
   deploymentSnapshot:    'alerts/deployment-snapshot.json',
+  habSnapshot:           'alerts/hab-snapshot.json',
+  beaconSnapshot:        'alerts/beacon-snapshot.json',
 };
 
 export const DISK_PATHS = {

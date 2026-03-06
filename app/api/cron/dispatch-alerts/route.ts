@@ -13,6 +13,8 @@ import { evaluateDeltaAlerts } from '@/lib/alerts/triggers/deltaTrigger';
 import { evaluateNwssAlerts } from '@/lib/alerts/triggers/nwssTrigger';
 import { evaluateFloodForecasts } from '@/lib/alerts/triggers/floodForecastTrigger';
 import { evaluateDeploymentAlerts, type DeploymentInput } from '@/lib/alerts/triggers/deploymentTrigger';
+import { evaluateHabAlerts } from '@/lib/alerts/triggers/habTrigger';
+import { evaluateBeaconAlerts } from '@/lib/alerts/triggers/beaconTrigger';
 import { loadRules, evaluateRules } from '@/lib/alerts/rules';
 import type { AlertEvent } from '@/lib/alerts/types';
 
@@ -126,7 +128,25 @@ export async function GET(request: NextRequest) {
       console.warn(`[dispatch-alerts] Deployment trigger error: ${err.message}`);
     }
 
-    // 7. Custom rules
+    // 7. HAB alert trigger
+    try {
+      const habEvents = await evaluateHabAlerts();
+      candidates.push(...habEvents);
+      console.warn(`[dispatch-alerts] HAB: ${habEvents.length} candidates`);
+    } catch (err: any) {
+      console.warn(`[dispatch-alerts] HAB trigger error: ${err.message}`);
+    }
+
+    // 8. BEACON beach advisory trigger
+    try {
+      const beaconEvents = await evaluateBeaconAlerts();
+      candidates.push(...beaconEvents);
+      console.warn(`[dispatch-alerts] BEACON: ${beaconEvents.length} candidates`);
+    } catch (err: any) {
+      console.warn(`[dispatch-alerts] BEACON trigger error: ${err.message}`);
+    }
+
+    // 9. Custom rules
     try {
       const rules = await loadRules();
       if (rules.length > 0) {
@@ -138,7 +158,7 @@ export async function GET(request: NextRequest) {
       console.warn(`[dispatch-alerts] Rules engine error: ${err.message}`);
     }
 
-    // 8. Dispatch all candidates
+    // 10. Dispatch all candidates
     const result = await dispatchAlerts(candidates);
     const durationMs = Date.now() - _buildStartedAt;
 

@@ -25,7 +25,7 @@ export function normalizeUserRole(role: string | undefined): UserRole {
     biotech: 'Biotech',
     investor: 'Investor',
   };
-  return roleMap[key] ?? 'Federal';
+  return roleMap[key] ?? 'NGO';
 }
 
 /** Roles that require admin approval + jurisdiction binding */

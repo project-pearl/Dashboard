@@ -41,7 +41,7 @@ const ROLE_ALLOWED_ROUTES: Record<UserRole, string[]> = {
   K12:        ['/dashboard/k12', '/dashboard/site-intelligence'],
   College:    ['/dashboard/university', '/dashboard/site-intelligence'],
   Researcher: ['/dashboard/university', '/dashboard/site-intelligence'],
-  NGO:        ['/dashboard/ngo', '/dashboard/site-intelligence'],
+  NGO:        ['/dashboard/ngo'],
   Temp:       ['/dashboard/k12', '/dashboard/site-intelligence'],
   Pearl:      [], // special-cased: admin sees everything
 };
@@ -51,7 +51,7 @@ const ROLE_ALLOWED_ROUTES: Record<UserRole, string[]> = {
 /** Resolve the primary dashboard route for a given user, filling in dynamic segments. */
 export function getPrimaryRoute(user: PearlUser): string {
   const normalizedRole = normalizeUserRole(user.role);
-  const template = ROLE_PRIMARY_ROUTE[normalizedRole] ?? '/dashboard/federal';
+  const template = ROLE_PRIMARY_ROUTE[normalizedRole] ?? '/dashboard/ngo';
 
   return template
     .replace('{state}', user.state || 'MD')

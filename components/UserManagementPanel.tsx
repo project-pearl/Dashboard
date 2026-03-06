@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/authContext';
 import { PearlUser, UserRole, OPERATOR_ROLES, EXPLORER_ROLES, isOperatorRole } from '@/lib/authTypes';
+import type { ApprovalOverrides } from '@/lib/authContext';
 import { MD_JURISDICTIONS, STATES, isFreeEmailDomain } from '@/lib/jurisdictions';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +26,50 @@ const STATUS_BADGE: Record<string, { bg: string; text: string; label: string }> 
 
 /** Roles that warrant a free-email-domain warning */
 const PROFESSIONAL_ROLES: UserRole[] = ['Federal', 'State', 'MS4', 'Corporate', 'Utility'];
+
+const selectClass = 'w-full px-3 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:border-cyan-400 focus:ring-1 focus:ring-cyan-200 outline-none';
+const inputClass = 'w-full px-3 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:border-cyan-400 focus:ring-1 focus:ring-cyan-200 outline-none placeholder-slate-400';
+
+const ALL_US_STATES: { abbr: string; name: string }[] = [
+  { abbr: 'AL', name: 'Alabama' }, { abbr: 'AK', name: 'Alaska' }, { abbr: 'AZ', name: 'Arizona' },
+  { abbr: 'AR', name: 'Arkansas' }, { abbr: 'CA', name: 'California' }, { abbr: 'CO', name: 'Colorado' },
+  { abbr: 'CT', name: 'Connecticut' }, { abbr: 'DE', name: 'Delaware' }, { abbr: 'DC', name: 'District of Columbia' },
+  { abbr: 'FL', name: 'Florida' }, { abbr: 'GA', name: 'Georgia' }, { abbr: 'HI', name: 'Hawaii' },
+  { abbr: 'ID', name: 'Idaho' }, { abbr: 'IL', name: 'Illinois' }, { abbr: 'IN', name: 'Indiana' },
+  { abbr: 'IA', name: 'Iowa' }, { abbr: 'KS', name: 'Kansas' }, { abbr: 'KY', name: 'Kentucky' },
+  { abbr: 'LA', name: 'Louisiana' }, { abbr: 'ME', name: 'Maine' }, { abbr: 'MD', name: 'Maryland' },
+  { abbr: 'MA', name: 'Massachusetts' }, { abbr: 'MI', name: 'Michigan' }, { abbr: 'MN', name: 'Minnesota' },
+  { abbr: 'MS', name: 'Mississippi' }, { abbr: 'MO', name: 'Missouri' }, { abbr: 'MT', name: 'Montana' },
+  { abbr: 'NE', name: 'Nebraska' }, { abbr: 'NV', name: 'Nevada' }, { abbr: 'NH', name: 'New Hampshire' },
+  { abbr: 'NJ', name: 'New Jersey' }, { abbr: 'NM', name: 'New Mexico' }, { abbr: 'NY', name: 'New York' },
+  { abbr: 'NC', name: 'North Carolina' }, { abbr: 'ND', name: 'North Dakota' }, { abbr: 'OH', name: 'Ohio' },
+  { abbr: 'OK', name: 'Oklahoma' }, { abbr: 'OR', name: 'Oregon' }, { abbr: 'PA', name: 'Pennsylvania' },
+  { abbr: 'RI', name: 'Rhode Island' }, { abbr: 'SC', name: 'South Carolina' }, { abbr: 'SD', name: 'South Dakota' },
+  { abbr: 'TN', name: 'Tennessee' }, { abbr: 'TX', name: 'Texas' }, { abbr: 'UT', name: 'Utah' },
+  { abbr: 'VT', name: 'Vermont' }, { abbr: 'VA', name: 'Virginia' }, { abbr: 'WA', name: 'Washington' },
+  { abbr: 'WV', name: 'West Virginia' }, { abbr: 'WI', name: 'Wisconsin' }, { abbr: 'WY', name: 'Wyoming' },
+];
+
+/** Route preview per role — shows admin exactly where the user will land */
+const ROUTE_PREVIEWS: Record<string, (...args: string[]) => string> = {
+  Federal:    ()                       => '/dashboard/federal',
+  State:      (state: string)          => `/dashboard/state/${state || '{state}'}`,
+  Local:      (_s: string, jur: string) => `/dashboard/local/${jur || '{jurisdictionId}'}`,
+  MS4:        (_s: string, jur: string) => `/dashboard/ms4/${jur || '{ms4Jurisdiction}'}`,
+  Corporate:  ()                       => '/dashboard/esg',
+  Utility:    ()                       => '/dashboard/utility/default',
+  Agriculture:()                       => '/dashboard/infrastructure',
+  Lab:        ()                       => '/dashboard/aqua-lo',
+  Biotech:    ()                       => '/dashboard/biotech',
+  Investor:   ()                       => '/dashboard/investor',
+  K12:        ()                       => '/dashboard/k12',
+  College:    ()                       => '/dashboard/university',
+  Researcher: ()                       => '/dashboard/university',
+  NGO:        ()                       => '/dashboard/ngo',
+  Temp:       ()                       => '/dashboard/k12',
+  Pearl:      ()                       => '/dashboard/pearl',
+  _default:   (role: string)           => `/dashboard/${role.toLowerCase()}`,
+};
 
 function accessType(role: UserRole): 'operator' | 'explorer' {
   return EXPLORER_ROLES.includes(role) ? 'explorer' : 'operator';
@@ -67,9 +112,8 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
   const [invCopied, setInvCopied] = useState(false);
   const [invSending, setInvSending] = useState(false);
 
-  // Approval state — jurisdiction binding + role override
-  const [approvalJurisdictions, setApprovalJurisdictions] = useState<Record<string, string>>({});
-  const [approvalRoleOverrides, setApprovalRoleOverrides] = useState<Record<string, UserRole>>({});
+  // Approval state — per-user overrides for role, state, jurisdiction, organization
+  const [approvalOverrides, setApprovalOverrides] = useState<Record<string, ApprovalOverrides>>({});
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -123,17 +167,21 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
     window.open(`mailto:${invEmail}?subject=${subject}&body=${body}`, '_blank');
   }
 
-  // ── Approve user (with optional role change) ──
+  function getOverride(uid: string): ApprovalOverrides {
+    return approvalOverrides[uid] ?? {};
+  }
+
+  function setOverrideField(uid: string, field: keyof ApprovalOverrides, value: string) {
+    setApprovalOverrides(prev => ({
+      ...prev,
+      [uid]: { ...prev[uid], [field]: value || undefined },
+    }));
+  }
+
+  // ── Approve user (with all drilldown overrides) ──
   async function handleApprove(uid: string) {
-    const jur = approvalJurisdictions[uid];
-    const roleOverride = approvalRoleOverrides[uid];
-
-    // If admin changed the role, apply that first
-    if (roleOverride) {
-      await updateUserRole(uid, roleOverride, jur || undefined);
-    }
-
-    await approveUser(uid, jur || undefined);
+    const overrides = getOverride(uid);
+    await approveUser(uid, Object.keys(overrides).length > 0 ? overrides : undefined);
     await refresh();
   }
 
@@ -196,13 +244,32 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
             </Card>
           ) : (
             pending.map(u => {
-              const effectiveRole = approvalRoleOverrides[u.uid] || u.role;
+              const ov = getOverride(u.uid);
+              const effectiveRole = (ov.role || u.role) as UserRole;
+              const effectiveState = ov.state || u.state || '';
+              const effectiveOrg = ov.organization ?? u.organization ?? '';
+              const effectiveJurisdiction = ov.ms4Jurisdiction || u.ms4Jurisdiction || '';
               const hasFreeEmail = isFreeEmailDomain(u.email);
-              const showEmailWarning = hasFreeEmail && PROFESSIONAL_ROLES.includes(u.role);
+              const showEmailWarning = hasFreeEmail && PROFESSIONAL_ROLES.includes(effectiveRole);
+
+              // Determine which drilldown fields this role needs
+              const needsState = ['State', 'Federal', 'MS4', 'Local', 'Utility'].includes(effectiveRole);
+              const needsJurisdiction = ['MS4', 'Local'].includes(effectiveRole);
+              const needsOrg = isOperatorRole(effectiveRole);
+
+              // Route preview
+              const routePreview = ROUTE_PREVIEWS[effectiveRole]?.(effectiveState, effectiveJurisdiction) ?? ROUTE_PREVIEWS._default(effectiveRole);
+
+              // Approval gate — block if required fields are missing
+              const missingFields: string[] = [];
+              if (needsState && !effectiveState) missingFields.push('state');
+              if (needsJurisdiction && !effectiveJurisdiction) missingFields.push('jurisdiction');
+              const canApprove = missingFields.length === 0;
 
               return (
                 <Card key={u.uid} className="border-2 border-amber-200 bg-amber-50/30">
                   <CardContent className="p-4 space-y-3">
+                    {/* Header: user info */}
                     <div className="flex items-start justify-between">
                       <div>
                         <div className="text-sm font-bold text-slate-800">{u.name}</div>
@@ -223,20 +290,20 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
                       <div className="flex items-start gap-2 p-2.5 rounded-lg bg-orange-50 border border-orange-200">
                         <AlertTriangle className="h-3.5 w-3.5 text-orange-500 flex-shrink-0 mt-0.5" />
                         <p className="text-[11px] text-orange-700">
-                          <span className="font-semibold">Free email domain</span> — this user claims <span className="font-semibold">{u.role}</span> role but registered with a personal email ({u.email.split('@')[1]}). Verify affiliation before approving.
+                          <span className="font-semibold">Free email domain</span> — this user claims <span className="font-semibold">{effectiveRole}</span> role but registered with a personal email ({u.email.split('@')[1]}). Verify affiliation before approving.
                         </p>
                       </div>
                     )}
 
-                    {/* Role override dropdown */}
+                    {/* ── Role Assignment ── */}
                     <div>
                       <label className="text-[11px] font-semibold text-slate-600 mb-1 block">
                         Assign Role
                       </label>
                       <select
                         value={effectiveRole}
-                        onChange={e => setApprovalRoleOverrides(prev => ({ ...prev, [u.uid]: e.target.value as UserRole }))}
-                        className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:border-cyan-400 focus:ring-1 focus:ring-cyan-200 outline-none"
+                        onChange={e => setOverrideField(u.uid, 'role', e.target.value)}
+                        className={selectClass}
                       >
                         {ALL_ROLES.map(r => (
                           <option key={r} value={r}>
@@ -246,16 +313,35 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
                       </select>
                     </div>
 
-                    {/* Jurisdiction binding (for MS4/State operators) */}
-                    {isOperatorRole(effectiveRole) && effectiveRole === 'MS4' && (
+                    {/* ── State ── */}
+                    {needsState && (
                       <div>
                         <label className="text-[11px] font-semibold text-slate-600 mb-1 block">
-                          Bind Jurisdiction (required for MS4)
+                          State {effectiveRole === 'State' ? '(determines landing page)' : ''}
                         </label>
                         <select
-                          value={approvalJurisdictions[u.uid] || ''}
-                          onChange={e => setApprovalJurisdictions(prev => ({ ...prev, [u.uid]: e.target.value }))}
-                          className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:border-cyan-400 focus:ring-1 focus:ring-cyan-200 outline-none"
+                          value={effectiveState}
+                          onChange={e => setOverrideField(u.uid, 'state', e.target.value)}
+                          className={selectClass}
+                        >
+                          <option value="">Select state...</option>
+                          {ALL_US_STATES.map(s => (
+                            <option key={s.abbr} value={s.abbr}>{s.name} ({s.abbr})</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {/* ── Jurisdiction (MS4 / Local) ── */}
+                    {needsJurisdiction && (
+                      <div>
+                        <label className="text-[11px] font-semibold text-slate-600 mb-1 block">
+                          Bind Jurisdiction {effectiveRole === 'MS4' ? '(required — determines MS4 permit dashboard)' : '(required — determines local dashboard)'}
+                        </label>
+                        <select
+                          value={effectiveJurisdiction}
+                          onChange={e => setOverrideField(u.uid, 'ms4Jurisdiction', e.target.value)}
+                          className={selectClass}
                         >
                           <option value="">Select jurisdiction...</option>
                           {MD_JURISDICTIONS.map(j => (
@@ -265,11 +351,43 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
                       </div>
                     )}
 
-                    {/* Actions */}
+                    {/* ── Organization ── */}
+                    {needsOrg && (
+                      <div>
+                        <label className="text-[11px] font-semibold text-slate-600 mb-1 block">
+                          Organization
+                        </label>
+                        <input
+                          type="text"
+                          value={effectiveOrg}
+                          onChange={e => setOverrideField(u.uid, 'organization', e.target.value)}
+                          placeholder={u.organization || 'e.g. Anne Arundel County DPW'}
+                          className={inputClass}
+                        />
+                      </div>
+                    )}
+
+                    {/* ── Landing route preview ── */}
+                    <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                      <div className="text-[10px] font-semibold text-slate-500 mb-1">Landing page</div>
+                      <code className="text-[11px] text-cyan-700 font-mono">{routePreview}</code>
+                    </div>
+
+                    {/* ── Validation warnings ── */}
+                    {!canApprove && (
+                      <div className="flex items-start gap-2 p-2.5 rounded-lg bg-red-50 border border-red-200">
+                        <AlertTriangle className="h-3.5 w-3.5 text-red-500 flex-shrink-0 mt-0.5" />
+                        <p className="text-[11px] text-red-700">
+                          Missing required field{missingFields.length > 1 ? 's' : ''}: <span className="font-semibold">{missingFields.join(', ')}</span>
+                        </p>
+                      </div>
+                    )}
+
+                    {/* ── Actions ── */}
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleApprove(u.uid)}
-                        disabled={effectiveRole === 'MS4' && !approvalJurisdictions[u.uid]}
+                        disabled={!canApprove}
                         className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                       >
                         <CheckCircle className="h-3.5 w-3.5" />

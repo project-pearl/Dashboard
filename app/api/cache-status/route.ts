@@ -46,6 +46,8 @@ import { getNwmCacheStatus, ensureWarmed as warmNwm } from '@/lib/nwmCache';
 import { getIpacCacheStatus, ensureWarmed as warmIpac } from '@/lib/ipacCache';
 import { getNceiCacheStatus, ensureWarmed as warmNcei } from '@/lib/nceiCache';
 import { getHabsosCacheStatus, ensureWarmed as warmHabsos } from '@/lib/habsosCache';
+import { getBeaconCacheStatus, ensureWarmed as warmBeacon } from '@/lib/beaconCache';
+import { getSsoCsoCacheStatus, ensureWarmed as warmSsoCso } from '@/lib/ssoCsoCache';
 import { getGlerlCacheStatus, ensureWarmed as warmGlerl } from '@/lib/glerlCache';
 import { getHefsCacheStatus, ensureWarmed as warmHefs } from '@/lib/hefsCache';
 import { getHealthSummary, ensureWarmed as warmSentinelHealth } from '@/lib/sentinel/sentinelHealth';
@@ -69,7 +71,7 @@ export async function GET() {
     [warmNwisIv, warmUsgsAlerts, warmNwsAlerts, warmNwps, warmCoops, warmSnotel],
     [warmTri, warmUSAs, warmGrantsGov, warmSam, warmSentinelHealth, warmSentinelQueue, warmSentinelScores],
     [warmFema, warmSuperfund, warmUsdm, warmUsgsDv, warmCoopsDerived, warmErddapSat],
-    [warmNasaStream, warmNwm, warmIpac, warmNcei, warmHabsos, warmGlerl, warmHefs],
+    [warmNasaStream, warmNwm, warmIpac, warmNcei, warmHabsos, warmGlerl, warmHefs, warmBeacon, warmSsoCso],
   ];
   for (const batch of warmBatches) {
     await Promise.allSettled(batch.map(fn => fn()));
@@ -115,6 +117,8 @@ export async function GET() {
   const ipac = getIpacCacheStatus();
   const ncei = getNceiCacheStatus();
   const habsos = getHabsosCacheStatus();
+  const beacon = getBeaconCacheStatus();
+  const ssoCso = getSsoCsoCacheStatus();
   const glerl = getGlerlCacheStatus();
   const hefs = getHefsCacheStatus();
 
@@ -283,6 +287,14 @@ export async function GET() {
     habsos: {
       ...habsos,
       ...staleness(habsos.loaded ? (habsos as any).built : null),
+    },
+    beacon: {
+      ...beacon,
+      ...staleness(beacon.loaded ? (beacon as any).built : null),
+    },
+    ssoCso: {
+      ...ssoCso,
+      ...staleness(ssoCso.loaded ? (ssoCso as any).built : null),
     },
     glerl: {
       ...glerl,

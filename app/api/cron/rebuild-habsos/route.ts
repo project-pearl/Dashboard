@@ -12,6 +12,8 @@ import {
   gridKey,
   type HabObservation,
 } from '@/lib/habsosCache';
+import { enqueueEvents } from '@/lib/sentinel/eventQueue';
+import type { ChangeEvent, SeverityHint } from '@/lib/sentinel/types';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -123,6 +125,47 @@ export async function GET(request: NextRequest) {
       grid,
     });
 
+    // Push high-cell-count observations as sentinel events
+    const nowIso = new Date().toISOString();
+    const sentinelEvents: ChangeEvent[] = [];
+    for (const obs of observations) {
+      if (obs.cellCount < 20_000) continue;
+      let severityHint: SeverityHint = 'LOW';
+      if (obs.cellCount > 500_000) severityHint = 'CRITICAL';
+      else if (obs.cellCount > 100_000) severityHint = 'HIGH';
+      else if (obs.cellCount > 20_000) severityHint = 'MODERATE';
+
+      sentinelEvents.push({
+        eventId: crypto.randomUUID(),
+        source: 'HABSOS',
+        detectedAt: nowIso,
+        sourceTimestamp: obs.sampleDate || null,
+        changeType: 'THRESHOLD_CROSSED',
+        geography: {
+          stateAbbr: obs.state || undefined,
+          lat: obs.lat,
+          lng: obs.lng,
+        },
+        severityHint,
+        payload: {
+          genus: obs.genus,
+          cellCount: obs.cellCount,
+          description: obs.description,
+        },
+        metadata: {
+          sourceRecordId: `habsos:${obs.state}:${obs.genus}:${obs.sampleDate}`,
+          currentValue: obs.cellCount,
+        },
+      });
+    }
+
+    let sentinelPushed = 0;
+    if (sentinelEvents.length > 0) {
+      const added = await enqueueEvents(sentinelEvents);
+      sentinelPushed = added.length;
+      console.log(`[HABSOS Cron] Pushed ${sentinelPushed} sentinel events`);
+    }
+
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[HABSOS Cron] Complete in ${elapsed}s — ${observations.length} observations, ${Object.keys(grid).length} cells`);
 
@@ -131,6 +174,7 @@ export async function GET(request: NextRequest) {
       duration: `${elapsed}s`,
       observationCount: observations.length,
       gridCells: Object.keys(grid).length,
+      sentinelPushed,
       cache: getHabsosCacheStatus(),
     });
 

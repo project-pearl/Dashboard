@@ -26,7 +26,7 @@ interface AuthContextType {
   logout: () => void;
   clearError: () => void;
 
-  approveUser: (uid: string, jurisdiction?: string) => Promise<void>;
+  approveUser: (uid: string, overrides?: ApprovalOverrides) => Promise<void>;
   rejectUser: (uid: string) => Promise<void>;
   deactivateUser: (uid: string) => Promise<void>;
   updateUserRole: (uid: string, role: UserRole, jurisdiction?: string) => Promise<void>;
@@ -46,6 +46,13 @@ interface SignupParams {
   requestedJurisdiction?: string;
   inviteToken?: string;
   useCase?: string;
+}
+
+export interface ApprovalOverrides {
+  role?: UserRole;
+  state?: string;
+  organization?: string;
+  ms4Jurisdiction?: string;
 }
 
 interface CreateInviteParams {
@@ -176,6 +183,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // ── Pending → Active auto-detection ──────────────────────────────────────
+  // Poll Supabase every 15s while user is pending. When admin approves,
+  // status flips to 'active' and the user is admitted without re-login.
+  useEffect(() => {
+    if (!user || user.status !== 'pending') return;
+
+    let active = true;
+    const POLL_MS = 15_000;
+
+    const intervalId = setInterval(async () => {
+      if (!active) return;
+      try {
+        const profile = await fetchProfile(user.uid);
+        if (!profile || !active) return;
+        const freshStatus = (profile.status || 'pending') as AccountStatus;
+
+        if (freshStatus === 'active') {
+          // Admin approved — upgrade session in place
+          const { data: { session } } = await supabase.auth.getSession();
+          const authUser = session?.user ?? { id: user.uid, email: user.email } as User;
+          const pearlUser = profileToPearlUser(profile, authUser);
+          setUser(pearlUser);
+          setError(null);
+          triggerPrefetch(pearlUser.role, pearlUser.state);
+          console.log('[Auth] Pending → Active: account approved by admin');
+        } else if (freshStatus === 'rejected' || freshStatus === 'deactivated') {
+          // Admin rejected — update state so AuthGuard shows deactivated screen
+          const { data: { session } } = await supabase.auth.getSession();
+          const authUser = session?.user ?? { id: user.uid, email: user.email } as User;
+          setUser(profileToPearlUser(profile, authUser));
+        }
+      } catch {
+        // Non-fatal — try again next interval
+      }
+    }, POLL_MS);
+
+    return () => {
+      active = false;
+      clearInterval(intervalId);
+    };
+  }, [user?.uid, user?.status]);
+
   const loginAsync = useCallback(async (email: string, password: string) => {
     setError(null);
     try {
@@ -194,19 +243,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const profile = await fetchProfile(data.user.id);
         if (profile) {
           const pearlUser = profileToPearlUser(profile, data.user);
-          if (pearlUser.status === 'pending') {
-            setError('Your account is pending approval.');
-            await supabase.auth.signOut();
-            return { success: false, error: 'Account pending approval' };
-          }
           if (pearlUser.status === 'deactivated' || pearlUser.status === 'rejected') {
             setError('Your account has been deactivated.');
             await supabase.auth.signOut();
             return { success: false, error: 'Account deactivated' };
           }
+          // Pending users: keep session alive so AuthGuard can show the
+          // pending screen and the polling loop can auto-detect approval.
           setUser(pearlUser);
-          triggerPrefetch(pearlUser.role, pearlUser.state);
-          supabase.from('profiles').update({ last_login_at: new Date().toISOString() }).eq('id', data.user.id).then(() => {});
+          if (pearlUser.status === 'active') {
+            triggerPrefetch(pearlUser.role, pearlUser.state);
+            supabase.from('profiles').update({ last_login_at: new Date().toISOString() }).eq('id', data.user.id).then(() => {});
+          }
           return { success: true, user: pearlUser };
         }
       }
@@ -284,10 +332,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const clearError = useCallback(() => setError(null), []);
 
-  const approveUser = useCallback(async (uid: string, jurisdiction?: string) => {
+  const approveUser = useCallback(async (uid: string, overrides?: ApprovalOverrides) => {
     const updates: any = { status: 'active', approved_at: new Date().toISOString() };
-    if (jurisdiction) updates.ms4_jurisdiction = jurisdiction;
     if (user?.uid) updates.approved_by = user.uid;
+    if (overrides?.role) updates.role = overrides.role;
+    if (overrides?.state) updates.state = overrides.state;
+    if (overrides?.organization) updates.organization = overrides.organization;
+    if (overrides?.ms4Jurisdiction) updates.ms4_jurisdiction = overrides.ms4Jurisdiction;
     await supabase.from('profiles').update(updates).eq('id', uid);
   }, [user]);
 
