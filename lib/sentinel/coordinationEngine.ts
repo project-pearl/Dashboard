@@ -5,6 +5,7 @@
 
 import type { ChangeEvent, CoordinatedEvent } from './types';
 import { getHuc6Parent, getAdjacentHucs } from './hucAdjacency';
+import { getWatershedContext } from './indexLookup';
 import {
   MIN_CLUSTER_SIZE,
   COORDINATION_WINDOW_MS,
@@ -164,11 +165,19 @@ function scoreCluster(
     ? 1.0
     : Math.max(0.1, 1.0 - (spread / windowMs));
 
-  return (
+  const weightedSum =
     COORDINATION_WEIGHTS.clusterSize * clusterScore +
     COORDINATION_WEIGHTS.parameterBreadth * breadthScore +
-    COORDINATION_WEIGHTS.temporalTightness * tightnessScore
-  );
+    COORDINATION_WEIGHTS.temporalTightness * tightnessScore;
+
+  // Watershed severity boost — clusters in degraded watersheds score higher
+  let totalSeverity = 0;
+  for (const huc of memberHucs) {
+    totalSeverity += getWatershedContext(huc).severity;
+  }
+  const avgSeverity = memberHucs.length > 0 ? totalSeverity / memberHucs.length : 0.5;
+
+  return weightedSum * (1 + avgSeverity * 0.3);
 }
 
 /* ------------------------------------------------------------------ */

@@ -1,6 +1,7 @@
 import { WaterQualityData, WaterQualityParameter } from './types';
 import { getParameterStatus } from './mockData';
 import { EJMetrics } from './ejImpact';
+import type { HucIndices } from './indices/types';
 
 export interface ESGScore {
   overall: number;
@@ -138,12 +139,19 @@ export function calculateESGScore(
   },
   ejMetrics?: EJMetrics,
   alertCount: number = 0,
-  isPublicView: boolean = false
+  isPublicView: boolean = false,
+  hucIndices?: HucIndices,
 ): ESGScore {
   const waterQuality = calculateWaterQualityScore(data);
   const pollutantReduction = calculatePollutantReductionScore(removalEfficiencies);
-  const riskManagement = calculateRiskManagementScore(data, ejMetrics, alertCount);
+  let riskManagement = calculateRiskManagementScore(data, ejMetrics, alertCount);
   const transparency = calculateTransparencyScore(isPublicView, true);
+
+  // Watershed stress penalty — degraded watersheds reduce risk management score
+  if (hucIndices) {
+    const watershedStress = hucIndices.composite / 100; // 0-1
+    riskManagement = riskManagement * (1 - watershedStress * 0.3);
+  }
 
   const overall = Math.round(
     waterQuality * 0.4 +

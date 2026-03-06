@@ -96,6 +96,12 @@ export const THRESHOLD_RULES: ThresholdRule[] = [
   },
 ];
 
+// ── Threshold Modifier ───────────────────────────────────────────────────────
+
+export interface ThresholdModifier {
+  sensitivityMultiplier: number; // >1 = tighter thresholds (degraded watersheds)
+}
+
 // ── Evaluation ───────────────────────────────────────────────────────────────
 
 /**
@@ -105,11 +111,13 @@ export const THRESHOLD_RULES: ThresholdRule[] = [
  * @param readings - Flat array of IV readings (usually one state's worth)
  * @param siteNames - Map of siteNumber → siteName (for human-readable messages)
  * @param siteStates - Map of siteNumber → state abbreviation
+ * @param modifier - Optional threshold modifier for watershed-adjusted sensitivity
  */
 export function evaluateThresholds(
   readings: UsgsIvReading[],
   siteNames: Map<string, string>,
   siteStates: Map<string, string>,
+  modifier?: ThresholdModifier,
 ): UsgsAlert[] {
   const alerts: UsgsAlert[] = [];
   const now = new Date().toISOString();
@@ -122,24 +130,33 @@ export function evaluateThresholds(
       let severity: 'warning' | 'critical' | null = null;
       let threshold: number;
 
+      // Apply sensitivity modifier: tighter thresholds for degraded watersheds
+      const sm = modifier?.sensitivityMultiplier ?? 1;
+      const adjWarning = check.direction === 'below'
+        ? check.warning * (1 / sm)   // lower threshold → triggers earlier
+        : check.warning * sm;         // higher threshold → triggers earlier
+      const adjCritical = check.direction === 'below'
+        ? check.critical * (1 / sm)
+        : check.critical * sm;
+
       if (check.direction === 'below') {
-        if (reading.value < check.critical) {
+        if (reading.value < adjCritical) {
           severity = 'critical';
-          threshold = check.critical;
-        } else if (reading.value < check.warning) {
+          threshold = adjCritical;
+        } else if (reading.value < adjWarning) {
           severity = 'warning';
-          threshold = check.warning;
+          threshold = adjWarning;
         } else {
           continue;
         }
       } else {
         // above
-        if (reading.value > check.critical) {
+        if (reading.value > adjCritical) {
           severity = 'critical';
-          threshold = check.critical;
-        } else if (reading.value > check.warning) {
+          threshold = adjCritical;
+        } else if (reading.value > adjWarning) {
           severity = 'warning';
-          threshold = check.warning;
+          threshold = adjWarning;
         } else {
           continue;
         }

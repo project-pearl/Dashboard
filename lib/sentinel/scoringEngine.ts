@@ -24,6 +24,7 @@ import {
 } from './config';
 import { getAllEvents, getActiveHucs, getEventsForHuc } from './eventQueue';
 import { getAdjacentHucs, getStateForHuc, shareHuc6Parent } from './hucAdjacency';
+import { getWatershedContext } from './indexLookup';
 import { saveCacheToBlob, loadCacheFromBlob } from '../blobPersistence';
 
 import fs from 'fs';
@@ -245,6 +246,10 @@ export async function scoreAllHucs(): Promise<ScoredHuc[]> {
     if (hasAdjacentActivity) {
       totalScore *= ADJACENT_HUC_BONUS;
     }
+
+    // 4. Watershed severity multiplier — degraded watersheds amplify scores
+    const ctx = getWatershedContext(huc8);
+    totalScore *= (1 + ctx.severity * 0.5);
 
     const level = scoreToLevel(totalScore);
 

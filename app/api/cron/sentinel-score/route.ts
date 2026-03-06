@@ -17,6 +17,7 @@ import { classifyEvent, gatherConfounders } from '@/lib/sentinel/classificationE
 import { correlateNwssWithWQ } from '@/lib/sentinel/nwssCorrelationEngine';
 import { ensureWarmed as ensureBaselinesWarmed } from '@/lib/sentinel/parameterBaselines';
 import { ensureWarmed as ensureNwssWarmed, getNwssAnomalies } from '@/lib/nwss/nwssCache';
+import { ensureWarmed as ensureIndicesWarmed } from '@/lib/indices/indicesCache';
 import type { NwssCorrelation } from '@/lib/sentinel/types';
 import { evaluateCoordinationAlerts } from '@/lib/alerts/triggers/coordinationTrigger';
 import { dispatchAlerts } from '@/lib/alerts/engine';
@@ -44,13 +45,14 @@ export async function GET(request: NextRequest) {
   const startTime = Date.now();
 
   try {
-    // Warm all sentinel state
+    // Warm all sentinel state (including indices for watershed context)
     await Promise.all([
       ensureQueueWarmed(),
       ensureHealthWarmed(),
       ensureScoreWarmed(),
       ensureBaselinesWarmed(),
       ensureNwssWarmed(),
+      ensureIndicesWarmed(),
     ]);
 
     // Run Tier-2 scoring

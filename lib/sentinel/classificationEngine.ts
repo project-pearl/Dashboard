@@ -18,6 +18,7 @@ import {
   BIO_MARKER_PARAMS,
 } from './classificationConfig';
 import { getEventsForHuc } from './eventQueue';
+import { getWatershedContext } from './indexLookup';
 
 /* ------------------------------------------------------------------ */
 /*  Main Classification                                               */
@@ -44,7 +45,20 @@ export function classifyEvent(
     });
   }
 
-  // Apply confounder reductions
+  // Watershed context — scale confounder effectiveness by watershed health
+  const ctx = getWatershedContext(huc.huc8);
+  const confounderScale = 1 - ctx.severity; // degraded watersheds reduce confounder effectiveness
+
+  if (ctx.available && ctx.severity > 0.6) {
+    reasoning.push({
+      rule: 'watershed_degradation',
+      effect: 'boost',
+      magnitude: 0,
+      detail: `Watershed degradation severity ${(ctx.severity * 100).toFixed(0)}% — confounder effectiveness reduced to ${(confounderScale * 100).toFixed(0)}%`,
+    });
+  }
+
+  // Apply confounder reductions (scaled by watershed health)
   const matchedConfounders = confounders.filter(c => c.matched);
   for (const confounder of matchedConfounders) {
     const rule = CONFOUNDER_RULES.find(r => r.id === confounder.rule);
@@ -66,11 +80,12 @@ export function classifyEvent(
       }
     }
 
-    threatScore -= rule.reductionMagnitude;
+    const scaledReduction = rule.reductionMagnitude * confounderScale;
+    threatScore -= scaledReduction;
     reasoning.push({
       rule: rule.id,
       effect: 'reduce',
-      magnitude: rule.reductionMagnitude,
+      magnitude: scaledReduction,
       detail: `${rule.name}: ${confounder.detail}`,
     });
   }
@@ -122,6 +137,10 @@ export function gatherConfounders(
   const checks: ConfounderCheck[] = [];
 
   // 1. Rainfall confounder — check for QPE_RAINFALL events in same area
+  //    Adaptive threshold: degraded watersheds need more rainfall to explain anomalies
+  const ctx = getWatershedContext(huc8);
+  const rainfallThreshold = 2.0 * (1 + ctx.severity); // 2.0" base → up to 3.6" for severity=0.8
+
   const rainfallEvents = allEvents.filter(
     e => e.source === 'QPE_RAINFALL' &&
       e.geography.huc8 === huc8 &&
@@ -132,9 +151,9 @@ export function gatherConfounders(
   ));
   checks.push({
     rule: 'RAINFALL_CONFOUNDER',
-    matched: maxRainfall > 2.0, // > 2 inches in 24h
+    matched: maxRainfall > rainfallThreshold,
     detail: maxRainfall > 0
-      ? `Recent rainfall: ${maxRainfall.toFixed(1)} inches in 24h`
+      ? `Recent rainfall: ${maxRainfall.toFixed(1)} inches in 24h (threshold: ${rainfallThreshold.toFixed(1)}")`
       : 'No significant recent rainfall',
   });
 

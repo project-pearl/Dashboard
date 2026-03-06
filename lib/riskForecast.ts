@@ -523,6 +523,17 @@ export function computeRiskForecast(
     scoreInterventionROI(report, hucIndices),
   ];
 
+  // Blend water risk score into all non-ROI predictions at 10% weight
+  const waterScoreRisk = report.waterScore
+    ? (100 - report.waterScore.composite.score) / 100 // invert: higher = more risk
+    : 0.5;
+  for (const pred of predictions) {
+    if (pred.category === 'intervention-roi') continue;
+    const blended = pred.probability * 0.9 + waterScoreRisk * 100 * 0.1;
+    pred.probability = clamp(Math.round(blended));
+    pred.riskLevel = probabilityToRiskLevel(pred.probability);
+  }
+
   // Data completeness: how many of the 9 indices are present
   const indexFields: (keyof HucIndices)[] = [
     'pearlLoadVelocity', 'infrastructureFailure', 'watershedRecovery',
