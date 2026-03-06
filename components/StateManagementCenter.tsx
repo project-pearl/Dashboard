@@ -61,6 +61,7 @@ import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import { useJurisdictionContext } from '@/lib/jurisdiction-context';
 import { scopeRowsByJurisdiction } from '@/lib/jurisdictions/index';
 import RoleTrainingGuide from '@/components/RoleTrainingGuide';
+import { AirQualityMonitoringCard } from '@/components/AirQualityMonitoringCard';
 
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
@@ -206,7 +207,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Monitoring',
     description: 'State monitoring network, data management, and optimization',
     defaultOverlay: 'coverage',
-    sections: new Set(['groundwater', 'mon-network', 'mon-data-mgmt', 'mon-optimization', 'mon-continuous', 'mon-latency', 'mon-report-card', 'mon-source-health', 'flood-status', 'flood-risk-summary', 'disclaimer']),
+    sections: new Set(['groundwater', 'mon-network', 'mon-data-mgmt', 'mon-optimization', 'mon-continuous', 'mon-air-quality', 'mon-latency', 'mon-report-card', 'mon-source-health', 'flood-status', 'flood-risk-summary', 'disclaimer']),
   },
   disaster: {
     label: 'Disaster & Emergency Response',
@@ -4040,6 +4041,14 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             );
 
             {/* ── Fix 19: New Monitoring cards ── */}
+            case 'mon-air-quality': return DS(
+              <AirQualityMonitoringCard
+                fallbackStateAbbr={stateAbbr}
+                title="Air Quality - Local Context"
+                description={`Air quality intelligence scoped to active jurisdiction context for ${stateName}.`}
+              />
+            );
+
             case 'mon-latency': return DS(
               <Card>
                 <CardHeader>

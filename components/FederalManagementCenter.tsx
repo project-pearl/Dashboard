@@ -71,6 +71,7 @@ import { useAlertSummary } from '@/ams/hooks/useAlertSummary';
 import { StateDataReportCard } from '@/components/StateDataReportCard';
 import { useStateReport } from '@/lib/useStateReport';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
+import { AirQualityMonitoringCard } from '@/components/AirQualityMonitoringCard';
 
 import hucNamesData from '@/data/huc8-names.json';
 import centroidsData from '@/data/huc8-centroids.json';
@@ -199,7 +200,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: true, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: true, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['networkhealth', 'coveragegaps', 'sla', 'data-latency', 'sentinel-briefing', 'flood-status', 'flood-risk-summary', 'delta-changelog']),
+    sections: new Set(['networkhealth', 'coveragegaps', 'sla', 'data-latency', 'sentinel-briefing', 'air-quality-briefing', 'flood-status', 'flood-risk-summary', 'delta-changelog']),
   },
   'sentinel-monitoring': {
     label: 'Sentinel Monitoring',
@@ -209,7 +210,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['sentinel-briefing', 'flood-status', 'flood-risk-summary', 'sentinel-alerts-placeholder']),
+    sections: new Set(['sentinel-briefing', 'air-quality-briefing', 'flood-status', 'flood-risk-summary', 'sentinel-alerts-placeholder']),
   },
   trends: {
     label: 'Trends & Projections',
@@ -5901,6 +5902,14 @@ export function FederalManagementCenter(props: Props) {
             sources={sentinel.sources}
             systemStatus={sentinel.systemStatus}
             lastFetched={sentinel.lastFetched}
+          />
+        );
+
+        case 'air-quality-briefing': return DS(
+          <AirQualityMonitoringCard
+            fallbackStateAbbr={selectedState}
+            title="Air Quality - Jurisdiction Context"
+            description="Air quality context aligned to active jurisdiction scope for federal and sentinel monitoring."
           />
         );
 
