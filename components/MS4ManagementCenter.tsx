@@ -40,6 +40,7 @@ import { DraggableSection } from './DraggableSection';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { GrantOutcomesCard } from './GrantOutcomesCard';
+import RoleTrainingGuide from '@/components/RoleTrainingGuide';
 import dynamic from 'next/dynamic';
 
 const MapboxMapShell = dynamic(
@@ -121,7 +122,7 @@ type Props = {
 type ViewLens = 'overview' | 'briefing' | 'political-briefing' | 'trends' | 'policy'
   | 'compliance' | 'water-quality' | 'public-health' | 'habitat' | 'receiving-waters'
   | 'stormwater-bmps' | 'infrastructure' | 'monitoring' | 'disaster'
-  | 'tmdl-compliance' | 'scorecard' | 'reports' | 'mcm-manager' | 'funding' | 'wqt';
+  | 'tmdl-compliance' | 'scorecard' | 'reports' | 'mcm-manager' | 'funding' | 'wqt' | 'training';
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -252,6 +253,11 @@ const LENS_CONFIG: Record<ViewLens, {
     description: 'Nutrient credit trading program — marketplace, sectors, compliance',
     defaultOverlay: 'impairment',
     sections: new Set(['wqt', 'nutrientcredits', 'disclaimer']),
+  },
+  training: {
+    label: 'Training', description: 'Deployment training and onboarding guide',
+    defaultOverlay: 'impairment',
+    sections: new Set(['training']),
   },
 };
 
@@ -5839,6 +5845,10 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
             ) : null;
 
             case 'disclaimer': return null;
+
+            case 'training': return DS(
+              <RoleTrainingGuide rolePath="/dashboard/ms4" />
+            );
 
             default: return null;
           }

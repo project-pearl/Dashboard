@@ -31,6 +31,7 @@ import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { PolicyTracker } from '@/components/PolicyTracker';
 import { EmergingContaminantsTracker } from '@/components/EmergingContaminantsTracker';
+import RoleTrainingGuide from '@/components/RoleTrainingGuide';
 import ResolutionPlanner from '@/components/ResolutionPlanner';
 import RestorationPlanner from '@/components/RestorationPlanner';
 import { DisasterEmergencyPanel } from '@/components/DisasterEmergencyPanel';
@@ -87,7 +88,7 @@ type Props = {
 type ViewLens = 'overview' | 'briefing' | 'trends' | 'policy' | 'compliance' |
   'water-quality' | 'public-health' | 'habitat' | 'research-monitoring' | 'campus-stormwater' |
   'infrastructure' | 'monitoring' | 'disaster-emergency' | 'watershed-partnerships' |
-  'scorecard' | 'reports' | 'grants-publications' | 'funding';
+  'scorecard' | 'reports' | 'grants-publications' | 'funding' | 'training';
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -130,6 +131,10 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set(['hab-ecoscore', 'hab-wildlife', 'disclaimer']) },
   funding:     { label: 'Funding & Grants', description: 'Research funding opportunities',
     sections: new Set(['grants', 'fund-active', 'fund-pipeline', 'disclaimer']) },
+  training: {
+    label: 'Training', description: 'Deployment training and onboarding guide',
+    sections: new Set(['training']),
+  },
 };
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -2202,6 +2207,9 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
             );
 
             case 'disclaimer': return null;
+            case 'training': return DS(
+              <RoleTrainingGuide rolePath="/dashboard/university" />
+            );
 
             default: return null;
           }

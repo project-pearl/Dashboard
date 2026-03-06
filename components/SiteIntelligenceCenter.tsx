@@ -2,6 +2,7 @@
 
 import React, { Suspense, useState, useCallback } from 'react';
 import { DashboardSection } from '@/components/DashboardSection';
+import RoleTrainingGuide from '@/components/RoleTrainingGuide';
 import { useLensParam } from '@/lib/useLensParam';
 import type { WaterRiskScoreResult, CategoryKey } from '@/lib/waterRiskScore';
 import {
@@ -38,7 +39,8 @@ type ViewLens =
   | 'corporate-facilities'
   | 'municipal-econ-dev'
   | 'brownfield'
-  | 'mining';
+  | 'mining'
+  | 'training';
 
 // ─── Lens label config ──────────────────────────────────────────────────────
 
@@ -60,6 +62,7 @@ const LENS_LABELS: Record<ViewLens, { risk: string; regulatory: string; ej: stri
   'municipal-econ-dev':  { risk: 'Site Suitability Risk',       regulatory: 'Development Regulations',    ej: 'EJ Community Impact',          trends: 'Contamination Screen',         permits: 'Zoning & Water Permits'       },
   brownfield:            { risk: 'Contamination Risk Profile',  regulatory: 'Cleanup Obligations',        ej: 'EJ Brownfield Screening',      trends: 'Contamination Screen',         permits: 'Cleanup & Reuse Permits'      },
   mining:                { risk: 'Mine Drainage Risk',          regulatory: 'Mining Regulations',         ej: 'EJ Mining Community Impact',   trends: 'Contamination Screen',         permits: 'Mining & Discharge Permits'   },
+  training:              { risk: 'Training',                    regulatory: 'Training',                   ej: 'Training',                     trends: 'Training',                     permits: 'Training'                     },
 };
 
 // ─── Types for API responses ─────────────────────────────────────────────────
@@ -314,6 +317,16 @@ function SiteIntelligenceContent() {
   const wdfnLastRefresh = wdfnBuiltCandidates.length
     ? new Date(Math.max(...wdfnBuiltCandidates.map((d) => new Date(d).getTime()))).toLocaleString()
     : null;
+
+  if (lens === 'training') {
+    return (
+      <div className="min-h-full bg-slate-50">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <RoleTrainingGuide rolePath="/dashboard/infrastructure" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-full bg-slate-50">

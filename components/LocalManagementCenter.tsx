@@ -8,6 +8,7 @@ import { STATE_GEO_LEAFLET, FIPS_TO_ABBR } from '@/lib/mapUtils';
 import { REGION_META, getWaterbodyDataSources } from '@/lib/useWaterData';
 import { resolveWaterbodyCoordinates } from '@/lib/waterbodyCentroids';
 import { useAuth } from '@/lib/authContext';
+import RoleTrainingGuide from '@/components/RoleTrainingGuide';
 import { useAdminState } from '@/lib/adminStateContext';
 import { getStateMS4Jurisdictions } from '@/lib/stateWaterData';
 import { getRegionMockData, calculateRemovalEfficiency, calculateOverallScore } from '@/lib/mockData';
@@ -72,7 +73,7 @@ type AlertLevel = 'none' | 'low' | 'medium' | 'high';
 type ViewLens = 'overview' | 'briefing' | 'political-briefing' | 'water-quality'
   | 'infrastructure' | 'compliance' | 'stormwater' | 'public-health' | 'habitat'
   | 'funding' | 'ej-equity' | 'emergency' | 'scorecard' | 'reports'
-  | 'trends' | 'policy' | 'wqt';
+  | 'trends' | 'policy' | 'wqt' | 'training';
 
 type Props = {
   jurisdictionId: string;
@@ -229,6 +230,10 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Water Quality Trading',
     description: 'Nutrient credit marketplace, sector breakdown, and program details',
     sections: new Set(['wqt', 'nutrientcredits', 'disclaimer']),
+  },
+  training: {
+    label: 'Training', description: 'Deployment training and onboarding guide',
+    sections: new Set(['training']),
   },
 };
 
@@ -2301,6 +2306,10 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
               />
             );
           })());
+
+          case 'training': return DS(
+            <RoleTrainingGuide rolePath="/dashboard/local" />
+          );
 
           default: return DS(
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">

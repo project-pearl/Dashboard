@@ -8,6 +8,7 @@ import {
   Factory, Bug, Scale, Gauge, Info, Bell, TrendingUp,
 } from 'lucide-react';
 import RiskForecastPanel from '@/components/RiskForecastPanel';
+import RoleTrainingGuide from '@/components/RoleTrainingGuide';
 import HeroBanner from '@/components/HeroBanner';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
@@ -761,6 +762,10 @@ export default function SiteIntelDashboard() {
 
                   // ── Disclaimer ────────────────────────────────────────────
                   case 'disclaimer': return null;
+
+                  case 'training': return DS(
+                    <RoleTrainingGuide rolePath="/dashboard/site-intelligence" />
+                  );
 
                   default: return null;
                 }

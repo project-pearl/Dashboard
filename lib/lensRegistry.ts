@@ -32,7 +32,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'reports', label: 'Reports' },
     { id: 'interagency', label: 'Cross-Agency' },
     { id: 'funding', label: 'Funding & Grants' },
-
+    { id: 'training', label: 'Training' },
   ],
   // ── State (18 items) ───────────────────────────────────────────────────────
   '/dashboard/state': [
@@ -55,6 +55,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'permits',        label: 'Permits & Enforcement' },
     { id: 'funding',        label: 'Funding & Grants' },
     { id: 'wqt',            label: 'Water Quality Trading', gateStates: NUTRIENT_TRADING_STATES },
+    { id: 'training',       label: 'Training' },
   ],
   // ── Local Government (16 items) ────────────────────────────────────────────
   '/dashboard/local': [
@@ -75,6 +76,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'scorecard',           label: 'Scorecard' },
     { id: 'reports',             label: 'Reports' },
     { id: 'wqt',                 label: 'Water Quality Trading', gateStates: NUTRIENT_TRADING_STATES },
+    { id: 'training',            label: 'Training' },
   ],
   // ── MS4 / Municipal Stormwater (17 items) ──────────────────────────────────
   '/dashboard/ms4': [
@@ -98,6 +100,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'mcm-manager',       label: 'MCM Manager' },
     { id: 'funding',           label: 'Funding & Grants' },
     { id: 'wqt',              label: 'Water Quality Trading', gateStates: NUTRIENT_TRADING_STATES },
+    { id: 'training',         label: 'Training' },
   ],
   // ── Municipal Utility (18 items) ───────────────────────────────────────────
   '/dashboard/utility': [
@@ -120,6 +123,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'reports',            label: 'Reports' },
     { id: 'asset-management',   label: 'Asset Management' },
     { id: 'funding',            label: 'Funding & Grants' },
+    { id: 'training',           label: 'Training' },
   ],
   // ── Site Intelligence (17 lenses) ──────────────────────────────────────────
   '/dashboard/infrastructure': [
@@ -139,6 +143,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'municipal-econ-dev', label: 'Municipal Econ Dev' },
     { id: 'brownfield', label: 'Brownfield' },
     { id: 'mining', label: 'Mining' },
+    { id: 'training', label: 'Training' },
   ],
   // ── Corporate ESG / Sustainability (10 items) ──────────────────────────────
   '/dashboard/esg': [
@@ -153,6 +158,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'supply-chain',        label: 'Supply Chain' },
     { id: 'trends',              label: 'Trends & Outlook' },
     { id: 'funding',             label: 'Funding & Grants' },
+    { id: 'training',            label: 'Training' },
   ],
   // ── Biotech / Pharma (11 items) ────────────────────────────────────────────
   '/dashboard/biotech': [
@@ -169,6 +175,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'scorecard',           label: 'Scorecard' },
     { id: 'funding',             label: 'Funding & Grants' },
     { id: 'trends',              label: 'Trends & Outlook' },
+    { id: 'training',            label: 'Training' },
   ],
   // ── Investor / Financial (13 items) ────────────────────────────────────────
   '/dashboard/investor': [
@@ -185,6 +192,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'scorecard',           label: 'Scorecard' },
     { id: 'trends',              label: 'Trends & Outlook' },
     { id: 'funding',             label: 'Funding & Grants' },
+    { id: 'training',            label: 'Training' },
   ],
   // ── University / Research (18 items) ───────────────────────────────────────
   '/dashboard/university': [
@@ -206,6 +214,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'reports',                 label: 'Reports' },
     { id: 'grants-publications',     label: 'Grants & Publications' },
     { id: 'funding',                 label: 'Funding & Grants' },
+    { id: 'training',                label: 'Training' },
   ],
   // ── NGO / Conservation (18 items) ──────────────────────────────────────────
   '/dashboard/ngo': [
@@ -230,6 +239,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'citizen-reporting',     label: 'Citizen Reporting' },
     { id: 'funding',               label: 'Funding & Grants' },
     { id: 'initiatives',           label: 'Initiatives' },
+    { id: 'training',              label: 'Training' },
   ],
   // ── K-12 Education (12 items) ──────────────────────────────────────────────
   '/dashboard/k12': [
@@ -248,6 +258,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'debate',                 label: 'Debate Topics' },
     { id: 'reports',                label: 'Reports' },
     { id: 'funding',                label: 'Funding & Grants' },
+    { id: 'training',               label: 'Training' },
   ],
   // ── PEARL Admin (11 items) ──────────────────────────────────────────────────
   '/dashboard/pearl': [
@@ -260,6 +271,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'investigation',    label: 'Investigation' },
     { id: 'users',            label: 'Users' },
     { id: 'alerts',           label: 'Alerts' },
+    { id: 'training',        label: 'Training' },
   ],
   '/dashboard/admin': [
     { id: 'operations',       label: 'Operations' },
@@ -271,6 +283,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'investigation',    label: 'Investigation' },
     { id: 'users',            label: 'Users' },
     { id: 'alerts',           label: 'Alerts' },
+    { id: 'training',        label: 'Training' },
   ],
   // ── Site Intelligence Dashboard (6 items) ──────────────────────────────────
   '/dashboard/site-intelligence': [
@@ -281,6 +294,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'regulatory',     label: 'Regulatory Context' },
     { id: 'risk',           label: 'Risk Summary' },
     { id: 'forecast',       label: 'Risk Forecast' },
+    { id: 'training',      label: 'Training' },
   ],
   // ── Aqua-LO Laboratory (5 items) ────────────────────────────────────────────
   '/dashboard/aqua-lo': [
@@ -289,6 +303,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'qaqc',     label: 'QA/QC' },
     { id: 'audit',    label: 'Audit Trail' },
     { id: 'reports',  label: 'Reports' },
+    { id: 'training', label: 'Training' },
   ],
 };
 

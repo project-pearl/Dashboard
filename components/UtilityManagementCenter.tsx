@@ -30,13 +30,14 @@ import { SDWISCompliancePanel } from '@/components/SDWISCompliancePanel';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { EmergingContaminantsTracker } from '@/components/EmergingContaminantsTracker';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
+import RoleTrainingGuide from '@/components/RoleTrainingGuide';
 
 // ─── View Lens ──────────────────────────────────────────────────────────────
 
 type ViewLens = 'overview' | 'briefing' | 'political-briefing' | 'trends' | 'policy'
   | 'compliance' | 'water-quality' | 'public-health' | 'habitat' | 'source-receiving'
   | 'treatment-process' | 'infrastructure' | 'laboratory' | 'disaster'
-  | 'permit-limits' | 'scorecard' | 'reports' | 'asset-management' | 'funding' ;
+  | 'permit-limits' | 'scorecard' | 'reports' | 'asset-management' | 'funding' | 'training' ;
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -141,6 +142,10 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Habitat & Ecology',
     description: 'Ecological sensitivity near intake and discharge — supports source water protection',
     sections: new Set(['hab-ecoscore', 'hab-wildlife', 'insights', 'alertfeed', 'disclaimer']),
+  },
+  training: {
+    label: 'Training', description: 'Deployment training and onboarding guide',
+    sections: new Set(['training']),
   },
 };
 
@@ -2071,6 +2076,10 @@ export default function UtilityManagementCenter({ systemId }: Props) {
             );
 
             case 'disclaimer': return null;
+
+            case 'training': return DS(
+              <RoleTrainingGuide rolePath="/dashboard/utility" />
+            );
 
             default: return null;
             }

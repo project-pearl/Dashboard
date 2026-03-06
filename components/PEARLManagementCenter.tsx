@@ -33,13 +33,14 @@ import type { RiskPrediction, RiskForecastResult } from '@/lib/siteIntelTypes';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import { GrantOpportunityMatcher } from './GrantOpportunityMatcher';
 import BudgetPlannerPanel from '@/components/BudgetPlannerPanel';
+import RoleTrainingGuide from '@/components/RoleTrainingGuide';
 import { useLensParam } from '@/lib/useLensParam';
 import { usePearlFunding } from '@/lib/usePearlFunding';
 import { AlertDeepDive, type DeepDiveAlert } from './AlertDeepDive';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type ViewLens = 'operations' | 'restoration' | 'opportunities' | 'proposals' | 'scenarios' | 'predictions' | 'scenario-planner' | 'budget-planner' | 'investigation' | 'users' | 'alerts';
+type ViewLens = 'operations' | 'restoration' | 'opportunities' | 'proposals' | 'scenarios' | 'predictions' | 'scenario-planner' | 'budget-planner' | 'investigation' | 'users' | 'alerts' | 'training';
 
 type DeploymentStatus = 'active' | 'maintenance' | 'offline' | 'staging' | 'decommissioned';
 type AlertSeverity = 'critical' | 'warning' | 'info' | 'ok';
@@ -2216,6 +2217,10 @@ Doug and the PIN team`;
 
         {viewLens === 'alerts' && isAdmin && (
           <AlertsManagementPanel />
+        )}
+
+        {viewLens === 'training' && (
+          <RoleTrainingGuide rolePath="/dashboard/pearl" />
         )}
 
         {/* ── FOOTER ── */}

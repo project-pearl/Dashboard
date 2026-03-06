@@ -60,6 +60,7 @@ import { NUTRIENT_TRADING_STATES } from '@/lib/constants';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import { useJurisdictionContext } from '@/lib/jurisdiction-context';
 import { scopeRowsByJurisdiction } from '@/lib/jurisdictions/index';
+import RoleTrainingGuide from '@/components/RoleTrainingGuide';
 
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
@@ -123,7 +124,7 @@ type OverlayId = 'risk' | 'coverage' | 'bmp' | 'ej';
 type ViewLens = 'overview' | 'briefing' | 'political-briefing' | 'trends' | 'policy'
   | 'compliance' | 'water-quality' | 'public-health' | 'habitat' | 'agriculture'
   | 'infrastructure' | 'monitoring' | 'disaster' | 'tmdl' | 'scorecard'
-  | 'reports' | 'permits' | 'funding' | 'wqt';
+  | 'reports' | 'permits' | 'funding' | 'wqt' | 'training';
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -248,6 +249,11 @@ const LENS_CONFIG: Record<ViewLens, {
     description: 'Nutrient credit trading program — all sectors, marketplace, compliance',
     defaultOverlay: 'risk',
     sections: new Set(['wqt', 'disclaimer']),
+  },
+  training: {
+    label: 'Training', description: 'Deployment training and onboarding guide',
+    defaultOverlay: 'risk',
+    sections: new Set(['training']),
   },
 };
 
@@ -6154,6 +6160,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             case 'wqt': return NUTRIENT_TRADING_STATES.has(stateAbbr) ? DS(<>
               <WaterQualityTradingPanel stateAbbr={stateAbbr} mode="state" />
             </>) : null;
+
+            case 'training': return DS(
+              <RoleTrainingGuide rolePath="/dashboard/state" />
+            );
 
             default: return null;
           }

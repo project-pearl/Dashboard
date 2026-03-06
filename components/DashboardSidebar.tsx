@@ -75,7 +75,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 
 // Icons for lens items when rendered as top-level nav (single-role mode)
-const LENS_ICONS: Record<string, LucideIcon> = {
+export const LENS_ICONS: Record<string, LucideIcon> = {
   // ── Shared / Federal ───────────────────────────────────────────────────────
   overview: LayoutDashboard,
   briefing: Sparkles,
@@ -197,6 +197,8 @@ const LENS_ICONS: Record<string, LucideIcon> = {
   'monitoring-gaps': AlertTriangle,
   'param-trends': TrendingUp,
   'my-clients': Users,
+  // ── Training ─────────────────────────────────────────────────────────────
+  training: GraduationCap,
 };
 
 interface NavItem {

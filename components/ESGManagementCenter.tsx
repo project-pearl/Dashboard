@@ -57,6 +57,7 @@ import { SupplyChainRiskPanel } from '@/components/SupplyChainRiskPanel';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
+import RoleTrainingGuide from '@/components/RoleTrainingGuide';
 import { GrantOutcomesCard } from './GrantOutcomesCard';
 import { WhatChangedOvernight, StakeholderWatch } from './BriefingCards';
 import { RoleBriefingActionsCard } from '@/components/RoleBriefingCards';
@@ -99,7 +100,7 @@ type FacilityRow = {
 // ─── Lenses (8-view architecture) ────────────────────────────────────────────
 
 type ViewLens = 'overview' | 'esg-reporting' | 'facility-operations' | 'compliance' |
-  'policy' | 'public-health' | 'habitat' | 'supply-chain' | 'trends' | 'funding' | 'briefing';
+  'policy' | 'public-health' | 'habitat' | 'supply-chain' | 'trends' | 'funding' | 'briefing' | 'training';
 
 type LensConfig = {
   label: string;
@@ -163,6 +164,11 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
     label: 'Daily Briefing', description: 'Morning briefing with priority actions, overnight changes, and program pulse',
     icon: FileText,
     sections: new Set(['briefing-actions', 'briefing-changes', 'briefing-stakeholders', 'insights']),
+  },
+  training: {
+    label: 'Training', description: 'Deployment training and onboarding guide',
+    icon: Building2,
+    sections: new Set(['training']),
   },
 };
 
@@ -2521,6 +2527,9 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
             </>);
 
             case 'disclaimer': return null;
+            case 'training': return DS(
+              <RoleTrainingGuide rolePath="/dashboard/esg" />
+            );
 
             default: return null;
           }

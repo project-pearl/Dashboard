@@ -47,6 +47,7 @@ import { EmergingContaminantsTracker } from '@/components/EmergingContaminantsTr
 import ResolutionPlanner from '@/components/ResolutionPlanner';
 import { DisasterEmergencyPanel } from '@/components/DisasterEmergencyPanel';
 import { SupplyChainRiskPanel } from '@/components/SupplyChainRiskPanel';
+import RoleTrainingGuide from '@/components/RoleTrainingGuide';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
@@ -86,7 +87,7 @@ type PortfolioCompany = {
 
 type ViewLens = 'overview' | 'portfolio-risk' | 'water-stress' | 'compliance' |
   'esg-disclosure' | 'climate-resilience' | 'financial-impact' | 'due-diligence' | 'trends' |
-  'briefing' | 'habitat' | 'scorecard';
+  'briefing' | 'habitat' | 'scorecard' | 'training';
 
 type LensConfig = {
   label: string;
@@ -192,6 +193,11 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
     label: 'Scorecard', description: 'KPIs and grades for portfolio environmental performance',
     icon: Award,
     sections: new Set(['scorecard-kpis', 'scorecard-grades', 'disclaimer']),
+  },
+  training: {
+    label: 'Training', description: 'Deployment training and onboarding guide',
+    icon: Building2,
+    sections: new Set(['training']),
   },
 };
 
@@ -1815,6 +1821,10 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
             // ─── DISCLAIMER ─────────────────────────────────────────────────
 
             case 'disclaimer': return null;
+
+            case 'training': return DS(
+              <RoleTrainingGuide rolePath="/dashboard/investor" />
+            );
 
             default: return null;
           }

@@ -47,6 +47,7 @@ import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import { DraggableSection } from './DraggableSection';
 import dynamic from 'next/dynamic';
 import { useAdminState } from '@/lib/adminStateContext';
+import RoleTrainingGuide from '@/components/RoleTrainingGuide';
 
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
@@ -93,7 +94,7 @@ type Props = {
 type ViewLens = 'overview' | 'briefing' | 'political-briefing' | 'trends' | 'policy' | 'compliance' |
   'water-quality' | 'public-health' | 'habitat' | 'watershed-health' | 'restoration-projects' |
   'infrastructure' | 'monitoring' | 'disaster-emergency' | 'advocacy' |
-  'scorecard' | 'reports' | 'volunteer-program' | 'citizen-reporting' | 'funding' | 'initiatives';
+  'scorecard' | 'reports' | 'volunteer-program' | 'citizen-reporting' | 'funding' | 'initiatives' | 'training';
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -149,6 +150,10 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set(['hab-ecoscore', 'hab-wildlife', 'disclaimer']) },
   initiatives: { label: 'Initiatives', description: 'Conservation initiative planning and tracking',
     sections: new Set(['initiatives-panel', 'disclaimer']) },
+  training: {
+    label: 'Training', description: 'Deployment training and onboarding guide',
+    sections: new Set(['training']),
+  },
 };
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -2670,6 +2675,10 @@ export function NGOManagementCenter({ stateAbbr: initialStateAbbr, onSelectRegio
             );
 
             case 'disclaimer': return null;
+
+            case 'training': return DS(
+              <RoleTrainingGuide rolePath="/dashboard/ngo" />
+            );
 
             default: return null;
           }

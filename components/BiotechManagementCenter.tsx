@@ -56,6 +56,7 @@ import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import { RoleBriefingActionsCard, RoleBriefingPulseCard } from '@/components/RoleBriefingCards';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
+import RoleTrainingGuide from '@/components/RoleTrainingGuide';
 import { getEcoData, getEcoScore, ecoScoreLabel } from '@/lib/ecologicalSensitivity';
 import { ecoScoreStyle } from '@/lib/scoringUtils';
 const GrantOpportunityMatcher = dynamic(
@@ -99,7 +100,7 @@ type FacilityRow = {
 // ─── Lenses (9-view architecture) ──────────────────────────────────────────
 
 type ViewLens = 'overview' | 'process-water' | 'discharge-effluent' | 'compliance' |
-  'contaminants' | 'habitat' | 'facility-operations' | 'gmp-quality' | 'supply-chain' | 'funding' | 'trends' | 'briefing' | 'scorecard';
+  'contaminants' | 'habitat' | 'facility-operations' | 'gmp-quality' | 'supply-chain' | 'funding' | 'trends' | 'briefing' | 'scorecard' | 'training';
 
 type LensConfig = {
   label: string;
@@ -173,6 +174,11 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
     label: 'Scorecard', description: 'Key performance indicators and letter grades for biotech compliance',
     icon: Award,
     sections: new Set(['scorecard-kpis', 'scorecard-grades', 'disclaimer']),
+  },
+  training: {
+    label: 'Training', description: 'Deployment training and onboarding guide',
+    icon: Building2,
+    sections: new Set(['training']),
   },
 };
 
@@ -1965,6 +1971,10 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
             // ─── DISCLAIMER ─────────────────────────────────────────────────
 
             case 'disclaimer': return null;
+
+            case 'training': return DS(
+              <RoleTrainingGuide rolePath="/dashboard/biotech" />
+            );
 
             default: return null;
           }

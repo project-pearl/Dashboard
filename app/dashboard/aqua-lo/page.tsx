@@ -2,6 +2,7 @@
 
 import React, { Suspense } from 'react';
 import HeroBanner from '@/components/HeroBanner';
+import RoleTrainingGuide from '@/components/RoleTrainingGuide';
 import { KPIStrip, KPICard } from '@/components/KPIStrip';
 import { DashboardSection } from '@/components/DashboardSection';
 import { useLensParam } from '@/lib/useLensParam';
@@ -25,7 +26,8 @@ type AquaLoLens =
   | 'push'
   | 'qaqc'
   | 'audit'
-  | 'reports';
+  | 'reports'
+  | 'training';
 
 // ─── Mock data ───────────────────────────────────────────────────────────────
 
@@ -315,6 +317,11 @@ function AquaLoContent() {
               </div>
             </div>
           </DashboardSection>
+        )}
+
+        {/* ── Training ── */}
+        {lens === 'training' && (
+          <RoleTrainingGuide rolePath="/dashboard/aqua-lo" />
         )}
       </div>
     </div>

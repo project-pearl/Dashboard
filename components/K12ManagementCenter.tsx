@@ -43,6 +43,7 @@ import LocationReportCard from '@/components/LocationReportCard';
 import { getEpaRegionForState } from '@/lib/epa-regions';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
+import RoleTrainingGuide from '@/components/RoleTrainingGuide';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
 import dynamic from 'next/dynamic';
@@ -93,7 +94,7 @@ type Props = {
 
 type ViewLens = 'overview' | 'briefing' | 'planner' | 'trends' | 'compliance' |
   'water-quality' | 'public-health' | 'habitat' | 'outdoor-classroom' | 'student-monitoring' |
-  'student-uploads' | 'drinking-water-safety' | 'debate' | 'reports' | 'funding';
+  'student-uploads' | 'drinking-water-safety' | 'debate' | 'reports' | 'funding' | 'training';
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -130,6 +131,10 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set(['grants', 'disclaimer']) },
   habitat:     { label: 'Habitat & Ecology', description: 'Explore the plants and animals that live in and around your local waterways',
     sections: new Set(['hab-ecoscore', 'hab-wildlife', 'disclaimer']) },
+  training: {
+    label: 'Training', description: 'Deployment training and onboarding guide',
+    sections: new Set(['training']),
+  },
 };
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -2466,6 +2471,9 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
             );
 
             case 'disclaimer': return null;
+            case 'training': return DS(
+              <RoleTrainingGuide rolePath="/dashboard/k12" />
+            );
 
             default: return null;
           }

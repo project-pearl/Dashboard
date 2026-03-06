@@ -60,6 +60,7 @@ import { INDEX_WEIGHTS } from '@/lib/indices/config';
 import { useSentinelAlerts } from '@/hooks/useSentinelAlerts';
 import { useFloodForecast } from '@/hooks/useFloodForecast';
 import { useFloodRiskOverview } from '@/hooks/useFloodRiskOverview';
+import RoleTrainingGuide from '@/components/RoleTrainingGuide';
 import { useSentinelAudio } from '@/hooks/useSentinelAudio';
 import { SentinelStatusBadge } from './SentinelStatusBadge';
 import { SentinelBriefingCard } from './SentinelBriefingCard';
@@ -94,7 +95,7 @@ type OverlayId = 'hotspots' | 'ms4' | 'ej' | 'economy' | 'wildlife' | 'trend' | 
 type ViewLens = 'overview' | 'briefing' | 'political-briefing' | 'trends' | 'policy' | 'compliance' |
   'water-quality' | 'public-health' | 'habitat-ecology' | 'agricultural-nps' |
   'infrastructure' | 'monitoring' | 'sentinel-monitoring' | 'disaster-emergency' | 'military-installations' |
-  'scorecard' | 'reports' | 'interagency' | 'funding';
+  'scorecard' | 'reports' | 'interagency' | 'funding' | 'training';
 
 // ─── Water Quality Domain Tabs ────────────────────────────────────────────────
 const WQ_DOMAINS = [
@@ -319,6 +320,16 @@ const LENS_CONFIG: Record<ViewLens, {
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
     sections: new Set(['fund-srf', 'infra-capital', 'infra-construction', 'funding-deadlines', 'grant-outcomes', 'funding-gap']),
+  },
+  training: {
+    label: 'Training',
+    description: 'Deployment training and onboarding guide',
+    defaultOverlay: 'hotspots',
+    showTopStrip: false, showPriorityQueue: false, showCoverageGaps: false,
+    showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
+    showHotspots: false, showSituationSummary: false, showTimeRange: false,
+    showSLA: false, showRestorationPlan: false, collapseStateTable: true,
+    sections: new Set(['training']),
   },
 };
 
@@ -6513,6 +6524,10 @@ export function FederalManagementCenter(props: Props) {
               </p>
             </CardContent>
           </Card>
+        );
+
+        case 'training': return DS(
+          <RoleTrainingGuide rolePath="/dashboard/federal" />
         );
 
         default: return null;
