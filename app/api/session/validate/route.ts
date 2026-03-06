@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateSession } from '@/lib/sessionGuard';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   const token = request.cookies.get('pin_session')?.value;
   if (!token) {
