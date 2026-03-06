@@ -29,12 +29,55 @@ interface LensConfig {
 
 const LENS_SECTIONS: Record<string, Set<string>> = {
   overview:       new Set(['location-context', 'env-profile', 'species-habitat', 'contamination', 'regulatory', 'water-score', 'risk-forecast', 'disclaimer']),
-  environment:    new Set(['location-context', 'env-profile', 'disclaimer']),
-  species:        new Set(['location-context', 'species-habitat', 'disclaimer']),
-  contamination:  new Set(['location-context', 'contamination', 'disclaimer']),
-  regulatory:     new Set(['location-context', 'regulatory', 'disclaimer']),
-  risk:           new Set(['location-context', 'water-score', 'risk-forecast', 'disclaimer']),
-  forecast:       new Set(['location-context', 'risk-forecast', 'disclaimer']),
+  developer:      new Set(['location-context', 'env-profile', 'regulatory', 'water-score', 'risk-forecast', 'disclaimer']),
+  'real-estate':  new Set(['location-context', 'env-profile', 'contamination', 'regulatory', 'water-score', 'disclaimer']),
+  insurance:      new Set(['location-context', 'contamination', 'regulatory', 'water-score', 'risk-forecast', 'disclaimer']),
+  legal:          new Set(['location-context', 'contamination', 'regulatory', 'water-score', 'disclaimer']),
+  consultant:     new Set(['location-context', 'env-profile', 'species-habitat', 'contamination', 'regulatory', 'water-score', 'risk-forecast', 'disclaimer']),
+  lender:         new Set(['location-context', 'contamination', 'regulatory', 'water-score', 'risk-forecast', 'disclaimer']),
+  appraiser:      new Set(['location-context', 'env-profile', 'contamination', 'water-score', 'risk-forecast', 'disclaimer']),
+  'title-company':new Set(['location-context', 'contamination', 'regulatory', 'water-score', 'disclaimer']),
+  construction:   new Set(['location-context', 'env-profile', 'species-habitat', 'regulatory', 'water-score', 'risk-forecast', 'disclaimer']),
+  'ma-due-diligence': new Set(['location-context', 'contamination', 'regulatory', 'water-score', 'risk-forecast', 'disclaimer']),
+  'energy-utilities': new Set(['location-context', 'env-profile', 'regulatory', 'water-score', 'risk-forecast', 'disclaimer']),
+  'private-equity':   new Set(['location-context', 'contamination', 'regulatory', 'water-score', 'risk-forecast', 'disclaimer']),
+  'corporate-facilities': new Set(['location-context', 'env-profile', 'regulatory', 'water-score', 'risk-forecast', 'disclaimer']),
+  'municipal-econ-dev':   new Set(['location-context', 'env-profile', 'species-habitat', 'regulatory', 'water-score', 'disclaimer']),
+  brownfield:     new Set(['location-context', 'contamination', 'regulatory', 'water-score', 'risk-forecast', 'disclaimer']),
+  mining:         new Set(['location-context', 'env-profile', 'contamination', 'regulatory', 'water-score', 'risk-forecast', 'disclaimer']),
+};
+
+const SECTION_CARD_META: Record<string, { title: string; subtitle: string; icon: React.ReactNode }> = {
+  'env-profile': {
+    title: 'Environmental Profile',
+    subtitle: 'ATTAINS, EJ, flood profile, and ambient context',
+    icon: <TreePine className="h-4 w-4 text-emerald-600" />,
+  },
+  'species-habitat': {
+    title: 'Species & Habitat',
+    subtitle: 'Critical habitat and ESA screening signals',
+    icon: <Bug className="h-4 w-4 text-amber-600" />,
+  },
+  contamination: {
+    title: 'Contamination',
+    subtitle: 'Superfund, brownfield, TRI, and PFAS risk',
+    icon: <AlertTriangle className="h-4 w-4 text-red-600" />,
+  },
+  regulatory: {
+    title: 'Regulatory Context',
+    subtitle: 'ICIS and SDWIS permits, violations, and status',
+    icon: <Scale className="h-4 w-4 text-blue-600" />,
+  },
+  'water-score': {
+    title: 'PIN Water Score',
+    subtitle: 'Composite and category-level risk scoring',
+    icon: <Gauge className="h-4 w-4 text-amber-600" />,
+  },
+  'risk-forecast': {
+    title: 'Risk Forecast',
+    subtitle: 'Forward-looking condition and alert posture',
+    icon: <TrendingUp className="h-4 w-4 text-amber-600" />,
+  },
 };
 
 // ─── Example search chips ───────────────────────────────────────────────────
@@ -147,6 +190,11 @@ const GRADE_COLORS: Record<string, string> = {
 export default function SiteIntelDashboard() {
   const searchParams = useSearchParams();
   const currentLens = searchParams.get('lens') || 'overview';
+  const infrastructureLenses = useMemo(() => getLensesForHref('/dashboard/infrastructure') || [], []);
+  const currentLensLabel = useMemo(
+    () => infrastructureLenses.find((l) => l.id === currentLens)?.label || 'Overview',
+    [currentLens, infrastructureLenses],
+  );
 
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
@@ -161,6 +209,14 @@ export default function SiteIntelDashboard() {
 
   // Risk indicators
   const riskIndicators = useMemo(() => report ? computeRiskIndicators(report) : [], [report]);
+  const lensCards = useMemo(() => {
+    const sectionSet = LENS_SECTIONS[currentLens];
+    if (!sectionSet || currentLens === 'overview') return [];
+    return Array.from(sectionSet)
+      .filter((id) => id !== 'location-context' && id !== 'disclaimer')
+      .map((id) => ({ id, ...SECTION_CARD_META[id] }))
+      .filter((entry): entry is { id: string; title: string; subtitle: string; icon: React.ReactNode } => Boolean(entry.title));
+  }, [currentLens]);
 
   // ── Search handler ──
   const handleSearch = useCallback(async (input: string) => {
@@ -210,10 +266,19 @@ export default function SiteIntelDashboard() {
 
   return (
     <div className="space-y-4">
-      <HeroBanner role="site-intel" />
+      <div className="max-w-6xl mx-auto">
+        <HeroBanner role="site-intel" />
+      </div>
 
       {/* ── Address Search Bar ── */}
       <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex items-center gap-2 mb-3">
+          <MapPin className="h-4 w-4 text-amber-600" />
+          <div>
+            <div className="text-sm font-bold text-slate-800">Property Lookup</div>
+            <div className="text-xs text-slate-500">Search by address, ZIP, or coordinates to generate site intelligence cards.</div>
+          </div>
+        </div>
         <form onSubmit={handleSubmit} className="flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -258,6 +323,33 @@ export default function SiteIntelDashboard() {
       </div>
 
       {/* ── Loading skeleton ── */}
+      {lensCards.length > 0 && (
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <div className="text-sm font-bold text-slate-800">{currentLensLabel} Cards</div>
+            <div className="text-[11px] text-slate-500">Scoped to selected sidebar lens</div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+            {lensCards.map((card) => (
+              <button
+                key={card.id}
+                onClick={() => report && scrollToPanel(card.id)}
+                className="text-left rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 transition-colors p-3"
+              >
+                <div className="flex items-center gap-2 mb-1.5">
+                  {card.icon}
+                  <span className="text-sm font-semibold text-slate-800">{card.title}</span>
+                </div>
+                <div className="text-xs text-slate-600">{card.subtitle}</div>
+                {!report && (
+                  <div className="text-[10px] text-slate-500 mt-2">Run Property Lookup to populate this card.</div>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {loading && (
         <div className="space-y-4">
           {[1, 2, 3].map(i => (
