@@ -93,10 +93,17 @@ import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 
 // Use service role for session management — bypasses RLS
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy-init to avoid "supabaseKey is required" during Next.js static page collection.
+let _supabaseAdmin: ReturnType<typeof createClient<any, 'public', any>> | null = null;
+function getSupabaseAdmin() {
+  if (!_supabaseAdmin) {
+    _supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
+  }
+  return _supabaseAdmin;
+}
 
 // ── Types ──
 
@@ -162,7 +169,7 @@ export async function createSession(
   const ua = request.headers.get("user-agent") || null;
 
   // Get session limit for this role
-  const { data: limitRow } = await supabaseAdmin
+  const { data: limitRow } = await getSupabaseAdmin()
     .from("session_limits")
     .select("max_concurrent_sessions, session_duration_hours, velocity_check_enabled")
     .eq("role", role)
@@ -188,7 +195,7 @@ export async function createSession(
   }
 
   // Get current active sessions for this user
-  const { data: activeSessions } = await supabaseAdmin
+  const { data: activeSessions } = await getSupabaseAdmin()
     .from("active_sessions")
     .select("id, session_token, created_at")
     .eq("user_id", userId)
@@ -204,7 +211,7 @@ export async function createSession(
       activeSessions.length - maxSessions + 1
     );
     for (const s of toKill) {
-      await supabaseAdmin
+      await getSupabaseAdmin()
         .from("active_sessions")
         .update({
           killed_by: "concurrent_limit",
@@ -216,7 +223,7 @@ export async function createSession(
   }
 
   // Create new session
-  await supabaseAdmin.from("active_sessions").insert({
+  await getSupabaseAdmin().from("active_sessions").insert({
     user_id: userId,
     session_token: token,
     device_fingerprint: fingerprint,
@@ -235,7 +242,7 @@ export async function validateSession(
 ): Promise<SessionValidation> {
   if (!token) return { valid: false, reason: "not_found" };
 
-  const { data: session, error } = await supabaseAdmin
+  const { data: session, error } = await getSupabaseAdmin()
     .from("active_sessions")
     .select("*")
     .eq("session_token", token)
@@ -254,7 +261,7 @@ export async function validateSession(
 
   // Check if expired
   if (new Date(session.expires_at) < new Date()) {
-    await supabaseAdmin
+    await getSupabaseAdmin()
       .from("active_sessions")
       .update({
         killed_by: "expired",
@@ -265,7 +272,7 @@ export async function validateSession(
   }
 
   // Update last_seen
-  await supabaseAdmin
+  await getSupabaseAdmin()
     .from("active_sessions")
     .update({ last_seen_at: new Date().toISOString() })
     .eq("id", session.id);
@@ -279,7 +286,7 @@ export async function killSession(
   token: string,
   reason: "user" | "admin" | "velocity" = "user"
 ): Promise<boolean> {
-  const { error } = await supabaseAdmin
+  const { error } = await getSupabaseAdmin()
     .from("active_sessions")
     .update({
       killed_by: reason,
@@ -297,7 +304,7 @@ export async function killAllSessions(
   userId: string,
   reason: "admin" | "password_reset" | "compromise" = "admin"
 ): Promise<number> {
-  const { data } = await supabaseAdmin
+  const { data } = await getSupabaseAdmin()
     .from("active_sessions")
     .update({
       killed_by: reason,
@@ -315,7 +322,7 @@ export async function killAllSessions(
 export async function getUserSessions(
   userId: string
 ): Promise<SessionInfo[]> {
-  const { data } = await supabaseAdmin
+  const { data } = await getSupabaseAdmin()
     .from("active_sessions")
     .select("*")
     .eq("user_id", userId)
@@ -332,7 +339,7 @@ async function checkVelocity(
   currentIP: string
 ): Promise<string | null> {
   // Get the most recent session
-  const { data: lastSession } = await supabaseAdmin
+  const { data: lastSession } = await getSupabaseAdmin()
     .from("active_sessions")
     .select("ip_address, last_seen_at, city, region, country")
     .eq("user_id", userId)
@@ -358,7 +365,7 @@ async function checkVelocity(
 // ── Cleanup Expired Sessions ──
 
 export async function cleanupExpiredSessions(): Promise<number> {
-  const { data } = await supabaseAdmin
+  const { data } = await getSupabaseAdmin()
     .from("active_sessions")
     .update({
       killed_by: "expired",
