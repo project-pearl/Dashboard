@@ -4,6 +4,7 @@
 
 export type ChangeSource =
   | 'NWS_ALERTS'
+  | 'AIR_QUALITY'
   | 'NWPS_FLOOD'
   | 'NWPS_FORECAST'
   | 'USGS_IV'
@@ -14,7 +15,9 @@ export type ChangeSource =
   | 'STATE_DISCHARGE'
   | 'FEMA_DISASTER'
   | 'ECHO_ENFORCEMENT'
-  | 'CDC_NWSS';
+  | 'CDC_NWSS'
+  | 'HABSOS'
+  | 'EPA_BEACON';
 
 export type ChangeType =
   | 'NEW_RECORD'

@@ -97,6 +97,10 @@
       "schedule": "*/30 * * * *"
     },
     {
+      "path": "/api/cron/rebuild-air-quality",
+      "schedule": "*/30 * * * *"
+    },
+    {
       "path": "/api/cron/rebuild-coops",
       "schedule": "0 */6 * * *"
     },
@@ -171,6 +175,14 @@
     {
       "path": "/api/cron/rebuild-ncei",
       "schedule": "30 16 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-beacon",
+      "schedule": "0 16 * * *"
+    },
+    {
+      "path": "/api/cron/rebuild-ssocso",
+      "schedule": "30 15 * * *"
     },
     {
       "path": "/api/cron/rebuild-habsos",

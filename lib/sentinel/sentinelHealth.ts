@@ -20,7 +20,7 @@ let _diskLoaded = false;
 let _blobChecked = false;
 
 const ALL_SOURCES: ChangeSource[] = [
-  'NWS_ALERTS', 'NWPS_FLOOD', 'USGS_IV', 'SSO_CSO',
+  'NWS_ALERTS', 'AIR_QUALITY', 'NWPS_FLOOD', 'USGS_IV', 'SSO_CSO',
   'NPDES_DMR', 'QPE_RAINFALL', 'ATTAINS',
   'STATE_DISCHARGE', 'FEMA_DISASTER', 'ECHO_ENFORCEMENT',
   'CDC_NWSS',

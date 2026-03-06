@@ -39,6 +39,7 @@ import { pollNwpsFlood } from '@/lib/sentinel/adapters/nwpsFloodAdapter';
 import { pollNwss }    from '@/lib/sentinel/adapters/nwssAdapter';
 import { pollStateDischarge } from '@/lib/sentinel/adapters/stateDischargeAdapter';
 import { pollNwpsForecast } from '@/lib/sentinel/adapters/nwpsForecastAdapter';
+import { pollAirQuality } from '@/lib/sentinel/adapters/airQualityAdapter';
 
 // Existing caches (need warming for adapters that read them)
 import { ensureWarmed as warmNws }     from '@/lib/nwsAlertCache';
@@ -49,6 +50,7 @@ import { ensureWarmed as warmAttains } from '@/lib/attainsCache';
 import { ensureWarmed as warmNwss }    from '@/lib/nwss/nwssCache';
 import { ensureWarmed as warmNwps }    from '@/lib/nwpsCache';
 import { ensureWarmed as warmGaugeLookup } from '@/lib/nwpsGaugeLookup';
+import { ensureWarmed as warmAirQuality } from '@/lib/airQualityCache';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
@@ -109,6 +111,7 @@ interface AdapterEntry {
 
 const ADAPTERS: AdapterEntry[] = [
   { source: 'NWS_ALERTS',       poll: pollNws,     isAsync: false, warmFn: warmNws },
+  { source: 'AIR_QUALITY',      poll: pollAirQuality, isAsync: false, warmFn: warmAirQuality },
   { source: 'NWPS_FLOOD',       poll: pollNwpsFlood, isAsync: false, warmFn: warmNws },
   { source: 'USGS_IV',          poll: pollUsgs,    isAsync: false, warmFn: warmNwisIv },
   { source: 'NPDES_DMR',        poll: pollNpdes,   isAsync: false, warmFn: warmIcis },

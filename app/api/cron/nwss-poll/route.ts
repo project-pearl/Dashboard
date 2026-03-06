@@ -143,6 +143,8 @@ export async function GET(request: NextRequest) {
         'influenza-a': pollNow,
         'mpox': pollNow,
         'rsv': pollNow,
+        'norovirus': pollNow,
+        'hepatitis-a': pollNow,
       },
       lastFullRefreshAt: isFullRefresh ? pollNow : (getNwssPollState()?.lastFullRefreshAt ?? null),
     };

@@ -10,6 +10,7 @@ import type { ChangeSource, SeverityHint, CompoundPattern, ScoreLevel } from './
 
 export const BASE_SCORES: Record<ChangeSource, Record<SeverityHint, number>> = {
   NWS_ALERTS:       { LOW: 10, MODERATE: 25, HIGH: 40, CRITICAL: 60 },
+  AIR_QUALITY:      { LOW:  5, MODERATE: 15, HIGH: 30, CRITICAL: 45 },
   NWPS_FLOOD:       { LOW: 10, MODERATE: 20, HIGH: 35, CRITICAL: 50 },
   NWPS_FORECAST:    { LOW:  5, MODERATE: 20, HIGH: 40, CRITICAL: 55 },
   USGS_IV:          { LOW:  5, MODERATE: 15, HIGH: 45, CRITICAL: 60 },
@@ -21,6 +22,8 @@ export const BASE_SCORES: Record<ChangeSource, Record<SeverityHint, number>> = {
   FEMA_DISASTER:    { LOW: 15, MODERATE: 30, HIGH: 50, CRITICAL: 70 },
   ECHO_ENFORCEMENT: { LOW: 10, MODERATE: 25, HIGH: 40, CRITICAL: 55 },
   CDC_NWSS:         { LOW:  5, MODERATE: 15, HIGH: 35, CRITICAL: 55 },
+  HABSOS:           { LOW: 10, MODERATE: 25, HIGH: 45, CRITICAL: 65 },
+  EPA_BEACON:       { LOW: 10, MODERATE: 30, HIGH: 50, CRITICAL: 70 },
 };
 
 /* ------------------------------------------------------------------ */
@@ -129,6 +132,18 @@ export const COMPOUND_PATTERNS: CompoundPattern[] = [
     minDistinctSources: 2,
   },
   {
+    id: 'airborne-public-health',
+    name: 'Airborne Public Health Risk',
+    multiplier: 2.0,
+    timeWindowHours: 12,
+    requireSameHuc: false,
+    requiredSources: [
+      ['AIR_QUALITY'],
+      ['NWS_ALERTS'],
+    ],
+    minDistinctSources: 2,
+  },
+  {
     id: 'predicted-infrastructure-failure',
     name: 'Predicted Infrastructure Failure',
     multiplier: 2.5,
@@ -137,6 +152,30 @@ export const COMPOUND_PATTERNS: CompoundPattern[] = [
     requiredSources: [
       ['NWPS_FORECAST'],
       ['SSO_CSO', 'NPDES_DMR'],          // infrastructure stress during predicted flood
+    ],
+    minDistinctSources: 2,
+  },
+  {
+    id: 'hab-wq-correlation',
+    name: 'HAB Water Quality Correlation',
+    multiplier: 2.5,
+    timeWindowHours: 72,
+    requireSameHuc: false,
+    requiredSources: [
+      ['HABSOS'],
+      ['USGS_IV'],
+    ],
+    minDistinctSources: 2,
+  },
+  {
+    id: 'beach-pathogen-wq',
+    name: 'Beach Pathogen Water Quality',
+    multiplier: 2.0,
+    timeWindowHours: 48,
+    requireSameHuc: false,
+    requiredSources: [
+      ['EPA_BEACON'],
+      ['USGS_IV', 'CDC_NWSS'],
     ],
     minDistinctSources: 2,
   },
@@ -169,6 +208,7 @@ export const ADJACENT_HUC_BONUS = 1.5;
 
 export const POLL_INTERVALS: Record<ChangeSource, number> = {
   NWS_ALERTS:       1,   // every 5 min
+  AIR_QUALITY:      6,   // every 30 min
   NWPS_FLOOD:       1,   // every 5 min
   NWPS_FORECAST:    6,   // every 30 min (matches rebuild-nwps cron)
   USGS_IV:          3,   // every 15 min
@@ -180,6 +220,8 @@ export const POLL_INTERVALS: Record<ChangeSource, number> = {
   FEMA_DISASTER:   12,   // every hour
   ECHO_ENFORCEMENT: 288, // once/day
   CDC_NWSS:        2016, // weekly (2016 × 5 min ≈ 7 days)
+  HABSOS:           288, // once/day
+  EPA_BEACON:       288, // once/day
 };
 
 /* ------------------------------------------------------------------ */
