@@ -1,113 +1,137 @@
 /* ------------------------------------------------------------------ */
-/*  PIN Alerts — USGS IV Threshold Alert Trigger                      */
-/*                                                                    */
-/*  Maps UsgsAlert[] from usgsAlertCache → AlertEvent[] for the       */
-/*  PIN alert dispatch pipeline.                                      */
-/*                                                                    */
-/*  Cooldown: snapshot-based (same pattern as sentinelTrigger).       */
+/*  PIN Alerts - USGS IV Trigger                                       */
+/*  Progressive staging + persistence gate before external alerts.     */
 /* ------------------------------------------------------------------ */
 
 import type { AlertEvent, AlertSeverity } from '../types';
 import { BLOB_PATHS } from '../config';
 import { saveCacheToBlob, loadCacheFromBlob } from '../../blobPersistence';
 import { getAllAlerts, ensureWarmed } from '../../usgsAlertCache';
-import type { UsgsAlert } from '../../usgsAlertEngine';
 import { gatherConfounders } from '../../sentinel/classificationEngine';
 import { getAllEvents, ensureWarmed as warmQueue } from '../../sentinel/eventQueue';
 import { getExistingGrid } from '../../nwisIvCache';
+import { getWatershedContext } from '../../sentinel/indexLookup';
+import { ensureWarmed as warmIndices } from '../../indices/indicesCache';
 
-/* ------------------------------------------------------------------ */
-/*  Snapshot — tracks which USGS alerts we've already dispatched      */
-/* ------------------------------------------------------------------ */
+interface InvestigationState {
+  consecutiveRuns: number;
+  lastStage: string;
+  lastConfidence: number;
+  externalIssued: boolean;
+  updatedAt: string;
+}
 
 interface UsgsAlertSnapshot {
-  /** alertId → last dispatched ISO timestamp */
   dispatched: Record<string, string>;
+  investigations?: Record<string, InvestigationState>;
   takenAt: string;
 }
 
-const COOLDOWN_MS = 60 * 60 * 1000; // 1 hour per alert
-
-/* ------------------------------------------------------------------ */
-/*  Severity Mapping                                                  */
-/* ------------------------------------------------------------------ */
+const COOLDOWN_MS = 60 * 60 * 1000;
+const WEATHER_SENSITIVE_PARAMS = new Set(['63680', '00095', '00065']);
 
 function mapSeverity(usgsLevel: 'critical' | 'warning'): AlertSeverity {
-  switch (usgsLevel) {
-    case 'critical': return 'critical';
-    case 'warning':  return 'warning';
-    default:         return 'info';
-  }
+  return usgsLevel === 'critical' ? 'critical' : 'warning';
 }
 
-/* ------------------------------------------------------------------ */
-/*  Evaluate                                                          */
-/* ------------------------------------------------------------------ */
-
-/** Weather-sensitive parameter codes — suppress when confounders match */
-const WEATHER_SENSITIVE_PARAMS = new Set(['63680', '00095', '00065']); // turbidity, conductivity, gage height
+function buildSiteHucMap(): Map<string, string> {
+  const map = new Map<string, string>();
+  const grid = getExistingGrid();
+  if (!grid) return map;
+  for (const cell of Object.values(grid)) {
+    for (const site of cell.sites) {
+      if (site.huc) map.set(site.siteNumber, site.huc);
+    }
+  }
+  return map;
+}
 
 export async function evaluateUsgsAlerts(): Promise<AlertEvent[]> {
-  await Promise.all([ensureWarmed(), warmQueue()]);
+  await Promise.all([ensureWarmed(), warmQueue(), warmIndices()]);
 
   const allAlerts = getAllAlerts();
   if (allAlerts.length === 0) return [];
 
   const previousSnapshot = await loadCacheFromBlob<UsgsAlertSnapshot>(BLOB_PATHS.usgsSnapshot);
   const prevDispatched = previousSnapshot?.dispatched ?? {};
+  const prevInvestigations = previousSnapshot?.investigations ?? {};
   const now = new Date();
   const nowIso = now.toISOString();
   const events: AlertEvent[] = [];
   const newDispatched: Record<string, string> = { ...prevDispatched };
+  const newInvestigations: Record<string, InvestigationState> = { ...prevInvestigations };
 
-  // Build site→HUC lookup from nwisIvCache
   const siteHucMap = buildSiteHucMap();
-  // Pre-fetch sentinel events once for confounder checks
   const sentinelEvents = getAllEvents();
-  // Cache confounder results per HUC (avoid redundant checks)
   const confounderCache = new Map<string, ReturnType<typeof gatherConfounders>>();
 
   for (const alert of allAlerts) {
     const dedupKey = `usgs-iv-${alert.siteNumber}-${alert.parameterCd}-${alert.severity}`;
-
-    // Cooldown check — 1 hour per site+param+severity
     const lastDispatched = prevDispatched[dedupKey];
-    if (lastDispatched && (now.getTime() - new Date(lastDispatched).getTime()) < COOLDOWN_MS) {
-      continue;
+    if (lastDispatched && (now.getTime() - new Date(lastDispatched).getTime()) < COOLDOWN_MS) continue;
+
+    const huc8 = siteHucMap.get(alert.siteNumber);
+    let rainfallActive = false;
+    let floodActive = false;
+
+    // Watershed context for this site's HUC
+    const ctx = huc8 ? getWatershedContext(huc8) : null;
+
+    if (WEATHER_SENSITIVE_PARAMS.has(alert.parameterCd) && huc8) {
+      if (!confounderCache.has(huc8)) confounderCache.set(huc8, gatherConfounders(huc8, sentinelEvents));
+      const confounders = confounderCache.get(huc8)!;
+      rainfallActive = confounders.some((c) => c.rule === 'RAINFALL_CONFOUNDER' && c.matched);
+      floodActive = confounders.some((c) => c.rule === 'FLOOD_CONFOUNDER' && c.matched);
     }
 
-    // Weather exclusion — suppress weather-sensitive parameters during active confounders
-    if (WEATHER_SENSITIVE_PARAMS.has(alert.parameterCd)) {
-      const huc8 = siteHucMap.get(alert.siteNumber);
-      if (huc8) {
-        if (!confounderCache.has(huc8)) {
-          confounderCache.set(huc8, gatherConfounders(huc8, sentinelEvents));
-        }
-        const confounders = confounderCache.get(huc8)!;
-        const rainfallActive = confounders.some(c => c.rule === 'RAINFALL_CONFOUNDER' && c.matched);
-        const floodActive = confounders.some(c => c.rule === 'FLOOD_CONFOUNDER' && c.matched);
+    // Skip weather suppression for severely degraded watersheds (severity > 0.7)
+    const skipWeatherSuppression = ctx && ctx.available && ctx.severity > 0.7;
 
-        if (rainfallActive || floodActive) {
-          console.warn(
-            `[usgs-trigger] Suppressed ${alert.siteNumber} ${alert.parameter} (${alert.parameterCd}) — ` +
-            `weather confounder active (${rainfallActive ? 'rainfall' : 'flood'}) in HUC ${huc8}`,
-          );
-          continue;
-        }
-      }
-    }
+    const invKey = `${alert.siteNumber}:${alert.parameterCd}`;
+    const prevInv = prevInvestigations[invKey] ?? null;
+    const nextRuns = (prevInv?.consecutiveRuns ?? 0) + 1;
+    const severe = alert.severity === 'critical';
+    const confidence = severe ? 0.85 : 0.65;
+    const likelyNatural = skipWeatherSuppression ? false : (rainfallActive || floodActive);
+    const persistent = nextRuns >= 2;
+    const corroborated = severe || nextRuns >= 3;
+
+    let stage = 'possible_anomaly';
+    if (likelyNatural) stage = 'likely_natural_or_operational';
+    else if (persistent) stage = 'unexplained_investigate';
+
+    const externalEligible =
+      (!likelyNatural && severe) ||
+      (!likelyNatural && persistent && corroborated && !prevInv?.externalIssued);
+
+    if (externalEligible) stage = 'external_alert';
+
+    newInvestigations[invKey] = {
+      consecutiveRuns: nextRuns,
+      lastStage: stage,
+      lastConfidence: confidence,
+      externalIssued: externalEligible ? true : Boolean(prevInv?.externalIssued),
+      updatedAt: nowIso,
+    };
+
+    if (!externalEligible) continue;
 
     const severity = mapSeverity(alert.severity);
+    const rationale = [];
+    if (persistent) rationale.push(`Persistent signal for ${nextRuns} runs.`);
+    if (rainfallActive) rationale.push('Rainfall confounder present.');
+    if (floodActive) rationale.push('Flood confounder present.');
+    if (severe) rationale.push('Critical threshold exceeded.');
 
     events.push({
       id: crypto.randomUUID(),
       type: 'usgs',
       severity,
-      title: alert.title,
-      body: alert.message,
+      title: `${alert.title} (${stage})`,
+      body: `${alert.message} This is a persistent unexplained signal under investigation unless otherwise confirmed.`,
       entityId: alert.siteNumber,
       entityLabel: `${alert.siteName} (${alert.state})`,
-      dedupKey,
+      dedupKey: `${dedupKey}:${stage}`,
       createdAt: nowIso,
       channel: 'email',
       recipientEmail: '',
@@ -126,42 +150,30 @@ export async function evaluateUsgsAlerts(): Promise<AlertEvent[]> {
         readingTime: alert.readingTime,
         lat: alert.lat,
         lng: alert.lng,
+        stage,
+        confidence,
+        persistentRuns: nextRuns,
+        rainfallConfounder: rainfallActive,
+        floodConfounder: floodActive,
+        rationale,
+        watershedSeverity: ctx?.severity ?? null,
+        weatherSuppressionSkipped: skipWeatherSuppression ?? false,
       },
     });
 
     newDispatched[dedupKey] = nowIso;
   }
 
-  // Expire old snapshot entries (>24h)
   const cutoff = now.getTime() - 24 * 60 * 60 * 1000;
   for (const [key, ts] of Object.entries(newDispatched)) {
-    if (new Date(ts).getTime() < cutoff) {
-      delete newDispatched[key];
-    }
+    if (new Date(ts).getTime() < cutoff) delete newDispatched[key];
   }
 
   await saveCacheToBlob(BLOB_PATHS.usgsSnapshot, {
     dispatched: newDispatched,
+    investigations: newInvestigations,
     takenAt: nowIso,
   });
 
   return events;
-}
-
-/* ------------------------------------------------------------------ */
-/*  Helpers                                                           */
-/* ------------------------------------------------------------------ */
-
-/** Build siteNumber → HUC-8 lookup from the nwisIvCache grid */
-function buildSiteHucMap(): Map<string, string> {
-  const map = new Map<string, string>();
-  const grid = getExistingGrid();
-  if (!grid) return map;
-
-  for (const cell of Object.values(grid)) {
-    for (const site of cell.sites) {
-      if (site.huc) map.set(site.siteNumber, site.huc);
-    }
-  }
-  return map;
 }

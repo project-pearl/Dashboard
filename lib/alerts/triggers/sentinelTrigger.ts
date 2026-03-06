@@ -1,31 +1,86 @@
 /* ------------------------------------------------------------------ */
-/*  PIN Alerts — Sentinel Trigger                                     */
-/*  Reads persisted scored HUCs + source health → candidate alerts    */
+/*  PIN Alerts - Sentinel Trigger                                      */
+/*  Progressive classification + persistence gating for calmer alerts. */
 /* ------------------------------------------------------------------ */
 
 import type { AlertEvent } from '../types';
-import type { ScoredHuc, SentinelSourceState } from '../../sentinel/types';
+import type { ScoredHuc } from '../../sentinel/types';
 import { BLOB_PATHS } from '../config';
-import { BLOB_PATHS as SENTINEL_BLOB_PATHS } from '../../sentinel/config';
 import { saveCacheToBlob, loadCacheFromBlob } from '../../blobPersistence';
 import { getScoredHucs, ensureWarmed as warmScoring } from '../../sentinel/scoringEngine';
 import { getAllStatuses, ensureWarmed as warmHealth } from '../../sentinel/sentinelHealth';
 import { classifyEvent, gatherConfounders } from '../../sentinel/classificationEngine';
 import { getAllEvents, ensureWarmed as warmQueue } from '../../sentinel/eventQueue';
 
-/* ------------------------------------------------------------------ */
-/*  Snapshot Types                                                    */
-/* ------------------------------------------------------------------ */
+interface InvestigationState {
+  consecutiveRuns: number;
+  lastStage: string;
+  lastConfidence: number;
+  externalIssued: boolean;
+  updatedAt: string;
+}
 
 interface SentinelSnapshot {
-  hucLevels: Record<string, string>;     // huc8 → ScoreLevel
-  sourceStatuses: Record<string, string>; // source → SourceStatus
+  hucLevels: Record<string, string>;
+  sourceStatuses: Record<string, string>;
+  investigations?: Record<string, InvestigationState>;
   takenAt: string;
 }
 
-/* ------------------------------------------------------------------ */
-/*  Evaluate                                                          */
-/* ------------------------------------------------------------------ */
+type SentinelStage =
+  | 'possible_anomaly'
+  | 'likely_natural_or_operational'
+  | 'unexplained_investigate'
+  | 'external_alert';
+
+function stageFromClassification(
+  classification: 'likely_attack' | 'possible_attack' | 'likely_benign' | 'insufficient_data',
+): SentinelStage {
+  if (classification === 'likely_benign') return 'likely_natural_or_operational';
+  if (classification === 'insufficient_data') return 'possible_anomaly';
+  if (classification === 'possible_attack') return 'possible_anomaly';
+  return 'unexplained_investigate';
+}
+
+function makeHucAlert(
+  huc: ScoredHuc,
+  severity: AlertEvent['severity'],
+  stage: SentinelStage,
+  confidence: number,
+  rationale: string[],
+  now: string,
+): AlertEvent {
+  return {
+    id: crypto.randomUUID(),
+    type: 'sentinel',
+    severity,
+    title: `HUC ${huc.huc8}: ${stage === 'external_alert' ? 'Persistent anomaly signal' : 'Possible anomaly signal'}`,
+    body: [
+      `Watershed ${huc.huc8} (${huc.stateAbbr}) score ${huc.score} (${huc.level}).`,
+      `Stage: ${stage}. Confidence: ${(confidence * 100).toFixed(0)}%.`,
+      'Signal is under active analysis; no confirmed contamination event unless separately validated.',
+    ].join(' '),
+    entityId: huc.huc8,
+    entityLabel: `HUC-8 ${huc.huc8} (${huc.stateAbbr})`,
+    dedupKey: `sentinel:${huc.huc8}:${stage}:${severity}`,
+    createdAt: now,
+    channel: 'email',
+    recipientEmail: '',
+    sent: false,
+    sentAt: null,
+    error: null,
+    ruleId: null,
+    metadata: {
+      score: huc.score,
+      level: huc.level,
+      eventCount: huc.events.length,
+      activePatterns: huc.activePatterns.map((p) => p.patternId),
+      stage,
+      confidence,
+      rationale,
+    },
+  };
+}
 
 export async function evaluateSentinelAlerts(): Promise<AlertEvent[]> {
   await Promise.all([warmScoring(), warmHealth(), warmQueue()]);
@@ -33,52 +88,65 @@ export async function evaluateSentinelAlerts(): Promise<AlertEvent[]> {
   const scoredHucs = getScoredHucs();
   const sourceStates = getAllStatuses();
   const previousSnapshot = await loadCacheFromBlob<SentinelSnapshot>(BLOB_PATHS.sentinelSnapshot);
+  const prevInvestigations = previousSnapshot?.investigations ?? {};
 
   const events: AlertEvent[] = [];
   const now = new Date().toISOString();
-  const prevHucLevels = previousSnapshot?.hucLevels ?? {};
-  const prevSourceStatuses = previousSnapshot?.sourceStatuses ?? {};
-
-  // Pre-fetch events once for classification
   const allEvents = getAllEvents();
+  const newInvestigations: Record<string, InvestigationState> = {};
 
-  // --- HUC level changes (with classification gate) ---
   for (const huc of scoredHucs) {
-    const prevLevel = prevHucLevels[huc.huc8];
+    if (huc.level !== 'WATCH' && huc.level !== 'CRITICAL') continue;
 
-    const isNewCritical = huc.level === 'CRITICAL' && prevLevel !== 'CRITICAL';
-    const isNewWatch = huc.level === 'WATCH' && prevLevel !== 'WATCH' && prevLevel !== 'CRITICAL';
-
-    if (!isNewCritical && !isNewWatch) continue;
-
-    // Run classification — suppress likely_benign (weather-correlated noise)
     const confounders = gatherConfounders(huc.huc8, allEvents);
     const classification = classifyEvent(huc, confounders);
+    const prev = prevInvestigations[huc.huc8] ?? null;
+    const nextRuns = (prev?.consecutiveRuns ?? 0) + 1;
+    const stageBase = stageFromClassification(classification.classification);
+    const confidence = classification.threatScore;
+    const corroborated = huc.events.length >= 2 || huc.activePatterns.length >= 1;
+    const persistent = nextRuns >= 2;
+    const hardCritical = huc.level === 'CRITICAL' && confidence >= 0.8;
 
-    if (classification.classification === 'likely_benign') {
-      console.warn(
-        `[sentinel-trigger] Suppressed ${huc.huc8} (${huc.level}) — classified likely_benign ` +
-        `(threat=${classification.threatScore}, confounders: ${confounders.filter(c => c.matched).map(c => c.rule).join(', ')})`,
-      );
-      continue;
+    const rationale: string[] = [];
+    if (classification.classification === 'likely_benign') rationale.push('Confounder model indicates likely benign/natural signal.');
+    if (persistent) rationale.push(`Signal persisted for ${nextRuns} runs.`);
+    if (corroborated) rationale.push('Corroborated by multiple events/patterns.');
+
+    let stage: SentinelStage = stageBase;
+    let externalEligible = false;
+    if (hardCritical) {
+      stage = 'external_alert';
+      externalEligible = true;
+      rationale.push('Hard-critical threshold reached.');
+    } else if (
+      stageBase !== 'likely_natural_or_operational' &&
+      persistent &&
+      corroborated &&
+      !prev?.externalIssued
+    ) {
+      stage = 'external_alert';
+      externalEligible = true;
+      rationale.push('Persistence + corroboration gate satisfied.');
     }
 
-    const severity = isNewCritical ? 'critical' as const : 'warning' as const;
-    const action = isNewCritical ? 'escalated to CRITICAL' : 'escalated to WATCH';
-    const alert = makeHucAlert(huc, severity, action, now);
+    newInvestigations[huc.huc8] = {
+      consecutiveRuns: nextRuns,
+      lastStage: stage,
+      lastConfidence: confidence,
+      externalIssued: externalEligible ? true : Boolean(prev?.externalIssued),
+      updatedAt: now,
+    };
 
-    // Attach classification to metadata for downstream enrichment
-    alert.metadata.classification = classification;
+    if (!externalEligible) continue;
 
-    events.push(alert);
+    const severity: AlertEvent['severity'] = hardCritical ? 'critical' : 'warning';
+    events.push(makeHucAlert(huc, severity, stage, confidence, rationale, now));
   }
 
-  // --- Source health transitions ---
   for (const source of sourceStates) {
-    const prev = prevSourceStatuses[source.source];
-
-    // DEGRADED → OFFLINE
-    if (source.status === 'OFFLINE' && prev !== 'OFFLINE') {
+    const prevStatus = previousSnapshot?.sourceStatuses?.[source.source];
+    if (source.status === 'OFFLINE' && prevStatus !== 'OFFLINE') {
       events.push({
         id: crypto.randomUUID(),
         type: 'sentinel',
@@ -98,9 +166,7 @@ export async function evaluateSentinelAlerts(): Promise<AlertEvent[]> {
         metadata: { consecutiveFailures: source.consecutiveFailures },
       });
     }
-
-    // OFFLINE → HEALTHY (recovery)
-    if (source.status === 'HEALTHY' && prev === 'OFFLINE') {
+    if (source.status === 'HEALTHY' && prevStatus === 'OFFLINE') {
       events.push({
         id: crypto.randomUUID(),
         type: 'sentinel',
@@ -122,48 +188,13 @@ export async function evaluateSentinelAlerts(): Promise<AlertEvent[]> {
     }
   }
 
-  // --- Save snapshot ---
   const newSnapshot: SentinelSnapshot = {
-    hucLevels: Object.fromEntries(scoredHucs.map(h => [h.huc8, h.level])),
-    sourceStatuses: Object.fromEntries(sourceStates.map(s => [s.source, s.status])),
+    hucLevels: Object.fromEntries(scoredHucs.map((h) => [h.huc8, h.level])),
+    sourceStatuses: Object.fromEntries(sourceStates.map((s) => [s.source, s.status])),
+    investigations: newInvestigations,
     takenAt: now,
   };
   await saveCacheToBlob(BLOB_PATHS.sentinelSnapshot, newSnapshot);
 
   return events;
-}
-
-/* ------------------------------------------------------------------ */
-/*  Helpers                                                           */
-/* ------------------------------------------------------------------ */
-
-function makeHucAlert(
-  huc: ScoredHuc,
-  severity: AlertEvent['severity'],
-  action: string,
-  now: string,
-): AlertEvent {
-  return {
-    id: crypto.randomUUID(),
-    type: 'sentinel',
-    severity,
-    title: `HUC ${huc.huc8} ${action}`,
-    body: `Watershed ${huc.huc8} (${huc.stateAbbr}) has ${action} with score ${huc.score}. ${huc.events.length} contributing event(s).`,
-    entityId: huc.huc8,
-    entityLabel: `HUC-8 ${huc.huc8} (${huc.stateAbbr})`,
-    dedupKey: `sentinel:${huc.huc8}:${severity}`,
-    createdAt: now,
-    channel: 'email',
-    recipientEmail: '',
-    sent: false,
-    sentAt: null,
-    error: null,
-    ruleId: null,
-    metadata: {
-      score: huc.score,
-      level: huc.level,
-      eventCount: huc.events.length,
-      activePatterns: huc.activePatterns.map(p => p.patternId),
-    },
-  };
 }
