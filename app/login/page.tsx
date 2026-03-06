@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/authContext';
 import { getPrimaryRoute } from '@/lib/roleRoutes';
 import { supabase } from '@/lib/supabase';
-import type { UserRole } from '@/lib/authTypes';
+import type { InvitePayload, UserRole } from '@/lib/authTypes';
 import Image from 'next/image';
 import { Eye, EyeOff } from 'lucide-react';
 
@@ -75,7 +75,8 @@ const selectClass = `${inputClass} [&>option]:bg-slate-900 [&>option]:text-white
 
 export default function LoginPage() {
   const router = useRouter();
-  const { loginAsync, signup, isAuthenticated, isLoading, loginError, clearError, user } = useAuth();
+  const searchParams = useSearchParams();
+  const { loginAsync, signup, isAuthenticated, isLoading, loginError, clearError, user, resolveInviteToken } = useAuth();
 
   const [mode, setMode] = useState<'login' | 'request' | 'forgot'>('login');
   const [email, setEmail] = useState('');
@@ -95,6 +96,10 @@ export default function LoginPage() {
   const [confirmTouched, setConfirmTouched] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
+  const [inviteToken, setInviteToken] = useState('');
+  const [invitePayload, setInvitePayload] = useState<InvitePayload | null>(null);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const inviteQueryToken = searchParams.get('invite') || '';
 
   const passwordValid = useMemo(() => PW_RULES.every(r => r.test(password)), [password]);
   const passwordsMatch = password === confirmPassword;
@@ -109,6 +114,43 @@ export default function LoginPage() {
       }
     }
   }, [isAuthenticated, isLoading, router, user]);
+
+  useEffect(() => {
+    const token = inviteQueryToken;
+    if (!token) {
+      setInviteToken('');
+      setInvitePayload(null);
+      setInviteError(null);
+      return;
+    }
+
+    let active = true;
+    setMode('request');
+    setInviteToken(token);
+
+    resolveInviteToken(token).then((payload) => {
+      if (!active) return;
+      if (!payload) {
+        setInvitePayload(null);
+        setInviteError('This invite link is invalid or expired.');
+        return;
+      }
+      setInvitePayload(payload);
+      setInviteError(null);
+      setRole(payload.role);
+      if (payload.email) setEmail(payload.email);
+      if (payload.organization) setOrganization(payload.organization);
+      if (payload.state) setState(payload.state);
+    }).catch(() => {
+      if (!active) return;
+      setInvitePayload(null);
+      setInviteError('Could not validate invite link.');
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [inviteQueryToken, resolveInviteToken]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -148,8 +190,24 @@ export default function LoginPage() {
     if (!signupReady) return;
     setIsSubmitting(true);
     clearError();
-    const result = await signup({ email, password, name, role, organization, state, useCase });
+    const result = await signup({
+      email,
+      password,
+      name,
+      role,
+      organization,
+      state,
+      useCase,
+      inviteToken: invitePayload ? inviteToken : undefined,
+    });
     if (result.success) {
+      if (result.user?.status === 'active') {
+        const loginResult = await loginAsync(email, password);
+        if (loginResult.success && loginResult.user) {
+          router.replace(getPrimaryRoute(loginResult.user));
+          return;
+        }
+      }
       setAccessRequested(true);
     }
     setIsSubmitting(false);
@@ -251,6 +309,11 @@ export default function LoginPage() {
           {loginError && (
             <div className="mb-4 p-3 bg-red-500/20 border border-red-400/30 rounded-lg text-red-200 text-sm">
               {loginError}
+            </div>
+          )}
+          {inviteError && mode === 'request' && (
+            <div className="mb-4 p-3 bg-amber-500/20 border border-amber-400/30 rounded-lg text-amber-100 text-sm">
+              {inviteError}
             </div>
           )}
 
@@ -371,6 +434,11 @@ export default function LoginPage() {
             </form>
           ) : (
             <form onSubmit={handleRequestAccess} className="space-y-3">
+              {invitePayload && (
+                <div className="p-3 rounded-lg border border-emerald-300/30 bg-emerald-500/15 text-emerald-100 text-xs">
+                  Invite verified. This account will be created with pre-approved access.
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-white/80 mb-1">Full Name</label>
                 <input
@@ -389,6 +457,7 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={e => setEmail(e.target.value)}
+                  disabled={!!invitePayload?.email}
                   className={inputClass}
                   placeholder="you@example.com"
                 />
@@ -452,6 +521,7 @@ export default function LoginPage() {
                   required
                   value={organization}
                   onChange={e => setOrganization(e.target.value)}
+                  disabled={!!invitePayload?.organization}
                   className={inputClass}
                   placeholder="e.g. Anne Arundel County DPW"
                 />
@@ -462,6 +532,7 @@ export default function LoginPage() {
                   <select
                     value={role}
                     onChange={e => setRole(e.target.value as UserRole)}
+                    disabled={!!invitePayload?.role}
                     className={selectClass}
                   >
                     {ROLES.map(r => (
@@ -474,6 +545,7 @@ export default function LoginPage() {
                   <select
                     value={state}
                     onChange={e => setState(e.target.value)}
+                    disabled={!!invitePayload?.state}
                     className={selectClass}
                   >
                     <option value="">Select state</option>
@@ -500,10 +572,10 @@ export default function LoginPage() {
                 disabled={isSubmitting || !signupReady}
                 className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all shadow-lg shadow-cyan-500/20"
               >
-                {isSubmitting ? 'Submitting...' : 'Request Access'}
+                {isSubmitting ? 'Submitting...' : invitePayload ? 'Create Account' : 'Request Access'}
               </button>
               <p className="text-xs text-white/40 text-center">
-                All accounts are reviewed before activation.
+                {invitePayload ? 'Invite accounts are activated immediately after signup.' : 'All accounts are reviewed before activation.'}
               </p>
             </form>
           )}

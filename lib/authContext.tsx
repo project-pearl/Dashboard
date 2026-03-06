@@ -275,8 +275,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signup = useCallback(async (params: SignupParams) => {
     setError(null);
-    const { email, password, name, role, organization, state, requestedJurisdiction, useCase } = params;
+    const { email, password, name, role, organization, state, requestedJurisdiction, useCase, inviteToken } = params;
     try {
+      let invitePayload: InvitePayload | null = null;
+      if (inviteToken) {
+        const inviteRes = await fetch('/api/invites/resolve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: inviteToken }),
+        });
+        const inviteBody = await inviteRes.json().catch(() => ({} as any));
+        invitePayload = (inviteBody?.payload ?? null) as InvitePayload | null;
+        if (!invitePayload) {
+          setError('Invite link is invalid or expired.');
+          return { success: false, error: 'Invalid invite link' };
+        }
+        if (invitePayload.email && invitePayload.email.toLowerCase() !== email.trim().toLowerCase()) {
+          setError('This invite is locked to a different email address.');
+          return { success: false, error: 'Invite email mismatch' };
+        }
+      }
+
+      const finalRole = invitePayload?.role ?? role;
+      const finalOrganization = invitePayload?.organization ?? organization ?? '';
+      const finalState = invitePayload?.state ?? state ?? '';
+      const finalJurisdiction = invitePayload?.jurisdiction ?? requestedJurisdiction ?? '';
+      const status: AccountStatus = invitePayload ? 'active' : 'pending';
+
       const { data, error: authError } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password,
@@ -291,28 +316,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (data.user) {
-        // All new accounts require admin approval
-        const status: AccountStatus = 'pending';
         const isAdmin = checkIsAdmin(email);
+        const nowIso = new Date().toISOString();
 
         await supabase
           .from('profiles')
           .update({
             name,
-            role,
-            organization: organization || '',
-            state: state || '',
-            ms4_jurisdiction: requestedJurisdiction || '',
+            role: finalRole,
+            organization: finalOrganization,
+            state: finalState,
+            ms4_jurisdiction: finalJurisdiction,
             status,
             is_admin: isAdmin,
             use_case: useCase || '',
+            approved_by: invitePayload?.invitedBy || null,
+            approved_at: invitePayload ? nowIso : null,
           })
           .eq('id', data.user.id);
 
         const profile = await fetchProfile(data.user.id);
         const pearlUser = profile ? profileToPearlUser(profile, data.user) : null;
 
-        // Do not auto-login — all accounts start as pending
+        // Standard signups remain pending; invite signups are pre-approved.
         return { success: true, user: pearlUser || undefined };
       }
 
@@ -368,12 +394,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return data.map((p: any) => profileToPearlUser(p, { id: p.id, email: p.email } as User));
   }, []);
 
-  const createInviteLink = useCallback(async (_params: CreateInviteParams): Promise<string> => {
-    return '';
-  }, []);
+  const createInviteLink = useCallback(async (params: CreateInviteParams): Promise<string> => {
+    if (!user?.isAdmin) throw new Error('Only admins can create invite links.');
+    const { data: { session } } = await supabase.auth.getSession();
+    const accessToken = session?.access_token;
+    if (!accessToken) throw new Error('No active admin session.');
 
-  const resolveInviteToken = useCallback(async (_token: string): Promise<InvitePayload | null> => {
-    return null;
+    const res = await fetch('/api/invites/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(params),
+    });
+
+    const body = await res.json().catch(() => ({} as any));
+    if (!res.ok || !body?.link) {
+      throw new Error(body?.error || 'Failed to create invite link');
+    }
+    return body.link as string;
+  }, [user?.isAdmin]);
+
+  const resolveInviteToken = useCallback(async (token: string): Promise<InvitePayload | null> => {
+    if (!token) return null;
+    try {
+      const res = await fetch('/api/invites/resolve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      });
+      if (!res.ok) return null;
+      const body = await res.json().catch(() => ({} as any));
+      return (body?.payload ?? null) as InvitePayload | null;
+    } catch {
+      return null;
+    }
   }, []);
 
   const value: AuthContextType = {

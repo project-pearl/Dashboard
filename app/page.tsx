@@ -5,6 +5,7 @@ import AuthGuard from '@/components/AuthGuard';
 import UserMenu from '@/components/UserMenu';
 import { useAuth } from '@/lib/authContext';
 import { useRouter } from 'next/navigation';
+import { getPrimaryRoute } from '@/lib/roleRoutes';
 import type { UserRole } from '@/lib/authTypes';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
@@ -295,7 +296,15 @@ const ROLE_ROUTES: Record<UserRole, string> = {
 };
 
 export default function Home() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
+
+  // Redirect authenticated users to their role-specific dashboard
+  useEffect(() => {
+    if (!isLoading && user && user.status === 'active') {
+      router.replace(getPrimaryRoute(user));
+    }
+  }, [isLoading, user, router]);
 
   const [timeMode, setTimeMode] = useState<TimeMode>('real-time');
   const [dataMode, setDataMode] = useState<DataMode>('ambient');
