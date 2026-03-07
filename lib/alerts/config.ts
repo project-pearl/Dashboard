@@ -32,6 +32,10 @@ export const COOLDOWNS: Record<AlertSeverity, number> = {
   info:    240 * 60_000,   // 4 hr
 };
 
+export const SITE_COOLDOWN_MS = 4 * 60 * 60_000;           // 4 hours
+export const CRITICAL_PERSISTENCE_THRESHOLD = 2;            // consecutive dispatch runs
+export const RECOVERY_GAP_MS = 10 * 60_000;                // 10 min (2 missed runs = recovered)
+
 export const MAX_EMAILS_PER_HOUR = 20;          // Resend free tier safety
 export const MAX_ALERT_LOG_SIZE = 500;           // keep last 500 events
 
@@ -53,6 +57,8 @@ export const BLOB_PATHS = {
   deploymentSnapshot:    'alerts/deployment-snapshot.json',
   habSnapshot:           'alerts/hab-snapshot.json',
   beaconSnapshot:        'alerts/beacon-snapshot.json',
+  fusionSnapshot:        'alerts/fusion-snapshot.json',
+  siteThrottle:          'alerts/site-throttle.json',
 };
 
 export const DISK_PATHS = {

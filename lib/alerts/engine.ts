@@ -7,6 +7,10 @@ import type { AlertEvent, AlertLog, DispatchResult } from './types';
 import { COOLDOWNS, MAX_EMAILS_PER_HOUR, MAX_ALERT_LOG_SIZE, BLOB_PATHS, DISK_PATHS } from './config';
 import { loadRecipients, getRecipientsForAlert } from './recipients';
 import { loadSuppressions, isSuppressed } from './suppressions';
+import {
+  loadSiteThrottleState, saveSiteThrottleState, updateSiteBreaches,
+  extractSiteKey, shouldThrottle, markSiteFired, purgeStaleSiteEntries,
+} from './siteThrottle';
 import { sendAlertEmail } from './channels/email';
 import { enrichAlertPayload } from './enrichment';
 import { saveCacheToBlob, loadCacheFromBlob } from '../blobPersistence';
@@ -88,7 +92,11 @@ export async function dispatchAlerts(candidateEvents: AlertEvent[]): Promise<Dis
   const suppressions = await loadSuppressions();
   const recipients = await loadRecipients();
 
-  const result: DispatchResult = { sent: 0, suppressed: 0, errors: 0, rateLimited: 0, logged: 0 };
+  // Load site throttle state and update breach counters for this run
+  const siteState = await loadSiteThrottleState();
+  updateSiteBreaches(candidateEvents, siteState);
+
+  const result: DispatchResult = { sent: 0, suppressed: 0, errors: 0, rateLimited: 0, logged: 0, throttled: 0 };
   let sentThisHour = countSentThisHour(log);
 
   for (const candidate of candidateEvents) {
@@ -99,17 +107,25 @@ export async function dispatchAlerts(candidateEvents: AlertEvent[]): Promise<Dis
       continue;
     }
 
-    // 2. Cooldown check
+    // 2. Cooldown check (exact-match dedup)
     if (isInCooldown(candidate.dedupKey, candidate.severity, log)) {
       result.suppressed++;
       continue;
     }
 
-    // 3. Get matching recipients
+    // 3. Site-level throttle (persistence + cooldown + recovery)
+    const siteKey = extractSiteKey(candidate.dedupKey);
+    if (shouldThrottle(siteKey, candidate.severity, siteState)) {
+      result.throttled++;
+      continue;
+    }
+
+    // 4. Get matching recipients
     const matchedRecipients = getRecipientsForAlert(candidate.type, candidate.severity, recipients);
     if (matchedRecipients.length === 0) continue;
 
-    // 4. Send to each recipient
+    // 5. Send to each recipient
+    let candidateDispatched = false;
     for (const recipient of matchedRecipients) {
       // Rate limit check
       if (sentThisHour >= MAX_EMAILS_PER_HOUR) {
@@ -143,6 +159,7 @@ export async function dispatchAlerts(candidateEvents: AlertEvent[]): Promise<Dis
         event.error = 'log_only';
         result.logged++;
         log.totalLogged = (log.totalLogged || 0) + 1;
+        candidateDispatched = true;
       } else if (sendResult.success) {
         event.sent = true;
         event.sentAt = new Date().toISOString();
@@ -150,6 +167,7 @@ export async function dispatchAlerts(candidateEvents: AlertEvent[]): Promise<Dis
         result.sent++;
         log.totalSent++;
         sentThisHour++;
+        candidateDispatched = true;
       } else {
         event.sent = false;
         event.sentAt = null;
@@ -160,6 +178,11 @@ export async function dispatchAlerts(candidateEvents: AlertEvent[]): Promise<Dis
 
       log.events.push(event);
     }
+
+    // Mark site as fired so cooldown starts for this site+parameter
+    if (candidateDispatched) {
+      markSiteFired(siteKey, siteState);
+    }
   }
 
   // Trim log to max size (FIFO)
@@ -169,6 +192,10 @@ export async function dispatchAlerts(candidateEvents: AlertEvent[]): Promise<Dis
 
   log.lastDispatchAt = new Date().toISOString();
   await saveAlertLog(log);
+
+  // Persist site throttle state
+  purgeStaleSiteEntries(siteState);
+  await saveSiteThrottleState(siteState);
 
   return result;
 }

@@ -282,7 +282,7 @@ function classifyDeploymentAnomaly(
   if (persistent && corroborated && failedGlitchGate) stage = 'unexplained_investigate';
 
   const externalEligible =
-    hasHardCriticalSignal ||
+    (hasHardCriticalSignal && consecutiveRuns >= 2) ||
     (stage === 'unexplained_investigate' && consecutiveRuns >= 4 && !prev?.externalIssued);
   if (externalEligible) stage = 'external_alert';
 
@@ -377,7 +377,11 @@ export async function evaluateDeploymentAlerts(
       }
     }
 
-    if (classification.externalEligible) {
+    const classChanged = prevInvestigation && (
+      prevInvestigation.lastHypothesis !== classification.hypothesis ||
+      prevInvestigation.lastStage !== classification.stage
+    );
+    if (classification.externalEligible && (!prevInvestigation?.externalIssued || classChanged)) {
       const hypothesisLabel = formatClassificationLabel(classification.hypothesis);
       events.push({
         id: crypto.randomUUID(),

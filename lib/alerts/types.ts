@@ -77,4 +77,5 @@ export interface DispatchResult {
   errors: number;
   rateLimited: number;
   logged: number;
+  throttled: number;
 }
