@@ -1,6 +1,8 @@
 'use client';
 
 import Image from 'next/image';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { getLensesForHref } from '@/lib/lensRegistry';
 
 export interface HeroBannerConfig {
   image: string;
@@ -145,7 +147,18 @@ interface HeroBannerProps {
 
 export default function HeroBanner({ role, className = '', children, onDoubleClick }: HeroBannerProps) {
   const config = heroConfigs[role];
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   if (!config) return null;
+
+  const activeLensId = searchParams.get('lens') || 'overview';
+  const lenses = getLensesForHref(pathname || '');
+  const matchedLens = lenses?.find((lens) => lens.id === activeLensId);
+  const lensTitle = matchedLens?.label
+    || activeLensId
+      .split('-')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
 
   return (
     <div className={`relative w-full overflow-hidden rounded-2xl cursor-default select-none ${className}`} style={{ border: '1px solid var(--border-subtle)' }} onDoubleClick={onDoubleClick}>
@@ -193,6 +206,11 @@ export default function HeroBanner({ role, className = '', children, onDoubleCli
             {config.description}
           </p>
         </div>
+      </div>
+      <div className="px-6 sm:px-10 lg:px-14 py-3 bg-slate-50 border-t border-slate-200">
+        <h2 className="text-sm sm:text-base font-semibold tracking-tight text-slate-900">
+          {lensTitle}
+        </h2>
       </div>
     </div>
   );
