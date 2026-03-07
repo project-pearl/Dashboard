@@ -1089,68 +1089,76 @@ Doug and the PIN team`;
         {/* ── HERO BANNER ── */}
         <HeroBanner role="pearl" onDoubleClick={() => props.onToggleDevMode?.()} />
 
-        {/* ── DATA SOURCE HEALTH MONITOR ── */}
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between gap-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Activity size={16} className="text-slate-700" />
-                Data Source Health
-              </CardTitle>
-              <Badge variant="outline" className="text-xs">
-                {sourceHealthLoading ? 'Checking...' : `${onlineSourceCount}/${totalSourceCount || 34} Online`}
-              </Badge>
-            </div>
-            <CardDescription>
-              {sourceHealthError
-                ? `Health monitor unavailable (${sourceHealthError}).`
-                : `${offlineSourceCount} offline, ${degradedSourceCount} degraded, ${onlineSourceCount} online.`}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0">
-            {sourceHealthLoading ? (
-              <div className="text-sm text-slate-500">Loading data source checks...</div>
-            ) : sourceHealthError ? (
-              <div className="text-sm text-red-600">Unable to load source health right now.</div>
-            ) : unhealthySources.length === 0 ? (
-              <div className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md px-3 py-2">
-                All monitored sources are online.
-              </div>
-            ) : (
-              <div className="max-h-56 overflow-y-auto border rounded-md">
-                <table className="w-full text-sm">
-                  <thead className="sticky top-0 bg-slate-50 text-slate-600">
-                    <tr className="text-left border-b">
-                      <th className="px-3 py-2 font-medium">Source</th>
-                      <th className="px-3 py-2 font-medium">Status</th>
-                      <th className="px-3 py-2 font-medium">Latency</th>
-                      <th className="px-3 py-2 font-medium">Checked</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {unhealthySources.map((s) => (
-                      <tr key={s.id} className="border-b last:border-b-0">
-                        <td className="px-3 py-2 text-slate-800">{s.name}</td>
-                        <td className="px-3 py-2">
-                          <Badge className={s.status === 'offline' ? 'bg-red-100 text-red-800 hover:bg-red-100' : 'bg-amber-100 text-amber-800 hover:bg-amber-100'}>
-                            {s.status}
-                          </Badge>
-                        </td>
-                        <td className="px-3 py-2 text-slate-600">
-                          {typeof s.responseTimeMs === 'number' ? `${Math.round(s.responseTimeMs)} ms` : 'n/a'}
-                        </td>
-                        <td className="px-3 py-2 text-slate-500">{new Date(s.checkedAt).toLocaleTimeString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {/* Data Source Health, National Health Gauge, KPI tiles moved into Operations lens */}
 
-        {/* ── NATIONAL WATER HEALTH GAUGE ── */}
-        <Card className="overflow-hidden relative">
+        {/* ════════════════════════════════════════════════════════════ */}
+        {/* ── OPERATIONS LENS ──────────────────────────────────────── */}
+        {/* ════════════════════════════════════════════════════════════ */}
+
+        {viewLens === 'operations' && (
+          <>
+            {/* ── DATA SOURCE HEALTH MONITOR ── */}
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between gap-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Activity size={16} className="text-slate-700" />
+                    Data Source Health
+                  </CardTitle>
+                  <Badge variant="outline" className="text-xs">
+                    {sourceHealthLoading ? 'Checking...' : `${onlineSourceCount}/${totalSourceCount || 34} Online`}
+                  </Badge>
+                </div>
+                <CardDescription>
+                  {sourceHealthError
+                    ? `Health monitor unavailable (${sourceHealthError}).`
+                    : `${offlineSourceCount} offline, ${degradedSourceCount} degraded, ${onlineSourceCount} online.`}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                {sourceHealthLoading ? (
+                  <div className="text-sm text-slate-500">Loading data source checks...</div>
+                ) : sourceHealthError ? (
+                  <div className="text-sm text-red-600">Unable to load source health right now.</div>
+                ) : unhealthySources.length === 0 ? (
+                  <div className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md px-3 py-2">
+                    All monitored sources are online.
+                  </div>
+                ) : (
+                  <div className="max-h-56 overflow-y-auto border rounded-md">
+                    <table className="w-full text-sm">
+                      <thead className="sticky top-0 bg-slate-50 text-slate-600">
+                        <tr className="text-left border-b">
+                          <th className="px-3 py-2 font-medium">Source</th>
+                          <th className="px-3 py-2 font-medium">Status</th>
+                          <th className="px-3 py-2 font-medium">Latency</th>
+                          <th className="px-3 py-2 font-medium">Checked</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {unhealthySources.map((s) => (
+                          <tr key={s.id} className="border-b last:border-b-0">
+                            <td className="px-3 py-2 text-slate-800">{s.name}</td>
+                            <td className="px-3 py-2">
+                              <Badge className={s.status === 'offline' ? 'bg-red-100 text-red-800 hover:bg-red-100' : 'bg-amber-100 text-amber-800 hover:bg-amber-100'}>
+                                {s.status}
+                              </Badge>
+                            </td>
+                            <td className="px-3 py-2 text-slate-600">
+                              {typeof s.responseTimeMs === 'number' ? `${Math.round(s.responseTimeMs)} ms` : 'n/a'}
+                            </td>
+                            <td className="px-3 py-2 text-slate-500">{new Date(s.checkedAt).toLocaleTimeString()}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* ── NATIONAL WATER HEALTH GAUGE ── */}
+            <Card className="overflow-hidden relative">
           {/* Demo Mode watermark */}
           {demoMode && (
             <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-10 flex items-start justify-center overflow-hidden">
@@ -1348,19 +1356,7 @@ Doug and the PIN team`;
           </Card>
         )}
 
-        {/* ════════════════════════════════════════════════════════════ */}
-        {/* ── OPERATIONS LENS ──────────────────────────────────────── */}
-        {/* ════════════════════════════════════════════════════════════ */}
-
-        {viewLens === 'operations' && (
-          <>
-            {/* GPM Calculator toggle */}
-            <div className="flex justify-end">
-              <Button variant="outline" size="sm" onClick={() => setShowGPMCalc(!showGPMCalc)}>
-                <Calculator size={14} className="mr-1" /> GPM Calc
-              </Button>
-            </div>
-{/* ── SENSOR ALERTS ── */}
+            {/* ── SENSOR ALERTS ── */}
             {allAlerts.length > 0 && (
               <Card>
                 <CardHeader className="pb-2">
