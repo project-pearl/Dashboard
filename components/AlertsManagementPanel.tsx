@@ -1084,8 +1084,45 @@ export function AlertsManagementPanel() {
 
       {tab === 'suppressions' && (
         <div className="space-y-3">
+          {/* Built-in Automatic Suppression */}
+          <Card className="border-indigo-200 bg-indigo-50/50">
+            <CardContent className="p-4 space-y-2.5">
+              <div className="flex items-center gap-2">
+                <Lock className="h-4 w-4 text-indigo-500" />
+                <span className="text-sm font-semibold text-indigo-800">Automatic Suppression</span>
+                <Badge variant="secondary" className="bg-indigo-100 text-indigo-600 text-[9px]">Always Active</Badge>
+              </div>
+              <p className="text-[11px] text-indigo-600/70 -mt-1">These suppression layers run automatically before manual suppressions are checked.</p>
+              <div className="space-y-1.5">
+                {[
+                  {
+                    name: 'Exact-Match Cooldown',
+                    desc: 'Each alert has a severity-based cooldown (critical: 15 min, warning: 1 hr, info: 4 hr). Identical dedupKeys are suppressed within this window.',
+                  },
+                  {
+                    name: 'Site-Level Throttle (4 hours)',
+                    desc: 'After an alert fires, the same site + parameter combo is suppressed for 4 hours regardless of severity. Prevents spam from persistent readings.',
+                  },
+                  {
+                    name: 'Rate Limit (20/hr)',
+                    desc: 'Maximum 20 alert emails per hour across all recipients. Excess alerts are queued for the next window.',
+                  },
+                ].map(rule => (
+                  <div key={rule.name} className="flex items-start gap-2.5 rounded-lg border border-indigo-200 bg-white/60 px-3 py-2">
+                    <ShieldOff className="h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-indigo-400" />
+                    <div className="min-w-0">
+                      <span className="text-xs font-semibold text-slate-800">{rule.name}</span>
+                      <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{rule.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Manual Suppressions */}
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-600">{suppressions.length} suppression{suppressions.length !== 1 ? 's' : ''}</span>
+            <span className="text-sm font-medium text-slate-600">{suppressions.length} manual suppression{suppressions.length !== 1 ? 's' : ''}</span>
             <button onClick={fetchSuppressions} className="flex items-center gap-1.5 text-xs text-cyan-600 hover:text-cyan-700 font-medium transition-colors">
               <RefreshCw className="h-3 w-3" /> Refresh
             </button>
