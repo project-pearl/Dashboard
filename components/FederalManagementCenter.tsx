@@ -100,7 +100,7 @@ type OverlayId = 'hotspots' | 'ms4' | 'ej' | 'economy' | 'wildlife' | 'trend' | 
 type ViewLens = 'overview' | 'briefing' | 'political-briefing' | 'trends' | 'policy' | 'compliance' |
   'water-quality' | 'public-health' | 'habitat-ecology' | 'agricultural-nps' |
   'infrastructure' | 'monitoring' | 'sentinel-monitoring' | 'disaster-emergency' | 'military-installations' |
-  'scorecard' | 'reports' | 'interagency' | 'funding' | 'grants' | 'training' | 'users';
+  'scorecard' | 'reports' | 'interagency' | 'funding' | 'training' | 'users';
 
 // ─── Water Quality Domain Tabs ────────────────────────────────────────────────
 const WQ_DOMAINS = [
@@ -350,24 +350,14 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set(['interagency-hub']),
   },
   funding: {
-    label: 'Funding',
-    description: 'SRF programs, capital planning, construction activity, and funding gap analysis',
+    label: 'Funding & Grants',
+    description: 'Available funding, eligibility, deadlines, and grant matching',
     defaultOverlay: 'hotspots',
     showTopStrip: false, showPriorityQueue: false, showCoverageGaps: false,
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['fund-srf', 'infra-capital', 'infra-construction', 'funding-gap']),
-  },
-  grants: {
-    label: 'Grants',
-    description: 'Grant opportunities, impairment matching, deadlines, and historical outcomes',
-    defaultOverlay: 'hotspots',
-    showTopStrip: false, showPriorityQueue: false, showCoverageGaps: false,
-    showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
-    showHotspots: false, showSituationSummary: false, showTimeRange: false,
-    showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['funding-landscape', 'funding-deadlines', 'grant-outcomes']),
+    sections: new Set(['fund-srf', 'infra-capital', 'infra-construction', 'funding-deadlines', 'grant-outcomes', 'funding-gap']),
   },
   training: {
     label: 'Training',
