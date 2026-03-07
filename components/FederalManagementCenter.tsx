@@ -1108,9 +1108,9 @@ export function FederalManagementCenter(props: Props) {
   }, [baseRegionData, attainsBulk]);
 
   const regionData = useMemo(() => {
-    if (!activeJurisdiction) return mergedRegionData;
+    if (federalMode || !activeJurisdiction) return mergedRegionData;
     return scopeRowsByJurisdiction(mergedRegionData, activeJurisdiction);
-  }, [mergedRegionData, activeJurisdiction]);
+  }, [mergedRegionData, activeJurisdiction, federalMode]);
 
   // ── ATTAINS National Cache Loader ──
   // Reads from server cache if available. Does NOT trigger a build.
@@ -1195,6 +1195,8 @@ export function FederalManagementCenter(props: Props) {
 
   // ── Sentinel Alert System ──
   const sentinel = useSentinelAlerts();
+  const liveSentinelAlertCount = sentinel.criticalHucs.length + sentinel.watchHucs.length + sentinel.advisoryHucs.length;
+  const liveSentinelSevereCount = sentinel.criticalHucs.length;
   const floodForecast = useFloodForecast();
   const floodRisk = useFloodRiskOverview();
   const amsSummary = useAlertSummary();
@@ -1972,7 +1974,7 @@ export function FederalManagementCenter(props: Props) {
     let totalAssessed = 0;
     let totalImpaired = 0; // Cat 4 + Cat 5
 
-    const scopedAttains = activeJurisdiction
+    const scopedAttains = (!federalMode && activeJurisdiction)
       ? Object.fromEntries(
         Object.entries(attainsBulk).filter(([abbr]) => abbr === activeJurisdiction.parent_state)
       )
@@ -2067,7 +2069,7 @@ export function FederalManagementCenter(props: Props) {
         ? Math.round((addressableCount / Object.values(causeCounts).reduce((s, c) => s + c, 0)) * 100) : 0,
       waterTypeCounts,
     };
-  }, [attainsBulk, activeJurisdiction]);
+  }, [attainsBulk, activeJurisdiction, federalMode]);
 
   // ── Federal top strip stats ──
   const topStrip = useMemo(() => {
@@ -2089,7 +2091,7 @@ export function FederalManagementCenter(props: Props) {
       totalStates: stateRollup.length,
       withData: nationalStats.assessed + nationalStats.monitored,
       noData: nationalStats.unmonitored,
-      severeCount: nationalStats.highAlerts,
+      severeCount: liveSentinelSevereCount,
       // Proper distinct counts from ATTAINS categories
       cat5Count: hasAttainsCategories ? attainsAggregation.cat5 : stateRollup.reduce((s, r) => s + r.high, 0),
       noTmdlCount: hasAttainsCategories ? attainsAggregation.cat5 : stateRollup.reduce((s, r) => s + r.high, 0),
@@ -2102,7 +2104,7 @@ export function FederalManagementCenter(props: Props) {
       highEJStates,
       sitesOnline: nationalStats.systemsOnline,
     };
-  }, [viewLens, stateRollup, nationalStats, overlayByState, attainsAggregation]);
+  }, [viewLens, stateRollup, nationalStats, overlayByState, attainsAggregation, liveSentinelSevereCount]);
 
   // ── National AI data prop for AIInsightsEngine ──
   const nationalAIData = useMemo(() => {
@@ -4810,8 +4812,8 @@ export function FederalManagementCenter(props: Props) {
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-4 text-center">
             <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Total Violations</div>
-            <div className={`text-3xl font-bold ${nationalStats.highAlerts > 0 ? 'text-red-600' : 'text-green-600'}`}>{nationalStats.totalAlerts?.toLocaleString()}</div>
-            <div className="text-[10px] text-slate-400 mt-1">{nationalStats.highAlerts} severe</div>
+            <div className={`text-3xl font-bold ${liveSentinelSevereCount > 0 ? 'text-red-600' : 'text-green-600'}`}>{liveSentinelAlertCount.toLocaleString()}</div>
+            <div className="text-[10px] text-slate-400 mt-1">{liveSentinelSevereCount} severe</div>
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-4 text-center">
             <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Impairment Rate</div>
@@ -4946,7 +4948,7 @@ export function FederalManagementCenter(props: Props) {
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { label: 'Active Alerts (Sentinel)', value: nationalStats.totalAlerts, color: 'text-red-600', sub: `${nationalStats.highAlerts} severe alerts` },
+            { label: 'Active Alerts (Sentinel)', value: liveSentinelAlertCount, color: 'text-red-600', sub: `${liveSentinelSevereCount} severe alerts` },
             { label: 'ATTAINS Assessments', value: scorecardData.totalAssessed, color: 'text-blue-600', sub: 'waterbodies assessed' },
             { label: 'Monitoring Coverage', value: `${scorecardData.coveragePct}%`, color: 'text-emerald-600', sub: 'assessed + monitored / tracked' },
             { label: 'States With Grades', value: scorecardData.gradedStates.length, color: 'text-violet-600', sub: 'states with sufficient grading data' },
@@ -5289,7 +5291,7 @@ export function FederalManagementCenter(props: Props) {
               <GrantOpportunityMatcher
                 regionId={selectedState.toLowerCase()}
                 removalEfficiencies={{ TSS: 90, TN: 45, TP: 55, bacteria: 85, DO: 30 }}
-                alertsCount={nationalStats.totalAlerts}
+                alertsCount={liveSentinelAlertCount}
                 userRole="Federal"
                 stateAbbr={selectedState}
               />
