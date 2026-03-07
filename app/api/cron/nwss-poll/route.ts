@@ -26,6 +26,7 @@ import {
   ALL_PATHOGENS, REGION_3_STATES,
   type PathogenType, type NWSSRecord, type NWSSCacheData, type NWSSPollState,
 } from '@/lib/nwss/types';
+import { isCronAuthorized } from '@/lib/apiAuth';
 
 function delay(ms: number): Promise<void> {
   return new Promise(r => setTimeout(r, ms));
@@ -36,10 +37,7 @@ function delay(ms: number): Promise<void> {
 /* ------------------------------------------------------------------ */
 
 export async function GET(request: NextRequest) {
-  // Auth check
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

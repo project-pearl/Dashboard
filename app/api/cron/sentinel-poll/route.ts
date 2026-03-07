@@ -51,6 +51,7 @@ import { ensureWarmed as warmNwss }    from '@/lib/nwss/nwssCache';
 import { ensureWarmed as warmNwps }    from '@/lib/nwpsCache';
 import { ensureWarmed as warmGaugeLookup } from '@/lib/nwpsGaugeLookup';
 import { ensureWarmed as warmAirQuality } from '@/lib/airQualityCache';
+import { isCronAuthorized } from '@/lib/apiAuth';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
@@ -130,10 +131,7 @@ const ADAPTERS: AdapterEntry[] = [
 /* ------------------------------------------------------------------ */
 
 export async function GET(request: NextRequest) {
-  // Auth check
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

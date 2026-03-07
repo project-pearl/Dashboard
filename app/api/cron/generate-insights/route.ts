@@ -35,6 +35,7 @@ import {
   ALL_ROLES, buildSystemPrompt, getConfiguredLLMCaller,
   parseInsights, sleep, type Role,
 } from '@/lib/llmHelpers';
+import { isCronAuthorized } from '@/lib/apiAuth';
 
 // ─── Concurrency semaphore ──────────────────────────────────────────────────
 
@@ -62,9 +63,7 @@ const MAX_ENTRY_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
 // ─── GET Handler (invoked by Vercel Cron) ────────────────────────────────────
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

@@ -23,15 +23,13 @@ import { evaluateCoordinationAlerts } from '@/lib/alerts/triggers/coordinationTr
 import { dispatchAlerts } from '@/lib/alerts/engine';
 import { ALERT_FLAGS } from '@/lib/alerts/config';
 import type { AttackClassification } from '@/lib/sentinel/types';
+import { isCronAuthorized } from '@/lib/apiAuth';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
 
 export async function GET(request: NextRequest) {
-  // Auth check
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

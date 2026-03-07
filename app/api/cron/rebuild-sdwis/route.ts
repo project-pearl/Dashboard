@@ -23,6 +23,7 @@ const CONCURRENCY = 10;
 
 import { ALL_STATES } from '@/lib/constants';
 import zipCentroids from '@/lib/zipCentroids.json';
+import { isCronAuthorized } from '@/lib/apiAuth';
 
 // ── Paginated fetch helper ──────────────────────────────────────────────────
 
@@ -161,9 +162,7 @@ function lookupZips(
 // ── GET Handler ──────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

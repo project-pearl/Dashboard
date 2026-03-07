@@ -25,6 +25,7 @@ const CONCURRENCY = 6;
 const DL_QCOLS = '1,2,3,4,5,9,24,25,97,98,99,101';
 
 import { ALL_STATES } from '@/lib/constants';
+import { isCronAuthorized } from '@/lib/apiAuth';
 
 // ── CSV parser (no external deps) ───────────────────────────────────────────
 
@@ -286,10 +287,7 @@ async function enrichWithNoncompliance(
 // ── GET Handler ──────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
-  // Auth check
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -429,7 +427,7 @@ export async function GET(request: NextRequest) {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
     fetch(`${baseUrl}/api/cron/sentinel-poll?forceSource=ECHO_ENFORCEMENT`, {
-      headers: { Authorization: `Bearer ${cronSecret}` },
+      headers: { Authorization: `Bearer ${process.env.CRON_SECRET}` },
       signal: AbortSignal.timeout(10_000),
     }).catch(() => {});
 

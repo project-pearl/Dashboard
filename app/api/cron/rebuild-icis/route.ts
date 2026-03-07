@@ -17,16 +17,14 @@ import {
 import { getOrRefresh } from '@/lib/supabaseCache';
 import { fetchIcisForState, type IcisStateSnapshot } from '@/lib/icisStateFetcher';
 import { ALL_STATES } from '@/lib/constants';
+import { isCronAuthorized } from '@/lib/apiAuth';
 
 const CONCURRENCY = 6;
 
 // ── GET Handler ──────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
-  // Auth check
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

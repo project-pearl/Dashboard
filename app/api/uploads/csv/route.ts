@@ -33,6 +33,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields: csv_text, user_id, user_role' }, { status: 400 });
     }
 
+    if (csv_text.length > 10_000_000) {
+      return NextResponse.json({ error: 'File too large (10MB max)' }, { status: 413 });
+    }
+
     if (user_role !== 'NGO' && user_role !== 'K12') {
       return NextResponse.json({ error: 'user_role must be NGO or K12' }, { status: 400 });
     }
@@ -46,6 +50,10 @@ export async function POST(request: NextRequest) {
 
     if (parsed.errors.length > 0 && parsed.data.length === 0) {
       return NextResponse.json({ error: 'Failed to parse CSV', details: parsed.errors.slice(0, 5) }, { status: 400 });
+    }
+
+    if (parsed.data.length > 100_000) {
+      return NextResponse.json({ error: 'Too many rows (100K max)' }, { status: 413 });
     }
 
     // Build column mapping: detect which CSV columns map to PEARL params

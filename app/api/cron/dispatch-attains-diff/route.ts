@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ALERT_FLAGS, BUILD_LOCK_TIMEOUT_MS } from '@/lib/alerts/config';
 import { dispatchAlerts } from '@/lib/alerts/engine';
 import { evaluateAttainsAlerts } from '@/lib/alerts/triggers/attainsTrigger';
+import { isCronAuthorized } from '@/lib/apiAuth';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
@@ -32,10 +33,7 @@ function isBuildInProgress(): boolean {
 /* ------------------------------------------------------------------ */
 
 export async function GET(request: NextRequest) {
-  // Auth check
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

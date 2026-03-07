@@ -21,6 +21,7 @@ const WQP_BASE = 'https://www.waterqualitydata.us/data/Result/search';
 const CONCURRENCY = 8;  // Parallel state fetches (respects WQP rate limits)
 
 import { ALL_STATES_WITH_FIPS, PRIORITY_STATES_WITH_FIPS } from '@/lib/constants';
+import { isCronAuthorized } from '@/lib/apiAuth';
 
 // Top characteristics to fetch (maps to PEARL keys)
 const CHARACTERISTICS = [
@@ -269,10 +270,7 @@ async function fetchRotatingStationSummaries(
 // ── GET Handler ──────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
-  // Auth check
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

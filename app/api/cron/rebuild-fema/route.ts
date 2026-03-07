@@ -28,6 +28,7 @@ const WATER_INCIDENT_TYPES = new Set([
 ]);
 
 import { ALL_STATES } from '@/lib/constants';
+import { isCronAuthorized } from '@/lib/apiAuth';
 
 // ── NFIP Community Status Fetch ─────────────────────────────────────────────
 
@@ -109,9 +110,7 @@ async function fetchAllNfipCommunities(): Promise<{ total: number; states: numbe
 // ── GET Handler ──────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

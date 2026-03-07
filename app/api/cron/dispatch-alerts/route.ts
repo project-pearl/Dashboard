@@ -17,6 +17,7 @@ import { evaluateHabAlerts } from '@/lib/alerts/triggers/habTrigger';
 import { evaluateBeaconAlerts } from '@/lib/alerts/triggers/beaconTrigger';
 import { loadRules, evaluateRules } from '@/lib/alerts/rules';
 import type { AlertEvent } from '@/lib/alerts/types';
+import { isCronAuthorized } from '@/lib/apiAuth';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -41,10 +42,7 @@ function isBuildInProgress(): boolean {
 /* ------------------------------------------------------------------ */
 
 export async function GET(request: NextRequest) {
-  // Auth check
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -113,7 +111,7 @@ export async function GET(request: NextRequest) {
     try {
       // Fetch current deployment readings from the deployments API
       const depRes = await fetch(new URL('/api/deployments/readings', request.url).toString(), {
-        headers: cronSecret ? { authorization: `Bearer ${cronSecret}` } : {},
+        headers: process.env.CRON_SECRET ? { authorization: `Bearer ${process.env.CRON_SECRET}` } : {},
       }).catch(() => null);
       if (depRes?.ok) {
         const depData = await depRes.json();

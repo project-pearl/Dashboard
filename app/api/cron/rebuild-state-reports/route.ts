@@ -7,12 +7,10 @@ export const maxDuration = 300;
 
 import { NextRequest, NextResponse } from 'next/server';
 import { buildStateReports } from '@/lib/stateReportCache';
+import { isCronAuthorized } from '@/lib/apiAuth';
 
 export async function GET(request: NextRequest) {
-  // Auth check
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

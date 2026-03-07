@@ -13,6 +13,7 @@ import {
   setAirQualityBuildInProgress,
   type AirQualityStateReading,
 } from '@/lib/airQualityCache';
+import { isCronAuthorized } from '@/lib/apiAuth';
 
 const OPEN_METEO_BASE = 'https://air-quality-api.open-meteo.com/v1/air-quality';
 const AIRNOW_BASE = 'https://www.airnowapi.org/aq/observation/latLong/current/';
@@ -251,9 +252,7 @@ async function fetchStateAirQuality(state: string, lat: number, lng: number): Pr
 }
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

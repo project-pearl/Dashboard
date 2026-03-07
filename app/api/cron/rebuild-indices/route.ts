@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { ensureWarmed as warmWqp } from '@/lib/wqpCache';
 import { ensureWarmed as warmIcis } from '@/lib/icisCache';
 import { ensureWarmed as warmSdwis } from '@/lib/sdwisCache';
@@ -27,14 +27,13 @@ import {
 } from '@/lib/indices/indicesCache';
 import type { HucIndices, IndexScore } from '@/lib/indices/types';
 import { HUC_BATCH_SIZE } from '@/lib/indices/config';
+import { isCronAuthorized } from '@/lib/apiAuth';
 
 export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: Request) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+export async function GET(request: NextRequest) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

@@ -38,6 +38,7 @@ import {
 import { buildAllAssessments } from '@/lib/analytics/comprehensiveAssessment';
 import { saveCacheToBlob } from '@/lib/blobPersistence';
 import { saveCacheToDisk } from '@/lib/cacheUtils';
+import { isCronAuthorized } from '@/lib/apiAuth';
 
 // ── Assessment Cache (simple in-memory + disk + blob) ────────────────────────
 
@@ -133,10 +134,7 @@ function compileSnapshot(
 // ── Route Handler ────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
-  // Auth check
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

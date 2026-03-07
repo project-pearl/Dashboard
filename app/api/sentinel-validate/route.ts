@@ -10,10 +10,9 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
 
 export async function GET(request: Request) {
-  // Auth check — require CRON_SECRET
-  const authHeader = request.headers.get('authorization');
-  const expected = process.env.CRON_SECRET;
-  if (expected && authHeader !== `Bearer ${expected}`) {
+  // Auth check — fail closed when CRON_SECRET is unset
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret || request.headers.get('authorization') !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -27,6 +26,7 @@ export async function GET(request: Request) {
     return NextResponse.json(report);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('[sentinel-validate] Error:', message);
+    return NextResponse.json({ error: 'Validation error' }, { status: 500 });
   }
 }

@@ -22,6 +22,7 @@ const MAX_PAGES_PER_STATE = 1; // Cap at 5000 facilities per state (API crashes 
 const CONCURRENCY = 6;
 
 import { ALL_STATES } from '@/lib/constants';
+import { isCronAuthorized } from '@/lib/apiAuth';
 
 // ── Paginated fetch helper ──────────────────────────────────────────────────
 
@@ -98,10 +99,7 @@ function transformFacility(row: Record<string, any>): FrsFacility | null {
 // ── GET Handler ──────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
-  // Auth check
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

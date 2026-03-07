@@ -11,6 +11,7 @@ import {
   isGrantsGovBuildInProgress, setGrantsGovBuildInProgress,
   type GrantsGovOpportunity,
 } from '@/lib/grantsGovCache';
+import { isCronAuthorized } from '@/lib/apiAuth';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -86,9 +87,7 @@ async function runWithSemaphore<T>(tasks: (() => Promise<T>)[], concurrency: num
 // ── GET Handler ──────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

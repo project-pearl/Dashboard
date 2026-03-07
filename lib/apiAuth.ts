@@ -39,3 +39,14 @@ export function isAuthorized(request: NextRequest): boolean {
 
   return false;
 }
+
+/**
+ * Fail-closed cron auth: returns false when CRON_SECRET is unset,
+ * preventing unauthenticated access if the env var is missing.
+ */
+export function isCronAuthorized(request: NextRequest): boolean {
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) return false;
+  const authHeader = request.headers.get('authorization');
+  return authHeader === `Bearer ${cronSecret}`;
+}

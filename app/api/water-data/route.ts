@@ -165,7 +165,7 @@ async function wqpResultsFetch(params: Record<string, any> = {}) {
 // Replaces MARACOOS ERDDAP (frozen at 2018). Real-time temp, salinity, conductivity.
 // API docs: https://mw.buoybay.noaa.gov/api/v1
 const CBIBS_BASE = 'https://mw.buoybay.noaa.gov/api/v1';
-const CBIBS_API_KEY = process.env.CBIBS_API_KEY || 'e824512c1a763440b7fd909ffac81705f76b213e'; // test key
+const CBIBS_API_KEY = process.env.CBIBS_API_KEY || '';
 
 // CBIBS stations mapped to PEARL regions
 const CBIBS_STATION_MAP: Record<string, { stationCode: string; name: string; lat: number; lng: number }> = {

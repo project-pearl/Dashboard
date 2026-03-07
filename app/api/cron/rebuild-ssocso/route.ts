@@ -16,6 +16,7 @@ import {
 import { ALL_STATES } from '@/lib/constants';
 import { enqueueEvents } from '@/lib/sentinel/eventQueue';
 import type { ChangeEvent, SeverityHint } from '@/lib/sentinel/types';
+import { isCronAuthorized } from '@/lib/apiAuth';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -103,9 +104,7 @@ function volumeToSeverity(volume: number | null): SeverityHint {
 // ── GET Handler ──────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

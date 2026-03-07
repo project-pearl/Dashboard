@@ -15,6 +15,7 @@ import {
   setHuc12Summaries,
   type Huc12Summary,
 } from '@/lib/attainsCache';
+import { isCronAuthorized } from '@/lib/apiAuth';
 
 // Vercel Pro max is 300s — request 300s, budget 240s (leave margin for response)
 export const maxDuration = 300;
@@ -140,10 +141,7 @@ async function triggerNextChunk(cronSecret: string | undefined, deferred: string
 }
 
 export async function GET(request: NextRequest) {
-  // Auth check
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -212,7 +210,7 @@ export async function GET(request: NextRequest) {
     // Must await to keep function alive until the request reaches Vercel's edge
     const willChain = remaining > 0;
     if (willChain) {
-      await triggerNextChunk(cronSecret, newDeferred, depth);
+      await triggerNextChunk(process.env.CRON_SECRET, newDeferred, depth);
     }
 
     return NextResponse.json({

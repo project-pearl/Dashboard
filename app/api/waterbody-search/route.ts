@@ -111,8 +111,9 @@ export async function GET(request: NextRequest) {
           { status: 400 },
         );
     }
-  } catch (e: any) {
-    console.error('[waterbody-search]', e.message);
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    console.error('[waterbody-search]', message);
     return NextResponse.json({ error: 'Search failed' }, { status: 500 });
   }
 }

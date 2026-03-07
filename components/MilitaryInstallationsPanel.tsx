@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Shield, AlertTriangle, Activity, Building2, Biohazard, Info, BellRing, Clock3, Gauge, Radar, ShieldAlert, Beaker, MapPin, TimerReset, CheckCircle2, XCircle } from 'lucide-react';
+import { Shield, AlertTriangle, Activity, Building2, Biohazard, Info, BellRing, Clock3, Gauge, Radar, ShieldAlert, Beaker, MapPin, TimerReset, CheckCircle2, XCircle, Droplets, CloudLightning, Factory, BarChart3, TrendingUp, Skull, Gavel } from 'lucide-react';
 
 interface MilitaryInstallationsPanelProps {
   selectedState: string;
@@ -60,17 +60,45 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
     results: Array<{ facilityName: string; state: string; contaminant: string; resultValue: number | null; detected: boolean; sampleDate: string; lat: number; lng: number }>;
   } | null>(null);
 
+  const [nwsData, setNwsData] = useState<{
+    totalAlerts: number;
+    severityCounts: Record<string, number>;
+    topAlerts: Array<{ id: string; event: string; severity: string; areaDesc: string; onset: string | null; expires: string | null; headline: string }>;
+  } | null>(null);
+
+  const [superfundData, setSuperfundData] = useState<{
+    totalSites: number;
+    activeNpl: number;
+    proposedNpl: number;
+    byState: Record<string, number>;
+    topBySiteScore: Array<{ siteEpaId: string; siteName: string; stateAbbr: string; city: string; status: string; siteScore: number; listingDate: string | null }>;
+  } | null>(null);
+
+  const [triData, setTriData] = useState<{
+    totalFacilities: number;
+    totalReleases: number;
+    carcinogenFacilities: number;
+    topFacilities: Array<{ facilityName: string; state: string; totalReleases: number; carcinogenReleases: number; topChemical: string }>;
+  } | null>(null);
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [icisRes, pfasRes] = await Promise.all([
+        const stateParam = selectedState ? `?state=${encodeURIComponent(selectedState)}` : '';
+        const [icisRes, pfasRes, nwsRes, superfundRes, triRes] = await Promise.all([
           fetch('/api/icis/national-summary'),
           fetch('/api/pfas/national-summary'),
+          fetch(`/api/nws-alerts${stateParam}`),
+          fetch(`/api/superfund-sites${stateParam}`),
+          fetch('/api/tri-releases/emergency-summary'),
         ]);
         if (icisRes.ok) setIcisData(await icisRes.json());
         if (pfasRes.ok) setPfasData(await pfasRes.json());
+        if (nwsRes.ok) setNwsData(await nwsRes.json());
+        if (superfundRes.ok) setSuperfundData(await superfundRes.json());
+        if (triRes.ok) setTriData(await triRes.json());
       } catch (e) {
         console.error('[MilitaryInstallations] data fetch failed:', e);
       } finally {
@@ -78,7 +106,7 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
       }
     }
     fetchData();
-  }, []);
+  }, [selectedState]);
 
   // Derived: filter to military/DOD facilities
   const militaryPermits = useMemo(
@@ -303,6 +331,174 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
       complianceSignals24h: violations24h.length,
     };
   }, [selectedState, militaryPermits, militaryViolations, militaryEnforcement, militaryInspections, pfasDetections, facilityRows, stateComplianceRows, icisData, pfasData]);
+
+  // ── Card 1: Drinking Water Readiness ──
+  const waterReadiness = useMemo(() => {
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const scopePermitIds = selectedState
+      ? new Set(militaryPermits.filter((p) => p.state.toUpperCase() === selectedState.toUpperCase()).map((p) => p.permit))
+      : milPermitIds;
+    const scopeViolations = militaryViolations.filter((v) => scopePermitIds.has(v.permit));
+
+    const recentRnc = scopeViolations.filter((v) => {
+      const d = safeDate(v.date);
+      return (v.rnc || v.severity.toLowerCase().includes('high')) && d && d >= thirtyDaysAgo;
+    });
+    const activeViolations = scopeViolations.length;
+    const affectedSystems = new Set(scopeViolations.map((v) => v.permit)).size;
+
+    // Top contaminant by frequency
+    const contCounts = new Map<string, number>();
+    for (const v of scopeViolations) {
+      const label = v.desc || v.code || 'Unknown';
+      contCounts.set(label, (contCounts.get(label) || 0) + 1);
+    }
+    const topContaminant = [...contCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || 'None';
+
+    // Days since last violation
+    const latestDate = scopeViolations.reduce((latest, v) => {
+      const d = safeDate(v.date);
+      return d && (!latest || d > latest) ? d : latest;
+    }, null as Date | null);
+    const daysSinceLast = latestDate ? Math.floor((now.getTime() - latestDate.getTime()) / (1000 * 60 * 60 * 24)) : null;
+
+    const status: 'NO-GO' | 'CAUTION' | 'GO' = recentRnc.length > 0 ? 'NO-GO' : activeViolations > 0 ? 'CAUTION' : 'GO';
+
+    return { status, activeViolations, affectedSystems, topContaminant, daysSinceLast };
+  }, [selectedState, militaryPermits, milPermitIds, militaryViolations]);
+
+  // ── Card 2: PFAS Exposure Alert ──
+  const pfasAlert = useMemo(() => {
+    const scopePfas = selectedState
+      ? pfasDetections.filter((r) => r.state.toUpperCase() === selectedState.toUpperCase())
+      : pfasDetections;
+    const total = scopePfas.length;
+    const maxConc = scopePfas.reduce((mx, r) => Math.max(mx, r.resultValue ?? 0), 0);
+
+    const compCounts = new Map<string, number>();
+    for (const r of scopePfas) compCounts.set(r.contaminant, (compCounts.get(r.contaminant) || 0) + 1);
+    const top3 = [...compCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([c]) => c);
+
+    const light: 'RED' | 'AMBER' | 'GREEN' = total > 10 ? 'RED' : total > 0 ? 'AMBER' : 'GREEN';
+
+    return { total, maxConc, top3, light };
+  }, [selectedState, pfasDetections]);
+
+  // ── Card 3: Contamination Proximity ──
+  const contaminationProximity = useMemo(() => {
+    const nplSites = superfundData?.topBySiteScore ?? [];
+    const triFacilities = triData?.topFacilities ?? [];
+    // Filter TRI to state if selected
+    const scopeTri = selectedState
+      ? triFacilities.filter((f) => f.state.toUpperCase() === selectedState.toUpperCase())
+      : triFacilities;
+
+    // Merge threats: NPL by site score, TRI by total releases
+    type Threat = { name: string; type: 'NPL' | 'TRI'; severity: number; detail: string };
+    const threats: Threat[] = [];
+    for (const s of nplSites.slice(0, 5)) {
+      threats.push({ name: s.siteName, type: 'NPL', severity: s.siteScore, detail: `Score ${s.siteScore.toFixed(1)} — ${s.city}, ${s.stateAbbr}` });
+    }
+    for (const f of scopeTri.slice(0, 5)) {
+      threats.push({ name: f.facilityName, type: 'TRI', severity: f.totalReleases, detail: `${f.totalReleases.toLocaleString()} lbs — ${f.topChemical}` });
+    }
+    threats.sort((a, b) => b.severity - a.severity);
+
+    return {
+      nplCount: superfundData?.activeNpl ?? 0,
+      triCount: triData?.totalFacilities ?? 0,
+      carcinogenCount: triData?.carcinogenFacilities ?? 0,
+      top3: threats.slice(0, 3),
+    };
+  }, [selectedState, superfundData, triData]);
+
+  // ── Card 4: Weather Threat Assessment ──
+  const weatherThreat = useMemo(() => {
+    if (!nwsData) return null;
+    const { severityCounts, topAlerts } = nwsData;
+    const extremeSevere = (severityCounts['Extreme'] || 0) + (severityCounts['Severe'] || 0);
+    const floodAlerts = topAlerts.filter((a) => /flood/i.test(a.event));
+    const mostSevere = topAlerts[0] || null;
+
+    return { totalAlerts: nwsData.totalAlerts, extremeSevere, floodCount: floodAlerts.length, severityCounts, mostSevere };
+  }, [nwsData]);
+
+  // ── Card 5: Compliance Countdown ──
+  const complianceCountdown = useMemo(() => {
+    const now = new Date();
+    const d30 = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const d90 = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
+    const d180 = new Date(now.getTime() + 180 * 24 * 60 * 60 * 1000);
+    const sixMonthsAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+
+    const scopePermits = selectedState
+      ? militaryPermits.filter((p) => p.state.toUpperCase() === selectedState.toUpperCase())
+      : militaryPermits;
+    const scopePermitIds = new Set(scopePermits.map((p) => p.permit));
+    const scopeInspections = militaryInspections.filter((i) => scopePermitIds.has(i.permit));
+    const scopeEnforcement = militaryEnforcement.filter((e) => scopePermitIds.has(e.permit));
+
+    const expiring30 = scopePermits.filter((p) => { const d = safeDate(p.expiration); return d && d >= now && d <= d30; }).length;
+    const expiring90 = scopePermits.filter((p) => { const d = safeDate(p.expiration); return d && d > d30 && d <= d90; }).length;
+    const expiring180 = scopePermits.filter((p) => { const d = safeDate(p.expiration); return d && d > d90 && d <= d180; }).length;
+
+    const inspectedIds = new Set(scopeInspections.filter((i) => { const d = safeDate(i.date); return d && d >= sixMonthsAgo; }).map((i) => i.permit));
+    const uninspected = scopePermits.filter((p) => !inspectedIds.has(p.permit)).length;
+
+    const lastEnforcement = scopeEnforcement.reduce((latest, e) => {
+      const d = safeDate(e.settlementDate);
+      return d && (!latest || d > latest) ? d : latest;
+    }, null as Date | null);
+    const daysSinceEnforcement = lastEnforcement ? Math.floor((now.getTime() - lastEnforcement.getTime()) / (1000 * 60 * 60 * 24)) : null;
+
+    return { expiring30, expiring90, expiring180, uninspected, daysSinceEnforcement };
+  }, [selectedState, militaryPermits, militaryInspections, militaryEnforcement]);
+
+  // ── Card 6: Enforcement Exposure ──
+  const enforcementExposure = useMemo(() => {
+    const scopeEnf = selectedState
+      ? militaryEnforcement.filter((e) => {
+          const p = militaryPermits.find((p2) => p2.permit === e.permit);
+          return p && p.state.toUpperCase() === selectedState.toUpperCase();
+        })
+      : militaryEnforcement;
+
+    const totalAssessed = scopeEnf.reduce((s, e) => s + (e.penaltyAssessed || 0), 0);
+    const totalCollected = scopeEnf.reduce((s, e) => s + (e.penaltyCollected || 0), 0);
+    const openCases = scopeEnf.length;
+    const avgPenalty = openCases > 0 ? totalAssessed / openCases : 0;
+
+    return { totalAssessed, totalCollected, openCases, avgPenalty };
+  }, [selectedState, militaryEnforcement, militaryPermits]);
+
+  // ── Card 7: Installation Ranking ──
+  const installationRanking = useMemo(() => {
+    const allDodViolationCounts = facilityRows.map((f) => f.violationCount);
+    if (allDodViolationCounts.length === 0) return null;
+
+    const scopePermits = selectedState
+      ? militaryPermits.filter((p) => p.state.toUpperCase() === selectedState.toUpperCase())
+      : militaryPermits;
+    const scopePermitIds = new Set(scopePermits.map((p) => p.permit));
+    const scopeViolations = militaryViolations.filter((v) => scopePermitIds.has(v.permit));
+    const myViolations = scopeViolations.length;
+
+    const sorted = [...allDodViolationCounts].sort((a, b) => a - b);
+    const medianIdx = Math.floor(sorted.length / 2);
+    const median = sorted.length % 2 === 0 ? (sorted[medianIdx - 1] + sorted[medianIdx]) / 2 : sorted[medianIdx];
+
+    const belowCount = sorted.filter((v) => v < myViolations).length;
+    const percentile = Math.round((belowCount / sorted.length) * 100);
+
+    const compliantCount = scopePermits.filter((p) => !scopeViolations.some((v) => v.permit === p.permit)).length;
+    const complianceRate = scopePermits.length > 0 ? Math.round((compliantCount / scopePermits.length) * 100) : 100;
+
+    const allDodCompliant = militaryPermits.filter((p) => !militaryViolations.some((v) => v.permit === p.permit)).length;
+    const dodAvgRate = militaryPermits.length > 0 ? Math.round((allDodCompliant / militaryPermits.length) * 100) : 100;
+
+    return { myViolations, median, percentile, complianceRate, dodAvgRate, totalFacilities: scopePermits.length };
+  }, [selectedState, militaryPermits, militaryViolations, facilityRows]);
 
   // Loading / error states
   if (loading) {

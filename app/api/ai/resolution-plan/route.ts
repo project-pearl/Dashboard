@@ -28,7 +28,8 @@ export async function POST(request: NextRequest) {
 
   if (!res.ok) {
     const body = await res.text().catch(() => '');
-    return NextResponse.json({ error: `OpenAI API error: ${res.status}`, detail: body.slice(0, 500) }, { status: res.status });
+    console.error(`[resolution-plan] OpenAI API error ${res.status}: ${body.slice(0, 500)}`);
+    return NextResponse.json({ error: 'AI service error' }, { status: 502 });
   }
 
   const data = await res.json();

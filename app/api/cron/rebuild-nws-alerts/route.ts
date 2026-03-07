@@ -12,6 +12,7 @@ import {
   type NwsAlert,
 } from '@/lib/nwsAlertCache';
 import { ALL_STATES } from '@/lib/constants';
+import { isCronAuthorized } from '@/lib/apiAuth';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -271,9 +272,7 @@ async function enrichFloodAlertsWithPrecip(
 // ── GET Handler ──────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

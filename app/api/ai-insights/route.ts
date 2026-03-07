@@ -104,9 +104,10 @@ export async function POST(request: NextRequest) {
         cacheStatus = 'miss';
         console.log(`[AI-Insights] Cache miss for ${requestState}:${requestRole} — falling through to on-demand LLM`);
       }
-    } catch (cacheErr: any) {
+    } catch (cacheErr: unknown) {
       cacheStatus = 'error';
-      console.warn(`[AI-Insights] Cache lookup failed: ${cacheErr.message} — proceeding to on-demand LLM`);
+      const msg = cacheErr instanceof Error ? cacheErr.message : 'Unknown error';
+      console.warn(`[AI-Insights] Cache lookup failed: ${msg} — proceeding to on-demand LLM`);
     }
 
     if (!OPENAI_API_KEY) {
@@ -119,11 +120,11 @@ export async function POST(request: NextRequest) {
     let rawText = '';
     try {
       rawText = await callOpenAI(OPENAI_API_KEY, systemPrompt, userMessage);
-    } catch (llmErr: any) {
-      const msg = llmErr.message || 'Unknown LLM error';
+    } catch (llmErr: unknown) {
+      const msg = llmErr instanceof Error ? llmErr.message : 'Unknown LLM error';
       console.error(`[AI-Insights] OpenAI call failed for ${requestState}:${requestRole}: ${msg}`);
       return NextResponse.json(
-        { error: `OpenAI call failed: ${msg}`, stage: 'llm-call', provider: 'openai', state: requestState, role: requestRole, cacheStatus, insights: [] },
+        { error: 'AI service unavailable', stage: 'llm-call', cacheStatus, insights: [] },
         { status: 502 }
       );
     }
@@ -167,10 +168,11 @@ export async function POST(request: NextRequest) {
       cacheStatus,
     });
 
-  } catch (err: any) {
-    console.error('[AI-Insights] Unhandled error:', err.message || err);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error('[AI-Insights] Unhandled error:', message);
     return NextResponse.json(
-      { error: err.message || 'Failed to generate insights', stage: 'unhandled', insights: [], detail: String(err.message || '').slice(0, 300) },
+      { error: 'Failed to generate insights', stage: 'unhandled', insights: [] },
       { status: 500 }
     );
   }

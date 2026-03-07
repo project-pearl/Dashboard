@@ -29,6 +29,7 @@ const CONCURRENCY = 3;           // Fetch 3 states at a time within budget
 const GW_PARAMS = '72019,62610,62611';
 
 import { ALL_STATES } from '@/lib/constants';
+import { isCronAuthorized } from '@/lib/apiAuth';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -313,10 +314,7 @@ async function triggerNextChunk(
 // ── GET Handler ──────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
-  // Auth check
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -509,7 +507,7 @@ export async function GET(request: NextRequest) {
 
     if (willChain) {
       const chainOffset = moreStates ? nextOffset : ALL_STATES.length;
-      await triggerNextChunk(cronSecret, chainOffset, depth, failedStates);
+      await triggerNextChunk(process.env.CRON_SECRET, chainOffset, depth, failedStates);
     }
 
     setNwisGwBuildInProgress(false);

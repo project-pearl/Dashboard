@@ -13,6 +13,7 @@ import {
   type TriFacility,
 } from '@/lib/triCache';
 import { ALL_STATES } from '@/lib/constants';
+import { isCronAuthorized } from '@/lib/apiAuth';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -141,9 +142,7 @@ async function fetchStateTRI(state: string): Promise<TriFacility[]> {
 // ── GET Handler ──────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
