@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Shield, AlertTriangle, Activity, Building2, Biohazard, Info, BellRing, Clock3, Gauge, Radar, ShieldAlert, Beaker, MapPin, TimerReset, CheckCircle2, XCircle, Droplets, CloudLightning, Factory, BarChart3, TrendingUp, Skull, Gavel } from 'lucide-react';
+import { Shield, AlertTriangle, Activity, Building2, Biohazard, Info, BellRing, Clock3, Gauge, Radar, ShieldAlert, Beaker, MapPin, TimerReset, CheckCircle2, XCircle, Droplets, CloudLightning, BarChart3, Skull, Gavel } from 'lucide-react';
 
 interface MilitaryInstallationsPanelProps {
   selectedState: string;
@@ -693,6 +693,266 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
           </div>
         </CardContent>
       </Card>
+
+      {/* ── Commander Cards: Life Safety Row ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Card 1: Drinking Water Readiness */}
+        <Card className="border-slate-700 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-slate-100">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Droplets className="w-5 h-5 text-cyan-300" />
+                <span className="text-xs uppercase tracking-wider text-cyan-300 font-semibold">Drinking Water Readiness</span>
+              </div>
+              <Badge className={`text-xs px-3 py-1 font-bold ${waterReadiness.status === 'NO-GO' ? 'bg-red-600 text-white border-red-400' : waterReadiness.status === 'CAUTION' ? 'bg-amber-500 text-slate-900 border-amber-300' : 'bg-emerald-500 text-slate-900 border-emerald-300'}`}>
+                {waterReadiness.status}
+              </Badge>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-400 uppercase">Systems</div>
+                <div className="text-lg font-bold text-white mt-0.5">{waterReadiness.affectedSystems}</div>
+              </div>
+              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-400 uppercase">Violations</div>
+                <div className="text-lg font-bold text-white mt-0.5">{waterReadiness.activeViolations}</div>
+              </div>
+              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-400 uppercase">Days Clear</div>
+                <div className="text-lg font-bold text-white mt-0.5">{waterReadiness.daysSinceLast ?? '—'}</div>
+              </div>
+            </div>
+            <div className="mt-2 text-xs text-slate-400">
+              Top contaminant: <span className="text-slate-200">{waterReadiness.topContaminant}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Card 2: PFAS Exposure Alert */}
+        <Card className="border-slate-700 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-slate-100">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Biohazard className="w-5 h-5 text-purple-400" />
+                <span className="text-xs uppercase tracking-wider text-cyan-300 font-semibold">PFAS Exposure Alert</span>
+              </div>
+              <Badge className={`text-xs px-3 py-1 font-bold ${pfasAlert.light === 'RED' ? 'bg-red-600 text-white border-red-400' : pfasAlert.light === 'AMBER' ? 'bg-amber-500 text-slate-900 border-amber-300' : 'bg-emerald-500 text-slate-900 border-emerald-300'}`}>
+                {pfasAlert.light}
+              </Badge>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-400 uppercase">Detections</div>
+                <div className="text-lg font-bold text-white mt-0.5">{pfasAlert.total.toLocaleString()}</div>
+              </div>
+              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-400 uppercase">Max Conc.</div>
+                <div className="text-lg font-bold text-white mt-0.5">{pfasAlert.maxConc > 0 ? pfasAlert.maxConc.toLocaleString() : '—'}</div>
+              </div>
+            </div>
+            {pfasAlert.top3.length > 0 && (
+              <div className="mt-2 text-xs text-slate-400">
+                Top compounds: <span className="text-slate-200">{pfasAlert.top3.join(', ')}</span>
+              </div>
+            )}
+            {pfasAlert.total === 0 && (
+              <div className="mt-2 text-xs text-slate-400 italic">No PFAS detections in current scope</div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ── Commander Cards: Threat Assessment Row ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Card 3: Contamination Proximity */}
+        <Card className="border-slate-700 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-slate-100">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Skull className="w-5 h-5 text-red-400" />
+              <span className="text-xs uppercase tracking-wider text-cyan-300 font-semibold">Contamination Proximity</span>
+            </div>
+            <div className="grid grid-cols-3 gap-3 mb-3">
+              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-400 uppercase">NPL Sites</div>
+                <div className="text-lg font-bold text-white mt-0.5">{contaminationProximity.nplCount}</div>
+              </div>
+              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-400 uppercase">TRI Facilities</div>
+                <div className="text-lg font-bold text-white mt-0.5">{contaminationProximity.triCount}</div>
+              </div>
+              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-400 uppercase">Carcinogen</div>
+                <div className={`text-lg font-bold mt-0.5 ${contaminationProximity.carcinogenCount > 0 ? 'text-red-400' : 'text-white'}`}>{contaminationProximity.carcinogenCount}</div>
+              </div>
+            </div>
+            {contaminationProximity.top3.length > 0 ? (
+              <div className="space-y-1.5">
+                {contaminationProximity.top3.map((t, i) => (
+                  <div key={`${t.name}-${i}`} className="flex items-center gap-2 text-xs rounded border border-slate-700 bg-slate-950/60 px-2 py-1.5">
+                    <Badge className={`text-[10px] shrink-0 ${t.type === 'NPL' ? 'bg-red-600 text-white border-red-400' : 'bg-amber-500 text-slate-900 border-amber-300'}`}>{t.type}</Badge>
+                    <span className="text-slate-200 truncate" title={t.name}>{t.name}</span>
+                    <span className="text-slate-400 ml-auto shrink-0">{t.detail}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-xs text-slate-400 italic">No contamination data available</div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Card 4: Weather Threat Assessment */}
+        <Card className="border-slate-700 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-slate-100">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <CloudLightning className="w-5 h-5 text-yellow-400" />
+              <span className="text-xs uppercase tracking-wider text-cyan-300 font-semibold">Weather Threat Assessment</span>
+            </div>
+            {weatherThreat ? (
+              <>
+                <div className="grid grid-cols-3 gap-3 mb-3">
+                  <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
+                    <div className="text-[11px] text-slate-400 uppercase">Total Alerts</div>
+                    <div className="text-lg font-bold text-white mt-0.5">{weatherThreat.totalAlerts}</div>
+                  </div>
+                  <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
+                    <div className="text-[11px] text-slate-400 uppercase">Extreme/Severe</div>
+                    <div className={`text-lg font-bold mt-0.5 ${weatherThreat.extremeSevere > 0 ? 'text-red-400' : 'text-white'}`}>{weatherThreat.extremeSevere}</div>
+                  </div>
+                  <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
+                    <div className="text-[11px] text-slate-400 uppercase">Flood Alerts</div>
+                    <div className={`text-lg font-bold mt-0.5 ${weatherThreat.floodCount > 0 ? 'text-amber-400' : 'text-white'}`}>{weatherThreat.floodCount}</div>
+                  </div>
+                </div>
+                {weatherThreat.mostSevere ? (
+                  <div className="rounded border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-200">
+                    <span className="text-slate-400">Most severe: </span>{weatherThreat.mostSevere.headline}
+                  </div>
+                ) : (
+                  <div className="text-xs text-emerald-400 italic">No active weather alerts</div>
+                )}
+              </>
+            ) : (
+              <div className="text-xs text-slate-400 italic">Weather alert data unavailable</div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ── Commander Cards: Administrative Row ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Card 5: Compliance Countdown */}
+        <Card className="border-slate-700 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-slate-100">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <TimerReset className="w-5 h-5 text-cyan-300" />
+              <span className="text-xs uppercase tracking-wider text-cyan-300 font-semibold">Compliance Countdown</span>
+            </div>
+            <div className="grid grid-cols-3 gap-3 mb-3">
+              <div className="rounded border border-red-500/40 bg-red-900/20 p-2.5 text-center">
+                <div className="text-[11px] text-red-300 uppercase">30 Days</div>
+                <div className="text-lg font-bold text-red-400 mt-0.5">{complianceCountdown.expiring30}</div>
+              </div>
+              <div className="rounded border border-amber-500/40 bg-amber-900/20 p-2.5 text-center">
+                <div className="text-[11px] text-amber-300 uppercase">90 Days</div>
+                <div className="text-lg font-bold text-amber-400 mt-0.5">{complianceCountdown.expiring90}</div>
+              </div>
+              <div className="rounded border border-blue-500/40 bg-blue-900/20 p-2.5 text-center">
+                <div className="text-[11px] text-blue-300 uppercase">180 Days</div>
+                <div className="text-lg font-bold text-blue-400 mt-0.5">{complianceCountdown.expiring180}</div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-400">Facilities without recent inspection</span>
+              <span className={`font-semibold ${complianceCountdown.uninspected > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>{complianceCountdown.uninspected}</span>
+            </div>
+            <div className="flex items-center justify-between text-xs mt-1">
+              <span className="text-slate-400">Days since last enforcement</span>
+              <span className="text-slate-200 font-semibold">{complianceCountdown.daysSinceEnforcement ?? '—'}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Card 6: Enforcement Exposure */}
+        <Card className="border-slate-700 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-slate-100">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Gavel className="w-5 h-5 text-amber-400" />
+              <span className="text-xs uppercase tracking-wider text-cyan-300 font-semibold">Enforcement Exposure</span>
+            </div>
+            <div className="grid grid-cols-3 gap-3 mb-3">
+              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-400 uppercase">Assessed</div>
+                <div className="text-lg font-bold text-white mt-0.5">${enforcementExposure.totalAssessed > 0 ? (enforcementExposure.totalAssessed / 1000).toFixed(0) + 'K' : '0'}</div>
+              </div>
+              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-400 uppercase">Collected</div>
+                <div className="text-lg font-bold text-white mt-0.5">${enforcementExposure.totalCollected > 0 ? (enforcementExposure.totalCollected / 1000).toFixed(0) + 'K' : '0'}</div>
+              </div>
+              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-400 uppercase">Open Cases</div>
+                <div className="text-lg font-bold text-white mt-0.5">{enforcementExposure.openCases}</div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-400">Average penalty per case</span>
+              <span className="text-slate-200 font-semibold">${enforcementExposure.avgPenalty > 0 ? enforcementExposure.avgPenalty.toLocaleString(undefined, { maximumFractionDigits: 0 }) : '0'}</span>
+            </div>
+            {enforcementExposure.totalAssessed > 0 && enforcementExposure.totalCollected < enforcementExposure.totalAssessed && (
+              <div className="mt-1 text-xs text-amber-400">
+                Collection gap: ${((enforcementExposure.totalAssessed - enforcementExposure.totalCollected) / 1000).toFixed(0)}K outstanding
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ── Card 7: Installation Ranking (full-width bar) ── */}
+      {installationRanking && (
+        <Card className="border-slate-700 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-slate-100">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <BarChart3 className="w-5 h-5 text-cyan-300" />
+              <span className="text-xs uppercase tracking-wider text-cyan-300 font-semibold">Installation Ranking vs DOD Average</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-400 uppercase">Your Violations</div>
+                <div className="text-lg font-bold text-white mt-0.5">{installationRanking.myViolations}</div>
+              </div>
+              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-400 uppercase">DOD Median</div>
+                <div className="text-lg font-bold text-white mt-0.5">{installationRanking.median}</div>
+              </div>
+              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-400 uppercase">Compliance</div>
+                <div className={`text-lg font-bold mt-0.5 ${installationRanking.complianceRate >= installationRanking.dodAvgRate ? 'text-emerald-400' : 'text-red-400'}`}>{installationRanking.complianceRate}%</div>
+              </div>
+              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-400 uppercase">DOD Avg</div>
+                <div className="text-lg font-bold text-white mt-0.5">{installationRanking.dodAvgRate}%</div>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400">Percentile rank (lower = fewer violations)</span>
+                <span className={`font-semibold ${installationRanking.percentile <= 50 ? 'text-emerald-400' : 'text-amber-400'}`}>{installationRanking.percentile}th percentile</span>
+              </div>
+              <div className="h-2.5 bg-slate-700 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all ${installationRanking.percentile <= 25 ? 'bg-emerald-500' : installationRanking.percentile <= 50 ? 'bg-cyan-500' : installationRanking.percentile <= 75 ? 'bg-amber-500' : 'bg-red-500'}`}
+                  style={{ width: `${installationRanking.percentile}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-[10px] text-slate-500">
+                <span>Better</span>
+                <span>{installationRanking.totalFacilities} facilities in scope</span>
+                <span>Worse</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Section 1: Hero Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
