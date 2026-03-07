@@ -181,6 +181,7 @@ export const LENS_ICONS: Record<string, LucideIcon> = {
   operations: Settings,
   restoration: TreePine,
   opportunities: HandCoins,
+  grants: DollarSign,
   proposals: FileText,
   scenarios: FlaskConical,
   predictions: Target,

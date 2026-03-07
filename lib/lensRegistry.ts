@@ -271,6 +271,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
   // ── PEARL Admin (11 items) ──────────────────────────────────────────────────
   '/dashboard/pearl': [
     { id: 'operations',       label: 'Operations' },
+    { id: 'grants',           label: 'Grants' },
     { id: 'proposals',        label: 'Proposals' },
     { id: 'scenarios',        label: 'What-If' },
     { id: 'predictions',      label: 'Predictions' },
@@ -283,6 +284,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
   ],
   '/dashboard/admin': [
     { id: 'operations',       label: 'Operations' },
+    { id: 'grants',           label: 'Grants' },
     { id: 'proposals',        label: 'Proposals' },
     { id: 'scenarios',        label: 'What-If' },
     { id: 'predictions',      label: 'Predictions' },

@@ -40,7 +40,7 @@ import { AlertDeepDive, type DeepDiveAlert } from './AlertDeepDive';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type ViewLens = 'operations' | 'restoration' | 'opportunities' | 'proposals' | 'scenarios' | 'predictions' | 'scenario-planner' | 'budget-planner' | 'investigation' | 'users' | 'alerts' | 'training';
+type ViewLens = 'operations' | 'restoration' | 'opportunities' | 'grants' | 'proposals' | 'scenarios' | 'predictions' | 'scenario-planner' | 'budget-planner' | 'investigation' | 'users' | 'alerts' | 'training';
 
 type DeploymentStatus = 'active' | 'maintenance' | 'offline' | 'staging' | 'decommissioned';
 type AlertSeverity = 'critical' | 'warning' | 'info' | 'ok';
@@ -1905,55 +1905,65 @@ Doug and the PIN team`;
         {/* ── PROPOSALS LENS ───────────────────────────────────────── */}
         {/* ════════════════════════════════════════════════════════════ */}
 
+        {/* ════════════════════════════════════════════════════════════ */}
+        {/* ── GRANTS LENS ────────────────────────────────────────────── */}
+        {/* ════════════════════════════════════════════════════════════ */}
+
+        {viewLens === 'grants' && (
+          <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50/70 via-white to-cyan-50/60">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <DollarSign size={16} className="text-emerald-600" /> Grant Matching
+              </CardTitle>
+              <CardDescription>
+                Agency-facing grant availability by role and state. No product positioning, just programs and fit.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Role</label>
+                  <select
+                    value={grantAudience}
+                    onChange={(e) => setGrantAudience(e.target.value as UserRole)}
+                    className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm"
+                  >
+                    {(['Federal', 'State', 'Local', 'NGO'] as UserRole[]).map((role) => (
+                      <option key={role} value={role}>{OUTREACH_ROLE_LABELS[role]}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">State</label>
+                  <select
+                    value={grantStateAbbr}
+                    onChange={(e) => setGrantStateAbbr(e.target.value)}
+                    className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm"
+                  >
+                    {adminGrantStateOptions.map((state) => (
+                      <option key={state} value={state}>{state}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <GrantOpportunityMatcher
+                regionId={`admin_${grantStateAbbr.toLowerCase()}_grant_matching`}
+                removalEfficiencies={{}}
+                alertsCount={criticalAlerts.length}
+                userRole={grantAudience}
+                stateAbbr={grantStateAbbr}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ════════════════════════════════════════════════════════════ */}
+        {/* ── PROPOSALS LENS ───────────────────────────────────────── */}
+        {/* ════════════════════════════════════════════════════════════ */}
+
         {viewLens === 'proposals' && (
           <>
-            <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50/70 via-white to-cyan-50/60">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <DollarSign size={16} className="text-emerald-600" /> Grant Matching
-                </CardTitle>
-                <CardDescription>
-                  Agency-facing grant availability by role and state. No product positioning, just programs and fit.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Role</label>
-                    <select
-                      value={grantAudience}
-                      onChange={(e) => setGrantAudience(e.target.value as UserRole)}
-                      className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm"
-                    >
-                      {(['Federal', 'State', 'Local', 'NGO'] as UserRole[]).map((role) => (
-                        <option key={role} value={role}>{OUTREACH_ROLE_LABELS[role]}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">State</label>
-                    <select
-                      value={grantStateAbbr}
-                      onChange={(e) => setGrantStateAbbr(e.target.value)}
-                      className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm"
-                    >
-                      {adminGrantStateOptions.map((state) => (
-                        <option key={state} value={state}>{state}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <GrantOpportunityMatcher
-                  regionId={`admin_${grantStateAbbr.toLowerCase()}_grant_matching`}
-                  removalEfficiencies={{}}
-                  alertsCount={criticalAlerts.length}
-                  userRole={grantAudience}
-                  stateAbbr={grantStateAbbr}
-                />
-              </CardContent>
-            </Card>
-
             <Card className="border-indigo-200 bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/60">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-base">
