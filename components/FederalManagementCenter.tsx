@@ -6323,7 +6323,13 @@ export function FederalManagementCenter(props: Props) {
             <CardContent>
               <div className="space-y-2">
                 {[
-                  { issue: 'Potomac River contamination — downstream drinking water safety', inquiries: 214, trend: '↑ NEW', highlight: true, note: 'Ongoing Interceptor recovery — no overflows since Feb 8; mid-March full restoration targeted (per DC Water March 1 update). PIN forecasts reduced enforcement risk post-intervention.' },
+                  {
+                    issue: `${STATE_ABBR_TO_NAME[selectedState] ?? selectedState} drinking water safety and downstream contamination`,
+                    inquiries: 214,
+                    trend: '↑ NEW',
+                    highlight: true,
+                    note: `Congressional offices are requesting daily incident posture updates for ${STATE_ABBR_TO_NAME[selectedState] ?? selectedState}. PIN tracks active recovery milestones, overflow status, and projected enforcement exposure for the selected state.`,
+                  },
                   { issue: 'Water sector cybersecurity posture following Iran strikes', inquiries: 168, trend: '↑ NEW', highlight: true },
                   { issue: 'PFAS regulation timeline & compliance cost estimates', inquiries: 142, trend: '↑ 38%', highlight: false },
                   { issue: 'SRF reauthorization levels for FY2028+', inquiries: 97, trend: '↑ 15%', highlight: false },
