@@ -2,18 +2,18 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/lib/authContext';
-import { PearlUser, UserRole, OPERATOR_ROLES, EXPLORER_ROLES, isOperatorRole } from '@/lib/authTypes';
+import { PearlUser, UserRole, AdminLevel, OPERATOR_ROLES, EXPLORER_ROLES, isOperatorRole } from '@/lib/authTypes';
 import type { ApprovalOverrides } from '@/lib/authContext';
-import { MD_JURISDICTIONS, STATES, isFreeEmailDomain } from '@/lib/jurisdictions';
+import { MD_JURISDICTIONS, STATES, isFreeEmailDomain, getJurisdictionsForState } from '@/lib/jurisdictions';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Link2, Users, UserPlus, CheckCircle, XCircle, Clock,
   Copy, Check, Mail, Building2, ChevronDown,
-  AlertTriangle, Send, RefreshCw, Trash2, Search,
+  AlertTriangle, Send, RefreshCw, Trash2, Search, Shield, ShieldCheck,
 } from 'lucide-react';
 
-// â”€â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Constants ───────────────────────────────────────────────────────────────
 
 const ALL_ROLES: UserRole[] = [...OPERATOR_ROLES, ...EXPLORER_ROLES];
 
@@ -50,7 +50,7 @@ const ALL_US_STATES: { abbr: string; name: string }[] = [
   { abbr: 'WV', name: 'West Virginia' }, { abbr: 'WI', name: 'Wisconsin' }, { abbr: 'WY', name: 'Wyoming' },
 ];
 
-/** Route preview per role â€” shows admin exactly where the user will land */
+/** Route preview per role */
 const ROUTE_PREVIEWS: Record<string, (...args: string[]) => string> = {
   Federal:    ()                       => '/dashboard/federal',
   State:      (state: string)          => `/dashboard/state/${state || '{state}'}`,
@@ -79,21 +79,58 @@ function accessScopeSummary(user: PearlUser): string {
   if (user.status === 'pending') return 'No platform access yet. Waiting for admin approval.';
   if (user.status === 'rejected') return 'No platform access. Request was rejected.';
   if (user.status === 'deactivated') return 'No platform access. Account is deactivated.';
-  if (user.isAdmin) return 'Admin access. Full user management and all role views.';
+  if (user.isSuperAdmin) return 'Super admin. Full user management and all role views.';
+  if (user.isAdmin) return 'Role admin. Can invite users within scope.';
   if (accessType(user.role) === 'explorer') return 'Explorer access. Read-focused role views with no operator/admin controls.';
   return 'Operator access. Role-based operational center with action tools where permitted.';
 }
 
-// â”€â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/** Admin level badge */
+function AdminBadge({ level, isMilitary }: { level: AdminLevel; isMilitary?: boolean }) {
+  return (
+    <>
+      {level === 'super_admin' && (
+        <Badge variant="secondary" className="bg-purple-100 text-purple-700 text-[9px] px-1.5">
+          SUPER ADMIN
+        </Badge>
+      )}
+      {level === 'role_admin' && (
+        <Badge variant="secondary" className="bg-blue-100 text-blue-700 text-[9px] px-1.5">
+          ROLE ADMIN
+        </Badge>
+      )}
+      {level === 'none' && (
+        <Badge variant="secondary" className="bg-slate-100 text-slate-600 text-[9px] px-1.5">
+          STANDARD
+        </Badge>
+      )}
+      {isMilitary && (
+        <Badge variant="secondary" className="bg-olive-100 text-[#556b2f] bg-[#e8ecd5] text-[9px] px-1.5">
+          MILITARY
+        </Badge>
+      )}
+    </>
+  );
+}
+
+// ─── Component ───────────────────────────────────────────────────────────────
+
+export interface ScopeFilter {
+  allowedRoles?: UserRole[];
+  lockedState?: string;
+  lockedJurisdiction?: string;
+}
 
 interface UserManagementPanelProps {
   onRefreshPendingCount?: (count: number) => void;
+  scopeFilter?: ScopeFilter;
 }
 
-export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPanelProps) {
+export function UserManagementPanel({ onRefreshPendingCount, scopeFilter }: UserManagementPanelProps) {
   const {
     user, isAdmin, approveUser, rejectUser, deactivateUser,
     deleteUser, updateUserRole, createInviteLink, listPendingUsers, listAllUsers,
+    grantRoleAdmin, revokeRoleAdmin,
   } = useAuth();
 
   const [tab, setTab] = useState<'pending' | 'invite' | 'users'>('pending');
@@ -106,33 +143,65 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
   const [actionBusyUid, setActionBusyUid] = useState<string | null>(null);
 
   // Invite form state
-  const [invRole, setInvRole] = useState<UserRole>('MS4');
+  const [invRole, setInvRole] = useState<UserRole>(scopeFilter?.allowedRoles?.[0] || 'MS4');
   const [invEmail, setInvEmail] = useState('');
   const [invOrg, setInvOrg] = useState('');
-  const [invState, setInvState] = useState('MD');
-  const [invJurisdiction, setInvJurisdiction] = useState('');
+  const [invState, setInvState] = useState(scopeFilter?.lockedState || 'MD');
+  const [invJurisdiction, setInvJurisdiction] = useState(scopeFilter?.lockedJurisdiction || '');
   const [invExpiryDays, setInvExpiryDays] = useState(7);
   const [invLink, setInvLink] = useState('');
   const [invCopied, setInvCopied] = useState(false);
   const [invSending, setInvSending] = useState(false);
+  const [invMilitary, setInvMilitary] = useState(false);
 
-  // Approval state â€” per-user overrides for role, state, jurisdiction, organization
+  // Approval state
   const [approvalOverrides, setApprovalOverrides] = useState<Record<string, ApprovalOverrides>>({});
+
+  // Roles available in the invite dropdown
+  const availableRoles = useMemo(() => {
+    if (scopeFilter?.allowedRoles && scopeFilter.allowedRoles.length > 0) {
+      return scopeFilter.allowedRoles;
+    }
+    return ALL_ROLES;
+  }, [scopeFilter?.allowedRoles]);
+
+  // Jurisdictions for current invite state
+  const jurisdictionsForState = useMemo(() => {
+    return getJurisdictionsForState(invState);
+  }, [invState]);
 
   const refresh = useCallback(async () => {
     setLoading(true);
     const [p, a] = await Promise.all([listPendingUsers(), listAllUsers()]);
-    setPending(p);
-    setAllUsers(a);
-    onRefreshPendingCount?.(p.length);
+
+    // Apply scope filter to pending/all users if present
+    const filterByScope = (users: PearlUser[]) => {
+      if (!scopeFilter) return users;
+      let filtered = users;
+      if (scopeFilter.allowedRoles && scopeFilter.allowedRoles.length > 0) {
+        filtered = filtered.filter(u => scopeFilter.allowedRoles!.includes(u.role));
+      }
+      if (scopeFilter.lockedState) {
+        filtered = filtered.filter(u => !u.state || u.state === scopeFilter.lockedState);
+      }
+      if (scopeFilter.lockedJurisdiction) {
+        filtered = filtered.filter(u => !u.ms4Jurisdiction || u.ms4Jurisdiction === scopeFilter.lockedJurisdiction);
+      }
+      return filtered;
+    };
+
+    setPending(filterByScope(p));
+    setAllUsers(filterByScope(a));
+    onRefreshPendingCount?.(filterByScope(p).length);
     setLoading(false);
-  }, [listPendingUsers, listAllUsers, onRefreshPendingCount]);
+  }, [listPendingUsers, listAllUsers, onRefreshPendingCount, scopeFilter]);
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  if (!isAdmin) return null;
+  // Guard: admins only (adminLevel !== 'none')
+  if (user?.adminLevel === 'none' && user?.role !== 'Pearl') return null;
 
-  // â”€â”€ Invite link generation â”€â”€
+  // ── Invite link generation ──
   async function handleGenerateInvite() {
     setInvSending(true);
     try {
@@ -143,6 +212,7 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
         state: invState || undefined,
         organization: invOrg || undefined,
         expiresInDays: invExpiryDays,
+        isMilitary: invRole === 'Federal' && invMilitary ? true : undefined,
       });
       setInvLink(link);
     } catch (err) {
@@ -158,7 +228,7 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
   }
 
   function emailInviteLink() {
-    const subject = encodeURIComponent(`You're invited to PEARL â€” ${invRole} Access`);
+    const subject = encodeURIComponent(`You're invited to PEARL - ${invRole} Access`);
     const body = encodeURIComponent(
       `Hi${invEmail ? '' : ' there'},\n\n` +
       `You've been invited to join the PEARL Water Quality Intelligence Platform` +
@@ -166,7 +236,7 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
       `Click the link below to create your account (pre-approved, no waiting):\n\n` +
       `${invLink}\n\n` +
       `This link expires in ${invExpiryDays} days.\n\n` +
-      `â€” PEARL Team\nproject-pearl.org`
+      `-- PEARL Team\nproject-pearl.org`
     );
     window.open(`mailto:${invEmail}?subject=${subject}&body=${body}`, '_blank');
   }
@@ -182,7 +252,6 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
     }));
   }
 
-  // â”€â”€ Approve user (with all drilldown overrides) â”€â”€
   async function handleApprove(uid: string) {
     const overrides = getOverride(uid);
     await approveUser(uid, Object.keys(overrides).length > 0 ? overrides : undefined);
@@ -219,6 +288,26 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
     }
   }
 
+  async function handleToggleRoleAdmin(target: PearlUser) {
+    setActionBusyUid(target.uid);
+    try {
+      if (target.adminLevel === 'role_admin') {
+        await revokeRoleAdmin(target.uid);
+      } else {
+        await grantRoleAdmin(target.uid);
+      }
+      await refresh();
+    } finally {
+      setActionBusyUid(null);
+    }
+  }
+
+  // Determine which drilldown fields to show for invite form
+  const invNeedsState = ['State', 'Federal', 'MS4', 'Local', 'Utility', 'Corporate', 'Biotech', 'Investor', 'K12'].includes(invRole);
+  const invNeedsJurisdiction = ['MS4', 'Local'].includes(invRole);
+  const invNeedsMilitary = invRole === 'Federal';
+  const invNeedsOrg = ['Corporate', 'Utility', 'Biotech', 'Investor', 'K12'].includes(invRole);
+
   const pendingCount = pending.length;
   const activeExplorerCount = allUsers.filter((u) => u.status === 'active' && accessType(u.role) === 'explorer').length;
   const activeOperatorCount = allUsers.filter((u) => u.status === 'active' && accessType(u.role) === 'operator').length;
@@ -237,7 +326,8 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
         case 'state':
           return (a.state || '').localeCompare(b.state || '') * dir || a.name.localeCompare(b.name);
         case 'admin':
-          return ((a.isAdmin ? 1 : 0) - (b.isAdmin ? 1 : 0)) * dir || a.name.localeCompare(b.name);
+          return ((a.adminLevel === 'super_admin' ? 2 : a.adminLevel === 'role_admin' ? 1 : 0) -
+                  (b.adminLevel === 'super_admin' ? 2 : b.adminLevel === 'role_admin' ? 1 : 0)) * dir || a.name.localeCompare(b.name);
         case 'status':
           return ((statusOrder[a.status] ?? 99) - (statusOrder[b.status] ?? 99)) * dir || a.name.localeCompare(b.name);
         case 'name':
@@ -277,7 +367,7 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
         })}
       </div>
 
-      {/* â”€â”€ Pending Approvals â”€â”€ */}
+      {/* ── Pending Approvals ── */}
       {tab === 'pending' && (
         <div className="space-y-3">
           {loading ? (
@@ -300,15 +390,12 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
               const hasFreeEmail = isFreeEmailDomain(u.email);
               const showEmailWarning = hasFreeEmail && PROFESSIONAL_ROLES.includes(effectiveRole);
 
-              // Determine which drilldown fields this role needs
               const needsState = ['State', 'Federal', 'MS4', 'Local', 'Utility'].includes(effectiveRole);
               const needsJurisdiction = ['MS4', 'Local'].includes(effectiveRole);
               const needsOrg = isOperatorRole(effectiveRole);
 
-              // Route preview
               const routePreview = ROUTE_PREVIEWS[effectiveRole]?.(effectiveState, effectiveJurisdiction) ?? ROUTE_PREVIEWS._default(effectiveRole);
 
-              // Approval gate â€” block if required fields are missing
               const missingFields: string[] = [];
               if (needsState && !effectiveState) missingFields.push('state');
               if (needsJurisdiction && !effectiveJurisdiction) missingFields.push('jurisdiction');
@@ -317,7 +404,6 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
               return (
                 <Card key={u.uid} className="border-2 border-amber-200 bg-amber-50/30">
                   <CardContent className="p-4 space-y-3">
-                    {/* Header: user info */}
                     <div className="flex items-start justify-between">
                       <div>
                         <div className="text-sm font-bold text-slate-800">{u.name}</div>
@@ -333,35 +419,32 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
                       </div>
                     </div>
 
-                    {/* Email domain warning */}
                     {showEmailWarning && (
                       <div className="flex items-start gap-2 p-2.5 rounded-lg bg-orange-50 border border-orange-200">
                         <AlertTriangle className="h-3.5 w-3.5 text-orange-500 flex-shrink-0 mt-0.5" />
                         <p className="text-[11px] text-orange-700">
-                          <span className="font-semibold">Free email domain</span> â€” this user claims <span className="font-semibold">{effectiveRole}</span> role but registered with a personal email ({u.email.split('@')[1]}). Verify affiliation before approving.
+                          <span className="font-semibold">Free email domain.</span> This user claims <span className="font-semibold">{effectiveRole}</span> role but registered with a personal email ({u.email.split('@')[1]}). Verify affiliation before approving.
                         </p>
                       </div>
                     )}
 
-                    {/* â”€â”€ Role Assignment â”€â”€ */}
+                    {/* Role Assignment */}
                     <div>
-                      <label className="text-[11px] font-semibold text-slate-600 mb-1 block">
-                        Assign Role
-                      </label>
+                      <label className="text-[11px] font-semibold text-slate-600 mb-1 block">Assign Role</label>
                       <select
                         value={effectiveRole}
                         onChange={e => setOverrideField(u.uid, 'role', e.target.value)}
                         className={selectClass}
                       >
-                        {ALL_ROLES.map(r => (
+                        {availableRoles.map(r => (
                           <option key={r} value={r}>
-                            {r}{r === u.role ? ' (requested)' : ''}{isOperatorRole(r) ? ' â€” operator' : ''}
+                            {r}{r === u.role ? ' (requested)' : ''}{isOperatorRole(r) ? ' (operator)' : ''}
                           </option>
                         ))}
                       </select>
                     </div>
 
-                    {/* â”€â”€ State â”€â”€ */}
+                    {/* State */}
                     {needsState && (
                       <div>
                         <label className="text-[11px] font-semibold text-slate-600 mb-1 block">
@@ -371,6 +454,7 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
                           value={effectiveState}
                           onChange={e => setOverrideField(u.uid, 'state', e.target.value)}
                           className={selectClass}
+                          disabled={!!scopeFilter?.lockedState}
                         >
                           <option value="">Select state...</option>
                           {ALL_US_STATES.map(s => (
@@ -380,31 +464,34 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
                       </div>
                     )}
 
-                    {/* â”€â”€ Jurisdiction (MS4 / Local) â”€â”€ */}
+                    {/* Jurisdiction (MS4 / Local) */}
                     {needsJurisdiction && (
                       <div>
                         <label className="text-[11px] font-semibold text-slate-600 mb-1 block">
-                          Bind Jurisdiction {effectiveRole === 'MS4' ? '(required â€” determines MS4 permit dashboard)' : '(required â€” determines local dashboard)'}
+                          Bind Jurisdiction {effectiveRole === 'MS4' ? '(required for MS4 permit dashboard)' : '(required for local dashboard)'}
                         </label>
                         <select
                           value={effectiveJurisdiction}
                           onChange={e => setOverrideField(u.uid, 'ms4Jurisdiction', e.target.value)}
                           className={selectClass}
+                          disabled={!!scopeFilter?.lockedJurisdiction}
                         >
                           <option value="">Select jurisdiction...</option>
-                          {MD_JURISDICTIONS.map(j => (
-                            <option key={j.key} value={j.key}>{j.label} ({j.permit})</option>
+                          {getJurisdictionsForState(effectiveState || undefined).map(j => (
+                            <option key={j.jurisdiction_id} value={j.jurisdiction_id}>{j.jurisdiction_name} ({j.jurisdiction_type})</option>
+                          ))}
+                          {/* Also show MD_JURISDICTIONS for backward compat */}
+                          {(effectiveState === 'MD' || !effectiveState) && MD_JURISDICTIONS.map(j => (
+                            <option key={`md-${j.key}`} value={j.key}>{j.label} ({j.permit})</option>
                           ))}
                         </select>
                       </div>
                     )}
 
-                    {/* â”€â”€ Organization â”€â”€ */}
+                    {/* Organization */}
                     {needsOrg && (
                       <div>
-                        <label className="text-[11px] font-semibold text-slate-600 mb-1 block">
-                          Organization
-                        </label>
+                        <label className="text-[11px] font-semibold text-slate-600 mb-1 block">Organization</label>
                         <input
                           type="text"
                           value={effectiveOrg}
@@ -415,13 +502,13 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
                       </div>
                     )}
 
-                    {/* â”€â”€ Landing route preview â”€â”€ */}
+                    {/* Landing route preview */}
                     <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
                       <div className="text-[10px] font-semibold text-slate-500 mb-1">Landing page</div>
                       <code className="text-[11px] text-cyan-700 font-mono">{routePreview}</code>
                     </div>
 
-                    {/* â”€â”€ Validation warnings â”€â”€ */}
+                    {/* Validation warnings */}
                     {!canApprove && (
                       <div className="flex items-start gap-2 p-2.5 rounded-lg bg-red-50 border border-red-200">
                         <AlertTriangle className="h-3.5 w-3.5 text-red-500 flex-shrink-0 mt-0.5" />
@@ -431,7 +518,7 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
                       </div>
                     )}
 
-                    {/* â”€â”€ Actions â”€â”€ */}
+                    {/* Actions */}
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleApprove(u.uid)}
@@ -457,12 +544,12 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
         </div>
       )}
 
-      {/* â”€â”€ Invite User â”€â”€ */}
+      {/* ── Invite User ── */}
       {tab === 'invite' && (
         <Card>
           <CardContent className="p-5 space-y-4">
             <p className="text-sm text-slate-600">
-              Generate a pre-approved invite link. The recipient will create their account with role and jurisdiction already bound â€” no waiting.
+              Generate a pre-approved invite link. The recipient will create their account with role and jurisdiction already bound, no waiting.
             </p>
 
             {/* Role */}
@@ -470,19 +557,32 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
               <label className="block text-xs font-semibold text-slate-600 mb-1">Role</label>
               <select
                 value={invRole}
-                onChange={e => { setInvRole(e.target.value as UserRole); setInvLink(''); }}
+                onChange={e => { setInvRole(e.target.value as UserRole); setInvLink(''); setInvMilitary(false); }}
                 className="w-full px-3 py-2.5 rounded-lg border border-slate-300 text-sm bg-white focus:border-cyan-400 focus:ring-1 focus:ring-cyan-200 outline-none"
               >
-                {ALL_ROLES.map(r => (
+                {availableRoles.map(r => (
                   <option key={r} value={r}>{r}{isOperatorRole(r) ? ' (operator)' : ''}</option>
                 ))}
               </select>
             </div>
 
+            {/* Military checkbox for Federal */}
+            {invNeedsMilitary && (
+              <label className="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={invMilitary}
+                  onChange={e => { setInvMilitary(e.target.checked); setInvLink(''); }}
+                  className="rounded border-slate-300 text-cyan-600 focus:ring-cyan-200"
+                />
+                <span className="text-sm text-slate-700">Military installation</span>
+              </label>
+            )}
+
             {/* Email (optional) */}
             <div>
               <label className="block text-xs font-semibold text-slate-600 mb-1">
-                Recipient Email <span className="text-slate-400 font-normal">(optional â€” locks invite to this email)</span>
+                Recipient Email <span className="text-slate-400 font-normal">(optional, locks invite to this email)</span>
               </label>
               <input
                 type="email"
@@ -494,40 +594,55 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
             </div>
 
             {/* Organization */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Organization</label>
-              <input
-                type="text"
-                value={invOrg}
-                onChange={e => { setInvOrg(e.target.value); setInvLink(''); }}
-                placeholder="Anne Arundel County DPW"
-                className="w-full px-3 py-2.5 rounded-lg border border-slate-300 text-sm focus:border-cyan-400 focus:ring-1 focus:ring-cyan-200 outline-none"
-              />
-            </div>
+            {invNeedsOrg && (
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">
+                  {invRole === 'K12' ? 'School / District' : 'Organization'}
+                </label>
+                <input
+                  type="text"
+                  value={invOrg}
+                  onChange={e => { setInvOrg(e.target.value); setInvLink(''); }}
+                  placeholder={invRole === 'K12' ? 'e.g. Chesapeake Bay Academy' : 'e.g. Anne Arundel County DPW'}
+                  className="w-full px-3 py-2.5 rounded-lg border border-slate-300 text-sm focus:border-cyan-400 focus:ring-1 focus:ring-cyan-200 outline-none"
+                />
+              </div>
+            )}
 
             {/* State */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">State</label>
-              <select
-                value={invState}
-                onChange={e => { setInvState(e.target.value); setInvLink(''); }}
-                className="w-full px-3 py-2.5 rounded-lg border border-slate-300 text-sm bg-white focus:border-cyan-400 focus:ring-1 focus:ring-cyan-200 outline-none"
-              >
-                {STATES.map(s => <option key={s.abbr} value={s.abbr}>{s.name}</option>)}
-              </select>
-            </div>
-
-            {/* Jurisdiction (MS4/State) */}
-            {(invRole === 'MS4' || invRole === 'State') && (
+            {invNeedsState && (
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">MS4 Jurisdiction</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">State</label>
+                <select
+                  value={invState}
+                  onChange={e => { setInvState(e.target.value); setInvJurisdiction(''); setInvLink(''); }}
+                  className="w-full px-3 py-2.5 rounded-lg border border-slate-300 text-sm bg-white focus:border-cyan-400 focus:ring-1 focus:ring-cyan-200 outline-none"
+                  disabled={!!scopeFilter?.lockedState}
+                >
+                  <option value="">Select state...</option>
+                  {ALL_US_STATES.map(s => <option key={s.abbr} value={s.abbr}>{s.name} ({s.abbr})</option>)}
+                </select>
+              </div>
+            )}
+
+            {/* Jurisdiction drilldown (MS4/Local) */}
+            {invNeedsJurisdiction && invState && (
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">County / City</label>
                 <select
                   value={invJurisdiction}
                   onChange={e => { setInvJurisdiction(e.target.value); setInvLink(''); }}
                   className="w-full px-3 py-2.5 rounded-lg border border-slate-300 text-sm bg-white focus:border-cyan-400 focus:ring-1 focus:ring-cyan-200 outline-none"
+                  disabled={!!scopeFilter?.lockedJurisdiction}
                 >
                   <option value="">None (bind later)</option>
-                  {MD_JURISDICTIONS.map(j => <option key={j.key} value={j.key}>{j.label} ({j.permit})</option>)}
+                  {jurisdictionsForState.map(j => (
+                    <option key={j.jurisdiction_id} value={j.jurisdiction_id}>{j.jurisdiction_name} ({j.jurisdiction_type})</option>
+                  ))}
+                  {/* Also show MD_JURISDICTIONS for backward compat with MD-specific permits */}
+                  {invState === 'MD' && MD_JURISDICTIONS.map(j => (
+                    <option key={`md-${j.key}`} value={j.key}>{j.label} ({j.permit})</option>
+                  ))}
                 </select>
               </div>
             )}
@@ -565,7 +680,6 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
                   <span className="text-sm font-semibold text-emerald-800">Invite Link Generated</span>
                 </div>
 
-                {/* Link display */}
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
@@ -582,7 +696,6 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
                   </button>
                 </div>
 
-                {/* Email button */}
                 {invEmail && (
                   <button
                     onClick={emailInviteLink}
@@ -596,7 +709,8 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
                 <div className="text-[10px] text-slate-400">
                   Expires {new Date(Date.now() + invExpiryDays * 86400000).toLocaleDateString()}.
                   Role: {invRole}
-                  {invJurisdiction && ` Â· Jurisdiction: ${MD_JURISDICTIONS.find(j => j.key === invJurisdiction)?.label}`}
+                  {invMilitary && ' (Military)'}
+                  {invJurisdiction && ` | Jurisdiction: ${jurisdictionsForState.find(j => j.jurisdiction_id === invJurisdiction)?.jurisdiction_name || MD_JURISDICTIONS.find(j => j.key === invJurisdiction)?.label || invJurisdiction}`}
                 </div>
               </div>
             )}
@@ -604,7 +718,7 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
         </Card>
       )}
 
-      {/* â”€â”€ All Users â”€â”€ */}
+      {/* ── All Users ── */}
       {tab === 'users' && (
         <Card>
           <CardContent className="p-5 space-y-2">
@@ -660,7 +774,7 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
                   <option value="name">Name</option>
                   <option value="role">Role</option>
                   <option value="state">State</option>
-                  <option value="admin">Admin Type</option>
+                  <option value="admin">Admin Level</option>
                   <option value="status">Status</option>
                 </select>
               </div>
@@ -700,11 +814,9 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
 
                       {/* Info */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-sm font-semibold text-slate-800 truncate">{u.name}</span>
-                          <Badge variant="secondary" className={`text-[9px] px-1.5 ${u.isAdmin ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-600'}`}>
-                            {u.isAdmin ? 'ADMIN' : 'STANDARD'}
-                          </Badge>
+                          <AdminBadge level={u.adminLevel} isMilitary={u.isMilitary} />
                           {isCurrentUser && <Badge variant="secondary" className="bg-cyan-100 text-cyan-700 text-[9px] px-1.5">YOU</Badge>}
                         </div>
                         <div className="flex items-center gap-2 text-[11px] text-slate-500">
@@ -738,6 +850,24 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
                       {/* Status + actions */}
                       <div className="flex items-center gap-2 flex-shrink-0">
                         <Badge variant="secondary" className={`${sb.bg} ${sb.text} text-[10px]`}>{sb.label}</Badge>
+
+                        {/* Grant/Revoke Role Admin — super_admin only */}
+                        {user?.isSuperAdmin && !isCurrentUser && u.adminLevel !== 'super_admin' && u.status === 'active' && (
+                          <button
+                            onClick={() => handleToggleRoleAdmin(u)}
+                            disabled={isBusy}
+                            className={`px-2 py-1 rounded-lg text-[11px] font-medium border transition-colors disabled:opacity-50 ${
+                              u.adminLevel === 'role_admin'
+                                ? 'text-blue-600 border-blue-200 hover:bg-blue-50'
+                                : 'text-slate-600 border-slate-200 hover:bg-slate-50'
+                            }`}
+                            title={u.adminLevel === 'role_admin' ? 'Revoke role admin' : 'Grant role admin'}
+                          >
+                            <Shield className="inline h-3 w-3 mr-0.5" />
+                            {u.adminLevel === 'role_admin' ? 'Revoke Admin' : 'Make Admin'}
+                          </button>
+                        )}
+
                         {canBlock && (
                           <button
                             onClick={() => handleToggleBlock(u)}
@@ -768,7 +898,7 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
                             </button>
                           </>
                         )}
-                        {!isCurrentUser && (
+                        {!isCurrentUser && user?.isSuperAdmin && (
                           <button
                             onClick={() => handleDeleteUser(u)}
                             disabled={isBusy}
@@ -789,4 +919,3 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
     </div>
   );
 }
-
