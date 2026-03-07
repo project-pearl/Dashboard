@@ -505,7 +505,7 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
     return (
       <div className="flex items-center gap-3 p-6">
         <Shield className="w-5 h-5 text-indigo-500 animate-pulse" />
-        <span className="text-sm text-slate-500">Loading military installations data...</span>
+        <span className="text-sm text-slate-500 dark:text-slate-400">Loading military installations data...</span>
       </div>
     );
   }
@@ -518,7 +518,7 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
           </div>
           <div>
             <p className="text-sm font-semibold text-slate-700">DoD Installation Monitoring</p>
-            <p className="text-xs text-slate-500 mt-0.5">Federal facility permit and PFAS data integration in progress. Data sources: EPA ECHO (ICIS-NPDES) and UCMR/state PFAS monitoring.</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Federal facility permit and PFAS data integration in progress. Data sources: EPA ECHO (ICIS-NPDES) and UCMR/state PFAS monitoring.</p>
           </div>
         </div>
       </div>
@@ -535,16 +535,16 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
   return (
     <div className="space-y-6">
       {/* Section 0: PIN Sentinel Commander Brief */}
-      <Card className="border-slate-300 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-slate-100 overflow-hidden">
-        <CardHeader className="pb-3 border-b border-slate-700/60">
+      <Card className="border-slate-200 dark:border-slate-700 overflow-hidden">
+        <CardHeader className="pb-3 border-b border-slate-200 dark:border-slate-700">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="space-y-1">
-              <div className="text-[11px] tracking-[0.16em] text-slate-300 uppercase">For Official Use</div>
-              <CardTitle className="text-lg md:text-xl text-white flex items-center gap-2">
-                <Radar className="w-5 h-5 text-cyan-300" />
+              <div className="text-[11px] tracking-[0.16em] text-slate-500 dark:text-slate-400 uppercase">For Official Use</div>
+              <CardTitle className="text-lg md:text-xl flex items-center gap-2">
+                <Radar className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                 PIN Sentinel Commander Water Threat Brief
               </CardTitle>
-              <CardDescription className="text-slate-300">
+              <CardDescription>
                 {commanderBrief.installationName} | {commanderBrief.displayDate} | {commanderBrief.displayTime} EST
               </CardDescription>
             </div>
@@ -552,104 +552,104 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
               <Badge className={`${commanderBrief.threatLevel === 'CRITICAL' ? 'bg-red-600 text-white border-red-400' : commanderBrief.threatLevel === 'ELEVATED' ? 'bg-amber-500 text-slate-900 border-amber-300' : 'bg-emerald-500 text-slate-900 border-emerald-300'} text-xs px-3 py-1`}>
                 THREAT LEVEL: {commanderBrief.threatLevel}
               </Badge>
-              <Badge variant="outline" className="border-cyan-400/60 text-cyan-200 bg-cyan-500/10">
+              <Badge variant="outline" className="border-indigo-300 dark:border-indigo-500 text-indigo-600 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/40">
                 Score {commanderBrief.score.toFixed(2)}
               </Badge>
             </div>
           </div>
-          <div className="mt-3 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-xs text-slate-200 font-mono">
+          <div className="mt-3 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 px-3 py-2 text-xs text-slate-700 dark:text-slate-200 font-mono">
             SUBJECT: {commanderBrief.subject}
           </div>
         </CardHeader>
         <CardContent className="pt-4 space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-2 rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-              <div className="text-xs uppercase tracking-wider text-cyan-300 mb-2 flex items-center gap-2">
+            <div className="lg:col-span-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50/80 dark:bg-slate-800/60 p-4">
+              <div className="text-xs uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-2 flex items-center gap-2">
                 <BellRing className="w-4 h-4" />
                 Situation Summary
               </div>
-              <p className="text-sm text-slate-100 leading-relaxed">{commanderBrief.summary}</p>
+              <p className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed">{commanderBrief.summary}</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-3">
-                <div className="rounded border border-slate-700 p-2">
-                  <div className="text-[11px] text-slate-400 uppercase">Primary Site</div>
-                  <div className="text-xs text-slate-100 mt-1 line-clamp-2">{commanderBrief.situation.facility}</div>
+                <div className="rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700/60 p-2">
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Primary Site</div>
+                  <div className="text-xs text-slate-800 dark:text-slate-200 mt-1 line-clamp-2">{commanderBrief.situation.facility}</div>
                 </div>
-                <div className="rounded border border-slate-700 p-2">
-                  <div className="text-[11px] text-slate-400 uppercase">Latest Signal</div>
-                  <div className="text-xs text-slate-100 mt-1 line-clamp-2">{commanderBrief.situation.latestSignal}</div>
+                <div className="rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700/60 p-2">
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Latest Signal</div>
+                  <div className="text-xs text-slate-800 dark:text-slate-200 mt-1 line-clamp-2">{commanderBrief.situation.latestSignal}</div>
                 </div>
-                <div className="rounded border border-slate-700 p-2">
-                  <div className="text-[11px] text-slate-400 uppercase">Last Detection</div>
-                  <div className="text-xs text-slate-100 mt-1">{commanderBrief.situation.latestTime}</div>
+                <div className="rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700/60 p-2">
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Last Detection</div>
+                  <div className="text-xs text-slate-800 dark:text-slate-200 mt-1">{commanderBrief.situation.latestTime}</div>
                 </div>
               </div>
             </div>
-            <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4 space-y-2">
-              <div className="text-xs uppercase tracking-wider text-cyan-300 mb-2 flex items-center gap-2">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50/80 dark:bg-slate-800/60 p-4 space-y-2">
+              <div className="text-xs uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-2 flex items-center gap-2">
                 <Clock3 className="w-4 h-4" />
                 Signal Snapshot
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400">Signals (24h)</span>
-                <span className="font-semibold text-white">{commanderBrief.complianceSignals24h}</span>
+                <span className="text-slate-500 dark:text-slate-400">Signals (24h)</span>
+                <span className="font-semibold text-slate-900 dark:text-white">{commanderBrief.complianceSignals24h}</span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400">Signals (30d)</span>
-                <span className="font-semibold text-white">{commanderBrief.complianceSignals30d}</span>
+                <span className="text-slate-500 dark:text-slate-400">Signals (30d)</span>
+                <span className="font-semibold text-slate-900 dark:text-white">{commanderBrief.complianceSignals30d}</span>
               </div>
-              <div className="text-[11px] text-slate-400 pt-1">Automated threshold logic:</div>
-              <div className="text-[11px] text-slate-300">`[NOMINAL]` score &lt; 0.40, `[ELEVATED]` 0.40-0.79, `[CRITICAL]` ≥ 0.80</div>
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 pt-1">Automated threshold logic:</div>
+              <div className="text-[11px] text-slate-600 dark:text-slate-300">`[NOMINAL]` score &lt; 0.40, `[ELEVATED]` 0.40-0.79, `[CRITICAL]` ≥ 0.80</div>
             </div>
           </div>
 
-          <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">
-            <div className="text-xs uppercase tracking-wider text-cyan-300 mb-2">Key Readings (vs target baseline)</div>
+          <div className="rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50/80 dark:bg-slate-800/60 p-3">
+            <div className="text-xs uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-2">Key Readings (vs target baseline)</div>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
               {commanderBrief.keyReadings.map((reading) => (
-                <div key={reading.label} className="rounded-lg border border-slate-700 bg-slate-950/60 p-2.5">
+                <div key={reading.label} className="rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700/60 p-2.5">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5">
-                      <reading.icon className="w-4 h-4 text-cyan-300" />
-                      <div className="text-xs text-slate-200">{reading.label}</div>
+                      <reading.icon className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                      <div className="text-xs text-slate-700 dark:text-slate-200">{reading.label}</div>
                     </div>
                     <Badge className={`${reading.status === 'ALERT' ? 'bg-red-600 text-white border-red-400' : reading.status === 'WATCH' ? 'bg-amber-500 text-slate-900 border-amber-300' : 'bg-emerald-500 text-slate-900 border-emerald-300'} text-[10px]`}>
                       {reading.status}
                     </Badge>
                   </div>
-                  <div className="mt-2 text-sm font-semibold text-white">{reading.value}</div>
-                  <div className="text-[11px] text-slate-400">{reading.baseline}</div>
-                  <div className="text-[11px] text-slate-300 mt-0.5">Delta: {reading.delta}</div>
+                  <div className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">{reading.value}</div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400">{reading.baseline}</div>
+                  <div className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">Delta: {reading.delta}</div>
                 </div>
               ))}
             </div>
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-            <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">
-              <div className="text-xs uppercase tracking-wider text-cyan-300 mb-2">Anomalies Detected</div>
+            <div className="rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50/80 dark:bg-slate-800/60 p-3">
+              <div className="text-xs uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-2">Anomalies Detected</div>
               <div className="space-y-2">
                 {commanderBrief.anomalies.length === 0 && (
-                  <div className="text-xs text-slate-400">No anomaly rows detected in current scope.</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">No anomaly rows detected in current scope.</div>
                 )}
                 {commanderBrief.anomalies.map((a, idx) => (
-                  <div key={`${a.time}-${idx}`} className="rounded border border-slate-700 bg-slate-950/60 p-2 text-xs">
+                  <div key={`${a.time}-${idx}`} className="rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700/60 p-2 text-xs">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-slate-300">{a.time}</span>
+                      <span className="text-slate-600 dark:text-slate-300">{a.time}</span>
                       <Badge className={`${a.classif === 'POSSIBLE INTRUSION' ? 'bg-red-600 text-white border-red-400' : a.classif === 'CORRELATED EVENT' ? 'bg-amber-500 text-slate-900 border-amber-300' : 'bg-blue-500 text-white border-blue-300'} text-[10px]`}>{a.classif}</Badge>
                     </div>
-                    <div className="text-slate-100 mt-1 flex items-center gap-1"><MapPin className="w-3 h-3 text-cyan-300" />{a.location}</div>
-                    <div className="text-slate-300 mt-0.5">{a.signal}</div>
-                    <div className="text-slate-400 mt-0.5">Score: {a.score}</div>
+                    <div className="text-slate-800 dark:text-slate-200 mt-1 flex items-center gap-1"><MapPin className="w-3 h-3 text-indigo-500 dark:text-indigo-400" />{a.location}</div>
+                    <div className="text-slate-600 dark:text-slate-300 mt-0.5">{a.signal}</div>
+                    <div className="text-slate-500 dark:text-slate-400 mt-0.5">Score: {a.score}</div>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">
-              <div className="text-xs uppercase tracking-wider text-cyan-300 mb-2">Regional Correlation</div>
+            <div className="rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50/80 dark:bg-slate-800/60 p-3">
+              <div className="text-xs uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-2">Regional Correlation</div>
               <div className="space-y-2">
                 {commanderBrief.regionalCorrelation.map((line, idx) => (
-                  <div key={`${line}-${idx}`} className="rounded border border-slate-700 bg-slate-950/60 px-2 py-1.5 text-xs text-slate-200">
+                  <div key={`${line}-${idx}`} className="rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700/60 px-2 py-1.5 text-xs text-slate-700 dark:text-slate-200">
                     {line}
                   </div>
                 ))}
@@ -658,35 +658,35 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
-            <div className="rounded-xl border border-red-500/40 bg-red-900/20 p-3">
-              <div className="text-xs uppercase tracking-wider text-red-200 mb-2">Immediate</div>
-              <div className="space-y-1.5 text-xs text-red-100">{commanderBrief.immediateActions.map((a) => <div key={a}>{a}</div>)}</div>
+            <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40 p-3">
+              <div className="text-xs uppercase tracking-wider text-red-700 dark:text-red-400 mb-2">Immediate</div>
+              <div className="space-y-1.5 text-xs text-red-600 dark:text-red-300">{commanderBrief.immediateActions.map((a) => <div key={a}>{a}</div>)}</div>
             </div>
-            <div className="rounded-xl border border-amber-500/40 bg-amber-900/20 p-3">
-              <div className="text-xs uppercase tracking-wider text-amber-100 mb-2">Within 2 Hrs</div>
-              <div className="space-y-1.5 text-xs text-amber-50">{commanderBrief.within2h.map((a) => <div key={a}>{a}</div>)}</div>
+            <div className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 p-3">
+              <div className="text-xs uppercase tracking-wider text-amber-700 dark:text-amber-400 mb-2">Within 2 Hrs</div>
+              <div className="space-y-1.5 text-xs text-amber-700 dark:text-amber-300">{commanderBrief.within2h.map((a) => <div key={a}>{a}</div>)}</div>
             </div>
-            <div className="rounded-xl border border-blue-500/40 bg-blue-900/20 p-3">
-              <div className="text-xs uppercase tracking-wider text-blue-100 mb-2">Within 24 Hrs</div>
-              <div className="space-y-1.5 text-xs text-blue-50">{commanderBrief.within24h.map((a) => <div key={a}>{a}</div>)}</div>
+            <div className="rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 p-3">
+              <div className="text-xs uppercase tracking-wider text-blue-700 dark:text-blue-400 mb-2">Within 24 Hrs</div>
+              <div className="space-y-1.5 text-xs text-blue-700 dark:text-blue-300">{commanderBrief.within24h.map((a) => <div key={a}>{a}</div>)}</div>
             </div>
-            <div className="rounded-xl border border-emerald-500/40 bg-emerald-900/20 p-3">
-              <div className="text-xs uppercase tracking-wider text-emerald-100 mb-2">Monitor</div>
-              <div className="space-y-1.5 text-xs text-emerald-50">{commanderBrief.monitor.map((a) => <div key={a}>{a}</div>)}</div>
+            <div className="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 p-3">
+              <div className="text-xs uppercase tracking-wider text-emerald-700 dark:text-emerald-400 mb-2">Monitor</div>
+              <div className="space-y-1.5 text-xs text-emerald-700 dark:text-emerald-300">{commanderBrief.monitor.map((a) => <div key={a}>{a}</div>)}</div>
             </div>
           </div>
 
-          <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">
-            <div className="text-xs uppercase tracking-wider text-cyan-300 mb-2">Sensor / Feed Status</div>
+          <div className="rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50/80 dark:bg-slate-800/60 p-3">
+            <div className="text-xs uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-2">Sensor / Feed Status</div>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2">
               {commanderBrief.feedStatus.map((f) => (
-                <div key={f.id} className="rounded border border-slate-700 bg-slate-950/60 p-2">
+                <div key={f.id} className="rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700/60 p-2">
                   <div className="flex items-center justify-between">
-                    <div className="text-xs text-slate-200">{f.label}</div>
-                    {f.status === 'online' ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <XCircle className="w-3.5 h-3.5 text-amber-400" />}
+                    <div className="text-xs text-slate-700 dark:text-slate-200">{f.label}</div>
+                    {f.status === 'online' ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <XCircle className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />}
                   </div>
-                  <div className="text-[11px] text-slate-400 mt-1">{f.last}</div>
-                  <div className="text-[11px] text-slate-300 mt-0.5">{f.detail}</div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">{f.last}</div>
+                  <div className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">{f.detail}</div>
                 </div>
               ))}
             </div>
@@ -697,66 +697,66 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
       {/* ── Commander Cards: Life Safety Row ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Card 1: Drinking Water Readiness */}
-        <Card className="border-slate-700 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-slate-100">
+        <Card>
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <Droplets className="w-5 h-5 text-cyan-300" />
-                <span className="text-xs uppercase tracking-wider text-cyan-300 font-semibold">Drinking Water Readiness</span>
+                <Droplets className="w-5 h-5 text-indigo-600" />
+                <span className="text-xs uppercase tracking-wider text-indigo-600 dark:text-indigo-400 font-semibold">Drinking Water Readiness</span>
               </div>
               <Badge className={`text-xs px-3 py-1 font-bold ${waterReadiness.status === 'NO-GO' ? 'bg-red-600 text-white border-red-400' : waterReadiness.status === 'CAUTION' ? 'bg-amber-500 text-slate-900 border-amber-300' : 'bg-emerald-500 text-slate-900 border-emerald-300'}`}>
                 {waterReadiness.status}
               </Badge>
             </div>
             <div className="grid grid-cols-3 gap-3">
-              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-400 uppercase">Systems</div>
-                <div className="text-lg font-bold text-white mt-0.5">{waterReadiness.affectedSystems}</div>
+              <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Systems</div>
+                <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{waterReadiness.affectedSystems}</div>
               </div>
-              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-400 uppercase">Violations</div>
-                <div className="text-lg font-bold text-white mt-0.5">{waterReadiness.activeViolations}</div>
+              <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Violations</div>
+                <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{waterReadiness.activeViolations}</div>
               </div>
-              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-400 uppercase">Days Clear</div>
-                <div className="text-lg font-bold text-white mt-0.5">{waterReadiness.daysSinceLast ?? '—'}</div>
+              <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Days Clear</div>
+                <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{waterReadiness.daysSinceLast ?? '—'}</div>
               </div>
             </div>
-            <div className="mt-2 text-xs text-slate-400">
-              Top contaminant: <span className="text-slate-200">{waterReadiness.topContaminant}</span>
+            <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+              Top contaminant: <span className="text-slate-700 dark:text-slate-200">{waterReadiness.topContaminant}</span>
             </div>
           </CardContent>
         </Card>
 
         {/* Card 2: PFAS Exposure Alert */}
-        <Card className="border-slate-700 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-slate-100">
+        <Card>
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <Biohazard className="w-5 h-5 text-purple-400" />
-                <span className="text-xs uppercase tracking-wider text-cyan-300 font-semibold">PFAS Exposure Alert</span>
+                <Biohazard className="w-5 h-5 text-purple-600" />
+                <span className="text-xs uppercase tracking-wider text-indigo-600 dark:text-indigo-400 font-semibold">PFAS Exposure Alert</span>
               </div>
               <Badge className={`text-xs px-3 py-1 font-bold ${pfasAlert.light === 'RED' ? 'bg-red-600 text-white border-red-400' : pfasAlert.light === 'AMBER' ? 'bg-amber-500 text-slate-900 border-amber-300' : 'bg-emerald-500 text-slate-900 border-emerald-300'}`}>
                 {pfasAlert.light}
               </Badge>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-400 uppercase">Detections</div>
-                <div className="text-lg font-bold text-white mt-0.5">{pfasAlert.total.toLocaleString()}</div>
+              <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Detections</div>
+                <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{pfasAlert.total.toLocaleString()}</div>
               </div>
-              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-400 uppercase">Max Conc.</div>
-                <div className="text-lg font-bold text-white mt-0.5">{pfasAlert.maxConc > 0 ? pfasAlert.maxConc.toLocaleString() : '—'}</div>
+              <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Max Conc.</div>
+                <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{pfasAlert.maxConc > 0 ? pfasAlert.maxConc.toLocaleString() : '—'}</div>
               </div>
             </div>
             {pfasAlert.top3.length > 0 && (
-              <div className="mt-2 text-xs text-slate-400">
-                Top compounds: <span className="text-slate-200">{pfasAlert.top3.join(', ')}</span>
+              <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                Top compounds: <span className="text-slate-700 dark:text-slate-200">{pfasAlert.top3.join(', ')}</span>
               </div>
             )}
             {pfasAlert.total === 0 && (
-              <div className="mt-2 text-xs text-slate-400 italic">No PFAS detections in current scope</div>
+              <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 italic">No PFAS detections in current scope</div>
             )}
           </CardContent>
         </Card>
@@ -765,75 +765,75 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
       {/* ── Commander Cards: Threat Assessment Row ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Card 3: Contamination Proximity */}
-        <Card className="border-slate-700 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-slate-100">
+        <Card>
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-3">
-              <Skull className="w-5 h-5 text-red-400" />
-              <span className="text-xs uppercase tracking-wider text-cyan-300 font-semibold">Contamination Proximity</span>
+              <Skull className="w-5 h-5 text-red-600" />
+              <span className="text-xs uppercase tracking-wider text-indigo-600 dark:text-indigo-400 font-semibold">Contamination Proximity</span>
             </div>
             <div className="grid grid-cols-3 gap-3 mb-3">
-              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-400 uppercase">NPL Sites</div>
-                <div className="text-lg font-bold text-white mt-0.5">{contaminationProximity.nplCount}</div>
+              <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">NPL Sites</div>
+                <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{contaminationProximity.nplCount}</div>
               </div>
-              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-400 uppercase">TRI Facilities</div>
-                <div className="text-lg font-bold text-white mt-0.5">{contaminationProximity.triCount}</div>
+              <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">TRI Facilities</div>
+                <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{contaminationProximity.triCount}</div>
               </div>
-              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-400 uppercase">Carcinogen</div>
-                <div className={`text-lg font-bold mt-0.5 ${contaminationProximity.carcinogenCount > 0 ? 'text-red-400' : 'text-white'}`}>{contaminationProximity.carcinogenCount}</div>
+              <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Carcinogen</div>
+                <div className={`text-lg font-bold mt-0.5 ${contaminationProximity.carcinogenCount > 0 ? 'text-red-600' : 'text-slate-900'}`}>{contaminationProximity.carcinogenCount}</div>
               </div>
             </div>
             {contaminationProximity.top3.length > 0 ? (
               <div className="space-y-1.5">
                 {contaminationProximity.top3.map((t, i) => (
-                  <div key={`${t.name}-${i}`} className="flex items-center gap-2 text-xs rounded border border-slate-700 bg-slate-950/60 px-2 py-1.5">
+                  <div key={`${t.name}-${i}`} className="flex items-center gap-2 text-xs rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 px-2 py-1.5">
                     <Badge className={`text-[10px] shrink-0 ${t.type === 'NPL' ? 'bg-red-600 text-white border-red-400' : 'bg-amber-500 text-slate-900 border-amber-300'}`}>{t.type}</Badge>
-                    <span className="text-slate-200 truncate" title={t.name}>{t.name}</span>
-                    <span className="text-slate-400 ml-auto shrink-0">{t.detail}</span>
+                    <span className="text-slate-700 dark:text-slate-200 truncate" title={t.name}>{t.name}</span>
+                    <span className="text-slate-500 dark:text-slate-400 ml-auto shrink-0">{t.detail}</span>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-xs text-slate-400 italic">No contamination data available</div>
+              <div className="text-xs text-slate-500 dark:text-slate-400 italic">No contamination data available</div>
             )}
           </CardContent>
         </Card>
 
         {/* Card 4: Weather Threat Assessment */}
-        <Card className="border-slate-700 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-slate-100">
+        <Card>
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-3">
-              <CloudLightning className="w-5 h-5 text-yellow-400" />
-              <span className="text-xs uppercase tracking-wider text-cyan-300 font-semibold">Weather Threat Assessment</span>
+              <CloudLightning className="w-5 h-5 text-yellow-600" />
+              <span className="text-xs uppercase tracking-wider text-indigo-600 dark:text-indigo-400 font-semibold">Weather Threat Assessment</span>
             </div>
             {weatherThreat ? (
               <>
                 <div className="grid grid-cols-3 gap-3 mb-3">
-                  <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
-                    <div className="text-[11px] text-slate-400 uppercase">Total Alerts</div>
-                    <div className="text-lg font-bold text-white mt-0.5">{weatherThreat.totalAlerts}</div>
+                  <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Total Alerts</div>
+                    <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{weatherThreat.totalAlerts}</div>
                   </div>
-                  <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
-                    <div className="text-[11px] text-slate-400 uppercase">Extreme/Severe</div>
-                    <div className={`text-lg font-bold mt-0.5 ${weatherThreat.extremeSevere > 0 ? 'text-red-400' : 'text-white'}`}>{weatherThreat.extremeSevere}</div>
+                  <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Extreme/Severe</div>
+                    <div className={`text-lg font-bold mt-0.5 ${weatherThreat.extremeSevere > 0 ? 'text-red-600' : 'text-slate-900'}`}>{weatherThreat.extremeSevere}</div>
                   </div>
-                  <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
-                    <div className="text-[11px] text-slate-400 uppercase">Flood Alerts</div>
-                    <div className={`text-lg font-bold mt-0.5 ${weatherThreat.floodCount > 0 ? 'text-amber-400' : 'text-white'}`}>{weatherThreat.floodCount}</div>
+                  <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Flood Alerts</div>
+                    <div className={`text-lg font-bold mt-0.5 ${weatherThreat.floodCount > 0 ? 'text-amber-600' : 'text-slate-900'}`}>{weatherThreat.floodCount}</div>
                   </div>
                 </div>
                 {weatherThreat.mostSevere ? (
-                  <div className="rounded border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-200">
-                    <span className="text-slate-400">Most severe: </span>{weatherThreat.mostSevere.headline}
+                  <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 px-3 py-2 text-xs text-slate-700 dark:text-slate-200">
+                    <span className="text-slate-500 dark:text-slate-400">Most severe:</span>{weatherThreat.mostSevere.headline}
                   </div>
                 ) : (
-                  <div className="text-xs text-emerald-400 italic">No active weather alerts</div>
+                  <div className="text-xs text-emerald-600 italic">No active weather alerts</div>
                 )}
               </>
             ) : (
-              <div className="text-xs text-slate-400 italic">Weather alert data unavailable</div>
+              <div className="text-xs text-slate-500 dark:text-slate-400 italic">Weather alert data unavailable</div>
             )}
           </CardContent>
         </Card>
@@ -842,64 +842,64 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
       {/* ── Commander Cards: Administrative Row ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Card 5: Compliance Countdown */}
-        <Card className="border-slate-700 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-slate-100">
+        <Card>
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-3">
-              <TimerReset className="w-5 h-5 text-cyan-300" />
-              <span className="text-xs uppercase tracking-wider text-cyan-300 font-semibold">Compliance Countdown</span>
+              <TimerReset className="w-5 h-5 text-indigo-600" />
+              <span className="text-xs uppercase tracking-wider text-indigo-600 dark:text-indigo-400 font-semibold">Compliance Countdown</span>
             </div>
             <div className="grid grid-cols-3 gap-3 mb-3">
-              <div className="rounded border border-red-500/40 bg-red-900/20 p-2.5 text-center">
-                <div className="text-[11px] text-red-300 uppercase">30 Days</div>
-                <div className="text-lg font-bold text-red-400 mt-0.5">{complianceCountdown.expiring30}</div>
+              <div className="rounded border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40 p-2.5 text-center">
+                <div className="text-[11px] text-red-600 dark:text-red-400 uppercase">30 Days</div>
+                <div className="text-lg font-bold text-red-700 dark:text-red-300 mt-0.5">{complianceCountdown.expiring30}</div>
               </div>
-              <div className="rounded border border-amber-500/40 bg-amber-900/20 p-2.5 text-center">
-                <div className="text-[11px] text-amber-300 uppercase">90 Days</div>
-                <div className="text-lg font-bold text-amber-400 mt-0.5">{complianceCountdown.expiring90}</div>
+              <div className="rounded border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 p-2.5 text-center">
+                <div className="text-[11px] text-amber-600 dark:text-amber-400 uppercase">90 Days</div>
+                <div className="text-lg font-bold text-amber-700 dark:text-amber-300 mt-0.5">{complianceCountdown.expiring90}</div>
               </div>
-              <div className="rounded border border-blue-500/40 bg-blue-900/20 p-2.5 text-center">
-                <div className="text-[11px] text-blue-300 uppercase">180 Days</div>
-                <div className="text-lg font-bold text-blue-400 mt-0.5">{complianceCountdown.expiring180}</div>
+              <div className="rounded border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 p-2.5 text-center">
+                <div className="text-[11px] text-blue-600 dark:text-blue-400 uppercase">180 Days</div>
+                <div className="text-lg font-bold text-blue-700 dark:text-blue-300 mt-0.5">{complianceCountdown.expiring180}</div>
               </div>
             </div>
             <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-400">Facilities without recent inspection</span>
-              <span className={`font-semibold ${complianceCountdown.uninspected > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>{complianceCountdown.uninspected}</span>
+              <span className="text-slate-500 dark:text-slate-400">Facilities without recent inspection</span>
+              <span className={`font-semibold ${complianceCountdown.uninspected > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>{complianceCountdown.uninspected}</span>
             </div>
             <div className="flex items-center justify-between text-xs mt-1">
-              <span className="text-slate-400">Days since last enforcement</span>
-              <span className="text-slate-200 font-semibold">{complianceCountdown.daysSinceEnforcement ?? '—'}</span>
+              <span className="text-slate-500 dark:text-slate-400">Days since last enforcement</span>
+              <span className="text-slate-700 dark:text-slate-200 font-semibold">{complianceCountdown.daysSinceEnforcement ?? '—'}</span>
             </div>
           </CardContent>
         </Card>
 
         {/* Card 6: Enforcement Exposure */}
-        <Card className="border-slate-700 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-slate-100">
+        <Card>
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-3">
-              <Gavel className="w-5 h-5 text-amber-400" />
-              <span className="text-xs uppercase tracking-wider text-cyan-300 font-semibold">Enforcement Exposure</span>
+              <Gavel className="w-5 h-5 text-amber-600" />
+              <span className="text-xs uppercase tracking-wider text-indigo-600 dark:text-indigo-400 font-semibold">Enforcement Exposure</span>
             </div>
             <div className="grid grid-cols-3 gap-3 mb-3">
-              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-400 uppercase">Assessed</div>
-                <div className="text-lg font-bold text-white mt-0.5">${enforcementExposure.totalAssessed > 0 ? (enforcementExposure.totalAssessed / 1000).toFixed(0) + 'K' : '0'}</div>
+              <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Assessed</div>
+                <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">${enforcementExposure.totalAssessed > 0 ? (enforcementExposure.totalAssessed / 1000).toFixed(0) + 'K' : '0'}</div>
               </div>
-              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-400 uppercase">Collected</div>
-                <div className="text-lg font-bold text-white mt-0.5">${enforcementExposure.totalCollected > 0 ? (enforcementExposure.totalCollected / 1000).toFixed(0) + 'K' : '0'}</div>
+              <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Collected</div>
+                <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">${enforcementExposure.totalCollected > 0 ? (enforcementExposure.totalCollected / 1000).toFixed(0) + 'K' : '0'}</div>
               </div>
-              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-400 uppercase">Open Cases</div>
-                <div className="text-lg font-bold text-white mt-0.5">{enforcementExposure.openCases}</div>
+              <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Open Cases</div>
+                <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{enforcementExposure.openCases}</div>
               </div>
             </div>
             <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-400">Average penalty per case</span>
-              <span className="text-slate-200 font-semibold">${enforcementExposure.avgPenalty > 0 ? enforcementExposure.avgPenalty.toLocaleString(undefined, { maximumFractionDigits: 0 }) : '0'}</span>
+              <span className="text-slate-500 dark:text-slate-400">Average penalty per case</span>
+              <span className="text-slate-700 dark:text-slate-200 font-semibold">${enforcementExposure.avgPenalty > 0 ? enforcementExposure.avgPenalty.toLocaleString(undefined, { maximumFractionDigits: 0 }) : '0'}</span>
             </div>
             {enforcementExposure.totalAssessed > 0 && enforcementExposure.totalCollected < enforcementExposure.totalAssessed && (
-              <div className="mt-1 text-xs text-amber-400">
+              <div className="mt-1 text-xs text-amber-600 dark:text-amber-400">
                 Collection gap: ${((enforcementExposure.totalAssessed - enforcementExposure.totalCollected) / 1000).toFixed(0)}K outstanding
               </div>
             )}
@@ -909,42 +909,42 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
 
       {/* ── Card 7: Installation Ranking (full-width bar) ── */}
       {installationRanking && (
-        <Card className="border-slate-700 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-slate-100">
+        <Card>
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-3">
-              <BarChart3 className="w-5 h-5 text-cyan-300" />
-              <span className="text-xs uppercase tracking-wider text-cyan-300 font-semibold">Installation Ranking vs DOD Average</span>
+              <BarChart3 className="w-5 h-5 text-indigo-600" />
+              <span className="text-xs uppercase tracking-wider text-indigo-600 dark:text-indigo-400 font-semibold">Installation Ranking vs DOD Average</span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
-              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-400 uppercase">Your Violations</div>
-                <div className="text-lg font-bold text-white mt-0.5">{installationRanking.myViolations}</div>
+              <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Your Violations</div>
+                <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{installationRanking.myViolations}</div>
               </div>
-              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-400 uppercase">DOD Median</div>
-                <div className="text-lg font-bold text-white mt-0.5">{installationRanking.median}</div>
+              <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">DOD Median</div>
+                <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{installationRanking.median}</div>
               </div>
-              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-400 uppercase">Compliance</div>
-                <div className={`text-lg font-bold mt-0.5 ${installationRanking.complianceRate >= installationRanking.dodAvgRate ? 'text-emerald-400' : 'text-red-400'}`}>{installationRanking.complianceRate}%</div>
+              <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Compliance</div>
+                <div className={`text-lg font-bold mt-0.5 ${installationRanking.complianceRate >= installationRanking.dodAvgRate ? 'text-emerald-600' : 'text-red-600'}`}>{installationRanking.complianceRate}%</div>
               </div>
-              <div className="rounded border border-slate-700 bg-slate-950/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-400 uppercase">DOD Avg</div>
-                <div className="text-lg font-bold text-white mt-0.5">{installationRanking.dodAvgRate}%</div>
+              <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">DOD Avg</div>
+                <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{installationRanking.dodAvgRate}%</div>
               </div>
             </div>
             <div className="space-y-1">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400">Percentile rank (lower = fewer violations)</span>
-                <span className={`font-semibold ${installationRanking.percentile <= 50 ? 'text-emerald-400' : 'text-amber-400'}`}>{installationRanking.percentile}th percentile</span>
+                <span className="text-slate-500 dark:text-slate-400">Percentile rank (lower = fewer violations)</span>
+                <span className={`font-semibold ${installationRanking.percentile <= 50 ? 'text-emerald-600' : 'text-amber-600'}`}>{installationRanking.percentile}th percentile</span>
               </div>
-              <div className="h-2.5 bg-slate-700 rounded-full overflow-hidden">
+              <div className="h-2.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                 <div
-                  className={`h-full rounded-full transition-all ${installationRanking.percentile <= 25 ? 'bg-emerald-500' : installationRanking.percentile <= 50 ? 'bg-cyan-500' : installationRanking.percentile <= 75 ? 'bg-amber-500' : 'bg-red-500'}`}
+                  className={`h-full rounded-full transition-all ${installationRanking.percentile <= 25 ? 'bg-emerald-500' : installationRanking.percentile <= 50 ? 'bg-indigo-500' : installationRanking.percentile <= 75 ? 'bg-amber-500' : 'bg-red-500'}`}
                   style={{ width: `${installationRanking.percentile}%` }}
                 />
               </div>
-              <div className="flex justify-between text-[10px] text-slate-500">
+              <div className="flex justify-between text-[10px] text-slate-400">
                 <span>Better</span>
                 <span>{installationRanking.totalFacilities} facilities in scope</span>
                 <span>Worse</span>
