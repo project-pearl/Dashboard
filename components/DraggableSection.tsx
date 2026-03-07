@@ -96,21 +96,25 @@ export function DraggableSection({
           </button>
         </div>
       )}
-      {/* Ask PIN + Collapse — top-right, visible on hover or when collapsed */}
+      {/* Ask PIN — always visible; Collapse — hover-only */}
       {canCollapse && (
-        <div className={`absolute top-2 right-2 z-10 flex gap-1 transition-all ${
-          collapsed || askPinOpen ? 'opacity-100' : 'opacity-0 group-hover/section:opacity-100'
-        }`}>
+        <div className="absolute top-2 right-2 z-10 flex gap-1">
           <button
             onClick={() => setAskPinOpen(v => !v)}
-            className="p-1 rounded-md border border-slate-200 bg-white/90 shadow-sm transition-all hover:border-blue-300 hover:shadow"
+            className={`p-1 rounded-md border shadow-sm transition-all hover:border-blue-300 hover:shadow ${
+              askPinOpen
+                ? 'border-blue-300 bg-blue-50 dark:bg-blue-950/40'
+                : 'border-slate-200 dark:border-slate-600 bg-white/90 dark:bg-slate-800/90'
+            }`}
             title="Ask PIN"
           >
             <HelpCircle className="h-3.5 w-3.5 text-blue-400" />
           </button>
           <button
             onClick={() => setCollapsed(prev => !prev)}
-            className="p-1 rounded-md border border-slate-200 bg-white/90 shadow-sm transition-all hover:border-blue-300 hover:shadow"
+            className={`p-1 rounded-md border border-slate-200 dark:border-slate-600 bg-white/90 dark:bg-slate-800/90 shadow-sm transition-all hover:border-blue-300 hover:shadow ${
+              collapsed ? 'opacity-100' : 'opacity-0 group-hover/section:opacity-100'
+            }`}
             title={collapsed ? `Expand: ${label}` : `Minimize: ${label}`}
           >
             {collapsed
