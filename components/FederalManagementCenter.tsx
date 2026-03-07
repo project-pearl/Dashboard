@@ -1133,6 +1133,51 @@ export function FederalManagementCenter(props: Props) {
   useEffect(() => {
     let cancelled = false;
     let pollTimer: ReturnType<typeof setTimeout> | null = null;
+    const allStates = [...new Set(baseRegionData.map(r => r.state))];
+
+    async function fillMissingAttainsStates(
+      bulk: Record<string, Array<{ name: string; category: string; alertLevel: AlertLevel; causes: string[]; cycle: string; waterType?: string }>>,
+      loaded: Set<string>
+    ) {
+      const missing = allStates.filter(s => !loaded.has(s));
+      if (missing.length === 0) return { bulk, loaded };
+
+      // Prioritize Florida first since it's currently a known gap.
+      const prioritized = [...missing.filter(s => s === 'FL'), ...missing.filter(s => s !== 'FL')].slice(0, 4);
+      const additions: typeof bulk = {};
+      const loadedNow: string[] = [];
+
+      await Promise.all(prioritized.map(async (stateCode) => {
+        try {
+          const res = await fetch(`/api/water-data?action=attains-bulk&statecode=${stateCode}`, { cache: 'no-store' });
+          if (!res.ok) return;
+          const json = await res.json();
+          const rows = Array.isArray(json?.waterbodies)
+            ? json.waterbodies.map((wb: any) => ({
+                id: wb.id || '',
+                name: wb.name || wb.id || '',
+                category: wb.category || '',
+                alertLevel: (wb.alertLevel || 'none') as AlertLevel,
+                causes: wb.causes || [],
+                cycle: '',
+                waterType: wb.waterType || undefined,
+              }))
+            : [];
+          if (rows.length > 0) {
+            additions[stateCode] = rows;
+            loadedNow.push(stateCode);
+          }
+        } catch {
+          // Keep silent and try again on next poll.
+        }
+      }));
+
+      if (loadedNow.length === 0) return { bulk, loaded };
+      return {
+        bulk: { ...bulk, ...additions },
+        loaded: new Set([...loaded, ...loadedNow]),
+      };
+    }
 
     async function loadFromCache() {
       try {
@@ -1175,12 +1220,13 @@ export function FederalManagementCenter(props: Props) {
             }
           }
 
+          const hydrated = await fillMissingAttainsStates(bulk, loaded);
+
           if (!cancelled) {
-            setAttainsBulk(bulk);
-            setAttainsBulkLoaded(loaded);
-            const allStates = [...new Set(baseRegionData.map(r => r.state))];
-            setAttainsBulkLoading(new Set(allStates.filter(s => !loaded.has(s))));
-            console.log(`[ATTAINS] Loaded ${loaded.size} states into UI`);
+            setAttainsBulk(hydrated.bulk);
+            setAttainsBulkLoaded(hydrated.loaded);
+            setAttainsBulkLoading(new Set(allStates.filter(s => !hydrated.loaded.has(s))));
+            console.log(`[ATTAINS] Loaded ${hydrated.loaded.size} states into UI`);
           }
         }
 

@@ -46,6 +46,8 @@ import { DraggableSection } from './DraggableSection';
 import RoleTrainingGuide from '@/components/RoleTrainingGuide';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import { NwisGwPanel } from '@/components/NwisGwPanel';
+import { UserManagementPanel } from './UserManagementPanel';
+import { getInvitableRoles } from '@/lib/adminHierarchy';
 import dynamic from 'next/dynamic';
 
 const GrantOpportunityMatcher = dynamic(
@@ -94,7 +96,7 @@ type Props = {
 
 type ViewLens = 'overview' | 'briefing' | 'planner' | 'trends' | 'compliance' |
   'water-quality' | 'public-health' | 'habitat' | 'outdoor-classroom' | 'student-monitoring' |
-  'student-uploads' | 'drinking-water-safety' | 'debate' | 'reports' | 'funding' | 'training';
+  'student-uploads' | 'drinking-water-safety' | 'debate' | 'games' | 'reports' | 'funding' | 'training' | 'users';
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -125,6 +127,8 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set(['drinking-water-safety-panel', 'sdwis', 'disclaimer']) },
   debate: { label: 'Debate Topics', description: 'Water policy debate topics and structured arguments',
     sections: new Set(['debate-topics-panel', 'disclaimer']) },
+  games: { label: 'Games', description: 'Water quality games and interactive learning',
+    sections: new Set(['shuck-and-destroy', 'disclaimer']) },
   reports:     { label: 'Reports', description: 'Educational reports and teacher resources',
     sections: new Set(['eduhub', 'teacher', 'reports-hub', 'disclaimer']) },
   funding:     { label: 'Funding & Grants', description: 'K-12 education grants for water science',
@@ -134,6 +138,10 @@ const LENS_CONFIG: Record<ViewLens, {
   training: {
     label: 'Training', description: 'Deployment training and onboarding guide',
     sections: new Set(['training']),
+  },
+  users: {
+    label: 'Users', description: 'User management and invite delegation',
+    sections: new Set(['users-panel']),
   },
 };
 
@@ -1784,18 +1792,6 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
         {/* Water Quality Challenges — always visible */}
         <WaterQualityChallenges context={isTeacher ? 'k12-teacher' : 'k12-student'} />
 
-        {/* ── WATER QUALITY GAMES ── */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-3 px-1">
-            <Image src="/Mascot.png" alt="PIN Mascot" width={90} height={90} />
-            <div>
-              <h2 className="text-lg font-bold text-slate-800">Water Quality Games</h2>
-              <span className="text-xs text-slate-400">Learn by playing — can you save the bay?</span>
-            </div>
-          </div>
-          <ShuckAndDestroy />
-        </div>
-
 
         {/* ── STATEWIDE COMPONENTS — shown when a waterbody is selected AND mock data is available ── */}
         {activeDetailId && displayData && regionMockData && (
@@ -2360,6 +2356,18 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
             case 'student-upload-panel': return DS(<StudentUploadPanel stateAbbr={stateAbbr} isTeacher={isTeacher} />);
             case 'drinking-water-safety-panel': return DS(<DrinkingWaterSafetyPanel stateAbbr={stateAbbr} />);
             case 'debate-topics-panel': return DS(<DebateTopicsPanel stateAbbr={stateAbbr} stateName={stateName} isTeacher={isTeacher} />);
+            case 'shuck-and-destroy': return DS(
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 px-1">
+                  <Image src="/Mascot.png" alt="PIN Mascot" width={90} height={90} />
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-white">Water Quality Games</h3>
+                    <span className="text-xs text-slate-400">Learn by playing — can you save the bay?</span>
+                  </div>
+                </div>
+                <ShuckAndDestroy />
+              </div>
+            );
 
             case 'location-report': return DS(<LocationReportCard />);
 
@@ -2474,6 +2482,16 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
             case 'training': return DS(
               <RoleTrainingGuide rolePath="/dashboard/k12" />
             );
+
+            case 'users-panel': {
+              if (user?.adminLevel === 'none') return null;
+              return DS(
+                <UserManagementPanel scopeFilter={{
+                  allowedRoles: getInvitableRoles(user?.adminLevel || 'none', user?.role || 'K12'),
+                  lockedState: user?.adminLevel === 'super_admin' ? undefined : user?.state,
+                }} />
+              );
+            }
 
             default: return null;
           }

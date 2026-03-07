@@ -8,6 +8,8 @@ import { STATE_GEO_LEAFLET, FIPS_TO_ABBR } from '@/lib/mapUtils';
 import { REGION_META, getWaterbodyDataSources } from '@/lib/useWaterData';
 import { resolveWaterbodyCoordinates } from '@/lib/waterbodyCentroids';
 import { useAuth } from '@/lib/authContext';
+import { UserManagementPanel } from './UserManagementPanel';
+import { getInvitableRoles } from '@/lib/adminHierarchy';
 import RoleTrainingGuide from '@/components/RoleTrainingGuide';
 import { useAdminState } from '@/lib/adminStateContext';
 import { getStateMS4Jurisdictions } from '@/lib/stateWaterData';
@@ -73,7 +75,7 @@ type AlertLevel = 'none' | 'low' | 'medium' | 'high';
 type ViewLens = 'overview' | 'briefing' | 'political-briefing' | 'water-quality'
   | 'infrastructure' | 'compliance' | 'stormwater' | 'public-health' | 'habitat'
   | 'funding' | 'ej-equity' | 'emergency' | 'scorecard' | 'reports'
-  | 'trends' | 'policy' | 'wqt' | 'training';
+  | 'trends' | 'policy' | 'wqt' | 'training' | 'users';
 
 type Props = {
   jurisdictionId: string;
@@ -234,6 +236,11 @@ const LENS_CONFIG: Record<ViewLens, {
   training: {
     label: 'Training', description: 'Deployment training and onboarding guide',
     sections: new Set(['training']),
+  },
+  users: {
+    label: 'Users',
+    description: 'User management and role administration',
+    sections: new Set(['users-panel']),
   },
 };
 
@@ -2310,6 +2317,17 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
           case 'training': return DS(
             <RoleTrainingGuide rolePath="/dashboard/local" />
           );
+
+        case 'users-panel': {
+          if (user?.adminLevel === 'none') return null;
+          return DS(
+            <UserManagementPanel scopeFilter={{
+              allowedRoles: getInvitableRoles(user?.adminLevel || 'none', user?.role || 'Local'),
+              lockedState: user?.adminLevel === 'super_admin' ? undefined : user?.state,
+              lockedJurisdiction: user?.adminLevel === 'super_admin' ? undefined : user?.ms4Jurisdiction,
+            }} />
+          );
+        }
 
           default: return DS(
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-500">

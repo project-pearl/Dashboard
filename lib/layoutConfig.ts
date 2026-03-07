@@ -53,12 +53,14 @@ export const DEFAULT_SECTIONS = {
     { id: 'student-monitoring-panel',    label: 'Student Monitoring Tools',    order: 20, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'student-upload-panel',        label: 'Student Data Uploads',        order: 21, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'drinking-water-safety-panel', label: 'Drinking Water Safety',      order: 22, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'shuck-and-destroy',          label: 'Water Quality Games',         order: 22.2, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'debate-topics-panel',       label: 'Debate Topics',              order: 22.3, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'groundwater',                label: 'Groundwater Monitoring (WDFN)', order: 22.5, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'delta-changelog',            label: 'Data Change Log',              order: 22.65, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'location-report', label: 'Location Water Quality Report', order: 23, visible: true, defaultExpanded: false, lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',  label: 'Platform Disclaimer',          order: 24, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'users-panel', label: 'User Management',              order: 998, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'training',    label: 'Deployment Training',          order: 999, visible: true, defaultExpanded: true, lensControlled: true },
   ],
 
@@ -199,6 +201,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'location-report',     label: 'Location Water Quality Report', order: 88, visible: true, defaultExpanded: false, lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',          label: 'Platform Disclaimer',          order: 89, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'users-panel',         label: 'User Management',             order: 998, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'training',            label: 'Deployment Training',          order: 999, visible: true, defaultExpanded: true, lensControlled: true },
   ],
 
@@ -326,6 +329,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'location-report',     label: 'Location Water Quality Report',    order: 86, visible: true, defaultExpanded: false, lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',          label: 'Platform Disclaimer',              order: 87, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'users-panel',         label: 'User Management',                 order: 998, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'training',            label: 'Deployment Training',              order: 999, visible: true, defaultExpanded: true, lensControlled: true },
   ],
 
@@ -596,6 +600,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'location-report',             label: 'Location Water Quality Report', order: 26, visible: true, defaultExpanded: false, lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',  label: 'Platform Disclaimer',          order: 27, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'users-panel', label: 'User Management',              order: 998, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'training',    label: 'Deployment Training',          order: 999, visible: true, defaultExpanded: true, lensControlled: true },
   ],
 
@@ -664,6 +669,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'infra-green',        label: 'Green Infrastructure',        order: 39.4, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'location-report',    label: 'Location Water Quality Report', order: 40, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'disclaimer',         label: 'Platform Disclaimer',         order: 41, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'users-panel',        label: 'User Management',             order: 998, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'training',           label: 'Deployment Training',         order: 999, visible: true, defaultExpanded: true, lensControlled: true },
   ],
 
@@ -803,6 +809,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'fund-capital-strategy',  label: 'Capital Funding Strategy',        order: 95, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'location-report',       label: 'Location Water Quality Report',  order: 96, visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'disclaimer',            label: 'Platform Disclaimer',            order: 97, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'users-panel',           label: 'User Management',               order: 998, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'training',              label: 'Deployment Training',            order: 999, visible: true, defaultExpanded: true, lensControlled: true },
   ],
 
@@ -938,6 +945,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'local-rpt-annual',            label: 'Annual Report',                 order: 79,  visible: true, defaultExpanded: true,  lensControlled: true },
     // ── Always visible ──
     { id: 'disclaimer',  label: 'Platform Disclaimer',  order: 80,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'users-panel', label: 'User Management',      order: 998, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'training',    label: 'Deployment Training',  order: 999, visible: true, defaultExpanded: true, lensControlled: true },
   ],
 

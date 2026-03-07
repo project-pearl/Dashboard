@@ -96,6 +96,8 @@ import { WaterQualityAlerts } from '@/components/WaterQualityAlerts';
 import { MDEExportTool } from '@/components/MDEExportTool';
 import LocationReportCard from '@/components/LocationReportCard';
 import { getEpaRegionForState } from '@/lib/epa-regions';
+import { UserManagementPanel } from './UserManagementPanel';
+import { getInvitableRoles } from '@/lib/adminHierarchy';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -122,7 +124,7 @@ type Props = {
 type ViewLens = 'overview' | 'briefing' | 'political-briefing' | 'trends' | 'policy'
   | 'compliance' | 'water-quality' | 'public-health' | 'habitat' | 'receiving-waters'
   | 'stormwater-bmps' | 'infrastructure' | 'monitoring' | 'disaster'
-  | 'tmdl-compliance' | 'scorecard' | 'reports' | 'mcm-manager' | 'funding' | 'wqt' | 'training';
+  | 'tmdl-compliance' | 'scorecard' | 'reports' | 'mcm-manager' | 'funding' | 'wqt' | 'training' | 'users';
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -258,6 +260,12 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Training', description: 'Deployment training and onboarding guide',
     defaultOverlay: 'impairment',
     sections: new Set(['training']),
+  },
+  users: {
+    label: 'Users',
+    description: 'User management and access control',
+    defaultOverlay: 'impairment',
+    sections: new Set(['users-panel']),
   },
 };
 
@@ -5849,6 +5857,17 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
             case 'training': return DS(
               <RoleTrainingGuide rolePath="/dashboard/ms4" />
             );
+
+            case 'users-panel': {
+              if (user?.adminLevel === 'none') return null;
+              return DS(
+                <UserManagementPanel scopeFilter={{
+                  allowedRoles: getInvitableRoles(user?.adminLevel || 'none', user?.role || 'MS4'),
+                  lockedState: user?.adminLevel === 'super_admin' ? undefined : user?.state,
+                  lockedJurisdiction: user?.adminLevel === 'super_admin' ? undefined : user?.ms4Jurisdiction,
+                }} />
+              );
+            }
 
             default: return null;
           }

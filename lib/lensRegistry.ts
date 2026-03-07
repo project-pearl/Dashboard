@@ -32,6 +32,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'reports', label: 'Reports' },
     { id: 'interagency', label: 'Cross-Agency' },
     { id: 'funding', label: 'Funding & Grants' },
+    { id: 'users', label: 'Users' },
     { id: 'training', label: 'Training' },
   ],
   // ── State (18 items) ───────────────────────────────────────────────────────
@@ -55,6 +56,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'permits',        label: 'Permits & Enforcement' },
     { id: 'funding',        label: 'Funding & Grants' },
     { id: 'wqt',            label: 'Water Quality Trading', gateStates: NUTRIENT_TRADING_STATES },
+    { id: 'users',          label: 'Users' },
     { id: 'training',       label: 'Training' },
   ],
   // ── Local Government (16 items) ────────────────────────────────────────────
@@ -76,6 +78,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'scorecard',           label: 'Scorecard' },
     { id: 'reports',             label: 'Reports' },
     { id: 'wqt',                 label: 'Water Quality Trading', gateStates: NUTRIENT_TRADING_STATES },
+    { id: 'users',               label: 'Users' },
     { id: 'training',            label: 'Training' },
   ],
   // ── MS4 / Municipal Stormwater (17 items) ──────────────────────────────────
@@ -100,6 +103,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'mcm-manager',       label: 'MCM Manager' },
     { id: 'funding',           label: 'Funding & Grants' },
     { id: 'wqt',              label: 'Water Quality Trading', gateStates: NUTRIENT_TRADING_STATES },
+    { id: 'users',            label: 'Users' },
     { id: 'training',         label: 'Training' },
   ],
   // ── Municipal Utility (18 items) ───────────────────────────────────────────
@@ -123,6 +127,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'reports',            label: 'Reports' },
     { id: 'asset-management',   label: 'Asset Management' },
     { id: 'funding',            label: 'Funding & Grants' },
+    { id: 'users',              label: 'Users' },
     { id: 'training',           label: 'Training' },
   ],
   // ── Site Intelligence (17 lenses) ──────────────────────────────────────────
@@ -158,6 +163,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'supply-chain',        label: 'Supply Chain' },
     { id: 'trends',              label: 'Trends & Outlook' },
     { id: 'funding',             label: 'Funding & Grants' },
+    { id: 'users',               label: 'Users' },
     { id: 'training',            label: 'Training' },
   ],
   // ── Biotech / Pharma (11 items) ────────────────────────────────────────────
@@ -256,8 +262,10 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'student-uploads',        label: 'Student Uploads' },
     { id: 'drinking-water-safety',  label: 'Drinking Water Safety' },
     { id: 'debate',                 label: 'Debate Topics' },
+    { id: 'games',                  label: 'Games' },
     { id: 'reports',                label: 'Reports' },
     { id: 'funding',                label: 'Funding & Grants' },
+    { id: 'users',                  label: 'Users' },
     { id: 'training',               label: 'Training' },
   ],
   // ── PEARL Admin (11 items) ──────────────────────────────────────────────────

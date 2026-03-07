@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { checkIsAdmin } from '@/lib/authTypes';
+import { resolveAdminLevel } from '@/lib/authTypes';
 
 export async function DELETE(
   request: NextRequest,
@@ -27,12 +27,12 @@ export async function DELETE(
   const adminClient = createClient(anonUrl, serviceKey);
   const { data: profile } = await adminClient
     .from('profiles')
-    .select('is_admin')
+    .select('admin_level, email')
     .eq('id', userData.user.id)
     .single();
 
-  const isAdmin = !!profile?.is_admin || checkIsAdmin(userData.user.email || '');
-  if (!isAdmin) return NextResponse.json({ error: 'Admin access required.' }, { status: 403 });
+  const adminLevel = resolveAdminLevel(profile?.admin_level, profile?.email || userData.user.email || '');
+  if (adminLevel === 'none') return NextResponse.json({ error: 'Admin access required.' }, { status: 403 });
 
   const uid = params.uid;
   if (!uid) return NextResponse.json({ error: 'Missing target user id.' }, { status: 400 });

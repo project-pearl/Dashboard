@@ -31,13 +31,16 @@ import { NwisGwPanel } from '@/components/NwisGwPanel';
 import { EmergingContaminantsTracker } from '@/components/EmergingContaminantsTracker';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import RoleTrainingGuide from '@/components/RoleTrainingGuide';
+import { UserManagementPanel } from './UserManagementPanel';
+import { getInvitableRoles } from '@/lib/adminHierarchy';
+import { useAuth } from '@/lib/authContext';
 
 // ─── View Lens ──────────────────────────────────────────────────────────────
 
 type ViewLens = 'overview' | 'briefing' | 'political-briefing' | 'trends' | 'policy'
   | 'compliance' | 'water-quality' | 'public-health' | 'habitat' | 'source-receiving'
   | 'treatment-process' | 'infrastructure' | 'laboratory' | 'disaster'
-  | 'permit-limits' | 'scorecard' | 'reports' | 'asset-management' | 'funding' | 'training' ;
+  | 'permit-limits' | 'scorecard' | 'reports' | 'asset-management' | 'funding' | 'training' | 'users';
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -146,6 +149,11 @@ const LENS_CONFIG: Record<ViewLens, {
   training: {
     label: 'Training', description: 'Deployment training and onboarding guide',
     sections: new Set(['training']),
+  },
+  users: {
+    label: 'Users',
+    description: 'User management and role administration',
+    sections: new Set(['users-panel']),
   },
 };
 
@@ -271,6 +279,7 @@ type Props = { systemId: string };
 export default function UtilityManagementCenter({ systemId }: Props) {
   const [activeLens, setActiveLens] = useLensParam<ViewLens>('overview');
   const lens = LENS_CONFIG[activeLens] ?? LENS_CONFIG['overview'];
+  const { user } = useAuth();
 
   return (
     <div className="min-h-full">
@@ -2080,6 +2089,16 @@ export default function UtilityManagementCenter({ systemId }: Props) {
             case 'training': return DS(
               <RoleTrainingGuide rolePath="/dashboard/utility" />
             );
+
+            case 'users-panel': {
+              if (user?.adminLevel === 'none') return null;
+              return DS(
+                <UserManagementPanel scopeFilter={{
+                  allowedRoles: getInvitableRoles(user?.adminLevel || 'none', user?.role || 'Utility'),
+                  lockedState: user?.adminLevel === 'super_admin' ? undefined : user?.state,
+                }} />
+              );
+            }
 
             default: return null;
             }

@@ -63,6 +63,7 @@ export function decodeInviteToken(token: string): InvitePayload | null {
       organization: raw.organization ? String(raw.organization).trim() : undefined,
       state: raw.state ? String(raw.state).trim().toUpperCase() : undefined,
       jurisdiction: raw.jurisdiction ? String(raw.jurisdiction).trim() : undefined,
+      isMilitary: raw.isMilitary === true ? true : undefined,
     };
 
     if (!payload.invitedBy || !payload.createdAt || !payload.expiresAt) return null;

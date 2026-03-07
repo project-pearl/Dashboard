@@ -71,6 +71,7 @@ import {
   Target,
   Calculator,
   HandCoins,
+  Gamepad2,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -170,6 +171,7 @@ export const LENS_ICONS: Record<string, LucideIcon> = {
   'student-monitoring': Beaker,
   'drinking-water-safety': GlassWater,
   debate: MessageSquare,
+  games: Gamepad2,
   // ── Site Intelligence ─────────────────────────────────────────────────────
   environment: TreePine,
   species: Leaf,
@@ -277,7 +279,8 @@ export function DashboardSidebar() {
     if (!lenses) return null;
     return lenses.filter((l) => {
       if (l.gateStates && !l.gateStates.has(adminState)) return false;
-      if ((l.id === 'users' || l.id === 'alerts') && !(user?.isAdmin || user?.role === 'Pearl')) return false;
+      if (l.id === 'users' && user?.adminLevel === 'none' && user?.role !== 'Pearl') return false;
+      if (l.id === 'alerts' && !(user?.isSuperAdmin || user?.role === 'Pearl')) return false;
       return true;
     });
   }, [adminState, user]);

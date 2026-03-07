@@ -3,8 +3,8 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { supabase } from './supabase';
 import {
-  PearlUser, UserRole, AccountStatus, InvitePayload,
-  isOperatorRole, checkIsAdmin, normalizeUserRole,
+  PearlUser, UserRole, AccountStatus, InvitePayload, AdminLevel,
+  isOperatorRole, checkIsAdmin, normalizeUserRole, resolveAdminLevel,
 } from './authTypes';
 import type { User } from '@supabase/supabase-js';
 
@@ -35,6 +35,9 @@ interface AuthContextType {
   listPendingUsers: () => Promise<PearlUser[]>;
   listAllUsers: () => Promise<PearlUser[]>;
   resolveInviteToken: (token: string) => Promise<InvitePayload | null>;
+  grantRoleAdmin: (uid: string) => Promise<void>;
+  revokeRoleAdmin: (uid: string) => Promise<void>;
+  updateUserMilitary: (uid: string, isMilitary: boolean) => Promise<void>;
 }
 
 interface SignupParams {
@@ -63,6 +66,7 @@ interface CreateInviteParams {
   state?: string;
   organization?: string;
   expiresInDays?: number;
+  isMilitary?: boolean;
 }
 
 // ─── Prefetch helper ────────────────────────────────────────────────────────
@@ -84,9 +88,11 @@ export function useAuth(): AuthContextType {
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function profileToPearlUser(profile: any, authUser: User): PearlUser {
+  const email = profile.email || authUser.email || '';
+  const adminLevel = resolveAdminLevel(profile.admin_level, email);
   return {
     uid: profile.id,
-    email: profile.email || authUser.email || '',
+    email,
     name: profile.name || '',
     role: normalizeUserRole(profile.role),
     organization: profile.organization || '',
@@ -94,7 +100,10 @@ function profileToPearlUser(profile: any, authUser: User): PearlUser {
     region: profile.region || '',
     ms4Jurisdiction: profile.ms4_jurisdiction || '',
     status: (profile.status || 'active') as AccountStatus,
-    isAdmin: profile.is_admin || checkIsAdmin(profile.email || authUser.email || ''),
+    isAdmin: adminLevel !== 'none',
+    adminLevel,
+    isSuperAdmin: adminLevel === 'super_admin',
+    isMilitary: !!profile.is_military,
     createdAt: profile.created_at || new Date().toISOString(),
     approvedBy: profile.approved_by || undefined,
     approvedAt: profile.approved_at || undefined,
@@ -317,7 +326,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (data.user) {
-        const isAdmin = checkIsAdmin(email);
+        const adminLevel = checkIsAdmin(email) ? 'super_admin' : 'none';
         const nowIso = new Date().toISOString();
 
         await supabase
@@ -329,7 +338,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             state: finalState,
             ms4_jurisdiction: finalJurisdiction,
             status,
-            is_admin: isAdmin,
+            admin_level: adminLevel,
+            is_military: invitePayload?.isMilitary || false,
             use_case: useCase || '',
             approved_by: invitePayload?.invitedBy || null,
             approved_at: invitePayload ? nowIso : null,
@@ -412,7 +422,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const createInviteLink = useCallback(async (params: CreateInviteParams): Promise<string> => {
-    if (!user?.isAdmin) throw new Error('Only admins can create invite links.');
+    if (user?.adminLevel === 'none') throw new Error('You do not have invite permissions.');
     const { data: { session } } = await supabase.auth.getSession();
     const accessToken = session?.access_token;
     if (!accessToken) throw new Error('No active admin session.');
@@ -431,7 +441,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(body?.error || 'Failed to create invite link');
     }
     return body.link as string;
-  }, [user?.isAdmin]);
+  }, [user?.adminLevel]);
 
   const resolveInviteToken = useCallback(async (token: string): Promise<InvitePayload | null> => {
     if (!token) return null;
@@ -448,6 +458,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return null;
     }
   }, []);
+
+  const grantRoleAdmin = useCallback(async (uid: string) => {
+    if (!user?.isSuperAdmin) throw new Error('Only super admins can grant admin privileges.');
+    const { data: { session } } = await supabase.auth.getSession();
+    const accessToken = session?.access_token;
+    if (!accessToken) throw new Error('No active session.');
+    const res = await fetch('/api/admin/grant-role-admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify({ targetUserId: uid, adminLevel: 'role_admin' }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({} as any));
+      throw new Error(body?.error || 'Failed to grant admin.');
+    }
+  }, [user?.isSuperAdmin]);
+
+  const revokeRoleAdmin = useCallback(async (uid: string) => {
+    if (!user?.isSuperAdmin) throw new Error('Only super admins can revoke admin privileges.');
+    const { data: { session } } = await supabase.auth.getSession();
+    const accessToken = session?.access_token;
+    if (!accessToken) throw new Error('No active session.');
+    const res = await fetch('/api/admin/grant-role-admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify({ targetUserId: uid, adminLevel: 'none' }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({} as any));
+      throw new Error(body?.error || 'Failed to revoke admin.');
+    }
+  }, [user?.isSuperAdmin]);
+
+  const updateUserMilitary = useCallback(async (uid: string, isMilitary: boolean) => {
+    if (!user?.isSuperAdmin) throw new Error('Only super admins can update military flag.');
+    await supabase.from('profiles').update({ is_military: isMilitary }).eq('id', uid);
+  }, [user?.isSuperAdmin]);
 
   const value: AuthContextType = {
     user,
@@ -471,6 +518,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     listPendingUsers,
     listAllUsers,
     resolveInviteToken,
+    grantRoleAdmin,
+    revokeRoleAdmin,
+    updateUserMilitary,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

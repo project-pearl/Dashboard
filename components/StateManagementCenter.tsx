@@ -62,6 +62,8 @@ import { useJurisdictionContext } from '@/lib/jurisdiction-context';
 import { scopeRowsByJurisdiction } from '@/lib/jurisdictions/index';
 import RoleTrainingGuide from '@/components/RoleTrainingGuide';
 import { AirQualityMonitoringCard } from '@/components/AirQualityMonitoringCard';
+import { UserManagementPanel } from './UserManagementPanel';
+import { getInvitableRoles } from '@/lib/adminHierarchy';
 
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
@@ -125,7 +127,7 @@ type OverlayId = 'risk' | 'coverage' | 'bmp' | 'ej';
 type ViewLens = 'overview' | 'briefing' | 'political-briefing' | 'trends' | 'policy'
   | 'compliance' | 'water-quality' | 'public-health' | 'habitat' | 'agriculture'
   | 'infrastructure' | 'monitoring' | 'disaster' | 'tmdl' | 'scorecard'
-  | 'reports' | 'permits' | 'funding' | 'wqt' | 'training';
+  | 'reports' | 'permits' | 'funding' | 'wqt' | 'training' | 'users';
 
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -255,6 +257,12 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'Training', description: 'Deployment training and onboarding guide',
     defaultOverlay: 'risk',
     sections: new Set(['training']),
+  },
+  users: {
+    label: 'Users',
+    description: 'User management and invite delegation',
+    defaultOverlay: 'risk',
+    sections: new Set(['users-panel']),
   },
 };
 
@@ -6173,6 +6181,16 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
             case 'training': return DS(
               <RoleTrainingGuide rolePath="/dashboard/state" />
             );
+
+        case 'users-panel': {
+          if (user?.adminLevel === 'none') return null;
+          return DS(
+            <UserManagementPanel scopeFilter={{
+              allowedRoles: getInvitableRoles(user?.adminLevel || 'none', user?.role || 'State'),
+              lockedState: user?.adminLevel === 'super_admin' ? undefined : user?.state,
+            }} />
+          );
+        }
 
             default: return null;
           }

@@ -54,6 +54,8 @@ import { WaterStewardshipPanel } from '@/components/WaterStewardshipPanel';
 import { FacilityOperationsPanel } from '@/components/FacilityOperationsPanel';
 import { ESGReportingPanel } from '@/components/ESGReportingPanel';
 import { SupplyChainRiskPanel } from '@/components/SupplyChainRiskPanel';
+import { UserManagementPanel } from './UserManagementPanel';
+import { getInvitableRoles } from '@/lib/adminHierarchy';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import { LayoutEditor } from './LayoutEditor';
 import { DraggableSection } from './DraggableSection';
@@ -100,7 +102,7 @@ type FacilityRow = {
 // ─── Lenses (8-view architecture) ────────────────────────────────────────────
 
 type ViewLens = 'overview' | 'esg-reporting' | 'facility-operations' | 'compliance' |
-  'policy' | 'public-health' | 'habitat' | 'supply-chain' | 'trends' | 'funding' | 'briefing' | 'training';
+  'policy' | 'public-health' | 'habitat' | 'supply-chain' | 'trends' | 'funding' | 'briefing' | 'training' | 'users';
 
 type LensConfig = {
   label: string;
@@ -169,6 +171,11 @@ const LENS_CONFIG: Record<ViewLens, LensConfig> = {
     label: 'Training', description: 'Deployment training and onboarding guide',
     icon: Building2,
     sections: new Set(['training']),
+  },
+  users: {
+    label: 'User Management', description: 'Manage users, roles, and permissions',
+    icon: Building2,
+    sections: new Set(['users-panel']),
   },
 };
 
@@ -2530,6 +2537,16 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
             case 'training': return DS(
               <RoleTrainingGuide rolePath="/dashboard/esg" />
             );
+
+        case 'users-panel': {
+          if (user?.adminLevel === 'none') return null;
+          return DS(
+            <UserManagementPanel scopeFilter={{
+              allowedRoles: getInvitableRoles(user?.adminLevel || 'none', user?.role || 'Corporate'),
+              lockedState: user?.adminLevel === 'super_admin' ? undefined : user?.state,
+            }} />
+          );
+        }
 
             default: return null;
           }

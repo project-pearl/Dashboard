@@ -4,6 +4,7 @@
 export type UserRole = 'Federal' | 'State' | 'Local' | 'MS4' | 'Corporate' | 'Researcher' | 'College' | 'NGO' | 'K12' | 'Temp' | 'Pearl'
   | 'Utility' | 'Agriculture' | 'Lab' | 'Biotech' | 'Investor';
 export type AccountStatus = 'active' | 'pending' | 'rejected' | 'deactivated';
+export type AdminLevel = 'super_admin' | 'role_admin' | 'none';
 
 export function normalizeUserRole(role: string | undefined): UserRole {
   const key = (role || '').trim().toLowerCase();
@@ -50,7 +51,10 @@ export interface PearlUser {
   title?: string;                    // Job title, e.g. "Water Quality Manager"
   // ── Auth fields ──
   status: AccountStatus;            // 'active' for explorers, 'pending' until admin approves operators
-  isAdmin: boolean;                 // Admin capability bit — Doug/Steve/Gwen
+  isAdmin: boolean;                 // Backward compat — true when adminLevel !== 'none'
+  adminLevel: AdminLevel;           // Tiered: super_admin > role_admin > none
+  isSuperAdmin: boolean;            // Convenience: adminLevel === 'super_admin'
+  isMilitary?: boolean;             // Federal sub-type flag
   createdAt: string;                // ISO timestamp
   invitedBy?: string;               // UID of admin who sent invite (if invite path)
   inviteToken?: string;             // Token used to create account (for audit trail)
@@ -67,6 +71,7 @@ export interface InvitePayload {
   organization?: string;            // Pre-filled org name
   invitedBy: string;                // Admin UID
   email?: string;                   // Optional — lock to specific email
+  isMilitary?: boolean;             // Federal sub-type flag
   createdAt: string;                // ISO timestamp
   expiresAt: string;                // ISO timestamp — default 7 days
 }
@@ -94,4 +99,13 @@ export const ADMIN_EMAILS = [
 /** Quick check — used by authContext to set isAdmin on login */
 export function checkIsAdmin(email: string): boolean {
   return ADMIN_EMAILS.includes(email.toLowerCase().trim());
+}
+
+/** Resolve effective admin level — DB column takes precedence, ADMIN_EMAILS as super_admin fallback */
+export function resolveAdminLevel(dbValue: string | undefined | null, email: string): AdminLevel {
+  const level = (dbValue || 'none') as AdminLevel;
+  if (level === 'super_admin' || level === 'role_admin') return level;
+  // Fallback: hardcoded super admins
+  if (checkIsAdmin(email)) return 'super_admin';
+  return 'none';
 }
