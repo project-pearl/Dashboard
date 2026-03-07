@@ -96,6 +96,7 @@ export const LENS_ICONS: Record<string, LucideIcon> = {
   reports: FileText,
   interagency: Network,
   funding: Banknote,
+  grants: HandCoins,
   full: LayoutDashboard,
   // ── State ──────────────────────────────────────────────────────────────────
   coverage: Activity,
