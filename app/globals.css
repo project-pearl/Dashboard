@@ -104,6 +104,26 @@
   }
 }
 
+/* Subtle pastel differentiation for light-mode white surfaces */
+.pin-soft-surface {
+  background-image:
+    linear-gradient(145deg, rgba(246, 252, 255, 0.92), rgba(255, 251, 247, 0.9));
+}
+
+.bg-white.rounded-lg,
+.bg-white.rounded-xl,
+.bg-white.rounded-2xl {
+  background-image:
+    linear-gradient(145deg, rgba(247, 252, 255, 0.9), rgba(255, 251, 246, 0.88));
+}
+
+.dark .pin-soft-surface,
+.dark .bg-white.rounded-lg,
+.dark .bg-white.rounded-xl,
+.dark .bg-white.rounded-2xl {
+  background-image: none !important;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    PIN Design Token Layer — semantic CSS variables for light/dark
    ═══════════════════════════════════════════════════════════════════════════ */
