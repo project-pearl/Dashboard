@@ -48,6 +48,13 @@ export async function POST(request: NextRequest) {
 
   const result = await sendAlertEmail(testEvent);
 
+  if (result.logOnly) {
+    return NextResponse.json({
+      status: 'log_only',
+      message: `PIN_ALERTS_LOG_ONLY is true — email was NOT sent to ${email}. Set PIN_ALERTS_LOG_ONLY=false to enable delivery.`,
+    });
+  }
+
   if (!result.success) {
     return NextResponse.json({ error: result.error }, { status: 500 });
   }

@@ -15,6 +15,8 @@ import { evaluateFloodForecasts } from '@/lib/alerts/triggers/floodForecastTrigg
 import { evaluateDeploymentAlerts, type DeploymentInput } from '@/lib/alerts/triggers/deploymentTrigger';
 import { evaluateHabAlerts } from '@/lib/alerts/triggers/habTrigger';
 import { evaluateBeaconAlerts } from '@/lib/alerts/triggers/beaconTrigger';
+import { evaluateFusionAlerts } from '@/lib/alerts/triggers/fusionTrigger';
+import { evaluateAttainsAlerts } from '@/lib/alerts/triggers/attainsTrigger';
 import { loadRules, evaluateRules } from '@/lib/alerts/rules';
 import type { AlertEvent } from '@/lib/alerts/types';
 import { isCronAuthorized } from '@/lib/apiAuth';
@@ -144,7 +146,25 @@ export async function GET(request: NextRequest) {
       console.warn(`[dispatch-alerts] BEACON trigger error: ${err.message}`);
     }
 
-    // 9. Custom rules
+    // 9. Fusion cross-source anomaly trigger
+    try {
+      const fusionEvents = await evaluateFusionAlerts();
+      candidates.push(...fusionEvents);
+      console.warn(`[dispatch-alerts] Fusion: ${fusionEvents.length} candidates`);
+    } catch (err: any) {
+      console.warn(`[dispatch-alerts] Fusion trigger error: ${err.message}`);
+    }
+
+    // 10. ATTAINS impairment diff trigger
+    try {
+      const attainsEvents = await evaluateAttainsAlerts();
+      candidates.push(...attainsEvents);
+      console.warn(`[dispatch-alerts] ATTAINS: ${attainsEvents.length} candidates`);
+    } catch (err: any) {
+      console.warn(`[dispatch-alerts] ATTAINS trigger error: ${err.message}`);
+    }
+
+    // 11. Custom rules
     try {
       const rules = await loadRules();
       if (rules.length > 0) {
@@ -156,7 +176,7 @@ export async function GET(request: NextRequest) {
       console.warn(`[dispatch-alerts] Rules engine error: ${err.message}`);
     }
 
-    // 10. Dispatch all candidates
+    // 12. Dispatch all candidates
     const result = await dispatchAlerts(candidates);
     const durationMs = Date.now() - _buildStartedAt;
 
