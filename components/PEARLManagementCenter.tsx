@@ -857,6 +857,7 @@ export function PEARLManagementCenter(props: Props) {
   const [sourceHealth, setSourceHealth] = useState<SourceHealthEntry[]>([]);
   const [sourceHealthLoading, setSourceHealthLoading] = useState<boolean>(true);
   const [sourceHealthError, setSourceHealthError] = useState<string | null>(null);
+  const [totalMonitoringPoints, setTotalMonitoringPoints] = useState<number>(0);
 
   // Fetch real risk predictions from site-intelligence API using the first active deployment
   useEffect(() => {
@@ -881,6 +882,9 @@ export function PEARLManagementCenter(props: Props) {
         const list = Array.isArray(data?.sources) ? data.sources : [];
         setSourceHealth(list);
         setSourceHealthError(null);
+        if (typeof data?.datapoints?.totalMonitoringPoints === 'number') {
+          setTotalMonitoringPoints(data.datapoints.totalMonitoringPoints);
+        }
       })
       .catch((e) => {
         if (cancelled) return;
@@ -1113,6 +1117,11 @@ Doug and the PIN team`;
                   {sourceHealthError
                     ? `Health monitor unavailable (${sourceHealthError}).`
                     : `${offlineSourceCount} offline, ${degradedSourceCount} degraded, ${onlineSourceCount} online.`}
+                  {!sourceHealthLoading && !sourceHealthError && totalMonitoringPoints > 0 && (
+                    <span className="block mt-1 text-xs font-semibold text-slate-700">
+                      Ingesting from {totalMonitoringPoints.toLocaleString()} monitoring points across {onlineSourceCount} live sources
+                    </span>
+                  )}
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">

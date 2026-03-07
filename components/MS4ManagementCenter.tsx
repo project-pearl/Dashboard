@@ -1544,7 +1544,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
 
                       // ─── Title ───
                       pdf.addTitle('ESG Summary Report');
-                      pdf.addText(clean(`${wbName}, ${stateName} -- ${ms4Jurisdiction || 'MS4 Jurisdiction'}`), { bold: true, fontSize: 12 });
+                      pdf.addText(clean(`${wbName}, ${stateName} -- ${ms4Jurisdiction || 'Local Jurisdiction'}`), { bold: true, fontSize: 12 });
                       pdf.addText(`Generated ${dateStr}`, { fontSize: 9 });
                       pdf.addSpacer(5);
 

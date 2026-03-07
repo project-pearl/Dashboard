@@ -10,7 +10,7 @@ import {
   Waves, Lock, Mail, User, Building2, MapPin, ArrowRight, AlertTriangle,
   CheckCircle, Clock, Shield, GraduationCap, Users, Globe, ChevronDown, TrendingUp,
 } from 'lucide-react';
-import { MD_JURISDICTIONS, STATES } from '@/lib/jurisdictions';
+import { STATES, getTopLevelJurisdictions, getChildJurisdictions, hasChildJurisdictions, getJurisdictionById } from '@/lib/jurisdictions';
 
 const ROLE_META: Record<UserRole, { icon: typeof Shield; label: string; desc: string; tier: 'explorer' | 'operator' }> = {
   K12:        { icon: Users,          label: 'K-12 Educator',         desc: 'Classroom tools & educational content',                       tier: 'explorer' },
@@ -51,6 +51,7 @@ export function SignupForm({ invitePayload, inviteToken, onSuccess, onSwitchToLo
   const [organization, setOrganization] = useState(invitePayload?.organization || '');
   const [state, setState] = useState(invitePayload?.state || 'MD');
   const [jurisdiction, setJurisdiction] = useState(invitePayload?.jurisdiction || '');
+  const [parentCounty, setParentCounty] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -307,30 +308,65 @@ export function SignupForm({ invitePayload, inviteToken, onSuccess, onSwitchToLo
                 </select>
               </div>
 
-              {/* Jurisdiction (for Municipal Utility role) */}
-              {(selectedRole === 'MS4' || invitePayload?.jurisdiction) && (
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">
-                    Jurisdiction {isInvite ? '' : '(requested)'}
-                  </label>
-                  <select
-                    value={jurisdiction}
-                    onChange={e => setJurisdiction(e.target.value)}
-                    disabled={!!invitePayload?.jurisdiction}
-                    className="w-full px-3 py-2.5 rounded-lg border border-slate-300 text-sm focus:border-cyan-400 focus:ring-1 focus:ring-cyan-200 outline-none transition-all bg-white disabled:bg-slate-100"
-                  >
-                    <option value="">Select jurisdiction...</option>
-                    {MD_JURISDICTIONS.map(j => (
-                      <option key={j.key} value={j.key}>{j.label} ({j.permit})</option>
-                    ))}
-                  </select>
-                  {!isInvite && isOperator && (
-                    <p className="text-[10px] text-slate-400 mt-1">
-                      An admin will verify and bind your jurisdiction before activation.
-                    </p>
-                  )}
-                </div>
-              )}
+              {/* Local Jurisdiction — two-step county → municipality drilldown */}
+              {(selectedRole === 'MS4' || selectedRole === 'Local' || invitePayload?.jurisdiction) && (() => {
+                const counties = getTopLevelJurisdictions(state || undefined);
+                const children = parentCounty ? getChildJurisdictions(parentCounty) : [];
+                const showStep2 = parentCounty && children.length > 0;
+                return (
+                  <>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">
+                        Local Jurisdiction — County {isInvite ? '' : '(requested)'}
+                      </label>
+                      <select
+                        value={parentCounty}
+                        onChange={e => {
+                          const countyId = e.target.value;
+                          setParentCounty(countyId);
+                          if (countyId && !hasChildJurisdictions(countyId)) {
+                            setJurisdiction(countyId);
+                          } else {
+                            setJurisdiction(countyId);
+                          }
+                        }}
+                        disabled={!!invitePayload?.jurisdiction}
+                        className="w-full px-3 py-2.5 rounded-lg border border-slate-300 text-sm focus:border-cyan-400 focus:ring-1 focus:ring-cyan-200 outline-none transition-all bg-white disabled:bg-slate-100"
+                      >
+                        <option value="">Select county...</option>
+                        {counties.map(j => (
+                          <option key={j.jurisdiction_id} value={j.jurisdiction_id}>{j.jurisdiction_name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    {showStep2 && (
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">
+                          Local Jurisdiction — Municipality {isInvite ? '' : '(requested)'}
+                        </label>
+                        <select
+                          value={jurisdiction}
+                          onChange={e => setJurisdiction(e.target.value)}
+                          disabled={!!invitePayload?.jurisdiction}
+                          className="w-full px-3 py-2.5 rounded-lg border border-slate-300 text-sm focus:border-cyan-400 focus:ring-1 focus:ring-cyan-200 outline-none transition-all bg-white disabled:bg-slate-100"
+                        >
+                          <option value={parentCounty}>
+                            {getJurisdictionById(parentCounty)?.jurisdiction_name} (entire county)
+                          </option>
+                          {children.map(j => (
+                            <option key={j.jurisdiction_id} value={j.jurisdiction_id}>{j.jurisdiction_name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                    {!isInvite && isOperator && (
+                      <p className="text-[10px] text-slate-400 mt-1">
+                        An admin will verify and bind your jurisdiction before activation.
+                      </p>
+                    )}
+                  </>
+                );
+              })()}
 
               {/* Error */}
               {error && (

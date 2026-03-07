@@ -1810,12 +1810,12 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Building2 className="h-4 w-4 text-indigo-600" />
-                  MS4 Jurisdictions — {(agency as any)?.name || stateName}
+                  Local Jurisdictions — {(agency as any)?.name || stateName}
                   <span className="text-sm font-normal text-slate-500">({jurisdictions.length})</span>
                 </CardTitle>
                 {expandedSections.ms4 ? (
                   <div className="flex items-center gap-1.5">
-                    <BrandedPrintBtn sectionId="ms4jurisdictions" title="MS4 Jurisdictions" />
+                    <BrandedPrintBtn sectionId="ms4jurisdictions" title="Local Jurisdictions" />
                     <Minus className="h-4 w-4 text-slate-400" />
                   </div>
                 ) : <ChevronDown className="h-4 w-4 text-slate-400" />}

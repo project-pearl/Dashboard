@@ -667,7 +667,7 @@ const DEPLOYMENT_START = new Date('2025-01-09'); // Milton FL pilot launch
 
 const OVERLAYS: { id: OverlayId; label: string; description: string; icon: any }[] = [
   { id: 'hotspots', label: 'Water Quality Risk', description: 'Impairment severity from EPA 303(d) and state assessments', icon: Droplets },
-  { id: 'ms4', label: 'MS4 Jurisdictions', description: 'Municipal Separate Storm Sewer System permit holders under NPDES stormwater permits', icon: Building2 },
+  { id: 'ms4', label: 'Local Jurisdictions', description: 'Municipal and county permit holders under NPDES stormwater permits', icon: Building2 },
   { id: 'ej', label: 'EJ Vulnerability', description: 'Census ACS demographics + EPA drinking water violations — community environmental burden', icon: Users },
   { id: 'economy', label: 'Economic Exposure', description: 'Waterfront property value at risk from water quality degradation (hedonic model)', icon: DollarSign },
   { id: 'wildlife', label: 'Ecological Sensitivity', description: 'USFWS ESA-listed threatened & endangered species density (aquatic-weighted)', icon: Leaf },

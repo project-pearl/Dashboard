@@ -73,7 +73,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'map-grid',            label: 'Map & Waterbody List',           order: 4,  visible: true, defaultExpanded: true,  lensControlled: true, compound: true },
     { id: 'local-panel',         label: 'Local',                          order: 4.5, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'detail',              label: 'Waterbody Detail',               order: 5,  visible: true, defaultExpanded: true,  lensControlled: true },
-    { id: 'ms4jurisdictions',    label: 'MS4 Jurisdictions',              order: 7,  visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'ms4jurisdictions',    label: 'Local Jurisdictions',             order: 7,  visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'icis',                label: 'NPDES Compliance & Enforcement', order: 8,  visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'sdwis',               label: 'Drinking Water (SDWIS)',         order: 9,  visible: true, defaultExpanded: false, lensControlled: true },
     { id: 'groundwater',         label: 'Groundwater Monitoring (WDFN)',  order: 10, visible: true, defaultExpanded: false, lensControlled: true },

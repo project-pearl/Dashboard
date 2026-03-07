@@ -17,6 +17,14 @@ import { getNarsCacheStatus, ensureWarmed as warmNars } from '@/lib/narsCache';
 import { getDataGovCacheStatus, ensureWarmed as warmDataGov } from '@/lib/dataGovCache';
 import { getUsaceCacheStatus, ensureWarmed as warmUsace } from '@/lib/usaceCache';
 import { getMdeCacheStatus, ensureWarmed as warmMde } from '@/lib/mdeCache';
+import { getUsgsIvCacheStatus, ensureWarmed as warmNwisIv } from '@/lib/nwisIvCache';
+import { getUsgsDvCacheStatus, ensureWarmed as warmUsgsDv } from '@/lib/usgsDvCache';
+import { getCoopsCacheStatus, ensureWarmed as warmCoops } from '@/lib/coopsCache';
+import { getSnotelCacheStatus, ensureWarmed as warmSnotel } from '@/lib/snotelCache';
+import { getTriCacheStatus, ensureWarmed as warmTri } from '@/lib/triCache';
+import { getSuperfundCacheStatus, ensureWarmed as warmSuperfund } from '@/lib/superfundCache';
+import { getBeaconCacheStatus, ensureWarmed as warmBeacon } from '@/lib/beaconCache';
+import { getSsoCsoCacheStatus, ensureWarmed as warmSsoCso } from '@/lib/ssoCsoCache';
 
 // ─── Federal Source Totals (conservative public figures, updated ~yearly) ────
 
@@ -99,6 +107,8 @@ export async function GET() {
     warmNwisGw(), warmEcho(), warmFrs(), warmPfas(), warmBwb(),
     warmCdcNwss(), warmNdbc(), warmNasaCmr(), warmNars(), warmDataGov(), warmUsace(),
     warmMde(),
+    warmNwisIv(), warmUsgsDv(), warmCoops(), warmSnotel(),
+    warmTri(), warmSuperfund(), warmBeacon(), warmSsoCso(),
   ]);
 
   const bwbToken = process.env.WATER_REPORTER_API_KEY || '';
@@ -436,6 +446,39 @@ export async function GET() {
   const mdeStatus = getMdeCacheStatus();
   const mdeUnits = mdeStatus.loaded ? mdeStatus.assessmentUnits : 0;
 
+  const nwisIvStatus = getUsgsIvCacheStatus();
+  const nwisIvSites = nwisIvStatus.loaded ? (nwisIvStatus as { siteCount: number }).siteCount : 0;
+
+  const usgsDvStatus = getUsgsDvCacheStatus();
+  const usgsDvStations = usgsDvStatus.loaded ? (usgsDvStatus as { stationCount: number }).stationCount : 0;
+
+  const coopsStatus = getCoopsCacheStatus();
+  const coopsStations = coopsStatus.loaded ? (coopsStatus as { stationCount: number }).stationCount : 0;
+
+  const snotelStatus = getSnotelCacheStatus();
+  const snotelStations = snotelStatus.loaded ? (snotelStatus as { stationCount: number }).stationCount : 0;
+
+  const triStatus = getTriCacheStatus();
+  const triFacilities = triStatus.loaded ? (triStatus as { facilityCount: number }).facilityCount : 0;
+
+  const superfundStatus = getSuperfundCacheStatus();
+  const superfundSites = superfundStatus.loaded ? (superfundStatus as { siteCount: number }).siteCount : 0;
+
+  const beaconStatus = getBeaconCacheStatus();
+  const beaconAdvisories = beaconStatus.loaded ? (beaconStatus as { advisoryCount: number }).advisoryCount : 0;
+
+  const ssoCsoStatus = getSsoCsoCacheStatus();
+  const ssoCsoEvents = ssoCsoStatus.loaded ? (ssoCsoStatus as { eventCount: number }).eventCount : 0;
+
+  // Total monitoring points: unique stations, sites, facilities, systems, waterbodies
+  // (excludes individual readings/records/violations to avoid double-counting)
+  const totalMonitoringPoints =
+    attainsWaterbodies + icisPermits + nwisGwSites + sdwisSystems +
+    echoFacilities + frsFacilities + bwbStations + ndbcStations +
+    narsSites + usaceLocations + mdeUnits + nwisIvSites + usgsDvStations +
+    coopsStations + snotelStations + triFacilities + superfundSites +
+    beaconAdvisories + ssoCsoEvents;
+
   const datapoints = {
     attains: { states: attainsStates.length, waterbodies: attainsWaterbodies, assessments: attainsAssessments },
     wqp: { records: wqpRecords, states: wqpStates },
@@ -454,7 +497,16 @@ export async function GET() {
     dataGov: { datasets: dataGovDatasets },
     usace: { locations: usaceLocations },
     mde: { assessmentUnits: mdeUnits },
-    total: attainsWaterbodies + wqpRecords + cedenChem + cedenTox + icisPermits + icisViolations + icisDmr + icisEnforcement + nwisGwSites + nwisGwLevels + sdwisSystems + sdwisViolations + sdwisEnforcement + echoFacilities + echoViolations + frsFacilities + pfasResults + bwbStations + bwbReadings + cdcNwssRecords + ndbcStations + narsSites + usaceLocations + mdeUnits,
+    nwisIv: { sites: nwisIvSites },
+    usgsDv: { stations: usgsDvStations },
+    coops: { stations: coopsStations },
+    snotel: { stations: snotelStations },
+    tri: { facilities: triFacilities },
+    superfund: { sites: superfundSites },
+    beacon: { advisories: beaconAdvisories },
+    ssoCso: { events: ssoCsoEvents },
+    total: attainsWaterbodies + wqpRecords + cedenChem + cedenTox + icisPermits + icisViolations + icisDmr + icisEnforcement + nwisGwSites + nwisGwLevels + sdwisSystems + sdwisViolations + sdwisEnforcement + echoFacilities + echoViolations + frsFacilities + pfasResults + bwbStations + bwbReadings + cdcNwssRecords + ndbcStations + narsSites + usaceLocations + mdeUnits + nwisIvSites + usgsDvStations + coopsStations + snotelStations + triFacilities + superfundSites + beaconAdvisories + ssoCsoEvents,
+    totalMonitoringPoints,
     totalAccessible: TOTAL_ACCESSIBLE,
   };
 
