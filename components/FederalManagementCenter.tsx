@@ -73,6 +73,9 @@ import { StateDataReportCard } from '@/components/StateDataReportCard';
 import { useStateReport } from '@/lib/useStateReport';
 import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import { AirQualityMonitoringCard } from '@/components/AirQualityMonitoringCard';
+import { UserManagementPanel } from './UserManagementPanel';
+import { getInvitableRoles } from '@/lib/adminHierarchy';
+import type { AlertEvent as EngineAlertEvent } from '@/lib/alerts/types';
 
 import hucNamesData from '@/data/huc8-names.json';
 import centroidsData from '@/data/huc8-centroids.json';
@@ -97,7 +100,7 @@ type OverlayId = 'hotspots' | 'ms4' | 'ej' | 'economy' | 'wildlife' | 'trend' | 
 type ViewLens = 'overview' | 'briefing' | 'political-briefing' | 'trends' | 'policy' | 'compliance' |
   'water-quality' | 'public-health' | 'habitat-ecology' | 'agricultural-nps' |
   'infrastructure' | 'monitoring' | 'sentinel-monitoring' | 'disaster-emergency' | 'military-installations' |
-  'scorecard' | 'reports' | 'interagency' | 'funding' | 'training';
+  'scorecard' | 'reports' | 'interagency' | 'funding' | 'training' | 'users';
 
 // ─── Water Quality Domain Tabs ────────────────────────────────────────────────
 const WQ_DOMAINS = [
@@ -365,6 +368,16 @@ const LENS_CONFIG: Record<ViewLens, {
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
     sections: new Set(['training']),
+  },
+  users: {
+    label: 'Users',
+    description: 'User management and invite delegation',
+    defaultOverlay: 'hotspots',
+    showTopStrip: false, showPriorityQueue: false, showCoverageGaps: false,
+    showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
+    showHotspots: false, showSituationSummary: false, showTimeRange: false,
+    showSLA: false, showRestorationPlan: false, collapseStateTable: true,
+    sections: new Set(['users-panel']),
   },
 };
 
@@ -1204,9 +1217,12 @@ export function FederalManagementCenter(props: Props) {
   const { audioEnabled, toggleAudio, playChime } = useSentinelAudio({ userRole: user?.role });
   const [reducedMotion, setReducedMotion] = useState(false);
   const [selectedAlertHuc, setSelectedAlertHuc] = useState<string | null>(null);
+  const [selectedAlertId, setSelectedAlertId] = useState<string | null>(null);
   const [selectedAlertLevel, setSelectedAlertLevel] = useState<string>('CRITICAL');
   const [sideCardMode, setSideCardMode] = useState<'alerts' | 'state' | 'alert-detail'>('alerts');
   const alertDetailReturnRef = useRef<'alerts' | 'state'>('alerts');
+  const [alertHistoryEvents, setAlertHistoryEvents] = useState<EngineAlertEvent[]>([]);
+  const [alertHistoryLoading, setAlertHistoryLoading] = useState(false);
 
   // Play chime when new CRITICAL HUCs appear
   useEffect(() => {
@@ -1243,9 +1259,38 @@ export function FederalManagementCenter(props: Props) {
   const [hucIndicesByState, setHucIndicesByState] = useState<Record<string, { composite: number }[]>>({});
   const [selectedHucIndices, setSelectedHucIndices] = useState<any>(null);
 
+  useEffect(() => {
+    let cancelled = false;
+    let pollTimer: ReturnType<typeof setTimeout> | null = null;
+    async function loadAlertHistory() {
+      if (cancelled) return;
+      try {
+        setAlertHistoryLoading(true);
+        const res = await fetch('/api/alerts/history?limit=300', { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (cancelled) return;
+        const events: EngineAlertEvent[] = Array.isArray(data?.events) ? data.events : [];
+        setAlertHistoryEvents(events);
+      } catch {
+        if (!cancelled) setAlertHistoryEvents([]);
+      } finally {
+        if (!cancelled) {
+          setAlertHistoryLoading(false);
+          pollTimer = setTimeout(loadAlertHistory, 30_000);
+        }
+      }
+    }
+    loadAlertHistory();
+    return () => {
+      cancelled = true;
+      if (pollTimer) clearTimeout(pollTimer);
+    };
+  }, []);
+
   // Fetch indices for selected HUC (for WaterbodyDetailCard pass-through)
   useEffect(() => {
-    if (!selectedAlertHuc) { setSelectedHucIndices(null); return; }
+    if (!selectedAlertHuc || !/^\d{8}$/.test(selectedAlertHuc)) { setSelectedHucIndices(null); return; }
     fetch(`/api/indices?huc8=${selectedAlertHuc}`)
       .then(r => r.json())
       .then(data => { setSelectedHucIndices(data?.hucIndices?.[0] ?? null); })
@@ -1669,6 +1714,7 @@ export function FederalManagementCenter(props: Props) {
     setShowAllWaterbodies(false);
     setSideCardMode('state');
     setSelectedAlertHuc(null);
+    setSelectedAlertId(null);
     // Zoom to clicked state
     const map = mapRef.current;
     if (map) {
@@ -2601,6 +2647,23 @@ export function FederalManagementCenter(props: Props) {
     if (!selectedAlertHuc) return null;
     return amsSummary?.recentEvents.find((e) => e.huc8 === selectedAlertHuc) ?? null;
   }, [amsSummary, selectedAlertHuc]);
+  const liveAlertFeed = useMemo(() => {
+    const fortyEightHoursAgo = Date.now() - (48 * 60 * 60 * 1000);
+    const byDedup = new Map<string, EngineAlertEvent>();
+    for (const ev of alertHistoryEvents) {
+      const ts = new Date(ev.createdAt).getTime();
+      if (Number.isNaN(ts) || ts < fortyEightHoursAgo) continue;
+      const key = `${ev.dedupKey}|${ev.type}|${ev.entityId}`;
+      const existing = byDedup.get(key);
+      if (!existing || new Date(existing.createdAt).getTime() < ts) byDedup.set(key, ev);
+    }
+    return [...byDedup.values()].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [alertHistoryEvents]);
+  const selectedHistoryAlert = useMemo(() => {
+    if (selectedAlertId) return liveAlertFeed.find((e) => e.id === selectedAlertId) ?? null;
+    if (selectedAlertHuc) return liveAlertFeed.find((e) => e.entityId === selectedAlertHuc) ?? null;
+    return null;
+  }, [liveAlertFeed, selectedAlertId, selectedAlertHuc]);
 
   // ─── National Impact Counter ──────────────────────────────────────────────
   const [impactPeriod, setImpactPeriod] = useState<'all' | string>('all');
@@ -2870,6 +2933,8 @@ export function FederalManagementCenter(props: Props) {
                         hucNames={hucNames}
                         onHucClick={(huc8, level) => {
                           setSelectedAlertHuc(huc8);
+                          const matched = liveAlertFeed.find((e) => e.entityId === huc8);
+                          setSelectedAlertId(matched?.id ?? null);
                           setSelectedAlertLevel(level);
                           alertDetailReturnRef.current = 'alerts';
                           setSideCardMode('alert-detail');
@@ -2970,29 +3035,77 @@ export function FederalManagementCenter(props: Props) {
           <Card style={{ background: 'var(--bg-card)' }} className="flex flex-col overflow-hidden">
            <div className="flex-1 min-h-0 overflow-y-auto">
             {sideCardMode === 'alerts' ? (
-              <AMSAlertMonitor
-                summary={amsSummary}
-                role="FEDERAL_OVERSIGHT"
-                onOpenResponsePlanner={() => setViewLens('disaster-emergency' as ViewLens)}
-                onEventClick={(huc8) => {
-                  setSelectedAlertHuc(huc8);
-                  alertDetailReturnRef.current = 'alerts';
-                  setSideCardMode('alert-detail');
-                  // Look up state from scored HUCs and set selectedState
-                  const scoredHuc = [...sentinel.criticalHucs, ...sentinel.watchHucs, ...sentinel.advisoryHucs].find(h => h.huc8 === huc8);
-                  if (scoredHuc?.stateAbbr) setSelectedState(scoredHuc.stateAbbr);
-                  const c = centroids[huc8];
-                  if (c && mapRef.current) {
-                    mapRef.current.flyTo({ center: [c.lng, c.lat], zoom: 6, duration: 800 });
-                  }
-                }}
-              />
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Live Alert Feed</h3>
+                    <span className="text-xs text-slate-400 font-medium">Engine</span>
+                  </div>
+                  <span className="text-xs text-slate-500">{liveAlertFeed.length} recent</span>
+                </div>
+                <div className="p-4 space-y-3">
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    {[
+                      { label: 'Critical', count: liveAlertFeed.filter(e => e.severity === 'critical').length, cls: 'bg-red-50 border-red-200 text-red-700' },
+                      { label: 'Warning', count: liveAlertFeed.filter(e => e.severity === 'warning').length, cls: 'bg-amber-50 border-amber-200 text-amber-700' },
+                      { label: 'Info', count: liveAlertFeed.filter(e => e.severity === 'info').length, cls: 'bg-blue-50 border-blue-200 text-blue-700' },
+                    ].map((s) => (
+                      <div key={s.label} className={`rounded-lg border px-2 py-2 ${s.cls}`}>
+                        <div className="text-lg font-bold">{s.count}</div>
+                        <div className="text-[10px] uppercase tracking-wider">{s.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="space-y-1 max-h-[520px] overflow-y-auto">
+                    {alertHistoryLoading && (
+                      <div className="text-xs text-slate-400 py-6 text-center">Loading live alerts...</div>
+                    )}
+                    {!alertHistoryLoading && liveAlertFeed.length === 0 && (
+                      <div className="text-xs text-slate-400 py-6 text-center">No recent alert events in engine history.</div>
+                    )}
+                    {!alertHistoryLoading && liveAlertFeed.map((ev) => (
+                      <button
+                        key={ev.id}
+                        onClick={() => {
+                          setSelectedAlertHuc(ev.entityId);
+                          setSelectedAlertId(ev.id);
+                          setSelectedAlertLevel(ev.severity === 'critical' ? 'CRITICAL' : ev.severity === 'warning' ? 'WATCH' : 'ADVISORY');
+                          alertDetailReturnRef.current = 'alerts';
+                          setSideCardMode('alert-detail');
+                          if (/^\d{8}$/.test(ev.entityId)) {
+                            const c = centroids[ev.entityId];
+                            if (c && mapRef.current) mapRef.current.flyTo({ center: [c.lng, c.lat], zoom: 6, duration: 800 });
+                          }
+                        }}
+                        className="w-full text-left rounded-lg border border-slate-200 px-3 py-2 hover:bg-slate-50 transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="text-xs font-semibold text-slate-800 truncate">{ev.title}</div>
+                            <div className="text-[10px] text-slate-500 mt-0.5">
+                              {ev.type.toUpperCase()} · {ev.entityLabel || ev.entityId}
+                            </div>
+                          </div>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            ev.severity === 'critical' ? 'bg-red-100 text-red-700'
+                              : ev.severity === 'warning' ? 'bg-amber-100 text-amber-700'
+                              : 'bg-blue-100 text-blue-700'
+                          }`}>
+                            {ev.severity.toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-slate-400 mt-1">{formatEasternTimestamp(ev.createdAt) ?? ev.createdAt}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
             ) : sideCardMode === 'alert-detail' ? (
               <>
                 <CardHeader className="pb-2 pt-4 px-5">
                   <CardTitle className="flex items-center gap-2 text-sm">
                     <button
-                      onClick={() => { setSideCardMode(alertDetailReturnRef.current); setSelectedAlertHuc(null); }}
+                      onClick={() => { setSideCardMode(alertDetailReturnRef.current); setSelectedAlertHuc(null); setSelectedAlertId(null); }}
                       className="flex items-center gap-1 text-xs font-medium transition-colors"
                       style={{ color: 'var(--accent-teal)' }}
                       onMouseEnter={e => { e.currentTarget.style.opacity = '0.8'; }}
@@ -3004,7 +3117,10 @@ export function FederalManagementCenter(props: Props) {
                     <span className="mx-1" style={{ color: 'var(--border-default)' }}>|</span>
                     <MapPin size={15} className="flex-shrink-0" style={{ color: 'var(--accent-teal)' }} />
                     <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
-                      {hucNames[selectedAlertHuc ?? ''] ?? selectedAlertHuc ?? 'Unknown'}
+                      {selectedHistoryAlert?.entityLabel
+                        ?? hucNames[selectedAlertHuc ?? '']
+                        ?? selectedAlertHuc
+                        ?? 'Unknown'}
                     </span>
                   </CardTitle>
                   {selectedAlertHuc && (
@@ -3012,58 +3128,52 @@ export function FederalManagementCenter(props: Props) {
                   )}
                 </CardHeader>
                 <CardContent className="space-y-4 px-5 pb-5">
-                  {selectedAmsEvent && (
+                  {selectedHistoryAlert && (
                     <div className="rounded-lg border border-red-200 bg-red-50/60 p-3 space-y-3">
                       <div className="flex items-center justify-between gap-2">
                         <div className="text-[10px] font-bold uppercase tracking-wider text-red-700">Why This Is Alerting</div>
                         <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                          selectedAmsEvent.alertLevel === 'ALERT' ? 'bg-red-600 text-white'
-                            : selectedAmsEvent.alertLevel === 'ADVISORY' ? 'bg-amber-500 text-white'
+                          selectedHistoryAlert.severity === 'critical' ? 'bg-red-600 text-white'
+                            : selectedHistoryAlert.severity === 'warning' ? 'bg-amber-500 text-white'
                             : 'bg-blue-500 text-white'
                         }`}>
-                          {selectedAmsEvent.alertLevel}
+                          {selectedHistoryAlert.severity.toUpperCase()}
                         </span>
                       </div>
                       <div className="grid grid-cols-3 gap-2 text-[10px]">
                         <div className="rounded border border-red-200 bg-white px-2 py-1.5">
-                          <div className="text-red-500">Composite</div>
-                          <div className="font-bold text-red-700">{Math.round(selectedAmsEvent.compositeScore)}</div>
+                          <div className="text-red-500">Trigger</div>
+                          <div className="font-bold text-red-700">{selectedHistoryAlert.type.toUpperCase()}</div>
                         </div>
                         <div className="rounded border border-red-200 bg-white px-2 py-1.5">
-                          <div className="text-red-500">Signals</div>
-                          <div className="font-bold text-red-700">{selectedAmsEvent.signalCount}</div>
+                          <div className="text-red-500">Entity</div>
+                          <div className="font-bold text-red-700 truncate" title={selectedHistoryAlert.entityId}>{selectedHistoryAlert.entityId}</div>
                         </div>
                         <div className="rounded border border-red-200 bg-white px-2 py-1.5">
-                          <div className="text-red-500">Last Signal</div>
-                          <div className="font-bold text-red-700">{formatRefreshAge(selectedAmsEvent.lastSignalAt)}</div>
+                          <div className="text-red-500">Detected</div>
+                          <div className="font-bold text-red-700">{formatRefreshAge(selectedHistoryAlert.createdAt)}</div>
                         </div>
                       </div>
-                      {selectedAmsEvent.signals.length > 0 && (
+                      {Array.isArray(selectedHistoryAlert.metadata?.rationale) && (selectedHistoryAlert.metadata?.rationale as any[]).length > 0 && (
                         <div className="space-y-1">
-                          <div className="text-[10px] font-semibold text-red-700">Primary Signal Drivers</div>
+                          <div className="text-[10px] font-semibold text-red-700">Rationale</div>
                           <div className="space-y-1 max-h-36 overflow-y-auto">
-                            {selectedAmsEvent.signals.slice(0, 5).map((sig) => (
-                              <div key={sig.changeEvent.eventId} className="rounded border border-red-200 bg-white px-2 py-1.5 text-[10px]">
-                                <div className="flex items-center justify-between gap-2">
-                                  <span className="font-semibold text-slate-700">{sig.signalType.replace(/_/g, ' ')}</span>
-                                  <span className="font-bold text-red-700">{Math.round(sig.effectiveScore)}</span>
-                                </div>
-                                <div className="text-slate-500 mt-0.5">
-                                  Source: {sig.changeEvent.source} · Severity: {sig.changeEvent.severityHint}
-                                </div>
+                            {(selectedHistoryAlert.metadata?.rationale as any[]).slice(0, 6).map((r, idx) => (
+                              <div key={`${selectedHistoryAlert.id}-why-${idx}`} className="rounded border border-red-200 bg-white px-2 py-1.5 text-[10px] text-slate-700">
+                                {String(r)}
                               </div>
                             ))}
                           </div>
                         </div>
                       )}
-                      {selectedAmsEvent.compoundMatches.length > 0 && (
+                      {Array.isArray(selectedHistoryAlert.metadata?.anomalies) && (selectedHistoryAlert.metadata?.anomalies as any[]).length > 0 && (
                         <div className="space-y-1">
-                          <div className="text-[10px] font-semibold text-red-700">Compound Pattern Matches</div>
+                          <div className="text-[10px] font-semibold text-red-700">Anomaly Signals</div>
                           <div className="space-y-1">
-                            {selectedAmsEvent.compoundMatches.slice(0, 3).map((m) => (
-                              <div key={m.pattern} className="rounded border border-red-200 bg-white px-2 py-1.5 text-[10px]">
-                                <span className="font-semibold text-slate-700">{m.label}</span>
-                                <span className="text-slate-500"> · Score {Math.round(m.compoundScore)} · {m.matchedSignals.length} linked signals</span>
+                            {(selectedHistoryAlert.metadata?.anomalies as any[]).slice(0, 4).map((a, idx) => (
+                              <div key={`${selectedHistoryAlert.id}-sig-${idx}`} className="rounded border border-red-200 bg-white px-2 py-1.5 text-[10px]">
+                                <span className="font-semibold text-slate-700">{a.parameter || 'Signal'}</span>
+                                <span className="text-slate-500"> · {a.severity || 'n/a'} · delta {typeof a.delta === 'number' ? a.delta.toFixed(1) : String(a.delta ?? 'n/a')}</span>
                               </div>
                             ))}
                           </div>
@@ -3150,7 +3260,7 @@ export function FederalManagementCenter(props: Props) {
                 <CardHeader className="pb-2 pt-4 px-5">
                   <CardTitle className="flex items-center gap-2 text-sm">
                     <button
-                      onClick={() => { setSideCardMode('alerts'); setSelectedAlertHuc(null); }}
+                      onClick={() => { setSideCardMode('alerts'); setSelectedAlertHuc(null); setSelectedAlertId(null); }}
                       className="flex items-center gap-1 text-xs font-medium transition-colors"
                       style={{ color: 'var(--accent-teal)' }}
                       onMouseEnter={e => { e.currentTarget.style.opacity = '0.8'; }}
@@ -3196,6 +3306,8 @@ export function FederalManagementCenter(props: Props) {
                                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
                                 onClick={() => {
                                   setSelectedAlertHuc(h.huc8);
+                                  const matched = liveAlertFeed.find((e) => e.entityId === h.huc8);
+                                  setSelectedAlertId(matched?.id ?? null);
                                   setSelectedAlertLevel(h.level);
                                   alertDetailReturnRef.current = 'state';
                                   setSideCardMode('alert-detail');
@@ -6644,6 +6756,15 @@ export function FederalManagementCenter(props: Props) {
         case 'training': return DS(
           <RoleTrainingGuide rolePath="/dashboard/federal" />
         );
+
+        case 'users-panel': {
+          if (user?.adminLevel === 'none') return null;
+          return DS(
+            <UserManagementPanel scopeFilter={{
+              allowedRoles: getInvitableRoles(user?.adminLevel || 'none', user?.role || 'Federal'),
+            }} />
+          );
+        }
 
         default: return null;
         } {/* end switch */}
