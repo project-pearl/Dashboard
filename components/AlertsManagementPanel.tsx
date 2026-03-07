@@ -25,6 +25,29 @@ const SEVERITY_COLORS: Record<AlertSeverity, { bg: string; border: string; text:
   info:     { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-800', icon: Info },
 };
 
+const EPA_REGIONS: Record<string, string[]> = {
+  '1': ['CT', 'ME', 'MA', 'NH', 'RI', 'VT'],
+  '2': ['NJ', 'NY', 'PR', 'VI'],
+  '3': ['DC', 'DE', 'MD', 'PA', 'VA', 'WV'],
+  '4': ['AL', 'FL', 'GA', 'KY', 'MS', 'NC', 'SC', 'TN'],
+  '5': ['IL', 'IN', 'MI', 'MN', 'OH', 'WI'],
+  '6': ['AR', 'LA', 'NM', 'OK', 'TX'],
+  '7': ['IA', 'KS', 'MO', 'NE'],
+  '8': ['CO', 'MT', 'ND', 'SD', 'UT', 'WY'],
+  '9': ['AZ', 'CA', 'HI', 'NV', 'AS', 'GU'],
+  '10': ['AK', 'ID', 'OR', 'WA'],
+};
+
+const STATE_TO_REGION: Record<string, string> = {};
+for (const [region, states] of Object.entries(EPA_REGIONS)) {
+  for (const st of states) STATE_TO_REGION[st] = region;
+}
+
+type DatePreset = 'all' | 'today' | 'week' | 'lastWeek' | 'custom';
+type SortOption = 'newest' | 'oldest' | 'region' | 'severity' | 'state';
+
+const SEVERITY_RANK: Record<string, number> = { critical: 0, warning: 1, info: 2 };
+
 const TRIGGER_TYPES: AlertTriggerType[] = ['sentinel', 'usgs', 'delta', 'attains', 'nwss', 'coordination', 'fusion', 'flood_forecast', 'deployment', 'custom'];
 const SEVERITIES: AlertSeverity[] = ['critical', 'warning', 'info'];
 const OPERATORS = [
@@ -45,6 +68,13 @@ export function AlertsManagementPanel() {
   const [events, setEvents] = useState<AlertEvent[]>([]);
   const [historyStats, setHistoryStats] = useState({ totalSent: 0, totalSuppressed: 0, totalErrors: 0, totalLogged: 0, lastDispatchAt: null as string | null });
   const [severityFilter, setSeverityFilter] = useState<AlertSeverity | 'all'>('all');
+  const [regionFilter, setRegionFilter] = useState<string>('all');
+  const [stateFilter, setStateFilter] = useState<string>('all');
+  const [datePreset, setDatePreset] = useState<DatePreset>('all');
+  const [customDateFrom, setCustomDateFrom] = useState('');
+  const [customDateTo, setCustomDateTo] = useState('');
+  const [parameterFilter, setParameterFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [selectedEvent, setSelectedEvent] = useState<AlertEvent | null>(null);
 
   // ── Recipients state ──
@@ -303,9 +333,102 @@ export function AlertsManagementPanel() {
     };
   }
 
+  function extractState(evt: AlertEvent): string | null {
+    if (typeof evt.metadata?.state === 'string') return evt.metadata.state;
+    if (/^[A-Z]{2}$/.test(evt.entityId)) return evt.entityId;
+    const colonMatch = evt.entityId.match(/^([A-Z]{2}):/);
+    if (colonMatch) return colonMatch[1];
+    const parenMatch = evt.entityLabel.match(/\(([A-Z]{2})\)\s*$/);
+    if (parenMatch) return parenMatch[1];
+    const commaMatch = evt.entityLabel.match(/,\s*([A-Z]{2})\s*$/);
+    if (commaMatch) return commaMatch[1];
+    return null;
+  }
+
+  function extractParameter(evt: AlertEvent): string | null {
+    if (typeof evt.metadata?.parameter === 'string') return evt.metadata.parameter;
+    if (Array.isArray(evt.metadata?.spikeParameters) && evt.metadata.spikeParameters.length > 0) {
+      return evt.metadata.spikeParameters[0] as string;
+    }
+    return null;
+  }
+
   // ─── Derived ───────────────────────────────────────────────────────────────
 
-  const filteredEvents = severityFilter === 'all' ? events : events.filter(e => e.severity === severityFilter);
+  const availableStates = (() => {
+    const regionStates = regionFilter !== 'all' ? new Set(EPA_REGIONS[regionFilter]) : null;
+    const statesInEvents = new Set<string>();
+    for (const e of events) {
+      const st = extractState(e);
+      if (st && (!regionStates || regionStates.has(st))) statesInEvents.add(st);
+    }
+    return [...statesInEvents].sort();
+  })();
+
+  const availableParams = (() => {
+    const params = new Set<string>();
+    for (const e of events) {
+      const p = extractParameter(e);
+      if (p) params.add(p);
+    }
+    return [...params].sort();
+  })();
+
+  const filteredEvents = events.filter(e => {
+    if (severityFilter !== 'all' && e.severity !== severityFilter) return false;
+    if (regionFilter !== 'all') {
+      const st = extractState(e);
+      if (!st || !EPA_REGIONS[regionFilter].includes(st)) return false;
+    }
+    if (stateFilter !== 'all') {
+      const st = extractState(e);
+      if (st !== stateFilter) return false;
+    }
+    if (datePreset !== 'all') {
+      const created = new Date(e.createdAt);
+      const now = new Date();
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      if (datePreset === 'today' && created < startOfDay) return false;
+      if (datePreset === 'week') {
+        const weekAgo = new Date(startOfDay); weekAgo.setDate(weekAgo.getDate() - 7);
+        if (created < weekAgo) return false;
+      }
+      if (datePreset === 'lastWeek') {
+        const weekAgo = new Date(startOfDay); weekAgo.setDate(weekAgo.getDate() - 7);
+        const twoWeeksAgo = new Date(startOfDay); twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+        if (created < twoWeeksAgo || created >= weekAgo) return false;
+      }
+      if (datePreset === 'custom') {
+        if (customDateFrom && created < new Date(customDateFrom)) return false;
+        if (customDateTo) {
+          const toEnd = new Date(customDateTo); toEnd.setDate(toEnd.getDate() + 1);
+          if (created >= toEnd) return false;
+        }
+      }
+    }
+    if (parameterFilter !== 'all') {
+      const p = extractParameter(e);
+      if (p !== parameterFilter) return false;
+    }
+    return true;
+  });
+
+  const sortedEvents = [...filteredEvents].sort((a, b) => {
+    if (sortBy === 'newest') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    if (sortBy === 'oldest') return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    if (sortBy === 'severity') return (SEVERITY_RANK[a.severity] ?? 9) - (SEVERITY_RANK[b.severity] ?? 9);
+    if (sortBy === 'region') {
+      const ra = Number(STATE_TO_REGION[extractState(a) || ''] || 99);
+      const rb = Number(STATE_TO_REGION[extractState(b) || ''] || 99);
+      return ra - rb || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
+    if (sortBy === 'state') {
+      const sa = extractState(a) || 'ZZ';
+      const sb = extractState(b) || 'ZZ';
+      return sa.localeCompare(sb) || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
+    return 0;
+  });
 
   // ─── Render ────────────────────────────────────────────────────────────────
 
@@ -374,25 +497,102 @@ export function AlertsManagementPanel() {
             </div>
           </div>
 
-          {/* Severity filter */}
-          <div className="flex items-center gap-2">
-            <Filter className="h-3.5 w-3.5 text-slate-400" />
-            {(['all', 'critical', 'warning', 'info'] as const).map(s => (
-              <button
-                key={s}
-                onClick={() => setSeverityFilter(s)}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                  severityFilter === s
-                    ? 'bg-slate-900 text-white'
-                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                }`}
+          {/* Filters */}
+          <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50/50 p-2.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <Filter className="h-3.5 w-3.5 text-slate-400" />
+              <select
+                value={regionFilter}
+                onChange={e => { setRegionFilter(e.target.value); setStateFilter('all'); }}
+                className="px-3 py-1 rounded-lg border border-slate-300 text-xs bg-white focus:border-cyan-400 outline-none"
               >
-                {s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
+                <option value="all">All Regions</option>
+                {Object.entries(EPA_REGIONS).map(([num, states]) => (
+                  <option key={num} value={num}>Region {num} — {states.join(', ')}</option>
+                ))}
+              </select>
+              <select
+                value={stateFilter}
+                onChange={e => setStateFilter(e.target.value)}
+                disabled={availableStates.length === 0}
+                className="px-3 py-1 rounded-lg border border-slate-300 text-xs bg-white focus:border-cyan-400 outline-none disabled:opacity-40"
+              >
+                <option value="all">All States</option>
+                {availableStates.map(st => (
+                  <option key={st} value={st}>{st}</option>
+                ))}
+              </select>
+              <select
+                value={datePreset}
+                onChange={e => setDatePreset(e.target.value as DatePreset)}
+                className="px-3 py-1 rounded-lg border border-slate-300 text-xs bg-white focus:border-cyan-400 outline-none"
+              >
+                <option value="all">All Dates</option>
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="lastWeek">Last Week</option>
+                <option value="custom">Custom Range</option>
+              </select>
+              {availableParams.length > 0 && (
+                <select
+                  value={parameterFilter}
+                  onChange={e => setParameterFilter(e.target.value)}
+                  className="px-3 py-1 rounded-lg border border-slate-300 text-xs bg-white focus:border-cyan-400 outline-none"
+                >
+                  <option value="all">All Parameters</option>
+                  {availableParams.map(p => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+              )}
+              <select
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value as SortOption)}
+                className="px-3 py-1 rounded-lg border border-slate-300 text-xs bg-white focus:border-cyan-400 outline-none"
+              >
+                <option value="newest">Sort: Newest</option>
+                <option value="oldest">Sort: Oldest</option>
+                <option value="severity">Sort: Severity</option>
+                <option value="region">Sort: Region</option>
+                <option value="state">Sort: State</option>
+              </select>
+              <button onClick={fetchHistory} className="ml-auto flex items-center gap-1.5 text-xs text-cyan-600 hover:text-cyan-700 font-medium transition-colors">
+                <RefreshCw className="h-3 w-3" /> Refresh
               </button>
-            ))}
-            <button onClick={fetchHistory} className="ml-auto flex items-center gap-1.5 text-xs text-cyan-600 hover:text-cyan-700 font-medium transition-colors">
-              <RefreshCw className="h-3 w-3" /> Refresh
-            </button>
+            </div>
+            {datePreset === 'custom' && (
+              <div className="flex items-center gap-2 pl-5">
+                <input
+                  type="date"
+                  value={customDateFrom}
+                  onChange={e => setCustomDateFrom(e.target.value)}
+                  className="px-2 py-1 rounded-lg border border-slate-300 text-xs bg-white focus:border-cyan-400 outline-none"
+                />
+                <span className="text-xs text-slate-400">to</span>
+                <input
+                  type="date"
+                  value={customDateTo}
+                  onChange={e => setCustomDateTo(e.target.value)}
+                  className="px-2 py-1 rounded-lg border border-slate-300 text-xs bg-white focus:border-cyan-400 outline-none"
+                />
+              </div>
+            )}
+            <div className="flex items-center gap-2 pl-5">
+              {(['all', 'critical', 'warning', 'info'] as const).map(s => (
+                <button
+                  key={s}
+                  onClick={() => setSeverityFilter(s)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                    severityFilter === s
+                      ? 'bg-slate-900 text-white'
+                      : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                  }`}
+                >
+                  {s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
+                </button>
+              ))}
+              <span className="ml-auto text-[10px] text-slate-400">{filteredEvents.length} result{filteredEvents.length !== 1 ? 's' : ''}</span>
+            </div>
           </div>
 
           {/* Event list */}
@@ -451,7 +651,7 @@ export function AlertsManagementPanel() {
               )}
 
               {/* ── Event list ── */}
-              {[...filteredEvents].reverse().map(evt => {
+              {sortedEvents.map(evt => {
                 const sev = SEVERITY_COLORS[evt.severity] || SEVERITY_COLORS.info;
                 const SevIcon = sev.icon;
                 const isDeployment = evt.type === 'deployment';
