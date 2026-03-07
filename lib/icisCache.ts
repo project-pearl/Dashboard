@@ -302,19 +302,22 @@ export function setIcisBuildInProgress(v: boolean): void {
 export function getIcisAllData(): {
   permits: IcisPermit[];
   violations: IcisViolation[];
+  enforcement: IcisEnforcement[];
   inspections: IcisInspection[];
 } {
   ensureDiskLoaded();
-  if (!_memCache) return { permits: [], violations: [], inspections: [] };
+  if (!_memCache) return { permits: [], violations: [], enforcement: [], inspections: [] };
   const permits: IcisPermit[] = [];
   const violations: IcisViolation[] = [];
+  const enforcement: IcisEnforcement[] = [];
   const inspections: IcisInspection[] = [];
   for (const cell of Object.values(_memCache.grid)) {
     permits.push(...cell.permits);
     violations.push(...cell.violations);
+    enforcement.push(...cell.enforcement);
     inspections.push(...cell.inspections);
   }
-  return { permits, violations, inspections };
+  return { permits, violations, enforcement, inspections };
 }
 
 /**
