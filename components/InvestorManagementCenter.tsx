@@ -565,7 +565,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
           const sectionDescription = SECTION_DESCRIPTIONS[section.id] || '';
           const DS = (children: React.ReactNode) => (
             <DraggableSection key={section.id} id={section.id} label={section.label}
-              isEditMode={isEditMode} isVisible={section.visible} onToggleVisibility={onToggleVisibility}>
+              isEditMode={isEditMode} isVisible={section.visible} onToggleVisibility={onToggleVisibility} userRole="Corporate">
               <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                 <button
                   onClick={() => toggleSection(section.id)}

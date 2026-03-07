@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import { CardAssistBar } from './CardAssistBar';
 
 export interface HeroBannerConfig {
   image: string;
@@ -149,61 +148,52 @@ export default function HeroBanner({ role, className = '', children, onDoubleCli
   if (!config) return null;
 
   return (
-    <>
-      <div className={`relative w-full overflow-hidden rounded-2xl cursor-default select-none ${className}`} style={{ border: '1px solid var(--border-subtle)' }} onDoubleClick={onDoubleClick}>
-        {/* Background image */}
-        <div className="relative h-[160px] sm:h-[180px] lg:h-[200px] w-full">
-          <Image
-            src={config.image}
-            alt={config.headline}
-            fill
-            className="object-cover"
-            priority
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1400px"
-          />
+    <div className={`relative w-full overflow-hidden rounded-2xl cursor-default select-none ${className}`} style={{ border: '1px solid var(--border-subtle)' }} onDoubleClick={onDoubleClick}>
+      {/* Background image */}
+      <div className="relative h-[160px] sm:h-[180px] lg:h-[200px] w-full">
+        <Image
+          src={config.image}
+          alt={config.headline}
+          fill
+          className="object-cover"
+          priority
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1400px"
+        />
 
-          {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/30" />
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/30" />
 
-          {/* Top-right controls overlay */}
-          {children && (
-            <div className="absolute top-4 right-4 sm:top-5 sm:right-6 flex items-center gap-2 z-10">
-              {children}
-            </div>
-          )}
-
-          {/* Content */}
-          <div className="absolute inset-0 flex flex-col justify-center px-6 sm:px-10 lg:px-14">
-            {/* Subtitle label */}
-            <div className="mb-1.5 sm:mb-2">
-              <span
-                className={`inline-flex items-center gap-1.5 w-fit text-sm sm:text-base font-extrabold uppercase tracking-[0.18em] ${config.accentColor}`}
-                style={{ textShadow: '0 0 12px currentColor, 0 0 24px currentColor' }}
-              >
-                <span className="inline-block w-2 h-2 rounded-full bg-current animate-pulse" style={{ boxShadow: '0 0 6px currentColor' }} />
-                {config.subtitle}
-              </span>
-            </div>
-
-            {/* Headline */}
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white leading-tight max-w-2xl">
-              {config.headline}
-            </h1>
-
-            {/* Description */}
-            <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-white/80 max-w-xl leading-relaxed">
-              {config.description}
-            </p>
+        {/* Top-right controls overlay */}
+        {children && (
+          <div className="absolute top-4 right-4 sm:top-5 sm:right-6 flex items-center gap-2 z-10">
+            {children}
           </div>
+        )}
+
+        {/* Content */}
+        <div className="absolute inset-0 flex flex-col justify-center px-6 sm:px-10 lg:px-14">
+          {/* Subtitle label */}
+          <div className="mb-1.5 sm:mb-2">
+            <span
+              className={`inline-flex items-center gap-1.5 w-fit text-sm sm:text-base font-extrabold uppercase tracking-[0.18em] ${config.accentColor}`}
+              style={{ textShadow: '0 0 12px currentColor, 0 0 24px currentColor' }}
+            >
+              <span className="inline-block w-2 h-2 rounded-full bg-current animate-pulse" style={{ boxShadow: '0 0 6px currentColor' }} />
+              {config.subtitle}
+            </span>
+          </div>
+
+          {/* Headline */}
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white leading-tight max-w-2xl">
+            {config.headline}
+          </h1>
+
+          {/* Description */}
+          <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-white/80 max-w-xl leading-relaxed">
+            {config.description}
+          </p>
         </div>
       </div>
-
-      {/* Single page-level Ask PIN bar — below hero, not per-card */}
-      <CardAssistBar
-        sectionId={`page-${role}`}
-        label={config.headline}
-        description={config.description}
-      />
-    </>
+    </div>
   );
 }

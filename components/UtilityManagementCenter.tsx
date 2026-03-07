@@ -292,7 +292,7 @@ export default function UtilityManagementCenter({ systemId }: Props) {
           }).map(section => {
             const DS = (children: React.ReactNode) => (
               <DraggableSection key={section.id} id={section.id} label={section.label}
-                isEditMode={isEditMode} isVisible={section.visible} onToggleVisibility={onToggleVisibility}>
+                isEditMode={isEditMode} isVisible={section.visible} onToggleVisibility={onToggleVisibility} userRole="State">
                 {children}
               </DraggableSection>
             );

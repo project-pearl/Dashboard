@@ -904,7 +904,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
         }).map(section => {
           const DS = (children: React.ReactNode) => (
             <DraggableSection key={section.id} id={section.id} label={section.label}
-              isEditMode={isEditMode} isVisible={section.visible} onToggleVisibility={onToggleVisibility}>
+              isEditMode={isEditMode} isVisible={section.visible} onToggleVisibility={onToggleVisibility} userRole="Corporate">
               {children}
             </DraggableSection>
           );

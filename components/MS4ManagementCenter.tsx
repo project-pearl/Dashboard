@@ -1308,7 +1308,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
         }).map(section => {
           const DS = (children: React.ReactNode) => (
             <DraggableSection key={section.id} id={section.id} label={section.label}
-              isEditMode={isEditMode} isVisible={section.visible} onToggleVisibility={onToggleVisibility}>
+              isEditMode={isEditMode} isVisible={section.visible} onToggleVisibility={onToggleVisibility} userRole="MS4">
               {children}
             </DraggableSection>
           );

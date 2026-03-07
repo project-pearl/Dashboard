@@ -108,6 +108,39 @@ const WQ_DOMAINS = [
   { id: 'coastal' as const, label: 'Coastal', color: '#0EA5E9', description: 'Estuaries, bays, and coastal waters assessed for ocean health and beach advisories.', keyMetrics: ['Coastal Waters', 'Beach Advisories', 'Estuary Health'] },
 ];
 
+const POTOMAC_INCIDENT_DATE_ISO = '2026-01-19';
+
+function getUtcDayNumber(date: Date): number {
+  return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+}
+
+function getDaysSinceIsoDate(isoDate: string, now: Date = new Date()): number {
+  const start = new Date(`${isoDate}T00:00:00Z`);
+  if (Number.isNaN(start.getTime())) return 0;
+  const delta = Math.floor((getUtcDayNumber(now) - getUtcDayNumber(start)) / (24 * 60 * 60 * 1000));
+  return Math.max(1, delta + 1);
+}
+
+function getPotomacRecoveryBadgeMeta(now: Date = new Date()): { label: string; className: string } {
+  const day = getDaysSinceIsoDate(POTOMAC_INCIDENT_DATE_ISO, now);
+  if (day <= 12) {
+    return {
+      label: `Day ${day} Recovery Window`,
+      className: 'bg-red-100 text-red-800 border-red-200',
+    };
+  }
+  if (day <= 60) {
+    return {
+      label: `Day ${day} Stabilization Phase`,
+      className: 'bg-amber-100 text-amber-800 border-amber-200',
+    };
+  }
+  return {
+    label: `Day ${day} Long-Term Recovery`,
+    className: 'bg-blue-100 text-blue-800 border-blue-200',
+  };
+}
+
 // ─── Lens Configuration: what each view shows/hides ────────────────────────────
 const LENS_CONFIG: Record<ViewLens, {
   label: string;
@@ -895,6 +928,7 @@ export function FederalManagementCenter(props: Props) {
   // ── View Lens: controls layout composition ──
   const [viewLens, setViewLens] = useLensParam<ViewLens>(federalMode ? 'overview' : 'overview');
   const lens = LENS_CONFIG[viewLens] ?? LENS_CONFIG['overview'];
+  const potomacRecoveryBadge = useMemo(() => getPotomacRecoveryBadgeMeta(), []);
   const [wqDomain, setWqDomain] = useState<'all' | 'surface-water' | 'stormwater' | 'groundwater' | 'drinking-water' | 'coastal'>('all');
 
   // ── ATTAINS Bulk State Assessment Data ──
@@ -2715,7 +2749,7 @@ export function FederalManagementCenter(props: Props) {
         }).map(section => {
           const DS = (children: React.ReactNode) => (
             <DraggableSection key={section.id} id={section.id} label={section.label}
-              isEditMode={isEditMode} isVisible={section.visible} onToggleVisibility={onToggleVisibility}>
+              isEditMode={isEditMode} isVisible={section.visible} onToggleVisibility={onToggleVisibility} userRole="Federal">
               {children}
             </DraggableSection>
           );
@@ -6193,7 +6227,7 @@ export function FederalManagementCenter(props: Props) {
                     <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
                     <h4 className="text-sm font-bold text-red-900">Potomac Interceptor Recovery - Ongoing</h4>
                   </div>
-                  <Badge className="bg-red-100 text-red-800 border-red-200">Day 12 Recovery Window</Badge>
+                  <Badge className={potomacRecoveryBadge.className}>{potomacRecoveryBadge.label}</Badge>
                 </div>
                 <p className="text-xs text-slate-700">DC Water and partner agencies remain in active recovery following the Potomac Interceptor collapse and associated sewage release. No overflows have been reported since Feb 8, 2026, with full flow restoration targeted for mid-March 2026 and shellfish precautionary closures scheduled to lift Mar 10, 2026 pending confirmation sampling.</p>
                 <div className="flex flex-wrap gap-2 text-[10px]">

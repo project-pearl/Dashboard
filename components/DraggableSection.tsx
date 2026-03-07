@@ -3,8 +3,9 @@
 import { useCallback, useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Eye, EyeOff, Minus, ChevronDown } from 'lucide-react';
+import { GripVertical, Eye, EyeOff, Minus, ChevronDown, HelpCircle } from 'lucide-react';
 import type { ReactNode, MouseEvent } from 'react';
+import { AskPinPopover } from './AskPinPopover';
 
 interface DraggableSectionProps {
   id: string;
@@ -13,6 +14,7 @@ interface DraggableSectionProps {
   isVisible: boolean;
   label: string;
   onToggleVisibility: (id: string) => void;
+  userRole?: string;
 }
 
 // Sections that should not show collapse controls (too small or structural)
@@ -28,8 +30,10 @@ export function DraggableSection({
   isVisible,
   label,
   onToggleVisibility,
+  userRole,
 }: DraggableSectionProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const [askPinOpen, setAskPinOpen] = useState(false);
   const {
     attributes,
     listeners,
@@ -92,19 +96,31 @@ export function DraggableSection({
           </button>
         </div>
       )}
-      {/* Collapse toggle — top-right, visible on hover or when collapsed */}
+      {/* Ask PIN + Collapse — top-right, visible on hover or when collapsed */}
       {canCollapse && (
-        <button
-          onClick={() => setCollapsed(prev => !prev)}
-          className={`absolute top-2 right-2 z-10 p-1 rounded-md border border-slate-200 bg-white/90 shadow-sm transition-all hover:border-blue-300 hover:shadow ${
-            collapsed ? 'opacity-100' : 'opacity-0 group-hover/section:opacity-100'
-          }`}
-          title={collapsed ? `Expand: ${label}` : `Minimize: ${label}`}
-        >
-          {collapsed
-            ? <ChevronDown className="h-3.5 w-3.5 text-slate-500" />
-            : <Minus className="h-3.5 w-3.5 text-slate-400" />}
-        </button>
+        <div className={`absolute top-2 right-2 z-10 flex gap-1 transition-all ${
+          collapsed || askPinOpen ? 'opacity-100' : 'opacity-0 group-hover/section:opacity-100'
+        }`}>
+          <button
+            onClick={() => setAskPinOpen(v => !v)}
+            className="p-1 rounded-md border border-slate-200 bg-white/90 shadow-sm transition-all hover:border-blue-300 hover:shadow"
+            title="Ask PIN"
+          >
+            <HelpCircle className="h-3.5 w-3.5 text-blue-400" />
+          </button>
+          <button
+            onClick={() => setCollapsed(prev => !prev)}
+            className="p-1 rounded-md border border-slate-200 bg-white/90 shadow-sm transition-all hover:border-blue-300 hover:shadow"
+            title={collapsed ? `Expand: ${label}` : `Minimize: ${label}`}
+          >
+            {collapsed
+              ? <ChevronDown className="h-3.5 w-3.5 text-slate-500" />
+              : <Minus className="h-3.5 w-3.5 text-slate-400" />}
+          </button>
+        </div>
+      )}
+      {askPinOpen && (
+        <AskPinPopover sectionId={id} label={label} userRole={userRole || 'Federal'} onClose={() => setAskPinOpen(false)} />
       )}
       {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
       <div onClick={handleHeaderClick} className={canCollapse ? '[&_h3]:cursor-pointer' : ''}>
