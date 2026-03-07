@@ -67,6 +67,7 @@ export interface AlertLog {
   lastDispatchAt: string | null;
   totalSent: number;
   totalSuppressed: number;
+  totalThrottled: number;
   totalErrors: number;
   totalLogged: number;
 }

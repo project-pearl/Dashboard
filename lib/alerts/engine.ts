@@ -25,7 +25,7 @@ let _logDiskLoaded = false;
 let _logBlobChecked = false;
 
 function defaultLog(): AlertLog {
-  return { events: [], lastDispatchAt: null, totalSent: 0, totalSuppressed: 0, totalErrors: 0, totalLogged: 0 };
+  return { events: [], lastDispatchAt: null, totalSent: 0, totalSuppressed: 0, totalThrottled: 0, totalErrors: 0, totalLogged: 0 };
 }
 
 function ensureLogDiskLoaded(): void {
@@ -117,6 +117,7 @@ export async function dispatchAlerts(candidateEvents: AlertEvent[]): Promise<Dis
     const siteKey = extractSiteKey(candidate.dedupKey);
     if (shouldThrottle(siteKey, candidate.severity, siteState)) {
       result.throttled++;
+      log.totalThrottled = (log.totalThrottled || 0) + 1;
       continue;
     }
 

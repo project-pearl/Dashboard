@@ -66,7 +66,7 @@ export function AlertsManagementPanel() {
 
   // ── History state ──
   const [events, setEvents] = useState<AlertEvent[]>([]);
-  const [historyStats, setHistoryStats] = useState({ totalSent: 0, totalSuppressed: 0, totalErrors: 0, totalLogged: 0, lastDispatchAt: null as string | null });
+  const [historyStats, setHistoryStats] = useState({ totalSent: 0, totalSuppressed: 0, totalThrottled: 0, totalErrors: 0, totalLogged: 0, lastDispatchAt: null as string | null });
   const [severityFilter, setSeverityFilter] = useState<AlertSeverity | 'all'>('all');
   const [regionFilter, setRegionFilter] = useState<string>('all');
   const [stateFilter, setStateFilter] = useState<string>('all');
@@ -89,6 +89,13 @@ export function AlertsManagementPanel() {
   const [suppressions, setSuppressions] = useState<AlertSuppression[]>([]);
   const [suppressForm, setSuppressForm] = useState({ dedupKey: '', reason: '', expiresAt: '' });
 
+  // ── Throttle stats (live counters for built-in protections) ──
+  const [throttleStats, setThrottleStats] = useState<{
+    totalTracked: number; sitesInCooldown: number; sitesPending: number;
+    sitesRecovered: number; totalThrottled: number; totalSuppressed: number;
+    sentThisHour: number; rateLimitCap: number;
+  } | null>(null);
+
   // ── Test state ──
   const [testEmail, setTestEmail] = useState('');
   const [testStatus, setTestStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -106,7 +113,7 @@ export function AlertsManagementPanel() {
       if (res.ok) {
         const data = await res.json();
         setEvents(data.events || []);
-        setHistoryStats({ totalSent: data.totalSent, totalSuppressed: data.totalSuppressed, totalErrors: data.totalErrors, totalLogged: data.totalLogged || 0, lastDispatchAt: data.lastDispatchAt });
+        setHistoryStats({ totalSent: data.totalSent, totalSuppressed: data.totalSuppressed, totalThrottled: data.totalThrottled || 0, totalErrors: data.totalErrors, totalLogged: data.totalLogged || 0, lastDispatchAt: data.lastDispatchAt });
       }
     } catch { /* ignore */ }
     setLoading(false);
@@ -148,13 +155,20 @@ export function AlertsManagementPanel() {
     setLoading(false);
   }, []);
 
+  const fetchThrottleStats = useCallback(async () => {
+    try {
+      const res = await fetch('/api/alerts/throttle-stats');
+      if (res.ok) setThrottleStats(await res.json());
+    } catch { /* ignore */ }
+  }, []);
+
   useEffect(() => {
     if (tab === 'history') fetchHistory();
     else if (tab === 'recipients') fetchRecipients();
-    else if (tab === 'rules') fetchRules();
-    else if (tab === 'suppressions') fetchSuppressions();
+    else if (tab === 'rules') { fetchRules(); fetchThrottleStats(); }
+    else if (tab === 'suppressions') { fetchSuppressions(); fetchThrottleStats(); }
     else setLoading(false);
-  }, [tab, fetchHistory, fetchRecipients, fetchRules, fetchSuppressions]);
+  }, [tab, fetchHistory, fetchRecipients, fetchRules, fetchSuppressions, fetchThrottleStats]);
 
   // ─── Mutations ─────────────────────────────────────────────────────────────
 
@@ -478,7 +492,7 @@ export function AlertsManagementPanel() {
       {tab === 'history' && (
         <div className="space-y-3">
           {/* Stats bar */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
             <div className="rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs text-cyan-800">
               <span className="font-semibold">{historyStats.totalLogged}</span> logged
             </div>
@@ -487,6 +501,9 @@ export function AlertsManagementPanel() {
             </div>
             <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
               <span className="font-semibold">{historyStats.totalSuppressed}</span> suppressed
+            </div>
+            <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs text-indigo-800">
+              <span className="font-semibold">{historyStats.totalThrottled}</span> throttled
             </div>
             <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800">
               <span className="font-semibold">{historyStats.totalErrors}</span> errors
@@ -901,16 +918,25 @@ export function AlertsManagementPanel() {
                     name: 'Persistence Confirmation',
                     desc: 'Critical alerts require 2 consecutive sub-threshold readings (~10 min) before firing. Prevents single-sensor glitches from triggering.',
                     severity: 'critical' as AlertSeverity,
+                    badge: throttleStats && throttleStats.sitesPending > 0
+                      ? { label: `${throttleStats.sitesPending} pending`, color: 'bg-amber-100 text-amber-700' }
+                      : null,
                   },
                   {
                     name: 'Site Cooldown (4 hours)',
                     desc: 'After an alert fires for a site + parameter, the same combo is suppressed for 4 hours. Prevents indefinite re-firing.',
                     severity: 'warning' as AlertSeverity,
+                    badge: throttleStats && throttleStats.sitesInCooldown > 0
+                      ? { label: `${throttleStats.sitesInCooldown} in cooldown`, color: 'bg-red-100 text-red-700' }
+                      : null,
                   },
                   {
                     name: 'Recovery Reset',
                     desc: 'When a site returns to normal for 10+ minutes, its cooldown clears so the next breach fires fresh.',
                     severity: 'info' as AlertSeverity,
+                    badge: throttleStats && throttleStats.sitesRecovered > 0
+                      ? { label: `${throttleStats.sitesRecovered} recovered`, color: 'bg-emerald-100 text-emerald-700' }
+                      : null,
                   },
                 ].map(rule => {
                   const sev = SEVERITY_COLORS[rule.severity];
@@ -921,6 +947,9 @@ export function AlertsManagementPanel() {
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-semibold text-slate-800">{rule.name}</span>
                           <Badge variant="secondary" className={`text-[8px] ${sev.bg} ${sev.text}`}>{rule.severity}</Badge>
+                          {rule.badge && (
+                            <Badge variant="secondary" className={`text-[8px] ${rule.badge.color}`}>{rule.badge.label}</Badge>
+                          )}
                         </div>
                         <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{rule.desc}</p>
                       </div>
@@ -1098,20 +1127,39 @@ export function AlertsManagementPanel() {
                   {
                     name: 'Exact-Match Cooldown',
                     desc: 'Each alert has a severity-based cooldown (critical: 15 min, warning: 1 hr, info: 4 hr). Identical dedupKeys are suppressed within this window.',
+                    badges: throttleStats && throttleStats.totalSuppressed > 0
+                      ? [{ label: `${throttleStats.totalSuppressed} total`, color: 'bg-slate-200 text-slate-700' }]
+                      : [],
                   },
                   {
                     name: 'Site-Level Throttle (4 hours)',
                     desc: 'After an alert fires, the same site + parameter combo is suppressed for 4 hours regardless of severity. Prevents spam from persistent readings.',
+                    badges: [
+                      ...(throttleStats && throttleStats.totalThrottled > 0
+                        ? [{ label: `${throttleStats.totalThrottled} throttled`, color: 'bg-slate-200 text-slate-700' }]
+                        : []),
+                      ...(throttleStats && throttleStats.sitesInCooldown > 0
+                        ? [{ label: `${throttleStats.sitesInCooldown} active`, color: 'bg-slate-200 text-slate-700' }]
+                        : []),
+                    ],
                   },
                   {
                     name: 'Rate Limit (20/hr)',
                     desc: 'Maximum 20 alert emails per hour across all recipients. Excess alerts are queued for the next window.',
+                    badges: throttleStats
+                      ? [{ label: `${throttleStats.sentThisHour}/${throttleStats.rateLimitCap} this hour`, color: throttleStats.sentThisHour >= 15 ? 'bg-amber-100 text-amber-700' : 'bg-slate-200 text-slate-700' }]
+                      : [],
                   },
                 ].map(rule => (
                   <div key={rule.name} className="flex items-start gap-2.5 rounded-lg border border-indigo-200 bg-white/60 px-3 py-2">
                     <ShieldOff className="h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-indigo-400" />
                     <div className="min-w-0">
-                      <span className="text-xs font-semibold text-slate-800">{rule.name}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-slate-800">{rule.name}</span>
+                        {rule.badges.map(b => (
+                          <Badge key={b.label} variant="secondary" className={`text-[8px] ${b.color}`}>{b.label}</Badge>
+                        ))}
+                      </div>
                       <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{rule.desc}</p>
                     </div>
                   </div>

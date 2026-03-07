@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
     lastDispatchAt: log.lastDispatchAt,
     totalSent: log.totalSent,
     totalSuppressed: log.totalSuppressed,
+    totalThrottled: log.totalThrottled || 0,
     totalErrors: log.totalErrors,
     totalLogged: log.totalLogged || 0,
   });
