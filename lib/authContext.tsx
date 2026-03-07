@@ -29,6 +29,7 @@ interface AuthContextType {
   approveUser: (uid: string, overrides?: ApprovalOverrides) => Promise<void>;
   rejectUser: (uid: string) => Promise<void>;
   deactivateUser: (uid: string) => Promise<void>;
+  deleteUser: (uid: string) => Promise<void>;
   updateUserRole: (uid: string, role: UserRole, jurisdiction?: string) => Promise<void>;
   createInviteLink: (params: CreateInviteParams) => Promise<string>;
   listPendingUsers: () => Promise<PearlUser[]>;
@@ -376,6 +377,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.from('profiles').update({ status: 'deactivated' }).eq('id', uid);
   }, []);
 
+  const deleteUser = useCallback(async (uid: string) => {
+    if (!user?.isAdmin) throw new Error('Only admins can delete users.');
+    const { data: { session } } = await supabase.auth.getSession();
+    const accessToken = session?.access_token;
+    if (!accessToken) throw new Error('No active admin session.');
+
+    const res = await fetch(`/api/admin/users/${uid}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({} as any));
+      throw new Error(body?.error || 'Failed to delete user');
+    }
+  }, [user?.isAdmin]);
+
   const updateUserRole = useCallback(async (uid: string, role: UserRole, jurisdiction?: string) => {
     const updates: any = { role };
     if (jurisdiction) updates.ms4_jurisdiction = jurisdiction;
@@ -448,6 +465,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     approveUser,
     rejectUser,
     deactivateUser,
+    deleteUser,
     updateUserRole,
     createInviteLink,
     listPendingUsers,

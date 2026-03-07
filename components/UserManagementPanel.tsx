@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/lib/authContext';
 import { PearlUser, UserRole, OPERATOR_ROLES, EXPLORER_ROLES, isOperatorRole } from '@/lib/authTypes';
 import type { ApprovalOverrides } from '@/lib/authContext';
@@ -10,10 +10,10 @@ import { Badge } from '@/components/ui/badge';
 import {
   Link2, Users, UserPlus, CheckCircle, XCircle, Clock,
   Copy, Check, Mail, Building2, ChevronDown,
-  AlertTriangle, Send, RefreshCw, EyeOff,
+  AlertTriangle, Send, RefreshCw, Trash2, Search,
 } from 'lucide-react';
 
-// ─── Constants ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const ALL_ROLES: UserRole[] = [...OPERATOR_ROLES, ...EXPLORER_ROLES];
 
@@ -50,7 +50,7 @@ const ALL_US_STATES: { abbr: string; name: string }[] = [
   { abbr: 'WV', name: 'West Virginia' }, { abbr: 'WI', name: 'Wisconsin' }, { abbr: 'WY', name: 'Wyoming' },
 ];
 
-/** Route preview per role — shows admin exactly where the user will land */
+/** Route preview per role â€” shows admin exactly where the user will land */
 const ROUTE_PREVIEWS: Record<string, (...args: string[]) => string> = {
   Federal:    ()                       => '/dashboard/federal',
   State:      (state: string)          => `/dashboard/state/${state || '{state}'}`,
@@ -84,7 +84,7 @@ function accessScopeSummary(user: PearlUser): string {
   return 'Operator access. Role-based operational center with action tools where permitted.';
 }
 
-// ─── Component ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface UserManagementPanelProps {
   onRefreshPendingCount?: (count: number) => void;
@@ -93,13 +93,17 @@ interface UserManagementPanelProps {
 export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPanelProps) {
   const {
     user, isAdmin, approveUser, rejectUser, deactivateUser,
-    updateUserRole, createInviteLink, listPendingUsers, listAllUsers,
+    deleteUser, updateUserRole, createInviteLink, listPendingUsers, listAllUsers,
   } = useAuth();
 
   const [tab, setTab] = useState<'pending' | 'invite' | 'users'>('pending');
   const [pending, setPending] = useState<PearlUser[]>([]);
   const [allUsers, setAllUsers] = useState<PearlUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userSearch, setUserSearch] = useState('');
+  const [userSortBy, setUserSortBy] = useState<'name' | 'role' | 'state' | 'admin' | 'status'>('name');
+  const [userSortDir, setUserSortDir] = useState<'asc' | 'desc'>('asc');
+  const [actionBusyUid, setActionBusyUid] = useState<string | null>(null);
 
   // Invite form state
   const [invRole, setInvRole] = useState<UserRole>('MS4');
@@ -112,7 +116,7 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
   const [invCopied, setInvCopied] = useState(false);
   const [invSending, setInvSending] = useState(false);
 
-  // Approval state — per-user overrides for role, state, jurisdiction, organization
+  // Approval state â€” per-user overrides for role, state, jurisdiction, organization
   const [approvalOverrides, setApprovalOverrides] = useState<Record<string, ApprovalOverrides>>({});
 
   const refresh = useCallback(async () => {
@@ -128,7 +132,7 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
 
   if (!isAdmin) return null;
 
-  // ── Invite link generation ──
+  // â”€â”€ Invite link generation â”€â”€
   async function handleGenerateInvite() {
     setInvSending(true);
     try {
@@ -154,7 +158,7 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
   }
 
   function emailInviteLink() {
-    const subject = encodeURIComponent(`You're invited to PEARL — ${invRole} Access`);
+    const subject = encodeURIComponent(`You're invited to PEARL â€” ${invRole} Access`);
     const body = encodeURIComponent(
       `Hi${invEmail ? '' : ' there'},\n\n` +
       `You've been invited to join the PEARL Water Quality Intelligence Platform` +
@@ -162,7 +166,7 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
       `Click the link below to create your account (pre-approved, no waiting):\n\n` +
       `${invLink}\n\n` +
       `This link expires in ${invExpiryDays} days.\n\n` +
-      `— PEARL Team\nproject-pearl.org`
+      `â€” PEARL Team\nproject-pearl.org`
     );
     window.open(`mailto:${invEmail}?subject=${subject}&body=${body}`, '_blank');
   }
@@ -178,7 +182,7 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
     }));
   }
 
-  // ── Approve user (with all drilldown overrides) ──
+  // â”€â”€ Approve user (with all drilldown overrides) â”€â”€
   async function handleApprove(uid: string) {
     const overrides = getOverride(uid);
     await approveUser(uid, Object.keys(overrides).length > 0 ? overrides : undefined);
@@ -190,14 +194,58 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
     await refresh();
   }
 
-  async function handleDeactivate(uid: string) {
-    await deactivateUser(uid);
-    await refresh();
+  async function handleToggleBlock(target: PearlUser) {
+    if (target.uid === user?.uid) return;
+    setActionBusyUid(target.uid);
+    try {
+      if (target.status === 'deactivated') await approveUser(target.uid);
+      else await deactivateUser(target.uid);
+      await refresh();
+    } finally {
+      setActionBusyUid(null);
+    }
+  }
+
+  async function handleDeleteUser(target: PearlUser) {
+    if (target.uid === user?.uid) return;
+    const ok = window.confirm(`Delete user ${target.name} (${target.email})? This removes the account permanently.`);
+    if (!ok) return;
+    setActionBusyUid(target.uid);
+    try {
+      await deleteUser(target.uid);
+      await refresh();
+    } finally {
+      setActionBusyUid(null);
+    }
   }
 
   const pendingCount = pending.length;
   const activeExplorerCount = allUsers.filter((u) => u.status === 'active' && accessType(u.role) === 'explorer').length;
   const activeOperatorCount = allUsers.filter((u) => u.status === 'active' && accessType(u.role) === 'operator').length;
+  const visibleUsers = useMemo(() => {
+    const query = userSearch.trim().toLowerCase();
+    const filtered = query
+      ? allUsers.filter((u) => (u.name || '').toLowerCase().includes(query))
+      : allUsers;
+
+    const statusOrder: Record<string, number> = { pending: 0, active: 1, rejected: 2, deactivated: 3 };
+    return [...filtered].sort((a, b) => {
+      const dir = userSortDir === 'asc' ? 1 : -1;
+      switch (userSortBy) {
+        case 'role':
+          return a.role.localeCompare(b.role) * dir || a.name.localeCompare(b.name);
+        case 'state':
+          return (a.state || '').localeCompare(b.state || '') * dir || a.name.localeCompare(b.name);
+        case 'admin':
+          return ((a.isAdmin ? 1 : 0) - (b.isAdmin ? 1 : 0)) * dir || a.name.localeCompare(b.name);
+        case 'status':
+          return ((statusOrder[a.status] ?? 99) - (statusOrder[b.status] ?? 99)) * dir || a.name.localeCompare(b.name);
+        case 'name':
+        default:
+          return a.name.localeCompare(b.name) * dir;
+      }
+    });
+  }, [allUsers, userSearch, userSortBy, userSortDir]);
 
   return (
     <div className="space-y-4">
@@ -229,7 +277,7 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
         })}
       </div>
 
-      {/* ── Pending Approvals ── */}
+      {/* â”€â”€ Pending Approvals â”€â”€ */}
       {tab === 'pending' && (
         <div className="space-y-3">
           {loading ? (
@@ -260,7 +308,7 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
               // Route preview
               const routePreview = ROUTE_PREVIEWS[effectiveRole]?.(effectiveState, effectiveJurisdiction) ?? ROUTE_PREVIEWS._default(effectiveRole);
 
-              // Approval gate — block if required fields are missing
+              // Approval gate â€” block if required fields are missing
               const missingFields: string[] = [];
               if (needsState && !effectiveState) missingFields.push('state');
               if (needsJurisdiction && !effectiveJurisdiction) missingFields.push('jurisdiction');
@@ -290,12 +338,12 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
                       <div className="flex items-start gap-2 p-2.5 rounded-lg bg-orange-50 border border-orange-200">
                         <AlertTriangle className="h-3.5 w-3.5 text-orange-500 flex-shrink-0 mt-0.5" />
                         <p className="text-[11px] text-orange-700">
-                          <span className="font-semibold">Free email domain</span> — this user claims <span className="font-semibold">{effectiveRole}</span> role but registered with a personal email ({u.email.split('@')[1]}). Verify affiliation before approving.
+                          <span className="font-semibold">Free email domain</span> â€” this user claims <span className="font-semibold">{effectiveRole}</span> role but registered with a personal email ({u.email.split('@')[1]}). Verify affiliation before approving.
                         </p>
                       </div>
                     )}
 
-                    {/* ── Role Assignment ── */}
+                    {/* â”€â”€ Role Assignment â”€â”€ */}
                     <div>
                       <label className="text-[11px] font-semibold text-slate-600 mb-1 block">
                         Assign Role
@@ -307,13 +355,13 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
                       >
                         {ALL_ROLES.map(r => (
                           <option key={r} value={r}>
-                            {r}{r === u.role ? ' (requested)' : ''}{isOperatorRole(r) ? ' — operator' : ''}
+                            {r}{r === u.role ? ' (requested)' : ''}{isOperatorRole(r) ? ' â€” operator' : ''}
                           </option>
                         ))}
                       </select>
                     </div>
 
-                    {/* ── State ── */}
+                    {/* â”€â”€ State â”€â”€ */}
                     {needsState && (
                       <div>
                         <label className="text-[11px] font-semibold text-slate-600 mb-1 block">
@@ -332,11 +380,11 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
                       </div>
                     )}
 
-                    {/* ── Jurisdiction (MS4 / Local) ── */}
+                    {/* â”€â”€ Jurisdiction (MS4 / Local) â”€â”€ */}
                     {needsJurisdiction && (
                       <div>
                         <label className="text-[11px] font-semibold text-slate-600 mb-1 block">
-                          Bind Jurisdiction {effectiveRole === 'MS4' ? '(required — determines MS4 permit dashboard)' : '(required — determines local dashboard)'}
+                          Bind Jurisdiction {effectiveRole === 'MS4' ? '(required â€” determines MS4 permit dashboard)' : '(required â€” determines local dashboard)'}
                         </label>
                         <select
                           value={effectiveJurisdiction}
@@ -351,7 +399,7 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
                       </div>
                     )}
 
-                    {/* ── Organization ── */}
+                    {/* â”€â”€ Organization â”€â”€ */}
                     {needsOrg && (
                       <div>
                         <label className="text-[11px] font-semibold text-slate-600 mb-1 block">
@@ -367,13 +415,13 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
                       </div>
                     )}
 
-                    {/* ── Landing route preview ── */}
+                    {/* â”€â”€ Landing route preview â”€â”€ */}
                     <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
                       <div className="text-[10px] font-semibold text-slate-500 mb-1">Landing page</div>
                       <code className="text-[11px] text-cyan-700 font-mono">{routePreview}</code>
                     </div>
 
-                    {/* ── Validation warnings ── */}
+                    {/* â”€â”€ Validation warnings â”€â”€ */}
                     {!canApprove && (
                       <div className="flex items-start gap-2 p-2.5 rounded-lg bg-red-50 border border-red-200">
                         <AlertTriangle className="h-3.5 w-3.5 text-red-500 flex-shrink-0 mt-0.5" />
@@ -383,7 +431,7 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
                       </div>
                     )}
 
-                    {/* ── Actions ── */}
+                    {/* â”€â”€ Actions â”€â”€ */}
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleApprove(u.uid)}
@@ -409,12 +457,12 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
         </div>
       )}
 
-      {/* ── Invite User ── */}
+      {/* â”€â”€ Invite User â”€â”€ */}
       {tab === 'invite' && (
         <Card>
           <CardContent className="p-5 space-y-4">
             <p className="text-sm text-slate-600">
-              Generate a pre-approved invite link. The recipient will create their account with role and jurisdiction already bound — no waiting.
+              Generate a pre-approved invite link. The recipient will create their account with role and jurisdiction already bound â€” no waiting.
             </p>
 
             {/* Role */}
@@ -434,7 +482,7 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
             {/* Email (optional) */}
             <div>
               <label className="block text-xs font-semibold text-slate-600 mb-1">
-                Recipient Email <span className="text-slate-400 font-normal">(optional — locks invite to this email)</span>
+                Recipient Email <span className="text-slate-400 font-normal">(optional â€” locks invite to this email)</span>
               </label>
               <input
                 type="email"
@@ -548,7 +596,7 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
                 <div className="text-[10px] text-slate-400">
                   Expires {new Date(Date.now() + invExpiryDays * 86400000).toLocaleDateString()}.
                   Role: {invRole}
-                  {invJurisdiction && ` · Jurisdiction: ${MD_JURISDICTIONS.find(j => j.key === invJurisdiction)?.label}`}
+                  {invJurisdiction && ` Â· Jurisdiction: ${MD_JURISDICTIONS.find(j => j.key === invJurisdiction)?.label}`}
                 </div>
               </div>
             )}
@@ -556,7 +604,7 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
         </Card>
       )}
 
-      {/* ── All Users ── */}
+      {/* â”€â”€ All Users â”€â”€ */}
       {tab === 'users' && (
         <Card>
           <CardContent className="p-5 space-y-2">
@@ -589,17 +637,58 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
               </button>
             )}
 
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-2">
+              <div className="md:col-span-2">
+                <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Search Name</label>
+                <div className="relative">
+                  <Search className="h-3.5 w-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    value={userSearch}
+                    onChange={(e) => setUserSearch(e.target.value)}
+                    placeholder="Type letters in the user's name..."
+                    className={`${inputClass} pl-8`}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Sort By</label>
+                <select
+                  value={userSortBy}
+                  onChange={(e) => setUserSortBy(e.target.value as 'name' | 'role' | 'state' | 'admin' | 'status')}
+                  className={selectClass}
+                >
+                  <option value="name">Name</option>
+                  <option value="role">Role</option>
+                  <option value="state">State</option>
+                  <option value="admin">Admin Type</option>
+                  <option value="status">Status</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Direction</label>
+                <select
+                  value={userSortDir}
+                  onChange={(e) => setUserSortDir(e.target.value as 'asc' | 'desc')}
+                  className={selectClass}
+                >
+                  <option value="asc">Ascending</option>
+                  <option value="desc">Descending</option>
+                </select>
+              </div>
+            </div>
+
             {loading ? (
               <div className="text-center py-8 text-sm text-slate-400">Loading...</div>
+            ) : visibleUsers.length === 0 ? (
+              <div className="text-center py-8 text-sm text-slate-400">No users match this search.</div>
             ) : (
-              allUsers
-                .sort((a, b) => {
-                  const order: Record<string, number> = { pending: 0, active: 1, rejected: 2, deactivated: 3 };
-                  return (order[a.status] ?? 4) - (order[b.status] ?? 4) || a.name.localeCompare(b.name);
-                })
+              visibleUsers
                 .map(u => {
                   const sb = STATUS_BADGE[u.status] || STATUS_BADGE.active;
                   const isCurrentUser = u.uid === user?.uid;
+                  const isBusy = actionBusyUid === u.uid;
+                  const canBlock = !isCurrentUser && u.status !== 'pending';
+                  const blockLabel = u.status === 'deactivated' ? 'Unblock' : 'Block';
                   return (
                     <div key={u.uid} className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
                       u.status === 'pending' ? 'border-amber-200 bg-amber-50/30' : 'border-slate-200 hover:bg-slate-50'
@@ -613,16 +702,24 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-semibold text-slate-800 truncate">{u.name}</span>
-                          {u.isAdmin && <Badge variant="secondary" className="bg-purple-100 text-purple-700 text-[9px] px-1.5">ADMIN</Badge>}
+                          <Badge variant="secondary" className={`text-[9px] px-1.5 ${u.isAdmin ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-600'}`}>
+                            {u.isAdmin ? 'ADMIN' : 'STANDARD'}
+                          </Badge>
                           {isCurrentUser && <Badge variant="secondary" className="bg-cyan-100 text-cyan-700 text-[9px] px-1.5">YOU</Badge>}
                         </div>
                         <div className="flex items-center gap-2 text-[11px] text-slate-500">
                           <span>{u.email}</span>
-                          <span>·</span>
+                          <span>|</span>
                           <span>{u.role}</span>
+                          {u.state && (
+                            <>
+                              <span>|</span>
+                              <span>{u.state}</span>
+                            </>
+                          )}
                           {u.ms4Jurisdiction && (
                             <>
-                              <span>·</span>
+                              <span>|</span>
                               <span className="text-cyan-600">{MD_JURISDICTIONS.find(j => j.key === u.ms4Jurisdiction)?.label || u.ms4Jurisdiction}</span>
                             </>
                           )}
@@ -641,19 +738,21 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
                       {/* Status + actions */}
                       <div className="flex items-center gap-2 flex-shrink-0">
                         <Badge variant="secondary" className={`${sb.bg} ${sb.text} text-[10px]`}>{sb.label}</Badge>
-                        {u.status === 'active' && !isCurrentUser && (
+                        {canBlock && (
                           <button
-                            onClick={() => handleDeactivate(u.uid)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                            title="Deactivate"
+                            onClick={() => handleToggleBlock(u)}
+                            disabled={isBusy}
+                            className="px-2 py-1 rounded-lg text-[11px] font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 border border-slate-200 disabled:opacity-50 transition-colors"
+                            title={blockLabel}
                           >
-                            <EyeOff className="h-3.5 w-3.5" />
+                            {blockLabel}
                           </button>
                         )}
                         {u.status === 'pending' && (
                           <>
                             <button
                               onClick={() => handleApprove(u.uid)}
+                              disabled={isBusy}
                               className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors"
                               title="Approve"
                             >
@@ -661,12 +760,23 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
                             </button>
                             <button
                               onClick={() => handleReject(u.uid)}
+                              disabled={isBusy}
                               className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
                               title="Reject"
                             >
                               <XCircle className="h-3.5 w-3.5" />
                             </button>
                           </>
+                        )}
+                        {!isCurrentUser && (
+                          <button
+                            onClick={() => handleDeleteUser(u)}
+                            disabled={isBusy}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                            title="Delete user"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
                         )}
                       </div>
                     </div>
@@ -679,3 +789,4 @@ export function UserManagementPanel({ onRefreshPendingCount }: UserManagementPan
     </div>
   );
 }
+
