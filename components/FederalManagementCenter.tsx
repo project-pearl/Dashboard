@@ -67,6 +67,7 @@ import { SentinelBriefingCard } from './SentinelBriefingCard';
 import { FloodForecastCard, FloodStatusSummary } from './FloodForecastCard';
 import { FloodRiskOverviewCard, FloodRiskSummary } from './FloodRiskOverviewCard';
 import AMSAlertMonitor from '@/ams/components/AMSAlertMonitor';
+import type { WatershedScore } from '@/ams/types/sentinel';
 import { useAlertSummary } from '@/ams/hooks/useAlertSummary';
 import { StateDataReportCard } from '@/components/StateDataReportCard';
 import { useStateReport } from '@/lib/useStateReport';
@@ -2596,6 +2597,10 @@ export function FederalManagementCenter(props: Props) {
       .sort((a, b) => b.score - a.score),
     [sentinel]
   );
+  const selectedAmsEvent = useMemo<WatershedScore | null>(() => {
+    if (!selectedAlertHuc) return null;
+    return amsSummary?.recentEvents.find((e) => e.huc8 === selectedAlertHuc) ?? null;
+  }, [amsSummary, selectedAlertHuc]);
 
   // ─── National Impact Counter ──────────────────────────────────────────────
   const [impactPeriod, setImpactPeriod] = useState<'all' | string>('all');
@@ -3007,6 +3012,65 @@ export function FederalManagementCenter(props: Props) {
                   )}
                 </CardHeader>
                 <CardContent className="space-y-4 px-5 pb-5">
+                  {selectedAmsEvent && (
+                    <div className="rounded-lg border border-red-200 bg-red-50/60 p-3 space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-red-700">Why This Is Alerting</div>
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                          selectedAmsEvent.alertLevel === 'ALERT' ? 'bg-red-600 text-white'
+                            : selectedAmsEvent.alertLevel === 'ADVISORY' ? 'bg-amber-500 text-white'
+                            : 'bg-blue-500 text-white'
+                        }`}>
+                          {selectedAmsEvent.alertLevel}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 text-[10px]">
+                        <div className="rounded border border-red-200 bg-white px-2 py-1.5">
+                          <div className="text-red-500">Composite</div>
+                          <div className="font-bold text-red-700">{Math.round(selectedAmsEvent.compositeScore)}</div>
+                        </div>
+                        <div className="rounded border border-red-200 bg-white px-2 py-1.5">
+                          <div className="text-red-500">Signals</div>
+                          <div className="font-bold text-red-700">{selectedAmsEvent.signalCount}</div>
+                        </div>
+                        <div className="rounded border border-red-200 bg-white px-2 py-1.5">
+                          <div className="text-red-500">Last Signal</div>
+                          <div className="font-bold text-red-700">{formatRefreshAge(selectedAmsEvent.lastSignalAt)}</div>
+                        </div>
+                      </div>
+                      {selectedAmsEvent.signals.length > 0 && (
+                        <div className="space-y-1">
+                          <div className="text-[10px] font-semibold text-red-700">Primary Signal Drivers</div>
+                          <div className="space-y-1 max-h-36 overflow-y-auto">
+                            {selectedAmsEvent.signals.slice(0, 5).map((sig) => (
+                              <div key={sig.changeEvent.eventId} className="rounded border border-red-200 bg-white px-2 py-1.5 text-[10px]">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="font-semibold text-slate-700">{sig.signalType.replace(/_/g, ' ')}</span>
+                                  <span className="font-bold text-red-700">{Math.round(sig.effectiveScore)}</span>
+                                </div>
+                                <div className="text-slate-500 mt-0.5">
+                                  Source: {sig.changeEvent.source} · Severity: {sig.changeEvent.severityHint}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {selectedAmsEvent.compoundMatches.length > 0 && (
+                        <div className="space-y-1">
+                          <div className="text-[10px] font-semibold text-red-700">Compound Pattern Matches</div>
+                          <div className="space-y-1">
+                            {selectedAmsEvent.compoundMatches.slice(0, 3).map((m) => (
+                              <div key={m.pattern} className="rounded border border-red-200 bg-white px-2 py-1.5 text-[10px]">
+                                <span className="font-semibold text-slate-700">{m.label}</span>
+                                <span className="text-slate-500"> · Score {Math.round(m.compoundScore)} · {m.matchedSignals.length} linked signals</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                   {selectedHucIndices ? (
                     <div className="space-y-4">
                       {/* Composite score gauge */}
