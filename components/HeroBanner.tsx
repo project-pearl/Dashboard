@@ -207,8 +207,8 @@ export default function HeroBanner({ role, className = '', children, onDoubleCli
           </p>
         </div>
       </div>
-      <div className="px-6 sm:px-10 lg:px-14 py-3 bg-slate-50 border-t border-slate-200">
-        <h2 className="text-sm sm:text-base font-semibold tracking-tight text-slate-900">
+      <div className="px-6 sm:px-10 lg:px-14 py-3 bg-slate-50 border-t border-slate-200 text-center">
+        <h2 className="text-[1.14rem] font-semibold tracking-tight text-slate-900">
           {lensTitle}
         </h2>
       </div>
