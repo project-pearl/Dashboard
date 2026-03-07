@@ -33,6 +33,20 @@ type SentinelStage =
   | 'unexplained_investigate'
   | 'external_alert';
 
+export const PATTERN_LABELS: Record<string, string> = {
+  'potomac-crisis': 'Multi-Hazard Crisis',
+  'infrastructure-stress': 'Infrastructure Stress',
+  'spreading-contamination': 'Spreading Contamination',
+  'regulatory-escalation': 'Regulatory Escalation',
+  'enforcement-cascade': 'Enforcement Cascade',
+  'bio-threat-correlation': 'Bio-Threat Correlation',
+  'flood-prediction-cascade': 'Flood Prediction Cascade',
+  'airborne-public-health': 'Airborne Public Health Risk',
+  'predicted-infrastructure-failure': 'Predicted Infrastructure Failure',
+  'hab-wq-correlation': 'HAB Water Quality',
+  'beach-pathogen-wq': 'Beach Pathogen Alert',
+};
+
 function stageFromClassification(
   classification: 'likely_attack' | 'possible_attack' | 'likely_benign' | 'insufficient_data',
 ): SentinelStage {
@@ -54,11 +68,15 @@ function makeHucAlert(
     id: crypto.randomUUID(),
     type: 'sentinel',
     severity,
-    title: `HUC ${huc.huc8}: ${stage === 'external_alert' ? 'Persistent anomaly signal' : 'Possible anomaly signal'}`,
+    title: `HUC ${huc.huc8}: ${
+      huc.activePatterns.length > 0
+        ? PATTERN_LABELS[huc.activePatterns[0].patternId] || 'Anomaly Signal'
+        : 'Persistent Anomaly Signal'
+    }`,
     body: [
-      `Watershed ${huc.huc8} (${huc.stateAbbr}) score ${huc.score} (${huc.level}).`,
-      `Stage: ${stage}. Confidence: ${(confidence * 100).toFixed(0)}%.`,
-      'Signal is under active analysis; no confirmed contamination event unless separately validated.',
+      `Watershed ${huc.huc8} (${huc.stateAbbr}) — ${huc.level} level, score ${huc.score}.`,
+      `Patterns: ${huc.activePatterns.map(p => PATTERN_LABELS[p.patternId] || p.patternId).join(', ') || 'None'}.`,
+      `${huc.events.length} correlated event${huc.events.length !== 1 ? 's' : ''} detected. Confidence: ${(confidence * 100).toFixed(0)}%.`,
     ].join(' '),
     entityId: huc.huc8,
     entityLabel: `HUC-8 ${huc.huc8} (${huc.stateAbbr})`,
