@@ -1631,7 +1631,10 @@ export function FederalManagementCenter(props: Props) {
 
   // Generate stable overlay scores per state
   const overlayByState = useMemo(() => {
-    const states = Array.from(derived.regionsByState.keys());
+    const states = Array.from(new Set([
+      ...derived.regionsByState.keys(),
+      ...Object.keys(attainsBulk),
+    ]));
 
     const stableHash01 = (s: string) => {
       let h = 2166136261;
@@ -1670,7 +1673,7 @@ export function FederalManagementCenter(props: Props) {
     }
 
     return result;
-  }, [derived.regionsByState, hucIndicesByState]);
+  }, [derived.regionsByState, hucIndicesByState, attainsBulk]);
 
   const selectedStateRegions = derived.regionsByState.get(selectedState) ?? [];
   const selectedStateTopRegion = selectedStateRegions[0]?.id;
@@ -1823,7 +1826,12 @@ export function FederalManagementCenter(props: Props) {
     // Tier 1: ASSESSED waterbodies (legacy alerts or per-waterbody matches) → direct grading
     // Tier 2: ATTAINS bulk data (EPA 303(d) state counts) → grade from federal data
     // Tier 3: No data → N/A
-    const rows = Array.from(derived.regionsByState.entries()).map(([abbr, regions]) => {
+    const stateKeys = Array.from(new Set([
+      ...derived.regionsByState.keys(),
+      ...Object.keys(attainsBulk),
+    ]));
+    const rows = stateKeys.map((abbr) => {
+      const regions = derived.regionsByState.get(abbr) ?? [];
       const assessed = regions.filter(r => r.status === 'assessed');
       const monitored = regions.filter(r => r.status === 'monitored');
       const unmonitored = regions.filter(r => r.status === 'unmonitored');
