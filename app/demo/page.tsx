@@ -8,10 +8,7 @@ export const metadata: Metadata = {
 };
 
 const DemoCommandCenter = dynamic(
-  () =>
-    import('@/components/demo/DemoCommandCenter').then(
-      (m) => m.DemoCommandCenter,
-    ),
+  () => import('@/components/demo/DemoCommandCenter'),
   { ssr: false },
 );
 

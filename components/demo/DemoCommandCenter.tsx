@@ -29,7 +29,7 @@ const FALLBACK_DATA: DemoGridData = {
 
 /* ── Component ──────────────────────────────────────────────────────── */
 
-export function DemoCommandCenter() {
+export default function DemoCommandCenter() {
   const [gridData, setGridData] = useState<DemoGridData>(FALLBACK_DATA);
   const [activeEntity, setActiveEntity] = useState<string | null>(null);
   const [selectedAlert, setSelectedAlert] = useState<string | null>(null);
