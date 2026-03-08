@@ -65,6 +65,7 @@ export async function POST(request: NextRequest) {
   const fetches: Record<string, Promise<any>> = {
     nationalSummary: fetchInternal(request, '/api/national-summary'),
     sourceHealth: fetchInternal(request, '/api/source-health'),
+    sentinel: fetchInternal(request, '/api/sentinel-status'),
   };
 
   if (role === 'Federal') {
@@ -174,6 +175,48 @@ export async function POST(request: NextRequest) {
         const list = degraded.map((s: any) => `  ${s.name}: ${s.status}${s.error ? ` (${s.error})` : ''}`).join('\n');
         contextParts.push(`Data sources with issues:\n${list}`);
       }
+    }
+  }
+
+  // ── Sentinel alerts (anomaly detection) ─────────────────────────────────
+  const sentinel = data.sentinel;
+  if (sentinel && sentinel.summary) {
+    sources.push('sentinel-status');
+    const s = sentinel.summary;
+    contextParts.push([
+      `Sentinel anomaly detection status:`,
+      `- CRITICAL watersheds: ${s.criticalHucs ?? 0}`,
+      `- WATCH watersheds: ${s.watchHucs ?? 0}`,
+      `- ADVISORY watersheds: ${s.advisoryHucs ?? 0}`,
+      `- Healthy data sources: ${s.healthySources ?? '?'}, Degraded: ${s.degradedSources ?? 0}, Offline: ${s.offlineSources ?? 0}`,
+    ].join('\n'));
+
+    // Active CRITICAL/WATCH alerts with detail
+    if (sentinel.activeHucs?.length) {
+      const critical = sentinel.activeHucs.filter((h: any) => h.level === 'CRITICAL');
+      const watch = sentinel.activeHucs.filter((h: any) => h.level === 'WATCH');
+
+      if (critical.length) {
+        const list = critical.slice(0, 10).map((h: any) =>
+          `  HUC ${h.huc8} (${h.stateAbbr}): score ${h.score}, ${h.eventCount} events, patterns: ${h.patternNames?.join(', ') || 'unknown'}`
+        ).join('\n');
+        contextParts.push(`CRITICAL Sentinel alerts (immediate attention):\n${list}`);
+      }
+
+      if (watch.length) {
+        const list = watch.slice(0, 10).map((h: any) =>
+          `  HUC ${h.huc8} (${h.stateAbbr}): score ${h.score}, ${h.eventCount} events, patterns: ${h.patternNames?.join(', ') || 'unknown'}`
+        ).join('\n');
+        contextParts.push(`WATCH Sentinel alerts (elevated monitoring):\n${list}`);
+      }
+    }
+
+    // Recent resolutions
+    if (sentinel.recentResolutions?.length) {
+      const list = sentinel.recentResolutions.slice(0, 5).map((r: any) =>
+        `  HUC ${r.huc8} (${r.stateAbbr}): resolved from ${r.previousLevel}, was score ${r.peakScore}`
+      ).join('\n');
+      contextParts.push(`Recently resolved Sentinel alerts:\n${list}`);
     }
   }
 
