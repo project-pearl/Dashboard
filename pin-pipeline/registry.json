@@ -1,7 +1,7 @@
 {
   "meta": {
     "version": "1.0",
-    "updated": "2026-03-08T20:58:32.745857Z",
+    "updated": "2026-03-08T21:52:04.587120Z",
     "description": "PIN (PEARL Intelligence Network) \u00e2\u20ac\u201d central source registry. Tracks every US water data endpoint with status, priority, staleness, and error history."
   },
   "sources": [
@@ -17,14 +17,14 @@
       "priority": 1,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-03-08T20:56:38.070000Z",
+      "last_checked": "2026-03-08T21:51:16.013314Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "430M+",
       "notes": "Primary discrete sample source. Aggregates USGS, EPA, USDA, tribal, and state lab data. Use statecode=US:{fips} for per-state pulls.",
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-03-08T21:01:38.070004Z"
+      "next_check_after": "2026-03-08T21:56:16.013323Z"
     },
     {
       "id": "usgs-nwis-iv",
@@ -38,14 +38,14 @@
       "priority": 1,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-03-08T20:56:38.690360Z",
+      "last_checked": "2026-03-08T21:51:16.760269Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "1.9M sites",
       "notes": "Real-time 15-minute sensor data. parameterCd: 00300=DO, 00010=Temp, 00400=pH, 00095=Conductivity, 00060=Discharge, 00065=Gage height, 63680=Turbidity",
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-03-08T21:01:38.690365Z"
+      "next_check_after": "2026-03-08T21:56:16.760283Z"
     },
     {
       "id": "usgs-nwis-dv",
@@ -59,14 +59,14 @@
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-03-08T20:56:39.247943Z",
+      "last_checked": "2026-03-08T21:51:17.312116Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "1.9M sites",
       "notes": "Daily aggregated values (min/max/mean). Same sites as IV but with daily statistics.",
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-03-08T21:01:39.247949Z"
+      "next_check_after": "2026-03-08T21:56:17.312126Z"
     },
     {
       "id": "epa-attains",
@@ -170,14 +170,14 @@
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-03-08T20:56:39.680728Z",
+      "last_checked": "2026-03-08T21:51:17.741333Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "20M+",
       "notes": "Chesapeake Bay watershed: MD, VA, PA, DE, WV, DC, NY. Endpoints: WaterQuality, LivingResources, Fluorescence, PointSource, Toxics.",
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-03-08T21:01:39.680734Z"
+      "next_check_after": "2026-03-08T21:56:17.741343Z"
     },
     {
       "id": "tx-tceq",
@@ -215,14 +215,14 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-03-08T20:56:40.147472Z",
+      "last_checked": "2026-03-08T21:51:18.284914Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "1,300+ buoys",
       "notes": "Buoy data: water temp, wave height, wind. Real-time files at /data/realtime2/{station}.txt. ERDDAP mirror available.",
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-03-08T21:01:40.147476Z"
+      "next_check_after": "2026-03-08T21:56:18.284924Z"
     },
     {
       "id": "noaa-nerrs",
@@ -236,14 +236,14 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-03-08T20:56:40.755167Z",
+      "last_checked": "2026-03-08T21:51:18.887387Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "29 reserves",
       "notes": "SWMP (System-Wide Monitoring Program). Real-time water quality at estuarine reserves. Also available via CDMO: https://cdmo.baruch.sc.edu/",
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-03-08T21:01:40.755171Z"
+      "next_check_after": "2026-03-08T21:56:18.887398Z"
     },
     {
       "id": "icis_npdes",
@@ -299,14 +299,14 @@
       "priority": 1,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-03-08T20:56:41.412265Z",
+      "last_checked": "2026-03-08T21:51:19.539899Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "800K+ facilities",
       "notes": "CWA facility compliance data from ECHO. No auth. Query params: p_st for state, responseset for limit.",
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-03-08T21:01:41.412271Z"
+      "next_check_after": "2026-03-08T21:56:19.539910Z"
     },
     {
       "id": "echo_violations",
@@ -320,14 +320,14 @@
       "priority": 1,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-03-08T20:56:42.032002Z",
+      "last_checked": "2026-03-08T21:51:20.220403Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "varies",
       "notes": "Facilities currently in violation under CWA. p_qiv=Y filters to violators only. No auth.",
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-03-08T21:01:42.032008Z"
+      "next_check_after": "2026-03-08T21:56:20.220414Z"
     },
     {
       "id": "frs_wwtps",
@@ -383,14 +383,14 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-03-08T20:56:42.599097Z",
+      "last_checked": "2026-03-08T21:51:20.941499Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "500K+",
       "notes": "Pathogen concentrations (COVID, RSV, influenza) from wastewater treatment plants. Socrata API, no auth. $order by date_end DESC.",
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-03-08T21:01:42.599103Z"
+      "next_check_after": "2026-03-08T21:56:20.941510Z"
     },
     {
       "id": "nps_wq",
@@ -425,14 +425,14 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-03-08T20:56:43.370843Z",
+      "last_checked": "2026-03-08T21:51:21.687061Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "catalog",
       "notes": "Meta-catalog discovery \u00e2\u20ac\u201d returns dataset metadata, not raw data. Useful for finding new sources. CKAN API, no auth.",
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-03-08T21:01:43.370847Z"
+      "next_check_after": "2026-03-08T21:56:21.687094Z"
     },
     {
       "id": "nasa_cmr",
@@ -446,14 +446,14 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-03-08T20:56:43.943295Z",
+      "last_checked": "2026-03-08T21:51:22.265734Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "catalog",
       "notes": "Satellite dataset discovery \u00e2\u20ac\u201d returns collection metadata. Useful for remote-sensing water quality sources. CMR API, no auth.",
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-03-08T21:01:43.943301Z"
+      "next_check_after": "2026-03-08T21:56:22.265745Z"
     },
     {
       "id": "state_ny",
@@ -614,14 +614,14 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-03-08T20:56:44.408949Z",
+      "last_checked": "2026-03-08T21:51:22.683853Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "satellite",
       "notes": "Satellite-derived chlorophyll-a, turbidity, and Secchi depth estimates from Landsat/Sentinel.",
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-03-08T21:01:44.408955Z"
+      "next_check_after": "2026-03-08T21:56:22.683864Z"
     },
     {
       "id": "hydroshare",
@@ -635,14 +635,14 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-03-08T20:56:45.485408Z",
+      "last_checked": "2026-03-08T21:51:23.351871Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "10K+ datasets",
       "notes": "Hydrologic dataset repository from CUAHSI research network. Searchable by keyword, subject, and location.",
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-03-08T21:01:45.485414Z"
+      "next_check_after": "2026-03-08T21:56:23.351881Z"
     },
     {
       "id": "usgs-nwis-gw",
@@ -656,14 +656,14 @@
       "priority": 2,
       "last_fetch": null,
       "last_success": null,
-      "last_checked": "2026-03-08T20:56:47.046885Z",
+      "last_checked": "2026-03-08T21:51:24.619331Z",
       "error_count": 0,
       "staleness_days": null,
       "record_estimate": "850K+ sites",
       "notes": "USGS groundwater level measurements. Real-time and historical. Same NWIS service as IV/DV but for gwlevels endpoint.",
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-03-08T21:01:47.046890Z"
+      "next_check_after": "2026-03-08T21:56:24.619338Z"
     },
     {
       "id": "md-mde-arcgis",
@@ -793,8 +793,8 @@
       "error_count": 0,
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-03-08T21:01:59.878262Z",
-      "last_checked": "2026-03-08T20:56:59.878256Z"
+      "next_check_after": "2026-03-08T21:56:30.147996Z",
+      "last_checked": "2026-03-08T21:51:30.147986Z"
     },
     "DC": {
       "fips": "11",
@@ -806,8 +806,8 @@
       "error_count": 0,
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-03-08T21:01:59.346283Z",
-      "last_checked": "2026-03-08T20:56:59.346277Z"
+      "next_check_after": "2026-03-08T21:56:26.942396Z",
+      "last_checked": "2026-03-08T21:51:26.942385Z"
     },
     "FL": {
       "fips": "12",
@@ -845,8 +845,8 @@
       "error_count": 0,
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-03-08T21:02:00.945112Z",
-      "last_checked": "2026-03-08T20:57:00.945106Z"
+      "next_check_after": "2026-03-08T21:56:35.454882Z",
+      "last_checked": "2026-03-08T21:51:35.454872Z"
     },
     "ID": {
       "fips": "16",
@@ -858,8 +858,8 @@
       "error_count": 0,
       "first_failure": null,
       "backoff_minutes": 5,
-      "next_check_after": "2026-03-08T21:02:02.027650Z",
-      "last_checked": "2026-03-08T20:57:02.027646Z"
+      "next_check_after": "2026-03-08T21:56:36.519997Z",
+      "last_checked": "2026-03-08T21:51:36.519991Z"
     },
     "IL": {
       "fips": "17",
@@ -884,8 +884,8 @@
       "error_count": 0,
       "first_failure": null,
       "backoff_minutes": 5,
-      "next_check_after": "2026-03-08T21:02:02.563401Z",
-      "last_checked": "2026-03-08T20:57:02.563395Z"
+      "next_check_after": "2026-03-08T21:56:37.052781Z",
+      "last_checked": "2026-03-08T21:51:37.052775Z"
     },
     "IA": {
       "fips": "19",
@@ -897,8 +897,8 @@
       "error_count": 0,
       "first_failure": null,
       "backoff_minutes": 5,
-      "next_check_after": "2026-03-08T21:02:01.482292Z",
-      "last_checked": "2026-03-08T20:57:01.482286Z"
+      "next_check_after": "2026-03-08T21:56:35.987813Z",
+      "last_checked": "2026-03-08T21:51:35.987797Z"
     },
     "KS": {
       "fips": "20",
@@ -949,21 +949,21 @@
       "error_count": 0,
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-03-08T21:02:09.164248Z",
-      "last_checked": "2026-03-08T20:57:09.164244Z"
+      "next_check_after": "2026-03-08T21:56:45.888886Z",
+      "last_checked": "2026-03-08T21:51:45.888876Z"
     },
     "MD": {
       "fips": "24",
       "name": "Maryland",
-      "status": "live",
+      "status": "degraded",
       "priority": 1,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 0,
-      "backoff_minutes": 5,
-      "first_failure": null,
-      "next_check_after": "2026-03-08T21:02:08.629207Z",
-      "last_checked": "2026-03-08T20:57:08.629203Z"
+      "error_count": 1,
+      "backoff_minutes": 15,
+      "first_failure": "2026-03-08T21:51:42.589397Z",
+      "next_check_after": "2026-03-08T22:06:42.589429Z",
+      "last_checked": "2026-03-08T21:51:42.589397Z"
     },
     "MA": {
       "fips": "25",
@@ -1079,8 +1079,8 @@
       "error_count": 0,
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-03-08T21:02:32.368957Z",
-      "last_checked": "2026-03-08T20:57:32.368952Z"
+      "next_check_after": "2026-03-08T21:56:48.004586Z",
+      "last_checked": "2026-03-08T21:51:48.004576Z"
     },
     "NJ": {
       "fips": "34",
@@ -1209,8 +1209,8 @@
       "error_count": 0,
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-03-08T21:02:55.160671Z",
-      "last_checked": "2026-03-08T20:57:55.160666Z"
+      "next_check_after": "2026-03-08T21:56:48.536801Z",
+      "last_checked": "2026-03-08T21:51:48.536794Z"
     },
     "SC": {
       "fips": "45",
@@ -1222,8 +1222,8 @@
       "error_count": 0,
       "first_failure": null,
       "backoff_minutes": 5,
-      "next_check_after": "2026-03-08T21:03:00.591535Z",
-      "last_checked": "2026-03-08T20:58:00.591528Z"
+      "next_check_after": "2026-03-08T21:56:49.073139Z",
+      "last_checked": "2026-03-08T21:51:49.073133Z"
     },
     "SD": {
       "fips": "46",
@@ -1271,11 +1271,11 @@
       "priority": 3,
       "last_fetch": null,
       "last_success": null,
-      "error_count": 2,
+      "error_count": 3,
       "first_failure": "2026-03-08T19:48:59.630471Z",
       "backoff_minutes": 15,
-      "next_check_after": "2026-03-08T21:13:11.658916Z",
-      "last_checked": "2026-03-08T20:58:11.658893Z"
+      "next_check_after": "2026-03-08T22:06:54.606840Z",
+      "last_checked": "2026-03-08T21:51:54.606810Z"
     },
     "VT": {
       "fips": "50",
@@ -1287,8 +1287,8 @@
       "error_count": 0,
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-03-08T21:03:18.255940Z",
-      "last_checked": "2026-03-08T20:58:18.255935Z"
+      "next_check_after": "2026-03-08T21:56:55.681398Z",
+      "last_checked": "2026-03-08T21:51:55.681391Z"
     },
     "VA": {
       "fips": "51",
@@ -1365,8 +1365,8 @@
       "error_count": 0,
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-03-08T21:01:53.279271Z",
-      "last_checked": "2026-03-08T20:56:53.279266Z"
+      "next_check_after": "2026-03-08T21:56:25.412828Z",
+      "last_checked": "2026-03-08T21:51:25.412818Z"
     },
     "GU": {
       "fips": "66",
@@ -1378,8 +1378,8 @@
       "error_count": 0,
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-03-08T21:02:00.411157Z",
-      "last_checked": "2026-03-08T20:57:00.411151Z"
+      "next_check_after": "2026-03-08T21:56:31.270600Z",
+      "last_checked": "2026-03-08T21:51:31.270589Z"
     },
     "MP": {
       "fips": "69",
@@ -1391,8 +1391,8 @@
       "error_count": 0,
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-03-08T21:02:15.230183Z",
-      "last_checked": "2026-03-08T20:57:15.230178Z"
+      "next_check_after": "2026-03-08T21:56:46.908460Z",
+      "last_checked": "2026-03-08T21:51:46.908450Z"
     },
     "PR": {
       "fips": "72",
@@ -1417,8 +1417,8 @@
       "error_count": 0,
       "backoff_minutes": 5,
       "first_failure": null,
-      "next_check_after": "2026-03-08T21:03:17.726080Z",
-      "last_checked": "2026-03-08T20:58:17.726074Z"
+      "next_check_after": "2026-03-08T21:56:55.139166Z",
+      "last_checked": "2026-03-08T21:51:55.139159Z"
     }
   }
 }
