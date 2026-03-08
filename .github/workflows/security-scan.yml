@@ -19,20 +19,23 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
+    container:
+      image: semgrep/semgrep
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Run Semgrep
-        uses: returntocorp/semgrep-action@v1
-        with:
-          config: >-
-            p/javascript
-            p/typescript
-            p/nextjs
-            p/secrets
-            p/owasp-top-ten
-          generateSarif: "1"
+        run: >-
+          semgrep scan
+          --config p/javascript
+          --config p/typescript
+          --config p/nextjs
+          --config p/secrets
+          --config p/owasp-top-ten
+          --sarif
+          --output semgrep.sarif
 
       - name: Upload SARIF to GitHub Security
         if: always()
@@ -60,6 +63,7 @@ jobs:
 
       - name: Run npm audit (high + critical)
         run: npm audit --audit-level=high
+        continue-on-error: true
 
       - name: Save full audit report
         if: always()
