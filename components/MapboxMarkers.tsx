@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { Source, Layer, Popup } from 'react-map-gl';
+import { Source, Layer, Popup } from 'react-map-gl/mapbox';
 import type { CircleLayer } from 'mapbox-gl';
 
 export interface MarkerDatum {

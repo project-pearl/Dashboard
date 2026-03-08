@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useCallback, useRef } from 'react';
-import Map, { Source, Layer, Marker, NavigationControl, type MapRef } from 'react-map-gl';
+import Map, { Source, Layer, Marker, NavigationControl, type MapRef } from 'react-map-gl/mapbox';
 import type { FillLayer, LineLayer, CircleLayer } from 'mapbox-gl';
 import type { DemoGridData } from './DemoCommandCenter';
 import { getStatesGeoJSONWithAbbr } from '@/lib/mapUtils';

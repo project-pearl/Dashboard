@@ -6,7 +6,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { Source, Layer, Marker } from 'react-map-gl';
+import { Source, Layer, Marker } from 'react-map-gl/mapbox';
 import type { ScoredHucClient } from '@/lib/sentinel/types';
 
 /* Mapbox tileset ID for HUC-8 boundaries — update after uploading   */

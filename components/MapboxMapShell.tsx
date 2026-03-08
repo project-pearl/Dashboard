@@ -2,7 +2,7 @@
 
 import React, { useRef, useCallback } from 'react';
 import { useTheme } from 'next-themes';
-import Map, { NavigationControl, type MapRef } from 'react-map-gl';
+import Map, { NavigationControl, type MapRef } from 'react-map-gl/mapbox';
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
 

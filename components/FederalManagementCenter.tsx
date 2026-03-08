@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { useLensParam } from '@/lib/useLensParam';
 import { feature } from 'topojson-client';
 import statesTopo from 'us-atlas/states-10m.json';
-import type { MapRef } from 'react-map-gl';
+import type { MapRef } from 'react-map-gl/mapbox';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

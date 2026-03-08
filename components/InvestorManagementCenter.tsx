@@ -9,7 +9,7 @@ import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import MissionQuote from './MissionQuote';
 import { WhatChangedOvernight, StakeholderWatch } from './BriefingCards';
 import { useLensParam } from '@/lib/useLensParam';
-import type { MapRef } from 'react-map-gl';
+import type { MapRef } from 'react-map-gl/mapbox';
 import HeroBanner from './HeroBanner';
 import dynamic from 'next/dynamic';
 import { STATE_GEO_LEAFLET, FIPS_TO_ABBR, STATE_NAMES as _SN } from '@/lib/mapUtils';

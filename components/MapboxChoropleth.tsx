@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Source, Layer } from 'react-map-gl';
+import { Source, Layer } from 'react-map-gl/mapbox';
 import type { FillLayer, LineLayer, Expression } from 'mapbox-gl';
 
 export interface MapboxChoroplethProps {

@@ -22,7 +22,7 @@ vi.mock('@/hooks/useSentinelAudio', () => ({ useSentinelAudio: () => ({ play: vi
 vi.mock('@/ams/hooks/useAlertSummary', () => ({ useAlertSummary: () => ({ data: null }) }));
 vi.mock('@/lib/jurisdiction-context', () => ({ useJurisdictionContext: () => ({ jurisdiction: null, setJurisdiction: vi.fn() }) }));
 vi.mock('@/lib/jurisdictions/index', () => ({ scopeRowsByJurisdiction: () => [] }));
-vi.mock('react-map-gl', () => ({ default: () => null, Source: () => null, Layer: () => null, Marker: () => null, Popup: () => null, NavigationControl: () => null }));
+vi.mock('react-map-gl/mapbox', () => ({ default: () => null, Source: () => null, Layer: () => null, Marker: () => null, Popup: () => null, NavigationControl: () => null }));
 vi.mock('mapbox-gl', () => ({ default: {} }));
 vi.mock('us-atlas/states-10m.json', () => ({ default: { type: 'Topology', objects: { states: { type: 'GeometryCollection', geometries: [] } }, arcs: [] } }));
 vi.mock('topojson-client', () => ({ feature: () => ({ type: 'FeatureCollection', features: [] }) }));
