@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { X, Sparkles, Loader2 } from 'lucide-react';
 import type { Pillar, ModuleCategory, PartnerStrength } from '@/components/treatment/treatmentData';
 import { MODULE_CATS } from '@/components/treatment/treatmentData';
+import { csrfHeaders } from '@/lib/csrf';
 
 interface AdminAddFormProps {
   type: 'module' | 'partner' | 'event';
@@ -31,7 +32,7 @@ export default function AdminAddForm({ type, onAdd, onClose }: AdminAddFormProps
     try {
       const res = await fetch('/api/ai-categorize', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
         body: JSON.stringify({ type, name, description }),
       });
       if (res.ok) {

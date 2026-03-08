@@ -5,7 +5,8 @@
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { isAuthorized } from '@/lib/apiAuth';
 import { getWqpCacheStatus, ensureWarmed as warmWqp } from '@/lib/wqpCache';
 import { getCacheStatus as getAttainsCacheStatus, ensureWarmed as warmAttains } from '@/lib/attainsCache';
 import { getCedenCacheStatus, ensureWarmed as warmCeden } from '@/lib/cedenCache';
@@ -62,7 +63,11 @@ function staleness(built: string | null | undefined): { stale: boolean; ageHours
   return { stale: ageHours > 48, ageHours };
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  if (!isAuthorized(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   // Warm caches from blob storage in batches of 6 (avoid overwhelming network)
   const warmBatches = [
     [warmWqp, warmAttains, warmCeden, warmIcis, warmSdwis, warmNwisGw],

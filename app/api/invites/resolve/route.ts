@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { decodeInviteToken } from '@/lib/inviteTokens';
+import { inviteResolveSchema } from '@/lib/schemas';
+import { parseBody } from '@/lib/validateRequest';
 
 export async function POST(request: NextRequest) {
-  const body = await request.json().catch(() => ({}));
-  const token = typeof body?.token === 'string' ? body.token : '';
+  const parsed = await parseBody(request, inviteResolveSchema);
+  if (!parsed.success) return parsed.error;
+  const { token } = parsed.data;
   let payload = null;
   try {
     payload = decodeInviteToken(token);

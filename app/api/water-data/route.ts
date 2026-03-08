@@ -2,6 +2,7 @@
 // Unified server-side proxy for multiple water quality data sources
 // Sources: Water Reporter (BWB), Chesapeake Bay Program DataHub, USGS (IV, Samples, Daily), MARACOOS ERDDAP (MD DNR)
 import { NextRequest, NextResponse } from 'next/server';
+import { isAuthorized } from '@/lib/apiAuth';
 import { getAttainsCache, getAttainsCacheSummary, getCacheStatus, triggerAttainsBuild, ensureWarmed as warmAttains } from '@/lib/attainsCache';
 import { getCedenCache, getCedenCacheStatus, ensureWarmed as warmCeden } from '@/lib/cedenCache';
 import { getWqpCache, getWqpCacheStatus, ensureWarmed as warmWqp } from '@/lib/wqpCache';
@@ -560,6 +561,10 @@ async function echoEnforcementSearch(state: string, limit = 500): Promise<any[]>
 
 // ─── GET handler ─────────────────────────────────────────────────────────────
 export async function GET(request: NextRequest) {
+  if (!isAuthorized(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const sp = request.nextUrl.searchParams;
   const action = sp.get('action');
 

@@ -8,6 +8,7 @@ import { GraduationCap, CheckCircle, Clock, XCircle, RefreshCw } from 'lucide-re
 import { WaterSampleUploadForm } from '@/components/uploads/WaterSampleUploadForm';
 import { CSVUploadDropzone } from '@/components/uploads/CSVUploadDropzone';
 import { useAuth } from '@/lib/authContext';
+import { csrfHeaders } from '@/lib/csrf';
 
 interface StudentUploadPanelProps {
   stateAbbr: string;
@@ -72,7 +73,7 @@ export function StudentUploadPanel({ stateAbbr, isTeacher = false }: StudentUplo
     try {
       await fetch('/api/uploads/approve', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
         body: JSON.stringify({ sample_ids: sampleIds, approved_by: userId }),
       });
       fetchSamples();
@@ -83,7 +84,7 @@ export function StudentUploadPanel({ stateAbbr, isTeacher = false }: StudentUplo
     try {
       await fetch('/api/uploads/approve', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
         body: JSON.stringify({ sample_ids: sampleIds, approved_by: userId, action: 'reject' }),
       });
       fetchSamples();

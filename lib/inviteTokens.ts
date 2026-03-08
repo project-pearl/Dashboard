@@ -16,13 +16,8 @@ function base64UrlDecode(input: string): string {
 }
 
 function getInviteSecret(): string {
-  const secret = process.env.INVITE_TOKEN_SECRET
-    || process.env.CRON_SECRET
-    || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    || '';
-  if (!secret) {
-    throw new Error('Missing invite token secret');
-  }
+  const secret = process.env.INVITE_TOKEN_SECRET;
+  if (!secret) throw new Error('Missing INVITE_TOKEN_SECRET environment variable');
   return secret;
 }
 

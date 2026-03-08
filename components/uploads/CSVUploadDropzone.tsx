@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2, X } from 'lucide-react';
 import Papa from 'papaparse';
+import { csrfHeaders } from '@/lib/csrf';
 
 const CSV_TO_PEARL: Record<string, string> = {
   'dissolved_oxygen': 'DO', 'do': 'DO', 'dissolved oxygen': 'DO',
@@ -102,7 +103,7 @@ export function CSVUploadDropzone({ mode, userId, stateAbbr, teacherUid, onUploa
     try {
       const res = await fetch('/api/uploads/csv', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
         body: JSON.stringify({
           csv_text: csvText,
           user_id: userId,

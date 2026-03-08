@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ClipboardList, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { csrfHeaders } from '@/lib/csrf';
 
 const PARAM_OPTIONS = [
   { key: 'DO', label: 'Dissolved Oxygen', unit: 'mg/L' },
@@ -57,7 +58,7 @@ export function WaterSampleUploadForm({ mode, userId, stateAbbr, teacherUid, onS
     try {
       const res = await fetch('/api/uploads/submit', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
         body: JSON.stringify({
           parameter,
           value: parseFloat(value),

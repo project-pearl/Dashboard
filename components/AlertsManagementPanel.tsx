@@ -15,6 +15,7 @@ import type {
 import { AlertDeepDive } from './AlertDeepDive';
 import type { DeepDiveAlert } from './AlertDeepDive';
 import { PATTERN_LABELS } from '@/lib/alerts/triggers/sentinelTrigger';
+import { csrfHeaders } from '@/lib/csrf';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -185,7 +186,7 @@ export function AlertsManagementPanel() {
     try {
       const res = await fetch('/api/alerts/recipients', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
         body: JSON.stringify(recipientForm),
       });
       if (res.ok) {
@@ -203,7 +204,7 @@ export function AlertsManagementPanel() {
     try {
       const res = await fetch('/api/alerts/recipients', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
         body: JSON.stringify({ email, active }),
       });
       if (res.ok) fetchRecipients();
@@ -215,7 +216,7 @@ export function AlertsManagementPanel() {
     try {
       const res = await fetch('/api/alerts/recipients', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
         body: JSON.stringify({ email, triggers, severities }),
       });
       if (res.ok) {
@@ -230,7 +231,7 @@ export function AlertsManagementPanel() {
     try {
       const res = await fetch('/api/alerts/recipients', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
         body: JSON.stringify({ email }),
       });
       if (res.ok) {
@@ -246,7 +247,7 @@ export function AlertsManagementPanel() {
     try {
       const res = await fetch('/api/alerts/rules', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
         body: JSON.stringify({
           name: ruleForm.name,
           triggerType: ruleForm.triggerType,
@@ -269,7 +270,7 @@ export function AlertsManagementPanel() {
     try {
       const res = await fetch('/api/alerts/rules', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
         body: JSON.stringify({ id }),
       });
       if (res.ok) {
@@ -285,7 +286,7 @@ export function AlertsManagementPanel() {
     try {
       const res = await fetch('/api/alerts/suppress', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
         body: JSON.stringify({
           dedupKey: suppressForm.dedupKey,
           reason: suppressForm.reason,
@@ -307,7 +308,7 @@ export function AlertsManagementPanel() {
     try {
       const res = await fetch('/api/alerts/suppress', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
         body: JSON.stringify({ id }),
       });
       if (res.ok) {
@@ -325,7 +326,7 @@ export function AlertsManagementPanel() {
     try {
       const res = await fetch('/api/alerts/test', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
         body: JSON.stringify({ email: testEmail }),
       });
       if (res.ok) {

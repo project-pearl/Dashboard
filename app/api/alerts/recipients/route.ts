@@ -8,6 +8,8 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { loadRecipients, saveRecipients } from '@/lib/alerts/recipients';
 import type { AlertRecipient } from '@/lib/alerts/types';
+import { alertRecipientCreateSchema, alertRecipientUpdateSchema, alertRecipientDeleteSchema } from '@/lib/schemas';
+import { parseBody } from '@/lib/validateRequest';
 
 import { isAuthorized } from '@/lib/apiAuth';
 
@@ -31,16 +33,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: Partial<AlertRecipient>;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
-
-  if (!body.email || !body.name) {
-    return NextResponse.json({ error: 'email and name required' }, { status: 400 });
-  }
+  const parsed = await parseBody(request, alertRecipientCreateSchema);
+  if (!parsed.success) return parsed.error;
+  const body = parsed.data;
 
   const recipients = await loadRecipients();
 
@@ -71,16 +66,9 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: Partial<AlertRecipient> & { email: string };
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
-
-  if (!body.email) {
-    return NextResponse.json({ error: 'email required' }, { status: 400 });
-  }
+  const parsed = await parseBody(request, alertRecipientUpdateSchema);
+  if (!parsed.success) return parsed.error;
+  const body = parsed.data;
 
   const recipients = await loadRecipients();
   const idx = recipients.findIndex(r => r.email === body.email);
@@ -102,16 +90,9 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: { email?: string };
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
-
-  if (!body.email) {
-    return NextResponse.json({ error: 'email required' }, { status: 400 });
-  }
+  const parsed = await parseBody(request, alertRecipientDeleteSchema);
+  if (!parsed.success) return parsed.error;
+  const body = parsed.data;
 
   const recipients = await loadRecipients();
   const filtered = recipients.filter(r => r.email !== body.email);

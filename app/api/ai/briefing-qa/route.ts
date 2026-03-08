@@ -1,22 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { callOpenAI, BRIEFING_QA_TONE, type BriefingQARole } from '@/lib/llmHelpers';
+import { briefingQaSchema } from '@/lib/schemas';
+import { parseBody } from '@/lib/validateRequest';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
-
-// ── Simple in-memory rate limiter (10 req / 60s per IP) ─────────────────────
-const hits = new Map<string, number[]>();
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const window = 60_000;
-  const max = 10;
-  const times = (hits.get(ip) || []).filter(t => now - t < window);
-  if (times.length >= max) return true;
-  times.push(now);
-  hits.set(ip, times);
-  return false;
-}
 
 // ── Internal fetch helper ───────────────────────────────────────────────────
 async function fetchInternal(request: NextRequest, path: string): Promise<any> {
@@ -40,22 +29,12 @@ export async function POST(request: NextRequest) {
 
   // Rate limit
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-  if (isRateLimited(ip)) {
-    return NextResponse.json({ error: 'Too many requests. Please wait a moment.' }, { status: 429 });
-  }
+  const rateLimited = await checkRateLimit(ip);
+  if (rateLimited) return rateLimited;
 
-  const body = await request.json().catch(() => null);
-  if (!body || typeof body.question !== 'string' || !body.question.trim()) {
-    return NextResponse.json({ error: 'Missing question' }, { status: 400 });
-  }
-
-  const { question, role, state, jurisdiction, isMilitary } = body as {
-    question: string;
-    role: 'Federal' | 'State' | 'MS4' | 'Local';
-    state?: string;
-    jurisdiction?: string;
-    isMilitary?: boolean;
-  };
+  const parsed = await parseBody(request, briefingQaSchema);
+  if (!parsed.success) return parsed.error;
+  const { question, role, state, jurisdiction, isMilitary } = parsed.data;
 
   // ── Gather role-specific context in parallel ────────────────────────────────
   const sources: string[] = [];

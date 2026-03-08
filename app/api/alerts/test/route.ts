@@ -9,23 +9,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sendAlertEmail } from '@/lib/alerts/channels/email';
 import { isAuthorized } from '@/lib/apiAuth';
 import type { AlertEvent } from '@/lib/alerts/types';
+import { alertTestSchema } from '@/lib/schemas';
+import { parseBody } from '@/lib/validateRequest';
 
 export async function POST(request: NextRequest) {
   if (!isAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: { email?: string };
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
-
-  const email = body.email;
-  if (!email || typeof email !== 'string') {
-    return NextResponse.json({ error: 'email field required' }, { status: 400 });
-  }
+  const parsed = await parseBody(request, alertTestSchema);
+  if (!parsed.success) return parsed.error;
+  const { email } = parsed.data;
 
   const testEvent: AlertEvent = {
     id: crypto.randomUUID(),

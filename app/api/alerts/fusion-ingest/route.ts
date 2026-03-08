@@ -6,6 +6,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { dispatchAlerts } from '@/lib/alerts/engine';
 import { isAuthorized } from '@/lib/apiAuth';
 import type { AlertEvent, AlertSeverity } from '@/lib/alerts/types';
+import { fusionIngestSchema } from '@/lib/schemas';
+import { parseBody } from '@/lib/validateRequest';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,12 +46,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
-    const { source, anomaly } = body as { source: string; anomaly: FusionAnomaly };
-
-    if (source !== 'fusion-engine' || !anomaly) {
-      return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
-    }
+    const parsed = await parseBody(request, fusionIngestSchema);
+    if (!parsed.success) return parsed.error;
+    const { source, anomaly } = parsed.data;
 
     const severity = mapSeverity(anomaly.severity);
     const entityId = anomaly.affectedBasins.join(',');

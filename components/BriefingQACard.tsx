@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { MessageSquare, Send, Loader2 } from 'lucide-react';
+import { csrfHeaders } from '@/lib/csrf';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -70,7 +71,7 @@ export function BriefingQACard({ role, state, jurisdiction, isMilitary }: Briefi
     try {
       const res = await fetch('/api/ai/briefing-qa', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
         body: JSON.stringify({ question: q, role, state, jurisdiction, isMilitary }),
       });
 

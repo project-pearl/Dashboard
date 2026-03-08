@@ -8,6 +8,8 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { loadSuppressions, saveSuppressions } from '@/lib/alerts/suppressions';
 import type { AlertSuppression } from '@/lib/alerts/types';
+import { alertSuppressCreateSchema, alertSuppressDeleteSchema } from '@/lib/schemas';
+import { parseBody } from '@/lib/validateRequest';
 
 import { isAuthorized } from '@/lib/apiAuth';
 
@@ -31,16 +33,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: { dedupKey?: string; reason?: string; expiresAt?: string | null; createdBy?: string };
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
-
-  if (!body.dedupKey || !body.reason) {
-    return NextResponse.json({ error: 'dedupKey and reason required' }, { status: 400 });
-  }
+  const parsed = await parseBody(request, alertSuppressCreateSchema);
+  if (!parsed.success) return parsed.error;
+  const body = parsed.data;
 
   const suppressions = await loadSuppressions();
 
@@ -65,16 +60,9 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: { id?: string };
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
-
-  if (!body.id) {
-    return NextResponse.json({ error: 'id required' }, { status: 400 });
-  }
+  const parsed = await parseBody(request, alertSuppressDeleteSchema);
+  if (!parsed.success) return parsed.error;
+  const body = parsed.data;
 
   const suppressions = await loadSuppressions();
   const filtered = suppressions.filter(s => s.id !== body.id);

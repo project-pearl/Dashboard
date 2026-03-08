@@ -8,6 +8,8 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { loadRules, saveRules } from '@/lib/alerts/rules';
 import type { AlertRule } from '@/lib/alerts/types';
+import { alertRuleCreateSchema, alertRuleDeleteSchema } from '@/lib/schemas';
+import { parseBody } from '@/lib/validateRequest';
 
 import { isAuthorized } from '@/lib/apiAuth';
 
@@ -31,16 +33,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: Partial<AlertRule>;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
-
-  if (!body.name || !body.condition) {
-    return NextResponse.json({ error: 'name and condition required' }, { status: 400 });
-  }
+  const parsed = await parseBody(request, alertRuleCreateSchema);
+  if (!parsed.success) return parsed.error;
+  const body = parsed.data;
 
   const rules = await loadRules();
 
@@ -67,16 +62,9 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: { id?: string };
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
-
-  if (!body.id) {
-    return NextResponse.json({ error: 'id required' }, { status: 400 });
-  }
+  const parsed = await parseBody(request, alertRuleDeleteSchema);
+  if (!parsed.success) return parsed.error;
+  const body = parsed.data;
 
   const rules = await loadRules();
   const filtered = rules.filter(r => r.id !== body.id);

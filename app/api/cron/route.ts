@@ -2,25 +2,13 @@
 // Legacy insights cron — LLM-powered water quality insights with cache-first strategy.
 import { NextRequest, NextResponse } from 'next/server';
 import { getInsights } from '@/lib/insightsCache';
+import { aiInsightsSchema } from '@/lib/schemas';
+import { parseBody } from '@/lib/validateRequest';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
-
-// Rate limit: simple in-memory throttle (per-deployment, resets on cold start)
-const rateLimitMap = new Map<string, number[]>();
-const RATE_LIMIT_WINDOW = 60_000; // 1 minute
-const RATE_LIMIT_MAX = 10; // max requests per window
-
-function checkRateLimit(key: string): boolean {
-  const now = Date.now();
-  const timestamps = rateLimitMap.get(key) || [];
-  const recent = timestamps.filter(t => now - t < RATE_LIMIT_WINDOW);
-  if (recent.length >= RATE_LIMIT_MAX) return false;
-  recent.push(now);
-  rateLimitMap.set(key, recent);
-  return true;
-}
 
 // ─── OpenAI ──────────────────────────────────────────────────────────────────
 
@@ -57,22 +45,12 @@ export async function POST(request: NextRequest) {
   try {
     // Rate limit by IP (basic protection)
     const ip = request.headers.get('x-forwarded-for') || 'unknown';
-    if (!checkRateLimit(ip)) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded. Try again in a minute.' },
-        { status: 429 }
-      );
-    }
+    const rateLimited = await checkRateLimit(ip);
+    if (rateLimited) return rateLimited;
 
-    const body = await request.json();
-    const { systemPrompt, userMessage } = body;
-
-    if (!systemPrompt || !userMessage) {
-      return NextResponse.json(
-        { error: 'systemPrompt and userMessage required' },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(request, aiInsightsSchema);
+    if (!parsed.success) return parsed.error;
+    const { systemPrompt, userMessage } = parsed.data;
 
     // ── Cache-first: serve pre-generated insights if available ──
     try {

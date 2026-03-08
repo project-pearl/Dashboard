@@ -12,6 +12,7 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { getArchivedSignals, type Signal } from "@/lib/signalArchiveCacheClient";
+import { csrfHeaders } from '@/lib/csrf';
 
 // html2pdf.js loaded dynamically in export handler (code-split)
 
@@ -668,7 +669,7 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
       }
       const response = await fetch("/api/ai/resolution-plan", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ prompt }),
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
@@ -706,7 +707,7 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
     try {
       const response = await fetch("/api/ai/resolution-plan", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({
           prompt: buildRefinePrompt(scopeContext, userRole, plan.sections, userMsg),
         }),

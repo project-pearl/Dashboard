@@ -14,6 +14,7 @@ import {
 } from 'recharts';
 import type { AlertSeverity } from '@/lib/alerts/types';
 import { useAuth } from '@/lib/authContext';
+import { csrfHeaders } from '@/lib/csrf';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -133,7 +134,7 @@ export function AlertDeepDive({ alert, inlineTimeline, inlineAcknowledgments, on
     try {
       const res = await fetch('/api/alerts/deployment-alerts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
         body: JSON.stringify({
           action: 'acknowledge',
           alert_id: alert.id,

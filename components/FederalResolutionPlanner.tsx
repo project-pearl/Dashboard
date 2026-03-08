@@ -16,6 +16,7 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 
 import { getArchivedSignals, type Signal } from "@/lib/signalArchiveCacheClient";
+import { csrfHeaders } from '@/lib/csrf';
 
 // Lazy-load Mapbox components (SSR-safe)
 
@@ -483,7 +484,7 @@ export default function FederalResolutionPlanner({ userTier, userId }: FederalRe
       }
       const response = await fetch("/api/ai/resolution-plan", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ prompt }),
       });
       const data = await response.json();
@@ -524,7 +525,7 @@ export default function FederalResolutionPlanner({ userTier, userId }: FederalRe
     try {
       const response = await fetch("/api/ai/resolution-plan", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ prompt: buildFederalRefinePrompt(scope, plan, prompt) }),
       });
       const data = await response.json();

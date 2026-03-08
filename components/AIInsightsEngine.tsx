@@ -8,6 +8,7 @@ import {
   TrendingUp, Search, Lightbulb, FileText, Info, ShieldAlert, Clock
 } from 'lucide-react';
 import { PearlIcon } from './PearlIcon';
+import { csrfHeaders } from '@/lib/csrf';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -185,7 +186,7 @@ Use the nationalSummary data to provide specific numbers: cat5 count, TMDL gap p
     try {
       const res = await fetch('/api/ai-insights', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
         body: JSON.stringify({
           systemPrompt: `You are a water quality data analyst. Generate actionable insights based on the provided water quality data. Be specific, cite parameter values, and provide early warnings. When analyzing waterbody data near major infrastructure (CSO outfalls, interceptors, treatment plants), flag sudden multi-parameter anomalies (simultaneous E. coli spike + DO crash + turbidity surge) as potential sewage discharge events. If activeSignals are present in the data, incorporate them prominently into your analysis — these represent active conditions that need immediate attention. Let the data drive the narrative — highlight whatever the most significant patterns, violations, or anomalies are.
 

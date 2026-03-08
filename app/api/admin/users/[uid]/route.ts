@@ -4,8 +4,9 @@ import { resolveAdminLevel } from '@/lib/authTypes';
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { uid: string } }
+  { params }: { params: Promise<{ uid: string }> }
 ) {
+  const { uid } = await params;
   const anonUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -34,7 +35,6 @@ export async function DELETE(
   const adminLevel = resolveAdminLevel(profile?.admin_level, profile?.email || userData.user.email || '');
   if (adminLevel === 'none') return NextResponse.json({ error: 'Admin access required.' }, { status: 403 });
 
-  const uid = params.uid;
   if (!uid) return NextResponse.json({ error: 'Missing target user id.' }, { status: 400 });
   if (uid === userData.user.id) {
     return NextResponse.json({ error: 'Admins cannot delete their own account from this panel.' }, { status: 400 });

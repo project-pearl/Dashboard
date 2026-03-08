@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { uploadSubmitSchema } from '@/lib/schemas';
+import { parseBody } from '@/lib/validateRequest';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,29 +14,13 @@ const PARAM_UNITS: Record<string, string> = {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const parsed = await parseBody(request, uploadSubmitSchema);
+    if (!parsed.success) return parsed.error;
     const {
       parameter, value, latitude, longitude, location_name, sample_date,
       user_id, user_role, volunteer_id, qa_checklist, student_name, team_name, teacher_uid,
       state_abbr,
-    } = body;
-
-    // Validate required fields
-    if (!parameter || value == null || !latitude || !longitude || !user_id || !user_role) {
-      return NextResponse.json({ error: 'Missing required fields: parameter, value, latitude, longitude, user_id, user_role' }, { status: 400 });
-    }
-
-    if (!VALID_PARAMS.includes(parameter)) {
-      return NextResponse.json({ error: `Invalid parameter. Must be one of: ${VALID_PARAMS.join(', ')}` }, { status: 400 });
-    }
-
-    if (typeof value !== 'number' || isNaN(value)) {
-      return NextResponse.json({ error: 'Value must be a valid number' }, { status: 400 });
-    }
-
-    if (user_role !== 'NGO' && user_role !== 'K12') {
-      return NextResponse.json({ error: 'user_role must be NGO or K12' }, { status: 400 });
-    }
+    } = parsed.data;
 
     const provenance = user_role === 'NGO' ? 'CITIZEN_SCIENCE' : 'EDUCATIONAL';
     const unit = PARAM_UNITS[parameter] || 'unknown';

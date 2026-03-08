@@ -4,6 +4,8 @@ import { InvitePayload, normalizeUserRole, resolveAdminLevel } from '@/lib/authT
 import { encodeInviteToken } from '@/lib/inviteTokens';
 import { getInvitableRoles, canInviteRole } from '@/lib/adminHierarchy';
 import type { AdminLevel } from '@/lib/authTypes';
+import { inviteCreateSchema } from '@/lib/schemas';
+import { parseBody } from '@/lib/validateRequest';
 
 type CreateInviteBody = {
   role?: string;
@@ -54,7 +56,9 @@ export async function POST(request: NextRequest) {
 
   const callerRole = normalizeUserRole(profile?.role);
 
-  const body = (await request.json().catch(() => ({}))) as CreateInviteBody;
+  const parsed = await parseBody(request, inviteCreateSchema);
+  if (!parsed.success) return parsed.error;
+  const body = parsed.data;
   const targetRole = normalizeUserRole(body.role);
 
   // Check role is in caller's invitable list

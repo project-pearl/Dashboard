@@ -11,6 +11,8 @@ export const maxDuration = 120;
 import { NextRequest, NextResponse } from 'next/server';
 import { getOrRefresh, type GetOrRefreshResult } from '@/lib/supabaseCache';
 import { fetchIcisForState, type IcisStateSnapshot } from '@/lib/icisStateFetcher';
+import { cacheRefreshSchema } from '@/lib/schemas';
+import { parseBody } from '@/lib/validateRequest';
 
 // ── Source → fetch function registry ────────────────────────────────────────
 
@@ -32,17 +34,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: { source?: string; scopeKey?: string };
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
-
-  const { source, scopeKey } = body;
-  if (!source || !scopeKey) {
-    return NextResponse.json({ error: 'source and scopeKey required' }, { status: 400 });
-  }
+  const parsed = await parseBody(request, cacheRefreshSchema);
+  if (!parsed.success) return parsed.error;
+  const { source, scopeKey } = parsed.data;
 
   const fetchFn = FETCHERS[source];
   if (!fetchFn) {

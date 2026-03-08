@@ -8,6 +8,7 @@ import { Users, CheckCircle, Clock, XCircle, RefreshCw } from 'lucide-react';
 import { WaterSampleUploadForm } from '@/components/uploads/WaterSampleUploadForm';
 import { CSVUploadDropzone } from '@/components/uploads/CSVUploadDropzone';
 import { useAuth } from '@/lib/authContext';
+import { csrfHeaders } from '@/lib/csrf';
 
 interface CitizenReportingPanelProps {
   stateAbbr: string;
@@ -68,7 +69,7 @@ export function CitizenReportingPanel({ stateAbbr }: CitizenReportingPanelProps)
     try {
       await fetch('/api/uploads/approve', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
         body: JSON.stringify({ sample_ids: sampleIds, approved_by: userId }),
       });
       fetchSamples();
@@ -79,7 +80,7 @@ export function CitizenReportingPanel({ stateAbbr }: CitizenReportingPanelProps)
     try {
       await fetch('/api/uploads/approve', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
         body: JSON.stringify({ sample_ids: sampleIds, approved_by: userId, action: 'reject' }),
       });
       fetchSamples();

@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { resolutionPlanSchema } from '@/lib/schemas';
+import { parseBody } from '@/lib/validateRequest';
 
 export const maxDuration = 300;
 
@@ -8,10 +10,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'OPENAI_API_KEY not configured' }, { status: 500 });
   }
 
-  const { prompt } = await request.json();
-  if (!prompt || typeof prompt !== 'string') {
-    return NextResponse.json({ error: 'Missing prompt' }, { status: 400 });
-  }
+  const parsed = await parseBody(request, resolutionPlanSchema);
+  if (!parsed.success) return parsed.error;
+  const { prompt } = parsed.data;
 
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',

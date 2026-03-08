@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { resolveAdminLevel } from '@/lib/authTypes';
 import type { AdminLevel } from '@/lib/authTypes';
+import { grantRoleAdminSchema } from '@/lib/schemas';
+import { parseBody } from '@/lib/validateRequest';
 
 export async function POST(request: NextRequest) {
   const anonUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -38,16 +40,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Only super admins can grant admin privileges.' }, { status: 403 });
   }
 
-  const body = await request.json().catch(() => ({} as any));
-  const targetUserId = body.targetUserId as string;
-  const newAdminLevel = body.adminLevel as AdminLevel;
-
-  if (!targetUserId) {
-    return NextResponse.json({ error: 'targetUserId is required.' }, { status: 400 });
-  }
-  if (newAdminLevel !== 'role_admin' && newAdminLevel !== 'none') {
-    return NextResponse.json({ error: 'adminLevel must be "role_admin" or "none".' }, { status: 400 });
-  }
+  const parsed = await parseBody(request, grantRoleAdminSchema);
+  if (!parsed.success) return parsed.error;
+  const { targetUserId, adminLevel: newAdminLevel } = parsed.data;
 
   // Prevent self-demotion
   if (targetUserId === userData.user.id) {

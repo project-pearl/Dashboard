@@ -1,20 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { uploadApproveSchema } from '@/lib/schemas';
+import { parseBody } from '@/lib/validateRequest';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { sample_ids, approved_by, action } = body;
-
-    if (!sample_ids || !Array.isArray(sample_ids) || sample_ids.length === 0) {
-      return NextResponse.json({ error: 'sample_ids must be a non-empty array' }, { status: 400 });
-    }
-
-    if (!approved_by) {
-      return NextResponse.json({ error: 'approved_by is required' }, { status: 400 });
-    }
+    const parsed = await parseBody(request, uploadApproveSchema);
+    if (!parsed.success) return parsed.error;
+    const { sample_ids, approved_by, action } = parsed.data;
 
     const status = action === 'reject' ? 'REJECTED' : 'ACTIVE';
 

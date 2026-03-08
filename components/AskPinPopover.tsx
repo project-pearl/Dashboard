@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronRight, Loader2, MessageSquare, Send } from 'lucide-react';
 import { getKB, type SectionKB } from '@/lib/askPinKB';
+import { csrfHeaders } from '@/lib/csrf';
 
 interface AskPinPopoverProps {
   sectionId: string;
@@ -79,7 +80,7 @@ export function AskPinPopover({ sectionId, label, userRole, onClose }: AskPinPop
     try {
       const res = await fetch('/api/ai/ask-pin', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
         body: JSON.stringify({
           sectionId,
           label,

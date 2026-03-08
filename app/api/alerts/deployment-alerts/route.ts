@@ -7,6 +7,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { isAuthorized } from '@/lib/apiAuth';
+import { deploymentAlertSchema, deploymentAlertUpdateSchema } from '@/lib/schemas';
+import { parseBody } from '@/lib/validateRequest';
 
 export const dynamic = 'force-dynamic';
 
@@ -88,7 +90,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 });
   }
 
-  const body = await request.json();
+  const parsed = await parseBody(request, deploymentAlertSchema);
+  if (!parsed.success) return parsed.error;
+  const body = parsed.data;
   const { action } = body;
 
   // ── Create deployment alert ──
@@ -178,12 +182,9 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 });
   }
 
-  const body = await request.json();
-  const { alert_id, status } = body;
-
-  if (!alert_id || !status) {
-    return NextResponse.json({ error: 'alert_id and status required' }, { status: 400 });
-  }
+  const parsed = await parseBody(request, deploymentAlertUpdateSchema);
+  if (!parsed.success) return parsed.error;
+  const { alert_id, status } = parsed.data;
 
   const { error } = await supabase
     .from('deployment_alerts')

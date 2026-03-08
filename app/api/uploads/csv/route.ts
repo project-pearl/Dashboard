@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import Papa from 'papaparse';
+import { csvUploadSchema } from '@/lib/schemas';
+import { parseBody } from '@/lib/validateRequest';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,41 +25,30 @@ function normalizeColumnName(col: string): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const parsed = await parseBody(request, csvUploadSchema);
+    if (!parsed.success) return parsed.error;
     const {
       csv_text, user_id, user_role, column_mapping, state_abbr,
       volunteer_id, teacher_uid, original_file,
-    } = body;
-
-    if (!csv_text || !user_id || !user_role) {
-      return NextResponse.json({ error: 'Missing required fields: csv_text, user_id, user_role' }, { status: 400 });
-    }
-
-    if (csv_text.length > 10_000_000) {
-      return NextResponse.json({ error: 'File too large (10MB max)' }, { status: 413 });
-    }
-
-    if (user_role !== 'NGO' && user_role !== 'K12') {
-      return NextResponse.json({ error: 'user_role must be NGO or K12' }, { status: 400 });
-    }
+    } = csvResult.data;
 
     // Parse CSV
-    const parsed = Papa.parse<Record<string, string>>(csv_text, {
+    const csvResult = Papa.parse<Record<string, string>>(csv_text, {
       header: true,
       skipEmptyLines: true,
       transformHeader: (h: string) => h.trim(),
     });
 
-    if (parsed.errors.length > 0 && parsed.data.length === 0) {
-      return NextResponse.json({ error: 'Failed to parse CSV', details: parsed.errors.slice(0, 5) }, { status: 400 });
+    if (csvResult.errors.length > 0 && csvResult.data.length === 0) {
+      return NextResponse.json({ error: 'Failed to parse CSV', details: csvResult.errors.slice(0, 5) }, { status: 400 });
     }
 
-    if (parsed.data.length > 100_000) {
+    if (csvResult.data.length > 100_000) {
       return NextResponse.json({ error: 'Too many rows (100K max)' }, { status: 413 });
     }
 
     // Build column mapping: detect which CSV columns map to PEARL params
-    const headers = parsed.meta.fields || [];
+    const headers = csvResult.meta.fields || [];
     const mapping: Record<string, string> = column_mapping || {};
     if (!column_mapping) {
       for (const h of headers) {
@@ -81,8 +72,8 @@ export async function POST(request: NextRequest) {
     const validRows: Array<Record<string, unknown>> = [];
     const errorRows: Array<{ row: number; error: string }> = [];
 
-    for (let i = 0; i < parsed.data.length; i++) {
-      const row = parsed.data[i];
+    for (let i = 0; i < csvResult.data.length; i++) {
+      const row = csvResult.data[i];
       const lat = latCol ? parseFloat(row[latCol]) : null;
       const lng = lngCol ? parseFloat(row[lngCol]) : null;
       const sampleDate = dateCol ? row[dateCol] : new Date().toISOString();

@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { aiCategorizeSchema } from '@/lib/schemas';
+import { parseBody } from '@/lib/validateRequest';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,11 +19,9 @@ Respond ONLY with valid JSON, no markdown or explanation.`;
 
 export async function POST(request: Request) {
   try {
-    const { type, name, description } = await request.json();
-
-    if (!type || !name) {
-      return NextResponse.json({ error: 'Missing type or name' }, { status: 400 });
-    }
+    const parsed = await parseBody(request, aiCategorizeSchema);
+    if (!parsed.success) return parsed.error;
+    const { type, name, description } = parsed.data;
 
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
@@ -56,8 +56,8 @@ export async function POST(request: Request) {
     const text = data?.choices?.[0]?.message?.content || '{}';
 
     // Parse the JSON response
-    const parsed = JSON.parse(text);
-    return NextResponse.json(parsed);
+    const result = JSON.parse(text);
+    return NextResponse.json(result);
   } catch (err) {
     console.error('ai-categorize error:', err);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
