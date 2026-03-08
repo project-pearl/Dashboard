@@ -52,6 +52,9 @@ import { ensureWarmed as warmNwps }    from '@/lib/nwpsCache';
 import { ensureWarmed as warmGaugeLookup } from '@/lib/nwpsGaugeLookup';
 import { ensureWarmed as warmAirQuality } from '@/lib/airQualityCache';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
@@ -224,6 +227,8 @@ export async function GET(request: NextRequest) {
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
 
+    recordCronRun('sentinel-poll', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'complete',
       duration: `${duration}s`,
@@ -235,6 +240,12 @@ export async function GET(request: NextRequest) {
   } catch (err: any) {
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
     console.error(`[sentinel-poll] Fatal error: ${err.message}`);
+
+    Sentry.captureException(err, { tags: { cron: 'sentinel-poll' } });
+
+    notifySlackCronFailure({ cronName: 'sentinel-poll', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('sentinel-poll', 'error', Date.now() - startTime, err.message);
     return NextResponse.json({
       status: 'error',
       duration: `${duration}s`,

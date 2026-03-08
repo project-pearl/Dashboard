@@ -4,6 +4,9 @@ import TreatmentSection from '@/components/TreatmentSection';
 export const metadata: Metadata = {
   title: 'Our Technology | Project PEARL',
   description: 'ALIA treatment technology: oyster biofiltration and multi-stage mechanical filtration achieving 88-95% TSS removal. Closing the shoreline treatment gap.',
+  alternates: {
+    canonical: '/treatment',
+  },
 };
 
 export default function TreatmentPage() {

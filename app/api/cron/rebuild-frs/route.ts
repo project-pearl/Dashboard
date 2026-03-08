@@ -23,6 +23,9 @@ const CONCURRENCY = 6;
 
 import { ALL_STATES } from '@/lib/constants';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 // ── Paginated fetch helper ──────────────────────────────────────────────────
 
@@ -237,6 +240,8 @@ export async function GET(request: NextRequest) {
       `${allFacilities.length} facilities, ${Object.keys(grid).length} cells`
     );
 
+    recordCronRun('rebuild-frs', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
@@ -249,6 +254,12 @@ export async function GET(request: NextRequest) {
 
   } catch (err: any) {
     console.error('[FRS Cron] Build failed:', err);
+
+    Sentry.captureException(err, { tags: { cron: 'rebuild-frs' } });
+
+    notifySlackCronFailure({ cronName: 'rebuild-frs', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('rebuild-frs', 'error', Date.now() - startTime, err.message);
     return NextResponse.json(
       { status: 'error', error: err.message || 'FRS build failed' },
       { status: 500 },

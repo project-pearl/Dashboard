@@ -24,6 +24,9 @@ import { dispatchAlerts } from '@/lib/alerts/engine';
 import { ALERT_FLAGS } from '@/lib/alerts/config';
 import type { AttackClassification } from '@/lib/sentinel/types';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
@@ -126,6 +129,8 @@ export async function GET(request: NextRequest) {
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
 
+    recordCronRun('sentinel-score', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'complete',
       duration: `${duration}s`,
@@ -172,6 +177,12 @@ export async function GET(request: NextRequest) {
   } catch (err: any) {
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
     console.error(`[sentinel-score] Fatal error: ${err.message}`);
+
+    Sentry.captureException(err, { tags: { cron: 'sentinel-score' } });
+
+    notifySlackCronFailure({ cronName: 'sentinel-score', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('sentinel-score', 'error', Date.now() - startTime, err.message);
     return NextResponse.json({
       status: 'error',
       duration: `${duration}s`,

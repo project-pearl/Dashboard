@@ -8,6 +8,9 @@ export const maxDuration = 300;
 import { NextRequest, NextResponse } from 'next/server';
 import { buildStateReports } from '@/lib/stateReportCache';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 export async function GET(request: NextRequest) {
   if (!isCronAuthorized(request)) {
@@ -23,6 +26,8 @@ export async function GET(request: NextRequest) {
 
     console.log(`[State Reports Cron] Build complete in ${elapsed}s — ${stateReports._meta.stateCount} states`);
 
+    recordCronRun('rebuild-state-reports', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
@@ -31,6 +36,12 @@ export async function GET(request: NextRequest) {
     });
   } catch (err: any) {
     console.error('[State Reports Cron] Build failed:', err);
+
+    Sentry.captureException(err, { tags: { cron: 'rebuild-state-reports' } });
+
+    notifySlackCronFailure({ cronName: 'rebuild-state-reports', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('rebuild-state-reports', 'error', Date.now() - startTime, err.message);
     return NextResponse.json(
       { status: 'error', error: err.message || 'State reports build failed' },
       { status: 500 },

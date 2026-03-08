@@ -27,6 +27,9 @@ import {
   type PathogenType, type NWSSRecord, type NWSSCacheData, type NWSSPollState,
 } from '@/lib/nwss/types';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 function delay(ms: number): Promise<void> {
   return new Promise(r => setTimeout(r, ms));
@@ -185,6 +188,8 @@ export async function GET(request: NextRequest) {
       `(${anomalyCritical} critical, ${anomalyWarning} warning)`,
     );
 
+    recordCronRun('nwss-poll', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'complete',
       mode: isFullRefresh ? 'full_refresh' : 'incremental',
@@ -205,6 +210,12 @@ export async function GET(request: NextRequest) {
 
   } catch (err: any) {
     console.error('[NWSS Poll] Build failed:', err);
+
+    Sentry.captureException(err, { tags: { cron: 'nwss-poll' } });
+
+    notifySlackCronFailure({ cronName: 'nwss-poll', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('nwss-poll', 'error', Date.now() - startTime, err.message);
     return NextResponse.json(
       { status: 'error', error: err.message || 'NWSS poll failed' },
       { status: 500 },

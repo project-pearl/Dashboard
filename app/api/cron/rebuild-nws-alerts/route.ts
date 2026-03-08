@@ -13,6 +13,9 @@ import {
 } from '@/lib/nwsAlertCache';
 import { ALL_STATES } from '@/lib/constants';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -356,6 +359,8 @@ export async function GET(request: NextRequest) {
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[NWS Cron] Complete in ${elapsed}s — ${totalAlerts} water alerts across ${Object.keys(alertsByState).length} states`);
 
+    recordCronRun('rebuild-nws-alerts', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
@@ -368,6 +373,12 @@ export async function GET(request: NextRequest) {
 
   } catch (err: any) {
     console.error('[NWS Cron] Build failed:', err);
+
+    Sentry.captureException(err, { tags: { cron: 'rebuild-nws-alerts' } });
+
+    notifySlackCronFailure({ cronName: 'rebuild-nws-alerts', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('rebuild-nws-alerts', 'error', Date.now() - startTime, err.message);
     return NextResponse.json(
       { status: 'error', error: err.message || 'NWS alert build failed' },
       { status: 500 },

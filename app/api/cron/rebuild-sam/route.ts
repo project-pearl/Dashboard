@@ -13,6 +13,9 @@ import {
 } from '@/lib/samGovCache';
 import { PRIORITY_STATES } from '@/lib/constants';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -187,6 +190,8 @@ export async function GET(request: NextRequest) {
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[SAM Cron] Built in ${elapsed}s — ${totalEntities} entities`);
 
+    recordCronRun('rebuild-sam', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
@@ -199,6 +204,12 @@ export async function GET(request: NextRequest) {
 
   } catch (err: any) {
     console.error('[SAM Cron] Build failed:', err);
+
+    Sentry.captureException(err, { tags: { cron: 'rebuild-sam' } });
+
+    notifySlackCronFailure({ cronName: 'rebuild-sam', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('rebuild-sam', 'error', Date.now() - startTime, err.message);
     return NextResponse.json(
       { status: 'error', error: err.message || 'SAM.gov build failed', requestCount },
       { status: 500 },

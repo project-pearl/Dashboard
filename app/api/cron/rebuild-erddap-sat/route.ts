@@ -13,6 +13,9 @@ import {
   type SatellitePixel,
 } from '@/lib/erddapSatCache';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -215,6 +218,8 @@ export async function GET(request: NextRequest) {
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[ERDDAP-Sat Cron] Complete in ${elapsed}s — ${pixels.length} pixels, ${Object.keys(grid).length} cells`);
 
+    recordCronRun('rebuild-erddap-sat', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
@@ -229,6 +234,12 @@ export async function GET(request: NextRequest) {
 
   } catch (err: any) {
     console.error('[ERDDAP-Sat Cron] Build failed:', err);
+
+    Sentry.captureException(err, { tags: { cron: 'rebuild-erddap-sat' } });
+
+    notifySlackCronFailure({ cronName: 'rebuild-erddap-sat', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('rebuild-erddap-sat', 'error', Date.now() - startTime, err.message);
     return NextResponse.json(
       { status: 'error', error: err.message || 'ERDDAP-Sat build failed' },
       { status: 500 },

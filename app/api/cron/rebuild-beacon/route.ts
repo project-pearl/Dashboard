@@ -16,6 +16,9 @@ import { ALL_STATES } from '@/lib/constants';
 import { enqueueEvents } from '@/lib/sentinel/eventQueue';
 import type { ChangeEvent, SeverityHint } from '@/lib/sentinel/types';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -227,6 +230,8 @@ export async function GET(request: NextRequest) {
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[BEACON Cron] Complete in ${elapsed}s — ${allAdvisories.length} advisories, ${Object.keys(grid).length} cells`);
 
+    recordCronRun('rebuild-beacon', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
@@ -238,6 +243,12 @@ export async function GET(request: NextRequest) {
 
   } catch (err: any) {
     console.error('[BEACON Cron] Build failed:', err);
+
+    Sentry.captureException(err, { tags: { cron: 'rebuild-beacon' } });
+
+    notifySlackCronFailure({ cronName: 'rebuild-beacon', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('rebuild-beacon', 'error', Date.now() - startTime, err.message);
     return NextResponse.json(
       { status: 'error', error: err.message || 'BEACON build failed' },
       { status: 500 },

@@ -16,6 +16,9 @@ import {
   type Huc12Summary,
 } from '@/lib/attainsCache';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 // Vercel Pro max is 300s — request 300s, budget 240s (leave margin for response)
 export const maxDuration = 300;
@@ -213,6 +216,8 @@ export async function GET(request: NextRequest) {
       await triggerNextChunk(process.env.CRON_SECRET, newDeferred, depth);
     }
 
+    recordCronRun('rebuild-attains', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
@@ -233,6 +238,12 @@ export async function GET(request: NextRequest) {
     });
   } catch (err: any) {
     console.error('[ATTAINS Cron] Build failed:', err);
+
+    Sentry.captureException(err, { tags: { cron: 'rebuild-attains' } });
+
+    notifySlackCronFailure({ cronName: 'rebuild-attains', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('rebuild-attains', 'error', Date.now() - startTime, err.message);
     return NextResponse.json(
       { status: 'error', error: err.message || 'ATTAINS build failed', cache: getCacheStatus() },
       { status: 500 },

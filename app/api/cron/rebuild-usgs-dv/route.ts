@@ -14,6 +14,9 @@ import {
 } from '@/lib/usgsDvCache';
 import { ALL_STATES } from '@/lib/constants';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -238,6 +241,8 @@ export async function GET(request: NextRequest) {
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[USGS-DV Cron] Complete in ${elapsed}s — ${allStations.length} stations, ${Object.keys(grid).length} cells`);
 
+    recordCronRun('rebuild-usgs-dv', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
@@ -249,6 +254,12 @@ export async function GET(request: NextRequest) {
 
   } catch (err: any) {
     console.error('[USGS-DV Cron] Build failed:', err);
+
+    Sentry.captureException(err, { tags: { cron: 'rebuild-usgs-dv' } });
+
+    notifySlackCronFailure({ cronName: 'rebuild-usgs-dv', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('rebuild-usgs-dv', 'error', Date.now() - startTime, err.message);
     return NextResponse.json(
       { status: 'error', error: err.message || 'USGS-DV build failed' },
       { status: 500 },

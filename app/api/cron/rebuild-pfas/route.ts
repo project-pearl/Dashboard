@@ -13,6 +13,9 @@ import {
   type PfasResult,
 } from '@/lib/pfasCache';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 // Allow up to 5 minutes on Vercel Pro
 export const maxDuration = 300;
@@ -394,6 +397,8 @@ export async function GET(request: NextRequest) {
       `${Object.keys(grid).length} cells (${geocodeRate})`
     );
 
+    recordCronRun('rebuild-pfas', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
@@ -407,6 +412,12 @@ export async function GET(request: NextRequest) {
 
   } catch (err: any) {
     console.error('[PFAS Cron] Build failed:', err);
+
+    Sentry.captureException(err, { tags: { cron: 'rebuild-pfas' } });
+
+    notifySlackCronFailure({ cronName: 'rebuild-pfas', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('rebuild-pfas', 'error', Date.now() - startTime, err.message);
     return NextResponse.json(
       { status: 'error', error: err.message || 'PFAS build failed' },
       { status: 500 },

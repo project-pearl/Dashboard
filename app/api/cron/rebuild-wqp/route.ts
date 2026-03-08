@@ -22,6 +22,9 @@ const CONCURRENCY = 8;  // Parallel state fetches (respects WQP rate limits)
 
 import { ALL_STATES_WITH_FIPS } from '@/lib/constants';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 // Top characteristics to fetch (maps to PEARL keys)
 const CHARACTERISTICS = [
@@ -384,6 +387,8 @@ export async function GET(request: NextRequest) {
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[WQP Cron] Build complete in ${elapsed}s — ${allRecords.length} records, ${Object.keys(grid).length} cells`);
 
+    recordCronRun('rebuild-wqp', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
@@ -398,6 +403,12 @@ export async function GET(request: NextRequest) {
 
   } catch (err: any) {
     console.error('[WQP Cron] Build failed:', err);
+
+    Sentry.captureException(err, { tags: { cron: 'rebuild-wqp' } });
+
+    notifySlackCronFailure({ cronName: 'rebuild-wqp', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('rebuild-wqp', 'error', Date.now() - startTime, err.message);
     return NextResponse.json(
       { status: 'error', error: err.message || 'WQP build failed' },
       { status: 500 },

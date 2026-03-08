@@ -36,6 +36,9 @@ import {
   parseInsights, sleep, type Role,
 } from '@/lib/llmHelpers';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 // ─── Concurrency semaphore ──────────────────────────────────────────────────
 
@@ -281,6 +284,12 @@ export async function GET(request: NextRequest) {
             const msg = `${stateAbbr}:${role} — ${err.message?.slice(0, 100) || 'unknown error'}`;
             results.errors.push(msg);
             console.error(`[Cron/Insights] ${msg}`);
+
+            Sentry.captureException(err, { tags: { cron: 'generate-insights' } });
+
+            notifySlackCronFailure({ cronName: 'generate-insights', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+            recordCronRun('generate-insights', 'error', Date.now() - startTime, err.message);
           }
         }
       })
@@ -299,6 +308,8 @@ export async function GET(request: NextRequest) {
     `${results.failed} failed, ${results.skipped} skipped, ` +
     `${results.enrichedStates} enriched states, ${results.criticalStates} critical`
   );
+
+  recordCronRun('generate-insights', 'success', Date.now() - startTime);
 
   return NextResponse.json({
     status: 'complete',

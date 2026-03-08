@@ -39,6 +39,9 @@ import { buildAllAssessments } from '@/lib/analytics/comprehensiveAssessment';
 import { saveCacheToBlob } from '@/lib/blobPersistence';
 import { saveCacheToDisk } from '@/lib/cacheUtils';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 // ── Assessment Cache (simple in-memory + disk + blob) ────────────────────────
 
@@ -264,6 +267,8 @@ export async function GET(request: NextRequest) {
       `avg completeness ${avgCompleteness}%, ${criticalStates.length} critical`,
     );
 
+    recordCronRun('build-assessments', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
@@ -276,6 +281,12 @@ export async function GET(request: NextRequest) {
   } catch (err: any) {
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.error(`[Assessments Cron] Failed after ${elapsed}s:`, err);
+
+    Sentry.captureException(err, { tags: { cron: 'build-assessments' } });
+
+    notifySlackCronFailure({ cronName: 'build-assessments', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('build-assessments', 'error', Date.now() - startTime, err.message);
     return NextResponse.json(
       { status: 'error', error: err.message || 'Assessment build failed', duration: `${elapsed}s` },
       { status: 500 },

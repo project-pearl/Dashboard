@@ -1,10 +1,5 @@
 import type { Metadata } from 'next';
-import dynamic from 'next/dynamic';
-
-const WaterRiskScore = dynamic(
-  () => import('@/components/WaterRiskScore'),
-  { ssr: false },
-);
+import WaterRiskScoreClient from './WaterRiskScoreClient';
 
 export const metadata: Metadata = {
   title: 'Water Risk Score | PIN',
@@ -23,8 +18,11 @@ export const metadata: Metadata = {
     description:
       'Know your water risk in seconds. Comprehensive 0-100 score for any US address, ZIP, or coordinates.',
   },
+  alternates: {
+    canonical: '/water-risk-score',
+  },
 };
 
 export default function WaterRiskScorePage() {
-  return <WaterRiskScore />;
+  return <WaterRiskScoreClient />;
 }

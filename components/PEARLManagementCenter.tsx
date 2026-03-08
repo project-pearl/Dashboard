@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback, lazy, Suspense } from 'react';
 import { MockDataBadge } from './MockDataBadge';
 import HeroBanner from './HeroBanner';
+
+const CronHealthDashboard = lazy(() => import('./CronHealthDashboard'));
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip,
   ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
@@ -1165,6 +1167,11 @@ Doug and the PIN team`;
                 )}
               </CardContent>
             </Card>
+
+            {/* ── CRON & CACHE HEALTH DASHBOARD ── */}
+            <Suspense fallback={<Card><CardContent className="p-6 text-center text-slate-500">Loading cron health...</CardContent></Card>}>
+              <CronHealthDashboard />
+            </Suspense>
 
             {/* ── NATIONAL WATER HEALTH GAUGE ── */}
             <Card className="overflow-hidden relative">

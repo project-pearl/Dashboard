@@ -22,3 +22,8 @@ tsconfig.tsbuildinfo
 .next-dev.out.log
 .next-dev.err.log
 public/PIN_Overview.mp4
+
+# Test artifacts
+coverage/
+playwright-report/
+test-results/

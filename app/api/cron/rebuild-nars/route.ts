@@ -14,6 +14,9 @@ import {
   type NarsSite,
 } from '@/lib/narsCache';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -260,6 +263,8 @@ export async function GET(request: NextRequest) {
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[NARS Cron] Built in ${elapsed}s — ${allSites.length} sites, ${Object.keys(grid).length} cells`);
 
+    recordCronRun('rebuild-nars', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
@@ -272,6 +277,12 @@ export async function GET(request: NextRequest) {
 
   } catch (err: any) {
     console.error('[NARS Cron] Build failed:', err);
+
+    Sentry.captureException(err, { tags: { cron: 'rebuild-nars' } });
+
+    notifySlackCronFailure({ cronName: 'rebuild-nars', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('rebuild-nars', 'error', Date.now() - startTime, err.message);
     return NextResponse.json(
       { status: 'error', error: err.message || 'NARS build failed' },
       { status: 500 },

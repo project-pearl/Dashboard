@@ -13,6 +13,9 @@ import {
 } from '@/lib/nwpsCache';
 import { ALL_STATES } from '@/lib/constants';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -236,6 +239,8 @@ export async function GET(request: NextRequest) {
     const flooding = allGauges.filter(g => g.status !== 'no_flooding' && g.status !== 'not_defined');
     console.log(`[NWPS Cron] Complete in ${elapsed}s — ${allGauges.length} gauges, ${flooding.length} flooding`);
 
+    recordCronRun('rebuild-nwps', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
@@ -248,6 +253,12 @@ export async function GET(request: NextRequest) {
 
   } catch (err: any) {
     console.error('[NWPS Cron] Build failed:', err);
+
+    Sentry.captureException(err, { tags: { cron: 'rebuild-nwps' } });
+
+    notifySlackCronFailure({ cronName: 'rebuild-nwps', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('rebuild-nwps', 'error', Date.now() - startTime, err.message);
     return NextResponse.json(
       { status: 'error', error: err.message || 'NWPS build failed' },
       { status: 500 },

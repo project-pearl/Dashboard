@@ -13,6 +13,9 @@ import {
   type SnotelStation,
 } from '@/lib/snotelCache';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -221,6 +224,8 @@ export async function GET(request: NextRequest) {
     const withSWE = stations.filter(s => s.snowWaterEquiv !== null).length;
     console.log(`[SNOTEL Cron] Complete in ${elapsed}s — ${stations.length} stations, ${withSWE} with SWE data`);
 
+    recordCronRun('rebuild-snotel', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
@@ -233,6 +238,12 @@ export async function GET(request: NextRequest) {
 
   } catch (err: any) {
     console.error('[SNOTEL Cron] Build failed:', err);
+
+    Sentry.captureException(err, { tags: { cron: 'rebuild-snotel' } });
+
+    notifySlackCronFailure({ cronName: 'rebuild-snotel', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('rebuild-snotel', 'error', Date.now() - startTime, err.message);
     return NextResponse.json(
       { status: 'error', error: err.message || 'SNOTEL build failed' },
       { status: 500 },

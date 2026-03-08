@@ -12,6 +12,9 @@ import {
   type DataGovDataset,
 } from '@/lib/dataGovCache';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -155,6 +158,8 @@ export async function GET(request: NextRequest) {
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[Data.gov Cron] Built in ${elapsed}s — ${datasets.length} datasets`);
 
+    recordCronRun('rebuild-datagov', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
@@ -165,6 +170,12 @@ export async function GET(request: NextRequest) {
 
   } catch (err: any) {
     console.error('[Data.gov Cron] Build failed:', err);
+
+    Sentry.captureException(err, { tags: { cron: 'rebuild-datagov' } });
+
+    notifySlackCronFailure({ cronName: 'rebuild-datagov', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('rebuild-datagov', 'error', Date.now() - startTime, err.message);
     return NextResponse.json(
       { status: 'error', error: err.message || 'Data.gov build failed' },
       { status: 500 },

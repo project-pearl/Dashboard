@@ -15,6 +15,9 @@ import {
   type NdbcStation, type NdbcObservation, type NdbcOceanParams,
 } from '@/lib/ndbcCache';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -449,6 +452,8 @@ export async function GET(request: NextRequest) {
       `${oceanMap.size} WQ, ${Object.keys(grid).length} cells`
     );
 
+    recordCronRun('rebuild-ndbc', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
@@ -463,6 +468,12 @@ export async function GET(request: NextRequest) {
 
   } catch (err: any) {
     console.error('[NDBC Cron] Build failed:', err);
+
+    Sentry.captureException(err, { tags: { cron: 'rebuild-ndbc' } });
+
+    notifySlackCronFailure({ cronName: 'rebuild-ndbc', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('rebuild-ndbc', 'error', Date.now() - startTime, err.message);
     return NextResponse.json(
       { status: 'error', error: err.message || 'NDBC build failed' },
       { status: 500 },

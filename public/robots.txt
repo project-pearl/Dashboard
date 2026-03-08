@@ -1,0 +1,20 @@
+# Project PEARL — robots.txt
+# Allow crawling of public pages, block authenticated areas and API routes.
+
+User-agent: *
+Allow: /
+Allow: /explore
+Allow: /demo
+Allow: /story
+Allow: /treatment
+Allow: /roadmap
+Allow: /methodology
+Allow: /water-risk-score
+Allow: /login
+
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /account
+Disallow: /_next/
+
+Sitemap: https://pinwater.org/sitemap.xml

@@ -1,0 +1,62 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  unit-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      - name: Run unit & integration tests
+        run: npx vitest run --coverage
+        env:
+          CRON_SECRET: test-cron-secret
+          BLOB_READ_WRITE_TOKEN: test-blob-token
+          NEXT_PUBLIC_SUPABASE_URL: https://test.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: test-anon-key
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage/
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install chromium
+
+      - name: Run E2E tests
+        run: npx playwright test
+        env:
+          TEST_FEDERAL_EMAIL: ${{ secrets.TEST_FEDERAL_EMAIL }}
+          TEST_FEDERAL_PASSWORD: ${{ secrets.TEST_FEDERAL_PASSWORD }}
+          TEST_K12_EMAIL: ${{ secrets.TEST_K12_EMAIL }}
+          TEST_K12_PASSWORD: ${{ secrets.TEST_K12_PASSWORD }}
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/

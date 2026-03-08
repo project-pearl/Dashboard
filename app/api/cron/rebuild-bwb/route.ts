@@ -14,6 +14,9 @@ import {
   type BwbStation, type BwbParameter,
 } from '@/lib/bwbCache';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -235,6 +238,8 @@ export async function GET(request: NextRequest) {
       `${datasetIds.size} datasets, ${Object.keys(grid).length} cells`
     );
 
+    recordCronRun('rebuild-bwb', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
@@ -248,6 +253,12 @@ export async function GET(request: NextRequest) {
 
   } catch (err: any) {
     console.error('[BWB Cron] Build failed:', err);
+
+    Sentry.captureException(err, { tags: { cron: 'rebuild-bwb' } });
+
+    notifySlackCronFailure({ cronName: 'rebuild-bwb', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('rebuild-bwb', 'error', Date.now() - startTime, err.message);
     return NextResponse.json(
       { status: 'error', error: err.message || 'BWB build failed' },
       { status: 500 },

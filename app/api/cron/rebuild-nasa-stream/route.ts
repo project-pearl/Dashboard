@@ -13,6 +13,9 @@ import {
   type NasaSatObs,
 } from '@/lib/nasaStreamCache';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -215,6 +218,8 @@ export async function GET(request: NextRequest) {
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[NASA-Stream Cron] Complete in ${elapsed}s — ${observations.length} obs, ${Object.keys(grid).length} cells`);
 
+    recordCronRun('rebuild-nasa-stream', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
@@ -229,6 +234,12 @@ export async function GET(request: NextRequest) {
 
   } catch (err: any) {
     console.error('[NASA-Stream Cron] Build failed:', err);
+
+    Sentry.captureException(err, { tags: { cron: 'rebuild-nasa-stream' } });
+
+    notifySlackCronFailure({ cronName: 'rebuild-nasa-stream', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('rebuild-nasa-stream', 'error', Date.now() - startTime, err.message);
     return NextResponse.json(
       { status: 'error', error: err.message || 'NASA-Stream build failed' },
       { status: 500 },

@@ -13,6 +13,9 @@ import {
 } from '@/lib/superfundCache';
 import { STATE_NAMES, NAME_TO_ABBR } from '@/lib/mapUtils';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -142,6 +145,8 @@ export async function GET(request: NextRequest) {
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[Superfund Cron] Complete in ${elapsed}s — ${totalSites} NPL sites across ${Object.keys(sitesByState).length} states`);
 
+    recordCronRun('rebuild-superfund', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
@@ -153,6 +158,12 @@ export async function GET(request: NextRequest) {
 
   } catch (err: any) {
     console.error('[Superfund Cron] Build failed:', err);
+
+    Sentry.captureException(err, { tags: { cron: 'rebuild-superfund' } });
+
+    notifySlackCronFailure({ cronName: 'rebuild-superfund', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('rebuild-superfund', 'error', Date.now() - startTime, err.message);
     return NextResponse.json(
       { status: 'error', error: err.message || 'Superfund build failed' },
       { status: 500 },

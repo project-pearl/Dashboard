@@ -24,6 +24,9 @@ import {
   parseInsights, sleep, type Role,
 } from '@/lib/llmHelpers';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 // Only these roles get urgent refresh — they're the ones who act on crises
 const URGENT_ROLES: Role[] = ['MS4', 'State', 'Federal'];
@@ -79,6 +82,8 @@ export async function GET(request: NextRequest) {
   }
 
   if (crisisStates.length === 0) {
+    recordCronRun('generate-urgent-insights', 'success', 0);
+
     return NextResponse.json({
       status: 'complete',
       reason: 'No states with critical conditions',
@@ -174,6 +179,12 @@ export async function GET(request: NextRequest) {
         const msg = `${abbr}:${role} — ${err.message?.slice(0, 100) || 'unknown error'}`;
         results.errors.push(msg);
         console.error(`[Cron/Urgent] ${msg}`);
+
+        Sentry.captureException(err, { tags: { cron: 'generate-urgent-insights' } });
+
+        notifySlackCronFailure({ cronName: 'generate-urgent-insights', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+        recordCronRun('generate-urgent-insights', 'error', Date.now() - startTime, err.message);
       }
     }
   }

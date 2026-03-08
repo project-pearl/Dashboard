@@ -14,6 +14,9 @@ import {
   type USAsProgramData, type USAsStateData, type USAsCacheData,
 } from '@/lib/usaSpendingCache';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -464,6 +467,8 @@ export async function GET(request: NextRequest) {
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[USAs Cron] Build complete: ${statesProcessed.length} states in ${elapsed}s`);
 
+    recordCronRun('rebuild-usaspending', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'ok',
       statesProcessed: statesProcessed.length,
@@ -474,6 +479,12 @@ export async function GET(request: NextRequest) {
   } catch (e: any) {
     setUSAsBuildInProgress(false);
     console.error('[USAs Cron] Build failed:', e);
+
+    Sentry.captureException(e, { tags: { cron: 'rebuild-usaspending' } });
+
+    notifySlackCronFailure({ cronName: 'rebuild-usaspending', error: e.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('rebuild-usaspending', 'error', Date.now() - startTime, e.message);
     return NextResponse.json(
       { status: 'error', error: e.message || 'Unknown error' },
       { status: 500 }

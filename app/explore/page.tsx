@@ -1,10 +1,5 @@
 import type { Metadata } from 'next';
-import dynamic from 'next/dynamic';
-
-const WaterQualityExplorer = dynamic(
-  () => import('@/components/WaterQualityExplorer'),
-  { ssr: false },
-);
+import ExploreClient from './ExploreClient';
 
 export const metadata: Metadata = {
   title: 'State Water Quality Report Card | Project PEARL',
@@ -23,8 +18,11 @@ export const metadata: Metadata = {
     description:
       'Discover your state\'s water quality story with EPA-powered report cards and take-action resources.',
   },
+  alternates: {
+    canonical: '/explore',
+  },
 };
 
 export default function ExplorePage() {
-  return <WaterQualityExplorer />;
+  return <ExploreClient />;
 }

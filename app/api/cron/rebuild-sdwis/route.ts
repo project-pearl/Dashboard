@@ -24,6 +24,9 @@ const CONCURRENCY = 10;
 import { ALL_STATES } from '@/lib/constants';
 import zipCentroids from '@/lib/zipCentroids.json';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 // ── Paginated fetch helper ──────────────────────────────────────────────────
 
@@ -366,6 +369,8 @@ export async function GET(request: NextRequest) {
       `${geocodedEnforcement.length} enforcement, ${Object.keys(grid).length} cells`
     );
 
+    recordCronRun('rebuild-sdwis', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
@@ -381,6 +386,12 @@ export async function GET(request: NextRequest) {
 
   } catch (err: any) {
     console.error('[SDWIS Cron] Build failed:', err);
+
+    Sentry.captureException(err, { tags: { cron: 'rebuild-sdwis' } });
+
+    notifySlackCronFailure({ cronName: 'rebuild-sdwis', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('rebuild-sdwis', 'error', Date.now() - startTime, err.message);
     return NextResponse.json(
       { status: 'error', error: err.message || 'SDWIS build failed' },
       { status: 500 },

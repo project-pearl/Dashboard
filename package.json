@@ -8,7 +8,24 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "build:huc8-routing": "node scripts/build-huc8-flow-routing.js"
+    "build:huc8-routing": "node scripts/build-huc8-flow-routing.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "lib/**/*.ts": [
+      "vitest related --run"
+    ],
+    "components/**/*.tsx": [
+      "vitest related --run"
+    ],
+    "app/api/**/*.ts": [
+      "vitest related --run"
+    ]
   },
   "dependencies": {
     "@babel/runtime": "^7.28.6",
@@ -17,7 +34,6 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^3.9.0",
     "@netlify/plugin-nextjs": "^5.15.1",
-    "@next/swc-wasm-nodejs": "13.5.1",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
     "@radix-ui/react-aspect-ratio": "^1.1.0",
@@ -46,12 +62,16 @@
     "@radix-ui/react-toggle-group": "^1.1.0",
     "@radix-ui/react-tooltip": "^1.1.2",
     "@react-email/render": "^2.0.4",
+    "@sentry/nextjs": "^10.42.0",
     "@supabase/supabase-js": "^2.96.0",
     "@types/jspdf": "^1.3.3",
     "@types/mapbox-gl": "^3.4.1",
     "@types/node": "20.6.2",
-    "@types/react": "18.2.22",
-    "@types/react-dom": "18.2.7",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.36.3",
+    "@vercel/speed-insights": "^1.3.1",
     "autoprefixer": "10.4.15",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
@@ -61,20 +81,20 @@
     "echarts-for-react": "^3.0.6",
     "embla-carousel-react": "^8.3.0",
     "eslint": "8.49.0",
-    "eslint-config-next": "13.5.1",
+    "eslint-config-next": "^15.3.0",
     "html2pdf.js": "^0.14.0",
     "input-otp": "^1.2.4",
     "jspdf": "^4.1.0",
     "jszip": "^3.10.1",
     "lucide-react": "^0.446.0",
     "mapbox-gl": "^3.18.1",
-    "next": "13.5.1",
-    "next-themes": "^0.3.0",
+    "next": "^15.3.0",
+    "next-themes": "^0.4.4",
     "papaparse": "^5.5.3",
-    "postcss": "8.4.30",
-    "react": "18.2.0",
+    "postcss": "^8.5.0",
+    "react": "^19.0.0",
     "react-day-picker": "^8.10.1",
-    "react-dom": "18.2.0",
+    "react-dom": "^19.0.0",
     "react-gauge-chart": "^0.5.1",
     "react-hook-form": "^7.53.0",
     "react-map-gl": "^7.1.9",
@@ -92,8 +112,20 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/papaparse": "^5.5.2",
+    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/ui": "^4.0.18",
     "csv-parse": "^6.1.0",
+    "husky": "^9.1.7",
+    "jsdom": "^28.1.0",
+    "lint-staged": "^16.3.2",
+    "msw": "^2.12.10",
+    "vitest": "^4.0.18",
     "xlsx": "^0.18.5"
   }
 }

@@ -18,6 +18,9 @@ import { fetchAllSignals } from '@/lib/signals';
 import { archiveSignals } from '@/lib/signalArchiveCache';
 import { ALL_STATES } from '@/lib/constants';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 // Allow up to 5 minutes on Vercel Pro
 export const maxDuration = 300;
@@ -369,6 +372,8 @@ export async function GET(request: NextRequest) {
       `${Object.keys(grid).length} cells, ${allAlerts.length} alerts`
     );
 
+    recordCronRun('rebuild-nwis-iv', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
@@ -384,6 +389,12 @@ export async function GET(request: NextRequest) {
 
   } catch (err: any) {
     console.error('[NWIS-IV Cron] Build failed:', err);
+
+    Sentry.captureException(err, { tags: { cron: 'rebuild-nwis-iv' } });
+
+    notifySlackCronFailure({ cronName: 'rebuild-nwis-iv', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('rebuild-nwis-iv', 'error', Date.now() - startTime, err.message);
     return NextResponse.json(
       { status: 'error', error: err.message || 'NWIS-IV build failed' },
       { status: 500 },

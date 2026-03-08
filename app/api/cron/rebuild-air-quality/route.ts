@@ -14,6 +14,9 @@ import {
   type AirQualityStateReading,
 } from '@/lib/airQualityCache';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 const OPEN_METEO_BASE = 'https://air-quality-api.open-meteo.com/v1/air-quality';
 const AIRNOW_BASE = 'https://www.airnowapi.org/aq/observation/latLong/current/';
@@ -311,6 +314,8 @@ export async function GET(request: NextRequest) {
     });
 
     const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+    recordCronRun('rebuild-air-quality', 'success', Date.now() - start);
+
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
@@ -321,6 +326,10 @@ export async function GET(request: NextRequest) {
       cache: getAirQualityCacheStatus(),
     });
   } catch (err: any) {
+    console.error('[Air Quality Cron] Build failed:', err);
+    Sentry.captureException(err, { tags: { cron: 'rebuild-air-quality' } });
+    notifySlackCronFailure({ cronName: 'rebuild-air-quality', error: err.message || 'build failed', duration: Date.now() - start });
+    recordCronRun('rebuild-air-quality', 'error', Date.now() - start, err.message);
     return NextResponse.json(
       { status: 'error', error: err?.message || 'Air quality build failed' },
       { status: 500 },

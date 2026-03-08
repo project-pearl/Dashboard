@@ -26,6 +26,9 @@ const DL_QCOLS = '1,2,3,4,5,9,24,25,97,98,99,101';
 
 import { ALL_STATES } from '@/lib/constants';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 // ── CSV parser (no external deps) ───────────────────────────────────────────
 
@@ -438,6 +441,8 @@ export async function GET(request: NextRequest) {
       `${Object.keys(grid).length} cells`
     );
 
+    recordCronRun('rebuild-echo', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
@@ -451,6 +456,12 @@ export async function GET(request: NextRequest) {
 
   } catch (err: any) {
     console.error('[ECHO Cron] Build failed:', err);
+
+    Sentry.captureException(err, { tags: { cron: 'rebuild-echo' } });
+
+    notifySlackCronFailure({ cronName: 'rebuild-echo', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('rebuild-echo', 'error', Date.now() - startTime, err.message);
     return NextResponse.json(
       { status: 'error', error: err.message || 'ECHO build failed' },
       { status: 500 },

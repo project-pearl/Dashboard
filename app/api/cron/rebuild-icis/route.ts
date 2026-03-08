@@ -18,6 +18,9 @@ import { getOrRefresh } from '@/lib/supabaseCache';
 import { fetchIcisForState, type IcisStateSnapshot } from '@/lib/icisStateFetcher';
 import { ALL_STATES } from '@/lib/constants';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 const CONCURRENCY = 6;
 
@@ -179,6 +182,8 @@ export async function GET(request: NextRequest) {
       `${Object.keys(grid).length} cells (${cachedStates} states served from cache)`
     );
 
+    recordCronRun('rebuild-icis', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
@@ -196,6 +201,12 @@ export async function GET(request: NextRequest) {
 
   } catch (err: any) {
     console.error('[ICIS Cron] Build failed:', err);
+
+    Sentry.captureException(err, { tags: { cron: 'rebuild-icis' } });
+
+    notifySlackCronFailure({ cronName: 'rebuild-icis', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('rebuild-icis', 'error', Date.now() - startTime, err.message);
     return NextResponse.json(
       { status: 'error', error: err.message || 'ICIS build failed' },
       { status: 500 },

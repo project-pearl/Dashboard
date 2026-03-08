@@ -13,6 +13,9 @@ import {
 } from '@/lib/nceiCache';
 import { ALL_STATES_WITH_FIPS } from '@/lib/constants';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -154,6 +157,8 @@ export async function GET(request: NextRequest) {
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[NCEI Cron] Complete in ${elapsed}s — ${stateCount} states, ${fetchErrors} errors`);
 
+    recordCronRun('rebuild-ncei', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
@@ -164,6 +169,12 @@ export async function GET(request: NextRequest) {
 
   } catch (err: any) {
     console.error('[NCEI Cron] Build failed:', err);
+
+    Sentry.captureException(err, { tags: { cron: 'rebuild-ncei' } });
+
+    notifySlackCronFailure({ cronName: 'rebuild-ncei', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('rebuild-ncei', 'error', Date.now() - startTime, err.message);
     return NextResponse.json(
       { status: 'error', error: err.message || 'NCEI build failed' },
       { status: 500 },

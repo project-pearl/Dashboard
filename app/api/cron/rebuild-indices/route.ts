@@ -28,6 +28,9 @@ import {
 import type { HucIndices, IndexScore } from '@/lib/indices/types';
 import { HUC_BATCH_SIZE } from '@/lib/indices/config';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
@@ -164,6 +167,8 @@ export async function GET(request: NextRequest) {
     await setIndicesCache(results, { built, totalHucs: scoredCount, avgConfidence });
     await appendScoreHistory(historyEntries);
 
+    recordCronRun('rebuild-indices', 'success', Date.now() - startMs);
+
     return NextResponse.json({
       status: 'ok',
       totalHucs: scoredCount,
@@ -173,6 +178,12 @@ export async function GET(request: NextRequest) {
     });
   } catch (err: any) {
     console.error('[Indices Cron] Build failed:', err);
+
+    Sentry.captureException(err, { tags: { cron: 'rebuild-indices' } });
+
+    notifySlackCronFailure({ cronName: 'rebuild-indices', error: err.message || 'build failed', duration: Date.now() - startMs });
+
+    recordCronRun('rebuild-indices', 'error', Date.now() - startMs, err.message);
     return NextResponse.json({
       status: 'error',
       error: err?.message ?? 'Unknown error',

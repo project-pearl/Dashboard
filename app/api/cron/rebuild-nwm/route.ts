@@ -13,6 +13,9 @@ import {
   type NwmReach,
 } from '@/lib/nwmCache';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -179,6 +182,8 @@ export async function GET(request: NextRequest) {
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[NWM Cron] Complete in ${elapsed}s — ${reaches.length} reaches, ${Object.keys(grid).length} cells`);
 
+    recordCronRun('rebuild-nwm', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
@@ -191,6 +196,12 @@ export async function GET(request: NextRequest) {
 
   } catch (err: any) {
     console.error('[NWM Cron] Build failed:', err);
+
+    Sentry.captureException(err, { tags: { cron: 'rebuild-nwm' } });
+
+    notifySlackCronFailure({ cronName: 'rebuild-nwm', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('rebuild-nwm', 'error', Date.now() - startTime, err.message);
     return NextResponse.json(
       { status: 'error', error: err.message || 'NWM build failed' },
       { status: 500 },

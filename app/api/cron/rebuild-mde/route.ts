@@ -21,6 +21,9 @@ import {
   setMdeBuildInProgress,
   type MdeAssessmentUnit,
 } from '@/lib/mdeCache';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -369,6 +372,8 @@ export async function GET(request: NextRequest) {
     const elapsed = Date.now() - startTime;
     console.log(`[MDE Cron] Complete: ${deduped.length} units from ${usedEndpoint} (${elapsed}ms)`);
 
+    recordCronRun('rebuild-mde', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'ok',
       assessmentUnits: deduped.length,
@@ -377,6 +382,12 @@ export async function GET(request: NextRequest) {
     });
   } catch (err) {
     console.error('[MDE Cron] Fatal error:', err);
+
+    Sentry.captureException(err, { tags: { cron: 'rebuild-mde' } });
+
+    notifySlackCronFailure({ cronName: 'rebuild-mde', error: err instanceof Error ? err.message : 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('rebuild-mde', 'error', Date.now() - startTime, err instanceof Error ? err.message : String(err));
     return NextResponse.json(
       { status: 'error', error: String(err) },
       { status: 500 },

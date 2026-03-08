@@ -12,6 +12,9 @@ import {
   type NasaCmrCollection,
 } from '@/lib/nasaCmrCache';
 import { isCronAuthorized } from '@/lib/apiAuth';
+import * as Sentry from '@sentry/nextjs';
+import { notifySlackCronFailure } from '@/lib/slackNotify';
+import { recordCronRun } from '@/lib/cronHealth';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -154,6 +157,8 @@ export async function GET(request: NextRequest) {
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[NASA CMR Cron] Built in ${elapsed}s — ${collections.length} collections, ${totalGranules} granules`);
 
+    recordCronRun('rebuild-nasa-cmr', 'success', Date.now() - startTime);
+
     return NextResponse.json({
       status: 'complete',
       duration: `${elapsed}s`,
@@ -165,6 +170,12 @@ export async function GET(request: NextRequest) {
 
   } catch (err: any) {
     console.error('[NASA CMR Cron] Build failed:', err);
+
+    Sentry.captureException(err, { tags: { cron: 'rebuild-nasa-cmr' } });
+
+    notifySlackCronFailure({ cronName: 'rebuild-nasa-cmr', error: err.message || 'build failed', duration: Date.now() - startTime });
+
+    recordCronRun('rebuild-nasa-cmr', 'error', Date.now() - startTime, err.message);
     return NextResponse.json(
       { status: 'error', error: err.message || 'NASA CMR build failed' },
       { status: 500 },
