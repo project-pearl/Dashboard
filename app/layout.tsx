@@ -71,11 +71,11 @@ export default function RootLayout({
             <footer className="fixed bottom-0 left-0 right-0 z-40 border-t bg-white/95 backdrop-blur-sm px-4 py-2 flex items-center justify-between text-[10px] text-slate-400" style={{ borderColor: 'var(--border-default)', background: 'var(--bg-card, white)' }}>
               <span>PIN synthesizes public EPA/Congressional/media signals into predictive intelligence — not official regulatory or legal advice.</span>
               <span className="flex items-center gap-3">
-                <a href="mailto:doug@project-pearl.org" className="hover:text-slate-600 transition-colors">Request Demo</a>
+                <a href="mailto:doug@pinwater.org" className="hover:text-slate-600 transition-colors">Request Demo</a>
                 <span className="text-slate-300">|</span>
-                <a href="mailto:doug@project-pearl.org" className="hover:text-slate-600 transition-colors">See Potomac Scenario in Action</a>
+                <a href="mailto:doug@pinwater.org" className="hover:text-slate-600 transition-colors">See Potomac Scenario in Action</a>
                 <span className="text-slate-300">|</span>
-                <a href="mailto:doug@project-pearl.org" className="hover:text-slate-600 transition-colors font-medium">doug@project-pearl.org</a>
+                <a href="mailto:doug@pinwater.org" className="hover:text-slate-600 transition-colors font-medium">doug@pinwater.org</a>
               </span>
             </footer>
           </AuthProvider>
