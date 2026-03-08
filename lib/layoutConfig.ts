@@ -85,6 +85,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'quick-access',        label: 'Quick Access Grid',             order: 15, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── AI Briefing (View 2) ──
     { id: 'briefing-actions',    label: 'Action Required',               order: 16, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'briefing-qa',         label: 'Ask Your Briefing',             order: 16.5, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'delta-changelog',     label: 'Data Change Log',               order: 17.1, visible: true, defaultExpanded: false, lensControlled: true },
     // ── Political Briefing ──
     { id: 'pol-talking-points',       label: 'Talking Points',              order: 19.41, visible: true, defaultExpanded: true, lensControlled: true },
@@ -224,6 +225,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'quick-access',        label: 'Quick Access Grid',                order: 14, visible: true, defaultExpanded: true,  lensControlled: true },
     // ── AI Briefing (View 2) ──
     { id: 'briefing-actions',    label: 'Action Required',                  order: 15, visible: true, defaultExpanded: true,  lensControlled: true },
+    { id: 'briefing-qa',         label: 'Ask Your Briefing',                order: 15.5, visible: true, defaultExpanded: true,  lensControlled: true },
     { id: 'delta-changelog',     label: 'Data Change Log',                  order: 16.1, visible: true, defaultExpanded: false, lensControlled: true },
     // ── Political Briefing ──
     { id: 'pol-talking-points',       label: 'Talking Points',                order: 18.41, visible: true, defaultExpanded: true, lensControlled: true },
@@ -615,6 +617,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'flood-status',       label: 'River Flood Status',           order: 5.05, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'flood-risk-summary', label: 'Flood Risk by Watershed',       order: 5.06, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'briefing-actions',    label: 'Action Required',               order: 5.1, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'briefing-qa',         label: 'Ask Your Briefing',              order: 5.15, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'delta-changelog',     label: 'Data Change Log',               order: 5.25, visible: true, defaultExpanded: false, lensControlled: true },
     // ── Political Briefing ──
     { id: 'pol-active-situations',    label: 'Active Situations',           order: 5.50, visible: true, defaultExpanded: true, lensControlled: true },

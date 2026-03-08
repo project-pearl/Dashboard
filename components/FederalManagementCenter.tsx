@@ -76,6 +76,7 @@ import { AirQualityMonitoringCard } from '@/components/AirQualityMonitoringCard'
 import { UserManagementPanel } from './UserManagementPanel';
 import { getInvitableRoles } from '@/lib/adminHierarchy';
 import type { AlertEvent as EngineAlertEvent } from '@/lib/alerts/types';
+import { BriefingQACard } from '@/components/BriefingQACard';
 
 import hucNamesData from '@/data/huc8-names.json';
 import centroidsData from '@/data/huc8-centroids.json';
@@ -183,7 +184,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: true,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['ai-water-intelligence', 'briefing-actions']),
+    sections: new Set(['ai-water-intelligence', 'briefing-actions', 'briefing-qa']),
   },
   'political-briefing': {
     label: 'Political Briefing',
@@ -196,7 +197,7 @@ const LENS_CONFIG: Record<ViewLens, {
     sections: new Set([
       'pol-active-situations', 'pol-talking-points', 'pol-constituent-concerns', 'pol-funding-wins', 'pol-funding-risks',
       'pol-regulatory-deadlines', 'pol-ej-exposure', 'pol-media-ready-grades',
-      'pol-peer-comparison', 'pol-council-agenda',
+      'pol-peer-comparison', 'pol-council-agenda', 'briefing-qa',
     ]),
   },
   compliance: {
@@ -317,7 +318,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['military-installations']),
+    sections: new Set(['military-installations', 'briefing-qa']),
   },
   scorecard: {
     label: 'Scorecard',
@@ -6428,6 +6429,10 @@ export function FederalManagementCenter(props: Props) {
               </div>
             </CardContent>
           </Card>
+        );
+
+        case 'briefing-qa': return DS(
+          <BriefingQACard role="Federal" isMilitary={viewLens === 'military-installations'} />
         );
 
         case 'delta-changelog': return DS(<DeltaChangelog />);

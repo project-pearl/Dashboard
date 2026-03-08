@@ -64,6 +64,7 @@ import RoleTrainingGuide from '@/components/RoleTrainingGuide';
 import { AirQualityMonitoringCard } from '@/components/AirQualityMonitoringCard';
 import { UserManagementPanel } from './UserManagementPanel';
 import { getInvitableRoles } from '@/lib/adminHierarchy';
+import { BriefingQACard } from '@/components/BriefingQACard';
 
 const GrantOpportunityMatcher = dynamic(
   () => import('@/components/GrantOpportunityMatcher').then((mod) => mod.GrantOpportunityMatcher),
@@ -145,7 +146,7 @@ const LENS_CONFIG: Record<ViewLens, {
     label: 'AI Briefing',
     description: 'AI-generated overnight summary and action items',
     defaultOverlay: 'risk',
-    sections: new Set(['insights', 'briefing-actions']),
+    sections: new Set(['insights', 'briefing-actions', 'briefing-qa']),
   },
   'political-briefing': {
     label: 'Political Briefing',
@@ -2541,6 +2542,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   </div>
                 </CardContent>
               </Card>
+            );
+
+            case 'briefing-qa': return DS(
+              <BriefingQACard role="State" state={stateAbbr} />
             );
 
             case 'briefing-changes': return DS(
