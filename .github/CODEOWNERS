@@ -1,0 +1,9 @@
+# PIN Dashboard — Code Owners
+# Require review from @project-pearl for critical paths.
+
+lib/                        @project-pearl
+app/api/admin/              @project-pearl
+app/api/cron/               @project-pearl
+lib/sentinel/               @project-pearl
+.github/                    @project-pearl
+vercel.json                 @project-pearl
