@@ -51,7 +51,11 @@ export async function GET(request: NextRequest) {
   if (region) {
     const data = getFirmsForRegion(region);
     if (!data) {
-      return NextResponse.json({ error: `Region '${region}' not found`, cache: cacheStatus }, { status: 404 });
+      // Return empty region instead of 404 — cache may not be warm yet
+      return NextResponse.json({
+        region: { region, label: region, bbox: [0, 0, 0, 0], detectionCount: 0, highConfidenceCount: 0, maxFrp: 0, detections: [] },
+        cache: cacheStatus,
+      });
     }
     return NextResponse.json({ region: data, cache: cacheStatus });
   }
