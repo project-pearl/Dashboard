@@ -2,6 +2,9 @@ import { defineConfig } from 'vitest/config';
 import path from 'path';
 
 export default defineConfig({
+  esbuild: {
+    jsx: 'automatic',
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname),
@@ -19,12 +22,12 @@ export default defineConfig({
     exclude: ['tests/e2e/**'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'lcov', 'json-summary'],
+      reporter: ['text', 'lcov', 'json-summary', 'json'],
       thresholds: {
-        statements: 15,
-        branches: 5,
-        functions: 10,
-        lines: 15,
+        statements: 20,
+        branches: 10,
+        functions: 15,
+        lines: 20,
       },
     },
   },

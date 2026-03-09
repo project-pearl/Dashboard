@@ -10,6 +10,8 @@ jobs:
   unit-integration:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,6 +27,7 @@ jobs:
           BLOB_READ_WRITE_TOKEN: test-blob-token
           NEXT_PUBLIC_SUPABASE_URL: https://test.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: test-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: test-service-role-key
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
@@ -32,6 +35,14 @@ jobs:
         with:
           name: coverage-report
           path: coverage/
+
+      - name: Coverage PR comment
+        uses: davelosert/vitest-coverage-report-action@v2
+        if: github.event_name == 'pull_request'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          json-summary-path: coverage/coverage-summary.json
+          json-final-path: coverage/coverage-final.json
 
   e2e:
     runs-on: ubuntu-latest

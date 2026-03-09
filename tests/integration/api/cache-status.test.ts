@@ -1,15 +1,5 @@
 import { describe, it, expect } from 'vitest';
-
-// Helper to create a NextRequest-like object with cookies support
-function makeNextRequest(url: string, init?: RequestInit) {
-  const req = new Request(url, init);
-  (req as any).cookies = {
-    has: () => false,
-    get: () => undefined,
-  };
-  (req as any).nextUrl = new URL(url);
-  return req as any;
-}
+import { makeNextRequest, AUTH_HEADER } from '../../helpers/makeNextRequest';
 
 describe('GET /api/cache-status', () => {
   it('returns 401 without auth', async () => {
@@ -22,9 +12,7 @@ describe('GET /api/cache-status', () => {
   it('returns 200 with valid auth and JSON body', async () => {
     const { GET } = await import('@/app/api/cache-status/route');
     const req = makeNextRequest('http://localhost:3000/api/cache-status', {
-      headers: {
-        authorization: `Bearer ${process.env.CRON_SECRET}`,
-      },
+      headers: AUTH_HEADER,
     });
     const res = await GET(req);
     expect(res.status).toBe(200);
@@ -38,9 +26,7 @@ describe('GET /api/cache-status', () => {
   it('handles all-cold caches gracefully', async () => {
     const { GET } = await import('@/app/api/cache-status/route');
     const req = makeNextRequest('http://localhost:3000/api/cache-status', {
-      headers: {
-        authorization: `Bearer ${process.env.CRON_SECRET}`,
-      },
+      headers: AUTH_HEADER,
     });
     const res = await GET(req);
     expect(res.status).toBe(200);

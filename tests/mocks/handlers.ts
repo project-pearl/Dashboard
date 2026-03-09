@@ -43,4 +43,22 @@ export const handlers = [
       return HttpResponse.json({ features: [] });
     },
   ),
+
+  // EPA Envirofacts (SDWIS, ECHO)
+  http.get('https://data.epa.gov/efservice/*', () => {
+    return HttpResponse.json([]);
+  }),
+
+  // Resend email API
+  http.post('https://api.resend.com/emails', () => {
+    return HttpResponse.json({ id: 'test-email-id' });
+  }),
+
+  // ECHO API endpoints
+  http.get('https://echodata.epa.gov/*', () => {
+    return HttpResponse.json({ Results: { Facilities: [] } });
+  }),
+  http.get('https://echo.epa.gov/*', () => {
+    return HttpResponse.json({ Results: { Facilities: [] } });
+  }),
 ];
