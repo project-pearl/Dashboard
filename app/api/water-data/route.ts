@@ -3,7 +3,7 @@
 // Sources: Water Reporter (BWB), Chesapeake Bay Program DataHub, USGS (IV, Samples, Daily), MARACOOS ERDDAP (MD DNR)
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthorized } from '@/lib/apiAuth';
-import { getAttainsCache, getAttainsCacheSummary, getCacheStatus, triggerAttainsBuild, ensureWarmed as warmAttains } from '@/lib/attainsCache';
+import { getAttainsCache, getAttainsCacheSummary, getCacheStatus, triggerAttainsBuild, ensureWarmed as warmAttains, ensureMetaWarmed as warmAttainsMeta, ensureStateLoaded as loadAttainsState, getAttainsStateData } from '@/lib/attainsCache';
 import { getCedenCache, getCedenCacheStatus, ensureWarmed as warmCeden } from '@/lib/cedenCache';
 import { getWqpCache, getWqpCacheStatus, ensureWarmed as warmWqp } from '@/lib/wqpCache';
 import { getStateReport, getAllStateReports, getStateReportStatus, ensureWarmed as warmStateReports } from '@/lib/stateReportCache';
@@ -1176,7 +1176,7 @@ export async function GET(request: NextRequest) {
           import('@/lib/pfasCache'),
         ]);
         await Promise.all([
-          warmAttains(),
+          warmAttainsMeta(),       // meta only — buildStateAssessmentData loads per-state
           warmSdwis(),
           warmIcis(),
           warmEcho(),
@@ -1184,7 +1184,7 @@ export async function GET(request: NextRequest) {
           warmPfas(),
           warmStateReports(),
         ]);
-        const assessmentData = buildStateAssessmentData(stateCode);
+        const assessmentData = await buildStateAssessmentData(stateCode);
         const reportCard = generateReportCard(assessmentData);
         return NextResponse.json(reportCard, {
           headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=600' },
@@ -1474,6 +1474,24 @@ export async function GET(request: NextRequest) {
       // ATTAINS National Cache — pre-built buffer for all 51 states
       // Fetches in background, serves instantly on repeat requests
       // ════════════════════════════════════════════════════════════════════════
+
+      // Per-state data — loads only meta (200 bytes) + one state blob (~40-100KB)
+      // Example: ?action=attains-state-data&state=MD
+      case 'attains-state-data': {
+        const stateParam = sp.get('state');
+        if (!stateParam) {
+          return NextResponse.json({ error: 'state parameter required' }, { status: 400 });
+        }
+        const stateData = await getAttainsStateData(stateParam);
+        return NextResponse.json({
+          cacheStatus: getCacheStatus(),
+          state: stateData,
+        }, {
+          headers: {
+            'Cache-Control': 'public, max-age=300, stale-while-revalidate=600',
+          },
+        });
+      }
 
       // Full cache with waterbody arrays — READ ONLY, does NOT trigger build
       // Example: ?action=attains-national-cache
@@ -3373,7 +3391,7 @@ export async function GET(request: NextRequest) {
               usgsRealtime: ['usgs-iv', 'usgs-sites', 'usgs-site-iv', 'usgs-state-discovery'],
               usgsSamples: ['usgs-samples', 'usgs-samples-summary'],
               usgsDaily: ['usgs-daily', 'usgs-locations'],
-              attains: ['attains-assessments', 'attains-actions', 'attains-impaired', 'attains-national-cache', 'attains-national-summary', 'attains-national-status', 'attains-build'],
+              attains: ['attains-assessments', 'attains-actions', 'attains-impaired', 'attains-national-cache', 'attains-national-summary', 'attains-national-status', 'attains-state-data', 'attains-build'],
               echo: ['echo-facilities'],
               ejscreen: ['ejscreen'],
               erddap: ['erddap-latest', 'erddap-range', 'erddap-stations'],

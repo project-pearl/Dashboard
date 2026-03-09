@@ -55,7 +55,7 @@ export default function StateReportCard({ stateAbbr }: { stateAbbr: string }) {
       setAttainsLoading(true);
       while (attempt < maxRetries && !cancelled) {
         try {
-          const r = await fetch('/api/water-data?action=attains-national-cache');
+          const r = await fetch('/api/water-data?action=attains-national-summary');
           if (!r.ok) throw new Error(`HTTP ${r.status}`);
           const json = await r.json();
           const stateData = json.states?.[stateAbbr];

@@ -276,6 +276,55 @@ function ensureDiskLoaded() {
 // ─── Vercel Blob persistence (shared helpers) ────────────────────────────────
 
 const BLOB_PATH = 'cache/attains-national.json';
+const BLOB_META_PATH = 'cache/attains/_meta.json';
+const stateBlobPath = (state: string) => `cache/attains/${state.toUpperCase()}.json`;
+
+// ─── Per-state blob functions ─────────────────────────────────────────────────
+
+interface AttainsMeta {
+  lastBuilt: string | null;
+  stateCount: number;
+  stateList: string[];
+}
+
+async function saveStateToBlob(state: string, data: StateSummary): Promise<boolean> {
+  return saveCacheToBlob(stateBlobPath(state), data);
+}
+
+async function loadStateFromBlob(state: string): Promise<StateSummary | null> {
+  return loadCacheFromBlob<StateSummary>(stateBlobPath(state));
+}
+
+async function saveMetaToBlob(): Promise<boolean> {
+  const meta: AttainsMeta = {
+    lastBuilt: lastBuilt?.toISOString() || null,
+    stateCount: loadedStates.size,
+    stateList: [...loadedStates],
+  };
+  return saveCacheToBlob(BLOB_META_PATH, meta);
+}
+
+async function loadMetaFromBlob(): Promise<boolean> {
+  const meta = await loadCacheFromBlob<AttainsMeta>(BLOB_META_PATH);
+  if (!meta?.stateList || meta.stateList.length === 0) return false;
+
+  for (const st of meta.stateList) {
+    loadedStates.add(st);
+  }
+  lastBuilt = meta.lastBuilt ? new Date(meta.lastBuilt) : null;
+  buildStatus =
+    lastBuilt && Date.now() - lastBuilt.getTime() < CACHE_TTL_MS ? "ready" : "stale";
+  _cacheSource = "blob";
+
+  console.log(
+    `[ATTAINS Cache] Loaded meta from blob (${meta.stateList.length} states known, built ${
+      lastBuilt?.toISOString() || "unknown"
+    })`
+  );
+  return true;
+}
+
+// ─── Monolithic blob (backward compat for ensureWarmed) ───────────────────────
 
 async function saveToBlob(): Promise<boolean> {
   const payload = {
@@ -283,6 +332,33 @@ async function saveToBlob(): Promise<boolean> {
     states: cache,
   };
   return saveCacheToBlob(BLOB_PATH, payload);
+}
+
+/**
+ * Save per-state blobs + meta for the given states (or all if not specified).
+ * Also saves the monolithic blob for backward compat.
+ */
+async function savePerStateBlobs(changedStates?: string[]): Promise<boolean> {
+  // Save meta
+  const metaSaved = await saveMetaToBlob();
+
+  // Save changed per-state blobs (batches of 6)
+  const toSave = changedStates || Object.keys(cache);
+  let allSaved = metaSaved;
+  for (let i = 0; i < toSave.length; i += 6) {
+    const batch = toSave.slice(i, i + 6);
+    const results = await Promise.allSettled(
+      batch.map(st => cache[st] ? saveStateToBlob(st, cache[st]) : Promise.resolve(true))
+    );
+    for (const r of results) {
+      if (r.status === 'rejected' || (r.status === 'fulfilled' && !r.value)) allSaved = false;
+    }
+  }
+
+  // Also save monolithic blob for backward compat (existing ensureWarmed callers)
+  const monoSaved = await saveToBlob();
+
+  return allSaved && monoSaved;
 }
 
 async function loadFromBlob(): Promise<boolean> {
@@ -306,17 +382,70 @@ async function loadFromBlob(): Promise<boolean> {
 }
 
 let _blobChecked = false;
+let _metaBlobChecked = false;
 
 /**
  * Async warm-up: tries disk first (sync), then Vercel Blob if cache is still empty.
- * Call this at the start of ATTAINS data-serving routes.
+ * Call this at the start of ATTAINS data-serving routes that need ALL states.
  */
 export async function ensureWarmed(): Promise<void> {
   ensureDiskLoaded();
-  if (loadedStates.size > 0) return;
+  if (loadedStates.size > 0 && Object.keys(cache).length > 0) return;
   if (_blobChecked) return;
   _blobChecked = true;
+  _metaBlobChecked = true; // monolithic load supersedes meta
   await loadFromBlob();
+}
+
+/**
+ * Lightweight warm-up: loads only meta (stateList, ~200 bytes) from blob.
+ * Use this for per-state endpoints that don't need all states in memory.
+ */
+export async function ensureMetaWarmed(): Promise<void> {
+  ensureDiskLoaded();
+  if (loadedStates.size > 0) return;
+  if (_metaBlobChecked || _blobChecked) return;
+  _metaBlobChecked = true;
+
+  // Try per-state meta first
+  const metaLoaded = await loadMetaFromBlob();
+  if (metaLoaded) return;
+
+  // Fallback: load monolithic blob (pre-migration data)
+  _blobChecked = true;
+  await loadFromBlob();
+}
+
+/**
+ * Ensure a single state's data is loaded into memory.
+ * If the state is known (in loadedStates) but not in cache, loads from per-state blob.
+ */
+export async function ensureStateLoaded(state: string): Promise<StateSummary | null> {
+  const st = state.toUpperCase();
+
+  // Already in memory
+  if (cache[st]) return cache[st];
+
+  // Known to exist (from meta or disk) but not yet loaded — fetch per-state blob
+  if (loadedStates.has(st)) {
+    const data = await loadStateFromBlob(st);
+    if (data) {
+      cache[st] = data;
+      return data;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Get a single state's ATTAINS data. Meta-warms first (200 bytes),
+ * then lazy-loads only the requested state's blob (~40-100KB).
+ * Use this instead of getAttainsCache() when only one state is needed.
+ */
+export async function getAttainsStateData(state: string): Promise<StateSummary | null> {
+  await ensureMetaWarmed();
+  return ensureStateLoaded(state);
 }
 
 // ─── GIS MapServer fallback for huge states (e.g., PA has very large counts) ──
@@ -922,7 +1051,7 @@ export async function buildAttainsChunk(timeBudgetMs: number, deferredStates: st
   if (processed.length > 0) {
     saveToDisk();
     savedToDisk = true;
-    savedToBlob = await saveToBlob();
+    savedToBlob = await savePerStateBlobs(processed);
   }
 
   const elapsed = ((Date.now() - cronStart) / 1000).toFixed(1);
@@ -1033,9 +1162,9 @@ async function buildCache(): Promise<void> {
     buildStartTime: buildStarted!.getTime(),
   });
 
-  // Persist to disk + blob
+  // Persist to disk + blob (per-state + monolithic)
   saveToDisk();
-  await saveToBlob();
+  await savePerStateBlobs();
 }
 
 // ─── Public API ────────────────────────────────────────────────────────────────

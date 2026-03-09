@@ -534,11 +534,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
     let cancelled = false;
     async function fetchAttains() {
       try {
-        const r = await fetch('/api/water-data?action=attains-national-cache');
+        const r = await fetch(`/api/water-data?action=attains-state-data&state=${stateAbbr}`);
         if (!r.ok) return;
         const json = await r.json();
-        console.log('[ATTAINS Cache]', { loaded: !!json, stateCount: Object.keys(json?.states || {}).length });
-        const stateData = json.states?.[stateAbbr];
+        const stateData = json.state;
         if (!stateData || cancelled) return;
         const waterbodies = (stateData.waterbodies || []).map((wb: any) => ({
           id: wb.id || '',

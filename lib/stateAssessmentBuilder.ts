@@ -4,7 +4,7 @@
  */
 
 import type { StateAssessmentData } from './stateFindings';
-import { getAttainsCache } from './attainsCache';
+import { getAttainsStateData, getCacheStatus as getAttainsCacheStatus } from './attainsCache';
 import { getSdwisAllData } from './sdwisCache';
 import { getIcisAllData } from './icisCache';
 import { getEchoAllData } from './echoCache';
@@ -25,13 +25,12 @@ const STATE_NAMES: Record<string, string> = {
   WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming',
 };
 
-export function buildStateAssessmentData(stateCode: string): StateAssessmentData {
+export async function buildStateAssessmentData(stateCode: string): Promise<StateAssessmentData> {
   const sc = stateCode.toUpperCase();
   const stateName = STATE_NAMES[sc] || sc;
 
-  // ── ATTAINS ──
-  const attains = getAttainsCache();
-  const stateAttains = attains.states[sc];
+  // ── ATTAINS ── (per-state lazy load — ~40-100KB instead of 2-3MB)
+  const stateAttains = await getAttainsStateData(sc);
 
   const total = stateAttains?.total ?? 0;
   const high = stateAttains?.high ?? 0;
@@ -138,7 +137,7 @@ export function buildStateAssessmentData(stateCode: string): StateAssessmentData
     stateCode: sc,
     stateName,
     reportingCycle: '2022',
-    lastUpdated: attains.cacheStatus.lastBuilt || new Date().toISOString(),
+    lastUpdated: getAttainsCacheStatus().lastBuilt || new Date().toISOString(),
 
     totalAssessmentUnits: total,
     assessedUnits,
