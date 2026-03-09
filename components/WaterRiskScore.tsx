@@ -62,30 +62,34 @@ function detectInputType(input: string): string {
 }
 
 function conditionLabel(score: number): string {
-  if (score >= 80) return 'Good';
-  if (score >= 60) return 'Fair';
-  if (score >= 40) return 'Poor';
+  if (score >= 90) return 'Excellent';
+  if (score >= 70) return 'Good';
+  if (score >= 50) return 'Fair';
+  if (score >= 30) return 'Poor';
   return 'Critical';
 }
 
 function conditionColorDark(score: number): string {
-  if (score >= 80) return 'text-green-400';
-  if (score >= 60) return 'text-yellow-400';
-  if (score >= 40) return 'text-orange-400';
+  if (score >= 90) return 'text-emerald-400';
+  if (score >= 70) return 'text-green-400';
+  if (score >= 50) return 'text-yellow-400';
+  if (score >= 30) return 'text-orange-400';
   return 'text-red-400';
 }
 
 function conditionBgDark(score: number): string {
-  if (score >= 80) return 'bg-green-950/40 border-green-800/40';
-  if (score >= 60) return 'bg-yellow-950/40 border-yellow-800/40';
-  if (score >= 40) return 'bg-orange-950/40 border-orange-800/40';
+  if (score >= 90) return 'bg-emerald-950/40 border-emerald-800/40';
+  if (score >= 70) return 'bg-green-950/40 border-green-800/40';
+  if (score >= 50) return 'bg-yellow-950/40 border-yellow-800/40';
+  if (score >= 30) return 'bg-orange-950/40 border-orange-800/40';
   return 'bg-red-950/40 border-red-800/40';
 }
 
 function ringColor(score: number): string {
-  if (score >= 80) return '#22c55e'; // green-500
-  if (score >= 60) return '#eab308'; // yellow-500
-  if (score >= 40) return '#f97316'; // orange-500
+  if (score >= 90) return '#10b981'; // emerald-500
+  if (score >= 70) return '#22c55e'; // green-500
+  if (score >= 50) return '#eab308'; // yellow-500
+  if (score >= 30) return '#f97316'; // orange-500
   return '#ef4444'; // red-500
 }
 

@@ -1,16 +1,23 @@
 import type { IndexId } from './types';
 
-/** Composite weights — 5 data-rich HUC-specific × 12% + 4 state-baseline × 10% = 100% */
+/**
+ * Composite weights — Tiered Pyramid Model
+ *   Tier 1 (Direct Measurement):        pearlLoadVelocity 15%, perCapitaLoad 13%
+ *   Tier 2 (Infrastructure & Compliance): infrastructureFailure 14%, permitRiskExposure 12%
+ *   Tier 3 (Ecological Status):          ecologicalHealth 12%, watershedRecovery 10%
+ *   Tier 4 (Context & Equity):           waterfrontExposure 8%, ejVulnerability 8%, governanceResponse 8%
+ *   Sum = 100%
+ */
 export const INDEX_WEIGHTS: Record<IndexId, number> = {
-  pearlLoadVelocity: 0.12,
-  infrastructureFailure: 0.12,
-  watershedRecovery: 0.12,
+  pearlLoadVelocity: 0.15,
+  perCapitaLoad: 0.13,
+  infrastructureFailure: 0.14,
   permitRiskExposure: 0.12,
-  perCapitaLoad: 0.12,
-  waterfrontExposure: 0.10,
-  ecologicalHealth: 0.10,
-  ejVulnerability: 0.10,
-  governanceResponse: 0.10,
+  ecologicalHealth: 0.12,
+  watershedRecovery: 0.10,
+  waterfrontExposure: 0.08,
+  ejVulnerability: 0.08,
+  governanceResponse: 0.08,
 };
 
 /** Confidence tier thresholds */
@@ -26,8 +33,8 @@ export const NEUTRAL_SCORE = 50;
 
 /** Confidence component weights */
 export const CONFIDENCE_WEIGHTS = {
-  dataDensity: 0.40,
-  recency: 0.35,
+  dataDensity: 0.30,
+  recency: 0.45,
   sourceDiversity: 0.25,
 } as const;
 

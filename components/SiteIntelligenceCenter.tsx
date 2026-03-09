@@ -115,24 +115,27 @@ function detectInputType(input: string): string {
 }
 
 function conditionLabel(score: number): string {
-  if (score >= 80) return 'Good';
-  if (score >= 60) return 'Fair';
-  if (score >= 40) return 'Poor';
+  if (score >= 90) return 'Excellent';
+  if (score >= 70) return 'Good';
+  if (score >= 50) return 'Fair';
+  if (score >= 30) return 'Poor';
   return 'Critical';
 }
 
 function conditionColor(score: number): string {
-  if (score >= 80) return 'text-green-700';
-  if (score >= 60) return 'text-yellow-700';
-  if (score >= 40) return 'text-orange-700';
+  if (score >= 90) return 'text-emerald-700';
+  if (score >= 70) return 'text-green-700';
+  if (score >= 50) return 'text-yellow-700';
+  if (score >= 30) return 'text-orange-700';
   return 'text-red-700';
 }
 
 function ringColor(score: number): string {
-  if (score >= 80) return '#16a34a';
-  if (score >= 60) return '#ca8a04';
-  if (score >= 40) return '#ea580c';
-  return '#dc2626';
+  if (score >= 90) return '#10b981'; // emerald-500
+  if (score >= 70) return '#22c55e'; // green-500
+  if (score >= 50) return '#eab308'; // yellow-500
+  if (score >= 30) return '#f97316'; // orange-500
+  return '#ef4444'; // red-500
 }
 
 function parseEj(data: Record<string, unknown> | null): Array<{ label: string; value: string; unit: string; flagged: boolean }> {

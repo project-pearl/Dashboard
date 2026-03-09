@@ -146,7 +146,7 @@ export default function MethodologyPage() {
             <h1 className="text-3xl font-bold text-slate-900 mb-2">PEARL Platform Methodology &amp; Data Standards</h1>
             <p className="text-sm text-slate-500 leading-relaxed max-w-2xl">
               This document describes the measurement parameters, calculation methods, data sources, and quality assurance standards used across the PEARL water quality monitoring platform.
-              All methods conform to EPA-approved analytical procedures and Clean Water Act regulatory frameworks.
+              PIN ingests data produced by laboratories and agencies that follow EPA-approved analytical procedures and Clean Water Act regulatory frameworks.
             </p>
             <div className="mt-3 flex flex-wrap gap-2 text-[10px] text-slate-400">
               <span>Version 1.0</span>
@@ -162,8 +162,8 @@ export default function MethodologyPage() {
               ═══════════════════════════════════════════════════════════════════ */}
           <SectionHeading id="parameters" number={1} title="Parameter Definitions" />
           <p className="text-sm text-slate-600 mb-4 leading-relaxed">
-            PEARL monitors the following water quality parameters. All measurements follow EPA-approved methods
-            and are calibrated against NIST-traceable standards.
+            PEARL monitors the following water quality parameters. All measurements are produced by source agencies
+            and laboratories following EPA-approved methods calibrated against NIST-traceable standards.
           </p>
 
           <Table

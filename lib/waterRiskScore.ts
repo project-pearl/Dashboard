@@ -389,9 +389,10 @@ function parseEjValue(v: unknown): number | null {
 }
 
 function conditionLabel(score: number): string {
-  if (score >= 80) return 'Good';
-  if (score >= 60) return 'Fair';
-  if (score >= 40) return 'Poor';
+  if (score >= 90) return 'Excellent';
+  if (score >= 70) return 'Good';
+  if (score >= 50) return 'Fair';
+  if (score >= 30) return 'Poor';
   return 'Critical';
 }
 

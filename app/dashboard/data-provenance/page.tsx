@@ -381,15 +381,15 @@ export default function DataProvenancePage() {
           <Table
             headers={['Index', 'Weight', 'Inv', 'Description', 'Sources']}
             rows={[
-              ['PEARL Load Velocity', '12%', 'No', 'Rate of nutrient/pollutant loading relative to watershed capacity', 'WQP, ICIS DMR'],
-              ['Infrastructure Failure', '12%', 'Yes', 'Risk of drinking water and wastewater infrastructure failure based on violations and age', 'SDWIS, ICIS inspections'],
-              ['Watershed Recovery', '12%', 'No', 'Potential for ecological recovery based on impairment status and restoration activity', 'ATTAINS'],
+              ['PEARL Load Velocity', '15%', 'No', 'Rate of nutrient/pollutant loading relative to watershed capacity', 'WQP, ICIS DMR'],
+              ['Per Capita Load', '13%', 'Yes', 'Population-normalized pollutant burden on the watershed', 'SDWIS, WQP, ICIS DMR'],
+              ['Infrastructure Failure', '14%', 'Yes', 'Risk of drinking water and wastewater infrastructure failure based on violations and age', 'SDWIS, ICIS inspections'],
               ['Permit Risk Exposure', '12%', 'Yes', 'Compliance risk from NPDES-permitted dischargers in the watershed', 'ICIS permits, violations, DMR, enforcement'],
-              ['Per Capita Load', '12%', 'Yes', 'Population-normalized pollutant burden on the watershed', 'SDWIS, WQP, ICIS DMR'],
-              ['Waterfront Exposure', '10%', 'Yes', 'Human exposure risk from recreational and residential waterfront proximity', 'WQP, ATTAINS, DMR'],
-              ['Ecological Health', '10%', 'Yes', 'Ecological sensitivity based on impairment status and species at risk', 'ATTAINS, USFWS ECOS'],
-              ['EJ Vulnerability', '10%', 'Yes', 'Environmental justice burden on surrounding communities', 'EJScreen, SDWIS'],
-              ['Governance Response', '10%', 'Yes', 'Strength and timeliness of regulatory response to violations', 'ATTAINS, ICIS, SDWIS'],
+              ['Ecological Health', '12%', 'Yes', 'Ecological sensitivity based on impairment status and species at risk', 'ATTAINS, USFWS ECOS'],
+              ['Watershed Recovery', '10%', 'No', 'Potential for ecological recovery based on impairment status and restoration activity', 'ATTAINS'],
+              ['Waterfront Exposure', '8%', 'Yes', 'Human exposure risk from recreational and residential waterfront proximity', 'WQP, ATTAINS, DMR'],
+              ['EJ Vulnerability', '8%', 'Yes', 'Environmental justice burden on surrounding communities', 'EJScreen, SDWIS'],
+              ['Governance Response', '8%', 'Yes', 'Strength and timeliness of regulatory response to violations', 'ATTAINS, ICIS, SDWIS'],
             ]}
           />
           <p className="text-xs text-slate-500 mt-2 leading-relaxed">Group A weights sum to 100%.</p>
@@ -401,9 +401,9 @@ export default function DataProvenancePage() {
           <Table
             headers={['Index', 'Weight', 'Description', 'Calculation']}
             rows={[
-              ['Water Quality Grade', '34%', 'EPA-method parameter scoring across DO, pH, nutrients, bacteria, turbidity, TSS', 'Weighted average of parameter scores vs. EPA criteria thresholds (see Section 8.1)'],
-              ['Monitoring Coverage', '16%', 'Fraction of key parameters with live sensor data', '(Live key params / Total key params) × 100'],
-              ['Data Freshness', '16%', 'Recency of most recent sample data across all parameters', 'Older data reduces score progressively'],
+              ['Water Quality Grade', '38%', 'EPA-method parameter scoring across DO, pH, nutrients, bacteria, turbidity, TSS', 'Weighted average of parameter scores vs. EPA criteria thresholds (see Section 8.1)'],
+              ['Monitoring Coverage', '8%', 'Fraction of key parameters with live sensor data', '(Live key params / Total key params) × 100'],
+              ['Data Freshness', '20%', 'Recency of most recent sample data across all parameters', 'Older data reduces score progressively'],
               ['Regulatory Compliance', '18%', 'ATTAINS assessment category mapping', 'Cat. 1 = 100, Cat. 2 = 85, Cat. 3 = 50, Cat. 4 = 30, Cat. 5 = 10'],
               ['Trend Direction', '16%', 'Direction and magnitude of water quality trends', '50 + trend value, clamped to 0–100. Positive trends improve score'],
             ]}
@@ -439,7 +439,7 @@ export default function DataProvenancePage() {
             Chesapeake Bay region.
           </p>
           <p className="text-xs text-slate-500 leading-relaxed">
-            Confidence itself is computed from: Data Density (40% weight), Recency (35% weight), and Source Diversity (25% weight).
+            Confidence itself is computed from: Data Density (30% weight), Recency (45% weight), and Source Diversity (25% weight).
           </p>
 
           {/* ═══════════════════════════════════════════════════════════════════
@@ -553,18 +553,32 @@ export default function DataProvenancePage() {
               ['Total Nitrogen', '0–50 mg/L', 'Flagged; excluded from grade'],
               ['Total Phosphorus', '0–10 mg/L', 'Flagged; excluded from grade'],
               ['E. coli', '0–100,000 CFU/100mL', 'Flagged; excluded from grade'],
+              ['TSS', '0–10,000 mg/L', 'Flagged; excluded from grade'],
+              ['Conductivity', '0–100,000 µS/cm', 'Flagged; excluded from grade'],
+              ['Enterococcus', '0–100,000 CFU/100mL', 'Flagged; excluded from grade'],
+              ['Chlorophyll-a', '0–1,000 µg/L', 'Flagged; excluded from grade'],
             ]}
           />
 
           <SubHeading>7.2 Cross-Source Validation</SubHeading>
           <p className="text-sm text-slate-600 mb-3 leading-relaxed">
             When the same parameter is available from multiple sources (e.g., USGS WDFN and WQP for the same station),
-            PIN compares values and applies the following rules:
+            PIN applies four pre-comparison gates before comparing values:
+          </p>
+          <ol className="text-sm text-slate-600 space-y-1.5 mb-3 ml-4 list-decimal">
+            <li><span className="font-medium text-slate-700">Temporal window:</span> Only readings within ±24 hours of each other are compared.</li>
+            <li><span className="font-medium text-slate-700">Spatial proximity:</span> Readings must originate from sites within 500 m of each other (or share the same station ID).</li>
+            <li><span className="font-medium text-slate-700">Parameter match:</span> Parameter codes must map to the same canonical parameter after harmonization.</li>
+            <li><span className="font-medium text-slate-700">Detection limit check:</span> If either reading is below the detection limit, the pair is excluded from cross-source comparison.</li>
+          </ol>
+          <p className="text-sm text-slate-600 mb-3 leading-relaxed">
+            Readings that pass all four gates are compared using hybrid thresholds:
           </p>
           <ul className="text-sm text-slate-600 space-y-1.5 mb-3 ml-4 list-disc">
             <li><span className="font-medium text-slate-700">Agreement (within threshold):</span> Higher-tier source value is used; lower-tier source annotated as corroborating.</li>
             <li><span className="font-medium text-slate-700">Minor disagreement (above threshold, within 3x threshold):</span> Both values retained with weighted average favoring higher tier. Confidence is reduced.</li>
             <li><span className="font-medium text-slate-700">Major disagreement (above 3x threshold):</span> Higher-tier source value is used; lower-tier value flagged for review and not used in scoring.</li>
+            <li><span className="font-medium text-slate-700">Same-tier resolution:</span> When two sources at the same confidence tier disagree, the more recent reading takes precedence.</li>
           </ul>
           <p className="text-xs text-slate-500 leading-relaxed">
             Agreement thresholds are parameter-specific. For parameters with narrow natural ranges (pH, dissolved oxygen),
@@ -574,14 +588,18 @@ export default function DataProvenancePage() {
 
           <SubHeading>7.3 Temporal Consistency</SubHeading>
           <p className="text-sm text-slate-600 mb-3 leading-relaxed">
-            Consecutive readings from the same source are checked for rate-of-change anomalies.
-            A parameter change exceeding 3 standard deviations from the historical mean for that site
-            triggers a suspect flag and manual review queue entry.
+            Consecutive readings from the same source are checked for rate-of-change anomalies against
+            seasonal baselines. For each site-parameter pair, baseline statistics are computed per calendar
+            quarter from at least 20 readings. High-variance parameters (E. coli, turbidity) are
+            log-transformed before comparison. A parameter change exceeding 3 standard deviations from
+            the seasonal baseline triggers a suspect flag and automated triage. If the same parameter
+            at the same site is flagged in 3 or more consecutive readings, it is escalated from suspect
+            to persistent anomaly and excluded from scoring until manual review.
           </p>
 
           <SubHeading>7.4 QA Pass Rate</SubHeading>
           <p className="text-sm text-slate-600 mb-3 leading-relaxed">
-            Across all data ingested by PIN, approximately <span className="font-semibold text-slate-800">97.3%</span> of
+            During initial validation testing across all data ingested by PIN, approximately <span className="font-semibold text-slate-800">97.3%</span> of
             records pass all validation checks without flagging. The remaining 2.7% are distributed as:
           </p>
           <ul className="text-sm text-slate-600 space-y-1 mb-4 ml-4 list-disc">
@@ -589,16 +607,22 @@ export default function DataProvenancePage() {
             <li>0.6% — Cross-source disagreement flags</li>
             <li>0.3% — Temporal consistency flags</li>
           </ul>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            These rates are expected to shift as source coverage expands and seasonal patterns are incorporated
+            into baseline statistics. Updated pass-rate statistics will be published with each major methodology revision.
+          </p>
 
           <SubHeading>7.5 Conflict Handling</SubHeading>
           <p className="text-sm text-slate-600 mb-3 leading-relaxed">
-            When data conflicts cannot be automatically resolved, PIN follows a strict priority hierarchy:
+            When data conflicts cannot be automatically resolved, PIN applies pre-comparison gates (Section 7.2)
+            first, then follows a strict priority hierarchy:
           </p>
           <ol className="text-sm text-slate-600 space-y-1.5 mb-4 ml-4 list-decimal">
-            <li>Federal regulatory sources (Tier 1) always take precedence</li>
+            <li>Federal regulatory sources (Tier 1) take precedence, conditional on passing pre-comparison gates (temporal, spatial, parameter match, detection limit)</li>
             <li>More recent data takes precedence over older data at the same tier</li>
             <li>Sources with documented QA/QC procedures take precedence over those without</li>
-            <li>When all else is equal, values are averaged and confidence is reduced</li>
+            <li>If either value is below the method detection limit, the non-detect is excluded and the detected value is used</li>
+            <li>When all else is equal, a tier-weighted average is computed and confidence is reduced</li>
           </ol>
 
           <SubHeading>7.6 Missing Data Policy</SubHeading>
@@ -606,16 +630,17 @@ export default function DataProvenancePage() {
             PIN never interpolates or estimates missing parameter values. When data is unavailable:
           </p>
           <ul className="text-sm text-slate-600 space-y-1.5 mb-4 ml-4 list-disc">
+            <li><span className="font-medium text-slate-700">Non-detects:</span> Results reported as &quot;below detection limit&quot; are stored as DL/2 (half the detection limit) for scoring purposes, consistent with EPA guidance for left-censored environmental data.</li>
             <li>The parameter displays &quot;—&quot; with an &quot;Unassessed&quot; label</li>
-            <li>The parameter is excluded from grade calculations and its weight is redistributed among available parameters</li>
+            <li>The parameter is excluded from grade calculations and its weight is redistributed among available parameters within the same index class (Group A or Group B), preserving the 56/44 group split</li>
             <li>Monitoring Coverage and Data Freshness indices reflect the gap, reducing the PIN Water Score</li>
             <li>If fewer than 3 key parameters have data, the waterbody is shown as &quot;Insufficient Data&quot; rather than graded</li>
           </ul>
           <p className="text-xs text-slate-500 leading-relaxed">
             <span className="font-medium text-slate-600">Trend Direction:</span> When a waterbody lacks sufficient data
             for trend analysis (minimum 8 data points spanning 3+ years), Trend Direction defaults to 50 (neutral) rather
-            than being excluded. This prevents the absence of trend data from artificially inflating or deflating the
-            composite score through weight redistribution.
+            than being excluded. Parameters that have never been measured at a site are excluded from trend calculations
+            entirely, rather than being assigned a neutral default.
           </p>
 
           {/* ═══════════════════════════════════════════════════════════════════
@@ -623,7 +648,8 @@ export default function DataProvenancePage() {
               ═══════════════════════════════════════════════════════════════════ */}
           <SectionHeading id="methodology" number={8} title="Methodology &amp; Data Standards" />
           <p className="text-sm text-slate-600 mb-4 leading-relaxed">
-            PIN uses EPA-approved analytical methods for all parameter scoring. This section summarizes the key
+            PIN ingests data produced by laboratories and agencies that follow EPA-approved analytical methods. PIN does not
+            perform primary analysis but applies standardized scoring to the results it receives. This section summarizes the key
             measurement standards and methodological approaches used across the platform.
           </p>
 
@@ -648,9 +674,11 @@ export default function DataProvenancePage() {
 
           <SubHeading>8.2 Trend Analysis</SubHeading>
           <p className="text-sm text-slate-600 mb-3 leading-relaxed">
-            Trends are computed using the non-parametric Mann-Kendall test with Theil-Sen slope estimation.
-            A minimum of 8 data points spanning at least 3 years is required to report a trend. Results are
-            classified as improving, stable, or degrading based on the direction and statistical significance (p &lt; 0.05).
+            Trends are computed using the Seasonal Kendall test (a seasonally-adjusted variant of the Mann-Kendall
+            test) with Theil-Sen slope estimation. High-variance parameters (E. coli, turbidity) are log-transformed
+            before trend computation to stabilize variance. A minimum of 8 data points spanning at least 3 years is
+            required to report a trend. Results are classified as improving, stable, or degrading based on the
+            direction and statistical significance (p &lt; 0.05).
           </p>
           <p className="text-xs text-slate-500 leading-relaxed">
             When insufficient data exists for trend calculation, see Section 7.6 for default handling.
@@ -665,6 +693,12 @@ export default function DataProvenancePage() {
             <li><span className="font-medium text-slate-700">Waterbody to HUC-8:</span> Area-weighted averaging. Larger waterbodies contribute proportionally more to the watershed score, reflecting their greater hydrological influence.</li>
             <li><span className="font-medium text-slate-700">HUC-8 to State:</span> Median of constituent HUC-8 scores. Median is used at the state scale (rather than area-weighted average) because state-level reporting is more susceptible to extreme outliers from very large or very small watersheds.</li>
           </ul>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            <span className="font-medium text-slate-600">Point-source limitation:</span> Spatial aggregation dilutes the
+            influence of point-source contaminants (e.g., an industrial discharge) across the full grid cell or HUC-8
+            boundary. Users investigating site-specific contamination should review individual station data rather than
+            relying on aggregated watershed scores.
+          </p>
 
           <SubHeading>8.4 Confidence Scoring</SubHeading>
           <p className="text-sm text-slate-600 mb-3 leading-relaxed">
@@ -673,8 +707,8 @@ export default function DataProvenancePage() {
           <Table
             headers={['Factor', 'Weight', 'Description']}
             rows={[
-              ['Data Density', '40%', 'Number of monitoring stations and data points per watershed area'],
-              ['Recency', '35%', 'Fraction of data less than 2 years old (decision-grade)'],
+              ['Data Density', '30%', 'Number of monitoring stations and data points per watershed area'],
+              ['Recency', '45%', 'Average freshness weight of data, emphasizing decision-grade recency'],
               ['Source Diversity', '25%', 'Number of independent data sources contributing to the index'],
             ]}
           />
@@ -687,11 +721,13 @@ export default function DataProvenancePage() {
           <div className="rounded-lg border border-amber-200 bg-amber-50/40 p-4 mb-4">
             <p className="text-xs text-slate-700 leading-relaxed font-medium mb-2">Standard Disclaimer</p>
             <p className="text-xs text-slate-600 leading-relaxed">
-              PIN grades, scores, and alerts are informational tools derived from publicly available data and automated analysis.
-              They are <span className="font-semibold">not</span> official EPA, MDE, state, or federal regulatory assessments and do not constitute
-              regulatory determinations. Always verify with primary agency data and sources for compliance, permitting,
-              or enforcement purposes. Data freshness and completeness vary by source and region — stale or absent data
-              results in &quot;Unassessed&quot; status to reflect uncertainty.
+              PIN is not a regulatory agency, laboratory, or certified data provider. PIN is not a substitute for
+              professional environmental assessment or legal compliance review. PIN does not perform primary field
+              sampling or laboratory analysis. PIN does not guarantee the accuracy, completeness, or timeliness of
+              any third-party data it ingests. PIN scores, grades, and alerts are informational tools derived from
+              publicly available data and automated analysis — they do <span className="font-semibold">not</span> constitute
+              official EPA, state, or federal regulatory assessments or determinations. Always verify with primary
+              agency data and sources for compliance, permitting, or enforcement purposes.
             </p>
           </div>
 
@@ -719,6 +755,29 @@ export default function DataProvenancePage() {
               context-specific weight profiles.
             </li>
             <li>
+              <span className="font-medium text-slate-700">Method variation across sources:</span> Different agencies
+              and laboratories may use different EPA-approved methods for the same parameter (e.g., EPA 353.2 vs.
+              SM 4500-NO3 for nitrogen). PIN harmonizes results by canonical parameter but does not adjust for
+              method-specific bias between analytical techniques.
+            </li>
+            <li>
+              <span className="font-medium text-slate-700">Confidence regression:</span> Scores in data-sparse areas
+              are regressed toward neutral (50) to prevent false precision. This means low-confidence scores
+              cluster near 50 regardless of actual conditions — users should check confidence levels before
+              interpreting scores in under-monitored areas.
+            </li>
+            <li>
+              <span className="font-medium text-slate-700">Trend analysis limitations:</span> The Seasonal Kendall test
+              requires at least 8 data points over 3+ years. Many waterbodies, particularly in rural and under-monitored
+              regions, lack sufficient data. In these cases, Trend Direction defaults to neutral (see Section 7.6).
+              Log-transformation of high-variance parameters may compress the apparent magnitude of extreme trends.
+            </li>
+            <li>
+              <span className="font-medium text-slate-700">Fixed group split:</span> The 56/44 split between Group A
+              (HUC-8 indices) and Group B (standard indices) is a fixed architectural decision. When an entire group
+              has no data, the available group receives 100% weight, which may overrepresent one analytical dimension.
+            </li>
+            <li>
               <span className="font-medium text-slate-700">No primary data collection:</span> PIN does not perform
               primary field sampling or laboratory analysis. All scores and indices are automated interpretations
               of data collected and published by other organizations.
@@ -728,16 +787,11 @@ export default function DataProvenancePage() {
               Corrections and official designations flow through state and federal agency review processes.
               PIN cannot modify upstream data sources.
             </li>
-            <li>
-              <span className="font-medium text-slate-700">Trend data availability:</span> Many waterbodies,
-              particularly in rural and under-monitored regions, lack sufficient historical data to compute trend
-              analysis. In these cases, Trend Direction defaults to neutral (see Section 7.6).
-            </li>
           </ul>
 
           {/* ── Document footer ── */}
           <div className="mt-12 pt-6 border-t border-slate-200 text-[10px] text-slate-400 space-y-1">
-            <p>PIN Data Confidence &amp; Methodology · Version 1.0 · February 2026</p>
+            <p>PIN Data Confidence &amp; Methodology · Version 2.0 · March 2026</p>
             <p>PEARL Intelligence Network (PIN) · pinwater.org</p>
             <p>&copy; {new Date().getFullYear()} Local Seafood Projects Inc. All rights reserved.</p>
             <p>Project Pearl&trade;, Pearl&trade;, and PIN&trade; are trademarks of Local Seafood Projects.</p>

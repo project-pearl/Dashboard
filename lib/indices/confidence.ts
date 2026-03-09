@@ -31,8 +31,8 @@ export function freshnessWeight(dateStr: string | null | undefined): number {
  * Compute confidence score for an index (0-100).
  *
  * Three components:
- *   Data Density (40%):    dataPoints / expected
- *   Recency (35%):         average freshness weight of date strings
+ *   Data Density (30%):    dataPoints / expected
+ *   Recency (45%):         average freshness weight of date strings
  *   Source Diversity (25%): unique sources / expected sources
  */
 export function computeConfidence(

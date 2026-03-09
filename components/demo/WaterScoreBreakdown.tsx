@@ -12,21 +12,21 @@ interface IndexBar {
 }
 
 const GROUP_A: IndexBar[] = [
-  { label: 'PEARL Load Velocity',   weight: '12%', score: 62, sparkline: [55, 58, 61, 59, 63, 62, 62] },
-  { label: 'Infrastructure Failure', weight: '12%', score: 41, sparkline: [48, 45, 43, 44, 42, 40, 41] },
-  { label: 'Watershed Recovery',     weight: '12%', score: 55, sparkline: [50, 51, 53, 52, 54, 56, 55] },
+  { label: 'PEARL Load Velocity',   weight: '15%', score: 62, sparkline: [55, 58, 61, 59, 63, 62, 62] },
+  { label: 'Per Capita Load',        weight: '13%', score: 67, sparkline: [60, 62, 64, 65, 66, 68, 67] },
+  { label: 'Infrastructure Failure', weight: '14%', score: 41, sparkline: [48, 45, 43, 44, 42, 40, 41] },
   { label: 'Permit Risk Exposure',   weight: '12%', score: 38, sparkline: [42, 40, 39, 41, 38, 37, 38] },
-  { label: 'Per Capita Load',        weight: '12%', score: 67, sparkline: [60, 62, 64, 65, 66, 68, 67] },
-  { label: 'Waterfront Exposure',    weight: '10%', score: 49, sparkline: [52, 50, 48, 49, 51, 50, 49] },
-  { label: 'Ecological Health',      weight: '10%', score: 71, sparkline: [65, 67, 68, 70, 69, 71, 71] },
-  { label: 'EJ Vulnerability',       weight: '10%', score: 33, sparkline: [38, 36, 35, 34, 33, 34, 33] },
-  { label: 'Governance Response',    weight: '10%', score: 58, sparkline: [54, 55, 56, 57, 58, 57, 58] },
+  { label: 'Ecological Health',      weight: '12%', score: 71, sparkline: [65, 67, 68, 70, 69, 71, 71] },
+  { label: 'Watershed Recovery',     weight: '10%', score: 55, sparkline: [50, 51, 53, 52, 54, 56, 55] },
+  { label: 'Waterfront Exposure',    weight: '8%', score: 49, sparkline: [52, 50, 48, 49, 51, 50, 49] },
+  { label: 'EJ Vulnerability',       weight: '8%', score: 33, sparkline: [38, 36, 35, 34, 33, 34, 33] },
+  { label: 'Governance Response',    weight: '8%', score: 58, sparkline: [54, 55, 56, 57, 58, 57, 58] },
 ];
 
 const GROUP_B: IndexBar[] = [
-  { label: 'Water Quality Grade',     weight: '34%', score: 64, sparkline: [58, 60, 61, 63, 62, 64, 64] },
-  { label: 'Monitoring Coverage',     weight: '16%', score: 72, sparkline: [66, 68, 69, 70, 71, 72, 72] },
-  { label: 'Data Freshness',          weight: '16%', score: 81, sparkline: [74, 76, 78, 79, 80, 81, 81] },
+  { label: 'Water Quality Grade',     weight: '38%', score: 64, sparkline: [58, 60, 61, 63, 62, 64, 64] },
+  { label: 'Monitoring Coverage',     weight: '8%', score: 72, sparkline: [66, 68, 69, 70, 71, 72, 72] },
+  { label: 'Data Freshness',          weight: '20%', score: 81, sparkline: [74, 76, 78, 79, 80, 81, 81] },
   { label: 'Regulatory Compliance',   weight: '18%', score: 45, sparkline: [50, 48, 47, 46, 45, 44, 45] },
   { label: 'Trend Direction',         weight: '16%', score: 53, sparkline: [49, 50, 51, 52, 53, 52, 53] },
 ];

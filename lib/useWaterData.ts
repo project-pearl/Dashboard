@@ -73,10 +73,10 @@ export const TIER_META: Record<DataConfidenceTier, {
   bgColor: string;     // Tailwind bg color
   borderColor: string; // Tailwind border color
 }> = {
-  1: { label: 'Regulatory',    description: 'Federal/state agency data with QA/QC protocols',    color: 'text-green-700',  bgColor: 'bg-green-50',  borderColor: 'border-green-200' },
-  2: { label: 'Research',      description: 'Peer-reviewed research and satellite-derived data',  color: 'text-blue-700',   bgColor: 'bg-blue-50',   borderColor: 'border-blue-200' },
-  3: { label: 'Community',     description: 'Citizen science and community monitoring networks',  color: 'text-amber-700',  bgColor: 'bg-amber-50',  borderColor: 'border-amber-200' },
-  4: { label: 'Observational', description: 'Modeled, simulated, or unverified observational data', color: 'text-slate-500',  bgColor: 'bg-slate-50',  borderColor: 'border-slate-200' },
+  1: { label: 'Federal / Regulatory',    description: 'Federal agency data with regulatory authority and mandated quality assurance programs',    color: 'text-green-700',  bgColor: 'bg-green-50',  borderColor: 'border-green-200' },
+  2: { label: 'State / Academic / Research',      description: 'State agency, academic, and research network data with documented QA/QC procedures',  color: 'text-blue-700',   bgColor: 'bg-blue-50',   borderColor: 'border-blue-200' },
+  3: { label: 'Community',     description: 'Volunteer monitoring and community-based organizations, subdivided by QA/QC status',  color: 'text-amber-700',  bgColor: 'bg-amber-50',  borderColor: 'border-amber-200' },
+  4: { label: 'Observational', description: 'Data estimated or derived from indirect indicators rather than direct measurement', color: 'text-slate-500',  bgColor: 'bg-slate-50',  borderColor: 'border-slate-200' },
 };
 
 export interface DataSourceInfo {
