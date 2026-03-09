@@ -161,6 +161,8 @@ export function UserManagementPanel({ onRefreshPendingCount, scopeFilter }: User
   const [parentCountySelections, setParentCountySelections] = useState<Record<string, string>>({});
   // Parent county for invite form
   const [invParentCounty, setInvParentCounty] = useState('');
+  const [invCustomCounty, setInvCustomCounty] = useState('');
+  const [invCustomJurisdiction, setInvCustomJurisdiction] = useState('');
 
   // Roles available in the invite dropdown
   const availableRoles = useMemo(() => {
@@ -180,6 +182,29 @@ export function UserManagementPanel({ onRefreshPendingCount, scopeFilter }: User
     if (!invParentCounty) return [];
     return getChildJurisdictions(invParentCounty);
   }, [invParentCounty]);
+  // Determine which drilldown fields to show for invite form
+  const invNeedsState = ['State', 'Federal', 'MS4', 'Local', 'Utility', 'Corporate', 'Biotech', 'Investor', 'K12'].includes(invRole);
+  const invNeedsJurisdiction = ['MS4', 'Local'].includes(invRole);
+  const invNeedsMilitary = invRole === 'Federal';
+  const invNeedsOrg = ['Corporate', 'Utility', 'Biotech', 'Investor', 'K12'].includes(invRole);
+  const invHasCountyCatalog = invCountiesForState.length > 0;
+  const resolvedInvJurisdiction = useMemo(() => {
+    if (!invNeedsJurisdiction) return '';
+    if (invHasCountyCatalog) return invJurisdiction;
+    const county = invCustomCounty.trim();
+    const local = invCustomJurisdiction.trim();
+    if (local && county) return `${local} (${county}, ${invState})`;
+    if (local) return `${local} (${invState})`;
+    if (county) return `${county} (${invState})`;
+    return '';
+  }, [
+    invNeedsJurisdiction,
+    invHasCountyCatalog,
+    invJurisdiction,
+    invCustomCounty,
+    invCustomJurisdiction,
+    invState,
+  ]);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -216,13 +241,13 @@ export function UserManagementPanel({ onRefreshPendingCount, scopeFilter }: User
   async function handleGenerateInvite() {
     setInvSending(true);
     try {
-      const link = await createInviteLink({
-        role: invRole,
-        email: invEmail || undefined,
-        jurisdiction: invJurisdiction || undefined,
-        state: invState || undefined,
-        organization: invOrg || undefined,
-        expiresInDays: invExpiryDays,
+        const link = await createInviteLink({
+          role: invRole,
+          email: invEmail || undefined,
+          jurisdiction: resolvedInvJurisdiction || undefined,
+          state: invState || undefined,
+          organization: invOrg || undefined,
+          expiresInDays: invExpiryDays,
         isMilitary: invRole === 'Federal' && invMilitary ? true : undefined,
       });
       setInvLink(link);
@@ -243,7 +268,7 @@ export function UserManagementPanel({ onRefreshPendingCount, scopeFilter }: User
     const body = encodeURIComponent(
       `Hi${invEmail ? '' : ' there'},\n\n` +
       `You've been invited to join the PEARL Water Quality Intelligence Platform` +
-      `${(['MS4', 'Local'].includes(invRole) && invJurisdiction) ? ` for ${getJurisdictionDisplayLabel(invJurisdiction)}` : ''}.\n\n` +
+      `${(['MS4', 'Local'].includes(invRole) && resolvedInvJurisdiction) ? ` for ${getJurisdictionDisplayLabel(resolvedInvJurisdiction)}` : ''}.\n\n` +
       `Click the link below to create your account (pre-approved, no waiting):\n\n` +
       `${invLink}\n\n` +
       `This link expires in ${invExpiryDays} days.\n\n` +
@@ -312,12 +337,6 @@ export function UserManagementPanel({ onRefreshPendingCount, scopeFilter }: User
       setActionBusyUid(null);
     }
   }
-
-  // Determine which drilldown fields to show for invite form
-  const invNeedsState = ['State', 'Federal', 'MS4', 'Local', 'Utility', 'Corporate', 'Biotech', 'Investor', 'K12'].includes(invRole);
-  const invNeedsJurisdiction = ['MS4', 'Local'].includes(invRole);
-  const invNeedsMilitary = invRole === 'Federal';
-  const invNeedsOrg = ['Corporate', 'Utility', 'Biotech', 'Investor', 'K12'].includes(invRole);
 
   const pendingCount = pending.length;
   const activeExplorerCount = allUsers.filter((u) => u.status === 'active' && accessType(u.role) === 'explorer').length;
@@ -661,7 +680,14 @@ export function UserManagementPanel({ onRefreshPendingCount, scopeFilter }: User
                 <label className="block text-xs font-semibold text-slate-600 mb-1">State</label>
                 <select
                   value={invState}
-                  onChange={e => { setInvState(e.target.value); setInvParentCounty(''); setInvJurisdiction(''); setInvLink(''); }}
+                  onChange={e => {
+                    setInvState(e.target.value);
+                    setInvParentCounty('');
+                    setInvJurisdiction('');
+                    setInvCustomCounty('');
+                    setInvCustomJurisdiction('');
+                    setInvLink('');
+                  }}
                   className="w-full px-3 py-2.5 rounded-lg border border-slate-300 text-sm bg-white focus:border-cyan-400 focus:ring-1 focus:ring-cyan-200 outline-none"
                   disabled={!!scopeFilter?.lockedState}
                 >
@@ -674,47 +700,79 @@ export function UserManagementPanel({ onRefreshPendingCount, scopeFilter }: User
             {/* Local Jurisdiction — two-step county → municipality drilldown */}
             {invNeedsJurisdiction && invState && (
               <>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Local Jurisdiction — County</label>
-                  <select
-                    value={invParentCounty}
-                    onChange={e => {
-                      const countyId = e.target.value;
-                      setInvParentCounty(countyId);
-                      // If county has no children, set jurisdiction directly
-                      if (countyId && !hasChildJurisdictions(countyId)) {
-                        setInvJurisdiction(countyId);
-                      } else {
-                        setInvJurisdiction(countyId);
-                      }
-                      setInvLink('');
-                    }}
-                    className="w-full px-3 py-2.5 rounded-lg border border-slate-300 text-sm bg-white focus:border-cyan-400 focus:ring-1 focus:ring-cyan-200 outline-none"
-                    disabled={!!scopeFilter?.lockedJurisdiction}
-                  >
-                    <option value="">None (bind later)</option>
-                    {invCountiesForState.map(j => (
-                      <option key={j.jurisdiction_id} value={j.jurisdiction_id}>{j.jurisdiction_name}</option>
-                    ))}
-                  </select>
-                </div>
-                {invParentCounty && invChildJurisdictions.length > 0 && (
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1">Local Jurisdiction — Municipality</label>
-                    <select
-                      value={invJurisdiction}
-                      onChange={e => { setInvJurisdiction(e.target.value); setInvLink(''); }}
-                      className="w-full px-3 py-2.5 rounded-lg border border-slate-300 text-sm bg-white focus:border-cyan-400 focus:ring-1 focus:ring-cyan-200 outline-none"
-                      disabled={!!scopeFilter?.lockedJurisdiction}
-                    >
-                      <option value={invParentCounty}>
-                        {getJurisdictionById(invParentCounty)?.jurisdiction_name} (entire county)
-                      </option>
-                      {invChildJurisdictions.map(j => (
-                        <option key={j.jurisdiction_id} value={j.jurisdiction_id}>{j.jurisdiction_name}</option>
-                      ))}
-                    </select>
-                  </div>
+                {invHasCountyCatalog ? (
+                  <>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Local Jurisdiction — County</label>
+                      <select
+                        value={invParentCounty}
+                        onChange={e => {
+                          const countyId = e.target.value;
+                          setInvParentCounty(countyId);
+                          // If county has no children, set jurisdiction directly
+                          if (countyId && !hasChildJurisdictions(countyId)) {
+                            setInvJurisdiction(countyId);
+                          } else {
+                            setInvJurisdiction(countyId);
+                          }
+                          setInvLink('');
+                        }}
+                        className="w-full px-3 py-2.5 rounded-lg border border-slate-300 text-sm bg-white focus:border-cyan-400 focus:ring-1 focus:ring-cyan-200 outline-none"
+                        disabled={!!scopeFilter?.lockedJurisdiction}
+                      >
+                        <option value="">None (bind later)</option>
+                        {invCountiesForState.map(j => (
+                          <option key={j.jurisdiction_id} value={j.jurisdiction_id}>{j.jurisdiction_name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    {invParentCounty && invChildJurisdictions.length > 0 && (
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">Local Jurisdiction — Municipality</label>
+                        <select
+                          value={invJurisdiction}
+                          onChange={e => { setInvJurisdiction(e.target.value); setInvLink(''); }}
+                          className="w-full px-3 py-2.5 rounded-lg border border-slate-300 text-sm bg-white focus:border-cyan-400 focus:ring-1 focus:ring-cyan-200 outline-none"
+                          disabled={!!scopeFilter?.lockedJurisdiction}
+                        >
+                          <option value={invParentCounty}>
+                            {getJurisdictionById(invParentCounty)?.jurisdiction_name} (entire county)
+                          </option>
+                          {invChildJurisdictions.map(j => (
+                            <option key={j.jurisdiction_id} value={j.jurisdiction_id}>{j.jurisdiction_name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Local Jurisdiction — County / Parish / Borough</label>
+                      <input
+                        type="text"
+                        value={invCustomCounty}
+                        onChange={e => { setInvCustomCounty(e.target.value); setInvLink(''); }}
+                        placeholder="e.g. Miami-Dade County"
+                        className="w-full px-3 py-2.5 rounded-lg border border-slate-300 text-sm focus:border-cyan-400 focus:ring-1 focus:ring-cyan-200 outline-none"
+                        disabled={!!scopeFilter?.lockedJurisdiction}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Local Jurisdiction — Municipality (optional)</label>
+                      <input
+                        type="text"
+                        value={invCustomJurisdiction}
+                        onChange={e => { setInvCustomJurisdiction(e.target.value); setInvLink(''); }}
+                        placeholder="e.g. City of Miami"
+                        className="w-full px-3 py-2.5 rounded-lg border border-slate-300 text-sm focus:border-cyan-400 focus:ring-1 focus:ring-cyan-200 outline-none"
+                        disabled={!!scopeFilter?.lockedJurisdiction}
+                      />
+                    </div>
+                    <p className="text-[11px] text-slate-500">
+                      Full county/municipality catalog for {invState} is not loaded yet, so this invite stores the jurisdiction exactly as entered.
+                    </p>
+                  </>
                 )}
               </>
             )}
@@ -782,7 +840,7 @@ export function UserManagementPanel({ onRefreshPendingCount, scopeFilter }: User
                   Expires {new Date(Date.now() + invExpiryDays * 86400000).toLocaleDateString()}.
                   Role: {invRole}
                   {invMilitary && ' (Military)'}
-                  {invJurisdiction && ` | Jurisdiction: ${getJurisdictionDisplayLabel(invJurisdiction)}`}
+                  {resolvedInvJurisdiction && ` | Jurisdiction: ${getJurisdictionDisplayLabel(resolvedInvJurisdiction)}`}
                 </div>
               </div>
             )}
