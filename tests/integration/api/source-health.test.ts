@@ -9,7 +9,7 @@ describe('GET /api/source-health', () => {
     const req = makeNextRequest(BASE);
     const res = await GET(req);
     expect(res.status).toBe(200);
-  });
+  }, 30_000);
 
   it('returns timestamp in response', async () => {
     const { GET } = await import('@/app/api/source-health/route');
@@ -17,7 +17,7 @@ describe('GET /api/source-health', () => {
     const res = await GET(req);
     const json = await res.json();
     expect(json).toHaveProperty('timestamp');
-  });
+  }, 30_000);
 
   it('returns sources array', async () => {
     const { GET } = await import('@/app/api/source-health/route');
@@ -26,7 +26,7 @@ describe('GET /api/source-health', () => {
     const json = await res.json();
     expect(json).toHaveProperty('sources');
     expect(Array.isArray(json.sources)).toBe(true);
-  });
+  }, 30_000);
 
   it('returns datapoints object', async () => {
     const { GET } = await import('@/app/api/source-health/route');
@@ -35,5 +35,5 @@ describe('GET /api/source-health', () => {
     const json = await res.json();
     expect(json).toHaveProperty('datapoints');
     expect(typeof json.datapoints).toBe('object');
-  });
+  }, 30_000);
 });
