@@ -138,6 +138,31 @@ function New-RestorePoint {
   Checkpoint-Computer -Description $Description -RestorePointType 'MODIFY_SETTINGS' | Out-Null
 }
 
+function Start-ElevatedSelf {
+  $argLine = @(
+    '-NoProfile',
+    '-ExecutionPolicy', 'Bypass',
+    '-File', "`"$PSCommandPath`"",
+    '-Mode', $Mode,
+    '-OutputDir', "`"$OutputDir`""
+  )
+  foreach ($id in $ResolveIds) {
+    if ($id) {
+      $argLine += @('-ResolveIds', $id)
+    }
+  }
+  if ($InteractiveSelect) { $argLine += '-InteractiveSelect' }
+  if ($SkipDefenderQuickScan) { $argLine += '-SkipDefenderQuickScan' }
+  if ($AssumeYes) { $argLine += '-AssumeYes' }
+
+  try {
+    $p = Start-Process -FilePath 'powershell.exe' -ArgumentList $argLine -Verb RunAs -Wait -PassThru
+    exit $p.ExitCode
+  } catch {
+    throw "Administrator approval is required to continue remediation. $($_.Exception.Message)"
+  }
+}
+
 function Select-ActionsInteractive {
   param([object[]]$Actions)
   if (-not $Actions -or $Actions.Count -eq 0) { return @() }
@@ -159,22 +184,31 @@ if ($Mode -eq 'scan') {
   $actionIndex = 0
 
   $defender = Get-DefenderSummary
+  $defenderHasError = $defender.PSObject.Properties.Name -contains 'error'
+  $defenderErrorText = if ($defenderHasError) { [string]$defender.error } else { '' }
+  $defenderRtp = if ($defender.PSObject.Properties.Name -contains 'realTimeProtection') { [bool]$defender.realTimeProtection } else { $false }
+  $defenderSigAge = if ($defender.PSObject.Properties.Name -contains 'sigAgeDays') { [string]$defender.sigAgeDays } else { 'n/a' }
+  $defenderQuickAge = if ($defender.PSObject.Properties.Name -contains 'quickScanAgeDays') { [string]$defender.quickScanAgeDays } else { 'n/a' }
   $findings += [pscustomobject]@{
     id = 'F-DEFENDER'
-    severity = if ($defender.error) { 'high' } elseif (-not $defender.realTimeProtection) { 'high' } else { 'info' }
+    severity = if ($defenderHasError) { 'high' } elseif (-not $defenderRtp) { 'high' } else { 'info' }
     title = 'Windows Defender status'
-    detail = if ($defender.error) { $defender.error } else { "RTP=$($defender.realTimeProtection), SigAgeDays=$($defender.sigAgeDays), QuickScanAgeDays=$($defender.quickScanAgeDays)" }
+    detail = if ($defenderHasError) { $defenderErrorText } else { "RTP=$defenderRtp, SigAgeDays=$defenderSigAge, QuickScanAgeDays=$defenderQuickAge" }
     data = $defender
   }
 
   if (-not $SkipDefenderQuickScan) {
     try {
-      Start-MpScan -ScanType QuickScan | Out-Null
+      Start-Process -FilePath 'powershell.exe' -ArgumentList @(
+        '-NoProfile',
+        '-ExecutionPolicy', 'Bypass',
+        '-Command', 'Start-MpScan -ScanType QuickScan | Out-Null'
+      ) -WindowStyle Hidden | Out-Null
       $findings += [pscustomobject]@{
         id = 'F-DEFENDER-SCAN'
         severity = 'info'
         title = 'Defender quick scan started'
-        detail = 'Quick scan launched in background.'
+        detail = 'Quick scan launched asynchronously in background.'
       }
     } catch {
       $findings += [pscustomobject]@{
@@ -297,6 +331,11 @@ if ($Mode -eq 'scan') {
 }
 
 if ($Mode -eq 'resolve') {
+  if (-not (Test-IsAdmin)) {
+    Write-Host 'Remediation requires elevation. Requesting Administrator approval...'
+    Start-ElevatedSelf
+  }
+
   $actionsPath = Join-Path $OutputDir 'latest-actions.json'
   if (-not (Test-Path -LiteralPath $actionsPath)) {
     throw "No actions file found at $actionsPath. Run scan mode first."
@@ -314,7 +353,12 @@ if ($Mode -eq 'resolve') {
     $selectedIds = Select-ActionsInteractive -Actions $allActions
   }
   if ($ResolveIds.Count -gt 0) {
-    $selectedIds += $ResolveIds
+    $normalizedIds = @()
+    foreach ($rid in $ResolveIds) {
+      if (-not $rid) { continue }
+      $normalizedIds += ($rid -split '[,\s]+' | Where-Object { $_ -and $_.Trim() })
+    }
+    $selectedIds += $normalizedIds
   }
   $selectedIds = @($selectedIds | Select-Object -Unique)
   if ($selectedIds.Count -eq 0) {

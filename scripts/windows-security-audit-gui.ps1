@@ -34,7 +34,7 @@ function Load-Actions {
 function Refresh-Grid {
   param([System.Windows.Forms.DataGridView]$Grid, [System.Windows.Forms.Label]$Status)
   $Grid.Rows.Clear()
-  $actions = Load-Actions
+  $actions = @(Load-Actions)
   foreach ($a in $actions) {
     $idx = $Grid.Rows.Add($false, [string]$a.id, [string]$a.risk, [string]$a.title, [string]$a.detail, [string]$a.kind)
     $null = $idx
@@ -56,6 +56,18 @@ function Get-CheckedActionIds {
     }
   }
   return @($ids | Select-Object -Unique)
+}
+
+function Get-DefenderStatusText {
+  try {
+    $s = Get-MpComputerStatus
+    if ($s.QuickScanInProgress) { return 'Defender: Quick Scan in progress' }
+    if ($s.FullScanInProgress) { return 'Defender: Full Scan in progress' }
+    $age = if ($null -ne $s.QuickScanAge) { [string]$s.QuickScanAge } else { 'n/a' }
+    return "Defender: idle (QuickScanAgeDays=$age)"
+  } catch {
+    return 'Defender: status unavailable'
+  }
 }
 
 Ensure-Dir -Path $outputDir
@@ -80,33 +92,40 @@ $status.Location = New-Object System.Drawing.Point(18, 48)
 $status.AutoSize = $true
 $form.Controls.Add($status)
 
+$defenderStatus = New-Object System.Windows.Forms.Label
+$defenderStatus.Text = Get-DefenderStatusText
+$defenderStatus.Font = New-Object System.Drawing.Font('Segoe UI', 9)
+$defenderStatus.Location = New-Object System.Drawing.Point(18, 62)
+$defenderStatus.AutoSize = $true
+$form.Controls.Add($defenderStatus)
+
 $btnScan = New-Object System.Windows.Forms.Button
 $btnScan.Text = 'Run Scan'
 $btnScan.Size = New-Object System.Drawing.Size(120, 34)
-$btnScan.Location = New-Object System.Drawing.Point(18, 78)
+$btnScan.Location = New-Object System.Drawing.Point(18, 86)
 $form.Controls.Add($btnScan)
 
 $btnRefresh = New-Object System.Windows.Forms.Button
 $btnRefresh.Text = 'Refresh Actions'
 $btnRefresh.Size = New-Object System.Drawing.Size(140, 34)
-$btnRefresh.Location = New-Object System.Drawing.Point(146, 78)
+$btnRefresh.Location = New-Object System.Drawing.Point(146, 86)
 $form.Controls.Add($btnRefresh)
 
 $btnResolve = New-Object System.Windows.Forms.Button
 $btnResolve.Text = 'Resolve Selected'
 $btnResolve.Size = New-Object System.Drawing.Size(140, 34)
-$btnResolve.Location = New-Object System.Drawing.Point(294, 78)
+$btnResolve.Location = New-Object System.Drawing.Point(294, 86)
 $form.Controls.Add($btnResolve)
 
 $note = New-Object System.Windows.Forms.Label
-$note.Text = 'Remediation requires user click, confirmation, and a successful restore point before any change.'
+$note.Text = 'Remediation requires confirmation and a restore point; UAC elevation prompt appears automatically when needed.'
 $note.Font = New-Object System.Drawing.Font('Segoe UI', 9, [System.Drawing.FontStyle]::Italic)
-$note.Location = New-Object System.Drawing.Point(450, 86)
+$note.Location = New-Object System.Drawing.Point(450, 94)
 $note.AutoSize = $true
 $form.Controls.Add($note)
 
 $grid = New-Object System.Windows.Forms.DataGridView
-$grid.Location = New-Object System.Drawing.Point(18, 128)
+$grid.Location = New-Object System.Drawing.Point(18, 136)
 $grid.Size = New-Object System.Drawing.Size(1096, 490)
 $grid.AllowUserToAddRows = $false
 $grid.AllowUserToDeleteRows = $false
@@ -132,10 +151,12 @@ $grid.Columns['Kind'].FillWeight = 11
 $btnScan.Add_Click({
   try {
     $status.Text = 'Running scan...'
+    $defenderStatus.Text = Get-DefenderStatusText
     $form.Refresh()
     $exitCode = Invoke-Backend -ArgsList @('-Mode', 'scan', '-OutputDir', "`"$outputDir`"")
     if ($exitCode -eq 0) {
       Refresh-Grid -Grid $grid -Status $status
+      $defenderStatus.Text = Get-DefenderStatusText
       [System.Windows.Forms.MessageBox]::Show('Scan complete.', 'Security Audit', [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Information) | Out-Null
     } else {
       $status.Text = "Scan failed (exit $exitCode)."
@@ -150,6 +171,7 @@ $btnScan.Add_Click({
 $btnRefresh.Add_Click({
   try {
     Refresh-Grid -Grid $grid -Status $status
+    $defenderStatus.Text = Get-DefenderStatusText
   } catch {
     [System.Windows.Forms.MessageBox]::Show($_.Exception.Message, 'Security Audit', [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error) | Out-Null
   }
@@ -157,7 +179,7 @@ $btnRefresh.Add_Click({
 
 $btnResolve.Add_Click({
   try {
-    $ids = Get-CheckedActionIds -Grid $grid
+    $ids = @(Get-CheckedActionIds -Grid $grid)
     if ($ids.Count -eq 0) {
       [System.Windows.Forms.MessageBox]::Show('Select at least one action to resolve.', 'Security Audit', [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Warning) | Out-Null
       return
@@ -181,7 +203,7 @@ $btnResolve.Add_Click({
       Refresh-Grid -Grid $grid -Status $status
     } else {
       $status.Text = "Remediation failed (exit $exitCode)."
-      [System.Windows.Forms.MessageBox]::Show("Remediation failed with exit code $exitCode.`nRun PowerShell as Administrator and try again.", 'Security Audit', [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error) | Out-Null
+      [System.Windows.Forms.MessageBox]::Show("Remediation failed with exit code $exitCode.`nIf UAC was declined, run Resolve Selected again and approve elevation.", 'Security Audit', [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error) | Out-Null
     }
   } catch {
     $status.Text = 'Remediation failed.'
@@ -189,6 +211,13 @@ $btnResolve.Add_Click({
   }
 })
 
-Refresh-Grid -Grid $grid -Status $status
-[void]$form.ShowDialog()
+$timer = New-Object System.Windows.Forms.Timer
+$timer.Interval = 5000
+$timer.Add_Tick({
+  $defenderStatus.Text = Get-DefenderStatusText
+})
+$timer.Start()
 
+Refresh-Grid -Grid $grid -Status $status
+[void]($defenderStatus.Text = Get-DefenderStatusText)
+[void]$form.ShowDialog()
