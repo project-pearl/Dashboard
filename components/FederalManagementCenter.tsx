@@ -103,6 +103,20 @@ type ViewLens = 'overview' | 'briefing' | 'political-briefing' | 'trends' | 'pol
   'infrastructure' | 'monitoring' | 'sentinel-monitoring' | 'disaster-emergency' | 'military-installations' |
   'scorecard' | 'reports' | 'interagency' | 'funding' | 'training' | 'users';
 
+interface GulfCrosscheckIncident {
+  id: string;
+  state: string;
+  severity: 'high' | 'medium' | 'low' | 'info';
+  title: string;
+  source: string;
+  reason: string;
+  timestamp: string;
+  location: string;
+  relatedAlerts: number;
+  relatedCritical: number;
+  status: 'corroborated' | 'unconfirmed';
+}
+
 // ─── Water Quality Domain Tabs ────────────────────────────────────────────────
 const WQ_DOMAINS = [
   { id: 'all' as const, label: 'All Domains', color: 'var(--accent-teal)', description: 'Combined view across all water quality domains.' },
@@ -1270,6 +1284,9 @@ export function FederalManagementCenter(props: Props) {
   const alertDetailReturnRef = useRef<'alerts' | 'state'>('alerts');
   const [alertHistoryEvents, setAlertHistoryEvents] = useState<EngineAlertEvent[]>([]);
   const [alertHistoryLoading, setAlertHistoryLoading] = useState(false);
+  const [gulfCrosscheckIncidents, setGulfCrosscheckIncidents] = useState<GulfCrosscheckIncident[]>([]);
+  const [gulfCrosscheckLoading, setGulfCrosscheckLoading] = useState(false);
+  const [gulfCrosscheckSummary, setGulfCrosscheckSummary] = useState<{ incidents: number; corroborated: number; liveMatches: number } | null>(null);
 
   // Play chime when new CRITICAL HUCs appear
   useEffect(() => {
@@ -1329,6 +1346,39 @@ export function FederalManagementCenter(props: Props) {
       }
     }
     loadAlertHistory();
+    return () => {
+      cancelled = true;
+      if (pollTimer) clearTimeout(pollTimer);
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    let pollTimer: ReturnType<typeof setTimeout> | null = null;
+    async function loadGulfCrosscheck() {
+      if (cancelled) return;
+      try {
+        setGulfCrosscheckLoading(true);
+        const res = await fetch('/api/incidents/gulf-crosscheck?sinceHours=48', { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (cancelled) return;
+        const incidents: GulfCrosscheckIncident[] = Array.isArray(data?.incidents) ? data.incidents : [];
+        setGulfCrosscheckIncidents(incidents);
+        setGulfCrosscheckSummary(data?.summary ?? null);
+      } catch {
+        if (!cancelled) {
+          setGulfCrosscheckIncidents([]);
+          setGulfCrosscheckSummary(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setGulfCrosscheckLoading(false);
+          pollTimer = setTimeout(loadGulfCrosscheck, 5 * 60_000);
+        }
+      }
+    }
+    loadGulfCrosscheck();
     return () => {
       cancelled = true;
       if (pollTimer) clearTimeout(pollTimer);
@@ -2719,6 +2769,10 @@ export function FederalManagementCenter(props: Props) {
     if (selectedAlertHuc) return liveAlertFeed.find((e) => e.entityId === selectedAlertHuc) ?? null;
     return null;
   }, [liveAlertFeed, selectedAlertId, selectedAlertHuc]);
+  const topGulfIncidents = useMemo(
+    () => gulfCrosscheckIncidents.slice(0, 4),
+    [gulfCrosscheckIncidents],
+  );
 
   // ─── National Impact Counter ──────────────────────────────────────────────
   const [impactPeriod, setImpactPeriod] = useState<'all' | string>('all');
@@ -3110,6 +3164,46 @@ export function FederalManagementCenter(props: Props) {
                         <div className="text-[10px] uppercase tracking-wider">{s.label}</div>
                       </div>
                     ))}
+                  </div>
+                  <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle size={13} className="text-blue-700" />
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-blue-800">Gulf Incident Cross-Check (48h)</div>
+                      </div>
+                      <span className="text-[10px] text-blue-700">
+                        {gulfCrosscheckSummary ? `${gulfCrosscheckSummary.corroborated}/${gulfCrosscheckSummary.incidents} corroborated` : 'monitoring'}
+                      </span>
+                    </div>
+                    {gulfCrosscheckLoading && (
+                      <div className="text-[10px] text-blue-700/80">Refreshing Gulf signals and comparing to live alerts...</div>
+                    )}
+                    {!gulfCrosscheckLoading && topGulfIncidents.length === 0 && (
+                      <div className="text-[10px] text-blue-700/80">No Gulf oil/spill incident signals detected in the last 48 hours.</div>
+                    )}
+                    {!gulfCrosscheckLoading && topGulfIncidents.length > 0 && (
+                      <div className="space-y-1">
+                        {topGulfIncidents.map((inc) => (
+                          <div key={inc.id} className="rounded border border-blue-200 bg-white px-2 py-1.5">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <div className="text-[11px] font-semibold text-slate-800 truncate">
+                                  [{inc.state}] {inc.title}
+                                </div>
+                                <div className="text-[10px] text-slate-500 truncate">
+                                  {inc.source} · {inc.location || 'Gulf region'} · {formatEasternTimestamp(inc.timestamp) ?? inc.timestamp}
+                                </div>
+                              </div>
+                              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                                inc.status === 'corroborated' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'
+                              }`}>
+                                {inc.status === 'corroborated' ? `${inc.relatedAlerts} linked` : 'unconfirmed'}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className="space-y-1 max-h-[520px] overflow-y-auto">
                     {alertHistoryLoading && (
