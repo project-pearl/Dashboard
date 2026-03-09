@@ -280,6 +280,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'investigation',    label: 'Investigation' },
     { id: 'users',            label: 'Users' },
     { id: 'alerts',           label: 'Alerts' },
+    { id: 'quiz',            label: 'Knowledge Quiz' },
     { id: 'training',        label: 'Training' },
   ],
   '/dashboard/admin': [
@@ -293,6 +294,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'investigation',    label: 'Investigation' },
     { id: 'users',            label: 'Users' },
     { id: 'alerts',           label: 'Alerts' },
+    { id: 'quiz',            label: 'Knowledge Quiz' },
     { id: 'training',        label: 'Training' },
   ],
   // ── Site Intelligence Dashboard (6 items) ──────────────────────────────────

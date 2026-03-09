@@ -36,13 +36,14 @@ import { DataFreshnessFooter } from '@/components/DataFreshnessFooter';
 import { GrantOpportunityMatcher } from './GrantOpportunityMatcher';
 import BudgetPlannerPanel from '@/components/BudgetPlannerPanel';
 import RoleTrainingGuide from '@/components/RoleTrainingGuide';
+const PINQuiz = lazy(() => import('@/components/PINQuiz'));
 import { useLensParam } from '@/lib/useLensParam';
 import { usePearlFunding } from '@/lib/usePearlFunding';
 import { AlertDeepDive, type DeepDiveAlert } from './AlertDeepDive';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type ViewLens = 'operations' | 'restoration' | 'opportunities' | 'grants' | 'proposals' | 'scenarios' | 'predictions' | 'scenario-planner' | 'budget-planner' | 'investigation' | 'users' | 'alerts' | 'training';
+type ViewLens = 'operations' | 'restoration' | 'opportunities' | 'grants' | 'proposals' | 'scenarios' | 'predictions' | 'scenario-planner' | 'budget-planner' | 'investigation' | 'users' | 'alerts' | 'quiz' | 'training';
 
 type DeploymentStatus = 'active' | 'maintenance' | 'offline' | 'staging' | 'decommissioned';
 type AlertSeverity = 'critical' | 'warning' | 'info' | 'ok';
@@ -2239,6 +2240,12 @@ Doug and the PIN team`;
 
         {viewLens === 'alerts' && isAdmin && (
           <AlertsManagementPanel />
+        )}
+
+        {viewLens === 'quiz' && (
+          <Suspense fallback={<div className="text-sm text-slate-400 py-8 text-center">Loading quiz...</div>}>
+            <PINQuiz />
+          </Suspense>
         )}
 
         {viewLens === 'training' && (
