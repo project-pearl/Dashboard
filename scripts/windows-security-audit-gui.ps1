@@ -17,8 +17,15 @@ function Ensure-Dir {
 }
 
 function Invoke-Backend {
-  param([string[]]$ArgsList)
+  param(
+    [string[]]$ArgsList,
+    [switch]$RequireAdmin
+  )
   $argLine = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', "`"$backendScript`"") + $ArgsList
+  if ($RequireAdmin) {
+    $p = Start-Process -FilePath 'powershell.exe' -ArgumentList $argLine -WorkingDirectory $repoRoot -Verb RunAs -Wait -PassThru
+    return $p.ExitCode
+  }
   $p = Start-Process -FilePath 'powershell.exe' -ArgumentList $argLine -WorkingDirectory $repoRoot -Wait -PassThru
   return $p.ExitCode
 }
@@ -196,7 +203,7 @@ $btnResolve.Add_Click({
     $status.Text = 'Applying selected remediations...'
     $form.Refresh()
     $idsArg = $ids -join ','
-    $exitCode = Invoke-Backend -ArgsList @('-Mode', 'resolve', '-OutputDir', "`"$outputDir`"", '-ResolveIds', $idsArg, '-AssumeYes')
+    $exitCode = Invoke-Backend -ArgsList @('-Mode', 'resolve', '-OutputDir', "`"$outputDir`"", '-ResolveIds', $idsArg, '-AssumeYes') -RequireAdmin
     if ($exitCode -eq 0) {
       $status.Text = 'Remediation completed.'
       [System.Windows.Forms.MessageBox]::Show('Selected remediations completed. Check security-audit\\resolve-*.json for results.', 'Security Audit', [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Information) | Out-Null
