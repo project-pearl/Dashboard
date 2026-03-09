@@ -27,3 +27,7 @@ public/PIN_Overview.mp4
 coverage/
 playwright-report/
 test-results/
+
+# Generated reports
+sbom.json
+audit-report.json
