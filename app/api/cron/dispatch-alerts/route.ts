@@ -16,6 +16,7 @@ import { evaluateDeploymentAlerts, type DeploymentInput } from '@/lib/alerts/tri
 import { evaluateHabAlerts } from '@/lib/alerts/triggers/habTrigger';
 import { evaluateBeaconAlerts } from '@/lib/alerts/triggers/beaconTrigger';
 import { evaluateFusionAlerts } from '@/lib/alerts/triggers/fusionTrigger';
+import { evaluateFirmsAlerts } from '@/lib/alerts/triggers/firmsTrigger';
 import { evaluateAttainsAlerts } from '@/lib/alerts/triggers/attainsTrigger';
 import { loadRules, evaluateRules } from '@/lib/alerts/rules';
 import type { AlertEvent } from '@/lib/alerts/types';
@@ -158,7 +159,16 @@ export async function GET(request: NextRequest) {
       console.warn(`[dispatch-alerts] Fusion trigger error: ${err.message}`);
     }
 
-    // 10. ATTAINS impairment diff trigger
+    // 10. FIRMS fire detection trigger
+    try {
+      const firmsEvents = await evaluateFirmsAlerts();
+      candidates.push(...firmsEvents);
+      console.warn(`[dispatch-alerts] FIRMS: ${firmsEvents.length} candidates`);
+    } catch (err: any) {
+      console.warn(`[dispatch-alerts] FIRMS trigger error: ${err.message}`);
+    }
+
+    // 11. ATTAINS impairment diff trigger
     try {
       const attainsEvents = await evaluateAttainsAlerts();
       candidates.push(...attainsEvents);
@@ -167,7 +177,7 @@ export async function GET(request: NextRequest) {
       console.warn(`[dispatch-alerts] ATTAINS trigger error: ${err.message}`);
     }
 
-    // 11. Custom rules
+    // 12. Custom rules
     try {
       const rules = await loadRules();
       if (rules.length > 0) {
@@ -179,7 +189,7 @@ export async function GET(request: NextRequest) {
       console.warn(`[dispatch-alerts] Rules engine error: ${err.message}`);
     }
 
-    // 12. Dispatch all candidates
+    // 13. Dispatch all candidates
     const result = await dispatchAlerts(candidates);
     const durationMs = Date.now() - _buildStartedAt;
 

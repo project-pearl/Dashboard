@@ -77,6 +77,8 @@ import { UserManagementPanel } from './UserManagementPanel';
 import { getInvitableRoles } from '@/lib/adminHierarchy';
 import type { AlertEvent as EngineAlertEvent } from '@/lib/alerts/types';
 import { BriefingQACard } from '@/components/BriefingQACard';
+import { FireDetectionCard } from '@/components/FireDetectionCard';
+import { FireAirQualityIntelPanel } from '@/components/FireAirQualityIntelPanel';
 
 import hucNamesData from '@/data/huc8-names.json';
 import centroidsData from '@/data/huc8-centroids.json';
@@ -101,7 +103,7 @@ type OverlayId = 'hotspots' | 'ms4' | 'ej' | 'economy' | 'wildlife' | 'trend' | 
 type ViewLens = 'overview' | 'briefing' | 'political-briefing' | 'trends' | 'policy' | 'compliance' |
   'water-quality' | 'public-health' | 'habitat-ecology' | 'agricultural-nps' |
   'infrastructure' | 'monitoring' | 'sentinel-monitoring' | 'disaster-emergency' | 'military-installations' |
-  'scorecard' | 'reports' | 'interagency' | 'funding' | 'training' | 'users';
+  'fire-air-quality' | 'scorecard' | 'reports' | 'interagency' | 'funding' | 'training' | 'users';
 
 interface GulfCrosscheckIncident {
   id: string;
@@ -252,7 +254,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: true, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: true, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['networkhealth', 'coveragegaps', 'sla', 'data-latency', 'sentinel-briefing', 'air-quality-briefing', 'flood-status', 'flood-risk-summary', 'delta-changelog']),
+    sections: new Set(['networkhealth', 'coveragegaps', 'sla', 'data-latency', 'sentinel-briefing', 'air-quality-briefing', 'fire-detection', 'flood-status', 'flood-risk-summary', 'delta-changelog']),
   },
   'sentinel-monitoring': {
     label: 'Sentinel Monitoring',
@@ -332,7 +334,17 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['military-installations', 'briefing-qa']),
+    sections: new Set(['military-installations', 'fire-detection', 'fire-health-advisory', 'briefing-qa']),
+  },
+  'fire-air-quality': {
+    label: 'Fire & Air Quality',
+    description: 'NASA FIRMS fire detection, air quality intelligence, and burn pit health advisories',
+    defaultOverlay: 'hotspots',
+    showTopStrip: false, showPriorityQueue: false, showCoverageGaps: false,
+    showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
+    showHotspots: false, showSituationSummary: false, showTimeRange: false,
+    showSLA: false, showRestorationPlan: false, collapseStateTable: true,
+    sections: new Set(['fire-detection', 'fire-aq-intel', 'air-quality-briefing', 'fire-health-advisory', 'briefing-qa']),
   },
   scorecard: {
     label: 'Scorecard',
@@ -6271,6 +6283,27 @@ export function FederalManagementCenter(props: Props) {
             fallbackStateAbbr={selectedState}
             title="Air Quality - Jurisdiction Context"
             description="Air quality context aligned to active jurisdiction scope for federal and sentinel monitoring."
+          />
+        );
+
+        case 'fire-detection': return DS(
+          <FireDetectionCard
+            title="NASA FIRMS Fire Detection"
+            description="Active fire detections from VIIRS NOAA-20 satellite across military command regions."
+          />
+        );
+
+        case 'fire-aq-intel': return DS(
+          <FireAirQualityIntelPanel
+            selectedState={selectedState}
+          />
+        );
+
+        case 'fire-health-advisory': return DS(
+          <FireDetectionCard
+            title="Burn Pit & Smoke Advisory - Fire Context"
+            description="Active fire detections near military installations with documented burn pit history."
+            focusRegion="middle-east"
           />
         );
 

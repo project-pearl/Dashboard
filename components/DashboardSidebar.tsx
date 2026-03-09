@@ -72,6 +72,7 @@ import {
   Calculator,
   HandCoins,
   Gamepad2,
+  Flame,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -92,6 +93,7 @@ export const LENS_ICONS: Record<string, LucideIcon> = {
   'agricultural-nps': Sprout,
   'disaster-emergency': AlertTriangle,
   'military-installations': Shield,
+  'fire-air-quality': Flame,
   scorecard: Trophy,
   reports: FileText,
   interagency: Network,

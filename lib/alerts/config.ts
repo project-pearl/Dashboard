@@ -58,6 +58,7 @@ export const BLOB_PATHS = {
   habSnapshot:           'alerts/hab-snapshot.json',
   beaconSnapshot:        'alerts/beacon-snapshot.json',
   fusionSnapshot:        'alerts/fusion-snapshot.json',
+  firmsSnapshot:         'alerts/firms-snapshot.json',
   siteThrottle:          'alerts/site-throttle.json',
 };
 

@@ -197,6 +197,10 @@
       "schedule": "30 */6 * * *"
     },
     {
+      "path": "/api/cron/rebuild-firms",
+      "schedule": "0 */4 * * *"
+    },
+    {
       "path": "/api/cron/dispatch-alerts",
       "schedule": "2/5 * * * *"
     },

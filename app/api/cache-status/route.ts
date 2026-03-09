@@ -51,6 +51,7 @@ import { getBeaconCacheStatus, ensureWarmed as warmBeacon } from '@/lib/beaconCa
 import { getSsoCsoCacheStatus, ensureWarmed as warmSsoCso } from '@/lib/ssoCsoCache';
 import { getGlerlCacheStatus, ensureWarmed as warmGlerl } from '@/lib/glerlCache';
 import { getHefsCacheStatus, ensureWarmed as warmHefs } from '@/lib/hefsCache';
+import { getFirmsCacheStatus, ensureWarmed as warmFirms } from '@/lib/firmsCache';
 import { getHealthSummary, ensureWarmed as warmSentinelHealth } from '@/lib/sentinel/sentinelHealth';
 import { getQueueStats, ensureWarmed as warmSentinelQueue } from '@/lib/sentinel/eventQueue';
 import { getScoredHucsSummary, ensureWarmed as warmSentinelScores } from '@/lib/sentinel/scoringEngine';
@@ -76,7 +77,7 @@ export async function GET(request: NextRequest) {
     [warmNwisIv, warmUsgsAlerts, warmNwsAlerts, warmNwps, warmCoops, warmSnotel],
     [warmTri, warmUSAs, warmGrantsGov, warmSam, warmSentinelHealth, warmSentinelQueue, warmSentinelScores],
     [warmFema, warmSuperfund, warmUsdm, warmUsgsDv, warmCoopsDerived, warmErddapSat],
-    [warmNasaStream, warmNwm, warmIpac, warmNcei, warmHabsos, warmGlerl, warmHefs, warmBeacon, warmSsoCso],
+    [warmNasaStream, warmNwm, warmIpac, warmNcei, warmHabsos, warmGlerl, warmHefs, warmBeacon, warmSsoCso, warmFirms],
   ];
   for (const batch of warmBatches) {
     await Promise.allSettled(batch.map(fn => fn()));
@@ -126,6 +127,7 @@ export async function GET(request: NextRequest) {
   const ssoCso = getSsoCsoCacheStatus();
   const glerl = getGlerlCacheStatus();
   const hefs = getHefsCacheStatus();
+  const firms = getFirmsCacheStatus();
 
   const caches = {
     wqp: {
@@ -308,6 +310,10 @@ export async function GET(request: NextRequest) {
     hefs: {
       ...hefs,
       ...staleness(hefs.loaded ? (hefs as any).built : null),
+    },
+    firms: {
+      ...firms,
+      ...staleness(firms.loaded ? (firms as any).built : null),
     },
   };
 
