@@ -344,7 +344,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['fire-detection', 'fire-aq-intel', 'air-quality-briefing', 'fire-health-advisory', 'briefing-qa']),
+    sections: new Set(['fire-aq-intel', 'briefing-qa']),
   },
   scorecard: {
     label: 'Scorecard',
