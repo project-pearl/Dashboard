@@ -31,6 +31,11 @@ export interface AirQualityStateReading {
   co: number | null;
 }
 
+export interface AqiTrendSnapshot {
+  timestamp: string;
+  stateReadings: Record<string, { usAqi: number | null; pm25: number | null; ozone: number | null }>;
+}
+
 interface AirQualityCacheData {
   _meta: {
     built: string;
@@ -50,6 +55,13 @@ let _buildStartedAt = 0;
 
 const BUILD_LOCK_TIMEOUT_MS = 12 * 60 * 1000;
 const BLOB_KEY = 'cache/air-quality.json';
+const AQ_TREND_BLOB_KEY = 'cache/aq-trend.json';
+const AQ_TREND_DISK_FILE = 'aq-trend.json';
+const AQ_TREND_RING_SIZE = 168; // 7 days at hourly cron
+
+let _aqTrendHistory: AqiTrendSnapshot[] = [];
+let _aqTrendDiskLoaded = false;
+let _aqTrendBlobChecked = false;
 
 function loadFromDisk(): boolean {
   try {
@@ -148,4 +160,71 @@ export function getAirQualityCacheStatus() {
     provider: _memCache._meta.provider,
     lastDelta: _lastDelta,
   };
+}
+
+/* ------------------------------------------------------------------ */
+/*  AQI Trend History                                                  */
+/* ------------------------------------------------------------------ */
+
+function loadAqTrendFromDisk(): boolean {
+  try {
+    if (typeof process === 'undefined') return false;
+    const fs = require('fs');
+    const path = require('path');
+    const file = path.join(process.cwd(), '.cache', AQ_TREND_DISK_FILE);
+    if (!fs.existsSync(file)) return false;
+    const raw = fs.readFileSync(file, 'utf-8');
+    const data = JSON.parse(raw);
+    if (!Array.isArray(data)) return false;
+    _aqTrendHistory = data;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function saveAqTrendToDisk(): void {
+  try {
+    if (typeof process === 'undefined') return;
+    const fs = require('fs');
+    const path = require('path');
+    const dir = path.join(process.cwd(), '.cache');
+    const file = path.join(dir, AQ_TREND_DISK_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(file, JSON.stringify(_aqTrendHistory), 'utf-8');
+  } catch {
+    // non-fatal
+  }
+}
+
+export async function ensureAqTrendWarmed(): Promise<void> {
+  if (!_aqTrendDiskLoaded) {
+    _aqTrendDiskLoaded = true;
+    loadAqTrendFromDisk();
+  }
+  if (_aqTrendHistory.length > 0) return;
+  if (_aqTrendBlobChecked) return;
+  _aqTrendBlobChecked = true;
+  const data = await loadCacheFromBlob<AqiTrendSnapshot[]>(AQ_TREND_BLOB_KEY);
+  if (Array.isArray(data) && data.length > 0) {
+    _aqTrendHistory = data;
+    saveAqTrendToDisk();
+  }
+}
+
+export async function appendAqiTrend(snapshot: AqiTrendSnapshot): Promise<void> {
+  _aqTrendHistory.push(snapshot);
+  if (_aqTrendHistory.length > AQ_TREND_RING_SIZE) {
+    _aqTrendHistory.splice(0, _aqTrendHistory.length - AQ_TREND_RING_SIZE);
+  }
+  saveAqTrendToDisk();
+  await saveCacheToBlob(AQ_TREND_BLOB_KEY, _aqTrendHistory);
+}
+
+export function getAqiTrendHistory(): AqiTrendSnapshot[] {
+  if (!_aqTrendDiskLoaded) {
+    _aqTrendDiskLoaded = true;
+    loadAqTrendFromDisk();
+  }
+  return _aqTrendHistory;
 }

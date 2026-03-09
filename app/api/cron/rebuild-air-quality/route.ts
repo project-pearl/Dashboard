@@ -11,7 +11,9 @@ import {
   getAirQualityCacheStatus,
   isAirQualityBuildInProgress,
   setAirQualityBuildInProgress,
+  appendAqiTrend,
   type AirQualityStateReading,
+  type AqiTrendSnapshot,
 } from '@/lib/airQualityCache';
 import { isCronAuthorized } from '@/lib/apiAuth';
 import * as Sentry from '@sentry/nextjs';
@@ -312,6 +314,13 @@ export async function GET(request: NextRequest) {
       },
       states,
     });
+
+    // Append AQI trend snapshot for sparkline history
+    const stateReadings: AqiTrendSnapshot['stateReadings'] = {};
+    for (const [abbr, reading] of Object.entries(states)) {
+      stateReadings[abbr] = { usAqi: reading.usAqi, pm25: reading.pm25, ozone: reading.ozone };
+    }
+    await appendAqiTrend({ timestamp: new Date().toISOString(), stateReadings });
 
     const elapsed = ((Date.now() - start) / 1000).toFixed(1);
     recordCronRun('rebuild-air-quality', 'success', Date.now() - start);

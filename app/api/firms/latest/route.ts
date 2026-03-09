@@ -9,10 +9,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { isAuthorized } from '@/lib/apiAuth';
 import {
   ensureWarmed,
+  ensureTrendWarmed,
   getFirmsAllRegions,
   getFirmsForRegion,
   getFirmsNearPoint,
   getFirmsCacheStatus,
+  getFirmsTrendHistory,
 } from '@/lib/firmsCache';
 
 export async function GET(request: NextRequest) {
@@ -27,6 +29,7 @@ export async function GET(request: NextRequest) {
   const lat = searchParams.get('lat');
   const lng = searchParams.get('lng');
   const radius = searchParams.get('radius');
+  const wantTrends = searchParams.get('trends') === 'true';
 
   const cacheStatus = getFirmsCacheStatus();
 
@@ -69,6 +72,13 @@ export async function GET(request: NextRequest) {
     }
   }
   const distinctDates = [...dateSet].sort().reverse();
+
+  let trendHistory: any = undefined;
+  if (wantTrends) {
+    await ensureTrendWarmed();
+    trendHistory = getFirmsTrendHistory();
+  }
+
   return NextResponse.json({
     regions: allRegions.map(r => ({
       region: r.region,
@@ -79,6 +89,7 @@ export async function GET(request: NextRequest) {
     })),
     totalDetections: allRegions.reduce((sum, r) => sum + r.detectionCount, 0),
     distinctDates,
+    ...(trendHistory !== undefined ? { trendHistory } : {}),
     cache: cacheStatus,
   });
 }

@@ -79,6 +79,9 @@ import type { AlertEvent as EngineAlertEvent } from '@/lib/alerts/types';
 import { BriefingQACard } from '@/components/BriefingQACard';
 import { FireDetectionCard } from '@/components/FireDetectionCard';
 import { FireAirQualityIntelPanel } from '@/components/FireAirQualityIntelPanel';
+import { AqiTrendChart } from '@/components/AqiTrendChart';
+import { FireAqCorrelationCard } from '@/components/FireAqCorrelationCard';
+import { InstallationRiskScorecard } from '@/components/InstallationRiskScorecard';
 
 import hucNamesData from '@/data/huc8-names.json';
 import centroidsData from '@/data/huc8-centroids.json';
@@ -344,7 +347,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['fire-aq-intel', 'briefing-qa']),
+    sections: new Set(['fire-aq-intel', 'fire-aq-correlation', 'installation-risk-scorecard', 'aqi-trend-chart', 'briefing-qa']),
   },
   scorecard: {
     label: 'Scorecard',
@@ -6297,6 +6300,18 @@ export function FederalManagementCenter(props: Props) {
           <FireAirQualityIntelPanel
             selectedState={selectedState}
           />
+        );
+
+        case 'fire-aq-correlation': return DS(
+          <FireAqCorrelationCard />
+        );
+
+        case 'installation-risk-scorecard': return DS(
+          <InstallationRiskScorecard />
+        );
+
+        case 'aqi-trend-chart': return DS(
+          <AqiTrendChart selectedState={selectedState} />
         );
 
         case 'fire-health-advisory': return DS(

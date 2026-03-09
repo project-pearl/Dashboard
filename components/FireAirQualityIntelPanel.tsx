@@ -6,6 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { FireDetectionCard } from './FireDetectionCard';
 import { AirQualityMonitoringCard } from './AirQualityMonitoringCard';
+import { Sparkline } from './Sparkline';
+import { FireAqMap } from './FireAqMap';
 
 interface RegionSummary {
   region: string;
@@ -42,14 +44,31 @@ export function FireAirQualityIntelPanel({
 }) {
   const [regions, setRegions] = useState<RegionSummary[]>([]);
   const [distinctDates, setDistinctDates] = useState<string[]>([]);
+  const [trendHistory, setTrendHistory] = useState<Array<{
+    timestamp: string; totalFires: number; highConfCount: number; maxFrp: number;
+  }>>([]);
+  const [mapData, setMapData] = useState<any>(null);
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/firms/latest')
+    fetch('/api/firms/latest?trends=true')
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (!cancelled && data?.regions) setRegions(data.regions);
         if (!cancelled && data?.distinctDates) setDistinctDates(data.distinctDates);
+        if (!cancelled && Array.isArray(data?.trendHistory)) setTrendHistory(data.trendHistory);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  // Fetch map data
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/fire-aq/map-data')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!cancelled && data) setMapData(data);
       })
       .catch(() => {});
     return () => { cancelled = true; };
@@ -63,6 +82,9 @@ export function FireAirQualityIntelPanel({
 
   return (
     <div className="space-y-4">
+      {/* ── Situational Map ── */}
+      <FireAqMap data={mapData} />
+
       {/* ── Threat Status Badges ── */}
       <Card>
         <CardHeader className="pb-3">
@@ -90,16 +112,31 @@ export function FireAirQualityIntelPanel({
               <Flame className={`w-4 h-4 mx-auto mb-1 ${style.text}`} />
               <p className={`text-lg font-bold ${style.text}`}>{totalFires}</p>
               <p className="text-[10px] text-slate-500">Active Fires</p>
+              {trendHistory.length >= 2 && (
+                <div className="flex justify-center mt-1">
+                  <Sparkline data={trendHistory.map(t => t.totalFires)} color="#ef4444" />
+                </div>
+              )}
             </div>
             <div className="rounded-lg px-3 py-2 text-center border border-slate-200 bg-slate-50">
               <AlertTriangle className="w-4 h-4 mx-auto mb-1 text-red-500" />
               <p className="text-lg font-bold text-slate-800">{totalHighConf}</p>
               <p className="text-[10px] text-slate-500">High-Confidence</p>
+              {trendHistory.length >= 2 && (
+                <div className="flex justify-center mt-1">
+                  <Sparkline data={trendHistory.map(t => t.highConfCount)} color="#dc2626" />
+                </div>
+              )}
             </div>
             <div className="rounded-lg px-3 py-2 text-center border border-slate-200 bg-slate-50">
               <Wind className="w-4 h-4 mx-auto mb-1 text-blue-500" />
               <p className="text-lg font-bold text-slate-800">{maxFrp > 0 ? maxFrp.toFixed(1) : '—'}</p>
               <p className="text-[10px] text-slate-500">Max FRP (MW)</p>
+              {trendHistory.length >= 2 && (
+                <div className="flex justify-center mt-1">
+                  <Sparkline data={trendHistory.map(t => t.maxFrp)} color="#3b82f6" />
+                </div>
+              )}
             </div>
             <div className="rounded-lg px-3 py-2 text-center border border-slate-200 bg-slate-50">
               <Shield className="w-4 h-4 mx-auto mb-1 text-emerald-500" />

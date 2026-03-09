@@ -10,10 +10,12 @@ import {
   getFirmsCacheStatus,
   isFirmsBuildInProgress,
   setFirmsBuildInProgress,
+  appendFirmsTrend,
   FIRMS_REGIONS,
   type FirmsDetection,
   type FirmsRegionSummary,
   type FirmsCacheData,
+  type FirmsTrendSnapshot,
 } from '@/lib/firmsCache';
 import { isCronAuthorized } from '@/lib/apiAuth';
 import * as Sentry from '@sentry/nextjs';
@@ -233,6 +235,19 @@ export async function GET(request: NextRequest) {
     };
 
     await setFirmsCache(cacheData);
+
+    // Append trend snapshot for sparkline history
+    const byRegion: FirmsTrendSnapshot['byRegion'] = {};
+    for (const r of Object.values(regions)) {
+      byRegion[r.region] = { fires: r.detectionCount, highConf: r.highConfidenceCount, maxFrp: r.maxFrp };
+    }
+    await appendFirmsTrend({
+      timestamp: new Date().toISOString(),
+      totalFires: totalDetections,
+      highConfCount: Object.values(regions).reduce((s, r) => s + r.highConfidenceCount, 0),
+      maxFrp: Math.max(0, ...Object.values(regions).map(r => r.maxFrp)),
+      byRegion,
+    });
 
     const elapsed = ((Date.now() - start) / 1000).toFixed(1);
     recordCronRun('rebuild-firms', 'success', Date.now() - start);

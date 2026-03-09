@@ -45,6 +45,14 @@ export interface FirmsCacheData {
   regions: Record<string, FirmsRegionSummary>;
 }
 
+export interface FirmsTrendSnapshot {
+  timestamp: string;
+  totalFires: number;
+  highConfCount: number;
+  maxFrp: number;
+  byRegion: Record<string, { fires: number; highConf: number; maxFrp: number }>;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Region Constants                                                   */
 /* ------------------------------------------------------------------ */
@@ -71,6 +79,17 @@ let _buildStartedAt = 0;
 
 const BUILD_LOCK_TIMEOUT_MS = 12 * 60 * 1000;
 const BLOB_KEY = 'cache/firms.json';
+const TREND_BLOB_KEY = 'cache/firms-trend.json';
+const TREND_DISK_FILE = 'firms-trend.json';
+const TREND_RING_SIZE = 42; // 7 days at 4h intervals
+
+/* ------------------------------------------------------------------ */
+/*  Trend History State                                                */
+/* ------------------------------------------------------------------ */
+
+let _trendHistory: FirmsTrendSnapshot[] = [];
+let _trendDiskLoaded = false;
+let _trendBlobChecked = false;
 
 /* ------------------------------------------------------------------ */
 /*  Disk Persistence                                                   */
@@ -113,6 +132,41 @@ function ensureDiskLoaded() {
   if (_diskLoaded) return;
   _diskLoaded = true;
   loadFromDisk();
+}
+
+/* ------------------------------------------------------------------ */
+/*  Trend Disk Persistence                                             */
+/* ------------------------------------------------------------------ */
+
+function loadTrendFromDisk(): boolean {
+  try {
+    if (typeof process === 'undefined') return false;
+    const fs = require('fs');
+    const path = require('path');
+    const file = path.join(process.cwd(), '.cache', TREND_DISK_FILE);
+    if (!fs.existsSync(file)) return false;
+    const raw = fs.readFileSync(file, 'utf-8');
+    const data = JSON.parse(raw);
+    if (!Array.isArray(data)) return false;
+    _trendHistory = data;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function saveTrendToDisk(): void {
+  try {
+    if (typeof process === 'undefined') return;
+    const fs = require('fs');
+    const path = require('path');
+    const dir = path.join(process.cwd(), '.cache');
+    const file = path.join(dir, TREND_DISK_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(file, JSON.stringify(_trendHistory), 'utf-8');
+  } catch {
+    // non-fatal
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -190,6 +244,42 @@ export function getFirmsCacheStatus() {
     totalDetections: _memCache._meta.totalDetections,
     lastDelta: _lastDelta,
   };
+}
+
+/* ------------------------------------------------------------------ */
+/*  Trend History API                                                  */
+/* ------------------------------------------------------------------ */
+
+export async function ensureTrendWarmed(): Promise<void> {
+  if (!_trendDiskLoaded) {
+    _trendDiskLoaded = true;
+    loadTrendFromDisk();
+  }
+  if (_trendHistory.length > 0) return;
+  if (_trendBlobChecked) return;
+  _trendBlobChecked = true;
+  const data = await loadCacheFromBlob<FirmsTrendSnapshot[]>(TREND_BLOB_KEY);
+  if (Array.isArray(data) && data.length > 0) {
+    _trendHistory = data;
+    saveTrendToDisk();
+  }
+}
+
+export async function appendFirmsTrend(snapshot: FirmsTrendSnapshot): Promise<void> {
+  _trendHistory.push(snapshot);
+  if (_trendHistory.length > TREND_RING_SIZE) {
+    _trendHistory.splice(0, _trendHistory.length - TREND_RING_SIZE);
+  }
+  saveTrendToDisk();
+  await saveCacheToBlob(TREND_BLOB_KEY, _trendHistory);
+}
+
+export function getFirmsTrendHistory(): FirmsTrendSnapshot[] {
+  if (!_trendDiskLoaded) {
+    _trendDiskLoaded = true;
+    loadTrendFromDisk();
+  }
+  return _trendHistory;
 }
 
 /* ------------------------------------------------------------------ */

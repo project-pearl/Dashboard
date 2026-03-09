@@ -5,6 +5,7 @@ import { Wind, MapPin, Activity, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useJurisdictionContext } from '@/lib/jurisdiction-context';
+import { Sparkline } from './Sparkline';
 
 type AirQualityReading = {
   state: string;
@@ -61,6 +62,7 @@ export function AirQualityMonitoringCard({
   const [loading, setLoading] = useState(true);
   const [reading, setReading] = useState<AirQualityReading | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [aqiTrend, setAqiTrend] = useState<Array<{ usAqi: number | null }>>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -68,12 +70,15 @@ export function AirQualityMonitoringCard({
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/air-quality/latest?state=${encodeURIComponent(effectiveState)}`);
+        const res = await fetch(`/api/air-quality/latest?state=${encodeURIComponent(effectiveState)}&trends=true`);
         const json = await res.json();
         if (!res.ok || !json?.ok) {
           throw new Error(json?.error || `Failed to load air quality for ${effectiveState}`);
         }
-        if (!cancelled) setReading((json.reading || null) as AirQualityReading | null);
+        if (!cancelled) {
+          setReading((json.reading || null) as AirQualityReading | null);
+          if (Array.isArray(json.trendHistory)) setAqiTrend(json.trendHistory);
+        }
       } catch (e: any) {
         if (!cancelled) setError(e?.message || 'Unable to load air quality data');
       } finally {
@@ -137,6 +142,14 @@ export function AirQualityMonitoringCard({
               <div className="rounded-xl border bg-cyan-50 border-cyan-200 p-3">
                 <div className="text-[10px] uppercase tracking-wide font-semibold text-cyan-700">US AQI</div>
                 <div className="text-xl font-bold text-cyan-800">{reading.usAqi ?? 'N/A'}</div>
+                {aqiTrend.length >= 2 && (
+                  <div className="mt-1">
+                    <Sparkline
+                      data={aqiTrend.map(t => t.usAqi ?? 0).filter((_, i, a) => i >= a.length - 24)}
+                      color="#0891b2"
+                    />
+                  </div>
+                )}
               </div>
               <div className="rounded-xl border bg-blue-50 border-blue-200 p-3">
                 <div className="text-[10px] uppercase tracking-wide font-semibold text-blue-700">PM2.5</div>
