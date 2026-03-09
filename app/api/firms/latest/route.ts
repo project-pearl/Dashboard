@@ -62,6 +62,13 @@ export async function GET(request: NextRequest) {
 
   // All regions summary
   const allRegions = getFirmsAllRegions();
+  const dateSet = new Set<string>();
+  for (const r of allRegions) {
+    for (const d of r.detections) {
+      if (d.acq_date) dateSet.add(d.acq_date);
+    }
+  }
+  const distinctDates = [...dateSet].sort().reverse();
   return NextResponse.json({
     regions: allRegions.map(r => ({
       region: r.region,
@@ -71,6 +78,7 @@ export async function GET(request: NextRequest) {
       maxFrp: r.maxFrp,
     })),
     totalDetections: allRegions.reduce((sum, r) => sum + r.detectionCount, 0),
+    distinctDates,
     cache: cacheStatus,
   });
 }

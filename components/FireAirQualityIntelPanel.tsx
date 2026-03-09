@@ -41,6 +41,7 @@ export function FireAirQualityIntelPanel({
   selectedState?: string;
 }) {
   const [regions, setRegions] = useState<RegionSummary[]>([]);
+  const [distinctDates, setDistinctDates] = useState<string[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -48,6 +49,7 @@ export function FireAirQualityIntelPanel({
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (!cancelled && data?.regions) setRegions(data.regions);
+        if (!cancelled && data?.distinctDates) setDistinctDates(data.distinctDates);
       })
       .catch(() => {});
     return () => { cancelled = true; };
@@ -75,6 +77,11 @@ export function FireAirQualityIntelPanel({
           </div>
           <CardDescription className="text-xs">
             Combined satellite fire detection and air quality intelligence for military force health protection.
+            {distinctDates.length >= 2 && (
+              <span className="ml-1 text-slate-400">
+                Covering {distinctDates[distinctDates.length - 1]} to {distinctDates[0]}.
+              </span>
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -96,8 +103,8 @@ export function FireAirQualityIntelPanel({
             </div>
             <div className="rounded-lg px-3 py-2 text-center border border-slate-200 bg-slate-50">
               <Shield className="w-4 h-4 mx-auto mb-1 text-emerald-500" />
-              <p className="text-lg font-bold text-slate-800">{regions.filter(r => r.detectionCount > 0).length}</p>
-              <p className="text-[10px] text-slate-500">Regions Active</p>
+              <p className="text-lg font-bold text-slate-800">{distinctDates.length || '—'}</p>
+              <p className="text-[10px] text-slate-500">Days of Data</p>
             </div>
           </div>
         </CardContent>

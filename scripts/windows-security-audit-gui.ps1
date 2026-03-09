@@ -8,6 +8,7 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $backendScript = Join-Path $PSScriptRoot 'windows-security-audit.ps1'
 $outputDir = Join-Path $repoRoot 'security-audit'
 $actionsPath = Join-Path $outputDir 'latest-actions.json'
+$errorPath = Join-Path $outputDir 'latest-error.json'
 
 function Ensure-Dir {
   param([string]$Path)
@@ -36,6 +37,18 @@ function Load-Actions {
   if (-not $raw) { return @() }
   $json = $raw | ConvertFrom-Json
   return @($json)
+}
+
+function Load-LatestErrorMessage {
+  if (-not (Test-Path -LiteralPath $errorPath)) { return $null }
+  try {
+    $raw = Get-Content -LiteralPath $errorPath -Raw
+    if (-not $raw) { return $null }
+    $obj = $raw | ConvertFrom-Json
+    return [string]$obj.message
+  } catch {
+    return $null
+  }
 }
 
 function Refresh-Grid {
@@ -203,14 +216,18 @@ $btnResolve.Add_Click({
     $status.Text = 'Applying selected remediations...'
     $form.Refresh()
     $idsArg = $ids -join ','
-    $exitCode = Invoke-Backend -ArgsList @('-Mode', 'resolve', '-OutputDir', "`"$outputDir`"", '-ResolveIds', $idsArg, '-AssumeYes') -RequireAdmin
+    $exitCode = Invoke-Backend -ArgsList @('-Mode', 'resolve', '-OutputDir', "`"$outputDir`"", '-ResolveIds', $idsArg, '-AssumeYes', '-AllowNoRestorePoint') -RequireAdmin
     if ($exitCode -eq 0) {
       $status.Text = 'Remediation completed.'
       [System.Windows.Forms.MessageBox]::Show('Selected remediations completed. Check security-audit\\resolve-*.json for results.', 'Security Audit', [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Information) | Out-Null
       Refresh-Grid -Grid $grid -Status $status
     } else {
       $status.Text = "Remediation failed (exit $exitCode)."
-      [System.Windows.Forms.MessageBox]::Show("Remediation failed with exit code $exitCode.`nIf UAC was declined, run Resolve Selected again and approve elevation.", 'Security Audit', [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error) | Out-Null
+      $detail = Load-LatestErrorMessage
+      if (-not $detail) {
+        $detail = 'If UAC was declined, run Resolve Selected again and approve elevation.'
+      }
+      [System.Windows.Forms.MessageBox]::Show("Remediation failed with exit code $exitCode.`n$detail", 'Security Audit', [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error) | Out-Null
     }
   } catch {
     $status.Text = 'Remediation failed.'

@@ -6,7 +6,8 @@ param(
   [string[]]$ResolveIds = @(),
   [switch]$InteractiveSelect,
   [switch]$SkipDefenderQuickScan,
-  [switch]$AssumeYes
+  [switch]$AssumeYes,
+  [switch]$AllowNoRestorePoint
 )
 
 Set-StrictMode -Version Latest
@@ -27,6 +28,27 @@ function Ensure-Dir {
   param([string]$Path)
   if (-not (Test-Path -LiteralPath $Path)) {
     New-Item -Path $Path -ItemType Directory | Out-Null
+  }
+}
+
+function Write-FailureRecord {
+  param(
+    [string]$Phase,
+    [string]$Message
+  )
+  try {
+    Ensure-Dir -Path $OutputDir
+    $failurePath = Join-Path $OutputDir 'latest-error.json'
+    [pscustomobject]@{
+      generatedAt = (Get-Date).ToString('o')
+      mode = $Mode
+      phase = $Phase
+      message = $Message
+      isAdmin = (Test-IsAdmin)
+      user = "$env:USERDOMAIN\$env:USERNAME"
+    } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $failurePath -Encoding UTF8
+  } catch {
+    # best-effort only
   }
 }
 
@@ -154,6 +176,7 @@ function Start-ElevatedSelf {
   if ($InteractiveSelect) { $argLine += '-InteractiveSelect' }
   if ($SkipDefenderQuickScan) { $argLine += '-SkipDefenderQuickScan' }
   if ($AssumeYes) { $argLine += '-AssumeYes' }
+  if ($AllowNoRestorePoint) { $argLine += '-AllowNoRestorePoint' }
 
   try {
     $p = Start-Process -FilePath 'powershell.exe' -ArgumentList $argLine -Verb RunAs -Wait -PassThru
@@ -331,105 +354,116 @@ if ($Mode -eq 'scan') {
 }
 
 if ($Mode -eq 'resolve') {
-  if (-not (Test-IsAdmin)) {
-    Write-Host 'Remediation requires elevation. Requesting Administrator approval...'
-    Start-ElevatedSelf
-  }
-
-  $actionsPath = Join-Path $OutputDir 'latest-actions.json'
-  if (-not (Test-Path -LiteralPath $actionsPath)) {
-    throw "No actions file found at $actionsPath. Run scan mode first."
-  }
-
-  $allActions = Get-Content -LiteralPath $actionsPath -Raw | ConvertFrom-Json
-  $allActions = @($allActions)
-  if ($allActions.Count -eq 0) {
-    Write-Host 'No pending actions.'
-    exit 0
-  }
-
-  $selectedIds = @()
-  if ($InteractiveSelect) {
-    $selectedIds = Select-ActionsInteractive -Actions $allActions
-  }
-  if ($ResolveIds.Count -gt 0) {
-    $normalizedIds = @()
-    foreach ($rid in $ResolveIds) {
-      if (-not $rid) { continue }
-      $normalizedIds += ($rid -split '[,\s]+' | Where-Object { $_ -and $_.Trim() })
-    }
-    $selectedIds += $normalizedIds
-  }
-  $selectedIds = @($selectedIds | Select-Object -Unique)
-  if ($selectedIds.Count -eq 0) {
-    throw 'No actions selected. Provide -ResolveIds or use -InteractiveSelect.'
-  }
-
-  $selected = @($allActions | Where-Object { $selectedIds -contains $_.id })
-  if ($selected.Count -eq 0) {
-    throw 'Selected action IDs were not found in latest-actions.json.'
-  }
-
-  Write-Host "Selected actions: $($selected.Count)"
-  $selected | ForEach-Object { Write-Host " - $($_.id): $($_.title)" }
-
-  if (-not $AssumeYes) {
-    $confirmation = Read-Host 'Type YES to create restore point and execute selected remediations'
-    if ($confirmation -ne 'YES') {
-      throw 'Aborted by user.'
-    }
-  }
-
   try {
-    New-RestorePoint -Description "Pre-Security-Remediation-$timestamp"
-    Write-Host 'Restore point created.'
-  } catch {
-    throw "Restore point failed. Remediation aborted. $($_.Exception.Message)"
-  }
+    if (-not (Test-IsAdmin)) {
+      Write-Host 'Remediation requires elevation. Requesting Administrator approval...'
+      Start-ElevatedSelf
+    }
 
-  $quarantineDir = Join-Path $OutputDir 'quarantine'
-  Ensure-Dir -Path $quarantineDir
-  $execLog = @()
+    $actionsPath = Join-Path $OutputDir 'latest-actions.json'
+    if (-not (Test-Path -LiteralPath $actionsPath)) {
+      throw "No actions file found at $actionsPath. Run scan mode first."
+    }
 
-  foreach ($a in $selected) {
-    $status = 'success'
-    $message = 'ok'
-    try {
-      switch ($a.kind) {
-        'disable-task' {
-          Disable-ScheduledTask -TaskName $a.payload.taskName -TaskPath $a.payload.taskPath -ErrorAction Stop | Out-Null
-        }
-        'remove-run' {
-          $key = "$($a.payload.hive):\$($a.payload.keyPath)"
-          Remove-ItemProperty -LiteralPath $key -Name $a.payload.name -ErrorAction Stop
-        }
-        'quarantine-file' {
-          $src = [string]$a.payload.path
-          if (-not (Test-Path -LiteralPath $src)) { throw "File not found: $src" }
-          $dest = Join-Path $quarantineDir ("$timestamp-" + [IO.Path]::GetFileName($src))
-          Move-Item -LiteralPath $src -Destination $dest -Force
-        }
-        default {
-          throw "Unsupported action kind: $($a.kind)"
-        }
+    $allActions = Get-Content -LiteralPath $actionsPath -Raw | ConvertFrom-Json
+    $allActions = @($allActions)
+    if ($allActions.Count -eq 0) {
+      Write-Host 'No pending actions.'
+      exit 0
+    }
+
+    $selectedIds = @()
+    if ($InteractiveSelect) {
+      $selectedIds = Select-ActionsInteractive -Actions $allActions
+    }
+    if ($ResolveIds.Count -gt 0) {
+      $normalizedIds = @()
+      foreach ($rid in $ResolveIds) {
+        if (-not $rid) { continue }
+        $normalizedIds += ($rid -split '[,\s]+' | Where-Object { $_ -and $_.Trim() })
       }
+      $selectedIds += $normalizedIds
+    }
+    $selectedIds = @($selectedIds | Select-Object -Unique)
+    if ($selectedIds.Count -eq 0) {
+      throw 'No actions selected. Provide -ResolveIds or use -InteractiveSelect.'
+    }
+
+    $selected = @($allActions | Where-Object { $selectedIds -contains $_.id })
+    if ($selected.Count -eq 0) {
+      throw 'Selected action IDs were not found in latest-actions.json.'
+    }
+
+    Write-Host "Selected actions: $($selected.Count)"
+    $selected | ForEach-Object { Write-Host " - $($_.id): $($_.title)" }
+
+    if (-not $AssumeYes) {
+      $confirmation = Read-Host 'Type YES to create restore point and execute selected remediations'
+      if ($confirmation -ne 'YES') {
+        throw 'Aborted by user.'
+      }
+    }
+
+    try {
+      New-RestorePoint -Description "Pre-Security-Remediation-$timestamp"
+      Write-Host 'Restore point created.'
     } catch {
-      $status = 'failed'
-      $message = $_.Exception.Message
+      if ($AllowNoRestorePoint) {
+        Write-Warning "Restore point failed. Continuing because -AllowNoRestorePoint was provided. $($_.Exception.Message)"
+      } else {
+        throw "Restore point failed. Remediation aborted. $($_.Exception.Message)"
+      }
     }
 
-    $execLog += [pscustomobject]@{
-      id = $a.id
-      title = $a.title
-      kind = $a.kind
-      status = $status
-      message = $message
-      executedAt = (Get-Date).ToString('o')
+    $quarantineDir = Join-Path $OutputDir 'quarantine'
+    Ensure-Dir -Path $quarantineDir
+    $execLog = @()
+
+    foreach ($a in $selected) {
+      $status = 'success'
+      $message = 'ok'
+      try {
+        switch ($a.kind) {
+          'disable-task' {
+            Disable-ScheduledTask -TaskName $a.payload.taskName -TaskPath $a.payload.taskPath -ErrorAction Stop | Out-Null
+          }
+          'remove-run' {
+            $key = "$($a.payload.hive):\$($a.payload.keyPath)"
+            Remove-ItemProperty -LiteralPath $key -Name $a.payload.name -ErrorAction Stop
+          }
+          'quarantine-file' {
+            $src = [string]$a.payload.path
+            if (-not (Test-Path -LiteralPath $src)) { throw "File not found: $src" }
+            $dest = Join-Path $quarantineDir ("$timestamp-" + [IO.Path]::GetFileName($src))
+            Move-Item -LiteralPath $src -Destination $dest -Force
+          }
+          default {
+            throw "Unsupported action kind: $($a.kind)"
+          }
+        }
+      } catch {
+        $status = 'failed'
+        $message = $_.Exception.Message
+      }
+
+      $execLog += [pscustomobject]@{
+        id = $a.id
+        title = $a.title
+        kind = $a.kind
+        status = $status
+        message = $message
+        executedAt = (Get-Date).ToString('o')
+      }
     }
+
+    $resolvePath = Join-Path $OutputDir ("resolve-$timestamp.json")
+    $execLog | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $resolvePath -Encoding UTF8
+    Write-Host "Resolution complete. Log: $resolvePath"
+    exit 0
+  } catch {
+    $msg = $_.Exception.Message
+    Write-FailureRecord -Phase 'resolve' -Message $msg
+    Write-Error $msg
+    exit 1
   }
-
-  $resolvePath = Join-Path $OutputDir ("resolve-$timestamp.json")
-  $execLog | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $resolvePath -Encoding UTF8
-  Write-Host "Resolution complete. Log: $resolvePath"
-  exit 0
 }

@@ -99,7 +99,7 @@ async function fetchRegion(
   mapKey: string,
 ): Promise<FirmsRegionSummary> {
   const [w, s, e, n] = bbox;
-  const url = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${mapKey}/VIIRS_NOAA20_NRT/${w},${s},${e},${n}/2`;
+  const url = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${mapKey}/VIIRS_NOAA20_NRT/${w},${s},${e},${n}/5`;
 
   const res = await fetch(url, {
     headers: { 'User-Agent': 'PEARL-Platform/1.0' },
