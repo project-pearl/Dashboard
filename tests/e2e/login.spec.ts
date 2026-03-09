@@ -27,7 +27,7 @@ test.describe('Login page', () => {
   test('shows error on invalid credentials', async ({ page }) => {
     await page.getByLabel(/email/i).first().fill('invalid@example.com');
     await page.getByLabel(/password/i).first().fill('wrongpassword');
-    await page.getByRole('button', { name: /sign in|log in|login/i }).click();
+    await page.locator('form button[type="submit"]').click();
     // Should show an error message (not redirect)
     await page.waitForTimeout(3000);
     await expect(page).toHaveURL(/login/);
