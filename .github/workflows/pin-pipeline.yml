@@ -82,5 +82,6 @@ jobs:
 
             Automated by PIN Pipeline GitHub Action
             Co-Authored-By: github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+            git pull --rebase origin main || true
             git push
           fi
