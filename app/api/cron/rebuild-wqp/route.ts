@@ -27,15 +27,27 @@ import { notifySlackCronFailure } from '@/lib/slackNotify';
 import { recordCronRun } from '@/lib/cronHealth';
 
 // Top characteristics to fetch (maps to PEARL keys)
+// NOTE: WQP characteristic names must match exactly. Many state agencies use
+// the "mixed forms" variants, so we include both short and long forms.
 const CHARACTERISTICS = [
   'Dissolved oxygen (DO)',
   'pH',
   'Temperature, water',
   'Turbidity',
   'Nitrogen',
+  'Total Nitrogen, mixed forms (NH3), (NH4), organic, (NO2) and (NO3)',
+  'Nitrate + Nitrite',
+  'Nitrate',
   'Phosphorus',
+  'Total Phosphorus, mixed forms',
+  'Orthophosphate',
   'Escherichia coli',
+  'Enterococcus',
+  'Fecal Coliform',
   'Specific conductance',
+  'Conductivity',
+  'Total suspended solids',
+  'Chlorophyll a',
 ];
 
 // WQP characteristic → PEARL key
@@ -48,15 +60,22 @@ const CHAR_TO_PEARL: Record<string, string> = {
   'Turbidity': 'turbidity',
   'Nitrogen': 'TN',
   'Total Nitrogen, mixed forms': 'TN',
+  'Total Nitrogen, mixed forms (NH3), (NH4), organic, (NO2) and (NO3)': 'TN',
   'Nitrate': 'TN',
+  'Nitrate + Nitrite': 'TN',
+  'Ammonium': 'TN',
+  'Ammonia': 'TN',
   'Phosphorus': 'TP',
   'Total Phosphorus, mixed forms': 'TP',
+  'Orthophosphate': 'TP',
   'Escherichia coli': 'bacteria',
   'Enterococcus': 'bacteria',
   'Fecal Coliform': 'bacteria',
   'Total suspended solids': 'TSS',
   'Specific conductance': 'conductivity',
+  'Conductivity': 'conductivity',
   'Chlorophyll a': 'chlorophyll',
+  'Chlorophyll a (probe)': 'chlorophyll',
   'Salinity': 'salinity',
 };
 
@@ -101,12 +120,13 @@ function csvToRows(csv: string): Record<string, string>[] {
 // ── Fetch WQP for one state ──────────────────────────────────────────────────
 
 async function fetchState(stateAbbr: string, fips: string): Promise<WqpRecord[]> {
-  const sixMonthsAgo = new Date();
-  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  // 12-month window — many state agencies upload to WQP with 6-12 month lag
+  const lookbackDate = new Date();
+  lookbackDate.setMonth(lookbackDate.getMonth() - 12);
   // WQP requires MM-dd-yyyy format (not ISO yyyy-MM-dd)
-  const mm = String(sixMonthsAgo.getMonth() + 1).padStart(2, '0');
-  const dd = String(sixMonthsAgo.getDate()).padStart(2, '0');
-  const yyyy = sixMonthsAgo.getFullYear();
+  const mm = String(lookbackDate.getMonth() + 1).padStart(2, '0');
+  const dd = String(lookbackDate.getDate()).padStart(2, '0');
+  const yyyy = lookbackDate.getFullYear();
   const startDate = `${mm}-${dd}-${yyyy}`;
 
   const url = new URL(WQP_BASE);
