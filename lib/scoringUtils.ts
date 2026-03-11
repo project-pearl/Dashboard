@@ -1,6 +1,9 @@
-// lib/scoringUtils.ts
-// Centralized scoring utilities — single source of truth for all grading,
-// alert-level mapping, and ecological/EJ styling across the dashboard.
+/**
+ * Centralized scoring utilities — single source of truth for all grading,
+ * alert-level mapping, and ecological/EJ styling across the dashboard.
+ *
+ * Re-exports {@link scoreToLetter} and {@link GradeLetter} from `waterQualityScore`.
+ */
 
 export { scoreToLetter, type GradeLetter } from './waterQualityScore';
 import { scoreToLetter } from './waterQualityScore';
@@ -9,6 +12,12 @@ import { ejScoreLabel } from './ejVulnerability';
 
 // ── PEARL-derived styled grade (A+ through F) ──────────────────────────────────
 
+/**
+ * Convert a numeric score (0-100) to a styled grade object with Tailwind classes.
+ *
+ * @param score - Numeric score from 0 to 100
+ * @returns Object with `letter` (e.g. "A+"), `color`, `bg`, and `textColor` Tailwind classes
+ */
 export function scoreToGrade(score: number): { letter: string; color: string; bg: string; textColor: string } {
   const letter = scoreToLetter(score);
   const l = letter.charAt(0);
@@ -46,6 +55,7 @@ export function scoreToGrade(score: number): { letter: string; color: string; bg
 
 // ── Alert level → numeric score (PEARL-derived) ────────────────────────────────
 
+/** Maps alert level strings ("none" | "low" | "medium" | "high") to numeric scores (100→40). */
 export const ALERT_LEVEL_SCORES: Record<string, number> = {
   none: 100,
   low: 85,
@@ -53,6 +63,12 @@ export const ALERT_LEVEL_SCORES: Record<string, number> = {
   high: 40,
 };
 
+/**
+ * Compute the weighted-average score for a set of regions based on their alert levels.
+ *
+ * @param regions - Array of objects each with an `alertLevel` string
+ * @returns Average score (0-100), or -1 if no assessable regions
+ */
 export function alertLevelAvgScore(regions: { alertLevel: string }[]): number {
   const assessed = regions.filter(r => r.alertLevel && r.alertLevel !== 'unknown');
   if (assessed.length === 0) return -1;
@@ -63,6 +79,12 @@ export function alertLevelAvgScore(regions: { alertLevel: string }[]): number {
 
 // ── Eco sensitivity styling (80/60/40/20 thresholds) ────────────────────────────
 
+/**
+ * Return Tailwind background classes and a human-readable label for an ecological sensitivity score.
+ *
+ * @param score - Ecological sensitivity score (0-100, higher = more sensitive)
+ * @returns Object with `bg` (Tailwind classes) and `label` (e.g. "Critical", "High")
+ */
 export function ecoScoreStyle(score: number): { bg: string; label: string } {
   const label = ecoScoreLabel(score);
   if (score >= 80) return { bg: 'bg-red-50 border-red-200 text-red-700', label };
@@ -74,6 +96,12 @@ export function ecoScoreStyle(score: number): { bg: string; label: string } {
 
 // ── EJ vulnerability styling (70/50/30 thresholds) ──────────────────────────────
 
+/**
+ * Return Tailwind styling and a label for an environmental justice vulnerability score.
+ *
+ * @param score - EJ vulnerability score (0-100, higher = more vulnerable)
+ * @returns Object with `bg`, `border`, `color` (hex), and `label` strings
+ */
 export function ejScoreStyle(score: number): {
   bg: string;
   border: string;
@@ -89,6 +117,13 @@ export function ejScoreStyle(score: number): {
 
 // ── Simple letter grade (A-F, 10pt bands) ───────────────────────────────────────
 
+/**
+ * Convert a percentage score to a simple letter grade (A/B/C/D/F).
+ * Uses 10-point bands: 90+ = A, 80+ = B, 70+ = C, 60+ = D, below = F.
+ *
+ * @param pct - Percentage score (0-100). Negative values return "N/A".
+ * @returns A single letter grade string
+ */
 export function letterGrade(pct: number): string {
   if (pct < 0) return 'N/A';
   if (pct >= 90) return 'A';

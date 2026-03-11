@@ -1,6 +1,10 @@
-// lib/national-summary.ts
-// Single source of truth for national water quality statistics.
-// Aggregates from existing server-side caches with a 30-min in-memory TTL.
+/**
+ * National water quality summary — single source of truth.
+ *
+ * Aggregates data from ATTAINS, USGS IV, NWS alerts, and 15+ additional
+ * cache modules into a unified {@link NationalSummary}. Results are memoized
+ * with a 30-minute TTL.
+ */
 
 import { getAttainsCacheSummary, type StateSummary } from './attainsCache';
 import { getUsgsIvCacheStatus } from './nwisIvCache';
@@ -26,6 +30,7 @@ import { ALERT_LEVEL_SCORES, letterGrade } from './scoringUtils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
+/** Aggregated national water quality statistics across all reporting states. */
 export interface NationalSummary {
   generatedAt: string;
   statesReporting: number;
@@ -89,6 +94,15 @@ const TTL_MS = 30 * 60 * 1000; // 30 min
 let _cached: NationalSummary | null = null;
 let _cachedAt = 0;
 
+/**
+ * Compute or return the cached national water quality summary.
+ *
+ * Aggregates ATTAINS impairment data, USGS real-time sites, NWS alerts,
+ * flow vulnerability scores, and data source counts from 15+ caches.
+ * Results are cached for 30 minutes.
+ *
+ * @returns A comprehensive {@link NationalSummary} object
+ */
 export function getNationalSummary(): NationalSummary {
   const now = Date.now();
   if (_cached && now - _cachedAt < TTL_MS) return _cached;

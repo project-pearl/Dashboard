@@ -1,10 +1,14 @@
-// lib/insightsCache.ts
-// In-memory cache for pre-generated AI insights
-// Populated by cron job every 6 hours, served instantly to users
-// Falls back to on-demand generation on cold start
+/**
+ * In-memory cache for pre-generated AI insights.
+ *
+ * Populated by the `generate-insights` cron job every 6 hours and served
+ * instantly to users. Falls back to on-demand generation on cold start.
+ * Uses debounced disk writes (10s) to avoid thrashing during the 408-call build.
+ */
 
 import { saveCacheToBlob, loadCacheFromBlob } from './blobPersistence';
 
+/** A single AI-generated insight (predictive, anomaly, comparison, etc.). */
 export interface CachedInsight {
   type: 'predictive' | 'anomaly' | 'comparison' | 'recommendation' | 'summary';
   severity: 'info' | 'warning' | 'critical';
@@ -14,6 +18,7 @@ export interface CachedInsight {
   timeframe?: string;
 }
 
+/** A cached set of insights for a specific state+role combination. */
 export interface CacheEntry {
   insights: CachedInsight[];
   generatedAt: string;
@@ -110,6 +115,10 @@ function ensureDiskLoaded() {
 }
 
 let _blobChecked = false;
+/**
+ * Ensure the insights cache is populated. Tries disk first, then Vercel Blob.
+ * No-op if the cache already has entries.
+ */
 export async function ensureWarmed(): Promise<void> {
   ensureDiskLoaded();
   if (cache.size > 0) return;
@@ -128,11 +137,24 @@ export async function ensureWarmed(): Promise<void> {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+/**
+ * Build the cache lookup key for a given state and role.
+ *
+ * @param state - State abbreviation (e.g. "MD")
+ * @param role  - User role (e.g. "Federal", "MS4")
+ * @returns Cache key in "STATE:ROLE" format
+ */
 export function getCacheKey(state: string, role: string): CacheKey {
   return `${state.toUpperCase()}:${role}`;
 }
 
-// Simple hash for change detection — if signals haven't changed, skip regeneration
+/**
+ * Compute a simple hash of signal data for change detection.
+ * If the hash hasn't changed since the last build, regeneration is skipped.
+ *
+ * @param signals - Array of signal objects with type, severity, and title
+ * @returns A base-36 hash string
+ */
 export function hashSignals(signals: any[]): string {
   const str = JSON.stringify(signals.map(s => `${s.type}:${s.severity}:${s.title}`).sort());
   let hash = 0;
@@ -146,6 +168,13 @@ export function hashSignals(signals: any[]): string {
 
 // ─── Public API ──────────────────────────────────────────────────────────────
 
+/**
+ * Retrieve cached insights for a state+role. Returns null if not cached or stale (>7 hours).
+ *
+ * @param state - State abbreviation
+ * @param role  - User role
+ * @returns The cached entry, or null if missing/stale
+ */
 export function getInsights(state: string, role: string): CacheEntry | null {
   ensureDiskLoaded();
   const entry = cache.get(getCacheKey(state, role));
@@ -158,11 +187,23 @@ export function getInsights(state: string, role: string): CacheEntry | null {
   return entry;
 }
 
+/**
+ * Store insights for a state+role in the in-memory cache and trigger a debounced disk save.
+ *
+ * @param state - State abbreviation
+ * @param role  - User role
+ * @param entry - The insight cache entry to store
+ */
 export function setInsights(state: string, role: string, entry: CacheEntry): void {
   cache.set(getCacheKey(state, role), entry);
   debouncedSaveToDisk();
 }
 
+/**
+ * Check if an insight build is currently running. Auto-clears stale locks older than 12 minutes.
+ *
+ * @returns Whether a build is in progress
+ */
 export function isBuildInProgress(): boolean {
   if (buildInProgress && _buildStartedAt > 0 && Date.now() - _buildStartedAt > BUILD_LOCK_TIMEOUT_MS) {
     console.warn('[Insights Cache] Auto-clearing stale build lock (>12 min)');
@@ -172,11 +213,22 @@ export function isBuildInProgress(): boolean {
   return buildInProgress;
 }
 
+/**
+ * Set or clear the build-in-progress lock.
+ *
+ * @param v - `true` to start build lock, `false` to release
+ */
 export function setBuildInProgress(v: boolean): void {
   buildInProgress = v;
   _buildStartedAt = v ? Date.now() : 0;
 }
 
+/**
+ * Record the timestamp of the last complete insight build.
+ * Forces an immediate disk save and persists the full cache to Vercel Blob.
+ *
+ * @param timestamp - ISO timestamp of build completion
+ */
 export async function setLastFullBuild(timestamp: string): Promise<void> {
   lastFullBuild = timestamp;
   saveToDisk(); // Force immediate save at end of build
@@ -186,6 +238,11 @@ export async function setLastFullBuild(timestamp: string): Promise<void> {
   });
 }
 
+/**
+ * Get a summary of the current insights cache state.
+ *
+ * @returns Status object with build state, entry count, last build time, and reporting states
+ */
 export function getCacheStatus(): {
   status: 'idle' | 'building' | 'ready';
   entries: number;
@@ -205,7 +262,10 @@ export function getCacheStatus(): {
   };
 }
 
-// Clear all cached insights (for manual reset)
+/**
+ * Clear all cached insights and reset the last-build timestamp.
+ * Used for manual cache reset.
+ */
 export function clearInsightsCache(): void {
   cache.clear();
   lastFullBuild = null;

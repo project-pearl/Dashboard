@@ -1,7 +1,13 @@
-/* ------------------------------------------------------------------ */
-/*  PIN Alerts — Core Dispatch Engine                                 */
-/*  Dedup, cooldowns, rate limiting, logging                          */
-/* ------------------------------------------------------------------ */
+/**
+ * PIN Alerts — Core Dispatch Engine
+ *
+ * Processes candidate alert events through a multi-stage pipeline:
+ * suppression check → cooldown dedup → site-level throttle → recipient
+ * matching → email delivery → log persistence.
+ *
+ * Exports {@link loadAlertLog} for reading the alert log and
+ * {@link dispatchAlerts} for processing a batch of candidate events.
+ */
 
 import type { AlertEvent, AlertLog, DispatchResult } from './types';
 import { COOLDOWNS, MAX_EMAILS_PER_HOUR, MAX_ALERT_LOG_SIZE, BLOB_PATHS, DISK_PATHS } from './config';
@@ -35,6 +41,12 @@ function ensureLogDiskLoaded(): void {
   if (data && data.events) _log = data;
 }
 
+/**
+ * Load the alert log, trying disk cache first then Vercel Blob.
+ * Creates a default empty log if neither source has data.
+ *
+ * @returns The current alert log
+ */
 export async function loadAlertLog(): Promise<AlertLog> {
   ensureLogDiskLoaded();
   if (_log) return _log;
@@ -87,6 +99,16 @@ function countSentThisHour(log: AlertLog): number {
 /*  Dispatch                                                          */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Process a batch of candidate alert events through the dispatch pipeline.
+ *
+ * Each candidate is checked for suppression, cooldown, site throttle, and
+ * rate limits before being sent to matched recipients via email.
+ * The alert log and site throttle state are persisted after processing.
+ *
+ * @param candidateEvents - Alert events to evaluate and potentially dispatch
+ * @returns Summary counts of sent, suppressed, throttled, rate-limited, and errored events
+ */
 export async function dispatchAlerts(candidateEvents: AlertEvent[]): Promise<DispatchResult> {
   const log = await loadAlertLog();
   const suppressions = await loadSuppressions();

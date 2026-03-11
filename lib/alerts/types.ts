@@ -1,11 +1,20 @@
-/* ------------------------------------------------------------------ */
-/*  PIN Alerts — Core Types                                           */
-/* ------------------------------------------------------------------ */
+/**
+ * PIN Alerts — Core Types
+ *
+ * Shared type definitions for the alert dispatch engine, recipient management,
+ * custom rules, suppressions, and dispatch results.
+ */
 
+/** Alert severity levels, ordered from most to least urgent. */
 export type AlertSeverity = 'critical' | 'warning' | 'info';
+
+/** Supported alert delivery channels. Currently email only. */
 export type AlertChannel = 'email';
+
+/** All supported alert trigger sources across Sentinel, USGS, ATTAINS, etc. */
 export type AlertTriggerType = 'sentinel' | 'usgs' | 'delta' | 'attains' | 'nwss' | 'custom' | 'fusion' | 'coordination' | 'flood_forecast' | 'deployment' | 'hab' | 'beacon' | 'firms' | 'nws_weather';
 
+/** A single alert event to be dispatched (or already dispatched) to a recipient. */
 export interface AlertEvent {
   id: string;                    // uuid
   type: AlertTriggerType;
@@ -25,6 +34,7 @@ export interface AlertEvent {
   metadata: Record<string, unknown>;
 }
 
+/** A configured alert recipient with trigger and severity filters. */
 export interface AlertRecipient {
   email: string;
   name: string;
@@ -35,6 +45,7 @@ export interface AlertRecipient {
   active: boolean;
 }
 
+/** A custom alert rule with a condition that triggers alerts when met. */
 export interface AlertRule {
   id: string;
   name: string;
@@ -46,6 +57,7 @@ export interface AlertRule {
   createdAt: string;
 }
 
+/** The condition evaluated by an {@link AlertRule} — compares a metric against a threshold. */
 export interface RuleCondition {
   source: string;
   metric: string;
@@ -53,6 +65,7 @@ export interface RuleCondition {
   value: number;
 }
 
+/** A suppression rule that silences alerts matching a dedupKey pattern. */
 export interface AlertSuppression {
   id: string;
   dedupKey: string;              // pattern to suppress (supports wildcards)
@@ -62,6 +75,7 @@ export interface AlertSuppression {
   createdAt: string;
 }
 
+/** Persistent log of all alert events with aggregate counters. */
 export interface AlertLog {
   events: AlertEvent[];
   lastDispatchAt: string | null;
@@ -72,6 +86,7 @@ export interface AlertLog {
   totalLogged: number;
 }
 
+/** Summary returned by {@link dispatchAlerts} after processing a batch of candidates. */
 export interface DispatchResult {
   sent: number;
   suppressed: number;

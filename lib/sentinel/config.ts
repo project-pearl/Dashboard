@@ -1,6 +1,10 @@
-/* ------------------------------------------------------------------ */
-/*  PIN Sentinel — Configuration (all scoring params externalized)    */
-/* ------------------------------------------------------------------ */
+/**
+ * PIN Sentinel — Configuration
+ *
+ * All scoring parameters externalized: base scores per source/severity,
+ * score thresholds, compound multi-hazard patterns, dedup windows,
+ * time decay, polling intervals, feature flags, and persistence paths.
+ */
 
 import type { ChangeSource, SeverityHint, CompoundPattern, ScoreLevel } from './types';
 
@@ -8,6 +12,7 @@ import type { ChangeSource, SeverityHint, CompoundPattern, ScoreLevel } from './
 /*  Base Scores: source × severity → numeric weight                   */
 /* ------------------------------------------------------------------ */
 
+/** Numeric weight matrix mapping each change source and severity hint to a base score. */
 export const BASE_SCORES: Record<ChangeSource, Record<SeverityHint, number>> = {
   NWS_ALERTS:       { LOW: 10, MODERATE: 25, HIGH: 40, CRITICAL: 60 },
   AIR_QUALITY:      { LOW:  5, MODERATE: 15, HIGH: 30, CRITICAL: 45 },
@@ -30,6 +35,7 @@ export const BASE_SCORES: Record<ChangeSource, Record<SeverityHint, number>> = {
 /*  Score Thresholds                                                  */
 /* ------------------------------------------------------------------ */
 
+/** Ordered thresholds mapping cumulative scores to Sentinel levels (CRITICAL→NOMINAL). */
 export const SCORE_THRESHOLDS: { min: number; level: ScoreLevel }[] = [
   { min: 150, level: 'CRITICAL' },
   { min:  75, level: 'WATCH' },
@@ -37,6 +43,12 @@ export const SCORE_THRESHOLDS: { min: number; level: ScoreLevel }[] = [
   { min:   0, level: 'NOMINAL' },
 ];
 
+/**
+ * Map a cumulative Sentinel score to a threat level.
+ *
+ * @param score - Cumulative score for a HUC region
+ * @returns The corresponding {@link ScoreLevel} (CRITICAL | WATCH | ADVISORY | NOMINAL)
+ */
 export function scoreToLevel(score: number): ScoreLevel {
   for (const t of SCORE_THRESHOLDS) {
     if (score >= t.min) return t.level;
@@ -48,6 +60,7 @@ export function scoreToLevel(score: number): ScoreLevel {
 /*  Compound Patterns                                                 */
 /* ------------------------------------------------------------------ */
 
+/** Multi-hazard compound patterns that apply score multipliers when co-occurring events match. */
 export const COMPOUND_PATTERNS: CompoundPattern[] = [
   {
     id: 'potomac-crisis',
@@ -185,6 +198,7 @@ export const COMPOUND_PATTERNS: CompoundPattern[] = [
 /*  Deduplication Windows                                             */
 /* ------------------------------------------------------------------ */
 
+/** Deduplication time windows (hours) to prevent redundant event scoring. */
 export const DEDUP_WINDOWS = {
   sameSourceId_hours: 1,
   sameGeography_hours: 4,
@@ -197,8 +211,11 @@ export const DEDUP_WINDOWS = {
 /*  Time Decay & Geographic Correlation                               */
 /* ------------------------------------------------------------------ */
 
+/** Hours over which event scores decay toward the floor. */
 export const TIME_DECAY_WINDOW_HOURS = 48;
+/** Minimum decay multiplier (events never fully zero out within the window). */
 export const TIME_DECAY_FLOOR = 0.1;
+/** Score multiplier applied when events occur in adjacent HUC regions. */
 export const ADJACENT_HUC_BONUS = 1.5;
 
 /* ------------------------------------------------------------------ */
@@ -206,6 +223,7 @@ export const ADJACENT_HUC_BONUS = 1.5;
 /*  Value = how many 5-min cycles between polls for each source       */
 /* ------------------------------------------------------------------ */
 
+/** Polling intervals per source, in multiples of the base 5-min sentinel-poll cron cycle. */
 export const POLL_INTERVALS: Record<ChangeSource, number> = {
   NWS_ALERTS:       1,   // every 5 min
   AIR_QUALITY:      6,   // every 30 min
@@ -228,6 +246,7 @@ export const POLL_INTERVALS: Record<ChangeSource, number> = {
 /*  Feature Flags (env-var driven)                                    */
 /* ------------------------------------------------------------------ */
 
+/** Runtime feature flags for Sentinel (read from environment variables). */
 export const SENTINEL_FLAGS = {
   get ENABLED()  { return process.env.SENTINEL_ENABLED  !== 'false'; },
   get SCORING()  { return process.env.SENTINEL_SCORING  !== 'false'; },
@@ -239,6 +258,7 @@ export const SENTINEL_FLAGS = {
 /*  Blob / Disk Paths                                                 */
 /* ------------------------------------------------------------------ */
 
+/** Vercel Blob storage paths for Sentinel persistence. */
 export const BLOB_PATHS = {
   eventQueue:      'sentinel/event-queue.json',
   sourceHealth:    'sentinel/source-health.json',
@@ -249,6 +269,7 @@ export const BLOB_PATHS = {
   coordination:    'sentinel/coordination-state.json',
 };
 
+/** Local disk paths for Sentinel cache persistence. */
 export const DISK_PATHS = {
   eventQueue:      '.cache/sentinel-event-queue.json',
   sourceHealth:    '.cache/sentinel-source-health.json',

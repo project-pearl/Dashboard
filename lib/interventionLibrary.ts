@@ -1,28 +1,37 @@
-// lib/interventionLibrary.ts
-// Intervention efficacy database for restoration planning
-// 9 intervention types with removal rates, cost models, ramp-up curves, and tidal adjustments
-// Pure data — zero React, zero side effects
+/**
+ * Intervention efficacy database for restoration planning.
+ *
+ * Contains 9 intervention types with pollutant removal rates, cost models,
+ * ramp-up curves, tidal adjustments, and compatibility matrices.
+ * Pure data — zero React dependencies, zero side effects.
+ */
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
+/** A min/expected/max confidence range for numeric estimates. */
 export interface ConfidenceRange {
   min: number;
   expected: number;
   max: number;
 }
 
+/** Supported pollutant identifiers for removal rate lookups. */
 export type PollutantId = 'TN' | 'TP' | 'TSS' | 'bacteria' | 'DO_improvement';
 
+/** Waterbody classification for intervention compatibility filtering. */
 export type WaterbodyCategory = 'estuary' | 'tidal_river' | 'freshwater' | 'coastal' | 'lake';
 
+/** Shape of the efficacy ramp-up curve over time. */
 export type RampFunction = 'linear' | 'logarithmic' | 'step';
 
+/** Time profile for an intervention to reach full efficacy. */
 export interface RampUpCurve {
   monthsToMinEfficacy: number;
   monthsToFullEfficacy: number;
   rampFunction: RampFunction;
 }
 
+/** Capital and annual O&M cost estimates for an intervention. */
 export interface CostModel {
   capitalPerUnit: ConfidenceRange;   // $ per unit
   annualOMPerUnit: ConfidenceRange;  // $ per unit per year
@@ -31,12 +40,14 @@ export interface CostModel {
   regionalNotes?: string;
 }
 
+/** Multipliers adjusting intervention efficacy in tidal environments. */
 export interface TidalAdjustment {
   flushingRateMultiplier: number;    // 0–1: high flushing reduces contact time
   depthMultiplier: number;           // deeper = less effective for some interventions
   salinityMultiplier: number;        // high salinity affects biological interventions
 }
 
+/** Complete definition of a restoration intervention with all efficacy and cost data. */
 export interface InterventionType {
   id: string;
   name: string;
@@ -54,6 +65,7 @@ export interface InterventionType {
 
 // ─── Intervention Library ───────────────────────────────────────────────────
 
+/** The complete library of 9 intervention types with efficacy and cost data. */
 export const INTERVENTION_LIBRARY: InterventionType[] = [
   // 1. PEARL ALIA Treatment
   {
@@ -352,10 +364,22 @@ export const INTERVENTION_LIBRARY: InterventionType[] = [
 
 const _byId = new Map(INTERVENTION_LIBRARY.map(i => [i.id, i]));
 
+/**
+ * Look up an intervention type by its ID.
+ *
+ * @param id - Intervention identifier (e.g. "pearl-alia", "oyster-reef")
+ * @returns The matching {@link InterventionType}, or undefined if not found
+ */
 export function getIntervention(id: string): InterventionType | undefined {
   return _byId.get(id);
 }
 
+/**
+ * Get all interventions compatible with a given waterbody category.
+ *
+ * @param type - Waterbody classification (e.g. "estuary", "freshwater")
+ * @returns Array of compatible {@link InterventionType} entries
+ */
 export function getInterventionsForWaterbody(type: WaterbodyCategory): InterventionType[] {
   return INTERVENTION_LIBRARY.filter(i => i.compatibleWaterbodies.includes(type));
 }

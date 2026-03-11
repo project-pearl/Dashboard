@@ -1,12 +1,21 @@
-// lib/restorationEngine.ts
-// Pure computation engine for PEARL restoration plans
-// Extracted from NCC inline logic — reusable by NCC, SCC, reports, and exports
-// Zero React dependencies — this is a data-in, data-out function
+/**
+ * Pure computation engine for PEARL restoration plans.
+ *
+ * Takes a {@link RestorationInput} (water quality parameters, ATTAINS data,
+ * alert level) and produces a comprehensive {@link RestorationResult} with
+ * impairment classification, severity scoring, treatment recommendations,
+ * BMP categories, PEARL unit sizing, cost estimates, and threat assessments.
+ *
+ * Zero React dependencies — data-in, data-out. Reusable by NCC, SCC,
+ * reports, and PDF exports.
+ */
 
 // ─── Input Types ─────────────────────────────────────────────────────────────
 
+/** Alert level indicating waterbody health status. */
 export type AlertLevel = 'none' | 'low' | 'medium' | 'high';
 
+/** Input data required to compute a PEARL restoration plan. */
 export interface RestorationInput {
   // Identity
   regionName: string;
@@ -27,8 +36,10 @@ export interface RestorationInput {
 
 // ─── Output Types ────────────────────────────────────────────────────────────
 
+/** Treatment module recommendation status, from strongest to weakest. */
 export type TreatmentStatus = 'recommended' | 'warranted' | 'co-benefit' | 'accelerator';
 
+/** A single treatment module within a restoration category. */
 export interface TreatmentModule {
   id: string;
   label: string;
@@ -38,6 +49,7 @@ export interface TreatmentModule {
   color: string;
 }
 
+/** A group of related treatment modules (e.g. Source Control, Nature-Based). */
 export interface RestorationCategory {
   id: string;
   title: string;
@@ -47,6 +59,7 @@ export interface RestorationCategory {
   color: string;
 }
 
+/** A classified ATTAINS impairment cause with tier and recommended action. */
 export interface ImpairmentItem {
   cause: string;
   tier: 1 | 2 | 3;
@@ -81,6 +94,7 @@ export interface WhyBullet {
   implication: string;
 }
 
+/** Complete output of {@link computeRestorationPlan} — all restoration analysis results. */
 export interface RestorationResult {
   // Identity
   regionName: string;
@@ -197,11 +211,22 @@ export interface RestorationResult {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
+/** Annual operating cost per PEARL unit ($). */
 export const COST_PER_UNIT_YEAR = 200000;
-export const UNITS_PER_QUAD = 4; // 1 quad = 4 units = 200 GPM
+/** Number of PEARL units per quad (1 quad = 4 units = 200 GPM treatment capacity). */
+export const UNITS_PER_QUAD = 4;
 
 // ─── Engine ──────────────────────────────────────────────────────────────────
 
+/**
+ * Compute a comprehensive PEARL restoration plan from input data.
+ *
+ * Performs impairment classification, severity scoring, treatment prioritization,
+ * BMP selection, PEARL unit sizing, cost estimation, and threat assessment.
+ *
+ * @param input - Water quality parameters, ATTAINS data, and alert level
+ * @returns A full {@link RestorationResult} with all analysis outputs
+ */
 export function computeRestorationPlan(input: RestorationInput): RestorationResult {
   const { regionName, stateAbbr, alertLevel: level, params, attainsCategory, attainsCauses, attainsCycle } = input;
 
@@ -728,6 +753,15 @@ export function computeRestorationPlan(input: RestorationInput): RestorationResu
 // ─── ATTAINS Category Resolution Helper ──────────────────────────────────────
 // Extracted so NCC and SCC can both use the same three-source worst-case logic
 
+/**
+ * Resolve the worst-case ATTAINS category from three sources:
+ * per-waterbody, bulk (state-level), and alert-level-derived.
+ *
+ * @param perWbCategory - Category from per-waterbody ATTAINS lookup
+ * @param bulkCategory  - Category from bulk state ATTAINS data
+ * @param alertLevel    - Current alert level (high→5, medium→4)
+ * @returns The worst (highest numbered) category string
+ */
 export function resolveAttainsCategory(
   perWbCategory: string,
   bulkCategory: string,
@@ -743,7 +777,14 @@ export function resolveAttainsCategory(
   });
 }
 
-// ── Cause Merge Helper ──
+/**
+ * Merge ATTAINS impairment causes from per-waterbody and bulk sources,
+ * deduplicating when both are available.
+ *
+ * @param perWbCauses - Causes from per-waterbody lookup
+ * @param bulkCauses  - Causes from bulk state data
+ * @returns Merged, deduplicated array of cause strings
+ */
 export function mergeAttainsCauses(perWbCauses: string[], bulkCauses: string[]): string[] {
   if (perWbCauses.length > 0 && bulkCauses.length > 0) {
     return [...new Set([...perWbCauses, ...bulkCauses])];

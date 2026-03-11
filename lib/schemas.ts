@@ -1,7 +1,16 @@
+/**
+ * Zod validation schemas for all API request bodies.
+ *
+ * Organized by domain: Upload, Alert, AI, Admin, Invite, Cache.
+ * Each schema is used with {@link parseBody} from `lib/validateRequest.ts`
+ * inside the corresponding API route handler.
+ */
+
 import { z } from 'zod';
 
 // ─── Upload Schemas ──────────────────────────────────────────────────────────
 
+/** Schema for a single water-quality sample submission (NGO/K-12 upload). */
 export const uploadSubmitSchema = z.object({
   parameter: z.enum(['DO', 'pH', 'temperature', 'turbidity', 'bacteria', 'TN', 'TP', 'conductivity']),
   value: z.number({ required_error: 'value is required' }).refine((v) => !isNaN(v), 'value must be a valid number'),
@@ -19,6 +28,7 @@ export const uploadSubmitSchema = z.object({
   state_abbr: z.string().optional(),
 });
 
+/** Schema for bulk CSV upload of water-quality samples. */
 export const csvUploadSchema = z.object({
   csv_text: z.string().min(1, 'csv_text is required').max(10_000_000, 'CSV exceeds 10MB limit'),
   user_id: z.string().min(1, 'user_id is required'),
@@ -30,6 +40,7 @@ export const csvUploadSchema = z.object({
   original_file: z.string().optional(),
 });
 
+/** Schema for approving pending sample submissions. */
 export const uploadApproveSchema = z.object({
   sample_ids: z.array(z.string()).min(1, 'sample_ids must be a non-empty array'),
   approved_by: z.string().min(1, 'approved_by is required'),
@@ -38,6 +49,7 @@ export const uploadApproveSchema = z.object({
 
 // ─── Alert Schemas ───────────────────────────────────────────────────────────
 
+/** Schema for creating a custom alert rule. */
 export const alertRuleCreateSchema = z.object({
   name: z.string().min(1, 'name is required'),
   condition: z.unknown(),
@@ -47,10 +59,12 @@ export const alertRuleCreateSchema = z.object({
   createdBy: z.string().optional().default('admin'),
 });
 
+/** Schema for deleting an alert rule by ID. */
 export const alertRuleDeleteSchema = z.object({
   id: z.string().min(1, 'id is required'),
 });
 
+/** Schema for adding a new alert recipient. */
 export const alertRecipientCreateSchema = z.object({
   email: z.string().email('valid email is required'),
   name: z.string().min(1, 'name is required'),
@@ -61,6 +75,7 @@ export const alertRecipientCreateSchema = z.object({
   active: z.boolean().optional().default(true),
 });
 
+/** Schema for updating an existing alert recipient's preferences. */
 export const alertRecipientUpdateSchema = z.object({
   email: z.string().email('valid email is required'),
   name: z.string().optional(),
@@ -71,10 +86,12 @@ export const alertRecipientUpdateSchema = z.object({
   active: z.boolean().optional(),
 });
 
+/** Schema for removing an alert recipient by email. */
 export const alertRecipientDeleteSchema = z.object({
   email: z.string().email('valid email is required'),
 });
 
+/** Schema for creating an alert suppression rule (silence a dedupKey). */
 export const alertSuppressCreateSchema = z.object({
   dedupKey: z.string().min(1, 'dedupKey is required'),
   reason: z.string().min(1, 'reason is required'),
@@ -82,14 +99,17 @@ export const alertSuppressCreateSchema = z.object({
   createdBy: z.string().optional().default('admin'),
 });
 
+/** Schema for removing an alert suppression by ID. */
 export const alertSuppressDeleteSchema = z.object({
   id: z.string().min(1, 'id is required'),
 });
 
+/** Schema for sending a test alert email. */
 export const alertTestSchema = z.object({
   email: z.string().email('valid email is required'),
 });
 
+/** Schema for creating a deployment-level alert (PEARL unit anomaly). */
 export const deploymentAlertCreateSchema = z.object({
   action: z.literal('create_alert'),
   deployment_id: z.string(),
@@ -105,6 +125,7 @@ export const deploymentAlertCreateSchema = z.object({
   pipeline_event_id: z.string(),
 });
 
+/** Schema for acknowledging a deployment alert. */
 export const deploymentAlertAckSchema = z.object({
   action: z.literal('acknowledge'),
   alert_id: z.string().min(1, 'alert_id is required'),
@@ -114,6 +135,7 @@ export const deploymentAlertAckSchema = z.object({
   action_taken: z.string(),
 });
 
+/** Schema for recording a single deployment alert timeline entry. */
 export const deploymentAlertTimelineSchema = z.object({
   action: z.literal('record_timeline'),
   alert_id: z.string(),
@@ -124,16 +146,19 @@ export const deploymentAlertTimelineSchema = z.object({
   severity: z.string(),
 });
 
+/** Schema for recording a batch of deployment alert timeline entries. */
 export const deploymentAlertBatchTimelineSchema = z.object({
   action: z.literal('batch_timeline'),
   entries: z.array(z.record(z.unknown())).min(1, 'entries must be a non-empty array'),
 });
 
+/** Schema for updating a deployment alert's status. */
 export const deploymentAlertUpdateSchema = z.object({
   alert_id: z.string().min(1, 'alert_id is required'),
   status: z.string().min(1, 'status is required'),
 });
 
+/** Discriminated union schema for all deployment alert actions. */
 export const deploymentAlertSchema = z.discriminatedUnion('action', [
   deploymentAlertCreateSchema,
   deploymentAlertAckSchema,
@@ -141,6 +166,7 @@ export const deploymentAlertSchema = z.discriminatedUnion('action', [
   deploymentAlertBatchTimelineSchema,
 ]);
 
+/** Schema for ingesting a fusion-engine anomaly detection event. */
 export const fusionIngestSchema = z.object({
   source: z.literal('fusion-engine'),
   anomaly: z.object({
@@ -162,6 +188,7 @@ export const fusionIngestSchema = z.object({
 
 // ─── AI Schemas ──────────────────────────────────────────────────────────────
 
+/** Schema for the Ask PIN AI question endpoint. */
 export const askPinSchema = z.object({
   question: z.string().min(1, 'question is required'),
   sectionId: z.string().optional(),
@@ -170,6 +197,7 @@ export const askPinSchema = z.object({
   kbContext: z.string().optional(),
 });
 
+/** Schema for the briefing Q&A follow-up endpoint. */
 export const briefingQaSchema = z.object({
   question: z.string().min(1, 'question is required'),
   role: z.enum(['Federal', 'State', 'MS4', 'Local']),
@@ -178,15 +206,18 @@ export const briefingQaSchema = z.object({
   isMilitary: z.boolean().optional(),
 });
 
+/** Schema for AI resolution plan generation. */
 export const resolutionPlanSchema = z.object({
   prompt: z.string().min(1, 'prompt is required'),
 });
 
+/** Schema for raw AI insight generation (system prompt + user message). */
 export const aiInsightsSchema = z.object({
   systemPrompt: z.string().min(1, 'systemPrompt is required'),
   userMessage: z.string().min(1, 'userMessage is required'),
 });
 
+/** Schema for AI-powered categorization of a named entity. */
 export const aiCategorizeSchema = z.object({
   type: z.string().min(1, 'type is required'),
   name: z.string().min(1, 'name is required'),
@@ -195,6 +226,7 @@ export const aiCategorizeSchema = z.object({
 
 // ─── Admin Schemas ───────────────────────────────────────────────────────────
 
+/** Schema for granting or revoking role-admin privileges. */
 export const grantRoleAdminSchema = z.object({
   targetUserId: z.string().min(1, 'targetUserId is required'),
   adminLevel: z.enum(['role_admin', 'none']),
@@ -202,6 +234,7 @@ export const grantRoleAdminSchema = z.object({
 
 // ─── Invite Schemas ──────────────────────────────────────────────────────────
 
+/** Schema for creating a new invite link with optional role/scope. */
 export const inviteCreateSchema = z.object({
   role: z.string().optional(),
   email: z.string().optional(),
@@ -212,12 +245,14 @@ export const inviteCreateSchema = z.object({
   isMilitary: z.boolean().optional(),
 });
 
+/** Schema for resolving (redeeming) an invite token. */
 export const inviteResolveSchema = z.object({
   token: z.string().min(1, 'token is required'),
 });
 
 // ─── Cache Schemas ───────────────────────────────────────────────────────────
 
+/** Schema for triggering a targeted cache refresh by source and scope key. */
 export const cacheRefreshSchema = z.object({
   source: z.string().min(1, 'source is required'),
   scopeKey: z.string().min(1, 'scopeKey is required'),
