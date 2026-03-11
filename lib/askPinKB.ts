@@ -477,6 +477,20 @@ export const SECTION_KB: Record<string, SectionKB> = {
     ],
   },
 
+  'at-risk-facilities': {
+    explanation: 'A compact alert card showing military installations and U.S. embassies currently under elevated environmental threat. Each facility is scored on a composite scale (0–100) combining four factors: fire proximity (0–40 points based on nearest FIRMS detection), AQI severity (0–30 based on nearby air quality readings), burn pit history (0–15 for documented PACT Act sites), and wind exposure (0–15 when winds carry smoke from nearby fires). Only facilities scoring 20+ appear here.',
+    lookFor: 'Color-coded left borders indicate severity: red (≥60, CRITICAL), amber (≥40, ELEVATED), yellow (≥20, MODERATE). Inline chips show specific threats — flame icon with distance to nearest fire, wind icon with AQI value, "BP" badge for burn pit history, and wind context from NDBC buoys. A green empty state means all facilities are within normal parameters.',
+    action: 'Focus on red/critical facilities first. Cross-reference fire proximity with wind direction to assess smoke plume risk. For embassies, coordinate with Regional Security Officers. For installations, notify Environmental Health and Force Health Protection offices.',
+    faq: [
+      { q: 'Why are embassies included?', keywords: ['embassy', 'embassies', 'state dept', 'why'],
+        a: 'U.S. embassies face the same environmental risks as military installations — wildfires, degraded air quality, and smoke exposure. Embassy staff and their families need the same environmental awareness. Embassies are shown with a flag icon and "State Dept" branch label.' },
+      { q: 'How is this different from the full scorecard?', keywords: ['scorecard', 'different', 'difference', 'full', 'table'],
+        a: 'The Installation Risk Scorecard (on the Fire & Air Quality lens) shows all facilities in a sortable table with every score column. This card is a compact alert view — it only shows facilities at elevated risk (composite ≥ 20) with inline threat chips for quick situational awareness.' },
+      { q: 'What do the composite scores mean?', keywords: ['composite', 'score', 'scoring', 'number', 'calculate'],
+        a: 'The composite score (0–100) sums four factors: Fire proximity (0–40) based on distance to nearest FIRMS hotspot, AQI severity (0–30) from nearby air quality monitors, Burn pit history (0–15) for PACT Act documented sites, and Wind exposure (0–15) when winds carry smoke from nearby fires toward the facility.' },
+    ],
+  },
+
   'military-installations': {
     explanation: 'Water quality monitoring data for military installations, including PFAS contamination tracking, groundwater status, and compliance with DoD environmental requirements.',
     lookFor: 'Installations with active PFAS plumes or expanding contamination. Facilities not meeting cleanup milestones.',

@@ -672,6 +672,7 @@ export const DEFAULT_SECTIONS = {
     { id: 'agricultural-nps',   label: 'Agricultural & NPS',          order: 36, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'disaster-emergency', label: 'Disaster & Emergency',        order: 37, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'ntas-status',           label: 'NTAS Threat Level',         order: 37.9, visible: true, defaultExpanded: true, lensControlled: true },
+    { id: 'at-risk-facilities',    label: 'At-Risk Installations & Embassies', order: 37.95, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'military-installations', label: 'Military Installations',  order: 38, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'waterfront-exposure', label: 'Waterfront Value Exposure',  order: 39, visible: true, defaultExpanded: true, lensControlled: true },
     { id: 'fund-srf',           label: 'SRF Program',                 order: 39.1, visible: true, defaultExpanded: true, lensControlled: true },

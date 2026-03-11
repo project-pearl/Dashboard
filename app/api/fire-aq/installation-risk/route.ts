@@ -1,5 +1,5 @@
 // app/api/fire-aq/installation-risk/route.ts
-// Scores each military installation for fire/AQ risk. Returns sorted by composite score.
+// Scores each military installation/embassy for fire/AQ risk. Returns sorted by composite score.
 
 export const dynamic = 'force-dynamic';
 
@@ -18,6 +18,7 @@ interface Installation {
   region: string;
   branch: string;
   burnPitHistory: boolean;
+  type?: 'installation' | 'embassy';
 }
 
 const INSTALLATIONS: Installation[] = installationsJson as Installation[];
@@ -52,6 +53,8 @@ export async function GET(request: NextRequest) {
   for (const s of aqStates) {
     stateAqiMap[s.state] = s.usAqi;
   }
+
+  const elevated = request.nextUrl.searchParams.get('elevated') === 'true';
 
   const scores = INSTALLATIONS.map(inst => {
     // Fire proximity score (0-40)
@@ -142,6 +145,7 @@ export async function GET(request: NextRequest) {
       name: inst.name,
       branch: inst.branch,
       region: inst.region,
+      type: inst.type || 'installation' as const,
       burnPitHistory: inst.burnPitHistory,
       fireScore,
       aqiScore,
@@ -157,5 +161,8 @@ export async function GET(request: NextRequest) {
 
   scores.sort((a, b) => b.composite - a.composite);
 
-  return NextResponse.json({ installations: scores });
+  const total = scores.length;
+  const filtered = elevated ? scores.filter(s => s.composite >= 20) : scores;
+
+  return NextResponse.json({ installations: filtered, total });
 }

@@ -84,6 +84,7 @@ import { FireAqCorrelationCard } from '@/components/FireAqCorrelationCard';
 import { InstallationRiskScorecard } from '@/components/InstallationRiskScorecard';
 import { WeatherAlertsSection } from '@/components/WeatherAlertsSection';
 import { NtasStatusBadge } from '@/components/NtasStatusBadge';
+import { AtRiskFacilitiesCard } from '@/components/AtRiskFacilitiesCard';
 
 import hucNamesData from '@/data/huc8-names.json';
 import centroidsData from '@/data/huc8-centroids.json';
@@ -339,7 +340,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['ntas-status', 'military-installations', 'fire-detection', 'fire-health-advisory', 'briefing-qa']),
+    sections: new Set(['ntas-status', 'at-risk-facilities', 'military-installations', 'fire-detection', 'fire-health-advisory', 'briefing-qa']),
   },
   'fire-air-quality': {
     label: 'Fire & Air Quality',
@@ -6267,6 +6268,8 @@ export function FederalManagementCenter(props: Props) {
         </>);
 
         case 'ntas-status': return DS(<NtasStatusBadge />);
+
+        case 'at-risk-facilities': return DS(<AtRiskFacilitiesCard />);
 
         case 'military-installations': return DS(<>
         {/* ── MILITARY INSTALLATIONS ── */}
