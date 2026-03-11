@@ -282,6 +282,7 @@ export function DashboardSidebar() {
     if (!lenses) return null;
     return lenses.filter((l) => {
       if (l.gateStates && !l.gateStates.has(adminState)) return false;
+      if (l.gateMilitary && !user?.isMilitary && user?.role !== 'Pearl' && !user?.isSuperAdmin) return false;
       if (l.id === 'users' && user?.adminLevel === 'none' && user?.role !== 'Pearl') return false;
       if (l.id === 'alerts' && !(user?.isSuperAdmin || user?.role === 'Pearl')) return false;
       return true;

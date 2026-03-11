@@ -9,6 +9,8 @@ export interface LensDef {
   label: string;
   /** If set, only show this lens when user's state is in this Set. */
   gateStates?: Set<string>;
+  /** If true, only show this lens to military-flagged Federal users (Pearl/super-admin bypass). */
+  gateMilitary?: boolean;
 }
 
 export const LENS_REGISTRY: Record<string, LensDef[]> = {
@@ -28,7 +30,7 @@ export const LENS_REGISTRY: Record<string, LensDef[]> = {
     { id: 'sentinel-monitoring', label: 'Sentinel Monitoring' },
     { id: 'disaster-emergency', label: 'Disaster & Emergency' },
     { id: 'military-installations', label: 'Military Installations' },
-    { id: 'fire-air-quality', label: 'Fire & Air Quality' },
+    { id: 'fire-air-quality', label: 'Fire & Air Quality', gateMilitary: true },
     { id: 'scorecard', label: 'Scorecard' },
     { id: 'reports', label: 'Reports' },
     { id: 'interagency', label: 'Cross-Agency' },

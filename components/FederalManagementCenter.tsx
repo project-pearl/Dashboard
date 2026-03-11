@@ -82,6 +82,8 @@ import { FireAirQualityIntelPanel } from '@/components/FireAirQualityIntelPanel'
 import { AqiTrendChart } from '@/components/AqiTrendChart';
 import { FireAqCorrelationCard } from '@/components/FireAqCorrelationCard';
 import { InstallationRiskScorecard } from '@/components/InstallationRiskScorecard';
+import { WeatherAlertsSection } from '@/components/WeatherAlertsSection';
+import { NtasStatusBadge } from '@/components/NtasStatusBadge';
 
 import hucNamesData from '@/data/huc8-names.json';
 import centroidsData from '@/data/huc8-centroids.json';
@@ -337,7 +339,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['military-installations', 'fire-detection', 'fire-health-advisory', 'briefing-qa']),
+    sections: new Set(['ntas-status', 'military-installations', 'fire-detection', 'fire-health-advisory', 'briefing-qa']),
   },
   'fire-air-quality': {
     label: 'Fire & Air Quality',
@@ -347,7 +349,7 @@ const LENS_CONFIG: Record<ViewLens, {
     showNetworkHealth: false, showNationalImpact: false, showAIInsights: false,
     showHotspots: false, showSituationSummary: false, showTimeRange: false,
     showSLA: false, showRestorationPlan: false, collapseStateTable: true,
-    sections: new Set(['fire-aq-intel', 'fire-aq-correlation', 'installation-risk-scorecard', 'aqi-trend-chart', 'briefing-qa']),
+    sections: new Set(['fire-aq-intel', 'fire-aq-correlation', 'installation-risk-scorecard', 'aqi-trend-chart', 'weather-alerts', 'briefing-qa']),
   },
   scorecard: {
     label: 'Scorecard',
@@ -6264,6 +6266,8 @@ export function FederalManagementCenter(props: Props) {
         <DisasterEmergencyPanel selectedState={selectedState} stateRollup={stateRollup} />
         </>);
 
+        case 'ntas-status': return DS(<NtasStatusBadge />);
+
         case 'military-installations': return DS(<>
         {/* ── MILITARY INSTALLATIONS ── */}
         <MilitaryInstallationsPanel selectedState={selectedState} />
@@ -6312,6 +6316,10 @@ export function FederalManagementCenter(props: Props) {
 
         case 'aqi-trend-chart': return DS(
           <AqiTrendChart selectedState={selectedState} />
+        );
+
+        case 'weather-alerts': return DS(
+          <WeatherAlertsSection />
         );
 
         case 'fire-health-advisory': return DS(
