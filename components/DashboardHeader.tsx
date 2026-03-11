@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { usePathname } from 'next/navigation';
+import React, { useEffect } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
 import UserMenu from '@/components/UserMenu';
 import GlobalAlertBadge from '@/ams/components/GlobalAlertBadge';
 import { useAlertSummary } from '@/ams/hooks/useAlertSummary';
@@ -45,6 +45,17 @@ export function DashboardHeader() {
   const routeLabel = ROUTE_LABELS[routeKey] || routeKey;
   const accentColor = ROUTE_ACCENTS[routeKey] || 'text-blue-600';
   const subParam = segments[2]; // e.g. stateCode or permitId
+  const searchParams = useSearchParams();
+  const lens = searchParams.get('lens');
+
+  // Update page title to reflect current view
+  useEffect(() => {
+    const parts = ['PIN'];
+    if (routeLabel) parts.push(routeLabel);
+    if (lens) parts.push(lens.charAt(0).toUpperCase() + lens.slice(1).replace(/-/g, ' '));
+    if (subParam) parts.push(subParam.toUpperCase());
+    document.title = parts.join(' — ');
+  }, [routeLabel, lens, subParam]);
 
   return (
     <header className="h-14 flex items-center justify-between px-4 lg:px-6 bg-white border-b border-slate-200 flex-shrink-0 shadow-sm dark:bg-[rgba(14,22,45,0.9)] dark:backdrop-blur-xl dark:border-[rgba(58,189,176,0.12)]">

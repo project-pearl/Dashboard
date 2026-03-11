@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MapPin } from 'lucide-react';
 
 const MapboxMapShell = dynamic(
   () => import('@/components/MapboxMapShell').then(m => m.MapboxMapShell),
-  { ssr: false }
+  { ssr: false, loading: () => <div className="w-full h-[400px] rounded-xl bg-slate-100 dark:bg-slate-800/50 animate-pulse flex items-center justify-center"><span className="text-xs text-slate-400">Loading map…</span></div> }
 );
 
 interface Detection {
@@ -86,10 +86,10 @@ export function FireAqMap({ data }: { data: MapData | null }) {
     };
   }, [data]);
 
-  // We need react-map-gl components for layers; import them dynamically
+  // react-map-gl components loaded at module level via next/dynamic
   const [RMG, setRMG] = useState<any>(null);
-  useEffect(() => {
-    import('react-map-gl/mapbox').then(mod => setRMG(mod));
+  React.useEffect(() => {
+    import('react-map-gl/mapbox').then(mod => setRMG(mod)).catch(() => {});
   }, []);
 
   if (!data) {

@@ -91,15 +91,15 @@ import centroidsData from '@/data/huc8-centroids.json';
 
 const MapboxMapShell = dynamic(
   () => import('@/components/MapboxMapShell').then(m => m.MapboxMapShell),
-  { ssr: false }
+  { ssr: false, loading: () => <div className="w-full h-[400px] rounded-xl bg-slate-100 dark:bg-slate-800/50 animate-pulse flex items-center justify-center"><span className="text-xs text-slate-400">Loading map…</span></div> }
 );
 const MapboxChoropleth = dynamic(
   () => import('@/components/MapboxChoropleth').then(m => m.MapboxChoropleth),
-  { ssr: false }
+  { ssr: false, loading: () => <div className="w-full h-[400px] rounded-xl bg-slate-100 dark:bg-slate-800/50 animate-pulse flex items-center justify-center"><span className="text-xs text-slate-400">Loading map…</span></div> }
 );
 const SentinelAlertLayer = dynamic(
   () => import('@/components/SentinelAlertLayer').then(m => m.SentinelAlertLayer),
-  { ssr: false }
+  { ssr: false, loading: () => <div className="w-full h-[400px] rounded-xl bg-slate-100 dark:bg-slate-800/50 animate-pulse flex items-center justify-center"><span className="text-xs text-slate-400">Loading map…</span></div> }
 );
 
 // ─── Types ────────────────────────────────────────────────────────────────────
