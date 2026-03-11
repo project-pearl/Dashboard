@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { isAuthorized } from '@/lib/apiAuth';
 import { ensureWarmed as ensureFirmsWarmed, getFirmsAllRegions } from '@/lib/firmsCache';
 import { ensureWarmed as ensureAqWarmed, getAirQualityAllStates } from '@/lib/airQualityCache';
+import { ensureWarmed as ensureEmbassyAqiWarmed, getEmbassyAqiForFacility } from '@/lib/embassyAqiCache';
 import { getNdbcCache } from '@/lib/ndbcCache';
 import { ensureWarmed as ensureUsdmWarmed, getUsdmByState } from '@/lib/usdmCache';
 import { ensureWarmed as ensureSeismicWarmed, getSeismicAll } from '@/lib/seismicCache';
@@ -46,7 +47,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  await Promise.all([ensureFirmsWarmed(), ensureAqWarmed(), ensureUsdmWarmed(), ensureSeismicWarmed(), ensureDamWarmed()]);
+  await Promise.all([ensureFirmsWarmed(), ensureAqWarmed(), ensureEmbassyAqiWarmed(), ensureUsdmWarmed(), ensureSeismicWarmed(), ensureDamWarmed()]);
 
   const regions = getFirmsAllRegions();
   const allDetections = regions.flatMap(r => r.detections);
@@ -83,14 +84,29 @@ export async function GET(request: NextRequest) {
     // Bonus for high-confidence fires within 25mi
     fireScore = Math.min(40, fireScore + highConfWithin25 * 5);
 
-    // AQI severity score (0-30) — use nearest CONUS state AQI
+    // AQI severity score (0-30) — use nearest CONUS state AQI, then overlay WAQI
     let aqiScore = 0;
     let aqiValue: number | null = null;
+    let aqiSource: 'waqi' | 'airnow' | null = null;
     // Simple: find AQI readings from all states, take the most relevant
     for (const s of aqStates) {
       const dist = haversineMi(inst.lat, inst.lng, s.lat, s.lng);
       if (dist < 300 && s.usAqi != null) {
-        if (aqiValue == null || s.usAqi > aqiValue) aqiValue = s.usAqi;
+        if (aqiValue == null || s.usAqi > aqiValue) {
+          aqiValue = s.usAqi;
+          aqiSource = 'airnow';
+        }
+      }
+    }
+    // Overlay WAQI data — prefer it when AirNow has no data, or WAQI station is closer than 50mi
+    const embassyReading = getEmbassyAqiForFacility(inst.id);
+    if (embassyReading?.aqi != null) {
+      if (aqiValue == null) {
+        aqiValue = embassyReading.aqi;
+        aqiSource = 'waqi';
+      } else if (embassyReading.stationDistanceMi != null && embassyReading.stationDistanceMi < 50) {
+        aqiValue = embassyReading.aqi;
+        aqiSource = 'waqi';
       }
     }
     if (aqiValue != null) {
@@ -215,6 +231,7 @@ export async function GET(request: NextRequest) {
       nearestFireDist: nearestFireDist === Infinity ? null : Math.round(nearestFireDist * 10) / 10,
       nearestFireFrp: nearestFireDist === Infinity ? null : Math.round(nearestFireFrp * 10) / 10,
       aqiValue,
+      aqiSource,
       windContext: windContext || null,
       droughtLevel,
       nearestQuakeDist: earthquakes.length > 0 ? nearestQuakeDist : null,

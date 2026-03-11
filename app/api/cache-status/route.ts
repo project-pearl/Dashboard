@@ -54,6 +54,7 @@ import { getHefsCacheStatus, ensureWarmed as warmHefs } from '@/lib/hefsCache';
 import { getFirmsCacheStatus, ensureWarmed as warmFirms } from '@/lib/firmsCache';
 import { getSeismicCacheStatus, ensureWarmed as warmSeismic } from '@/lib/seismicCache';
 import { getDamCacheStatus, ensureWarmed as warmDam } from '@/lib/damCache';
+import { getEmbassyAqiCacheStatus, ensureWarmed as warmEmbassyAqi } from '@/lib/embassyAqiCache';
 import { getHealthSummary, ensureWarmed as warmSentinelHealth } from '@/lib/sentinel/sentinelHealth';
 import { getQueueStats, ensureWarmed as warmSentinelQueue } from '@/lib/sentinel/eventQueue';
 import { getScoredHucsSummary, ensureWarmed as warmSentinelScores } from '@/lib/sentinel/scoringEngine';
@@ -79,7 +80,7 @@ export async function GET(request: NextRequest) {
     [warmNwisIv, warmUsgsAlerts, warmNwsAlerts, warmNwps, warmCoops, warmSnotel],
     [warmTri, warmUSAs, warmGrantsGov, warmSam, warmSentinelHealth, warmSentinelQueue, warmSentinelScores],
     [warmFema, warmSuperfund, warmUsdm, warmUsgsDv, warmCoopsDerived, warmErddapSat],
-    [warmNasaStream, warmNwm, warmIpac, warmNcei, warmHabsos, warmGlerl, warmHefs, warmBeacon, warmSsoCso, warmFirms, warmSeismic, warmDam],
+    [warmNasaStream, warmNwm, warmIpac, warmNcei, warmHabsos, warmGlerl, warmHefs, warmBeacon, warmSsoCso, warmFirms, warmSeismic, warmDam, warmEmbassyAqi],
   ];
   for (const batch of warmBatches) {
     await Promise.allSettled(batch.map(fn => fn()));
@@ -132,6 +133,7 @@ export async function GET(request: NextRequest) {
   const firms = getFirmsCacheStatus();
   const seismic = getSeismicCacheStatus();
   const dam = getDamCacheStatus();
+  const embassyAqi = getEmbassyAqiCacheStatus();
 
   const caches = {
     wqp: {
@@ -326,6 +328,10 @@ export async function GET(request: NextRequest) {
     dam: {
       ...dam,
       ...staleness(dam.loaded ? (dam as any).built : null),
+    },
+    embassyAqi: {
+      ...embassyAqi,
+      ...staleness(embassyAqi.loaded ? (embassyAqi as any).built : null),
     },
   };
 
