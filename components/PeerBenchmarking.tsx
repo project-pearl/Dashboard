@@ -271,7 +271,7 @@ function StatePeerBenchmarking({ removalEfficiencies, regionId }: { removalEffic
                           style={{ width: `${(s[r.field] / maxVal) * 100}%` }}
                         />
                         {isMe && (
-                          <span className="absolute inset-0 flex items-center justify-end pr-2 text-[10px] font-bold text-white">
+                          <span className="absolute inset-0 flex items-center justify-end pr-2 text-2xs font-bold text-white">
                             {s[r.field].toFixed(1)}%
                           </span>
                         )}
@@ -295,7 +295,7 @@ function StatePeerBenchmarking({ removalEfficiencies, regionId }: { removalEffic
                   </div>
                   <div className="flex items-center gap-2 mb-2">
                     <div className="flex-1">
-                      <div className="flex justify-between text-[10px] text-slate-500 mb-0.5">
+                      <div className="flex justify-between text-2xs text-slate-500 mb-0.5">
                         <span>{myState.label}: {r.stateVal.toFixed(1)}%</span>
                         <span>{r.leader.label}: {r.leader[r.field].toFixed(1)}%</span>
                       </div>
@@ -305,7 +305,7 @@ function StatePeerBenchmarking({ removalEfficiencies, regionId }: { removalEffic
                       </div>
                     </div>
                   </div>
-                  <div className="text-[11px] text-slate-600 space-y-0.5">
+                  <div className="text-xs text-slate-600 space-y-0.5">
                     <div className="flex items-center gap-1">
                       <ChevronRight className="h-3 w-3 text-indigo-500 flex-shrink-0" />
                       <span>Improve {r.label.toLowerCase()} removal by <span className="font-bold text-indigo-700">{r.gapTo1.toFixed(1)}%</span> to match {r.leader.label}</span>
@@ -335,7 +335,7 @@ function StatePeerBenchmarking({ removalEfficiencies, regionId }: { removalEffic
                     <Award className="h-3.5 w-3.5" />
                     {myState.label} leads the {regionInfo.name} in {r.label.toLowerCase()} removal
                   </div>
-                  <div className="text-[11px] text-green-700 mt-1">
+                  <div className="text-xs text-green-700 mt-1">
                     {(r.stateVal - r.peerAvg).toFixed(1)}% above the regional average ({r.peerAvg.toFixed(1)}%) — maintain through continued BMP investment and monitoring
                   </div>
                 </div>
@@ -365,7 +365,7 @@ function StatePeerBenchmarking({ removalEfficiencies, regionId }: { removalEffic
                   ) : (
                     <>
                       <div className="text-sm font-bold text-indigo-700">+{r.gapTo1.toFixed(1)}%</div>
-                      <div className="text-[10px] text-slate-500">to match {r.leader.abbr}</div>
+                      <div className="text-2xs text-slate-500">to match {r.leader.abbr}</div>
                     </>
                   )}
                 </div>

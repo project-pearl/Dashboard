@@ -438,7 +438,7 @@ export default function PredictiveRiskEnginePanel() {
         <div className="flex items-center gap-2">
           <Zap className="h-5 w-5 text-purple-600" />
           <h2 className="text-lg font-bold text-slate-800">Predictive Risk Engine</h2>
-          <Badge variant="outline" className="text-[10px] font-mono">
+          <Badge variant="outline" className="text-2xs font-mono">
             {hucs.length} HUCs
           </Badge>
         </div>
@@ -465,15 +465,15 @@ export default function PredictiveRiskEnginePanel() {
               const confColor = stat.avgConfidence >= 70 ? 'bg-green-100 text-green-700' : stat.avgConfidence >= 40 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500';
               return (
                 <div key={stat.id} className="border border-slate-200 rounded-lg p-2 bg-white text-center space-y-1">
-                  <p className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider truncate" title={stat.label}>
+                  <p className="text-2xs font-semibold text-slate-500 uppercase tracking-wider truncate" title={stat.label}>
                     {INDEX_SHORT[stat.id]}
                   </p>
                   <p className="text-xl font-bold text-slate-800">{stat.avg}</p>
                   <div className="flex items-center justify-center gap-1">
                     <TrendIcon className={`h-3 w-3 ${trendColor}`} />
-                    <span className={`text-[9px] px-1 py-0.5 rounded ${confColor}`}>{confTier}</span>
+                    <span className={`text-2xs px-1 py-0.5 rounded ${confColor}`}>{confTier}</span>
                   </div>
-                  <p className="text-[8px] text-slate-400 truncate" title={`Worst: ${stat.worstHuc}`}>
+                  <p className="text-2xs text-slate-400 truncate" title={`Worst: ${stat.worstHuc}`}>
                     Worst: {stat.worstHuc || '—'}
                   </p>
                 </div>
@@ -505,7 +505,7 @@ export default function PredictiveRiskEnginePanel() {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full text-[10px]">
+            <table className="w-full text-2xs">
               <thead>
                 <tr className="border-b border-slate-200">
                   <th className="text-left py-2 pr-2 text-slate-500 font-semibold sticky left-0 bg-white z-10">Prediction</th>
@@ -527,7 +527,7 @@ export default function PredictiveRiskEnginePanel() {
                       if (!role) return <td key={idx} className="text-center px-1 py-1.5" />;
                       return (
                         <td key={idx} className="text-center px-1 py-1.5">
-                          <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[9px] font-bold ${
+                          <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-2xs font-bold ${
                             role === 'P' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'
                           }`}>
                             {role}
@@ -540,7 +540,7 @@ export default function PredictiveRiskEnginePanel() {
               </tbody>
             </table>
           </div>
-          <p className="text-[9px] text-slate-400 mt-2">
+          <p className="text-2xs text-slate-400 mt-2">
             Showing 9 implemented indices. The full v2 spec defines 14 indices — 5 additional indices (Treatment Efficacy, Climate Vulnerability, Contaminant Interaction, Source Attribution, Temporal Trend Severity) are planned.
           </p>
         </CardContent>
@@ -597,17 +597,17 @@ export default function PredictiveRiskEnginePanel() {
                 <div key={step.phase} className={`rounded-lg border p-2.5 ${step.color} relative`}>
                   <div className="flex items-center gap-1.5 mb-2">
                     <StepIcon className="h-3.5 w-3.5" />
-                    <span className="text-[10px] font-bold uppercase tracking-wide">{step.phase}</span>
+                    <span className="text-2xs font-bold uppercase tracking-wide">{step.phase}</span>
                   </div>
                   <ul className="space-y-1 mb-2">
                     {step.features.map(f => (
-                      <li key={f} className="text-[9px] text-slate-600 flex items-center gap-1">
+                      <li key={f} className="text-2xs text-slate-600 flex items-center gap-1">
                         <CheckCircle className="h-2.5 w-2.5 text-slate-400 flex-shrink-0" />
                         {f}
                       </li>
                     ))}
                   </ul>
-                  <p className="text-[8px] text-slate-500 border-t border-current/10 pt-1.5">{step.feature}</p>
+                  <p className="text-2xs text-slate-500 border-t border-current/10 pt-1.5">{step.feature}</p>
                   {i < 4 && (
                     <div className="absolute top-1/2 -right-1.5 transform -translate-y-1/2 text-slate-300 text-sm font-bold hidden lg:block">
                       ›
@@ -658,13 +658,13 @@ export default function PredictiveRiskEnginePanel() {
                         <td className="py-2 pr-3 text-right font-bold text-slate-800">{Math.round(row.composite)}</td>
                         <td className="py-2 pr-3 text-slate-700">{row.topRisk.label}</td>
                         <td className="py-2 pr-3 text-center">
-                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${RISK_BG[row.topRisk.level]} ${RISK_TEXT[row.topRisk.level]}`}>
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-bold ${RISK_BG[row.topRisk.level]} ${RISK_TEXT[row.topRisk.level]}`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${RISK_DOT[row.topRisk.level]}`} />
                             {topDisplay}
                           </span>
                         </td>
                         <td className="py-2 text-right">
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                          <span className={`text-2xs px-1.5 py-0.5 rounded ${
                             rowTier === 'HIGH' ? 'bg-green-100 text-green-700' : rowTier === 'MODERATE' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500'
                           }`}>{rowTier}</span>
                         </td>
@@ -682,7 +682,7 @@ export default function PredictiveRiskEnginePanel() {
                                   <div key={pred.id} className="flex items-center gap-2 p-2 rounded border border-slate-200 bg-white">
                                     <span className={`w-2 h-2 rounded-full flex-shrink-0 ${RISK_DOT[pred.level]}`} />
                                     <div className="flex-1 min-w-0">
-                                      <p className="text-[10px] font-medium text-slate-700 truncate">{pred.label}</p>
+                                      <p className="text-2xs font-medium text-slate-700 truncate">{pred.label}</p>
                                       <p className={`text-xs font-bold ${RISK_TEXT[pred.level]}`}>{predDisplay}</p>
                                     </div>
                                   </div>
@@ -699,7 +699,7 @@ export default function PredictiveRiskEnginePanel() {
             </table>
           </div>
           {hucRisks.length > 20 && (
-            <p className="text-[10px] text-slate-400 mt-2 text-center">
+            <p className="text-2xs text-slate-400 mt-2 text-center">
               Showing top 20 of {hucRisks.length} HUCs
             </p>
           )}
@@ -738,7 +738,7 @@ export default function PredictiveRiskEnginePanel() {
               const total = c.high + c.moderate + c.low;
               return (
                 <div key={c.id} className="border border-slate-200 rounded-lg p-2 text-center bg-white">
-                  <p className="text-[9px] font-semibold text-slate-500 uppercase truncate" title={c.label}>{c.short}</p>
+                  <p className="text-2xs font-semibold text-slate-500 uppercase truncate" title={c.label}>{c.short}</p>
                   <div className="flex justify-center gap-0.5 mt-1.5">
                     {total > 0 && (
                       <>
@@ -748,7 +748,7 @@ export default function PredictiveRiskEnginePanel() {
                       </>
                     )}
                   </div>
-                  <p className="text-[8px] text-slate-400 mt-1">{c.high}H / {c.moderate}M / {c.low}L</p>
+                  <p className="text-2xs text-slate-400 mt-1">{c.high}H / {c.moderate}M / {c.low}L</p>
                 </div>
               );
             })}
@@ -764,10 +764,10 @@ export default function PredictiveRiskEnginePanel() {
           { tier: 'LOW' as const, color: 'bg-slate-100 text-slate-500', format: 'Directional indicator only', example: '"Elevated risk"', guardrail: 'No specific probabilities. Flag data gaps.' },
         ].map(t => (
           <div key={t.tier} className="rounded-lg border border-slate-200 bg-white p-2.5 space-y-1">
-            <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold ${t.color}`}>{t.tier}</span>
-            <p className="text-[10px] text-slate-600"><span className="font-semibold">Format:</span> {t.format}</p>
-            <p className="text-[10px] text-slate-500 font-mono">{t.example}</p>
-            <p className="text-[9px] text-slate-400">{t.guardrail}</p>
+            <span className={`inline-block px-1.5 py-0.5 rounded text-2xs font-bold ${t.color}`}>{t.tier}</span>
+            <p className="text-2xs text-slate-600"><span className="font-semibold">Format:</span> {t.format}</p>
+            <p className="text-2xs text-slate-500 font-mono">{t.example}</p>
+            <p className="text-2xs text-slate-400">{t.guardrail}</p>
           </div>
         ))}
       </div>

@@ -156,7 +156,7 @@ function AquaLoContent() {
                     <ClipboardList className="w-4 h-4 text-teal-600" />
                     <div>
                       <div className="text-sm font-medium text-slate-800">{v.id}</div>
-                      <div className="text-[10px] text-slate-400">{v.method} · {v.records} records · {v.age} ago</div>
+                      <div className="text-2xs text-slate-400">{v.method} · {v.records} records · {v.age} ago</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -208,14 +208,14 @@ function AquaLoContent() {
                   const heightPct = (m.count / maxCount) * 100;
                   return (
                     <div key={m.month} className="flex-1 flex flex-col items-center gap-1">
-                      <span className="text-[10px] text-slate-500 font-medium">{m.count}</span>
+                      <span className="text-2xs text-slate-500 font-medium">{m.count}</span>
                       <div className="w-full bg-slate-100 rounded-t-md overflow-hidden" style={{ height: '100px' }}>
                         <div
                           className="w-full bg-teal-400 rounded-t-md mt-auto"
                           style={{ height: `${heightPct}%`, marginTop: `${100 - heightPct}%` }}
                         />
                       </div>
-                      <span className="text-[10px] text-slate-400">{m.month}</span>
+                      <span className="text-2xs text-slate-400">{m.month}</span>
                     </div>
                   );
                 })}
@@ -231,17 +231,17 @@ function AquaLoContent() {
               <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 text-center">
                 <Network className="w-6 h-6 text-emerald-600 mx-auto mb-2" />
                 <div className="text-lg font-bold text-emerald-700">Online</div>
-                <div className="text-[10px] text-emerald-600 mt-1">PIN Network Status</div>
+                <div className="text-2xs text-emerald-600 mt-1">PIN Network Status</div>
               </div>
               <div className="bg-white border border-slate-200 rounded-lg p-4 text-center">
                 <TrendingUp className="w-6 h-6 text-teal-600 mx-auto mb-2" />
                 <div className="text-lg font-bold text-slate-800">5,698</div>
-                <div className="text-[10px] text-slate-500 mt-1">Total Records Published</div>
+                <div className="text-2xs text-slate-500 mt-1">Total Records Published</div>
               </div>
               <div className="bg-white border border-slate-200 rounded-lg p-4 text-center">
                 <Timer className="w-6 h-6 text-sky-600 mx-auto mb-2" />
                 <div className="text-lg font-bold text-slate-800">18 min</div>
-                <div className="text-[10px] text-slate-500 mt-1">Avg. Publish Latency</div>
+                <div className="text-2xs text-slate-500 mt-1">Avg. Publish Latency</div>
               </div>
             </div>
           </DashboardSection>
@@ -274,7 +274,7 @@ function AquaLoContent() {
                   m.status === 'good' ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'
                 }`}>
                   <div className={`text-xl font-bold ${m.status === 'good' ? 'text-emerald-700' : 'text-amber-700'}`}>{m.value}</div>
-                  <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-1">{m.label}</div>
+                  <div className="text-2xs uppercase tracking-wider text-slate-500 mt-1">{m.label}</div>
                 </div>
               ))}
             </div>
@@ -290,7 +290,7 @@ function AquaLoContent() {
                   {auditIcon(a.type)}
                   <div className="flex-1 min-w-0">
                     <div className="text-sm text-slate-800">{a.action}</div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">{a.user} · {a.time}</div>
+                    <div className="text-2xs text-slate-400 mt-0.5">{a.user} · {a.time}</div>
                   </div>
                 </div>
               ))}

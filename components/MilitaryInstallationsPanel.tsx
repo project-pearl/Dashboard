@@ -251,12 +251,24 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
       .map((v, idx) => {
         const facility = scopePermits.find((p) => p.permit === v.permit)?.facility || v.permit;
         const eventScore = Math.min(0.99, (v.rnc ? 0.78 : 0.55) + (v.severity.toLowerCase().includes('high') ? 0.18 : 0) - (idx * 0.05));
+
+        // CBRN indicators: derive from violation characteristics
+        const cbrnIndicators: { category: string; confidence: number }[] = [];
+        const descLower = (v.desc || '').toLowerCase();
+        if (descLower.includes('chemical') || descLower.includes('ph') || descLower.includes('conductiv')) {
+          cbrnIndicators.push({ category: 'chemical', confidence: eventScore });
+        }
+        if (descLower.includes('biological') || descLower.includes('bacteria') || descLower.includes('coliform')) {
+          cbrnIndicators.push({ category: 'biological', confidence: eventScore });
+        }
+
         return {
           time: safeDate(v.date)?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false, timeZoneName: 'short' }) || 'N/A',
           location: facility,
           signal: `${v.code}${v.desc ? ` - ${v.desc}` : ''}`,
           score: eventScore.toFixed(2),
           classif: eventScore >= 0.8 ? 'POSSIBLE INTRUSION' : eventScore >= 0.65 ? 'CORRELATED EVENT' : 'WATCH',
+          cbrnIndicators: cbrnIndicators.length > 0 ? cbrnIndicators : undefined,
         };
       });
 
@@ -539,7 +551,7 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
         <CardHeader className="pb-3 border-b border-slate-200 dark:border-slate-700">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="space-y-1">
-              <div className="text-[11px] tracking-[0.16em] text-slate-500 dark:text-slate-400 uppercase">For Official Use</div>
+              <div className="text-xs tracking-[0.16em] text-slate-500 dark:text-slate-400 uppercase">For Official Use</div>
               <CardTitle className="text-lg md:text-xl flex items-center gap-2">
                 <Radar className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                 PIN Sentinel Commander Water Threat Brief
@@ -571,15 +583,15 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
               <p className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed">{commanderBrief.summary}</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-3">
                 <div className="rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700/60 p-2">
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Primary Site</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 uppercase">Primary Site</div>
                   <div className="text-xs text-slate-800 dark:text-slate-200 mt-1 line-clamp-2">{commanderBrief.situation.facility}</div>
                 </div>
                 <div className="rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700/60 p-2">
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Latest Signal</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 uppercase">Latest Signal</div>
                   <div className="text-xs text-slate-800 dark:text-slate-200 mt-1 line-clamp-2">{commanderBrief.situation.latestSignal}</div>
                 </div>
                 <div className="rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700/60 p-2">
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Last Detection</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 uppercase">Last Detection</div>
                   <div className="text-xs text-slate-800 dark:text-slate-200 mt-1">{commanderBrief.situation.latestTime}</div>
                 </div>
               </div>
@@ -597,8 +609,8 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
                 <span className="text-slate-500 dark:text-slate-400">Signals (30d)</span>
                 <span className="font-semibold text-slate-900 dark:text-white">{commanderBrief.complianceSignals30d}</span>
               </div>
-              <div className="text-[11px] text-slate-500 dark:text-slate-400 pt-1">Automated threshold logic:</div>
-              <div className="text-[11px] text-slate-600 dark:text-slate-300">`[NOMINAL]` score &lt; 0.40, `[ELEVATED]` 0.40-0.79, `[CRITICAL]` ≥ 0.80</div>
+              <div className="text-xs text-slate-500 dark:text-slate-400 pt-1">Automated threshold logic:</div>
+              <div className="text-xs text-slate-600 dark:text-slate-300">`[NOMINAL]` score &lt; 0.40, `[ELEVATED]` 0.40-0.79, `[CRITICAL]` ≥ 0.80</div>
             </div>
           </div>
 
@@ -612,13 +624,13 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
                       <reading.icon className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
                       <div className="text-xs text-slate-700 dark:text-slate-200">{reading.label}</div>
                     </div>
-                    <Badge className={`${reading.status === 'ALERT' ? 'bg-red-600 text-white border-red-400' : reading.status === 'WATCH' ? 'bg-amber-500 text-slate-900 border-amber-300' : 'bg-emerald-500 text-slate-900 border-emerald-300'} text-[10px]`}>
+                    <Badge className={`${reading.status === 'ALERT' ? 'bg-red-600 text-white border-red-400' : reading.status === 'WATCH' ? 'bg-amber-500 text-slate-900 border-amber-300' : 'bg-emerald-500 text-slate-900 border-emerald-300'} text-2xs`}>
                       {reading.status}
                     </Badge>
                   </div>
                   <div className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">{reading.value}</div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400">{reading.baseline}</div>
-                  <div className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">Delta: {reading.delta}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">{reading.baseline}</div>
+                  <div className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">Delta: {reading.delta}</div>
                 </div>
               ))}
             </div>
@@ -635,7 +647,14 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
                   <div key={`${a.time}-${idx}`} className="rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700/60 p-2 text-xs">
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-slate-600 dark:text-slate-300">{a.time}</span>
-                      <Badge className={`${a.classif === 'POSSIBLE INTRUSION' ? 'bg-red-600 text-white border-red-400' : a.classif === 'CORRELATED EVENT' ? 'bg-amber-500 text-slate-900 border-amber-300' : 'bg-blue-500 text-white border-blue-300'} text-[10px]`}>{a.classif}</Badge>
+                      <div className="flex items-center gap-1">
+                        {a.cbrnIndicators && a.cbrnIndicators.map((ind: { category: string; confidence: number }) => (
+                          <Badge key={ind.category} className={`text-2xs ${ind.category === 'chemical' ? 'bg-amber-500 text-white border-amber-400' : ind.category === 'biological' ? 'bg-green-600 text-white border-green-400' : ind.category === 'radiological' ? 'bg-purple-600 text-white border-purple-400' : 'bg-red-700 text-white border-red-500'}`}>
+                            {ind.category.charAt(0).toUpperCase()}: {(ind.confidence * 100).toFixed(0)}%
+                          </Badge>
+                        ))}
+                        <Badge className={`${a.classif === 'POSSIBLE INTRUSION' ? 'bg-red-600 text-white border-red-400' : a.classif === 'CORRELATED EVENT' ? 'bg-amber-500 text-slate-900 border-amber-300' : 'bg-blue-500 text-white border-blue-300'} text-2xs`}>{a.classif}</Badge>
+                      </div>
                     </div>
                     <div className="text-slate-800 dark:text-slate-200 mt-1 flex items-center gap-1"><MapPin className="w-3 h-3 text-indigo-500 dark:text-indigo-400" />{a.location}</div>
                     <div className="text-slate-600 dark:text-slate-300 mt-0.5">{a.signal}</div>
@@ -685,8 +704,8 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
                     <div className="text-xs text-slate-700 dark:text-slate-200">{f.label}</div>
                     {f.status === 'online' ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <XCircle className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />}
                   </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">{f.last}</div>
-                  <div className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">{f.detail}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">{f.last}</div>
+                  <div className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">{f.detail}</div>
                 </div>
               ))}
             </div>
@@ -710,15 +729,15 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Systems</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 uppercase">Systems</div>
                 <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{waterReadiness.affectedSystems}</div>
               </div>
               <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Violations</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 uppercase">Violations</div>
                 <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{waterReadiness.activeViolations}</div>
               </div>
               <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Days Clear</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 uppercase">Days Clear</div>
                 <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{waterReadiness.daysSinceLast ?? '—'}</div>
               </div>
             </div>
@@ -742,11 +761,11 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Detections</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 uppercase">Detections</div>
                 <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{pfasAlert.total.toLocaleString()}</div>
               </div>
               <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Max Conc.</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 uppercase">Max Conc.</div>
                 <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{pfasAlert.maxConc > 0 ? pfasAlert.maxConc.toLocaleString() : '—'}</div>
               </div>
             </div>
@@ -773,15 +792,15 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
             </div>
             <div className="grid grid-cols-3 gap-3 mb-3">
               <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">NPL Sites</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 uppercase">NPL Sites</div>
                 <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{contaminationProximity.nplCount}</div>
               </div>
               <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">TRI Facilities</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 uppercase">TRI Facilities</div>
                 <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{contaminationProximity.triCount}</div>
               </div>
               <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Carcinogen</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 uppercase">Carcinogen</div>
                 <div className={`text-lg font-bold mt-0.5 ${contaminationProximity.carcinogenCount > 0 ? 'text-red-600' : 'text-slate-900'}`}>{contaminationProximity.carcinogenCount}</div>
               </div>
             </div>
@@ -789,7 +808,7 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
               <div className="space-y-1.5">
                 {contaminationProximity.top3.map((t, i) => (
                   <div key={`${t.name}-${i}`} className="flex items-center gap-2 text-xs rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 px-2 py-1.5">
-                    <Badge className={`text-[10px] shrink-0 ${t.type === 'NPL' ? 'bg-red-600 text-white border-red-400' : 'bg-amber-500 text-slate-900 border-amber-300'}`}>{t.type}</Badge>
+                    <Badge className={`text-2xs shrink-0 ${t.type === 'NPL' ? 'bg-red-600 text-white border-red-400' : 'bg-amber-500 text-slate-900 border-amber-300'}`}>{t.type}</Badge>
                     <span className="text-slate-700 dark:text-slate-200 truncate" title={t.name}>{t.name}</span>
                     <span className="text-slate-500 dark:text-slate-400 ml-auto shrink-0">{t.detail}</span>
                   </div>
@@ -812,15 +831,15 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
               <>
                 <div className="grid grid-cols-3 gap-3 mb-3">
                   <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Total Alerts</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400 uppercase">Total Alerts</div>
                     <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{weatherThreat.totalAlerts}</div>
                   </div>
                   <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Extreme/Severe</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400 uppercase">Extreme/Severe</div>
                     <div className={`text-lg font-bold mt-0.5 ${weatherThreat.extremeSevere > 0 ? 'text-red-600' : 'text-slate-900'}`}>{weatherThreat.extremeSevere}</div>
                   </div>
                   <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Flood Alerts</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400 uppercase">Flood Alerts</div>
                     <div className={`text-lg font-bold mt-0.5 ${weatherThreat.floodCount > 0 ? 'text-amber-600' : 'text-slate-900'}`}>{weatherThreat.floodCount}</div>
                   </div>
                 </div>
@@ -850,15 +869,15 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
             </div>
             <div className="grid grid-cols-3 gap-3 mb-3">
               <div className="rounded border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40 p-2.5 text-center">
-                <div className="text-[11px] text-red-600 dark:text-red-400 uppercase">30 Days</div>
+                <div className="text-xs text-red-600 dark:text-red-400 uppercase">30 Days</div>
                 <div className="text-lg font-bold text-red-700 dark:text-red-300 mt-0.5">{complianceCountdown.expiring30}</div>
               </div>
               <div className="rounded border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 p-2.5 text-center">
-                <div className="text-[11px] text-amber-600 dark:text-amber-400 uppercase">90 Days</div>
+                <div className="text-xs text-amber-600 dark:text-amber-400 uppercase">90 Days</div>
                 <div className="text-lg font-bold text-amber-700 dark:text-amber-300 mt-0.5">{complianceCountdown.expiring90}</div>
               </div>
               <div className="rounded border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 p-2.5 text-center">
-                <div className="text-[11px] text-blue-600 dark:text-blue-400 uppercase">180 Days</div>
+                <div className="text-xs text-blue-600 dark:text-blue-400 uppercase">180 Days</div>
                 <div className="text-lg font-bold text-blue-700 dark:text-blue-300 mt-0.5">{complianceCountdown.expiring180}</div>
               </div>
             </div>
@@ -882,15 +901,15 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
             </div>
             <div className="grid grid-cols-3 gap-3 mb-3">
               <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Assessed</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 uppercase">Assessed</div>
                 <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">${enforcementExposure.totalAssessed > 0 ? (enforcementExposure.totalAssessed / 1000).toFixed(0) + 'K' : '0'}</div>
               </div>
               <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Collected</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 uppercase">Collected</div>
                 <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">${enforcementExposure.totalCollected > 0 ? (enforcementExposure.totalCollected / 1000).toFixed(0) + 'K' : '0'}</div>
               </div>
               <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Open Cases</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 uppercase">Open Cases</div>
                 <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{enforcementExposure.openCases}</div>
               </div>
             </div>
@@ -917,19 +936,19 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
               <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Your Violations</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 uppercase">Your Violations</div>
                 <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{installationRanking.myViolations}</div>
               </div>
               <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">DOD Median</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 uppercase">DOD Median</div>
                 <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{installationRanking.median}</div>
               </div>
               <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">Compliance</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 uppercase">Compliance</div>
                 <div className={`text-lg font-bold mt-0.5 ${installationRanking.complianceRate >= installationRanking.dodAvgRate ? 'text-emerald-600' : 'text-red-600'}`}>{installationRanking.complianceRate}%</div>
               </div>
               <div className="rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-2.5 text-center">
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 uppercase">DOD Avg</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 uppercase">DOD Avg</div>
                 <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{installationRanking.dodAvgRate}%</div>
               </div>
             </div>
@@ -944,7 +963,7 @@ export function MilitaryInstallationsPanel({ selectedState }: MilitaryInstallati
                   style={{ width: `${installationRanking.percentile}%` }}
                 />
               </div>
-              <div className="flex justify-between text-[10px] text-slate-400">
+              <div className="flex justify-between text-2xs text-slate-400">
                 <span>Better</span>
                 <span>{installationRanking.totalFacilities} facilities in scope</span>
                 <span>Worse</span>

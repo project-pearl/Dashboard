@@ -153,23 +153,23 @@ export function StudyGroupHub({ stateAbbr, regionId }: Props) {
                 <div>
                   <div className="text-xs font-semibold text-slate-800 flex items-center gap-1.5">
                     {group.name}
-                    <Badge variant="outline" className={`text-[9px] h-4 ${statusStyle(group.status)}`}>
+                    <Badge variant="outline" className={`text-2xs h-4 ${statusStyle(group.status)}`}>
                       {group.status}
                     </Badge>
                   </div>
-                  <div className="text-[10px] text-slate-500">{group.focus}</div>
+                  <div className="text-2xs text-slate-500">{group.focus}</div>
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-[10px] h-6 px-2"
+                  className="text-2xs h-6 px-2"
                   disabled={group.status === 'full'}
                 >
                   {group.status === 'full' ? 'Full' : 'Join'}
                 </Button>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3 text-[10px] text-slate-500 mt-2">
+              <div className="flex flex-wrap items-center gap-3 text-2xs text-slate-500 mt-2">
                 <span className="flex items-center gap-1">
                   <Users className="h-3 w-3" /> {group.memberCount}/{group.maxMembers}
                 </span>
@@ -183,10 +183,10 @@ export function StudyGroupHub({ stateAbbr, regionId }: Props) {
 
               <div className="flex flex-wrap gap-1 mt-2">
                 {group.waterbodies.map(wb => (
-                  <span key={wb} className="px-1.5 py-0.5 rounded text-[9px] bg-blue-50 text-blue-600 border border-blue-100">{wb}</span>
+                  <span key={wb} className="px-1.5 py-0.5 rounded text-2xs bg-blue-50 text-blue-600 border border-blue-100">{wb}</span>
                 ))}
                 {group.tags.map(tag => (
-                  <span key={tag} className="px-1.5 py-0.5 rounded text-[9px] bg-slate-50 text-slate-500 border border-slate-100">#{tag}</span>
+                  <span key={tag} className="px-1.5 py-0.5 rounded text-2xs bg-slate-50 text-slate-500 border border-slate-100">#{tag}</span>
                 ))}
               </div>
             </div>
@@ -197,11 +197,11 @@ export function StudyGroupHub({ stateAbbr, regionId }: Props) {
       {/* Field Sampling Coordination */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
         <div className="text-xs font-semibold text-blue-800 mb-1">🗓️ Upcoming Field Sampling Sessions</div>
-        <p className="text-[10px] text-blue-700 mb-2">
+        <p className="text-2xs text-blue-700 mb-2">
           Coordinate with your study group for joint field sampling. PIN sensors provide continuous baseline data
           between your sampling events.
         </p>
-        <div className="text-[10px] text-blue-500 italic">No upcoming sessions scheduled. Create one from your study group page.</div>
+        <div className="text-2xs text-blue-500 italic">No upcoming sessions scheduled. Create one from your study group page.</div>
       </div>
     </div>
   );

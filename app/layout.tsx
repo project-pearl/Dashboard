@@ -103,7 +103,7 @@ export default async function RootLayout({
           <AuthProvider>
             {children}
             <SpeedInsights />
-            <footer className="fixed bottom-0 left-0 right-0 z-40 border-t bg-white/95 backdrop-blur-sm px-4 py-2 flex items-center justify-between text-[10px] text-slate-400" style={{ borderColor: 'var(--border-default)', background: 'var(--bg-card, white)' }}>
+            <footer className="fixed bottom-0 left-0 right-0 z-40 border-t bg-white/95 backdrop-blur-sm px-4 py-2 flex items-center justify-between text-2xs text-slate-400" style={{ borderColor: 'var(--border-default)', background: 'var(--bg-card, white)' }}>
               <span>PIN synthesizes public EPA/Congressional/media signals into predictive intelligence — not official regulatory or legal advice.</span>
               <span className="flex items-center gap-3">
                 <a href="mailto:doug@pinwater.org" className="hover:text-slate-600 transition-colors">Request Demo</a>

@@ -12,6 +12,7 @@ import {
   Shield,
   BarChart3,
 } from 'lucide-react';
+import { CappedList } from '@/components/CappedList';
 
 // ── Props ───────────────────────────────────────────────────────────────────
 
@@ -164,15 +165,15 @@ export function CampusStormwaterPanel({ stateAbbr }: CampusStormwaterPanelProps)
             <div className="flex gap-6">
               <div className="text-center">
                 <p className="text-lg font-bold text-slate-800">{permits.length}</p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wide">Active Permits</p>
+                <p className="text-2xs text-slate-500 uppercase tracking-wide">Active Permits</p>
               </div>
               <div className="text-center">
                 <p className="text-lg font-bold text-slate-800">{greenInfra.length}</p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wide">GI Features</p>
+                <p className="text-2xs text-slate-500 uppercase tracking-wide">GI Features</p>
               </div>
               <div className="text-center">
                 <p className="text-lg font-bold text-blue-700">{totalGreenArea.toLocaleString()}</p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wide">Sq Ft GI</p>
+                <p className="text-2xs text-slate-500 uppercase tracking-wide">Sq Ft GI</p>
               </div>
             </div>
           </div>
@@ -189,20 +190,27 @@ export function CampusStormwaterPanel({ stateAbbr }: CampusStormwaterPanelProps)
           <CardDescription>University stormwater discharge permits and renewal tracking</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {permits.map((p) => (
-              <div key={p.permitId} className="flex items-center justify-between p-3 rounded-lg border border-slate-100 hover:bg-slate-50 transition-colors">
+          <CappedList
+            items={permits}
+            maxVisible={5}
+            searchable={permits.length > 5}
+            searchPlaceholder="Search permits..."
+            getSearchText={(p) => `${p.permitId} ${p.type} ${p.status}`}
+            getKey={(p) => p.permitId}
+            className="space-y-3"
+            renderItem={(p) => (
+              <div className="flex items-center justify-between p-3 rounded-lg border border-slate-100 hover:bg-slate-50 transition-colors">
                 <div>
                   <p className="text-sm font-semibold text-slate-800">{p.permitId}</p>
                   <p className="text-xs text-slate-500">{p.type} — Issued {p.issued}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-xs text-slate-400">Exp: {p.expires}</span>
-                  <Badge className={`text-[10px] ${permitStatusColor(p.status)}`}>{p.status}</Badge>
+                  <Badge className={`text-2xs ${permitStatusColor(p.status)}`}>{p.status}</Badge>
                 </div>
               </div>
-            ))}
-          </div>
+            )}
+          />
         </CardContent>
       </Card>
 
@@ -212,7 +220,7 @@ export function CampusStormwaterPanel({ stateAbbr }: CampusStormwaterPanelProps)
           <CardTitle className="flex items-center gap-2 text-base">
             <Leaf size={16} className="text-emerald-600" />
             Green Infrastructure Inventory
-            <Badge variant="secondary" className="ml-1 text-[10px]">{greenInfra.length} features</Badge>
+            <Badge variant="secondary" className="ml-1 text-2xs">{greenInfra.length} features</Badge>
           </CardTitle>
           <CardDescription>Rain gardens, bioswales, green roofs, and other campus GI assets</CardDescription>
         </CardHeader>
@@ -236,7 +244,7 @@ export function CampusStormwaterPanel({ stateAbbr }: CampusStormwaterPanelProps)
                     <td className="py-2 text-right text-slate-600">{gi.areaSqFt.toLocaleString()}</td>
                     <td className="py-2 text-right text-slate-600">{gi.installedYear}</td>
                     <td className="py-2 text-right">
-                      <Badge className={`text-[10px] ${conditionColor(gi.condition)}`}>{gi.condition}</Badge>
+                      <Badge className={`text-2xs ${conditionColor(gi.condition)}`}>{gi.condition}</Badge>
                     </td>
                   </tr>
                 ))}
@@ -301,10 +309,10 @@ export function CampusStormwaterPanel({ stateAbbr }: CampusStormwaterPanelProps)
                     <p className="text-sm font-semibold text-slate-800">{bmp.name}</p>
                     <p className="text-xs text-slate-500">{bmp.type} — Last inspected {bmp.lastInspection}</p>
                   </div>
-                  <Badge className={`text-[10px] ${bmpStatusColor(bmp.status)}`}>{bmp.status}</Badge>
+                  <Badge className={`text-2xs ${bmpStatusColor(bmp.status)}`}>{bmp.status}</Badge>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-slate-500 w-20">Reduction</span>
+                  <span className="text-2xs text-slate-500 w-20">Reduction</span>
                   <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full bg-violet-500 transition-all duration-500"
@@ -343,7 +351,7 @@ export function CampusStormwaterPanel({ stateAbbr }: CampusStormwaterPanelProps)
               <p className="text-xs text-slate-500 mt-1">TMDLs — Under Development</p>
             </div>
           </div>
-          <p className="text-[10px] text-slate-400 mt-3">
+          <p className="text-2xs text-slate-400 mt-3">
             Campus outfalls drain to Mill Creek (sediment TMDL), Cedar River (phosphorus TMDL), and unnamed tributary (bacteria TMDL pending).
           </p>
         </CardContent>

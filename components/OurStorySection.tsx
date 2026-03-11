@@ -40,7 +40,7 @@ const OurStorySection: React.FC = () => {
 
       {/* ── Story content ── */}
       <div className="max-w-3xl mx-auto px-6 pb-16 md:pb-20">
-        <div className="space-y-8 text-[17px] md:text-lg leading-[1.9] text-slate-700">
+        <div className="space-y-8 text-lg md:text-lg leading-[1.9] text-slate-700">
           <p>
             We started Project PEARL after Doug and his family visited the Navarre Beach
             Sea Turtle Conservation Center. They saw what polluted coastal water does to
@@ -185,7 +185,7 @@ const OurStorySection: React.FC = () => {
     <footer className="py-8 bg-stone-50 border-t border-slate-200">
       <div className="max-w-3xl mx-auto px-6 text-center space-y-1">
         <p className="text-xs text-slate-400">&copy; {new Date().getFullYear()} Local Seafood Projects Inc. All rights reserved.</p>
-        <p className="text-[10px] text-slate-400/70">Project Pearl&trade;, Pearl&trade;, ALIA&trade;, and AQUA-LO&trade; are trademarks of Local Seafood Projects.</p>
+        <p className="text-2xs text-slate-400/70">Project Pearl&trade;, Pearl&trade;, ALIA&trade;, and AQUA-LO&trade; are trademarks of Local Seafood Projects.</p>
       </div>
     </footer>
     </div>

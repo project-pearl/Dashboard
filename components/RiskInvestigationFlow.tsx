@@ -918,7 +918,7 @@ function TalkingPointsCard({ step, talkingPoints }: { step: Exclude<Investigatio
             <span className={`text-xs font-bold uppercase tracking-wider ${urgencyStyle.text}`}>
               Oversight Talking Points
             </span>
-            <Badge className={`text-[9px] ${urgencyStyle.bg} ${urgencyStyle.text} border ${urgencyStyle.border}`}>
+            <Badge className={`text-2xs ${urgencyStyle.bg} ${urgencyStyle.text} border ${urgencyStyle.border}`}>
               {urgencyStyle.label}
             </Badge>
           </div>
@@ -946,7 +946,7 @@ function TalkingPointsCard({ step, talkingPoints }: { step: Exclude<Investigatio
           {tp.talkTrack && (
             <div className="pl-8">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <div className="text-[10px] font-bold text-blue-500 uppercase tracking-wider mb-1">Open with this</div>
+                <div className="text-2xs font-bold text-blue-500 uppercase tracking-wider mb-1">Open with this</div>
                 <p className="text-xs text-blue-800 leading-relaxed italic">
                   {tp.talkTrack}
                 </p>
@@ -972,10 +972,10 @@ function TalkingPointsCard({ step, talkingPoints }: { step: Exclude<Investigatio
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-xs font-bold text-slate-800">{contact.role}</span>
                       {contact.name && (
-                        <span className="text-[10px] text-slate-400 italic">({contact.name})</span>
+                        <span className="text-2xs text-slate-400 italic">({contact.name})</span>
                       )}
                     </div>
-                    <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{contact.why}</p>
+                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{contact.why}</p>
                   </div>
                 </div>
               ))}
@@ -994,7 +994,7 @@ function TalkingPointsCard({ step, talkingPoints }: { step: Exclude<Investigatio
               {tp.askFor.map((item, i) => (
                 <div key={i} className="flex items-start gap-2 text-xs">
                   <div className="w-5 h-5 rounded bg-green-50 border border-green-200 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-[9px] font-bold text-green-600">{i + 1}</span>
+                    <span className="text-2xs font-bold text-green-600">{i + 1}</span>
                   </div>
                   <span className="text-slate-700 leading-relaxed">{item}</span>
                 </div>
@@ -1034,23 +1034,23 @@ function ComplianceAccountSummary({ completedSteps }: { completedSteps: Set<Inve
             </div>
             <div>
               <div className="text-sm font-bold text-white">{acct.accountName}</div>
-              <div className="text-[10px] text-slate-400">
+              <div className="text-2xs text-slate-400">
                 {acct.scope} &middot; {acct.scopeDetail}
               </div>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <div className="text-[9px] text-slate-500 uppercase tracking-wider">Account ID</div>
+              <div className="text-2xs text-slate-500 uppercase tracking-wider">Account ID</div>
               <div className="text-xs font-mono font-bold text-slate-200">{acct.accountId}</div>
-              <div className="text-[9px] text-slate-500">{acct.accountIdType}</div>
+              <div className="text-2xs text-slate-500">{acct.accountIdType}</div>
             </div>
             <div className="text-right">
-              <div className="text-[9px] text-slate-500 uppercase tracking-wider">Permit Cycle</div>
+              <div className="text-2xs text-slate-500 uppercase tracking-wider">Permit Cycle</div>
               <div className="text-xs font-mono font-bold text-slate-200">{acct.permitCycle}</div>
             </div>
             <div className="text-right">
-              <div className="text-[9px] text-slate-500 uppercase tracking-wider">Financial</div>
+              <div className="text-2xs text-slate-500 uppercase tracking-wider">Financial</div>
               <div className="text-xs font-mono font-bold text-green-400">{acct.financialOutstanding}</div>
             </div>
           </div>
@@ -1074,10 +1074,10 @@ function ComplianceAccountSummary({ completedSteps }: { completedSteps: Set<Inve
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-medium text-slate-700">{ob.label}</div>
                   {isConditional && ob.conditionalOn && (
-                    <div className="text-[10px] text-slate-400 italic">{ob.conditionalOn}</div>
+                    <div className="text-2xs text-slate-400 italic">{ob.conditionalOn}</div>
                   )}
                   {ob.amount && (
-                    <div className="text-[10px] text-emerald-600 font-medium">{ob.amount}</div>
+                    <div className="text-2xs text-emerald-600 font-medium">{ob.amount}</div>
                   )}
                 </div>
 
@@ -1085,22 +1085,22 @@ function ComplianceAccountSummary({ completedSteps }: { completedSteps: Set<Inve
                 <div className="text-right flex-shrink-0 w-32">
                   {ob.dueDate ? (
                     <>
-                      <div className="text-[10px] font-mono text-slate-600">
+                      <div className="text-2xs font-mono text-slate-600">
                         {new Date(ob.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </div>
-                      <div className={`text-[9px] font-bold ${
+                      <div className={`text-2xs font-bold ${
                         days! < 0 ? 'text-red-600' : days! < 30 ? 'text-amber-600' : days! < 90 ? 'text-amber-500' : 'text-slate-400'
                       }`}>
                         {days! < 0 ? `${Math.abs(days!)} days overdue` : `${days} days`}
                       </div>
                     </>
                   ) : (
-                    <div className="text-[10px] text-slate-400">If triggered</div>
+                    <div className="text-2xs text-slate-400">If triggered</div>
                   )}
                 </div>
 
                 {/* Status badge */}
-                <Badge className={`text-[9px] flex-shrink-0 ${style.bg} ${style.text} border border-current/20`}>
+                <Badge className={`text-2xs flex-shrink-0 ${style.bg} ${style.text} border border-current/20`}>
                   {ob.status === 'on-track' ? 'On Track' :
                    ob.status === 'approaching' ? 'Approaching' :
                    ob.status === 'overdue' ? 'Overdue' :
@@ -1109,7 +1109,7 @@ function ComplianceAccountSummary({ completedSteps }: { completedSteps: Set<Inve
 
                 {/* Create Filing button */}
                 <button
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-semibold transition-colors flex-shrink-0 ${
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded text-2xs font-semibold transition-colors flex-shrink-0 ${
                     isConditional
                       ? 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'
                       : 'bg-blue-600 text-white hover:bg-blue-700'
@@ -1346,7 +1346,7 @@ export default function RiskInvestigationFlow({ preSelectedRisk, predictions: pr
                   <React.Fragment key={step}>
                     <button
                       onClick={() => { if (isComplete || isCurrent) goToStep(step); }}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-semibold transition-all ${
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-2xs font-semibold transition-all ${
                         isComplete ? 'bg-green-100 text-green-700 cursor-pointer hover:bg-green-200' :
                         isCurrent ? 'bg-blue-100 text-blue-700 ring-2 ring-blue-300' :
                         'bg-slate-100 text-slate-400'
@@ -1389,7 +1389,7 @@ export default function RiskInvestigationFlow({ preSelectedRisk, predictions: pr
               </CardTitle>
             </CardHeader>
             <CardContent className="overflow-x-auto">
-              <table className="w-full text-[11px] border-collapse min-w-[700px]">
+              <table className="w-full text-xs border-collapse min-w-[700px]">
                 <thead>
                   <tr className="border-b border-slate-200">
                     <th className="text-left py-2 px-2 font-semibold text-slate-600">Category</th>
@@ -1408,7 +1408,7 @@ export default function RiskInvestigationFlow({ preSelectedRisk, predictions: pr
                       <tr key={r.category} className="border-b border-slate-100 hover:bg-slate-50">
                         <td className="py-1.5 px-2 font-medium text-slate-700">{r.category}</td>
                         <td className="text-center py-1.5 px-2">
-                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-bold ${
                             r.probability >= 70 ? 'bg-red-100 text-red-700' : r.probability >= 40 ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
                           }`}>{r.probability}%</span>
                         </td>
@@ -1433,7 +1433,7 @@ export default function RiskInvestigationFlow({ preSelectedRisk, predictions: pr
                   </tr>
                 </tbody>
               </table>
-              <div className="mt-3 flex items-center gap-2 text-[11px] text-green-700 bg-green-50 rounded-lg p-2 border border-green-200">
+              <div className="mt-3 flex items-center gap-2 text-xs text-green-700 bg-green-50 rounded-lg p-2 border border-green-200">
                 <TrendingUp className="h-3.5 w-3.5 flex-shrink-0" />
                 Year-over-year comparison: Risk position improved 42% due to actions taken in the past 12 months.
               </div>
@@ -1480,12 +1480,12 @@ export default function RiskInvestigationFlow({ preSelectedRisk, predictions: pr
                       </div>
                       <div className="flex items-center gap-1.5">
                         <span className={`text-sm font-bold ${colors.text}`}>{pred.probability}%</span>
-                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-semibold">{pred.timeframe}</span>
+                        <span className="text-2xs px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-semibold">{pred.timeframe}</span>
                       </div>
-                      <p className="text-[11px] text-slate-600 leading-relaxed line-clamp-2">{pred.summary}</p>
+                      <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">{pred.summary}</p>
                       <button
                         onClick={() => selectRisk(pred)}
-                        className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                        className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-2xs font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors"
                       >
                         <Search className="h-3 w-3" />
                         Investigate This Risk
@@ -1530,12 +1530,12 @@ export default function RiskInvestigationFlow({ preSelectedRisk, predictions: pr
                       </div>
                       <Progress value={selectedRisk.probability} className="h-2" />
                     </div>
-                    <Badge className={`text-[10px] ${
+                    <Badge className={`text-2xs ${
                       selectedRisk.confidence === 'HIGH' ? 'bg-green-100 text-green-700' :
                       selectedRisk.confidence === 'MODERATE' ? 'bg-amber-100 text-amber-700' :
                       'bg-slate-100 text-slate-500'
                     }`}>{selectedRisk.confidence} confidence</Badge>
-                    <Badge className="text-[10px] bg-slate-100 text-slate-500">{selectedRisk.timeframe}</Badge>
+                    <Badge className="text-2xs bg-slate-100 text-slate-500">{selectedRisk.timeframe}</Badge>
                   </div>
                 </div>
               </div>
@@ -1569,7 +1569,7 @@ export default function RiskInvestigationFlow({ preSelectedRisk, predictions: pr
                        f.direction === 'positive' ? <TrendingUp className="h-3 w-3 text-green-500" /> :
                        <Minus className="h-3 w-3 text-slate-400" />}
                     </span>
-                    <span className="w-10 text-right text-[10px] text-slate-400 font-mono">{(f.weight * 100).toFixed(0)}%</span>
+                    <span className="w-10 text-right text-2xs text-slate-400 font-mono">{(f.weight * 100).toFixed(0)}%</span>
                   </div>
                 ))}
               </div>
@@ -1586,13 +1586,13 @@ export default function RiskInvestigationFlow({ preSelectedRisk, predictions: pr
                     <Users size={14} className="text-indigo-600" />
                     <span className="text-xs font-semibold text-slate-700">Peer Comparison</span>
                   </div>
-                  <p className="text-[11px] text-slate-600 leading-relaxed">
+                  <p className="text-xs text-slate-600 leading-relaxed">
                     Your failure probability is higher than <strong className="text-indigo-700">{peer.percentile}%</strong> of {peer.peerGroup} in {peer.state}.
                   </p>
                   <div className="mt-2 h-2 rounded-full bg-slate-100 overflow-hidden">
                     <div className="h-full rounded-full bg-indigo-500" style={{ width: `${peer.percentile}%` }} />
                   </div>
-                  <div className="flex justify-between text-[9px] text-slate-400 mt-1">
+                  <div className="flex justify-between text-2xs text-slate-400 mt-1">
                     <span>Better than peers</span>
                     <span>Worse</span>
                   </div>
@@ -1608,7 +1608,7 @@ export default function RiskInvestigationFlow({ preSelectedRisk, predictions: pr
                     <Clock size={14} className="text-amber-600" />
                     <span className="text-xs font-semibold text-slate-700">Previous Occurrence</span>
                   </div>
-                  <p className="text-[11px] text-slate-600 leading-relaxed">
+                  <p className="text-xs text-slate-600 leading-relaxed">
                     <strong>{history.date}</strong> — {history.event}
                   </p>
                   <div className="mt-2 flex items-center gap-1.5">
@@ -1628,12 +1628,12 @@ export default function RiskInvestigationFlow({ preSelectedRisk, predictions: pr
                 </div>
                 <div className="space-y-1">
                   {MOCK_DATA_SOURCES.slice(0, 5).map((src, i) => (
-                    <div key={i} className="text-[10px] text-slate-500 flex items-start gap-1.5">
+                    <div key={i} className="text-2xs text-slate-500 flex items-start gap-1.5">
                       <Check className="h-2.5 w-2.5 text-green-500 mt-0.5 flex-shrink-0" />
                       <span>{src}</span>
                     </div>
                   ))}
-                  <div className="text-[10px] text-slate-400 mt-1">+ {MOCK_DATA_SOURCES.length - 5} more sources</div>
+                  <div className="text-2xs text-slate-400 mt-1">+ {MOCK_DATA_SOURCES.length - 5} more sources</div>
                 </div>
               </CardContent>
             </Card>
@@ -1650,7 +1650,7 @@ export default function RiskInvestigationFlow({ preSelectedRisk, predictions: pr
                 >
                   <DollarSign className="h-6 w-6 text-red-600" />
                   <span className="text-xs font-bold text-red-700">What does this cost?</span>
-                  <span className="text-[10px] text-red-500">4-tier cost analysis</span>
+                  <span className="text-2xs text-red-500">4-tier cost analysis</span>
                 </button>
                 <button
                   onClick={() => goToStep('response')}
@@ -1658,7 +1658,7 @@ export default function RiskInvestigationFlow({ preSelectedRisk, predictions: pr
                 >
                   <Zap className="h-6 w-6 text-amber-600" />
                   <span className="text-xs font-bold text-amber-700">This is happening now</span>
-                  <span className="text-[10px] text-amber-500">Response plan + cascade</span>
+                  <span className="text-2xs text-amber-500">Response plan + cascade</span>
                 </button>
                 <button
                   onClick={() => goToStep('prevention')}
@@ -1666,7 +1666,7 @@ export default function RiskInvestigationFlow({ preSelectedRisk, predictions: pr
                 >
                   <Shield className="h-6 w-6 text-green-600" />
                   <span className="text-xs font-bold text-green-700">How do I prevent this?</span>
-                  <span className="text-[10px] text-green-500">3 intervention options</span>
+                  <span className="text-2xs text-green-500">3 intervention options</span>
                 </button>
                 <button
                   onClick={startFullInvestigation}
@@ -1674,7 +1674,7 @@ export default function RiskInvestigationFlow({ preSelectedRisk, predictions: pr
                 >
                   <Target className="h-6 w-6 text-blue-600" />
                   <span className="text-xs font-bold text-blue-700">Full Investigation</span>
-                  <span className="text-[10px] text-blue-500">All 3 analyses + report</span>
+                  <span className="text-2xs text-blue-500">All 3 analyses + report</span>
                 </button>
               </div>
             </CardContent>
@@ -1704,12 +1704,12 @@ export default function RiskInvestigationFlow({ preSelectedRisk, predictions: pr
                 </div>
                 <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white border border-red-200">
                   <div className="text-center">
-                    <div className="text-[10px] text-slate-400">Score Before</div>
+                    <div className="text-2xs text-slate-400">Score Before</div>
                     <div className="text-lg font-bold text-slate-700 font-mono">{scoreImpact.before}</div>
                   </div>
                   <ArrowRight className="h-4 w-4 text-red-400" />
                   <div className="text-center">
-                    <div className="text-[10px] text-slate-400">Score After</div>
+                    <div className="text-2xs text-slate-400">Score After</div>
                     <div className="text-lg font-bold text-red-600 font-mono">{scoreImpact.after}</div>
                   </div>
                   <div className="text-xs font-bold text-red-600 ml-2">{scoreImpact.delta} pts</div>
@@ -1828,7 +1828,7 @@ export default function RiskInvestigationFlow({ preSelectedRisk, predictions: pr
                   <div key={label} className="text-center">
                     <Icon className="h-4 w-4 text-amber-600 mx-auto mb-1" />
                     <div className="text-xl font-bold text-amber-800 font-mono">{value}</div>
-                    <div className="text-[10px] text-amber-600">{label}</div>
+                    <div className="text-2xs text-amber-600">{label}</div>
                   </div>
                 ))}
               </div>
@@ -1845,7 +1845,7 @@ export default function RiskInvestigationFlow({ preSelectedRisk, predictions: pr
                 <CardTitle className={`text-sm flex items-center gap-2 ${phase.textColor}`}>
                   <Clock size={14} />
                   {phase.phase}
-                  <Badge className={`text-[9px] ${phase.color} ${phase.textColor} border ${phase.borderColor}`}>
+                  <Badge className={`text-2xs ${phase.color} ${phase.textColor} border ${phase.borderColor}`}>
                     {phase.timeframe}
                   </Badge>
                 </CardTitle>
@@ -1880,7 +1880,7 @@ export default function RiskInvestigationFlow({ preSelectedRisk, predictions: pr
                 ].map((r) => (
                   <div key={r.role} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
                     <div className="text-xs font-bold text-slate-700">{r.role}</div>
-                    <div className="mt-1 space-y-1 text-[10px] text-slate-500">
+                    <div className="mt-1 space-y-1 text-2xs text-slate-500">
                       <div className="flex justify-between"><span>Personnel</span><span className="font-mono">{r.count}</span></div>
                       <div className="flex justify-between"><span>Duration</span><span className="font-mono">{r.hours}</span></div>
                       <div className="flex justify-between"><span>Est. Cost</span><span className="font-mono font-bold text-slate-700">{r.cost}</span></div>
@@ -1910,7 +1910,7 @@ export default function RiskInvestigationFlow({ preSelectedRisk, predictions: pr
                   { time: '5 days', who: 'MDE (written report)', method: 'Formal 5-day SSO report' },
                 ].map((n, i) => (
                   <div key={i} className="flex items-center gap-3 text-xs border-b border-slate-100 pb-1.5">
-                    <span className="w-20 text-[10px] font-mono font-bold text-blue-600">{n.time}</span>
+                    <span className="w-20 text-2xs font-mono font-bold text-blue-600">{n.time}</span>
                     <span className="w-44 font-medium text-slate-700">{n.who}</span>
                     <span className="text-slate-500 flex-1">{n.method}</span>
                   </div>
@@ -1961,7 +1961,7 @@ export default function RiskInvestigationFlow({ preSelectedRisk, predictions: pr
               </CardTitle>
             </CardHeader>
             <CardContent className="overflow-x-auto">
-              <table className="w-full text-[11px] border-collapse min-w-[600px]">
+              <table className="w-full text-xs border-collapse min-w-[600px]">
                 <thead>
                   <tr className="border-b border-slate-200">
                     <th className="text-left py-2 px-2 font-semibold text-slate-600">Option</th>
@@ -1977,7 +1977,7 @@ export default function RiskInvestigationFlow({ preSelectedRisk, predictions: pr
                     <tr key={intv.id} className="border-b border-slate-100 hover:bg-slate-50">
                       <td className="py-2 px-2">
                         <div className="font-bold text-slate-700">Option {intv.id}: {intv.name}</div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">{intv.description}</div>
+                        <div className="text-2xs text-slate-500 mt-0.5">{intv.description}</div>
                       </td>
                       <td className="text-right py-2 px-2 font-mono font-bold">{formatCurrency(intv.costLow)}–{formatCurrency(intv.costHigh)}</td>
                       <td className="text-center py-2 px-2 font-mono font-bold text-green-600">{intv.probReduction}</td>
@@ -2037,7 +2037,7 @@ export default function RiskInvestigationFlow({ preSelectedRisk, predictions: pr
                 <div className="rounded-xl border-2 border-red-200 bg-red-50 p-4">
                   <div className="text-xs font-bold text-red-700 uppercase tracking-wider mb-2">If Failure Occurs</div>
                   <div className="text-2xl font-bold text-red-700 font-mono">{formatCurrency(totalCostLow)} — {formatCurrency(totalCostHigh)}</div>
-                  <div className="text-[10px] text-red-500 mt-1">Direct + regulatory + economic costs</div>
+                  <div className="text-2xs text-red-500 mt-1">Direct + regulatory + economic costs</div>
                   <div className="mt-2 text-xs text-red-600">
                     Plus: recovery period, score drop of {Math.abs(scoreImpact.delta)} points, NOV risk, public trust impact
                   </div>
@@ -2045,7 +2045,7 @@ export default function RiskInvestigationFlow({ preSelectedRisk, predictions: pr
                 <div className="rounded-xl border-2 border-green-200 bg-green-50 p-4">
                   <div className="text-xs font-bold text-green-700 uppercase tracking-wider mb-2">Best Prevention Option (B): {interventions[1]?.name}</div>
                   <div className="text-2xl font-bold text-green-700 font-mono">{formatCurrency(interventions[1]?.costLow ?? 0)} — {formatCurrency(interventions[1]?.costHigh ?? 0)}</div>
-                  <div className="text-[10px] text-green-500 mt-1">{interventions[1]?.probReduction} risk, +{interventions[1]?.scoreImprovement} score</div>
+                  <div className="text-2xs text-green-500 mt-1">{interventions[1]?.probReduction} risk, +{interventions[1]?.scoreImprovement} score</div>
                   <div className="mt-2 text-xs text-green-600">
                     Savings: {formatCurrency(totalCostLow - (interventions[1]?.costHigh ?? 0))} — {formatCurrency(totalCostHigh - (interventions[1]?.costLow ?? 0))} avoided cost, {interventions[1]?.roiLow}x–{interventions[1]?.roiHigh}x ROI
                   </div>
@@ -2061,14 +2061,14 @@ export default function RiskInvestigationFlow({ preSelectedRisk, predictions: pr
                 <DollarSign className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
                 <div>
                   <div className="text-xs font-bold text-emerald-700">Grant Eligibility: EPA Clean Water State Revolving Fund (SRF)</div>
-                  <p className="text-[11px] text-emerald-600 mt-1 leading-relaxed">
+                  <p className="text-xs text-emerald-600 mt-1 leading-relaxed">
                     This project may qualify for subsidized SRF financing at 1.5-2.0% interest (vs. 4.5% municipal bond rate).
                     Infrastructure condition assessment + cost-benefit documentation required.
                     Maryland SRF program accepts applications quarterly — next deadline: April 15, 2026.
                   </p>
                   <div className="mt-2 flex items-center gap-2">
-                    <Badge className="text-[9px] bg-emerald-100 text-emerald-700 border border-emerald-300">Potential savings: $15-40K in interest</Badge>
-                    <Badge className="text-[9px] bg-emerald-100 text-emerald-700 border border-emerald-300">Application deadline: Apr 15</Badge>
+                    <Badge className="text-2xs bg-emerald-100 text-emerald-700 border border-emerald-300">Potential savings: $15-40K in interest</Badge>
+                    <Badge className="text-2xs bg-emerald-100 text-emerald-700 border border-emerald-300">Application deadline: Apr 15</Badge>
                   </div>
                 </div>
               </div>
@@ -2124,7 +2124,7 @@ export default function RiskInvestigationFlow({ preSelectedRisk, predictions: pr
                     <button
                       key={aud.id}
                       onClick={() => setReportAudience(aud.id)}
-                      className={`px-3 py-1.5 rounded-full text-[10px] font-semibold transition-colors ${
+                      className={`px-3 py-1.5 rounded-full text-2xs font-semibold transition-colors ${
                         reportAudience === aud.id
                           ? 'bg-slate-900 text-white'
                           : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
@@ -2155,10 +2155,10 @@ export default function RiskInvestigationFlow({ preSelectedRisk, predictions: pr
                          <Circle className="h-3.5 w-3.5 text-slate-300" />}
                         <span className="font-medium flex-1">{section.label}</span>
                         {isIncluded && !isDataAvailable && (
-                          <span className="text-[9px]">Complete {STEP_LABELS[section.requiredStep!]} to include</span>
+                          <span className="text-2xs">Complete {STEP_LABELS[section.requiredStep!]} to include</span>
                         )}
-                        {willRender && <span className="text-[9px]">Included</span>}
-                        {!isIncluded && <span className="text-[9px]">Not for this audience</span>}
+                        {willRender && <span className="text-2xs">Included</span>}
+                        {!isIncluded && <span className="text-2xs">Not for this audience</span>}
                       </div>
                     );
                   })}
@@ -2176,7 +2176,7 @@ export default function RiskInvestigationFlow({ preSelectedRisk, predictions: pr
               <CardTitle className="text-sm flex items-center gap-2">
                 <FileText size={14} className="text-blue-600" />
                 Executive Summary Preview
-                <Badge className="text-[9px] bg-blue-100 text-blue-600">Auto-generated</Badge>
+                <Badge className="text-2xs bg-blue-100 text-blue-600">Auto-generated</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent>

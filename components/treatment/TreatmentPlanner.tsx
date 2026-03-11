@@ -23,7 +23,7 @@ function Bar({ base, result, colorKey }: { base: number; result?: number; colorK
   const color = CONTAMINANT_COLORS[colorKey];
   return (
     <div className="flex items-center gap-1.5 mb-1">
-      <div className="w-[70px] text-[10px] text-slate-400 font-mono truncate">
+      <div className="w-[70px] text-2xs text-slate-400 font-mono truncate">
         {CONTAMINANT_LABELS[colorKey]?.split(" / ")[0]}
       </div>
       <div className="flex-1 h-[5px] bg-slate-100 rounded-sm overflow-hidden relative">
@@ -38,7 +38,7 @@ function Bar({ base, result, colorKey }: { base: number; result?: number; colorK
           />
         )}
       </div>
-      <div className="w-[50px] text-[10px] font-mono text-right text-slate-700 font-medium">
+      <div className="w-[50px] text-2xs font-mono text-right text-slate-700 font-medium">
         {base}%{result != null ? ` \u2192 ${remaining.toFixed(0)}%` : ""}
       </div>
     </div>
@@ -85,29 +85,29 @@ function ModRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1 flex-wrap">
           <span className="text-xs">{m.icon}</span>
-          <span className={`text-[11px] font-semibold ${checked ? "text-slate-800" : "text-slate-500"}`}>
+          <span className={`text-xs font-semibold ${checked ? "text-slate-800" : "text-slate-500"}`}>
             {m.name.trim()}
           </span>
           {!m.isBMP && (
-            <span className="text-[8px] bg-red-50 text-red-700 px-1 rounded font-bold">PILOT</span>
+            <span className="text-2xs bg-red-50 text-red-700 px-1 rounded font-bold">PILOT</span>
           )}
           {m.trl && (
-            <span className="text-[8px] bg-purple-50 text-purple-700 px-1 rounded">TRL {m.trl}</span>
+            <span className="text-2xs bg-purple-50 text-purple-700 px-1 rounded">TRL {m.trl}</span>
           )}
           {m.hasOpex && (
-            <span className="text-[8px] bg-orange-50 text-orange-700 px-1 rounded font-bold">OPEX</span>
+            <span className="text-2xs bg-orange-50 text-orange-700 px-1 rounded font-bold">OPEX</span>
           )}
           {m.isAddon && (
-            <span className="text-[8px] bg-green-50 text-green-800 px-1 rounded">ADD-ON</span>
+            <span className="text-2xs bg-green-50 text-green-800 px-1 rounded">ADD-ON</span>
           )}
           {climActive && m.climateVulnerability === "high" && (
-            <span className="text-[8px] bg-red-100 text-red-700 px-1 rounded font-bold">CLIM-VULN</span>
+            <span className="text-2xs bg-red-100 text-red-700 px-1 rounded font-bold">CLIM-VULN</span>
           )}
           {climActive && m.climateVulnerability === "moderate" && (
-            <span className="text-[8px] bg-amber-100 text-amber-700 px-1 rounded font-bold">CLIM-MOD</span>
+            <span className="text-2xs bg-amber-100 text-amber-700 px-1 rounded font-bold">CLIM-MOD</span>
           )}
         </div>
-        <div className="text-[9px] text-slate-400 mt-0.5 leading-snug">{m.desc || m.pilotNote || ""}</div>
+        <div className="text-2xs text-slate-400 mt-0.5 leading-snug">{m.desc || m.pilotNote || ""}</div>
         {/* contaminant chips */}
         <div className="flex gap-1 mt-1 flex-wrap">
           {CK.map(
@@ -115,7 +115,7 @@ function ModRow({
               m[k] > 0 && (
                 <span
                   key={k}
-                  className="text-[8px] px-1 rounded font-mono"
+                  className="text-2xs px-1 rounded font-mono"
                   style={{
                     background: m[k] > 60 ? CONTAMINANT_COLORS[k] + "22" : "#f0f3f7",
                     color: m[k] > 60 ? CONTAMINANT_COLORS[k] : "#8a9bb0",
@@ -126,7 +126,7 @@ function ModRow({
               ),
           )}
           {m.gpm > 0 && (
-            <span className="text-[8px] px-1 rounded font-mono bg-blue-50 text-blue-700">
+            <span className="text-2xs px-1 rounded font-mono bg-blue-50 text-blue-700">
               {(m.gpm * units).toLocaleString()} GPM
             </span>
           )}
@@ -135,7 +135,7 @@ function ModRow({
 
       {/* units + cost */}
       <div className="flex flex-col items-end gap-1 shrink-0" onClick={e => e.stopPropagation()}>
-        <span className={`font-mono text-[11px] font-medium ${checked ? "text-slate-800" : "text-slate-300"}`}>
+        <span className={`font-mono text-xs font-medium ${checked ? "text-slate-800" : "text-slate-300"}`}>
           {checked ? fmt(cost) : "\u2014"}
         </span>
         {checked && (
@@ -146,7 +146,7 @@ function ModRow({
             >
               &minus;
             </button>
-            <span className="text-[11px] font-mono text-slate-800 min-w-[16px] text-center">{units}</span>
+            <span className="text-xs font-mono text-slate-800 min-w-[16px] text-center">{units}</span>
             <button
               onClick={() => onUnits(m.id, units + 1)}
               className="w-[18px] h-[18px] rounded border border-slate-200 bg-slate-50 text-xs flex items-center justify-center text-slate-500 hover:bg-slate-100"
@@ -185,19 +185,19 @@ function NgoRow({ n, checked, onToggle }: { n: NGO; checked: boolean; onToggle: 
       </div>
       <div className="flex-1">
         <div className="flex items-center gap-1">
-          <span className="text-[13px]">{n.icon}</span>
-          <span className={`text-[11px] font-semibold ${checked ? "text-slate-800" : "text-slate-500"}`}>
+          <span className="text-sm">{n.icon}</span>
+          <span className={`text-xs font-semibold ${checked ? "text-slate-800" : "text-slate-500"}`}>
             {n.name}
           </span>
           {n.grant && (
-            <span className="text-[8px] bg-green-50 text-green-800 px-1 rounded font-bold">GRANT</span>
+            <span className="text-2xs bg-green-50 text-green-800 px-1 rounded font-bold">GRANT</span>
           )}
         </div>
-        <div className="text-[9px] text-slate-400 mt-0.5">
+        <div className="text-2xs text-slate-400 mt-0.5">
           {n.type} &mdash; {n.desc}
         </div>
       </div>
-      <span className={`font-mono text-[10px] font-medium shrink-0 ${checked ? "text-green-700" : "text-slate-300"}`}>
+      <span className={`font-mono text-2xs font-medium shrink-0 ${checked ? "text-green-700" : "text-slate-300"}`}>
         {checked ? "+" + fmt(n.value) : "\u2014"}
       </span>
     </div>
@@ -229,16 +229,16 @@ function EventRow({ ev, checked, onToggle }: { ev: CommunityEvent; checked: bool
       </div>
       <div className="flex-1">
         <div className="flex items-center gap-1 flex-wrap">
-          <span className="text-[13px]">{ev.icon}</span>
-          <span className={`text-[11px] font-semibold ${checked ? "text-slate-800" : "text-slate-500"}`}>
+          <span className="text-sm">{ev.icon}</span>
+          <span className={`text-xs font-semibold ${checked ? "text-slate-800" : "text-slate-500"}`}>
             {ev.name}
           </span>
-          <span className="text-[8px] bg-orange-50 text-orange-700 px-1 rounded">{ev.freq}</span>
-          <span className="text-[8px] bg-slate-100 text-slate-500 px-1 rounded">{ev.cat}</span>
+          <span className="text-2xs bg-orange-50 text-orange-700 px-1 rounded">{ev.freq}</span>
+          <span className="text-2xs bg-slate-100 text-slate-500 px-1 rounded">{ev.cat}</span>
         </div>
-        <div className="text-[9px] text-slate-400 mt-0.5">{ev.desc}</div>
+        <div className="text-2xs text-slate-400 mt-0.5">{ev.desc}</div>
       </div>
-      <span className={`font-mono text-[10px] font-medium shrink-0 ${checked ? "text-orange-700" : "text-slate-300"}`}>
+      <span className={`font-mono text-2xs font-medium shrink-0 ${checked ? "text-orange-700" : "text-slate-300"}`}>
         {checked ? "+" + fmt(ev.cost) + "/yr" : "\u2014"}
       </span>
     </div>
@@ -254,8 +254,8 @@ function LedgerLine({
   return (
     <div className="flex justify-between items-baseline py-1 border-b border-slate-100">
       <div>
-        <span className="text-[11px] text-slate-400">{label}</span>
-        {sub && <span className="text-[8px] text-slate-300 ml-1.5">{sub}</span>}
+        <span className="text-xs text-slate-400">{label}</span>
+        {sub && <span className="text-2xs text-slate-300 ml-1.5">{sub}</span>}
       </div>
       <span
         className="font-mono"
@@ -329,14 +329,14 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
         <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_theme(colors.emerald.400)]" />
         <span className="font-mono text-xs font-medium text-slate-100 tracking-[3px]">PIN</span>
         <span className="text-slate-700 text-xs">|</span>
-        <span className="text-[11px] text-sky-700">Resolution Planner</span>
-        <span className="text-slate-700 text-[10px]">&rsaquo;</span>
-        <span className="text-[11px] text-slate-100 font-serif">{ws.name}</span>
+        <span className="text-xs text-sky-700">Resolution Planner</span>
+        <span className="text-slate-700 text-2xs">&rsaquo;</span>
+        <span className="text-xs text-slate-100 font-serif">{ws.name}</span>
         <div className="ml-auto flex gap-2 items-center">
-          <span className="text-[9px] font-mono text-slate-700">GC VIEW</span>
+          <span className="text-2xs font-mono text-slate-700">GC VIEW</span>
           <button
             onClick={onBack}
-            className="text-[10px] text-sky-700 bg-transparent border border-slate-700 rounded px-2.5 py-0.5 cursor-pointer hover:border-sky-600 transition-colors"
+            className="text-2xs text-sky-700 bg-transparent border border-slate-700 rounded px-2.5 py-0.5 cursor-pointer hover:border-sky-600 transition-colors"
           >
             &larr; Back
           </button>
@@ -345,7 +345,7 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
 
       {/* ── Watershed summary bar ── */}
       <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2.5 flex gap-4 items-center flex-wrap">
-        <span className="font-serif text-[17px] text-slate-800">{ws.name}</span>
+        <span className="font-serif text-lg text-slate-800">{ws.name}</span>
         <div className="w-px h-5 bg-slate-200 hidden sm:block" />
         {[
           { l: "Flow", v: ws.flowMGD.toLocaleString() + " MGD", delta: climActive && climProj ? `+${climProj.precipIntensityPct}%` : undefined },
@@ -360,18 +360,18 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
           { l: "Treatable", v: ws.treatable + "%" },
         ].map((x, i) => (
           <div key={i} className="text-center">
-            <div className="text-[8px] text-slate-400 uppercase font-mono tracking-wider">{x.l}</div>
+            <div className="text-2xs text-slate-400 uppercase font-mono tracking-wider">{x.l}</div>
             <div className="text-xs font-semibold font-mono" style={{ color: (x as { c?: string }).c || "#1b3a5c" }}>
               {x.v}
               {(x as { delta?: string }).delta && (
-                <span className="text-[8px] text-amber-600 ml-1">({(x as { delta?: string }).delta})</span>
+                <span className="text-2xs text-amber-600 ml-1">({(x as { delta?: string }).delta})</span>
               )}
             </div>
           </div>
         ))}
         <div className="ml-auto flex gap-1.5 flex-wrap">
           {ws.causes.map((c, i) => (
-            <span key={i} className="text-[9px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded">
+            <span key={i} className="text-2xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded">
               {c}
             </span>
           ))}
@@ -400,7 +400,7 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
               >
                 {t.label}
                 {t.count > 0 && (
-                  <span className="ml-1 text-[9px] bg-slate-800 text-white rounded-full px-1.5 py-px">
+                  <span className="ml-1 text-2xs bg-slate-800 text-white rounded-full px-1.5 py-px">
                     {t.count}
                   </span>
                 )}
@@ -422,10 +422,10 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
                       className="flex items-center gap-1.5 px-3 py-2 bg-slate-50 border-b border-slate-100 cursor-pointer sticky top-0 z-[1]"
                     >
                       <div className="w-[3px] h-3.5 rounded-sm" style={{ background: CAT_COLORS[cat as ModuleCategory] }} />
-                      <span className="text-[11px] font-bold text-slate-700 flex-1">{cat}</span>
+                      <span className="text-xs font-bold text-slate-700 flex-1">{cat}</span>
                       {selCount > 0 && (
                         <span
-                          className="text-[9px] font-bold px-1.5 rounded"
+                          className="text-2xs font-bold px-1.5 rounded"
                           style={{
                             background: CAT_COLORS[cat as ModuleCategory] + "22",
                             color: CAT_COLORS[cat as ModuleCategory],
@@ -465,10 +465,10 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
           {leftTab === "ngo" && (
             <div className="flex-1 overflow-y-auto">
               <div className="px-3 py-2.5 bg-green-50 border-b border-slate-200">
-                <div className="text-[11px] font-semibold text-green-900">
+                <div className="text-xs font-semibold text-green-900">
                   Partnership Value Selected: <span className="font-mono">{fmt(ngoValue)}</span>
                 </div>
-                <div className="text-[9px] text-green-600 mt-0.5">
+                <div className="text-2xs text-green-600 mt-0.5">
                   In-kind services, co-funding eligibility, and grant match support.
                 </div>
               </div>
@@ -487,10 +487,10 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
           {leftTab === "events" && (
             <div className="flex-1 overflow-y-auto">
               <div className="px-3 py-2.5 bg-amber-50 border-b border-slate-200">
-                <div className="text-[11px] font-semibold text-orange-800">
+                <div className="text-xs font-semibold text-orange-800">
                   Community Program Cost: <span className="font-mono">{fmt(evtCostYr)}/yr</span>
                 </div>
-                <div className="text-[9px] text-orange-500 mt-0.5">
+                <div className="text-2xs text-orange-500 mt-0.5">
                   Optional community add-ons. Strengthens stakeholder buy-in + data collection.
                 </div>
               </div>
@@ -509,15 +509,15 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
         {/* ══ MIDDLE: CONDITIONS ══ */}
         <div className="bg-white lg:border-r border-slate-200 flex flex-col overflow-hidden">
           <div className="px-4 py-3 border-b border-slate-200 shrink-0">
-            <div className="text-[11px] font-bold text-slate-800">Waterbody Conditions</div>
-            <div className="text-[9px] text-slate-400 mt-0.5">
+            <div className="text-xs font-bold text-slate-800">Waterbody Conditions</div>
+            <div className="text-2xs text-slate-400 mt-0.5">
               Baseline impairment vs. projected outcome from selected stack
             </div>
           </div>
 
           {/* Baseline bars */}
           <div className="px-4 py-3 border-b border-slate-200 shrink-0">
-            <div className="text-[9px] text-slate-400 uppercase tracking-wider font-mono mb-2">
+            <div className="text-2xs text-slate-400 uppercase tracking-wider font-mono mb-2">
               Contaminant Index (% impaired)
             </div>
             {CK.map(k => ws.baseline[k] > 0 && <Bar key={k} base={ws.baseline[k]} result={calc?.ach[k]} colorKey={k} />)}
@@ -526,7 +526,7 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
           {/* Projected outcomes */}
           {calc && (
             <div className="px-4 py-3 bg-slate-50 shrink-0">
-              <div className="text-[9px] text-slate-400 uppercase tracking-wider font-mono mb-2">
+              <div className="text-2xs text-slate-400 uppercase tracking-wider font-mono mb-2">
                 Projected Improvement
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -543,11 +543,11 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
                   { l: "Target", v: target + "%", c: "#78909c" },
                 ].map((x, i) => (
                   <div key={i} className="bg-white rounded-lg px-2.5 py-1.5 border border-slate-200">
-                    <div className="text-[8px] text-slate-400 uppercase tracking-wide">{x.l}</div>
+                    <div className="text-2xs text-slate-400 uppercase tracking-wide">{x.l}</div>
                     <div className="text-base font-bold font-mono" style={{ color: x.c }}>
                       {x.v}
                       {(x as { delta?: string }).delta && (
-                        <span className="text-[9px] text-amber-600 font-medium ml-1">
+                        <span className="text-2xs text-amber-600 font-medium ml-1">
                           ({(x as { delta?: string }).delta})
                         </span>
                       )}
@@ -560,7 +560,7 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
                   calc.met ? "bg-green-50 border-green-200" : "bg-amber-50 border-amber-200"
                 }`}
               >
-                <span className={`text-[11px] font-bold ${calc.met ? "text-green-700" : "text-orange-700"}`}>
+                <span className={`text-xs font-bold ${calc.met ? "text-green-700" : "text-orange-700"}`}>
                   {calc.met
                     ? "\u2713 Target achievable with selected stack"
                     : "\u26A0 Below target \u2014 add modules or increase units"}
@@ -572,24 +572,24 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
           {/* Grants */}
           <div className="flex-1 overflow-y-auto">
             <div className="px-4 py-2.5 bg-slate-50 border-y border-slate-200">
-              <div className="text-[9px] text-slate-400 uppercase tracking-wider font-mono">
+              <div className="text-2xs text-slate-400 uppercase tracking-wider font-mono">
                 Upstream Load Sources
               </div>
             </div>
             {calc && calc.grants.length > 0 && (
               <div className="px-4 py-2.5 border-b border-slate-200">
-                <div className="text-[9px] text-slate-400 uppercase tracking-wider font-mono mb-1.5">
+                <div className="text-2xs text-slate-400 uppercase tracking-wider font-mono mb-1.5">
                   Eligible Grants
                 </div>
                 {calc.grants.map((g, i) => (
                   <div key={i} className="flex justify-between py-0.5 border-b border-slate-50">
-                    <span className="text-[10px] text-slate-600">{g.name}</span>
-                    <span className="text-[10px] font-semibold text-green-700 font-mono">{fmt(g.savings)}</span>
+                    <span className="text-2xs text-slate-600">{g.name}</span>
+                    <span className="text-2xs font-semibold text-green-700 font-mono">{fmt(g.savings)}</span>
                   </div>
                 ))}
                 <div className="flex justify-between mt-1 pt-1 border-t-2 border-slate-200">
-                  <span className="text-[10px] font-bold text-slate-800">Total Grant Potential</span>
-                  <span className="text-[11px] font-bold text-green-700 font-mono">{fmt(calc.grantTotal)}</span>
+                  <span className="text-2xs font-bold text-slate-800">Total Grant Potential</span>
+                  <span className="text-xs font-bold text-green-700 font-mono">{fmt(calc.grantTotal)}</span>
                 </div>
               </div>
             )}
@@ -600,21 +600,21 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
         <div className="bg-white flex flex-col overflow-hidden">
           {/* dark header */}
           <div className="px-4 py-3 bg-slate-900 border-b border-slate-200 shrink-0">
-            <div className="font-mono text-[10px] text-emerald-400 tracking-[2px] mb-0.5">COST LEDGER</div>
-            <div className="font-serif text-[22px] text-slate-100">{fmt(runningCapex + estOpexTotal)}</div>
-            <div className="text-[9px] text-sky-700 mt-0.5">Lifecycle estimate &middot; {tl}yr</div>
+            <div className="font-mono text-2xs text-emerald-400 tracking-[2px] mb-0.5">COST LEDGER</div>
+            <div className="font-serif text-xl text-slate-100">{fmt(runningCapex + estOpexTotal)}</div>
+            <div className="text-2xs text-sky-700 mt-0.5">Lifecycle estimate &middot; {tl}yr</div>
           </div>
 
           {/* controls */}
           <div className="px-4 py-3 border-b border-slate-200 grid grid-cols-2 gap-2 shrink-0">
             <div>
-              <div className="text-[8px] text-slate-400 uppercase tracking-wider mb-1">Timeline (years)</div>
+              <div className="text-2xs text-slate-400 uppercase tracking-wider mb-1">Timeline (years)</div>
               <div className="flex gap-1">
                 {[2, 5, 10, 15].map(y => (
                   <button
                     key={y}
                     onClick={() => setTl(y)}
-                    className={`flex-1 py-1 rounded text-[11px] font-mono cursor-pointer border transition-all ${
+                    className={`flex-1 py-1 rounded text-xs font-mono cursor-pointer border transition-all ${
                       tl === y
                         ? "border-slate-800 bg-slate-800 text-white"
                         : "border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300"
@@ -626,7 +626,7 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
               </div>
             </div>
             <div>
-              <div className="text-[8px] text-slate-400 uppercase tracking-wider mb-1">Target (%)</div>
+              <div className="text-2xs text-slate-400 uppercase tracking-wider mb-1">Target (%)</div>
               <input
                 type="number"
                 min={25}
@@ -640,7 +640,7 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
 
           {/* climate scenario controls */}
           <div className="px-4 py-3 border-b border-slate-200 shrink-0">
-            <div className="text-[8px] text-slate-400 uppercase tracking-wider mb-1.5">Climate Scenario</div>
+            <div className="text-2xs text-slate-400 uppercase tracking-wider mb-1.5">Climate Scenario</div>
             <div className="flex gap-1 mb-2">
               {([
                 { id: "baseline" as RcpScenario, label: "Baseline" },
@@ -650,7 +650,7 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
                 <button
                   key={s.id}
                   onClick={() => setClimScenario(s.id)}
-                  className={`flex-1 py-1 rounded text-[11px] font-mono cursor-pointer border transition-all ${
+                  className={`flex-1 py-1 rounded text-xs font-mono cursor-pointer border transition-all ${
                     climScenario === s.id
                       ? "border-slate-800 bg-slate-800 text-white"
                       : "border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300"
@@ -662,13 +662,13 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
             </div>
             {climActive && (
               <>
-                <div className="text-[8px] text-slate-400 uppercase tracking-wider mb-1">Projection Horizon</div>
+                <div className="text-2xs text-slate-400 uppercase tracking-wider mb-1">Projection Horizon</div>
                 <div className="flex gap-1 mb-2">
                   {([2030, 2050, 2080] as ClimateDecade[]).map(d => (
                     <button
                       key={d}
                       onClick={() => setClimDecade(d)}
-                      className={`flex-1 py-1 rounded text-[11px] font-mono cursor-pointer border transition-all ${
+                      className={`flex-1 py-1 rounded text-xs font-mono cursor-pointer border transition-all ${
                         climDecade === d
                           ? "border-slate-800 bg-slate-800 text-white"
                           : "border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300"
@@ -682,9 +682,9 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
                   <div className="bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-2 space-y-0.5">
                     <div className="flex items-center gap-1.5 mb-1">
                       <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                      <span className="text-[9px] font-bold text-amber-700 uppercase tracking-wider">Climate stress active</span>
+                      <span className="text-2xs font-bold text-amber-700 uppercase tracking-wider">Climate stress active</span>
                     </div>
-                    <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[9px] font-mono">
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-2xs font-mono">
                       <span className="text-slate-500">Temp</span>
                       <span className="text-amber-700 text-right">+{climProj.tempIncrease_F}°F</span>
                       <span className="text-slate-500">Precip</span>
@@ -707,7 +707,7 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
           {/* ledger lines */}
           <div className="flex-1 overflow-y-auto px-4 py-3">
             {/* CapEx */}
-            <div className="text-[9px] text-slate-400 uppercase tracking-wider font-mono mb-1.5">
+            <div className="text-2xs text-slate-400 uppercase tracking-wider font-mono mb-1.5">
               CapEx &mdash; Module Stack
             </div>
             {MODULE_CATS.map(cat => {
@@ -719,9 +719,9 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
                   <div className="flex justify-between py-0.5">
                     <div className="flex items-center gap-1.5">
                       <div className="w-[3px] h-2.5 rounded-sm" style={{ background: CAT_COLORS[cat as ModuleCategory] }} />
-                      <span className="text-[10px] font-semibold text-slate-600">{cat}</span>
+                      <span className="text-2xs font-semibold text-slate-600">{cat}</span>
                     </div>
-                    <span className="text-[10px] font-semibold text-slate-800 font-mono">{fmt(catTotal)}</span>
+                    <span className="text-2xs font-semibold text-slate-800 font-mono">{fmt(catTotal)}</span>
                   </div>
                   {mods.map(m => (
                     <div key={m.id} className="flex justify-between py-0.5 pl-3 border-b border-slate-50">
@@ -736,7 +736,7 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
             })}
 
             {selModules.length === 0 && (
-              <div className="text-center py-5 text-slate-300 text-[11px]">
+              <div className="text-center py-5 text-slate-300 text-xs">
                 Select modules from the left &rarr;
               </div>
             )}
@@ -746,7 +746,7 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
             {/* OpEx */}
             {aliaCount > 0 && (
               <>
-                <div className="text-[9px] text-slate-400 uppercase tracking-wider font-mono mb-1.5">
+                <div className="text-2xs text-slate-400 uppercase tracking-wider font-mono mb-1.5">
                   OpEx &mdash; PIN Operating
                 </div>
                 <LedgerLine label="PIN Units" value={String(aliaCount)} />
@@ -760,7 +760,7 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
             {/* NGO value */}
             {ngoSel.size > 0 && (
               <>
-                <div className="text-[9px] text-slate-400 uppercase tracking-wider font-mono mb-1.5">
+                <div className="text-2xs text-slate-400 uppercase tracking-wider font-mono mb-1.5">
                   NGO Partnership Value
                 </div>
                 {NGOS.filter(n => ngoSel.has(n.id)).map(n => (
@@ -774,7 +774,7 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
             {/* Community events */}
             {evtSel.size > 0 && (
               <>
-                <div className="text-[9px] text-slate-400 uppercase tracking-wider font-mono mb-1.5">
+                <div className="text-2xs text-slate-400 uppercase tracking-wider font-mono mb-1.5">
                   Community Program (Annual)
                 </div>
                 {EVENTS.filter(e => evtSel.has(e.id)).map(e => (
@@ -788,7 +788,7 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
             {/* Summary */}
             {selModules.length > 0 && (
               <>
-                <div className="text-[9px] text-slate-400 uppercase tracking-wider font-mono mb-1.5">Summary</div>
+                <div className="text-2xs text-slate-400 uppercase tracking-wider font-mono mb-1.5">Summary</div>
                 <LedgerLine label="CapEx" value={fmt(runningCapex)} />
                 {aliaCount > 0 && <LedgerLine label="OpEx Total" value={fmt(estOpexTotal)} color="#e65100" />}
                 {evtSel.size > 0 && <LedgerLine label="Community Program" value={fmt(evtCostYr * tl)} color="#e65100" />}
@@ -822,10 +822,10 @@ export default function TreatmentPlanner({ ws, onBack }: TreatmentPlannerProps) 
                   calc.met ? "bg-green-50 border-green-200" : "bg-amber-50 border-amber-200"
                 }`}
               >
-                <span className={`text-[11px] font-bold ${calc.met ? "text-green-700" : "text-orange-700"}`}>
+                <span className={`text-xs font-bold ${calc.met ? "text-green-700" : "text-orange-700"}`}>
                   {calc.met ? "\u2713 TARGET MET" : "\u26A0 " + calc.avg.toFixed(0) + "% / " + target + "%"}
                 </span>
-                <span className="text-[10px] font-mono text-slate-600">
+                <span className="text-2xs font-mono text-slate-600">
                   {calc.active.length} modules{calc.totGPM > 0 ? " \u00B7 " + fmtN(Math.round(calc.totGPM)) + " GPM" : ""}
                 </span>
               </div>

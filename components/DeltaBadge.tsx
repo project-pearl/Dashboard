@@ -11,7 +11,7 @@ interface DeltaBadgeProps {
 export function DeltaBadge({ delta, countKey }: DeltaBadgeProps) {
   if (!delta) {
     return (
-      <span className="inline-flex items-center text-[10px] px-1.5 py-0.5 rounded-full font-semibold bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
+      <span className="inline-flex items-center text-2xs px-1.5 py-0.5 rounded-full font-semibold bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
         —
       </span>
     );
@@ -49,7 +49,7 @@ export function DeltaBadge({ delta, countKey }: DeltaBadgeProps) {
   }
 
   return (
-    <span className={`inline-flex items-center text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${colorClasses}`}>
+    <span className={`inline-flex items-center text-2xs px-1.5 py-0.5 rounded-full font-semibold ${colorClasses}`}>
       {label}
     </span>
   );

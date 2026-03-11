@@ -159,7 +159,7 @@ export function ESGReportingPanel({ stateAbbr }: ESGReportingPanelProps) {
                 </div>
                 <div>
                   <p className="text-lg font-bold text-slate-800">{stat.value}</p>
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wide">{stat.label}</p>
+                  <p className="text-2xs text-slate-500 uppercase tracking-wide">{stat.label}</p>
                 </div>
               </div>
             </CardContent>
@@ -188,7 +188,7 @@ export function ESGReportingPanel({ stateAbbr }: ESGReportingPanelProps) {
                     <span className="text-xs text-slate-400 ml-2">{fw.fullName}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge className={`text-[9px] ${statusColor(fw.status)}`}>{fw.status}</Badge>
+                    <Badge className={`text-2xs ${statusColor(fw.status)}`}>{fw.status}</Badge>
                     <span className="text-xs text-slate-500">Due: {fw.deadline}</span>
                   </div>
                 </div>
@@ -199,7 +199,7 @@ export function ESGReportingPanel({ stateAbbr }: ESGReportingPanelProps) {
                       style={{ width: `${fw.readinessPct}%` }}
                     />
                     {fw.readinessPct >= 20 && (
-                      <span className="absolute inset-y-0 left-2 flex items-center text-[10px] font-bold text-white">
+                      <span className="absolute inset-y-0 left-2 flex items-center text-2xs font-bold text-white">
                         {fw.readinessPct}%
                       </span>
                     )}
@@ -210,10 +210,10 @@ export function ESGReportingPanel({ stateAbbr }: ESGReportingPanelProps) {
                 </div>
                 {fw.gaps.length > 0 && (
                   <div className="mt-2">
-                    <span className="text-[10px] text-slate-500 uppercase tracking-wide">Remaining Gaps:</span>
+                    <span className="text-2xs text-slate-500 uppercase tracking-wide">Remaining Gaps:</span>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {fw.gaps.map((gap) => (
-                        <Badge key={gap} variant="outline" className="text-[9px] text-amber-700 border-amber-200 bg-amber-50">
+                        <Badge key={gap} variant="outline" className="text-2xs text-amber-700 border-amber-200 bg-amber-50">
                           {gap}
                         </Badge>
                       ))}
@@ -233,7 +233,7 @@ export function ESGReportingPanel({ stateAbbr }: ESGReportingPanelProps) {
             <AlertTriangle size={16} className="text-amber-600" />
             Data Gap Analysis
             {criticalGaps > 0 && (
-              <Badge className="ml-1 text-[10px] bg-red-100 text-red-700">{criticalGaps} action items</Badge>
+              <Badge className="ml-1 text-2xs bg-red-100 text-red-700">{criticalGaps} action items</Badge>
             )}
           </CardTitle>
           <CardDescription>
@@ -250,9 +250,9 @@ export function ESGReportingPanel({ stateAbbr }: ESGReportingPanelProps) {
               }`}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs font-semibold text-slate-800">{gap.area}</span>
-                  <Badge className={`text-[9px] ${severityColor(gap.severity)}`}>{gap.severity}</Badge>
+                  <Badge className={`text-2xs ${severityColor(gap.severity)}`}>{gap.severity}</Badge>
                 </div>
-                <p className="text-[10px] text-slate-600">{gap.description}</p>
+                <p className="text-2xs text-slate-600">{gap.description}</p>
               </div>
             ))}
           </div>
@@ -294,7 +294,7 @@ export function ESGReportingPanel({ stateAbbr }: ESGReportingPanelProps) {
                       <td className="py-2 text-right text-slate-500 tabular-nums">{bm.industryAvg} {bm.unit}</td>
                       <td className="py-2 text-right text-slate-500 tabular-nums">{bm.bestInClass} {bm.unit}</td>
                       <td className="py-2 text-center">
-                        <Badge className={`text-[9px] ${aboveAvg ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                        <Badge className={`text-2xs ${aboveAvg ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
                           {aboveAvg ? 'Above Avg' : 'Below Avg'}
                         </Badge>
                       </td>
@@ -324,9 +324,9 @@ export function ESGReportingPanel({ stateAbbr }: ESGReportingPanelProps) {
               <div key={r.report} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
                 <div>
                   <span className="text-xs font-medium text-slate-700">{r.report}</span>
-                  <p className="text-[10px] text-slate-400">Last updated: {r.lastUpdated}</p>
+                  <p className="text-2xs text-slate-400">Last updated: {r.lastUpdated}</p>
                 </div>
-                <Badge className={`text-[9px] ${reportStatusColor(r.status)}`}>{r.status}</Badge>
+                <Badge className={`text-2xs ${reportStatusColor(r.status)}`}>{r.status}</Badge>
               </div>
             ))}
           </div>

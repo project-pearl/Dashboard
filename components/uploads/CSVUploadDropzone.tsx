@@ -181,7 +181,7 @@ export function CSVUploadDropzone({ mode, userId, stateAbbr, teacherUid, onUploa
             <p className="text-sm text-slate-600 font-medium">
               Drop a CSV file here, or click to browse
             </p>
-            <p className="text-[10px] text-slate-400 mt-1">
+            <p className="text-2xs text-slate-400 mt-1">
               Columns like &quot;pH&quot;, &quot;dissolved_oxygen&quot;, &quot;temperature&quot; are auto-detected
             </p>
             <input
@@ -199,7 +199,7 @@ export function CSVUploadDropzone({ mode, userId, stateAbbr, teacherUid, onUploa
               <div className="flex items-center gap-2">
                 <FileSpreadsheet size={14} className="text-slate-500" />
                 <span className="text-xs font-medium text-slate-700">{fileName}</span>
-                <Badge variant="secondary" className="text-[9px]">{preview.length} rows previewed</Badge>
+                <Badge variant="secondary" className="text-2xs">{preview.length} rows previewed</Badge>
               </div>
               <button onClick={clearFile} className="p-1 hover:bg-slate-200 rounded">
                 <X size={14} className="text-slate-400" />
@@ -208,7 +208,7 @@ export function CSVUploadDropzone({ mode, userId, stateAbbr, teacherUid, onUploa
 
             {/* Column mapping */}
             <div>
-              <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-wide mb-2">
+              <p className="text-2xs font-semibold text-slate-600 uppercase tracking-wide mb-2">
                 Column Mapping ({mappedCount} detected)
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -217,10 +217,10 @@ export function CSVUploadDropzone({ mode, userId, stateAbbr, teacherUid, onUploa
                   const isLocation = /^(lat|latitude|lng|lon|longitude|date|sample_date|site|station|location|student|team)$/i.test(h.trim());
                   return (
                     <div key={h} className="flex items-center gap-2">
-                      <span className="text-[10px] text-slate-500 truncate max-w-[80px]" title={h}>{h}</span>
-                      <span className="text-[10px] text-slate-400">&rarr;</span>
+                      <span className="text-2xs text-slate-500 truncate max-w-[80px]" title={h}>{h}</span>
+                      <span className="text-2xs text-slate-400">&rarr;</span>
                       {isLocation ? (
-                        <Badge variant="outline" className="text-[9px] text-slate-400">auto</Badge>
+                        <Badge variant="outline" className="text-2xs text-slate-400">auto</Badge>
                       ) : (
                         <select
                           value={columnMapping[h] || ''}
@@ -233,7 +233,7 @@ export function CSVUploadDropzone({ mode, userId, stateAbbr, teacherUid, onUploa
                             }
                             setColumnMapping(newMapping);
                           }}
-                          className="text-[10px] h-6 rounded border border-slate-200 px-1 bg-white"
+                          className="text-2xs h-6 rounded border border-slate-200 px-1 bg-white"
                         >
                           <option value="">skip</option>
                           {PEARL_KEYS.map(pk => (
@@ -250,7 +250,7 @@ export function CSVUploadDropzone({ mode, userId, stateAbbr, teacherUid, onUploa
             {/* Preview table */}
             {preview.length > 0 && (
               <div className="overflow-x-auto">
-                <table className="w-full text-[10px]">
+                <table className="w-full text-2xs">
                   <thead>
                     <tr className="text-left text-slate-500 border-b">
                       {headers.map(h => (
@@ -282,7 +282,7 @@ export function CSVUploadDropzone({ mode, userId, stateAbbr, teacherUid, onUploa
                 {uploading ? 'Uploading...' : `Upload ${mappedCount} mapped column${mappedCount !== 1 ? 's' : ''}`}
               </Button>
               {mappedCount === 0 && (
-                <span className="text-[10px] text-amber-600">No parameter columns detected — map at least one</span>
+                <span className="text-2xs text-amber-600">No parameter columns detected — map at least one</span>
               )}
             </div>
 
@@ -294,7 +294,7 @@ export function CSVUploadDropzone({ mode, userId, stateAbbr, teacherUid, onUploa
                 {result.success ? <CheckCircle size={14} /> : <AlertCircle size={14} />}
                 <span>{result.message}</span>
                 {result.errorCount != null && result.errorCount > 0 && (
-                  <Badge variant="secondary" className="text-[9px] ml-1">{result.errorCount} errors</Badge>
+                  <Badge variant="secondary" className="text-2xs ml-1">{result.errorCount} errors</Badge>
                 )}
               </div>
             )}

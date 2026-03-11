@@ -85,7 +85,7 @@ export default function MethodologyPage() {
         <div className="relative h-10 w-32 mb-4">
           <Image src="/Pearl-Logo-alt.png" alt="PEARL" fill className="object-contain object-left" />
         </div>
-        <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-3">Methodology</div>
+        <div className="text-2xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Methodology</div>
         <ul className="space-y-1">
           {SECTIONS.map((s) => (
             <li key={s.id}>
@@ -148,7 +148,7 @@ export default function MethodologyPage() {
               This document describes the measurement parameters, calculation methods, data sources, and quality assurance standards used across the PEARL water quality monitoring platform.
               PIN ingests data produced by laboratories and agencies that follow EPA-approved analytical procedures and Clean Water Act regulatory frameworks.
             </p>
-            <div className="mt-3 flex flex-wrap gap-2 text-[10px] text-slate-400">
+            <div className="mt-3 flex flex-wrap gap-2 text-2xs text-slate-400">
               <span>Version 1.0</span>
               <span>·</span>
               <span>Last updated: February 2026</span>
@@ -385,7 +385,7 @@ export default function MethodologyPage() {
           </div>
 
           {/* ── Document footer ── */}
-          <div className="mt-12 pt-6 border-t border-slate-200 text-[10px] text-slate-400 space-y-1">
+          <div className="mt-12 pt-6 border-t border-slate-200 text-2xs text-slate-400 space-y-1">
             <p>PEARL Platform Methodology &amp; Data Standards · Version 1.0 · February 2026</p>
             <p>This document is provided for informational purposes. PEARL assessments are derived from publicly available data and do not constitute official regulatory determinations. Always verify with primary agency sources for compliance or permitting decisions.</p>
             <p>&copy; {new Date().getFullYear()} Local Seafood Projects Inc. All rights reserved.</p>

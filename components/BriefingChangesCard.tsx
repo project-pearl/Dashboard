@@ -67,7 +67,7 @@ export function BriefingChangesCard() {
                     style={{ borderColor: 'var(--border-subtle)' }}
                     onClick={() => setExpandedId(isExpanded ? null : name)}
                   >
-                    <span className="text-[10px] font-mono whitespace-nowrap mt-0.5" style={{ color: 'var(--text-dim)' }}>
+                    <span className="text-2xs font-mono whitespace-nowrap mt-0.5" style={{ color: 'var(--text-dim)' }}>
                       {time}
                     </span>
                     <span className="text-xs flex-1" style={{ color: 'var(--text-primary)' }}>
@@ -84,7 +84,7 @@ export function BriefingChangesCard() {
                   {isExpanded && (
                     <div className="ml-4 mt-1 rounded-lg border p-3" style={{ borderColor: 'var(--accent-purple, #7c3aed)', background: 'var(--bg-card)' }}>
                       {/* Per-count breakdown table */}
-                      <table className="w-full text-[11px] mb-2">
+                      <table className="w-full text-xs mb-2">
                         <thead>
                           <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                             <th className="text-left py-1 font-semibold" style={{ color: 'var(--text-dim)' }}>Metric</th>
@@ -109,7 +109,7 @@ export function BriefingChangesCard() {
 
                       {/* State changes */}
                       {delta.states && (delta.states.added.length > 0 || delta.states.removed.length > 0) && (
-                        <div className="text-[11px] mt-1" style={{ color: 'var(--text-secondary)' }}>
+                        <div className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
                           {delta.states.added.length > 0 && (
                             <span className="text-emerald-600">Added: {delta.states.added.join(', ')}</span>
                           )}
@@ -122,7 +122,7 @@ export function BriefingChangesCard() {
 
                       {/* Build duration */}
                       {delta.buildDurationSec != null && (
-                        <div className="text-[10px] mt-1" style={{ color: 'var(--text-dim)' }}>
+                        <div className="text-2xs mt-1" style={{ color: 'var(--text-dim)' }}>
                           Build time: {delta.buildDurationSec}s · Source: {meta?.agency ?? 'Unknown'}
                         </div>
                       )}

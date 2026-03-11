@@ -609,7 +609,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
   // ─── Helper: concern badge ────────────────────────────────────────────────
 
   const ConcernBadge = ({ level }: { level: 'high' | 'medium' | 'low' }) => (
-    <Badge variant="outline" className={`text-[9px] ${
+    <Badge variant="outline" className={`text-2xs ${
       level === 'high' ? 'border-red-300 bg-red-50 text-red-700' :
       level === 'medium' ? 'border-amber-300 bg-amber-50 text-amber-700' :
       'border-green-300 bg-green-50 text-green-700'
@@ -617,7 +617,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
   );
 
   const OverlapBadge = ({ level }: { level: 'high' | 'moderate' | 'low' }) => (
-    <Badge variant="outline" className={`text-[9px] ${
+    <Badge variant="outline" className={`text-2xs ${
       level === 'high' ? 'border-purple-300 bg-purple-50 text-purple-700' :
       level === 'moderate' ? 'border-blue-300 bg-blue-50 text-blue-700' :
       'border-slate-300 bg-slate-50 text-slate-700'
@@ -625,7 +625,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
   );
 
   const CoverageBadge = ({ level }: { level: 'full' | 'partial' | 'planned' }) => (
-    <Badge variant="outline" className={`text-[9px] ${
+    <Badge variant="outline" className={`text-2xs ${
       level === 'full' ? 'border-green-300 bg-green-50 text-green-700' :
       level === 'partial' ? 'border-amber-300 bg-amber-50 text-amber-700' :
       'border-slate-300 bg-slate-50 text-slate-700'
@@ -705,7 +705,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <div className="text-xs font-semibold text-violet-700">Key Strengths</div>
-                    <div className="text-[11px] text-slate-700 space-y-1">
+                    <div className="text-xs text-slate-700 space-y-1">
                       <div className="flex items-start gap-1.5">
                         <TrendingUp className="h-3 w-3 text-green-500 mt-0.5 flex-shrink-0" />
                         <span><span className="font-semibold">{portfolioScores.gmpCompliantCount}/{portfolioScores.total} facilities</span> FDA cGMP compliant</span>
@@ -724,7 +724,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                   </div>
                   <div className="space-y-1.5">
                     <div className="text-xs font-semibold text-amber-700">Risk Flags</div>
-                    <div className="text-[11px] text-slate-700 space-y-1">
+                    <div className="text-xs text-slate-700 space-y-1">
                       {portfolioScores.highRisk > 0 && (
                         <div className="flex items-start gap-1.5">
                           <AlertTriangle className="h-3 w-3 text-red-500 mt-0.5 flex-shrink-0" />
@@ -751,7 +751,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                         {Math.round((portfolioScores.gmpCompliantCount / Math.max(portfolioScores.total, 1)) * 100)}%
                       </div>
                       <div className="text-xs text-slate-500 font-medium">GMP Compliance Rate</div>
-                      <div className="text-[10px] text-slate-400 mt-1">{portfolioScores.total} facilities | {portfolioScores.monitored} PIN-verified</div>
+                      <div className="text-2xs text-slate-400 mt-1">{portfolioScores.total} facilities | {portfolioScores.monitored} PIN-verified</div>
                     </div>
                   </div>
                 </div>
@@ -797,7 +797,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                     <div className="flex items-center gap-1.5">
                       {OVERLAYS.map(o => (
                         <button key={o.id} onClick={() => setOverlay(o.id)}
-                          className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors ${
+                          className={`flex items-center gap-1 px-2 py-1 rounded text-2xs font-medium transition-colors ${
                             overlay === o.id ? 'bg-violet-100 text-violet-800 border border-violet-300' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
                           }`}>
                           <o.icon className="h-3 w-3" /> {o.label}
@@ -823,7 +823,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                     <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search facilities..."
                       className="flex-1 text-xs bg-transparent outline-none placeholder:text-slate-400" />
                     <select value={filterLevel} onChange={e => setFilterLevel(e.target.value as any)}
-                      className="text-[10px] px-1.5 py-0.5 rounded border border-slate-200 bg-white text-slate-600">
+                      className="text-2xs px-1.5 py-0.5 rounded border border-slate-200 bg-white text-slate-600">
                       <option value="all">All</option>
                       <option value="high">High</option>
                       <option value="medium">Medium</option>
@@ -841,19 +841,19 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                         }`}>
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-semibold text-slate-800">{f.name}</span>
-                          <Badge variant="outline" className={`text-[9px] ${
+                          <Badge variant="outline" className={`text-2xs ${
                             f.alertLevel === 'high' ? 'border-red-300 bg-red-50 text-red-700' :
                             f.alertLevel === 'medium' ? 'border-amber-300 bg-amber-50 text-amber-700' :
                             f.alertLevel === 'low' ? 'border-green-300 bg-green-50 text-green-700' :
                             'border-slate-200 bg-slate-50 text-slate-500'
                           }`}>{f.alertLevel}</Badge>
                         </div>
-                        <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-500">
+                        <div className="flex items-center gap-2 mt-0.5 text-2xs text-slate-500">
                           <span>{f.state}</span>
                           <span>Risk: {f.waterRiskScore}</span>
-                          {f.uspGrade && <Badge variant="outline" className="text-[8px] border-blue-200 bg-blue-50 text-blue-700">{f.uspGrade}</Badge>}
-                          {f.gmpCompliant === true && <Badge variant="outline" className="text-[8px] border-green-200 bg-green-50 text-green-700">GMP</Badge>}
-                          {f.gmpCompliant === false && <Badge variant="outline" className="text-[8px] border-red-200 bg-red-50 text-red-700">GMP Gap</Badge>}
+                          {f.uspGrade && <Badge variant="outline" className="text-2xs border-blue-200 bg-blue-50 text-blue-700">{f.uspGrade}</Badge>}
+                          {f.gmpCompliant === true && <Badge variant="outline" className="text-2xs border-green-200 bg-green-50 text-green-700">GMP</Badge>}
+                          {f.gmpCompliant === false && <Badge variant="outline" className="text-2xs border-red-200 bg-red-50 text-red-700">GMP Gap</Badge>}
                         </div>
                       </button>
                     ))}
@@ -867,7 +867,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><Building2 className="h-4 w-4 text-violet-600" /> Select Facility</CardTitle>
-                  <CardDescription className="text-[11px]">Choose a facility to view detailed data</CardDescription>
+                  <CardDescription className="text-xs">Choose a facility to view detailed data</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <select
@@ -883,21 +883,21 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                   {selectedFac && (
                     <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2">
                       <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 text-center">
-                        <div className="text-[10px] font-bold uppercase text-slate-500">Risk Score</div>
+                        <div className="text-2xs font-bold uppercase text-slate-500">Risk Score</div>
                         <div className="text-lg font-bold text-slate-800">{selectedFac.waterRiskScore}</div>
                       </div>
                       <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 text-center">
-                        <div className="text-[10px] font-bold uppercase text-slate-500">Alert</div>
+                        <div className="text-2xs font-bold uppercase text-slate-500">Alert</div>
                         <div className={`text-lg font-bold ${selectedFac.alertLevel === 'high' ? 'text-red-700' : selectedFac.alertLevel === 'medium' ? 'text-amber-700' : 'text-green-700'}`}>{selectedFac.alertLevel}</div>
                       </div>
                       {selectedFac.uspGrade && (
                         <div className="rounded-lg border border-blue-200 bg-blue-50 p-2 text-center">
-                          <div className="text-[10px] font-bold uppercase text-blue-600">USP Grade</div>
+                          <div className="text-2xs font-bold uppercase text-blue-600">USP Grade</div>
                           <div className="text-lg font-bold text-blue-700">{selectedFac.uspGrade}</div>
                         </div>
                       )}
                       <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 text-center">
-                        <div className="text-[10px] font-bold uppercase text-slate-500">GMP</div>
+                        <div className="text-2xs font-bold uppercase text-slate-500">GMP</div>
                         <div className={`text-lg font-bold ${selectedFac.gmpCompliant ? 'text-green-700' : 'text-red-700'}`}>
                           {selectedFac.gmpCompliant ? 'Compliant' : 'Gap'}
                         </div>
@@ -913,31 +913,31 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-violet-600" /> GMP Regulatory Status</CardTitle>
-                  <CardDescription className="text-[11px]">Current good manufacturing practice compliance across facilities</CardDescription>
+                  <CardDescription className="text-xs">Current good manufacturing practice compliance across facilities</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-center">
                       <div className="text-2xl font-bold text-green-700">{portfolioScores.gmpCompliantCount}</div>
-                      <div className="text-[10px] text-green-600 font-medium">FDA cGMP Compliant</div>
+                      <div className="text-2xs text-green-600 font-medium">FDA cGMP Compliant</div>
                     </div>
                     <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-center">
                       <div className="text-2xl font-bold text-red-700">{portfolioScores.total - portfolioScores.gmpCompliantCount}</div>
-                      <div className="text-[10px] text-red-600 font-medium">Requires Remediation</div>
+                      <div className="text-2xs text-red-600 font-medium">Requires Remediation</div>
                     </div>
                     <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-center">
                       <div className="text-2xl font-bold text-blue-700">{portfolioScores.wfiCount}</div>
-                      <div className="text-[10px] text-blue-600 font-medium">WFI Grade Qualified</div>
+                      <div className="text-2xs text-blue-600 font-medium">WFI Grade Qualified</div>
                     </div>
                   </div>
                   <div className="mt-3 space-y-1.5">
                     {facilitiesData.map(f => (
-                      <div key={f.id} className="flex items-center justify-between px-3 py-1.5 rounded-md bg-white border border-slate-100 text-[11px]">
+                      <div key={f.id} className="flex items-center justify-between px-3 py-1.5 rounded-md bg-white border border-slate-100 text-xs">
                         <span className="font-medium text-slate-700">{f.name}</span>
                         <div className="flex items-center gap-2">
-                          {f.uspGrade && <Badge variant="outline" className="text-[9px] border-blue-200 text-blue-700">{f.uspGrade}</Badge>}
-                          {f.gmpCompliant === true && <Badge variant="outline" className="text-[9px] border-green-300 bg-green-50 text-green-700">Compliant</Badge>}
-                          {f.gmpCompliant === false && <Badge variant="outline" className="text-[9px] border-red-300 bg-red-50 text-red-700">Gap Found</Badge>}
+                          {f.uspGrade && <Badge variant="outline" className="text-2xs border-blue-200 text-blue-700">{f.uspGrade}</Badge>}
+                          {f.gmpCompliant === true && <Badge variant="outline" className="text-2xs border-green-300 bg-green-50 text-green-700">Compliant</Badge>}
+                          {f.gmpCompliant === false && <Badge variant="outline" className="text-2xs border-red-300 bg-red-50 text-red-700">Gap Found</Badge>}
                           {f.fdaInspectionDate && <span className="text-slate-400">Last FDA: {new Date(f.fdaInspectionDate).toLocaleDateString()}</span>}
                         </div>
                       </div>
@@ -952,11 +952,11 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><Droplets className="h-4 w-4 text-blue-600" /> USP Water Grade Specifications</CardTitle>
-                  <CardDescription className="text-[11px]">Pharmacopeial water quality requirements per USP &lt;1231&gt;</CardDescription>
+                  <CardDescription className="text-xs">Pharmacopeial water quality requirements per USP &lt;1231&gt;</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-[11px]">
+                    <table className="w-full text-xs">
                       <thead>
                         <tr className="border-b border-slate-200 text-left">
                           <th className="pb-2 font-semibold text-slate-600 pr-3">Grade</th>
@@ -979,7 +979,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                       </tbody>
                     </table>
                   </div>
-                  <div className="mt-3 text-[10px] text-slate-400">
+                  <div className="mt-3 text-2xs text-slate-400">
                     Source: USP &lt;1231&gt; Water for Pharmaceutical Purposes. EP = European Pharmacopoeia equivalent.
                   </div>
                 </CardContent>
@@ -998,10 +998,10 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                   <div key={kpi.label} className={`rounded-lg border p-3 ${kpi.bg}`}>
                     <div className="flex items-center gap-1.5 mb-1">
                       <kpi.icon className={`h-3.5 w-3.5 ${kpi.color}`} />
-                      <span className="text-[10px] text-slate-500 font-medium">{kpi.label}</span>
+                      <span className="text-2xs text-slate-500 font-medium">{kpi.label}</span>
                     </div>
                     <div className={`text-xl font-bold ${kpi.color}`}>{kpi.value}</div>
-                    <div className="text-[9px] text-slate-400 mt-0.5">{kpi.sub}</div>
+                    <div className="text-2xs text-slate-400 mt-0.5">{kpi.sub}</div>
                   </div>
                 ))}
               </div>
@@ -1012,7 +1012,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-amber-600" /> Process Water Alerts</CardTitle>
-                  <CardDescription className="text-[11px]">Real-time alert and action limit exceedances across water systems</CardDescription>
+                  <CardDescription className="text-xs">Real-time alert and action limit exceedances across water systems</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
@@ -1025,14 +1025,14 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                         a.status === 'alert' ? 'border-amber-200 bg-amber-50' : 'border-green-200 bg-green-50'
                       }`}>
                         <div>
-                          <div className="text-[11px] font-semibold text-slate-800">{a.facility} - {a.system}</div>
-                          <div className="text-[10px] text-slate-500">{a.param}: <span className="font-medium">{a.value}</span> (limit: {a.limit})</div>
+                          <div className="text-xs font-semibold text-slate-800">{a.facility} - {a.system}</div>
+                          <div className="text-2xs text-slate-500">{a.param}: <span className="font-medium">{a.value}</span> (limit: {a.limit})</div>
                         </div>
                         <div className="text-right">
-                          <Badge variant="outline" className={`text-[9px] ${a.status === 'alert' ? 'border-amber-300 text-amber-700' : 'border-green-300 text-green-700'}`}>
+                          <Badge variant="outline" className={`text-2xs ${a.status === 'alert' ? 'border-amber-300 text-amber-700' : 'border-green-300 text-green-700'}`}>
                             {a.status === 'alert' ? 'Near Limit' : 'Normal'}
                           </Badge>
-                          <div className="text-[9px] text-slate-400 mt-0.5">{a.time}</div>
+                          <div className="text-2xs text-slate-400 mt-0.5">{a.time}</div>
                         </div>
                       </div>
                     ))}
@@ -1046,7 +1046,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><Waves className="h-4 w-4 text-cyan-600" /> Discharge Overview</CardTitle>
-                  <CardDescription className="text-[11px]">Pharmaceutical wastewater discharge summary across NPDES-permitted facilities</CardDescription>
+                  <CardDescription className="text-xs">Pharmaceutical wastewater discharge summary across NPDES-permitted facilities</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
@@ -1058,13 +1058,13 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                     ].map(kpi => (
                       <div key={kpi.label} className={`rounded-lg border p-2 text-center ${kpi.bg}`}>
                         <div className={`text-lg font-bold ${kpi.color}`}>{kpi.value}</div>
-                        <div className="text-[9px] text-slate-500">{kpi.label}</div>
+                        <div className="text-2xs text-slate-500">{kpi.label}</div>
                       </div>
                     ))}
                   </div>
                   <div className="space-y-1.5">
                     {facilitiesData.filter(f => f.npdespermit).map(f => (
-                      <div key={f.id} className="flex items-center justify-between px-3 py-1.5 rounded-md bg-white border border-slate-100 text-[11px]">
+                      <div key={f.id} className="flex items-center justify-between px-3 py-1.5 rounded-md bg-white border border-slate-100 text-xs">
                         <div>
                           <span className="font-medium text-slate-700">{f.name}</span>
                           <span className="text-slate-400 ml-2">Permit: {f.npdespermit}</span>
@@ -1085,11 +1085,11 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><FileText className="h-4 w-4 text-slate-600" /> Effluent Limitation Guidelines (40 CFR 439)</CardTitle>
-                  <CardDescription className="text-[11px]">Federal pharmaceutical manufacturing effluent standards</CardDescription>
+                  <CardDescription className="text-xs">Federal pharmaceutical manufacturing effluent standards</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-[11px]">
+                    <table className="w-full text-xs">
                       <thead>
                         <tr className="border-b border-slate-200 text-left">
                           <th className="pb-2 font-semibold text-slate-600 pr-3">Parameter</th>
@@ -1104,8 +1104,8 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                         {PHARMA_EFFLUENT_PARAMS.map(p => (
                           <tr key={p.parameter} className="hover:bg-slate-50/50">
                             <td className="py-1.5 pr-3 font-medium text-slate-800">{p.parameter}</td>
-                            <td className="py-1.5 pr-3 text-slate-600 font-mono text-[10px]">{p.dailyMax}</td>
-                            <td className="py-1.5 pr-3 text-slate-600 font-mono text-[10px]">{p.monthlyAvg}</td>
+                            <td className="py-1.5 pr-3 text-slate-600 font-mono text-2xs">{p.dailyMax}</td>
+                            <td className="py-1.5 pr-3 text-slate-600 font-mono text-2xs">{p.monthlyAvg}</td>
                             <td className="py-1.5 pr-3 text-slate-500">{p.unit}</td>
                             <td className="py-1.5 pr-3 text-slate-400">{p.cfr439Ref}</td>
                             <td className="py-1.5"><ConcernBadge level={p.concern} /></td>
@@ -1123,7 +1123,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><AlertCircle className="h-4 w-4 text-red-600" /> API Discharge Monitoring</CardTitle>
-                  <CardDescription className="text-[11px]">Active pharmaceutical ingredient concentrations in wastewater discharge</CardDescription>
+                  <CardDescription className="text-xs">Active pharmaceutical ingredient concentrations in wastewater discharge</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
@@ -1136,11 +1136,11 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                     ].map((row, i) => (
                       <div key={i} className="flex items-center justify-between px-3 py-2 rounded-lg border border-slate-100 hover:bg-slate-50">
                         <div>
-                          <div className="text-[11px] font-semibold text-slate-800">{row.api}</div>
-                          <div className="text-[10px] text-slate-500">Measured: <span className="font-mono">{row.conc}</span> | {row.limit}</div>
+                          <div className="text-xs font-semibold text-slate-800">{row.api}</div>
+                          <div className="text-2xs text-slate-500">Measured: <span className="font-mono">{row.conc}</span> | {row.limit}</div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className={`text-[10px] font-medium ${row.trend === 'increasing' ? 'text-red-600' : row.trend === 'decreasing' ? 'text-green-600' : 'text-slate-500'}`}>
+                          <span className={`text-2xs font-medium ${row.trend === 'increasing' ? 'text-red-600' : row.trend === 'decreasing' ? 'text-green-600' : 'text-slate-500'}`}>
                             {row.trend === 'increasing' ? '^ Rising' : row.trend === 'decreasing' ? 'v Falling' : '~ Stable'}
                           </span>
                           <ConcernBadge level={row.risk} />
@@ -1148,7 +1148,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                       </div>
                     ))}
                   </div>
-                  <div className="mt-2 text-[10px] text-slate-400">PNEC = Predicted No Effect Concentration. Monitoring data is illustrative.</div>
+                  <div className="mt-2 text-2xs text-slate-400">PNEC = Predicted No Effect Concentration. Monitoring data is illustrative.</div>
                 </CardContent>
               </Card>
             );
@@ -1158,25 +1158,25 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><Shield className="h-4 w-4 text-violet-600" /> Regulatory Compliance Overview</CardTitle>
-                  <CardDescription className="text-[11px]">Dual FDA/EPA compliance status across the biotech portfolio</CardDescription>
+                  <CardDescription className="text-xs">Dual FDA/EPA compliance status across the biotech portfolio</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-center">
                       <div className="text-2xl font-bold text-green-700">{portfolioScores.gmpCompliantCount}</div>
-                      <div className="text-[10px] text-green-600">FDA cGMP OK</div>
+                      <div className="text-2xs text-green-600">FDA cGMP OK</div>
                     </div>
                     <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-center">
                       <div className="text-2xl font-bold text-blue-700">{facilitiesData.filter(f => f.npdespermit).length}</div>
-                      <div className="text-[10px] text-blue-600">NPDES Permitted</div>
+                      <div className="text-2xs text-blue-600">NPDES Permitted</div>
                     </div>
                     <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-center">
                       <div className="text-2xl font-bold text-amber-700">{facilitiesData.reduce((s, f) => s + f.activeAlerts, 0)}</div>
-                      <div className="text-[10px] text-amber-600">Active Alerts</div>
+                      <div className="text-2xs text-amber-600">Active Alerts</div>
                     </div>
                     <div className="rounded-lg border border-purple-200 bg-purple-50 p-3 text-center">
                       <div className="text-2xl font-bold text-purple-700">{GMP_FRAMEWORKS.length}</div>
-                      <div className="text-[10px] text-purple-600">Frameworks Tracked</div>
+                      <div className="text-2xs text-purple-600">Frameworks Tracked</div>
                     </div>
                   </div>
                 </CardContent>
@@ -1188,22 +1188,22 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><FileText className="h-4 w-4 text-blue-600" /> Permit Status</CardTitle>
-                  <CardDescription className="text-[11px]">NPDES discharge permits and FDA facility registrations</CardDescription>
+                  <CardDescription className="text-xs">NPDES discharge permits and FDA facility registrations</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-1.5 max-h-[240px] overflow-y-auto">
                     {facilitiesData.map(f => (
                       <div key={f.id} className="flex items-center justify-between px-3 py-2 rounded-md border border-slate-100 hover:bg-slate-50">
                         <div>
-                          <div className="text-[11px] font-semibold text-slate-800">{f.name}</div>
-                          <div className="text-[10px] text-slate-500">
+                          <div className="text-xs font-semibold text-slate-800">{f.name}</div>
+                          <div className="text-2xs text-slate-500">
                             {f.npdespermit ? `NPDES: ${f.npdespermit}` : 'No NPDES permit'}
                             {f.fdaInspectionDate && ` | FDA inspection: ${new Date(f.fdaInspectionDate).toLocaleDateString()}`}
                           </div>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          {f.npdespermit && <Badge variant="outline" className="text-[9px] border-cyan-200 text-cyan-700">NPDES</Badge>}
-                          {f.gmpCompliant && <Badge variant="outline" className="text-[9px] border-green-200 text-green-700">cGMP</Badge>}
+                          {f.npdespermit && <Badge variant="outline" className="text-2xs border-cyan-200 text-cyan-700">NPDES</Badge>}
+                          {f.gmpCompliant && <Badge variant="outline" className="text-2xs border-green-200 text-green-700">cGMP</Badge>}
                         </div>
                       </div>
                     ))}
@@ -1217,11 +1217,11 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><Scale className="h-4 w-4 text-purple-600" /> FDA / EPA Dual-Regulatory Crosswalk</CardTitle>
-                  <CardDescription className="text-[11px]">Where FDA pharmaceutical and EPA environmental requirements intersect</CardDescription>
+                  <CardDescription className="text-xs">Where FDA pharmaceutical and EPA environmental requirements intersect</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-[11px]">
+                    <table className="w-full text-xs">
                       <thead>
                         <tr className="border-b border-slate-200 text-left">
                           <th className="pb-2 font-semibold text-slate-600 pr-3">Area</th>
@@ -1253,7 +1253,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><AlertCircle className="h-4 w-4 text-red-600" /> Active Pharmaceutical Ingredient Tracking</CardTitle>
-                  <CardDescription className="text-[11px]">Monitoring APIs in wastewater and receiving waters</CardDescription>
+                  <CardDescription className="text-xs">Monitoring APIs in wastewater and receiving waters</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
@@ -1266,11 +1266,11 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                     ].map((row, i) => (
                       <div key={i} className="px-3 py-2 rounded-lg border border-slate-100 hover:bg-slate-50">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-[11px] font-semibold text-slate-800">{row.class}</span>
+                          <span className="text-xs font-semibold text-slate-800">{row.class}</span>
                           <ConcernBadge level={row.level} />
                         </div>
-                        <div className="text-[10px] text-slate-500">Examples: {row.examples}</div>
-                        <div className="text-[10px] text-slate-600 mt-0.5">Concern: {row.concern}</div>
+                        <div className="text-2xs text-slate-500">Examples: {row.examples}</div>
+                        <div className="text-2xs text-slate-600 mt-0.5">Concern: {row.concern}</div>
                       </div>
                     ))}
                   </div>
@@ -1283,13 +1283,13 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-amber-600" /> PFAS in Pharmaceutical Manufacturing</CardTitle>
-                  <CardDescription className="text-[11px]">Per- and polyfluoroalkyl substances in pharma processes and wastewater</CardDescription>
+                  <CardDescription className="text-xs">Per- and polyfluoroalkyl substances in pharma processes and wastewater</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-                      <div className="text-[11px] font-semibold text-amber-800 mb-1">Regulatory Landscape</div>
-                      <div className="text-[10px] text-amber-700 space-y-1">
+                      <div className="text-xs font-semibold text-amber-800 mb-1">Regulatory Landscape</div>
+                      <div className="text-2xs text-amber-700 space-y-1">
                         <div>- EPA PFAS Strategic Roadmap: PFOA/PFOS MCL finalized at 4 ppt (2024)</div>
                         <div>- FDA investigating PFAS in drug packaging and medical devices</div>
                         <div>- NPDES permits increasingly include PFAS monitoring requirements</div>
@@ -1297,8 +1297,8 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                       </div>
                     </div>
                     <div className="rounded-lg border border-slate-200 p-3">
-                      <div className="text-[11px] font-semibold text-slate-800 mb-1">Pharma-Specific PFAS Sources</div>
-                      <div className="text-[10px] text-slate-600 space-y-1">
+                      <div className="text-xs font-semibold text-slate-800 mb-1">Pharma-Specific PFAS Sources</div>
+                      <div className="text-2xs text-slate-600 space-y-1">
                         <div>- PTFE-lined equipment and gaskets in API processing</div>
                         <div>- Fluorinated solvents in synthesis pathways</div>
                         <div>- Packaging materials with PFAS coatings</div>
@@ -1308,15 +1308,15 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                     <div className="grid grid-cols-3 gap-2">
                       <div className="rounded-md bg-red-50 border border-red-200 p-2 text-center">
                         <div className="text-sm font-bold text-red-700">4 ppt</div>
-                        <div className="text-[9px] text-red-600">PFOA/PFOS MCL</div>
+                        <div className="text-2xs text-red-600">PFOA/PFOS MCL</div>
                       </div>
                       <div className="rounded-md bg-amber-50 border border-amber-200 p-2 text-center">
                         <div className="text-sm font-bold text-amber-700">70 ppt</div>
-                        <div className="text-[9px] text-amber-600">Prev. Health Advisory</div>
+                        <div className="text-2xs text-amber-600">Prev. Health Advisory</div>
                       </div>
                       <div className="rounded-md bg-blue-50 border border-blue-200 p-2 text-center">
                         <div className="text-sm font-bold text-blue-700">TBD</div>
-                        <div className="text-[9px] text-blue-600">Effluent Guidelines</div>
+                        <div className="text-2xs text-blue-600">Effluent Guidelines</div>
                       </div>
                     </div>
                   </div>
@@ -1329,7 +1329,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><ClipboardList className="h-4 w-4 text-purple-600" /> GMP Regulatory Frameworks</CardTitle>
-                  <CardDescription className="text-[11px]">Key regulatory frameworks governing pharmaceutical water quality and manufacturing</CardDescription>
+                  <CardDescription className="text-xs">Key regulatory frameworks governing pharmaceutical water quality and manufacturing</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
@@ -1337,20 +1337,20 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                       <div key={fw.id} className="rounded-lg border border-slate-200 p-3 hover:shadow-sm transition-shadow">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
-                            <span className="text-[11px] font-bold text-slate-800">{fw.name}</span>
-                            <Badge className={`text-[9px] ${fw.authorityBadge}`}>{fw.authority}</Badge>
+                            <span className="text-xs font-bold text-slate-800">{fw.name}</span>
+                            <Badge className={`text-2xs ${fw.authorityBadge}`}>{fw.authority}</Badge>
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="w-20 h-1.5 rounded-full bg-slate-100 overflow-hidden">
                               <div className={`h-full rounded-full ${fw.coverage >= 85 ? 'bg-green-500' : fw.coverage >= 70 ? 'bg-amber-500' : 'bg-red-500'}`}
                                 style={{ width: `${fw.coverage}%` }} />
                             </div>
-                            <span className="text-[10px] font-medium text-slate-600">{fw.coverage}%</span>
+                            <span className="text-2xs font-medium text-slate-600">{fw.coverage}%</span>
                           </div>
                         </div>
                         <div className="flex flex-wrap gap-1.5">
                           {fw.requirements.map((req, i) => (
-                            <span key={i} className="text-[9px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">{req}</span>
+                            <span key={i} className="text-2xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">{req}</span>
                           ))}
                         </div>
                       </div>
@@ -1365,20 +1365,20 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-green-600" /> USP Water System Validation</CardTitle>
-                  <CardDescription className="text-[11px]">IQ/OQ/PQ validation status for pharmaceutical water systems</CardDescription>
+                  <CardDescription className="text-xs">IQ/OQ/PQ validation status for pharmaceutical water systems</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2 max-h-[240px] overflow-y-auto">
                     {facilitiesData.map(f => (
                       <div key={f.id} className="flex items-center justify-between px-3 py-2 rounded-md border border-slate-100">
                         <div>
-                          <div className="text-[11px] font-semibold text-slate-800">{f.name}</div>
-                          <div className="text-[10px] text-slate-500">{f.uspGrade || 'Not classified'} | {f.state}</div>
+                          <div className="text-xs font-semibold text-slate-800">{f.name}</div>
+                          <div className="text-2xs text-slate-500">{f.uspGrade || 'Not classified'} | {f.state}</div>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <Badge variant="outline" className="text-[9px] border-green-200 text-green-700">IQ</Badge>
-                          <Badge variant="outline" className="text-[9px] border-green-200 text-green-700">OQ</Badge>
-                          <Badge variant="outline" className={`text-[9px] ${f.gmpCompliant ? 'border-green-200 text-green-700' : 'border-amber-200 text-amber-700'}`}>
+                          <Badge variant="outline" className="text-2xs border-green-200 text-green-700">IQ</Badge>
+                          <Badge variant="outline" className="text-2xs border-green-200 text-green-700">OQ</Badge>
+                          <Badge variant="outline" className={`text-2xs ${f.gmpCompliant ? 'border-green-200 text-green-700' : 'border-amber-200 text-amber-700'}`}>
                             PQ {f.gmpCompliant ? 'Pass' : 'Pending'}
                           </Badge>
                         </div>
@@ -1394,7 +1394,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><FileText className="h-4 w-4 text-slate-600" /> Quality Audit Log</CardTitle>
-                  <CardDescription className="text-[11px]">Recent FDA inspections, internal audits, and CAPA actions</CardDescription>
+                  <CardDescription className="text-xs">Recent FDA inspections, internal audits, and CAPA actions</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
@@ -1408,19 +1408,19 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                       <div key={i} className="px-3 py-2 rounded-lg border border-slate-100 hover:bg-slate-50">
                         <div className="flex items-center justify-between mb-0.5">
                           <div className="flex items-center gap-2">
-                            <span className="text-[11px] font-semibold text-slate-800">{audit.facility}</span>
-                            <Badge variant="outline" className="text-[9px]">{audit.type}</Badge>
+                            <span className="text-xs font-semibold text-slate-800">{audit.facility}</span>
+                            <Badge variant="outline" className="text-2xs">{audit.type}</Badge>
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <Badge variant="outline" className={`text-[9px] ${
+                            <Badge variant="outline" className={`text-2xs ${
                               audit.result === 'NAI' || audit.result === 'Pass' ? 'border-green-300 bg-green-50 text-green-700' :
                               audit.result === 'VAI' ? 'border-amber-300 bg-amber-50 text-amber-700' :
                               'border-red-300 bg-red-50 text-red-700'
                             }`}>{audit.result}</Badge>
-                            <span className="text-[10px] text-slate-400">{audit.date}</span>
+                            <span className="text-2xs text-slate-400">{audit.date}</span>
                           </div>
                         </div>
-                        <div className="text-[10px] text-slate-500">{audit.notes}</div>
+                        <div className="text-2xs text-slate-500">{audit.notes}</div>
                       </div>
                     ))}
                   </div>
@@ -1433,11 +1433,11 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><Package className="h-4 w-4 text-indigo-600" /> Batch Water Tracking</CardTitle>
-                  <CardDescription className="text-[11px]">Water quality records linked to production batch lots for traceability</CardDescription>
+                  <CardDescription className="text-xs">Water quality records linked to production batch lots for traceability</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-[11px]">
+                    <table className="w-full text-xs">
                       <thead>
                         <tr className="border-b border-slate-200 text-left">
                           <th className="pb-2 font-semibold text-slate-600 pr-3">Batch ID</th>
@@ -1457,13 +1457,13 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                           { batch: 'BT-2026-0214', facility: 'Juncos Sterile', grade: 'WFI', cond: '0.91 uS', toc: '298 ppb', pass: true },
                         ].map(row => (
                           <tr key={row.batch} className="hover:bg-indigo-50/30">
-                            <td className="py-1.5 pr-3 font-mono text-[10px] text-slate-800">{row.batch}</td>
+                            <td className="py-1.5 pr-3 font-mono text-2xs text-slate-800">{row.batch}</td>
                             <td className="py-1.5 pr-3 text-slate-700">{row.facility}</td>
-                            <td className="py-1.5 pr-3"><Badge variant="outline" className="text-[9px] border-blue-200 text-blue-700">{row.grade}</Badge></td>
-                            <td className="py-1.5 pr-3 font-mono text-[10px] text-slate-600">{row.cond}</td>
-                            <td className="py-1.5 pr-3 font-mono text-[10px] text-slate-600">{row.toc}</td>
+                            <td className="py-1.5 pr-3"><Badge variant="outline" className="text-2xs border-blue-200 text-blue-700">{row.grade}</Badge></td>
+                            <td className="py-1.5 pr-3 font-mono text-2xs text-slate-600">{row.cond}</td>
+                            <td className="py-1.5 pr-3 font-mono text-2xs text-slate-600">{row.toc}</td>
                             <td className="py-1.5">
-                              <Badge variant="outline" className={`text-[9px] ${row.pass ? 'border-green-300 bg-green-50 text-green-700' : 'border-red-300 bg-red-50 text-red-700'}`}>
+                              <Badge variant="outline" className={`text-2xs ${row.pass ? 'border-green-300 bg-green-50 text-green-700' : 'border-red-300 bg-red-50 text-red-700'}`}>
                                 {row.pass ? 'Pass' : 'Fail'}
                               </Badge>
                             </td>
@@ -1481,7 +1481,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><DollarSign className="h-4 w-4 text-emerald-600" /> Economic Performance</CardTitle>
-                  <CardDescription className="text-[11px]">Water cost analysis, treatment ROI, and compliance economics</CardDescription>
+                  <CardDescription className="text-xs">Water cost analysis, treatment ROI, and compliance economics</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -1493,8 +1493,8 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                     ].map(kpi => (
                       <div key={kpi.label} className={`rounded-lg border p-3 text-center ${kpi.bg}`}>
                         <div className={`text-xl font-bold ${kpi.color}`}>{kpi.value}</div>
-                        <div className="text-[10px] text-slate-600 font-medium">{kpi.label}</div>
-                        <div className="text-[9px] text-slate-400">{kpi.sub}</div>
+                        <div className="text-2xs text-slate-600 font-medium">{kpi.label}</div>
+                        <div className="text-2xs text-slate-400">{kpi.sub}</div>
                       </div>
                     ))}
                   </div>
@@ -1538,7 +1538,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                           <span className="text-slate-500">{g.amount}</span>
                           <span className="text-slate-400">{g.period}</span>
                           <span className="text-slate-500">Rem: {g.remaining}</span>
-                          <Badge variant="outline" className={`text-[9px] ${g.status === 'New' ? 'border-blue-300 text-blue-700' : 'border-green-300 text-green-700'}`}>{g.status}</Badge>
+                          <Badge variant="outline" className={`text-2xs ${g.status === 'New' ? 'border-blue-300 text-blue-700' : 'border-green-300 text-green-700'}`}>{g.status}</Badge>
                         </div>
                       </div>
                     ))}
@@ -1567,7 +1567,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                       { label: 'Loan Repayments', value: '$31M/yr', bg: 'bg-slate-50 border-slate-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -1581,7 +1581,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                       { label: 'Repayment Status', value: 'Current', bg: 'bg-emerald-50 border-emerald-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -1613,7 +1613,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                         <div className="flex items-center gap-3">
                           <span className="text-slate-500">{o.amount}</span>
                           <span className="text-slate-400">Due: {o.deadline}</span>
-                          <Badge variant="outline" className={`text-[9px] ${o.status === 'Preparing' ? 'border-amber-300 text-amber-700' : o.status === 'Pre-Application' ? 'border-blue-300 text-blue-700' : 'border-slate-300 text-slate-600'}`}>{o.status}</Badge>
+                          <Badge variant="outline" className={`text-2xs ${o.status === 'Preparing' ? 'border-amber-300 text-amber-700' : o.status === 'Pre-Application' ? 'border-blue-300 text-blue-700' : 'border-slate-300 text-slate-600'}`}>{o.status}</Badge>
                         </div>
                       </div>
                     ))}
@@ -1644,7 +1644,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                         <span className="text-slate-700">{m.metric}</span>
                         <div className="flex items-center gap-3">
                           <span className="font-mono font-semibold text-slate-800">{m.value}</span>
-                          <Badge variant="outline" className={`text-[9px] ${m.trend === 'Improving' || m.trend === 'Decreasing' ? 'border-green-300 text-green-700' : m.trend === 'Increasing' ? 'border-amber-300 text-amber-700' : 'border-slate-300 text-slate-600'}`}>{m.trend}</Badge>
+                          <Badge variant="outline" className={`text-2xs ${m.trend === 'Improving' || m.trend === 'Decreasing' ? 'border-green-300 text-green-700' : m.trend === 'Increasing' ? 'border-amber-300 text-amber-700' : 'border-slate-300 text-slate-600'}`}>{m.trend}</Badge>
                         </div>
                       </div>
                     ))}
@@ -1679,7 +1679,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
               <Card><CardHeader><CardTitle>Biotech Reports</CardTitle><CardDescription>Generated biotech/pharma compliance reports</CardDescription></CardHeader>
               <CardContent><div className="space-y-2">
                 {['Annual Water Quality Report', 'FDA cGMP Compliance Summary', 'NPDES Discharge Summary', '40 CFR 439 Effluent Report', 'PFAS Monitoring Report'].map(r =>
-                  <div key={r} className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50"><span className="text-sm text-slate-700">{r}</span><Badge variant="outline" className="text-[10px]">Generate</Badge></div>
+                  <div key={r} className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50"><span className="text-sm text-slate-700">{r}</span><Badge variant="outline" className="text-2xs">Generate</Badge></div>
                 )}
               </div></CardContent></Card>
             );
@@ -1696,29 +1696,29 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><TrendingUp className="h-4 w-4 text-indigo-600" /> Trends & Forecasting<MockDataBadge /></CardTitle>
-                  <CardDescription className="text-[11px]">Water quality and regulatory compliance trends across the biotech portfolio</CardDescription>
+                  <CardDescription className="text-xs">Water quality and regulatory compliance trends across the biotech portfolio</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="rounded-lg border border-green-200 bg-green-50 p-3">
-                      <div className="text-[11px] font-semibold text-green-800">Improving</div>
-                      <div className="text-[10px] text-green-700 mt-1 space-y-0.5">
+                      <div className="text-xs font-semibold text-green-800">Improving</div>
+                      <div className="text-2xs text-green-700 mt-1 space-y-0.5">
                         <div>- TSS removal efficiency +3.2% YoY</div>
                         <div>- WFI system uptime 99.7%</div>
                         <div>- FDA inspection outcomes trending NAI</div>
                       </div>
                     </div>
                     <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-                      <div className="text-[11px] font-semibold text-amber-800">Watch</div>
-                      <div className="text-[10px] text-amber-700 mt-1 space-y-0.5">
+                      <div className="text-xs font-semibold text-amber-800">Watch</div>
+                      <div className="text-2xs text-amber-700 mt-1 space-y-0.5">
                         <div>- PFAS regulatory landscape evolving</div>
                         <div>- API discharge limits under review</div>
                         <div>- Water scarcity risk at CA facility</div>
                       </div>
                     </div>
                     <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-                      <div className="text-[11px] font-semibold text-red-800">Action Required</div>
-                      <div className="text-[10px] text-red-700 mt-1 space-y-0.5">
+                      <div className="text-xs font-semibold text-red-800">Action Required</div>
+                      <div className="text-2xs text-red-700 mt-1 space-y-0.5">
                         <div>- NJ facility effluent limits tightening Q3</div>
                         <div>- Indianapolis GMP revalidation overdue</div>
                         <div>- New state PFAS requirements pending</div>
@@ -1747,14 +1747,14 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                   <CardContent>
                     <div className={`rounded-xl border p-4 flex items-center justify-between ${scoreBg}`}>
                       <div>
-                        <div className="text-[10px] font-bold uppercase tracking-wider opacity-70">Eco Score</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider opacity-70">Eco Score</div>
                         <div className="text-xs opacity-80 mt-1">
                           {ecoData ? `${ecoData.totalTE} T&E species · ${ecoData.aquaticTE} aquatic · ${ecoData.criticalHabitat} critical habitat` : 'No T&E data available'}
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="text-2xl font-bold">{ecoScore}</div>
-                        <Badge variant="outline" className="text-[10px] mt-1">{label}</Badge>
+                        <Badge variant="outline" className="text-2xs mt-1">{label}</Badge>
                       </div>
                     </div>
                   </CardContent>
@@ -1774,31 +1774,31 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                     <CardTitle className="flex items-center gap-2">
                       <Bug className="h-5 w-5 text-rose-600" />
                       Threatened & Endangered Species — {STATE_NAMES[focusedState] || focusedState}
-                      <Badge variant="secondary" className="ml-1 text-[10px]">USFWS ECOS</Badge>
+                      <Badge variant="secondary" className="ml-1 text-2xs">USFWS ECOS</Badge>
                     </CardTitle>
                     <CardDescription>ESA-listed species near pharmaceutical sites — API discharge ecological footprint</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       <div className="rounded-xl border p-4 bg-slate-50 border-slate-200">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total T&E</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Total T&E</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{federalTotal}</div>
-                        <div className="text-[10px] text-slate-400">Federal ESA</div>
+                        <div className="text-2xs text-slate-400">Federal ESA</div>
                       </div>
                       <div className="rounded-xl border p-4 bg-blue-50 border-blue-200">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Aquatic T&E</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Aquatic T&E</div>
                         <div className="text-2xl font-bold text-blue-700 mt-1">{federalAquatic}</div>
-                        <div className="text-[10px] text-slate-400">Freshwater / marine</div>
+                        <div className="text-2xs text-slate-400">Freshwater / marine</div>
                       </div>
                       <div className="rounded-xl border p-4 bg-rose-50 border-rose-200">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Critical Habitat</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Critical Habitat</div>
                         <div className="text-2xl font-bold text-rose-700 mt-1">{critHab}</div>
-                        <div className="text-[10px] text-slate-400">Designated areas</div>
+                        <div className="text-2xs text-slate-400">Designated areas</div>
                       </div>
                       <div className="rounded-xl border p-4 bg-amber-50 border-amber-200">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Eco Score</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Eco Score</div>
                         <div className="text-2xl font-bold text-amber-700 mt-1">{getEcoScore(focusedState)}</div>
-                        <div className="text-[10px] text-slate-400">{ecoScoreLabel(getEcoScore(focusedState))}</div>
+                        <div className="text-2xs text-slate-400">{ecoScoreLabel(getEcoScore(focusedState))}</div>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1883,7 +1883,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><Target className="h-4 w-4 text-blue-600" /> Scorecard KPIs<MockDataBadge /></CardTitle>
-                  <CardDescription className="text-[11px]">Key performance indicators for water compliance.</CardDescription>
+                  <CardDescription className="text-xs">Key performance indicators for water compliance.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -1899,7 +1899,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                     ].map((kpi, i) => (
                       <div key={i} className="rounded-lg border border-slate-200 p-3 text-center">
                         <div className="text-lg font-bold text-slate-800">{kpi.value}</div>
-                        <div className="text-[10px] text-slate-500">{kpi.label}</div>
+                        <div className="text-2xs text-slate-500">{kpi.label}</div>
                         <div className="mt-1">
                           {kpi.trend === 'up' && <TrendingUp className="h-3 w-3 text-green-500 mx-auto" />}
                           {kpi.trend === 'down' && <TrendingDown className="h-3 w-3 text-red-500 mx-auto" />}
@@ -1916,7 +1916,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><Award className="h-4 w-4 text-amber-600" /> Scorecard Grades<MockDataBadge /></CardTitle>
-                  <CardDescription className="text-[11px]">Letter grades for biotech environmental performance.</CardDescription>
+                  <CardDescription className="text-xs">Letter grades for biotech environmental performance.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -1930,7 +1930,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                     ].map((item, i) => (
                       <div key={i} className={`rounded-lg border p-3 text-center ${item.color}`}>
                         <div className="text-2xl font-extrabold">{item.grade}</div>
-                        <div className="text-[10px] font-medium mt-1">{item.category}</div>
+                        <div className="text-2xs font-medium mt-1">{item.category}</div>
                       </div>
                     ))}
                   </div>
@@ -1944,7 +1944,7 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><Zap className="h-4 w-4 text-orange-600" /> Alert Feed<MockDataBadge /></CardTitle>
-                  <CardDescription className="text-[11px]">Real-time alerts for biotech water compliance.</CardDescription>
+                  <CardDescription className="text-xs">Real-time alerts for biotech water compliance.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
@@ -1958,9 +1958,9 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                       <div key={i} className="flex items-start gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50">
                         <div className={`h-2 w-2 rounded-full mt-1.5 flex-shrink-0 ${alert.severity === 'high' ? 'bg-red-500' : alert.severity === 'medium' ? 'bg-amber-500' : 'bg-green-500'}`} />
                         <div className="flex-1 min-w-0">
-                          <span className="text-[11px] text-slate-700">{alert.message}</span>
+                          <span className="text-xs text-slate-700">{alert.message}</span>
                         </div>
-                        <span className="text-[9px] text-slate-400 whitespace-nowrap">{alert.time}</span>
+                        <span className="text-2xs text-slate-400 whitespace-nowrap">{alert.time}</span>
                       </div>
                     ))}
                   </div>
@@ -1993,21 +1993,21 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                   <span className={`block h-2.5 w-2.5 rounded-full ${selectedFac.waterRiskScore >= 70 ? 'bg-red-400' : selectedFac.waterRiskScore >= 40 ? 'bg-amber-400' : 'bg-green-400'}`} />
                   <div>
                     <div className="text-lg font-bold text-slate-800">{selectedFac.waterRiskScore}</div>
-                    <div className="text-[10px] text-slate-500">Water Risk</div>
+                    <div className="text-2xs text-slate-500">Water Risk</div>
                   </div>
                 </div>
                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 flex items-center gap-2">
                   <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                   <div>
                     <div className="text-lg font-bold text-slate-800">{selectedFac.state}</div>
-                    <div className="text-[10px] text-slate-500">State</div>
+                    <div className="text-2xs text-slate-500">State</div>
                   </div>
                 </div>
                 <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 flex items-center gap-2">
                   <Droplets className="h-3.5 w-3.5 text-blue-500 shrink-0" />
                   <div>
                     <div className="text-lg font-bold text-blue-700">{selectedFac.uspGrade || '--'}</div>
-                    <div className="text-[10px] text-slate-500">USP Grade</div>
+                    <div className="text-2xs text-slate-500">USP Grade</div>
                   </div>
                 </div>
                 <div className={`rounded-lg border p-3 flex items-center gap-2 ${selectedFac.gmpCompliant ? 'border-green-200 bg-green-50' : selectedFac.gmpCompliant === false ? 'border-red-200 bg-red-50' : 'border-slate-200 bg-slate-50'}`}>
@@ -2016,21 +2016,21 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                     <div className={`text-lg font-bold ${selectedFac.gmpCompliant ? 'text-green-600' : selectedFac.gmpCompliant === false ? 'text-red-600' : 'text-slate-400'}`}>
                       {selectedFac.gmpCompliant ? 'Yes' : selectedFac.gmpCompliant === false ? 'No' : '--'}
                     </div>
-                    <div className="text-[10px] text-slate-500">GMP Compliant</div>
+                    <div className="text-2xs text-slate-500">GMP Compliant</div>
                   </div>
                 </div>
                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 flex items-center gap-2">
                   <AlertTriangle className={`h-3.5 w-3.5 shrink-0 ${selectedFac.activeAlerts > 0 ? 'text-amber-500' : 'text-slate-300'}`} />
                   <div>
                     <div className="text-lg font-bold text-slate-800">{selectedFac.activeAlerts}</div>
-                    <div className="text-[10px] text-slate-500">Active Alerts</div>
+                    <div className="text-2xs text-slate-500">Active Alerts</div>
                   </div>
                 </div>
                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 flex items-center gap-2">
                   <Activity className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                   <div>
                     <div className="text-lg font-bold text-slate-800">{selectedFac.dataSourceCount}</div>
-                    <div className="text-[10px] text-slate-500">Data Sources</div>
+                    <div className="text-2xs text-slate-500">Data Sources</div>
                   </div>
                 </div>
               </div>
@@ -2038,23 +2038,23 @@ export function BiotechManagementCenter({ companyName = 'PEARL Biotech Portfolio
                 <div className="grid grid-cols-4 gap-2">
                   <div className="rounded-md bg-blue-50 p-2 text-center">
                     <div className="text-sm font-bold text-blue-700">{selectedFac.gallonsTreated ? (selectedFac.gallonsTreated / 1000).toFixed(0) + 'K' : '--'}</div>
-                    <div className="text-[9px] text-blue-600">Gallons</div>
+                    <div className="text-2xs text-blue-600">Gallons</div>
                   </div>
                   <div className="rounded-md bg-indigo-50 p-2 text-center">
                     <div className="text-sm font-bold text-indigo-700">{selectedFac.tnReduced?.toFixed(1) || '--'}</div>
-                    <div className="text-[9px] text-indigo-600">lbs TN</div>
+                    <div className="text-2xs text-indigo-600">lbs TN</div>
                   </div>
                   <div className="rounded-md bg-purple-50 p-2 text-center">
                     <div className="text-sm font-bold text-purple-700">{selectedFac.tpReduced?.toFixed(1) || '--'}</div>
-                    <div className="text-[9px] text-purple-600">lbs TP</div>
+                    <div className="text-2xs text-purple-600">lbs TP</div>
                   </div>
                   <div className="rounded-md bg-violet-50 p-2 text-center">
                     <div className="text-sm font-bold text-violet-700">{selectedFac.tssReduced?.toLocaleString() || '--'}</div>
-                    <div className="text-[9px] text-violet-600">lbs TSS</div>
+                    <div className="text-2xs text-violet-600">lbs TSS</div>
                   </div>
                 </div>
               )}
-              <div className="text-[10px] text-slate-500 space-y-0.5">
+              <div className="text-2xs text-slate-500 space-y-0.5">
                 {selectedFac.receivingWaterbody && <div>Receiving waterbody: <span className="font-medium text-slate-700">{selectedFac.receivingWaterbody}</span></div>}
                 {selectedFac.npdespermit && <div>NPDES Permit: <span className="font-mono text-slate-600">{selectedFac.npdespermit}</span></div>}
                 {selectedFac.fdaInspectionDate && <div>Last FDA Inspection: <span className="font-medium text-slate-700">{new Date(selectedFac.fdaInspectionDate).toLocaleDateString()}</span></div>}

@@ -716,7 +716,7 @@ export function GrantOpportunityMatcher({
         {grants.filter(g => g.fit === 'High').length > 0 && (
           <div className="border-l-4 border-green-400 pl-3 mb-2">
             <div className="text-xs font-bold text-green-700 uppercase tracking-wide flex items-center gap-2">
-              <span className="bg-green-100 text-green-800 border border-green-200 px-1.5 py-0.5 rounded text-[10px]">HIGH FIT</span>
+              <span className="bg-green-100 text-green-800 border border-green-200 px-1.5 py-0.5 rounded text-2xs">HIGH FIT</span>
               Strong alignment with {stateName} water quality priorities
             </div>
           </div>
@@ -769,7 +769,7 @@ export function GrantOpportunityMatcher({
         {grants.filter(g => g.fit === 'Good').length > 0 && (
           <div className="border-l-4 border-blue-300 pl-3 mt-4 mb-2">
             <div className="text-xs font-bold text-blue-700 uppercase tracking-wide flex items-center gap-2">
-              <span className="bg-blue-100 text-blue-800 border border-blue-200 px-1.5 py-0.5 rounded text-[10px]">GOOD FIT</span>
+              <span className="bg-blue-100 text-blue-800 border border-blue-200 px-1.5 py-0.5 rounded text-2xs">GOOD FIT</span>
               Potential alignment — may require additional positioning
             </div>
           </div>

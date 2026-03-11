@@ -281,7 +281,7 @@ export function ICISCompliancePanel({
           <div className={`overflow-auto rounded-lg border border-slate-200 ${TABLE_MAX_HEIGHT}`}>
             <table className="w-full text-xs">
               <thead>
-                <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                <tr className="bg-slate-50 text-left text-2xs font-semibold text-slate-500 uppercase tracking-wider">
                   {([
                     ['permit', 'Permit'],
                     ['desc', 'Violation'],
@@ -319,13 +319,13 @@ export function ICISCompliancePanel({
                     <td className="px-2.5 py-2 text-slate-600 whitespace-nowrap">{v.date ? formatDate(v.date) : '—'}</td>
                     <td className="px-2.5 py-2">
                       {v.rnc || v.severity === 'S' ? (
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-700">SNC</span>
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-2xs font-semibold bg-red-100 text-red-700">SNC</span>
                       ) : v.severity === 'M' ? (
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700">Moderate</span>
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-2xs font-semibold bg-amber-100 text-amber-700">Moderate</span>
                       ) : v.severity ? (
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700">{v.severity}</span>
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-2xs font-semibold bg-amber-100 text-amber-700">{v.severity}</span>
                       ) : (
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-500">—</span>
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-2xs font-semibold bg-slate-100 text-slate-500">—</span>
                       )}
                     </td>
                   </tr>
@@ -378,7 +378,7 @@ export function ICISCompliancePanel({
           <div className={`overflow-auto rounded-lg border border-slate-200 ${TABLE_MAX_HEIGHT}`}>
             <table className="w-full text-xs">
               <thead>
-                <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                <tr className="bg-slate-50 text-left text-2xs font-semibold text-slate-500 uppercase tracking-wider">
                   <th className="px-2.5 py-2">Facility / Permit</th>
                   <th className="px-2.5 py-2">Case ID</th>
                   <th className="px-2.5 py-2">Type</th>
@@ -450,7 +450,7 @@ export function ICISCompliancePanel({
           <div className={`overflow-auto rounded-lg border border-slate-200 ${TABLE_MAX_HEIGHT}`}>
             <table className="w-full text-xs">
               <thead>
-                <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                <tr className="bg-slate-50 text-left text-2xs font-semibold text-slate-500 uppercase tracking-wider">
                   <th className="px-2.5 py-2">Permit</th>
                   <th className="px-2.5 py-2">Parameter</th>
                   <th className="px-2.5 py-2 text-right">Actual</th>

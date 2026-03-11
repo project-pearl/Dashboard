@@ -289,7 +289,7 @@ export default function LocationReportCard() {
                     <div key={s.pwsid} className="flex items-center gap-2 text-xs">
                       <Badge
                         variant="outline"
-                        className="text-[10px]"
+                        className="text-2xs"
                         title={s.type === 'CWS' ? 'Community Water System — serves year-round residents'
                           : s.type === 'NTNCWS' ? 'Non-Transient Non-Community Water System — serves the same people regularly (e.g. schools, offices)'
                           : s.type === 'TNCWS' ? 'Transient Non-Community Water System — serves transient visitors (e.g. gas stations, campgrounds)'
@@ -313,7 +313,7 @@ export default function LocationReportCard() {
                       PFAS: {detected} detection{detected !== 1 ? 's' : ''} out of {total} sample{total !== 1 ? 's' : ''} ({pct}%)
                     </p>
                     {isHigh && (
-                      <p className="text-[10px] text-red-600/80 dark:text-red-400/80 mt-0.5">
+                      <p className="text-2xs text-red-600/80 dark:text-red-400/80 mt-0.5">
                         High PFAS detection rate — review source water and treatment options
                       </p>
                     )}
@@ -333,7 +333,7 @@ export default function LocationReportCard() {
                   <p><strong>{report.sources.nwisIv.sites.length}</strong> USGS gauge(s) nearby</p>
                   {report.sources.nwisIv.readings.slice(0, 8).map((r, i) => (
                     <div key={i} className="flex items-center gap-2 text-xs">
-                      <Badge variant="outline" className="text-[10px]">{r.parameterName}</Badge>
+                      <Badge variant="outline" className="text-2xs">{r.parameterName}</Badge>
                       <span>{r.value} {r.unit}</span>
                       <span
                         className="text-muted-foreground ml-auto cursor-help"
@@ -363,7 +363,7 @@ export default function LocationReportCard() {
                     return (
                       <div className="flex flex-wrap gap-1 mt-1">
                         {sorted.map(([key, count]) => (
-                          <Badge key={key} variant="secondary" className="text-[10px]">{key}: {count}</Badge>
+                          <Badge key={key} variant="secondary" className="text-2xs">{key}: {count}</Badge>
                         ))}
                       </div>
                     );
@@ -388,11 +388,11 @@ export default function LocationReportCard() {
                   )}
                   {report.sources.icis.permits.slice(0, 5).map((p, i) => (
                     <div key={i} className="flex items-center gap-2 text-xs">
-                      <Badge variant="outline" className="text-[10px] shrink-0">{(p as any).permitId || (p as any).npdesId || (p as any).externalPermitNmbr || `Permit ${i + 1}`}</Badge>
+                      <Badge variant="outline" className="text-2xs shrink-0">{(p as any).permitId || (p as any).npdesId || (p as any).externalPermitNmbr || `Permit ${i + 1}`}</Badge>
                       <span className="truncate">{(p as any).facilityName || (p as any).name || ''}</span>
                       <Badge
                         variant={(p as any).status === 'Effective' ? 'default' : 'secondary'}
-                        className="text-[10px] ml-auto shrink-0"
+                        className="text-2xs ml-auto shrink-0"
                       >{(p as any).status || (p as any).permitStatus || 'Active'}</Badge>
                     </div>
                   ))}
@@ -411,7 +411,7 @@ export default function LocationReportCard() {
                       <span className="truncate">{(f as any).facilityName || (f as any).name || `Facility ${i + 1}`}</span>
                       <Badge
                         variant={(f as any).complianceStatus === 'No Violation' ? 'default' : 'destructive'}
-                        className="text-[10px] ml-auto shrink-0"
+                        className="text-2xs ml-auto shrink-0"
                       >{(f as any).complianceStatus || (f as any).status || 'Unknown'}</Badge>
                     </div>
                   ))}
@@ -433,7 +433,7 @@ export default function LocationReportCard() {
                   {report.sources.nwisGw.trends.slice(0, 5).map((t, i) => (
                     <div key={i} className="flex items-center gap-2 text-xs">
                       <span className="truncate">{t.siteName}</span>
-                      <Badge variant={t.trend === 'falling' ? 'destructive' : t.trend === 'rising' ? 'default' : 'secondary'} className="text-[10px] ml-auto">
+                      <Badge variant={t.trend === 'falling' ? 'destructive' : t.trend === 'rising' ? 'default' : 'secondary'} className="text-2xs ml-auto">
                         {t.trend}
                       </Badge>
                     </div>
@@ -586,15 +586,15 @@ export default function LocationReportCard() {
                       )}
                       {report.sources.attains.topCauses.length > 0 && (
                         <div className="mt-1">
-                          <p className="text-[10px] text-muted-foreground mb-1">Top Causes of Impairment</p>
+                          <p className="text-2xs text-muted-foreground mb-1">Top Causes of Impairment</p>
                           <div className="flex flex-wrap gap-1">
                             {report.sources.attains.topCauses.slice(0, 5).map(c => (
-                              <Badge key={c} variant="secondary" className="text-[10px]">{c}</Badge>
+                              <Badge key={c} variant="secondary" className="text-2xs">{c}</Badge>
                             ))}
                           </div>
                         </div>
                       )}
-                      <p className="text-[10px] text-muted-foreground mt-1">Source: EPA ATTAINS</p>
+                      <p className="text-2xs text-muted-foreground mt-1">Source: EPA ATTAINS</p>
                     </div>
                   ) : report.sources.stateReport && report.sources.stateReport.impairedCount > 0 ? (
                     <div className="flex items-center justify-between text-xs">
@@ -619,7 +619,7 @@ export default function LocationReportCard() {
                     <div key={s.id} className="flex items-center gap-2 text-xs">
                       <span className="truncate">{s.name || s.id}</span>
                       {s.observation?.waterTemp != null && <span>{s.observation.waterTemp}°C</span>}
-                      <Badge variant="outline" className="text-[10px] ml-auto">{s.type}</Badge>
+                      <Badge variant="outline" className="text-2xs ml-auto">{s.type}</Badge>
                     </div>
                   ))}
                 </div>
@@ -637,7 +637,7 @@ export default function LocationReportCard() {
                 <div className="space-y-1">
                   {report.sources.nars.sites.slice(0, 5).map(s => (
                     <div key={s.uniqueId} className="flex items-center gap-2 text-xs">
-                      <Badge variant="outline" className="text-[10px]">{s.survey}</Badge>
+                      <Badge variant="outline" className="text-2xs">{s.survey}</Badge>
                       <span className="truncate">{s.name || s.siteId}</span>
                       <span className="text-muted-foreground ml-auto">{s.surveyYear}</span>
                     </div>
@@ -646,7 +646,7 @@ export default function LocationReportCard() {
               </ReportSection>
             )}
 
-            <p className="text-[10px] text-muted-foreground text-right">
+            <p className="text-2xs text-muted-foreground text-right">
               Generated {new Date(report.generatedAt).toLocaleString()}
             </p>
           </div>

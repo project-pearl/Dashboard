@@ -328,7 +328,7 @@ export default function SiteIntelDashboard() {
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <div className="text-sm font-bold text-slate-800">{currentLensLabel} Cards</div>
-            <div className="text-[11px] text-slate-500">Scoped to selected sidebar lens</div>
+            <div className="text-xs text-slate-500">Scoped to selected sidebar lens</div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
             {lensCards.map((card) => (
@@ -343,7 +343,7 @@ export default function SiteIntelDashboard() {
                 </div>
                 <div className="text-xs text-slate-600">{card.subtitle}</div>
                 {!report && (
-                  <div className="text-[10px] text-slate-500 mt-2">Run Property Lookup to populate this card.</div>
+                  <div className="text-2xs text-slate-500 mt-2">Run Property Lookup to populate this card.</div>
                 )}
               </button>
             ))}
@@ -446,7 +446,7 @@ export default function SiteIntelDashboard() {
                               <MetricBox label="% Impaired" value={report.environmentalProfile.attains.total > 0 ? `${Math.round((report.environmentalProfile.attains.impaired / report.environmentalProfile.attains.total) * 100)}%` : '—'} />
                             </div>
                             {report.environmentalProfile.attains.topCauses.length > 0 && (
-                              <div className="mt-2 text-[11px] text-slate-600">
+                              <div className="mt-2 text-xs text-slate-600">
                                 <span className="font-semibold">Top causes:</span>{' '}
                                 {report.environmentalProfile.attains.topCauses.slice(0, 5).join(', ')}
                               </div>
@@ -460,7 +460,7 @@ export default function SiteIntelDashboard() {
                             {(report.environmentalProfile.ejscreen as Record<string, unknown>)?._degraded ? (
                               <>
                                 <div className="text-xs font-semibold text-slate-700 mb-1">EJ Indicators (Census ACS / SDWIS fallback)</div>
-                                <div className="text-[11px] text-amber-600 mb-2">
+                                <div className="text-xs text-amber-600 mb-2">
                                   State-level estimate. EPA EJScreen API offline since Feb 2025.
                                 </div>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -499,7 +499,7 @@ export default function SiteIntelDashboard() {
                               </span>
                             </div>
                             {report.floodZone.zoneSubtype && (
-                              <div className="mt-1 text-[11px] text-slate-500">Subtype: {report.floodZone.zoneSubtype}</div>
+                              <div className="mt-1 text-xs text-slate-500">Subtype: {report.floodZone.zoneSubtype}</div>
                             )}
                           </div>
                         )}
@@ -547,7 +547,7 @@ export default function SiteIntelDashboard() {
                                     <td className="py-1.5 pr-3 text-slate-800 font-medium">{h.species || '—'}</td>
                                     <td className="py-1.5 pr-3 text-slate-600 italic">{h.scientificName || '—'}</td>
                                     <td className="py-1.5 pr-3">
-                                      <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold ${h.status?.toLowerCase().includes('endangered') ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
+                                      <span className={`inline-flex px-1.5 py-0.5 rounded text-2xs font-semibold ${h.status?.toLowerCase().includes('endangered') ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
                                         {h.status || '—'}
                                       </span>
                                     </td>
@@ -562,7 +562,7 @@ export default function SiteIntelDashboard() {
                         )}
 
                         {/* Caveat */}
-                        <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-amber-800 flex items-start gap-2">
+                        <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-start gap-2">
                           <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
                           <span>
                             <strong>Important:</strong> Absence of records does NOT confirm absence of species.
@@ -602,7 +602,7 @@ export default function SiteIntelDashboard() {
                                     <td className="py-1.5 pr-3 text-slate-800 font-medium">{s.name}</td>
                                     <td className="py-1.5 pr-3 text-slate-600">{s.distanceMi} mi</td>
                                     <td className="py-1.5 pr-3 text-slate-600">{s.nplStatus}</td>
-                                    <td className="py-1.5 text-slate-500 font-mono text-[10px]">{s.epaId}</td>
+                                    <td className="py-1.5 text-slate-500 font-mono text-2xs">{s.epaId}</td>
                                   </tr>
                                 ))}
                               </tbody>
@@ -660,7 +660,7 @@ export default function SiteIntelDashboard() {
                         )}
 
                         {/* Caveat */}
-                        <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-600 flex items-start gap-2">
+                        <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-600 flex items-start gap-2">
                           <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
                           <span>
                             Contamination data is sourced from EPA federal databases and may not include all state-level
@@ -694,7 +694,7 @@ export default function SiteIntelDashboard() {
                               <tbody>
                                 {report.regulatory.icisPermits.slice(0, 10).map((p, i) => (
                                   <tr key={i} className="border-b border-slate-50">
-                                    <td className="py-1.5 pr-3 text-slate-800 font-mono text-[10px]">{p.permit || '—'}</td>
+                                    <td className="py-1.5 pr-3 text-slate-800 font-mono text-2xs">{p.permit || '—'}</td>
                                     <td className="py-1.5 pr-3 text-slate-600">{p.facility || '—'}</td>
                                     <td className="py-1.5 text-slate-600">{p.status || '—'}</td>
                                   </tr>
@@ -800,7 +800,7 @@ export default function SiteIntelDashboard() {
                       </div>
                       <div>
                         <div className="text-lg font-bold text-slate-800">{report.waterScore.composite.score}/100</div>
-                        <div className="text-[10px] text-slate-500 uppercase tracking-wide">Composite Score</div>
+                        <div className="text-2xs text-slate-500 uppercase tracking-wide">Composite Score</div>
                       </div>
                     </div>
                   )}
@@ -817,7 +817,7 @@ export default function SiteIntelDashboard() {
                         <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${colors.dot}`} />
                         <div className="flex-1 min-w-0">
                           <div className={`text-xs font-semibold ${colors.text}`}>{ind.label}</div>
-                          <div className="text-[10px] text-slate-500 truncate">{ind.detail}</div>
+                          <div className="text-2xs text-slate-500 truncate">{ind.detail}</div>
                         </div>
                       </button>
                     );
@@ -857,7 +857,7 @@ export default function SiteIntelDashboard() {
 function KV({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="text-[10px] text-slate-500 uppercase tracking-wide">{label}</div>
+      <div className="text-2xs text-slate-500 uppercase tracking-wide">{label}</div>
       <div className="text-xs text-slate-800 font-medium truncate">{value}</div>
     </div>
   );
@@ -867,7 +867,7 @@ function MetricBox({ label, value, color }: { label: string; value: string | num
   return (
     <div className="rounded-lg border border-slate-100 bg-slate-50 p-2.5 text-center">
       <div className={`text-lg font-bold ${color || 'text-slate-800'}`}>{value}</div>
-      <div className="text-[10px] text-slate-500 mt-0.5">{label}</div>
+      <div className="text-2xs text-slate-500 mt-0.5">{label}</div>
     </div>
   );
 }
@@ -877,15 +877,15 @@ function EJMetric({ label, value, suffix }: { label: string; value: number | nul
   const color = value >= 80 ? 'text-red-600' : value >= 50 ? 'text-amber-600' : 'text-green-600';
   return (
     <div className="rounded-lg border border-slate-100 bg-slate-50 p-2 text-center">
-      <div className={`text-sm font-bold ${color}`}>{Math.round(value)}<span className="text-[10px] text-slate-400 ml-0.5">{suffix}</span></div>
-      <div className="text-[10px] text-slate-500 mt-0.5 leading-tight">{label}</div>
+      <div className={`text-sm font-bold ${color}`}>{Math.round(value)}<span className="text-2xs text-slate-400 ml-0.5">{suffix}</span></div>
+      <div className="text-2xs text-slate-500 mt-0.5 leading-tight">{label}</div>
     </div>
   );
 }
 
 function SourceBadge({ tier }: { tier: string }) {
   return (
-    <span className="ml-auto inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">
+    <span className="ml-auto inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-semibold bg-slate-100 text-slate-500 border border-slate-200">
       {tier}
     </span>
   );
@@ -906,7 +906,7 @@ function SubSection({ title, icon, count, children }: { title: string; icon: Rea
       <div className="flex items-center gap-2 mb-2">
         {icon}
         <span className="text-xs font-semibold text-slate-700">{title}</span>
-        <span className="text-[10px] text-slate-400">({count})</span>
+        <span className="text-2xs text-slate-400">({count})</span>
       </div>
       {children}
     </div>
@@ -960,7 +960,7 @@ function WaterScoreDisplay({ score }: { score: WaterRiskScoreResult }) {
         {(Object.entries(score.categories) as [CategoryKey, typeof score.categories[CategoryKey]][]).map(([key, cat]) => (
           <div key={key} className="rounded-lg border border-slate-100 bg-slate-50 p-3">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-wide">
+              <span className="text-2xs font-semibold text-slate-600 uppercase tracking-wide">
                 {CATEGORY_LABELS[key]}
               </span>
               <span className={`text-sm font-bold ${cat.score >= 70 ? 'text-green-600' : cat.score >= 40 ? 'text-amber-600' : 'text-red-600'}`}>
@@ -983,7 +983,7 @@ function WaterScoreDisplay({ score }: { score: WaterRiskScoreResult }) {
           <div className="text-xs font-semibold text-slate-700 mb-1.5">Key Observations</div>
           <div className="space-y-1">
             {score.details.observations.slice(0, 5).map((obs, i) => (
-              <div key={i} className="text-[11px] text-slate-600 flex items-start gap-1.5">
+              <div key={i} className="text-xs text-slate-600 flex items-start gap-1.5">
                 <span className="text-slate-400 mt-0.5">•</span>
                 <span>{obs.text}</span>
               </div>

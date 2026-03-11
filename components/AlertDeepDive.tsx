@@ -196,9 +196,9 @@ export function AlertDeepDive({ alert, inlineTimeline, inlineAcknowledgments, on
                 {alert.title}
               </CardTitle>
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                <Badge className={`${statusCfg.bg} ${statusCfg.text} text-[10px]`}>{statusCfg.label}</Badge>
-                <Badge variant="outline" className="text-[10px]">{alert.parameter}</Badge>
-                <span className="text-[10px] text-slate-500 flex items-center gap-1">
+                <Badge className={`${statusCfg.bg} ${statusCfg.text} text-2xs`}>{statusCfg.label}</Badge>
+                <Badge variant="outline" className="text-2xs">{alert.parameter}</Badge>
+                <span className="text-2xs text-slate-500 flex items-center gap-1">
                   <Clock className="h-3 w-3" />
                   {isRecent ? `${duration} ago — sudden onset` : `Ongoing for ${duration}`}
                 </span>
@@ -215,15 +215,15 @@ export function AlertDeepDive({ alert, inlineTimeline, inlineAcknowledgments, on
         {/* ── Readings ── */}
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-slate-50 rounded-lg p-3 border text-center">
-            <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Baseline</div>
+            <div className="text-2xs text-slate-500 font-medium uppercase tracking-wider">Baseline</div>
             <div className="text-lg font-bold font-mono text-slate-700">{alert.baseline} <span className="text-xs font-normal">{alert.unit}</span></div>
           </div>
           <div className={`rounded-lg p-3 border text-center ${sev.bg} ${sev.border}`}>
-            <div className={`text-[10px] font-medium uppercase tracking-wider ${sev.text}`}>Current</div>
+            <div className={`text-2xs font-medium uppercase tracking-wider ${sev.text}`}>Current</div>
             <div className={`text-lg font-bold font-mono ${sev.text}`}>{alert.value} <span className="text-xs font-normal">{alert.unit}</span></div>
           </div>
           <div className="bg-slate-50 rounded-lg p-3 border text-center">
-            <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Delta</div>
+            <div className="text-2xs text-slate-500 font-medium uppercase tracking-wider">Delta</div>
             <div className="text-lg font-bold font-mono flex items-center justify-center gap-1">
               {alert.delta < 0 ? <TrendingDown className="h-4 w-4 text-red-600" /> : <TrendingUp className="h-4 w-4 text-emerald-600" />}
               <span className={alert.delta < 0 ? 'text-red-700' : 'text-emerald-700'}>
@@ -297,7 +297,7 @@ export function AlertDeepDive({ alert, inlineTimeline, inlineAcknowledgments, on
                   <div className="text-xs">
                     <span className="font-semibold text-emerald-800">{ack.user_name || 'Operator'}</span>
                     {ack.action_taken && (
-                      <Badge variant="outline" className="ml-1.5 text-[9px]">{ack.action_taken.replace(/_/g, ' ')}</Badge>
+                      <Badge variant="outline" className="ml-1.5 text-2xs">{ack.action_taken.replace(/_/g, ' ')}</Badge>
                     )}
                     <span className="text-slate-500 ml-1.5">{new Date(ack.acknowledged_at).toLocaleString()}</span>
                     {ack.note && <p className="text-slate-600 mt-0.5">{ack.note}</p>}

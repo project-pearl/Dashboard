@@ -82,12 +82,12 @@ export function PipelineHealthIndicator() {
           {/* Fresh */}
           {fresh.length > 0 && (
             <div className="mb-2">
-              <div className="text-[10px] font-semibold text-emerald-600 mb-1">
+              <div className="text-2xs font-semibold text-emerald-600 mb-1">
                 Fresh ({fresh.length})
               </div>
               <div className="flex flex-wrap gap-1">
                 {fresh.map(name => (
-                  <span key={name} className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                  <span key={name} className="text-2xs px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
                     {CACHE_META[name]?.friendlyName ?? name}
                   </span>
                 ))}
@@ -98,12 +98,12 @@ export function PipelineHealthIndicator() {
           {/* Stale */}
           {stale.length > 0 && (
             <div className="mb-2">
-              <div className="text-[10px] font-semibold text-red-600 mb-1">
+              <div className="text-2xs font-semibold text-red-600 mb-1">
                 Stale &gt;48h ({stale.length})
               </div>
               <div className="flex flex-wrap gap-1">
                 {stale.map(name => (
-                  <span key={name} className="text-[10px] px-1.5 py-0.5 rounded bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400">
+                  <span key={name} className="text-2xs px-1.5 py-0.5 rounded bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400">
                     {CACHE_META[name]?.friendlyName ?? name}
                   </span>
                 ))}
@@ -114,12 +114,12 @@ export function PipelineHealthIndicator() {
           {/* Pending */}
           {pending.length > 0 && (
             <div>
-              <div className="text-[10px] font-semibold text-slate-500 mb-1">
+              <div className="text-2xs font-semibold text-slate-500 mb-1">
                 Pending ({pending.length})
               </div>
               <div className="flex flex-wrap gap-1">
                 {pending.map(name => (
-                  <span key={name} className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                  <span key={name} className="text-2xs px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
                     {CACHE_META[name]?.friendlyName ?? name}
                   </span>
                 ))}

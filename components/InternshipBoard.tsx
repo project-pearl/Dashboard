@@ -106,7 +106,7 @@ export function InternshipBoard({ stateAbbr }: Props) {
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-2.5 py-1 rounded-full text-[10px] font-medium border transition-colors ${
+            className={`px-2.5 py-1 rounded-full text-2xs font-medium border transition-colors ${
               filter === f
                 ? 'bg-emerald-100 text-emerald-700 border-emerald-300'
                 : 'bg-white text-slate-500 border-slate-200 hover:border-emerald-200'
@@ -117,7 +117,7 @@ export function InternshipBoard({ stateAbbr }: Props) {
              f === 'internship' ? 'Internships' : 'Fellowships'}
           </button>
         ))}
-        <span className="text-[10px] text-slate-400 ml-auto">{filtered.length} opportunities</span>
+        <span className="text-2xs text-slate-400 ml-auto">{filtered.length} opportunities</span>
       </div>
 
       {/* Listings */}
@@ -136,14 +136,14 @@ export function InternshipBoard({ stateAbbr }: Props) {
                   {listing.pearlRelevant && <Star className="h-3 w-3 text-emerald-500 fill-emerald-500 flex-shrink-0" />}
                   {listing.title}
                 </div>
-                <div className="text-[10px] text-slate-600 font-medium mt-0.5">{listing.org}</div>
+                <div className="text-2xs text-slate-600 font-medium mt-0.5">{listing.org}</div>
               </div>
-              <Badge variant="outline" className={`text-[9px] h-4 flex-shrink-0 ${typeStyle(listing.type)}`}>
+              <Badge variant="outline" className={`text-2xs h-4 flex-shrink-0 ${typeStyle(listing.type)}`}>
                 {listing.type}
               </Badge>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 text-[10px] text-slate-500 mt-1.5">
+            <div className="flex flex-wrap items-center gap-3 text-2xs text-slate-500 mt-1.5">
               <span className="flex items-center gap-1">
                 <MapPin className="h-3 w-3" /> {listing.location} {listing.remote && '(Remote OK)'}
               </span>
@@ -154,15 +154,15 @@ export function InternshipBoard({ stateAbbr }: Props) {
 
             {expandedId === listing.id && (
               <div className="mt-2.5 pt-2.5 border-t border-slate-100">
-                <p className="text-[10px] text-slate-600 leading-relaxed mb-2">{listing.description}</p>
+                <p className="text-2xs text-slate-600 leading-relaxed mb-2">{listing.description}</p>
                 <div className="flex flex-wrap gap-1 mb-2">
                   {listing.tags.map(tag => (
-                    <span key={tag} className="px-1.5 py-0.5 rounded text-[9px] bg-slate-50 text-slate-500 border border-slate-100">
+                    <span key={tag} className="px-1.5 py-0.5 rounded text-2xs bg-slate-50 text-slate-500 border border-slate-100">
                       {tag}
                     </span>
                   ))}
                 </div>
-                <Button variant="outline" size="sm" className="text-[10px] h-6 border-blue-200 text-blue-600 hover:bg-blue-50">
+                <Button variant="outline" size="sm" className="text-2xs h-6 border-blue-200 text-blue-600 hover:bg-blue-50">
                   <ExternalLink className="h-3 w-3 mr-1" /> View Full Listing
                 </Button>
               </div>
@@ -174,7 +174,7 @@ export function InternshipBoard({ stateAbbr }: Props) {
       {/* PEARL internship callout */}
       <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-lg p-3">
         <div className="text-xs font-semibold text-emerald-800 mb-1">🦪 Intern with Project PEARL</div>
-        <p className="text-[10px] text-emerald-700 leading-relaxed">
+        <p className="text-2xs text-emerald-700 leading-relaxed">
           We're always looking for motivated students interested in water quality, aquaculture, data science, or environmental engineering.
           PEARL interns get hands-on experience with real deployment sites, sensor networks, and regulatory compliance workflows.
           Contact <span className="font-medium">careers@project-pearl.org</span> with your CV and research interests.

@@ -114,7 +114,7 @@ export function WaterSampleUploadForm({ mode, userId, stateAbbr, teacherUid, onS
           {/* Parameter + Value row */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="text-[10px] font-semibold text-slate-600 uppercase tracking-wide mb-1 block">Parameter</label>
+              <label className="text-2xs font-semibold text-slate-600 uppercase tracking-wide mb-1 block">Parameter</label>
               <select
                 value={parameter}
                 onChange={e => setParameter(e.target.value)}
@@ -128,7 +128,7 @@ export function WaterSampleUploadForm({ mode, userId, stateAbbr, teacherUid, onS
               </select>
             </div>
             <div>
-              <label className="text-[10px] font-semibold text-slate-600 uppercase tracking-wide mb-1 block">Value</label>
+              <label className="text-2xs font-semibold text-slate-600 uppercase tracking-wide mb-1 block">Value</label>
               <input
                 type="number"
                 step="any"
@@ -140,7 +140,7 @@ export function WaterSampleUploadForm({ mode, userId, stateAbbr, teacherUid, onS
               />
             </div>
             <div>
-              <label className="text-[10px] font-semibold text-slate-600 uppercase tracking-wide mb-1 block">Unit</label>
+              <label className="text-2xs font-semibold text-slate-600 uppercase tracking-wide mb-1 block">Unit</label>
               <div className="h-9 rounded-md border border-slate-200 bg-slate-50 px-2 flex items-center text-xs text-slate-500">
                 {selectedParam?.unit || '—'}
               </div>
@@ -150,7 +150,7 @@ export function WaterSampleUploadForm({ mode, userId, stateAbbr, teacherUid, onS
           {/* Location row */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="text-[10px] font-semibold text-slate-600 uppercase tracking-wide mb-1 block">Station / Site Name</label>
+              <label className="text-2xs font-semibold text-slate-600 uppercase tracking-wide mb-1 block">Station / Site Name</label>
               <input
                 type="text"
                 value={locationName}
@@ -160,7 +160,7 @@ export function WaterSampleUploadForm({ mode, userId, stateAbbr, teacherUid, onS
               />
             </div>
             <div>
-              <label className="text-[10px] font-semibold text-slate-600 uppercase tracking-wide mb-1 block">Latitude</label>
+              <label className="text-2xs font-semibold text-slate-600 uppercase tracking-wide mb-1 block">Latitude</label>
               <input
                 type="number"
                 step="any"
@@ -172,7 +172,7 @@ export function WaterSampleUploadForm({ mode, userId, stateAbbr, teacherUid, onS
               />
             </div>
             <div>
-              <label className="text-[10px] font-semibold text-slate-600 uppercase tracking-wide mb-1 block">Longitude</label>
+              <label className="text-2xs font-semibold text-slate-600 uppercase tracking-wide mb-1 block">Longitude</label>
               <input
                 type="number"
                 step="any"
@@ -187,7 +187,7 @@ export function WaterSampleUploadForm({ mode, userId, stateAbbr, teacherUid, onS
 
           {/* Date/time */}
           <div className="max-w-xs">
-            <label className="text-[10px] font-semibold text-slate-600 uppercase tracking-wide mb-1 block">Sample Date & Time</label>
+            <label className="text-2xs font-semibold text-slate-600 uppercase tracking-wide mb-1 block">Sample Date & Time</label>
             <input
               type="datetime-local"
               value={sampleDate}
@@ -200,7 +200,7 @@ export function WaterSampleUploadForm({ mode, userId, stateAbbr, teacherUid, onS
           {isCitizen && (
             <div className="space-y-3 border-t pt-3">
               <div className="max-w-xs">
-                <label className="text-[10px] font-semibold text-slate-600 uppercase tracking-wide mb-1 block">Volunteer ID</label>
+                <label className="text-2xs font-semibold text-slate-600 uppercase tracking-wide mb-1 block">Volunteer ID</label>
                 <input
                   type="text"
                   value={volunteerId}
@@ -210,7 +210,7 @@ export function WaterSampleUploadForm({ mode, userId, stateAbbr, teacherUid, onS
                 />
               </div>
               <div>
-                <label className="text-[10px] font-semibold text-slate-600 uppercase tracking-wide mb-2 block">QA/QC Checklist</label>
+                <label className="text-2xs font-semibold text-slate-600 uppercase tracking-wide mb-2 block">QA/QC Checklist</label>
                 <div className="flex flex-wrap gap-3">
                   {[
                     { key: 'calibrated', label: 'Equipment calibrated', checked: calibrated, set: setCalibrated },
@@ -236,7 +236,7 @@ export function WaterSampleUploadForm({ mode, userId, stateAbbr, teacherUid, onS
           {!isCitizen && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t pt-3">
               <div>
-                <label className="text-[10px] font-semibold text-slate-600 uppercase tracking-wide mb-1 block">Student Name</label>
+                <label className="text-2xs font-semibold text-slate-600 uppercase tracking-wide mb-1 block">Student Name</label>
                 <input
                   type="text"
                   value={studentName}
@@ -246,7 +246,7 @@ export function WaterSampleUploadForm({ mode, userId, stateAbbr, teacherUid, onS
                 />
               </div>
               <div>
-                <label className="text-[10px] font-semibold text-slate-600 uppercase tracking-wide mb-1 block">Team Name</label>
+                <label className="text-2xs font-semibold text-slate-600 uppercase tracking-wide mb-1 block">Team Name</label>
                 <input
                   type="text"
                   value={teamName}
@@ -268,7 +268,7 @@ export function WaterSampleUploadForm({ mode, userId, stateAbbr, teacherUid, onS
               {submitting ? <Loader2 size={14} className="animate-spin mr-1" /> : null}
               {submitting ? 'Submitting...' : 'Submit Reading'}
             </Button>
-            <Badge variant="secondary" className="text-[10px]">Status: PENDING until approved</Badge>
+            <Badge variant="secondary" className="text-2xs">Status: PENDING until approved</Badge>
           </div>
 
           {/* Result message */}

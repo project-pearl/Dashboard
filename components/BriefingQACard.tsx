@@ -171,9 +171,9 @@ export function BriefingQACard({ role, state, jurisdiction, isMilitary }: Briefi
                 <p className="text-sm text-slate-800 whitespace-pre-wrap leading-relaxed">{answer}</p>
                 {sources.length > 0 && (
                   <div className="flex items-center gap-1.5 pt-1 border-t border-slate-200">
-                    <span className="text-[10px] text-slate-400 uppercase tracking-wider">Sources:</span>
+                    <span className="text-2xs text-slate-400 uppercase tracking-wider">Sources:</span>
                     {sources.map((s) => (
-                      <span key={s} className="text-[10px] px-1.5 py-0.5 bg-slate-200 text-slate-600 rounded">
+                      <span key={s} className="text-2xs px-1.5 py-0.5 bg-slate-200 text-slate-600 rounded">
                         {s}
                       </span>
                     ))}

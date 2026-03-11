@@ -2,6 +2,7 @@
 
 import { WaterQualityAlert } from '@/lib/alertDetection';
 import { AlertTriangle, AlertCircle, Info, X } from 'lucide-react';
+import { CappedList } from '@/components/CappedList';
 
 interface AlertsBannerProps {
   alerts: WaterQualityAlert[];
@@ -14,8 +15,15 @@ export function AlertsBanner({ alerts, dismissedAlerts, onDismiss }: AlertsBanne
   if (visible.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-2">
-      {visible.map(alert => {
+    <CappedList
+      items={visible}
+      maxVisible={5}
+      searchable={false}
+      searchPlaceholder=""
+      getSearchText={(alert) => alert.title}
+      getKey={(alert) => alert.id}
+      className="flex flex-col gap-2"
+      renderItem={(alert) => {
         const isSevere = alert.severity === 'severe';
         const isCaution = alert.severity === 'caution';
         const bg = isSevere ? 'bg-red-50 border-red-300' : isCaution ? 'bg-amber-50 border-amber-300' : 'bg-blue-50 border-blue-300';
@@ -24,7 +32,7 @@ export function AlertsBanner({ alerts, dismissedAlerts, onDismiss }: AlertsBanne
         const iconColor = isSevere ? 'text-red-500' : isCaution ? 'text-amber-500' : 'text-blue-500';
 
         return (
-          <div key={alert.id} className={`flex items-start gap-3 px-4 py-3 rounded-xl border-2 ${bg}`}>
+          <div className={`flex items-start gap-3 px-4 py-3 rounded-xl border-2 ${bg}`}>
             <Icon className={`h-5 w-5 mt-0.5 flex-shrink-0 ${iconColor}`} />
             <div className="flex-1 min-w-0">
               <div className={`font-semibold text-sm ${textColor}`}>{alert.title}</div>
@@ -48,7 +56,7 @@ export function AlertsBanner({ alerts, dismissedAlerts, onDismiss }: AlertsBanne
             </button>
           </div>
         );
-      })}
-    </div>
+      }}
+    />
   );
 }

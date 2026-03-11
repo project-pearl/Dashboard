@@ -5,6 +5,7 @@ import { MockDataBadge } from './MockDataBadge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Scale, AlertTriangle, FileText, Calendar, Megaphone, Shield } from 'lucide-react';
+import { CappedList } from '@/components/CappedList';
 
 // ── Props ───────────────────────────────────────────────────────────────────
 
@@ -159,7 +160,7 @@ export function AdvocacyPanel({ stateAbbr }: AdvocacyPanelProps) {
                 </div>
                 <div>
                   <p className={`text-2xl font-bold ${stat.valueColor}`}>{stat.value}</p>
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wide">{stat.label}</p>
+                  <p className="text-2xs text-slate-500 uppercase tracking-wide">{stat.label}</p>
                 </div>
               </div>
             </CardContent>
@@ -173,7 +174,7 @@ export function AdvocacyPanel({ stateAbbr }: AdvocacyPanelProps) {
           <CardTitle className="flex items-center gap-2 text-base">
             <AlertTriangle size={16} className="text-red-600" />
             Violation Alerts Requiring Advocacy
-            <Badge className="ml-1 text-[10px] bg-red-100 text-red-700">
+            <Badge className="ml-1 text-2xs bg-red-100 text-red-700">
               {VIOLATION_ALERTS.filter((v) => v.priority === 'critical').length} critical
             </Badge>
           </CardTitle>
@@ -191,12 +192,12 @@ export function AdvocacyPanel({ stateAbbr }: AdvocacyPanelProps) {
                     <div className="flex items-center gap-2 min-w-0">
                       <AlertTriangle size={14} className={v.priority === 'critical' ? 'text-red-600 shrink-0' : 'text-amber-600 shrink-0'} />
                       <span className="text-xs font-semibold text-slate-800 truncate">{v.facility}</span>
-                      <Badge variant="secondary" className="text-[9px] shrink-0">{v.state}</Badge>
+                      <Badge variant="secondary" className="text-2xs shrink-0">{v.state}</Badge>
                     </div>
-                    <Badge className={`text-[9px] ${cfg.badge}`}>{cfg.label}</Badge>
+                    <Badge className={`text-2xs ${cfg.badge}`}>{cfg.label}</Badge>
                   </div>
-                  <p className="text-[11px] text-slate-600 ml-5 mb-1">{v.violation}</p>
-                  <div className="flex items-center gap-4 text-[10px] text-slate-500 ml-5">
+                  <p className="text-xs text-slate-600 ml-5 mb-1">{v.violation}</p>
+                  <div className="flex items-center gap-4 text-2xs text-slate-500 ml-5">
                     <span className="font-mono">{v.permit}</span>
                     <span className={urgencyColor(v.daysSinceDetection)}>
                       {v.daysSinceDetection}d since detection
@@ -223,7 +224,7 @@ export function AdvocacyPanel({ stateAbbr }: AdvocacyPanelProps) {
           <CardTitle className="flex items-center gap-2 text-base">
             <FileText size={16} className="text-blue-600" />
             Regulatory Comment Periods
-            <Badge variant="secondary" className="ml-1 text-[10px]">
+            <Badge variant="secondary" className="ml-1 text-2xs">
               {COMMENT_PERIODS.length} open
             </Badge>
           </CardTitle>
@@ -232,9 +233,9 @@ export function AdvocacyPanel({ stateAbbr }: AdvocacyPanelProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          <div className="max-h-[320px] overflow-y-auto overflow-x-auto">
             <table className="w-full text-xs">
-              <thead>
+              <thead className="sticky top-0 bg-white dark:bg-slate-900 z-10">
                 <tr className="text-left text-slate-500 border-b border-slate-200">
                   <th className="pb-2 font-semibold">Rulemaking / Permit</th>
                   <th className="pb-2 font-semibold">Agency</th>
@@ -247,7 +248,7 @@ export function AdvocacyPanel({ stateAbbr }: AdvocacyPanelProps) {
                   <tr key={cp.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
                     <td className="py-2 font-medium text-slate-700 max-w-[280px] truncate" title={cp.title}>{cp.title}</td>
                     <td className="py-2 text-slate-600">{cp.agency}</td>
-                    <td className="py-2"><Badge variant="secondary" className="text-[9px]">{cp.type}</Badge></td>
+                    <td className="py-2"><Badge variant="secondary" className="text-2xs">{cp.type}</Badge></td>
                     <td className="py-2 text-right">
                       <span className={urgencyColor(cp.daysRemaining)}>{cp.daysRemaining}d</span>
                     </td>
@@ -271,26 +272,33 @@ export function AdvocacyPanel({ stateAbbr }: AdvocacyPanelProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
-            {BILLS.map((b) => (
-              <div key={b.id} className="flex items-center justify-between rounded-lg border border-slate-200 p-3 hover:bg-slate-50 transition-colors">
+          <CappedList
+            items={BILLS}
+            maxVisible={5}
+            searchable={BILLS.length > 5}
+            searchPlaceholder="Search bills..."
+            getSearchText={(b) => `${b.bill} ${b.title} ${b.chamber}`}
+            getKey={(b) => b.id}
+            className="space-y-2"
+            renderItem={(b) => (
+              <div className="flex items-center justify-between rounded-lg border border-slate-200 p-3 hover:bg-slate-50 transition-colors">
                 <div className="flex items-center gap-3 min-w-0">
                   <Scale size={14} className="text-purple-500 shrink-0" />
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-slate-800">{b.bill}</span>
-                      <Badge variant="secondary" className="text-[9px]">{b.chamber}</Badge>
+                      <Badge variant="secondary" className="text-2xs">{b.chamber}</Badge>
                     </div>
-                    <p className="text-[11px] text-slate-600 truncate">{b.title}</p>
+                    <p className="text-xs text-slate-600 truncate">{b.title}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0 ml-3">
-                  <span className="text-[10px] text-slate-500">{b.status}</span>
-                  <Badge className={`text-[9px] ${RELEVANCE_BADGE[b.relevance]}`}>{b.relevance}</Badge>
+                  <span className="text-2xs text-slate-500">{b.status}</span>
+                  <Badge className={`text-2xs ${RELEVANCE_BADGE[b.relevance]}`}>{b.relevance}</Badge>
                 </div>
               </div>
-            ))}
-          </div>
+            )}
+          />
         </CardContent>
       </Card>
 
@@ -306,24 +314,31 @@ export function AdvocacyPanel({ stateAbbr }: AdvocacyPanelProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
-            {HEARINGS.map((h) => (
-              <div key={h.id} className="flex items-center justify-between rounded-lg border border-slate-200 p-3 hover:bg-slate-50 transition-colors">
+          <CappedList
+            items={HEARINGS}
+            maxVisible={5}
+            searchable={HEARINGS.length > 5}
+            searchPlaceholder="Search hearings..."
+            getSearchText={(h) => `${h.title} ${h.location} ${h.type}`}
+            getKey={(h) => h.id}
+            className="space-y-2"
+            renderItem={(h) => (
+              <div className="flex items-center justify-between rounded-lg border border-slate-200 p-3 hover:bg-slate-50 transition-colors">
                 <div className="flex items-center gap-3 min-w-0">
                   <Calendar size={14} className="text-slate-500 shrink-0" />
                   <div className="min-w-0">
                     <p className="text-xs font-medium text-slate-700 truncate">{h.title}</p>
-                    <p className="text-[10px] text-slate-500">{h.location}</p>
+                    <p className="text-2xs text-slate-500">{h.location}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0 ml-3">
                   <span className="text-xs font-semibold text-slate-700">{fmtDate(h.date)}</span>
-                  <Badge variant="secondary" className="text-[9px]">{h.type}</Badge>
+                  <Badge variant="secondary" className="text-2xs">{h.type}</Badge>
                 </div>
               </div>
-            ))}
-          </div>
-          <p className="text-[10px] text-slate-400 mt-3 flex items-center gap-1">
+            )}
+          />
+          <p className="text-2xs text-slate-400 mt-3 flex items-center gap-1">
             <Shield size={10} />
             Successful interventions: {interventionStats.totalInterventions} total,{' '}
             {interventionStats.successfulOutcomes} favorable outcomes ({interventionStats.successRate}% success rate).

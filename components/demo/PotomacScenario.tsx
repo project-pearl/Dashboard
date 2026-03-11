@@ -48,7 +48,7 @@ export function PotomacScenario() {
         <div className="bg-slate-900/80 border border-slate-700/40 rounded-2xl p-8 sm:p-10">
           {/* Header */}
           <div className="mb-8">
-            <div className="inline-block px-2.5 py-1 rounded text-[10px] font-bold tracking-wider uppercase bg-amber-900/40 text-amber-400 border border-amber-700/30 mb-4">
+            <div className="inline-block px-2.5 py-1 rounded text-2xs font-bold tracking-wider uppercase bg-amber-900/40 text-amber-400 border border-amber-700/30 mb-4">
               Scenario Analysis
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">

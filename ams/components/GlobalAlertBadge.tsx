@@ -65,7 +65,7 @@ export default function GlobalAlertBadge({
         {/* Count badge */}
         {activeCount > 0 && (
           <span
-            className={`absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold text-white ${badgeColor}`}
+            className={`absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-2xs font-bold text-white ${badgeColor}`}
           >
             {hasAlerts && (
               <span className="absolute inset-0 rounded-full animate-ping bg-red-400 opacity-40" />

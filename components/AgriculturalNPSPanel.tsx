@@ -280,7 +280,7 @@ export function AgriculturalNPSPanel({
                   <p className={`text-2xl font-bold ${stat.valueColor}`}>
                     {stat.value.toLocaleString()}
                   </p>
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wide">
+                  <p className="text-2xs text-slate-500 uppercase tracking-wide">
                     {stat.label}
                   </p>
                 </div>
@@ -297,7 +297,7 @@ export function AgriculturalNPSPanel({
             <BarChart3 size={16} className="text-slate-600" />
             Cause Category Breakdown
             {agData.totalAgCauses > 0 && (
-              <Badge variant="secondary" className="ml-1 text-[10px]">
+              <Badge variant="secondary" className="ml-1 text-2xs">
                 {agData.totalAgCauses.toLocaleString()} total
               </Badge>
             )}
@@ -331,7 +331,7 @@ export function AgriculturalNPSPanel({
                         <span className="text-xs font-semibold text-slate-800 tabular-nums">
                           {cat.count.toLocaleString()}
                         </span>
-                        <Badge className={`text-[9px] ${cat.badge}`}>
+                        <Badge className={`text-2xs ${cat.badge}`}>
                           {pct(cat.count, agData.totalAgCauses)}%
                         </Badge>
                       </div>
@@ -342,7 +342,7 @@ export function AgriculturalNPSPanel({
                         style={{ width: `${widthPct}%` }}
                       />
                       {cat.count > 0 && widthPct >= 15 && (
-                        <span className="absolute inset-y-0 left-2 flex items-center text-[10px] font-semibold text-white">
+                        <span className="absolute inset-y-0 left-2 flex items-center text-2xs font-semibold text-white">
                           {pct(cat.count, agData.totalAgCauses)}%
                         </span>
                       )}
@@ -350,7 +350,7 @@ export function AgriculturalNPSPanel({
                   </div>
                 );
               })}
-              <p className="text-[10px] text-slate-400 mt-1">
+              <p className="text-2xs text-slate-400 mt-1">
                 Categories counted per waterbody — a waterbody with multiple nutrient causes counts once for Nutrients.
               </p>
             </div>
@@ -365,7 +365,7 @@ export function AgriculturalNPSPanel({
             <Sprout size={16} className="text-green-600" />
             Top Agricultural Causes
             {topCausesForTable.length > 0 && (
-              <Badge variant="secondary" className="ml-1 text-[10px]">
+              <Badge variant="secondary" className="ml-1 text-2xs">
                 Top {topCausesForTable.length}
               </Badge>
             )}
@@ -476,7 +476,7 @@ export function AgriculturalNPSPanel({
                             <span className="font-semibold text-slate-700">{row.abbr}</span>
                             <span className="text-slate-400">{row.stateName}</span>
                             {isSelected && (
-                              <Badge className="text-[9px] bg-blue-100 text-blue-700 ml-1">
+                              <Badge className="text-2xs bg-blue-100 text-blue-700 ml-1">
                                 Selected
                               </Badge>
                             )}
@@ -533,7 +533,7 @@ export function AgriculturalNPSPanel({
               ] as const).map((s) => (
                 <div key={s.label} className="rounded-lg border border-slate-200 p-3 text-center">
                   <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wide">{s.label}</p>
+                  <p className="text-2xs text-slate-500 uppercase tracking-wide">{s.label}</p>
                 </div>
               ))}
             </div>

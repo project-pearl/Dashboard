@@ -543,7 +543,7 @@ export function DashboardSidebar() {
           filteredGroups.map((group) => (
             <div key={group.title}>
               {!collapsed && (
-                <div className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <div className="px-3 mb-1.5 text-2xs font-bold uppercase tracking-wider text-slate-400">
                   {group.title}
                 </div>
               )}
@@ -560,8 +560,8 @@ export function DashboardSidebar() {
         <div className="border-t border-slate-200 dark:border-[rgba(58,189,176,0.12)] px-2 py-3 space-y-0.5">
           {!collapsed ? (
             <div className="px-3 mb-1.5 space-y-1">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Admin</div>
-              <div className="text-[10px] font-medium text-slate-500">Viewing as</div>
+              <div className="text-2xs font-bold uppercase tracking-wider text-slate-400">Admin</div>
+              <div className="text-2xs font-medium text-slate-500">Viewing as</div>
               <select
                 value={adminState}
                 onChange={(e) => {
@@ -581,7 +581,7 @@ export function DashboardSidebar() {
           ) : (
             <div className="flex flex-col items-center gap-0.5 px-1 mb-1" title={`${STATE_ABBR_TO_NAME[adminState] || adminState} (${adminState})`}>
               <MapPin className="w-4 h-4 text-purple-500" />
-              <span className="text-[9px] font-bold text-purple-600">{adminState}</span>
+              <span className="text-2xs font-bold text-purple-600">{adminState}</span>
             </div>
           )}
           <Link
@@ -611,7 +611,7 @@ export function DashboardSidebar() {
         </Link>
         {!collapsed && user && !isSingleRole && (
           <div className="px-3 py-2">
-            <span className="text-[10px] font-semibold tracking-wider uppercase px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+            <span className="text-2xs font-semibold tracking-wider uppercase px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
               {user.role}
             </span>
           </div>

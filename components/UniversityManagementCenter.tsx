@@ -697,7 +697,7 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                         </div>
                         <div>
                           <div className="text-sm font-semibold text-slate-800">{user.name}</div>
-                          <div className="text-[11px] text-slate-500">{user.email || 'research@project-pearl.org'}</div>
+                          <div className="text-xs text-slate-500">{user.email || 'research@project-pearl.org'}</div>
                         </div>
                       </div>
                       <button onClick={() => setShowAccountPanel(false)} className="text-slate-400 hover:text-slate-600"><X size={14} /></button>
@@ -778,7 +778,7 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                         <div className="h-full bg-cyan-400 flex-1 rounded-r-full" />
                       </div>
                     )}
-                    <div className="flex items-center gap-4 mt-2 text-[10px]">
+                    <div className="flex items-center gap-4 mt-2 text-2xs">
                       <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-red-400" /> {impairedCount} Impaired (Cat 4/5)</span>
                       <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-cyan-400" /> {wbCount - impairedCount} Attaining</span>
                     </div>
@@ -789,30 +789,30 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                       <span className="block h-2.5 w-2.5 rounded-full bg-slate-400" />
                       <div>
                         <div className="text-sm font-bold text-slate-700">{agency?.cwaSec || 'CWA §303(d)'}</div>
-                        <div className="text-[10px] text-slate-400">Primary CWA Section</div>
+                        <div className="text-2xs text-slate-400">Primary CWA Section</div>
                       </div>
                     </div>
                     <div className="rounded-lg bg-purple-50 border border-purple-100 p-3 flex items-center gap-3">
                       <div className="text-xl font-bold text-purple-700">{ejScore}<span className="text-xs font-normal text-purple-400">/100</span></div>
                       <div>
-                        <div className="text-[10px] text-purple-500">EJ Vulnerability</div>
+                        <div className="text-2xs text-purple-500">EJ Vulnerability</div>
                         <div className="mt-1 h-1.5 w-14 rounded-full bg-purple-100 overflow-hidden"><div className="h-full rounded-full bg-purple-500" style={{ width: `${ejScore}%` }} /></div>
                       </div>
                     </div>
                     <div className="rounded-lg bg-indigo-50 border border-indigo-100 p-3 flex items-center gap-2">
                       <div className="text-xl font-bold text-indigo-700">6</div>
-                      <div className="text-[10px] text-indigo-400">API Data Sources</div>
+                      <div className="text-2xs text-indigo-400">API Data Sources</div>
                     </div>
                     <div className={`rounded-lg border p-3 flex items-center gap-2 ${trendBg}`}>
                       <div className={`text-sm font-bold ${trendColor}`}>{trendLabel}</div>
-                      <div className="text-[10px] text-slate-400">WQ Trend</div>
+                      <div className="text-2xs text-slate-400">WQ Trend</div>
                     </div>
                   </div>
                 </div>
                 {(() => {
                   const agencyNotes = agency?.division;
                   return agencyNotes ? (
-                    <div className="text-[10px] text-slate-400 italic mt-2">State agency: {agency?.name} — {agencyNotes}</div>
+                    <div className="text-2xs text-slate-400 italic mt-2">State agency: {agency?.name} — {agencyNotes}</div>
                   ) : null;
                 })()}
               </div>
@@ -1027,8 +1027,8 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 bg-slate-100 border-slate-300">
                       <div className="text-2xl font-black text-slate-400">N/A</div>
                       <div className="text-right">
-                        <div className="text-[10px] text-slate-500">Ungraded</div>
-                        <div className="text-[10px] text-slate-400">{attainsBulkLoaded ? 'No data' : 'Loading...'}</div>
+                        <div className="text-2xs text-slate-500">Ungraded</div>
+                        <div className="text-2xs text-slate-400">{attainsBulkLoaded ? 'No data' : 'Loading...'}</div>
                       </div>
                     </div>
                   );
@@ -1039,7 +1039,7 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                       <div className={`text-2xl font-black ${grade.color}`}>{grade.letter}</div>
                       <div className="text-right">
                         <div className={`text-sm font-bold ${grade.color}`}>{avgScore}%</div>
-                        <div className="text-[10px] text-slate-500">{assessed.length} assessed</div>
+                        <div className="text-2xs text-slate-500">{assessed.length} assessed</div>
                       </div>
                     </div>
                   );
@@ -1050,19 +1050,19 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
               <div className="grid grid-cols-4 gap-1.5 text-center mt-3">
                 <div className="rounded-lg bg-slate-50 p-2">
                   <div className="text-lg font-bold text-slate-800">{regionData.length}</div>
-                  <div className="text-[10px] text-slate-500">Total</div>
+                  <div className="text-2xs text-slate-500">Total</div>
                 </div>
                 <div className="rounded-lg bg-green-50 p-2">
                   <div className="text-lg font-bold text-green-700">{regionData.filter(r => r.status === 'assessed').length}</div>
-                  <div className="text-[10px] text-slate-500">Assessed</div>
+                  <div className="text-2xs text-slate-500">Assessed</div>
                 </div>
                 <div className="rounded-lg bg-blue-50 p-2">
                   <div className="text-lg font-bold text-blue-600">{regionData.filter(r => r.status === 'monitored').length}</div>
-                  <div className="text-[10px] text-slate-500">Monitored</div>
+                  <div className="text-2xs text-slate-500">Monitored</div>
                 </div>
                 <div className="rounded-lg bg-slate-50 p-2">
                   <div className="text-lg font-bold text-slate-400">{regionData.filter(r => r.status === 'unmonitored').length}</div>
-                  <div className="text-[10px] text-slate-500">No Data</div>
+                  <div className="text-2xs text-slate-500">No Data</div>
                 </div>
               </div>
 
@@ -1077,7 +1077,7 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                   <button
                     key={f.key}
                     onClick={() => { setFilterLevel(f.key); setShowAll(false); }}
-                    className={`px-2.5 py-1 text-[11px] font-medium rounded-full border transition-all ${
+                    className={`px-2.5 py-1 text-xs font-medium rounded-full border transition-all ${
                       filterLevel === f.key
                         ? f.color + ' ring-1 ring-offset-1 shadow-sm'
                         : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'
@@ -1106,7 +1106,7 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                   className="w-full px-2 py-1.5 text-sm border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-300"
                 />
                 {searchQuery && (
-                  <div className="text-[10px] text-slate-400 mt-1">{sortedRegions.length} of {regionData.length} waterbodies</div>
+                  <div className="text-2xs text-slate-400 mt-1">{sortedRegions.length} of {regionData.length} waterbodies</div>
                 )}
               </div>
             </CardHeader>
@@ -1132,7 +1132,7 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                             <div className={`truncate text-sm font-medium ${isActive ? 'text-blue-900' : ''}`}>{r.name}</div>
                             <div className="flex items-center gap-2 text-xs text-slate-500">
                               {r.status === 'assessed' ? (
-                                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
+                                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-2xs font-medium ${
                                   r.alertLevel === 'high' ? 'bg-red-100 text-red-700' :
                                   r.alertLevel === 'medium' ? 'bg-orange-100 text-orange-700' :
                                   r.alertLevel === 'low' ? 'bg-yellow-100 text-yellow-700' :
@@ -1141,14 +1141,14 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                                   {levelToLabel(r.alertLevel)}
                                 </span>
                               ) : r.status === 'monitored' ? (
-                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-600">
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-2xs font-medium bg-blue-50 text-blue-600">
                                   ◐ {r.dataSourceCount} source{r.dataSourceCount !== 1 ? 's' : ''}
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-500">— Unmonitored</span>
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-2xs font-medium bg-slate-100 text-slate-500">— Unmonitored</span>
                               )}
                               {r.activeAlerts > 0 && <span>{r.activeAlerts} alert{r.activeAlerts !== 1 ? 's' : ''}</span>}
-                              {r.status === 'assessed' && <span className="text-[9px] text-slate-400">EPA ATTAINS</span>}
+                              {r.status === 'assessed' && <span className="text-2xs text-slate-400">EPA ATTAINS</span>}
                             </div>
                           </div>
                           {isActive && <div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0 mr-1" />}
@@ -1328,15 +1328,15 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                       <div className="text-left">
                         <div className="text-sm font-semibold text-cyan-800 flex items-center gap-2">
                           Restoration Plan — {regionName}
-                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${siteSeverityColor}`}>
+                          <span className={`text-2xs font-bold px-1.5 py-0.5 rounded-full ${siteSeverityColor}`}>
                             {siteSeverityLabel} ({siteSeverityScore})
                           </span>
                         </div>
-                        <div className="text-[11px] text-slate-500">
+                        <div className="text-xs text-slate-500">
                           {pearlModel} × {totalUnits} unit{totalUnits > 1 ? 's' : ''} ({totalQuads} quad{totalQuads > 1 ? 's' : ''}, {fullGPM} GPM) + {totalBMPs} BMPs · {waterType === 'brackish' ? '🦪 Oyster' : '🐚 Mussel'} Biofilt · {fmt(fullAnnualCost)}/yr
                         </div>
                         {(attainsCategory || isCat5) && (
-                          <div className="text-[10px] mt-0.5 flex items-center gap-1.5 flex-wrap">
+                          <div className="text-2xs mt-0.5 flex items-center gap-1.5 flex-wrap">
                             <span className={`font-bold px-1.5 py-0.5 rounded ${
                               isCat5 ? 'bg-red-100 text-red-700' :
                               attainsCategory.includes('4') ? 'bg-orange-100 text-orange-700' :
@@ -1354,7 +1354,7 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1.5 text-[9px]">
+                      <div className="flex items-center gap-1.5 text-2xs">
                         {categories.reduce((n, c) => n + c.modules.filter(m => m.status === 'warranted').length, 0) > 0 && (
                           <span className="bg-red-200 text-red-800 font-bold px-1.5 py-0.5 rounded-full">
                             {categories.reduce((n, c) => n + c.modules.filter(m => m.status === 'warranted').length, 0)} warranted
@@ -1383,20 +1383,20 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                       <div className="rounded-lg border-2 border-slate-300 bg-white p-4 space-y-3">
                         <div className="flex items-center justify-between">
                           <div className="text-sm font-bold text-slate-900 uppercase tracking-wide">Executive Summary</div>
-                          <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${siteSeverityColor}`}>
+                          <span className={`text-2xs font-bold px-2 py-1 rounded-full ${siteSeverityColor}`}>
                             Site Severity: {siteSeverityLabel} ({siteSeverityScore}/100)
                           </span>
                         </div>
                         {/* Parameter assessment grid */}
                         <div className="rounded-md bg-slate-50 border border-slate-200 p-3 space-y-2">
-                          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{isMD ? 'MD DNR Threshold' : 'EPA Criteria'} Assessment</div>
-                          <div className="grid grid-cols-5 gap-1.5 text-[10px]">
+                          <div className="text-2xs font-bold text-slate-500 uppercase tracking-wider">{isMD ? 'MD DNR Threshold' : 'EPA Criteria'} Assessment</div>
+                          <div className="grid grid-cols-5 gap-1.5 text-2xs">
                             <div className="text-center">
                               <div className={`font-bold ${doSeverity === 'critical' ? 'text-red-700' : doSeverity === 'stressed' ? 'text-amber-600' : doSeverity === 'adequate' ? 'text-green-600' : 'text-slate-400'}`}>
                                 {doSeverity === 'unknown' ? '?' : doVal?.toFixed(1)} mg/L
                               </div>
                               <div className="text-slate-500">DO</div>
-                              <div className={`text-[9px] font-medium ${doSeverity === 'critical' ? 'text-red-600' : doSeverity === 'stressed' ? 'text-amber-600' : 'text-green-600'}`}>
+                              <div className={`text-2xs font-medium ${doSeverity === 'critical' ? 'text-red-600' : doSeverity === 'stressed' ? 'text-amber-600' : 'text-green-600'}`}>
                                 {doSeverity !== 'unknown' ? doSeverity : 'no data'}
                               </div>
                             </div>
@@ -1405,7 +1405,7 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                                 {bloomSeverity === 'unknown' ? '?' : chlVal} ug/L
                               </div>
                               <div className="text-slate-500">Chl-a</div>
-                              <div className={`text-[9px] font-medium ${bloomSeverity === 'severe' ? 'text-red-600' : bloomSeverity === 'significant' ? 'text-orange-600' : bloomSeverity === 'bloom' ? 'text-amber-600' : 'text-green-600'}`}>
+                              <div className={`text-2xs font-medium ${bloomSeverity === 'severe' ? 'text-red-600' : bloomSeverity === 'significant' ? 'text-orange-600' : bloomSeverity === 'bloom' ? 'text-amber-600' : 'text-green-600'}`}>
                                 {bloomSeverity !== 'unknown' ? bloomSeverity : 'no data'}
                               </div>
                             </div>
@@ -1414,7 +1414,7 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                                 {turbiditySeverity === 'unknown' ? '?' : turbVal?.toFixed(1)} FNU
                               </div>
                               <div className="text-slate-500">Turbidity</div>
-                              <div className={`text-[9px] font-medium ${turbiditySeverity === 'impaired' ? 'text-red-600' : turbiditySeverity === 'elevated' ? 'text-amber-600' : 'text-green-600'}`}>
+                              <div className={`text-2xs font-medium ${turbiditySeverity === 'impaired' ? 'text-red-600' : turbiditySeverity === 'elevated' ? 'text-amber-600' : 'text-green-600'}`}>
                                 {turbiditySeverity !== 'unknown' ? (turbiditySeverity === 'clear' ? 'ok' : turbiditySeverity) : 'no data'}
                               </div>
                             </div>
@@ -1423,14 +1423,14 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                                 {nutrientSeverity === 'unknown' ? '?' : `TN ${tnVal?.toFixed(1) ?? '?'}`}
                               </div>
                               <div className="text-slate-500">Nutrients</div>
-                              <div className={`text-[9px] font-medium ${nutrientSeverity === 'excessive' ? 'text-red-600' : nutrientSeverity === 'elevated' ? 'text-amber-600' : 'text-green-600'}`}>
+                              <div className={`text-2xs font-medium ${nutrientSeverity === 'excessive' ? 'text-red-600' : nutrientSeverity === 'elevated' ? 'text-amber-600' : 'text-green-600'}`}>
                                 {nutrientSeverity !== 'unknown' ? nutrientSeverity : 'no data'}
                               </div>
                             </div>
                             <div className="text-center">
                               <div className="font-bold text-slate-700">{attainsCategory || '?'}</div>
                               <div className="text-slate-500">ATTAINS</div>
-                              <div className={`text-[9px] font-medium ${isCat5 ? 'text-red-600' : isImpaired ? 'text-amber-600' : 'text-green-600'}`}>
+                              <div className={`text-2xs font-medium ${isCat5 ? 'text-red-600' : isImpaired ? 'text-amber-600' : 'text-green-600'}`}>
                                 {tmdlStatus === 'needed' ? 'no TMDL' : tmdlStatus === 'completed' ? 'has TMDL' : tmdlStatus}
                               </div>
                             </div>
@@ -1438,12 +1438,12 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                           <div className="w-full bg-slate-200 rounded-full h-2 mt-1">
                             <div className={`h-2 rounded-full transition-all ${siteSeverityScore >= 75 ? 'bg-red-500' : siteSeverityScore >= 50 ? 'bg-amber-500' : siteSeverityScore >= 25 ? 'bg-yellow-500' : 'bg-green-500'}`} style={{ width: `${Math.min(100, siteSeverityScore)}%` }} />
                           </div>
-                          <div className="text-[9px] text-slate-400">Composite: DO (25%) + Bloom/Nutrients (25%) + Turbidity (15%) + Impairment (20%) + Monitoring Gap (15%) | Thresholds: {thresholdSource}</div>
+                          <div className="text-2xs text-slate-400">Composite: DO (25%) + Bloom/Nutrients (25%) + Turbidity (15%) + Impairment (20%) + Monitoring Gap (15%) | Thresholds: {thresholdSource}</div>
                         </div>
                         {/* Situation + Treatment Priorities */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div className="rounded-md bg-slate-50 border border-slate-200 p-3">
-                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Situation</div>
+                            <div className="text-2xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Situation</div>
                             <div className="space-y-1 text-xs text-slate-700 leading-relaxed">
                               <div><span className="font-semibold">{regionName}</span> is {isCat5 ? 'Category 5 impaired' : attainsCategory.includes('4') ? 'Category 4 impaired' : isImpaired ? 'impaired' : 'under monitoring'}{attainsCauses.length > 0 ? ` for ${attainsCauses.join(', ').toLowerCase()}` : ''}.</div>
                               {dataAgeDays !== null && <div>Most recent data is <span className="font-semibold">{dataAgeDays} days old</span>. Confidence is <span className={`font-semibold ${dataConfidence === 'low' ? 'text-red-600' : dataConfidence === 'moderate' ? 'text-amber-600' : 'text-green-600'}`}>{dataConfidence}</span>.</div>}
@@ -1451,7 +1451,7 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                             </div>
                           </div>
                           <div className="rounded-md bg-red-50 border border-red-200 p-3">
-                            <div className="text-[10px] font-bold text-red-700 uppercase tracking-wider mb-1.5">Treatment Priorities</div>
+                            <div className="text-2xs font-bold text-red-700 uppercase tracking-wider mb-1.5">Treatment Priorities</div>
                             <div className="space-y-1 text-xs text-red-800 leading-relaxed">
                               {treatmentPriorities.length > 0 ? treatmentPriorities.slice(0, 3).map((tp: any, i: number) => (
                                 <div key={i} className="flex items-start gap-1">
@@ -1500,11 +1500,11 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                                 <div className="flex-1">
                                   <span className="font-medium text-slate-800">{imp.cause}</span>
                                   <span className="mx-1.5 text-slate-300">|</span>
-                                  <span className={`text-[10px] font-semibold ${imp.tier === 1 ? 'text-green-700' : imp.tier === 2 ? 'text-amber-700' : 'text-slate-500'}`}>
+                                  <span className={`text-2xs font-semibold ${imp.tier === 1 ? 'text-green-700' : imp.tier === 2 ? 'text-amber-700' : 'text-slate-500'}`}>
                                     {imp.tierLabel}
                                   </span>
                                 </div>
-                                <span className="text-[11px] text-slate-500 max-w-[40%] text-right">{imp.pearlAction}</span>
+                                <span className="text-xs text-slate-500 max-w-[40%] text-right">{imp.pearlAction}</span>
                               </div>
                             ))}
                           </div>
@@ -1517,9 +1517,9 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                           <div key={cat.id} className={`rounded-lg border p-2.5 ${cat.color}`}>
                             <div className="text-xs font-semibold flex items-center gap-1.5">
                               <span>{cat.icon}</span> {cat.title}
-                              <span className="text-[10px] font-normal text-slate-500 ml-auto">{cat.modules.length} modules</span>
+                              <span className="text-2xs font-normal text-slate-500 ml-auto">{cat.modules.length} modules</span>
                             </div>
-                            <div className="text-[11px] text-slate-500 mt-0.5">{cat.subtitle}</div>
+                            <div className="text-xs text-slate-500 mt-0.5">{cat.subtitle}</div>
                           </div>
                         ))}
                       </div>
@@ -1573,7 +1573,7 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                       <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold">1</div>
                       <div className="min-w-0 flex-1">
                         <div className="text-sm font-bold text-red-900">Potomac River — Interceptor Collapse</div>
-                        <div className="text-[10px] font-semibold text-red-700 uppercase tracking-wide">Active Sewage Spill · Cabin John, Montgomery County · Since Jan 19, 2026</div>
+                        <div className="text-2xs font-semibold text-red-700 uppercase tracking-wide">Active Sewage Spill · Cabin John, Montgomery County · Since Jan 19, 2026</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5">
@@ -1619,16 +1619,16 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                       <span className="font-bold">🔬 PEARL Relevance:</span> This event demonstrates catastrophic infrastructure failure impact on receiving waters. PEARL's real-time monitoring capability would provide continuous E. coli, nutrient, and pathogen tracking during and after spill events — filling the gap that required UMD researchers and volunteer riverkeepers to manually sample. Continuous deployment at 6 DC Water monitoring sites would provide the 24/7 data regulators and the public need.
                     </div>
                     <div className="flex flex-wrap gap-1.5 pt-1">
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">DC Water</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">NPR</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">The Hill</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">NBC News</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">UMD School of Public Health</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">Potomac Conservancy</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">DOEE</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">VDH</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">MD Matters</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">Izaak Walton League</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">DC Water</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">NPR</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">The Hill</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">NBC News</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">UMD School of Public Health</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">Potomac Conservancy</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">DOEE</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">VDH</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">MD Matters</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">Izaak Walton League</span>
                     </div>
                   </div>
                   )}
@@ -1731,21 +1731,21 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                 <div className="bg-white rounded-lg border border-purple-200 p-3 text-center">
                   <div className="text-2xl font-bold text-purple-700">—</div>
                   <div className="text-xs text-purple-600">Active Studies</div>
-                  <div className="text-[10px] text-slate-400 mt-0.5">Using {stateName} waterbody data</div>
+                  <div className="text-2xs text-slate-400 mt-0.5">Using {stateName} waterbody data</div>
                 </div>
                 <div className="bg-white rounded-lg border border-indigo-200 p-3 text-center">
                   <div className="text-2xl font-bold text-indigo-600">—</div>
                   <div className="text-xs text-indigo-700">Research Partners</div>
-                  <div className="text-[10px] text-slate-400 mt-0.5">Universities & institutions</div>
+                  <div className="text-2xs text-slate-400 mt-0.5">Universities & institutions</div>
                 </div>
                 <div className="bg-white rounded-lg border border-blue-200 p-3 text-center">
                   <div className="text-2xl font-bold text-blue-600">—</div>
                   <div className="text-xs text-blue-700">Shared Datasets</div>
-                  <div className="text-[10px] text-slate-400 mt-0.5">PIN + ATTAINS + WQP</div>
+                  <div className="text-2xs text-slate-400 mt-0.5">PIN + ATTAINS + WQP</div>
                 </div>
               </div>
 
-              <div className="text-[10px] text-slate-400 italic">
+              <div className="text-2xs text-slate-400 italic">
                 Research collaboration features powered by PEARL data platform. Integrates with ORCID, Google Scholar, and institution SSO.
               </div>
             </CardContent>
@@ -1768,13 +1768,13 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="bg-white rounded-lg border border-slate-200 p-3">
                   <div className="text-xs font-semibold text-slate-700 mb-1">📊 Data Citation (PIN)</div>
-                  <div className="text-[10px] text-slate-500 font-mono bg-slate-50 p-2 rounded">
+                  <div className="text-2xs text-slate-500 font-mono bg-slate-50 p-2 rounded">
                     Local Seafood Projects Inc. ({new Date().getFullYear()}). Project PEARL Water Quality Monitoring Data: {stateName}. Retrieved {new Date().toISOString().split('T')[0]} from pearl.localseafoodprojects.com
                   </div>
                 </div>
                 <div className="bg-white rounded-lg border border-slate-200 p-3">
                   <div className="text-xs font-semibold text-slate-700 mb-1">📊 Data Citation (ATTAINS)</div>
-                  <div className="text-[10px] text-slate-500 font-mono bg-slate-50 p-2 rounded">
+                  <div className="text-2xs text-slate-500 font-mono bg-slate-50 p-2 rounded">
                     U.S. EPA ({new Date().getFullYear()}). ATTAINS: Assessment, TMDL Tracking and Implementation System. Retrieved from epa.gov/waterdata/attains
                   </div>
                 </div>
@@ -1828,8 +1828,8 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                   ].map(m => (
                     <div key={m.param} className="bg-white rounded border border-amber-100 p-2">
                       <div className="text-xs font-bold text-amber-900">{m.param}</div>
-                      <div className="text-[10px] text-amber-700">{m.method}</div>
-                      <div className="text-[10px] text-slate-500">MDL: {m.mdl}</div>
+                      <div className="text-2xs text-amber-700">{m.method}</div>
+                      <div className="text-2xs text-slate-500">MDL: {m.mdl}</div>
                     </div>
                   ))}
                 </div>
@@ -1865,8 +1865,8 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                     <span className="text-lg">{ds.icon}</span>
                     <div className="flex-1 min-w-0">
                       <div className="text-xs font-semibold text-slate-800">{ds.name}</div>
-                      <div className="text-[10px] text-slate-500">{ds.source} · {ds.format}</div>
-                      <div className="text-[10px] text-slate-400">{ds.freq}</div>
+                      <div className="text-2xs text-slate-500">{ds.source} · {ds.format}</div>
+                      <div className="text-2xs text-slate-400">{ds.freq}</div>
                     </div>
                   </div>
                 ))}
@@ -1877,7 +1877,7 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                 <div className="text-xs font-semibold text-blue-800 mb-1">🔄 Research Export Formats</div>
                 <div className="flex flex-wrap gap-2">
                   {['CSV (tabular)', 'JSON (API)', 'NetCDF (climate)', 'GeoJSON (spatial)', 'R (.rds)', 'Python (.pkl)', 'BibTeX (citations)'].map(fmt => (
-                    <span key={fmt} className="px-2 py-1 rounded-full text-[10px] font-medium bg-blue-100 text-blue-700 border border-blue-200">{fmt}</span>
+                    <span key={fmt} className="px-2 py-1 rounded-full text-2xs font-medium bg-blue-100 text-blue-700 border border-blue-200">{fmt}</span>
                   ))}
                 </div>
               </div>
@@ -1943,9 +1943,9 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                 { label: 'Citation Impact', value: '↑ 8.3', sub: 'avg citations per paper (h-index)', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
               ].map(t => (
                 <div key={t.label} className={`rounded-xl border p-4 ${t.bg}`}>
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{t.label}</div>
+                  <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{t.label}</div>
                   <div className={`text-2xl font-bold ${t.color} mt-1`}>{t.value}</div>
-                  <div className="text-[10px] text-slate-500 mt-1">{t.sub}</div>
+                  <div className="text-2xs text-slate-500 mt-1">{t.sub}</div>
                 </div>
               ))}
             </div>
@@ -1965,7 +1965,7 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                   <div key={c.category} className={`border rounded-lg p-4 ${c.bg}`}>
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="text-sm font-semibold text-slate-800">{c.category}</h4>
-                      <Badge variant="outline" className={`text-[10px] ${c.color}`}>{c.trend}</Badge>
+                      <Badge variant="outline" className={`text-2xs ${c.color}`}>{c.trend}</Badge>
                     </div>
                     <p className="text-xs text-slate-500 leading-relaxed">{c.detail}</p>
                   </div>
@@ -1996,7 +1996,7 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
               </div>
             </div>
 
-            <div className="text-[10px] text-slate-400 italic">
+            <div className="text-2xs text-slate-400 italic">
               Metrics based on institutional research databases, WQP submissions, and publication tracking. Actual values will populate as research outputs accumulate.
             </div>
           </CardContent>
@@ -2019,7 +2019,7 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                   { label: 'Data Quality', value: '94%', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
                   { label: 'Campus Compliance', value: '100%', color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
                   { label: 'Partnership Score', value: 'A-', color: 'text-violet-600', bg: 'bg-violet-50 border-violet-200' }
-                ].map(k => <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}><div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div><div className={`text-2xl font-bold ${k.color} mt-1`}>{k.value}</div></div>)}
+                ].map(k => <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}><div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div><div className={`text-2xl font-bold ${k.color} mt-1`}>{k.value}</div></div>)}
               </div></CardContent></Card>
             );
             case 'scorecard-grades': return DS(
@@ -2034,7 +2034,7 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
               <Card><CardHeader><CardTitle>Research Reports</CardTitle><CardDescription>Generated reports and data exports for academic use</CardDescription></CardHeader>
               <CardContent><div className="space-y-2">
                 {['Annual Water Quality Summary', 'Campus Stormwater Report', 'Research Output Bibliography', 'Monitoring Network Status'].map(r =>
-                  <div key={r} className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50"><span className="text-sm text-slate-700">{r}</span><Badge variant="outline" className="text-[10px]">Generate</Badge></div>
+                  <div key={r} className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50"><span className="text-sm text-slate-700">{r}</span><Badge variant="outline" className="text-2xs">Generate</Badge></div>
                 )}
               </div></CardContent></Card>
             );
@@ -2063,14 +2063,14 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                   <CardContent>
                     <div className={`rounded-xl border p-4 flex items-center justify-between ${scoreBg}`}>
                       <div>
-                        <div className="text-[10px] font-bold uppercase tracking-wider opacity-70">Eco Score</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider opacity-70">Eco Score</div>
                         <div className="text-xs opacity-80 mt-1">
                           {ecoData ? `${ecoData.totalTE} T&E species · ${ecoData.aquaticTE} aquatic · ${ecoData.criticalHabitat} critical habitat` : 'No T&E data available'}
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="text-2xl font-bold">{ecoScore}</div>
-                        <Badge variant="outline" className="text-[10px] mt-1">{label}</Badge>
+                        <Badge variant="outline" className="text-2xs mt-1">{label}</Badge>
                       </div>
                     </div>
                   </CardContent>
@@ -2090,31 +2090,31 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                     <CardTitle className="flex items-center gap-2">
                       <Bug className="h-5 w-5 text-rose-600" />
                       Threatened & Endangered Species — {stateName}
-                      <Badge variant="secondary" className="ml-1 text-[10px]">USFWS ECOS</Badge>
+                      <Badge variant="secondary" className="ml-1 text-2xs">USFWS ECOS</Badge>
                     </CardTitle>
                     <CardDescription>ESA-listed species near campus and field sites — informs research design and environmental review</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       <div className="rounded-xl border p-4 bg-slate-50 border-slate-200">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total T&E</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Total T&E</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{federalTotal}</div>
-                        <div className="text-[10px] text-slate-400">Federal ESA</div>
+                        <div className="text-2xs text-slate-400">Federal ESA</div>
                       </div>
                       <div className="rounded-xl border p-4 bg-blue-50 border-blue-200">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Aquatic T&E</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Aquatic T&E</div>
                         <div className="text-2xl font-bold text-blue-700 mt-1">{federalAquatic}</div>
-                        <div className="text-[10px] text-slate-400">Freshwater / marine</div>
+                        <div className="text-2xs text-slate-400">Freshwater / marine</div>
                       </div>
                       <div className="rounded-xl border p-4 bg-rose-50 border-rose-200">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Critical Habitat</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Critical Habitat</div>
                         <div className="text-2xl font-bold text-rose-700 mt-1">{critHab}</div>
-                        <div className="text-[10px] text-slate-400">Designated areas</div>
+                        <div className="text-2xs text-slate-400">Designated areas</div>
                       </div>
                       <div className="rounded-xl border p-4 bg-amber-50 border-amber-200">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Eco Score</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Eco Score</div>
                         <div className="text-2xl font-bold text-amber-700 mt-1">{getEcoScore(stateAbbr)}</div>
-                        <div className="text-[10px] text-slate-400">{ecoScoreLabel(getEcoScore(stateAbbr))}</div>
+                        <div className="text-2xs text-slate-400">{ecoScoreLabel(getEcoScore(stateAbbr))}</div>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -2165,7 +2165,7 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                           <span className="text-slate-500">{g.amount}</span>
                           <span className="text-slate-400">{g.period}</span>
                           <span className="text-slate-500">Rem: {g.remaining}</span>
-                          <Badge variant="outline" className={`text-[9px] ${g.status === 'New' ? 'border-blue-300 text-blue-700' : 'border-green-300 text-green-700'}`}>{g.status}</Badge>
+                          <Badge variant="outline" className={`text-2xs ${g.status === 'New' ? 'border-blue-300 text-blue-700' : 'border-green-300 text-green-700'}`}>{g.status}</Badge>
                         </div>
                       </div>
                     ))}
@@ -2196,7 +2196,7 @@ export function UniversityManagementCenter({ stateAbbr: initialStateAbbr, userRo
                         <div className="flex items-center gap-3">
                           <span className="text-slate-500">{o.amount}</span>
                           <span className="text-slate-400">Due: {o.deadline}</span>
-                          <Badge variant="outline" className={`text-[9px] ${o.status === 'Preparing' ? 'border-amber-300 text-amber-700' : o.status === 'Eligible' ? 'border-blue-300 text-blue-700' : 'border-slate-300 text-slate-600'}`}>{o.status}</Badge>
+                          <Badge variant="outline" className={`text-2xs ${o.status === 'Preparing' ? 'border-amber-300 text-amber-700' : o.status === 'Eligible' ? 'border-blue-300 text-blue-700' : 'border-slate-300 text-slate-600'}`}>{o.status}</Badge>
                         </div>
                       </div>
                     ))}

@@ -140,7 +140,7 @@ export function AirQualityMonitoringCard({
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div className="rounded-xl border bg-cyan-50 border-cyan-200 p-3">
-                <div className="text-[10px] uppercase tracking-wide font-semibold text-cyan-700">US AQI</div>
+                <div className="text-2xs uppercase tracking-wide font-semibold text-cyan-700">US AQI</div>
                 <div className="text-xl font-bold text-cyan-800">{reading.usAqi ?? 'N/A'}</div>
                 {aqiTrend.length >= 2 && (
                   <div className="mt-1">
@@ -152,15 +152,15 @@ export function AirQualityMonitoringCard({
                 )}
               </div>
               <div className="rounded-xl border bg-blue-50 border-blue-200 p-3">
-                <div className="text-[10px] uppercase tracking-wide font-semibold text-blue-700">PM2.5</div>
+                <div className="text-2xs uppercase tracking-wide font-semibold text-blue-700">PM2.5</div>
                 <div className="text-xl font-bold text-blue-800">{reading.pm25 ?? 'N/A'}</div>
               </div>
               <div className="rounded-xl border bg-slate-50 border-slate-200 p-3">
-                <div className="text-[10px] uppercase tracking-wide font-semibold text-slate-600">Monitors</div>
+                <div className="text-2xs uppercase tracking-wide font-semibold text-slate-600">Monitors</div>
                 <div className="text-xl font-bold text-slate-800">{reading.monitorCount}</div>
               </div>
               <div className="rounded-xl border bg-amber-50 border-amber-200 p-3">
-                <div className="text-[10px] uppercase tracking-wide font-semibold text-amber-700">Confidence</div>
+                <div className="text-2xs uppercase tracking-wide font-semibold text-amber-700">Confidence</div>
                 <div className="text-xl font-bold text-amber-800">{reading.confidence}</div>
               </div>
             </div>

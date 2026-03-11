@@ -50,7 +50,7 @@ function ModuleCard({ mod }: { mod: ScoredModule }) {
       {mod.primaryUsers.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {mod.primaryUsers.map(user => (
-            <span key={user} className="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-600 border border-purple-200">
+            <span key={user} className="text-2xs px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-600 border border-purple-200">
               {user}
             </span>
           ))}
@@ -61,7 +61,7 @@ function ModuleCard({ mod }: { mod: ScoredModule }) {
       {mod.matchedCauses.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {mod.matchedCauses.map(cause => (
-            <span key={cause} className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200">
+            <span key={cause} className="text-2xs px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200">
               {cause}
             </span>
           ))}
@@ -72,7 +72,7 @@ function ModuleCard({ mod }: { mod: ScoredModule }) {
       {mod.dataSources.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {mod.dataSources.map(src => (
-            <span key={src} className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">
+            <span key={src} className="text-2xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">
               {src}
             </span>
           ))}
@@ -80,7 +80,7 @@ function ModuleCard({ mod }: { mod: ScoredModule }) {
       )}
 
       {/* Row 6: Metadata chips */}
-      <div className="flex flex-wrap items-center gap-2 text-[11px]">
+      <div className="flex flex-wrap items-center gap-2 text-xs">
         <span className="px-2 py-0.5 rounded bg-gray-100 text-gray-600">{mod.loadReductionRange}</span>
         <span className="px-2 py-0.5 rounded bg-gray-100 text-gray-600">{mod.timeline}</span>
         <span className={`px-2 py-0.5 rounded font-medium ${COST_COLORS[mod.costTier]}`}>
@@ -93,12 +93,12 @@ function ModuleCard({ mod }: { mod: ScoredModule }) {
         <div>
           <button
             onClick={() => setShowOutputs(v => !v)}
-            className="text-[11px] text-indigo-600 hover:text-indigo-800 font-medium"
+            className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
           >
             {showOutputs ? 'Hide deliverables' : 'Show deliverables'}
           </button>
           {showOutputs && (
-            <ul className="mt-1.5 space-y-0.5 text-[11px] text-gray-600 list-disc list-inside">
+            <ul className="mt-1.5 space-y-0.5 text-xs text-gray-600 list-disc list-inside">
               {mod.outputs.map(output => (
                 <li key={output}>{output}</li>
               ))}
@@ -155,7 +155,7 @@ export function StrategyModulesSection({ categories, minScore = 20 }: Props) {
               <div className="flex items-center gap-2">
                 <span className="text-base">{cat.icon}</span>
                 <span className="text-sm font-semibold text-gray-700">{cat.title}</span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/60 text-gray-500 font-medium">
+                <span className="text-2xs px-1.5 py-0.5 rounded-full bg-white/60 text-gray-500 font-medium">
                   {cat.modules.length} module{cat.modules.length !== 1 ? 's' : ''}
                 </span>
               </div>

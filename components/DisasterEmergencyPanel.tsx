@@ -417,7 +417,7 @@ export function DisasterEmergencyPanel({
                 <p className="text-2xl font-bold text-slate-800">
                   {formatNumber(sites.length)}
                 </p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wide">
+                <p className="text-2xs text-slate-500 uppercase tracking-wide">
                   GW Stations
                 </p>
               </div>
@@ -435,7 +435,7 @@ export function DisasterEmergencyPanel({
                 <p className="text-2xl font-bold text-red-700">
                   {formatNumber(decliningCount)}
                 </p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wide">
+                <p className="text-2xs text-slate-500 uppercase tracking-wide">
                   Declining Tables
                 </p>
               </div>
@@ -453,7 +453,7 @@ export function DisasterEmergencyPanel({
                 <p className="text-2xl font-bold text-amber-700">
                   {formatNumber(highAlertWaterbodies)}
                 </p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wide">
+                <p className="text-2xs text-slate-500 uppercase tracking-wide">
                   Alert Waterbodies
                 </p>
               </div>
@@ -471,7 +471,7 @@ export function DisasterEmergencyPanel({
                 <p className="text-2xl font-bold text-orange-700">
                   {formatNumber(nwsData?.totalAlerts ?? 0)}
                 </p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wide">
+                <p className="text-2xs text-slate-500 uppercase tracking-wide">
                   Weather Alerts
                 </p>
               </div>
@@ -489,7 +489,7 @@ export function DisasterEmergencyPanel({
                 <p className="text-2xl font-bold text-indigo-700">
                   {formatNumber(femaData?.totalDeclarations ?? 0)}
                 </p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wide">
+                <p className="text-2xs text-slate-500 uppercase tracking-wide">
                   FEMA Declarations
                 </p>
               </div>
@@ -507,7 +507,7 @@ export function DisasterEmergencyPanel({
                 <p className="text-2xl font-bold text-yellow-700">
                   {formatNumber(superfundData?.totalSites ?? 0)}
                 </p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wide">
+                <p className="text-2xs text-slate-500 uppercase tracking-wide">
                   Superfund Sites
                 </p>
               </div>
@@ -525,7 +525,7 @@ export function DisasterEmergencyPanel({
                 <p className="text-2xl font-bold text-violet-700">
                   {formatNumber(triData?.totalFacilities ?? 0)}
                 </p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wide">
+                <p className="text-2xs text-slate-500 uppercase tracking-wide">
                   TRI Facilities
                 </p>
               </div>
@@ -543,7 +543,7 @@ export function DisasterEmergencyPanel({
                 <p className="text-2xl font-bold text-slate-800">
                   {formatNumber(activeTrendCount)}
                 </p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wide">
+                <p className="text-2xs text-slate-500 uppercase tracking-wide">
                   Active Trends
                 </p>
               </div>
@@ -559,7 +559,7 @@ export function DisasterEmergencyPanel({
             <TrendingDown size={16} className="text-red-600" />
             Critical Groundwater Trends
             {criticalTrends.length > 0 && (
-              <Badge className="ml-1 text-[10px] bg-red-100 text-red-700">
+              <Badge className="ml-1 text-2xs bg-red-100 text-red-700">
                 {criticalTrends.length} sites declining
               </Badge>
             )}
@@ -604,7 +604,7 @@ export function DisasterEmergencyPanel({
                       <span className="text-xs font-semibold text-slate-800 truncate">
                         {t.siteName || t.siteNumber}
                       </span>
-                      <Badge variant="secondary" className="text-[9px] shrink-0">
+                      <Badge variant="secondary" className="text-2xs shrink-0">
                         {t.state}
                       </Badge>
                     </div>
@@ -620,7 +620,7 @@ export function DisasterEmergencyPanel({
                       -{t.trendMagnitude.toFixed(2)} ft/mo
                     </span>
                   </div>
-                  <div className="flex items-center gap-4 text-[10px] text-slate-500 ml-5">
+                  <div className="flex items-center gap-4 text-2xs text-slate-500 ml-5">
                     <span>
                       Latest: <span className="font-medium text-slate-700">{formatDepth(t.latestLevel)}</span>
                     </span>
@@ -631,7 +631,7 @@ export function DisasterEmergencyPanel({
                   </div>
                 </div>
               ))}
-              <p className="text-[10px] text-slate-400 mt-2 flex items-center gap-1">
+              <p className="text-2xs text-slate-400 mt-2 flex items-center gap-1">
                 <Info size={10} />
                 Showing top {criticalTrends.length} sites by decline rate (ft/month).
                 Higher magnitude indicates faster groundwater depletion.
@@ -648,7 +648,7 @@ export function DisasterEmergencyPanel({
             <AlertTriangle size={16} className="text-amber-600" />
             High-Severity Surface Water
             {highSeverityStates.length > 0 && (
-              <Badge variant="secondary" className="ml-1 text-[10px]">
+              <Badge variant="secondary" className="ml-1 text-2xs">
                 {highSeverityStates.length} states
               </Badge>
             )}
@@ -717,7 +717,7 @@ export function DisasterEmergencyPanel({
                   ))}
                 </tbody>
               </table>
-              <p className="text-[10px] text-slate-400 mt-3 flex items-center gap-1">
+              <p className="text-2xs text-slate-400 mt-3 flex items-center gap-1">
                 <Info size={10} />
                 Assessment Gap = total waterbodies minus assessed. Positive values
                 indicate unassessed waterbodies that may harbor unknown impairments.
@@ -734,7 +734,7 @@ export function DisasterEmergencyPanel({
             <CloudRain size={16} className="text-orange-600" />
             Active Weather Alerts
             {nwsData && nwsData.totalAlerts > 0 && (
-              <Badge className="ml-1 text-[10px] bg-orange-100 text-orange-700">
+              <Badge className="ml-1 text-2xs bg-orange-100 text-orange-700">
                 {nwsData.totalAlerts} active
               </Badge>
             )}
@@ -764,7 +764,7 @@ export function DisasterEmergencyPanel({
                   .map(([severity, count]) => (
                     <span
                       key={severity}
-                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${SEVERITY_COLORS[severity] || SEVERITY_COLORS.Unknown}`}
+                      className={`text-2xs font-semibold px-2 py-0.5 rounded-full ${SEVERITY_COLORS[severity] || SEVERITY_COLORS.Unknown}`}
                     >
                       {severity}: {count}
                     </span>
@@ -797,7 +797,7 @@ export function DisasterEmergencyPanel({
                   />
                 </div>
                 {(nwsSeverityFilter !== 'all' || nwsSearch) && (
-                  <span className="text-[10px] text-slate-400">
+                  <span className="text-2xs text-slate-400">
                     {filteredAlerts.length} of {nwsData.topAlerts.length} alerts
                   </span>
                 )}
@@ -824,7 +824,7 @@ export function DisasterEmergencyPanel({
                           {alert.event}
                         </td>
                         <td className="py-2">
-                          <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${SEVERITY_COLORS[alert.severity] || SEVERITY_COLORS.Unknown}`}>
+                          <span className={`text-2xs font-semibold px-1.5 py-0.5 rounded-full ${SEVERITY_COLORS[alert.severity] || SEVERITY_COLORS.Unknown}`}>
                             {alert.severity}
                           </span>
                         </td>
@@ -842,7 +842,7 @@ export function DisasterEmergencyPanel({
                   </tbody>
                 </table>
               </div>
-              <p className="text-[10px] text-slate-400 mt-3 flex items-center gap-1">
+              <p className="text-2xs text-slate-400 mt-3 flex items-center gap-1">
                 <Info size={10} />
                 Data refreshed every 30 minutes from NWS API.
               </p>
@@ -858,7 +858,7 @@ export function DisasterEmergencyPanel({
             <Landmark size={16} className="text-indigo-600" />
             FEMA Disaster Declarations
             {femaData && femaData.totalDeclarations > 0 && (
-              <Badge className="ml-1 text-[10px] bg-indigo-100 text-indigo-700">
+              <Badge className="ml-1 text-2xs bg-indigo-100 text-indigo-700">
                 {femaData.totalDeclarations} declarations
               </Badge>
             )}
@@ -884,7 +884,7 @@ export function DisasterEmergencyPanel({
                   .map(([type, count]) => (
                     <span
                       key={type}
-                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${INCIDENT_TYPE_COLORS[type] || 'bg-slate-100 text-slate-600'}`}
+                      className={`text-2xs font-semibold px-2 py-0.5 rounded-full ${INCIDENT_TYPE_COLORS[type] || 'bg-slate-100 text-slate-600'}`}
                     >
                       {type}: {count}
                     </span>
@@ -919,7 +919,7 @@ export function DisasterEmergencyPanel({
                   />
                 </div>
                 {(femaTypeFilter !== 'all' || femaSearch) && (
-                  <span className="text-[10px] text-slate-400">
+                  <span className="text-2xs text-slate-400">
                     {filteredFema.length} of {femaData.topDeclarations.length} declarations
                   </span>
                 )}
@@ -949,7 +949,7 @@ export function DisasterEmergencyPanel({
                       >
                         <td className="py-2 font-mono text-slate-600">{d.disasterNumber}</td>
                         <td className="py-2">
-                          <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${INCIDENT_TYPE_COLORS[d.incidentType] || 'bg-slate-100 text-slate-600'}`}>
+                          <span className={`text-2xs font-semibold px-1.5 py-0.5 rounded-full ${INCIDENT_TYPE_COLORS[d.incidentType] || 'bg-slate-100 text-slate-600'}`}>
                             {d.incidentType}
                           </span>
                         </td>
@@ -968,7 +968,7 @@ export function DisasterEmergencyPanel({
                   </tbody>
                 </table>
               </div>
-              <p className="text-[10px] text-slate-400 mt-3 flex items-center gap-1">
+              <p className="text-2xs text-slate-400 mt-3 flex items-center gap-1">
                 <Info size={10} />
                 Filtered to water-relevant incident types.
               </p>
@@ -984,7 +984,7 @@ export function DisasterEmergencyPanel({
             <Shield size={16} className="text-yellow-600" />
             Superfund NPL Sites
             {superfundData && superfundData.totalSites > 0 && (
-              <Badge className="ml-1 text-[10px] bg-yellow-100 text-yellow-700">
+              <Badge className="ml-1 text-2xs bg-yellow-100 text-yellow-700">
                 {superfundData.activeNpl} active
               </Badge>
             )}
@@ -1031,7 +1031,7 @@ export function DisasterEmergencyPanel({
                   />
                 </div>
                 {(sfStatusFilter !== 'all' || sfSearch) && (
-                  <span className="text-[10px] text-slate-400">
+                  <span className="text-2xs text-slate-400">
                     {filteredSuperfund.length} of {superfundData.topBySiteScore.length} sites
                   </span>
                 )}
@@ -1065,7 +1065,7 @@ export function DisasterEmergencyPanel({
                         <td className="py-2 text-slate-600">{s.stateAbbr}</td>
                         <td className="py-2 text-slate-500">{s.city}</td>
                         <td className="py-2">
-                          <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
+                          <span className={`text-2xs font-semibold px-1.5 py-0.5 rounded-full ${
                             s.status.toLowerCase().includes('final') || s.status.toLowerCase() === 'npl site'
                               ? 'bg-red-100 text-red-700'
                               : s.status.toLowerCase().includes('proposed')
@@ -1094,7 +1094,7 @@ export function DisasterEmergencyPanel({
                   </tbody>
                 </table>
               </div>
-              <p className="text-[10px] text-slate-400 mt-3 flex items-center gap-1">
+              <p className="text-2xs text-slate-400 mt-3 flex items-center gap-1">
                 <Info size={10} />
                 Score of 28.50+ qualifies for NPL listing.
               </p>
@@ -1110,7 +1110,7 @@ export function DisasterEmergencyPanel({
             <FlaskConical size={16} className="text-violet-600" />
             Chemical Releases (TRI)
             {triData && triData.carcinogenFacilities > 0 && (
-              <Badge className="ml-1 text-[10px] bg-violet-100 text-violet-700">
+              <Badge className="ml-1 text-2xs bg-violet-100 text-violet-700">
                 {triData.carcinogenFacilities} carcinogen reporters
               </Badge>
             )}
@@ -1154,7 +1154,7 @@ export function DisasterEmergencyPanel({
                   />
                 </div>
                 {(triCarcinogenOnly || triSearch) && (
-                  <span className="text-[10px] text-slate-400">
+                  <span className="text-2xs text-slate-400">
                     {filteredTri.length} of {triData.topFacilities.length} facilities
                   </span>
                 )}
@@ -1190,7 +1190,7 @@ export function DisasterEmergencyPanel({
                         </td>
                         <td className="py-2 text-center">
                           {f.carcinogenReleases > 0 ? (
-                            <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-red-100 text-red-700">
+                            <span className="text-2xs font-semibold px-1.5 py-0.5 rounded-full bg-red-100 text-red-700">
                               YES
                             </span>
                           ) : (
@@ -1205,7 +1205,7 @@ export function DisasterEmergencyPanel({
                   </tbody>
                 </table>
               </div>
-              <p className="text-[10px] text-slate-400 mt-3 flex items-center gap-1">
+              <p className="text-2xs text-slate-400 mt-3 flex items-center gap-1">
                 <Info size={10} />
                 Total releases across all TRI facilities: {formatWeight(triData.totalReleases)}.
               </p>

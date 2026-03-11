@@ -52,6 +52,8 @@ import { getSsoCsoCacheStatus, ensureWarmed as warmSsoCso } from '@/lib/ssoCsoCa
 import { getGlerlCacheStatus, ensureWarmed as warmGlerl } from '@/lib/glerlCache';
 import { getHefsCacheStatus, ensureWarmed as warmHefs } from '@/lib/hefsCache';
 import { getFirmsCacheStatus, ensureWarmed as warmFirms } from '@/lib/firmsCache';
+import { getSeismicCacheStatus, ensureWarmed as warmSeismic } from '@/lib/seismicCache';
+import { getDamCacheStatus, ensureWarmed as warmDam } from '@/lib/damCache';
 import { getHealthSummary, ensureWarmed as warmSentinelHealth } from '@/lib/sentinel/sentinelHealth';
 import { getQueueStats, ensureWarmed as warmSentinelQueue } from '@/lib/sentinel/eventQueue';
 import { getScoredHucsSummary, ensureWarmed as warmSentinelScores } from '@/lib/sentinel/scoringEngine';
@@ -77,7 +79,7 @@ export async function GET(request: NextRequest) {
     [warmNwisIv, warmUsgsAlerts, warmNwsAlerts, warmNwps, warmCoops, warmSnotel],
     [warmTri, warmUSAs, warmGrantsGov, warmSam, warmSentinelHealth, warmSentinelQueue, warmSentinelScores],
     [warmFema, warmSuperfund, warmUsdm, warmUsgsDv, warmCoopsDerived, warmErddapSat],
-    [warmNasaStream, warmNwm, warmIpac, warmNcei, warmHabsos, warmGlerl, warmHefs, warmBeacon, warmSsoCso, warmFirms],
+    [warmNasaStream, warmNwm, warmIpac, warmNcei, warmHabsos, warmGlerl, warmHefs, warmBeacon, warmSsoCso, warmFirms, warmSeismic, warmDam],
   ];
   for (const batch of warmBatches) {
     await Promise.allSettled(batch.map(fn => fn()));
@@ -128,6 +130,8 @@ export async function GET(request: NextRequest) {
   const glerl = getGlerlCacheStatus();
   const hefs = getHefsCacheStatus();
   const firms = getFirmsCacheStatus();
+  const seismic = getSeismicCacheStatus();
+  const dam = getDamCacheStatus();
 
   const caches = {
     wqp: {
@@ -314,6 +318,14 @@ export async function GET(request: NextRequest) {
     firms: {
       ...firms,
       ...staleness(firms.loaded ? (firms as any).built : null),
+    },
+    seismic: {
+      ...seismic,
+      ...staleness(seismic.loaded ? (seismic as any).built : null),
+    },
+    dam: {
+      ...dam,
+      ...staleness(dam.loaded ? (dam as any).built : null),
     },
   };
 

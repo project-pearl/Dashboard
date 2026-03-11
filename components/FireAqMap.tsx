@@ -154,7 +154,7 @@ export function FireAqMap({ data }: { data: MapData | null }) {
               {data.installations.map(inst => (
                 <RMG.Marker key={inst.id} latitude={inst.lat} longitude={inst.lng} anchor="center">
                   <div
-                    className={`w-4 h-4 rounded-sm border-2 flex items-center justify-center text-[8px] font-bold ${
+                    className={`w-4 h-4 rounded-sm border-2 flex items-center justify-center text-2xs font-bold ${
                       inst.burnPitHistory
                         ? 'bg-red-100 border-red-500 text-red-700'
                         : 'bg-blue-100 border-blue-500 text-blue-700'

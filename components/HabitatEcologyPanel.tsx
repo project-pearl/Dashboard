@@ -351,7 +351,7 @@ export function HabitatEcologyPanel({
                 <p className="text-lg font-bold text-slate-800">
                   {heroStats.meeting.toLocaleString()}
                 </p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wide">
+                <p className="text-2xs text-slate-500 uppercase tracking-wide">
                   Meeting
                 </p>
               </div>
@@ -359,7 +359,7 @@ export function HabitatEcologyPanel({
                 <p className="text-lg font-bold text-slate-800">
                   {heroStats.totalAssessed.toLocaleString()}
                 </p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wide">
+                <p className="text-2xs text-slate-500 uppercase tracking-wide">
                   Assessed
                 </p>
               </div>
@@ -368,7 +368,7 @@ export function HabitatEcologyPanel({
                   <p className="text-lg font-bold text-slate-800">
                     {heroStats.totalStates}
                   </p>
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wide">
+                  <p className="text-2xs text-slate-500 uppercase tracking-wide">
                     States
                   </p>
                 </div>
@@ -378,7 +378,7 @@ export function HabitatEcologyPanel({
                   <p className="text-lg font-bold text-red-600">
                     {heroStats.impairedStates}
                   </p>
-                  <p className="text-[10px] text-red-500 uppercase tracking-wide">
+                  <p className="text-2xs text-red-500 uppercase tracking-wide">
                     Below Threshold
                   </p>
                 </div>
@@ -412,7 +412,7 @@ export function HabitatEcologyPanel({
               />
             </div>
             {sortedTableData.length > 3 && (
-              <p className="mt-1 text-[10px] text-slate-500">
+              <p className="mt-1 text-2xs text-slate-500">
                 Showing top 3 rows. Scroll for additional states.
               </p>
             )}
@@ -510,7 +510,7 @@ export function HabitatEcologyPanel({
                     </td>
                     <td className="py-2 text-right">
                       <Badge
-                        className={`text-[10px] ${ecoScoreBadgeVariant(row.ecoScore)}`}
+                        className={`text-2xs ${ecoScoreBadgeVariant(row.ecoScore)}`}
                       >
                         {row.ecoScore} - {row.ecoLabel}
                       </Badge>
@@ -530,7 +530,7 @@ export function HabitatEcologyPanel({
             <AlertTriangle size={16} className="text-amber-600" />
             Habitat-Related Impairment Causes
             {totalHabitatImpairments > 0 && (
-              <Badge variant="secondary" className="ml-1 text-[10px]">
+              <Badge variant="secondary" className="ml-1 text-2xs">
                 {totalHabitatImpairments.toLocaleString()} waterbodies
               </Badge>
             )}
@@ -571,7 +571,7 @@ export function HabitatEcologyPanel({
                         style={{ width: `${Math.max(widthPct, count > 0 ? 2 : 0)}%` }}
                       />
                       {count > 0 && widthPct >= 12 && (
-                        <span className="absolute inset-y-0 left-2 flex items-center text-[10px] font-semibold text-white">
+                        <span className="absolute inset-y-0 left-2 flex items-center text-2xs font-semibold text-white">
                           {pct(count, totalHabitatImpairments)}%
                         </span>
                       )}
@@ -581,7 +581,7 @@ export function HabitatEcologyPanel({
               })}
 
               {/* Legend note */}
-              <p className="text-[10px] text-slate-400 mt-2 flex items-center gap-1">
+              <p className="text-2xs text-slate-400 mt-2 flex items-center gap-1">
                 <Info size={10} />
                 A single waterbody may have multiple habitat-related causes.
               </p>
@@ -596,7 +596,7 @@ export function HabitatEcologyPanel({
           <CardTitle className="flex items-center gap-2 text-base">
             <Bug size={16} className="text-rose-600" />
             Threatened &amp; Endangered Species
-            <Badge variant="secondary" className="ml-1 text-[10px]">
+            <Badge variant="secondary" className="ml-1 text-2xs">
               USFWS ECOS
             </Badge>
           </CardTitle>
@@ -651,7 +651,7 @@ export function HabitatEcologyPanel({
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-bold">{eco.abbr}</span>
                         <Badge
-                          className={`text-[9px] ${ecoScoreBadgeVariant(eco.score)}`}
+                          className={`text-2xs ${ecoScoreBadgeVariant(eco.score)}`}
                         >
                           {ecoScoreLabel(eco.score)}
                         </Badge>
@@ -663,7 +663,7 @@ export function HabitatEcologyPanel({
                     <div className="grid grid-cols-3 gap-2 text-center">
                       <div>
                         <p className="text-sm font-bold">{eco.totalTE}</p>
-                        <p className="text-[9px] text-slate-500 uppercase tracking-wider">
+                        <p className="text-2xs text-slate-500 uppercase tracking-wider">
                           Total T&amp;E
                         </p>
                       </div>
@@ -671,7 +671,7 @@ export function HabitatEcologyPanel({
                         <p className="text-sm font-bold text-blue-700">
                           {eco.aquaticTE}
                         </p>
-                        <p className="text-[9px] text-slate-500 uppercase tracking-wider">
+                        <p className="text-2xs text-slate-500 uppercase tracking-wider">
                           Aquatic
                         </p>
                       </div>
@@ -679,7 +679,7 @@ export function HabitatEcologyPanel({
                         <p className="text-sm font-bold text-rose-700">
                           {eco.criticalHabitat}
                         </p>
-                        <p className="text-[9px] text-slate-500 uppercase tracking-wider">
+                        <p className="text-2xs text-slate-500 uppercase tracking-wider">
                           Crit. Habitat
                         </p>
                       </div>
@@ -689,7 +689,7 @@ export function HabitatEcologyPanel({
                     {isExpanded && (
                       <div className="mt-3 pt-3 border-t border-current/10 space-y-2">
                         <div>
-                          <div className="flex items-center justify-between text-[11px] mb-1">
+                          <div className="flex items-center justify-between text-xs mb-1">
                             <span className="flex items-center gap-1">
                               <Fish size={10} />
                               Aquatic species ratio
@@ -704,7 +704,7 @@ export function HabitatEcologyPanel({
                           </div>
                         </div>
                         <div>
-                          <div className="flex items-center justify-between text-[11px] mb-1">
+                          <div className="flex items-center justify-between text-xs mb-1">
                             <span className="flex items-center gap-1">
                               <ShieldAlert size={10} />
                               Critical habitat coverage
@@ -718,7 +718,7 @@ export function HabitatEcologyPanel({
                             />
                           </div>
                         </div>
-                        <p className="text-[10px] opacity-70 mt-1">
+                        <p className="text-2xs opacity-70 mt-1">
                           Eco Score is a 0-100 composite: 50% aquatic T&amp;E density,
                           25% total T&amp;E presence, 25% critical habitat density.
                         </p>
@@ -732,7 +732,7 @@ export function HabitatEcologyPanel({
           )}
 
           {/* Attribution */}
-          <p className="text-[10px] text-slate-400 mt-3 flex items-center gap-1">
+          <p className="text-2xs text-slate-400 mt-3 flex items-center gap-1">
             <Info size={10} />
             Source: USFWS ECOS — ESA-listed species by state (2024-2025).
             Higher eco scores indicate greater ecological sensitivity.

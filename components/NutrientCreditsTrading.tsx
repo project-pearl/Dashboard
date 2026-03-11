@@ -622,7 +622,7 @@ export function NutrientCreditsTrading({
                   Available Credits to Buy
                 </CardTitle>
                 <CardDescription>Purchase credits from other verified BMPs</CardDescription>
-                <div className="text-[10px] text-muted-foreground mt-1">Last refreshed: {new Date().toLocaleString()} · Market data is demonstration only</div>
+                <div className="text-2xs text-muted-foreground mt-1">Last refreshed: {new Date().toLocaleString()} · Market data is demonstration only</div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 max-h-[400px] overflow-y-auto">

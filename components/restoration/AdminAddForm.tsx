@@ -122,7 +122,7 @@ export default function AdminAddForm({ type, onAdd, onClose }: AdminAddFormProps
         <div className="space-y-3">
           {/* Name */}
           <div>
-            <label className="text-[10px] font-medium text-slate-500 block mb-1">Name</label>
+            <label className="text-2xs font-medium text-slate-500 block mb-1">Name</label>
             <input
               value={name}
               onChange={e => setName(e.target.value)}
@@ -133,7 +133,7 @@ export default function AdminAddForm({ type, onAdd, onClose }: AdminAddFormProps
 
           {/* Description */}
           <div>
-            <label className="text-[10px] font-medium text-slate-500 block mb-1">Description</label>
+            <label className="text-2xs font-medium text-slate-500 block mb-1">Description</label>
             <textarea
               value={description}
               onChange={e => setDescription(e.target.value)}
@@ -146,7 +146,7 @@ export default function AdminAddForm({ type, onAdd, onClose }: AdminAddFormProps
           {type === 'module' && (
             <>
               <div>
-                <label className="text-[10px] font-medium text-slate-500 block mb-1">Category</label>
+                <label className="text-2xs font-medium text-slate-500 block mb-1">Category</label>
                 <select
                   value={category}
                   onChange={e => setCategory(e.target.value)}
@@ -157,7 +157,7 @@ export default function AdminAddForm({ type, onAdd, onClose }: AdminAddFormProps
                 </select>
               </div>
               <div>
-                <label className="text-[10px] font-medium text-slate-500 block mb-1">Cost Per Unit ($)</label>
+                <label className="text-2xs font-medium text-slate-500 block mb-1">Cost Per Unit ($)</label>
                 <input
                   type="number"
                   value={costPer}
@@ -171,7 +171,7 @@ export default function AdminAddForm({ type, onAdd, onClose }: AdminAddFormProps
 
           {type === 'partner' && (
             <div>
-              <label className="text-[10px] font-medium text-slate-500 block mb-1">In-Kind Value ($)</label>
+              <label className="text-2xs font-medium text-slate-500 block mb-1">In-Kind Value ($)</label>
               <input
                 type="number"
                 value={value}
@@ -186,7 +186,7 @@ export default function AdminAddForm({ type, onAdd, onClose }: AdminAddFormProps
             <>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-[10px] font-medium text-slate-500 block mb-1">Cost/yr ($)</label>
+                  <label className="text-2xs font-medium text-slate-500 block mb-1">Cost/yr ($)</label>
                   <input
                     type="number"
                     value={cost}
@@ -196,7 +196,7 @@ export default function AdminAddForm({ type, onAdd, onClose }: AdminAddFormProps
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-medium text-slate-500 block mb-1">Volunteers</label>
+                  <label className="text-2xs font-medium text-slate-500 block mb-1">Volunteers</label>
                   <input
                     type="number"
                     value={volunteers}
@@ -206,7 +206,7 @@ export default function AdminAddForm({ type, onAdd, onClose }: AdminAddFormProps
                 </div>
               </div>
               <div>
-                <label className="text-[10px] font-medium text-slate-500 block mb-1">Frequency</label>
+                <label className="text-2xs font-medium text-slate-500 block mb-1">Frequency</label>
                 <select
                   value={frequency}
                   onChange={e => setFrequency(e.target.value)}
@@ -222,7 +222,7 @@ export default function AdminAddForm({ type, onAdd, onClose }: AdminAddFormProps
 
           {/* Auto-categorize result */}
           {(autoCategory || autoPillars.length > 0 || autoStrengths.length > 0) && (
-            <div className="bg-purple-50 rounded-md px-3 py-2 text-[9px] text-purple-700 space-y-0.5">
+            <div className="bg-purple-50 rounded-md px-3 py-2 text-2xs text-purple-700 space-y-0.5">
               {autoCategory && <p><strong>Category:</strong> {autoCategory}</p>}
               {autoPillars.length > 0 && <p><strong>Pillars:</strong> {autoPillars.join(', ')}</p>}
               {autoStrengths.length > 0 && <p><strong>Strengths:</strong> {autoStrengths.join(', ')}</p>}
@@ -235,7 +235,7 @@ export default function AdminAddForm({ type, onAdd, onClose }: AdminAddFormProps
           <button
             onClick={handleAutoCategorize}
             disabled={categorizing || (!name && !description)}
-            className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 disabled:opacity-40 rounded-md transition-colors"
+            className="flex items-center gap-1 px-3 py-1.5 text-2xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 disabled:opacity-40 rounded-md transition-colors"
           >
             {categorizing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
             Auto-Categorize
@@ -243,14 +243,14 @@ export default function AdminAddForm({ type, onAdd, onClose }: AdminAddFormProps
           <div className="flex-1" />
           <button
             onClick={onClose}
-            className="px-3 py-1.5 text-[10px] font-medium text-slate-500 hover:text-slate-700 transition-colors"
+            className="px-3 py-1.5 text-2xs font-medium text-slate-500 hover:text-slate-700 transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={!name.trim()}
-            className="px-4 py-1.5 text-[10px] font-semibold text-white bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-300 rounded-md transition-colors"
+            className="px-4 py-1.5 text-2xs font-semibold text-white bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-300 rounded-md transition-colors"
           >
             Add {typeLabel}
           </button>

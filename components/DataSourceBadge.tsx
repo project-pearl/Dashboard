@@ -83,7 +83,7 @@ export function DataSourceBadge({ waterData, isLoading, compact = false }: DataS
         <span className={`w-1.5 h-1.5 rounded-full bg-current ${isLive ? 'animate-pulse' : ''}`} />
         {badgeLabel}
         {waterData.activeSources.length > 1 && (
-          <span className="ml-0.5 px-1 py-0 rounded bg-white/50 text-[10px]">
+          <span className="ml-0.5 px-1 py-0 rounded bg-white/50 text-2xs">
             +{waterData.activeSources.length - 1} source{waterData.activeSources.length > 2 ? 's' : ''}
           </span>
         )}
@@ -102,13 +102,13 @@ export function DataSourceBadge({ waterData, isLoading, compact = false }: DataS
                 <div className="flex items-center gap-1.5">
                   <span className={`font-medium text-xs ${detail.source.textColor}`}>{detail.source.name}</span>
                   <TierBadge tier={getTierForSource(detail.source.id)} size="sm" />
-                  <span className="text-[10px] text-gray-400 px-1 py-0 rounded bg-gray-50">
+                  <span className="text-2xs text-gray-400 px-1 py-0 rounded bg-gray-50">
                     {detail.parameterCount} param{detail.parameterCount !== 1 ? 's' : ''}
                   </span>
                 </div>
-                <div className="text-[11px] text-gray-500 truncate">{detail.stationName}</div>
+                <div className="text-xs text-gray-500 truncate">{detail.stationName}</div>
                 {detail.lastSampled && (
-                  <div className="text-[10px] text-gray-400">
+                  <div className="text-2xs text-gray-400">
                     Last sampled: {new Date(detail.lastSampled).toLocaleDateString()}
                   </div>
                 )}
@@ -118,10 +118,10 @@ export function DataSourceBadge({ waterData, isLoading, compact = false }: DataS
 
           {/* Per-parameter attribution */}
           <div className="mt-2 pt-2 border-t">
-            <div className="text-[10px] font-medium text-gray-400 mb-1">PARAMETER SOURCES</div>
+            <div className="text-2xs font-medium text-gray-400 mb-1">PARAMETER SOURCES</div>
             <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
               {Object.entries(waterData.parameters).map(([key, param]) => (
-                <div key={key} className="flex items-center gap-1 text-[11px]">
+                <div key={key} className="flex items-center gap-1 text-xs">
                   <span className={`w-1.5 h-1.5 rounded-full ${sourceDotColor(param.source)}`} />
                   <span className="text-gray-600">{key}</span>
                   <span className="text-gray-400">→ {param.source}</span>
@@ -131,7 +131,7 @@ export function DataSourceBadge({ waterData, isLoading, compact = false }: DataS
             </div>
           </div>
 
-          <div className="mt-2 pt-2 border-t text-[10px] text-gray-400">
+          <div className="mt-2 pt-2 border-t text-2xs text-gray-400">
             Click any source name for documentation
           </div>
         </div>

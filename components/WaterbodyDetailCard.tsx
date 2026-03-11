@@ -308,12 +308,12 @@ function IndexBar({ name, value, weight }: { name: string; value: number; weight
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[10px] text-slate-600 w-[140px] truncate shrink-0" title={name}>{name}</span>
+      <span className="text-2xs text-slate-600 w-[140px] truncate shrink-0" title={name}>{name}</span>
       <div className="flex-1 h-2.5 bg-slate-100 rounded-full overflow-hidden">
         <div className={`h-full rounded-full ${barColor} transition-all duration-500`} style={{ width: `${val}%` }} />
       </div>
-      <span className="text-[10px] font-semibold text-slate-700 w-8 text-right tabular-nums">{Math.round(val)}</span>
-      <span className="text-[9px] text-slate-400 w-8 text-right tabular-nums">{(weight * 100).toFixed(0)}%</span>
+      <span className="text-2xs font-semibold text-slate-700 w-8 text-right tabular-nums">{Math.round(val)}</span>
+      <span className="text-2xs text-slate-400 w-8 text-right tabular-nums">{(weight * 100).toFixed(0)}%</span>
     </div>
   );
 }
@@ -323,14 +323,14 @@ function MethodologySection() {
   const [open, setOpen] = useState(false);
   return (
     <div className="mt-3 border-t border-slate-100 pt-2">
-      <button onClick={() => setOpen(o => !o)} className="text-[10px] text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
+      <button onClick={() => setOpen(o => !o)} className="text-2xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className={`transition-transform ${open ? 'rotate-90' : ''}`}>
           <path d="M3 1.5L7 5L3 8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
         How is this calculated?
       </button>
       {open && (
-        <div className="mt-2 text-[10px] text-slate-500 leading-relaxed space-y-1.5 pl-3 border-l-2 border-blue-100">
+        <div className="mt-2 text-2xs text-slate-500 leading-relaxed space-y-1.5 pl-3 border-l-2 border-blue-100">
           <p>The <strong>PIN Water Score</strong> is a weighted composite of environmental indices, each scored 0-100 based on real-time and historical data from federal, state, and community sources.</p>
           <p>Each index weight reflects its relative importance to overall watershed health. Weights are calibrated per HUC-8 based on regional hydrology, land use, and regulatory context.</p>
           <p>Condition thresholds: <strong>Good</strong> (80-100), <strong>Fair</strong> (60-79), <strong>Poor</strong> (40-59), <strong>Severe</strong> (0-39). Scores update as new data arrives from the PEARL data cascade.</p>
@@ -620,7 +620,7 @@ export function WaterbodyDetailCard({
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {attainsIsLive && (
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${catConfig.bg} ${catConfig.text}`}>
+              <span className={`px-2 py-0.5 rounded-full text-2xs font-semibold ${catConfig.bg} ${catConfig.text}`}>
                 {catConfig.label}
               </span>
             )}
@@ -638,10 +638,10 @@ export function WaterbodyDetailCard({
         {attainsCauses.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-2">
             {attainsCauses.slice(0, 6).map(cause => (
-              <span key={cause} className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-slate-100 text-slate-600">{cause}</span>
+              <span key={cause} className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-100 text-slate-600">{cause}</span>
             ))}
             {attainsCauses.length > 6 && (
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-slate-100 text-slate-400">+{attainsCauses.length - 6} more</span>
+              <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-100 text-slate-400">+{attainsCauses.length - 6} more</span>
             )}
           </div>
         )}
@@ -692,10 +692,10 @@ export function WaterbodyDetailCard({
               <div>
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[9px] text-slate-400 uppercase tracking-wider font-semibold w-[140px]">Index</span>
+                    <span className="text-2xs text-slate-400 uppercase tracking-wider font-semibold w-[140px]">Index</span>
                     <span className="flex-1" />
-                    <span className="text-[9px] text-slate-400 uppercase tracking-wider font-semibold w-8 text-right">Score</span>
-                    <span className="text-[9px] text-slate-400 uppercase tracking-wider font-semibold w-8 text-right">Wt</span>
+                    <span className="text-2xs text-slate-400 uppercase tracking-wider font-semibold w-8 text-right">Score</span>
+                    <span className="text-2xs text-slate-400 uppercase tracking-wider font-semibold w-8 text-right">Wt</span>
                   </div>
                   {indices.map(idx => (
                     <IndexBar key={idx.name} name={idx.name} value={idx.value} weight={idx.weight} />
@@ -726,20 +726,20 @@ export function WaterbodyDetailCard({
                         <TierIcon tier={reading.tier} />
                         <span className="ml-auto text-xs font-bold text-slate-900 tabular-nums whitespace-nowrap">
                           {reading.value < 0.01 && reading.value > 0 ? reading.value.toFixed(3) : reading.value < 1 ? reading.value.toFixed(2) : reading.value < 100 ? reading.value.toFixed(1) : Math.round(reading.value).toLocaleString()}
-                          {reading.unit && <span className="text-[10px] font-normal text-slate-500 ml-0.5">{reading.unit}</span>}
+                          {reading.unit && <span className="text-2xs font-normal text-slate-500 ml-0.5">{reading.unit}</span>}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 mt-1 ml-4">
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${SOURCE_COLOR[reading.source] || 'bg-slate-100 text-slate-500'}`}>
+                        <span className={`text-2xs px-1.5 py-0.5 rounded-full font-medium ${SOURCE_COLOR[reading.source] || 'bg-slate-100 text-slate-500'}`}>
                           {reading.sourceName}
                         </span>
                         <TierBadge tier={reading.tier} size="sm" />
-                        <span className="text-[10px] text-slate-300">|</span>
-                        <span className="text-[10px] text-slate-400">{age || 'No timestamp'}</span>
+                        <span className="text-2xs text-slate-300">|</span>
+                        <span className="text-2xs text-slate-400">{age || 'No timestamp'}</span>
                         {reading.target && (
                           <>
-                            <span className="text-[10px] text-slate-300">|</span>
-                            <span className="text-[10px] text-slate-400">Target: {reading.target}</span>
+                            <span className="text-2xs text-slate-300">|</span>
+                            <span className="text-2xs text-slate-400">Target: {reading.target}</span>
                           </>
                         )}
                       </div>
@@ -758,11 +758,11 @@ export function WaterbodyDetailCard({
                       ] as const).map(s => (
                         <span key={s.status} className="flex items-center gap-1">
                           <span className={`w-1.5 h-1.5 rounded-full ${STATUS_STYLES[s.status].dot}`} />
-                          <span className="text-[9px] text-slate-500">{s.label}</span>
+                          <span className="text-2xs text-slate-500">{s.label}</span>
                         </span>
                       ))}
                     </div>
-                    <a href="/dashboard/data-provenance#tiers" className="text-[9px] text-blue-500 hover:text-blue-700 underline">
+                    <a href="/dashboard/data-provenance#tiers" className="text-2xs text-blue-500 hover:text-blue-700 underline">
                       Tier definitions →
                     </a>
                   </div>
@@ -797,7 +797,7 @@ export function WaterbodyDetailCard({
             )}
 
             {/* ── Sources row ── */}
-            <div className="flex items-center justify-end gap-2 text-[10px] text-slate-400 pt-1">
+            <div className="flex items-center justify-end gap-2 text-2xs text-slate-400 pt-1">
               <span>Sources: {attainsIsLive ? '✅ ATTAINS' : '⚠ Mock 303(d)'} · {ejIsLive ? '✅ EJScreen' : '✅ Census/SDWIS'} · PIN monitoring</span>
             </div>
 
@@ -808,30 +808,30 @@ export function WaterbodyDetailCard({
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div className="bg-white rounded-md border border-indigo-100 p-2">
-                  <div className="text-[10px] text-slate-500 uppercase">303(d) Status {attainsIsLive && <span className="text-green-500 ml-0.5">● ATTAINS</span>}{attainsLoading && <span className="animate-pulse text-blue-400 ml-0.5">fetching...</span>}</div>
+                  <div className="text-2xs text-slate-500 uppercase">303(d) Status {attainsIsLive && <span className="text-green-500 ml-0.5">● ATTAINS</span>}{attainsLoading && <span className="animate-pulse text-blue-400 ml-0.5">fetching...</span>}</div>
                   <div className={`text-sm font-semibold ${is303dListed ? 'text-red-600' : 'text-green-600'}`}>
                     {attainsIsLive
                       ? `${attainsCategory.includes('5') ? 'Listed — Category 5' : attainsCategory.includes('4a') ? 'Listed — Category 4a' : attainsCategory.includes('4') ? 'Category 4' : attainsCategory.includes('3') ? 'Insufficient Data' : attainsCategory.includes('2') ? 'Partially Assessed' : attainsCategory.includes('1') ? 'Attaining' : `Cat. ${attainsCategory}`}`
                       : level === 'high' ? 'Listed — Category 5' : level === 'medium' ? 'Listed — Category 4a' : level === 'low' ? 'Monitored' : 'Attaining'}
                   </div>
                   {attainsIsLive && attainsCauses.length > 0 && (
-                    <div className="text-[10px] text-slate-500 mt-0.5 truncate" title={attainsCauses.join(', ')}>
+                    <div className="text-2xs text-slate-500 mt-0.5 truncate" title={attainsCauses.join(', ')}>
                       Causes: {attainsCauses.slice(0, 3).join(', ')}{attainsCauses.length > 3 ? ` +${attainsCauses.length - 3} more` : ''}
                     </div>
                   )}
                 </div>
                 <div className="bg-white rounded-md border border-indigo-100 p-2">
-                  <div className="text-[10px] text-slate-500 uppercase">TMDL Coverage</div>
+                  <div className="text-2xs text-slate-500 uppercase">TMDL Coverage</div>
                   <div className={`text-sm font-semibold ${level === 'high' ? 'text-orange-600' : 'text-green-600'}`}>
                     {level === 'high' ? 'Needed — Not established' : level === 'medium' ? 'Approved TMDL' : 'Not required'}
                   </div>
                 </div>
                 <div className="bg-white rounded-md border border-indigo-100 p-2">
-                  <div className="text-[10px] text-slate-500 uppercase">MS4 Permit</div>
+                  <div className="text-2xs text-slate-500 uppercase">MS4 Permit</div>
                   <div className="text-sm font-semibold text-slate-700">{agency?.ms4Program || 'NPDES MS4'}</div>
                 </div>
                 <div className="bg-white rounded-md border border-indigo-100 p-2">
-                  <div className="text-[10px] text-slate-500 uppercase">CWA Authority</div>
+                  <div className="text-2xs text-slate-500 uppercase">CWA Authority</div>
                   <div className="text-sm font-semibold text-slate-700">{agency?.cwaSec || '§303(d)/§402'}</div>
                 </div>
               </div>
@@ -872,7 +872,7 @@ export function WaterbodyDetailCard({
 
                 {/* Outreach summary */}
                 <div className="bg-white rounded-md border border-emerald-100 p-3 space-y-1.5">
-                  <div className="text-[10px] text-slate-500 uppercase font-semibold">Outreach Summary — Ready to Adapt</div>
+                  <div className="text-2xs text-slate-500 uppercase font-semibold">Outreach Summary — Ready to Adapt</div>
                   <div className="text-xs text-slate-700 leading-relaxed">
                     <span className="font-medium">{regionName}</span> in {stateName || stateAbbr} currently shows{' '}
                     <span className={`font-semibold ${level === 'high' ? 'text-red-600' : level === 'medium' ? 'text-orange-600' : 'text-green-600'}`}>
@@ -891,7 +891,7 @@ export function WaterbodyDetailCard({
                         onToast?.('Outreach summary copied to clipboard');
                       });
                     }}
-                    className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 hover:text-emerald-800 mt-1"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 hover:text-emerald-800 mt-1"
                   >
                     📋 Copy Summary
                   </button>
@@ -900,20 +900,20 @@ export function WaterbodyDetailCard({
                 {/* Federal resources */}
                 <div className="flex flex-wrap gap-1.5">
                   <a href="https://www.epa.gov/npdes/npdes-stormwater-program" target="_blank" rel="noopener noreferrer"
-                    className="text-[10px] text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-0.5 rounded-full">
+                    className="text-2xs text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-0.5 rounded-full">
                     EPA Stormwater Program →
                   </a>
                   <a href="https://www.epa.gov/tmdl" target="_blank" rel="noopener noreferrer"
-                    className="text-[10px] text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-0.5 rounded-full">
+                    className="text-2xs text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-0.5 rounded-full">
                     EPA TMDL Resources →
                   </a>
                   <a href="https://www.epa.gov/waterdata/waters-geospatial-data-downloads" target="_blank" rel="noopener noreferrer"
-                    className="text-[10px] text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-0.5 rounded-full">
+                    className="text-2xs text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-0.5 rounded-full">
                     WATERS GIS Data →
                   </a>
                   {ejScore >= 50 && (
                     <a href="https://screeningtool.geoplatform.gov/" target="_blank" rel="noopener noreferrer"
-                      className="text-[10px] text-purple-600 hover:text-purple-800 bg-purple-50 px-2 py-0.5 rounded-full">
+                      className="text-2xs text-purple-600 hover:text-purple-800 bg-purple-50 px-2 py-0.5 rounded-full">
                       CEJST Screening Tool →
                     </a>
                   )}
@@ -927,7 +927,7 @@ export function WaterbodyDetailCard({
               <div className="rounded-lg border border-teal-200 bg-teal-50/40 p-3 space-y-1.5">
                 <div className="text-xs font-semibold text-teal-800 uppercase tracking-wide flex items-center gap-1.5">
                   Chlorophyll Profiles
-                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-700 font-medium ml-1">CBP DataHub</span>
+                  <span className="text-2xs px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-700 font-medium ml-1">CBP DataHub</span>
                 </div>
                 <div className="text-xs text-slate-600">
                   Latest chlorophyll fluorescence (CHL_F): <span className="font-medium">{waterData.parameters._cbp_fluorescence.value}</span> {waterData.parameters._cbp_fluorescence.unit} via CBP Fluorescence monitoring.
@@ -939,7 +939,7 @@ export function WaterbodyDetailCard({
               <div className="rounded-lg border border-teal-200 bg-teal-50/40 p-3 space-y-1.5">
                 <div className="text-xs font-semibold text-teal-800 uppercase tracking-wide flex items-center gap-1.5">
                   Point Source Discharges
-                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-700 font-medium ml-1">CBP DataHub</span>
+                  <span className="text-2xs px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-700 font-medium ml-1">CBP DataHub</span>
                 </div>
                 <div className="text-xs text-slate-600">
                   <span className="font-medium">{waterData.parameters._cbp_pointsource.value}</span> active discharge {waterData.parameters._cbp_pointsource.value === 1 ? 'facility' : 'facilities'} tracked in this watershed.
@@ -951,7 +951,7 @@ export function WaterbodyDetailCard({
               <div className="rounded-lg border border-teal-200 bg-teal-50/40 p-3 space-y-1.5">
                 <div className="text-xs font-semibold text-teal-800 uppercase tracking-wide flex items-center gap-1.5">
                   Contaminant Monitoring
-                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-700 font-medium ml-1">CBP DataHub</span>
+                  <span className="text-2xs px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-700 font-medium ml-1">CBP DataHub</span>
                 </div>
                 <div className="text-xs text-slate-600">
                   <span className="font-medium">{waterData.parameters._cbp_toxics.value}</span> contaminant {waterData.parameters._cbp_toxics.value === 1 ? 'sample' : 'samples'} (PAH, pesticides, metals) over the past 5 years.
@@ -963,7 +963,7 @@ export function WaterbodyDetailCard({
               <div className="rounded-lg border border-teal-200 bg-teal-50/40 p-3 space-y-1.5">
                 <div className="text-xs font-semibold text-teal-800 uppercase tracking-wide flex items-center gap-1.5">
                   Benthic Health
-                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-700 font-medium ml-1">CBP DataHub</span>
+                  <span className="text-2xs px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-700 font-medium ml-1">CBP DataHub</span>
                 </div>
                 <div className="text-xs text-slate-600">
                   Benthic Index of Biotic Integrity (IBI): <span className="font-medium">{waterData.parameters._cbp_benthic.value}</span> {waterData.parameters._cbp_benthic.unit}
@@ -976,7 +976,7 @@ export function WaterbodyDetailCard({
               <div className="rounded-lg border border-amber-200 bg-amber-50/40 p-3 space-y-1.5">
                 <div className="text-xs font-semibold text-amber-800 uppercase tracking-wide flex items-center gap-1.5">
                   California Water Quality
-                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium ml-1">CEDEN</span>
+                  <span className="text-2xs px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium ml-1">CEDEN</span>
                 </div>
                 <div className="text-xs text-slate-600">
                   <span className="font-medium">{waterData.parameters._ceden_bacteria.value}</span> bacteria indicator samples via California&apos;s CEDEN monitoring network.
@@ -988,7 +988,7 @@ export function WaterbodyDetailCard({
               <div className="rounded-lg border border-amber-200 bg-amber-50/40 p-3 space-y-1.5">
                 <div className="text-xs font-semibold text-amber-800 uppercase tracking-wide flex items-center gap-1.5">
                   Toxicity Monitoring
-                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium ml-1">CEDEN</span>
+                  <span className="text-2xs px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium ml-1">CEDEN</span>
                 </div>
                 <div className="text-xs text-slate-600">
                   <span className="font-medium">{waterData.parameters._ceden_toxicity.value}</span> toxicity tests recorded. {waterData.parameters._ceden_toxicity.parameterName}
@@ -1001,7 +1001,7 @@ export function WaterbodyDetailCard({
               <div className="rounded-lg border border-orange-200 bg-orange-50/40 p-3 space-y-1.5">
                 <div className="text-xs font-semibold text-orange-800 uppercase tracking-wide flex items-center gap-1.5">
                   <Shield size={13} /> Compliance Context
-                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-700 font-medium ml-1">EPA Envirofacts</span>
+                  <span className="text-2xs px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-700 font-medium ml-1">EPA Envirofacts</span>
                 </div>
                 <div className="text-xs text-slate-600">
                   <span className="font-medium">{waterData.parameters._epa_violations.value}</span> SDWIS drinking water violation{waterData.parameters._epa_violations.value !== 1 ? 's' : ''} found in this state.
@@ -1011,7 +1011,7 @@ export function WaterbodyDetailCard({
 
             {/* ── Source attribution strip ── */}
             {waterData && waterData.sourceDetails?.length > 0 && (
-              <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-200 text-[10px] text-slate-500">
+              <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-200 text-2xs text-slate-500">
                 <span className="font-medium">Sources:</span>
                 {waterData.sourceDetails.map((sd: any, i: number) => (
                   <span key={i} className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full ${SOURCE_COLOR[sd.source.id] || 'bg-slate-100'}`}>
@@ -1028,7 +1028,7 @@ export function WaterbodyDetailCard({
             )}
 
             {/* ── Footer ── */}
-            <div className="flex items-center gap-1.5 pt-2 border-t border-blue-200/50 text-[10px] text-slate-400">
+            <div className="flex items-center gap-1.5 pt-2 border-t border-blue-200/50 text-2xs text-slate-400">
               <Info size={10} className="flex-shrink-0" />
               <span>PIN Water Score computed from {indices.length} indices. Derived from {waterData?.activeSources?.filter((s: string) => s !== 'MOCK').join(', ') || 'EPA ATTAINS'}. Informational only — not an official regulatory determination.</span>
             </div>
@@ -1081,7 +1081,7 @@ export function WaterbodyDetailCard({
                         <div className="bg-slate-50 rounded-lg p-2 col-span-2">
                           <div className="text-slate-500">Source</div>
                           <div className="font-medium text-slate-700 flex items-center gap-1.5 mt-0.5">
-                            <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${SOURCE_COLOR[(p as any).source] || 'bg-slate-100 text-slate-500'}`}>
+                            <span className={`px-1.5 py-0.5 rounded-full text-2xs ${SOURCE_COLOR[(p as any).source] || 'bg-slate-100 text-slate-500'}`}>
                               {getSourceName((p as any).source)}
                             </span>
                             <TierBadge tier={getTierForSource((p as any).source as DataSourceId)} size="md" showLabel />

@@ -4,7 +4,7 @@
 /* ------------------------------------------------------------------ */
 
 import type { AlertEvent } from '../types';
-import type { ScoredHuc } from '../../sentinel/types';
+import type { ScoredHuc, CbrnIndicator } from '../../sentinel/types';
 import { BLOB_PATHS } from '../config';
 import { saveCacheToBlob, loadCacheFromBlob } from '../../blobPersistence';
 import { getScoredHucs, ensureWarmed as warmScoring } from '../../sentinel/scoringEngine';
@@ -66,6 +66,7 @@ function makeHucAlert(
   confidence: number,
   rationale: string[],
   now: string,
+  cbrnIndicators?: CbrnIndicator[],
 ): AlertEvent {
   return {
     id: crypto.randomUUID(),
@@ -99,6 +100,7 @@ function makeHucAlert(
       stage,
       confidence,
       rationale,
+      ...(cbrnIndicators && cbrnIndicators.length > 0 ? { cbrnIndicators } : {}),
     },
   };
 }
@@ -133,6 +135,9 @@ export async function evaluateSentinelAlerts(): Promise<AlertEvent[]> {
     if (classification.classification === 'likely_benign') rationale.push('Confounder model indicates likely benign/natural signal.');
     if (persistent) rationale.push(`Signal persisted for ${nextRuns} runs.`);
     if (corroborated) rationale.push('Corroborated by multiple events/patterns.');
+    if (classification.cbrnIndicators.length > 0) {
+      rationale.push(`CBRN indicators: ${classification.cbrnIndicators.map(i => `${i.category.toUpperCase()} (${(i.confidence * 100).toFixed(0)}%)`).join(', ')}.`);
+    }
 
     let stage: SentinelStage = stageBase;
     let externalEligible = false;
@@ -184,7 +189,7 @@ export async function evaluateSentinelAlerts(): Promise<AlertEvent[]> {
     if (!externalEligible) continue;
 
     const severity: AlertEvent['severity'] = hardCritical ? 'critical' : 'warning';
-    events.push(makeHucAlert(huc, severity, stage, confidence, rationale, now));
+    events.push(makeHucAlert(huc, severity, stage, confidence, rationale, now, classification.cbrnIndicators));
   }
 
   for (const source of sourceStates) {

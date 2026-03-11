@@ -90,22 +90,22 @@ function AdminBadge({ level, isMilitary }: { level: AdminLevel; isMilitary?: boo
   return (
     <>
       {level === 'super_admin' && (
-        <Badge variant="secondary" className="bg-purple-100 text-purple-700 text-[9px] px-1.5">
+        <Badge variant="secondary" className="bg-purple-100 text-purple-700 text-2xs px-1.5">
           SUPER ADMIN
         </Badge>
       )}
       {level === 'role_admin' && (
-        <Badge variant="secondary" className="bg-blue-100 text-blue-700 text-[9px] px-1.5">
+        <Badge variant="secondary" className="bg-blue-100 text-blue-700 text-2xs px-1.5">
           ROLE ADMIN
         </Badge>
       )}
       {level === 'none' && (
-        <Badge variant="secondary" className="bg-slate-100 text-slate-600 text-[9px] px-1.5">
+        <Badge variant="secondary" className="bg-slate-100 text-slate-600 text-2xs px-1.5">
           STANDARD
         </Badge>
       )}
       {isMilitary && (
-        <Badge variant="secondary" className="bg-olive-100 text-[#556b2f] bg-[#e8ecd5] text-[9px] px-1.5">
+        <Badge variant="secondary" className="bg-olive-100 text-[#556b2f] bg-[#e8ecd5] text-2xs px-1.5">
           MILITARY
         </Badge>
       )}
@@ -390,7 +390,7 @@ export function UserManagementPanel({ onRefreshPendingCount, scopeFilter }: User
               <Icon className="h-4 w-4" />
               {t.label}
               {t.badge > 0 && (
-                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-amber-500 text-white text-[10px] font-bold">{t.badge}</span>
+                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-amber-500 text-white text-2xs font-bold">{t.badge}</span>
               )}
             </button>
           );
@@ -439,12 +439,12 @@ export function UserManagementPanel({ onRefreshPendingCount, scopeFilter }: User
                         <div className="text-sm font-bold text-slate-800">{u.name}</div>
                         <div className="text-xs text-slate-500">{u.email}</div>
                         <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="secondary" className="bg-amber-100 text-amber-700 text-[10px]">{u.role}</Badge>
-                          {u.organization && <span className="text-[11px] text-slate-500">{u.organization}</span>}
-                          {u.state && <span className="text-[11px] text-slate-400">{u.state}</span>}
+                          <Badge variant="secondary" className="bg-amber-100 text-amber-700 text-2xs">{u.role}</Badge>
+                          {u.organization && <span className="text-xs text-slate-500">{u.organization}</span>}
+                          {u.state && <span className="text-xs text-slate-400">{u.state}</span>}
                         </div>
                       </div>
-                      <div className="text-[10px] text-slate-400">
+                      <div className="text-2xs text-slate-400">
                         {new Date(u.createdAt).toLocaleDateString()}
                       </div>
                     </div>
@@ -452,7 +452,7 @@ export function UserManagementPanel({ onRefreshPendingCount, scopeFilter }: User
                     {showEmailWarning && (
                       <div className="flex items-start gap-2 p-2.5 rounded-lg bg-orange-50 border border-orange-200">
                         <AlertTriangle className="h-3.5 w-3.5 text-orange-500 flex-shrink-0 mt-0.5" />
-                        <p className="text-[11px] text-orange-700">
+                        <p className="text-xs text-orange-700">
                           <span className="font-semibold">Free email domain.</span> This user claims <span className="font-semibold">{effectiveRole}</span> role but registered with a personal email ({u.email.split('@')[1]}). Verify affiliation before approving.
                         </p>
                       </div>
@@ -460,7 +460,7 @@ export function UserManagementPanel({ onRefreshPendingCount, scopeFilter }: User
 
                     {/* Role Assignment */}
                     <div>
-                      <label className="text-[11px] font-semibold text-slate-600 mb-1 block">Assign Role</label>
+                      <label className="text-xs font-semibold text-slate-600 mb-1 block">Assign Role</label>
                       <select
                         value={effectiveRole}
                         onChange={e => setOverrideField(u.uid, 'role', e.target.value)}
@@ -477,7 +477,7 @@ export function UserManagementPanel({ onRefreshPendingCount, scopeFilter }: User
                     {/* State */}
                     {needsState && (
                       <div>
-                        <label className="text-[11px] font-semibold text-slate-600 mb-1 block">
+                        <label className="text-xs font-semibold text-slate-600 mb-1 block">
                           State {effectiveRole === 'State' ? '(determines landing page)' : ''}
                         </label>
                         <select
@@ -504,7 +504,7 @@ export function UserManagementPanel({ onRefreshPendingCount, scopeFilter }: User
                       return (
                         <>
                           <div>
-                            <label className="text-[11px] font-semibold text-slate-600 mb-1 block">
+                            <label className="text-xs font-semibold text-slate-600 mb-1 block">
                               Local Jurisdiction — County
                             </label>
                             <select
@@ -531,7 +531,7 @@ export function UserManagementPanel({ onRefreshPendingCount, scopeFilter }: User
                           </div>
                           {showStep2 && (
                             <div>
-                              <label className="text-[11px] font-semibold text-slate-600 mb-1 block">
+                              <label className="text-xs font-semibold text-slate-600 mb-1 block">
                                 Local Jurisdiction — Municipality
                               </label>
                               <select
@@ -556,7 +556,7 @@ export function UserManagementPanel({ onRefreshPendingCount, scopeFilter }: User
                     {/* Organization */}
                     {needsOrg && (
                       <div>
-                        <label className="text-[11px] font-semibold text-slate-600 mb-1 block">Organization</label>
+                        <label className="text-xs font-semibold text-slate-600 mb-1 block">Organization</label>
                         <input
                           type="text"
                           value={effectiveOrg}
@@ -569,15 +569,15 @@ export function UserManagementPanel({ onRefreshPendingCount, scopeFilter }: User
 
                     {/* Landing route preview */}
                     <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
-                      <div className="text-[10px] font-semibold text-slate-500 mb-1">Landing page</div>
-                      <code className="text-[11px] text-cyan-700 font-mono">{routePreview}</code>
+                      <div className="text-2xs font-semibold text-slate-500 mb-1">Landing page</div>
+                      <code className="text-xs text-cyan-700 font-mono">{routePreview}</code>
                     </div>
 
                     {/* Validation warnings */}
                     {!canApprove && (
                       <div className="flex items-start gap-2 p-2.5 rounded-lg bg-red-50 border border-red-200">
                         <AlertTriangle className="h-3.5 w-3.5 text-red-500 flex-shrink-0 mt-0.5" />
-                        <p className="text-[11px] text-red-700">
+                        <p className="text-xs text-red-700">
                           Missing required field{missingFields.length > 1 ? 's' : ''}: <span className="font-semibold">{missingFields.join(', ')}</span>
                         </p>
                       </div>
@@ -769,7 +769,7 @@ export function UserManagementPanel({ onRefreshPendingCount, scopeFilter }: User
                         disabled={!!scopeFilter?.lockedJurisdiction}
                       />
                     </div>
-                    <p className="text-[11px] text-slate-500">
+                    <p className="text-xs text-slate-500">
                       Full county/municipality catalog for {invState} is not loaded yet, so this invite stores the jurisdiction exactly as entered.
                     </p>
                   </>
@@ -836,7 +836,7 @@ export function UserManagementPanel({ onRefreshPendingCount, scopeFilter }: User
                   </button>
                 )}
 
-                <div className="text-[10px] text-slate-400">
+                <div className="text-2xs text-slate-400">
                   Expires {new Date(Date.now() + invExpiryDays * 86400000).toLocaleDateString()}.
                   Role: {invRole}
                   {invMilitary && ' (Military)'}
@@ -883,7 +883,7 @@ export function UserManagementPanel({ onRefreshPendingCount, scopeFilter }: User
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-2">
               <div className="md:col-span-2">
-                <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Search Name</label>
+                <label className="text-xs font-semibold text-slate-500 mb-1 block">Search Name</label>
                 <div className="relative">
                   <Search className="h-3.5 w-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
                   <input
@@ -895,7 +895,7 @@ export function UserManagementPanel({ onRefreshPendingCount, scopeFilter }: User
                 </div>
               </div>
               <div>
-                <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Sort By</label>
+                <label className="text-xs font-semibold text-slate-500 mb-1 block">Sort By</label>
                 <select
                   value={userSortBy}
                   onChange={(e) => setUserSortBy(e.target.value as 'name' | 'role' | 'state' | 'admin' | 'status')}
@@ -909,7 +909,7 @@ export function UserManagementPanel({ onRefreshPendingCount, scopeFilter }: User
                 </select>
               </div>
               <div>
-                <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Direction</label>
+                <label className="text-xs font-semibold text-slate-500 mb-1 block">Direction</label>
                 <select
                   value={userSortDir}
                   onChange={(e) => setUserSortDir(e.target.value as 'asc' | 'desc')}
@@ -947,9 +947,9 @@ export function UserManagementPanel({ onRefreshPendingCount, scopeFilter }: User
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-sm font-semibold text-slate-800 truncate">{u.name}</span>
                           <AdminBadge level={u.adminLevel} isMilitary={u.isMilitary} />
-                          {isCurrentUser && <Badge variant="secondary" className="bg-cyan-100 text-cyan-700 text-[9px] px-1.5">YOU</Badge>}
+                          {isCurrentUser && <Badge variant="secondary" className="bg-cyan-100 text-cyan-700 text-2xs px-1.5">YOU</Badge>}
                         </div>
-                        <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                        <div className="flex items-center gap-2 text-xs text-slate-500">
                           <span>{u.email}</span>
                           <span>|</span>
                           <span>{u.role}</span>
@@ -969,24 +969,24 @@ export function UserManagementPanel({ onRefreshPendingCount, scopeFilter }: User
                         <div className="flex items-center gap-2 mt-1">
                           <Badge
                             variant="secondary"
-                            className={`text-[9px] px-1.5 ${accessType(u.role) === 'explorer' ? 'bg-cyan-100 text-cyan-700' : 'bg-blue-100 text-blue-700'}`}
+                            className={`text-2xs px-1.5 ${accessType(u.role) === 'explorer' ? 'bg-cyan-100 text-cyan-700' : 'bg-blue-100 text-blue-700'}`}
                           >
                             {accessType(u.role) === 'explorer' ? 'Explorer/Public' : 'Operator'}
                           </Badge>
-                          <span className="text-[10px] text-slate-500">{accessScopeSummary(u)}</span>
+                          <span className="text-2xs text-slate-500">{accessScopeSummary(u)}</span>
                         </div>
                       </div>
 
                       {/* Status + actions */}
                       <div className="flex items-center gap-2 flex-shrink-0">
-                        <Badge variant="secondary" className={`${sb.bg} ${sb.text} text-[10px]`}>{sb.label}</Badge>
+                        <Badge variant="secondary" className={`${sb.bg} ${sb.text} text-2xs`}>{sb.label}</Badge>
 
                         {/* Grant/Revoke Role Admin — super_admin only */}
                         {user?.isSuperAdmin && !isCurrentUser && u.adminLevel !== 'super_admin' && u.status === 'active' && (
                           <button
                             onClick={() => handleToggleRoleAdmin(u)}
                             disabled={isBusy}
-                            className={`px-2 py-1 rounded-lg text-[11px] font-medium border transition-colors disabled:opacity-50 ${
+                            className={`px-2 py-1 rounded-lg text-xs font-medium border transition-colors disabled:opacity-50 ${
                               u.adminLevel === 'role_admin'
                                 ? 'text-blue-600 border-blue-200 hover:bg-blue-50'
                                 : 'text-slate-600 border-slate-200 hover:bg-slate-50'
@@ -1002,7 +1002,7 @@ export function UserManagementPanel({ onRefreshPendingCount, scopeFilter }: User
                           <button
                             onClick={() => handleToggleBlock(u)}
                             disabled={isBusy}
-                            className="px-2 py-1 rounded-lg text-[11px] font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 border border-slate-200 disabled:opacity-50 transition-colors"
+                            className="px-2 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 border border-slate-200 disabled:opacity-50 transition-colors"
                             title={blockLabel}
                           >
                             {blockLabel}

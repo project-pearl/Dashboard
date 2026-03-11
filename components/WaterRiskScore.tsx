@@ -451,7 +451,7 @@ export default function WaterRiskScore() {
                     <div className={`text-xs font-semibold ${conditionColorDark(cat.score)}`}>
                       {conditionLabel(cat.score)}
                     </div>
-                    <div className="text-[11px] text-slate-500 mt-1">{cat.label}</div>
+                    <div className="text-xs text-slate-500 mt-1">{cat.label}</div>
                   </div>
                 );
               })}

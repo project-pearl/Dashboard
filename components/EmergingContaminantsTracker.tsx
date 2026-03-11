@@ -494,9 +494,9 @@ function waterbodyStatusBadge(status: string): string {
 function StatTile({ label, value, desc, className }: { label: string; value: string; desc: string; className?: string }) {
   return (
     <div className={`bg-slate-50 rounded-lg p-3 border border-slate-200 flex-1 min-w-0 ${className ?? ''}`}>
-      <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">{label}</div>
+      <div className="text-2xs text-slate-400 uppercase tracking-wider mb-1">{label}</div>
       <div className="text-lg font-extrabold text-slate-800 font-mono">{value}</div>
-      {desc && <div className="text-[10px] text-slate-500 mt-0.5">{desc}</div>}
+      {desc && <div className="text-2xs text-slate-500 mt-0.5">{desc}</div>}
     </div>
   );
 }
@@ -548,7 +548,7 @@ function ThreatDashboard({
           <div className="flex items-center gap-2 mb-2">
             <span className={`text-xl ${levelStyle.text}`}>{active.icon}</span>
             <span className="text-base font-extrabold text-slate-800">{active.name}</span>
-            <Badge className={`${levelStyle.badge} text-[10px]`}>{active.level}</Badge>
+            <Badge className={`${levelStyle.badge} text-2xs`}>{active.level}</Badge>
             {role !== 'federal' && (
               <span className="text-xs text-slate-500 ml-auto">
                 {role === 'state'
@@ -566,9 +566,9 @@ function ThreatDashboard({
         <div className="grid grid-cols-4 gap-2">
           {active.keyFacts.map((f, i) => (
             <div key={i} className="bg-white rounded-lg p-2.5 border border-slate-200">
-              <div className="text-[9px] text-slate-400 uppercase tracking-wider">{f.label}</div>
+              <div className="text-2xs text-slate-400 uppercase tracking-wider">{f.label}</div>
               <div className={`text-sm font-extrabold font-mono ${levelStyle.text}`}>{f.value}</div>
-              <div className="text-[9px] text-slate-500">{f.desc}</div>
+              <div className="text-2xs text-slate-500">{f.desc}</div>
             </div>
           ))}
         </div>
@@ -576,7 +576,7 @@ function ThreatDashboard({
         {/* Charts row */}
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-white rounded-lg p-3 border border-slate-200">
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-2">Detection Trend</div>
+            <div className="text-2xs text-slate-400 uppercase tracking-wider font-bold mb-2">Detection Trend</div>
             <div style={{ height: 180 }}>
               <ResponsiveContainer>
                 <AreaChart data={active.trend} margin={{ left: 0, right: 8, top: 4, bottom: 0 }}>
@@ -597,7 +597,7 @@ function ThreatDashboard({
           </div>
 
           <div className="bg-white rounded-lg p-3 border border-slate-200">
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-2">Top 5 States</div>
+            <div className="text-2xs text-slate-400 uppercase tracking-wider font-bold mb-2">Top 5 States</div>
             <div style={{ height: 180 }}>
               <ResponsiveContainer>
                 <BarChart data={active.topStates} layout="vertical" margin={{ left: 2, right: 8, top: 0, bottom: 0 }}>
@@ -614,15 +614,15 @@ function ThreatDashboard({
         {/* Waterbodies table */}
         <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
           <div className="px-3 py-2 border-b border-slate-100">
-            <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Key Waterbodies</span>
+            <span className="text-2xs text-slate-400 uppercase tracking-wider font-bold">Key Waterbodies</span>
           </div>
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-slate-100">
-                <th className="px-3 py-2 text-left text-[9px] text-slate-400 uppercase tracking-wider font-bold">Waterbody</th>
-                <th className="px-3 py-2 text-left text-[9px] text-slate-400 uppercase tracking-wider font-bold">Type</th>
-                <th className="px-3 py-2 text-left text-[9px] text-slate-400 uppercase tracking-wider font-bold">Status</th>
-                <th className="px-3 py-2 text-left text-[9px] text-slate-400 uppercase tracking-wider font-bold">Level</th>
+                <th className="px-3 py-2 text-left text-2xs text-slate-400 uppercase tracking-wider font-bold">Waterbody</th>
+                <th className="px-3 py-2 text-left text-2xs text-slate-400 uppercase tracking-wider font-bold">Type</th>
+                <th className="px-3 py-2 text-left text-2xs text-slate-400 uppercase tracking-wider font-bold">Status</th>
+                <th className="px-3 py-2 text-left text-2xs text-slate-400 uppercase tracking-wider font-bold">Level</th>
               </tr>
             </thead>
             <tbody>
@@ -631,7 +631,7 @@ function ThreatDashboard({
                   <td className="px-3 py-2 font-semibold text-slate-700">{w.name}</td>
                   <td className="px-3 py-2 text-slate-500">{w.type}</td>
                   <td className="px-3 py-2">
-                    <Badge className={`text-[9px] px-1.5 py-0 border ${waterbodyStatusBadge(w.status)}`}>{w.status}</Badge>
+                    <Badge className={`text-2xs px-1.5 py-0 border ${waterbodyStatusBadge(w.status)}`}>{w.status}</Badge>
                   </td>
                   <td className={`px-3 py-2 font-semibold ${levelStyle.text}`}>{w.level}</td>
                 </tr>
@@ -642,24 +642,24 @@ function ThreatDashboard({
 
         {/* State-specific data */}
         <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
-          <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-2">State Data: {active.stateData.state}</div>
+          <div className="text-2xs text-slate-400 uppercase tracking-wider font-bold mb-2">State Data: {active.stateData.state}</div>
           <div className="grid grid-cols-5 gap-2 text-xs">
-            <div><span className="text-slate-400 block text-[9px]">Units</span><span className="font-bold text-slate-700">{active.stateData.units}</span></div>
-            <div><span className="text-slate-400 block text-[9px]">Systems</span><span className="font-bold text-slate-700">{active.stateData.systems}</span></div>
-            <div><span className="text-slate-400 block text-[9px]">Rank</span><span className="font-bold text-slate-700">#{active.stateData.rank}</span></div>
-            <div><span className="text-slate-400 block text-[9px]">Standard</span><span className="font-bold text-slate-700">{active.stateData.stateStandard}</span></div>
-            <div><span className="text-slate-400 block text-[9px]">Trend</span><span className="font-bold text-slate-700">{active.stateData.trend}</span></div>
+            <div><span className="text-slate-400 block text-2xs">Units</span><span className="font-bold text-slate-700">{active.stateData.units}</span></div>
+            <div><span className="text-slate-400 block text-2xs">Systems</span><span className="font-bold text-slate-700">{active.stateData.systems}</span></div>
+            <div><span className="text-slate-400 block text-2xs">Rank</span><span className="font-bold text-slate-700">#{active.stateData.rank}</span></div>
+            <div><span className="text-slate-400 block text-2xs">Standard</span><span className="font-bold text-slate-700">{active.stateData.stateStandard}</span></div>
+            <div><span className="text-slate-400 block text-2xs">Trend</span><span className="font-bold text-slate-700">{active.stateData.trend}</span></div>
           </div>
         </div>
 
         {/* MS4 context */}
         {(role === 'ms4' || role === 'ms4_admin') && (
           <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
-            <div className="text-[10px] text-blue-400 uppercase tracking-wider font-bold mb-2">MS4 Context: {active.ms4Data.jurisdiction}</div>
+            <div className="text-2xs text-blue-400 uppercase tracking-wider font-bold mb-2">MS4 Context: {active.ms4Data.jurisdiction}</div>
             <div className="grid grid-cols-3 gap-2 text-xs">
-              <div><span className="text-blue-400 block text-[9px]">Sites</span><span className="font-bold text-blue-700">{active.ms4Data.sites}</span></div>
-              <div><span className="text-blue-400 block text-[9px]">Runoff Risk</span><span className="font-bold text-blue-700">{active.ms4Data.runoffRisk}</span></div>
-              <div><span className="text-blue-400 block text-[9px]">BMPs Needed</span><span className="font-bold text-blue-700">{active.ms4Data.bmpsNeeded}</span></div>
+              <div><span className="text-blue-400 block text-2xs">Sites</span><span className="font-bold text-blue-700">{active.ms4Data.sites}</span></div>
+              <div><span className="text-blue-400 block text-2xs">Runoff Risk</span><span className="font-bold text-blue-700">{active.ms4Data.runoffRisk}</span></div>
+              <div><span className="text-blue-400 block text-2xs">BMPs Needed</span><span className="font-bold text-blue-700">{active.ms4Data.bmpsNeeded}</span></div>
             </div>
           </div>
         )}
@@ -695,12 +695,12 @@ function ThreatDashboard({
                 <span className={`text-lg ${ls.text}`}>{t.icon}</span>
                 <div>
                   <div className="text-sm font-extrabold text-slate-800">{t.name}</div>
-                  <Badge className={`text-[9px] px-1.5 py-0 ${ls.badge} border`}>{t.level}</Badge>
+                  <Badge className={`text-2xs px-1.5 py-0 ${ls.badge} border`}>{t.level}</Badge>
                 </div>
               </div>
               <div className="text-right">
                 <div className={`text-2xl font-black font-mono ${ls.text}`}>{count.toLocaleString()}</div>
-                <div className="text-[9px] text-slate-400">{role === 'federal' ? 'national' : `in ${t.stateData.state}`}</div>
+                <div className="text-2xs text-slate-400">{role === 'federal' ? 'national' : `in ${t.stateData.state}`}</div>
               </div>
             </div>
 
@@ -717,18 +717,18 @@ function ThreatDashboard({
 
             <div className="grid grid-cols-2 gap-2 mb-2">
               <div className="bg-slate-50 rounded p-2 border border-slate-200">
-                <div className="text-[9px] text-slate-400 uppercase tracking-wider">MCL</div>
-                <div className="text-[10px] text-slate-700 mt-0.5 font-semibold">{t.mcl}</div>
+                <div className="text-2xs text-slate-400 uppercase tracking-wider">MCL</div>
+                <div className="text-2xs text-slate-700 mt-0.5 font-semibold">{t.mcl}</div>
               </div>
               <div className="bg-slate-50 rounded p-2 border border-slate-200">
-                <div className="text-[9px] text-slate-400 uppercase tracking-wider">YoY Change</div>
-                <div className={`text-[10px] mt-0.5 font-bold ${t.yoy > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                <div className="text-2xs text-slate-400 uppercase tracking-wider">YoY Change</div>
+                <div className={`text-2xs mt-0.5 font-bold ${t.yoy > 0 ? 'text-red-500' : 'text-green-500'}`}>
                   {t.yoy > 0 ? '\u25B2' : '\u25BC'} {Math.abs(t.yoy)}%
                 </div>
               </div>
             </div>
 
-            <div className="text-[10px] text-slate-500 leading-relaxed line-clamp-2">
+            <div className="text-2xs text-slate-500 leading-relaxed line-clamp-2">
               {t.summary}
             </div>
           </div>
@@ -752,19 +752,19 @@ function RegCalendar({ role }: { role: string }) {
       {/* Countdown tiles */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-white rounded-lg border border-red-200 p-4">
-          <div className="text-[9px] text-red-500 uppercase tracking-wider font-bold">PFAS Monitoring Deadline</div>
+          <div className="text-2xs text-red-500 uppercase tracking-wider font-bold">PFAS Monitoring Deadline</div>
           <div className="text-3xl font-black text-red-500 font-mono">{daysUntil('2027-01-01')}</div>
-          <div className="text-[10px] text-slate-400">days remaining &middot; Jan 2027</div>
+          <div className="text-2xs text-slate-400">days remaining &middot; Jan 2027</div>
         </div>
         <div className="bg-white rounded-lg border border-amber-200 p-4">
-          <div className="text-[9px] text-amber-500 uppercase tracking-wider font-bold">PFAS Compliance Deadline</div>
+          <div className="text-2xs text-amber-500 uppercase tracking-wider font-bold">PFAS Compliance Deadline</div>
           <div className="text-3xl font-black text-amber-500 font-mono">{daysUntil('2031-01-01')}</div>
-          <div className="text-[10px] text-slate-400">days remaining &middot; Jan 2031</div>
+          <div className="text-2xs text-slate-400">days remaining &middot; Jan 2031</div>
         </div>
         <div className="bg-white rounded-lg border border-pink-200 p-4">
-          <div className="text-[9px] text-pink-500 uppercase tracking-wider font-bold">LCRR Compliance</div>
+          <div className="text-2xs text-pink-500 uppercase tracking-wider font-bold">LCRR Compliance</div>
           <div className="text-3xl font-black text-pink-500 font-mono">{daysUntil('2027-06-01')}</div>
-          <div className="text-[10px] text-slate-400">days remaining &middot; Jun 2027</div>
+          <div className="text-2xs text-slate-400">days remaining &middot; Jun 2027</div>
         </div>
       </div>
 
@@ -778,7 +778,7 @@ function RegCalendar({ role }: { role: string }) {
             key={f.id}
             variant={filter === f.id ? 'default' : 'outline'}
             size="sm"
-            className={`text-[10px] h-7 px-2.5 ${
+            className={`text-2xs h-7 px-2.5 ${
               filter === f.id ? '' : 'text-slate-500'
             }`}
             onClick={() => setFilter(f.id)}
@@ -808,7 +808,7 @@ function RegCalendar({ role }: { role: string }) {
                 }`}>
                   {ev.date.slice(0, 7)}
                 </div>
-                <div className="text-[9px] text-slate-400">{ev.type}</div>
+                <div className="text-2xs text-slate-400">{ev.type}</div>
               </div>
               {/* Dot + line */}
               <div className="flex flex-col items-center">
@@ -821,9 +821,9 @@ function RegCalendar({ role }: { role: string }) {
                   <span className="text-xs font-bold text-slate-700">{ev.title}</span>
                   {t && ls && <span className={`text-xs ${ls.text}`}>{t.icon}</span>}
                 </div>
-                <div className="text-[10px] text-slate-500 leading-relaxed">{ev.impact}</div>
+                <div className="text-2xs text-slate-500 leading-relaxed">{ev.impact}</div>
                 {role !== 'federal' && ev.contaminant === 'pfas' && ev.status === 'upcoming' && (
-                  <div className="text-[9px] text-blue-500 mt-1 italic">
+                  <div className="text-2xs text-blue-500 mt-1 italic">
                     {'\u2192'} MD impact: {threats.find(x => x.id === 'pfas')!.stateData.systems} systems must prepare
                   </div>
                 )}
@@ -852,7 +852,7 @@ function StateVsFederal() {
     <div className="space-y-3">
       {/* Score bar chart */}
       <div className="bg-white rounded-lg border border-slate-200 p-4">
-        <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-2">
+        <div className="text-2xs text-slate-400 uppercase tracking-wider font-bold mb-2">
           State Regulatory Strictness Score (0-100)
         </div>
         <div style={{ height: 180 }}>
@@ -888,7 +888,7 @@ function StateVsFederal() {
               ].map(h => (
                 <th
                   key={h.label}
-                  className={`px-2.5 py-2 text-left text-[9px] text-slate-400 uppercase tracking-wider font-bold ${
+                  className={`px-2.5 py-2 text-left text-2xs text-slate-400 uppercase tracking-wider font-bold ${
                     h.key ? 'cursor-pointer hover:text-slate-600' : ''
                   }`}
                   onClick={() => {
@@ -911,16 +911,16 @@ function StateVsFederal() {
                     <div className="w-12">
                       <MiniBar pct={s.score} colorClass={scoreBarColor(s.score)} />
                     </div>
-                    <span className={`text-[10px] font-bold font-mono ${scoreColor(s.score)}`}>{s.score}</span>
+                    <span className={`text-2xs font-bold font-mono ${scoreColor(s.score)}`}>{s.score}</span>
                   </div>
                 </td>
-                <td className={`px-2.5 py-2 text-[10px] ${cellTextColor(s.pfas)}`}>{s.pfas}</td>
-                <td className={`px-2.5 py-2 text-[10px] ${cellTextColor(s.micro)}`}>{s.micro}</td>
-                <td className={`px-2.5 py-2 text-[10px] ${cellTextColor(s.cyano)}`}>{s.cyano}</td>
-                <td className={`px-2.5 py-2 text-[10px] ${cellTextColor(s.sixppd)}`}>{s.sixppd}</td>
-                <td className={`px-2.5 py-2 text-[10px] ${cellTextColor(s.lead)}`}>{s.lead}</td>
+                <td className={`px-2.5 py-2 text-2xs ${cellTextColor(s.pfas)}`}>{s.pfas}</td>
+                <td className={`px-2.5 py-2 text-2xs ${cellTextColor(s.micro)}`}>{s.micro}</td>
+                <td className={`px-2.5 py-2 text-2xs ${cellTextColor(s.cyano)}`}>{s.cyano}</td>
+                <td className={`px-2.5 py-2 text-2xs ${cellTextColor(s.sixppd)}`}>{s.sixppd}</td>
+                <td className={`px-2.5 py-2 text-2xs ${cellTextColor(s.lead)}`}>{s.lead}</td>
                 <td className="px-2.5 py-2">
-                  <Badge className={`text-[9px] px-1.5 py-0 border ${
+                  <Badge className={`text-2xs px-1.5 py-0 border ${
                     s.score >= 80
                       ? 'bg-green-100 text-green-700 border-green-200'
                       : s.score >= 50
@@ -962,7 +962,7 @@ function TreatmentEffectiveness({ role }: { role: string }) {
 
       {/* Removal chart */}
       <div className="bg-white rounded-lg border border-slate-200 p-4">
-        <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-2">
+        <div className="text-2xs text-slate-400 uppercase tracking-wider font-bold mb-2">
           Treatment Removal Effectiveness by Contaminant
         </div>
         <div style={{ height: 200 }}>
@@ -998,7 +998,7 @@ function TreatmentEffectiveness({ role }: { role: string }) {
                   <span className={`text-lg ${ls.text}`}>{t.icon}</span>
                   <div>
                     <div className="text-sm font-extrabold text-slate-800">{t.name}</div>
-                    <Badge className={`text-[9px] px-1.5 py-0 ${
+                    <Badge className={`text-2xs px-1.5 py-0 ${
                       t.treatmentAvailable
                         ? 'bg-blue-100 text-blue-700 border-blue-200'
                         : 'bg-slate-100 text-slate-500 border-slate-200'
@@ -1010,7 +1010,7 @@ function TreatmentEffectiveness({ role }: { role: string }) {
                 {t.treatmentAvailable && (
                   <div className="text-right">
                     <div className="text-2xl font-black text-blue-600 font-mono">{t.treatmentRemoval}%</div>
-                    <div className="text-[9px] text-slate-400">removal rate</div>
+                    <div className="text-2xs text-slate-400">removal rate</div>
                   </div>
                 )}
               </div>
@@ -1022,19 +1022,19 @@ function TreatmentEffectiveness({ role }: { role: string }) {
                   </div>
                   <div className="grid grid-cols-2 gap-2 mb-2">
                     <div className="bg-slate-50 rounded p-2 border border-slate-200">
-                      <div className="text-[9px] text-slate-400 uppercase tracking-wider">Method</div>
-                      <div className="text-[10px] text-slate-700 mt-0.5">{t.treatmentMethod}</div>
+                      <div className="text-2xs text-slate-400 uppercase tracking-wider">Method</div>
+                      <div className="text-2xs text-slate-700 mt-0.5">{t.treatmentMethod}</div>
                     </div>
                     <div className="bg-slate-50 rounded p-2 border border-slate-200">
-                      <div className="text-[9px] text-slate-400 uppercase tracking-wider">Stages</div>
-                      <div className="text-[10px] text-slate-700 mt-0.5">{t.treatmentStages}</div>
+                      <div className="text-2xs text-slate-400 uppercase tracking-wider">Stages</div>
+                      <div className="text-2xs text-slate-700 mt-0.5">{t.treatmentStages}</div>
                     </div>
                   </div>
-                  <div className="text-[10px] text-slate-500 p-2 bg-slate-50 rounded border-l-2 border-blue-400">
+                  <div className="text-2xs text-slate-500 p-2 bg-slate-50 rounded border-l-2 border-blue-400">
                     {t.treatmentEvidence}
                   </div>
                   {role !== 'federal' && (
-                    <div className="text-[9px] text-blue-500 mt-2 italic">
+                    <div className="text-2xs text-blue-500 mt-2 italic">
                       {role === 'ms4'
                         ? `${t.ms4Data.sites} sites in Anne Arundel could benefit from treatment deployment`
                         : `${t.stateData.units} MD assessment units with ${t.name} detections`}
@@ -1042,7 +1042,7 @@ function TreatmentEffectiveness({ role }: { role: string }) {
                   )}
                 </>
               ) : (
-                <div className="text-[10px] text-slate-500 mt-1">{t.treatmentEvidence}</div>
+                <div className="text-2xs text-slate-500 mt-1">{t.treatmentEvidence}</div>
               )}
             </div>
           );
@@ -1051,7 +1051,7 @@ function TreatmentEffectiveness({ role }: { role: string }) {
 
       {/* Closed-loop diagram */}
       <div className="bg-white rounded-lg border border-blue-100 p-4">
-        <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-4">
+        <div className="text-2xs text-slate-400 uppercase tracking-wider font-bold mb-4">
           PIN Closed-Loop: Detect {'\u2192'} Treat {'\u2192'} Verify
         </div>
         <div className="grid grid-cols-4 gap-0 items-center">
@@ -1066,7 +1066,7 @@ function TreatmentEffectiveness({ role }: { role: string }) {
                 {s.iconEl}
               </div>
               <div className={`text-xs font-bold ${s.color}`}>{s.label}</div>
-              <div className="text-[9px] text-slate-400 mt-0.5 leading-snug px-2">{s.desc}</div>
+              <div className="text-2xs text-slate-400 mt-0.5 leading-snug px-2">{s.desc}</div>
               {i < 3 && (
                 <div className="absolute right-0 top-4 w-4 flex items-center justify-center">
                   <ArrowRight className="w-3.5 h-3.5 text-slate-300" />
@@ -1111,7 +1111,7 @@ function ExpandedOverlay({
             <div className="flex items-center gap-2 mb-1">
               <span className={`text-xl ${ls.text}`}>{threat.icon}</span>
               <span className="text-lg font-black text-slate-800">{threat.name}</span>
-              <Badge className={`${ls.badge} text-[10px]`}>{threat.level}</Badge>
+              <Badge className={`${ls.badge} text-2xs`}>{threat.level}</Badge>
             </div>
             <div className="text-xs text-slate-500 max-w-[560px]">{threat.summary}</div>
           </div>
@@ -1124,9 +1124,9 @@ function ExpandedOverlay({
         <div className="px-5 py-3 flex gap-2">
           {threat.keyFacts.map((f, i) => (
             <div key={i} className="bg-slate-50 rounded-lg p-2.5 border border-slate-200 flex-1 min-w-0">
-              <div className="text-[9px] text-slate-400 uppercase tracking-wider">{f.label}</div>
+              <div className="text-2xs text-slate-400 uppercase tracking-wider">{f.label}</div>
               <div className={`text-sm font-extrabold font-mono ${ls.text}`}>{f.value}</div>
-              <div className="text-[9px] text-slate-500">{f.desc}</div>
+              <div className="text-2xs text-slate-500">{f.desc}</div>
             </div>
           ))}
         </div>
@@ -1134,7 +1134,7 @@ function ExpandedOverlay({
         {/* Charts */}
         <div className="px-5 pb-3 grid grid-cols-2 gap-3">
           <div className="bg-white rounded-lg p-3 border border-slate-200">
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-2">Detection Trend</div>
+            <div className="text-2xs text-slate-400 uppercase tracking-wider font-bold mb-2">Detection Trend</div>
             <div style={{ height: 150 }}>
               <ResponsiveContainer>
                 <AreaChart data={threat.trend} margin={{ left: 0, right: 8, top: 4, bottom: 0 }}>
@@ -1154,7 +1154,7 @@ function ExpandedOverlay({
             </div>
           </div>
           <div className="bg-white rounded-lg p-3 border border-slate-200">
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-2">Top 5 States</div>
+            <div className="text-2xs text-slate-400 uppercase tracking-wider font-bold mb-2">Top 5 States</div>
             <div style={{ height: 150 }}>
               <ResponsiveContainer>
                 <BarChart data={threat.topStates} margin={{ left: 0, right: 8, top: 4, bottom: 0 }}>
@@ -1178,7 +1178,7 @@ function ExpandedOverlay({
                   key={v}
                   variant={view === v ? 'default' : 'ghost'}
                   size="sm"
-                  className={`text-[10px] h-6 px-3 ${view !== v ? 'text-slate-400' : ''}`}
+                  className={`text-2xs h-6 px-3 ${view !== v ? 'text-slate-400' : ''}`}
                   onClick={() => setView(v)}
                 >
                   {v === 'states' ? 'States' : 'Waterbodies'}
@@ -1186,7 +1186,7 @@ function ExpandedOverlay({
               ))}
             </div>
             {threat.treatmentAvailable && (
-              <Badge className="bg-blue-100 text-blue-700 border-blue-200 text-[10px] border">
+              <Badge className="bg-blue-100 text-blue-700 border-blue-200 text-2xs border">
                 Treatment: {threat.treatmentRemoval}% removal
               </Badge>
             )}
@@ -1199,7 +1199,7 @@ function ExpandedOverlay({
                     ? ['#', 'State', 'Units', 'MCL']
                     : ['Waterbody', 'Type', 'Status', 'Level']
                   ).map(h => (
-                    <th key={h} className="px-2.5 py-2 text-left text-[9px] text-slate-400 uppercase tracking-wider font-bold">
+                    <th key={h} className="px-2.5 py-2 text-left text-2xs text-slate-400 uppercase tracking-wider font-bold">
                       {h}
                     </th>
                   ))}
@@ -1220,7 +1220,7 @@ function ExpandedOverlay({
                         <td className="px-2.5 py-2 font-semibold text-slate-700">{w.name}</td>
                         <td className="px-2.5 py-2 text-slate-500">{w.type}</td>
                         <td className="px-2.5 py-2">
-                          <Badge className={`text-[9px] px-1.5 py-0 border ${waterbodyStatusBadge(w.status)}`}>
+                          <Badge className={`text-2xs px-1.5 py-0 border ${waterbodyStatusBadge(w.status)}`}>
                             {w.status}
                           </Badge>
                         </td>
@@ -1283,19 +1283,19 @@ export function EmergingContaminantsTracker({
         {/* KPI strip */}
         <div className="grid grid-cols-4 gap-2">
           <div className="bg-white rounded-lg p-3 border border-slate-200">
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider">PFAS Detections</div>
+            <div className="text-2xs text-slate-400 uppercase tracking-wider">PFAS Detections</div>
             <div className="text-lg font-extrabold text-red-600 font-mono">2,847</div>
           </div>
           <div className="bg-white rounded-lg p-3 border border-slate-200">
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider">States Affected</div>
+            <div className="text-2xs text-slate-400 uppercase tracking-wider">States Affected</div>
             <div className="text-lg font-extrabold text-amber-600 font-mono">49</div>
           </div>
           <div className="bg-white rounded-lg p-3 border border-slate-200">
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Systems At Risk</div>
+            <div className="text-2xs text-slate-400 uppercase tracking-wider">Systems At Risk</div>
             <div className="text-lg font-extrabold text-purple-600 font-mono">1,203</div>
           </div>
           <div className="bg-white rounded-lg p-3 border border-slate-200">
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider">New This Quarter</div>
+            <div className="text-2xs text-slate-400 uppercase tracking-wider">New This Quarter</div>
             <div className="text-lg font-extrabold text-cyan-600 font-mono">+156</div>
           </div>
         </div>

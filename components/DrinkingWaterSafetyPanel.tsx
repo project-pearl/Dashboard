@@ -125,7 +125,7 @@ export function DrinkingWaterSafetyPanel({ stateAbbr }: DrinkingWaterSafetyPanel
               </div>
               <div>
                 <p className="text-2xl font-bold text-slate-800">{heroStats.total}</p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wide">Buildings Tested</p>
+                <p className="text-2xs text-slate-500 uppercase tracking-wide">Buildings Tested</p>
               </div>
             </div>
           </CardContent>
@@ -138,7 +138,7 @@ export function DrinkingWaterSafetyPanel({ stateAbbr }: DrinkingWaterSafetyPanel
               </div>
               <div>
                 <p className="text-2xl font-bold text-emerald-700">{heroStats.passing}</p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wide">Passing</p>
+                <p className="text-2xs text-slate-500 uppercase tracking-wide">Passing</p>
               </div>
             </div>
           </CardContent>
@@ -151,7 +151,7 @@ export function DrinkingWaterSafetyPanel({ stateAbbr }: DrinkingWaterSafetyPanel
               </div>
               <div>
                 <p className="text-2xl font-bold text-red-700">{heroStats.exceedances}</p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wide">Exceedances</p>
+                <p className="text-2xs text-slate-500 uppercase tracking-wide">Exceedances</p>
               </div>
             </div>
           </CardContent>
@@ -164,7 +164,7 @@ export function DrinkingWaterSafetyPanel({ stateAbbr }: DrinkingWaterSafetyPanel
               </div>
               <div>
                 <p className="text-2xl font-bold text-sky-700">{heroStats.activeFountains}</p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wide">Fountains Active</p>
+                <p className="text-2xs text-slate-500 uppercase tracking-wide">Fountains Active</p>
               </div>
             </div>
           </CardContent>
@@ -178,7 +178,7 @@ export function DrinkingWaterSafetyPanel({ stateAbbr }: DrinkingWaterSafetyPanel
             <Shield size={16} className="text-blue-600" />
             Lead &amp; Copper Testing Results
             {heroStats.exceedances > 0 && (
-              <Badge className="ml-1 text-[10px] bg-red-100 text-red-700">
+              <Badge className="ml-1 text-2xs bg-red-100 text-red-700">
                 {heroStats.exceedances} exceedance{heroStats.exceedances > 1 ? 's' : ''}
               </Badge>
             )}
@@ -224,7 +224,7 @@ export function DrinkingWaterSafetyPanel({ stateAbbr }: DrinkingWaterSafetyPanel
                       {new Date(row.testDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </td>
                     <td className="py-2 text-right">
-                      <Badge className={`text-[9px] ${statusBadgeClass(row.status)}`}>{statusLabel(row.status)}</Badge>
+                      <Badge className={`text-2xs ${statusBadgeClass(row.status)}`}>{statusLabel(row.status)}</Badge>
                     </td>
                   </tr>
                 ))}
@@ -249,7 +249,7 @@ export function DrinkingWaterSafetyPanel({ stateAbbr }: DrinkingWaterSafetyPanel
           <CardTitle className="flex items-center gap-2 text-base">
             <Droplets size={16} className="text-sky-600" />
             Water Fountain Status
-            <Badge variant="secondary" className="ml-1 text-[10px]">
+            <Badge variant="secondary" className="ml-1 text-2xs">
               {FOUNTAIN_STATUS.filter((f) => f.status === 'active').length}/{FOUNTAIN_STATUS.length} active
             </Badge>
           </CardTitle>
@@ -263,10 +263,10 @@ export function DrinkingWaterSafetyPanel({ stateAbbr }: DrinkingWaterSafetyPanel
               <div key={fountain.location} className="rounded-lg border border-slate-200 p-2.5 text-center hover:bg-slate-50 transition-colors">
                 <div className="flex items-center justify-center gap-1.5 mb-1">
                   <div className={`w-2 h-2 rounded-full ${fountainStatusColor(fountain.status)}`} />
-                  <span className="text-[10px] font-semibold text-slate-700 capitalize">{fountain.status}</span>
+                  <span className="text-2xs font-semibold text-slate-700 capitalize">{fountain.status}</span>
                 </div>
-                <p className="text-[10px] text-slate-600 truncate" title={fountain.location}>{fountain.location}</p>
-                <p className="text-[9px] text-slate-400 mt-0.5">Filter: {fountain.filterAge} days</p>
+                <p className="text-2xs text-slate-600 truncate" title={fountain.location}>{fountain.location}</p>
+                <p className="text-2xs text-slate-400 mt-0.5">Filter: {fountain.filterAge} days</p>
               </div>
             ))}
           </div>
@@ -295,17 +295,17 @@ export function DrinkingWaterSafetyPanel({ stateAbbr }: DrinkingWaterSafetyPanel
                   <span className="text-xs font-medium truncate">{item.location}</span>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-[10px] font-semibold">
+                  <span className="text-2xs font-semibold">
                     {new Date(item.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </span>
-                  <Badge className={`text-[9px] ${filterPriorityClass(item.priority)}`}>
+                  <Badge className={`text-2xs ${filterPriorityClass(item.priority)}`}>
                     {item.priority === 'overdue' ? 'Overdue' : item.priority === 'upcoming' ? 'Soon' : 'Scheduled'}
                   </Badge>
                 </div>
               </div>
             ))}
           </div>
-          <p className="text-[10px] text-slate-400 mt-3 flex items-center gap-1">
+          <p className="text-2xs text-slate-400 mt-3 flex items-center gap-1">
             <Info size={10} />
             Compliance with EPA&apos;s Lead and Copper Rule (LCR) requires regular testing and filter maintenance.
             Schools should test all drinking water outlets used for consumption.

@@ -63,7 +63,7 @@ export function DeltaChangelog() {
                   style={significant ? undefined : { borderColor: 'var(--border-subtle)' }}
                 >
                   {significant && <AlertTriangle className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" />}
-                  <span className="text-[10px] font-mono whitespace-nowrap" style={{ color: 'var(--text-dim)' }}>
+                  <span className="text-2xs font-mono whitespace-nowrap" style={{ color: 'var(--text-dim)' }}>
                     {time}
                   </span>
                   <span className="font-medium flex-1" style={{ color: 'var(--text-primary)' }}>

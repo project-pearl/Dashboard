@@ -263,14 +263,14 @@ export function WhatChangedOvernight({ entityType, entityName, stateAbbr }: Brie
                 className="flex items-start gap-3 rounded-lg border border-slate-200 p-3 cursor-pointer hover:ring-1 hover:ring-purple-300 transition-all"
                 onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}
               >
-                <span className="text-[10px] font-mono text-slate-400 whitespace-nowrap mt-0.5">{c.time}</span>
+                <span className="text-2xs font-mono text-slate-400 whitespace-nowrap mt-0.5">{c.time}</span>
                 <span className="text-xs text-slate-700 flex-1">{c.change}</span>
                 <ChevronDown size={14} className={`flex-shrink-0 text-slate-400 transition-transform mt-0.5 ${expandedId === c.id ? 'rotate-180' : ''}`} />
               </div>
               {expandedId === c.id && (
                 <div className="ml-4 mt-1 rounded-lg border border-purple-200 bg-purple-50/60 p-3">
                   <p className="text-xs text-slate-700">{c.detail}</p>
-                  <p className="text-[10px] text-purple-600 mt-2 font-medium">Navigate to source data — Coming Soon</p>
+                  <p className="text-2xs text-purple-600 mt-2 font-medium">Navigate to source data — Coming Soon</p>
                 </div>
               )}
             </div>
@@ -310,9 +310,9 @@ export function StakeholderWatch({ entityType, entityName, stateAbbr }: Briefing
                 onClick={() => setExpandedId(expandedId === s.id ? null : s.id)}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <Badge variant="outline" className="text-[10px]">{s.type}</Badge>
+                  <Badge variant="outline" className="text-2xs">{s.type}</Badge>
                   <div className="flex items-center gap-1.5">
-                    <Badge variant="secondary" className="text-[10px]">{s.status}</Badge>
+                    <Badge variant="secondary" className="text-2xs">{s.status}</Badge>
                     <ChevronDown size={14} className={`text-slate-400 transition-transform ${expandedId === s.id ? 'rotate-180' : ''}`} />
                   </div>
                 </div>
@@ -321,7 +321,7 @@ export function StakeholderWatch({ entityType, entityName, stateAbbr }: Briefing
               {expandedId === s.id && (
                 <div className="ml-4 mt-1 rounded-lg border border-indigo-200 bg-indigo-50/60 p-3">
                   <p className="text-xs text-slate-700">{s.expandDetail}</p>
-                  <p className="text-[10px] text-indigo-600 mt-2 font-medium">Open full context — Coming Soon</p>
+                  <p className="text-2xs text-indigo-600 mt-2 font-medium">Open full context — Coming Soon</p>
                 </div>
               )}
             </div>

@@ -230,7 +230,7 @@ export function WeatherAlertsSection({ userState }: Props) {
                   <button
                     type="button"
                     onClick={() => toggle(category)}
-                    className="text-[11px] px-2 py-0.5 rounded hover:underline"
+                    className="text-xs px-2 py-0.5 rounded hover:underline"
                     style={{ color: 'var(--text-link, var(--text-secondary))' }}
                   >
                     {expanded
@@ -244,7 +244,7 @@ export function WeatherAlertsSection({ userState }: Props) {
         })}
 
         {/* Footer */}
-        <p className="text-[10px] pt-1" style={{ color: 'var(--text-tertiary)' }}>
+        <p className="text-2xs pt-1" style={{ color: 'var(--text-tertiary)' }}>
           Source: NWS Weather Alerts API. Refreshed every 10 min.
         </p>
       </CardContent>

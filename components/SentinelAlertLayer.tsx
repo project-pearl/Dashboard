@@ -149,7 +149,7 @@ export function SentinelAlertLayer({
           anchor="bottom"
         >
           <div className="flex flex-col items-center" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>
-            <div className="px-2 py-1 rounded-md text-[10px] font-bold text-white mb-0.5"
+            <div className="px-2 py-1 rounded-md text-2xs font-bold text-white mb-0.5"
               style={{ background: '#0d9488', whiteSpace: 'nowrap' }}>
               {hucNames[selectedHuc] ?? selectedHuc}
             </div>

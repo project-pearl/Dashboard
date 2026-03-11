@@ -13,8 +13,8 @@ interface TierBadgeProps {
 }
 
 const SIZE_CONFIG = {
-  xs: { icon: 10, text: 'text-[9px]',  gap: 'gap-0.5', px: 'px-1',   py: 'py-0' },
-  sm: { icon: 12, text: 'text-[10px]', gap: 'gap-0.5', px: 'px-1',   py: 'py-0' },
+  xs: { icon: 10, text: 'text-2xs',  gap: 'gap-0.5', px: 'px-1',   py: 'py-0' },
+  sm: { icon: 12, text: 'text-2xs', gap: 'gap-0.5', px: 'px-1',   py: 'py-0' },
   md: { icon: 14, text: 'text-xs',     gap: 'gap-1',   px: 'px-1.5', py: 'py-0.5' },
   lg: { icon: 16, text: 'text-sm',     gap: 'gap-1',   px: 'px-2',   py: 'py-0.5' },
 } as const;

@@ -137,7 +137,7 @@ export default function DataProvenancePage() {
                 <button
                   key={s.id}
                   onClick={() => scrollTo(s.id)}
-                  className="whitespace-nowrap px-2.5 py-1 rounded-full text-[11px] font-medium text-slate-500 hover:bg-blue-50 hover:text-blue-700 transition-colors flex-shrink-0"
+                  className="whitespace-nowrap px-2.5 py-1 rounded-full text-xs font-medium text-slate-500 hover:bg-blue-50 hover:text-blue-700 transition-colors flex-shrink-0"
                 >
                   {s.label}
                 </button>
@@ -196,7 +196,7 @@ export default function DataProvenancePage() {
               and quality assurance processes. The <button onClick={() => scrollTo('methodology')} className="text-blue-600 hover:text-blue-800 underline">Methodology &amp; Standards</button> section
               covers parameter-level measurement methods and analytical procedures.
             </p>
-            <div className="mt-3 flex flex-wrap gap-2 text-[10px] text-slate-400">
+            <div className="mt-3 flex flex-wrap gap-2 text-2xs text-slate-400">
               <span>Version 1.0</span>
               <span>·</span>
               <span>Last updated: February 2026</span>
@@ -246,14 +246,14 @@ export default function DataProvenancePage() {
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-blue-700"><ShieldIcon size={18} /></span>
                 <span className="text-sm font-bold text-blue-800">Tier 1 — Federal / Regulatory</span>
-                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-medium">T1</span>
+                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 text-2xs font-medium">T1</span>
               </div>
               <p className="text-xs text-slate-600 leading-relaxed mb-2">
                 Data from federal agency APIs with regulatory authority and mandated quality assurance programs.
                 These sources follow EPA-approved analytical methods, undergo external audits, and serve as the legal
                 basis for Clean Water Act compliance decisions.
               </p>
-              <div className="text-[10px] text-slate-500">
+              <div className="text-2xs text-slate-500">
                 <span className="font-medium text-slate-600">Examples:</span> EPA ATTAINS, USGS WDFN, Water Quality Portal, EPA ECHO/ICIS, NOAA CO-OPS, EJScreen
               </div>
             </div>
@@ -263,14 +263,14 @@ export default function DataProvenancePage() {
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-purple-700"><BeakerIcon size={18} /></span>
                 <span className="text-sm font-bold text-purple-800">Tier 2 — State / Academic / Research</span>
-                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 text-[10px] font-medium">T2</span>
+                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 text-2xs font-medium">T2</span>
               </div>
               <p className="text-xs text-slate-600 leading-relaxed mb-2">
                 Data from state environmental agencies, university research programs, and peer-reviewed monitoring networks.
                 These sources maintain documented QA/QC procedures and calibration records, but may not carry the same
                 federal chain-of-custody guarantees as Tier 1.
               </p>
-              <div className="text-[10px] text-slate-500">
+              <div className="text-2xs text-slate-500">
                 <span className="font-medium text-slate-600">Examples:</span> State MDE monitoring, CBP DataHub, university research stations, NERRS
               </div>
             </div>
@@ -280,14 +280,14 @@ export default function DataProvenancePage() {
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-emerald-700"><PeopleIcon size={18} /></span>
                 <span className="text-sm font-bold text-emerald-800">Tier 3 — Community / Citizen Science</span>
-                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-medium">T3</span>
+                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-2xs font-medium">T3</span>
               </div>
               <p className="text-xs text-slate-600 leading-relaxed mb-2">
                 Data from trained volunteer monitoring programs with standardized protocols.
                 Community science data broadens spatial coverage but typically has wider measurement uncertainty
                 and less frequent calibration than Tier 1 or 2.
               </p>
-              <div className="text-[10px] text-slate-500">
+              <div className="text-2xs text-slate-500">
                 <span className="font-medium text-slate-600">Examples:</span> Blue Water Baltimore, Chesapeake Bay Foundation volunteer monitors, Waterkeeper Alliance
               </div>
             </div>
@@ -297,14 +297,14 @@ export default function DataProvenancePage() {
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-amber-700"><EyeIcon size={18} /></span>
                 <span className="text-sm font-bold text-amber-800">Tier 4 — Observational / Derived</span>
-                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-medium">T4</span>
+                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-2xs font-medium">T4</span>
               </div>
               <p className="text-xs text-slate-600 leading-relaxed mb-2">
                 Data estimated or derived from indirect indicators rather than direct measurement.
                 Tier 4 provides useful context but should not be used as sole evidence for regulatory decisions.
                 PIN clearly labels all derived values and explains the estimation method.
               </p>
-              <div className="text-[10px] text-slate-500">
+              <div className="text-2xs text-slate-500">
                 <span className="font-medium text-slate-600">Examples:</span> PIN-derived EJ composites (when EJScreen unavailable), satellite-estimated chlorophyll, model-projected scores
               </div>
             </div>
@@ -790,7 +790,7 @@ export default function DataProvenancePage() {
           </ul>
 
           {/* ── Document footer ── */}
-          <div className="mt-12 pt-6 border-t border-slate-200 text-[10px] text-slate-400 space-y-1">
+          <div className="mt-12 pt-6 border-t border-slate-200 text-2xs text-slate-400 space-y-1">
             <p>PIN Data Confidence &amp; Methodology · Version 2.0 · March 2026</p>
             <p>PEARL Intelligence Network (PIN) · pinwater.org</p>
             <p>&copy; {new Date().getFullYear()} Local Seafood Projects Inc. All rights reserved.</p>

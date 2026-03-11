@@ -132,7 +132,7 @@ export function RestorationProjectsPanel({ stateAbbr }: RestorationProjectsPanel
                 </div>
                 <div>
                   <p className={`text-2xl font-bold ${stat.valueColor}`}>{stat.value}</p>
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wide">{stat.label}</p>
+                  <p className="text-2xs text-slate-500 uppercase tracking-wide">{stat.label}</p>
                 </div>
               </div>
             </CardContent>
@@ -167,7 +167,7 @@ export function RestorationProjectsPanel({ stateAbbr }: RestorationProjectsPanel
                 >
                   <div className={`w-3 h-3 rounded-full mx-auto mb-1 ${cfg.dot}`} />
                   <p className="text-xl font-bold text-slate-800">{count}</p>
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wide">{cfg.label}</p>
+                  <p className="text-2xs text-slate-500 uppercase tracking-wide">{cfg.label}</p>
                 </button>
               );
             })}
@@ -175,9 +175,9 @@ export function RestorationProjectsPanel({ stateAbbr }: RestorationProjectsPanel
           {/* ATTAINS category summary */}
           <div className="flex items-center gap-3 mt-4 pt-3 border-t border-slate-100">
             <span className="text-xs text-slate-500">ATTAINS Categories:</span>
-            <Badge className="bg-emerald-100 text-emerald-700 text-[10px]">4a: {attainsCounts['4a']}</Badge>
-            <Badge className="bg-blue-100 text-blue-700 text-[10px]">4b: {attainsCounts['4b']}</Badge>
-            <Badge className="bg-red-100 text-red-700 text-[10px]">5: {attainsCounts['5']}</Badge>
+            <Badge className="bg-emerald-100 text-emerald-700 text-2xs">4a: {attainsCounts['4a']}</Badge>
+            <Badge className="bg-blue-100 text-blue-700 text-2xs">4b: {attainsCounts['4b']}</Badge>
+            <Badge className="bg-red-100 text-red-700 text-2xs">5: {attainsCounts['5']}</Badge>
           </div>
         </CardContent>
       </Card>
@@ -188,7 +188,7 @@ export function RestorationProjectsPanel({ stateAbbr }: RestorationProjectsPanel
           <CardTitle className="flex items-center gap-2 text-base">
             <Hammer size={16} className="text-slate-600" />
             Project Details
-            <Badge variant="secondary" className="ml-1 text-[10px]">
+            <Badge variant="secondary" className="ml-1 text-2xs">
               {filteredProjects.length} shown
             </Badge>
           </CardTitle>
@@ -213,19 +213,19 @@ export function RestorationProjectsPanel({ stateAbbr }: RestorationProjectsPanel
                       <span className="text-xs font-mono text-slate-400">{p.id}</span>
                       <span className="text-sm font-semibold text-slate-800 truncate">{p.name}</span>
                     </div>
-                    <Badge className={`text-[10px] ${cfg.badge}`}>{cfg.label}</Badge>
+                    <Badge className={`text-2xs ${cfg.badge}`}>{cfg.label}</Badge>
                   </div>
 
-                  <div className="flex items-center gap-4 text-[11px] text-slate-500 mb-3">
+                  <div className="flex items-center gap-4 text-xs text-slate-500 mb-3">
                     <span className="font-medium text-slate-600">{p.state}</span>
                     <span>{p.lead}</span>
                     <span>{fmtDate(p.startDate)} - {fmtDate(p.endDate)}</span>
-                    <Badge variant="secondary" className="text-[9px]">Cat {p.attainsCategory}</Badge>
+                    <Badge variant="secondary" className="text-2xs">Cat {p.attainsCategory}</Badge>
                   </div>
 
                   {/* Budget progress bar */}
                   <div className="mb-2">
-                    <div className="flex items-center justify-between text-[10px] mb-1">
+                    <div className="flex items-center justify-between text-2xs mb-1">
                       <span className="text-slate-500">Budget: {fmtCurrency(p.budgetK)}</span>
                       <span className="font-semibold text-slate-700">{fmtCurrency(p.spentK)} spent ({spentPct.toFixed(0)}%)</span>
                     </div>
@@ -238,7 +238,7 @@ export function RestorationProjectsPanel({ stateAbbr }: RestorationProjectsPanel
                   </div>
 
                   {/* Outcomes */}
-                  <div className="flex items-center gap-4 text-[10px]">
+                  <div className="flex items-center gap-4 text-2xs">
                     {p.acresRestored > 0 && (
                       <span className="flex items-center gap-1 text-emerald-700">
                         <CheckCircle size={10} />

@@ -218,22 +218,22 @@ function PredictionCard({ prediction, segmentQuote, onInvestigate }: { predictio
         {/* Probability + badges — tier-formatted */}
         <div className="flex items-center gap-1.5 flex-wrap">
           <span className={`text-sm font-bold ${colors.text}`}>{display.label}</span>
-          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">
+          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-semibold bg-slate-100 text-slate-500 border border-slate-200">
             {prediction.timeframe}
           </span>
-          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold ${confBadge.bg} ${confBadge.text}`}>
+          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-semibold ${confBadge.bg} ${confBadge.text}`}>
             {prediction.confidence}
           </span>
         </div>
 
         {/* Summary */}
-        <p className="text-[11px] text-slate-600 leading-relaxed">{prediction.summary}</p>
+        <p className="text-xs text-slate-600 leading-relaxed">{prediction.summary}</p>
 
         {/* Expand factors toggle */}
         {prediction.factors.length > 0 && (
           <button
             onClick={() => setExpanded(!expanded)}
-            className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-slate-600 transition-colors"
+            className="flex items-center gap-1 text-2xs text-slate-400 hover:text-slate-600 transition-colors"
           >
             {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
             {expanded ? 'Hide' : 'Show'} factors ({prediction.factors.length})
@@ -244,7 +244,7 @@ function PredictionCard({ prediction, segmentQuote, onInvestigate }: { predictio
         {expanded && (
           <div className="space-y-1 pt-1 border-t border-slate-100">
             {prediction.factors.map((f, i) => (
-              <div key={i} className="flex items-center gap-2 text-[10px]">
+              <div key={i} className="flex items-center gap-2 text-2xs">
                 <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
                   f.direction === 'negative' ? 'bg-red-400' : f.direction === 'positive' ? 'bg-green-400' : 'bg-slate-300'
                 }`} />
@@ -260,13 +260,13 @@ function PredictionCard({ prediction, segmentQuote, onInvestigate }: { predictio
           <>
             <button
               onClick={() => setShowQuote(!showQuote)}
-              className="flex items-center gap-1 text-[10px] text-blue-400 hover:text-blue-600 transition-colors"
+              className="flex items-center gap-1 text-2xs text-blue-400 hover:text-blue-600 transition-colors"
             >
               {showQuote ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
               {showQuote ? 'Hide' : 'Show'} example output
             </button>
             {showQuote && (
-              <div className="bg-blue-50 border border-blue-200 rounded p-2 text-[10px] text-blue-700 italic leading-relaxed">
+              <div className="bg-blue-50 border border-blue-200 rounded p-2 text-2xs text-blue-700 italic leading-relaxed">
                 &ldquo;{segmentQuote}&rdquo;
               </div>
             )}
@@ -277,7 +277,7 @@ function PredictionCard({ prediction, segmentQuote, onInvestigate }: { predictio
         {onInvestigate && (
           <button
             onClick={(e) => { e.stopPropagation(); onInvestigate(prediction); }}
-            className="w-full mt-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+            className="w-full mt-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-2xs font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors"
           >
             <Search className="h-3 w-3" />
             Investigate This Risk
@@ -346,14 +346,14 @@ export default function PredictiveRiskEngine({ predictions = null, dataCompleten
                   <div className={`text-xs font-bold uppercase tracking-wide ${overallColors.text}`}>
                     {overallRisk === 'red' ? 'HIGH RISK' : overallRisk === 'amber' ? 'MODERATE RISK' : 'LOW RISK'}
                   </div>
-                  <div className="text-[10px] text-slate-400">Composite: {avgProbability}% avg</div>
+                  <div className="text-2xs text-slate-400">Composite: {avgProbability}% avg</div>
                 </div>
               </div>
 
               {/* Data completeness */}
               <div className="text-center">
                 <div className="text-xl font-bold font-mono text-slate-700">{dataCompleteness}%</div>
-                <div className="text-[9px] text-slate-400 uppercase tracking-wider">Data Complete</div>
+                <div className="text-2xs text-slate-400 uppercase tracking-wider">Data Complete</div>
               </div>
             </div>
           </div>
@@ -402,7 +402,7 @@ export default function PredictiveRiskEngine({ predictions = null, dataCompleten
                     <div className="flex items-center gap-1.5">
                       <span className="text-sm font-medium text-slate-400">Data Pending</span>
                     </div>
-                    <p className="text-[11px] text-slate-400 leading-relaxed italic">
+                    <p className="text-xs text-slate-400 leading-relaxed italic">
                       Insufficient data to compute risk score. Select a deployment location to generate predictions.
                     </p>
                   </div>
@@ -438,7 +438,7 @@ export default function PredictiveRiskEngine({ predictions = null, dataCompleten
           </p>
         </CardHeader>
         <CardContent className="overflow-x-auto">
-          <table className="w-full text-[11px] border-collapse min-w-[700px]">
+          <table className="w-full text-xs border-collapse min-w-[700px]">
             <thead>
               <tr className="border-b border-slate-200">
                 <th className="text-left py-2 px-2 font-semibold text-slate-600 sticky left-0 bg-white z-10">Index</th>
@@ -462,10 +462,10 @@ export default function PredictiveRiskEngine({ predictions = null, dataCompleten
                   {row.mapping.map((role, ci) => (
                     <td key={ci} className="text-center py-1.5 px-1.5">
                       {role === 'P' && (
-                        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-100 text-green-700 text-[10px] font-bold">P</span>
+                        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-100 text-green-700 text-2xs font-bold">P</span>
                       )}
                       {role === 'S' && (
-                        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold">S</span>
+                        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 text-slate-500 text-2xs font-bold">S</span>
                       )}
                     </td>
                   ))}
@@ -503,13 +503,13 @@ export default function PredictiveRiskEngine({ predictions = null, dataCompleten
                     </div>
                     <div className="space-y-1 mb-2">
                       {phase.categories.map(cat => (
-                        <div key={cat} className="text-[10px] flex items-center gap-1">
+                        <div key={cat} className="text-2xs flex items-center gap-1">
                           <span className="w-1 h-1 rounded-full bg-current opacity-50" />
                           {cat}
                         </div>
                       ))}
                     </div>
-                    <p className="text-[10px] opacity-70 leading-relaxed border-t border-current/10 pt-2 mt-auto">
+                    <p className="text-2xs opacity-70 leading-relaxed border-t border-current/10 pt-2 mt-auto">
                       {phase.feature}
                     </p>
                   </div>
@@ -546,18 +546,18 @@ export default function PredictiveRiskEngine({ predictions = null, dataCompleten
               const badge = CONFIDENCE_BADGE[ct.tier];
               return (
                 <div key={ct.tier} className="rounded-lg border border-slate-200 bg-white p-3 space-y-2">
-                  <Badge className={`${badge.bg} ${badge.text} text-[10px]`}>{ct.tier}</Badge>
+                  <Badge className={`${badge.bg} ${badge.text} text-2xs`}>{ct.tier}</Badge>
                   <div>
-                    <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">Data Criteria</div>
-                    <p className="text-[11px] text-slate-600 leading-relaxed">{ct.criteria}</p>
+                    <div className="text-2xs font-semibold text-slate-500 uppercase tracking-wider mb-0.5">Data Criteria</div>
+                    <p className="text-xs text-slate-600 leading-relaxed">{ct.criteria}</p>
                   </div>
                   <div>
-                    <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">Display Format</div>
-                    <p className="text-[11px] text-slate-600 leading-relaxed font-mono">{ct.format}</p>
+                    <div className="text-2xs font-semibold text-slate-500 uppercase tracking-wider mb-0.5">Display Format</div>
+                    <p className="text-xs text-slate-600 leading-relaxed font-mono">{ct.format}</p>
                   </div>
                   <div>
-                    <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">Guardrail</div>
-                    <p className="text-[11px] text-slate-600 leading-relaxed">{ct.guardrail}</p>
+                    <div className="text-2xs font-semibold text-slate-500 uppercase tracking-wider mb-0.5">Guardrail</div>
+                    <p className="text-xs text-slate-600 leading-relaxed">{ct.guardrail}</p>
                   </div>
                 </div>
               );
@@ -578,7 +578,7 @@ export default function PredictiveRiskEngine({ predictions = null, dataCompleten
           <div className="flex items-center gap-2">
             <Target size={16} className="text-teal-600" />
             <span className="text-base font-semibold text-slate-900">Customer Segment Examples</span>
-            <Badge variant="secondary" className="text-[10px]">6 segments</Badge>
+            <Badge variant="secondary" className="text-2xs">6 segments</Badge>
           </div>
           {showSegments ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </div>
@@ -588,8 +588,8 @@ export default function PredictiveRiskEngine({ predictions = null, dataCompleten
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {SEGMENT_EXAMPLES.map(seg => (
                 <div key={seg.segment} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">{seg.segment}</div>
-                  <p className="text-[11px] text-slate-700 leading-relaxed italic">&ldquo;{seg.quote}&rdquo;</p>
+                  <div className="text-2xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">{seg.segment}</div>
+                  <p className="text-xs text-slate-700 leading-relaxed italic">&ldquo;{seg.quote}&rdquo;</p>
                 </div>
               ))}
             </div>

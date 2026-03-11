@@ -350,7 +350,7 @@ function IndexBar({ name, value, weight, pending, locked }: { name: string; valu
       <div className="flex items-center gap-2 py-0.5 opacity-40">
         <span className="text-xs text-slate-400 w-[195px] truncate shrink-0" title={name}>🔒 {name}</span>
         <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden" />
-        <span className="text-[10px] text-slate-400 w-8 text-right italic">—</span>
+        <span className="text-2xs text-slate-400 w-8 text-right italic">—</span>
       </div>
     );
   }
@@ -362,7 +362,7 @@ function IndexBar({ name, value, weight, pending, locked }: { name: string; valu
         <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
           <div className="h-full rounded-full bg-slate-200 animate-pulse" style={{ width: '100%' }} />
         </div>
-        <span className="text-[10px] text-slate-400 w-8 text-right italic">—</span>
+        <span className="text-2xs text-slate-400 w-8 text-right italic">—</span>
       </div>
     );
   }
@@ -500,9 +500,9 @@ export function StateDataReportCard({ report: rawReport, stateName }: { report: 
         <div className="space-y-1">
           {/* Column headers */}
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] text-slate-400 uppercase tracking-wider font-semibold w-[195px]">Index</span>
+            <span className="text-2xs text-slate-400 uppercase tracking-wider font-semibold w-[195px]">Index</span>
             <span className="flex-1" />
-            <span className="text-[9px] text-slate-400 uppercase tracking-wider font-semibold w-8 text-right">Score</span>
+            <span className="text-2xs text-slate-400 uppercase tracking-wider font-semibold w-8 text-right">Score</span>
           </div>
 
           {PIN_14_INDICES.map((idx) => {
@@ -520,7 +520,7 @@ export function StateDataReportCard({ report: rawReport, stateName }: { report: 
           })}
 
           {/* National Security notice */}
-          <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-[10px] text-slate-500 mt-2">
+          <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-2xs text-slate-500 mt-2">
             🔒 National Security Water Vulnerability requires military data access key.
             {' '}13 of 14 indices active. Score computed from available indices with renormalized weights (§5.1).
           </div>
@@ -551,7 +551,7 @@ export function StateDataReportCard({ report: rawReport, stateName }: { report: 
                   Only indices with available data contribute. Weights are renormalized so
                   missing indices don&apos;t artificially deflate the score.
                 </p>
-                <p className="text-[10px] text-slate-400 italic">
+                <p className="text-2xs text-slate-400 italic">
                   This score is informational and derived from public data sources. It is
                   not an official EPA or state determination.
                 </p>
@@ -569,26 +569,26 @@ export function StateDataReportCard({ report: rawReport, stateName }: { report: 
           <div className="grid grid-cols-4 gap-2">
             <div className="rounded-lg border border-slate-200 p-2.5 text-center">
               <div className="text-lg font-black text-slate-800">{report.totalWaterbodies.toLocaleString()}</div>
-              <div className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide">Total</div>
+              <div className="text-2xs text-slate-400 font-semibold uppercase tracking-wide">Total</div>
             </div>
             <div className="rounded-lg border border-slate-200 p-2.5 text-center">
               <div className="text-lg font-black text-slate-700">{report.assessedCount.toLocaleString()}</div>
-              <div className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide">Assessed</div>
+              <div className="text-2xs text-slate-400 font-semibold uppercase tracking-wide">Assessed</div>
             </div>
             <div className="rounded-lg border border-slate-200 p-2.5 text-center">
               <div className="text-lg font-black text-slate-900">{report.impairedCount.toLocaleString()}</div>
-              <div className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide">Impaired</div>
+              <div className="text-2xs text-slate-400 font-semibold uppercase tracking-wide">Impaired</div>
             </div>
             <div className="rounded-lg border border-red-200 bg-red-50 p-2.5 text-center">
               <div className="text-lg font-black text-red-700">{report.tmdlNeeded.toLocaleString()}</div>
-              <div className="text-[9px] text-red-500 font-semibold uppercase tracking-wide">Cat 5</div>
+              <div className="text-2xs text-red-500 font-semibold uppercase tracking-wide">Cat 5</div>
             </div>
           </div>
 
           {/* ── Impairment Categories ──────────────────────────────────── */}
           {(report.tmdlNeeded > 0 || report.tmdlCompleted > 0 || report.tmdlAlternative > 0 || report.notPollutant > 0) && (
             <div>
-              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Impairment Categories</div>
+              <div className="text-2xs font-bold text-slate-500 uppercase tracking-wider mb-2">Impairment Categories</div>
               <div className="space-y-0">
                 {[
                   { label: 'Cat 5 — Needs TMDL', value: report.tmdlNeeded },
@@ -608,7 +608,7 @@ export function StateDataReportCard({ report: rawReport, stateName }: { report: 
           {/* ── Top Impairment Causes ──────────────────────────────────── */}
           {report.topCausesWithCounts && report.topCausesWithCounts.length > 0 && (
             <div>
-              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Top Impairment Causes</div>
+              <div className="text-2xs font-bold text-slate-500 uppercase tracking-wider mb-2">Top Impairment Causes</div>
               <div className="space-y-0">
                 {report.topCausesWithCounts.map((row, idx) => (
                   <div key={row.cause} className="flex items-baseline justify-between py-1.5 border-b border-dotted border-slate-200 last:border-0">
@@ -625,11 +625,11 @@ export function StateDataReportCard({ report: rawReport, stateName }: { report: 
 
           {/* ── Monitoring Coverage ────────────────────────────────────── */}
           <div>
-            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Monitoring Coverage</div>
+            <div className="text-2xs font-bold text-slate-500 uppercase tracking-wider mb-2">Monitoring Coverage</div>
             <div className="flex items-center gap-4 text-xs">
-              <span><strong className="text-slate-800">{report.monitoredWaterbodies.toLocaleString()}</strong> <span className="text-[10px] text-slate-400 uppercase">Monitored</span></span>
-              <span><strong className="text-slate-800">{report.assessedCount.toLocaleString()}</strong> <span className="text-[10px] text-slate-400 uppercase">Assessed</span></span>
-              <span><strong className="text-slate-800">{report.unmonitoredWaterbodies.toLocaleString()}</strong> <span className="text-[10px] text-slate-400 uppercase">Unmonitored</span></span>
+              <span><strong className="text-slate-800">{report.monitoredWaterbodies.toLocaleString()}</strong> <span className="text-2xs text-slate-400 uppercase">Monitored</span></span>
+              <span><strong className="text-slate-800">{report.assessedCount.toLocaleString()}</strong> <span className="text-2xs text-slate-400 uppercase">Assessed</span></span>
+              <span><strong className="text-slate-800">{report.unmonitoredWaterbodies.toLocaleString()}</strong> <span className="text-2xs text-slate-400 uppercase">Unmonitored</span></span>
             </div>
             {/* Coverage bar */}
             <div className="mt-2 h-2.5 rounded-full overflow-hidden bg-slate-100">

@@ -15,7 +15,7 @@ interface WeatherDrivenBadgeProps {
 export function WeatherDrivenBadge({ weatherContext }: WeatherDrivenBadgeProps) {
   return (
     <span
-      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300"
+      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-2xs font-medium bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300"
       title={
         weatherContext
           ? `Anomaly suppressed: concurrent ${weatherContext} — likely weather-driven`

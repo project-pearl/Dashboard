@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ShieldAlert, CheckCircle, Flame, Wind, Flag, Shield } from 'lucide-react';
+import { CappedList } from '@/components/CappedList';
 
 interface InstRisk {
   id: string;
@@ -16,11 +17,19 @@ interface InstRisk {
   aqiScore: number;
   burnPitScore: number;
   windScore: number;
+  droughtScore: number;
+  seismicScore: number;
+  damScore: number;
   composite: number;
   nearestFireDist: number | null;
   nearestFireFrp: number | null;
   aqiValue: number | null;
   windContext: string | null;
+  droughtLevel: string | null;
+  nearestQuakeDist: number | null;
+  nearestQuakeMag: number | null;
+  nearestDamDist: number | null;
+  nearestDamName: string | null;
 }
 
 interface NtasData {
@@ -43,14 +52,14 @@ const NTAS_PILL: Record<string, { label: string; color: string; bg: string }> = 
 };
 
 function rowBorderColor(score: number): string {
-  if (score >= 60) return '#ef4444';
-  if (score >= 40) return '#f59e0b';
+  if (score >= 75) return '#ef4444';
+  if (score >= 50) return '#f59e0b';
   return '#eab308';
 }
 
 function compositeBadgeClass(score: number): string {
-  if (score >= 60) return 'bg-red-100 text-red-800';
-  if (score >= 40) return 'bg-amber-100 text-amber-800';
+  if (score >= 75) return 'bg-red-100 text-red-800';
+  if (score >= 50) return 'bg-amber-100 text-amber-800';
   return 'bg-yellow-100 text-yellow-800';
 }
 
@@ -116,7 +125,7 @@ export function AtRiskFacilitiesCard() {
           {ntas && ntas.status !== 'none' && (
             <div className="mb-2">
               <span
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-semibold"
                 style={{ color: NTAS_PILL[ntas.status]?.color, background: NTAS_PILL[ntas.status]?.bg }}
               >
                 {NTAS_PILL[ntas.status]?.label}
@@ -129,7 +138,7 @@ export function AtRiskFacilitiesCard() {
               All facilities operating within normal environmental parameters.
             </span>
           </div>
-          <div className="text-[10px] text-right" style={{ color: 'var(--text-dim)' }}>
+          <div className="text-2xs text-right" style={{ color: 'var(--text-dim)' }}>
             0 of {total} facilities at elevated risk
             {fetchedAt && <> &middot; {new Date(fetchedAt).toLocaleString()}</>}
           </div>
@@ -151,7 +160,7 @@ export function AtRiskFacilitiesCard() {
         {ntas && ntas.status !== 'none' && (
           <div className="mb-1">
             <span
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold"
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-semibold"
               style={{ color: NTAS_PILL[ntas.status]?.color, background: NTAS_PILL[ntas.status]?.bg }}
             >
               {NTAS_PILL[ntas.status]?.label}
@@ -160,10 +169,16 @@ export function AtRiskFacilitiesCard() {
         )}
 
         {/* Facility rows */}
-        <div className="space-y-1.5">
-          {facilities.map(f => (
+        <CappedList
+          items={facilities}
+          maxVisible={5}
+          searchable={facilities.length > 5}
+          searchPlaceholder="Search facilities..."
+          getSearchText={(f) => `${f.name} ${f.branch} ${REGION_LABELS[f.region] || f.region}`}
+          getKey={(f) => f.id}
+          className="space-y-1.5"
+          renderItem={(f) => (
             <div
-              key={f.id}
               className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs"
               style={{
                 borderLeft: `4px solid ${rowBorderColor(f.composite)}`,
@@ -181,7 +196,7 @@ export function AtRiskFacilitiesCard() {
                 <div className="font-medium truncate" style={{ color: 'var(--text-bright)' }}>
                   {f.name}
                 </div>
-                <div className="text-[10px]" style={{ color: 'var(--text-dim)' }}>
+                <div className="text-2xs" style={{ color: 'var(--text-dim)' }}>
                   {f.branch} &middot; {REGION_LABELS[f.region] || f.region}
                 </div>
               </div>
@@ -189,39 +204,54 @@ export function AtRiskFacilitiesCard() {
               {/* Threat chips */}
               <div className="flex items-center gap-1 shrink-0 flex-wrap justify-end">
                 {f.fireScore > 0 && (
-                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium bg-orange-100 text-orange-700">
+                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-2xs font-medium bg-orange-100 text-orange-700">
                     <Flame size={9} />
                     {f.nearestFireDist != null ? `${f.nearestFireDist} mi` : 'nearby'}
                   </span>
                 )}
                 {f.aqiScore > 0 && (
-                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium bg-purple-100 text-purple-700">
+                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-2xs font-medium bg-purple-100 text-purple-700">
                     <Wind size={9} />
                     AQI {f.aqiValue}
                   </span>
                 )}
                 {f.burnPitScore > 0 && (
-                  <Badge variant="outline" className="text-[8px] px-1 py-0 bg-red-50 text-red-600 border-red-200">
+                  <Badge variant="outline" className="text-2xs px-1 py-0 bg-red-50 text-red-600 border-red-200">
                     BP
                   </Badge>
                 )}
                 {f.windContext && f.windScore > 0 && (
-                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-sky-100 text-sky-700">
+                  <span className="text-2xs px-1.5 py-0.5 rounded bg-sky-100 text-sky-700">
                     {f.windContext}
+                  </span>
+                )}
+                {f.droughtScore > 0 && (
+                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-2xs font-medium bg-orange-100 text-orange-800">
+                    {f.droughtLevel || 'Drought'}
+                  </span>
+                )}
+                {f.seismicScore > 0 && (
+                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-100 text-slate-800">
+                    M{f.nearestQuakeMag} {f.nearestQuakeDist != null ? `${f.nearestQuakeDist} mi` : ''}
+                  </span>
+                )}
+                {f.damScore > 0 && (
+                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-2xs font-medium bg-cyan-100 text-cyan-800">
+                    Dam {f.nearestDamDist != null ? `${f.nearestDamDist} mi` : 'nearby'}
                   </span>
                 )}
               </div>
 
               {/* Composite badge */}
-              <Badge variant="outline" className={`font-mono text-[10px] shrink-0 ${compositeBadgeClass(f.composite)}`}>
+              <Badge variant="outline" className={`font-mono text-2xs shrink-0 ${compositeBadgeClass(f.composite)}`}>
                 {f.composite}
               </Badge>
             </div>
-          ))}
-        </div>
+          )}
+        />
 
         {/* Footer */}
-        <div className="text-[10px] text-right pt-1" style={{ color: 'var(--text-dim)' }}>
+        <div className="text-2xs text-right pt-1" style={{ color: 'var(--text-dim)' }}>
           {facilities.length} of {total} facilities at elevated risk
           {fetchedAt && <> &middot; {new Date(fetchedAt).toLocaleString()}</>}
         </div>

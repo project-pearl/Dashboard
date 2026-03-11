@@ -236,15 +236,15 @@ export function InitiativesTrackerPanel({ stateAbbr }: Props) {
         <div className="grid grid-cols-3 gap-3">
           <div className="rounded-lg border p-3 text-center">
             <div className="text-2xl font-bold text-green-600">{stats.active}</div>
-            <div className="text-[10px] font-medium uppercase tracking-wider text-slate-500">Active</div>
+            <div className="text-2xs font-medium uppercase tracking-wider text-slate-500">Active</div>
           </div>
           <div className="rounded-lg border p-3 text-center">
             <div className="text-2xl font-bold text-blue-600">{stats.completed}</div>
-            <div className="text-[10px] font-medium uppercase tracking-wider text-slate-500">Completed</div>
+            <div className="text-2xs font-medium uppercase tracking-wider text-slate-500">Completed</div>
           </div>
           <div className="rounded-lg border p-3 text-center">
             <div className="text-2xl font-bold text-amber-600">{stats.avgProgress}%</div>
-            <div className="text-[10px] font-medium uppercase tracking-wider text-slate-500">Avg Progress</div>
+            <div className="text-2xs font-medium uppercase tracking-wider text-slate-500">Avg Progress</div>
           </div>
         </div>
 
@@ -318,18 +318,18 @@ export function InitiativesTrackerPanel({ stateAbbr }: Props) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium text-sm truncate">{init.name}</span>
-                        <Badge variant="outline" className={`text-[10px] ${CATEGORY_COLORS[init.category]}`}>{init.category}</Badge>
-                        <Badge variant="outline" className={`text-[10px] ${STATUS_COLORS[init.status]}`}>{init.status}</Badge>
-                        <span className={`text-[10px] font-bold uppercase ${PRIORITY_COLORS[init.priority]}`}>{init.priority}</span>
+                        <Badge variant="outline" className={`text-2xs ${CATEGORY_COLORS[init.category]}`}>{init.category}</Badge>
+                        <Badge variant="outline" className={`text-2xs ${STATUS_COLORS[init.status]}`}>{init.status}</Badge>
+                        <span className={`text-2xs font-bold uppercase ${PRIORITY_COLORS[init.priority]}`}>{init.priority}</span>
                       </div>
-                      {init.lead && <div className="text-[11px] text-slate-500 mt-0.5">{init.lead}{init.watershed ? ` · ${init.watershed}` : ''}</div>}
+                      {init.lead && <div className="text-xs text-slate-500 mt-0.5">{init.lead}{init.watershed ? ` · ${init.watershed}` : ''}</div>}
                     </div>
                     {/* Progress bar mini */}
                     <div className="w-20 flex-shrink-0">
                       <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
                         <div className="h-full bg-green-500 rounded-full transition-all" style={{ width: `${init.progressPct}%` }} />
                       </div>
-                      <div className="text-[10px] text-slate-500 text-right mt-0.5">{init.progressPct}%</div>
+                      <div className="text-2xs text-slate-500 text-right mt-0.5">{init.progressPct}%</div>
                     </div>
                     {expanded ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
                   </div>
@@ -381,7 +381,7 @@ export function InitiativesTrackerPanel({ stateAbbr }: Props) {
                           <button
                             key={s}
                             onClick={() => updateStatus(init.id, s)}
-                            className={`px-2 py-0.5 text-[10px] rounded border transition-colors ${
+                            className={`px-2 py-0.5 text-2xs rounded border transition-colors ${
                               init.status === s ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-100'
                             }`}
                           >

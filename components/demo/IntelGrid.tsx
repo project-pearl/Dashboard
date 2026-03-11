@@ -286,7 +286,7 @@ export function IntelGrid({ gridData, activeEntity, onAlertClick }: IntelGridPro
           <span className="text-lg font-bold tracking-wide text-white drop-shadow-lg">
             PIN
           </span>
-          <span className="text-[10px] font-semibold tracking-[0.25em] uppercase text-slate-300 drop-shadow">
+          <span className="text-2xs font-semibold tracking-[0.25em] uppercase text-slate-300 drop-shadow">
             National Water Intelligence Grid
           </span>
         </div>

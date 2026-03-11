@@ -155,7 +155,7 @@ export function VolunteerProgramPanel({ stateAbbr }: VolunteerProgramPanelProps)
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-semibold text-amber-800">Submit Citizen Science Data</p>
-              <p className="text-[10px] text-amber-600 mt-0.5">
+              <p className="text-2xs text-amber-600 mt-0.5">
                 Upload field readings from volunteer monitoring sessions — single entry or CSV bulk upload
               </p>
             </div>
@@ -186,7 +186,7 @@ export function VolunteerProgramPanel({ stateAbbr }: VolunteerProgramPanelProps)
                 </div>
                 <div>
                   <p className={`text-2xl font-bold ${stat.valueColor}`}>{stat.value}</p>
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wide">{stat.label}</p>
+                  <p className="text-2xs text-slate-500 uppercase tracking-wide">{stat.label}</p>
                 </div>
               </div>
             </CardContent>
@@ -200,7 +200,7 @@ export function VolunteerProgramPanel({ stateAbbr }: VolunteerProgramPanelProps)
           <CardTitle className="flex items-center gap-2 text-base">
             <GraduationCap size={16} className="text-purple-600" />
             Training Progress
-            <Badge variant="secondary" className="ml-1 text-[10px]">
+            <Badge variant="secondary" className="ml-1 text-2xs">
               {VOLUNTEER_STATS.totalRegistered} registered
             </Badge>
           </CardTitle>
@@ -221,7 +221,7 @@ export function VolunteerProgramPanel({ stateAbbr }: VolunteerProgramPanelProps)
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-semibold text-slate-800 tabular-nums">{t.count}</span>
-                      <Badge className={`text-[9px] ${t.bg} ${t.color}`}>
+                      <Badge className={`text-2xs ${t.bg} ${t.color}`}>
                         {widthPct.toFixed(0)}%
                       </Badge>
                     </div>
@@ -235,7 +235,7 @@ export function VolunteerProgramPanel({ stateAbbr }: VolunteerProgramPanelProps)
                 </div>
               );
             })}
-            <p className="text-[10px] text-slate-400 mt-1">
+            <p className="text-2xs text-slate-400 mt-1">
               {VOLUNTEER_STATS.totalRegistered - VOLUNTEER_STATS.trained} volunteers still awaiting initial training.
             </p>
           </div>
@@ -248,7 +248,7 @@ export function VolunteerProgramPanel({ stateAbbr }: VolunteerProgramPanelProps)
           <CardTitle className="flex items-center gap-2 text-base">
             <Calendar size={16} className="text-blue-600" />
             Monitoring Events
-            <Badge variant="secondary" className="ml-1 text-[10px]">
+            <Badge variant="secondary" className="ml-1 text-2xs">
               {MONITORING_EVENTS.length} scheduled
             </Badge>
           </CardTitle>
@@ -268,15 +268,15 @@ export function VolunteerProgramPanel({ stateAbbr }: VolunteerProgramPanelProps)
                       <Calendar size={14} className="text-blue-500 shrink-0" />
                       <span className="text-xs font-semibold text-slate-800 truncate">{e.name}</span>
                     </div>
-                    <Badge className={`text-[9px] ${cfg.badge}`}>{cfg.label}</Badge>
+                    <Badge className={`text-2xs ${cfg.badge}`}>{cfg.label}</Badge>
                   </div>
-                  <div className="flex items-center gap-4 text-[10px] text-slate-500 ml-5 mb-2">
+                  <div className="flex items-center gap-4 text-2xs text-slate-500 ml-5 mb-2">
                     <span className="font-semibold text-slate-700">{fmtDate(e.date)}</span>
                     <span>{e.location}</span>
                   </div>
                   <div className="ml-5 flex items-center gap-3">
                     <div className="flex-1">
-                      <div className="flex items-center justify-between text-[10px] mb-0.5">
+                      <div className="flex items-center justify-between text-2xs mb-0.5">
                         <span className="text-slate-500">Volunteers</span>
                         <span className="font-semibold text-slate-700">{e.volunteersSignedUp}/{e.volunteersNeeded}</span>
                       </div>
@@ -289,10 +289,10 @@ export function VolunteerProgramPanel({ stateAbbr }: VolunteerProgramPanelProps)
                     </div>
                     <div className="flex flex-wrap gap-1">
                       {e.parameters.slice(0, 3).map((p) => (
-                        <Badge key={p} variant="secondary" className="text-[8px]">{p}</Badge>
+                        <Badge key={p} variant="secondary" className="text-2xs">{p}</Badge>
                       ))}
                       {e.parameters.length > 3 && (
-                        <Badge variant="secondary" className="text-[8px]">+{e.parameters.length - 3}</Badge>
+                        <Badge variant="secondary" className="text-2xs">+{e.parameters.length - 3}</Badge>
                       )}
                     </div>
                   </div>
@@ -371,7 +371,7 @@ export function VolunteerProgramPanel({ stateAbbr }: VolunteerProgramPanelProps)
           <CardTitle className="flex items-center gap-2 text-base">
             <Package size={16} className="text-slate-600" />
             Equipment Inventory
-            <Badge variant="secondary" className="ml-1 text-[10px]">
+            <Badge variant="secondary" className="ml-1 text-2xs">
               {EQUIPMENT.length} items tracked
             </Badge>
           </CardTitle>
@@ -406,7 +406,7 @@ export function VolunteerProgramPanel({ stateAbbr }: VolunteerProgramPanelProps)
                       <td className="py-2 text-right text-slate-600">{eq.totalUnits}</td>
                       <td className="py-2 text-slate-600">{fmtDate(eq.lastCalibration)}</td>
                       <td className="py-2">
-                        <Badge className={`text-[9px] ${cond.badge}`}>{cond.label}</Badge>
+                        <Badge className={`text-2xs ${cond.badge}`}>{cond.label}</Badge>
                       </td>
                     </tr>
                   );
@@ -414,7 +414,7 @@ export function VolunteerProgramPanel({ stateAbbr }: VolunteerProgramPanelProps)
               </tbody>
             </table>
           </div>
-          <p className="text-[10px] text-slate-400 mt-3 flex items-center gap-1">
+          <p className="text-2xs text-slate-400 mt-3 flex items-center gap-1">
             <BarChart3 size={10} />
             Equipment needing service should be returned to the program coordinator for calibration and repair.
           </p>

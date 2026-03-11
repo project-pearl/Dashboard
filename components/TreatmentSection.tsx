@@ -94,7 +94,7 @@ const TreatmentSection: React.FC = () => {
           />
         </div>
         <div className="mt-10">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-teal-700 mb-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.35em] text-teal-700 mb-5">
             Treatment Technology
           </p>
           <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-slate-900 leading-[1.05] max-w-4xl">
@@ -116,14 +116,14 @@ const TreatmentSection: React.FC = () => {
       <div className="max-w-7xl mx-auto px-8 py-28 md:py-36">
         <div className="grid md:grid-cols-2 gap-16 items-center">
           <FadeIn>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-teal-600 mb-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-teal-600 mb-4">
               The Shoreline Gap
             </p>
             <h2 className="text-3xl md:text-[2.75rem] font-bold text-slate-900 leading-[1.15] mb-6">
               Land-based tools stop at the water&apos;s edge.{" "}
               <span className="text-slate-400">Pollution doesn&apos;t.</span>
             </h2>
-            <div className="space-y-5 text-[17px] leading-[1.9] text-slate-600">
+            <div className="space-y-5 text-lg leading-[1.9] text-slate-600">
               <p>
                 Bioswales, retention ponds, and street sweeping do valuable work on land. But once
                 stormwater runoff crosses the shoreline into the water column, no infrastructure
@@ -161,7 +161,7 @@ const TreatmentSection: React.FC = () => {
         <div className="max-w-7xl mx-auto px-8 py-28 md:py-36">
           <FadeIn>
             <div className="text-center mb-16">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-emerald-400 mb-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-400 mb-4">
                 How It Works
               </p>
               <h2 className="text-3xl md:text-5xl font-bold leading-tight mb-5">
@@ -213,7 +213,7 @@ const TreatmentSection: React.FC = () => {
                   <div className={`absolute top-0 left-6 right-6 h-px bg-gradient-to-r ${stage.accent} opacity-40`} />
                   <div className="flex items-center gap-3 mb-4">
                     <span className={`text-xs font-bold tracking-wider ${stage.badge} px-2.5 py-1 rounded-md`}>{stage.num}</span>
-                    <h3 className="font-bold text-white text-[15px]">{stage.title}</h3>
+                    <h3 className="font-bold text-white text-base">{stage.title}</h3>
                   </div>
                   <p className="text-sm text-slate-400 leading-relaxed">{stage.desc}</p>
                 </div>
@@ -229,7 +229,7 @@ const TreatmentSection: React.FC = () => {
       <div className="max-w-7xl mx-auto px-8 py-28 md:py-36">
         <FadeIn>
           <div className="text-center mb-16">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-teal-600 mb-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-teal-600 mb-4">
               Field Validated
             </p>
             <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight mb-3">
@@ -257,7 +257,7 @@ const TreatmentSection: React.FC = () => {
                   {m.display ?? <AnimatedCounter end={m.end} prefix={m.prefix} suffix={m.suffix} />}
                 </div>
                 <div className="text-xs font-semibold text-slate-800 uppercase tracking-[0.15em] mb-1">{m.label}</div>
-                <div className="text-[11px] text-slate-400">{m.sub}</div>
+                <div className="text-xs text-slate-400">{m.sub}</div>
               </div>
             </FadeIn>
           ))}
@@ -292,7 +292,7 @@ const TreatmentSection: React.FC = () => {
         <div className="max-w-7xl mx-auto px-8 py-28 md:py-36">
           <FadeIn>
             <div className="text-center mb-16">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-teal-600 mb-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-teal-600 mb-4">
                 Deployment
               </p>
               <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight mb-5">
@@ -324,7 +324,7 @@ const TreatmentSection: React.FC = () => {
                 <div className="absolute left-0 top-8 bottom-8 w-[3px] rounded-full bg-gradient-to-b from-sky-400 to-sky-600" />
                 <div className="pl-4">
                   <h3 className="text-xl font-bold text-slate-900 mb-3">Vessel-Mounted Platform</h3>
-                  <p className="text-[15px] text-slate-600 leading-relaxed mb-5">
+                  <p className="text-base text-slate-600 leading-relaxed mb-5">
                     Mobile treatment for tidal, estuarine, and brackish environments. No land acquisition
                     required and simplified permitting. Repositionable based on seasonal conditions.
                   </p>
@@ -345,7 +345,7 @@ const TreatmentSection: React.FC = () => {
                 <div className="absolute left-0 top-8 bottom-8 w-[3px] rounded-full bg-gradient-to-b from-emerald-400 to-emerald-600" />
                 <div className="pl-4">
                   <h3 className="text-xl font-bold text-slate-900 mb-3">Fixed Dockside System</h3>
-                  <p className="text-[15px] text-slate-600 leading-relaxed mb-5">
+                  <p className="text-base text-slate-600 leading-relaxed mb-5">
                     Permanent infrastructure for freshwater MS4 outfalls, PFAS hotspots, and year-round
                     compliance points. Smaller footprint for constrained sites.
                   </p>
@@ -370,7 +370,7 @@ const TreatmentSection: React.FC = () => {
       <div className="max-w-7xl mx-auto px-8 py-28 md:py-36">
         <div className="grid md:grid-cols-2 gap-16 items-center">
           <FadeIn>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-teal-600 mb-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-teal-600 mb-4">
               More Than a Filter
             </p>
             <h2 className="text-3xl md:text-[2.75rem] font-bold text-slate-900 leading-[1.15] mb-6">
@@ -379,7 +379,7 @@ const TreatmentSection: React.FC = () => {
                 a data node.
               </span>
             </h2>
-            <div className="space-y-5 text-[17px] leading-[1.9] text-slate-600">
+            <div className="space-y-5 text-lg leading-[1.9] text-slate-600">
               <p>
                 Each PEARL system carries 8 monitoring points that capture influent and effluent
                 data in real time — TSS, turbidity, nutrients, microplastics, and dissolved oxygen.
@@ -431,7 +431,7 @@ const TreatmentSection: React.FC = () => {
         <div className="max-w-5xl mx-auto px-8 py-28 md:py-36">
           <FadeIn>
             <div className="text-center mb-16">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-emerald-400 mb-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-400 mb-4">
                 System Architecture
               </p>
               <h2 className="text-3xl md:text-5xl font-bold leading-tight mb-5">
@@ -455,11 +455,11 @@ const TreatmentSection: React.FC = () => {
                     <span className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center text-sm font-bold ring-1 ring-sky-500/20">01</span>
                     <h3 className="text-xl font-bold">PIN — The Diagnostic Layer</h3>
                   </div>
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.2em] px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20">
+                  <span className="text-2xs font-semibold uppercase tracking-[0.2em] px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20">
                     Operational
                   </span>
                 </div>
-                <p className="text-[15px] text-slate-400 leading-relaxed mb-6">
+                <p className="text-base text-slate-400 leading-relaxed mb-6">
                   The PEARL Intelligence Network monitors surface water quality across all 50 states.
                   565,000+ assessment points. Real-time federal data from USGS, EPA, NOAA, and state
                   agencies. Role-based dashboards for municipalities, regulators, researchers, and educators.
@@ -486,11 +486,11 @@ const TreatmentSection: React.FC = () => {
                     <span className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-sm font-bold ring-1 ring-emerald-500/20">02</span>
                     <h3 className="text-xl font-bold">PEARL — The Treatment Layer</h3>
                   </div>
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.2em] px-4 py-1.5 rounded-full bg-amber-500/10 text-amber-400 ring-1 ring-amber-500/20">
+                  <span className="text-2xs font-semibold uppercase tracking-[0.2em] px-4 py-1.5 rounded-full bg-amber-500/10 text-amber-400 ring-1 ring-amber-500/20">
                     Pilot Validated
                   </span>
                 </div>
-                <p className="text-[15px] text-slate-400 leading-relaxed mb-6">
+                <p className="text-base text-slate-400 leading-relaxed mb-6">
                   Modular biofiltration and mechanical treatment deployed at the shoreline. Oyster
                   raceways and progressive mesh screens intercept what land-based BMPs miss. Each
                   unit generates high-frequency treatment data that feeds back into PIN.

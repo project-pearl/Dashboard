@@ -541,17 +541,17 @@ export default function SiteAssessmentCard({
           <div className="text-left">
             <div className="text-sm font-semibold text-cyan-800 flex items-center gap-2">
               Restoration Plan — {regionName}
-              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${siteSeverityColor}`}>
+              <span className={`text-2xs font-bold px-1.5 py-0.5 rounded-full ${siteSeverityColor}`}>
                 {siteSeverityLabel} ({siteSeverityScore})
               </span>
             </div>
-            <div className="text-[11px] text-slate-500">
+            <div className="text-xs text-slate-500">
               {pearlModel} × {totalUnits} unit{totalUnits > 1 ? 's' : ''} ({totalQuads} quad{totalQuads > 1 ? 's' : ''}, {fullGPM} GPM) + {totalBMPs} BMPs · {waterType === 'brackish' ? '🦪 Oyster' : '🐚 Mussel'} Biofilt · {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(fullAnnualCost)}/yr
             </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 text-[9px]">
+          <div className="flex items-center gap-1.5 text-2xs">
             {categories.reduce((n, c) => n + c.modules.filter(m => m.status === 'warranted').length, 0) > 0 && (
               <span className="bg-red-200 text-red-800 font-bold px-1.5 py-0.5 rounded-full">
                 {categories.reduce((n, c) => n + c.modules.filter(m => m.status === 'warranted').length, 0)} warranted
@@ -573,21 +573,21 @@ export default function SiteAssessmentCard({
               <div className="rounded-lg border-2 border-slate-300 bg-white p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="text-sm font-bold text-slate-900 uppercase tracking-wide">Executive Summary</div>
-                  <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${siteSeverityColor}`}>
+                  <span className={`text-2xs font-bold px-2 py-1 rounded-full ${siteSeverityColor}`}>
                     Site Severity: {siteSeverityLabel} ({siteSeverityScore}/100)
                   </span>
                 </div>
 
                 {/* Severity score breakdown bar */}
                 <div className="rounded-md bg-slate-50 border border-slate-200 p-3 space-y-2">
-                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{isMD ? 'MD DNR Threshold' : 'EPA Criteria'} Assessment</div>
-                  <div className="grid grid-cols-5 gap-1.5 text-[10px]">
+                  <div className="text-2xs font-bold text-slate-500 uppercase tracking-wider">{isMD ? 'MD DNR Threshold' : 'EPA Criteria'} Assessment</div>
+                  <div className="grid grid-cols-5 gap-1.5 text-2xs">
                     <div className="text-center">
                       <div className={`font-bold ${doSeverity === 'critical' ? 'text-red-700' : doSeverity === 'stressed' ? 'text-amber-600' : doSeverity === 'adequate' ? 'text-green-600' : 'text-slate-400'}`}>
                         {doSeverity === 'unknown' ? '?' : doVal?.toFixed(1)} mg/L
                       </div>
                       <div className="text-slate-500">DO</div>
-                      <div className={`text-[9px] font-medium ${doSeverity === 'critical' ? 'text-red-600' : doSeverity === 'stressed' ? 'text-amber-600' : 'text-green-600'}`}>
+                      <div className={`text-2xs font-medium ${doSeverity === 'critical' ? 'text-red-600' : doSeverity === 'stressed' ? 'text-amber-600' : 'text-green-600'}`}>
                         {doSeverity !== 'unknown' ? doSeverity : 'no data'}
                       </div>
                     </div>
@@ -596,7 +596,7 @@ export default function SiteAssessmentCard({
                         {bloomSeverity === 'unknown' ? '?' : chlVal} ug/L
                       </div>
                       <div className="text-slate-500">Chl-a</div>
-                      <div className={`text-[9px] font-medium ${bloomSeverity === 'severe' ? 'text-red-600' : bloomSeverity === 'significant' ? 'text-orange-600' : bloomSeverity === 'bloom' ? 'text-amber-600' : 'text-green-600'}`}>
+                      <div className={`text-2xs font-medium ${bloomSeverity === 'severe' ? 'text-red-600' : bloomSeverity === 'significant' ? 'text-orange-600' : bloomSeverity === 'bloom' ? 'text-amber-600' : 'text-green-600'}`}>
                         {bloomSeverity !== 'unknown' ? bloomSeverity : 'no data'}
                       </div>
                     </div>
@@ -605,7 +605,7 @@ export default function SiteAssessmentCard({
                         {turbiditySeverity === 'unknown' ? '?' : turbVal?.toFixed(1)} FNU
                       </div>
                       <div className="text-slate-500">Turbidity</div>
-                      <div className={`text-[9px] font-medium ${turbiditySeverity === 'impaired' ? 'text-red-600' : turbiditySeverity === 'elevated' ? 'text-amber-600' : 'text-green-600'}`}>
+                      <div className={`text-2xs font-medium ${turbiditySeverity === 'impaired' ? 'text-red-600' : turbiditySeverity === 'elevated' ? 'text-amber-600' : 'text-green-600'}`}>
                         {turbiditySeverity !== 'unknown' ? (turbiditySeverity === 'clear' ? 'ok' : turbiditySeverity) : 'no data'}
                       </div>
                     </div>
@@ -614,14 +614,14 @@ export default function SiteAssessmentCard({
                         {nutrientSeverity === 'unknown' ? '?' : `TN ${tnVal?.toFixed(1) ?? '?'}`}
                       </div>
                       <div className="text-slate-500">Nutrients</div>
-                      <div className={`text-[9px] font-medium ${nutrientSeverity === 'excessive' ? 'text-red-600' : nutrientSeverity === 'elevated' ? 'text-amber-600' : 'text-green-600'}`}>
+                      <div className={`text-2xs font-medium ${nutrientSeverity === 'excessive' ? 'text-red-600' : nutrientSeverity === 'elevated' ? 'text-amber-600' : 'text-green-600'}`}>
                         {nutrientSeverity !== 'unknown' ? nutrientSeverity : 'no data'}
                       </div>
                     </div>
                     <div className="text-center">
                       <div className="font-bold text-slate-700">{attainsCategory || '?'}</div>
                       <div className="text-slate-500">ATTAINS</div>
-                      <div className={`text-[9px] font-medium ${isCat5 ? 'text-red-600' : isImpaired ? 'text-amber-600' : 'text-green-600'}`}>
+                      <div className={`text-2xs font-medium ${isCat5 ? 'text-red-600' : isImpaired ? 'text-amber-600' : 'text-green-600'}`}>
                         {tmdlStatus === 'needed' ? 'no TMDL' : tmdlStatus === 'completed' ? 'has TMDL' : tmdlStatus}
                       </div>
                     </div>
@@ -630,13 +630,13 @@ export default function SiteAssessmentCard({
                   <div className="w-full bg-slate-200 rounded-full h-2 mt-1">
                     <div className={`h-2 rounded-full transition-all ${siteSeverityScore >= 75 ? 'bg-red-500' : siteSeverityScore >= 50 ? 'bg-amber-500' : siteSeverityScore >= 25 ? 'bg-yellow-500' : 'bg-green-500'}`} style={{ width: `${Math.min(100, siteSeverityScore)}%` }} />
                   </div>
-                  <div className="text-[9px] text-slate-400">Composite: DO (25%) + Bloom/Nutrients (25%) + Turbidity (15%) + Impairment (20%) + Monitoring Gap (15%) | Thresholds: {thresholdSource}</div>
+                  <div className="text-2xs text-slate-400">Composite: DO (25%) + Bloom/Nutrients (25%) + Turbidity (15%) + Impairment (20%) + Monitoring Gap (15%) | Thresholds: {thresholdSource}</div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {/* Situation */}
                   <div className="rounded-md bg-slate-50 border border-slate-200 p-3">
-                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Situation</div>
+                    <div className="text-2xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Situation</div>
                     <div className="space-y-1 text-xs text-slate-700 leading-relaxed">
                       <div><span className="font-semibold">{regionName}</span> is {isCat5 ? 'Category 5 impaired' : attainsCategory.includes('4') ? 'Category 4 impaired' : isImpaired ? 'impaired' : 'under monitoring'}{attainsCauses.length > 0 ? ` for ${attainsCauses.slice(0, 2).join(' and ').toLowerCase()}` : ''}.</div>
                       {dataAgeDays !== null && <div>Most recent data is <span className="font-semibold">{dataAgeDays} days old</span>. Confidence is <span className={`font-semibold ${dataConfidence === 'low' ? 'text-red-600' : dataConfidence === 'moderate' ? 'text-amber-600' : 'text-green-600'}`}>{dataConfidence}</span>.</div>}
@@ -646,7 +646,7 @@ export default function SiteAssessmentCard({
 
                   {/* Treatment Priorities */}
                   <div className="rounded-md bg-red-50 border border-red-200 p-3">
-                    <div className="text-[10px] font-bold text-red-700 uppercase tracking-wider mb-1.5">Treatment Priorities</div>
+                    <div className="text-2xs font-bold text-red-700 uppercase tracking-wider mb-1.5">Treatment Priorities</div>
                     <div className="space-y-1 text-xs text-red-800 leading-relaxed">
                       {treatmentPriorities.length > 0 ? treatmentPriorities.slice(0, 3).map((tp, i) => (
                         <div key={i} className="flex items-start gap-1">
@@ -667,10 +667,10 @@ export default function SiteAssessmentCard({
 
                   {/* Plan */}
                   <div className="rounded-md bg-blue-50 border border-blue-200 p-3">
-                    <div className="text-[10px] font-bold text-blue-700 uppercase tracking-wider mb-1.5">Plan</div>
+                    <div className="text-2xs font-bold text-blue-700 uppercase tracking-wider mb-1.5">Plan</div>
                     <div className="space-y-1 text-xs text-blue-800 leading-relaxed">
                       <div>Layered approach:</div>
-                      <div className="pl-2 space-y-0.5 text-[11px]">
+                      <div className="pl-2 space-y-0.5 text-xs">
                         <div>→ Upstream BMPs and source control</div>
                         <div>→ Nature-based restoration for long-term recovery</div>
                         <div>→ Community programs for compliance and stewardship</div>
@@ -681,7 +681,7 @@ export default function SiteAssessmentCard({
 
                   {/* Priority Findings */}
                   <div className="rounded-md bg-cyan-50 border-2 border-cyan-300 p-3">
-                    <div className="text-[10px] font-bold text-cyan-800 uppercase tracking-wider mb-1.5">Priority Findings</div>
+                    <div className="text-2xs font-bold text-cyan-800 uppercase tracking-wider mb-1.5">Priority Findings</div>
                     <div className="space-y-1.5 text-xs text-cyan-900 leading-relaxed">
                       {dataAgeDays !== null && dataAgeDays > 30 && (
                         <div><span className="font-semibold text-red-700">Data is {dataAgeDays} days old.</span> Continuous, compliance-grade monitoring is needed.</div>
@@ -702,7 +702,7 @@ export default function SiteAssessmentCard({
                   <div className="text-xs font-semibold">
                     Recommended next step: Deploy {isPhasedDeployment ? `Phase 1 (${phase1Units} unit${phase1Units > 1 ? 's' : ''}, ${phase1GPM} GPM)` : `${totalUnits} PIN unit${totalUnits > 1 ? 's' : ''}`} at {regionName} and begin continuous monitoring within 30 days.
                   </div>
-                  <div className="text-[10px] text-cyan-200 mt-1">
+                  <div className="text-2xs text-cyan-200 mt-1">
                     Typical deployment: 30-60 days. Pilot generates continuous data and measurable reductions within the first operating cycle.
                   </div>
                 </div>
@@ -724,7 +724,7 @@ export default function SiteAssessmentCard({
                   <div className="text-sm font-bold text-cyan-900 uppercase tracking-wide flex items-center gap-2">
                     ⚡ Fastest Path to Measurable Results
                   </div>
-                  <div className="flex items-center gap-1.5 text-[9px]">
+                  <div className="flex items-center gap-1.5 text-2xs">
                     {warranted.length > 0 && <span className="bg-red-200 text-red-800 font-bold px-1.5 py-0.5 rounded-full">{warranted.length} warranted</span>}
                     <span className="bg-cyan-200 text-cyan-800 font-bold px-1.5 py-0.5 rounded-full">{totalQuads}Q / {totalUnits} units / {fullGPM} GPM</span>
                   </div>
@@ -732,12 +732,12 @@ export default function SiteAssessmentCard({
 
                 {/* Site assessment — dynamic evidence box */}
                 <div className="rounded-md border border-cyan-300 bg-white p-3 space-y-2">
-                  <div className="text-[10px] font-bold text-cyan-800 uppercase tracking-wider">Site Assessment</div>
+                  <div className="text-2xs font-bold text-cyan-800 uppercase tracking-wider">Site Assessment</div>
                   <div className="space-y-1.5">
                     {whyBullets.map((b, i) => (
                       <div key={i} className="flex items-start gap-2">
                         <span className="text-sm flex-shrink-0 mt-0.5">{b.icon}</span>
-                        <div className="text-[11px] leading-relaxed">
+                        <div className="text-xs leading-relaxed">
                           <span className="text-red-700 font-medium">{b.problem}.</span>{' '}
                           <span className="text-slate-600">{b.implication}.</span>
                         </div>
@@ -755,11 +755,11 @@ export default function SiteAssessmentCard({
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-semibold">{t.label}</span>
-                            <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase ${
+                            <span className={`text-2xs font-bold px-1.5 py-0.5 rounded-full uppercase ${
                               t.status === 'warranted' ? 'bg-red-200 text-red-800' : 'bg-cyan-200 text-cyan-800'
                             }`}>{t.status === 'warranted' ? 'WARRANTED' : 'PIN'}</span>
                           </div>
-                          <div className="text-[10px] mt-0.5 leading-relaxed opacity-90">{t.detail}</div>
+                          <div className="text-2xs mt-0.5 leading-relaxed opacity-90">{t.detail}</div>
                         </div>
                       </div>
                     </div>
@@ -767,7 +767,7 @@ export default function SiteAssessmentCard({
                   {coBenefits.length > 0 && (
                     <div className="flex flex-wrap gap-1 pt-0.5">
                       {coBenefits.map((t) => (
-                        <span key={t.id} className="inline-flex items-center gap-1 text-[10px] text-slate-500 bg-white/70 border border-slate-200 rounded px-2 py-1" title={t.detail}>
+                        <span key={t.id} className="inline-flex items-center gap-1 text-2xs text-slate-500 bg-white/70 border border-slate-200 rounded px-2 py-1" title={t.detail}>
                           {t.icon} {t.label}
                         </span>
                       ))}
@@ -779,24 +779,24 @@ export default function SiteAssessmentCard({
                 <div className="rounded-md bg-white border border-cyan-200 p-3 space-y-2">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div>
-                      <div className="text-[10px] text-slate-500 uppercase">Configuration</div>
+                      <div className="text-2xs text-slate-500 uppercase">Configuration</div>
                       <div className="text-sm font-bold text-cyan-800">{pearlModel}</div>
-                      <div className="text-[10px] text-slate-500">{waterType === 'brackish' ? 'Oyster' : 'Mussel'} Biofilt{pearlMods.some(t => t.id.startsWith('pearl-resin')) ? ' + Resin' : ''}{pearlMods.some(t => t.id === 'pearl-uv') ? ' + UV' : ''}{pearlMods.some(t => t.id === 'pearl-gac') ? ' + GAC' : ''}</div>
+                      <div className="text-2xs text-slate-500">{waterType === 'brackish' ? 'Oyster' : 'Mussel'} Biofilt{pearlMods.some(t => t.id.startsWith('pearl-resin')) ? ' + Resin' : ''}{pearlMods.some(t => t.id === 'pearl-uv') ? ' + UV' : ''}{pearlMods.some(t => t.id === 'pearl-gac') ? ' + GAC' : ''}</div>
                     </div>
                     <div>
-                      <div className="text-[10px] text-slate-500 uppercase">Full Build Target</div>
+                      <div className="text-2xs text-slate-500 uppercase">Full Build Target</div>
                       <div className="text-sm font-bold text-cyan-800">{totalQuads} quad{totalQuads > 1 ? 's' : ''} ({totalUnits} units)</div>
-                      <div className="text-[10px] text-slate-500">{fullGPM} GPM total capacity</div>
+                      <div className="text-2xs text-slate-500">{fullGPM} GPM total capacity</div>
                     </div>
                     <div>
-                      <div className="text-[10px] text-slate-500 uppercase">Full Build Annual</div>
+                      <div className="text-2xs text-slate-500 uppercase">Full Build Annual</div>
                       <div className="text-sm font-bold text-cyan-800">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(fullAnnualCost)}/yr</div>
-                      <div className="text-[10px] text-slate-500">$200K/unit/yr</div>
+                      <div className="text-2xs text-slate-500">$200K/unit/yr</div>
                     </div>
                     <div>
-                      <div className="text-[10px] text-slate-500 uppercase">Sizing Basis</div>
+                      <div className="text-2xs text-slate-500 uppercase">Sizing Basis</div>
                       <div className={`text-xs font-semibold ${siteSeverityScore >= 75 ? 'text-red-700' : siteSeverityScore >= 50 ? 'text-amber-700' : 'text-slate-700'}`}>Severity {prelimSeverity}/100</div>
-                      <div className="text-[10px] text-slate-500">{sizingBasis}</div>
+                      <div className="text-2xs text-slate-500">{sizingBasis}</div>
                     </div>
                   </div>
                 </div>
@@ -911,7 +911,7 @@ export default function SiteAssessmentCard({
 
                   return (
                     <div className="rounded-md border border-slate-200 bg-white p-3 space-y-2">
-                      <div className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Deployment Roadmap -- Path to {totalQuads} Quads ({totalUnits} Units)</div>
+                      <div className="text-2xs font-bold text-slate-600 uppercase tracking-wider">Deployment Roadmap -- Path to {totalQuads} Quads ({totalUnits} Units)</div>
 
                       <div className="space-y-2">
                         {phases.map((p, i) => (
@@ -921,17 +921,17 @@ export default function SiteAssessmentCard({
                                 <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${i === 0 ? 'bg-cyan-700 text-white' : i === 1 ? 'bg-blue-600 text-white' : 'bg-indigo-600 text-white'}`}>
                                   {p.phase}
                                 </span>
-                                <span className="text-[10px] font-bold uppercase tracking-wider opacity-70">{p.mission}</span>
+                                <span className="text-2xs font-bold uppercase tracking-wider opacity-70">{p.mission}</span>
                               </div>
                               <span className="text-xs font-bold">{p.quads} quad{p.quads > 1 ? 's' : ''} ({p.units}U, {p.gpm} GPM) -- {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(p.cost)}/yr</span>
                             </div>
-                            <div className="text-[11px] leading-relaxed">
+                            <div className="text-xs leading-relaxed">
                               <span className="font-semibold">Placement:</span> {p.placement}
                             </div>
-                            <div className="text-[11px] leading-relaxed mt-1">
+                            <div className="text-xs leading-relaxed mt-1">
                               <span className="font-semibold">Justification:</span> {p.why}
                             </div>
-                            <div className="text-[10px] text-slate-500 mt-1">
+                            <div className="text-2xs text-slate-500 mt-1">
                               <span className="font-medium">Trigger:</span> {p.trigger}
                             </div>
                           </div>
@@ -944,7 +944,7 @@ export default function SiteAssessmentCard({
                           <div key={i} className={`flex-1 h-2 rounded-full ${i === 0 ? 'bg-cyan-500' : i === 1 ? 'bg-blue-500' : 'bg-indigo-500'}`} title={`${p.phase}: ${p.units} units`} />
                         ))}
                       </div>
-                      <div className="flex justify-between text-[9px] text-slate-400">
+                      <div className="flex justify-between text-2xs text-slate-400">
                         <span>Day 1</span>
                         <span>90 days</span>
                         {phases.length > 2 && <span>180 days</span>}
@@ -1391,16 +1391,16 @@ export default function SiteAssessmentCard({
 
                   return (
                     <div className="rounded-lg border-2 border-green-300 bg-gradient-to-br from-green-50 to-emerald-50 p-3 space-y-3">
-                      <div className="text-[10px] font-bold text-green-800 uppercase tracking-wider">PIN Economics -- {regionName}</div>
+                      <div className="text-2xs font-bold text-green-800 uppercase tracking-wider">PIN Economics -- {regionName}</div>
 
                       {/* Unit pricing */}
                       <div className="space-y-1">
-                        <div className="text-[10px] font-bold text-slate-600 uppercase">PIN Unit Pricing</div>
+                        <div className="text-2xs font-bold text-slate-600 uppercase">PIN Unit Pricing</div>
                         <div className="rounded-md bg-white border border-slate-200 overflow-hidden">
-                          <div className="grid grid-cols-[1fr_auto] text-[11px]">
+                          <div className="grid grid-cols-[1fr_auto] text-xs">
                             <div className="px-2 py-1.5 bg-slate-100 font-semibold border-b border-slate-200">PIN Unit (50 GPM)</div>
                             <div className="px-2 py-1.5 bg-slate-100 font-bold text-right border-b border-slate-200">{fmt(unitCost)}/unit/year</div>
-                            <div className="px-2 py-1.5 border-b border-slate-100 text-[10px] text-slate-500" style={{ gridColumn: '1 / -1' }}>
+                            <div className="px-2 py-1.5 border-b border-slate-100 text-2xs text-slate-500" style={{ gridColumn: '1 / -1' }}>
                               All-inclusive: hardware, deployment, calibration, continuous monitoring, dashboards, automated reporting, maintenance, and support
                             </div>
                           </div>
@@ -1409,9 +1409,9 @@ export default function SiteAssessmentCard({
 
                       {/* Deployment costs by phase */}
                       <div className="space-y-1">
-                        <div className="text-[10px] font-bold text-slate-600 uppercase">{isPhasedDeployment ? 'Phased Deployment Costs' : 'Deployment Cost'}</div>
+                        <div className="text-2xs font-bold text-slate-600 uppercase">{isPhasedDeployment ? 'Phased Deployment Costs' : 'Deployment Cost'}</div>
                         <div className="rounded-md bg-white border border-slate-200 overflow-hidden">
-                          <div className="grid grid-cols-[1fr_auto_auto_auto] text-[11px]">
+                          <div className="grid grid-cols-[1fr_auto_auto_auto] text-xs">
                             <div className="px-2 py-1 bg-slate-200 font-bold border-b border-slate-300">Phase</div>
                             <div className="px-2 py-1 bg-slate-200 font-bold text-right border-b border-slate-300">Units</div>
                             <div className="px-2 py-1 bg-slate-200 font-bold text-right border-b border-slate-300">GPM</div>
@@ -1469,9 +1469,9 @@ export default function SiteAssessmentCard({
 
                       {/* Traditional compliance baseline */}
                       <div className="space-y-1">
-                        <div className="text-[10px] font-bold text-slate-600 uppercase">Current Compliance Cost Baseline ({totalQuads} Zones, Annual)</div>
+                        <div className="text-2xs font-bold text-slate-600 uppercase">Current Compliance Cost Baseline ({totalQuads} Zones, Annual)</div>
                         <div className="rounded-md bg-white border border-slate-200 overflow-hidden">
-                          <div className="grid grid-cols-[1fr_auto] text-[11px]">
+                          <div className="grid grid-cols-[1fr_auto] text-xs">
                             <div className="px-2 py-1.5 border-b border-slate-100">Continuous monitoring stations (install amortized + ops)</div>
                             <div className="px-2 py-1.5 font-bold text-slate-600 text-right border-b border-slate-100">{fmt(tradMonitoringLow * totalQuads)} -- {fmt(tradMonitoringHigh * totalQuads)}/yr</div>
                             <div className="px-2 py-1.5 bg-slate-50 border-b border-slate-100">Treatment BMPs (constructed wetland / bioretention, amortized)</div>
@@ -1482,50 +1482,50 @@ export default function SiteAssessmentCard({
                             <div className="px-2 py-1.5 bg-slate-200 font-bold text-slate-700 text-right">{fmt(tradTotalLow)} -- {fmt(tradTotalHigh)}/yr</div>
                           </div>
                         </div>
-                        <div className="text-[9px] text-slate-500 px-1">These are costs Baltimore already pays or would pay to achieve equivalent compliance coverage. PIN does not eliminate all of these -- it partially displaces and compresses them.</div>
+                        <div className="text-2xs text-slate-500 px-1">These are costs Baltimore already pays or would pay to achieve equivalent compliance coverage. PIN does not eliminate all of these -- it partially displaces and compresses them.</div>
                       </div>
 
                       {/* Compliance cost savings */}
                       <div className="space-y-1">
-                        <div className="text-[10px] font-bold text-green-700 uppercase">Compliance Cost Savings From Meeting Permit Requirements</div>
+                        <div className="text-2xs font-bold text-green-700 uppercase">Compliance Cost Savings From Meeting Permit Requirements</div>
                         <div className="rounded-md bg-white border border-green-200 overflow-hidden">
-                          <div className="grid grid-cols-[1fr_auto] text-[11px]">
+                          <div className="grid grid-cols-[1fr_auto] text-xs">
                             <div className="px-2 py-1.5 border-b border-green-100">
                               <div className="font-semibold">Monitoring & reporting efficiency</div>
-                              <div className="text-[9px] text-slate-500">Replaces 50-75% of fixed stations, 40-60% of consulting & lab work</div>
+                              <div className="text-2xs text-slate-500">Replaces 50-75% of fixed stations, 40-60% of consulting & lab work</div>
                             </div>
                             <div className="px-2 py-1.5 font-bold text-green-700 text-right border-b border-green-100">{fmt(bucket1Low)} -- {fmt(bucket1High)}/yr</div>
                             <div className="px-2 py-1.5 bg-green-50/50 border-b border-green-100">
                               <div className="font-semibold">BMP execution efficiency</div>
-                              <div className="text-[9px] text-slate-500">Better targeting reduces rework, redesign & mis-targeted spend (5-10% of BMP program)</div>
+                              <div className="text-2xs text-slate-500">Better targeting reduces rework, redesign & mis-targeted spend (5-10% of BMP program)</div>
                             </div>
                             <div className="px-2 py-1.5 bg-green-50/50 font-bold text-green-700 text-right border-b border-green-100">{fmt(bucket2Low)} -- {fmt(bucket2High)}/yr</div>
                             <div className="px-2 py-1.5 bg-green-200 font-bold text-green-900">Total Compliance Savings</div>
                             <div className="px-2 py-1.5 bg-green-200 font-bold text-green-900 text-right">{fmt(compSavingsLowRound)} -- {fmt(compSavingsHighRound)}/yr</div>
                           </div>
                         </div>
-                        <div className="text-[9px] text-slate-500 px-1">This is not avoided fines. This is reduced spend on monitoring, reporting, and inefficient BMP execution -- tied directly to Baltimore's existing cost categories.</div>
+                        <div className="text-2xs text-slate-500 px-1">This is not avoided fines. This is reduced spend on monitoring, reporting, and inefficient BMP execution -- tied directly to Baltimore's existing cost categories.</div>
                       </div>
 
                       {/* What this means */}
                       <div className="grid grid-cols-2 gap-2">
                         <div className="rounded-md bg-green-100 border border-green-200 text-center py-2">
-                          <div className="text-[9px] text-green-600">Compliance Savings Offset</div>
+                          <div className="text-2xs text-green-600">Compliance Savings Offset</div>
                           <div className="text-lg font-bold text-green-700">{offsetPctLow}% -- {offsetPctHigh}%</div>
-                          <div className="text-[9px] text-green-500">of PIN cost offset by reduced compliance spend</div>
+                          <div className="text-2xs text-green-500">of PIN cost offset by reduced compliance spend</div>
                         </div>
                         <div className="rounded-md bg-cyan-100 border border-cyan-200 text-center py-2">
-                          <div className="text-[9px] text-cyan-600">Time to Compliance Data</div>
+                          <div className="text-2xs text-cyan-600">Time to Compliance Data</div>
                           <div className="text-lg font-bold text-cyan-700">30 -- 60 days</div>
-                          <div className="text-[9px] text-cyan-500">vs. 12-24 months traditional BMP</div>
+                          <div className="text-2xs text-cyan-500">vs. 12-24 months traditional BMP</div>
                         </div>
                       </div>
 
                       {/* Grant offset */}
                       <div className="space-y-1">
-                        <div className="text-[10px] font-bold text-slate-600 uppercase">Grant Funding Offset</div>
+                        <div className="text-2xs font-bold text-slate-600 uppercase">Grant Funding Offset</div>
                         <div className="rounded-md bg-white border border-slate-200 overflow-hidden">
-                          <div className="grid grid-cols-[1fr_auto] text-[11px]">
+                          <div className="grid grid-cols-[1fr_auto] text-xs">
                             <div className="px-2 py-1.5 border-b border-slate-100">Estimated grant-eligible portion (40-75%)</div>
                             <div className="px-2 py-1.5 font-bold text-green-700 text-right border-b border-slate-100">{fmt(grantOffsetLow)} -- {fmt(grantOffsetHigh)}/yr</div>
                             <div className="px-2 py-1.5 bg-slate-50 border-b border-slate-100">+ Compliance savings</div>
@@ -1534,30 +1534,30 @@ export default function SiteAssessmentCard({
                             <div className="px-2 py-1.5 bg-green-200 font-bold text-green-900 text-right">{fmt(effectiveCostLow)} -- {fmt(effectiveCostHigh)}/yr</div>
                           </div>
                         </div>
-                        <div className="text-[9px] text-slate-500 px-1">Effective net cost = PIN annual cost minus grant funding minus compliance savings. This is the incremental budget impact for capabilities that would otherwise require {totalQuads} separate monitoring, treatment, and consulting contracts.</div>
+                        <div className="text-2xs text-slate-500 px-1">Effective net cost = PIN annual cost minus grant funding minus compliance savings. This is the incremental budget impact for capabilities that would otherwise require {totalQuads} separate monitoring, treatment, and consulting contracts.</div>
                       </div>
 
                       {/* Grant alignment */}
                       <div className="space-y-1">
-                        <div className="text-[10px] font-bold text-slate-600 uppercase">Grant Alignment</div>
-                        <div className="grid grid-cols-3 gap-1 text-[10px]">
+                        <div className="text-2xs font-bold text-slate-600 uppercase">Grant Alignment</div>
+                        <div className="grid grid-cols-3 gap-1 text-2xs">
                           <div className="rounded bg-green-100 border border-green-200 p-1.5 text-center">
                             <div className="font-bold text-green-800">Equipment</div>
-                            <div className="text-green-600 text-[9px]">"Pilot deployment & equipment"</div>
+                            <div className="text-green-600 text-2xs">"Pilot deployment & equipment"</div>
                             <div className="font-bold text-green-700 mt-0.5">HIGHLY FUNDABLE</div>
                           </div>
                           <div className="rounded bg-green-100 border border-green-200 p-1.5 text-center">
                             <div className="font-bold text-green-800">Monitoring</div>
-                            <div className="text-green-600 text-[9px]">"Monitoring, evaluation & data"</div>
+                            <div className="text-green-600 text-2xs">"Monitoring, evaluation & data"</div>
                             <div className="font-bold text-green-700 mt-0.5">HIGHLY FUNDABLE</div>
                           </div>
                           <div className="rounded bg-green-100 border border-green-200 p-1.5 text-center">
                             <div className="font-bold text-green-800">Treatment</div>
-                            <div className="text-green-600 text-[9px]">"Nature-based BMP implementation"</div>
+                            <div className="text-green-600 text-2xs">"Nature-based BMP implementation"</div>
                             <div className="font-bold text-green-700 mt-0.5">HIGHLY FUNDABLE</div>
                           </div>
                         </div>
-                        <div className="text-[10px] text-slate-500">Eligible: EPA 319, {stateAbbr === 'MD' ? 'MD Bay Restoration Fund, ' : ''}Justice40, CBRAP, NOAA Habitat Restoration, state revolving funds</div>
+                        <div className="text-2xs text-slate-500">Eligible: EPA 319, {stateAbbr === 'MD' ? 'MD Bay Restoration Fund, ' : ''}Justice40, CBRAP, NOAA Habitat Restoration, state revolving funds</div>
                       </div>
                     </div>
                   );
@@ -1567,8 +1567,8 @@ export default function SiteAssessmentCard({
           })()}
 
           {/* ═══ SUPPORTING LAYERS (source, nature, community, regulatory) ═══ */}
-          <div className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold px-1 pt-1">Supporting Restoration Layers</div>
-          <div className="text-[11px] text-slate-500 px-1 -mt-2">
+          <div className="text-2xs text-slate-400 uppercase tracking-wider font-semibold px-1 pt-1">Supporting Restoration Layers</div>
+          <div className="text-xs text-slate-500 px-1 -mt-2">
             PIN accelerates results. These layers provide the long-term foundation.
           </div>
 
@@ -1579,16 +1579,16 @@ export default function SiteAssessmentCard({
             return (
               <div key={cat.id} className={`rounded-lg border ${cat.color} p-2.5 space-y-1.5`}>
                 <div className="flex items-center justify-between">
-                  <div className="text-[11px] font-semibold uppercase tracking-wide flex items-center gap-1.5">
+                  <div className="text-xs font-semibold uppercase tracking-wide flex items-center gap-1.5">
                     <span>{cat.icon}</span> {cat.title}
                   </div>
-                  <div className="flex items-center gap-1.5 text-[9px]">
+                  <div className="flex items-center gap-1.5 text-2xs">
                     {warranted.length > 0 && <span className="bg-red-200 text-red-800 font-bold px-1.5 py-0.5 rounded-full">{warranted.length} warranted</span>}
                     {recommended.length > 0 && <span className="bg-blue-200 text-blue-800 font-bold px-1.5 py-0.5 rounded-full">{recommended.length} recommended</span>}
                     {coBenefits.length > 0 && <span className="bg-slate-200 text-slate-600 font-bold px-1.5 py-0.5 rounded-full">{coBenefits.length} co-benefit</span>}
                   </div>
                 </div>
-                <div className="text-[10px] text-slate-500 -mt-0.5">{cat.subtitle}</div>
+                <div className="text-2xs text-slate-500 -mt-0.5">{cat.subtitle}</div>
                 <div className="space-y-1">
                   {[...warranted, ...recommended].map((t) => (
                     <div key={t.id} className={`rounded-md border p-2 ${t.color}`}>
@@ -1597,11 +1597,11 @@ export default function SiteAssessmentCard({
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-semibold">{t.label}</span>
-                            <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase ${
+                            <span className={`text-2xs font-bold px-1.5 py-0.5 rounded-full uppercase ${
                               t.status === 'warranted' ? 'bg-red-200 text-red-800' : 'bg-blue-200 text-blue-800'
                             }`}>{t.status}</span>
                           </div>
-                          <div className="text-[10px] mt-0.5 leading-relaxed opacity-90">{t.detail}</div>
+                          <div className="text-2xs mt-0.5 leading-relaxed opacity-90">{t.detail}</div>
                         </div>
                       </div>
                     </div>
@@ -1609,7 +1609,7 @@ export default function SiteAssessmentCard({
                   {coBenefits.length > 0 && (
                     <div className="flex flex-wrap gap-1 pt-0.5">
                       {coBenefits.map((t) => (
-                        <span key={t.id} className="inline-flex items-center gap-1 text-[10px] text-slate-500 bg-white/70 border border-slate-200 rounded px-2 py-1" title={t.detail}>
+                        <span key={t.id} className="inline-flex items-center gap-1 text-2xs text-slate-500 bg-white/70 border border-slate-200 rounded px-2 py-1" title={t.detail}>
                           {t.icon} {t.label}
                         </span>
                       ))}
@@ -1624,9 +1624,9 @@ export default function SiteAssessmentCard({
           <div className="grid grid-cols-3 gap-2">
             {threats.map((t) => (
               <div key={t.label} className="bg-white rounded-md border border-cyan-100 p-2 text-center">
-                <div className="text-[10px] text-slate-500 uppercase">{t.label}</div>
+                <div className="text-2xs text-slate-500 uppercase">{t.label}</div>
                 <div className={`text-sm font-bold ${t.color}`}>{t.level}</div>
-                <div className="text-[9px] text-slate-400 mt-0.5">{t.detail}</div>
+                <div className="text-2xs text-slate-400 mt-0.5">{t.detail}</div>
               </div>
             ))}
           </div>
@@ -1635,29 +1635,29 @@ export default function SiteAssessmentCard({
           <div className="rounded-md bg-white border border-slate-200 p-2.5">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
               <div>
-                <div className="text-[10px] text-slate-500 uppercase">Full Plan</div>
+                <div className="text-2xs text-slate-500 uppercase">Full Plan</div>
                 <div className="text-sm font-bold text-slate-700">{totalBMPs} BMPs + {pearlModel}</div>
               </div>
               <div>
-                <div className="text-[10px] text-slate-500 uppercase">Deployment</div>
+                <div className="text-2xs text-slate-500 uppercase">Deployment</div>
                 <div className="text-sm font-bold text-slate-700">{totalQuads} quad{totalQuads > 1 ? 's' : ''} ({totalUnits} units)</div>
-                <div className="text-[9px] text-slate-400">{isPhasedDeployment ? `Phase 1: ${phase1Quads}Q / ${phase1Units}U` : `${fullGPM} GPM`}</div>
+                <div className="text-2xs text-slate-400">{isPhasedDeployment ? `Phase 1: ${phase1Quads}Q / ${phase1Units}U` : `${fullGPM} GPM`}</div>
               </div>
               <div>
-                <div className="text-[10px] text-slate-500 uppercase">Annual Cost</div>
+                <div className="text-2xs text-slate-500 uppercase">Annual Cost</div>
                 <div className="text-sm font-bold text-slate-700">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(fullAnnualCost)}/yr</div>
               </div>
               <div>
-                <div className="text-[10px] text-slate-500 uppercase">Severity</div>
+                <div className="text-2xs text-slate-500 uppercase">Severity</div>
                 <div className={`text-sm font-bold ${siteSeverityScore >= 75 ? 'text-red-700' : siteSeverityScore >= 50 ? 'text-amber-700' : siteSeverityScore >= 25 ? 'text-yellow-700' : 'text-green-700'}`}>{siteSeverityLabel}</div>
-                <div className="text-[9px] text-slate-400">{siteSeverityScore}/100</div>
+                <div className="text-2xs text-slate-400">{siteSeverityScore}/100</div>
               </div>
               <div>
-                <div className="text-[10px] text-slate-500 uppercase">Pathway</div>
+                <div className="text-2xs text-slate-500 uppercase">Pathway</div>
                 <div className="text-xs font-semibold text-slate-700">{compliancePathway}</div>
               </div>
             </div>
-            <div className="text-[10px] text-slate-400 mt-2 border-t border-slate-100 pt-1.5">
+            <div className="text-2xs text-slate-400 mt-2 border-t border-slate-100 pt-1.5">
               Sizing derived from {isMD ? 'MD DNR Shallow Water Monitoring thresholds: DO (5.0/3.2 mg/L), chlorophyll (15/50/100 ug/L), turbidity (7 FNU)' : 'EPA National Recommended Water Quality Criteria: DO (5.0/4.0 mg/L), chlorophyll (20/40/60 ug/L), turbidity (10/25 FNU)'}, EPA ATTAINS category. PIN is the data backbone -- it measures, verifies, and optimizes every restoration layer from day one.
             </div>
           </div>

@@ -108,7 +108,7 @@ export function AskPinPopover({ sectionId, label, userRole, onClose }: AskPinPop
       <div className="p-3 space-y-3">
         {/* ── Explanation ─────────────────────────────────── */}
         <div>
-          <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-blue-700 mb-1">
+          <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-blue-700 mb-1">
             <span>What This Card Shows</span>
           </div>
           <p className="text-slate-700 leading-relaxed">{kb.explanation}</p>
@@ -116,7 +116,7 @@ export function AskPinPopover({ sectionId, label, userRole, onClose }: AskPinPop
 
         {/* ── Look For ────────────────────────────────────── */}
         <div>
-          <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-700 mb-1">
+          <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-emerald-700 mb-1">
             <span>What To Look For</span>
           </div>
           <p className="text-slate-700 leading-relaxed">{kb.lookFor}</p>
@@ -124,7 +124,7 @@ export function AskPinPopover({ sectionId, label, userRole, onClose }: AskPinPop
 
         {/* ── Action ──────────────────────────────────────── */}
         <div>
-          <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-amber-700 mb-1">
+          <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-amber-700 mb-1">
             <span>What Action To Take</span>
           </div>
           <p className="text-slate-700 leading-relaxed">{kb.action}</p>
@@ -134,7 +134,7 @@ export function AskPinPopover({ sectionId, label, userRole, onClose }: AskPinPop
         {kb.faq.length > 0 && (
           <div>
             <div className="border-t border-slate-100 pt-2 mb-1.5">
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Common Questions</span>
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Common Questions</span>
             </div>
             <div className="space-y-1">
               {kb.faq.map((faq, i) => (
@@ -192,7 +192,7 @@ export function AskPinPopover({ sectionId, label, userRole, onClose }: AskPinPop
               <button
                 type="button"
                 onClick={handleAskAi}
-                className="inline-flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors"
               >
                 <MessageSquare className="h-3 w-3" />
                 Ask AI
@@ -214,7 +214,7 @@ export function AskPinPopover({ sectionId, label, userRole, onClose }: AskPinPop
               <div className="rounded-md border border-violet-100 bg-violet-50/50 p-2 text-slate-700 leading-relaxed">
                 {aiAnswer}
               </div>
-              <p className="mt-1 text-[10px] text-slate-400">Powered by AI &middot; may be inaccurate</p>
+              <p className="mt-1 text-2xs text-slate-400">Powered by AI &middot; may be inaccurate</p>
             </div>
           )}
         </div>

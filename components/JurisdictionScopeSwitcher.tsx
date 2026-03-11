@@ -43,7 +43,7 @@ export function JurisdictionScopeSwitcher() {
       {overrideJurisdiction && (
         <button
           onClick={clearJurisdictionOverride}
-          className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] text-slate-600 hover:bg-slate-200"
+          className="inline-flex items-center rounded px-1.5 py-0.5 text-2xs text-slate-600 hover:bg-slate-200"
           title="Clear jurisdiction override"
         >
           <X className="h-3 w-3 mr-1" />
@@ -51,7 +51,7 @@ export function JurisdictionScopeSwitcher() {
         </button>
       )}
       {activeJurisdiction && (
-        <span className="hidden xl:inline text-[10px] text-slate-500">
+        <span className="hidden xl:inline text-2xs text-slate-500">
           Scoped: {activeJurisdiction.jurisdiction_name}
         </span>
       )}

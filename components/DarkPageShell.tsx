@@ -38,7 +38,7 @@ export default function DarkPageShell({ children }: DarkPageShellProps) {
             </Link>
 
             {/* Desktop nav */}
-            <div className="hidden md:flex items-center gap-8 text-[13px] font-mono tracking-wide uppercase">
+            <div className="hidden md:flex items-center gap-8 text-sm font-mono tracking-wide uppercase">
               {NAV_LINKS.map((link) => (
                 <Link
                   key={link.href}
@@ -199,7 +199,7 @@ export default function DarkPageShell({ children }: DarkPageShellProps) {
                 Patent Pending &middot; Built in Maryland
               </p>
             </div>
-            <p className="text-[10px] text-slate-800 font-mono text-center sm:text-left">
+            <p className="text-2xs text-slate-800 font-mono text-center sm:text-left">
               Project Pearl&trade;, Pearl&trade;, ALIA&trade;, and AQUA-LO&trade; are trademarks of Local Seafood Projects.
             </p>
           </div>

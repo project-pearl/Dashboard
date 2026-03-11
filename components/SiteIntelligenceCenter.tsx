@@ -204,16 +204,16 @@ function CategoryCard({ catKey, cat }: { catKey: CategoryKey; cat: WaterRiskScor
     <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
       <button onClick={() => setOpen(!open)} className="w-full px-3 py-3 text-center hover:bg-slate-50 transition-colors">
         <div className="text-xl font-bold text-slate-800">{cat.score}</div>
-        <div className={`text-[10px] font-semibold uppercase tracking-wider ${conditionColor(cat.score)}`}>
+        <div className={`text-2xs font-semibold uppercase tracking-wider ${conditionColor(cat.score)}`}>
           {conditionLabel(cat.score)}
         </div>
-        <div className="text-[10px] text-slate-500 mt-0.5">{CATEGORY_LABELS[catKey]}</div>
+        <div className="text-2xs text-slate-500 mt-0.5">{CATEGORY_LABELS[catKey]}</div>
         {open ? <ChevronDown className="w-3 h-3 mx-auto mt-1 text-slate-400" /> : <ChevronRight className="w-3 h-3 mx-auto mt-1 text-slate-400" />}
       </button>
       {open && (
         <div className="border-t border-slate-100 px-3 py-2 space-y-1">
           {cat.factors.map((f, i) => (
-            <div key={i} className="flex items-center justify-between text-[11px]">
+            <div key={i} className="flex items-center justify-between text-xs">
               <span className="text-slate-600 truncate mr-2">{f.name}</span>
               <div className="flex items-center gap-1.5 shrink-0">
                 <span className="font-medium text-slate-700">{f.value}</span>
@@ -224,7 +224,7 @@ function CategoryCard({ catKey, cat }: { catKey: CategoryKey; cat: WaterRiskScor
               </div>
             </div>
           ))}
-          <div className="text-[10px] text-slate-400 pt-1 flex items-center gap-1">
+          <div className="text-2xs text-slate-400 pt-1 flex items-center gap-1">
             <Info className="w-2.5 h-2.5" /> Confidence: {cat.confidence}%
           </div>
         </div>
@@ -418,7 +418,7 @@ function SiteIntelligenceContent() {
                     <span className="text-xs text-slate-400 ml-2">HUC-8: {scoreData.location.huc8}</span>
                   )}
                   {(scoreData?.location.state || locationData?.location.state) && (
-                    <span className="ml-2 px-1.5 py-0.5 bg-slate-100 rounded text-[10px] font-medium text-slate-500">
+                    <span className="ml-2 px-1.5 py-0.5 bg-slate-100 rounded text-2xs font-medium text-slate-500">
                       {scoreData?.location.state || locationData?.location.state}
                     </span>
                   )}
@@ -446,7 +446,7 @@ function SiteIntelligenceContent() {
                         {conditionLabel(scoreData.composite.score)} Condition
                       </span>
                     </div>
-                    <p className="text-[10px] text-slate-400 mt-1">Confidence: {scoreData.composite.confidence}%</p>
+                    <p className="text-2xs text-slate-400 mt-1">Confidence: {scoreData.composite.confidence}%</p>
                   </div>
 
                   {/* Category KPI grid */}
@@ -576,24 +576,24 @@ function SiteIntelligenceContent() {
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div className="rounded-lg border border-slate-200 bg-white p-3">
                       <div className="text-lg font-bold text-slate-800">{nwisGwSites.length}</div>
-                      <div className="text-[10px] uppercase tracking-wider text-slate-500">GW sites</div>
+                      <div className="text-2xs uppercase tracking-wider text-slate-500">GW sites</div>
                     </div>
                     <div className="rounded-lg border border-slate-200 bg-white p-3">
                       <div className="text-lg font-bold text-slate-800">{nwisGwLevels.length}</div>
-                      <div className="text-[10px] uppercase tracking-wider text-slate-500">GW levels</div>
+                      <div className="text-2xs uppercase tracking-wider text-slate-500">GW levels</div>
                     </div>
                     <div className="rounded-lg border border-slate-200 bg-white p-3">
                       <div className="text-lg font-bold text-slate-800">{nwisIvSites.length}</div>
-                      <div className="text-[10px] uppercase tracking-wider text-slate-500">IV sites</div>
+                      <div className="text-2xs uppercase tracking-wider text-slate-500">IV sites</div>
                     </div>
                     <div className="rounded-lg border border-slate-200 bg-white p-3">
                       <div className="text-lg font-bold text-slate-800">{nwisIvReadings.length}</div>
-                      <div className="text-[10px] uppercase tracking-wider text-slate-500">IV readings</div>
+                      <div className="text-2xs uppercase tracking-wider text-slate-500">IV readings</div>
                     </div>
                   </div>
 
                   {wdfnLastRefresh && (
-                    <div className="text-[11px] text-slate-500">
+                    <div className="text-xs text-slate-500">
                       Last WDFN refresh: {wdfnLastRefresh}
                     </div>
                   )}
@@ -606,7 +606,7 @@ function SiteIntelligenceContent() {
                           <div key={i} className="flex items-center justify-between bg-white border border-slate-100 rounded-lg px-4 py-3">
                             <div>
                               <div className="text-sm font-medium text-slate-800">{t.siteName}</div>
-                              <div className="text-[10px] text-slate-400">{t.siteNumber} · {new Date(t.latestDate).toLocaleDateString()}</div>
+                              <div className="text-2xs text-slate-400">{t.siteNumber} · {new Date(t.latestDate).toLocaleDateString()}</div>
                             </div>
                             <span className={`text-xs px-2 py-0.5 rounded-full font-medium border ${
                               t.trend === 'falling' ? 'bg-red-50 text-red-700 border-red-200' :
@@ -664,7 +664,7 @@ function SiteIntelligenceContent() {
                         <div key={i} className="flex items-center justify-between bg-white border border-slate-100 rounded-lg px-4 py-3">
                           <div>
                             <div className="text-sm font-medium text-slate-800">{sys.name}</div>
-                            <div className="text-[10px] text-slate-400">{sys.pwsid} · {sys.type} · {sys.sourceWater} · Pop: {sys.population?.toLocaleString()}</div>
+                            <div className="text-2xs text-slate-400">{sys.pwsid} · {sys.type} · {sys.sourceWater} · Pop: {sys.population?.toLocaleString()}</div>
                           </div>
                         </div>
                       ))}
@@ -681,7 +681,7 @@ function SiteIntelligenceContent() {
                             <AlertTriangle className={`w-4 h-4 ${v.isHealthBased ? 'text-red-500' : 'text-amber-500'}`} />
                             <div>
                               <div className="text-sm font-medium text-slate-800">{v.contaminant}</div>
-                              <div className="text-[10px] text-slate-400">{v.rule} · {v.compliancePeriod}</div>
+                              <div className="text-2xs text-slate-400">{v.rule} · {v.compliancePeriod}</div>
                             </div>
                           </div>
                           <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
@@ -712,12 +712,12 @@ function SiteIntelligenceContent() {
                         <div className={`text-xl font-bold ${m.flagged ? 'text-amber-700' : 'text-slate-800'}`}>
                           {m.value}<span className="text-xs font-normal ml-0.5">{m.unit}</span>
                         </div>
-                        <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-1">{m.label}</div>
+                        <div className="text-2xs uppercase tracking-wider text-slate-500 mt-1">{m.label}</div>
                         {m.flagged && <AlertTriangle className="w-3 h-3 text-amber-500 mx-auto mt-1" />}
                       </div>
                     ))}
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-3">
+                  <p className="text-2xs text-slate-400 mt-3">
                     Source: EPA EJScreen. High percentiles indicate elevated environmental justice concern.
                   </p>
                 </>
@@ -739,7 +739,7 @@ function SiteIntelligenceContent() {
                             <Activity className={`w-4 h-4 ${r.detected ? 'text-red-500' : 'text-green-500'}`} />
                             <div>
                               <div className="text-sm font-medium text-slate-800">{r.contaminant}</div>
-                              <div className="text-[10px] text-slate-400">{r.facilityName} · {r.sampleDate}</div>
+                              <div className="text-2xs text-slate-400">{r.facilityName} · {r.sampleDate}</div>
                             </div>
                           </div>
                           <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
@@ -760,7 +760,7 @@ function SiteIntelligenceContent() {
                         <div key={i} className="flex items-center justify-between bg-white border border-slate-100 rounded-lg px-4 py-3">
                           <div>
                             <div className="text-sm font-medium text-slate-800">{f.facilityName}</div>
-                            <div className="text-[10px] text-slate-400">{f.topChemicals?.slice(0, 3).join(', ')}</div>
+                            <div className="text-2xs text-slate-400">{f.topChemicals?.slice(0, 3).join(', ')}</div>
                           </div>
                           <span className="text-xs text-slate-600 font-medium">{f.totalReleases?.toLocaleString()} lbs</span>
                         </div>
@@ -776,7 +776,7 @@ function SiteIntelligenceContent() {
                         <div key={i} className="flex items-center justify-between bg-white border border-slate-100 rounded-lg px-4 py-3">
                           <div>
                             <div className="text-sm font-medium text-slate-800">{v.name}</div>
-                            <div className="text-[10px] text-slate-400">{v.violationType} · {v.pollutant}</div>
+                            <div className="text-2xs text-slate-400">{v.violationType} · {v.pollutant}</div>
                           </div>
                           <span className="text-xs text-slate-500">{v.qtrsInNc} qtrs non-compliant</span>
                         </div>
@@ -841,7 +841,7 @@ function SiteIntelligenceContent() {
                               <AlertTriangle className="w-4 h-4 text-red-500" />
                               <div>
                                 <div className="text-sm font-medium text-slate-800">{v.desc}</div>
-                                <div className="text-[10px] text-slate-400">{v.permit} · {v.date}</div>
+                                <div className="text-2xs text-slate-400">{v.permit} · {v.date}</div>
                               </div>
                             </div>
                             <span className="text-xs text-slate-500">{v.severity}</span>
@@ -864,7 +864,7 @@ function SiteIntelligenceContent() {
             </div>{/* end grid */}
 
             {/* Data source footer */}
-            <div className="text-[10px] text-slate-400 px-1">
+            <div className="text-2xs text-slate-400 px-1">
               {scoreData?.dataSources && (
                 <p>Data: {scoreData.dataSources.join(' | ')}</p>
               )}

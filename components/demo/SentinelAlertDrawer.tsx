@@ -109,7 +109,7 @@ export function SentinelAlertDrawer({ selectedAlert, onClose }: SentinelAlertDra
             {/* Header */}
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <div className="inline-block px-2.5 py-1 rounded text-[10px] font-bold tracking-wider uppercase bg-red-900/60 text-red-300 border border-red-700/40 mb-3">
+                <div className="inline-block px-2.5 py-1 rounded text-2xs font-bold tracking-wider uppercase bg-red-900/60 text-red-300 border border-red-700/40 mb-3">
                   {alert.badge}
                 </div>
                 <h2 className="text-xl font-bold text-white">{alert.location}</h2>
@@ -164,7 +164,7 @@ export function SentinelAlertDrawer({ selectedAlert, onClose }: SentinelAlertDra
             <div className="flex items-center gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-slate-300 font-mono">{alert.scoreDelta.from}</div>
-                <div className="text-[10px] text-slate-500 uppercase">Before</div>
+                <div className="text-2xs text-slate-500 uppercase">Before</div>
               </div>
               <div className="flex-1 flex items-center justify-center">
                 <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -173,7 +173,7 @@ export function SentinelAlertDrawer({ selectedAlert, onClose }: SentinelAlertDra
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-red-400 font-mono">{alert.scoreDelta.to}</div>
-                <div className="text-[10px] text-slate-500 uppercase">After</div>
+                <div className="text-2xs text-slate-500 uppercase">After</div>
               </div>
               <div className="text-xs text-slate-400 ml-2">
                 {alert.scoreDelta.window} window

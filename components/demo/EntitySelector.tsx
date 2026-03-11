@@ -54,7 +54,7 @@ export function EntitySelector({ activeEntity, onSelect }: EntitySelectorProps) 
   return (
     <section className="bg-slate-950 py-20 px-6">
       <div className="max-w-5xl mx-auto">
-        <h2 className="text-[10px] font-bold tracking-[0.2em] uppercase text-slate-500 text-center mb-3">
+        <h2 className="text-2xs font-bold tracking-[0.2em] uppercase text-slate-500 text-center mb-3">
           12 Entity Types — One Grid
         </h2>
         <p className="text-sm text-slate-400 text-center mb-10 max-w-xl mx-auto">

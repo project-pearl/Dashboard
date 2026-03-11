@@ -172,7 +172,7 @@ export default function RoleTrainingGuide({ rolePath }: Props) {
                       <p className="text-xs text-slate-500 leading-relaxed mb-2">{guide.summary}</p>
                       <ul className="space-y-1">
                         {guide.keyFeatures.map((f, i) => (
-                          <li key={i} className="text-[11px] text-slate-400 flex items-start gap-1.5">
+                          <li key={i} className="text-xs text-slate-400 flex items-start gap-1.5">
                             <span className="inline-block w-1 h-1 rounded-full bg-slate-300 mt-1.5 flex-shrink-0" />
                             {f}
                           </li>

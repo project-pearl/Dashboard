@@ -108,7 +108,7 @@ export function SignupForm({ invitePayload, inviteToken, onSuccess, onSwitchToLo
           </div>
           <div>
             <div className="text-xl font-bold tracking-tight text-slate-900" style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}>PIN</div>
-            <div className="text-[9px] font-medium text-slate-400 -mt-1 tracking-widest uppercase">Create Account</div>
+            <div className="text-2xs font-medium text-slate-400 -mt-1 tracking-widest uppercase">Create Account</div>
           </div>
         </div>
 
@@ -151,7 +151,7 @@ export function SignupForm({ invitePayload, inviteToken, onSuccess, onSwitchToLo
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-semibold text-slate-800">{meta.label}</div>
-                      <div className="text-[11px] text-slate-500">{meta.desc}</div>
+                      <div className="text-xs text-slate-500">{meta.desc}</div>
                     </div>
                     {isSelected && <CheckCircle className="h-4 w-4 text-cyan-600 flex-shrink-0" />}
                   </button>
@@ -182,7 +182,7 @@ export function SignupForm({ invitePayload, inviteToken, onSuccess, onSwitchToLo
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-semibold text-slate-800">{meta.label}</div>
-                      <div className="text-[11px] text-slate-500">{meta.desc}</div>
+                      <div className="text-xs text-slate-500">{meta.desc}</div>
                     </div>
                     {isSelected && <CheckCircle className="h-4 w-4 text-amber-600 flex-shrink-0" />}
                   </button>
@@ -216,13 +216,13 @@ export function SignupForm({ invitePayload, inviteToken, onSuccess, onSwitchToLo
                 {roleMeta && (() => { const Icon = roleMeta.icon; return <Icon className="h-5 w-5 text-cyan-600" />; })()}
                 <CardTitle className="text-lg">{roleMeta?.label}</CardTitle>
                 {isOperator && !isInvite && (
-                  <Badge variant="secondary" className="bg-amber-100 text-amber-700 border-amber-200 text-[10px]">
+                  <Badge variant="secondary" className="bg-amber-100 text-amber-700 border-amber-200 text-2xs">
                     <Clock className="h-3 w-3 mr-0.5" />
                     Requires Approval
                   </Badge>
                 )}
                 {isInvite && (
-                  <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 border-emerald-200 text-[10px]">
+                  <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 border-emerald-200 text-2xs">
                     <CheckCircle className="h-3 w-3 mr-0.5" />
                     Pre-approved
                   </Badge>
@@ -360,7 +360,7 @@ export function SignupForm({ invitePayload, inviteToken, onSuccess, onSwitchToLo
                       </div>
                     )}
                     {!isInvite && isOperator && (
-                      <p className="text-[10px] text-slate-400 mt-1">
+                      <p className="text-2xs text-slate-400 mt-1">
                         An admin will verify and bind your jurisdiction before activation.
                       </p>
                     )}
@@ -480,7 +480,7 @@ export function LoginForm({ onSuccess, onSwitchToSignup }: LoginFormProps) {
           </div>
           <div>
             <div className="text-xl font-bold tracking-tight text-slate-900" style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}>PIN</div>
-            <div className="text-[9px] font-medium text-slate-400 -mt-1 tracking-widest uppercase">Sign In</div>
+            <div className="text-2xs font-medium text-slate-400 -mt-1 tracking-widest uppercase">Sign In</div>
           </div>
         </div>
 

@@ -120,17 +120,17 @@ export default function ExecutiveOutput({
     <div className="border-t-4 border-emerald-400 bg-slate-50">
       {/* Toolbar */}
       <div className="sticky top-0 z-20 bg-white border-b border-slate-200 px-6 py-2.5 flex items-center gap-3 no-pdf">
-        <span className="text-[11px] font-bold text-slate-800 uppercase tracking-wider">Executive Summary</span>
+        <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">Executive Summary</span>
         <div className="flex-1" />
         <button
           onClick={handleExportPDF}
-          className="px-3 py-1.5 bg-slate-800 text-white text-[11px] font-bold rounded hover:bg-slate-700 transition-colors cursor-pointer"
+          className="px-3 py-1.5 bg-slate-800 text-white text-xs font-bold rounded hover:bg-slate-700 transition-colors cursor-pointer"
         >
           Export PDF
         </button>
         <button
           onClick={onClose}
-          className="px-3 py-1.5 border border-slate-300 text-slate-600 text-[11px] rounded hover:bg-slate-50 transition-colors cursor-pointer"
+          className="px-3 py-1.5 border border-slate-300 text-slate-600 text-xs rounded hover:bg-slate-50 transition-colors cursor-pointer"
         >
           Close
         </button>
@@ -153,9 +153,9 @@ export default function ExecutiveOutput({
               </p>
             </div>
             <div className="text-right">
-              <div className="text-[9px] text-slate-400 uppercase tracking-wider">Target Reduction</div>
+              <div className="text-2xs text-slate-400 uppercase tracking-wider">Target Reduction</div>
               <div className="text-2xl font-bold font-mono text-slate-800">{target}%</div>
-              <div className="text-[9px] text-slate-400">{timeline}-Year Timeline</div>
+              <div className="text-2xs text-slate-400">{timeline}-Year Timeline</div>
             </div>
           </div>
         </section>
@@ -172,7 +172,7 @@ export default function ExecutiveOutput({
               { l: "Treatable", v: ws.treatable + "%" },
             ].map(x => (
               <div key={x.l} className="text-center bg-slate-50 rounded-lg py-2">
-                <div className="text-[8px] text-slate-400 uppercase tracking-wider">{x.l}</div>
+                <div className="text-2xs text-slate-400 uppercase tracking-wider">{x.l}</div>
                 <div className="text-sm font-bold font-mono text-slate-800">{x.v}</div>
               </div>
             ))}
@@ -180,24 +180,24 @@ export default function ExecutiveOutput({
           <p className="text-xs text-slate-500 mb-3">{ws.context}</p>
           <div className="flex gap-1.5 flex-wrap mb-4">
             {ws.causes.map(c => (
-              <span key={c} className="text-[9px] bg-red-50 text-red-600 px-2 py-0.5 rounded">{c}</span>
+              <span key={c} className="text-2xs bg-red-50 text-red-600 px-2 py-0.5 rounded">{c}</span>
             ))}
           </div>
-          <div className="text-[9px] text-slate-400 uppercase tracking-wider font-mono mb-2">
+          <div className="text-2xs text-slate-400 uppercase tracking-wider font-mono mb-2">
             Baseline Contamination
           </div>
           {CK.map(k => {
             if (ws.baseline[k] === 0) return null;
             return (
               <div key={k} className="flex items-center gap-2 mb-1">
-                <span className="w-16 text-[10px] text-slate-500 font-mono">{CONTAMINANT_LABELS[k].split(" / ")[0]}</span>
+                <span className="w-16 text-2xs text-slate-500 font-mono">{CONTAMINANT_LABELS[k].split(" / ")[0]}</span>
                 <div className="flex-1 h-2 bg-slate-100 rounded-sm overflow-hidden">
                   <div
                     className="h-full rounded-sm"
                     style={{ width: `${ws.baseline[k]}%`, background: CONTAMINANT_COLORS[k], opacity: 0.7 }}
                   />
                 </div>
-                <span className="w-8 text-[10px] font-mono text-slate-600 text-right">{ws.baseline[k]}%</span>
+                <span className="w-8 text-2xs font-mono text-slate-600 text-right">{ws.baseline[k]}%</span>
               </div>
             );
           })}
@@ -206,7 +206,7 @@ export default function ExecutiveOutput({
         {/* ═══ 3. Treatment Stack ═══ */}
         <section className="exec-card bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
           <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Treatment Stack</h2>
-          <table className="w-full text-[10px]">
+          <table className="w-full text-2xs">
             <thead>
               <tr className="border-b-2 border-slate-200 text-left">
                 <th className="py-1.5 text-slate-400 font-mono uppercase tracking-wider">Module</th>
@@ -225,7 +225,7 @@ export default function ExecutiveOutput({
                       {m.icon} {m.name.trim()}
                     </td>
                     <td className="py-1.5 text-center">
-                      <span className="px-1.5 rounded text-[8px] font-bold" style={{ background: CAT_COLORS[m.cat] + "18", color: CAT_COLORS[m.cat] }}>
+                      <span className="px-1.5 rounded text-2xs font-bold" style={{ background: CAT_COLORS[m.cat] + "18", color: CAT_COLORS[m.cat] }}>
                         {m.cat}
                       </span>
                     </td>
@@ -252,14 +252,14 @@ export default function ExecutiveOutput({
               { l: "PIN Teams", v: String(calc.teams), c: "text-slate-800" },
             ].map(x => (
               <div key={x.l} className="bg-slate-50 rounded-lg p-3 text-center">
-                <div className="text-[8px] text-slate-400 uppercase tracking-wider">{x.l}</div>
+                <div className="text-2xs text-slate-400 uppercase tracking-wider">{x.l}</div>
                 <div className={`text-lg font-bold font-mono ${x.c}`}>{x.v}</div>
               </div>
             ))}
           </div>
 
           {/* Before/after bars */}
-          <div className="text-[9px] text-slate-400 uppercase tracking-wider font-mono mb-2">
+          <div className="text-2xs text-slate-400 uppercase tracking-wider font-mono mb-2">
             Contaminant Reduction (Before &rarr; After)
           </div>
           {CK.map(k => {
@@ -267,12 +267,12 @@ export default function ExecutiveOutput({
             const after = Math.max(0, ws.baseline[k] - (ws.baseline[k] * calc.ach[k] / 100));
             return (
               <div key={k} className="flex items-center gap-2 mb-1.5">
-                <span className="w-16 text-[10px] text-slate-500 font-mono">{CONTAMINANT_LABELS[k].split(" / ")[0]}</span>
+                <span className="w-16 text-2xs text-slate-500 font-mono">{CONTAMINANT_LABELS[k].split(" / ")[0]}</span>
                 <div className="flex-1 h-3 bg-slate-100 rounded-sm overflow-hidden relative">
                   <div className="absolute h-full rounded-sm opacity-20" style={{ width: `${ws.baseline[k]}%`, background: CONTAMINANT_COLORS[k] }} />
                   <div className="absolute h-full rounded-sm" style={{ width: `${after}%`, background: CONTAMINANT_COLORS[k], opacity: 0.8 }} />
                 </div>
-                <span className="w-20 text-[10px] font-mono text-slate-600 text-right">
+                <span className="w-20 text-2xs font-mono text-slate-600 text-right">
                   {ws.baseline[k]}% &rarr; {after.toFixed(0)}%
                 </span>
               </div>
@@ -311,7 +311,7 @@ export default function ExecutiveOutput({
               </div>
 
               {/* Forcing summary grid */}
-              <div className="text-[9px] text-slate-400 uppercase tracking-wider font-mono mb-2">Climate Forcing Parameters</div>
+              <div className="text-2xs text-slate-400 uppercase tracking-wider font-mono mb-2">Climate Forcing Parameters</div>
               <div className="grid grid-cols-3 gap-3 mb-4">
                 {[
                   { l: "Temp Increase", v: `+${proj.tempIncrease_F}°F` },
@@ -319,15 +319,15 @@ export default function ExecutiveOutput({
                   { l: ws.salinity > 0 ? "Sea Level Rise" : "SLR (inland)", v: ws.salinity > 0 ? `+${proj.seaLevelRise_ft} ft` : "N/A" },
                 ].map(x => (
                   <div key={x.l} className="text-center bg-amber-50 rounded-lg py-2 border border-amber-100">
-                    <div className="text-[8px] text-slate-400 uppercase tracking-wider">{x.l}</div>
+                    <div className="text-2xs text-slate-400 uppercase tracking-wider">{x.l}</div>
                     <div className="text-sm font-bold font-mono text-amber-700">{x.v}</div>
                   </div>
                 ))}
               </div>
 
               {/* Watershed impact table */}
-              <div className="text-[9px] text-slate-400 uppercase tracking-wider font-mono mb-2">Watershed Impact</div>
-              <table className="w-full text-[10px] mb-4">
+              <div className="text-2xs text-slate-400 uppercase tracking-wider font-mono mb-2">Watershed Impact</div>
+              <table className="w-full text-2xs mb-4">
                 <thead>
                   <tr className="border-b-2 border-slate-200 text-left">
                     <th className="py-1.5 text-slate-400 font-mono uppercase tracking-wider">Parameter</th>
@@ -361,8 +361,8 @@ export default function ExecutiveOutput({
               </table>
 
               {/* Performance comparison */}
-              <div className="text-[9px] text-slate-400 uppercase tracking-wider font-mono mb-2">Performance Comparison</div>
-              <table className="w-full text-[10px] mb-4">
+              <div className="text-2xs text-slate-400 uppercase tracking-wider font-mono mb-2">Performance Comparison</div>
+              <table className="w-full text-2xs mb-4">
                 <thead>
                   <tr className="border-b-2 border-slate-200 text-left">
                     <th className="py-1.5 text-slate-400 font-mono uppercase tracking-wider">Contaminant</th>
@@ -394,24 +394,24 @@ export default function ExecutiveOutput({
               </table>
 
               {/* Module vulnerability groupings */}
-              <div className="text-[9px] text-slate-400 uppercase tracking-wider font-mono mb-2">Module Vulnerability Assessment</div>
+              <div className="text-2xs text-slate-400 uppercase tracking-wider font-mono mb-2">Module Vulnerability Assessment</div>
               <div className="space-y-2 mb-4">
                 {highVuln.length > 0 && (
                   <div className="flex items-start gap-2">
-                    <span className="text-[8px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold shrink-0 mt-0.5">HIGH</span>
-                    <span className="text-[10px] text-slate-600">{highVuln.map(m => m.name.trim()).join(", ")}</span>
+                    <span className="text-2xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold shrink-0 mt-0.5">HIGH</span>
+                    <span className="text-2xs text-slate-600">{highVuln.map(m => m.name.trim()).join(", ")}</span>
                   </div>
                 )}
                 {modVuln.length > 0 && (
                   <div className="flex items-start gap-2">
-                    <span className="text-[8px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold shrink-0 mt-0.5">MOD</span>
-                    <span className="text-[10px] text-slate-600">{modVuln.map(m => m.name.trim()).join(", ")}</span>
+                    <span className="text-2xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold shrink-0 mt-0.5">MOD</span>
+                    <span className="text-2xs text-slate-600">{modVuln.map(m => m.name.trim()).join(", ")}</span>
                   </div>
                 )}
                 {lowVuln.length > 0 && (
                   <div className="flex items-start gap-2">
-                    <span className="text-[8px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold shrink-0 mt-0.5">LOW</span>
-                    <span className="text-[10px] text-slate-600">{lowVuln.map(m => m.name.trim()).join(", ")}</span>
+                    <span className="text-2xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold shrink-0 mt-0.5">LOW</span>
+                    <span className="text-2xs text-slate-600">{lowVuln.map(m => m.name.trim()).join(", ")}</span>
                   </div>
                 )}
               </div>
@@ -419,8 +419,8 @@ export default function ExecutiveOutput({
               {/* Climate-vulnerable callout */}
               {highVuln.length > 0 && (
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
-                  <div className="text-[11px] font-bold text-amber-800 mb-1">Climate Vulnerability Warning</div>
-                  <div className="text-[10px] text-amber-700 leading-relaxed">
+                  <div className="text-xs font-bold text-amber-800 mb-1">Climate Vulnerability Warning</div>
+                  <div className="text-2xs text-amber-700 leading-relaxed">
                     {highVuln.length} high-vulnerability module{highVuln.length > 1 ? "s" : ""} in this portfolio.
                     Average reduction drops {avgDrop.toFixed(1)}% under {scenarioLabel}/{climateDecade}.
                     Consider supplementing nature-based systems with engineered treatment (PIN, MBR, DAF)
@@ -430,8 +430,8 @@ export default function ExecutiveOutput({
               )}
 
               {/* Adaptive management recommendations */}
-              <div className="text-[9px] text-slate-400 uppercase tracking-wider font-mono mb-2">Adaptive Management Recommendations</div>
-              <ul className="text-[10px] text-slate-600 space-y-1.5 list-disc pl-4">
+              <div className="text-2xs text-slate-400 uppercase tracking-wider font-mono mb-2">Adaptive Management Recommendations</div>
+              <ul className="text-2xs text-slate-600 space-y-1.5 list-disc pl-4">
                 <li>Deploy additional PIN units to compensate for {avgDrop.toFixed(0)}% reduction loss under climate stress</li>
                 <li>Prioritize engineered treatment over nature-based solutions for critical contaminant targets</li>
                 {ws.salinity > 0 && (
@@ -450,32 +450,32 @@ export default function ExecutiveOutput({
           <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Cost Analysis</h2>
 
           {/* CapEx by category */}
-          <div className="text-[9px] text-slate-400 uppercase tracking-wider font-mono mb-2">Capital Expenditure</div>
+          <div className="text-2xs text-slate-400 uppercase tracking-wider font-mono mb-2">Capital Expenditure</div>
           {capexByCat.map(c => (
             <div key={c.cat} className="flex justify-between py-1 border-b border-slate-100">
               <div className="flex items-center gap-1.5">
                 <div className="w-[3px] h-2.5 rounded-sm" style={{ background: CAT_COLORS[c.cat] }} />
-                <span className="text-[10px] text-slate-600">{c.cat}</span>
+                <span className="text-2xs text-slate-600">{c.cat}</span>
               </div>
-              <span className="text-[10px] font-mono font-semibold text-slate-800">{fmt(c.total)}</span>
+              <span className="text-2xs font-mono font-semibold text-slate-800">{fmt(c.total)}</span>
             </div>
           ))}
           <div className="flex justify-between py-1.5 border-t-2 border-slate-300 mt-1">
-            <span className="text-[10px] font-bold text-slate-800">Total CapEx</span>
-            <span className="text-[11px] font-bold font-mono text-slate-800">{fmt(calc.capex)}</span>
+            <span className="text-2xs font-bold text-slate-800">Total CapEx</span>
+            <span className="text-xs font-bold font-mono text-slate-800">{fmt(calc.capex)}</span>
           </div>
 
           {/* OpEx */}
           {calc.teams > 0 && (
             <div className="mt-4">
-              <div className="text-[9px] text-slate-400 uppercase tracking-wider font-mono mb-2">Operating Expenditure</div>
+              <div className="text-2xs text-slate-400 uppercase tracking-wider font-mono mb-2">Operating Expenditure</div>
               <div className="flex justify-between py-1 border-b border-slate-100">
-                <span className="text-[10px] text-slate-600">PIN Teams ({calc.teams})</span>
-                <span className="text-[10px] font-mono text-orange-700">{fmt(calc.annualOpex)}/yr</span>
+                <span className="text-2xs text-slate-600">PIN Teams ({calc.teams})</span>
+                <span className="text-2xs font-mono text-orange-700">{fmt(calc.annualOpex)}/yr</span>
               </div>
               <div className="flex justify-between py-1.5 border-t-2 border-slate-300 mt-1">
-                <span className="text-[10px] font-bold text-slate-800">{timeline}-Year OpEx</span>
-                <span className="text-[11px] font-bold font-mono text-orange-700">{fmt(calc.totalOpex)}</span>
+                <span className="text-2xs font-bold text-slate-800">{timeline}-Year OpEx</span>
+                <span className="text-xs font-bold font-mono text-orange-700">{fmt(calc.totalOpex)}</span>
               </div>
             </div>
           )}
@@ -483,10 +483,10 @@ export default function ExecutiveOutput({
           {/* Community */}
           {selectedEvents.length > 0 && (
             <div className="mt-4">
-              <div className="text-[9px] text-slate-400 uppercase tracking-wider font-mono mb-2">Community Programs</div>
+              <div className="text-2xs text-slate-400 uppercase tracking-wider font-mono mb-2">Community Programs</div>
               <div className="flex justify-between py-1.5 border-t-2 border-slate-300">
-                <span className="text-[10px] font-bold text-slate-800">{timeline}-Year Total</span>
-                <span className="text-[11px] font-bold font-mono text-orange-700">{fmt(communityTotal)}</span>
+                <span className="text-2xs font-bold text-slate-800">{timeline}-Year Total</span>
+                <span className="text-xs font-bold font-mono text-orange-700">{fmt(communityTotal)}</span>
               </div>
             </div>
           )}
@@ -510,7 +510,7 @@ export default function ExecutiveOutput({
         {calc.grants.length > 0 && (
           <section className="exec-card bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
             <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Grant Opportunities</h2>
-            <table className="w-full text-[10px]">
+            <table className="w-full text-2xs">
               <thead>
                 <tr className="border-b-2 border-slate-200 text-left">
                   <th className="py-1.5 text-slate-400 font-mono uppercase tracking-wider">Program</th>
@@ -543,7 +543,7 @@ export default function ExecutiveOutput({
         {selectedNGOs.length > 0 && (
           <section className="exec-card bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
             <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">NGO Partnerships</h2>
-            <table className="w-full text-[10px]">
+            <table className="w-full text-2xs">
               <thead>
                 <tr className="border-b-2 border-slate-200 text-left">
                   <th className="py-1.5 text-slate-400 font-mono uppercase tracking-wider">Organization</th>
@@ -574,7 +574,7 @@ export default function ExecutiveOutput({
         {selectedEvents.length > 0 && (
           <section className="exec-card bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
             <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Community Programs</h2>
-            <table className="w-full text-[10px]">
+            <table className="w-full text-2xs">
               <thead>
                 <tr className="border-b-2 border-slate-200 text-left">
                   <th className="py-1.5 text-slate-400 font-mono uppercase tracking-wider">Program</th>
@@ -611,17 +611,17 @@ export default function ExecutiveOutput({
             </h2>
             <div className="grid grid-cols-3 gap-4 mb-3">
               <div>
-                <div className="text-[9px] text-slate-400 uppercase">Target</div>
+                <div className="text-2xs text-slate-400 uppercase">Target</div>
                 <div className="text-lg font-bold font-mono text-slate-800">{target}%</div>
               </div>
               <div>
-                <div className="text-[9px] text-slate-400 uppercase">Projected</div>
+                <div className="text-2xs text-slate-400 uppercase">Projected</div>
                 <div className={`text-lg font-bold font-mono ${calc.met ? "text-green-700" : "text-amber-700"}`}>
                   {calc.avg.toFixed(1)}%
                 </div>
               </div>
               <div>
-                <div className="text-[9px] text-slate-400 uppercase">Gap</div>
+                <div className="text-2xs text-slate-400 uppercase">Gap</div>
                 <div className={`text-lg font-bold font-mono ${calc.met ? "text-green-700" : "text-amber-700"}`}>
                   {calc.met ? "+" : ""}{(calc.avg - target).toFixed(1)}%
                 </div>
@@ -639,7 +639,7 @@ export default function ExecutiveOutput({
 
         {/* ═══ 10. Disclaimer ═══ */}
         <section className="exec-card border-t border-slate-200 pt-4">
-          <div className="text-[9px] text-slate-400 leading-relaxed space-y-1">
+          <div className="text-2xs text-slate-400 leading-relaxed space-y-1">
             <p>
               <strong>Disclaimer:</strong> This treatment plan was generated by PIN (PEARL Intelligence Network)
               for planning purposes only. It does not constitute a regulatory determination, legal opinion,

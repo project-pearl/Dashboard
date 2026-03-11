@@ -43,10 +43,10 @@ export default function WatershedPicker({ onSelect }: WatershedPickerProps) {
               key={b.label}
               className="px-3 py-1.5 rounded-lg bg-emerald-400/10 border border-emerald-400/20"
             >
-              <span className="text-[11px] font-bold text-emerald-400 font-mono tracking-wide">
+              <span className="text-xs font-bold text-emerald-400 font-mono tracking-wide">
                 {b.label}
               </span>
-              <span className="text-[9px] text-sky-700 ml-1.5">{b.sub}</span>
+              <span className="text-2xs text-sky-700 ml-1.5">{b.sub}</span>
             </div>
           ))}
         </div>
@@ -54,7 +54,7 @@ export default function WatershedPicker({ onSelect }: WatershedPickerProps) {
         {/* How PIN Works expandable */}
         <button
           onClick={() => setTechOpen(o => !o)}
-          className="text-[11px] text-sky-600 hover:text-emerald-400 transition-colors tracking-wide uppercase font-mono"
+          className="text-xs text-sky-600 hover:text-emerald-400 transition-colors tracking-wide uppercase font-mono"
         >
           How PIN Works {techOpen ? "\u25B4" : "\u25BE"}
         </button>
@@ -85,12 +85,12 @@ export default function WatershedPicker({ onSelect }: WatershedPickerProps) {
                 className={`bg-white/[0.04] rounded-lg p-3 border ${s.accent.split(" ")[0]}`}
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <span className={`text-[10px] font-bold ${s.accent.split(" ")[1]} font-mono`}>
+                  <span className={`text-2xs font-bold ${s.accent.split(" ")[1]} font-mono`}>
                     {s.num}
                   </span>
-                  <span className="text-[11px] font-bold text-slate-200">{s.title}</span>
+                  <span className="text-xs font-bold text-slate-200">{s.title}</span>
                 </div>
-                <p className="text-[10px] text-slate-400 leading-relaxed">{s.desc}</p>
+                <p className="text-2xs text-slate-400 leading-relaxed">{s.desc}</p>
               </div>
             ))}
           </div>
@@ -102,7 +102,7 @@ export default function WatershedPicker({ onSelect }: WatershedPickerProps) {
             <button
               key={s}
               onClick={() => setFilter(s)}
-              className={`px-3.5 py-1 rounded-full border text-[11px] font-mono cursor-pointer transition-all ${
+              className={`px-3.5 py-1 rounded-full border text-xs font-mono cursor-pointer transition-all ${
                 filter === s
                   ? "border-emerald-400 bg-emerald-400 text-slate-900"
                   : "border-slate-700 bg-transparent text-sky-700 hover:border-sky-600"
@@ -126,16 +126,16 @@ export default function WatershedPicker({ onSelect }: WatershedPickerProps) {
             <div className="absolute top-0 right-0 w-14 h-14 bg-emerald-400 opacity-[0.03] rounded-bl-[60px]" />
 
             <div className="flex justify-between mb-1.5">
-              <span className="text-[10px] font-mono text-sky-800">
+              <span className="text-2xs font-mono text-sky-800">
                 {w.state} &middot; {w.huc}
               </span>
-              <span className="text-[9px] font-semibold bg-red-950 text-red-300 px-1.5 rounded">
+              <span className="text-2xs font-semibold bg-red-950 text-red-300 px-1.5 rounded">
                 IMPAIRED
               </span>
             </div>
 
             <div className="font-serif text-base text-slate-100 mb-1 leading-snug">{w.name}</div>
-            <div className="text-[10px] text-sky-700 leading-snug mb-2.5">{w.context}</div>
+            <div className="text-2xs text-sky-700 leading-snug mb-2.5">{w.context}</div>
 
             {/* contaminant chips */}
             <div className="flex gap-1.5 flex-wrap">
@@ -144,7 +144,7 @@ export default function WatershedPicker({ onSelect }: WatershedPickerProps) {
                   w.baseline[k] > 30 && (
                     <span
                       key={k}
-                      className="px-1.5 rounded text-[9px] font-mono"
+                      className="px-1.5 rounded text-2xs font-mono"
                       style={{
                         background:
                           w.baseline[k] > 65
@@ -168,19 +168,19 @@ export default function WatershedPicker({ onSelect }: WatershedPickerProps) {
 
             {/* footer stats */}
             <div className="flex gap-2.5 mt-2.5 pt-2.5 border-t border-slate-700">
-              <span className="text-[9px] text-sky-800 font-mono">
+              <span className="text-2xs text-sky-800 font-mono">
                 {w.flowMGD.toLocaleString()} MGD
               </span>
-              <span className="text-[9px] text-sky-800 font-mono">
+              <span className="text-2xs text-sky-800 font-mono">
                 {w.acres.toLocaleString()} ac
               </span>
               <span
-                className={`text-[9px] font-mono ${w.doMgL < 3.5 ? "text-red-300" : "text-sky-700"}`}
+                className={`text-2xs font-mono ${w.doMgL < 3.5 ? "text-red-300" : "text-sky-700"}`}
               >
                 DO {w.doMgL}
               </span>
               {w.aquaculture.length > 0 && (
-                <span className="text-[9px] text-emerald-400">Aquaculture</span>
+                <span className="text-2xs text-emerald-400">Aquaculture</span>
               )}
             </div>
           </button>

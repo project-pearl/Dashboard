@@ -120,7 +120,7 @@ export function OutdoorClassroomPanel({ stateAbbr }: OutdoorClassroomPanelProps)
           <CardTitle className="flex items-center gap-2 text-base">
             <MapPin size={16} className="text-emerald-600" />
             Nearby Outdoor Classroom Sites
-            <Badge variant="secondary" className="ml-1 text-[10px]">
+            <Badge variant="secondary" className="ml-1 text-2xs">
               {OUTDOOR_SITES.length} locations
             </Badge>
           </CardTitle>
@@ -142,20 +142,20 @@ export function OutdoorClassroomPanel({ stateAbbr }: OutdoorClassroomPanelProps)
                     <div className="flex items-center gap-2 min-w-0">
                       <MapPin size={14} className="text-emerald-600 shrink-0" />
                       <span className="text-xs font-semibold text-slate-800 truncate">{site.name}</span>
-                      <Badge className={`text-[9px] ${ratingColor(site.rating)}`}>{site.rating}</Badge>
+                      <Badge className={`text-2xs ${ratingColor(site.rating)}`}>{site.rating}</Badge>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-[10px] text-slate-500">{site.distance}</span>
-                      <Badge variant="secondary" className="text-[9px]">{site.type}</Badge>
+                      <span className="text-2xs text-slate-500">{site.distance}</span>
+                      <Badge variant="secondary" className="text-2xs">{site.type}</Badge>
                       {isExpanded ? <ChevronUp size={12} className="text-slate-400" /> : <ChevronDown size={12} className="text-slate-400" />}
                     </div>
                   </div>
                   {isExpanded && (
                     <div className="mt-2 pt-2 border-t border-slate-100">
-                      <p className="text-[10px] text-slate-500 uppercase tracking-wide mb-1">Available Features</p>
+                      <p className="text-2xs text-slate-500 uppercase tracking-wide mb-1">Available Features</p>
                       <div className="flex flex-wrap gap-1">
                         {site.features.map((f) => (
-                          <Badge key={f} variant="outline" className="text-[9px] text-slate-600">{f}</Badge>
+                          <Badge key={f} variant="outline" className="text-2xs text-slate-600">{f}</Badge>
                         ))}
                       </div>
                     </div>
@@ -173,7 +173,7 @@ export function OutdoorClassroomPanel({ stateAbbr }: OutdoorClassroomPanelProps)
           <CardTitle className="flex items-center gap-2 text-base">
             <Sun size={16} className="text-amber-500" />
             Field Trip Planning Checklist
-            <Badge className={`ml-1 text-[10px] ${completionPct === 100 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+            <Badge className={`ml-1 text-2xs ${completionPct === 100 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
               {completedTasks}/{totalTasks} complete
             </Badge>
           </CardTitle>
@@ -183,7 +183,7 @@ export function OutdoorClassroomPanel({ stateAbbr }: OutdoorClassroomPanelProps)
         </CardHeader>
         <CardContent>
           <div className="mb-3">
-            <div className="flex items-center justify-between text-[10px] text-slate-500 mb-1">
+            <div className="flex items-center justify-between text-2xs text-slate-500 mb-1">
               <span>Progress</span>
               <span className="font-semibold text-slate-700">{completionPct}%</span>
             </div>
@@ -233,7 +233,7 @@ export function OutdoorClassroomPanel({ stateAbbr }: OutdoorClassroomPanelProps)
                     <span className="text-base">{guide.icon}</span>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold text-slate-700 truncate">{guide.name}</p>
-                      <p className="text-[10px] text-slate-400">{guide.category}</p>
+                      <p className="text-2xs text-slate-400">{guide.category}</p>
                     </div>
                     {isExternal ? <ExternalLink size={12} className="text-blue-500 shrink-0" /> : <BookOpen size={12} className="text-blue-500 shrink-0" />}
                   </Tag>
@@ -256,10 +256,10 @@ export function OutdoorClassroomPanel({ stateAbbr }: OutdoorClassroomPanelProps)
                 <CloudSun size={20} className="text-sky-600" />
                 <div>
                   <p className="text-sm font-bold text-sky-800">72°F — Partly Cloudy</p>
-                  <p className="text-[10px] text-sky-600">Great conditions for outdoor learning!</p>
+                  <p className="text-2xs text-sky-600">Great conditions for outdoor learning!</p>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
+              <div className="grid grid-cols-3 gap-2 text-center text-2xs">
                 <div className="rounded bg-white p-1.5 border border-sky-100">
                   <p className="font-bold text-sky-700">5 mph</p>
                   <p className="text-slate-500">Wind</p>
@@ -319,13 +319,13 @@ export function OutdoorClassroomPanel({ stateAbbr }: OutdoorClassroomPanelProps)
                       <span className="text-xs font-bold text-teal-800">{tool.name}</span>
                       <ExternalLink size={10} className="text-teal-400 group-hover:text-teal-600 transition-colors shrink-0" />
                     </div>
-                    <p className="text-[10px] text-teal-600 mb-1">{tool.org}</p>
-                    <p className="text-[11px] text-slate-600 leading-relaxed">{tool.description}</p>
+                    <p className="text-2xs text-teal-600 mb-1">{tool.org}</p>
+                    <p className="text-xs text-slate-600 leading-relaxed">{tool.description}</p>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-1 mt-2">
                   {tool.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="text-[9px] bg-teal-100 text-teal-700 border-teal-200">{tag}</Badge>
+                    <Badge key={tag} variant="secondary" className="text-2xs bg-teal-100 text-teal-700 border-teal-200">{tag}</Badge>
                   ))}
                 </div>
               </a>
@@ -340,7 +340,7 @@ export function OutdoorClassroomPanel({ stateAbbr }: OutdoorClassroomPanelProps)
           <CardTitle className="flex items-center gap-2 text-base">
             <BookOpen size={16} className="text-violet-600" />
             Nature Journaling Prompts
-            <Badge variant="secondary" className="ml-1 text-[10px]">
+            <Badge variant="secondary" className="ml-1 text-2xs">
               {JOURNAL_PROMPTS.length} prompts
             </Badge>
           </CardTitle>
@@ -370,7 +370,7 @@ export function OutdoorClassroomPanel({ stateAbbr }: OutdoorClassroomPanelProps)
               )}
             </button>
           )}
-          <p className="text-[10px] text-slate-400 mt-2 flex items-center gap-1">
+          <p className="text-2xs text-slate-400 mt-2 flex items-center gap-1">
             <Info size={10} />
             Prompts aligned with NGSS Earth &amp; Space Science and Life Science standards.
           </p>

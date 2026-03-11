@@ -880,39 +880,39 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                     <>
                       <div className="rounded-lg bg-orange-50 border border-orange-100 p-2.5 text-center">
                         <div className="text-2xl font-black text-orange-700 inline-flex items-center gap-1">{ms4Total}<ProvenanceIcon metricName="MS4 Total" displayValue={String(ms4Total)} /></div>
-                        <div className="text-[10px] text-orange-600 font-medium">MS4 Total</div>
+                        <div className="text-2xs text-orange-600 font-medium">MS4 Total</div>
                       </div>
                       <div className="rounded-lg bg-orange-50/50 border border-orange-100 p-2.5 text-center">
                         <div className="text-xl font-bold text-orange-800">{ms4Summary?.phaseI ?? 0}</div>
-                        <div className="text-[10px] text-orange-500">Phase I (≥100k)</div>
+                        <div className="text-2xs text-orange-500">Phase I (≥100k)</div>
                       </div>
                       <div className="rounded-lg bg-amber-50 border border-amber-100 p-2.5 text-center">
                         <div className="text-xl font-bold text-amber-700">{ms4Summary?.phaseII ?? 0}</div>
-                        <div className="text-[10px] text-amber-500">Phase II (small)</div>
+                        <div className="text-2xs text-amber-500">Phase II (small)</div>
                       </div>
                     </>
                   )}
                   <div className="rounded-lg bg-slate-50 border border-slate-200 p-2.5 text-center">
                     <div className="text-sm font-bold text-slate-700 leading-tight">{agency?.ms4Program || 'NPDES MS4'}</div>
-                    <div className="text-[10px] text-slate-400">Permit Program</div>
+                    <div className="text-2xs text-slate-400">Permit Program</div>
                   </div>
                   <div className="rounded-lg bg-purple-50 border border-purple-100 p-2.5 text-center">
                     <div className="text-xl font-bold text-purple-700 inline-flex items-center gap-1">{ejScore}<span className="text-xs font-normal text-purple-400">/100</span><ProvenanceIcon metricName="EJ Vulnerability" displayValue={String(ejScore)} unit="/100" /></div>
-                    <div className="text-[10px] text-purple-500">EJ Vulnerability</div>
+                    <div className="text-2xs text-purple-500">EJ Vulnerability</div>
                   </div>
                   <div className="rounded-lg bg-blue-50 border border-blue-100 p-2.5 text-center">
                     <div className="text-sm font-bold text-blue-700 leading-tight inline-flex items-center gap-1">{complianceLabel}<ProvenanceIcon metricName="Compliance Burden" displayValue={complianceLabel} /></div>
-                    <div className="text-[10px] text-blue-400">Compliance Burden</div>
+                    <div className="text-2xs text-blue-400">Compliance Burden</div>
                   </div>
                   <div className={`rounded-lg border p-2.5 text-center ${trendBg}`}>
                     <div className={`text-sm font-bold ${trendColor}`}>{trendLabel}</div>
-                    <div className="text-[10px] text-slate-400">WQ Trend</div>
+                    <div className="text-2xs text-slate-400">WQ Trend</div>
                   </div>
                 </div>
                 {(() => {
                   const agencyNotes = agency?.division;
                   return agencyNotes ? (
-                    <div className="text-[10px] text-slate-400 italic mt-2">{agencyNotes}</div>
+                    <div className="text-2xs text-slate-400 italic mt-2">{agencyNotes}</div>
                   ) : null;
                 })()}
               </div>
@@ -928,7 +928,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                     <BarChart3 size={15} className="text-cyan-600" />
                     <span className="text-sm font-bold text-slate-800">Data Report Card</span>
                     {stateReport && (
-                      <span className={`ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold border ${
+                      <span className={`ml-1 px-1.5 py-0.5 rounded text-2xs font-bold border ${
                         stateReport.aiReadinessGrade === 'A' || stateReport.aiReadinessGrade === 'B' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
                         stateReport.aiReadinessGrade === 'C' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
                         'bg-red-50 text-red-700 border-red-200'
@@ -1184,7 +1184,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   {comingSoonId === 'wb-search-detail' ? (
                     <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-3">
                       <p className="text-xs text-slate-700">Search by waterbody name, ATTAINS ID, or HUC-12 code to view assessment status, impairment causes, TMDL linkage, and monitoring data.</p>
-                      <p className="text-[10px] text-blue-600 mt-2 font-medium">Waterbody search — Coming Soon</p>
+                      <p className="text-2xs text-blue-600 mt-2 font-medium">Waterbody search — Coming Soon</p>
                     </div>
                   ) : (
                     <div className="text-center text-slate-400">
@@ -1304,15 +1304,15 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       <div className="text-left">
                         <div className="text-sm font-semibold text-cyan-800 flex items-center gap-2">
                           Restoration Plan — {regionName}
-                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${siteSeverityColor}`}>
+                          <span className={`text-2xs font-bold px-1.5 py-0.5 rounded-full ${siteSeverityColor}`}>
                             {siteSeverityLabel} ({siteSeverityScore})
                           </span>
                         </div>
-                        <div className="text-[11px] text-slate-500">
+                        <div className="text-xs text-slate-500">
                           {pearlModel} × {totalUnits} unit{totalUnits > 1 ? 's' : ''} ({totalQuads} quad{totalQuads > 1 ? 's' : ''}, {fullGPM} GPM) + {totalBMPs} BMPs · {waterType === 'brackish' ? '🦪 Oyster' : '🐚 Mussel'} Biofilt · {fmt(fullAnnualCost)}/yr
                         </div>
                         {(attainsCategory || isCat5) && (
-                          <div className="text-[10px] mt-0.5 flex items-center gap-1.5 flex-wrap">
+                          <div className="text-2xs mt-0.5 flex items-center gap-1.5 flex-wrap">
                             <span className={`font-bold px-1.5 py-0.5 rounded ${
                               isCat5 ? 'bg-red-100 text-red-700' :
                               attainsCategory.includes('4') ? 'bg-orange-100 text-orange-700' :
@@ -1330,7 +1330,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1.5 text-[9px]">
+                      <div className="flex items-center gap-1.5 text-2xs">
                         {categories.reduce((n, c) => n + c.modules.filter(m => m.status === 'warranted').length, 0) > 0 && (
                           <span className="bg-red-200 text-red-800 font-bold px-1.5 py-0.5 rounded-full">
                             {categories.reduce((n, c) => n + c.modules.filter(m => m.status === 'warranted').length, 0)} warranted
@@ -1359,20 +1359,20 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       <div className="rounded-lg border-2 border-slate-300 bg-white p-4 space-y-3">
                         <div className="flex items-center justify-between">
                           <div className="text-sm font-bold text-slate-900 uppercase tracking-wide">Executive Summary</div>
-                          <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${siteSeverityColor}`}>
+                          <span className={`text-2xs font-bold px-2 py-1 rounded-full ${siteSeverityColor}`}>
                             Site Severity: {siteSeverityLabel} ({siteSeverityScore}/100)
                           </span>
                         </div>
                         {/* Parameter assessment grid */}
                         <div className="rounded-md bg-slate-50 border border-slate-200 p-3 space-y-2">
-                          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{isMD ? 'MD DNR Threshold' : 'EPA Criteria'} Assessment</div>
-                          <div className="grid grid-cols-5 gap-1.5 text-[10px]">
+                          <div className="text-2xs font-bold text-slate-500 uppercase tracking-wider">{isMD ? 'MD DNR Threshold' : 'EPA Criteria'} Assessment</div>
+                          <div className="grid grid-cols-5 gap-1.5 text-2xs">
                             <div className="text-center">
                               <div className={`font-bold ${doSeverity === 'critical' ? 'text-red-700' : doSeverity === 'stressed' ? 'text-amber-600' : doSeverity === 'adequate' ? 'text-green-600' : 'text-slate-400'}`}>
                                 {doSeverity === 'unknown' ? '?' : doVal?.toFixed(1)} mg/L
                               </div>
                               <div className="text-slate-500">DO</div>
-                              <div className={`text-[9px] font-medium ${doSeverity === 'critical' ? 'text-red-600' : doSeverity === 'stressed' ? 'text-amber-600' : 'text-green-600'}`}>
+                              <div className={`text-2xs font-medium ${doSeverity === 'critical' ? 'text-red-600' : doSeverity === 'stressed' ? 'text-amber-600' : 'text-green-600'}`}>
                                 {doSeverity !== 'unknown' ? doSeverity : 'no data'}
                               </div>
                             </div>
@@ -1381,7 +1381,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                                 {bloomSeverity === 'unknown' ? '?' : chlVal} ug/L
                               </div>
                               <div className="text-slate-500">Chl-a</div>
-                              <div className={`text-[9px] font-medium ${bloomSeverity === 'severe' ? 'text-red-600' : bloomSeverity === 'significant' ? 'text-orange-600' : bloomSeverity === 'bloom' ? 'text-amber-600' : 'text-green-600'}`}>
+                              <div className={`text-2xs font-medium ${bloomSeverity === 'severe' ? 'text-red-600' : bloomSeverity === 'significant' ? 'text-orange-600' : bloomSeverity === 'bloom' ? 'text-amber-600' : 'text-green-600'}`}>
                                 {bloomSeverity !== 'unknown' ? bloomSeverity : 'no data'}
                               </div>
                             </div>
@@ -1390,7 +1390,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                                 {turbiditySeverity === 'unknown' ? '?' : turbVal?.toFixed(1)} FNU
                               </div>
                               <div className="text-slate-500">Turbidity</div>
-                              <div className={`text-[9px] font-medium ${turbiditySeverity === 'impaired' ? 'text-red-600' : turbiditySeverity === 'elevated' ? 'text-amber-600' : 'text-green-600'}`}>
+                              <div className={`text-2xs font-medium ${turbiditySeverity === 'impaired' ? 'text-red-600' : turbiditySeverity === 'elevated' ? 'text-amber-600' : 'text-green-600'}`}>
                                 {turbiditySeverity !== 'unknown' ? (turbiditySeverity === 'clear' ? 'ok' : turbiditySeverity) : 'no data'}
                               </div>
                             </div>
@@ -1399,14 +1399,14 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                                 {nutrientSeverity === 'unknown' ? '?' : `TN ${tnVal?.toFixed(1) ?? '?'}`}
                               </div>
                               <div className="text-slate-500">Nutrients</div>
-                              <div className={`text-[9px] font-medium ${nutrientSeverity === 'excessive' ? 'text-red-600' : nutrientSeverity === 'elevated' ? 'text-amber-600' : 'text-green-600'}`}>
+                              <div className={`text-2xs font-medium ${nutrientSeverity === 'excessive' ? 'text-red-600' : nutrientSeverity === 'elevated' ? 'text-amber-600' : 'text-green-600'}`}>
                                 {nutrientSeverity !== 'unknown' ? nutrientSeverity : 'no data'}
                               </div>
                             </div>
                             <div className="text-center">
                               <div className="font-bold text-slate-700">{attainsCategory || '?'}</div>
                               <div className="text-slate-500">ATTAINS</div>
-                              <div className={`text-[9px] font-medium ${isCat5 ? 'text-red-600' : isImpaired ? 'text-amber-600' : 'text-green-600'}`}>
+                              <div className={`text-2xs font-medium ${isCat5 ? 'text-red-600' : isImpaired ? 'text-amber-600' : 'text-green-600'}`}>
                                 {tmdlStatus === 'needed' ? 'no TMDL' : tmdlStatus === 'completed' ? 'has TMDL' : tmdlStatus}
                               </div>
                             </div>
@@ -1414,12 +1414,12 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                           <div className="w-full bg-slate-200 rounded-full h-2 mt-1">
                             <div className={`h-2 rounded-full transition-all ${siteSeverityScore >= 75 ? 'bg-red-500' : siteSeverityScore >= 50 ? 'bg-amber-500' : siteSeverityScore >= 25 ? 'bg-yellow-500' : 'bg-green-500'}`} style={{ width: `${Math.min(100, siteSeverityScore)}%` }} />
                           </div>
-                          <div className="text-[9px] text-slate-400">Composite: DO (25%) + Bloom/Nutrients (25%) + Turbidity (15%) + Impairment (20%) + Monitoring Gap (15%) | Thresholds: {thresholdSource}</div>
+                          <div className="text-2xs text-slate-400">Composite: DO (25%) + Bloom/Nutrients (25%) + Turbidity (15%) + Impairment (20%) + Monitoring Gap (15%) | Thresholds: {thresholdSource}</div>
                         </div>
                         {/* Situation + Treatment Priorities */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div className="rounded-md bg-slate-50 border border-slate-200 p-3">
-                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Situation</div>
+                            <div className="text-2xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Situation</div>
                             <div className="space-y-1 text-xs text-slate-700 leading-relaxed">
                               <div><span className="font-semibold">{regionName}</span> is {isCat5 ? 'Category 5 impaired' : attainsCategory.includes('4') ? 'Category 4 impaired' : isImpaired ? 'impaired' : 'under monitoring'}{attainsCauses.length > 0 ? ` for ${attainsCauses.join(', ').toLowerCase()}` : ''}.</div>
                               {dataAgeDays !== null && <div>Most recent data is <span className="font-semibold">{dataAgeDays} days old</span>. Confidence is <span className={`font-semibold ${dataConfidence === 'low' ? 'text-red-600' : dataConfidence === 'moderate' ? 'text-amber-600' : 'text-green-600'}`}>{dataConfidence}</span>.</div>}
@@ -1427,7 +1427,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                             </div>
                           </div>
                           <div className="rounded-md bg-red-50 border border-red-200 p-3">
-                            <div className="text-[10px] font-bold text-red-700 uppercase tracking-wider mb-1.5">Treatment Priorities</div>
+                            <div className="text-2xs font-bold text-red-700 uppercase tracking-wider mb-1.5">Treatment Priorities</div>
                             <div className="space-y-1 text-xs text-red-800 leading-relaxed">
                               {treatmentPriorities.length > 0 ? treatmentPriorities.slice(0, 3).map((tp: any, i: number) => (
                                 <div key={i} className="flex items-start gap-1">
@@ -1476,11 +1476,11 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                                 <div className="flex-1">
                                   <span className="font-medium text-slate-800">{imp.cause}</span>
                                   <span className="mx-1.5 text-slate-300">|</span>
-                                  <span className={`text-[10px] font-semibold ${imp.tier === 1 ? 'text-green-700' : imp.tier === 2 ? 'text-amber-700' : 'text-slate-500'}`}>
+                                  <span className={`text-2xs font-semibold ${imp.tier === 1 ? 'text-green-700' : imp.tier === 2 ? 'text-amber-700' : 'text-slate-500'}`}>
                                     {imp.tierLabel}
                                   </span>
                                 </div>
-                                <span className="text-[11px] text-slate-500 max-w-[40%] text-right">{imp.pearlAction}</span>
+                                <span className="text-xs text-slate-500 max-w-[40%] text-right">{imp.pearlAction}</span>
                               </div>
                             ))}
                           </div>
@@ -1493,9 +1493,9 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                           <div key={cat.id} className={`rounded-lg border p-2.5 ${cat.color}`}>
                             <div className="text-xs font-semibold flex items-center gap-1.5">
                               <span>{cat.icon}</span> {cat.title}
-                              <span className="text-[10px] font-normal text-slate-500 ml-auto">{cat.modules.length} modules</span>
+                              <span className="text-2xs font-normal text-slate-500 ml-auto">{cat.modules.length} modules</span>
                             </div>
-                            <div className="text-[11px] text-slate-500 mt-0.5">{cat.subtitle}</div>
+                            <div className="text-xs text-slate-500 mt-0.5">{cat.subtitle}</div>
                           </div>
                         ))}
                       </div>
@@ -1565,7 +1565,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                               : 'Low EJ vulnerability relative to national benchmarks.'
                             }
                           </div>
-                          <div className="text-[9px] text-slate-400 mt-1">Source: EPA EJScreen API (live geospatial lookup)</div>
+                          <div className="text-2xs text-slate-400 mt-1">Source: EPA EJScreen API (live geospatial lookup)</div>
                         </div>
                       )}
                       {wbEJLoading && (
@@ -1578,33 +1578,33 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
                         <div className="rounded-lg bg-purple-50 border border-purple-100 p-2 text-center">
                           <div className="text-lg font-bold text-purple-700">{ejDetail.povertyPct}%</div>
-                          <div className="text-[10px] text-purple-500 font-medium">Below Poverty</div>
-                          <div className="text-[9px] text-slate-400">Census ACS</div>
+                          <div className="text-2xs text-purple-500 font-medium">Below Poverty</div>
+                          <div className="text-2xs text-slate-400">Census ACS</div>
                         </div>
                         <div className="rounded-lg bg-purple-50 border border-purple-100 p-2 text-center">
                           <div className="text-lg font-bold text-purple-700">{ejDetail.minorityPct}%</div>
-                          <div className="text-[10px] text-purple-500 font-medium">Minority</div>
-                          <div className="text-[9px] text-slate-400">Census ACS</div>
+                          <div className="text-2xs text-purple-500 font-medium">Minority</div>
+                          <div className="text-2xs text-slate-400">Census ACS</div>
                         </div>
                         <div className="rounded-lg bg-purple-50 border border-purple-100 p-2 text-center">
                           <div className="text-lg font-bold text-purple-700">{ejDetail.uninsuredPct}%</div>
-                          <div className="text-[10px] text-purple-500 font-medium">Uninsured</div>
-                          <div className="text-[9px] text-slate-400">Census ACS</div>
+                          <div className="text-2xs text-purple-500 font-medium">Uninsured</div>
+                          <div className="text-2xs text-slate-400">Census ACS</div>
                         </div>
                         <div className="rounded-lg bg-purple-50 border border-purple-100 p-2 text-center">
                           <div className="text-lg font-bold text-purple-700">{ejDetail.lingIsolatedPct}%</div>
-                          <div className="text-[10px] text-purple-500 font-medium">Ling. Isolated</div>
-                          <div className="text-[9px] text-slate-400">Census ACS</div>
+                          <div className="text-2xs text-purple-500 font-medium">Ling. Isolated</div>
+                          <div className="text-2xs text-slate-400">Census ACS</div>
                         </div>
                         <div className="rounded-lg bg-purple-50 border border-purple-100 p-2 text-center">
                           <div className="text-lg font-bold text-purple-700">{ejDetail.noHSDiplomaPct}%</div>
-                          <div className="text-[10px] text-purple-500 font-medium">No HS Diploma</div>
-                          <div className="text-[9px] text-slate-400">Census ACS</div>
+                          <div className="text-2xs text-purple-500 font-medium">No HS Diploma</div>
+                          <div className="text-2xs text-slate-400">Census ACS</div>
                         </div>
                         <div className="rounded-lg bg-red-50 border border-red-100 p-2 text-center">
                           <div className="text-lg font-bold text-red-700">{ejDetail.drinkingWaterViol}</div>
-                          <div className="text-[10px] text-red-500 font-medium">SDWA Violations</div>
-                          <div className="text-[9px] text-slate-400">per 100k (SDWIS)</div>
+                          <div className="text-2xs text-red-500 font-medium">SDWA Violations</div>
+                          <div className="text-2xs text-slate-400">per 100k (SDWIS)</div>
                         </div>
                       </div>
                       {/* Per-waterbody EJ breakdown */}
@@ -1623,7 +1623,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                           : `${wbEJScore !== null ? wbName : stateName} shows moderate EJ burden. Communities near impaired waterbodies may qualify for Justice40 and EPA EJ program support where local indicators exceed thresholds.`
                         }
                       </div>
-                      <div className="text-[10px] text-slate-400 italic">
+                      <div className="text-2xs text-slate-400 italic">
                         Sources: Census ACS 5-Year (2018–2022) S1701, DP05, S2701, S1601, S1501 · EPA SDWIS · EPA EJScreen API (per-waterbody)
                       </div>
                     </div>
@@ -1670,7 +1670,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold">1</div>
                       <div className="min-w-0 flex-1">
                         <div className="text-sm font-bold text-red-900">Potomac River — Interceptor Collapse</div>
-                        <div className="text-[10px] font-semibold text-red-700 uppercase tracking-wide">Active Sewage Spill · Cabin John, Montgomery County · Since Jan 19, 2026</div>
+                        <div className="text-2xs font-semibold text-red-700 uppercase tracking-wide">Active Sewage Spill · Cabin John, Montgomery County · Since Jan 19, 2026</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5">
@@ -1716,16 +1716,16 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       <span className="font-bold">🔬 PIN Relevance:</span> This event demonstrates catastrophic infrastructure failure impact on receiving waters. PIN's real-time monitoring capability would provide continuous E. coli, nutrient, and pathogen tracking during and after spill events — filling the gap that required UMD researchers and volunteer riverkeepers to manually sample. Continuous deployment at 6 DC Water monitoring sites would provide the 24/7 data regulators and the public need.
                     </div>
                     <div className="flex flex-wrap gap-1.5 pt-1">
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">DC Water</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">NPR</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">The Hill</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">NBC News</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">UMD School of Public Health</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">Potomac Conservancy</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">DOEE</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">VDH</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">MD Matters</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">Izaak Walton League</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">DC Water</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">NPR</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">The Hill</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">NBC News</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">UMD School of Public Health</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">Potomac Conservancy</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">DOEE</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">VDH</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">MD Matters</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">Izaak Walton League</span>
                     </div>
                   </div>
                   )}
@@ -1834,7 +1834,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   <div className="bg-white rounded-lg border border-slate-200 p-3 text-center">
                     <div className="text-2xl font-bold text-slate-800">{ms4Summary.total}</div>
                     <div className="text-xs text-slate-500">Total MS4s</div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">{ms4Summary.phaseI} Phase I · {ms4Summary.phaseII} Phase II</div>
+                    <div className="text-2xs text-slate-400 mt-0.5">{ms4Summary.phaseI} Phase I · {ms4Summary.phaseII} Phase II</div>
                   </div>
                   <div className="bg-white rounded-lg border border-emerald-200 p-3 text-center">
                     <div className="text-2xl font-bold text-emerald-600">{ms4Summary.inCompliance}</div>
@@ -1893,7 +1893,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       </div>
                       {sel.keyIssues && sel.keyIssues.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 mt-1">
-                          {sel.keyIssues.map((k: string) => <Badge key={k} variant="outline" className="text-[10px]">{k}</Badge>)}
+                          {sel.keyIssues.map((k: string) => <Badge key={k} variant="outline" className="text-2xs">{k}</Badge>)}
                         </div>
                       )}
                       {sel.statusDetail && <p className="text-xs text-slate-600 mt-1">{sel.statusDetail}</p>}
@@ -1927,14 +1927,14 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                             >
                               <td className="px-3 py-2.5">
                                 <div className="font-medium text-slate-800">{j.name}</div>
-                                {j.statusDetail && <div className="text-[11px] text-slate-500 mt-0.5">{j.statusDetail}</div>}
+                                {j.statusDetail && <div className="text-xs text-slate-500 mt-0.5">{j.statusDetail}</div>}
                               </td>
                               <td className="px-3 py-2.5 text-center">
                                 <span className={`px-2 py-0.5 rounded text-xs font-medium ${j.phase === 'Phase I' ? 'bg-indigo-100 text-indigo-700' : 'bg-violet-50 text-violet-600'}`}>{j.phase}</span>
                               </td>
                               <td className="px-3 py-2.5 text-center">
                                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border ${statusColor[j.status] || 'bg-slate-100 text-slate-600'}`}>
-                                  <span className="text-[10px]">{statusIcon[j.status] || '•'}</span> {j.status}
+                                  <span className="text-2xs">{statusIcon[j.status] || '•'}</span> {j.status}
                                 </span>
                               </td>
                               <td className="px-3 py-2.5 text-center text-xs text-slate-600">{j.population > 0 ? j.population.toLocaleString() : '—'}</td>
@@ -1946,7 +1946,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   </div>
                 </div>
 
-                <div className="text-[10px] text-slate-400 italic">
+                <div className="text-2xs text-slate-400 italic">
                   Source: EPA ECHO database, state NPDES program records, consent decree public filings. Compliance status reflects most recent annual report cycle.
                 </div>
               </CardContent>
@@ -2064,14 +2064,14 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                     className={`rounded-xl border p-4 cursor-pointer hover:ring-1 hover:ring-blue-300 transition-all ${t.bg}`}
                     onClick={() => setComingSoonId(comingSoonId === t.id ? null : t.id)}
                   >
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{t.label}</div>
+                    <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{t.label}</div>
                     <div className={`text-2xl font-bold ${t.color} mt-1`}>{t.value}</div>
-                    <div className="text-[10px] text-slate-500 mt-1">{t.sub}</div>
+                    <div className="text-2xs text-slate-500 mt-1">{t.sub}</div>
                   </div>
                   {comingSoonId === t.id && (
                     <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
                       <p className="text-xs text-slate-700">{t.drillDetail}</p>
-                      <p className="text-[10px] text-blue-600 mt-2 font-medium">Full filtered list — Coming Soon</p>
+                      <p className="text-2xs text-blue-600 mt-2 font-medium">Full filtered list — Coming Soon</p>
                     </div>
                   )}
                 </div>
@@ -2097,14 +2097,14 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                     >
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="text-sm font-semibold text-slate-800">{c.category}</h4>
-                        <Badge variant="outline" className={`text-[10px] ${c.color}`}>{c.trend}</Badge>
+                        <Badge variant="outline" className={`text-2xs ${c.color}`}>{c.trend}</Badge>
                       </div>
                       <p className="text-xs text-slate-500 leading-relaxed">{c.detail}</p>
                     </div>
                     {comingSoonId === c.id && (
                       <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
                         <p className="text-xs text-slate-700">{c.drillDetail}</p>
-                        <p className="text-[10px] text-blue-600 mt-2 font-medium">Full data view — Coming Soon</p>
+                        <p className="text-2xs text-blue-600 mt-2 font-medium">Full data view — Coming Soon</p>
                       </div>
                     )}
                   </div>
@@ -2135,7 +2135,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
               </div>
             </div>
 
-            <div className="text-[10px] text-slate-400 italic">
+            <div className="text-2xs text-slate-400 italic">
               Projections based on {stateAbbr} 303(d)/305(b) assessment data, TMDL tracking, and NPDES compliance records. Scenario text is generated from placeholder narrative — actual values will populate as historical snapshots accumulate.
             </div>
           </CardContent>
@@ -2422,7 +2422,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Enforcement Pipeline', status: 'Active', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
                     ].map(item => (
                       <div key={item.label} className={`rounded-xl border p-4 ${item.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{item.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{item.label}</div>
                         <div className={`text-lg font-bold ${item.color} mt-1`}>{item.status}</div>
                       </div>
                     ))}
@@ -2480,13 +2480,13 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
 
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                     <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-700">
-                      <p className="text-[10px] font-semibold uppercase tracking-wide">{stateName} PIN Composite</p>
+                      <p className="text-2xs font-semibold uppercase tracking-wide">{stateName} PIN Composite</p>
                       <p className="mt-1 text-sm font-semibold">
                         {alertLevelAvgScore(regionData)}/100 ({scoreToGrade(alertLevelAvgScore(regionData)).letter})
                       </p>
                     </div>
                     <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-700">
-                      <p className="text-[10px] font-semibold uppercase tracking-wide">Current Risk Snapshot</p>
+                      <p className="text-2xs font-semibold uppercase tracking-wide">Current Risk Snapshot</p>
                       <p className="mt-1 text-sm font-semibold">
                         {stats.high} severe · {stats.medium} impaired · {stats.low} watch
                       </p>
@@ -2526,7 +2526,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                             onClick={() => setComingSoonId(comingSoonId === a.id ? null : a.id)}
                           >
                             <div className="flex items-center gap-2">
-                              <Badge variant="outline" className="text-[10px]">{a.priority}</Badge>
+                              <Badge variant="outline" className="text-2xs">{a.priority}</Badge>
                               <span className="flex-1 text-xs">{a.item}</span>
                               <ChevronDown size={14} className={`flex-shrink-0 text-slate-400 transition-transform ${comingSoonId === a.id ? 'rotate-180' : ''}`} />
                             </div>
@@ -2570,14 +2570,14 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                           className="flex items-start gap-3 rounded-lg border border-slate-200 p-3 cursor-pointer hover:ring-1 hover:ring-purple-300 transition-all"
                           onClick={() => setComingSoonId(comingSoonId === c.id ? null : c.id)}
                         >
-                          <span className="text-[10px] font-mono text-slate-400 whitespace-nowrap mt-0.5">{c.time}</span>
+                          <span className="text-2xs font-mono text-slate-400 whitespace-nowrap mt-0.5">{c.time}</span>
                           <span className="text-xs text-slate-700 flex-1">{c.change}</span>
                           <ChevronDown size={14} className={`flex-shrink-0 text-slate-400 transition-transform mt-0.5 ${comingSoonId === c.id ? 'rotate-180' : ''}`} />
                         </div>
                         {comingSoonId === c.id && (
                           <div className="ml-4 mt-1 rounded-lg border border-purple-200 bg-purple-50/60 p-3">
                             <p className="text-xs text-slate-700">{c.detail}</p>
-                            <p className="text-[10px] text-purple-600 mt-2 font-medium">Navigate to source data — Coming Soon</p>
+                            <p className="text-2xs text-purple-600 mt-2 font-medium">Navigate to source data — Coming Soon</p>
                           </div>
                         )}
                       </div>
@@ -2610,13 +2610,13 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                           className={`rounded-xl border p-4 cursor-pointer hover:ring-1 hover:ring-blue-300 transition-all ${m.bg}`}
                           onClick={() => setComingSoonId(comingSoonId === m.id ? null : m.id)}
                         >
-                          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{m.label}</div>
+                          <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{m.label}</div>
                           <div className={`text-2xl font-bold ${m.color} mt-1`}>{m.value}</div>
-                          <div className="text-[10px] text-slate-500 mt-1">{m.trend} this week</div>
+                          <div className="text-2xs text-slate-500 mt-1">{m.trend} this week</div>
                         </div>
                         {comingSoonId === m.id && (
                           <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-2">
-                            <p className="text-[10px] text-blue-600 font-medium">{m.dest} — Coming Soon</p>
+                            <p className="text-2xs text-blue-600 font-medium">{m.dest} — Coming Soon</p>
                           </div>
                         )}
                       </div>
@@ -2649,9 +2649,9 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                           onClick={() => setComingSoonId(comingSoonId === s.id ? null : s.id)}
                         >
                           <div className="flex items-center justify-between mb-1">
-                            <Badge variant="outline" className="text-[10px]">{s.type}</Badge>
+                            <Badge variant="outline" className="text-2xs">{s.type}</Badge>
                             <div className="flex items-center gap-1.5">
-                              <Badge variant="secondary" className="text-[10px]">{s.status}</Badge>
+                              <Badge variant="secondary" className="text-2xs">{s.status}</Badge>
                               <ChevronDown size={14} className={`text-slate-400 transition-transform ${comingSoonId === s.id ? 'rotate-180' : ''}`} />
                             </div>
                           </div>
@@ -2660,7 +2660,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                         {comingSoonId === s.id && (
                           <div className="ml-4 mt-1 rounded-lg border border-indigo-200 bg-indigo-50/60 p-3">
                             <p className="text-xs text-slate-700">{s.expandDetail}</p>
-                            <p className="text-[10px] text-indigo-600 mt-2 font-medium">Open full context — Coming Soon</p>
+                            <p className="text-2xs text-indigo-600 mt-2 font-medium">Open full context — Coming Soon</p>
                           </div>
                         )}
                       </div>
@@ -2712,12 +2712,12 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-xs font-semibold text-blue-800">{f.action}</span>
                             <div className="flex items-center gap-2">
-                              <Badge variant="outline" className={`text-[10px] ${f.status === 'Comment Period' ? 'border-amber-400 text-amber-700' : f.status === 'Final Rule' ? 'border-green-400 text-green-700' : 'border-blue-400 text-blue-700'}`}>{f.status}</Badge>
+                              <Badge variant="outline" className={`text-2xs ${f.status === 'Comment Period' ? 'border-amber-400 text-amber-700' : f.status === 'Final Rule' ? 'border-green-400 text-green-700' : 'border-blue-400 text-blue-700'}`}>{f.status}</Badge>
                               <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform ${expandedSections[`fed-${i}`] ? 'rotate-180' : ''}`} />
                             </div>
                           </div>
                           <p className="text-xs text-slate-600">{f.impact}</p>
-                          <p className="text-[10px] text-slate-400 mt-1">Target date: {f.date}</p>
+                          <p className="text-2xs text-slate-400 mt-1">Target date: {f.date}</p>
                         </button>
                         {expandedSections[`fed-${i}`] && (
                           <div className="px-3 pb-3 border-t border-blue-200 bg-white/60 space-y-2">
@@ -2778,7 +2778,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-xs font-semibold text-teal-800">{s.action}</span>
                             <div className="flex items-center gap-2">
-                              <Badge variant="outline" className={`text-[10px] ${s.stage === 'Public Comment' ? 'border-amber-400 text-amber-700' : s.stage === 'Draft' ? 'border-slate-400 text-slate-600' : 'border-teal-400 text-teal-700'}`}>{s.stage}</Badge>
+                              <Badge variant="outline" className={`text-2xs ${s.stage === 'Public Comment' ? 'border-amber-400 text-amber-700' : s.stage === 'Draft' ? 'border-slate-400 text-slate-600' : 'border-teal-400 text-teal-700'}`}>{s.stage}</Badge>
                               <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform ${expandedSections[`state-${i}`] ? 'rotate-180' : ''}`} />
                             </div>
                           </div>
@@ -2847,16 +2847,16 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                           className="w-full p-3 text-center hover:bg-slate-50 transition-colors"
                         >
                           <div className="text-sm font-bold text-slate-700">{p.program}</div>
-                          <Badge variant={p.status === 'Authorized' || p.status === 'Primacy' ? 'default' : 'secondary'} className="text-[10px] mt-1">{p.status}</Badge>
-                          <div className="text-[10px] text-slate-400 mt-1">Last review: {p.lastReview}</div>
+                          <Badge variant={p.status === 'Authorized' || p.status === 'Primacy' ? 'default' : 'secondary'} className="text-2xs mt-1">{p.status}</Badge>
+                          <div className="text-2xs text-slate-400 mt-1">Last review: {p.lastReview}</div>
                           <ChevronDown className={`h-3 w-3 text-slate-300 mx-auto mt-1 transition-transform ${expandedSections[`epa-${p.program}`] ? 'rotate-180' : ''}`} />
                         </button>
                         {expandedSections[`epa-${p.program}`] && (
                           <div className="px-3 pb-3 border-t border-slate-200 bg-slate-50/50 space-y-1.5 text-left">
-                            <div className="text-[11px] mt-2"><span className="font-semibold text-slate-600">Findings:</span> <span className="text-slate-700">{p.findings}</span></div>
-                            <div className="text-[11px]"><span className="font-semibold text-slate-600">Open items:</span> <span className="text-slate-700">{p.openItems}</span></div>
-                            {p.nextReview !== 'N/A' && <div className="text-[11px]"><span className="font-semibold text-slate-600">Next review:</span> <span className="text-slate-700">{p.nextReview}</span></div>}
-                            <div className="text-[11px]"><span className="font-semibold text-slate-600">Authorization:</span> <span className="text-slate-700">{p.conditions}</span></div>
+                            <div className="text-xs mt-2"><span className="font-semibold text-slate-600">Findings:</span> <span className="text-slate-700">{p.findings}</span></div>
+                            <div className="text-xs"><span className="font-semibold text-slate-600">Open items:</span> <span className="text-slate-700">{p.openItems}</span></div>
+                            {p.nextReview !== 'N/A' && <div className="text-xs"><span className="font-semibold text-slate-600">Next review:</span> <span className="text-slate-700">{p.nextReview}</span></div>}
+                            <div className="text-xs"><span className="font-semibold text-slate-600">Authorization:</span> <span className="text-slate-700">{p.conditions}</span></div>
                           </div>
                         )}
                       </div>
@@ -2886,7 +2886,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Expiring (90d)', value: '14', bg: 'bg-amber-50 border-amber-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -2914,7 +2914,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Category 1 (Attaining)', value: '423', bg: 'bg-green-50 border-green-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -2942,7 +2942,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Enforcement Actions', value: '7', bg: 'bg-amber-50 border-amber-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -2970,7 +2970,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'BMP Audits Due', value: '6', bg: 'bg-blue-50 border-blue-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -2997,10 +2997,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { metric: 'Avg. Resolution Time', value: '47 days', trend: '↓ 8 days', detail: 'From violation to return-to-compliance' },
                     ].map(m => (
                       <div key={m.metric} className="rounded-lg border border-violet-200 bg-violet-50/50 p-4">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{m.metric}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{m.metric}</div>
                         <div className="text-2xl font-bold text-violet-700 mt-1">{m.value}</div>
                         <div className="text-xs text-green-600 font-medium">{m.trend}</div>
-                        <div className="text-[10px] text-slate-500 mt-1">{m.detail}</div>
+                        <div className="text-2xs text-slate-500 mt-1">{m.detail}</div>
                       </div>
                     ))}
                   </div>
@@ -3033,8 +3033,8 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                           <span className="text-xs text-slate-500 ml-2">{s.criteria}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-slate-500">{s.use}</span>
-                          <Badge variant={s.status === 'Current' ? 'default' : 'secondary'} className="text-[10px]">{s.status}</Badge>
+                          <span className="text-2xs text-slate-500">{s.use}</span>
+                          <Badge variant={s.status === 'Current' ? 'default' : 'secondary'} className="text-2xs">{s.status}</Badge>
                         </div>
                       </div>
                     ))}
@@ -3068,7 +3068,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                     {comingSoonId === 'wq-assess-search' ? (
                       <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-3">
                         <p className="text-xs text-slate-700">Search by waterbody name or ATTAINS ID to compare monitoring data against applicable water quality standards and generate assessment decisions.</p>
-                        <p className="text-[10px] text-blue-600 mt-2 font-medium">Assessment workspace — Coming Soon</p>
+                        <p className="text-2xs text-blue-600 mt-2 font-medium">Assessment workspace — Coming Soon</p>
                       </div>
                     ) : (
                       <p className="text-xs text-slate-500 text-center">Compare monitoring data against applicable standards and generate assessment decisions</p>
@@ -3097,7 +3097,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Data Quality Score', value: '91%', bg: 'bg-emerald-50 border-emerald-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -3126,13 +3126,13 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'New Detections (90d)', value: '8', bg: 'bg-orange-50 border-orange-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
                   </div>
                   <div className="mt-4 rounded-lg border border-red-200 bg-red-50/40 p-3">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-red-700 mb-1">Drinking Water Health Thresholds</div>
+                    <div className="text-2xs font-bold uppercase tracking-wider text-red-700 mb-1">Drinking Water Health Thresholds</div>
                     <div className="text-xs text-slate-700">PFOS/PFOA MCL: &lt;= 4 ng/L (federal drinking water standard)</div>
                   </div>
                   <p className="text-xs text-slate-400 mt-4 italic">Data source: State lab results, EPA UCMR, SDWIS contaminant monitoring</p>
@@ -3159,8 +3159,8 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       <div key={i} className="flex items-center justify-between rounded-lg border border-pink-200 bg-pink-50/50 p-3">
                         <span className="text-xs font-medium text-slate-700">{a.advisory}</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-slate-400">{a.issued}</span>
-                          <Badge variant={a.status === 'Active' ? 'destructive' : 'secondary'} className="text-[10px]">{a.status}</Badge>
+                          <span className="text-2xs text-slate-400">{a.issued}</span>
+                          <Badge variant={a.status === 'Active' ? 'destructive' : 'secondary'} className="text-2xs">{a.status}</Badge>
                         </div>
                       </div>
                     ))}
@@ -3188,7 +3188,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Certifications', value: '14 Active', bg: 'bg-green-50 border-green-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -3216,14 +3216,14 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   <CardContent>
                     <div className={`rounded-xl border p-4 flex items-center justify-between ${scoreBg}`}>
                       <div>
-                        <div className="text-[10px] font-bold uppercase tracking-wider opacity-70">Eco Score</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider opacity-70">Eco Score</div>
                         <div className="text-xs opacity-80 mt-1">
                           {ecoData ? `${ecoData.totalTE} T&E species · ${ecoData.aquaticTE} aquatic · ${ecoData.criticalHabitat} critical habitat` : 'No T&E data available'}
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="text-2xl font-bold">{ecoScore}</div>
-                        <Badge variant="outline" className="text-[10px] mt-1">{label}</Badge>
+                        <Badge variant="outline" className="text-2xs mt-1">{label}</Badge>
                       </div>
                     </div>
                   </CardContent>
@@ -3254,7 +3254,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                         { label: 'Below Threshold', value: belowThreshold.toLocaleString(), bg: belowThreshold > 0 ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200' },
                       ].map(k => (
                         <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                          <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                           <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                         </div>
                       ))}
@@ -3287,7 +3287,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                     <CardTitle className="flex items-center gap-2">
                       <AlertTriangle className="h-5 w-5 text-amber-600" />
                       Habitat-Related Impairment Causes
-                      {totalHabitatWb > 0 && <Badge variant="secondary" className="ml-1 text-[10px]">{totalHabitatWb} waterbodies</Badge>}
+                      {totalHabitatWb > 0 && <Badge variant="secondary" className="ml-1 text-2xs">{totalHabitatWb} waterbodies</Badge>}
                     </CardTitle>
                     <CardDescription>Waterbodies impaired by habitat-related causes in {stateName}</CardDescription>
                   </CardHeader>
@@ -3314,13 +3314,13 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                                   style={{ width: `${Math.max(widthPct, count > 0 ? 2 : 0)}%` }}
                                 />
                                 {count > 0 && widthPct >= 15 && (
-                                  <span className="absolute inset-y-0 left-2 flex items-center text-[10px] font-semibold text-white">{pctOfTotal}%</span>
+                                  <span className="absolute inset-y-0 left-2 flex items-center text-2xs font-semibold text-white">{pctOfTotal}%</span>
                                 )}
                               </div>
                             </div>
                           );
                         })}
-                        <p className="text-[10px] text-slate-400 mt-2 flex items-center gap-1">
+                        <p className="text-2xs text-slate-400 mt-2 flex items-center gap-1">
                           <Info size={10} /> A single waterbody may have multiple habitat-related causes.
                         </p>
                       </div>
@@ -3348,7 +3348,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'IBI Poor/V.Poor', value: '14%', bg: 'bg-red-50 border-red-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -3376,7 +3376,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Avg. Review Time', value: '45 days', bg: 'bg-blue-50 border-blue-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -3406,7 +3406,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                     <CardTitle className="flex items-center gap-2">
                       <Bug className="h-5 w-5 text-rose-600" />
                       Threatened & Endangered Species — {stateName}
-                      <Badge variant="secondary" className="ml-1 text-[10px]">USFWS ECOS + IPaC</Badge>
+                      <Badge variant="secondary" className="ml-1 text-2xs">USFWS ECOS + IPaC</Badge>
                     </CardTitle>
                     <CardDescription>ESA-listed species counts, ecological sensitivity, and wildlife agency coordination for {stateAbbr}</CardDescription>
                   </CardHeader>
@@ -3414,29 +3414,29 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                     {/* Primary metrics grid */}
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                       <div className="rounded-xl border p-4 bg-slate-50 border-slate-200">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total T&E</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Total T&E</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{federalTotal}</div>
-                        <div className="text-[10px] text-slate-400">Federal ESA</div>
+                        <div className="text-2xs text-slate-400">Federal ESA</div>
                       </div>
                       <div className="rounded-xl border p-4 bg-blue-50 border-blue-200">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Aquatic (ESA)</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Aquatic (ESA)</div>
                         <div className="text-2xl font-bold text-blue-700 mt-1">{federalAquatic}</div>
-                        <div className="text-[10px] text-slate-400">Federal ESA only</div>
+                        <div className="text-2xs text-slate-400">Federal ESA only</div>
                       </div>
                       <div className="rounded-xl border p-4 bg-emerald-50 border-emerald-200">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Aquatic (All)</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Aquatic (All)</div>
                         <div className="text-2xl font-bold text-emerald-700 mt-1">~{combinedAquatic}</div>
-                        <div className="text-[10px] text-slate-400">Federal + state listed</div>
+                        <div className="text-2xs text-slate-400">Federal + state listed</div>
                       </div>
                       <div className="rounded-xl border p-4 bg-rose-50 border-rose-200">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Critical Habitat</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Critical Habitat</div>
                         <div className="text-2xl font-bold text-rose-700 mt-1">{critHab}</div>
-                        <div className="text-[10px] text-slate-400">Designated areas</div>
+                        <div className="text-2xs text-slate-400">Designated areas</div>
                       </div>
                       <div className="rounded-xl border p-4 bg-amber-50 border-amber-200">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Active Consultations</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Active Consultations</div>
                         <div className="text-2xl font-bold text-amber-700 mt-1">5</div>
-                        <div className="text-[10px] text-slate-400">USFWS Section 7</div>
+                        <div className="text-2xs text-slate-400">USFWS Section 7</div>
                       </div>
                     </div>
 
@@ -3469,15 +3469,15 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                         <span className="text-xs font-semibold text-slate-700">Eco Score: </span>
                         <span className="text-xs font-bold">{teScore}</span>
                         <span className="text-xs text-slate-500"> / 100</span>
-                        <Badge variant="outline" className="text-[10px] ml-2">{teLabel}</Badge>
+                        <Badge variant="outline" className="text-2xs ml-2">{teLabel}</Badge>
                       </div>
-                      <div className="text-[10px] text-slate-400">50% aquatic T&E + 25% total T&E + 25% crit. habitat</div>
+                      <div className="text-2xs text-slate-400">50% aquatic T&E + 25% total T&E + 25% crit. habitat</div>
                     </div>
 
                     {/* Source note explaining the two counts */}
                     <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3">
-                      <p className="text-[10px] text-amber-800 font-medium mb-1">Why two aquatic species counts?</p>
-                      <p className="text-[10px] text-amber-700">
+                      <p className="text-2xs text-amber-800 font-medium mb-1">Why two aquatic species counts?</p>
+                      <p className="text-2xs text-amber-700">
                         <strong>{federalAquatic} species (Federal ESA only)</strong> — from USFWS ECOS, includes only federally listed threatened and endangered aquatic species.{' '}
                         <strong>~{combinedAquatic} species (Federal + State listed)</strong> — adds state-listed species from IPaC/NatureServe that include semi-aquatic, riparian, and anadromous species not covered by federal ESA. Critical habitat count ({critHab}) is consistent across both sources.
                       </p>
@@ -3512,7 +3512,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Load Reduction (lbs)', value: '142K', bg: 'bg-green-50 border-green-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -3543,7 +3543,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Avg. Implementation', value: '42%', bg: 'bg-blue-50 border-blue-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -3574,7 +3574,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'P Achieved', value: '18%', bg: 'bg-green-50 border-green-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -3605,7 +3605,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Joint Projects', value: '15', bg: 'bg-green-50 border-green-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -3686,7 +3686,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                             <td className="py-2 pr-3 text-slate-600 text-right">{b.lbs}</td>
                             <td className="py-2 pr-3 text-slate-600 text-right">{b.cost}</td>
                             <td className="py-2">
-                              <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                              <span className={`inline-flex px-1.5 py-0.5 rounded text-2xs font-semibold ${
                                 b.perf === 'Exceeding' ? 'bg-green-100 text-green-700' :
                                 b.perf === 'On Target' ? 'bg-blue-100 text-blue-700' :
                                 'bg-amber-100 text-amber-700'
@@ -3723,7 +3723,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Milestones Met', value: '65%', bg: 'bg-blue-50 border-blue-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -3769,7 +3769,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                           <span className="text-sm">{f.icon}</span>
                           <div>
                             <div className="text-xs font-semibold text-slate-700">{f.source}</div>
-                            <div className="text-[10px] text-slate-400">{f.period}</div>
+                            <div className="text-2xs text-slate-400">{f.period}</div>
                           </div>
                         </div>
                         <span className="text-sm font-bold text-slate-800">{f.amount}</span>
@@ -3804,7 +3804,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Loan Repayments', value: '$31M/yr', bg: 'bg-slate-50 border-slate-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -3818,7 +3818,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Utilization Rate', value: '78%', bg: 'bg-amber-50 border-amber-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -3846,7 +3846,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Awaiting Funding', value: '12', bg: 'bg-amber-50 border-amber-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -3874,7 +3874,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Completed (YTD)', value: '5', bg: 'bg-slate-50 border-slate-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -3902,7 +3902,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Co-Benefits Score', value: 'High', bg: 'bg-emerald-50 border-emerald-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -3949,7 +3949,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Volunteer Sites', value: '94', bg: 'bg-green-50 border-green-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -3980,7 +3980,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'QA Pass Rate', value: '97.3%', bg: 'bg-green-50 border-green-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -4011,7 +4011,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Recommended Stations', value: '22', bg: 'bg-blue-50 border-blue-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -4043,7 +4043,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Parameters Tracked', value: '8', bg: 'bg-blue-50 border-blue-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -4086,7 +4086,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                           <span className={`w-2 h-2 rounded-full flex-shrink-0 ${s.status === 'fresh' ? 'bg-green-500' : 'bg-red-500'}`} />
                           <span className="text-xs font-semibold text-slate-700 w-24">{s.source}</span>
                         </div>
-                        <span className="text-[10px] text-slate-400">{s.frequency}</span>
+                        <span className="text-2xs text-slate-400">{s.frequency}</span>
                         <span className={`text-xs ${s.status === 'stale' ? 'text-red-600 font-semibold' : 'text-slate-500'}`}>
                           {s.lastPull}
                         </span>
@@ -4129,8 +4129,8 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                         <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
                           <div className={`h-full rounded-full ${d.score === d.max ? 'bg-green-500' : d.score === 0 ? 'bg-red-400' : 'bg-amber-400'}`} style={{ width: `${(d.score / d.max) * 100}%` }} />
                         </div>
-                        <span className="text-[10px] text-slate-500 w-12 text-right">{d.score}/{d.max}</span>
-                        <span className="text-[10px] text-slate-400 w-36 truncate">{d.note}</span>
+                        <span className="text-2xs text-slate-500 w-12 text-right">{d.score}/{d.max}</span>
+                        <span className="text-2xs text-slate-400 w-36 truncate">{d.note}</span>
                       </div>
                     ))}
                   </div>
@@ -4172,7 +4172,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                           <tr key={s.source} className="border-b border-slate-100">
                             <td className="py-2 pr-3 text-slate-700 font-medium">{s.source}</td>
                             <td className="py-2 pr-3">
-                              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs font-semibold ${
                                 s.status === 'Healthy' ? 'bg-green-100 text-green-700' :
                                 s.status === 'Stale' ? 'bg-red-100 text-red-700' :
                                 'bg-amber-100 text-amber-700'
@@ -4247,14 +4247,14 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-xs font-semibold text-slate-800">{inc.incident}</span>
                           <div className="flex items-center gap-2">
-                            <Badge variant={inc.severity === 'High' ? 'destructive' : 'default'} className="text-[10px]">{inc.status}</Badge>
-                            <span className="inline-flex items-center gap-1 text-[10px] text-blue-600 font-medium">
+                            <Badge variant={inc.severity === 'High' ? 'destructive' : 'default'} className="text-2xs">{inc.status}</Badge>
+                            <span className="inline-flex items-center gap-1 text-2xs text-blue-600 font-medium">
                               <Link2 className="h-3 w-3" />
                               Response Planner
                             </span>
                           </div>
                         </div>
-                        <p className="text-[10px] text-slate-500">Since {inc.since} · Severity: {inc.severity}</p>
+                        <p className="text-2xs text-slate-500">Since {inc.since} · Severity: {inc.severity}</p>
                       </div>
                     ))}
                   </div>
@@ -4285,7 +4285,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Federal Coordination', value: 'Active', bg: 'bg-amber-50 border-amber-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -4317,7 +4317,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Closed (30d)', value: '7', bg: 'bg-green-50 border-green-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -4348,7 +4348,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Equipment Ready', value: '94%', bg: 'bg-green-50 border-green-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -4382,8 +4382,8 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                         ].map((step, idx) => (
                           <div key={step.domain} className="flex items-center">
                             <div className={`rounded border px-2 py-2 min-w-[120px] ${step.color}`}>
-                              <div className="text-[9px] font-bold uppercase tracking-wider opacity-70">{step.domain}</div>
-                              <div className="text-[10px] mt-0.5 font-medium">{step.event}</div>
+                              <div className="text-2xs font-bold uppercase tracking-wider opacity-70">{step.domain}</div>
+                              <div className="text-2xs mt-0.5 font-medium">{step.event}</div>
                             </div>
                             {idx < 3 && <div className="text-slate-400 px-1 text-sm font-bold">→</div>}
                           </div>
@@ -4402,8 +4402,8 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                         ].map((step, idx) => (
                           <div key={step.domain} className="flex items-center">
                             <div className={`rounded border px-2 py-2 min-w-[120px] ${step.color}`}>
-                              <div className="text-[9px] font-bold uppercase tracking-wider opacity-70">{step.domain}</div>
-                              <div className="text-[10px] mt-0.5 font-medium">{step.event}</div>
+                              <div className="text-2xs font-bold uppercase tracking-wider opacity-70">{step.domain}</div>
+                              <div className="text-2xs mt-0.5 font-medium">{step.event}</div>
                             </div>
                             {idx < 2 && <div className="text-slate-400 px-1 text-sm font-bold">→</div>}
                           </div>
@@ -4464,13 +4464,13 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       {statusTiles.map(k => (
                         <div key={k.id}>
                           <button onClick={() => setComingSoonId(comingSoonId === k.id ? null : k.id)} className={`w-full rounded-xl border p-4 text-left transition-all hover:shadow-md cursor-pointer ${k.bg}`}>
-                            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                            <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                             <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                           </button>
                           {comingSoonId === k.id && (
                             <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
                               <p className="text-xs text-slate-700">{k.detail}</p>
-                              <p className="text-[10px] text-blue-600 mt-2 font-medium">Full detail view — Coming Soon</p>
+                              <p className="text-2xs text-blue-600 mt-2 font-medium">Full detail view — Coming Soon</p>
                             </div>
                           )}
                         </div>
@@ -4503,13 +4503,13 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       {listTiles.map(k => (
                         <div key={k.id}>
                           <button onClick={() => setComingSoonId(comingSoonId === k.id ? null : k.id)} className={`w-full rounded-xl border p-4 text-left transition-all hover:shadow-md cursor-pointer ${k.bg}`}>
-                            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                            <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                             <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                           </button>
                           {comingSoonId === k.id && (
                             <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
                               <p className="text-xs text-slate-700">{k.detail}</p>
-                              <p className="text-[10px] text-blue-600 mt-2 font-medium">Full detail view — Coming Soon</p>
+                              <p className="text-2xs text-blue-600 mt-2 font-medium">Full detail view — Coming Soon</p>
                             </div>
                           )}
                         </div>
@@ -4545,7 +4545,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                     {comingSoonId === 'tmdl-ws-search' && (
                       <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-3">
                         <p className="text-xs text-slate-700">Search and select any {stateName} waterbody with a pending or active TMDL. View pollutant source analysis, load allocation tables, WLA/LA breakdowns, and implementation milestones.</p>
-                        <p className="text-[10px] text-blue-600 mt-2 font-medium">Waterbody search — Coming Soon</p>
+                        <p className="text-2xs text-blue-600 mt-2 font-medium">Waterbody search — Coming Soon</p>
                       </div>
                     )}
                     <p className="text-xs text-slate-500">Track pollutant source analysis, load allocations, and implementation milestones</p>
@@ -4576,13 +4576,13 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       {implTiles.map(k => (
                         <div key={k.id}>
                           <button onClick={() => setComingSoonId(comingSoonId === k.id ? null : k.id)} className={`w-full rounded-xl border p-4 text-left transition-all hover:shadow-md cursor-pointer ${k.bg}`}>
-                            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                            <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                             <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                           </button>
                           {comingSoonId === k.id && (
                             <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
                               <p className="text-xs text-slate-700">{k.detail}</p>
-                              <p className="text-[10px] text-blue-600 mt-2 font-medium">Full detail view — Coming Soon</p>
+                              <p className="text-2xs text-blue-600 mt-2 font-medium">Full detail view — Coming Soon</p>
                             </div>
                           )}
                         </div>
@@ -4614,13 +4614,13 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       {restoreTiles.map(k => (
                         <div key={k.id}>
                           <button onClick={() => setComingSoonId(comingSoonId === k.id ? null : k.id)} className={`w-full rounded-xl border p-4 text-left transition-all hover:shadow-md cursor-pointer ${k.bg}`}>
-                            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                            <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                             <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                           </button>
                           {comingSoonId === k.id && (
                             <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
                               <p className="text-xs text-slate-700">{k.detail}</p>
-                              <p className="text-[10px] text-blue-600 mt-2 font-medium">Full detail view — Coming Soon</p>
+                              <p className="text-2xs text-blue-600 mt-2 font-medium">Full detail view — Coming Soon</p>
                             </div>
                           )}
                         </div>
@@ -4655,13 +4655,13 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                             <span className="text-xs text-slate-700">{e.item}</span>
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-bold text-blue-700">{e.count}</span>
-                              <Badge variant="outline" className="text-[10px]">{e.status}</Badge>
+                              <Badge variant="outline" className="text-2xs">{e.status}</Badge>
                             </div>
                           </button>
                           {comingSoonId === e.id && (
                             <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
                               <p className="text-xs text-slate-700">{e.detail}</p>
-                              <p className="text-[10px] text-blue-600 mt-2 font-medium">Full detail view — Coming Soon</p>
+                              <p className="text-2xs text-blue-600 mt-2 font-medium">Full detail view — Coming Soon</p>
                             </div>
                           )}
                         </div>
@@ -4692,9 +4692,9 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                         { label: '2025', approved: 94, bg: 'bg-green-50 border-green-200' },
                       ].map(yr => (
                         <div key={yr.label} className={`rounded-xl border p-3 text-center ${yr.bg}`}>
-                          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{yr.label}</div>
+                          <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{yr.label}</div>
                           <div className="text-xl font-bold text-slate-800 mt-1">{yr.approved}</div>
-                          <div className="text-[10px] text-slate-400">approved</div>
+                          <div className="text-2xs text-slate-400">approved</div>
                         </div>
                       ))}
                     </div>
@@ -4707,11 +4707,11 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                         <div className="bg-blue-500 h-2 rounded-full" style={{ width: '55%' }} />
                       </div>
                       <div className="flex justify-between mt-1">
-                        <span className="text-[9px] text-slate-400">0% of backlog cleared</span>
-                        <span className="text-[9px] text-slate-400">55% complete</span>
+                        <span className="text-2xs text-slate-400">0% of backlog cleared</span>
+                        <span className="text-2xs text-slate-400">55% complete</span>
                       </div>
                     </div>
-                    <p className="text-[10px] text-slate-400 italic">At current pace, backlog clearance projected by 2049. Accelerated alternatives may reduce timeline.</p>
+                    <p className="text-2xs text-slate-400 italic">At current pace, backlog clearance projected by 2049. Accelerated alternatives may reduce timeline.</p>
                   </div>
                   <p className="text-xs text-slate-400 mt-4 italic">Data source: EPA ATTAINS TMDL tracking, state submission records</p>
                 </CardContent>
@@ -4747,12 +4747,12 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                               <div className={`h-full rounded-full ${c.color}`} style={{ width: `${c.pct}%` }} />
                             </div>
                             <span className="text-xs font-bold text-slate-700 w-8 text-right">{c.count}</span>
-                            <span className="text-[10px] text-slate-400 w-8 text-right">{c.pct}%</span>
+                            <span className="text-2xs text-slate-400 w-8 text-right">{c.pct}%</span>
                           </div>
                           {comingSoonId === `cause-${c.cause}` && (
                             <div className="ml-44 mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-2">
-                              <p className="text-[10px] text-slate-600">{c.count} waterbodies impaired by {c.cause.toLowerCase()}. View affected waterbodies, TMDL status, and load reduction targets.</p>
-                              <p className="text-[10px] text-blue-600 mt-1 font-medium">Drill-down — Coming Soon</p>
+                              <p className="text-2xs text-slate-600">{c.count} waterbodies impaired by {c.cause.toLowerCase()}. View affected waterbodies, TMDL status, and load reduction targets.</p>
+                              <p className="text-2xs text-blue-600 mt-1 font-medium">Drill-down — Coming Soon</p>
                             </div>
                           )}
                         </button>
@@ -4787,14 +4787,14 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                             <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
                             <div className="flex-1 min-w-0">
                               <div className="text-xs font-semibold text-slate-800">{s.name}</div>
-                              <div className="text-[10px] text-slate-500">Delisted {s.year} — {s.cause}</div>
+                              <div className="text-2xs text-slate-500">Delisted {s.year} — {s.cause}</div>
                             </div>
                             <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${comingSoonId === s.id ? 'rotate-180' : ''}`} />
                           </button>
                           {comingSoonId === s.id && (
                             <div className="mt-1 rounded-lg border border-green-200 bg-green-50/60 p-3">
                               <p className="text-xs text-slate-700">{s.action}</p>
-                              <p className="text-[10px] text-blue-600 mt-2 font-medium">Full case study — Coming Soon</p>
+                              <p className="text-2xs text-blue-600 mt-2 font-medium">Full case study — Coming Soon</p>
                             </div>
                           )}
                         </div>
@@ -4825,7 +4825,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Needs Attention', value: `${jurisdictionScoreSummary.attentionCount}`, bg: 'bg-amber-50 border-amber-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-3xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -4866,7 +4866,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                           className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400"
                         />
                       </div>
-                      <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                      <div className="text-2xs font-semibold text-slate-500 uppercase tracking-wider">
                         Jurisdiction Grades ({filteredJurisdictions.length} shown)
                       </div>
                       <div className="max-h-[420px] overflow-auto space-y-1.5 pr-1">
@@ -4875,13 +4875,13 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                             <span className={`inline-flex items-center justify-center w-8 h-8 rounded-lg border text-sm font-bold ${j.grade.bg} ${j.grade.color}`}>{j.grade.letter}</span>
                             <div className="flex-1 min-w-0">
                               <div className="text-xs font-semibold text-slate-800 truncate">{j.name}</div>
-                              <div className="text-[10px] text-slate-400">
+                              <div className="text-2xs text-slate-400">
                                 {j.phase} · {j.status} · {j.permitId} · {j.population > 0 ? `${j.population.toLocaleString()} pop` : 'population n/a'}
                               </div>
                             </div>
                             <div className="text-right">
                               <div className="text-xs font-bold text-slate-700">{j.score}/100</div>
-                              <div className={`text-[10px] font-semibold ${j.trendColor}`}>{j.trendIcon} {j.trend}</div>
+                              <div className={`text-2xs font-semibold ${j.trendColor}`}>{j.trendIcon} {j.trend}</div>
                             </div>
                           </div>
                         ))}
@@ -4911,7 +4911,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Enforcement Rate', value: 'Below Avg', bg: 'bg-amber-50 border-amber-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-lg font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -4938,7 +4938,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Needs Attention', value: '4', bg: 'bg-amber-50 border-amber-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -4960,8 +4960,8 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                    <p className="text-[11px] font-semibold text-slate-700">Home / Reporting / 2026 Cycle</p>
-                    <p className="text-[10px] text-slate-600 mt-0.5">
+                    <p className="text-xs font-semibold text-slate-700">Home / Reporting / 2026 Cycle</p>
+                    <p className="text-2xs text-slate-600 mt-0.5">
                       State workspace for integrated report assembly, QA checks, and federal submission readiness.
                     </p>
                   </div>
@@ -4973,7 +4973,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Public Comment', value: 'Not Started', bg: 'bg-slate-50 border-slate-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-lg font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -5001,7 +5001,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                    <p className="text-[10px] text-slate-600">Workflow focus: track deadlines, validate packets, and submit complete reports on time.</p>
+                    <p className="text-2xs text-slate-600">Workflow focus: track deadlines, validate packets, and submit complete reports on time.</p>
                   </div>
                   <div className="space-y-2">
                     {[
@@ -5013,13 +5013,13 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       <div key={i} className="flex items-center justify-between rounded-lg border border-slate-200 p-3">
                         <span className="text-xs font-medium text-slate-700">{r.report}</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-slate-400">Due: {r.due}</span>
+                          <span className="text-2xs text-slate-400">Due: {r.due}</span>
                           <Badge
                             className={
-                              r.status === 'Complete' ? 'text-[10px] bg-green-100 text-green-800 border-green-200' :
-                              r.status === 'Pending' || r.status === 'Due Soon' ? 'text-[10px] bg-amber-100 text-amber-800 border-amber-200' :
-                              r.status === 'Overdue' ? 'text-[10px] bg-red-100 text-red-800 border-red-200' :
-                              'text-[10px] bg-slate-100 text-slate-700 border-slate-200'
+                              r.status === 'Complete' ? 'text-2xs bg-green-100 text-green-800 border-green-200' :
+                              r.status === 'Pending' || r.status === 'Due Soon' ? 'text-2xs bg-amber-100 text-amber-800 border-amber-200' :
+                              r.status === 'Overdue' ? 'text-2xs bg-red-100 text-red-800 border-red-200' :
+                              'text-2xs bg-slate-100 text-slate-700 border-slate-200'
                             }
                             variant="outline"
                           >
@@ -5055,7 +5055,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   <CardContent className="space-y-3">
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                       {['Build', 'Validate', 'Submit', 'Export', 'Track Deadlines'].map((label) => (
-                        <button key={label} className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1.5 text-[10px] font-semibold text-slate-700 hover:bg-slate-100 transition-colors text-left">
+                        <button key={label} className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1.5 text-2xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors text-left">
                           {label}
                         </button>
                       ))}
@@ -5067,10 +5067,10 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                             <span className="text-lg flex-shrink-0">{t.icon}</span>
                             <div className="min-w-0">
                               <div className="text-xs font-semibold text-slate-800">{t.name}</div>
-                              <div className="text-[10px] text-slate-500 leading-tight mt-0.5">{t.desc}</div>
+                              <div className="text-2xs text-slate-500 leading-tight mt-0.5">{t.desc}</div>
                               <div className="flex flex-wrap gap-1 mt-1.5">
                                 {t.sections.map(s => (
-                                  <span key={s} className="px-1.5 py-0.5 rounded text-[9px] bg-slate-100 text-slate-500 border border-slate-200">{s}</span>
+                                  <span key={s} className="px-1.5 py-0.5 rounded text-2xs bg-slate-100 text-slate-500 border border-slate-200">{s}</span>
                                 ))}
                               </div>
                             </div>
@@ -5078,7 +5078,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                           {comingSoonId === t.id && (
                             <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
                               <p className="text-xs text-slate-700">Generate a <strong>{t.name}</strong> report for {stateName}. Sections: {t.sections.join(', ')}. Output as PDF or interactive dashboard view.</p>
-                              <p className="text-[10px] text-blue-600 mt-2 font-medium">Report builder — Coming Soon</p>
+                              <p className="text-2xs text-blue-600 mt-2 font-medium">Report builder — Coming Soon</p>
                             </div>
                           )}
                         </div>
@@ -5109,7 +5109,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Backlogged', value: '6', bg: 'bg-red-50 border-red-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -5140,7 +5140,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Expired (no coverage)', value: '4', bg: 'bg-red-50 border-red-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -5171,7 +5171,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Final Issuance', value: '6', bg: 'bg-green-50 border-green-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -5202,7 +5202,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Late/Missing', value: '12', bg: 'bg-red-50 border-red-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -5233,7 +5233,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Coverage Rate', value: '67%', bg: 'bg-blue-50 border-blue-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -5264,7 +5264,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Penalties Assessed', value: '$142K', bg: 'bg-slate-50 border-slate-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -5295,7 +5295,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'CAFO GP', value: '28', bg: 'bg-amber-50 border-amber-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -5321,7 +5321,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   <div className="overflow-x-auto rounded-lg border border-slate-200">
                     <table className="w-full text-xs">
                       <thead>
-                        <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                        <tr className="bg-slate-50 text-left text-2xs font-semibold text-slate-500 uppercase tracking-wider">
                           <th className="px-2.5 py-2">Facility</th>
                           <th className="px-2.5 py-2">Permit ID</th>
                           <th className="px-2.5 py-2">Violation Type</th>
@@ -5341,7 +5341,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                             <td className="px-2.5 py-2 text-slate-700 font-medium">{r.fac}</td>
                             <td className="px-2.5 py-2 font-mono text-slate-600">{r.permit}</td>
                             <td className="px-2.5 py-2">
-                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-2xs font-semibold ${
                                 r.type === 'Effluent' ? 'bg-red-100 text-red-700' :
                                 r.type === 'Schedule' ? 'bg-amber-100 text-amber-700' :
                                 'bg-slate-100 text-slate-600'
@@ -5376,7 +5376,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   <div className="overflow-x-auto rounded-lg border border-slate-200">
                     <table className="w-full text-xs">
                       <thead>
-                        <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                        <tr className="bg-slate-50 text-left text-2xs font-semibold text-slate-500 uppercase tracking-wider">
                           <th className="px-2.5 py-2">Permit</th>
                           <th className="px-2.5 py-2">Facility</th>
                           <th className="px-2.5 py-2">Receiving Water</th>
@@ -5397,7 +5397,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                             <td className="px-2.5 py-2 text-blue-700 font-medium">{r.water}</td>
                             <td className="px-2.5 py-2 text-slate-600">{r.impair}</td>
                             <td className="px-2.5 py-2">
-                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-2xs font-semibold ${
                                 r.tmdl === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
                               }`}>{r.tmdl}</span>
                             </td>
@@ -5431,7 +5431,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Within 90 days', value: '8', bg: 'bg-blue-50 border-blue-200', textColor: 'text-blue-700' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg} text-center`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className={`text-2xl font-bold mt-1 ${k.textColor}`}>{k.value}</div>
                       </div>
                     ))}
@@ -5439,7 +5439,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   <div className="overflow-x-auto rounded-lg border border-slate-200">
                     <table className="w-full text-xs">
                       <thead>
-                        <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                        <tr className="bg-slate-50 text-left text-2xs font-semibold text-slate-500 uppercase tracking-wider">
                           <th className="px-2.5 py-2">Permit</th>
                           <th className="px-2.5 py-2">Facility</th>
                           <th className="px-2.5 py-2">Expires</th>
@@ -5459,7 +5459,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                             <td className="px-2.5 py-2 text-slate-700">{r.fac}</td>
                             <td className="px-2.5 py-2 text-slate-600 whitespace-nowrap">{r.exp}</td>
                             <td className="px-2.5 py-2">
-                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-2xs font-semibold ${
                                 r.status === 'Not Filed' ? 'bg-red-100 text-red-700' :
                                 r.status === 'Under Review' ? 'bg-amber-100 text-amber-700' :
                                 r.status === 'Application Filed' ? 'bg-green-100 text-green-700' :
@@ -5497,7 +5497,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Top Parameter', value: 'TSS', bg: 'bg-blue-50 border-blue-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -5505,7 +5505,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   <div className="overflow-x-auto rounded-lg border border-slate-200">
                     <table className="w-full text-xs">
                       <thead>
-                        <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                        <tr className="bg-slate-50 text-left text-2xs font-semibold text-slate-500 uppercase tracking-wider">
                           <th className="px-2.5 py-2">Parameter</th>
                           <th className="px-2.5 py-2 text-right">Exceedances</th>
                           <th className="px-2.5 py-2 text-right">Total DMRs</th>
@@ -5527,7 +5527,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                             <td className="px-2.5 py-2 text-right text-slate-500">{r.total}</td>
                             <td className="px-2.5 py-2 text-right font-semibold text-slate-700">{(r.exceed / r.total * 100).toFixed(1)}%</td>
                             <td className="px-2.5 py-2">
-                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-2xs font-semibold ${
                                 r.trend === 'Improving' ? 'bg-green-100 text-green-700' :
                                 r.trend === 'Worsening' ? 'bg-red-100 text-red-700' :
                                 'bg-slate-100 text-slate-600'
@@ -5565,9 +5565,9 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                         <div key={i} className="rounded-lg border border-green-200 bg-green-50/50 p-3">
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-xs font-semibold text-slate-800">{p.programName} ({p.cfda})</span>
-                            <Badge variant="default" className="text-[10px]">{p.awardCount} awards</Badge>
+                            <Badge variant="default" className="text-2xs">{p.awardCount} awards</Badge>
                           </div>
-                          <div className="flex items-center gap-4 text-[10px] text-slate-500">
+                          <div className="flex items-center gap-4 text-2xs text-slate-500">
                             <span>Total: ${(p.totalObligated / 1e6).toFixed(1)}M</span>
                             <span>Current FY: ${(p.currentFyObligated / 1e6).toFixed(1)}M</span>
                             {p.bilAmount > 0 && <span>BIL: ${(p.bilAmount / 1e6).toFixed(1)}M</span>}
@@ -5586,9 +5586,9 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                         <div key={i} className="rounded-lg border border-green-200 bg-green-50/50 p-3">
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-xs font-semibold text-slate-800">{g.grant}</span>
-                            <Badge variant="default" className="text-[10px]">{g.status}</Badge>
+                            <Badge variant="default" className="text-2xs">{g.status}</Badge>
                           </div>
-                          <div className="flex items-center gap-4 text-[10px] text-slate-500">
+                          <div className="flex items-center gap-4 text-2xs text-slate-500">
                             <span>Award: {g.amount}</span>
                             <span>{g.period}</span>
                             <span>Spent: {g.spent}</span>
@@ -5629,7 +5629,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'SRF Awards', value: String((cwsrfProg?.awardCount || 0) + (dwsrfProg?.awardCount || 0)), bg: 'bg-slate-50 border-slate-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -5643,7 +5643,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Available Balance', value: 'N/A', bg: 'bg-slate-50 border-slate-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -5658,7 +5658,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Loan Repayments', value: '$31M/yr', bg: 'bg-slate-50 border-slate-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -5688,9 +5688,9 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       <div key={i} className="rounded-lg border border-amber-200 bg-amber-50/50 p-3">
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-xs font-semibold text-slate-800">{o.opportunity}</span>
-                          <Badge variant="outline" className="text-[10px]">Due: {o.deadline}</Badge>
+                          <Badge variant="outline" className="text-2xs">Due: {o.deadline}</Badge>
                         </div>
-                        <div className="flex items-center gap-4 text-[10px] text-slate-500">
+                        <div className="flex items-center gap-4 text-2xs text-slate-500">
                           <span>Award: {o.amount}</span>
                           <span>Match: {o.match}</span>
                         </div>
@@ -5719,7 +5719,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Pending Closeout', value: '6', bg: 'bg-amber-50 border-amber-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -5747,7 +5747,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Grant Success Rate', value: '68%', bg: 'bg-amber-50 border-amber-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -5785,7 +5785,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Match Required', value: `$${((usasData?.bilMatchRequired || 0) / 1e6).toFixed(1)}M`, bg: 'bg-slate-50 border-slate-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -5793,7 +5793,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   <div className="overflow-x-auto rounded-lg border border-slate-200">
                     <table className="w-full text-xs">
                       <thead>
-                        <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                        <tr className="bg-slate-50 text-left text-2xs font-semibold text-slate-500 uppercase tracking-wider">
                           <th className="px-2.5 py-2">Program</th>
                           <th className="px-2.5 py-2 text-right">BIL Amount</th>
                           <th className="px-2.5 py-2 text-right">Total Obligated</th>
@@ -5824,7 +5824,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Remaining', value: '$16M', bg: 'bg-slate-50 border-slate-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -5856,14 +5856,14 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'DAC Communities Served', value: '24', bg: 'bg-slate-50 border-slate-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
                   </div>
                   {/* Progress bar */}
                   <div className="mt-2">
-                    <div className="flex justify-between text-[10px] text-slate-500 mb-1">
+                    <div className="flex justify-between text-2xs text-slate-500 mb-1">
                       <span>Progress toward 40% DAC investment</span>
                       <span>76% of target</span>
                     </div>
@@ -5892,7 +5892,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   <div className="overflow-x-auto rounded-lg border border-slate-200">
                     <table className="w-full text-xs">
                       <thead>
-                        <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                        <tr className="bg-slate-50 text-left text-2xs font-semibold text-slate-500 uppercase tracking-wider">
                           <th className="px-2.5 py-2">Project</th>
                           <th className="px-2.5 py-2">Applicant</th>
                           <th className="px-2.5 py-2 text-right">Amount</th>
@@ -5913,14 +5913,14 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                             <td className="px-2.5 py-2 text-slate-600">{r.app}</td>
                             <td className="px-2.5 py-2 text-right font-semibold text-slate-700">{r.amt}</td>
                             <td className="px-2.5 py-2 text-right">
-                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-2xs font-semibold ${
                                 r.pri >= 85 ? 'bg-green-100 text-green-700' :
                                 r.pri >= 75 ? 'bg-blue-100 text-blue-700' :
                                 'bg-slate-100 text-slate-600'
                               }`}>{r.pri}</span>
                             </td>
                             <td className="px-2.5 py-2">
-                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-2xs font-semibold ${
                                 r.status === 'Approved' ? 'bg-green-100 text-green-700' :
                                 r.status === 'Under Review' ? 'bg-amber-100 text-amber-700' :
                                 'bg-slate-100 text-slate-600'
@@ -5952,7 +5952,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   <div className="overflow-x-auto rounded-lg border border-slate-200">
                     <table className="w-full text-xs">
                       <thead>
-                        <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                        <tr className="bg-slate-50 text-left text-2xs font-semibold text-slate-500 uppercase tracking-wider">
                           <th className="px-2.5 py-2">Grant</th>
                           <th className="px-2.5 py-2">Deliverable</th>
                           <th className="px-2.5 py-2">Due Date</th>
@@ -5973,7 +5973,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                             <td className="px-2.5 py-2 text-slate-600">{r.deliv}</td>
                             <td className="px-2.5 py-2 text-slate-600 whitespace-nowrap">{r.due}</td>
                             <td className="px-2.5 py-2">
-                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-2xs font-semibold ${
                                 r.status === 'Submitted' ? 'bg-green-100 text-green-700' :
                                 r.status === 'Due Soon' ? 'bg-red-100 text-red-700' :
                                 r.status === 'In Progress' ? 'bg-blue-100 text-blue-700' :
@@ -6021,7 +6021,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   <div className="overflow-x-auto rounded-lg border border-slate-200">
                     <table className="w-full text-xs">
                       <thead>
-                        <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                        <tr className="bg-slate-50 text-left text-2xs font-semibold text-slate-500 uppercase tracking-wider">
                           <th className="px-2.5 py-2">Program</th>
                           {fyHeaders.map(h => <th key={h} className="px-2.5 py-2 text-right">{h}</th>)}
                           <th className="px-2.5 py-2">Trend</th>
@@ -6035,7 +6035,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                               <td key={i} className="px-2.5 py-2 text-right text-slate-600">{v > 0 ? `$${(v / 1e6).toFixed(1)}M` : '—'}</td>
                             ))}
                             <td className="px-2.5 py-2">
-                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-2xs font-semibold ${
                                 r.trend === 'Growing' ? 'bg-green-100 text-green-700' :
                                 r.trend === 'Declining' ? 'bg-red-100 text-red-700' :
                                 'bg-slate-100 text-slate-600'
@@ -6050,7 +6050,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   <div className="overflow-x-auto rounded-lg border border-slate-200">
                     <table className="w-full text-xs">
                       <thead>
-                        <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                        <tr className="bg-slate-50 text-left text-2xs font-semibold text-slate-500 uppercase tracking-wider">
                           <th className="px-2.5 py-2">Program</th>
                           <th className="px-2.5 py-2 text-right">FY22</th>
                           <th className="px-2.5 py-2 text-right">FY23</th>
@@ -6074,7 +6074,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                               <td key={i} className="px-2.5 py-2 text-right text-slate-600">{v}</td>
                             ))}
                             <td className="px-2.5 py-2">
-                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-2xs font-semibold ${
                                 r.trend === 'Growing' ? 'bg-green-100 text-green-700' :
                                 r.trend === 'Declining' ? 'bg-red-100 text-red-700' :
                                 'bg-slate-100 text-slate-600'
@@ -6126,7 +6126,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Federal Total', value: `$${((usasData?.totalEpaWater || 0) / 1e6).toFixed(0)}M`, bg: 'bg-green-50 border-green-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -6134,7 +6134,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                   <div className="overflow-x-auto rounded-lg border border-slate-200">
                     <table className="w-full text-xs">
                       <thead>
-                        <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                        <tr className="bg-slate-50 text-left text-2xs font-semibold text-slate-500 uppercase tracking-wider">
                           <th className="px-2.5 py-2">Program</th>
                           <th className="px-2.5 py-2 text-right">Match Required</th>
                           <th className="px-2.5 py-2 text-right">Committed</th>
@@ -6164,7 +6164,7 @@ export function StateManagementCenter({ stateAbbr, onSelectRegion, onToggleDevMo
                       { label: 'Match Rate', value: '81%', bg: 'bg-blue-50 border-blue-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}

@@ -114,7 +114,7 @@ export function WaterStewardshipPanel({ stateAbbr }: WaterStewardshipPanelProps)
                 </div>
                 <div>
                   <p className="text-lg font-bold text-slate-800">{stat.value}</p>
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wide">{stat.label}</p>
+                  <p className="text-2xs text-slate-500 uppercase tracking-wide">{stat.label}</p>
                 </div>
               </div>
             </CardContent>
@@ -128,7 +128,7 @@ export function WaterStewardshipPanel({ stateAbbr }: WaterStewardshipPanelProps)
           <CardTitle className="flex items-center gap-2 text-base">
             <Target size={16} className="text-emerald-600" />
             Reduction Target vs Actuals
-            <Badge variant="secondary" className="ml-1 text-[10px]">FY {data.targetYear} Goal</Badge>
+            <Badge variant="secondary" className="ml-1 text-2xs">FY {data.targetYear} Goal</Badge>
           </CardTitle>
           <CardDescription>
             Corporate water withdrawal reduction target progress toward {data.targetYear} commitment
@@ -149,7 +149,7 @@ export function WaterStewardshipPanel({ stateAbbr }: WaterStewardshipPanelProps)
                 {targetProgress.toFixed(0)}%
               </span>
             </div>
-            <div className="flex justify-between text-[10px] text-slate-400">
+            <div className="flex justify-between text-2xs text-slate-400">
               <span>Baseline (2020)</span>
               <span>{data.reductionActual}% current</span>
               <span>{data.reductionTarget}% target ({data.targetYear})</span>
@@ -164,7 +164,7 @@ export function WaterStewardshipPanel({ stateAbbr }: WaterStewardshipPanelProps)
           <CardTitle className="flex items-center gap-2 text-base">
             <MapPin size={16} className="text-red-600" />
             Facility Water Risk Exposure
-            <Badge variant="secondary" className="ml-1 text-[10px]">{data.facilities.length} facilities</Badge>
+            <Badge variant="secondary" className="ml-1 text-2xs">{data.facilities.length} facilities</Badge>
           </CardTitle>
           <CardDescription>
             Facility-level water stress ratings based on WRI Aqueduct basin analysis
@@ -188,11 +188,11 @@ export function WaterStewardshipPanel({ stateAbbr }: WaterStewardshipPanelProps)
                     <td className="py-2 font-medium text-slate-700">{f.name}</td>
                     <td className="py-2 text-slate-600">{f.region}</td>
                     <td className="py-2 text-center">
-                      <Badge className={`text-[9px] ${stressColor(f.stressLevel)}`}>{f.stressLevel}</Badge>
+                      <Badge className={`text-2xs ${stressColor(f.stressLevel)}`}>{f.stressLevel}</Badge>
                     </td>
                     <td className="py-2 text-center">
                       {f.sharedBasin
-                        ? <Badge className="text-[9px] bg-amber-100 text-amber-700">Yes</Badge>
+                        ? <Badge className="text-2xs bg-amber-100 text-amber-700">Yes</Badge>
                         : <span className="text-slate-400">No</span>}
                     </td>
                     <td className="py-2 text-right font-semibold text-slate-800 tabular-nums">{f.withdrawalMGD.toFixed(1)}</td>
@@ -224,9 +224,9 @@ export function WaterStewardshipPanel({ stateAbbr }: WaterStewardshipPanelProps)
               { label: 'Depletion Rate', value: `${data.watershedContext.depletionRate}%/yr`, sub: 'Annual withdrawal trend' },
             ] as const).map((item) => (
               <div key={item.label} className="rounded-lg border border-slate-200 p-3">
-                <p className="text-[10px] text-slate-500 uppercase tracking-wide mb-1">{item.label}</p>
+                <p className="text-2xs text-slate-500 uppercase tracking-wide mb-1">{item.label}</p>
                 <p className="text-sm font-bold text-slate-800">{item.value}</p>
-                {item.sub && <p className="text-[10px] text-slate-400 mt-0.5">{item.sub}</p>}
+                {item.sub && <p className="text-2xs text-slate-400 mt-0.5">{item.sub}</p>}
               </div>
             ))}
           </div>
@@ -239,7 +239,7 @@ export function WaterStewardshipPanel({ stateAbbr }: WaterStewardshipPanelProps)
           <CardTitle className="flex items-center gap-2 text-base">
             <Award size={16} className="text-indigo-600" />
             CDP Water Security Disclosure
-            <Badge className={`ml-1 text-[10px] ${cdpScoreColor(data.cdpScore)}`}>{data.cdpScore}</Badge>
+            <Badge className={`ml-1 text-2xs ${cdpScoreColor(data.cdpScore)}`}>{data.cdpScore}</Badge>
           </CardTitle>
           <CardDescription>
             Latest CDP Water Security questionnaire performance ({data.cdpYear})
@@ -255,13 +255,13 @@ export function WaterStewardshipPanel({ stateAbbr }: WaterStewardshipPanelProps)
               <div key={item.category} className="rounded-lg border border-indigo-100 bg-indigo-50/50 p-3">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs font-semibold text-indigo-900">{item.category}</span>
-                  <Badge className={`text-[9px] ${cdpScoreColor(item.score)}`}>{item.score}</Badge>
+                  <Badge className={`text-2xs ${cdpScoreColor(item.score)}`}>{item.score}</Badge>
                 </div>
-                <p className="text-[10px] text-indigo-600">{item.status}</p>
+                <p className="text-2xs text-indigo-600">{item.status}</p>
               </div>
             ))}
           </div>
-          <p className="text-[10px] text-slate-400 mt-3">
+          <p className="text-2xs text-slate-400 mt-3">
             CDP scores range A to D-. An A-list score demonstrates leadership-level transparency in water stewardship disclosure.
           </p>
         </CardContent>

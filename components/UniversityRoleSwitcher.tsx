@@ -49,7 +49,7 @@ export function UniversityRoleSwitcher({ currentRole, onRoleChange }: Props) {
       {open && (
         <div className="absolute right-0 top-full mt-1 w-72 bg-white rounded-lg border border-slate-200 shadow-xl z-50 overflow-hidden">
           <div className="px-3 py-2 bg-slate-50 border-b border-slate-100">
-            <div className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">View Mode</div>
+            <div className="text-2xs font-medium text-slate-500 uppercase tracking-wider">View Mode</div>
           </div>
           {ROLES.map(role => {
             const RIcon = role.icon;
@@ -67,14 +67,14 @@ export function UniversityRoleSwitcher({ currentRole, onRoleChange }: Props) {
                   <div className={`text-xs font-medium ${isActive ? 'text-purple-700' : 'text-slate-700'}`}>
                     {role.label}
                   </div>
-                  <div className="text-[10px] text-slate-500 leading-snug">{role.desc}</div>
+                  <div className="text-2xs text-slate-500 leading-snug">{role.desc}</div>
                 </div>
                 {isActive && <Check className="h-4 w-4 text-purple-600 flex-shrink-0 mt-0.5" />}
               </button>
             );
           })}
           <div className="px-3 py-2 bg-slate-50 border-t border-slate-100">
-            <div className="text-[9px] text-slate-400">
+            <div className="text-2xs text-slate-400">
               Switching views changes visible sections and their order. All data remains accessible.
             </div>
           </div>

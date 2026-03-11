@@ -1179,7 +1179,7 @@ Doug and the PIN team`;
           {/* Demo Mode watermark */}
           {demoMode && (
             <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-10 flex items-start justify-center overflow-hidden">
-              <div className="mt-1 px-3 py-0.5 rounded-b-md text-[10px] font-bold uppercase tracking-widest" style={{ background: 'rgba(254,243,199,0.85)', color: '#92400e', border: '1px solid #fde68a', borderTop: 'none' }}>
+              <div className="mt-1 px-3 py-0.5 rounded-b-md text-2xs font-bold uppercase tracking-widest" style={{ background: 'rgba(254,243,199,0.85)', color: '#92400e', border: '1px solid #fde68a', borderTop: 'none' }}>
                 Demo Data
               </div>
             </div>
@@ -1192,7 +1192,7 @@ Doug and the PIN team`;
                 className="inline-flex items-center gap-2 select-none focus:outline-none"
                 aria-label={demoMode ? 'Switch to live data' : 'Switch to demo data'}
               >
-                <span className={`text-[11px] font-semibold transition-colors ${demoMode ? 'text-amber-700' : 'text-slate-400'}`}>Demo</span>
+                <span className={`text-xs font-semibold transition-colors ${demoMode ? 'text-amber-700' : 'text-slate-400'}`}>Demo</span>
                 <div
                   className="relative w-9 h-5 rounded-full transition-colors cursor-pointer"
                   style={{ background: demoMode ? '#f59e0b' : '#22c55e' }}
@@ -1202,11 +1202,11 @@ Doug and the PIN team`;
                     style={{ left: demoMode ? '2px' : '18px' }}
                   />
                 </div>
-                <span className={`text-[11px] font-semibold transition-colors ${!demoMode ? 'text-green-700' : 'text-slate-400'}`}>Live</span>
+                <span className={`text-xs font-semibold transition-colors ${!demoMode ? 'text-green-700' : 'text-slate-400'}`}>Live</span>
                 {demoMode ? (
-                  <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider" style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a' }}>Demo Mode</span>
+                  <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-bold uppercase tracking-wider" style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a' }}>Demo Mode</span>
                 ) : (
-                  <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider" style={{ background: '#dcfce7', color: '#166534', border: '1px solid #bbf7d0' }}>Live Data</span>
+                  <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-bold uppercase tracking-wider" style={{ background: '#dcfce7', color: '#166534', border: '1px solid #bbf7d0' }}>Live Data</span>
                 )}
               </button>
             </div>
@@ -1237,7 +1237,7 @@ Doug and the PIN team`;
                     { label: 'Good', range: '65–85', color: 'bg-lime-500' },
                     { label: 'Excellent', range: '85–100', color: 'bg-green-500' },
                   ].map(({ label, range, color }) => (
-                    <div key={label} className="flex items-center gap-1 text-[10px] text-slate-500">
+                    <div key={label} className="flex items-center gap-1 text-2xs text-slate-500">
                       <span className={`w-2 h-2 rounded-full ${color}`} />
                       {label} ({range})
                     </div>
@@ -1264,9 +1264,9 @@ Doug and the PIN team`;
               <div className="flex items-start gap-2.5">
                 <div className={`rounded-lg p-1.5 bg-white/70 ${tile.color}`}>{tile.icon}</div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">{tile.label}</div>
+                  <div className="text-2xs text-slate-500 font-medium uppercase tracking-wider">{tile.label}</div>
                   <div className="text-xl font-bold text-slate-900 font-mono leading-tight">{tile.value}</div>
-                  <div className="text-[10px] text-slate-400 mt-0.5">{tile.sub}</div>
+                  <div className="text-2xs text-slate-400 mt-0.5">{tile.sub}</div>
                   {tile.pct !== undefined && (
                     <div className="mt-1.5 h-1.5 rounded-full bg-white/60 overflow-hidden">
                       <div className="h-full rounded-full bg-emerald-500" style={{ width: `${Math.min(tile.pct, 100)}%` }} />
@@ -1316,7 +1316,7 @@ Doug and the PIN team`;
                         onChange={(e) => setGpmInputs(prev => ({ ...prev, [key]: parseFloat(e.target.value) }))}
                         className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                       />
-                      <div className="flex justify-between text-[9px] text-slate-400 mt-0.5">
+                      <div className="flex justify-between text-2xs text-slate-400 mt-0.5">
                         <span>{min} {unit}</span>
                         <span>{max} {unit}</span>
                       </div>
@@ -1354,15 +1354,15 @@ Doug and the PIN team`;
                     </div>
                     <div className="flex gap-4 mt-3 pt-3 border-t border-blue-100">
                       <div>
-                        <div className="text-[10px] text-slate-400">Est. Capital</div>
+                        <div className="text-2xs text-slate-400">Est. Capital</div>
                         <div className="text-sm font-bold font-mono">${formatNumber(gpmResult.totalCost)}</div>
                       </div>
                       <div>
-                        <div className="text-[10px] text-slate-400">TSS Removal</div>
+                        <div className="text-2xs text-slate-400">TSS Removal</div>
                         <div className="text-sm font-bold font-mono text-green-700">{gpmResult.estimatedTSSRemoval}%</div>
                       </div>
                       <div>
-                        <div className="text-[10px] text-slate-400">Annual Vol.</div>
+                        <div className="text-2xs text-slate-400">Annual Vol.</div>
                         <div className="text-sm font-bold font-mono">{formatNumber(gpmResult.estimatedAnnualGallons)} gal</div>
                       </div>
                     </div>
@@ -1381,10 +1381,10 @@ Doug and the PIN team`;
                     <Activity size={16} /> Deployment Sensor Alerts
                     <Badge variant="secondary" className="ml-2">{allAlerts.length} signal{allAlerts.length !== 1 ? 's' : ''}</Badge>
                     {criticalAlerts.length > 0 && (
-                      <Badge className="bg-red-100 text-red-700 text-[10px]">{criticalAlerts.length} critical</Badge>
+                      <Badge className="bg-red-100 text-red-700 text-2xs">{criticalAlerts.length} critical</Badge>
                     )}
                     {warningAlerts.length > 0 && (
-                      <Badge className="bg-amber-100 text-amber-700 text-[10px]">{warningAlerts.length} warning</Badge>
+                      <Badge className="bg-amber-100 text-amber-700 text-2xs">{warningAlerts.length} warning</Badge>
                     )}
                   </CardTitle>
                   <CardDescription>Live sensor readings compared against installation baselines. Click any alert for full analysis.</CardDescription>
@@ -1434,18 +1434,18 @@ Doug and the PIN team`;
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-xs font-bold">{(alert as any).deploymentName}</span>
-                              <Badge className={`text-[9px] ${alert.severity === 'critical' ? 'bg-red-200 text-red-900' : alert.severity === 'warning' ? 'bg-amber-200 text-amber-900' : 'bg-blue-200 text-blue-900'}`}>
+                              <Badge className={`text-2xs ${alert.severity === 'critical' ? 'bg-red-200 text-red-900' : alert.severity === 'warning' ? 'bg-amber-200 text-amber-900' : 'bg-blue-200 text-blue-900'}`}>
                                 {alert.severity}
                               </Badge>
                               <span className="text-xs font-semibold">{alert.parameter}</span>
                             </div>
                             <p className="text-xs mt-1 font-medium">{alert.message}</p>
-                            <div className="flex gap-3 mt-1 text-[10px] font-mono opacity-70">
+                            <div className="flex gap-3 mt-1 text-2xs font-mono opacity-70">
                               <span>Baseline: {alert.baseline} {alert.unit}</span>
                               <span>Current: {alert.current} {alert.unit}</span>
                               <span>Δ {alert.delta > 0 ? '+' : ''}{alert.delta.toFixed(1)}{alert.unit === '%' ? '' : ''}</span>
                             </div>
-                            <div className="mt-1.5 text-[10px] text-slate-500 font-medium">
+                            <div className="mt-1.5 text-2xs text-slate-500 font-medium">
                               Click for deep dive &rarr;
                             </div>
                           </div>
@@ -1580,7 +1580,7 @@ Doug and the PIN team`;
                             { label: 'Uptime', value: `${dep.uptime}%`, ok: dep.uptime > 95 },
                           ].map(({ label, value, ok }) => (
                             <div key={label} className="text-center">
-                              <div className="text-[9px] text-slate-400 uppercase">{label}</div>
+                              <div className="text-2xs text-slate-400 uppercase">{label}</div>
                               <div className={`text-xs font-bold font-mono ${ok ? 'text-slate-700' : 'text-amber-600'}`}>{value}</div>
                             </div>
                           ))}
@@ -1607,7 +1607,7 @@ Doug and the PIN team`;
                                 <div key={label} className={`flex items-center gap-2 rounded-lg border px-3 py-2 ${color}`}>
                                   {icon}
                                   <span className="text-xs font-medium flex-1">{label}</span>
-                                  <span className="text-[10px] font-bold uppercase">{status}</span>
+                                  <span className="text-2xs font-bold uppercase">{status}</span>
                                 </div>
                               ))}
                             </div>
@@ -1641,8 +1641,8 @@ Doug and the PIN team`;
                                 </BarChart>
                               </ResponsiveContainer>
                               <div className="flex justify-center gap-4 mt-1">
-                                <div className="flex items-center gap-1.5 text-[10px] text-slate-500"><span className="w-3 h-2 rounded-sm bg-slate-300" />Baseline</div>
-                                <div className="flex items-center gap-1.5 text-[10px] text-blue-600 font-medium"><span className="w-3 h-2 rounded-sm bg-blue-500" />Current</div>
+                                <div className="flex items-center gap-1.5 text-2xs text-slate-500"><span className="w-3 h-2 rounded-sm bg-slate-300" />Baseline</div>
+                                <div className="flex items-center gap-1.5 text-2xs text-blue-600 font-medium"><span className="w-3 h-2 rounded-sm bg-blue-500" />Current</div>
                               </div>
                             </div>
                           )}
@@ -1657,7 +1657,7 @@ Doug and the PIN team`;
                               <div className="flex justify-between"><span className="text-slate-500">Water Type</span><span className="font-mono capitalize">{dep.waterType}</span></div>
                               <div className="flex justify-between"><span className="text-slate-500">Total Treated</span><span className="font-mono font-bold">{formatNumber(dep.totalGallonsTreated)} gal</span></div>
                               <div className="flex justify-between"><span className="text-slate-500">TSS Removal</span><span className="font-mono font-bold text-green-700">{dep.tssRemovalRate}%</span></div>
-                              <div className="flex justify-between"><span className="text-slate-500">Coordinates</span><span className="font-mono text-[10px]">{dep.lat.toFixed(4)}, {dep.lon.toFixed(4)}</span></div>
+                              <div className="flex justify-between"><span className="text-slate-500">Coordinates</span><span className="font-mono text-2xs">{dep.lat.toFixed(4)}, {dep.lon.toFixed(4)}</span></div>
                             </div>
                           </div>
                         </div>
@@ -1720,9 +1720,9 @@ Doug and the PIN team`;
               .sort((a, b) => b.fit - a.fit);
 
             const fitBadge = (fit: number) => {
-              if (fit >= 0.9) return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-800 border border-green-200">High</span>;
-              if (fit >= 0.7) return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">Good</span>;
-              return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">Review</span>;
+              if (fit >= 0.9) return <span className="px-1.5 py-0.5 rounded text-2xs font-bold bg-green-100 text-green-800 border border-green-200">High</span>;
+              if (fit >= 0.7) return <span className="px-1.5 py-0.5 rounded text-2xs font-bold bg-blue-100 text-blue-800 border border-blue-200">Good</span>;
+              return <span className="px-1.5 py-0.5 rounded text-2xs font-bold bg-slate-100 text-slate-600 border border-slate-200">Review</span>;
             };
 
             const isUrgent = (closes: string | null) => {
@@ -1747,25 +1747,25 @@ Doug and the PIN team`;
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                       <div className="bg-slate-50 rounded-lg p-3 border text-center">
                         <div className="text-2xl font-bold text-slate-900">{pearlGrants.length}</div>
-                        <div className="text-[11px] text-slate-500 font-medium">Total Grants</div>
+                        <div className="text-xs text-slate-500 font-medium">Total Grants</div>
                       </div>
                       <div className="bg-slate-50 rounded-lg p-3 border text-center">
                         <div className="text-2xl font-bold text-slate-900">{pearlFunders.length}</div>
-                        <div className="text-[11px] text-slate-500 font-medium">Total Funders</div>
+                        <div className="text-xs text-slate-500 font-medium">Total Funders</div>
                       </div>
                       <div className="bg-green-50 rounded-lg p-3 border border-green-200 text-center">
                         <div className="text-2xl font-bold text-green-700">{highFitGrants.length}</div>
-                        <div className="text-[11px] text-green-600 font-medium">High-Fit Grants</div>
+                        <div className="text-xs text-green-600 font-medium">High-Fit Grants</div>
                       </div>
                       <div className="bg-blue-50 rounded-lg p-3 border border-blue-200 text-center">
                         <div className="text-2xl font-bold text-blue-700">{activePursuitGrants.length + activePursuitFunders.length}</div>
-                        <div className="text-[11px] text-blue-600 font-medium">Active Pursuits</div>
+                        <div className="text-xs text-blue-600 font-medium">Active Pursuits</div>
                       </div>
                       <div className={`rounded-lg p-3 border text-center ${nearestDeadline ? 'bg-amber-50 border-amber-200' : 'bg-slate-50'}`}>
                         <div className="text-sm font-bold text-amber-700">
                           {nearestDeadline ? new Date(nearestDeadline.closes!).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
                         </div>
-                        <div className="text-[11px] text-amber-600 font-medium">Nearest Deadline</div>
+                        <div className="text-xs text-amber-600 font-medium">Nearest Deadline</div>
                       </div>
                     </div>
                   </CardContent>
@@ -1810,7 +1810,7 @@ Doug and the PIN team`;
                               <td className="px-3 py-2 text-slate-500 text-xs">{g.source}</td>
                               <td className="px-3 py-2">{fitBadge(g.fit)}</td>
                               <td className="px-3 py-2 text-xs text-slate-600 max-w-xs truncate">
-                                {g.eligible === 'Co-Sponsor' && g.coSponsor && <Badge variant="outline" className="mr-1 text-[9px]">Co-sponsor: {g.coSponsor}</Badge>}
+                                {g.eligible === 'Co-Sponsor' && g.coSponsor && <Badge variant="outline" className="mr-1 text-2xs">Co-sponsor: {g.coSponsor}</Badge>}
                                 {g.notes}
                               </td>
                               <td className="px-3 py-2 text-xs">
@@ -1935,7 +1935,7 @@ Doug and the PIN team`;
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Role</label>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Role</label>
                   <select
                     value={grantAudience}
                     onChange={(e) => setGrantAudience(e.target.value as UserRole)}
@@ -1947,7 +1947,7 @@ Doug and the PIN team`;
                   </select>
                 </div>
                 <div>
-                  <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">State</label>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">State</label>
                   <select
                     value={grantStateAbbr}
                     onChange={(e) => setGrantStateAbbr(e.target.value)}
@@ -1989,19 +1989,19 @@ Doug and the PIN team`;
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                   <div>
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Audience</label>
+                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Audience</label>
                     <select value={outreachRole} onChange={(e) => setOutreachRole(e.target.value as UserRole)} className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm">
                       {OUTREACH_ROLE_ORDER.map((role) => (<option key={role} value={role}>{OUTREACH_ROLE_LABELS[role]}</option>))}
                     </select>
                   </div>
                   <div>
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Recipient</label>
+                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Recipient</label>
                     <select value={outreachContact} onChange={(e) => { const name = e.target.value; const selected = roleContacts.find((c) => c.name === name); setOutreachContact(name); setOutreachRecipient(name); if (selected) setOutreachOrg(selected.organization); }} className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm">
                       {roleContacts.map((contact) => (<option key={contact.name} value={contact.name}>{contact.name} - {contact.title}</option>))}
                     </select>
                   </div>
                   <div>
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Organization</label>
+                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Organization</label>
                     <input value={outreachOrg} onChange={(e) => setOutreachOrg(e.target.value)} className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm" />
                   </div>
                   <div className="flex items-end gap-2">
@@ -2054,7 +2054,7 @@ Doug and the PIN team`;
                               <span className={`text-xs font-semibold ${textColors[i]}`}>{stageLabel(stage)}</span>
                               <div className="flex items-center gap-2">
                                 <span className={`text-sm font-bold ${textColors[i]}`}>{count}</span>
-                                {value > 0 && <span className="text-[10px] opacity-70">${formatNumber(value)}</span>}
+                                {value > 0 && <span className="text-2xs opacity-70">${formatNumber(value)}</span>}
                               </div>
                             </div>
                           </div>
@@ -2254,7 +2254,7 @@ Doug and the PIN team`;
 
         {/* ── FOOTER ── */}
         <div className="border-t border-slate-200 pt-3 mt-6">
-          <div className="flex items-center justify-between text-[10px] text-slate-400">
+          <div className="flex items-center justify-between text-2xs text-slate-400">
             <span className="font-mono">PIN — Operations Management Center v1.0 · Internal Use Only · Local Seafood Projects Inc.</span>
             <span className="font-mono">Session {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
           </div>

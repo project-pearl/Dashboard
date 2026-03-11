@@ -136,7 +136,7 @@ export function StudentMonitoringPanel({ stateAbbr }: StudentMonitoringPanelProp
               <div key={field.label} className={`rounded-lg border-2 ${field.color} p-3`}>
                 <div className="flex items-center gap-1.5 mb-2">
                   <field.icon size={14} className="text-slate-500" />
-                  <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-wide">{field.label}</span>
+                  <span className="text-2xs font-semibold text-slate-600 uppercase tracking-wide">{field.label}</span>
                 </div>
                 <div className="h-8 rounded-md bg-slate-100 border border-slate-200 flex items-center px-2">
                   <span className="text-xs text-slate-400">Ideal: {field.placeholder}</span>
@@ -151,7 +151,7 @@ export function StudentMonitoringPanel({ stateAbbr }: StudentMonitoringPanelProp
             >
               <span className="text-xs font-semibold text-white">Submit Reading</span>
             </a>
-            <p className="text-[10px] text-slate-400 italic">Opens the Student Uploads portal</p>
+            <p className="text-2xs text-slate-400 italic">Opens the Student Uploads portal</p>
           </div>
         </CardContent>
       </Card>
@@ -162,7 +162,7 @@ export function StudentMonitoringPanel({ stateAbbr }: StudentMonitoringPanelProp
           <CardTitle className="flex items-center gap-2 text-base">
             <TrendingUp size={16} className="text-emerald-600" />
             Recent Readings
-            <Badge variant="secondary" className="ml-1 text-[10px]">
+            <Badge variant="secondary" className="ml-1 text-2xs">
               {RECENT_READINGS.length} entries
             </Badge>
           </CardTitle>
@@ -194,7 +194,7 @@ export function StudentMonitoringPanel({ stateAbbr }: StudentMonitoringPanelProp
                     <td className="py-2 text-right text-slate-700">{row.temperature.toFixed(1)}</td>
                     <td className={`py-2 text-right font-semibold ${turbidityColor(row.turbidity)}`}>{row.turbidity}</td>
                     <td className="py-2 text-right">
-                      <Badge className={`text-[9px] ${gradeColor(row.grade)}`}>{row.grade}</Badge>
+                      <Badge className={`text-2xs ${gradeColor(row.grade)}`}>{row.grade}</Badge>
                     </td>
                   </tr>
                 ))}
@@ -238,7 +238,7 @@ export function StudentMonitoringPanel({ stateAbbr }: StudentMonitoringPanelProp
                     <div className="flex items-center gap-2">
                       <span className="text-base">{param.icon}</span>
                       <span className="text-xs font-semibold text-slate-800">{param.name}</span>
-                      <Badge variant="secondary" className="text-[9px]">
+                      <Badge variant="secondary" className="text-2xs">
                         Ideal: {param.range} {param.unit}
                       </Badge>
                     </div>
@@ -260,7 +260,7 @@ export function StudentMonitoringPanel({ stateAbbr }: StudentMonitoringPanelProp
           <CardTitle className="flex items-center gap-2 text-base">
             <Award size={16} className="text-amber-500" />
             Class Leaderboard
-            <Badge variant="secondary" className="ml-1 text-[10px]">
+            <Badge variant="secondary" className="ml-1 text-2xs">
               {totalReadings} total readings
             </Badge>
           </CardTitle>
@@ -281,11 +281,11 @@ export function StudentMonitoringPanel({ stateAbbr }: StudentMonitoringPanelProp
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold text-slate-800">{team.team}</span>
-                    <span className="text-[10px] text-slate-500">{team.readings} readings</span>
+                    <span className="text-2xs text-slate-500">{team.readings} readings</span>
                   </div>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {team.badges.map((badge) => (
-                      <Badge key={badge} variant="outline" className="text-[8px] py-0 px-1.5">
+                      <Badge key={badge} variant="outline" className="text-2xs py-0 px-1.5">
                         <Star size={8} className="text-amber-500 mr-0.5" />
                         {badge}
                       </Badge>
@@ -294,7 +294,7 @@ export function StudentMonitoringPanel({ stateAbbr }: StudentMonitoringPanelProp
                 </div>
                 <div className="text-right shrink-0">
                   <p className="text-sm font-bold text-indigo-700">{team.points}</p>
-                  <p className="text-[9px] text-slate-500 uppercase">points</p>
+                  <p className="text-2xs text-slate-500 uppercase">points</p>
                 </div>
               </div>
             ))}
@@ -326,14 +326,14 @@ export function StudentMonitoringPanel({ stateAbbr }: StudentMonitoringPanelProp
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
                     <p className="text-xs font-semibold text-slate-700">{opt.name}</p>
-                    <Badge variant="secondary" className="text-[8px]">{opt.format}</Badge>
+                    <Badge variant="secondary" className="text-2xs">{opt.format}</Badge>
                   </div>
-                  <p className="text-[10px] text-slate-500 mt-0.5">{opt.description}</p>
+                  <p className="text-2xs text-slate-500 mt-0.5">{opt.description}</p>
                 </div>
               </div>
             ))}
           </div>
-          <p className="text-[10px] text-slate-400 mt-3 flex items-center gap-1">
+          <p className="text-2xs text-slate-400 mt-3 flex items-center gap-1">
             <Info size={10} />
             All exports include metadata, collection dates, and quality control flags for scientific accuracy.
           </p>

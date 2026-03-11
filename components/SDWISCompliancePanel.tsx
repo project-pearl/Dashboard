@@ -319,7 +319,7 @@ export function SDWISCompliancePanel({
           <div className={`overflow-auto rounded-lg border border-slate-200 ${TABLE_MAX_HEIGHT}`}>
             <table className="w-full text-xs">
               <thead>
-                <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                <tr className="bg-slate-50 text-left text-2xs font-semibold text-slate-500 uppercase tracking-wider">
                   {([
                     ['pwsid', 'System'],
                     ['contaminant', 'Contaminant'],
@@ -355,7 +355,7 @@ export function SDWISCompliancePanel({
                     <tr key={`${v.pwsid}-${v.code}-${v.compliancePeriod}-${i}`} className="hover:bg-slate-50">
                       <td className="px-2.5 py-2">
                         <div className="font-medium text-slate-700">{sysName || v.pwsid}</div>
-                        {sysName && <div className="text-[10px] text-slate-400">{v.pwsid}</div>}
+                        {sysName && <div className="text-2xs text-slate-400">{v.pwsid}</div>}
                       </td>
                       <td className="px-2.5 py-2 text-slate-700 max-w-[18rem]">
                         <span style={TWO_LINE_CLAMP} title={v.contaminant || v.code || '—'}>
@@ -370,11 +370,11 @@ export function SDWISCompliancePanel({
                       <td className="px-2.5 py-2 text-slate-600 whitespace-nowrap">{v.compliancePeriod ? formatDate(v.compliancePeriod) : '—'}</td>
                       <td className="px-2.5 py-2">
                         {v.isMajor ? (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-700">Major</span>
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-2xs font-semibold bg-red-100 text-red-700">Major</span>
                         ) : v.isHealthBased ? (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700">Health-Based</span>
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-2xs font-semibold bg-amber-100 text-amber-700">Health-Based</span>
                         ) : (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600">Monitoring</span>
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-2xs font-semibold bg-slate-100 text-slate-600">Monitoring</span>
                         )}
                       </td>
                       <td className="px-2.5 py-2 text-slate-600 text-right tabular-nums">
@@ -419,7 +419,7 @@ export function SDWISCompliancePanel({
           <div className={`overflow-auto rounded-lg border border-slate-200 ${TABLE_MAX_HEIGHT}`}>
             <table className="w-full text-xs">
               <thead>
-                <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                <tr className="bg-slate-50 text-left text-2xs font-semibold text-slate-500 uppercase tracking-wider">
                   <th className="px-2.5 py-2">System</th>
                   <th className="px-2.5 py-2">PWSID</th>
                   <th className="px-2.5 py-2">Type</th>

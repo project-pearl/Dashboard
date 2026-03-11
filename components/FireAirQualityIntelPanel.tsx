@@ -111,7 +111,7 @@ export function FireAirQualityIntelPanel({
             <div className={`rounded-lg px-3 py-2 text-center border ${style.border} ${style.bg}`}>
               <Flame className={`w-4 h-4 mx-auto mb-1 ${style.text}`} />
               <p className={`text-lg font-bold ${style.text}`}>{totalFires}</p>
-              <p className="text-[10px] text-slate-500">Active Fires</p>
+              <p className="text-2xs text-slate-500">Active Fires</p>
               {trendHistory.length >= 2 && (
                 <div className="flex justify-center mt-1">
                   <Sparkline data={trendHistory.map(t => t.totalFires)} color="#ef4444" />
@@ -121,7 +121,7 @@ export function FireAirQualityIntelPanel({
             <div className="rounded-lg px-3 py-2 text-center border border-slate-200 bg-slate-50">
               <AlertTriangle className="w-4 h-4 mx-auto mb-1 text-red-500" />
               <p className="text-lg font-bold text-slate-800">{totalHighConf}</p>
-              <p className="text-[10px] text-slate-500">High-Confidence</p>
+              <p className="text-2xs text-slate-500">High-Confidence</p>
               {trendHistory.length >= 2 && (
                 <div className="flex justify-center mt-1">
                   <Sparkline data={trendHistory.map(t => t.highConfCount)} color="#dc2626" />
@@ -131,7 +131,7 @@ export function FireAirQualityIntelPanel({
             <div className="rounded-lg px-3 py-2 text-center border border-slate-200 bg-slate-50">
               <Wind className="w-4 h-4 mx-auto mb-1 text-blue-500" />
               <p className="text-lg font-bold text-slate-800">{maxFrp > 0 ? maxFrp.toFixed(1) : '—'}</p>
-              <p className="text-[10px] text-slate-500">Max FRP (MW)</p>
+              <p className="text-2xs text-slate-500">Max FRP (MW)</p>
               {trendHistory.length >= 2 && (
                 <div className="flex justify-center mt-1">
                   <Sparkline data={trendHistory.map(t => t.maxFrp)} color="#3b82f6" />
@@ -141,7 +141,7 @@ export function FireAirQualityIntelPanel({
             <div className="rounded-lg px-3 py-2 text-center border border-slate-200 bg-slate-50">
               <Shield className="w-4 h-4 mx-auto mb-1 text-emerald-500" />
               <p className="text-lg font-bold text-slate-800">{distinctDates.length || '—'}</p>
-              <p className="text-[10px] text-slate-500">Days of Data</p>
+              <p className="text-2xs text-slate-500">Days of Data</p>
             </div>
           </div>
         </CardContent>
@@ -203,22 +203,22 @@ function HealthAdvisoryCard({
             <tbody className="divide-y text-slate-700">
               <tr>
                 <td className="px-3 py-1.5 font-mono">0-12.0</td>
-                <td className="px-3 py-1.5"><Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-[10px]">Good</Badge></td>
+                <td className="px-3 py-1.5"><Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-2xs">Good</Badge></td>
                 <td className="px-3 py-1.5">Normal operations</td>
               </tr>
               <tr>
                 <td className="px-3 py-1.5 font-mono">12.1-35.4</td>
-                <td className="px-3 py-1.5"><Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-[10px]">Moderate</Badge></td>
+                <td className="px-3 py-1.5"><Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-2xs">Moderate</Badge></td>
                 <td className="px-3 py-1.5">Sensitive groups reduce outdoor exertion</td>
               </tr>
               <tr>
                 <td className="px-3 py-1.5 font-mono">35.5-55.4</td>
-                <td className="px-3 py-1.5"><Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 text-[10px]">USG</Badge></td>
+                <td className="px-3 py-1.5"><Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 text-2xs">USG</Badge></td>
                 <td className="px-3 py-1.5">Limit prolonged outdoor exertion; N95 masks recommended</td>
               </tr>
               <tr>
                 <td className="px-3 py-1.5 font-mono">55.5+</td>
-                <td className="px-3 py-1.5"><Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-[10px]">Unhealthy</Badge></td>
+                <td className="px-3 py-1.5"><Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-2xs">Unhealthy</Badge></td>
                 <td className="px-3 py-1.5">Minimize all outdoor activity; full respiratory protection</td>
               </tr>
             </tbody>

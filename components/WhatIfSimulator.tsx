@@ -260,7 +260,7 @@ export default function WhatIfSimulator() {
                       {CATEGORY_LABELS[cat]}
                     </span>
                     {selectedInCat > 0 && (
-                      <Badge variant="secondary" className="bg-teal-100 text-teal-700 text-[10px]">
+                      <Badge variant="secondary" className="bg-teal-100 text-teal-700 text-2xs">
                         {selectedInCat} selected
                       </Badge>
                     )}
@@ -291,13 +291,13 @@ export default function WhatIfSimulator() {
                                   <span className="w-2 h-2 rounded-full bg-teal-500 flex-shrink-0" />
                                 )}
                               </div>
-                              <p className="text-[10px] text-slate-500 mt-0.5 line-clamp-2">{scenario.description}</p>
+                              <p className="text-2xs text-slate-500 mt-0.5 line-clamp-2">{scenario.description}</p>
                               <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                                 {scenario.affectedStates.length === 0 ? (
-                                  <Badge variant="outline" className="text-[9px] py-0 h-4">Nationwide</Badge>
+                                  <Badge variant="outline" className="text-2xs py-0 h-4">Nationwide</Badge>
                                 ) : (
                                   scenario.affectedStates.map(st => (
-                                    <Badge key={st} variant="outline" className="text-[9px] py-0 h-4">{st}</Badge>
+                                    <Badge key={st} variant="outline" className="text-2xs py-0 h-4">{st}</Badge>
                                   ))
                                 )}
                               </div>
@@ -367,7 +367,7 @@ export default function WhatIfSimulator() {
               return (
                 <Card key={kpi.label} className="border-amber-200">
                   <CardContent className="p-3">
-                    <div className="text-[10px] text-slate-500 uppercase tracking-wider font-medium mb-1">
+                    <div className="text-2xs text-slate-500 uppercase tracking-wider font-medium mb-1">
                       {kpi.label}
                     </div>
                     <div className="flex items-end gap-2">
@@ -396,7 +396,7 @@ export default function WhatIfSimulator() {
                 <Badge variant="secondary" className="bg-amber-100 text-amber-700">
                   {sortedAffectedStates.length} impacted
                 </Badge>
-                <Badge variant="outline" className="text-[9px] text-amber-600 border-amber-300 ml-auto">
+                <Badge variant="outline" className="text-2xs text-amber-600 border-amber-300 ml-auto">
                   SIMULATED
                 </Badge>
               </CardTitle>
@@ -473,7 +473,7 @@ export default function WhatIfSimulator() {
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <AlertTriangle size={16} className="text-red-500" /> Simulated Alert Feed
-                  <Badge variant="outline" className="text-[9px] text-amber-600 border-amber-300 ml-auto">
+                  <Badge variant="outline" className="text-2xs text-amber-600 border-amber-300 ml-auto">
                     SIMULATED
                   </Badge>
                 </CardTitle>
@@ -495,13 +495,13 @@ export default function WhatIfSimulator() {
                       <AlertTriangle size={12} className={alert.severity === 'critical' ? 'text-red-600' : 'text-amber-600'} />
                       <Badge
                         variant="outline"
-                        className={`text-[9px] py-0 ${
+                        className={`text-2xs py-0 ${
                           alert.severity === 'critical' ? 'border-red-300 text-red-700' : 'border-amber-300 text-amber-700'
                         }`}
                       >
                         {alert.severity.toUpperCase()}
                       </Badge>
-                      <Badge variant="outline" className="text-[9px] py-0 border-amber-300 text-amber-600">SIMULATED</Badge>
+                      <Badge variant="outline" className="text-2xs py-0 border-amber-300 text-amber-600">SIMULATED</Badge>
                       <span className="text-xs font-medium">{alert.message}</span>
                     </div>
                   </div>
@@ -515,7 +515,7 @@ export default function WhatIfSimulator() {
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-base">
                 <Zap size={16} className="text-teal-600" /> AI Resolution Response
-                <Badge variant="outline" className="text-[9px] text-amber-600 border-amber-300 ml-auto">
+                <Badge variant="outline" className="text-2xs text-amber-600 border-amber-300 ml-auto">
                   SIMULATED
                 </Badge>
               </CardTitle>
@@ -540,7 +540,7 @@ export default function WhatIfSimulator() {
                 <div className="relative">
                   <div className="absolute top-0 left-0 right-0 bg-amber-100 border-b-2 border-amber-400 px-3 py-1.5 z-10 flex items-center gap-2 rounded-t-lg">
                     <AlertTriangle size={12} className="text-amber-700" />
-                    <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider">
+                    <span className="text-2xs font-bold text-amber-800 uppercase tracking-wider">
                       AI-Generated Response Plan for Simulated Scenario
                     </span>
                   </div>

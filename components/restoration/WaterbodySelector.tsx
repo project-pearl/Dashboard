@@ -261,22 +261,22 @@ export default function WaterbodySelector({
         <div className="flex items-center gap-2 bg-cyan-50 border border-cyan-200 rounded-lg px-3 py-2 mb-2">
           <MapPin className="h-3.5 w-3.5 text-cyan-600 shrink-0" />
           <div className="flex-1 min-w-0">
-            <span className="text-[11px] font-semibold text-cyan-800 truncate block">
+            <span className="text-xs font-semibold text-cyan-800 truncate block">
               {selected.name}
             </span>
             <div className="flex items-center gap-1.5 mt-0.5">
               {selected.category && (
-                <span className={`text-[8px] px-1 py-0.5 rounded font-bold ${
+                <span className={`text-2xs px-1 py-0.5 rounded font-bold ${
                   selected.category.startsWith('5') ? 'bg-red-100 text-red-700'
                   : selected.category.startsWith('4') ? 'bg-amber-100 text-amber-700'
                   : 'bg-slate-100 text-slate-600'
                 }`}>Cat {selected.category}</span>
               )}
               {selected.causeCount > 0 && (
-                <span className="text-[8px] text-slate-400">{selected.causeCount} cause{selected.causeCount !== 1 ? 's' : ''}</span>
+                <span className="text-2xs text-slate-400">{selected.causeCount} cause{selected.causeCount !== 1 ? 's' : ''}</span>
               )}
               {sizeTier && (
-                <span className="text-[8px] px-1 py-0.5 rounded bg-blue-50 text-blue-700 font-medium">
+                <span className="text-2xs px-1 py-0.5 rounded bg-blue-50 text-blue-700 font-medium">
                   Size: {sizeTier}{sizeLabel ? ` — ${sizeLabel}` : ''}
                 </span>
               )}
@@ -299,7 +299,7 @@ export default function WaterbodySelector({
             <button
               key={m.id}
               onClick={() => handleModeChange(m.id)}
-              className={`flex-1 px-2 py-1.5 text-[10px] font-medium transition-colors ${
+              className={`flex-1 px-2 py-1.5 text-2xs font-medium transition-colors ${
                 mode === m.id
                   ? 'text-cyan-700 border-b-2 border-cyan-600 bg-white'
                   : 'text-slate-400 hover:text-slate-600'
@@ -310,7 +310,7 @@ export default function WaterbodySelector({
           ))}
           <button
             onClick={() => { setAllStates(prev => !prev); setResults([]); }}
-            className={`px-2 py-1.5 text-[10px] font-medium transition-colors border-l border-slate-200 ${
+            className={`px-2 py-1.5 text-2xs font-medium transition-colors border-l border-slate-200 ${
               allStates
                 ? 'text-cyan-700 bg-cyan-50'
                 : 'text-slate-400 hover:text-slate-600'
@@ -334,7 +334,7 @@ export default function WaterbodySelector({
             onChange={e => handleInput(e.target.value)}
             onFocus={() => setOpen(true)}
             placeholder={placeholders[mode]}
-            className="flex-1 text-[11px] text-slate-700 placeholder:text-slate-300 outline-none bg-transparent"
+            className="flex-1 text-xs text-slate-700 placeholder:text-slate-300 outline-none bg-transparent"
           />
           {query && (
             <button onClick={() => { setQuery(''); setResults([]); }}
@@ -355,21 +355,21 @@ export default function WaterbodySelector({
               className="w-full flex items-start gap-2 px-3 py-2 text-left hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0"
             >
               <div className="flex-1 min-w-0">
-                <div className="text-[10px] font-semibold text-slate-700 truncate">{wb.name}</div>
+                <div className="text-2xs font-semibold text-slate-700 truncate">{wb.name}</div>
                 <div className="flex items-center gap-1 mt-0.5 flex-wrap">
-                  <span className="text-[8px] font-mono text-slate-400">{wb.id}</span>
+                  <span className="text-2xs font-mono text-slate-400">{wb.id}</span>
                   {wb.category && (
-                    <span className={`text-[7px] px-1 py-0.5 rounded font-bold ${
+                    <span className={`text-2xs px-1 py-0.5 rounded font-bold ${
                       wb.category.startsWith('5') ? 'bg-red-100 text-red-700'
                       : wb.category.startsWith('4') ? 'bg-amber-100 text-amber-700'
                       : 'bg-slate-100 text-slate-500'
                     }`}>Cat {wb.category}</span>
                   )}
                   {wb.causes.slice(0, 2).map(c => (
-                    <span key={c} className="text-[7px] px-1 rounded bg-red-50 text-red-500">{c}</span>
+                    <span key={c} className="text-2xs px-1 rounded bg-red-50 text-red-500">{c}</span>
                   ))}
                   {'distance' in wb && typeof wb.distance === 'number' && (
-                    <span className="text-[7px] px-1 rounded bg-blue-50 text-blue-600">{wb.distance} km</span>
+                    <span className="text-2xs px-1 rounded bg-blue-50 text-blue-600">{wb.distance} km</span>
                   )}
                 </div>
               </div>

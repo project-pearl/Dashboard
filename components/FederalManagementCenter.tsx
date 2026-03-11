@@ -3002,7 +3002,7 @@ export function FederalManagementCenter(props: Props) {
                 </div>
               ) : (
                 <div className="w-full overflow-hidden rounded-lg" style={{ border: '1px solid var(--border-subtle)' }}>
-                  <div className="px-3 py-2 text-[10px] flex items-center justify-between" style={{ color: 'var(--text-dim)', borderBottom: '1px solid var(--border-subtle)' }}>
+                  <div className="px-3 py-2 text-2xs flex items-center justify-between" style={{ color: 'var(--text-dim)', borderBottom: '1px solid var(--border-subtle)' }}>
                     <div className="flex items-center gap-2">
                       <span>Click a state to select</span>
                       <SentinelStatusBadge
@@ -3017,7 +3017,7 @@ export function FederalManagementCenter(props: Props) {
                       {/* Accessibility controls */}
                       <button
                         onClick={() => setReducedMotion(m => !m)}
-                        className="text-[10px] hover:underline"
+                        className="text-2xs hover:underline"
                         style={{ color: 'var(--text-dim)' }}
                         title={reducedMotion ? 'Enable animations' : 'Reduce motion'}
                       >
@@ -3025,14 +3025,14 @@ export function FederalManagementCenter(props: Props) {
                       </button>
                       <button
                         onClick={toggleAudio}
-                        className="text-[10px] hover:underline"
+                        className="text-2xs hover:underline"
                         style={{ color: 'var(--text-dim)' }}
                         title={audioEnabled ? 'Disable alert audio' : 'Enable alert audio'}
                       >
                         {audioEnabled ? 'Audio: On' : 'Audio: Off'}
                       </button>
                       <button onClick={() => mapRef.current?.flyTo({ center: [US_CENTER[1], US_CENTER[0]], zoom: US_ZOOM, duration: 800 })}
-                        className="text-[10px] hover:underline" style={{ color: 'var(--accent-teal)' }}>
+                        className="text-2xs hover:underline" style={{ color: 'var(--accent-teal)' }}>
                         Reset View
                       </button>
                     </div>
@@ -3090,17 +3090,17 @@ export function FederalManagementCenter(props: Props) {
                     {overlay === 'hotspots' && (
                       <>
                         <span className="pin-label mr-1">Risk:</span>
-                        <span className="inline-flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: 'var(--status-healthy)' }} /> Healthy</span>
-                        <span className="inline-flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: 'var(--status-warning)' }} /> Watch</span>
-                        <span className="inline-flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: 'var(--status-warning)' }} /> Impaired</span>
-                        <span className="inline-flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: 'var(--status-severe)' }} /> Severe</span>
+                        <span className="inline-flex items-center gap-1 text-2xs" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: 'var(--status-healthy)' }} /> Healthy</span>
+                        <span className="inline-flex items-center gap-1 text-2xs" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: 'var(--status-warning)' }} /> Watch</span>
+                        <span className="inline-flex items-center gap-1 text-2xs" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: 'var(--status-warning)' }} /> Impaired</span>
+                        <span className="inline-flex items-center gap-1 text-2xs" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: 'var(--status-severe)' }} /> Severe</span>
                       </>
                     )}
                     {overlay === 'ms4' && (
                       <>
                         <span className="pin-label mr-1">MS4 Permits:</span>
                         {[{ label: '<10', bg: '#fed7aa' }, { label: '10–29', bg: '#fdba74' }, { label: '30–74', bg: '#fb923c' }, { label: '75–149', bg: '#f97316' }, { label: '150–299', bg: '#ea580c' }, { label: '300+', bg: '#c2410c' }].map(s => (
-                          <span key={s.label} className="inline-flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: s.bg }} /> {s.label}</span>
+                          <span key={s.label} className="inline-flex items-center gap-1 text-2xs" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: s.bg }} /> {s.label}</span>
                         ))}
                       </>
                     )}
@@ -3108,7 +3108,7 @@ export function FederalManagementCenter(props: Props) {
                       <>
                         <span className="pin-label mr-1">EJScreen:</span>
                         {[{ label: 'Low', bg: '#d1d5db' }, { label: 'Moderate', bg: '#fde68a' }, { label: 'High', bg: '#f97316' }, { label: 'Very High', bg: '#dc2626' }, { label: 'Critical', bg: '#7f1d1d' }].map(s => (
-                          <span key={s.label} className="inline-flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: s.bg }} /> {s.label}</span>
+                          <span key={s.label} className="inline-flex items-center gap-1 text-2xs" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: s.bg }} /> {s.label}</span>
                         ))}
                       </>
                     )}
@@ -3116,7 +3116,7 @@ export function FederalManagementCenter(props: Props) {
                       <>
                         <span className="pin-label mr-1">Economic Exposure:</span>
                         {[{ label: 'Minimal', bg: '#d1fae5' }, { label: 'Low', bg: '#fde68a' }, { label: 'Moderate', bg: '#f59e0b' }, { label: 'Elevated', bg: '#dc2626' }, { label: 'High', bg: '#7f1d1d' }].map(s => (
-                          <span key={s.label} className="inline-flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: s.bg }} /> {s.label}</span>
+                          <span key={s.label} className="inline-flex items-center gap-1 text-2xs" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: s.bg }} /> {s.label}</span>
                         ))}
                       </>
                     )}
@@ -3124,7 +3124,7 @@ export function FederalManagementCenter(props: Props) {
                       <>
                         <span className="pin-label mr-1">T&E Species:</span>
                         {[{ label: 'Minimal', bg: '#d1d5db' }, { label: 'Low', bg: '#bbf7d0' }, { label: 'Moderate', bg: '#22c55e' }, { label: 'High', bg: '#16a34a' }, { label: 'Very High', bg: '#14532d' }].map(s => (
-                          <span key={s.label} className="inline-flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: s.bg }} /> {s.label}</span>
+                          <span key={s.label} className="inline-flex items-center gap-1 text-2xs" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: s.bg }} /> {s.label}</span>
                         ))}
                       </>
                     )}
@@ -3132,7 +3132,7 @@ export function FederalManagementCenter(props: Props) {
                       <>
                         <span className="pin-label mr-1">Trend:</span>
                         {[{ label: 'Worsening', bg: 'var(--status-severe)' }, { label: 'Stable', bg: '#9ca3af' }, { label: 'Improving', bg: 'var(--status-healthy)' }].map(s => (
-                          <span key={s.label} className="inline-flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: s.bg }} /> {s.label}</span>
+                          <span key={s.label} className="inline-flex items-center gap-1 text-2xs" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: s.bg }} /> {s.label}</span>
                         ))}
                       </>
                     )}
@@ -3140,7 +3140,7 @@ export function FederalManagementCenter(props: Props) {
                       <>
                         <span className="pin-label mr-1">Coverage:</span>
                         {[{ label: 'None', bg: '#d1d5db' }, { label: 'Ambient', bg: '#fde68a' }, { label: 'Treatment', bg: '#22c55e' }, { label: 'Full', bg: '#14532d' }].map(s => (
-                          <span key={s.label} className="inline-flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: s.bg }} /> {s.label}</span>
+                          <span key={s.label} className="inline-flex items-center gap-1 text-2xs" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: s.bg }} /> {s.label}</span>
                         ))}
                       </>
                     )}
@@ -3148,7 +3148,7 @@ export function FederalManagementCenter(props: Props) {
                       <>
                         <span className="pin-label mr-1">Composite Risk:</span>
                         {[{ label: 'Low (0-33)', bg: '#22c55e' }, { label: 'Moderate (34-49)', bg: '#fbbf24' }, { label: 'Elevated (50-66)', bg: '#f59e0b' }, { label: 'High (67-100)', bg: '#dc2626' }].map(s => (
-                          <span key={s.label} className="inline-flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: s.bg }} /> {s.label}</span>
+                          <span key={s.label} className="inline-flex items-center gap-1 text-2xs" style={{ color: 'var(--text-dim)' }}><span className="w-2 h-2 rounded-sm" style={{ background: s.bg }} /> {s.label}</span>
                         ))}
                       </>
                     )}
@@ -3179,7 +3179,7 @@ export function FederalManagementCenter(props: Props) {
                     ].map((s) => (
                       <div key={s.label} className={`rounded-lg border px-2 py-2 ${s.cls}`}>
                         <div className="text-lg font-bold">{s.count}</div>
-                        <div className="text-[10px] uppercase tracking-wider">{s.label}</div>
+                        <div className="text-2xs uppercase tracking-wider">{s.label}</div>
                       </div>
                     ))}
                   </div>
@@ -3187,17 +3187,17 @@ export function FederalManagementCenter(props: Props) {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <AlertTriangle size={13} className="text-blue-700" />
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-blue-800">Gulf Incident Cross-Check (48h)</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-blue-800">Gulf Incident Cross-Check (48h)</div>
                       </div>
-                      <span className="text-[10px] text-blue-700">
+                      <span className="text-2xs text-blue-700">
                         {gulfCrosscheckSummary ? `${gulfCrosscheckSummary.corroborated}/${gulfCrosscheckSummary.incidents} corroborated` : 'monitoring'}
                       </span>
                     </div>
                     {gulfCrosscheckLoading && (
-                      <div className="text-[10px] text-blue-700/80">Refreshing Gulf signals and comparing to live alerts...</div>
+                      <div className="text-2xs text-blue-700/80">Refreshing Gulf signals and comparing to live alerts...</div>
                     )}
                     {!gulfCrosscheckLoading && topGulfIncidents.length === 0 && (
-                      <div className="text-[10px] text-blue-700/80">No Gulf oil/spill incident signals detected in the last 48 hours.</div>
+                      <div className="text-2xs text-blue-700/80">No Gulf oil/spill incident signals detected in the last 48 hours.</div>
                     )}
                     {!gulfCrosscheckLoading && topGulfIncidents.length > 0 && (
                       <div className="space-y-1">
@@ -3205,14 +3205,14 @@ export function FederalManagementCenter(props: Props) {
                           <div key={inc.id} className="rounded border border-blue-200 bg-white px-2 py-1.5">
                             <div className="flex items-start justify-between gap-2">
                               <div className="min-w-0">
-                                <div className="text-[11px] font-semibold text-slate-800 truncate">
+                                <div className="text-xs font-semibold text-slate-800 truncate">
                                   [{inc.state}] {inc.title}
                                 </div>
-                                <div className="text-[10px] text-slate-500 truncate">
+                                <div className="text-2xs text-slate-500 truncate">
                                   {inc.source} · {inc.location || 'Gulf region'} · {formatEasternTimestamp(inc.timestamp) ?? inc.timestamp}
                                 </div>
                               </div>
-                              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                              <span className={`text-2xs font-bold px-1.5 py-0.5 rounded-full ${
                                 inc.status === 'corroborated' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'
                               }`}>
                                 {inc.status === 'corroborated' ? `${inc.relatedAlerts} linked` : 'unconfirmed'}
@@ -3249,11 +3249,11 @@ export function FederalManagementCenter(props: Props) {
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
                             <div className="text-xs font-semibold text-slate-800 truncate">{ev.title}</div>
-                            <div className="text-[10px] text-slate-500 mt-0.5">
+                            <div className="text-2xs text-slate-500 mt-0.5">
                               {ev.type.toUpperCase()} · {ev.entityLabel || ev.entityId}
                             </div>
                           </div>
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          <span className={`text-2xs font-bold px-2 py-0.5 rounded-full ${
                             ev.severity === 'critical' ? 'bg-red-100 text-red-700'
                               : ev.severity === 'warning' ? 'bg-amber-100 text-amber-700'
                               : 'bg-blue-100 text-blue-700'
@@ -3261,7 +3261,7 @@ export function FederalManagementCenter(props: Props) {
                             {ev.severity.toUpperCase()}
                           </span>
                         </div>
-                        <div className="text-[10px] text-slate-400 mt-1">{formatEasternTimestamp(ev.createdAt) ?? ev.createdAt}</div>
+                        <div className="text-2xs text-slate-400 mt-1">{formatEasternTimestamp(ev.createdAt) ?? ev.createdAt}</div>
                       </button>
                     ))}
                   </div>
@@ -3291,15 +3291,15 @@ export function FederalManagementCenter(props: Props) {
                     </span>
                   </CardTitle>
                   {selectedAlertHuc && (
-                    <div className="text-[10px] mt-0.5 ml-7" style={{ color: 'var(--text-dim)' }}>HUC-8: {selectedAlertHuc}</div>
+                    <div className="text-2xs mt-0.5 ml-7" style={{ color: 'var(--text-dim)' }}>HUC-8: {selectedAlertHuc}</div>
                   )}
                 </CardHeader>
                 <CardContent className="space-y-4 px-5 pb-5">
                   {selectedHistoryAlert && (
                     <div className="rounded-lg border border-red-200 bg-red-50/60 p-3 space-y-3">
                       <div className="flex items-center justify-between gap-2">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-red-700">Why This Is Alerting</div>
-                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                        <div className="text-2xs font-bold uppercase tracking-wider text-red-700">Why This Is Alerting</div>
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-2xs font-bold ${
                           selectedHistoryAlert.severity === 'critical' ? 'bg-red-600 text-white'
                             : selectedHistoryAlert.severity === 'warning' ? 'bg-amber-500 text-white'
                             : 'bg-blue-500 text-white'
@@ -3307,7 +3307,7 @@ export function FederalManagementCenter(props: Props) {
                           {selectedHistoryAlert.severity.toUpperCase()}
                         </span>
                       </div>
-                      <div className="grid grid-cols-3 gap-2 text-[10px]">
+                      <div className="grid grid-cols-3 gap-2 text-2xs">
                         <div className="rounded border border-red-200 bg-white px-2 py-1.5">
                           <div className="text-red-500">Trigger</div>
                           <div className="font-bold text-red-700">{selectedHistoryAlert.type.toUpperCase()}</div>
@@ -3323,10 +3323,10 @@ export function FederalManagementCenter(props: Props) {
                       </div>
                       {Array.isArray(selectedHistoryAlert.metadata?.rationale) && (selectedHistoryAlert.metadata?.rationale as any[]).length > 0 && (
                         <div className="space-y-1">
-                          <div className="text-[10px] font-semibold text-red-700">Rationale</div>
+                          <div className="text-2xs font-semibold text-red-700">Rationale</div>
                           <div className="space-y-1 max-h-36 overflow-y-auto">
                             {(selectedHistoryAlert.metadata?.rationale as any[]).slice(0, 6).map((r, idx) => (
-                              <div key={`${selectedHistoryAlert.id}-why-${idx}`} className="rounded border border-red-200 bg-white px-2 py-1.5 text-[10px] text-slate-700">
+                              <div key={`${selectedHistoryAlert.id}-why-${idx}`} className="rounded border border-red-200 bg-white px-2 py-1.5 text-2xs text-slate-700">
                                 {String(r)}
                               </div>
                             ))}
@@ -3335,10 +3335,10 @@ export function FederalManagementCenter(props: Props) {
                       )}
                       {Array.isArray(selectedHistoryAlert.metadata?.anomalies) && (selectedHistoryAlert.metadata?.anomalies as any[]).length > 0 && (
                         <div className="space-y-1">
-                          <div className="text-[10px] font-semibold text-red-700">Anomaly Signals</div>
+                          <div className="text-2xs font-semibold text-red-700">Anomaly Signals</div>
                           <div className="space-y-1">
                             {(selectedHistoryAlert.metadata?.anomalies as any[]).slice(0, 4).map((a, idx) => (
-                              <div key={`${selectedHistoryAlert.id}-sig-${idx}`} className="rounded border border-red-200 bg-white px-2 py-1.5 text-[10px]">
+                              <div key={`${selectedHistoryAlert.id}-sig-${idx}`} className="rounded border border-red-200 bg-white px-2 py-1.5 text-2xs">
                                 <span className="font-semibold text-slate-700">{a.parameter || 'Signal'}</span>
                                 <span className="text-slate-500"> · {a.severity || 'n/a'} · delta {typeof a.delta === 'number' ? a.delta.toFixed(1) : String(a.delta ?? 'n/a')}</span>
                               </div>
@@ -3363,14 +3363,14 @@ export function FederalManagementCenter(props: Props) {
                           </svg>
                           <div className="absolute inset-0 flex flex-col items-center justify-center">
                             <span className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{Math.round(selectedHucIndices.composite)}</span>
-                            <span className="text-[9px]" style={{ color: 'var(--text-dim)' }}>
+                            <span className="text-2xs" style={{ color: 'var(--text-dim)' }}>
                               {selectedHucIndices.composite >= 80 ? 'Healthy' : selectedHucIndices.composite >= 60 ? 'Watch' : selectedHucIndices.composite >= 40 ? 'Impaired' : 'Severe'}
                             </span>
                           </div>
                         </div>
                         <div className="flex-1">
                           <div className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Composite Score</div>
-                          <div className="text-[10px] mt-1" style={{ color: 'var(--text-dim)' }}>
+                          <div className="text-2xs mt-1" style={{ color: 'var(--text-dim)' }}>
                             Derived from ecological health, permit risk, and infrastructure indices for this HUC-8 watershed.
                           </div>
                         </div>
@@ -3378,7 +3378,7 @@ export function FederalManagementCenter(props: Props) {
 
                       {/* Index breakdown */}
                       <div className="space-y-2">
-                        <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-dim)' }}>Index Breakdown</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-dim)' }}>Index Breakdown</div>
                         {[
                           { label: 'Load Velocity', key: 'pearlLoadVelocity', color: '#3b82f6' },
                           { label: 'Infrastructure', key: 'infrastructureFailure', color: 'var(--accent-teal)' },
@@ -3393,11 +3393,11 @@ export function FederalManagementCenter(props: Props) {
                           const score = raw != null ? Math.round(typeof raw === 'object' && 'value' in raw ? raw.value : raw) : null;
                           return (
                             <div key={idx.key} className="flex items-center gap-2">
-                              <div className="text-[10px] w-28 text-right truncate" style={{ color: 'var(--text-dim)' }}>{idx.label}</div>
+                              <div className="text-2xs w-28 text-right truncate" style={{ color: 'var(--text-dim)' }}>{idx.label}</div>
                               <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
                                 <div className="h-full rounded-full transition-all" style={{ width: score != null ? `${score}%` : '0%', background: idx.color }} />
                               </div>
-                              <div className="text-[10px] w-6 font-semibold text-right" style={{ color: 'var(--text-primary)' }}>{score ?? '—'}</div>
+                              <div className="text-2xs w-6 font-semibold text-right" style={{ color: 'var(--text-primary)' }}>{score ?? '—'}</div>
                             </div>
                           );
                         })}
@@ -3406,8 +3406,8 @@ export function FederalManagementCenter(props: Props) {
                       {/* Alert level badge */}
                       {selectedAlertLevel && (
                         <div className="flex items-center gap-2 pt-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-                          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-dim)' }}>Alert Level:</span>
-                          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold" style={{
+                          <span className="text-2xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-dim)' }}>Alert Level:</span>
+                          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-semibold" style={{
                             background: selectedAlertLevel === 'CRITICAL' ? 'var(--status-severe-bg)' : selectedAlertLevel === 'WATCH' ? 'var(--status-watch-bg)' : 'var(--status-impaired-bg)',
                             color: selectedAlertLevel === 'CRITICAL' ? 'var(--status-severe)' : selectedAlertLevel === 'WATCH' ? 'var(--status-watch)' : 'var(--status-impaired)',
                           }}>
@@ -3458,7 +3458,7 @@ export function FederalManagementCenter(props: Props) {
 
                     return stateAlerts.length > 0 ? (
                       <div className="space-y-1.5">
-                        <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-dim)' }}>
+                        <div className="text-2xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-dim)' }}>
                           Sentinel Alerts ({stateAlerts.length})
                         </div>
                         <div className="space-y-1 max-h-[500px] overflow-y-auto">
@@ -3484,13 +3484,13 @@ export function FederalManagementCenter(props: Props) {
                                   }
                                 }}
                               >
-                                <span className="inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase" style={{ background: lc.bg, color: lc.text }}>
+                                <span className="inline-flex items-center rounded-full px-1.5 py-0.5 text-2xs font-bold uppercase" style={{ background: lc.bg, color: lc.text }}>
                                   {h.level}
                                 </span>
                                 <span className="text-xs truncate flex-1" style={{ color: 'var(--text-primary)' }}>
                                   {hucNames[h.huc8] ?? h.huc8}
                                 </span>
-                                <span className="text-[10px] tabular-nums" style={{ color: 'var(--text-dim)' }}>{h.score}</span>
+                                <span className="text-2xs tabular-nums" style={{ color: 'var(--text-dim)' }}>{h.score}</span>
                               </div>
                             );
                           })}
@@ -3499,7 +3499,7 @@ export function FederalManagementCenter(props: Props) {
                     ) : (
                       <div className="text-center py-8">
                         <div className="text-xs" style={{ color: 'var(--text-dim)' }}>No active Sentinel alerts for {STATE_ABBR_TO_NAME[selectedState] ?? selectedState}.</div>
-                        <div className="text-[10px] mt-1" style={{ color: 'var(--text-dim)' }}>Sentinel monitors HUC-8 watersheds for anomalous conditions.</div>
+                        <div className="text-2xs mt-1" style={{ color: 'var(--text-dim)' }}>Sentinel monitors HUC-8 watersheds for anomalous conditions.</div>
                       </div>
                     );
                   })()}
@@ -3688,15 +3688,15 @@ export function FederalManagementCenter(props: Props) {
                   <div className="text-left">
                     <div className="text-sm font-semibold text-cyan-800 flex items-center gap-2">
                       Restoration Plan — {regionName}
-                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${siteSeverityColor}`}>
+                      <span className={`text-2xs font-bold px-1.5 py-0.5 rounded-full ${siteSeverityColor}`}>
                         {siteSeverityLabel} ({siteSeverityScore})
                       </span>
                     </div>
-                    <div className="text-[11px] text-slate-500">
+                    <div className="text-xs text-slate-500">
                       {totalBMPs} recommended BMPs · {attainsCauses.length} impairment cause{attainsCauses.length !== 1 ? 's' : ''} · {compliancePathway}
                     </div>
                     {(attainsCategory || isCat5) && (
-                      <div className="text-[10px] mt-0.5 flex items-center gap-1.5 flex-wrap">
+                      <div className="text-2xs mt-0.5 flex items-center gap-1.5 flex-wrap">
                         <span className={`font-bold px-1.5 py-0.5 rounded ${
                           isCat5 ? 'bg-red-100 text-red-700' :
                           attainsCategory.includes('4') ? 'bg-orange-100 text-orange-700' :
@@ -3714,7 +3714,7 @@ export function FederalManagementCenter(props: Props) {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1.5 text-[9px]">
+                  <div className="flex items-center gap-1.5 text-2xs">
                     {categories.reduce((n, c) => n + c.modules.filter(m => m.status === 'warranted').length, 0) > 0 && (
                       <span className="bg-red-200 text-red-800 font-bold px-1.5 py-0.5 rounded-full">
                         {categories.reduce((n, c) => n + c.modules.filter(m => m.status === 'warranted').length, 0)} warranted
@@ -3745,21 +3745,21 @@ export function FederalManagementCenter(props: Props) {
                       <div className="rounded-lg border-2 border-slate-300 bg-white p-4 space-y-3">
                         <div className="flex items-center justify-between">
                           <div className="text-sm font-bold text-slate-900 uppercase tracking-wide">Executive Summary</div>
-                          <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${siteSeverityColor}`}>
+                          <span className={`text-2xs font-bold px-2 py-1 rounded-full ${siteSeverityColor}`}>
                             Site Severity: {siteSeverityLabel} ({siteSeverityScore}/100)
                           </span>
                         </div>
 
                         {/* Severity score breakdown bar */}
                         <div className="rounded-md bg-slate-50 border border-slate-200 p-3 space-y-2">
-                          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{isMD ? 'MD DNR Threshold' : 'EPA Criteria'} Assessment</div>
-                          <div className="grid grid-cols-5 gap-1.5 text-[10px]">
+                          <div className="text-2xs font-bold text-slate-500 uppercase tracking-wider">{isMD ? 'MD DNR Threshold' : 'EPA Criteria'} Assessment</div>
+                          <div className="grid grid-cols-5 gap-1.5 text-2xs">
                             <div className="text-center">
                               <div className={`font-bold ${doSeverity === 'critical' ? 'text-red-700' : doSeverity === 'stressed' ? 'text-amber-600' : doSeverity === 'adequate' ? 'text-green-600' : 'text-slate-400'}`}>
                                 {doSeverity === 'unknown' ? '?' : doVal?.toFixed(1)} mg/L
                               </div>
                               <div className="text-slate-500">DO</div>
-                              <div className={`text-[9px] font-medium ${doSeverity === 'critical' ? 'text-red-600' : doSeverity === 'stressed' ? 'text-amber-600' : 'text-green-600'}`}>
+                              <div className={`text-2xs font-medium ${doSeverity === 'critical' ? 'text-red-600' : doSeverity === 'stressed' ? 'text-amber-600' : 'text-green-600'}`}>
                                 {doSeverity !== 'unknown' ? doSeverity : 'no data'}
                               </div>
                             </div>
@@ -3768,7 +3768,7 @@ export function FederalManagementCenter(props: Props) {
                                 {bloomSeverity === 'unknown' ? '?' : chlVal} ug/L
                               </div>
                               <div className="text-slate-500">Chl-a</div>
-                              <div className={`text-[9px] font-medium ${bloomSeverity === 'severe' ? 'text-red-600' : bloomSeverity === 'significant' ? 'text-orange-600' : bloomSeverity === 'bloom' ? 'text-amber-600' : 'text-green-600'}`}>
+                              <div className={`text-2xs font-medium ${bloomSeverity === 'severe' ? 'text-red-600' : bloomSeverity === 'significant' ? 'text-orange-600' : bloomSeverity === 'bloom' ? 'text-amber-600' : 'text-green-600'}`}>
                                 {bloomSeverity !== 'unknown' ? bloomSeverity : 'no data'}
                               </div>
                             </div>
@@ -3777,7 +3777,7 @@ export function FederalManagementCenter(props: Props) {
                                 {turbiditySeverity === 'unknown' ? '?' : turbVal?.toFixed(1)} FNU
                               </div>
                               <div className="text-slate-500">Turbidity</div>
-                              <div className={`text-[9px] font-medium ${turbiditySeverity === 'impaired' ? 'text-red-600' : turbiditySeverity === 'elevated' ? 'text-amber-600' : 'text-green-600'}`}>
+                              <div className={`text-2xs font-medium ${turbiditySeverity === 'impaired' ? 'text-red-600' : turbiditySeverity === 'elevated' ? 'text-amber-600' : 'text-green-600'}`}>
                                 {turbiditySeverity !== 'unknown' ? (turbiditySeverity === 'clear' ? 'ok' : turbiditySeverity) : 'no data'}
                               </div>
                             </div>
@@ -3786,14 +3786,14 @@ export function FederalManagementCenter(props: Props) {
                                 {nutrientSeverity === 'unknown' ? '?' : `TN ${tnVal?.toFixed(1) ?? '?'}`}
                               </div>
                               <div className="text-slate-500">Nutrients</div>
-                              <div className={`text-[9px] font-medium ${nutrientSeverity === 'excessive' ? 'text-red-600' : nutrientSeverity === 'elevated' ? 'text-amber-600' : 'text-green-600'}`}>
+                              <div className={`text-2xs font-medium ${nutrientSeverity === 'excessive' ? 'text-red-600' : nutrientSeverity === 'elevated' ? 'text-amber-600' : 'text-green-600'}`}>
                                 {nutrientSeverity !== 'unknown' ? nutrientSeverity : 'no data'}
                               </div>
                             </div>
                             <div className="text-center">
                               <div className="font-bold text-slate-700">{attainsCategory || '?'}</div>
                               <div className="text-slate-500">ATTAINS</div>
-                              <div className={`text-[9px] font-medium ${isCat5 ? 'text-red-600' : isImpaired ? 'text-amber-600' : 'text-green-600'}`}>
+                              <div className={`text-2xs font-medium ${isCat5 ? 'text-red-600' : isImpaired ? 'text-amber-600' : 'text-green-600'}`}>
                                 {tmdlStatus === 'needed' ? 'no TMDL' : tmdlStatus === 'completed' ? 'has TMDL' : tmdlStatus}
                               </div>
                             </div>
@@ -3802,13 +3802,13 @@ export function FederalManagementCenter(props: Props) {
                           <div className="w-full bg-slate-200 rounded-full h-2 mt-1">
                             <div className={`h-2 rounded-full transition-all ${siteSeverityScore >= 75 ? 'bg-red-500' : siteSeverityScore >= 50 ? 'bg-amber-500' : siteSeverityScore >= 25 ? 'bg-yellow-500' : 'bg-green-500'}`} style={{ width: `${Math.min(100, siteSeverityScore)}%` }} />
                           </div>
-                          <div className="text-[9px] text-slate-400">Composite: DO (25%) + Bloom/Nutrients (25%) + Turbidity (15%) + Impairment (20%) + Monitoring Gap (15%) | Thresholds: {thresholdSource}</div>
+                          <div className="text-2xs text-slate-400">Composite: DO (25%) + Bloom/Nutrients (25%) + Turbidity (15%) + Impairment (20%) + Monitoring Gap (15%) | Thresholds: {thresholdSource}</div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           {/* Situation */}
                           <div className="rounded-md bg-slate-50 border border-slate-200 p-3">
-                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Situation</div>
+                            <div className="text-2xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Situation</div>
                             <div className="space-y-1 text-xs text-slate-700 leading-relaxed">
                               <div><span className="font-semibold">{regionName}</span> is {isCat5 ? 'Category 5 impaired' : attainsCategory.includes('4') ? 'Category 4 impaired' : isImpaired ? 'impaired' : 'under monitoring'}{attainsCauses.length > 0 ? ` for ${attainsCauses.join(', ').toLowerCase()}` : ''}.</div>
                               {dataAgeDays !== null && <div>Most recent data is <span className="font-semibold">{dataAgeDays} days old</span>. Confidence is <span className={`font-semibold ${dataConfidence === 'low' ? 'text-red-600' : dataConfidence === 'moderate' ? 'text-amber-600' : 'text-green-600'}`}>{dataConfidence}</span>.</div>}
@@ -3818,7 +3818,7 @@ export function FederalManagementCenter(props: Props) {
 
                           {/* Treatment Priorities */}
                           <div className="rounded-md bg-red-50 border border-red-200 p-3">
-                            <div className="text-[10px] font-bold text-red-700 uppercase tracking-wider mb-1.5">Treatment Priorities</div>
+                            <div className="text-2xs font-bold text-red-700 uppercase tracking-wider mb-1.5">Treatment Priorities</div>
                             <div className="space-y-1 text-xs text-red-800 leading-relaxed">
                               {treatmentPriorities.length > 0 ? treatmentPriorities.slice(0, 3).map((tp, i) => (
                                 <div key={i} className="flex items-start gap-1">
@@ -3839,10 +3839,10 @@ export function FederalManagementCenter(props: Props) {
 
                           {/* Plan */}
                           <div className="rounded-md bg-blue-50 border border-blue-200 p-3">
-                            <div className="text-[10px] font-bold text-blue-700 uppercase tracking-wider mb-1.5">Plan</div>
+                            <div className="text-2xs font-bold text-blue-700 uppercase tracking-wider mb-1.5">Plan</div>
                             <div className="space-y-1 text-xs text-blue-800 leading-relaxed">
                               <div>Layered approach:</div>
-                              <div className="pl-2 space-y-0.5 text-[11px]">
+                              <div className="pl-2 space-y-0.5 text-xs">
                                 <div>→ Upstream BMPs and source control</div>
                                 <div>→ Nature-based restoration for long-term recovery</div>
                                 <div>→ Continuous monitoring and real-time verification</div>
@@ -3864,7 +3864,7 @@ export function FederalManagementCenter(props: Props) {
                         <div className="text-sm font-bold text-slate-900 uppercase tracking-wide">
                           Impairment Classification
                         </div>
-                        <div className="flex items-center gap-2 text-[10px]">
+                        <div className="flex items-center gap-2 text-2xs">
                           <span className={`font-bold px-2 py-0.5 rounded-full ${
                             addressabilityPct >= 80 ? 'bg-green-200 text-green-800' :
                             addressabilityPct >= 50 ? 'bg-amber-200 text-amber-800' :
@@ -3878,7 +3878,7 @@ export function FederalManagementCenter(props: Props) {
                       <div className="space-y-1">
                         {/* Tier 1 */}
                         {impairmentClassification.filter(i => i.tier === 1).length > 0 && (
-                          <div className="text-[10px] font-bold text-green-700 uppercase tracking-wider mt-1">Tier 1 — Directly Treatable</div>
+                          <div className="text-2xs font-bold text-green-700 uppercase tracking-wider mt-1">Tier 1 — Directly Treatable</div>
                         )}
                         {impairmentClassification.filter(i => i.tier === 1).map((item, i) => (
                           <div key={`t1-${i}`} className="flex items-start gap-2 text-xs py-1 px-2 rounded bg-green-50 border border-green-100">
@@ -3892,7 +3892,7 @@ export function FederalManagementCenter(props: Props) {
 
                         {/* Tier 2 */}
                         {impairmentClassification.filter(i => i.tier === 2).length > 0 && (
-                          <div className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mt-2">Tier 2 — Indirect / Supporting Treatment</div>
+                          <div className="text-2xs font-bold text-amber-700 uppercase tracking-wider mt-2">Tier 2 — Indirect / Supporting Treatment</div>
                         )}
                         {impairmentClassification.filter(i => i.tier === 2).map((item, i) => (
                           <div key={`t2-${i}`} className="flex items-start gap-2 text-xs py-1 px-2 rounded bg-amber-50 border border-amber-100">
@@ -3906,7 +3906,7 @@ export function FederalManagementCenter(props: Props) {
 
                         {/* Tier 3 */}
                         {impairmentClassification.filter(i => i.tier === 3).length > 0 && (
-                          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-2">Tier 3 — Requires Different Intervention</div>
+                          <div className="text-2xs font-bold text-slate-500 uppercase tracking-wider mt-2">Tier 3 — Requires Different Intervention</div>
                         )}
                         {impairmentClassification.filter(i => i.tier === 3).map((item, i) => (
                           <div key={`t3-${i}`} className="flex items-start gap-2 text-xs py-1 px-2 rounded bg-slate-50 border border-slate-200">
@@ -3919,14 +3919,14 @@ export function FederalManagementCenter(props: Props) {
                         ))}
                       </div>
 
-                      <div className="text-[9px] text-slate-400 pt-1 border-t border-slate-100">
+                      <div className="text-2xs text-slate-400 pt-1 border-t border-slate-100">
                         Classification based on EPA ATTAINS impairment causes and available treatment technologies. Tier 1: directly treatable. Tier 2: indirect benefit from treatment. Tier 3: requires different intervention.
                       </div>
                     </div>
                   )}
 
                   {/* Severity methodology footnote */}
-                  <div className="text-[10px] text-slate-400 pt-1 border-t border-slate-100">
+                  <div className="text-2xs text-slate-400 pt-1 border-t border-slate-100">
                     Severity assessment derived from {isMD ? 'MD DNR Shallow Water Monitoring thresholds' : 'EPA National Recommended Water Quality Criteria'} and EPA ATTAINS impairment category. Composite weighted: DO (25%), Bloom/Nutrients (25%), Turbidity (15%), Impairment (20%), Monitoring Gap (15%).
                   </div>
                 </CardContent>
@@ -3971,7 +3971,7 @@ export function FederalManagementCenter(props: Props) {
                             opacity: 0.6,
                           }} />
                         </div>
-                        <div className="flex justify-between mt-1 text-[10px]" style={{ color: 'var(--text-dim)' }}>
+                        <div className="flex justify-between mt-1 text-2xs" style={{ color: 'var(--text-dim)' }}>
                           <span>Cat 5 (no TMDL): {attainsAggregation.cat5.toLocaleString()}</span>
                           <span>Cat 4a (has TMDL): {attainsAggregation.cat4a.toLocaleString()}</span>
                         </div>
@@ -3995,11 +3995,11 @@ export function FederalManagementCenter(props: Props) {
                         const pct = attainsAggregation.totalAssessed > 0 ? (r.count / attainsAggregation.totalAssessed) * 100 : 0;
                         return (
                           <div key={r.cat} className="flex items-center gap-2">
-                            <div className="w-[110px] text-[10px] truncate" style={{ color: 'var(--text-dim)' }}>{r.label}</div>
+                            <div className="w-[110px] text-2xs truncate" style={{ color: 'var(--text-dim)' }}>{r.label}</div>
                             <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
                               <div className="h-full rounded-full" style={{ width: `${Math.max(pct, 1)}%`, background: r.color, opacity: r.opacity }} />
                             </div>
-                            <div className="text-[10px] w-[48px] text-right pin-stat-secondary">{r.count.toLocaleString()}</div>
+                            <div className="text-2xs w-[48px] text-right pin-stat-secondary">{r.count.toLocaleString()}</div>
                           </div>
                         );
                       })}
@@ -4015,11 +4015,11 @@ export function FederalManagementCenter(props: Props) {
                         const pct = (c.count / maxCount) * 100;
                         return (
                           <div key={i} className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => console.log('Filter by cause:', c.cause)}>
-                            <div className="w-[110px] text-[10px] truncate" style={{ color: 'var(--text-dim)' }} title={c.cause}>{c.cause}</div>
+                            <div className="w-[110px] text-2xs truncate" style={{ color: 'var(--text-dim)' }} title={c.cause}>{c.cause}</div>
                             <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
                               <div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'var(--text-dim)', opacity: 0.35 }} />
                             </div>
-                            <div className="text-[10px] w-[48px] text-right pin-stat-secondary">{c.count.toLocaleString()}</div>
+                            <div className="text-2xs w-[48px] text-right pin-stat-secondary">{c.count.toLocaleString()}</div>
                           </div>
                         );
                       })}
@@ -4032,7 +4032,7 @@ export function FederalManagementCenter(props: Props) {
                       href="https://www.epa.gov/waterdata/attains"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[10px] flex items-center gap-1 hover:underline"
+                      className="text-2xs flex items-center gap-1 hover:underline"
                       style={{ color: 'var(--text-dim)' }}
                     >
                       <Info className="w-3 h-3" />
@@ -4047,7 +4047,7 @@ export function FederalManagementCenter(props: Props) {
                         a.href = url; a.download = 'national-impairment-summary.txt'; a.click();
                         URL.revokeObjectURL(url);
                       }}
-                      className="text-[10px] flex items-center gap-1 px-2 py-1 rounded transition-colors"
+                      className="text-2xs flex items-center gap-1 px-2 py-1 rounded transition-colors"
                       style={{ color: 'var(--text-dim)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
                     >
                       <ArrowRight className="w-3 h-3" />
@@ -4126,7 +4126,7 @@ export function FederalManagementCenter(props: Props) {
                       </div>
                       <div className="text-xs leading-relaxed pl-4" style={{ color: 'var(--text-secondary)' }}>{insight.detail}</div>
                       {insight.action && (
-                        <Button size="sm" variant="outline" className="mt-2 ml-4 h-6 text-[10px]">{insight.action}</Button>
+                        <Button size="sm" variant="outline" className="mt-2 ml-4 h-6 text-2xs">{insight.action}</Button>
                       )}
                     </div>
                   );
@@ -4168,7 +4168,7 @@ export function FederalManagementCenter(props: Props) {
                 {domain.keyMetrics && (
                   <div className="flex flex-wrap gap-2">
                     {domain.keyMetrics.map(m => (
-                      <span key={m} className="px-2 py-0.5 rounded text-[10px] font-medium" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-dim)' }}>
+                      <span key={m} className="px-2 py-0.5 rounded text-2xs font-medium" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-dim)' }}>
                         {m}
                       </span>
                     ))}
@@ -4217,7 +4217,7 @@ export function FederalManagementCenter(props: Props) {
                   </div>
                   {networkHealth.percentage >= 0 && (
                     <div className="mb-1.5 text-sm text-slate-500 flex items-center gap-1">
-                      <span className="text-[10px] uppercase tracking-wide">Prev:</span>
+                      <span className="text-2xs uppercase tracking-wide">Prev:</span>
                       <span className="font-semibold">58%</span>
                       <TrendingUp className="w-3.5 h-3.5 text-green-600" />
                     </div>
@@ -4258,7 +4258,7 @@ export function FederalManagementCenter(props: Props) {
                   {nationalStats.assessed} assessed · {nationalStats.monitored?.toLocaleString()} monitored · {nationalStats.totalWaterbodies?.toLocaleString()} total
                 </div>
                 {attainsBulkLoading.size > 0 && (
-                  <div className="text-[10px] text-blue-500 animate-pulse">
+                  <div className="text-2xs text-blue-500 animate-pulse">
                     ⏳ Loading EPA ATTAINS data ({attainsBulkLoaded.size}/{[...new Set(baseRegionData.map(r => r.state))].length} states)...
                   </div>
                 )}
@@ -4272,7 +4272,7 @@ export function FederalManagementCenter(props: Props) {
                   <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center">
                     <AlertTriangle className="w-4 h-4 text-rose-600" />
                   </div>
-                  <div className="text-[10px] uppercase tracking-wide text-rose-600 font-semibold">Severe</div>
+                  <div className="text-2xs uppercase tracking-wide text-rose-600 font-semibold">Severe</div>
                 </div>
                 <div className="text-2xl font-bold text-rose-700">{networkHealth.severeCount?.toLocaleString()}</div>
                 <div className="text-xs text-rose-500">waterbodies across {networkHealth.severeStates} states</div>
@@ -4282,7 +4282,7 @@ export function FederalManagementCenter(props: Props) {
                   <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
                     <AlertCircle className="w-4 h-4 text-amber-600" />
                   </div>
-                  <div className="text-[10px] uppercase tracking-wide text-amber-600 font-semibold">Impaired</div>
+                  <div className="text-2xs uppercase tracking-wide text-amber-600 font-semibold">Impaired</div>
                 </div>
                 <div className="text-2xl font-bold text-amber-700">{networkHealth.impairedCount?.toLocaleString()}</div>
                 <div className="text-xs text-amber-500">waterbodies across {networkHealth.impairedStates} states</div>
@@ -4292,7 +4292,7 @@ export function FederalManagementCenter(props: Props) {
                   <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
                     <Gauge className="w-4 h-4 text-amber-700" />
                   </div>
-                  <div className="text-[10px] uppercase tracking-wide text-amber-700 font-semibold">Monitored</div>
+                  <div className="text-2xs uppercase tracking-wide text-amber-700 font-semibold">Monitored</div>
                 </div>
                 <div className="text-2xl font-bold text-slate-700">{networkHealth.monitoredCount?.toLocaleString()}</div>
                 <div className="text-xs text-amber-600 font-medium">of {networkHealth.totalCount?.toLocaleString()} total waterbodies</div>
@@ -4309,7 +4309,7 @@ export function FederalManagementCenter(props: Props) {
                   {Object.entries(INDEX_WEIGHTS).map(([id, weight]) => {
                     const label = id.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim();
                     return (
-                      <div key={id} className="flex items-center gap-2 text-[11px]">
+                      <div key={id} className="flex items-center gap-2 text-xs">
                         <div className="w-full bg-slate-100 rounded-full h-1.5 flex-1">
                           <div className="h-full rounded-full bg-blue-400" style={{ width: `${weight * 100}%` }} />
                         </div>
@@ -4420,7 +4420,7 @@ export function FederalManagementCenter(props: Props) {
                 </div>
                 <div className="text-xs text-slate-600 mt-1 font-medium">Gallons Treated</div>
                 {nationalImpact.isLive && (
-                  <div className="text-[10px] text-cyan-600 mt-0.5 tabular-nums">
+                  <div className="text-2xs text-cyan-600 mt-0.5 tabular-nums">
                     +{Math.round(nationalImpact.gallonsPerSecond * 60).toLocaleString()}/min
                   </div>
                 )}
@@ -4432,7 +4432,7 @@ export function FederalManagementCenter(props: Props) {
                   {formatImpactNum(Math.round(liveTSS))}
                 </div>
                 <div className="text-xs text-slate-600 mt-1 font-medium">lbs TSS Removed</div>
-                <div className="text-[10px] text-amber-600 mt-0.5">
+                <div className="text-2xs text-amber-600 mt-0.5">
                   88–95% removal rate
                 </div>
               </div>
@@ -4443,7 +4443,7 @@ export function FederalManagementCenter(props: Props) {
                   {formatImpactNum(nationalImpact.totalNutrientLbs)}
                 </div>
                 <div className="text-xs text-slate-600 mt-1 font-medium">lbs Nutrients Removed</div>
-                <div className="text-[10px] text-green-600 mt-0.5">
+                <div className="text-2xs text-green-600 mt-0.5">
                   Nitrogen + Phosphorus
                 </div>
               </div>
@@ -4454,7 +4454,7 @@ export function FederalManagementCenter(props: Props) {
                   {formatImpactNum(nationalImpact.totalBacteria)}
                 </div>
                 <div className="text-xs text-slate-600 mt-1 font-medium">Bacteria Colonies Prevented</div>
-                <div className="text-[10px] text-purple-600 mt-0.5">
+                <div className="text-2xs text-purple-600 mt-0.5">
                   CFU reduction
                 </div>
               </div>
@@ -4507,16 +4507,16 @@ export function FederalManagementCenter(props: Props) {
                       onClick={() => { handleRegionClick(r.id); if (r.state) setSelectedState(r.state); }}
                       className="flex items-center gap-2 p-2 rounded-md border border-slate-200 hover:bg-red-50 hover:border-red-200 cursor-pointer transition-all"
                     >
-                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 flex items-center justify-center text-[10px] font-bold text-red-700">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 flex items-center justify-center text-2xs font-bold text-red-700">
                         {i + 1}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="text-sm font-medium text-slate-800 truncate">{r.name}</div>
-                        <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                        <div className="flex items-center gap-1 text-2xs text-slate-500">
                           {r.state && <span className="font-medium">{r.state}</span>}
                           <span>·</span>
                           {r.reasons.map((reason, j) => (
-                            <span key={j} className={`px-1 py-0.5 rounded text-[9px] font-medium ${
+                            <span key={j} className={`px-1 py-0.5 rounded text-2xs font-medium ${
                               reason === 'Cat 5' ? 'bg-red-100 text-red-700' :
                               reason === 'Cat 4' ? 'bg-orange-100 text-orange-700' :
                               reason === 'No TMDL' ? 'bg-purple-100 text-purple-700' :
@@ -4529,7 +4529,7 @@ export function FederalManagementCenter(props: Props) {
                       </div>
                       <div className="flex-shrink-0 text-right">
                         <div className="text-lg font-black text-red-700 tabular-nums">{r.priorityScore}</div>
-                        <div className="text-[9px] text-slate-400">score</div>
+                        <div className="text-2xs text-slate-400">score</div>
                       </div>
                     </div>
                   ))}
@@ -4557,15 +4557,15 @@ export function FederalManagementCenter(props: Props) {
                     <select
                       value={selectedState}
                       onChange={(e) => { setSelectedState(e.target.value); setWaterbodyFilter('all'); }}
-                      className="px-2 py-1 rounded-md border border-slate-300 text-[10px] bg-white cursor-pointer hover:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-300 mr-1"
+                      className="px-2 py-1 rounded-md border border-slate-300 text-2xs bg-white cursor-pointer hover:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-300 mr-1"
                     >
                       {Object.entries(STATE_ABBR_TO_NAME).sort((a, b) => a[1].localeCompare(b[1])).map(([abbr, name]) => (
                         <option key={abbr} value={abbr}>{abbr} — {name}</option>
                       ))}
                     </select>
                     <BrandedPrintBtn sectionId="coveragegaps" title="State Coverage Gaps" />
-                    <Button size="sm" variant={!showImpact ? 'default' : 'outline'} onClick={() => setShowImpact(false)} className="h-6 text-[10px] px-2">By Coverage</Button>
-                    <Button size="sm" variant={showImpact ? 'default' : 'outline'} onClick={() => setShowImpact(true)} className="h-6 text-[10px] px-2">By Severity</Button>
+                    <Button size="sm" variant={!showImpact ? 'default' : 'outline'} onClick={() => setShowImpact(false)} className="h-6 text-2xs px-2">By Coverage</Button>
+                    <Button size="sm" variant={showImpact ? 'default' : 'outline'} onClick={() => setShowImpact(true)} className="h-6 text-2xs px-2">By Severity</Button>
                   </div>
                 </div>
               </CardHeader>
@@ -4581,16 +4581,16 @@ export function FederalManagementCenter(props: Props) {
                       }}
                       className="flex items-center gap-2 p-2 rounded-md border border-slate-200 hover:bg-amber-50 hover:border-amber-200 cursor-pointer transition-all"
                     >
-                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center text-[10px] font-bold text-amber-700">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center text-2xs font-bold text-amber-700">
                         {i + 1}
                       </div>
                       <div className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold border ${s.grade.bg} ${s.grade.color}`}>
                         {s.grade.letter}
-                        <span className="text-[8px] font-normal ml-0.5">({s.score})</span>
+                        <span className="text-2xs font-normal ml-0.5">({s.score})</span>
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="text-sm font-medium text-slate-800">{s.name}</div>
-                        <div className="text-[10px] text-slate-500">
+                        <div className="text-2xs text-slate-500">
                           {showImpact
                             ? `${(s.high + s.medium).toLocaleString()} impaired (${s.high} severe, ${s.medium} moderate) · ${s.waterbodies} total`
                             : `${s.unmonitored} blind spots · ${('coveragePct' in s ? (s as any).coveragePct : 0)}% coverage`
@@ -4601,12 +4601,12 @@ export function FederalManagementCenter(props: Props) {
                         {showImpact ? (
                           <>
                             <div className="text-lg font-black text-red-700 tabular-nums">{s.high + s.medium}</div>
-                            <div className="text-[9px] text-slate-400">impaired</div>
+                            <div className="text-2xs text-slate-400">impaired</div>
                           </>
                         ) : (
                           <>
                             <div className="text-lg font-black text-amber-700 tabular-nums">{s.unmonitored}</div>
-                            <div className="text-[9px] text-slate-400">no data</div>
+                            <div className="text-2xs text-slate-400">no data</div>
                           </>
                         )}
                       </div>
@@ -4958,7 +4958,7 @@ export function FederalManagementCenter(props: Props) {
                       </td>
                       <td className="py-2 px-3 text-center text-green-700 font-medium">
                         {row.assessed || '—'}
-                        {row.dataSource === 'attains' && <span className="text-[9px] text-blue-500 ml-0.5">EPA</span>}
+                        {row.dataSource === 'attains' && <span className="text-2xs text-blue-500 ml-0.5">EPA</span>}
                       </td>
                       <td className="py-2 px-3 text-center">
                         {row.cat5 > 0 && <span className="pin-label inline-flex items-center rounded-full px-2 py-0.5" style={{ background: 'var(--status-severe-bg)', color: 'var(--status-severe)' }}>{row.cat5}</span>}
@@ -5144,34 +5144,34 @@ export function FederalManagementCenter(props: Props) {
         {/* ── SCORECARD: KPI Strip ── */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           <div className={`rounded-xl border-2 p-4 text-center ${scorecardData.nationalGrade.bg}`}>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">National Grade</div>
+            <div className="text-2xs font-bold uppercase tracking-wider text-slate-500 mb-1">National Grade</div>
             <div className={`text-4xl font-black ${scorecardData.nationalGrade.color}`}>{scorecardData.nationalGrade.letter}</div>
-            <div className="text-[10px] text-slate-400 mt-1">{scorecardData.gradedStates.length} states graded</div>
+            <div className="text-2xs text-slate-400 mt-1">{scorecardData.gradedStates.length} states graded</div>
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-4 text-center">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">States Monitored</div>
+            <div className="text-2xs font-bold uppercase tracking-wider text-slate-500 mb-1">States Monitored</div>
             <div className="text-3xl font-bold text-slate-800">{nationalStats.statesCovered}</div>
-            <div className="text-[10px] text-slate-400 mt-1">{nationalStats.totalWaterbodies?.toLocaleString()} waterbodies</div>
+            <div className="text-2xs text-slate-400 mt-1">{nationalStats.totalWaterbodies?.toLocaleString()} waterbodies</div>
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-4 text-center">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Total Violations</div>
+            <div className="text-2xs font-bold uppercase tracking-wider text-slate-500 mb-1">Total Violations</div>
             <div className={`text-3xl font-bold ${liveSentinelSevereCount > 0 ? 'text-red-600' : 'text-green-600'}`}>{liveSentinelAlertCount.toLocaleString()}</div>
-            <div className="text-[10px] text-slate-400 mt-1">{liveSentinelSevereCount} severe</div>
+            <div className="text-2xs text-slate-400 mt-1">{liveSentinelSevereCount} severe</div>
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-4 text-center">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Impairment Rate</div>
+            <div className="text-2xs font-bold uppercase tracking-wider text-slate-500 mb-1">Impairment Rate</div>
             <div className={`text-3xl font-bold ${scorecardData.impairmentPct > 30 ? 'text-red-600' : scorecardData.impairmentPct > 15 ? 'text-amber-600' : 'text-green-600'}`}>{scorecardData.impairmentPct}%</div>
-            <div className="text-[10px] text-slate-400 mt-1">{scorecardData.totalImpaired?.toLocaleString()} impaired</div>
+            <div className="text-2xs text-slate-400 mt-1">{scorecardData.totalImpaired?.toLocaleString()} impaired</div>
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-4 text-center">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Coverage Rate</div>
+            <div className="text-2xs font-bold uppercase tracking-wider text-slate-500 mb-1">Coverage Rate</div>
             <div className={`text-3xl font-bold ${scorecardData.coveragePct > 70 ? 'text-green-600' : scorecardData.coveragePct > 40 ? 'text-amber-600' : 'text-red-600'}`}>{scorecardData.coveragePct}%</div>
-            <div className="text-[10px] text-slate-400 mt-1">{nationalStats.assessed + nationalStats.monitored} with data</div>
+            <div className="text-2xs text-slate-400 mt-1">{nationalStats.assessed + nationalStats.monitored} with data</div>
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-4 text-center">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">SLA Compliance</div>
+            <div className="text-2xs font-bold uppercase tracking-wider text-slate-500 mb-1">SLA Compliance</div>
             <div className={`text-3xl font-bold ${slaMetrics.overdueCount > 0 ? 'text-red-600' : 'text-green-600'}`}>{slaMetrics.total > 0 ? Math.round((slaMetrics.withinSLA / slaMetrics.total) * 100) : 100}%</div>
-            <div className="text-[10px] text-slate-400 mt-1">{slaMetrics.overdueCount} overdue</div>
+            <div className="text-2xs text-slate-400 mt-1">{slaMetrics.overdueCount} overdue</div>
           </div>
         </div>
         </>);
@@ -5193,7 +5193,7 @@ export function FederalManagementCenter(props: Props) {
                     className={`rounded-lg border p-1.5 text-center transition-all hover:shadow-md hover:scale-105 ${g.bg}`}
                     title={`${STATE_ABBR_TO_NAME[s.abbr] || s.abbr}: ${g.letter} (${s.score >= 0 ? s.score : '?'})`}
                   >
-                    <div className="text-[10px] font-bold text-slate-600">{s.abbr}</div>
+                    <div className="text-2xs font-bold text-slate-600">{s.abbr}</div>
                     <div className={`text-sm font-black ${g.color}`}>{g.letter}</div>
                   </button>
                 );
@@ -5285,7 +5285,7 @@ export function FederalManagementCenter(props: Props) {
         {/* ── Scorecard data context snapshot ── */}
         <div className="rounded-lg border border-blue-200 bg-blue-50/60 px-3 py-2 mb-3">
           <p className="text-xs font-semibold text-blue-800">What These Numbers Represent</p>
-          <p className="text-[11px] text-blue-700 mt-0.5">
+          <p className="text-xs text-blue-700 mt-0.5">
             Current national inputs used to calculate scorecard grades (not a separate table and not 30-day trends).
           </p>
         </div>
@@ -5297,9 +5297,9 @@ export function FederalManagementCenter(props: Props) {
             { label: 'States With Grades', value: scorecardData.gradedStates.length, color: 'text-violet-600', sub: 'states with sufficient grading data' },
           ].map(t => (
             <div key={t.label} className="rounded-xl border border-slate-200 bg-white p-4">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{t.label}</div>
+              <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{t.label}</div>
               <div className={`text-2xl font-bold ${t.color} mt-1`}>{typeof t.value === 'number' ? t.value.toLocaleString() : t.value}</div>
-              <div className="text-[10px] text-slate-500 mt-2">{t.sub}</div>
+              <div className="text-2xs text-slate-500 mt-2">{t.sub}</div>
             </div>
           ))}
         </div>
@@ -5312,7 +5312,7 @@ export function FederalManagementCenter(props: Props) {
             <CardDescription>Read-only oversight exports for national program management, regional coordination, and analysis teams</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-[11px] text-slate-700 flex flex-wrap items-center justify-between gap-2">
+            <div className="rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-xs text-slate-700 flex flex-wrap items-center justify-between gap-2">
               <span className="font-semibold">Data freshness: Mar 2, 2026 08:07 AM EST</span>
               <span>Coverage: 3 active national source streams</span>
             </div>
@@ -5358,7 +5358,7 @@ export function FederalManagementCenter(props: Props) {
                 </div>
               </div>
             ))}
-            <div className="text-[10px] text-slate-500">
+            <div className="text-2xs text-slate-500">
               Federal view is oversight-oriented. State data-production workflows remain in state role workspaces.
             </div>
           </CardContent>
@@ -5382,12 +5382,12 @@ export function FederalManagementCenter(props: Props) {
                 { label: 'Monitoring Expansion', value: 'up 7.2%', sub: 'new stations online', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200', tooltip: 'Growth in active monitoring coverage from EPA/USGS/NOAA-connected stations.' },
               ].map(t => (
                 <div key={t.label} className={`rounded-xl border p-4 ${t.bg}`} title={t.tooltip}>
-                  <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  <div className="flex items-center gap-1 text-2xs font-bold uppercase tracking-wider text-slate-500">
                     <span>{t.label}</span>
                     <Info className="w-3 h-3 text-slate-400" />
                   </div>
                   <div className={`text-2xl font-bold ${t.color} mt-1`}>{t.value}</div>
-                  <div className="text-[10px] text-slate-500 mt-1">{t.sub}</div>
+                  <div className="text-2xs text-slate-500 mt-1">{t.sub}</div>
                 </div>
               ))}
             </div>
@@ -5411,7 +5411,7 @@ export function FederalManagementCenter(props: Props) {
                     >
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="text-sm font-semibold text-slate-800">{w.watershed}</h4>
-                        <Badge variant="outline" className={`text-[10px] ${w.color}`}>{w.trend}</Badge>
+                        <Badge variant="outline" className={`text-2xs ${w.color}`}>{w.trend}</Badge>
                       </div>
                       <p className="text-xs text-slate-500 leading-relaxed">{w.detail}</p>
                     </div>
@@ -5453,7 +5453,7 @@ export function FederalManagementCenter(props: Props) {
               </div>
             </div>
 
-            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[10px] text-slate-600 space-y-1">
+            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-2xs text-slate-600 space-y-1">
               <div className="italic">
                 PIN projections synthesized from public EPA/USGS/NOAA data plus proprietary indices. Not regulatory; confidence bands applied.
               </div>
@@ -5472,7 +5472,7 @@ export function FederalManagementCenter(props: Props) {
               </Button>
             </div>
 
-            <div className="text-[10px] text-slate-400 italic">
+            <div className="text-2xs text-slate-400 italic">
               Projections based on EPA Climate Change Indicators, USGS WaterWatch, and NOAA climate models. Actual values will populate as historical snapshots accumulate.
             </div>
           </CardContent>
@@ -5512,7 +5512,7 @@ export function FederalManagementCenter(props: Props) {
                   <div key={a.agency} className={`rounded-lg border p-3 text-center ${a.bg}`}>
                     <div className={`text-lg font-bold ${a.color}`}>{a.agency}</div>
                     <div className="text-sm font-semibold text-slate-700 mt-1">{a.sites}</div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">{a.focus}</div>
+                    <div className="text-2xs text-slate-500 mt-0.5">{a.focus}</div>
                   </div>
                 ))}
               </div>
@@ -5532,9 +5532,9 @@ export function FederalManagementCenter(props: Props) {
                   <div key={init.name} className="border border-slate-200 rounded-lg p-4 hover:border-blue-200 transition-colors">
                     <div className="flex items-center justify-between mb-1">
                       <h4 className="text-sm font-semibold text-slate-800">{init.name}</h4>
-                      <Badge variant="outline" className="text-[10px] text-green-700 border-green-200 bg-green-50">{init.status}</Badge>
+                      <Badge variant="outline" className="text-2xs text-green-700 border-green-200 bg-green-50">{init.status}</Badge>
                     </div>
-                    <div className="text-[10px] text-blue-600 font-medium mb-1.5">{init.agencies}</div>
+                    <div className="text-2xs text-blue-600 font-medium mb-1.5">{init.agencies}</div>
                     <p className="text-xs text-slate-500 leading-relaxed">{init.desc}</p>
                   </div>
                 ))}
@@ -5579,9 +5579,9 @@ export function FederalManagementCenter(props: Props) {
                 { label: 'Closing This Quarter', value: '23', sub: 'deadlines in next 90 days', color: 'text-amber-600' },
               ].map(k => (
                 <div key={k.label} className="rounded-xl border border-slate-200 bg-white p-4">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                  <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                   <div className={`text-2xl font-bold ${k.color} mt-1`}>{k.value}</div>
-                  <div className="text-[10px] text-slate-400 mt-1">{k.sub}</div>
+                  <div className="text-2xs text-slate-400 mt-1">{k.sub}</div>
                 </div>
               ))}
             </div>
@@ -5604,8 +5604,8 @@ export function FederalManagementCenter(props: Props) {
                       <span className="text-sm font-bold text-green-600">{p.amount}</span>
                     </div>
                     <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="outline" className="text-[10px]">{p.agency}</Badge>
-                      <span className="text-[10px] text-slate-500">{p.eligible}</span>
+                      <Badge variant="outline" className="text-2xs">{p.agency}</Badge>
+                      <span className="text-2xs text-slate-500">{p.eligible}</span>
                     </div>
                     <p className="text-xs text-slate-500 leading-relaxed">{p.desc}</p>
                   </div>
@@ -5651,7 +5651,7 @@ export function FederalManagementCenter(props: Props) {
               <CardTitle className="text-lg flex items-center gap-2">
                 <Clock className="h-5 w-5 text-amber-600" />
                 Upcoming Funding Deadlines
-                <span className="text-[10px] font-normal text-slate-400 ml-1">
+                <span className="text-2xs font-normal text-slate-400 ml-1">
                   {(() => { const now = new Date(); return [
                     { deadline: '2026-03-28' }, { deadline: '2026-04-01' }, { deadline: '2026-05-15' },
                     { deadline: '2026-06-15' }, { deadline: '2026-07-31' }, { deadline: '2026-08-30' },
@@ -5668,11 +5668,11 @@ export function FederalManagementCenter(props: Props) {
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-slate-200">
-                    <th className="text-left py-2 pr-3 font-semibold text-slate-600 uppercase tracking-wider text-[10px]">Program</th>
-                    <th className="text-left py-2 pr-3 font-semibold text-slate-600 uppercase tracking-wider text-[10px]">Deadline</th>
-                    <th className="text-left py-2 pr-3 font-semibold text-slate-600 uppercase tracking-wider text-[10px]">Eligible</th>
-                    <th className="text-right py-2 pr-3 font-semibold text-slate-600 uppercase tracking-wider text-[10px]">Available</th>
-                    <th className="text-center py-2 font-semibold text-slate-600 uppercase tracking-wider text-[10px]">Status</th>
+                    <th className="text-left py-2 pr-3 font-semibold text-slate-600 uppercase tracking-wider text-2xs">Program</th>
+                    <th className="text-left py-2 pr-3 font-semibold text-slate-600 uppercase tracking-wider text-2xs">Deadline</th>
+                    <th className="text-left py-2 pr-3 font-semibold text-slate-600 uppercase tracking-wider text-2xs">Eligible</th>
+                    <th className="text-right py-2 pr-3 font-semibold text-slate-600 uppercase tracking-wider text-2xs">Available</th>
+                    <th className="text-center py-2 font-semibold text-slate-600 uppercase tracking-wider text-2xs">Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -5704,7 +5704,7 @@ export function FederalManagementCenter(props: Props) {
                             {d.deadline === 'Rolling' ? 'Rolling' : new Date(d.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                           </div>
                           {daysLeft !== null && daysLeft > 0 && (
-                            <div className={`text-[10px] ${daysLeft <= 45 ? 'text-amber-600 font-semibold' : 'text-slate-400'}`}>
+                            <div className={`text-2xs ${daysLeft <= 45 ? 'text-amber-600 font-semibold' : 'text-slate-400'}`}>
                               {daysLeft} days left
                             </div>
                           )}
@@ -5712,7 +5712,7 @@ export function FederalManagementCenter(props: Props) {
                         <td className="py-2.5 pr-3 text-slate-600">{d.entity}</td>
                         <td className="py-2.5 pr-3 text-right font-semibold text-green-700">{d.amount}</td>
                         <td className="py-2.5 text-center">
-                          <Badge variant="outline" className={`text-[10px] ${
+                          <Badge variant="outline" className={`text-2xs ${
                             d.urgency === 'closing' ? 'bg-amber-100 text-amber-800 border-amber-300' :
                             d.urgency === 'always' ? 'bg-green-100 text-green-800 border-green-300' :
                             'bg-blue-100 text-blue-800 border-blue-300'
@@ -5793,26 +5793,26 @@ export function FederalManagementCenter(props: Props) {
             {/* State KPIs */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div className="rounded-xl border border-slate-200 bg-white p-3 text-center">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Est. SRF Allocation</div>
+                <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Est. SRF Allocation</div>
                 <div className="text-xl font-bold text-green-600 mt-1">
                   {estimatedSrf >= 1e9 ? `$${(estimatedSrf / 1e9).toFixed(1)}B` : estimatedSrf >= 1e6 ? `$${(estimatedSrf / 1e6).toFixed(0)}M` : `$${(estimatedSrf / 1e3).toFixed(0)}K`}
                 </div>
-                <div className="text-[10px] text-slate-400 mt-0.5">CWSRF + DWSRF combined</div>
+                <div className="text-2xs text-slate-400 mt-0.5">CWSRF + DWSRF combined</div>
               </div>
               <div className="rounded-xl border border-slate-200 bg-white p-3 text-center">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Impaired Waterbodies</div>
+                <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Impaired Waterbodies</div>
                 <div className="text-xl font-bold text-red-600 mt-1">{(fundingRow?.totalImpaired || 0).toLocaleString()}</div>
-                <div className="text-[10px] text-slate-400 mt-0.5">Cat 4 + Cat 5</div>
+                <div className="text-2xs text-slate-400 mt-0.5">Cat 4 + Cat 5</div>
               </div>
               <div className="rounded-xl border border-slate-200 bg-white p-3 text-center">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Cat 5 (303(d))</div>
+                <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Cat 5 (303(d))</div>
                 <div className="text-xl font-bold text-amber-600 mt-1">{(fundingRow?.cat5 || 0).toLocaleString()}</div>
-                <div className="text-[10px] text-slate-400 mt-0.5">Requiring TMDL</div>
+                <div className="text-2xs text-slate-400 mt-0.5">Requiring TMDL</div>
               </div>
               <div className="rounded-xl border border-slate-200 bg-white p-3 text-center">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Assessed</div>
+                <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Total Assessed</div>
                 <div className="text-xl font-bold text-blue-600 mt-1">{(fundingRow?.assessed || 0).toLocaleString()}</div>
-                <div className="text-[10px] text-slate-400 mt-0.5">EPA ATTAINS</div>
+                <div className="text-2xs text-slate-400 mt-0.5">EPA ATTAINS</div>
               </div>
             </div>
 
@@ -5835,14 +5835,14 @@ export function FederalManagementCenter(props: Props) {
                           <span className="text-sm font-bold text-slate-400 w-5">{i + 1}</span>
                           <div className="min-w-0">
                             <div className="text-xs font-medium text-slate-800 truncate">{c.cause}</div>
-                            <div className="text-[10px] text-slate-500">{c.count.toLocaleString()} waterbodies affected</div>
+                            <div className="text-2xs text-slate-500">{c.count.toLocaleString()} waterbodies affected</div>
                           </div>
                         </div>
                         <div className="flex gap-1 flex-wrap justify-end shrink-0 ml-2">
                           {uniquePrograms.length > 0 ? uniquePrograms.map(p => (
-                            <Badge key={p} variant="outline" className="text-[10px] py-0 px-1.5 h-5 bg-green-50 text-green-700 border-green-200">{p}</Badge>
+                            <Badge key={p} variant="outline" className="text-2xs py-0 px-1.5 h-5 bg-green-50 text-green-700 border-green-200">{p}</Badge>
                           )) : (
-                            <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-5 text-slate-400">—</Badge>
+                            <Badge variant="outline" className="text-2xs py-0 px-1.5 h-5 text-slate-400">—</Badge>
                           )}
                         </div>
                       </div>
@@ -5886,10 +5886,10 @@ export function FederalManagementCenter(props: Props) {
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b-2 border-slate-200">
-                    <th className="text-left py-2 pr-3 font-semibold text-slate-600 uppercase tracking-wider text-[10px]">Impairment Type</th>
-                    <th className="text-left py-2 pr-3 font-semibold text-slate-600 uppercase tracking-wider text-[10px]">Primary Programs</th>
-                    <th className="text-left py-2 pr-3 font-semibold text-slate-600 uppercase tracking-wider text-[10px]">Funding Type</th>
-                    <th className="text-left py-2 font-semibold text-slate-600 uppercase tracking-wider text-[10px]">Typical Use</th>
+                    <th className="text-left py-2 pr-3 font-semibold text-slate-600 uppercase tracking-wider text-2xs">Impairment Type</th>
+                    <th className="text-left py-2 pr-3 font-semibold text-slate-600 uppercase tracking-wider text-2xs">Primary Programs</th>
+                    <th className="text-left py-2 pr-3 font-semibold text-slate-600 uppercase tracking-wider text-2xs">Funding Type</th>
+                    <th className="text-left py-2 font-semibold text-slate-600 uppercase tracking-wider text-2xs">Typical Use</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -5913,7 +5913,7 @@ export function FederalManagementCenter(props: Props) {
                       <td className="py-2.5 pr-3">
                         <div className="flex gap-1 flex-wrap">
                           {row.programs.map(p => (
-                            <Badge key={p} variant="outline" className="text-[10px] py-0 px-1.5 h-5 bg-green-50 text-green-700 border-green-200">{p}</Badge>
+                            <Badge key={p} variant="outline" className="text-2xs py-0 px-1.5 h-5 bg-green-50 text-green-700 border-green-200">{p}</Badge>
                           ))}
                         </div>
                       </td>
@@ -5924,7 +5924,7 @@ export function FederalManagementCenter(props: Props) {
                 </tbody>
               </table>
             </div>
-            <div className="mt-3 flex items-center gap-2 text-[10px] text-slate-400">
+            <div className="mt-3 flex items-center gap-2 text-2xs text-slate-400">
               <ArrowRight className="h-3 w-3" />
               Use the Grant Matching Analysis above for AI-powered program recommendations based on your specific impairments.
             </div>
@@ -5975,19 +5975,19 @@ export function FederalManagementCenter(props: Props) {
             {/* National Summary Tiles */}
             <div className="grid grid-cols-4 gap-3 mb-4">
               <div className="rounded-xl border-2 border-slate-200 bg-slate-50 p-3 text-center">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Need</div>
+                <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Total Need</div>
                 <div className="text-xl font-bold text-slate-800 mt-1">{fmtDollars(natCost)}</div>
               </div>
               <div className="rounded-xl border-2 border-green-200 bg-green-50 p-3 text-center">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-green-500">Available</div>
+                <div className="text-2xs font-bold uppercase tracking-wider text-green-500">Available</div>
                 <div className="text-xl font-bold text-green-700 mt-1">{fmtDollars(natFunding)}</div>
               </div>
               <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-3 text-center">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-amber-600">Coverage</div>
+                <div className="text-2xs font-bold uppercase tracking-wider text-amber-600">Coverage</div>
                 <div className="text-xl font-bold text-amber-700 mt-1">{natCoveragePct}%</div>
               </div>
               <div className="rounded-xl border-2 border-rose-300 bg-rose-50 p-3 text-center">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-rose-600">Gap</div>
+                <div className="text-2xs font-bold uppercase tracking-wider text-rose-600">Gap</div>
                 <div className="text-xl font-bold text-rose-700 mt-1">{fmtDollars(natGap)}</div>
               </div>
             </div>
@@ -6012,19 +6012,19 @@ export function FederalManagementCenter(props: Props) {
             {/* State Gap Visualization */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="rounded-xl border-2 border-red-200 bg-red-50 p-4 text-center">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-red-500">Estimated Compliance Cost</div>
+                <div className="text-2xs font-bold uppercase tracking-wider text-red-500">Estimated Compliance Cost</div>
                 <div className="text-2xl font-bold text-red-700 mt-1">{fmtDollars(estimatedCost)}</div>
-                <div className="text-[10px] text-red-400 mt-1">{stateImpairedCount.toLocaleString()} impaired waterbodies × $2.5M avg</div>
+                <div className="text-2xs text-red-400 mt-1">{stateImpairedCount.toLocaleString()} impaired waterbodies × $2.5M avg</div>
               </div>
               <div className="rounded-xl border-2 border-green-200 bg-green-50 p-4 text-center">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-green-500">Available Federal Funding</div>
+                <div className="text-2xs font-bold uppercase tracking-wider text-green-500">Available Federal Funding</div>
                 <div className="text-2xl font-bold text-green-700 mt-1">{fmtDollars(estimatedFunding)}</div>
-                <div className="text-[10px] text-green-400 mt-1">Est. SRF allocation (CWSRF + DWSRF)</div>
+                <div className="text-2xs text-green-400 mt-1">Est. SRF allocation (CWSRF + DWSRF)</div>
               </div>
               <div className="rounded-xl border-2 border-rose-300 bg-rose-100 p-4 text-center">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-rose-600">Funding Gap</div>
+                <div className="text-2xs font-bold uppercase tracking-wider text-rose-600">Funding Gap</div>
                 <div className="text-2xl font-bold text-rose-700 mt-1">{fmtDollars(fundingGap)}</div>
-                <div className="text-[10px] text-rose-500 mt-1">
+                <div className="text-2xs text-rose-500 mt-1">
                   {coveragePct}% of estimated need covered
                 </div>
               </div>
@@ -6032,7 +6032,7 @@ export function FederalManagementCenter(props: Props) {
 
             {/* Coverage Bar */}
             <div>
-              <div className="flex justify-between text-[10px] text-slate-500 mb-1">
+              <div className="flex justify-between text-2xs text-slate-500 mb-1">
                 <span>{gapStateName} Federal Funding Coverage</span>
                 <span className="font-semibold">{coveragePct}%</span>
               </div>
@@ -6055,19 +6055,19 @@ export function FederalManagementCenter(props: Props) {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="text-center">
                   <div className="text-lg font-bold text-slate-700">{gapNationalImpaired.toLocaleString()}</div>
-                  <div className="text-[10px] text-slate-500">Impaired Waterbodies</div>
+                  <div className="text-2xs text-slate-500">Impaired Waterbodies</div>
                 </div>
                 <div className="text-center">
                   <div className="text-lg font-bold text-red-600">{fmtDollars(natCost)}</div>
-                  <div className="text-[10px] text-slate-500">Est. National Cost</div>
+                  <div className="text-2xs text-slate-500">Est. National Cost</div>
                 </div>
                 <div className="text-center">
                   <div className="text-lg font-bold text-green-600">{fmtDollars(natFunding)}</div>
-                  <div className="text-[10px] text-slate-500">Available SRF</div>
+                  <div className="text-2xs text-slate-500">Available SRF</div>
                 </div>
                 <div className="text-center">
                   <div className="text-lg font-bold text-rose-600">{fmtDollars(natGap)}</div>
-                  <div className="text-[10px] text-slate-500">National Gap ({natCoveragePct}% covered)</div>
+                  <div className="text-2xs text-slate-500">National Gap ({natCoveragePct}% covered)</div>
                 </div>
               </div>
             </div>
@@ -6100,7 +6100,7 @@ export function FederalManagementCenter(props: Props) {
               >
                 Compare State Allocations
               </Button>
-              <span className="text-[10px] text-slate-400">Methodology: $2.5M avg per impaired waterbody based on EPA TMDL implementation cost studies</span>
+              <span className="text-2xs text-slate-400">Methodology: $2.5M avg per impaired waterbody based on EPA TMDL implementation cost studies</span>
             </div>
           </CardContent>
         </Card>
@@ -6129,13 +6129,13 @@ export function FederalManagementCenter(props: Props) {
                 ].map(k => (
                   <div key={k.id}>
                     <button onClick={() => setComingSoonId(comingSoonId === k.id ? null : k.id)} className={`w-full rounded-xl border p-4 text-left transition-all hover:shadow-md cursor-pointer ${k.bg}`}>
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                      <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                       <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                     </button>
                     {comingSoonId === k.id && (
                       <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
                         <p className="text-xs text-slate-700">{k.detail}</p>
-                        <p className="text-[10px] text-slate-400 mt-2 italic">TODO: Wire to /api/disaster-events detail endpoint + build drill-down card</p>
+                        <p className="text-2xs text-slate-400 mt-2 italic">TODO: Wire to /api/disaster-events detail endpoint + build drill-down card</p>
                       </div>
                     )}
                   </div>
@@ -6166,14 +6166,14 @@ export function FederalManagementCenter(props: Props) {
                       <AlertCircle className={`h-4 w-4 flex-shrink-0 ${e.severity === 'Critical' ? 'text-red-600' : e.severity === 'High' ? 'text-orange-600' : 'text-amber-500'}`} />
                       <div className="flex-1 min-w-0">
                         <div className="text-xs font-semibold text-slate-800">{e.name}</div>
-                        <div className="text-[10px] text-slate-500">{e.region} · {e.states}</div>
+                        <div className="text-2xs text-slate-500">{e.region} · {e.states}</div>
                       </div>
-                      <Badge variant="outline" className={`text-[10px] ${e.severity === 'Critical' ? 'border-red-300 text-red-700 bg-red-50' : e.severity === 'High' ? 'border-orange-300 text-orange-700 bg-orange-50' : 'border-amber-300 text-amber-700 bg-amber-50'}`}>{e.severity}</Badge>
+                      <Badge variant="outline" className={`text-2xs ${e.severity === 'Critical' ? 'border-red-300 text-red-700 bg-red-50' : e.severity === 'High' ? 'border-orange-300 text-orange-700 bg-orange-50' : 'border-amber-300 text-amber-700 bg-amber-50'}`}>{e.severity}</Badge>
                     </button>
                     {comingSoonId === e.id && (
                       <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
                         <p className="text-xs text-slate-700">{e.detail}</p>
-                        <p className="text-[10px] text-slate-400 mt-2 italic">TODO: Build incident detail page — pull from NRC + EPA CERCLIS APIs</p>
+                        <p className="text-2xs text-slate-400 mt-2 italic">TODO: Build incident detail page — pull from NRC + EPA CERCLIS APIs</p>
                       </div>
                     )}
                   </div>
@@ -6202,13 +6202,13 @@ export function FederalManagementCenter(props: Props) {
                 ].map(k => (
                   <div key={k.id}>
                     <button onClick={() => setComingSoonId(comingSoonId === k.id ? null : k.id)} className={`w-full rounded-xl border p-4 text-left transition-all hover:shadow-md cursor-pointer ${k.bg}`}>
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                      <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                       <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                     </button>
                     {comingSoonId === k.id && (
                       <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
                         <p className="text-xs text-slate-700">{k.detail}</p>
-                        <p className="text-[10px] text-slate-400 mt-2 italic">TODO: Wire spill detail panel — NRC spill ID lookup + GIS layer</p>
+                        <p className="text-2xs text-slate-400 mt-2 italic">TODO: Wire spill detail panel — NRC spill ID lookup + GIS layer</p>
                       </div>
                     )}
                   </div>
@@ -6377,7 +6377,7 @@ export function FederalManagementCenter(props: Props) {
                   { label: 'Loan Repayments', value: '$4.2B/yr', bg: 'bg-slate-50 border-slate-200' },
                 ].map(k => (
                   <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                    <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                     <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                   </div>
                 ))}
@@ -6391,7 +6391,7 @@ export function FederalManagementCenter(props: Props) {
                   { label: 'Nat\'l Utilization', value: '78%', bg: 'bg-amber-50 border-amber-200' },
                 ].map(k => (
                   <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                    <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                     <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                   </div>
                 ))}
@@ -6418,7 +6418,7 @@ export function FederalManagementCenter(props: Props) {
                   { label: 'Unfunded Gap', value: '$375B', bg: 'bg-rose-50 border-rose-200' },
                 ].map(k => (
                   <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                    <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                     <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                   </div>
                 ))}
@@ -6445,7 +6445,7 @@ export function FederalManagementCenter(props: Props) {
                   { label: 'Completed (FY)', value: '1,100+', bg: 'bg-slate-50 border-slate-200' },
                 ].map(k => (
                   <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                    <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                     <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                   </div>
                 ))}
@@ -6472,7 +6472,7 @@ export function FederalManagementCenter(props: Props) {
                   { label: 'EJ Co-Benefit States', value: '38', bg: 'bg-emerald-50 border-emerald-200' },
                 ].map(k => (
                   <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                    <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                     <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                   </div>
                 ))}
@@ -6492,7 +6492,7 @@ export function FederalManagementCenter(props: Props) {
             <div className="flex-1">
               <div className="text-sm font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
                 Sentinel Alerts
-                <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full" style={{ background: '#F9A82520', color: '#F9A825', border: '1px solid #F9A82540' }}>TODO</span>
+                <span className="text-2xs font-medium px-1.5 py-0.5 rounded-full" style={{ background: '#F9A82520', color: '#F9A825', border: '1px solid #F9A82540' }}>TODO</span>
               </div>
               <p className="text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>
                 {viewLens === 'compliance'
@@ -6527,7 +6527,7 @@ export function FederalManagementCenter(props: Props) {
                   { label: 'Potomac Status', value: 'Recovery on track (no overflows 3+ weeks)', style: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
                 ].map((k) => (
                   <div key={k.label} className={`rounded-xl border px-4 py-3 ${k.style}`}>
-                    <p className="text-[10px] uppercase tracking-wide font-semibold">{k.label}</p>
+                    <p className="text-2xs uppercase tracking-wide font-semibold">{k.label}</p>
                     <p className="text-sm font-semibold mt-1">{k.value}</p>
                   </div>
                 ))}
@@ -6570,7 +6570,7 @@ export function FederalManagementCenter(props: Props) {
                         onClick={() => setComingSoonId(comingSoonId === a.id ? null : a.id)}
                       >
                         <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-[10px]">{a.priority}</Badge>
+                          <Badge variant="outline" className="text-2xs">{a.priority}</Badge>
                           <span className="text-xs flex-1">{a.item}</span>
                           <ChevronDown size={14} className={`flex-shrink-0 text-slate-400 transition-transform ${comingSoonId === a.id ? 'rotate-180' : ''}`} />
                         </div>
@@ -6585,7 +6585,7 @@ export function FederalManagementCenter(props: Props) {
                 </div>
               </div>
 
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] text-slate-600">
+              <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
                 {sharedBriefingTimestamp}
               </div>
             </CardContent>
@@ -6607,7 +6607,7 @@ export function FederalManagementCenter(props: Props) {
               <CardDescription>Critical incidents and elevated threat postures affecting water infrastructure</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] text-slate-600">
+              <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
                 {sharedBriefingTimestamp}
               </div>
               {/* Potomac Spill */}
@@ -6620,13 +6620,13 @@ export function FederalManagementCenter(props: Props) {
                   <Badge className={potomacRecoveryBadge.className}>{potomacRecoveryBadge.label}</Badge>
                 </div>
                 <p className="text-xs text-slate-700">DC Water and partner agencies remain in active recovery following the Potomac Interceptor collapse and associated sewage release. No overflows have been reported since Feb 8, 2026, with full flow restoration targeted for mid-March 2026 and shellfish precautionary closures scheduled to lift Mar 10, 2026 pending confirmation sampling.</p>
-                <div className="flex flex-wrap gap-2 text-[10px]">
+                <div className="flex flex-wrap gap-2 text-2xs">
                   <Badge className="bg-red-50 text-red-700 border-red-200">EPA Region 3 - Lead</Badge>
                   <Badge className="bg-amber-50 text-amber-700 border-amber-200">USACE and local utilities coordinating recovery ops</Badge>
                   <Badge className="bg-blue-50 text-blue-700 border-blue-200">DC Water activated alt. intake protocol</Badge>
                   <Badge className="bg-purple-50 text-purple-700 border-purple-200">3.2M population downstream</Badge>
                 </div>
-                <p className="text-[10px] text-slate-500">Source: DC Water recovery updates | EPA Region 3 coordination notes | Congressional notification sent to MD, WV, VA, DC delegations</p>
+                <p className="text-2xs text-slate-500">Source: DC Water recovery updates | EPA Region 3 coordination notes | Congressional notification sent to MD, WV, VA, DC delegations</p>
               </div>
 
               {/* National Security — Iran */}
@@ -6639,13 +6639,13 @@ export function FederalManagementCenter(props: Props) {
                   <Badge className="bg-amber-100 text-amber-800 border-amber-200">ELEVATED</Badge>
                 </div>
                 <p className="text-xs text-slate-700">CISA and EPA are maintaining a heightened posture for the water sector, with utilities advised to harden externally reachable ICS/SCADA assets. Historical Unitronics-related intrusions, including the 2023-2024 CyberAv3ngers campaign and Aliquippa incident, remain the primary benchmark for current defensive planning.</p>
-                <div className="flex flex-wrap gap-2 text-[10px]">
+                <div className="flex flex-wrap gap-2 text-2xs">
                   <Badge className="bg-amber-50 text-amber-700 border-amber-200">CISA Alert AA24-335A active</Badge>
                   <Badge className="bg-red-50 text-red-700 border-red-200">Historical Unitronics exposure pattern remains relevant</Badge>
                   <Badge className="bg-blue-50 text-blue-700 border-blue-200">EPA/CISA joint posture guidance in effect</Badge>
                   <Badge className="bg-purple-50 text-purple-700 border-purple-200">WaterISAC TLP:AMBER briefing 03/03</Badge>
                 </div>
-                <p className="text-[10px] text-slate-500">Source: CISA water sector advisories | historical incident reporting | WaterISAC member alert | EPA Cybersecurity Division coordination</p>
+                <p className="text-2xs text-slate-500">Source: CISA water sector advisories | historical incident reporting | WaterISAC member alert | EPA Cybersecurity Division coordination</p>
               </div>
 
               {/* Additional situational item */}
@@ -6658,7 +6658,7 @@ export function FederalManagementCenter(props: Props) {
                   <Badge className="bg-blue-100 text-blue-800 border-blue-200">Monitoring</Badge>
                 </div>
                 <p className="text-xs text-slate-700">Year-3 post-derailment monitoring in Leslie Run and Ohio River tributaries. Vinyl chloride non-detect in last 4 quarterly samples. EPA Region 5 transitioning to semi-annual monitoring. Norfolk Southern settlement funds ($600M) disbursing through state programs.</p>
-                <div className="flex flex-wrap gap-2 text-[10px]">
+                <div className="flex flex-wrap gap-2 text-2xs">
                   <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">WQ trending toward baseline</Badge>
                   <Badge className="bg-blue-50 text-blue-700 border-blue-200">Consent decree on track</Badge>
                 </div>
@@ -6738,7 +6738,7 @@ export function FederalManagementCenter(props: Props) {
                     </div>
                     {(c as any).note && (
                       <div className="ml-4 mt-1 rounded-lg border border-blue-200 bg-blue-50/60 px-3 py-2">
-                        <p className="text-[11px] text-blue-800">{(c as any).note}</p>
+                        <p className="text-xs text-blue-800">{(c as any).note}</p>
                       </div>
                     )}
                   </div>
@@ -6908,11 +6908,11 @@ export function FederalManagementCenter(props: Props) {
                   <div className="flex items-center justify-between text-xs">
                     <div className="flex items-center gap-1">
                       <span className="text-emerald-600 font-medium">Top 5:</span>
-                      {c.top.map((s, i) => <Badge key={s} className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px]">{i+1}. {s}</Badge>)}
+                      {c.top.map((s, i) => <Badge key={s} className="bg-emerald-50 text-emerald-700 border-emerald-200 text-2xs">{i+1}. {s}</Badge>)}
                     </div>
                     <div className="flex items-center gap-1">
                       <span className="text-red-600 font-medium">Bottom 5:</span>
-                      {c.bottom.map((s, i) => <Badge key={s} className="bg-red-50 text-red-700 border-red-200 text-[10px]">{46+i}. {s}</Badge>)}
+                      {c.bottom.map((s, i) => <Badge key={s} className="bg-red-50 text-red-700 border-red-200 text-2xs">{46+i}. {s}</Badge>)}
                     </div>
                   </div>
                 </div>
@@ -6958,7 +6958,7 @@ export function FederalManagementCenter(props: Props) {
                   Run Scenario: Potomac + Cyber Cascade
                 </Button>
               </div>
-              <p className="text-[11px] text-slate-500 border-t border-slate-200 pt-2">
+              <p className="text-xs text-slate-500 border-t border-slate-200 pt-2">
                 Synthesized from public EPA/CISA/Congressional/media signals. Predictive intelligence only - not official reporting.
               </p>
             </CardContent>

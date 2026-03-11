@@ -308,7 +308,7 @@ For beach closures or harvest stops, connect them to downstream impact on public
           </div>
           <div className="flex items-center gap-2">
             {lastUpdated && (
-              <span className="hidden sm:inline-flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-dim)' }}>
+              <span className="hidden sm:inline-flex items-center gap-1 text-2xs" style={{ color: 'var(--text-dim)' }}>
                 <Clock className="h-2.5 w-2.5" />
                 {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
@@ -325,14 +325,14 @@ For beach closures or harvest stops, connect them to downstream impact on public
             {insights.slice(0, 2).map((ins, i) => {
               const sevColor = ins.severity === 'critical' ? 'var(--status-severe)' : ins.severity === 'warning' ? 'var(--status-warning)' : 'var(--text-dim)';
               return (
-                <div key={i} className="flex items-center gap-2 text-[11px]">
+                <div key={i} className="flex items-center gap-2 text-xs">
                   <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: sevColor }} />
                   <span className="truncate" style={{ color: 'var(--text-secondary)' }}>{ins.title}</span>
                 </div>
               );
             })}
             {insights.length > 2 && (
-              <div className="text-[10px]" style={{ color: 'var(--text-dim)' }}>+{insights.length - 2} more findings — click to expand</div>
+              <div className="text-2xs" style={{ color: 'var(--text-dim)' }}>+{insights.length - 2} more findings — click to expand</div>
             )}
           </div>
         )}
@@ -378,9 +378,9 @@ For beach closures or harvest stops, connect them to downstream impact on public
                   <span className="text-xs font-bold text-slate-800">{insight.title}</span>
                   <div className="ml-auto flex items-center gap-1.5">
                     {insight.waterbody && (
-                      <Badge variant="secondary" className="text-[9px] bg-white/80 border-slate-200">{insight.waterbody}</Badge>
+                      <Badge variant="secondary" className="text-2xs bg-white/80 border-slate-200">{insight.waterbody}</Badge>
                     )}
-                    <Badge variant="secondary" className={`text-[9px] ${sevConf.bg} ${sevConf.text} border-current/20`}>
+                    <Badge variant="secondary" className={`text-2xs ${sevConf.bg} ${sevConf.text} border-current/20`}>
                       {insight.severity === 'critical' && <ShieldAlert className="h-2.5 w-2.5 mr-0.5" />}
                       {insight.severity === 'warning' && <AlertTriangle className="h-2.5 w-2.5 mr-0.5" />}
                       {insight.severity}
@@ -389,7 +389,7 @@ For beach closures or harvest stops, connect them to downstream impact on public
                 </div>
                 <div className="text-xs text-slate-700 leading-relaxed">{insight.body}</div>
                 {insight.timeframe && (
-                  <div className="mt-1.5 text-[10px] text-slate-500 flex items-center gap-1">
+                  <div className="mt-1.5 text-2xs text-slate-500 flex items-center gap-1">
                     <Clock className="h-2.5 w-2.5" /> Timeframe: {insight.timeframe}
                   </div>
                 )}
@@ -399,7 +399,7 @@ For beach closures or harvest stops, connect them to downstream impact on public
 
           {/* Error state */}
           {error && !loading && insights.length > 0 && (
-            <div className="text-[10px] text-amber-600 flex items-center gap-1" title={error}>
+            <div className="text-2xs text-amber-600 flex items-center gap-1" title={error}>
               <AlertTriangle className="h-3 w-3 flex-shrink-0" />
               <span>Using locally generated insights &mdash; {error}</span>
             </div>
@@ -408,12 +408,12 @@ For beach closures or harvest stops, connect them to downstream impact on public
           {/* Actions */}
           {!loading && (
             <div className="flex items-center justify-between pt-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-              <div className="text-[10px] leading-tight max-w-[70%]" style={{ color: 'var(--text-dim)' }}>
+              <div className="text-2xs leading-tight max-w-[70%]" style={{ color: 'var(--text-dim)' }}>
                 Sources: Compiled analysis of EPA ATTAINS, SDWIS, ICIS, USGS, and external regulatory data. Verify critical findings independently.
               </div>
               <button
                 onClick={() => fetchInsights(true)}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-semibold transition-all"
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-2xs font-semibold transition-all"
                 style={{ background: 'var(--accent-teal)', color: '#fff' }}
               >
                 <RefreshCw className="h-3 w-3" />

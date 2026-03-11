@@ -592,8 +592,8 @@ export default function WaterQualityExplorer() {
                   {reportCard.stats.slice(0, 8).map((stat, i) => (
                     <div key={i} className="bg-white rounded-lg border border-slate-200 px-3 py-2.5 text-center">
                       <p className="text-lg font-bold text-slate-900">{stat.value}</p>
-                      <p className="text-[11px] text-slate-500 font-medium">{stat.label}</p>
-                      {stat.subtext && <p className="text-[10px] text-slate-400">{stat.subtext}</p>}
+                      <p className="text-xs text-slate-500 font-medium">{stat.label}</p>
+                      {stat.subtext && <p className="text-2xs text-slate-400">{stat.subtext}</p>}
                     </div>
                   ))}
                 </div>
@@ -644,7 +644,7 @@ export default function WaterQualityExplorer() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="text-sm font-semibold text-slate-900">{item.title}</h3>
                         {item.badge && item.badge.length > 2 && (
-                          <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${colors.bg} ${colors.text} border ${colors.border}`}>
+                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${colors.bg} ${colors.text} border ${colors.border}`}>
                             {item.badge}
                           </span>
                         )}

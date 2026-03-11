@@ -121,16 +121,16 @@ export function SourceHealthPanel({ collapsible, defaultCollapsed }: SourceHealt
           )}
           <Activity size={16} className="text-slate-600" />
           Sentinel Health
-          <Badge variant="secondary" className="ml-1 text-[10px]">
+          <Badge variant="secondary" className="ml-1 text-2xs">
             {healthyDisplay}/{totalSourcesDisplay} healthy
           </Badge>
           {degradedCount > 0 && (
-            <Badge className="bg-amber-100 text-amber-700 text-[10px]">
+            <Badge className="bg-amber-100 text-amber-700 text-2xs">
               {degradedCount} degraded
             </Badge>
           )}
           {offlineCount > 0 && (
-            <Badge className="bg-red-100 text-red-700 text-[10px]">
+            <Badge className="bg-red-100 text-red-700 text-2xs">
               {offlineCount} offline
             </Badge>
           )}
@@ -145,7 +145,7 @@ export function SourceHealthPanel({ collapsible, defaultCollapsed }: SourceHealt
           </Button>
         </CardTitle>
         {lastChecked && (
-          <p className="text-[10px] text-slate-400">
+          <p className="text-2xs text-slate-400">
             Last checked: {new Date(lastChecked).toLocaleTimeString()}
           </p>
         )}
@@ -160,14 +160,14 @@ export function SourceHealthPanel({ collapsible, defaultCollapsed }: SourceHealt
                   <span className="text-lg font-bold text-slate-800 leading-tight">
                     {datapoints ? formatNumber(datapoints.total) : '-'}
                   </span>
-                  <span className="text-[10px] text-slate-500 ml-1">cached</span>
+                  <span className="text-2xs text-slate-500 ml-1">cached</span>
                   {datapoints?.totalAccessible && (
                     <>
-                      <span className="text-[10px] text-slate-400 mx-1">&middot;</span>
+                      <span className="text-2xs text-slate-400 mx-1">&middot;</span>
                       <span className="text-sm font-semibold text-blue-600">
                         {formatNumber(datapoints.totalAccessible)}+
                       </span>
-                      <span className="text-[10px] text-slate-500 ml-1">accessible</span>
+                      <span className="text-2xs text-slate-500 ml-1">accessible</span>
                     </>
                   )}
                 </div>
@@ -197,7 +197,7 @@ export function SourceHealthPanel({ collapsible, defaultCollapsed }: SourceHealt
               </div>
               <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1">
                 {unhealthySources.map((src) => (
-                  <div key={src.id} className="flex items-center justify-between text-[11px]">
+                  <div key={src.id} className="flex items-center justify-between text-xs">
                     <div className="flex items-center gap-2 min-w-0">
                       {src.status === 'offline' ? (
                         <WifiOff size={10} className="text-red-500 shrink-0" />
@@ -207,7 +207,7 @@ export function SourceHealthPanel({ collapsible, defaultCollapsed }: SourceHealt
                       <span className={`font-medium truncate ${src.status === 'offline' ? 'text-red-800' : 'text-amber-800'}`}>{src.name}</span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0 text-right">
-                      <span className={`uppercase text-[10px] font-semibold ${src.status === 'offline' ? 'text-red-600' : 'text-amber-600'}`}>
+                      <span className={`uppercase text-2xs font-semibold ${src.status === 'offline' ? 'text-red-600' : 'text-amber-600'}`}>
                         {src.status}
                       </span>
                       {src.offlineSince && (
@@ -232,7 +232,7 @@ export function SourceHealthPanel({ collapsible, defaultCollapsed }: SourceHealt
           )}
 
           <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-            <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+            <div className="text-2xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
               Total Dataset
               <span className="normal-case tracking-normal font-normal text-slate-400 ml-1">
                 {datapoints
@@ -241,7 +241,7 @@ export function SourceHealthPanel({ collapsible, defaultCollapsed }: SourceHealt
               </span>
             </div>
             {datapoints ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-1.5 text-[11px]">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-1.5 text-xs">
                 {([
                   ['ATTAINS', datapoints.attains.waterbodies, 'waterbodies'],
                   ['ATTAINS Assessed', datapoints.attains.assessments, 'assessments'],

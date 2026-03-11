@@ -211,7 +211,7 @@ export default function BudgetPlannerPanel() {
               <button
                 key={amt}
                 onClick={() => handleQuickBudget(amt)}
-                className={`px-2.5 py-1 text-[10px] font-semibold rounded-md border transition-all ${
+                className={`px-2.5 py-1 text-2xs font-semibold rounded-md border transition-all ${
                   budget === amt
                     ? 'bg-emerald-600 text-white border-emerald-600'
                     : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
@@ -229,11 +229,11 @@ export default function BudgetPlannerPanel() {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
             Priority Weights
-            <span className={`text-[10px] font-mono ${weightSum === 100 ? 'text-emerald-600' : 'text-amber-600'}`}>
+            <span className={`text-2xs font-mono ${weightSum === 100 ? 'text-emerald-600' : 'text-amber-600'}`}>
               ({weightSum}/100)
             </span>
           </CardTitle>
-          <CardDescription className="text-[11px]">
+          <CardDescription className="text-xs">
             Adjust sliders to set relative importance. They auto-balance to 100%.
           </CardDescription>
         </CardHeader>
@@ -271,7 +271,7 @@ export default function BudgetPlannerPanel() {
       </button>
       {showUpstreamInfo && (
         <Card>
-          <CardContent className="pt-4 text-[11px] text-slate-600 space-y-2">
+          <CardContent className="pt-4 text-xs text-slate-600 space-y-2">
             <p>
               Interventions are classified by their position in the watershed. <strong>Upstream</strong> solutions
               (riparian buffers, constructed wetlands, stormwater BMPs) prevent pollution at the source and receive
@@ -313,7 +313,7 @@ export default function BudgetPlannerPanel() {
               <Card key={label}>
                 <CardContent className="pt-3 pb-3 text-center">
                   <div className={`text-lg font-bold ${color}`}>{value}</div>
-                  <div className="text-[10px] text-slate-500 mt-0.5">{label}</div>
+                  <div className="text-2xs text-slate-500 mt-0.5">{label}</div>
                 </CardContent>
               </Card>
             ))}
@@ -349,12 +349,12 @@ export default function BudgetPlannerPanel() {
                         <tr key={a.intervention.id} className="border-b border-slate-100 hover:bg-slate-50">
                           <td className="py-1.5 px-1 font-medium text-slate-800">{a.intervention.name}</td>
                           <td className="py-1.5 px-1 text-center">
-                            <Badge variant="outline" className="text-[9px] px-1.5" style={{ borderColor: CATEGORY_COLORS[a.intervention.category] + '66', color: CATEGORY_COLORS[a.intervention.category] }}>
+                            <Badge variant="outline" className="text-2xs px-1.5" style={{ borderColor: CATEGORY_COLORS[a.intervention.category] + '66', color: CATEGORY_COLORS[a.intervention.category] }}>
                               {a.intervention.category}
                             </Badge>
                           </td>
                           <td className="py-1.5 px-1 text-center">
-                            <span className={`inline-flex items-center gap-0.5 text-[9px] font-semibold px-1.5 py-0.5 rounded border ${pos.bg} ${pos.color}`}>
+                            <span className={`inline-flex items-center gap-0.5 text-2xs font-semibold px-1.5 py-0.5 rounded border ${pos.bg} ${pos.color}`}>
                               {a.position === 'upstream' && <ArrowUpRight size={9} />}
                               {a.position === 'downstream' && <ArrowDownRight size={9} />}
                               {a.position === 'neutral' && <Minus size={9} />}
@@ -423,7 +423,7 @@ export default function BudgetPlannerPanel() {
             <Card>
               <CardHeader className="pb-1">
                 <CardTitle className="text-sm">Priority Achievement</CardTitle>
-                <CardDescription className="text-[10px]">Target weights vs achieved scores</CardDescription>
+                <CardDescription className="text-2xs">Target weights vs achieved scores</CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={240}>
@@ -444,7 +444,7 @@ export default function BudgetPlannerPanel() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Combined Removal Rates</CardTitle>
-              <CardDescription className="text-[10px]">
+              <CardDescription className="text-2xs">
                 Multiplicative combination across all funded interventions
               </CardDescription>
             </CardHeader>

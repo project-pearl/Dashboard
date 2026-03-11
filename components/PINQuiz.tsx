@@ -374,10 +374,10 @@ export default function PINQuiz() {
           <CardHeader className="pb-2 pt-3 px-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className={`text-[10px] border ${CATEGORY_BG[currentQ.category]}`}>
+                <Badge variant="outline" className={`text-2xs border ${CATEGORY_BG[currentQ.category]}`}>
                   {QUIZ_CATEGORIES.find(c => c.id === currentQ.category)?.label}
                 </Badge>
-                <span className="text-[10px] text-slate-400" title={DIFFICULTY_LABELS[currentQ.difficulty]}>
+                <span className="text-2xs text-slate-400" title={DIFFICULTY_LABELS[currentQ.difficulty]}>
                   {DIFFICULTY_STARS[currentQ.difficulty]}
                 </span>
               </div>

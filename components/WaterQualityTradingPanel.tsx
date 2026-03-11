@@ -448,7 +448,7 @@ export function WaterQualityTradingPanel({
               <p className="text-xs text-slate-500 mt-1">
                 Permit <span className="font-mono font-semibold text-slate-700">{permitLabel}</span>
                 <span className="mx-1.5">|</span>
-                <span className="inline-flex rounded-full bg-indigo-100 text-indigo-700 px-2 py-0.5 text-[10px] font-semibold">{permitPhase}</span>
+                <span className="inline-flex rounded-full bg-indigo-100 text-indigo-700 px-2 py-0.5 text-2xs font-semibold">{permitPhase}</span>
                 <span className="mx-1.5">|</span>
                 {localWatersheds.join(', ')}
               </p>
@@ -507,12 +507,12 @@ export function WaterQualityTradingPanel({
             ].map((card) => (
               <div key={card.key} className={`rounded-lg border p-3 ${card.style}`}>
                 <div className="text-lg font-bold">{card.value}</div>
-                <div className="text-[10px] font-semibold uppercase tracking-wide">{card.label}</div>
-                <div className="text-[10px] mt-1 opacity-80">{card.sub}</div>
+                <div className="text-2xs font-semibold uppercase tracking-wide">{card.label}</div>
+                <div className="text-2xs mt-1 opacity-80">{card.sub}</div>
               </div>
             ))}
           </div>
-          <div className="flex flex-wrap items-center gap-2 mt-3 text-[10px] text-slate-500">
+          <div className="flex flex-wrap items-center gap-2 mt-3 text-2xs text-slate-500">
             <Info className="w-3 h-3" />
             {localObligations.map((o) => (
               <span key={o.nutrient} className="inline-flex items-center rounded-full border border-slate-200 bg-white px-2 py-0.5">
@@ -526,7 +526,7 @@ export function WaterQualityTradingPanel({
           <div className="overflow-x-auto rounded-lg border border-slate-200 mt-3">
             <table className="w-full text-xs">
               <thead>
-                <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                <tr className="bg-slate-50 text-left text-2xs font-semibold text-slate-500 uppercase tracking-wider">
                   <th className="px-2.5 py-2">Source</th>
                   <th className="px-2.5 py-2">Sector</th>
                   <th className="px-2.5 py-2">Nutrient</th>
@@ -543,7 +543,7 @@ export function WaterQualityTradingPanel({
                     <tr key={`${row.source}-${idx}`} className="hover:bg-slate-50">
                       <td className="px-2.5 py-2 font-medium text-slate-700">{row.source}</td>
                       <td className="px-2.5 py-2">
-                        <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${sectorMeta.iconBg} ${sectorMeta.iconTx}`}>
+                        <span className={`text-2xs font-semibold px-1.5 py-0.5 rounded-full ${sectorMeta.iconBg} ${sectorMeta.iconTx}`}>
                           {sectorMeta.label}
                         </span>
                       </td>
@@ -573,12 +573,12 @@ export function WaterQualityTradingPanel({
               <div key={row.nutrient} className="rounded-lg border border-slate-200 bg-white p-3">
                 <div className="flex items-center justify-between">
                   <h4 className="text-sm font-semibold text-slate-800">{row.nutrient} Gap: {row.needed.toLocaleString()} credits</h4>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Scenario Planner ready</span>
+                  <span className="text-2xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Scenario Planner ready</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
                   <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
                     <div className="text-xs font-semibold text-blue-700 mb-1">Build Your Own BMPs</div>
-                    <div className="text-[11px] text-slate-600 space-y-1">
+                    <div className="text-xs text-slate-600 space-y-1">
                       <div>Estimated cost per credit: ${row.buildRateMid.toFixed(0)} (${localObligations.find(o => o.nutrient === row.nutrient)?.buildRateLow}-${localObligations.find(o => o.nutrient === row.nutrient)?.buildRateHigh})</div>
                       <div>Timeline: 18-30 months (design, permitting, construction, certification)</div>
                       <div>Total cost to close gap: <span className="font-semibold">{formatCurrency(row.buildCost)}</span></div>
@@ -588,7 +588,7 @@ export function WaterQualityTradingPanel({
                   </div>
                   <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
                     <div className="text-xs font-semibold text-emerald-700 mb-1">Buy Credits on Market</div>
-                    <div className="text-[11px] text-slate-600 space-y-1">
+                    <div className="text-xs text-slate-600 space-y-1">
                       <div>Current market rate per credit: ${row.buildCost > 0 ? (row.buyCost / row.needed).toFixed(0) : '0'}</div>
                       <div>Available credits: {localMarket.filter(m => m.nutrient === row.nutrient).reduce((s, m) => s + m.credits, 0).toLocaleString()} in eligible watersheds</div>
                       <div>Total cost to close gap: <span className="font-semibold">{formatCurrency(row.buyCost)}</span></div>
@@ -597,13 +597,13 @@ export function WaterQualityTradingPanel({
                     </div>
                   </div>
                 </div>
-                <div className="mt-3 rounded-lg border border-indigo-200 bg-indigo-50 p-3 text-[11px] text-slate-700">
+                <div className="mt-3 rounded-lg border border-indigo-200 bg-indigo-50 p-3 text-xs text-slate-700">
                   <span className="font-semibold text-indigo-700">Blended strategy recommendation:</span> Build 60% / Buy 40% at an estimated {formatCurrency(row.blendedCost)} now, with potential 5-year savings of {formatCurrency(row.blendedSavings)} versus build-only.
                 </div>
               </div>
             ))}
           </div>
-          <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-[10px] text-amber-900">
+          <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-2xs text-amber-900">
             Export guardrail: Build vs. Buy values are planning-level intelligence and are excluded from PDF export. Use Controlled Export templates for grant or budget packets.
           </div>
         </DashboardSection>
@@ -612,7 +612,7 @@ export function WaterQualityTradingPanel({
           <div className="overflow-x-auto rounded-lg border border-slate-200 mt-3">
             <table className="w-full text-xs">
               <thead>
-                <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                <tr className="bg-slate-50 text-left text-2xs font-semibold text-slate-500 uppercase tracking-wider">
                   <th className="px-2.5 py-2">Seller</th>
                   <th className="px-2.5 py-2">Sector</th>
                   <th className="px-2.5 py-2">Nutrient</th>
@@ -657,14 +657,14 @@ export function WaterQualityTradingPanel({
               <div className="absolute left-[76%] top-4.5 h-2 w-2 rounded-full bg-indigo-500" title="Planned BMP online" />
               <div className="absolute left-[92%] top-4.5 h-2 w-2 rounded-full bg-red-500" title="Permit closeout milestone" />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-2 text-[10px] text-slate-600 mt-1">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-2 text-2xs text-slate-600 mt-1">
               <div>2026 Q2 Permit Year 1</div>
               <div>2027 Q2 Mid-Term TMDL Check</div>
               <div>2028 Q1 Credit Expiration Risk</div>
               <div>2028 Q4 BMP On-line Milestone</div>
               <div>2030 Permit Closeout</div>
             </div>
-            <div className="mt-3 rounded border border-red-200 bg-red-50 p-2 text-[10px] text-red-800">
+            <div className="mt-3 rounded border border-red-200 bg-red-50 p-2 text-2xs text-red-800">
               Gap exposure window projected in 2028 if replacement TN credits are not secured before current purchased credits expire.
             </div>
           </div>
@@ -672,13 +672,13 @@ export function WaterQualityTradingPanel({
 
         <DashboardSection title="Cost History & Trends" subtitle="12-month market prices with jurisdiction purchase context" icon={<BarChart3 className="w-4 h-4" />} accent="cyan" defaultExpanded={false}>
           <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-[10px] mb-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-2xs mb-3">
               <div className="rounded border border-green-200 bg-green-50 p-2">TN trend: {trendDirection === 'up' ? 'Up' : trendDirection === 'down' ? 'Down' : 'Stable'}</div>
               <div className="rounded border border-blue-200 bg-blue-50 p-2">TP latest: ${localPriceHistory[localPriceHistory.length - 1].TP}/credit</div>
               <div className="rounded border border-amber-200 bg-amber-50 p-2">Sediment latest: ${localPriceHistory[localPriceHistory.length - 1].Sediment}/credit</div>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-[10px]">
+              <table className="w-full text-2xs">
                 <thead>
                   <tr className="text-slate-500">
                     <th className="text-left py-1">Month</th>
@@ -748,7 +748,7 @@ export function WaterQualityTradingPanel({
             href={info.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 text-[11px] text-emerald-700 hover:text-emerald-900 font-medium bg-emerald-100 px-2.5 py-1.5 rounded-lg border border-emerald-200 hover:bg-emerald-200 transition-colors"
+            className="flex items-center gap-1 text-xs text-emerald-700 hover:text-emerald-900 font-medium bg-emerald-100 px-2.5 py-1.5 rounded-lg border border-emerald-200 hover:bg-emerald-200 transition-colors"
           >
             <ExternalLink className="w-3 h-3" />
             {info.agencyAbbr} Portal
@@ -767,25 +767,25 @@ export function WaterQualityTradingPanel({
           ].map(kpi => (
             <div key={kpi.label} className={`rounded-lg border p-3 ${kpi.bg}`}>
               <div className={`text-lg font-bold ${kpi.color} tabular-nums`}>{kpi.value}</div>
-              <div className="text-[10px] font-semibold text-slate-600 uppercase tracking-wide">{kpi.label}</div>
-              <div className="text-[9px] text-slate-400 mt-0.5">{kpi.sub}</div>
+              <div className="text-2xs font-semibold text-slate-600 uppercase tracking-wide">{kpi.label}</div>
+              <div className="text-2xs text-slate-400 mt-0.5">{kpi.sub}</div>
             </div>
           ))}
         </div>
 
         {/* Nutrient chips */}
         <div className="flex items-center gap-2 mt-3">
-          <span className="text-[10px] text-slate-500 font-medium">Traded nutrients:</span>
+          <span className="text-2xs text-slate-500 font-medium">Traded nutrients:</span>
           {info.nutrients.map(n => (
-            <span key={n} className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white border border-slate-200 text-slate-600 capitalize">
+            <span key={n} className="text-2xs font-semibold px-2 py-0.5 rounded-full bg-white border border-slate-200 text-slate-600 capitalize">
               {n}
             </span>
           ))}
-          <span className="text-[10px] text-slate-500 font-medium ml-2">Sectors:</span>
+          <span className="text-2xs text-slate-500 font-medium ml-2">Sectors:</span>
           {info.sectors.map(s => {
             const meta = SECTOR_META[s];
             return (
-              <span key={s} className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${meta.iconBg} ${meta.iconTx}`}>
+              <span key={s} className={`text-2xs font-semibold px-2 py-0.5 rounded-full ${meta.iconBg} ${meta.iconTx}`}>
                 {meta.label}
               </span>
             );
@@ -818,7 +818,7 @@ export function WaterQualityTradingPanel({
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-xs font-semibold text-slate-800">{s.label}</div>
-                      <div className="text-[10px] text-slate-400">{s.facilities} registered facilities</div>
+                      <div className="text-2xs text-slate-400">{s.facilities} registered facilities</div>
                     </div>
                     {isExpanded
                       ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
@@ -830,7 +830,7 @@ export function WaterQualityTradingPanel({
                   <div className="space-y-1.5">
                     {s.tnCredits > 0 && (
                       <div>
-                        <div className="flex items-center justify-between text-[10px] mb-0.5">
+                        <div className="flex items-center justify-between text-2xs mb-0.5">
                           <span className="text-slate-500">TN</span>
                           <span className="font-semibold text-green-700">{formatNumber(s.tnCredits)} credits</span>
                         </div>
@@ -841,7 +841,7 @@ export function WaterQualityTradingPanel({
                     )}
                     {s.tpCredits > 0 && (
                       <div>
-                        <div className="flex items-center justify-between text-[10px] mb-0.5">
+                        <div className="flex items-center justify-between text-2xs mb-0.5">
                           <span className="text-slate-500">TP</span>
                           <span className="font-semibold text-blue-700">{formatNumber(s.tpCredits)} credits</span>
                         </div>
@@ -852,7 +852,7 @@ export function WaterQualityTradingPanel({
                     )}
                     {s.sedimentCredits > 0 && (
                       <div>
-                        <div className="flex items-center justify-between text-[10px] mb-0.5">
+                        <div className="flex items-center justify-between text-2xs mb-0.5">
                           <span className="text-slate-500">Sediment</span>
                           <span className="font-semibold text-amber-700">{formatNumber(s.sedimentCredits)} credits</span>
                         </div>
@@ -867,21 +867,21 @@ export function WaterQualityTradingPanel({
                 {/* Expanded detail */}
                 {isExpanded && (
                   <div className="border-t border-slate-100 p-3 bg-slate-50/50 space-y-2">
-                    <p className="text-[10px] text-slate-500">{s.description}</p>
+                    <p className="text-2xs text-slate-500">{s.description}</p>
                     <div className="grid grid-cols-2 gap-2">
-                      <div className="text-[10px]">
+                      <div className="text-2xs">
                         <span className="text-slate-400">Avg TN Price</span>
                         <div className="font-semibold text-slate-700">${s.avgPrice.tn}/credit</div>
                       </div>
-                      <div className="text-[10px]">
+                      <div className="text-2xs">
                         <span className="text-slate-400">Avg TP Price</span>
                         <div className="font-semibold text-slate-700">${s.avgPrice.tp}/credit</div>
                       </div>
-                      <div className="text-[10px]">
+                      <div className="text-2xs">
                         <span className="text-slate-400">Traded This Year</span>
                         <div className="font-semibold text-indigo-700">{formatNumber(s.tradedThisYear)} credits</div>
                       </div>
-                      <div className="text-[10px]">
+                      <div className="text-2xs">
                         <span className="text-slate-400">Est. Sector Value</span>
                         <div className="font-semibold text-emerald-700">{formatCurrency(s.tnCredits * s.avgPrice.tn + s.tpCredits * s.avgPrice.tp)}</div>
                       </div>
@@ -943,7 +943,7 @@ export function WaterQualityTradingPanel({
         <div className="overflow-x-auto rounded-lg border border-slate-200">
           <table className="w-full text-xs">
             <thead>
-              <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+              <tr className="bg-slate-50 text-left text-2xs font-semibold text-slate-500 uppercase tracking-wider">
                 <th className="px-2.5 py-2">Seller</th>
                 <th className="px-2.5 py-2">Sector</th>
                 <th className="px-2.5 py-2">Nutrient</th>
@@ -961,15 +961,15 @@ export function WaterQualityTradingPanel({
                   <tr key={l.id} className="hover:bg-slate-50">
                     <td className="px-2.5 py-2">
                       <div className="font-medium text-slate-700">{l.seller}</div>
-                      <div className="text-[10px] text-slate-400">{l.location}</div>
+                      <div className="text-2xs text-slate-400">{l.location}</div>
                     </td>
                     <td className="px-2.5 py-2">
-                      <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${meta.iconBg} ${meta.iconTx}`}>
+                      <span className={`text-2xs font-semibold px-1.5 py-0.5 rounded-full ${meta.iconBg} ${meta.iconTx}`}>
                         {meta.label}
                       </span>
                     </td>
                     <td className="px-2.5 py-2">
-                      <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
+                      <span className={`text-2xs font-semibold px-1.5 py-0.5 rounded-full ${
                         l.nutrient === 'TN' ? 'bg-green-100 text-green-700' :
                         l.nutrient === 'TP' ? 'bg-blue-100 text-blue-700' :
                         'bg-amber-100 text-amber-700'
@@ -991,7 +991,7 @@ export function WaterQualityTradingPanel({
                       {l.verified ? (
                         <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 mx-auto" />
                       ) : (
-                        <span className="text-[9px] text-slate-400">Pending</span>
+                        <span className="text-2xs text-slate-400">Pending</span>
                       )}
                     </td>
                   </tr>
@@ -1027,7 +1027,7 @@ export function WaterQualityTradingPanel({
               { step: 5, label: `${info.agencyAbbr} Certification`, status: 'pending', detail: `${info.agencyAbbr} issues tradeable credit certificate` },
             ].map(s => (
               <div key={s.step} className="flex items-start gap-3 p-2.5 rounded-lg border border-slate-100 bg-white">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-2xs font-bold shrink-0 ${
                   s.status === 'in-progress' ? 'bg-amber-100 text-amber-700 border border-amber-200' :
                   'bg-slate-100 text-slate-400 border border-slate-200'
                 }`}>
@@ -1036,18 +1036,18 @@ export function WaterQualityTradingPanel({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold text-slate-700">{s.label}</span>
-                    <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
+                    <span className={`text-2xs font-semibold px-1.5 py-0.5 rounded-full ${
                       s.status === 'in-progress' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-400'
                     }`}>
                       {s.status === 'in-progress' ? 'In Progress' : 'Pending'}
                     </span>
                   </div>
-                  <p className="text-[10px] text-slate-500 mt-0.5">{s.detail}</p>
+                  <p className="text-2xs text-slate-500 mt-0.5">{s.detail}</p>
                 </div>
               </div>
             ))}
           </div>
-          <p className="text-[10px] text-slate-400 mt-3 flex items-center gap-1">
+          <p className="text-2xs text-slate-400 mt-3 flex items-center gap-1">
             <Info className="w-3 h-3 shrink-0" />
             No PIN nutrient credits are currently certified, banked, or tradeable. Values shown are projected estimates for planning.
           </p>
@@ -1058,7 +1058,7 @@ export function WaterQualityTradingPanel({
       <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
         <div className="flex items-start gap-2">
           <Info className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
-          <div className="text-[10px] text-slate-500 space-y-1">
+          <div className="text-2xs text-slate-500 space-y-1">
             <p>
               <span className="font-semibold text-slate-600">Regulatory basis:</span> Certified credits can be used to meet NPDES permit requirements.
               {stateAbbr === 'MD' && ' Governed by COMAR 26.08.11 Trading Regulations.'}

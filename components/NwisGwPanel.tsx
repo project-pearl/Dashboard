@@ -218,7 +218,7 @@ export function NwisGwPanel({
       <div className="flex items-center gap-2 text-xs text-slate-400">
         <Waves className="w-3.5 h-3.5" />
         <span>USGS WDFN — Groundwater Levels{fromCache ? ' (cached)' : ' (live)'}</span>
-        <span className="text-[10px] text-slate-300 ml-1">(NWIS transitioning to WDFN — Spring 2026)</span>
+        <span className="text-2xs text-slate-300 ml-1">(NWIS transitioning to WDFN — Spring 2026)</span>
       </div>
 
       {/* KPI Strip */}
@@ -297,7 +297,7 @@ export function NwisGwPanel({
           <div className="overflow-x-auto rounded-lg border border-slate-200">
             <table className="w-full text-xs">
               <thead>
-                <tr className="bg-slate-50 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                <tr className="bg-slate-50 text-left text-2xs font-semibold text-slate-500 uppercase tracking-wider">
                   <th className="px-2.5 py-2">Site</th>
                   <th className="px-2.5 py-2 text-right">Latest Level</th>
                   <th className="px-2.5 py-2 text-center">Trend</th>
@@ -310,9 +310,9 @@ export function NwisGwPanel({
                 {pagedTrends.map((t, i) => (
                   <tr key={`${t.siteNumber}-${i}`} className="hover:bg-slate-50">
                     <td className="px-2.5 py-2">
-                      <div className="font-mono text-slate-700 text-[11px]">{t.siteNumber}</div>
+                      <div className="font-mono text-slate-700 text-xs">{t.siteNumber}</div>
                       {t.siteName && (
-                        <div className="text-[10px] text-slate-400 truncate max-w-[200px]">{t.siteName}</div>
+                        <div className="text-2xs text-slate-400 truncate max-w-[200px]">{t.siteName}</div>
                       )}
                     </td>
                     <td className="px-2.5 py-2 text-right font-semibold text-slate-700">
@@ -321,7 +321,7 @@ export function NwisGwPanel({
                     <td className="px-2.5 py-2 text-center">
                       <div className="flex items-center justify-center gap-1">
                         {trendIcon(t.trend)}
-                        <span className={`text-[10px] font-medium ${
+                        <span className={`text-2xs font-medium ${
                           t.trend === 'rising' ? 'text-emerald-600' :
                           t.trend === 'falling' ? 'text-red-600' :
                           t.trend === 'stable' ? 'text-blue-600' : 'text-slate-400'

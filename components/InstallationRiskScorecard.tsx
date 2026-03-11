@@ -16,26 +16,34 @@ interface InstRisk {
   aqiScore: number;
   burnPitScore: number;
   windScore: number;
+  droughtScore: number;
+  seismicScore: number;
+  damScore: number;
   composite: number;
   nearestFireDist: number | null;
   nearestFireFrp: number | null;
   aqiValue: number | null;
   windContext: string | null;
+  droughtLevel: string | null;
+  nearestQuakeDist: number | null;
+  nearestQuakeMag: number | null;
+  nearestDamDist: number | null;
+  nearestDamName: string | null;
 }
 
-type SortField = 'composite' | 'fireScore' | 'aqiScore' | 'burnPitScore' | 'windScore' | 'name';
+type SortField = 'composite' | 'fireScore' | 'aqiScore' | 'burnPitScore' | 'windScore' | 'droughtScore' | 'seismicScore' | 'damScore' | 'name';
 
 function riskColor(score: number): string {
-  if (score >= 60) return 'bg-red-100 text-red-800';
-  if (score >= 40) return 'bg-amber-100 text-amber-800';
-  if (score >= 20) return 'bg-yellow-100 text-yellow-800';
+  if (score >= 75) return 'bg-red-100 text-red-800';
+  if (score >= 50) return 'bg-amber-100 text-amber-800';
+  if (score >= 25) return 'bg-yellow-100 text-yellow-800';
   return 'bg-green-100 text-green-800';
 }
 
 function rowBorder(score: number): string {
-  if (score >= 60) return 'border-l-4 border-l-red-400';
-  if (score >= 40) return 'border-l-4 border-l-amber-400';
-  if (score >= 20) return 'border-l-4 border-l-yellow-400';
+  if (score >= 75) return 'border-l-4 border-l-red-400';
+  if (score >= 50) return 'border-l-4 border-l-amber-400';
+  if (score >= 25) return 'border-l-4 border-l-yellow-400';
   return 'border-l-4 border-l-green-400';
 }
 
@@ -97,7 +105,7 @@ export function InstallationRiskScorecard() {
       >
         {label}
         {sortField === field && (
-          <span className="ml-1 text-[9px]">{sortAsc ? '\u25B2' : '\u25BC'}</span>
+          <span className="ml-1 text-2xs">{sortAsc ? '\u25B2' : '\u25BC'}</span>
         )}
       </th>
     );
@@ -111,7 +119,7 @@ export function InstallationRiskScorecard() {
           Installation Risk Scorecard
         </CardTitle>
         <CardDescription className="text-xs">
-          Composite risk ranking across fire proximity, AQI severity, burn pit history, and wind exposure. Click rows for detail.
+          Composite risk ranking across fire, AQI, burn pit, wind, drought, seismic, and dam proximity. Click rows for detail.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -130,8 +138,11 @@ export function InstallationRiskScorecard() {
                   <th className="px-2 py-1.5 font-medium">Region</th>
                   <SortHeader field="fireScore" label="Fire (0-40)" className="text-center" />
                   <SortHeader field="aqiScore" label="AQI (0-30)" className="text-center" />
-                  <SortHeader field="burnPitScore" label="Burn Pit (0-15)" className="text-center" />
+                  <SortHeader field="burnPitScore" label="BP (0-15)" className="text-center" />
                   <SortHeader field="windScore" label="Wind (0-15)" className="text-center" />
+                  <SortHeader field="droughtScore" label="Drought (0-10)" className="text-center" />
+                  <SortHeader field="seismicScore" label="Seismic (0-15)" className="text-center" />
+                  <SortHeader field="damScore" label="Dam (0-10)" className="text-center" />
                   <SortHeader field="composite" label="Composite" className="text-center" />
                 </tr>
               </thead>
@@ -147,7 +158,7 @@ export function InstallationRiskScorecard() {
                         <span className="flex items-center gap-1">
                           {expandedId === inst.id ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
                           {inst.name}
-                          {inst.burnPitHistory && <Badge variant="outline" className="ml-1 text-[8px] bg-red-50 text-red-600 border-red-200">BP</Badge>}
+                          {inst.burnPitHistory && <Badge variant="outline" className="ml-1 text-2xs bg-red-50 text-red-600 border-red-200">BP</Badge>}
                         </span>
                       </td>
                       <td className="px-2 py-1.5">{inst.branch}</td>
@@ -156,6 +167,9 @@ export function InstallationRiskScorecard() {
                       <td className="px-2 py-1.5 text-center font-mono">{inst.aqiScore}</td>
                       <td className="px-2 py-1.5 text-center font-mono">{inst.burnPitScore}</td>
                       <td className="px-2 py-1.5 text-center font-mono">{inst.windScore}</td>
+                      <td className="px-2 py-1.5 text-center font-mono">{inst.droughtScore}</td>
+                      <td className="px-2 py-1.5 text-center font-mono">{inst.seismicScore}</td>
+                      <td className="px-2 py-1.5 text-center font-mono">{inst.damScore}</td>
                       <td className="px-2 py-1.5 text-center">
                         <Badge variant="outline" className={`font-mono ${riskColor(inst.composite)}`}>
                           {inst.composite}
@@ -164,7 +178,7 @@ export function InstallationRiskScorecard() {
                     </tr>
                     {expandedId === inst.id && (
                       <tr className="bg-slate-50">
-                        <td colSpan={9} className="px-4 py-3">
+                        <td colSpan={12} className="px-4 py-3">
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                             <div>
                               <span className="font-semibold text-slate-600">Nearest Fire:</span>{' '}
@@ -185,6 +199,22 @@ export function InstallationRiskScorecard() {
                               {inst.burnPitHistory
                                 ? <span className="text-red-600">Documented burn pit history — exposure documentation warranted</span>
                                 : 'No burn pit history'}
+                            </div>
+                            <div>
+                              <span className="font-semibold text-slate-600">Drought:</span>{' '}
+                              {inst.droughtLevel || 'No drought data'}
+                            </div>
+                            <div>
+                              <span className="font-semibold text-slate-600">Nearest Quake:</span>{' '}
+                              {inst.nearestQuakeDist != null
+                                ? `M${inst.nearestQuakeMag} at ${inst.nearestQuakeDist} mi`
+                                : 'None recent'}
+                            </div>
+                            <div>
+                              <span className="font-semibold text-slate-600">Nearest Dam:</span>{' '}
+                              {inst.nearestDamDist != null
+                                ? `${inst.nearestDamName} (${inst.nearestDamDist} mi)`
+                                : 'No high-hazard dams nearby'}
                             </div>
                           </div>
                         </td>

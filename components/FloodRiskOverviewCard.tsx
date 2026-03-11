@@ -82,7 +82,7 @@ function RiskBar({ score, level }: { score: number; level: string }) {
           style={{ width: `${Math.min(100, score)}%` }}
         />
       </div>
-      <span className={`text-[10px] font-bold w-7 text-right ${style.text}`}>
+      <span className={`text-2xs font-bold w-7 text-right ${style.text}`}>
         {score}
       </span>
     </div>
@@ -107,12 +107,12 @@ function BasinRow({ basin }: { basin: BasinRisk }) {
             <span className="font-medium text-sm" style={{ color: 'var(--text-bright)' }}>
               {basin.region}
             </span>
-            <Badge variant="outline" className={`text-[9px] px-1.5 py-0 uppercase tracking-wider ${style.text} ${style.border}`}>
+            <Badge variant="outline" className={`text-2xs px-1.5 py-0 uppercase tracking-wider ${style.text} ${style.border}`}>
               {basin.riskLevel}
             </Badge>
           </div>
 
-          <div className="flex items-center gap-3 mt-1.5 text-[11px] text-slate-500">
+          <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-500">
             <span className="flex items-center gap-1">
               <Gauge className="h-3 w-3" />
               {basin.gaugesWithData} gauges
@@ -157,7 +157,7 @@ function BasinRow({ basin }: { basin: BasinRisk }) {
       {expanded && (
         <div className="mt-3 pt-3 border-t border-slate-200/50 space-y-2">
           {/* Stats grid */}
-          <div className="grid grid-cols-4 gap-2 text-[10px]">
+          <div className="grid grid-cols-4 gap-2 text-2xs">
             <StatCell label="Total Gauges" value={basin.totalGauges} />
             <StatCell label="Flooding" value={basin.currentlyFlooding} highlight={basin.currentlyFlooding > 0} />
             <StatCell label="Near Threshold" value={basin.nearThreshold} />
@@ -167,7 +167,7 @@ function BasinRow({ basin }: { basin: BasinRisk }) {
           {/* Top gauges */}
           {basin.topGauges.length > 0 && (
             <div className="space-y-1 mt-2">
-              <span className="text-[10px] text-slate-400 uppercase tracking-wider font-medium">
+              <span className="text-2xs text-slate-400 uppercase tracking-wider font-medium">
                 Highest Risk Gauges
               </span>
               {basin.topGauges.map(g => (
@@ -177,7 +177,7 @@ function BasinRow({ basin }: { basin: BasinRisk }) {
           )}
 
           {!hasActivity && basin.topGauges.length === 0 && (
-            <div className="text-[11px] text-slate-400 text-center py-1">
+            <div className="text-xs text-slate-400 text-center py-1">
               No flood exceedances predicted in this basin
             </div>
           )}
@@ -207,9 +207,9 @@ function TopGaugeRow({ gauge }: { gauge: BasinTopGauge }) {
   const color = catColors[gauge.predictedCategory] || catColors.none;
 
   return (
-    <div className="flex items-center justify-between text-[11px] px-2 py-1.5 rounded bg-white/60">
+    <div className="flex items-center justify-between text-xs px-2 py-1.5 rounded bg-white/60">
       <div className="flex items-center gap-2 min-w-0">
-        <Badge variant="outline" className={`text-[9px] px-1 py-0 shrink-0 ${color}`}>
+        <Badge variant="outline" className={`text-2xs px-1 py-0 shrink-0 ${color}`}>
           {gauge.predictedCategory}
         </Badge>
         <span className="truncate text-slate-700">{gauge.name || gauge.lid}</span>
@@ -217,7 +217,7 @@ function TopGaugeRow({ gauge }: { gauge: BasinTopGauge }) {
       </div>
       <div className="flex items-center gap-3 text-slate-500 shrink-0 ml-2">
         {gauge.forecastPeak != null && (
-          <span className="text-[10px]">
+          <span className="text-2xs">
             peak {gauge.forecastPeak}{gauge.unit}
           </span>
         )}
@@ -247,7 +247,7 @@ function NationalSummary({ national }: { national: FloodRiskOverviewCardProps['n
       {tiles.map(t => (
         <div key={t.label} className={`rounded-lg border p-2 text-center ${t.bg}`}>
           <div className={`text-lg font-bold ${t.color}`}>{t.value}</div>
-          <div className="text-[9px] uppercase tracking-wider text-slate-500 font-medium">{t.label}</div>
+          <div className="text-2xs uppercase tracking-wider text-slate-500 font-medium">{t.label}</div>
         </div>
       ))}
     </div>
@@ -283,13 +283,13 @@ export function FloodRiskSummary({
             Flood Risk by Watershed
           </CardTitle>
           {updatedAt && (
-            <span className="text-[10px] text-slate-400">{formatTimeSince(updatedAt)}</span>
+            <span className="text-2xs text-slate-400">{formatTimeSince(updatedAt)}</span>
           )}
         </div>
       </CardHeader>
       <CardContent className="pt-0">
         {isLoading && basins.length === 0 ? (
-          <div className="text-[11px] text-slate-400 py-2">Loading...</div>
+          <div className="text-xs text-slate-400 py-2">Loading...</div>
         ) : (
           <>
             {/* Compact stat tiles */}
@@ -302,7 +302,7 @@ export function FloodRiskSummary({
               ].map(t => (
                 <div key={t.label} className={`rounded-lg border p-2 text-center ${t.bg}`}>
                   <div className={`text-lg font-bold ${t.color}`}>{t.value}</div>
-                  <div className="text-[9px] uppercase tracking-wider text-slate-500 font-medium">{t.label}</div>
+                  <div className="text-2xs uppercase tracking-wider text-slate-500 font-medium">{t.label}</div>
                 </div>
               ))}
             </div>
@@ -313,9 +313,9 @@ export function FloodRiskSummary({
                 {topBasins.map(b => {
                   const style = RISK_STYLES[b.riskLevel] || RISK_STYLES.low;
                   return (
-                    <div key={b.rfcCode} className="flex items-center justify-between text-[11px] px-2 py-1.5 rounded bg-slate-50/50">
+                    <div key={b.rfcCode} className="flex items-center justify-between text-xs px-2 py-1.5 rounded bg-slate-50/50">
                       <div className="flex items-center gap-2 min-w-0">
-                        <Badge variant="outline" className={`text-[9px] px-1 py-0 shrink-0 uppercase ${style.text} ${style.border}`}>
+                        <Badge variant="outline" className={`text-2xs px-1 py-0 shrink-0 uppercase ${style.text} ${style.border}`}>
                           {b.riskLevel}
                         </Badge>
                         <span className="truncate text-slate-700">{b.region}</span>
@@ -330,7 +330,7 @@ export function FloodRiskSummary({
             )}
 
             {!hasRisk && (
-              <div className="text-center text-[11px] text-slate-400 py-1">
+              <div className="text-center text-xs text-slate-400 py-1">
                 All basins at low risk
               </div>
             )}
@@ -338,7 +338,7 @@ export function FloodRiskSummary({
             {onViewDetails && hasRisk && (
               <button
                 onClick={onViewDetails}
-                className="w-full text-center text-[10px] text-blue-600 hover:text-blue-800 mt-2 py-1 transition-colors"
+                className="w-full text-center text-2xs text-blue-600 hover:text-blue-800 mt-2 py-1 transition-colors"
               >
                 View full risk overview &rarr;
               </button>
@@ -380,7 +380,7 @@ export function FloodRiskOverviewCard({
           </div>
           <div className="flex items-center gap-2">
             {updatedAt && (
-              <span className="text-[10px] text-slate-400">{formatTimeSince(updatedAt)}</span>
+              <span className="text-2xs text-slate-400">{formatTimeSince(updatedAt)}</span>
             )}
             {onRefresh && (
               <button
@@ -397,7 +397,7 @@ export function FloodRiskOverviewCard({
 
       <CardContent>
         {error && (
-          <div className="flex items-center gap-2 text-[11px] text-red-600 mb-3">
+          <div className="flex items-center gap-2 text-xs text-red-600 mb-3">
             <AlertTriangle className="h-3.5 w-3.5" />
             {error}
           </div>
@@ -423,7 +423,7 @@ export function FloodRiskOverviewCard({
             {basins.length > displayed.length && (
               <button
                 onClick={() => setShowAll(true)}
-                className="w-full text-center text-[11px] text-blue-600 hover:text-blue-800 py-1.5 mt-2 transition-colors"
+                className="w-full text-center text-xs text-blue-600 hover:text-blue-800 py-1.5 mt-2 transition-colors"
               >
                 Show all {basins.length} basins
               </button>
@@ -431,7 +431,7 @@ export function FloodRiskOverviewCard({
             {showAll && lowBasins.length > 0 && (
               <button
                 onClick={() => setShowAll(false)}
-                className="w-full text-center text-[11px] text-slate-400 hover:text-slate-600 py-1 transition-colors"
+                className="w-full text-center text-xs text-slate-400 hover:text-slate-600 py-1 transition-colors"
               >
                 Hide low-risk basins
               </button>

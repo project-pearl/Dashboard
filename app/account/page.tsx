@@ -260,7 +260,7 @@ export default function AccountPage() {
                     className={`w-8 h-8 rounded-full transition-all ${accentId === p.id ? 'ring-2 ring-offset-2 dark:ring-offset-slate-900' : 'hover:scale-110'}`}
                     style={{ background: p.swatch, ['--tw-ring-color' as string]: p.swatch }}
                   />
-                  <span className={`text-[10px] font-medium ${accentId === p.id ? 'text-slate-800 dark:text-white/90' : 'text-slate-400 dark:text-white/40'}`}>
+                  <span className={`text-2xs font-medium ${accentId === p.id ? 'text-slate-800 dark:text-white/90' : 'text-slate-400 dark:text-white/40'}`}>
                     {p.label}
                   </span>
                 </button>
@@ -387,7 +387,7 @@ export default function AccountPage() {
 
         <div className="text-center text-slate-400 dark:text-white/40 text-xs pb-4 space-y-1">
           <p>&copy; {new Date().getFullYear()} Local Seafood Projects Inc. All rights reserved.</p>
-          <p className="text-[10px] text-slate-400 dark:text-white/30">Project Pearl&trade;, Pearl&trade;, ALIA&trade;, and AQUA-LO&trade; are trademarks of Local Seafood Projects Inc.</p>
+          <p className="text-2xs text-slate-400 dark:text-white/30">Project Pearl&trade;, Pearl&trade;, ALIA&trade;, and AQUA-LO&trade; are trademarks of Local Seafood Projects Inc.</p>
         </div>
       </div>
     </div>

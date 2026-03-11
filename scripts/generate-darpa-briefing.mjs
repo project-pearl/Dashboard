@@ -364,10 +364,119 @@ const doc = new Document({
       ],
     },
 
-    /* ══════════════════ 6. PATUXENT SCENARIO ══════════════════ */
+    /* ══════════════════ 6. ZEPHAIR GAP ══════════════════ */
     {
       children: [
-        h1("6. Force Protection Scenario: Patuxent River"),
+        h1("6. The ZephAir Gap \u2014 A Force Protection Vacuum PIN Already Fills"),
+        p(
+          t("On "),
+          bold("March 5, 2025"),
+          t(", the U.S. State Department suspended its global air quality monitoring program (DOSAir) and the associated "),
+          bold("ZephAir mobile application"),
+          t(". Reference-grade EPA monitors at over 60 U.S. embassies and consulates worldwide went dark. The app that provided real-time AQI data, 24-hour trends, and push notifications to U.S. personnel in Beijing, Mumbai, Bangkok, and dozens of other high-pollution posts \u2014 shut down due to budget cuts."),
+        ),
+        p(t("")),
+        p(
+          t("A 2022 study estimated the program prevented approximately "),
+          bold("303 premature deaths per city annually"),
+          t(" and generated "),
+          bold("$127 million per year in mortality-related savings"),
+          t(". The program also reduced State Department hazard pay expenses for diplomats in polluted locations. All of that is now gone."),
+        ),
+        p(t("")),
+        h3("The Gap"),
+        p(
+          t("U.S. military and diplomatic personnel stationed abroad currently have "),
+          bold("no centralized air quality threat intelligence system"),
+          t(". ZephAir was display-only \u2014 it showed AQI numbers and sent push notifications. It had no anomaly detection, no threat scoring, no cross-domain correlation, and no integration with water or fire intelligence. Even at its best, it was a weather app for pollution, not a force protection tool."),
+        ),
+        p(t("")),
+        p(
+          t("A retired U.S. Air Force Colonel identified this gap and came to PIN. We built the air quality capability \u2014 unfunded \u2014 before ZephAir was shut down. "),
+          bold("PIN's air quality monitoring has been operational since before the government's own system went dark."),
+        ),
+        p(t("")),
+        h3("PIN vs. ZephAir: Capability Comparison"),
+        p(t("")),
+        simpleTable(
+          ["Capability", "ZephAir (State Dept) \u2014 SUSPENDED", "PIN Air Quality \u2014 OPERATIONAL"],
+          [
+            ["Status", "Shut down March 5, 2025", "Operational, 30-minute refresh cycle"],
+            ["Coverage", "~80 embassy/consulate fixed sites", "All 50 states + DC; OCONUS-extensible"],
+            ["Data source", "EPA reference-grade monitors at embassies", "AQI monitoring stations + NASA FIRMS satellite"],
+            ["Anomaly detection", "None \u2014 display only", "Sentinel pipeline: baseline, z-score, BED probability, compound scoring"],
+            ["Threat scoring", "None", "0\u20131.0 threat score with named compound patterns"],
+            ["Cross-domain fusion", "None \u2014 air only", "Air + fire + water: 14 adapters, 3 domains"],
+            ["Fire correlation", "None", "NASA FIRMS VIIRS/MODIS \u2192 smoke plume \u2192 AQI impact"],
+            ["Water correlation", "None", "Air quality degradation \u2192 atmospheric deposition \u2192 watershed contamination"],
+            ["Coordination detection", "None", "HUC-6 spatial clustering for multi-site events"],
+            ["Commander alerting", "Push notification (AQI level changed)", "AI-generated response plans, role-contextualized, installation-specific"],
+            ["NASA integration", "AI 3-day PM2.5 forecasts (suspended)", "FIRMS satellite fire detection (operational, every 4 hrs)"],
+            ["Cost to build", "Federal program budget (suspended)", "Built unfunded by single developer on operator request"],
+          ],
+          [22, 36, 42],
+        ),
+        p(t("")),
+        h3("What PIN Already Has (CONUS)"),
+        p(
+          t("PIN already ingests domestic AQI data from "),
+          bold("AirNow monitoring stations"),
+          t(" via the airQualityCache, refreshing every 30 minutes. This is the domestic equivalent of exactly what ZephAir provided overseas \u2014 except PIN layers anomaly detection, threat scoring, and cross-domain correlation on top. The CONUS air quality capability is production-ready today."),
+        ),
+        p(t("")),
+        h3("The OCONUS Path: How PIN Fills the Gap Abroad"),
+        p(
+          t("The DOSAir source that fed ZephAir is dead. The embassy monitors are offline. But the data doesn't have to come from embassies. Two realistic paths exist for overseas coverage:"),
+        ),
+        p(t("")),
+        p(
+          bold("OpenAQ"),
+          t(" \u2014 An open-source global aggregator that collected embassy monitor data before the shutdown and continues ingesting from whatever government and third-party monitors remain worldwide. Their API is public and free. This is the best near-term OCONUS source PIN can integrate: real monitoring data, global coverage, no procurement needed. Not reference-grade, but operational."),
+        ),
+        p(t("")),
+        p(
+          bold("NASA GEOS-CF"),
+          t(" \u2014 NASA's global composition forecast model produces worldwide AQI estimates computationally. The embassy monitors were used to calibrate and validate NASA satellite observations \u2014 GEOS-CF uses ground data to refine pollution estimates. With the ground data gone, NASA's model loses some calibration precision, but it still provides global coverage. PIN can ingest GEOS-CF as a computational AQI source for locations where no physical monitors exist."),
+        ),
+        p(t("")),
+        p(
+          t("Neither source is reference-grade EPA data. But both are "),
+          bold("far better than nothing"),
+          t(" \u2014 and right now, nothing is exactly what U.S. personnel abroad have."),
+        ),
+        p(t("")),
+        h3("13 Countries Now Dark"),
+        p(
+          t("In at least "),
+          bold("13 countries"),
+          t(", the U.S. embassy monitors were the "),
+          bold("sole source"),
+          t(" of government-sponsored, regulatory-grade air quality data. Those countries have no substitute. They are completely dark. PIN can ingest OpenAQ and NASA GEOS-CF as replacement sources for these locations \u2014 and that OCONUS integration is exactly what "),
+          bold("Milestone 4 of this proposal funds"),
+          t("."),
+        ),
+        p(t("")),
+        h3("The Implication for DARPA"),
+        p(
+          t("The U.S. government shut down its own air quality protection for personnel abroad. The capability gap is real and immediate. PIN did not build its air quality domain as a speculative feature \u2014 it was built at the request of a retired Air Force Colonel who saw the force protection need before the shutdown made it visible to everyone else."),
+        ),
+        p(t("")),
+        p(
+          t("PIN's air quality capability is not a replacement for ZephAir. It is a "),
+          bold("generational leap beyond it"),
+          t(". ZephAir displayed AQI numbers. PIN detects air quality anomalies, correlates them with active fires and downstream water contamination, scores the threat, classifies it, and generates an actionable response plan for the installation commander. The CONUS version is already running. The OCONUS extension \u2014 OpenAQ + NASA GEOS-CF integration \u2014 is a straightforward adapter addition to the existing pipeline, scoped and costed in Milestone 4."),
+        ),
+        p(t("")),
+        p(
+          italic("Sources: U.S. Department of State, Office of Environmental Quality; NBC News, March 5, 2025; NASA Earth Science Division; Centre for Research on Energy and Clean Air; OpenAQ Foundation."),
+        ),
+      ],
+    },
+
+    /* ══════════════════ 7. PATUXENT SCENARIO ══════════════════ */
+    {
+      children: [
+        h1("7. Force Protection Scenario: Patuxent River"),
         p(
           t("The following scenario was included in our abstract submission (Technical Paper 2 of 3). It demonstrates PIN Sentinel's end-to-end detection, classification, and response planning for a coordinated water infrastructure attack affecting military installations."),
         ),
@@ -423,7 +532,7 @@ const doc = new Document({
     /* ══════════════════ 7. VALIDATION ══════════════════ */
     {
       children: [
-        h1("7. Validation Results"),
+        h1("8. Validation Results"),
         p(t("")),
         simpleTable(
           ["Metric", "Value"],
@@ -446,7 +555,7 @@ const doc = new Document({
     /* ══════════════════ 8. SUPPORTING INFRASTRUCTURE ══════════════════ */
     {
       children: [
-        h1("8. Supporting Infrastructure"),
+        h1("9. Supporting Infrastructure"),
         p(
           t("Sentinel does not operate in isolation. It is the threat-detection core of a broader platform that provides the data pipeline, caching, persistence, and operator interface. Key supporting capabilities:"),
         ),
@@ -493,7 +602,7 @@ const doc = new Document({
     /* ══════════════════ 9. WHAT WE'RE ASKING FOR ══════════════════ */
     {
       children: [
-        h1("9. Award Request & Next Steps"),
+        h1("10. Award Request & Next Steps"),
         p(t("")),
         simpleTable(
           ["Item", "Detail"],
@@ -626,7 +735,7 @@ const doc = new Document({
           [
             ["Extended field validation", "$100,000", "7-day continuous monitoring period. Document system performance under real-world conditions: weather, diurnal cycles, upstream activity."],
             ["DoD hardening assessment", "$80,000", "IL-4/IL-5 gap analysis, ATO documentation package, security control mapping (NIST 800-53 already documented)."],
-            ["OCONUS air quality scoping", "$60,000", "Architecture design for extending AQI monitoring to overseas installations per retired AF Colonel's requirement. Deliverable: technical plan, not implementation."],
+            ["OCONUS air quality integration", "$60,000", "Integrate OpenAQ (global open-source monitor aggregator) and NASA GEOS-CF (global computational AQI) as OCONUS Sentinel adapters. Fills the ZephAir gap for 13+ countries with no remaining air quality monitoring. Per retired AF Colonel's force protection requirement."],
             ["Final documentation & reporting", "$80,000", "DARPA final report, system architecture documentation, operator manual, maintenance procedures, source code escrow."],
             ["Sprint team closeout & knowledge transfer", "$60,000", "Knowledge transfer to sustaining support team, documentation of all sprint-period changes, handoff procedures."],
             ["Contingency & materials reserve", "$60,000", "Replacement sondes, unexpected telemetry costs, additional field visits, unforeseen technical issues."],
@@ -637,7 +746,7 @@ const doc = new Document({
         p(bold("Deliverables:")),
         bullet("7-day continuous field validation report with performance metrics"),
         bullet("DoD hardening gap analysis and ATO documentation package"),
-        bullet("OCONUS air quality extension technical plan"),
+        bullet("OCONUS air quality operational: OpenAQ + NASA GEOS-CF adapters live in Sentinel, covering 13+ countries left dark by ZephAir shutdown"),
         bullet("Complete DARPA final report and system documentation"),
         bullet("All source code, documentation, and operational procedures delivered"),
         p(t("")),
@@ -669,7 +778,7 @@ const doc = new Document({
         bullet("Flow-time velocity routing operational with live USGS gauge data"),
         bullet("AI response plans calibrated to DoD installation protocols"),
         bullet("DoD hardening gap analysis and ATO package ready for next phase"),
-        bullet("Technical plan for OCONUS air quality extension"),
+        bullet("OCONUS air quality live via OpenAQ + NASA GEOS-CF \u2014 filling the ZephAir gap in 13+ countries"),
         bullet("Complete documentation, source code escrow, and transition package"),
         p(t("")),
         p(

@@ -121,3 +121,16 @@ export const ATTACK_SIGNALS: AttackSignal[] = [
 /* ------------------------------------------------------------------ */
 
 export const BIO_MARKER_PARAMS = new Set(['00300']); // dissolved oxygen
+
+/* ------------------------------------------------------------------ */
+/*  CBRN Signal Mapping                                               */
+/*  Maps attack signal IDs to CBRN categories for force protection.   */
+/* ------------------------------------------------------------------ */
+
+import type { CbrnCategory } from './types';
+
+export const CBRN_SIGNAL_MAP: Record<string, { category: CbrnCategory; basis: string }> = {
+  CHEMICAL_DUMP:    { category: 'chemical',    basis: 'Conductivity + pH/DO shifts indicate chemical agent' },
+  BIO_MARKER_SPIKE: { category: 'biological',  basis: 'DO crash + turbidity spike indicates biological agent' },
+  // Radiological/nuclear: future placeholders (no sensor data yet)
+};

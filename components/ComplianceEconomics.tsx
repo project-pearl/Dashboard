@@ -224,7 +224,7 @@ function AssumptionSlider({ label, value, onChange, min, max, step, unit, descri
         onChange={(e) => onChange(Number(e.target.value))}
         className="w-full h-1.5 bg-slate-200 rounded-full appearance-none cursor-pointer accent-cyan-600"
       />
-      <div className="flex justify-between text-[9px] text-slate-400">
+      <div className="flex justify-between text-2xs text-slate-400">
         <span>{unit === '$' ? `$${min}` : unit === '$K' ? `$${min}K` : `${min}${unit}`}</span>
         {description && <span className="text-slate-500 italic">{description}</span>}
         <span>{unit === '$' ? `$${max}` : unit === '$K' ? `$${max}K` : `${max}${unit}`}</span>
@@ -396,10 +396,10 @@ export function ComplianceEconomics({ regionId, tier: initialTier = 'large', jur
         </CardDescription>
         {jProfile && (
           <div className="flex flex-wrap gap-2 mt-2">
-            <Badge variant="outline" className="text-[10px]">{jProfile.phase}</Badge>
-            <Badge variant="outline" className="text-[10px] font-mono">{jProfile.permit}</Badge>
-            {jProfile.wprf && <Badge variant="outline" className="text-[10px] bg-green-50 border-green-200 text-green-700">WPRF: {jProfile.wprf}</Badge>}
-            {jProfile.sites && <Badge variant="outline" className="text-[10px]">{jProfile.sites} monitoring sites</Badge>}
+            <Badge variant="outline" className="text-2xs">{jProfile.phase}</Badge>
+            <Badge variant="outline" className="text-2xs font-mono">{jProfile.permit}</Badge>
+            {jProfile.wprf && <Badge variant="outline" className="text-2xs bg-green-50 border-green-200 text-green-700">WPRF: {jProfile.wprf}</Badge>}
+            {jProfile.sites && <Badge variant="outline" className="text-2xs">{jProfile.sites} monitoring sites</Badge>}
           </div>
         )}
       </CardHeader>
@@ -543,7 +543,7 @@ export function ComplianceEconomics({ regionId, tier: initialTier = 'large', jur
             </ResponsiveContainer>
             <div className="flex flex-wrap gap-2 mt-2 justify-center">
               {pieData.map((d, i) => (
-                <span key={i} className="flex items-center gap-1 text-[10px] text-slate-600">
+                <span key={i} className="flex items-center gap-1 text-2xs text-slate-600">
                   <span className="w-2 h-2 rounded-full" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
                   {d.name}: {fmt(d.value)}
                 </span>
@@ -568,7 +568,7 @@ export function ComplianceEconomics({ regionId, tier: initialTier = 'large', jur
                 )}
               </BarChart>
             </ResponsiveContainer>
-            <div className="text-[10px] text-slate-500 mt-1 text-center">
+            <div className="text-2xs text-slate-500 mt-1 text-center">
               3-year cumulative: <span className="font-bold text-cyan-700">{fmt(barData[2].cumulative)}</span> total value generated
             </div>
           </div>
@@ -589,15 +589,15 @@ export function ComplianceEconomics({ regionId, tier: initialTier = 'large', jur
                   className={`text-left p-3 rounded-lg border-2 transition-all ${isActive ? borderClass : inactiveClass}`}
                 >
                   <div className="flex items-center gap-1.5 mb-1">
-                    <span className={`text-[10px] font-bold uppercase ${
+                    <span className={`text-2xs font-bold uppercase ${
                       p.color === 'amber' ? 'text-amber-700' : p.color === 'cyan' ? 'text-cyan-700' : 'text-green-700'
                     }`}>Phase {p.phase}</span>
-                    {p.phase === 1 && <span className="text-[9px] text-slate-400">Year 1</span>}
-                    {p.phase === 2 && <span className="text-[9px] text-slate-400">Year 2</span>}
-                    {p.phase === 3 && <span className="text-[9px] text-slate-400">Year 3+</span>}
+                    {p.phase === 1 && <span className="text-2xs text-slate-400">Year 1</span>}
+                    {p.phase === 2 && <span className="text-2xs text-slate-400">Year 2</span>}
+                    {p.phase === 3 && <span className="text-2xs text-slate-400">Year 3+</span>}
                   </div>
                   <div className="text-xs font-semibold text-slate-800">{p.label}</div>
-                  <div className="text-[10px] text-slate-500 mt-0.5">Grabs: {p.confirmatory}</div>
+                  <div className="text-2xs text-slate-500 mt-0.5">Grabs: {p.confirmatory}</div>
                   <div className={`text-xs font-bold mt-1 ${p.savings >= 0 ? 'text-cyan-700' : 'text-amber-700'}`}>
                     {p.savings >= 0 ? '+' : ''}{fmt(p.savings)}/yr
                   </div>
@@ -621,24 +621,24 @@ export function ComplianceEconomics({ regionId, tier: initialTier = 'large', jur
           <div className="text-xs font-bold text-cyan-900 uppercase tracking-wide">Additional Value Generated</div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="bg-white rounded-lg border border-cyan-200 p-3 text-center">
-              <div className="text-[10px] text-slate-500 font-medium uppercase">Fines Avoided</div>
+              <div className="text-2xs text-slate-500 font-medium uppercase">Fines Avoided</div>
               <div className="text-sm font-bold text-cyan-800 mt-1">{fmtRange(t.fineAvoidedLow, t.fineAvoidedHigh)}</div>
-              <div className="text-[10px] text-slate-400">early exceedance detection</div>
+              <div className="text-2xs text-slate-400">early exceedance detection</div>
             </div>
             <div className="bg-white rounded-lg border border-cyan-200 p-3 text-center">
-              <div className="text-[10px] text-slate-500 font-medium uppercase">TN Credits</div>
+              <div className="text-2xs text-slate-500 font-medium uppercase">TN Credits</div>
               <div className="text-sm font-bold text-cyan-800 mt-1">{fmt(calc.creditValueTN)}/yr</div>
-              <div className="text-[10px] text-slate-400">{calc.tnReduction} lbs @ ${tnCreditPrice}/lb</div>
+              <div className="text-2xs text-slate-400">{calc.tnReduction} lbs @ ${tnCreditPrice}/lb</div>
             </div>
             <div className="bg-white rounded-lg border border-cyan-200 p-3 text-center">
-              <div className="text-[10px] text-slate-500 font-medium uppercase">TP Credits</div>
+              <div className="text-2xs text-slate-500 font-medium uppercase">TP Credits</div>
               <div className="text-sm font-bold text-cyan-800 mt-1">{fmt(calc.creditValueTP)}/yr</div>
-              <div className="text-[10px] text-slate-400">{calc.tpReduction} lbs @ ${tpCreditPrice}/lb</div>
+              <div className="text-2xs text-slate-400">{calc.tpReduction} lbs @ ${tpCreditPrice}/lb</div>
             </div>
             <div className="bg-white rounded-lg border border-cyan-200 p-3 text-center">
-              <div className="text-[10px] text-slate-500 font-medium uppercase">Staff Freed</div>
+              <div className="text-2xs text-slate-500 font-medium uppercase">Staff Freed</div>
               <div className="text-sm font-bold text-cyan-800 mt-1">{calc.staffHours} hrs/yr</div>
-              <div className="text-[10px] text-slate-400">fieldwork &amp; other priorities</div>
+              <div className="text-2xs text-slate-400">fieldwork &amp; other priorities</div>
             </div>
           </div>
 
@@ -646,9 +646,9 @@ export function ComplianceEconomics({ regionId, tier: initialTier = 'large', jur
           <div className="bg-white rounded-lg border border-cyan-200 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-[10px] text-slate-500 font-medium uppercase">Grant Funding Offset (40-75%)</div>
+                <div className="text-2xs text-slate-500 font-medium uppercase">Grant Funding Offset (40-75%)</div>
                 <div className="text-sm font-bold text-cyan-800">{fmtRange(calc.grantOffsetLow, calc.grantOffsetHigh)}</div>
-                <div className="text-[10px] text-slate-400">EPA 319(h), NOAA NFWF, MD Bay Restoration Fund, Justice40</div>
+                <div className="text-2xs text-slate-400">EPA 319(h), NOAA NFWF, MD Bay Restoration Fund, Justice40</div>
               </div>
               <Zap className="h-5 w-5 text-cyan-600" />
             </div>
@@ -656,7 +656,7 @@ export function ComplianceEconomics({ regionId, tier: initialTier = 'large', jur
 
           {/* Total value headline */}
           <div className="rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 p-4 text-center">
-            <div className="text-[10px] text-cyan-100 font-medium uppercase tracking-widest">Estimated Year 1 Total Value</div>
+            <div className="text-2xs text-cyan-100 font-medium uppercase tracking-widest">Estimated Year 1 Total Value</div>
             <div className="text-2xl md:text-3xl font-black text-white mt-1">
               {fmtRange(calc.totalValueLow, calc.totalValueHigh)}
             </div>
@@ -677,10 +677,10 @@ export function ComplianceEconomics({ regionId, tier: initialTier = 'large', jur
               const isActive = key === resolvedTier;
               return (
                 <div key={key} className={`text-center p-2.5 rounded-lg border-2 transition-all ${isActive ? 'border-cyan-400 bg-cyan-50' : 'border-slate-200 bg-white'}`}>
-                  <div className={`text-[10px] font-bold uppercase tracking-wide ${isActive ? 'text-cyan-800' : 'text-slate-500'}`}>{cfg.label}</div>
+                  <div className={`text-2xs font-bold uppercase tracking-wide ${isActive ? 'text-cyan-800' : 'text-slate-500'}`}>{cfg.label}</div>
                   <div className={`text-sm font-bold ${isActive ? 'text-cyan-700' : 'text-slate-700'}`}>{fmt(cfg.annualCost)}/yr</div>
-                  <div className="text-[10px] text-slate-400">{cfg.sitesLabel}</div>
-                  {isActive && <div className="text-[10px] font-bold text-cyan-600 mt-0.5">Current &#10003;</div>}
+                  <div className="text-2xs text-slate-400">{cfg.sitesLabel}</div>
+                  {isActive && <div className="text-2xs font-bold text-cyan-600 mt-0.5">Current &#10003;</div>}
                 </div>
               );
             })}
@@ -692,11 +692,11 @@ export function ComplianceEconomics({ regionId, tier: initialTier = 'large', jur
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-1.5">
             <div className="text-xs font-bold text-blue-900">{jProfile.name} Context</div>
             {jProfile.totalRestoration && (
-              <div className="text-[10px] text-blue-800">Total restoration/MS4 program: <span className="font-bold">{jProfile.totalRestoration}</span>. PEARL targets the monitoring subset — high-ROI slice.</div>
+              <div className="text-2xs text-blue-800">Total restoration/MS4 program: <span className="font-bold">{jProfile.totalRestoration}</span>. PEARL targets the monitoring subset — high-ROI slice.</div>
             )}
-            {jProfile.notes && <div className="text-[10px] text-blue-700">{jProfile.notes}</div>}
+            {jProfile.notes && <div className="text-2xs text-blue-700">{jProfile.notes}</div>}
             {jProfile.fapLink && (
-              <a href={jProfile.fapLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[10px] text-blue-600 hover:underline">
+              <a href={jProfile.fapLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-2xs text-blue-600 hover:underline">
                 View Financial Assurance Plan <ExternalLink className="h-2.5 w-2.5" />
               </a>
             )}
@@ -781,12 +781,12 @@ export function ComplianceEconomics({ regionId, tier: initialTier = 'large', jur
         {/* ── Pilot proof + disclaimer ── */}
         <div className="space-y-2">
           <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-            <p className="text-[10px] text-green-900 leading-relaxed">
+            <p className="text-2xs text-green-900 leading-relaxed">
               <span className="font-bold">Pilot Proof:</span> PEARL achieved <span className="font-bold">88-95% TSS removal</span> during the Milton, Florida pilot deployment (January 2025), validated across 7 days of continuous monitoring. This exceeds MDE&apos;s &gt;80% TSS target for BMP crediting and demonstrates the data quality foundation for sensor-based compliance acceptance.
             </p>
           </div>
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-            <p className="text-[10px] text-amber-900 leading-relaxed">
+            <p className="text-2xs text-amber-900 leading-relaxed">
               <span className="font-bold">Assumptions &amp; Risk:</span> Savings assume phased MDE acceptance of continuous monitoring per your QAPP/split-sample validation roadmap. Actuals vary by permit renewal cycle, sensor verification requirements, and MDE policy evolution. Confirmatory sampling retained per slider setting above. Does not include capital restoration costs — the largest MS4 budget item. Cost data sourced from Baltimore City FY24 Financial Assurance Plan, MDE monitoring guidelines, and peer jurisdiction surveys. Hardware costs not included in subscription pricing. Nutrient credit values based on current MD Bay trading rates — subject to market fluctuation.
             </p>
           </div>

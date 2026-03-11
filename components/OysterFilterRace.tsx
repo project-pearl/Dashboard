@@ -557,13 +557,13 @@ export function OysterFilterRace() {
         </div>
         {game.gamePhase === 'playing' && (
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-[10px] text-slate-500 font-medium">Level {game.level + 1}: {levelCfg.name}</span>
-            <span className="text-[10px] text-slate-400">·</span>
-            <span className="text-[10px] text-slate-500">Target: {levelCfg.targetClarity}% clarity</span>
-            <span className="text-[10px] text-slate-400">·</span>
+            <span className="text-2xs text-slate-500 font-medium">Level {game.level + 1}: {levelCfg.name}</span>
+            <span className="text-2xs text-slate-400">·</span>
+            <span className="text-2xs text-slate-500">Target: {levelCfg.targetClarity}% clarity</span>
+            <span className="text-2xs text-slate-400">·</span>
             <div className="flex gap-1">
               {levelCfg.types.map(t => (
-                <span key={t} className="text-[10px]" title={PARTICLE_TYPES[t].label}>
+                <span key={t} className="text-2xs" title={PARTICLE_TYPES[t].label}>
                   {PARTICLE_TYPES[t].emoji}
                 </span>
               ))}
@@ -612,15 +612,15 @@ export function OysterFilterRace() {
             <div className="grid grid-cols-3 gap-4 mb-4 text-center">
               <div>
                 <div className="text-2xl font-bold font-mono">{Math.round(game.score)}</div>
-                <div className="text-[10px] text-green-300">Score</div>
+                <div className="text-2xs text-green-300">Score</div>
               </div>
               <div>
                 <div className="text-2xl font-bold font-mono">{game.particlesFiltered}</div>
-                <div className="text-[10px] text-green-300">Filtered</div>
+                <div className="text-2xs text-green-300">Filtered</div>
               </div>
               <div>
                 <div className="text-2xl font-bold font-mono">{game.waterClarity}%</div>
-                <div className="text-[10px] text-green-300">Clarity</div>
+                <div className="text-2xs text-green-300">Clarity</div>
               </div>
             </div>
 
@@ -654,15 +654,15 @@ export function OysterFilterRace() {
             <div className="grid grid-cols-3 gap-4 mb-4 text-center">
               <div>
                 <div className="text-2xl font-bold font-mono">{Math.round(game.score)}</div>
-                <div className="text-[10px] text-red-300">Score</div>
+                <div className="text-2xs text-red-300">Score</div>
               </div>
               <div>
                 <div className="text-2xl font-bold font-mono">{game.particlesFiltered}</div>
-                <div className="text-[10px] text-red-300">Filtered</div>
+                <div className="text-2xs text-red-300">Filtered</div>
               </div>
               <div>
                 <div className="text-2xl font-bold font-mono">{game.maxCombo}×</div>
-                <div className="text-[10px] text-red-300">Best Combo</div>
+                <div className="text-2xs text-red-300">Best Combo</div>
               </div>
             </div>
 
@@ -685,7 +685,7 @@ export function OysterFilterRace() {
 
         {/* ── Legend ── */}
         {game.gamePhase === 'playing' && (
-          <div className="absolute bottom-2 left-2 bg-white/80 backdrop-blur-sm rounded-lg px-3 py-1.5 flex gap-3 text-[10px]">
+          <div className="absolute bottom-2 left-2 bg-white/80 backdrop-blur-sm rounded-lg px-3 py-1.5 flex gap-3 text-2xs">
             {levelCfg.types.map(t => (
               <span key={t} className="flex items-center gap-1">
                 <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: PARTICLE_TYPES[t].color }} />
@@ -707,7 +707,7 @@ export function OysterFilterRace() {
                 style={{ width: `${game.waterClarity}%` }}
               />
             </div>
-            <div className="flex justify-between text-[9px] text-white/70 mt-0.5 font-mono">
+            <div className="flex justify-between text-2xs text-white/70 mt-0.5 font-mono">
               <span>Water Clarity</span>
               <span>Target: {levelCfg.targetClarity}%</span>
             </div>

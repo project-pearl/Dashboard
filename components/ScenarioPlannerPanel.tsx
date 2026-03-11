@@ -170,9 +170,9 @@ export default function ScenarioPlannerPanel() {
                     <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{s.description}</p>
                     <div className="flex flex-wrap gap-1 mt-2">
                       {s.applicableRoles.includes(role) ? (
-                        <Badge className="bg-green-100 text-green-700 border-green-300 text-[9px]">Relevant to {ROLES.find(r => r.id === role)?.label}</Badge>
+                        <Badge className="bg-green-100 text-green-700 border-green-300 text-2xs">Relevant to {ROLES.find(r => r.id === role)?.label}</Badge>
                       ) : (
-                        <Badge className="bg-slate-100 text-slate-500 text-[9px]">Less relevant for {ROLES.find(r => r.id === role)?.label}</Badge>
+                        <Badge className="bg-slate-100 text-slate-500 text-2xs">Less relevant for {ROLES.find(r => r.id === role)?.label}</Badge>
                       )}
                     </div>
                   </div>
@@ -225,7 +225,7 @@ export default function ScenarioPlannerPanel() {
               <Button onClick={runScenario} size="sm" className="gap-1.5">
                 <Play size={14} /> Run Scenario
               </Button>
-              <span className="text-[10px] text-slate-400">
+              <span className="text-2xs text-slate-400">
                 State factor: {stateAbbr} | Role: {ROLES.find(r => r.id === role)?.label}
               </span>
             </div>
@@ -268,7 +268,7 @@ export default function ScenarioPlannerPanel() {
                 {result.scoreImpact && (
                   <div className="flex items-center gap-4">
                     <div className="text-center">
-                      <div className="text-[10px] text-slate-400 uppercase">Water Score Impact</div>
+                      <div className="text-2xs text-slate-400 uppercase">Water Score Impact</div>
                       <div className="flex items-center gap-2 mt-1">
                         <ScoreGauge value={result.scoreImpact.before} label="Before" />
                         <span className="text-slate-300">→</span>
@@ -311,7 +311,7 @@ export default function ScenarioPlannerPanel() {
                       <div className="flex-1 min-w-0 -mt-0.5">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-bold text-slate-900">{phase.phase}</span>
-                          <Badge variant="secondary" className="text-[9px]">{phase.duration}</Badge>
+                          <Badge variant="secondary" className="text-2xs">{phase.duration}</Badge>
                         </div>
                         <p className="text-xs text-slate-500 mt-0.5">{phase.description}</p>
                       </div>
@@ -338,7 +338,7 @@ export default function ScenarioPlannerPanel() {
           {/* Disclaimer */}
           <div className="flex items-start gap-2 px-2 py-3 rounded-lg bg-slate-50 border border-slate-200">
             <Info size={14} className="text-slate-400 flex-shrink-0 mt-0.5" />
-            <p className="text-[10px] text-slate-400 leading-relaxed">{result.disclaimer}</p>
+            <p className="text-2xs text-slate-400 leading-relaxed">{result.disclaimer}</p>
           </div>
         </div>
       )}
@@ -353,7 +353,7 @@ function ScoreGauge({ value, label }: { value: number; label: string }) {
   return (
     <div className="text-center">
       <div className={`text-lg font-bold font-mono ${color}`}>{value}</div>
-      <div className="text-[9px] text-slate-400">{label}</div>
+      <div className="text-2xs text-slate-400">{label}</div>
     </div>
   );
 }
@@ -369,7 +369,7 @@ function CostTierCard({ tier, expanded, onToggle }: { tier: CostTierOutput; expa
           <div className="flex items-center gap-2">
             {TIER_ICONS[tier.tier]}
             <span className="text-sm font-bold text-slate-900">{tier.label}</span>
-            <Badge variant="secondary" className="text-[9px] font-mono">
+            <Badge variant="secondary" className="text-2xs font-mono">
               {tier.items.length} item{tier.items.length !== 1 ? 's' : ''}
             </Badge>
           </div>

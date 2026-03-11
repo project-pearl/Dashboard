@@ -175,7 +175,7 @@ export default function CronHealthDashboard() {
               Cron & Cache Health
             </CardTitle>
             {lastRefresh && (
-              <span className="text-[10px] text-slate-400">
+              <span className="text-2xs text-slate-400">
                 Updated {lastRefresh.toLocaleTimeString()}
               </span>
             )}
@@ -185,25 +185,25 @@ export default function CronHealthDashboard() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="bg-slate-50 rounded-lg p-3 text-center">
               <div className="text-2xl font-bold font-mono text-slate-800">{totalCrons}</div>
-              <div className="text-[11px] text-slate-500">Crons Tracked</div>
+              <div className="text-xs text-slate-500">Crons Tracked</div>
             </div>
             <div className="bg-slate-50 rounded-lg p-3 text-center">
               <div className={`text-2xl font-bold font-mono ${overallSuccessRate >= 90 ? 'text-green-700' : overallSuccessRate >= 70 ? 'text-amber-700' : 'text-red-700'}`}>
                 {overallSuccessRate}%
               </div>
-              <div className="text-[11px] text-slate-500">24h Success Rate</div>
+              <div className="text-xs text-slate-500">24h Success Rate</div>
             </div>
             <div className="bg-slate-50 rounded-lg p-3 text-center">
               <div className={`text-2xl font-bold font-mono ${failedCrons > 0 ? 'text-red-700' : 'text-green-700'}`}>
                 {failedCrons}
               </div>
-              <div className="text-[11px] text-slate-500">Failed (Last Run)</div>
+              <div className="text-xs text-slate-500">Failed (Last Run)</div>
             </div>
             <div className="bg-slate-50 rounded-lg p-3 text-center">
               <div className={`text-2xl font-bold font-mono ${staleCaches > 0 ? 'text-amber-700' : 'text-green-700'}`}>
                 {staleCaches}
               </div>
-              <div className="text-[11px] text-slate-500">Stale Caches</div>
+              <div className="text-xs text-slate-500">Stale Caches</div>
             </div>
           </div>
         </CardContent>
@@ -342,7 +342,7 @@ export default function CronHealthDashboard() {
                           <span className={`text-xs font-mono ${s.successRate24h >= 90 ? 'text-green-700' : s.successRate24h >= 70 ? 'text-amber-700' : 'text-red-700'}`}>
                             {s.successRate24h}%
                           </span>
-                          <span className="text-[10px] text-slate-400 ml-1">({s.totalRuns24h})</span>
+                          <span className="text-2xs text-slate-400 ml-1">({s.totalRuns24h})</span>
                         </td>
                         <td className="px-2 py-1.5 text-xs text-slate-500 font-mono">
                           {s.avgDurationMs > 0 ? `${(s.avgDurationMs / 1000).toFixed(1)}s` : '-'}

@@ -24,7 +24,7 @@ export function PendingApproval() {
           </div>
           <div>
             <div className="text-xl font-bold tracking-tight text-slate-900" style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}>PEARL</div>
-            <div className="text-[9px] font-medium text-slate-400 -mt-1 tracking-widest uppercase">Water Quality Intelligence</div>
+            <div className="text-2xs font-medium text-slate-400 -mt-1 tracking-widest uppercase">Water Quality Intelligence</div>
           </div>
         </div>
 
@@ -39,7 +39,7 @@ export function PendingApproval() {
 
             <div className="space-y-3 text-sm text-slate-600">
               <p>
-                Your <Badge variant="secondary" className="bg-amber-100 text-amber-700 text-[10px] mx-1">{user.role}</Badge> account
+                Your <Badge variant="secondary" className="bg-amber-100 text-amber-700 text-2xs mx-1">{user.role}</Badge> account
                 has been submitted and is awaiting administrator approval.
               </p>
               <p>

@@ -36,7 +36,7 @@ function Tip({ text, children }: { text: string; children: React.ReactNode }) {
     <div className="group relative">
       {children}
       <div
-        className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 rounded-md text-[11px] leading-tight whitespace-normal max-w-[220px] text-center opacity-0 group-hover:opacity-100 transition-opacity z-50"
+        className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 rounded-md text-xs leading-tight whitespace-normal max-w-[220px] text-center opacity-0 group-hover:opacity-100 transition-opacity z-50"
         style={{ background: 'var(--bg-tooltip, #1e293b)', color: 'var(--text-tooltip, #f8fafc)' }}
       >
         {text}
@@ -192,7 +192,7 @@ export default function NationalStatusCard({ summary: initialSummary }: Props) {
         </div>
 
         {unaccounted > 0 && (
-          <p className="text-[10px]" style={{ color: 'var(--text-dim)' }}>
+          <p className="text-2xs" style={{ color: 'var(--text-dim)' }}>
             * {unaccounted.toLocaleString()} waterbodies not yet categorized or pending assessment
           </p>
         )}
@@ -232,7 +232,7 @@ export default function NationalStatusCard({ summary: initialSummary }: Props) {
                 style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}
               >
                 <div className="text-xs font-bold" style={{ color: '#EF4444' }}>{s.abbr}</div>
-                <div className="text-[11px] tabular-nums" style={{ color: 'var(--text-dim)' }}>{s.score}</div>
+                <div className="text-xs tabular-nums" style={{ color: 'var(--text-dim)' }}>{s.score}</div>
               </div>
             ))}
             {remaining > 0 && (
@@ -259,7 +259,7 @@ export default function NationalStatusCard({ summary: initialSummary }: Props) {
       {/* ── Extended footer: Data source coverage ── */}
       {data.dataSources && data.dataSources.totalDataPoints > 0 && (
         <div
-          className="flex items-center justify-between gap-4 px-5 py-2 text-[11px] flex-wrap"
+          className="flex items-center justify-between gap-4 px-5 py-2 text-xs flex-wrap"
           style={{ borderTop: '1px solid var(--border-subtle)', color: 'var(--text-dim)' }}
         >
           <Tip text="Total data points ingested from 15+ federal and community monitoring sources">
@@ -287,7 +287,7 @@ function HealthBox({ label, count, color }: { label: string; count: number; colo
       style={{ background: `${color}0A`, border: `1px solid ${color}30` }}
     >
       <div className="text-lg font-bold tabular-nums" style={{ color }}>{count.toLocaleString()}</div>
-      <div className="text-[11px] mt-0.5 leading-tight" style={{ color: 'var(--text-dim)' }}>{label}</div>
+      <div className="text-xs mt-0.5 leading-tight" style={{ color: 'var(--text-dim)' }}>{label}</div>
       <div className="mt-1.5 mx-auto w-2.5 h-2.5 rounded-sm" style={{ background: color }} />
     </div>
   );

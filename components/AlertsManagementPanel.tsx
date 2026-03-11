@@ -16,6 +16,7 @@ import { AlertDeepDive } from './AlertDeepDive';
 import type { DeepDiveAlert } from './AlertDeepDive';
 import { PATTERN_LABELS } from '@/lib/alerts/triggers/sentinelTrigger';
 import { csrfHeaders } from '@/lib/csrf';
+import { CappedList } from '@/components/CappedList';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -626,7 +627,7 @@ export function AlertsManagementPanel() {
                   {s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
                 </button>
               ))}
-              <span className="ml-auto text-[10px] text-slate-400">{filteredEvents.length} result{filteredEvents.length !== 1 ? 's' : ''}</span>
+              <span className="ml-auto text-2xs text-slate-400">{filteredEvents.length} result{filteredEvents.length !== 1 ? 's' : ''}</span>
             </div>
           </div>
 
@@ -662,17 +663,17 @@ export function AlertsManagementPanel() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className={`text-sm font-semibold ${sev.text}`}>{evt.title}</span>
-                          <Badge variant="secondary" className="text-[9px]">{evt.type}</Badge>
+                          <Badge variant="secondary" className="text-2xs">{evt.type}</Badge>
                           {evt.sent ? (
-                            <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 text-[9px]">Sent</Badge>
+                            <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 text-2xs">Sent</Badge>
                           ) : evt.error === 'log_only' ? (
-                            <Badge variant="secondary" className="bg-cyan-100 text-cyan-700 text-[9px]">Logged</Badge>
+                            <Badge variant="secondary" className="bg-cyan-100 text-cyan-700 text-2xs">Logged</Badge>
                           ) : evt.error ? (
-                            <Badge variant="secondary" className="bg-red-100 text-red-700 text-[9px]">Error</Badge>
+                            <Badge variant="secondary" className="bg-red-100 text-red-700 text-2xs">Error</Badge>
                           ) : null}
                         </div>
                         <p className="text-xs text-slate-600 mt-0.5 line-clamp-2">{evt.body}</p>
-                        <div className="flex items-center gap-3 mt-1.5 text-[10px] text-slate-500">
+                        <div className="flex items-center gap-3 mt-1.5 text-2xs text-slate-500">
                           <span>{evt.entityLabel}</span>
                           <span>{new Date(evt.createdAt).toLocaleString()}</span>
                           <span>{evt.recipientEmail}</span>
@@ -715,12 +716,12 @@ export function AlertsManagementPanel() {
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-sm font-semibold text-slate-800">{selectedEvent.title}</span>
-                            <Badge variant="secondary" className="text-[9px]">{selectedEvent.type}</Badge>
-                            <Badge className={`text-[9px] ${SEVERITY_COLORS[selectedEvent.severity].bg} ${SEVERITY_COLORS[selectedEvent.severity].text}`}>
+                            <Badge variant="secondary" className="text-2xs">{selectedEvent.type}</Badge>
+                            <Badge className={`text-2xs ${SEVERITY_COLORS[selectedEvent.severity].bg} ${SEVERITY_COLORS[selectedEvent.severity].text}`}>
                               {selectedEvent.severity}
                             </Badge>
                             {typeof meta.stage === 'string' && (
-                              <Badge variant="secondary" className="text-[9px] bg-violet-100 text-violet-700">{meta.stage}</Badge>
+                              <Badge variant="secondary" className="text-2xs bg-violet-100 text-violet-700">{meta.stage}</Badge>
                             )}
                           </div>
                         </div>
@@ -733,7 +734,7 @@ export function AlertsManagementPanel() {
                       {patterns.length > 0 && (
                         <div className="flex flex-wrap gap-1.5">
                           {patterns.map(p => (
-                            <Badge key={p} variant="secondary" className="text-[10px] bg-indigo-100 text-indigo-700">
+                            <Badge key={p} variant="secondary" className="text-2xs bg-indigo-100 text-indigo-700">
                               {PATTERN_LABELS[p] || p}
                             </Badge>
                           ))}
@@ -747,7 +748,7 @@ export function AlertsManagementPanel() {
                             <span className="flex items-center gap-1.5">
                               Score: <span className="font-semibold">{String(meta.score)}</span>
                               {typeof meta.level === 'string' && (
-                                <Badge variant="secondary" className={`text-[9px] ${
+                                <Badge variant="secondary" className={`text-2xs ${
                                   meta.level === 'CRITICAL' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
                                 }`}>{meta.level}</Badge>
                               )}
@@ -812,134 +813,143 @@ export function AlertsManagementPanel() {
               </CardContent>
             </Card>
           ) : (
-            recipients.map(r => {
-              const isEditing = editingRecipient === r.email;
-              return (
-                <div key={r.email} className={`rounded-lg border transition-all ${
-                  r.active ? 'border-slate-200 hover:bg-slate-50' : 'border-slate-200 bg-slate-50 opacity-60'
-                }`}>
-                  <div className="flex items-center gap-3 p-3">
-                    <div className="flex items-center justify-center w-9 h-9 rounded-full bg-slate-100 text-xs font-bold text-slate-600 flex-shrink-0">
-                      {r.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-slate-800 truncate">{r.name}</span>
-                        <Badge variant="secondary" className={`text-[9px] ${r.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
-                          {r.active ? 'Active' : 'Inactive'}
-                        </Badge>
+            <CappedList
+              items={recipients}
+              maxVisible={5}
+              searchable={recipients.length > 5}
+              searchPlaceholder="Search recipients..."
+              getSearchText={(r) => `${r.name} ${r.email} ${r.role} ${r.state || ''}`}
+              getKey={(r) => r.email}
+              className="space-y-2"
+              renderItem={(r) => {
+                const isEditing = editingRecipient === r.email;
+                return (
+                  <div className={`rounded-lg border transition-all ${
+                    r.active ? 'border-slate-200 hover:bg-slate-50' : 'border-slate-200 bg-slate-50 opacity-60'
+                  }`}>
+                    <div className="flex items-center gap-3 p-3">
+                      <div className="flex items-center justify-center w-9 h-9 rounded-full bg-slate-100 text-xs font-bold text-slate-600 flex-shrink-0">
+                        {r.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                       </div>
-                      <div className="text-[11px] text-slate-500">{r.email} &middot; {r.role}{r.state ? ` &middot; ${r.state}` : ''}</div>
-                      <div className="flex items-center gap-1.5 mt-1">
-                        {r.triggers.map(t => (
-                          <Badge key={t} variant="secondary" className="text-[8px] bg-blue-50 text-blue-600">{t}</Badge>
-                        ))}
-                        {r.severities.map(s => (
-                          <Badge key={s} variant="secondary" className={`text-[8px] ${SEVERITY_COLORS[s].bg} ${SEVERITY_COLORS[s].text}`}>{s}</Badge>
-                        ))}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-slate-800 truncate">{r.name}</span>
+                          <Badge variant="secondary" className={`text-2xs ${r.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                            {r.active ? 'Active' : 'Inactive'}
+                          </Badge>
+                        </div>
+                        <div className="text-xs text-slate-500">{r.email} &middot; {r.role}{r.state ? ` &middot; ${r.state}` : ''}</div>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          {r.triggers.map(t => (
+                            <Badge key={t} variant="secondary" className="text-2xs bg-blue-50 text-blue-600">{t}</Badge>
+                          ))}
+                          {r.severities.map(s => (
+                            <Badge key={s} variant="secondary" className={`text-2xs ${SEVERITY_COLORS[s].bg} ${SEVERITY_COLORS[s].text}`}>{s}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <button
+                          onClick={() => setEditingRecipient(isEditing ? null : r.email)}
+                          className={`p-1.5 rounded-lg transition-colors ${isEditing ? 'text-cyan-600 bg-cyan-50' : 'text-slate-400 hover:bg-slate-100'}`}
+                          title="Edit triggers"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleToggleRecipient(r.email, !r.active)}
+                          className={`p-1.5 rounded-lg transition-colors ${r.active ? 'text-amber-500 hover:bg-amber-50' : 'text-emerald-500 hover:bg-emerald-50'}`}
+                          title={r.active ? 'Deactivate' : 'Activate'}
+                        >
+                          {r.active ? <ShieldOff className="h-3.5 w-3.5" /> : <CheckCircle className="h-3.5 w-3.5" />}
+                        </button>
+                        <button
+                          onClick={() => handleRemoveRecipient(r.email)}
+                          className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                          title="Remove"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                      <button
-                        onClick={() => setEditingRecipient(isEditing ? null : r.email)}
-                        className={`p-1.5 rounded-lg transition-colors ${isEditing ? 'text-cyan-600 bg-cyan-50' : 'text-slate-400 hover:bg-slate-100'}`}
-                        title="Edit triggers"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleToggleRecipient(r.email, !r.active)}
-                        className={`p-1.5 rounded-lg transition-colors ${r.active ? 'text-amber-500 hover:bg-amber-50' : 'text-emerald-500 hover:bg-emerald-50'}`}
-                        title={r.active ? 'Deactivate' : 'Activate'}
-                      >
-                        {r.active ? <ShieldOff className="h-3.5 w-3.5" /> : <CheckCircle className="h-3.5 w-3.5" />}
-                      </button>
-                      <button
-                        onClick={() => handleRemoveRecipient(r.email)}
-                        className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
-                        title="Remove"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </div>
 
-                  {/* Inline trigger/severity editor */}
-                  {isEditing && (() => {
-                    const [editTriggers, setEditTriggers] = [r.triggers, (newTriggers: AlertTriggerType[]) => {
-                      setRecipients(prev => prev.map(p => p.email === r.email ? { ...p, triggers: newTriggers } : p));
-                    }];
-                    const [editSeverities, setEditSeverities] = [r.severities, (newSevs: AlertSeverity[]) => {
-                      setRecipients(prev => prev.map(p => p.email === r.email ? { ...p, severities: newSevs } : p));
-                    }];
-                    return (
-                      <div className="border-t border-slate-200 px-3 pb-3 pt-2 space-y-2.5">
-                        <div>
-                          <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Trigger Types</label>
-                          <div className="flex flex-wrap gap-1.5">
-                            {TRIGGER_TYPES.map(t => {
-                              const active = editTriggers.includes(t);
-                              return (
-                                <button
-                                  key={t}
-                                  onClick={() => {
-                                    const updated = active ? editTriggers.filter(x => x !== t) : [...editTriggers, t];
-                                    setEditTriggers(updated);
-                                  }}
-                                  className={`px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors ${
-                                    active ? 'bg-blue-100 text-blue-700 ring-1 ring-blue-300' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
-                                  }`}
-                                >
-                                  {t}
-                                </button>
-                              );
-                            })}
+                    {/* Inline trigger/severity editor */}
+                    {isEditing && (() => {
+                      const [editTriggers, setEditTriggers] = [r.triggers, (newTriggers: AlertTriggerType[]) => {
+                        setRecipients(prev => prev.map(p => p.email === r.email ? { ...p, triggers: newTriggers } : p));
+                      }];
+                      const [editSeverities, setEditSeverities] = [r.severities, (newSevs: AlertSeverity[]) => {
+                        setRecipients(prev => prev.map(p => p.email === r.email ? { ...p, severities: newSevs } : p));
+                      }];
+                      return (
+                        <div className="border-t border-slate-200 px-3 pb-3 pt-2 space-y-2.5">
+                          <div>
+                            <label className="block text-2xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Trigger Types</label>
+                            <div className="flex flex-wrap gap-1.5">
+                              {TRIGGER_TYPES.map(t => {
+                                const active = editTriggers.includes(t);
+                                return (
+                                  <button
+                                    key={t}
+                                    onClick={() => {
+                                      const updated = active ? editTriggers.filter(x => x !== t) : [...editTriggers, t];
+                                      setEditTriggers(updated);
+                                    }}
+                                    className={`px-2.5 py-1 rounded-full text-2xs font-medium transition-colors ${
+                                      active ? 'bg-blue-100 text-blue-700 ring-1 ring-blue-300' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
+                                    }`}
+                                  >
+                                    {t}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-2xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Severities</label>
+                            <div className="flex flex-wrap gap-1.5">
+                              {SEVERITIES.map(s => {
+                                const active = editSeverities.includes(s);
+                                const sev = SEVERITY_COLORS[s];
+                                return (
+                                  <button
+                                    key={s}
+                                    onClick={() => {
+                                      const updated = active ? editSeverities.filter(x => x !== s) : [...editSeverities, s];
+                                      setEditSeverities(updated);
+                                    }}
+                                    className={`px-2.5 py-1 rounded-full text-2xs font-medium transition-colors ${
+                                      active ? `${sev.bg} ${sev.text} ring-1 ring-current` : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
+                                    }`}
+                                  >
+                                    {s}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 pt-1">
+                            <button
+                              onClick={() => handleUpdateRecipientTriggers(r.email, editTriggers, editSeverities)}
+                              disabled={editTriggers.length === 0 || editSeverities.length === 0}
+                              className="px-4 py-1.5 rounded-lg text-xs font-semibold text-white bg-cyan-600 hover:bg-cyan-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={() => { setEditingRecipient(null); fetchRecipients(); }}
+                              className="px-4 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:bg-slate-100 transition-colors"
+                            >
+                              Cancel
+                            </button>
                           </div>
                         </div>
-                        <div>
-                          <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Severities</label>
-                          <div className="flex flex-wrap gap-1.5">
-                            {SEVERITIES.map(s => {
-                              const active = editSeverities.includes(s);
-                              const sev = SEVERITY_COLORS[s];
-                              return (
-                                <button
-                                  key={s}
-                                  onClick={() => {
-                                    const updated = active ? editSeverities.filter(x => x !== s) : [...editSeverities, s];
-                                    setEditSeverities(updated);
-                                  }}
-                                  className={`px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors ${
-                                    active ? `${sev.bg} ${sev.text} ring-1 ring-current` : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
-                                  }`}
-                                >
-                                  {s}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 pt-1">
-                          <button
-                            onClick={() => handleUpdateRecipientTriggers(r.email, editTriggers, editSeverities)}
-                            disabled={editTriggers.length === 0 || editSeverities.length === 0}
-                            className="px-4 py-1.5 rounded-lg text-xs font-semibold text-white bg-cyan-600 hover:bg-cyan-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                          >
-                            Save
-                          </button>
-                          <button
-                            onClick={() => { setEditingRecipient(null); fetchRecipients(); }}
-                            className="px-4 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:bg-slate-100 transition-colors"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-              );
-            })
+                      );
+                    })()}
+                  </div>
+                );
+              }}
+            />
           )}
 
           {/* Add Recipient Form */}
@@ -1064,9 +1074,9 @@ export function AlertsManagementPanel() {
               <div className="flex items-center gap-2">
                 <Lock className="h-4 w-4 text-indigo-500" />
                 <span className="text-sm font-semibold text-indigo-800">Built-in Protections</span>
-                <Badge variant="secondary" className="bg-indigo-100 text-indigo-600 text-[9px]">Always Active</Badge>
+                <Badge variant="secondary" className="bg-indigo-100 text-indigo-600 text-2xs">Always Active</Badge>
               </div>
-              <p className="text-[11px] text-indigo-600/70 -mt-1">These engine-level rules run automatically on every dispatch cycle. They cannot be disabled.</p>
+              <p className="text-xs text-indigo-600/70 -mt-1">These engine-level rules run automatically on every dispatch cycle. They cannot be disabled.</p>
               <div className="space-y-1.5">
                 {[
                   {
@@ -1101,12 +1111,12 @@ export function AlertsManagementPanel() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-semibold text-slate-800">{rule.name}</span>
-                          <Badge variant="secondary" className={`text-[8px] ${sev.bg} ${sev.text}`}>{rule.severity}</Badge>
+                          <Badge variant="secondary" className={`text-2xs ${sev.bg} ${sev.text}`}>{rule.severity}</Badge>
                           {rule.badge && (
-                            <Badge variant="secondary" className={`text-[8px] ${rule.badge.color}`}>{rule.badge.label}</Badge>
+                            <Badge variant="secondary" className={`text-2xs ${rule.badge.color}`}>{rule.badge.label}</Badge>
                           )}
                         </div>
-                        <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{rule.desc}</p>
+                        <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{rule.desc}</p>
                       </div>
                     </div>
                   );
@@ -1134,38 +1144,47 @@ export function AlertsManagementPanel() {
               </CardContent>
             </Card>
           ) : (
-            rules.map(r => {
-              const sev = SEVERITY_COLORS[r.severity] || SEVERITY_COLORS.info;
-              const opLabel = OPERATORS.find(o => o.value === r.condition.operator)?.label || r.condition.operator;
-              return (
-                <div key={r.id} className={`rounded-lg border p-3 ${sev.bg} ${sev.border}`}>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-sm font-semibold ${sev.text}`}>{r.name}</span>
-                        <Badge variant="secondary" className={`text-[9px] ${r.enabled ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
-                          {r.enabled ? 'Enabled' : 'Disabled'}
-                        </Badge>
-                        <Badge variant="secondary" className="text-[9px]">{r.triggerType}</Badge>
+            <CappedList
+              items={rules}
+              maxVisible={5}
+              searchable={rules.length > 5}
+              searchPlaceholder="Search rules..."
+              getSearchText={(r) => `${r.name} ${r.triggerType} ${r.condition.source} ${r.condition.metric}`}
+              getKey={(r) => r.id}
+              className="space-y-2"
+              renderItem={(r) => {
+                const sev = SEVERITY_COLORS[r.severity] || SEVERITY_COLORS.info;
+                const opLabel = OPERATORS.find(o => o.value === r.condition.operator)?.label || r.condition.operator;
+                return (
+                  <div className={`rounded-lg border p-3 ${sev.bg} ${sev.border}`}>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-sm font-semibold ${sev.text}`}>{r.name}</span>
+                          <Badge variant="secondary" className={`text-2xs ${r.enabled ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                            {r.enabled ? 'Enabled' : 'Disabled'}
+                          </Badge>
+                          <Badge variant="secondary" className="text-2xs">{r.triggerType}</Badge>
+                        </div>
+                        <p className="text-xs text-slate-600 mt-1">
+                          {r.condition.source}.{r.condition.metric} {opLabel} {r.condition.value}
+                        </p>
+                        <div className="text-2xs text-slate-500 mt-1">
+                          Created {new Date(r.createdAt).toLocaleDateString()} by {r.createdBy}
+                        </div>
                       </div>
-                      <p className="text-xs text-slate-600 mt-1">
-                        {r.condition.source}.{r.condition.metric} {opLabel} {r.condition.value}
-                      </p>
-                      <div className="text-[10px] text-slate-500 mt-1">
-                        Created {new Date(r.createdAt).toLocaleDateString()} by {r.createdBy}
-                      </div>
+                      <button
+                        onClick={() => handleDeleteRule(r.id)}
+                        className="p-1.5 rounded-lg text-red-500 hover:bg-red-100 transition-colors"
+                        title="Delete rule"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </div>
-                    <button
-                      onClick={() => handleDeleteRule(r.id)}
-                      className="p-1.5 rounded-lg text-red-500 hover:bg-red-100 transition-colors"
-                      title="Delete rule"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
                   </div>
-                </div>
-              );
-            })
+                );
+              }}
+            />
           )}
 
           {/* Add Rule Form */}
@@ -1274,9 +1293,9 @@ export function AlertsManagementPanel() {
               <div className="flex items-center gap-2">
                 <Lock className="h-4 w-4 text-indigo-500" />
                 <span className="text-sm font-semibold text-indigo-800">Automatic Suppression</span>
-                <Badge variant="secondary" className="bg-indigo-100 text-indigo-600 text-[9px]">Always Active</Badge>
+                <Badge variant="secondary" className="bg-indigo-100 text-indigo-600 text-2xs">Always Active</Badge>
               </div>
-              <p className="text-[11px] text-indigo-600/70 -mt-1">These suppression layers run automatically before manual suppressions are checked.</p>
+              <p className="text-xs text-indigo-600/70 -mt-1">These suppression layers run automatically before manual suppressions are checked.</p>
               <div className="space-y-1.5">
                 {[
                   {
@@ -1312,10 +1331,10 @@ export function AlertsManagementPanel() {
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-semibold text-slate-800">{rule.name}</span>
                         {rule.badges.map(b => (
-                          <Badge key={b.label} variant="secondary" className={`text-[8px] ${b.color}`}>{b.label}</Badge>
+                          <Badge key={b.label} variant="secondary" className={`text-2xs ${b.color}`}>{b.label}</Badge>
                         ))}
                       </div>
-                      <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{rule.desc}</p>
+                      <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{rule.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -1350,10 +1369,10 @@ export function AlertsManagementPanel() {
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-semibold text-slate-800 font-mono">{s.dedupKey}</span>
-                        {isExpired && <Badge variant="secondary" className="bg-slate-100 text-slate-500 text-[9px]">Expired</Badge>}
+                        {isExpired && <Badge variant="secondary" className="bg-slate-100 text-slate-500 text-2xs">Expired</Badge>}
                       </div>
                       <p className="text-xs text-slate-600 mt-0.5">{s.reason}</p>
-                      <div className="text-[10px] text-slate-500 mt-1">
+                      <div className="text-2xs text-slate-500 mt-1">
                         Created {new Date(s.createdAt).toLocaleDateString()} by {s.createdBy}
                         {s.expiresAt && ` · Expires ${new Date(s.expiresAt).toLocaleString()}`}
                         {!s.expiresAt && ' · Permanent'}
@@ -1389,7 +1408,7 @@ export function AlertsManagementPanel() {
                   placeholder="sentinel:*:critical"
                   className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm font-mono focus:border-cyan-400 focus:ring-1 focus:ring-cyan-200 outline-none"
                 />
-                <p className="text-[10px] text-slate-400 mt-0.5">Pattern format: type:entityId:severity (supports * wildcard)</p>
+                <p className="text-2xs text-slate-400 mt-0.5">Pattern format: type:entityId:severity (supports * wildcard)</p>
               </div>
 
               <div>
@@ -1411,7 +1430,7 @@ export function AlertsManagementPanel() {
                   onChange={e => setSuppressForm(f => ({ ...f, expiresAt: e.target.value }))}
                   className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:border-cyan-400 focus:ring-1 focus:ring-cyan-200 outline-none"
                 />
-                <p className="text-[10px] text-slate-400 mt-0.5">Leave empty for permanent suppression</p>
+                <p className="text-2xs text-slate-400 mt-0.5">Leave empty for permanent suppression</p>
               </div>
 
               <button

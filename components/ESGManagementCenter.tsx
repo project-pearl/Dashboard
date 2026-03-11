@@ -927,7 +927,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
             {/* Key wins */}
             <div className="space-y-1.5">
               <div className="text-xs font-semibold text-emerald-700">Key Strengths</div>
-              <div className="text-[11px] text-slate-700 space-y-1">
+              <div className="text-xs text-slate-700 space-y-1">
                 {portfolioScores.avgTSSEff > 0 && (
                   <div className="flex items-start gap-1.5">
                     <TrendingUp className="h-3 w-3 text-green-500 mt-0.5 flex-shrink-0" />
@@ -947,7 +947,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
             {/* Risk flags */}
             <div className="space-y-1.5">
               <div className="text-xs font-semibold text-amber-700">Risk Flags</div>
-              <div className="text-[11px] text-slate-700 space-y-1">
+              <div className="text-xs text-slate-700 space-y-1">
                 {portfolioScores.highRisk > 0 && (
                   <div className="flex items-start gap-1.5">
                     <AlertTriangle className="h-3 w-3 text-red-500 mt-0.5 flex-shrink-0" />
@@ -998,14 +998,14 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
               <div className="w-full mt-3 h-2.5 rounded-full bg-emerald-100 overflow-hidden">
                 <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${Math.min(portfolioScores.avgESG, 100)}%` }} />
               </div>
-              <div className="text-[10px] text-emerald-500 mt-1">{portfolioScores.avgESG}/100</div>
+              <div className="text-2xs text-emerald-500 mt-1">{portfolioScores.avgESG}/100</div>
             </CardContent>
           </Card>
 
           {/* Risk breakdown — stacked vertically */}
           <Card className="border border-slate-200">
             <CardContent className="p-4">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Portfolio Risk</div>
+              <div className="text-2xs font-bold uppercase tracking-wider text-slate-400 mb-2">Portfolio Risk</div>
               <div className="space-y-2">
                 {[
                   { label: 'High Risk', val: portfolioScores.highRisk, color: 'bg-red-500', textColor: 'text-red-600', prov: true },
@@ -1036,21 +1036,21 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                 <div className="rounded-lg bg-slate-100 p-2"><Building2 className="h-4 w-4 text-slate-500" /></div>
                 <div>
                   <div className="text-2xl font-bold text-slate-800">{portfolioScores.total}</div>
-                  <div className="text-[10px] text-slate-500">Total Facilities</div>
+                  <div className="text-2xs text-slate-500">Total Facilities</div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <div className="rounded-lg bg-green-100 p-2"><Shield className="h-4 w-4 text-green-600" /></div>
                 <div>
                   <div className="text-2xl font-bold text-green-600 inline-flex items-center gap-0.5">{portfolioScores.monitored}<ProvenanceIcon metricName="Verified Impact" displayValue={String(portfolioScores.monitored)} /></div>
-                  <div className="text-[10px] text-green-600 font-medium">Verified Impact</div>
+                  <div className="text-2xs text-green-600 font-medium">Verified Impact</div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <div className="rounded-lg bg-slate-100 p-2"><Gauge className="h-4 w-4 text-slate-500" /></div>
                 <div>
                   <div className="text-2xl font-bold text-slate-600 inline-flex items-center gap-0.5">{portfolioScores.avgRisk}<ProvenanceIcon metricName="Avg Risk Score" displayValue={String(portfolioScores.avgRisk)} /></div>
-                  <div className="text-[10px] text-slate-500">Avg Risk Score</div>
+                  <div className="text-2xs text-slate-500">Avg Risk Score</div>
                 </div>
               </div>
             </CardContent>
@@ -1100,7 +1100,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                 </div>
 
                 <div className="h-[450px] w-full relative">
-                  <button onClick={() => setFlyTarget({ center: defaultCenter, zoom: defaultZoom })} className="w-7 h-7 rounded bg-white border border-slate-300 shadow-sm flex items-center justify-center text-slate-500 hover:bg-slate-50 text-[10px] font-medium absolute top-2 right-2 z-[1000]">⌂</button>
+                  <button onClick={() => setFlyTarget({ center: defaultCenter, zoom: defaultZoom })} className="w-7 h-7 rounded bg-white border border-slate-300 shadow-sm flex items-center justify-center text-slate-500 hover:bg-slate-50 text-2xs font-medium absolute top-2 right-2 z-[1000]">⌂</button>
 
                   <MapboxMapShell
                     center={defaultCenter}
@@ -1216,17 +1216,17 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                     }`} />
                     <div className="flex-1 min-w-0">
                       <div className="text-xs font-medium text-slate-800 truncate">{f.name}</div>
-                      <div className="text-[10px] text-slate-500">{f.state} · {f.type} · Risk: {f.waterRiskScore}</div>
-                      {f.receivingWaterbody && <div className="text-[9px] text-slate-400 truncate">{f.receivingWaterbody}</div>}
+                      <div className="text-2xs text-slate-500">{f.state} · {f.type} · Risk: {f.waterRiskScore}</div>
+                      {f.receivingWaterbody && <div className="text-2xs text-slate-400 truncate">{f.receivingWaterbody}</div>}
                     </div>
                     {f.status === 'monitored' && (
-                      <Badge variant="secondary" className="text-[8px] h-4 px-1.5 bg-green-100 text-green-700 border-green-200 flex-shrink-0 gap-0.5">
+                      <Badge variant="secondary" className="text-2xs h-4 px-1.5 bg-green-100 text-green-700 border-green-200 flex-shrink-0 gap-0.5">
                         <Shield className="h-2.5 w-2.5" />
                         Verified
                       </Badge>
                     )}
                     {f.status === 'assessed' && (
-                      <Badge variant="secondary" className="text-[8px] h-4 px-1.5 bg-amber-50 text-amber-600 border-amber-200 flex-shrink-0">
+                      <Badge variant="secondary" className="text-2xs h-4 px-1.5 bg-amber-50 text-amber-600 border-amber-200 flex-shrink-0">
                         Assessed
                       </Badge>
                     )}
@@ -1260,19 +1260,19 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                   {selectedFac && (
                     <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2">
                       <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 text-center">
-                        <div className="text-[10px] font-bold uppercase text-slate-500">Risk Score</div>
+                        <div className="text-2xs font-bold uppercase text-slate-500">Risk Score</div>
                         <div className="text-lg font-bold text-slate-800">{selectedFac.waterRiskScore}</div>
                       </div>
                       <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 text-center">
-                        <div className="text-[10px] font-bold uppercase text-slate-500">Alert</div>
+                        <div className="text-2xs font-bold uppercase text-slate-500">Alert</div>
                         <div className={`text-lg font-bold ${selectedFac.alertLevel === 'high' ? 'text-red-700' : selectedFac.alertLevel === 'medium' ? 'text-amber-700' : 'text-green-700'}`}>{selectedFac.alertLevel}</div>
                       </div>
                       <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 text-center">
-                        <div className="text-[10px] font-bold uppercase text-slate-500">Type</div>
+                        <div className="text-2xs font-bold uppercase text-slate-500">Type</div>
                         <div className="text-sm font-bold text-slate-700">{selectedFac.type}</div>
                       </div>
                       <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 text-center">
-                        <div className="text-[10px] font-bold uppercase text-slate-500">Status</div>
+                        <div className="text-2xs font-bold uppercase text-slate-500">Status</div>
                         <div className="text-sm font-bold text-slate-700 capitalize">{selectedFac.status}</div>
                       </div>
                     </div>
@@ -1315,7 +1315,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                         <div className="flex-1 min-w-0">
                           <div className={`text-2xl font-extrabold ${m.valTx}`}>{m.value}</div>
                           <div className={`text-xs font-semibold ${m.lblTx}`}>{m.label}</div>
-                          <div className={`text-[10px] ${m.subTx} mt-0.5`}>{m.sub}</div>
+                          <div className={`text-2xs ${m.subTx} mt-0.5`}>{m.sub}</div>
                           {m.pct !== undefined && m.pct > 0 && (
                             <div className="mt-2 h-1.5 rounded-full bg-white/60 overflow-hidden">
                               <div className={`h-full rounded-full ${m.barBg}`} style={{ width: `${Math.min(m.pct, 100)}%` }} />
@@ -1368,9 +1368,9 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                 <div className="rounded-md border border-amber-200 bg-amber-50/50 px-3 py-2 space-y-1">
                   <div className="flex items-center gap-2">
                     <BarChart3 className="h-3 w-3 text-amber-600 flex-shrink-0" />
-                    <span className="text-[10px] font-semibold text-amber-800">Projected vs. Verified Data</span>
+                    <span className="text-2xs font-semibold text-amber-800">Projected vs. Verified Data</span>
                   </div>
-                  <span className="text-[10px] text-amber-700 block">Baseline projections derived from Milton, FL pilot (Jan 2025: 88-95% TSS removal, 50K GPD throughput). PIN-monitored facilities reflect verified continuous data. Non-monitored facilities show modeled estimates only. TN/TP reductions contribute directly to Chesapeake Bay TMDL credits under CWA Section 303(d).</span>
+                  <span className="text-2xs text-amber-700 block">Baseline projections derived from Milton, FL pilot (Jan 2025: 88-95% TSS removal, 50K GPD throughput). PIN-monitored facilities reflect verified continuous data. Non-monitored facilities show modeled estimates only. TN/TP reductions contribute directly to Chesapeake Bay TMDL credits under CWA Section 303(d).</span>
                 </div>
               </div>
             )}
@@ -1412,7 +1412,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                         <div className="flex-1 min-w-0">
                           <div className={`text-2xl font-extrabold ${m.valTx}`}>{m.value}</div>
                           <div className={`text-xs font-semibold ${m.lblTx}`}>{m.label}</div>
-                          <div className={`text-[10px] ${m.subTx} mt-0.5`}>{m.sub}</div>
+                          <div className={`text-2xs ${m.subTx} mt-0.5`}>{m.sub}</div>
                         </div>
                       </div>
                     );
@@ -1444,11 +1444,11 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                             <td className="text-right px-3 py-1.5 text-slate-600">{f.tpReduced ? f.tpReduced.toFixed(1) : '--'}</td>
                             <td className="text-center px-3 py-1.5">
                               {f.status === 'monitored' ? (
-                                <Badge variant="secondary" className="text-[9px] h-4 bg-green-100 text-green-700 border-green-200">Verified</Badge>
+                                <Badge variant="secondary" className="text-2xs h-4 bg-green-100 text-green-700 border-green-200">Verified</Badge>
                               ) : f.status === 'assessed' ? (
-                                <Badge variant="secondary" className="text-[9px] h-4 bg-amber-100 text-amber-700 border-amber-200">Assessed</Badge>
+                                <Badge variant="secondary" className="text-2xs h-4 bg-amber-100 text-amber-700 border-amber-200">Assessed</Badge>
                               ) : (
-                                <Badge variant="secondary" className="text-[9px] h-4 bg-slate-100 text-slate-500">Pending</Badge>
+                                <Badge variant="secondary" className="text-2xs h-4 bg-slate-100 text-slate-500">Pending</Badge>
                               )}
                             </td>
                           </tr>
@@ -1458,7 +1458,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                   </div>
                 </div>
 
-                <div className="rounded-md border border-blue-200 bg-blue-50/50 px-3 py-2 text-[10px] text-blue-700">
+                <div className="rounded-md border border-blue-200 bg-blue-50/50 px-3 py-2 text-2xs text-blue-700">
                   Chesapeake Bay TMDL allocations require jurisdictions to meet nitrogen, phosphorus, and sediment reduction targets under EPA-approved Watershed Implementation Plans (WIPs). PIN-verified nutrient reductions may qualify for tradeable credits under state nutrient trading programs (MD, VA, PA).
                 </div>
               </div>
@@ -1532,13 +1532,13 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-bold text-slate-800">{fw.name}</span>
-                        <span className="text-[10px] text-slate-500">{fw.fullName}</span>
+                        <span className="text-2xs text-slate-500">{fw.fullName}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         {CLOSE_THE_GAP[fw.id] && (
                           <button
                             onClick={() => openGapWizard(fw.id)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-sm hover:from-violet-700 hover:to-indigo-700 transition-all"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-2xs font-bold bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-sm hover:from-violet-700 hover:to-indigo-700 transition-all"
                           >
                             <Sparkles className="h-3 w-3" />
                             Close the Gap
@@ -1562,13 +1562,13 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                       />
                     </div>
                     <div className="flex items-center justify-between mt-1.5">
-                      <div className="text-[10px] text-slate-500">{fw.coverage}% coverage</div>
+                      <div className="text-2xs text-slate-500">{fw.coverage}% coverage</div>
                       <div className="flex flex-wrap gap-1">
                         {fw.relevantMetrics.slice(0, 3).map(m => (
-                          <span key={m} className="px-1.5 py-0.5 rounded text-[9px] bg-slate-100 text-slate-600">{m}</span>
+                          <span key={m} className="px-1.5 py-0.5 rounded text-2xs bg-slate-100 text-slate-600">{m}</span>
                         ))}
                         {fw.relevantMetrics.length > 3 && (
-                          <span className="px-1.5 py-0.5 rounded text-[9px] bg-slate-100 text-slate-500">+{fw.relevantMetrics.length - 3} more</span>
+                          <span className="px-1.5 py-0.5 rounded text-2xs bg-slate-100 text-slate-500">+{fw.relevantMetrics.length - 3} more</span>
                         )}
                       </div>
                     </div>
@@ -1597,7 +1597,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                       <div className="flex items-center gap-2 mb-1">
                         <Sparkles className="h-5 w-5 text-violet-200" />
                         <span className="text-white font-bold text-lg">Close the Gap</span>
-                        <Badge className="bg-white/20 text-white border-white/30 text-[10px]">Premium</Badge>
+                        <Badge className="bg-white/20 text-white border-white/30 text-2xs">Premium</Badge>
                       </div>
                       <div className="text-violet-200 text-sm">{fw.name} — {fw.fullName}</div>
                     </div>
@@ -1625,7 +1625,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <h3 className="text-sm font-bold text-slate-800">Missing Data Fields</h3>
-                        <div className="flex items-center gap-3 text-[10px] text-slate-500">
+                        <div className="flex items-center gap-3 text-2xs text-slate-500">
                           <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-green-600" /> Available</span>
                           <span className="flex items-center gap-1"><AlertCircle className="h-3 w-3 text-amber-500" /> Partial</span>
                           <span className="flex items-center gap-1"><Circle className="h-3 w-3 text-red-400" /> Missing</span>
@@ -1658,7 +1658,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <h3 className="text-sm font-bold text-slate-800">PIN Data Connections</h3>
-                        <div className="flex items-center gap-3 text-[10px] text-slate-500">
+                        <div className="flex items-center gap-3 text-2xs text-slate-500">
                           <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> Available</span>
                           <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500" /> Partial</span>
                           <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-slate-300" /> Planned</span>
@@ -1669,12 +1669,12 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                           <div key={m.field} className="p-3 rounded-lg border border-slate-200 bg-white">
                             <div className="flex items-center justify-between mb-1.5">
                               <span className="text-xs font-semibold text-slate-700">{m.field}</span>
-                              <Badge variant="secondary" className={`text-[9px] ${availBadge(m.availability)}`}>
+                              <Badge variant="secondary" className={`text-2xs ${availBadge(m.availability)}`}>
                                 {m.availability === 'available' ? 'Available' : m.availability === 'partial' ? 'Partial' : 'Planned'}
                               </Badge>
                             </div>
-                            <div className="text-[11px] text-slate-600 mb-2">{m.pearlParameter}</div>
-                            <button className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold transition-all ${
+                            <div className="text-xs text-slate-600 mb-2">{m.pearlParameter}</div>
+                            <button className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-2xs font-bold transition-all ${
                               m.availability === 'available' ? 'bg-green-600 text-white hover:bg-green-700' :
                               m.availability === 'partial' ? 'bg-amber-500 text-white hover:bg-amber-600' :
                               'bg-slate-200 text-slate-500 cursor-not-allowed'
@@ -1694,12 +1694,12 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                       <div className="flex items-center justify-between">
                         <h3 className="text-sm font-bold text-slate-800">Draft Disclosure Narrative</h3>
                         <div className="flex items-center gap-2">
-                          <Badge className="bg-violet-100 text-violet-700 border-violet-200 text-[10px]">AI-Generated Draft</Badge>
+                          <Badge className="bg-violet-100 text-violet-700 border-violet-200 text-2xs">AI-Generated Draft</Badge>
                         </div>
                       </div>
                       <div className="relative rounded-xl border border-violet-200 bg-gradient-to-br from-violet-50/50 to-indigo-50/30 p-4">
                         <div className="absolute top-3 right-3 flex items-center gap-1">
-                          <button className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+                          <button className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-2xs font-medium bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
                             <Download className="h-3 w-3" /> Copy
                           </button>
                         </div>
@@ -1712,7 +1712,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                           <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
                           <div>
                             <div className="text-xs font-semibold text-amber-800">Placeholders require your data</div>
-                            <div className="text-[11px] text-amber-700 mt-0.5">Bracketed values like [X], [N], [Company] must be replaced with actual figures from your facility data. Connect PIN data sources in Step 2 to auto-populate where available.</div>
+                            <div className="text-xs text-amber-700 mt-0.5">Bracketed values like [X], [N], [Company] must be replaced with actual figures from your facility data. Connect PIN data sources in Step 2 to auto-populate where available.</div>
                           </div>
                         </div>
                       </div>
@@ -1733,11 +1733,11 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="text-sm font-semibold text-slate-800">{ex.name}</div>
-                              <div className="text-[11px] text-slate-500">{ex.description}</div>
+                              <div className="text-xs text-slate-500">{ex.description}</div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Badge variant="secondary" className="text-[9px] bg-slate-100 text-slate-600 border-slate-200 capitalize">{ex.type}</Badge>
-                              <button className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold bg-violet-600 text-white hover:bg-violet-700 transition-colors">
+                              <Badge variant="secondary" className="text-2xs bg-slate-100 text-slate-600 border-slate-200 capitalize">{ex.type}</Badge>
+                              <button className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-2xs font-bold bg-violet-600 text-white hover:bg-violet-700 transition-colors">
                                 <Download className="h-3 w-3" /> Export
                               </button>
                             </div>
@@ -1765,7 +1765,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                   >
                     <ChevronRight className="h-3.5 w-3.5 rotate-180" /> Previous
                   </button>
-                  <div className="text-[10px] text-slate-400">Step {gapWizardStep} of 4</div>
+                  <div className="text-2xs text-slate-400">Step {gapWizardStep} of 4</div>
                   {gapWizardStep < 4 ? (
                     <button
                       onClick={() => setGapWizardStep(Math.min(4, gapWizardStep + 1) as WizardStep)}
@@ -1805,7 +1805,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                       <ArrowRight className="h-3.5 w-3.5 text-blue-600 rotate-180" />
                       Upstream — Ingredient Sourcing
                     </div>
-                    <div className="text-[11px] text-slate-600 space-y-1.5">
+                    <div className="text-xs text-slate-600 space-y-1.5">
                       <div className="flex justify-between">
                         <span>Facilities in water-stressed basins</span>
                         <span className="font-medium text-amber-600">{facilitiesData.filter(f => f.waterRiskScore >= 50).length} of {facilitiesData.length}</span>
@@ -1819,7 +1819,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                         <span className="font-medium text-red-600">High (Chesapeake region)</span>
                       </div>
                     </div>
-                    <div className="text-[9px] text-slate-400 mt-2 italic">Source: WRI Aqueduct water stress data + ATTAINS watershed impairments</div>
+                    <div className="text-2xs text-slate-400 mt-2 italic">Source: WRI Aqueduct water stress data + ATTAINS watershed impairments</div>
                   </div>
                   {/* Downstream */}
                   <div className="rounded-lg border border-slate-200 p-3">
@@ -1827,7 +1827,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                       <ArrowRight className="h-3.5 w-3.5 text-blue-600" />
                       Downstream — Effluent &amp; Discharge
                     </div>
-                    <div className="text-[11px] text-slate-600 space-y-1.5">
+                    <div className="text-xs text-slate-600 space-y-1.5">
                       <div className="flex justify-between">
                         <span>Facilities discharging to Bay tributaries</span>
                         <span className="font-medium">{facilitiesData.filter(f => ['MD', 'VA'].includes(f.state)).length}</span>
@@ -1869,19 +1869,19 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                       <DollarSign className="h-4 w-4 text-emerald-600" />
                       <span className="text-xs font-bold text-slate-800">Seafood Industry Value</span>
                     </div>
-                    <div className="text-[11px] text-slate-600 space-y-1.5">
+                    <div className="text-xs text-slate-600 space-y-1.5">
                       <div className="flex justify-between"><span>MD blue crab harvest</span><span className="font-medium">$89M/yr</span></div>
                       <div className="flex justify-between"><span>MD oyster harvest</span><span className="font-medium">$32M/yr</span></div>
                       <div className="flex justify-between"><span>Bay seafood economy (total)</span><span className="font-bold text-emerald-700">$600M+/yr</span></div>
                     </div>
-                    <div className="text-[9px] text-slate-400 mt-2 italic">Cleaner Bay water directly supports commercial harvest viability and market premium</div>
+                    <div className="text-2xs text-slate-400 mt-2 italic">Cleaner Bay water directly supports commercial harvest viability and market premium</div>
                   </div>
                   <div className="rounded-lg border border-blue-200 bg-blue-50/30 p-3">
                     <div className="flex items-center gap-2 mb-2">
                       <TrendingUp className="h-4 w-4 text-blue-600" />
                       <span className="text-xs font-bold text-slate-800">Nutrient Credit Value</span>
                     </div>
-                    <div className="text-[11px] text-slate-600 space-y-1.5">
+                    <div className="text-xs text-slate-600 space-y-1.5">
                       <div className="flex justify-between"><span>TN credits generated</span><span className="font-medium">{portfolioScores.totalTN.toFixed(1)} lbs</span></div>
                       <div className="flex justify-between"><span>TP credits generated</span><span className="font-medium">{portfolioScores.totalTP.toFixed(1)} lbs</span></div>
                       <div className="flex justify-between"><span>Market value (TN@$8-12/lb)</span><span className="font-bold text-blue-700">${(portfolioScores.totalTN * 10).toLocaleString()}</span></div>
@@ -1893,7 +1893,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                       <Heart className="h-4 w-4 text-cyan-600" />
                       <span className="text-xs font-bold text-slate-800">Ecosystem Services</span>
                     </div>
-                    <div className="text-[11px] text-slate-600 space-y-1.5">
+                    <div className="text-xs text-slate-600 space-y-1.5">
                       <div className="flex justify-between"><span>Oyster reef value (per acre)</span><span className="font-medium">$700K/yr</span></div>
                       <div className="flex justify-between"><span>Water filtration (per oyster)</span><span className="font-medium">50 gal/day</span></div>
                       <div className="flex justify-between"><span>Habitat co-benefits</span><span className="font-medium text-cyan-700">Reef + nursery</span></div>
@@ -1923,7 +1923,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                       <DollarSign className="h-4 w-4 text-emerald-600" />
                       <span className="text-xs font-bold text-slate-800">Financial Materiality</span>
                     </div>
-                    <div className="text-[11px] text-slate-600 space-y-1">
+                    <div className="text-xs text-slate-600 space-y-1">
                       <div className="flex justify-between"><span>Water risk exposure</span><span className="font-medium">${(portfolioScores.highRisk * 850_000).toLocaleString()}</span></div>
                       <div className="flex justify-between"><span>Compliance cost avoidance</span><span className="font-medium text-emerald-600">$340,000/yr</span></div>
                       <div className="flex justify-between"><span>Insurance premium reduction</span><span className="font-medium text-emerald-600">~8-12%</span></div>
@@ -1934,7 +1934,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                       <Award className="h-4 w-4 text-blue-600" />
                       <span className="text-xs font-bold text-slate-800">Sustainability Rating Impact</span>
                     </div>
-                    <div className="text-[11px] text-slate-600 space-y-1">
+                    <div className="text-xs text-slate-600 space-y-1">
                       <div className="flex justify-between"><span>MSCI Sustainability Rating</span><span className="font-medium">A → AA (projected)</span></div>
                       <div className="flex justify-between"><span>Sustainalytics Risk</span><span className="font-medium">Medium → Low</span></div>
                       <div className="flex justify-between"><span>CDP Water Score</span><span className="font-medium">C → B</span></div>
@@ -1945,7 +1945,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                       <Users className="h-4 w-4 text-purple-600" />
                       <span className="text-xs font-bold text-slate-800">Stakeholder Value</span>
                     </div>
-                    <div className="text-[11px] text-slate-600 space-y-1">
+                    <div className="text-xs text-slate-600 space-y-1">
                       <div className="flex justify-between"><span>Community benefit</span><span className="font-medium">{portfolioScores.monitored} watersheds</span></div>
                       <div className="flex justify-between"><span>Jobs supported</span><span className="font-medium">12-18 FTE</span></div>
                       <div className="flex justify-between"><span>EJ community overlap</span><span className="font-medium">3 of {portfolioScores.total} sites</span></div>
@@ -1955,7 +1955,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                 {/* Projection banner */}
                 <div className="rounded-md border border-amber-200 bg-amber-50/50 px-3 py-1.5 flex items-center gap-2">
                   <BarChart3 className="h-3 w-3 text-amber-600 flex-shrink-0" />
-                  <span className="text-[10px] text-amber-700">Rating projections are modeled estimates. Actual ESG rating changes depend on verified deployment data and reporting agency methodology.</span>
+                  <span className="text-2xs text-amber-700">Rating projections are modeled estimates. Actual ESG rating changes depend on verified deployment data and reporting agency methodology.</span>
                 </div>
               </div>
             )}
@@ -1985,7 +1985,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                   { metric: 'Bay Ecosystem Restoration Investment', yours: 72, industry: 18, better: 'higher' as const },
                 ].map(b => (
                   <div key={b.metric} className="space-y-1">
-                    <div className="flex justify-between text-[11px]">
+                    <div className="flex justify-between text-xs">
                       <span className="text-slate-700 font-medium">{b.metric}</span>
                       <span className="text-slate-500">
                         You: <span className="font-bold text-emerald-700">{Math.round(b.yours)}%</span>
@@ -2018,25 +2018,25 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                   <div className="rounded-lg border border-green-200 bg-green-50/50 p-3 text-center">
                     <Shield className="h-5 w-5 text-green-600 mx-auto mb-1" />
                     <div className="text-lg font-bold text-green-700">{facilitiesData.filter(f => f.alertLevel === 'none').length}</div>
-                    <div className="text-[10px] text-green-600">Clean Record</div>
+                    <div className="text-2xs text-green-600">Clean Record</div>
                   </div>
                   <div className="rounded-lg border border-yellow-200 bg-yellow-50/50 p-3 text-center">
                     <Eye className="h-5 w-5 text-yellow-600 mx-auto mb-1" />
                     <div className="text-lg font-bold text-yellow-700">{facilitiesData.filter(f => f.alertLevel === 'low').length}</div>
-                    <div className="text-[10px] text-yellow-600">Watch List</div>
+                    <div className="text-2xs text-yellow-600">Watch List</div>
                   </div>
                   <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3 text-center">
                     <AlertTriangle className="h-5 w-5 text-amber-600 mx-auto mb-1" />
                     <div className="text-lg font-bold text-amber-700">{facilitiesData.filter(f => f.alertLevel === 'medium').length}</div>
-                    <div className="text-[10px] text-amber-600">Violations</div>
+                    <div className="text-2xs text-amber-600">Violations</div>
                   </div>
                   <div className="rounded-lg border border-red-200 bg-red-50/50 p-3 text-center">
                     <Scale className="h-5 w-5 text-red-600 mx-auto mb-1" />
                     <div className="text-lg font-bold text-red-700">{facilitiesData.filter(f => f.alertLevel === 'high').length}</div>
-                    <div className="text-[10px] text-red-600">Enforcement Action</div>
+                    <div className="text-2xs text-red-600">Enforcement Action</div>
                   </div>
                 </div>
-                <div className="text-[10px] text-slate-500 flex items-center gap-1">
+                <div className="text-2xs text-slate-500 flex items-center gap-1">
                   <ExternalLink className="h-3 w-3" />
                   Source: EPA ECHO facility compliance database · Updated at page load
                 </div>
@@ -2062,20 +2062,20 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                       <Globe className="h-3.5 w-3.5 text-emerald-600" />
                       Public Impact Narrative
                     </div>
-                    <div className="text-[11px] text-slate-600 leading-relaxed">
+                    <div className="text-xs text-slate-600 leading-relaxed">
                       "{companyName} actively invests in nature-based water infrastructure across {facilitiesData.length} facilities,
                       treating stormwater runoff and restoring aquatic ecosystems in the communities where we operate.
                       Our PIN biofiltration systems combine oyster-powered natural filtration with real-time water quality monitoring,
                       demonstrating measurable environmental improvement at every deployment."
                     </div>
-                    <div className="text-[9px] text-slate-400 italic">Auto-generated narrative — customize for annual report, press releases, investor comms</div>
+                    <div className="text-2xs text-slate-400 italic">Auto-generated narrative — customize for annual report, press releases, investor comms</div>
                   </div>
                   <div className="rounded-lg border border-slate-200 p-3 space-y-2">
                     <div className="text-xs font-bold text-slate-800 flex items-center gap-2">
                       <Star className="h-3.5 w-3.5 text-amber-500" />
                       Trust Indicators
                     </div>
-                    <div className="text-[11px] text-slate-600 space-y-1.5">
+                    <div className="text-xs text-slate-600 space-y-1.5">
                       <div className="flex items-center gap-2">
                         <div className="w-4 h-4 rounded-full bg-green-100 flex items-center justify-center"><Zap className="h-2.5 w-2.5 text-green-600" /></div>
                         <span>Real-time monitoring — data available 24/7, not self-reported</span>
@@ -2133,7 +2133,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                           <span className="text-slate-500">{g.amount}</span>
                           <span className="text-slate-400">{g.period}</span>
                           <span className="text-slate-500">Rem: {g.remaining}</span>
-                          <Badge variant="outline" className={`text-[9px] ${g.status === 'New' ? 'border-blue-300 text-blue-700' : 'border-green-300 text-green-700'}`}>{g.status}</Badge>
+                          <Badge variant="outline" className={`text-2xs ${g.status === 'New' ? 'border-blue-300 text-blue-700' : 'border-green-300 text-green-700'}`}>{g.status}</Badge>
                         </div>
                       </div>
                     ))}
@@ -2160,7 +2160,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                       { label: 'Pass-Through Rate', value: '67%', color: 'text-slate-700', bg: 'bg-slate-50 border-slate-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-lg border p-3 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className={`text-xl font-bold ${k.color} mt-1`}>{k.value}</div>
                       </div>
                     ))}
@@ -2193,8 +2193,8 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                         </div>
                         <div className="flex items-center gap-3">
                           <span className="text-slate-500">{o.amount}</span>
-                          <Badge variant="outline" className="text-[9px] border-purple-300 text-purple-700">{o.match}% match</Badge>
-                          <Badge variant="outline" className="text-[9px]">{o.status}</Badge>
+                          <Badge variant="outline" className="text-2xs border-purple-300 text-purple-700">{o.match}% match</Badge>
+                          <Badge variant="outline" className="text-2xs">{o.status}</Badge>
                         </div>
                       </div>
                     ))}
@@ -2221,7 +2221,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                       { label: 'Pipeline Value', value: '$6.7M', color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-lg border p-3 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className={`text-xl font-bold ${k.color} mt-1`}>{k.value}</div>
                       </div>
                     ))}
@@ -2255,9 +2255,9 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                 { label: 'Portfolio Exposure', value: '34%', sub: 'facilities in high-stress zones', color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200' },
               ].map(t => (
                 <div key={t.label} className={`rounded-xl border p-4 ${t.bg}`}>
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{t.label}</div>
+                  <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{t.label}</div>
                   <div className={`text-2xl font-bold ${t.color} mt-1`}>{t.value}</div>
-                  <div className="text-[10px] text-slate-500 mt-1">{t.sub}</div>
+                  <div className="text-2xs text-slate-500 mt-1">{t.sub}</div>
                 </div>
               ))}
             </div>
@@ -2277,7 +2277,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                   <div key={c.category} className={`border rounded-lg p-4 ${c.bg}`}>
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="text-sm font-semibold text-slate-800">{c.category}</h4>
-                      <Badge variant="outline" className={`text-[10px] ${c.color}`}>{c.trend}</Badge>
+                      <Badge variant="outline" className={`text-2xs ${c.color}`}>{c.trend}</Badge>
                     </div>
                     <p className="text-xs text-slate-500 leading-relaxed">{c.detail}</p>
                   </div>
@@ -2308,7 +2308,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
               </div>
             </div>
 
-            <div className="text-[10px] text-slate-400 italic">
+            <div className="text-2xs text-slate-400 italic">
               Projections based on WRI Aqueduct, CDP Water Security responses, and global ESG regulatory tracking. Actual values will populate as portfolio assessments accumulate.
             </div>
           </CardContent>
@@ -2329,7 +2329,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                   { label: 'Compliance Rate', value: '97%', color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
                   { label: 'Disclosure Score', value: '82/100', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
                   { label: 'Supply Chain Risk', value: 'Low', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' }
-                ].map(k => <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}><div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div><div className={`text-2xl font-bold ${k.color} mt-1`}>{k.value}</div></div>)}
+                ].map(k => <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}><div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div><div className={`text-2xl font-bold ${k.color} mt-1`}>{k.value}</div></div>)}
               </div></CardContent></Card>
             );
             case 'scorecard-grades': return DS(
@@ -2344,7 +2344,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
               <Card><CardHeader><CardTitle>Sustainability Reports</CardTitle><CardDescription>Generated ESG reports and disclosures</CardDescription></CardHeader>
               <CardContent><div className="space-y-2">
                 {['Annual Sustainability Report', 'CDP Water Security Response', 'GRI Disclosure Index', 'TCFD Climate Report'].map(r =>
-                  <div key={r} className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50"><span className="text-sm text-slate-700">{r}</span><Badge variant="outline" className="text-[10px]">Generate</Badge></div>
+                  <div key={r} className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50"><span className="text-sm text-slate-700">{r}</span><Badge variant="outline" className="text-2xs">Generate</Badge></div>
                 )}
               </div></CardContent></Card>
             );
@@ -2388,14 +2388,14 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                   <CardContent>
                     <div className={`rounded-xl border p-4 flex items-center justify-between ${scoreBg}`}>
                       <div>
-                        <div className="text-[10px] font-bold uppercase tracking-wider opacity-70">Eco Score</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider opacity-70">Eco Score</div>
                         <div className="text-xs opacity-80 mt-1">
                           {ecoData ? `${ecoData.totalTE} T&E species · ${ecoData.aquaticTE} aquatic · ${ecoData.criticalHabitat} critical habitat` : 'No T&E data available'}
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="text-2xl font-bold">{ecoScore}</div>
-                        <Badge variant="outline" className="text-[10px] mt-1">{label}</Badge>
+                        <Badge variant="outline" className="text-2xs mt-1">{label}</Badge>
                       </div>
                     </div>
                   </CardContent>
@@ -2415,31 +2415,31 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                     <CardTitle className="flex items-center gap-2">
                       <Bug className="h-5 w-5 text-rose-600" />
                       Threatened & Endangered Species — {STATE_NAMES[focusedState] || focusedState}
-                      <Badge variant="secondary" className="ml-1 text-[10px]">USFWS ECOS</Badge>
+                      <Badge variant="secondary" className="ml-1 text-2xs">USFWS ECOS</Badge>
                     </CardTitle>
                     <CardDescription>ESA-listed species near facility operations — supports TNFD &amp; GRI 304 disclosure</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       <div className="rounded-xl border p-4 bg-slate-50 border-slate-200">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total T&E</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Total T&E</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{federalTotal}</div>
-                        <div className="text-[10px] text-slate-400">Federal ESA</div>
+                        <div className="text-2xs text-slate-400">Federal ESA</div>
                       </div>
                       <div className="rounded-xl border p-4 bg-blue-50 border-blue-200">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Aquatic T&E</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Aquatic T&E</div>
                         <div className="text-2xl font-bold text-blue-700 mt-1">{federalAquatic}</div>
-                        <div className="text-[10px] text-slate-400">Freshwater / marine</div>
+                        <div className="text-2xs text-slate-400">Freshwater / marine</div>
                       </div>
                       <div className="rounded-xl border p-4 bg-rose-50 border-rose-200">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Critical Habitat</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Critical Habitat</div>
                         <div className="text-2xl font-bold text-rose-700 mt-1">{critHab}</div>
-                        <div className="text-[10px] text-slate-400">Designated areas</div>
+                        <div className="text-2xs text-slate-400">Designated areas</div>
                       </div>
                       <div className="rounded-xl border p-4 bg-amber-50 border-amber-200">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Eco Score</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Eco Score</div>
                         <div className="text-2xl font-bold text-amber-700 mt-1">{getEcoScore(focusedState)}</div>
-                        <div className="text-[10px] text-slate-400">{ecoScoreLabel(getEcoScore(focusedState))}</div>
+                        <div className="text-2xs text-slate-400">{ecoScoreLabel(getEcoScore(focusedState))}</div>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -2565,26 +2565,26 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                   <span className={`block h-2.5 w-2.5 rounded-full ${selectedFac.waterRiskScore >= 70 ? 'bg-red-400' : selectedFac.waterRiskScore >= 40 ? 'bg-amber-400' : 'bg-green-400'}`} />
                   <div>
                     <div className="text-lg font-bold text-slate-800">{selectedFac.waterRiskScore}</div>
-                    <div className="text-[10px] text-slate-500">Water Risk</div>
+                    <div className="text-2xs text-slate-500">Water Risk</div>
                   </div>
                 </div>
                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 flex items-center gap-2">
                   <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                   <div>
                     <div className="text-lg font-bold text-slate-800">{selectedFac.state}</div>
-                    <div className="text-[10px] text-slate-500">State</div>
+                    <div className="text-2xs text-slate-500">State</div>
                   </div>
                 </div>
                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 flex items-center gap-2">
                   <AlertTriangle className={`h-3.5 w-3.5 shrink-0 ${selectedFac.activeAlerts > 0 ? 'text-amber-500' : 'text-slate-300'}`} />
                   <div>
                     <div className="text-lg font-bold text-slate-800">{selectedFac.activeAlerts}</div>
-                    <div className="text-[10px] text-slate-500">Alerts</div>
+                    <div className="text-2xs text-slate-500">Alerts</div>
                   </div>
                 </div>
                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
                   <div className="text-lg font-bold text-slate-800">{selectedFac.tssEfficiency ? `${selectedFac.tssEfficiency}%` : '--'}</div>
-                  <div className="text-[10px] text-slate-500 mb-1">TSS Efficiency</div>
+                  <div className="text-2xs text-slate-500 mb-1">TSS Efficiency</div>
                   {selectedFac.tssEfficiency && (
                     <div className="h-1.5 rounded-full bg-slate-200 overflow-hidden">
                       <div className={`h-full rounded-full ${selectedFac.tssEfficiency >= 80 ? 'bg-green-500' : selectedFac.tssEfficiency >= 50 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${selectedFac.tssEfficiency}%` }} />
@@ -2595,7 +2595,7 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                   <Heart className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                   <div>
                     <div className="text-lg font-bold text-slate-800">{selectedFac.ejScore ?? '--'}</div>
-                    <div className="text-[10px] text-slate-500">EJ Score</div>
+                    <div className="text-2xs text-slate-500">EJ Score</div>
                   </div>
                 </div>
                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 flex items-center gap-2">
@@ -2613,23 +2613,23 @@ export function ESGManagementCenter({ companyName = 'PEARL Portfolio', facilitie
                 <div className="grid grid-cols-4 gap-2">
                   <div className="rounded-md bg-blue-50 p-2 text-center">
                     <div className="text-sm font-bold text-blue-700">{selectedFac.gallonsTreated ? (selectedFac.gallonsTreated / 1000).toFixed(0) + 'K' : '--'}</div>
-                    <div className="text-[9px] text-blue-600">Gallons</div>
+                    <div className="text-2xs text-blue-600">Gallons</div>
                   </div>
                   <div className="rounded-md bg-indigo-50 p-2 text-center">
                     <div className="text-sm font-bold text-indigo-700">{selectedFac.tnReduced?.toFixed(1) || '--'}</div>
-                    <div className="text-[9px] text-indigo-600">lbs TN</div>
+                    <div className="text-2xs text-indigo-600">lbs TN</div>
                   </div>
                   <div className="rounded-md bg-purple-50 p-2 text-center">
                     <div className="text-sm font-bold text-purple-700">{selectedFac.tpReduced?.toFixed(1) || '--'}</div>
-                    <div className="text-[9px] text-purple-600">lbs TP</div>
+                    <div className="text-2xs text-purple-600">lbs TP</div>
                   </div>
                   <div className="rounded-md bg-emerald-50 p-2 text-center">
                     <div className="text-sm font-bold text-emerald-700">{selectedFac.tssReduced?.toLocaleString() || '--'}</div>
-                    <div className="text-[9px] text-emerald-600">lbs TSS</div>
+                    <div className="text-2xs text-emerald-600">lbs TSS</div>
                   </div>
                 </div>
               )}
-              <div className="text-[10px] text-slate-500 space-y-0.5">
+              <div className="text-2xs text-slate-500 space-y-0.5">
                 {selectedFac.receivingWaterbody && <div>Receiving waterbody: <span className="font-medium text-slate-700">{selectedFac.receivingWaterbody}</span></div>}
                 {selectedFac.huc12 && <div>HUC-12: <span className="font-mono text-slate-600">{selectedFac.huc12}</span></div>}
                 <div>Water risk derived from EPA ATTAINS impairment data. Compliance from EPA ECHO. EJ burden from EJScreen.</div>

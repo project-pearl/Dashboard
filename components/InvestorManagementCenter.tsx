@@ -485,7 +485,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
   // ── Text sanitizer for PDF ──
 
   const SeverityBadge = ({ level }: { level: 'high' | 'medium' | 'low' }) => (
-    <Badge variant="outline" className={`text-[9px] ${
+    <Badge variant="outline" className={`text-2xs ${
       level === 'high' ? 'border-red-300 bg-red-50 text-red-700' :
       level === 'medium' ? 'border-amber-300 bg-amber-50 text-amber-700' :
       'border-green-300 bg-green-50 text-green-700'
@@ -499,11 +499,11 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                 rating === 'C' ? 'border-amber-300 bg-amber-50 text-amber-700' :
                 rating === 'D' ? 'border-orange-300 bg-orange-50 text-orange-700' :
                 'border-red-300 bg-red-50 text-red-700';
-    return <Badge variant="outline" className={`text-[9px] ${cls}`}>{rating}</Badge>;
+    return <Badge variant="outline" className={`text-2xs ${cls}`}>{rating}</Badge>;
   };
 
   const StatusBadge = ({ status }: { status: 'above' | 'at' | 'below' }) => (
-    <Badge variant="outline" className={`text-[9px] ${
+    <Badge variant="outline" className={`text-2xs ${
       status === 'above' ? 'border-green-300 bg-green-50 text-green-700' :
       status === 'at' ? 'border-amber-300 bg-amber-50 text-amber-700' :
       'border-red-300 bg-red-50 text-red-700'
@@ -574,7 +574,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="text-base font-bold text-slate-800 leading-tight">{section.label}</div>
-                      <div className="mt-1 min-h-[32px] text-[11px] text-slate-500 leading-4 line-clamp-2">
+                      <div className="mt-1 min-h-[32px] text-xs text-slate-500 leading-4 line-clamp-2">
                         {sectionDescription || '\u00A0'}
                       </div>
                     </div>
@@ -584,7 +584,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                   </div>
                 </button>
                 {isSectionBodyOpen(section.id) && (
-                  <div className="p-4 text-[11px] leading-5 text-slate-700">
+                  <div className="p-4 text-xs leading-5 text-slate-700">
                     {children}
                   </div>
                 )}
@@ -603,7 +603,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <div className="text-xs font-semibold text-amber-700">Portfolio Strengths</div>
-                    <div className="text-[11px] text-slate-700 space-y-1">
+                    <div className="text-xs text-slate-700 space-y-1">
                       <div className="flex items-start gap-1.5">
                         <TrendingUp className="h-3 w-3 text-green-500 mt-0.5 flex-shrink-0" />
                         <span><span className="font-semibold">{portfolioScores.esgACount}/{portfolioScores.total} companies</span> rated ESG A</span>
@@ -620,7 +620,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                   </div>
                   <div className="space-y-1.5">
                     <div className="text-xs font-semibold text-red-700">Risk Flags</div>
-                    <div className="text-[11px] text-slate-700 space-y-1">
+                    <div className="text-xs text-slate-700 space-y-1">
                       {portfolioScores.highRisk > 0 && (
                         <div className="flex items-start gap-1.5">
                           <AlertTriangle className="h-3 w-3 text-red-500 mt-0.5 flex-shrink-0" />
@@ -645,7 +645,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                         {portfolioScores.avgRisk}
                       </div>
                       <div className="text-xs text-slate-500 font-medium">Avg Water Risk Score</div>
-                      <div className="text-[10px] text-slate-400 mt-1">{portfolioScores.total} companies | {portfolioScores.monitored} PIN-verified</div>
+                      <div className="text-2xs text-slate-400 mt-1">{portfolioScores.total} companies | {portfolioScores.monitored} PIN-verified</div>
                     </div>
                   </div>
                 </div>
@@ -666,7 +666,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                   <div key={kpi.label} className={`rounded-lg border p-3 ${kpi.bg}`}>
                     <div className="flex items-center gap-1.5 mb-1">
                       <kpi.icon className={`h-3.5 w-3.5 ${kpi.color}`} />
-                      <span className="text-[10px] text-slate-500 font-medium">{kpi.label}</span>
+                      <span className="text-2xs text-slate-500 font-medium">{kpi.label}</span>
                     </div>
                     <div className={`text-2xl font-bold ${kpi.color}`}>{kpi.value}</div>
                   </div>
@@ -684,7 +684,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                     <div className="flex items-center gap-1.5">
                       {OVERLAYS.map(o => (
                         <button key={o.id} onClick={() => setOverlay(o.id)}
-                          className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors ${
+                          className={`flex items-center gap-1 px-2 py-1 rounded text-2xs font-medium transition-colors ${
                             overlay === o.id ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
                           }`}>
                           <o.icon className="h-3 w-3" /> {o.label}
@@ -711,7 +711,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                     <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search companies..."
                       className="flex-1 text-xs bg-transparent outline-none placeholder:text-slate-400" />
                     <select value={filterLevel} onChange={e => setFilterLevel(e.target.value as any)}
-                      className="text-[10px] px-1.5 py-0.5 rounded border border-slate-200 bg-white text-slate-600">
+                      className="text-2xs px-1.5 py-0.5 rounded border border-slate-200 bg-white text-slate-600">
                       <option value="all">All</option>
                       <option value="high">High</option>
                       <option value="medium">Medium</option>
@@ -729,14 +729,14 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                         }`}>
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-semibold text-slate-800">{c.name}</span>
-                          <Badge variant="outline" className={`text-[9px] ${
+                          <Badge variant="outline" className={`text-2xs ${
                             c.alertLevel === 'high' ? 'border-red-300 bg-red-50 text-red-700' :
                             c.alertLevel === 'medium' ? 'border-amber-300 bg-amber-50 text-amber-700' :
                             c.alertLevel === 'low' ? 'border-green-300 bg-green-50 text-green-700' :
                             'border-slate-200 bg-slate-50 text-slate-500'
                           }`}>{c.alertLevel}</Badge>
                         </div>
-                        <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-500">
+                        <div className="flex items-center gap-2 mt-0.5 text-2xs text-slate-500">
                           <span>{c.sector}</span>
                           <span>${c.aum}M</span>
                           <span>Risk: {c.waterRiskScore}</span>
@@ -754,19 +754,19 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><Briefcase className="h-4 w-4 text-amber-600" /> Portfolio Snapshot</CardTitle>
-                  <CardDescription className="text-[11px]">Holdings by sector with water risk exposure</CardDescription>
+                  <CardDescription className="text-xs">Holdings by sector with water risk exposure</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-1.5 max-h-[240px] overflow-y-auto">
                     {companiesData.map(c => (
-                      <div key={c.id} className="flex items-center justify-between px-3 py-1.5 rounded-md bg-white border border-slate-100 text-[11px]">
+                      <div key={c.id} className="flex items-center justify-between px-3 py-1.5 rounded-md bg-white border border-slate-100 text-xs">
                         <div>
                           <span className="font-medium text-slate-700">{c.name}</span>
                           <span className="text-slate-400 ml-2">{c.sector} | {c.state}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-amber-700 font-medium">${c.aum}M</span>
-                          <Badge variant="outline" className={`text-[9px] ${
+                          <Badge variant="outline" className={`text-2xs ${
                             c.waterRiskScore >= 70 ? 'border-red-300 bg-red-50 text-red-700' :
                             c.waterRiskScore >= 40 ? 'border-amber-300 bg-amber-50 text-amber-700' :
                             'border-green-300 bg-green-50 text-green-700'
@@ -785,25 +785,25 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><BarChart3 className="h-4 w-4 text-amber-600" /> Portfolio Risk Matrix</CardTitle>
-                  <CardDescription className="text-[11px]">Water risk vs. AUM exposure for each portfolio holding</CardDescription>
+                  <CardDescription className="text-xs">Water risk vs. AUM exposure for each portfolio holding</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-3">
                     <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-center">
                       <div className="text-2xl font-bold text-red-700">${portfolioScores.exposedAUM}M</div>
-                      <div className="text-[10px] text-red-600 font-medium">At-Risk AUM</div>
+                      <div className="text-2xs text-red-600 font-medium">At-Risk AUM</div>
                     </div>
                     <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-center">
                       <div className="text-2xl font-bold text-amber-700">{Math.round(portfolioScores.exposedAUM / Math.max(portfolioScores.totalAUM, 1) * 100)}%</div>
-                      <div className="text-[10px] text-amber-600 font-medium">Portfolio Exposure</div>
+                      <div className="text-2xs text-amber-600 font-medium">Portfolio Exposure</div>
                     </div>
                     <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-center">
                       <div className="text-2xl font-bold text-green-700">{portfolioScores.lowRisk}</div>
-                      <div className="text-[10px] text-green-600 font-medium">Low-Risk Holdings</div>
+                      <div className="text-2xs text-green-600 font-medium">Low-Risk Holdings</div>
                     </div>
                   </div>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-[11px]">
+                    <table className="w-full text-xs">
                       <thead>
                         <tr className="border-b border-slate-200 text-left">
                           <th className="pb-2 font-semibold text-slate-600 pr-3">Company</th>
@@ -821,7 +821,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                             <td className="py-1.5 pr-3 text-slate-600">{c.sector}</td>
                             <td className="py-1.5 pr-3 text-slate-600 font-mono">{c.aum}</td>
                             <td className="py-1.5 pr-3">
-                              <Badge variant="outline" className={`text-[9px] ${
+                              <Badge variant="outline" className={`text-2xs ${
                                 c.waterRiskScore >= 70 ? 'border-red-300 bg-red-50 text-red-700' :
                                 c.waterRiskScore >= 40 ? 'border-amber-300 bg-amber-50 text-amber-700' :
                                 'border-green-300 bg-green-50 text-green-700'
@@ -843,7 +843,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-red-600" /> Water Risk Factor Analysis</CardTitle>
-                  <CardDescription className="text-[11px]">Key water risk categories and their financial implications for investors</CardDescription>
+                  <CardDescription className="text-xs">Key water risk categories and their financial implications for investors</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
@@ -854,9 +854,9 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                         'border-slate-200 bg-slate-50/50'
                       }`}>
                         <div className="flex-1">
-                          <div className="text-[11px] font-semibold text-slate-800">{rf.category}</div>
-                          <div className="text-[10px] text-slate-500 mt-0.5">{rf.description}</div>
-                          <div className="text-[10px] text-slate-600 mt-1"><span className="font-medium">Impact:</span> {rf.financialImpact}</div>
+                          <div className="text-xs font-semibold text-slate-800">{rf.category}</div>
+                          <div className="text-2xs text-slate-500 mt-0.5">{rf.description}</div>
+                          <div className="text-2xs text-slate-600 mt-1"><span className="font-medium">Impact:</span> {rf.financialImpact}</div>
                         </div>
                         <SeverityBadge level={rf.severity} />
                       </div>
@@ -871,7 +871,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><Target className="h-4 w-4 text-orange-600" /> Asset Exposure Analysis</CardTitle>
-                  <CardDescription className="text-[11px]">AUM concentration by water risk tier</CardDescription>
+                  <CardDescription className="text-xs">AUM concentration by water risk tier</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
@@ -885,13 +885,13 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                       return (
                         <div key={tier.tier} className={`rounded-lg p-3 ${tier.bg}`}>
                           <div className="flex items-center justify-between mb-1.5">
-                            <span className="text-[11px] font-semibold text-slate-800">{tier.tier}</span>
-                            <span className="text-[11px] font-bold text-slate-700">${tierAUM}M ({pct}%)</span>
+                            <span className="text-xs font-semibold text-slate-800">{tier.tier}</span>
+                            <span className="text-xs font-bold text-slate-700">${tierAUM}M ({pct}%)</span>
                           </div>
                           <div className="w-full h-2 bg-white/60 rounded-full overflow-hidden mb-2">
                             <div className={`h-full ${tier.color} rounded-full`} style={{ width: `${pct}%` }} />
                           </div>
-                          <div className="text-[10px] text-slate-500">
+                          <div className="text-2xs text-slate-500">
                             {tier.companies.map(c => c.name).join(', ') || 'No holdings'}
                           </div>
                         </div>
@@ -907,7 +907,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><Droplets className="h-4 w-4 text-blue-600" /> Water Stress Exposure</CardTitle>
-                  <CardDescription className="text-[11px]">Portfolio holdings mapped to WRI Aqueduct water stress basins</CardDescription>
+                  <CardDescription className="text-xs">Portfolio holdings mapped to WRI Aqueduct water stress basins</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -919,7 +919,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                     ].map(kpi => (
                       <div key={kpi.label} className={`rounded-lg border p-2 text-center ${kpi.bg}`}>
                         <div className={`text-lg font-bold ${kpi.color}`}>{kpi.value}</div>
-                        <div className="text-[9px] text-slate-500">{kpi.label}</div>
+                        <div className="text-2xs text-slate-500">{kpi.label}</div>
                       </div>
                     ))}
                   </div>
@@ -932,11 +932,11 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><AlertCircle className="h-4 w-4 text-red-600" /> Stressed Assets</CardTitle>
-                  <CardDescription className="text-[11px]">Holdings in water-stressed basins ranked by exposure</CardDescription>
+                  <CardDescription className="text-xs">Holdings in water-stressed basins ranked by exposure</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-[11px]">
+                    <table className="w-full text-xs">
                       <thead>
                         <tr className="border-b border-slate-200 text-left">
                           <th className="pb-2 font-semibold text-slate-600 pr-3">Company</th>
@@ -954,7 +954,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                             <td className="py-1.5 pr-3 font-medium text-slate-800">{c.name}</td>
                             <td className="py-1.5 pr-3 text-slate-600">{c.state}</td>
                             <td className="py-1.5 pr-3">
-                              <Badge variant="outline" className={`text-[9px] ${
+                              <Badge variant="outline" className={`text-2xs ${
                                 c.stressLevel === 'extreme' ? 'border-red-300 bg-red-50 text-red-700' :
                                 c.stressLevel === 'high' ? 'border-orange-300 bg-orange-50 text-orange-700' :
                                 'border-amber-300 bg-amber-50 text-amber-700'
@@ -977,7 +977,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><Globe className="h-4 w-4 text-cyan-600" /> Basin-Level Analysis</CardTitle>
-                  <CardDescription className="text-[11px]">Water basin health and availability outlook for portfolio regions</CardDescription>
+                  <CardDescription className="text-xs">Water basin health and availability outlook for portfolio regions</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
@@ -994,16 +994,16 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                         'border-green-200 bg-green-50/50'
                       }`}>
                         <div className="flex items-center justify-between mb-0.5">
-                          <span className="text-[11px] font-semibold text-slate-800">{b.basin}</span>
-                          <Badge variant="outline" className={`text-[9px] ${
+                          <span className="text-xs font-semibold text-slate-800">{b.basin}</span>
+                          <Badge variant="outline" className={`text-2xs ${
                             b.outlook === 'Critical' ? 'border-red-300 text-red-700' :
                             b.outlook === 'Severe' ? 'border-orange-300 text-orange-700' :
                             b.outlook === 'Moderate' ? 'border-amber-300 text-amber-700' :
                             'border-green-300 text-green-700'
                           }`}>{b.outlook}</Badge>
                         </div>
-                        <div className="text-[10px] text-slate-500">{b.detail}</div>
-                        <div className="text-[10px] text-slate-400 mt-0.5">Holdings: {b.holdings}</div>
+                        <div className="text-2xs text-slate-500">{b.detail}</div>
+                        <div className="text-2xs text-slate-400 mt-0.5">Holdings: {b.holdings}</div>
                       </div>
                     ))}
                   </div>
@@ -1016,34 +1016,34 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><Shield className="h-4 w-4 text-amber-600" /> Regulatory Compliance Overview</CardTitle>
-                  <CardDescription className="text-[11px]">Portfolio-wide compliance status and violation tracking</CardDescription>
+                  <CardDescription className="text-xs">Portfolio-wide compliance status and violation tracking</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
                     <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-center">
                       <div className="text-2xl font-bold text-green-700">{portfolioScores.avgCompliance}%</div>
-                      <div className="text-[10px] text-green-600">Avg Compliance</div>
+                      <div className="text-2xs text-green-600">Avg Compliance</div>
                     </div>
                     <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-center">
                       <div className="text-2xl font-bold text-red-700">{companiesData.reduce((s, c) => s + c.activeAlerts, 0)}</div>
-                      <div className="text-[10px] text-red-600">Active Violations</div>
+                      <div className="text-2xs text-red-600">Active Violations</div>
                     </div>
                     <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-center">
                       <div className="text-2xl font-bold text-blue-700">{portfolioScores.monitored}</div>
-                      <div className="text-[10px] text-blue-600">Monitored Companies</div>
+                      <div className="text-2xs text-blue-600">Monitored Companies</div>
                     </div>
                     <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-center">
                       <div className="text-2xl font-bold text-amber-700">{companiesData.filter(c => (c.complianceRate || 100) < 95).length}</div>
-                      <div className="text-[10px] text-amber-600">Below 95% Threshold</div>
+                      <div className="text-2xs text-amber-600">Below 95% Threshold</div>
                     </div>
                   </div>
                   <div className="space-y-1.5">
                     {companiesData.sort((a, b) => (a.complianceRate || 100) - (b.complianceRate || 100)).map(c => (
-                      <div key={c.id} className="flex items-center justify-between px-3 py-1.5 rounded-md bg-white border border-slate-100 text-[11px]">
+                      <div key={c.id} className="flex items-center justify-between px-3 py-1.5 rounded-md bg-white border border-slate-100 text-xs">
                         <span className="font-medium text-slate-700">{c.name}</span>
                         <div className="flex items-center gap-2">
                           <span className={`font-medium ${(c.complianceRate || 100) >= 95 ? 'text-green-700' : 'text-red-700'}`}>{c.complianceRate || '--'}%</span>
-                          <Badge variant="outline" className={`text-[9px] ${c.activeAlerts > 0 ? 'border-red-300 bg-red-50 text-red-700' : 'border-green-300 bg-green-50 text-green-700'}`}>
+                          <Badge variant="outline" className={`text-2xs ${c.activeAlerts > 0 ? 'border-red-300 bg-red-50 text-red-700' : 'border-green-300 bg-green-50 text-green-700'}`}>
                             {c.activeAlerts} alert{c.activeAlerts !== 1 ? 's' : ''}
                           </Badge>
                         </div>
@@ -1059,7 +1059,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><DollarSign className="h-4 w-4 text-red-600" /> Regulatory Cost Forecast</CardTitle>
-                  <CardDescription className="text-[11px]">Projected compliance costs from emerging and tightening regulations</CardDescription>
+                  <CardDescription className="text-xs">Projected compliance costs from emerging and tightening regulations</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
@@ -1072,13 +1072,13 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                     ].map((r, i) => (
                       <div key={i} className="flex items-center justify-between px-3 py-2 rounded-lg border border-slate-100 hover:bg-slate-50">
                         <div className="flex-1">
-                          <div className="text-[11px] font-semibold text-slate-800">{r.reg}</div>
-                          <div className="text-[10px] text-slate-500">{r.impact}</div>
+                          <div className="text-xs font-semibold text-slate-800">{r.reg}</div>
+                          <div className="text-2xs text-slate-500">{r.impact}</div>
                         </div>
                         <div className="text-right flex items-center gap-2">
                           <div>
-                            <div className="text-[11px] font-medium text-red-700">{r.estCost}</div>
-                            <div className="text-[9px] text-slate-400">{r.timeline}</div>
+                            <div className="text-xs font-medium text-red-700">{r.estCost}</div>
+                            <div className="text-2xs text-slate-400">{r.timeline}</div>
                           </div>
                           <SeverityBadge level={r.severity} />
                         </div>
@@ -1087,7 +1087,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                   </div>
                   <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-center">
                     <div className="text-xl font-bold text-red-700">$16.5 - $31M</div>
-                    <div className="text-[10px] text-red-600 font-medium">Total Estimated Regulatory Cost Exposure (5-year)</div>
+                    <div className="text-2xs text-red-600 font-medium">Total Estimated Regulatory Cost Exposure (5-year)</div>
                   </div>
                 </CardContent>
               </Card>
@@ -1098,7 +1098,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><Leaf className="h-4 w-4 text-green-600" /> ESG Water Scoring</CardTitle>
-                  <CardDescription className="text-[11px]">Water-related ESG ratings across portfolio holdings</CardDescription>
+                  <CardDescription className="text-xs">Water-related ESG ratings across portfolio holdings</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-3">
@@ -1112,14 +1112,14 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                       return (
                         <div key={rating} className={`rounded-lg border p-2 text-center ${cls}`}>
                           <div className="text-2xl font-bold">{count}</div>
-                          <div className="text-[10px] font-medium">Rating {rating}</div>
+                          <div className="text-2xs font-medium">Rating {rating}</div>
                         </div>
                       );
                     })}
                   </div>
                   <div className="space-y-1.5">
                     {companiesData.sort((a, b) => (a.esgRating || 'Z').localeCompare(b.esgRating || 'Z')).map(c => (
-                      <div key={c.id} className="flex items-center justify-between px-3 py-1.5 rounded-md bg-white border border-slate-100 text-[11px]">
+                      <div key={c.id} className="flex items-center justify-between px-3 py-1.5 rounded-md bg-white border border-slate-100 text-xs">
                         <span className="font-medium text-slate-700">{c.name}</span>
                         <div className="flex items-center gap-2">
                           <span className="text-slate-500">{c.sector}</span>
@@ -1137,7 +1137,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><FileText className="h-4 w-4 text-indigo-600" /> Disclosure Readiness</CardTitle>
-                  <CardDescription className="text-[11px]">Portfolio alignment with major ESG water disclosure frameworks</CardDescription>
+                  <CardDescription className="text-xs">Portfolio alignment with major ESG water disclosure frameworks</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
@@ -1150,8 +1150,8 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                     ].map((fw, i) => (
                       <div key={i} className="px-3 py-2 rounded-lg border border-slate-100">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-[11px] font-semibold text-slate-800">{fw.framework}</span>
-                          <Badge variant="outline" className={`text-[9px] ${
+                          <span className="text-xs font-semibold text-slate-800">{fw.framework}</span>
+                          <Badge variant="outline" className={`text-2xs ${
                             fw.coverage >= 80 ? 'border-green-300 bg-green-50 text-green-700' :
                             fw.coverage >= 60 ? 'border-amber-300 bg-amber-50 text-amber-700' :
                             'border-red-300 bg-red-50 text-red-700'
@@ -1160,7 +1160,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                         <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-1">
                           <div className={`h-full rounded-full ${fw.coverage >= 80 ? 'bg-green-500' : fw.coverage >= 60 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${fw.coverage}%` }} />
                         </div>
-                        <div className="text-[10px] text-slate-500">{fw.detail}</div>
+                        <div className="text-2xs text-slate-500">{fw.detail}</div>
                       </div>
                     ))}
                   </div>
@@ -1173,11 +1173,11 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><BarChart3 className="h-4 w-4 text-blue-600" /> ESG Water Metrics</CardTitle>
-                  <CardDescription className="text-[11px]">Portfolio performance against industry benchmarks</CardDescription>
+                  <CardDescription className="text-xs">Portfolio performance against industry benchmarks</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-[11px]">
+                    <table className="w-full text-xs">
                       <thead>
                         <tr className="border-b border-slate-200 text-left">
                           <th className="pb-2 font-semibold text-slate-600 pr-3">Metric</th>
@@ -1211,7 +1211,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><CloudRain className="h-4 w-4 text-blue-600" /> Climate Scenario Analysis</CardTitle>
-                  <CardDescription className="text-[11px]">IPCC RCP scenario projections for portfolio water risk exposure</CardDescription>
+                  <CardDescription className="text-xs">IPCC RCP scenario projections for portfolio water risk exposure</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
@@ -1222,22 +1222,22 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                         'border-green-200 bg-green-50/50'
                       }`}>
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-[11px] font-semibold text-slate-800">{sc.name}</span>
-                          <span className="text-[10px] text-slate-500">{sc.tempIncrease}</span>
+                          <span className="text-xs font-semibold text-slate-800">{sc.name}</span>
+                          <span className="text-2xs text-slate-500">{sc.tempIncrease}</span>
                         </div>
-                        <div className="text-[10px] text-slate-600 mb-2">{sc.waterImpact}</div>
+                        <div className="text-2xs text-slate-600 mb-2">{sc.waterImpact}</div>
                         <div className="grid grid-cols-3 gap-2">
                           <div className="text-center">
                             <div className="text-sm font-bold text-slate-800">{sc.portfolioExposure}</div>
-                            <div className="text-[9px] text-slate-500">AUM Exposed</div>
+                            <div className="text-2xs text-slate-500">AUM Exposed</div>
                           </div>
                           <div className="text-center">
                             <div className="text-sm font-bold text-red-700">{sc.annualizedLoss}</div>
-                            <div className="text-[9px] text-slate-500">Annualized Loss</div>
+                            <div className="text-2xs text-slate-500">Annualized Loss</div>
                           </div>
                           <div className="text-center">
                             <div className="text-sm font-bold text-slate-600">{sc.probability}</div>
-                            <div className="text-[9px] text-slate-500">Probability</div>
+                            <div className="text-2xs text-slate-500">Probability</div>
                           </div>
                         </div>
                       </div>
@@ -1252,13 +1252,13 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-orange-600" /> Physical Risk Assessment</CardTitle>
-                  <CardDescription className="text-[11px]">Acute and chronic climate-water risks across portfolio holdings</CardDescription>
+                  <CardDescription className="text-xs">Acute and chronic climate-water risks across portfolio holdings</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     <div className="rounded-lg border border-orange-200 bg-orange-50 p-3">
                       <div className="text-xs font-semibold text-orange-800">Climate Resilience KPI</div>
-                      <div className="text-[11px] text-orange-700 mt-1">
+                      <div className="text-xs text-orange-700 mt-1">
                         {portfolioScores.extremeStress + companiesData.filter((c) => c.stressLevel === 'high').length} holdings are in high/extreme stress zones ({portfolioScores.total > 0 ? Math.round(((portfolioScores.extremeStress + companiesData.filter((c) => c.stressLevel === 'high').length) / portfolioScores.total) * 100) : 0}% of scoped portfolio).
                       </div>
                     </div>
@@ -1266,7 +1266,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                     <div className="rounded-lg border border-slate-200 bg-white p-3">
                       <div className="flex items-center justify-between gap-2">
                         <div className="text-xs font-semibold text-slate-800">Most Exposed Holdings</div>
-                        <div className="text-[10px] text-slate-500">Showing first 5, scroll for more</div>
+                        <div className="text-2xs text-slate-500">Showing first 5, scroll for more</div>
                       </div>
                       <div className="mt-2 flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-1.5">
                         <Search className="h-3.5 w-3.5 text-slate-400" />
@@ -1284,25 +1284,25 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                         {climateRows.slice(0, 5).map((c) => (
                           <div
                             key={c.id}
-                            className="px-2.5 py-2 rounded-md border text-[11px] border-red-200 bg-red-50/40"
+                            className="px-2.5 py-2 rounded-md border text-xs border-red-200 bg-red-50/40"
                           >
                             <div className="flex items-center justify-between gap-2">
                               <span className="font-semibold text-slate-800">{c.name}</span>
-                              <Badge variant="outline" className="text-[9px] border-red-300 bg-red-50 text-red-700">
+                              <Badge variant="outline" className="text-2xs border-red-300 bg-red-50 text-red-700">
                                 {c.stressLevel || 'n/a'}
                               </Badge>
                             </div>
-                            <div className="text-[10px] text-slate-600 mt-0.5">
+                            <div className="text-2xs text-slate-600 mt-0.5">
                               {c.sector} · {c.state} · Risk {c.waterRiskScore} · AUM ${c.aum}M
                             </div>
                           </div>
                         ))}
                         {climateRows.length > 5 && (
                           <div className="rounded-md border border-slate-200 bg-slate-50 p-2.5">
-                            <div className="text-[10px] font-semibold text-slate-600 mb-1.5">More results ({climateRows.length - 5})</div>
+                            <div className="text-2xs font-semibold text-slate-600 mb-1.5">More results ({climateRows.length - 5})</div>
                             <div className="max-h-40 overflow-y-auto space-y-1.5 pr-1">
                               {climateRows.slice(5).map((c) => (
-                                <div key={`${c.id}-more`} className="px-2 py-1.5 rounded border border-slate-200 bg-white text-[10px]">
+                                <div key={`${c.id}-more`} className="px-2 py-1.5 rounded border border-slate-200 bg-white text-2xs">
                                   <div className="flex items-center justify-between gap-2">
                                     <span className="font-semibold text-slate-700">{c.name}</span>
                                     <span className="text-slate-500">{c.stressLevel}</span>
@@ -1325,7 +1325,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><Zap className="h-4 w-4 text-purple-600" /> Transition Risk Assessment</CardTitle>
-                  <CardDescription className="text-[11px]">Policy, technology, and market transition risks affecting water-dependent assets</CardDescription>
+                  <CardDescription className="text-xs">Policy, technology, and market transition risks affecting water-dependent assets</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
@@ -1337,11 +1337,11 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                     ].map((r, i) => (
                       <div key={i} className="flex items-center justify-between px-3 py-2 rounded-lg border border-slate-100 hover:bg-slate-50">
                         <div className="flex-1">
-                          <div className="text-[11px] font-semibold text-slate-800">{r.risk}</div>
-                          <div className="text-[10px] text-slate-500">{r.exposure} | {r.timeline}</div>
+                          <div className="text-xs font-semibold text-slate-800">{r.risk}</div>
+                          <div className="text-2xs text-slate-500">{r.exposure} | {r.timeline}</div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[11px] font-medium text-red-700">{r.cost}</span>
+                          <span className="text-xs font-medium text-red-700">{r.cost}</span>
                           <SeverityBadge level={r.severity} />
                         </div>
                       </div>
@@ -1356,7 +1356,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><DollarSign className="h-4 w-4 text-amber-600" /> Financial Impact Summary</CardTitle>
-                  <CardDescription className="text-[11px]">Quantified water risk financial exposure across the portfolio</CardDescription>
+                  <CardDescription className="text-xs">Quantified water risk financial exposure across the portfolio</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -1368,8 +1368,8 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                     ].map(kpi => (
                       <div key={kpi.label} className={`rounded-lg border p-3 text-center ${kpi.bg}`}>
                         <div className={`text-xl font-bold ${kpi.color}`}>{kpi.value}</div>
-                        <div className="text-[10px] text-slate-600 font-medium">{kpi.label}</div>
-                        <div className="text-[9px] text-slate-400">{kpi.sub}</div>
+                        <div className="text-2xs text-slate-600 font-medium">{kpi.label}</div>
+                        <div className="text-2xs text-slate-400">{kpi.sub}</div>
                       </div>
                     ))}
                   </div>
@@ -1382,7 +1382,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><TrendingDown className="h-4 w-4 text-red-600" /> Valuation Impact Analysis</CardTitle>
-                  <CardDescription className="text-[11px]">Estimated valuation adjustment from water risk materialization</CardDescription>
+                  <CardDescription className="text-xs">Estimated valuation adjustment from water risk materialization</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2 max-h-[240px] overflow-y-auto">
@@ -1392,14 +1392,14 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                       return (
                         <div key={c.id} className="flex items-center justify-between px-3 py-2 rounded-lg border border-slate-100 hover:bg-slate-50">
                           <div>
-                            <div className="text-[11px] font-semibold text-slate-800">{c.name}</div>
-                            <div className="text-[10px] text-slate-500">{c.sector} | ${c.aum}M AUM</div>
+                            <div className="text-xs font-semibold text-slate-800">{c.name}</div>
+                            <div className="text-2xs text-slate-500">{c.sector} | ${c.aum}M AUM</div>
                           </div>
                           <div className="text-right">
-                            <div className={`text-[11px] font-bold ${impactPct <= -5 ? 'text-red-700' : impactPct <= -2 ? 'text-amber-700' : 'text-green-700'}`}>
+                            <div className={`text-xs font-bold ${impactPct <= -5 ? 'text-red-700' : impactPct <= -2 ? 'text-amber-700' : 'text-green-700'}`}>
                               {impactPct}% (${impactAmt}M)
                             </div>
-                            <div className="text-[9px] text-slate-400">Risk-adjusted impact</div>
+                            <div className="text-2xs text-slate-400">Risk-adjusted impact</div>
                           </div>
                         </div>
                       );
@@ -1414,27 +1414,27 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><Scale className="h-4 w-4 text-red-600" /> Cost of Inaction</CardTitle>
-                  <CardDescription className="text-[11px]">Projected losses from delayed water risk mitigation</CardDescription>
+                  <CardDescription className="text-xs">Projected losses from delayed water risk mitigation</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
                       <div className="text-xs font-semibold text-amber-800 mb-1">Year 1</div>
                       <div className="text-xl font-bold text-amber-700">$4.2M</div>
-                      <div className="text-[10px] text-amber-600 mt-1">Compliance penalties + water efficiency losses</div>
+                      <div className="text-2xs text-amber-600 mt-1">Compliance penalties + water efficiency losses</div>
                     </div>
                     <div className="rounded-lg border border-orange-200 bg-orange-50 p-3">
                       <div className="text-xs font-semibold text-orange-800 mb-1">Year 3</div>
                       <div className="text-xl font-bold text-orange-700">$18.5M</div>
-                      <div className="text-[10px] text-orange-600 mt-1">+ Regulatory cost escalation + stranded asset write-downs</div>
+                      <div className="text-2xs text-orange-600 mt-1">+ Regulatory cost escalation + stranded asset write-downs</div>
                     </div>
                     <div className="rounded-lg border border-red-200 bg-red-50 p-3">
                       <div className="text-xs font-semibold text-red-800 mb-1">Year 5</div>
                       <div className="text-xl font-bold text-red-700">$47M</div>
-                      <div className="text-[10px] text-red-600 mt-1">+ Climate-driven operational disruption + reputational damage</div>
+                      <div className="text-2xs text-red-600 mt-1">+ Climate-driven operational disruption + reputational damage</div>
                     </div>
                   </div>
-                  <div className="mt-3 text-[10px] text-slate-400">
+                  <div className="mt-3 text-2xs text-slate-400">
                     Projections based on CDP Water methodology, TCFD scenario analysis, and historical enforcement penalty data.
                   </div>
                 </CardContent>
@@ -1446,7 +1446,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><ClipboardList className="h-4 w-4 text-indigo-600" /> Water Risk Due Diligence Checklist</CardTitle>
-                  <CardDescription className="text-[11px]">Standard due diligence items for water risk assessment in M&A and new investments</CardDescription>
+                  <CardDescription className="text-xs">Standard due diligence items for water risk assessment in M&A and new investments</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
@@ -1469,13 +1469,13 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                           <Circle className="h-4 w-4 text-slate-300 flex-shrink-0" />
                         )}
                         <div className="flex-1">
-                          <span className="text-[11px] text-slate-700">{dd.item}</span>
+                          <span className="text-xs text-slate-700">{dd.item}</span>
                         </div>
-                        <Badge variant="outline" className="text-[9px] border-slate-200 text-slate-500">{dd.category}</Badge>
+                        <Badge variant="outline" className="text-2xs border-slate-200 text-slate-500">{dd.category}</Badge>
                       </div>
                     ))}
                   </div>
-                  <div className="mt-2 text-[10px] text-slate-400">6 of 10 items covered by PEARL data sources. Remaining require third-party verification.</div>
+                  <div className="mt-2 text-2xs text-slate-400">6 of 10 items covered by PEARL data sources. Remaining require third-party verification.</div>
                 </CardContent>
               </Card>
             );
@@ -1485,7 +1485,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><MapPin className="h-4 w-4 text-red-600" /> Site Risk Profiles</CardTitle>
-                  <CardDescription className="text-[11px]">Location-level water risk summary for portfolio assets</CardDescription>
+                  <CardDescription className="text-xs">Location-level water risk summary for portfolio assets</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
@@ -1496,14 +1496,14 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                         'border-green-200 bg-green-50/50'
                       }`}>
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-[11px] font-semibold text-slate-800">{c.name} ({c.state})</span>
-                          <Badge variant="outline" className={`text-[9px] ${
+                          <span className="text-xs font-semibold text-slate-800">{c.name} ({c.state})</span>
+                          <Badge variant="outline" className={`text-2xs ${
                             c.waterRiskScore >= 70 ? 'border-red-300 text-red-700' :
                             c.waterRiskScore >= 40 ? 'border-amber-300 text-amber-700' :
                             'border-green-300 text-green-700'
                           }`}>Risk: {c.waterRiskScore}</Badge>
                         </div>
-                        <div className="grid grid-cols-4 gap-2 text-[10px]">
+                        <div className="grid grid-cols-4 gap-2 text-2xs">
                           <div><span className="text-slate-400">Stress:</span> <span className="text-slate-700">{c.stressLevel}</span></div>
                           <div><span className="text-slate-400">Compliance:</span> <span className="text-slate-700">{c.complianceRate}%</span></div>
                           <div><span className="text-slate-400">Intensity:</span> <span className="text-slate-700">{c.waterIntensity} gal/$1K</span></div>
@@ -1532,7 +1532,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><DollarSign className="h-4 w-4 text-emerald-600" /> Economic Performance</CardTitle>
-                  <CardDescription className="text-[11px]">Water-related economic KPIs across the portfolio</CardDescription>
+                  <CardDescription className="text-xs">Water-related economic KPIs across the portfolio</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -1544,8 +1544,8 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                     ].map(kpi => (
                       <div key={kpi.label} className={`rounded-lg border p-3 text-center ${kpi.bg}`}>
                         <div className={`text-xl font-bold ${kpi.color}`}>{kpi.value}</div>
-                        <div className="text-[10px] text-slate-600 font-medium">{kpi.label}</div>
-                        <div className="text-[9px] text-slate-400">{kpi.sub}</div>
+                        <div className="text-2xs text-slate-600 font-medium">{kpi.label}</div>
+                        <div className="text-2xs text-slate-400">{kpi.sub}</div>
                       </div>
                     ))}
                   </div>
@@ -1586,29 +1586,29 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><TrendingUp className="h-4 w-4 text-indigo-600" /> Trends & Forecasting</CardTitle>
-                  <CardDescription className="text-[11px]">Water risk and investment outlook trends</CardDescription>
+                  <CardDescription className="text-xs">Water risk and investment outlook trends</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="rounded-lg border border-green-200 bg-green-50 p-3">
-                      <div className="text-[11px] font-semibold text-green-800">Improving</div>
-                      <div className="text-[10px] text-green-700 mt-1 space-y-0.5">
+                      <div className="text-xs font-semibold text-green-800">Improving</div>
+                      <div className="text-2xs text-green-700 mt-1 space-y-0.5">
                         <div>- ESG water disclosure rates +18% YoY</div>
                         <div>- WIFIA loan program expanding</div>
                         <div>- Water recycling adoption accelerating</div>
                       </div>
                     </div>
                     <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-                      <div className="text-[11px] font-semibold text-amber-800">Watch</div>
-                      <div className="text-[10px] text-amber-700 mt-1 space-y-0.5">
+                      <div className="text-xs font-semibold text-amber-800">Watch</div>
+                      <div className="text-2xs text-amber-700 mt-1 space-y-0.5">
                         <div>- PFAS liability expanding across sectors</div>
                         <div>- Western water rights adjudication</div>
                         <div>- SEC climate disclosure finalization</div>
                       </div>
                     </div>
                     <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-                      <div className="text-[11px] font-semibold text-red-800">Action Required</div>
-                      <div className="text-[10px] text-red-700 mt-1 space-y-0.5">
+                      <div className="text-xs font-semibold text-red-800">Action Required</div>
+                      <div className="text-2xs text-red-700 mt-1 space-y-0.5">
                         <div>- 2 holdings in extreme stress basins worsening</div>
                         <div>- Compliance penalties trending up sector-wide</div>
                         <div>- Insurance carriers repricing water risk</div>
@@ -1679,22 +1679,22 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm flex items-center gap-2"><Leaf className="h-4 w-4 text-emerald-600" /> Ecological Sensitivity</CardTitle>
-                      <CardDescription className="text-[11px]">State-level biodiversity sensitivity exposure across scoped holdings</CardDescription>
+                      <CardDescription className="text-xs">State-level biodiversity sensitivity exposure across scoped holdings</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <div className={`rounded-lg border p-3 ${style.bg}`}>
-                        <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-600">Scoped Portfolio Eco Score</div>
+                        <div className="text-2xs font-semibold uppercase tracking-wide text-slate-600">Scoped Portfolio Eco Score</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{avgEco}</div>
-                        <div className="text-[10px] text-slate-500">{ecoScoreLabel(avgEco)}</div>
+                        <div className="text-2xs text-slate-500">{ecoScoreLabel(avgEco)}</div>
                       </div>
                       <div className="space-y-1.5 max-h-56 overflow-y-auto">
                         {scoreRows.sort((a, b) => b.eco - a.eco).map((c) => (
                           <div key={c.id} className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
                             <div className="flex items-center justify-between">
-                              <span className="text-[11px] font-semibold text-slate-800">{c.name}</span>
-                              <span className="text-[10px] font-semibold text-slate-700">{c.eco}</span>
+                              <span className="text-xs font-semibold text-slate-800">{c.name}</span>
+                              <span className="text-2xs font-semibold text-slate-700">{c.eco}</span>
                             </div>
-                            <div className="text-[10px] text-slate-500">{c.state} · {c.sector}</div>
+                            <div className="text-2xs text-slate-500">{c.state} · {c.sector}</div>
                           </div>
                         ))}
                       </div>
@@ -1708,7 +1708,7 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><Microscope className="h-4 w-4 text-rose-600" /> Wildlife & T&E Exposure</CardTitle>
-                  <CardDescription className="text-[11px]">Threatened/aquatic species context derived from scoped holding states</CardDescription>
+                  <CardDescription className="text-xs">Threatened/aquatic species context derived from scoped holding states</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {companiesData.map((c) => {
@@ -1716,10 +1716,10 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                     return (
                       <div key={c.id} className="rounded-md border border-slate-200 bg-white px-3 py-2">
                         <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-semibold text-slate-800">{c.name}</span>
-                          <Badge variant="outline" className="text-[9px]">{c.state}</Badge>
+                          <span className="text-xs font-semibold text-slate-800">{c.name}</span>
+                          <Badge variant="outline" className="text-2xs">{c.state}</Badge>
                         </div>
-                        <div className="text-[10px] text-slate-600 mt-0.5">
+                        <div className="text-2xs text-slate-600 mt-0.5">
                           {eco ? `${eco.totalTE} T&E · ${eco.aquaticTE} aquatic · ${eco.criticalHabitat} critical habitat` : 'No ecological sensitivity data available'}
                         </div>
                       </div>
@@ -1735,25 +1735,25 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2"><Award className="h-4 w-4 text-amber-600" /> Scorecard KPIs</CardTitle>
-                  <CardDescription className="text-[11px]">Core investor water KPIs for the current scoped portfolio</CardDescription>
+                  <CardDescription className="text-xs">Core investor water KPIs for the current scoped portfolio</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-center">
                       <div className="text-xl font-bold text-amber-700">{portfolioScores.avgRisk}</div>
-                      <div className="text-[10px] text-slate-600">Water Risk Index</div>
+                      <div className="text-2xs text-slate-600">Water Risk Index</div>
                     </div>
                     <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-center">
                       <div className="text-xl font-bold text-red-700">${portfolioScores.exposedAUM}M</div>
-                      <div className="text-[10px] text-slate-600">Exposed AUM</div>
+                      <div className="text-2xs text-slate-600">Exposed AUM</div>
                     </div>
                     <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-center">
                       <div className="text-xl font-bold text-green-700">{portfolioScores.avgCompliance}%</div>
-                      <div className="text-[10px] text-slate-600">Compliance KPI</div>
+                      <div className="text-2xs text-slate-600">Compliance KPI</div>
                     </div>
                     <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-center">
                       <div className="text-xl font-bold text-blue-700">{portfolioScores.esgACount}</div>
-                      <div className="text-[10px] text-slate-600">ESG A Holdings</div>
+                      <div className="text-2xs text-slate-600">ESG A Holdings</div>
                     </div>
                   </div>
                 </CardContent>
@@ -1771,14 +1771,14 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm flex items-center gap-2"><PieChart className="h-4 w-4 text-indigo-600" /> Scorecard Grades</CardTitle>
-                      <CardDescription className="text-[11px]">Investor grading across risk, compliance, ESG quality, and exposure concentration</CardDescription>
+                      <CardDescription className="text-xs">Investor grading across risk, compliance, ESG quality, and exposure concentration</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-center"><div className="text-2xl font-bold text-slate-800">{riskGrade}</div><div className="text-[10px] text-slate-500">Risk Grade</div></div>
-                        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-center"><div className="text-2xl font-bold text-slate-800">{compGrade}</div><div className="text-[10px] text-slate-500">Compliance Grade</div></div>
-                        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-center"><div className="text-2xl font-bold text-slate-800">{esgGrade}</div><div className="text-[10px] text-slate-500">ESG Grade</div></div>
-                        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-center"><div className="text-2xl font-bold text-slate-800">{exposureGrade}</div><div className="text-[10px] text-slate-500">Exposure Grade</div></div>
+                        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-center"><div className="text-2xl font-bold text-slate-800">{riskGrade}</div><div className="text-2xs text-slate-500">Risk Grade</div></div>
+                        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-center"><div className="text-2xl font-bold text-slate-800">{compGrade}</div><div className="text-2xs text-slate-500">Compliance Grade</div></div>
+                        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-center"><div className="text-2xl font-bold text-slate-800">{esgGrade}</div><div className="text-2xs text-slate-500">ESG Grade</div></div>
+                        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-center"><div className="text-2xl font-bold text-slate-800">{exposureGrade}</div><div className="text-2xs text-slate-500">Exposure Grade</div></div>
                       </div>
                     </CardContent>
                   </Card>
@@ -1841,32 +1841,32 @@ export function InvestorManagementCenter({ portfolioName = 'PEARL Investment Por
               <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
                 <div className="text-center">
                   <div className="text-xl font-bold text-slate-800">{selectedComp.waterRiskScore}</div>
-                  <div className="text-[10px] text-slate-500">Water Risk</div>
+                  <div className="text-2xs text-slate-500">Water Risk</div>
                 </div>
                 <div className="text-center">
                   <div className="text-xl font-bold text-slate-800">{selectedComp.sector}</div>
-                  <div className="text-[10px] text-slate-500">Sector</div>
+                  <div className="text-2xs text-slate-500">Sector</div>
                 </div>
                 <div className="text-center">
                   <div className="text-xl font-bold text-amber-700">${selectedComp.aum}M</div>
-                  <div className="text-[10px] text-slate-500">AUM Exposure</div>
+                  <div className="text-2xs text-slate-500">AUM Exposure</div>
                 </div>
                 <div className="text-center">
                   <div className="text-xl font-bold text-slate-800">{selectedComp.esgRating || '--'}</div>
-                  <div className="text-[10px] text-slate-500">ESG Rating</div>
+                  <div className="text-2xs text-slate-500">ESG Rating</div>
                 </div>
                 <div className="text-center">
                   <div className={`text-xl font-bold ${(selectedComp.complianceRate || 100) >= 95 ? 'text-green-600' : 'text-red-600'}`}>
                     {selectedComp.complianceRate || '--'}%
                   </div>
-                  <div className="text-[10px] text-slate-500">Compliance</div>
+                  <div className="text-2xs text-slate-500">Compliance</div>
                 </div>
                 <div className="text-center">
                   <div className="text-xl font-bold text-slate-800">{selectedComp.stressLevel || '--'}</div>
-                  <div className="text-[10px] text-slate-500">Water Stress</div>
+                  <div className="text-2xs text-slate-500">Water Stress</div>
                 </div>
               </div>
-              <div className="text-[10px] text-slate-500 space-y-0.5">
+              <div className="text-2xs text-slate-500 space-y-0.5">
                 <div>Water intensity: <span className="font-medium text-slate-700">{selectedComp.waterIntensity} gal per $1K revenue</span></div>
                 <div>Active alerts: <span className="font-medium text-slate-700">{selectedComp.activeAlerts}</span></div>
                 <div>Data sources: <span className="font-medium text-slate-700">{selectedComp.dataSourceCount}</span></div>

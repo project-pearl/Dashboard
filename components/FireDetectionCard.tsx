@@ -377,8 +377,8 @@ export function FireDetectionCard({
                             variant="outline"
                             className={
                               d.confidence === 'high'
-                                ? 'bg-red-50 text-red-700 border-red-200 text-[10px]'
-                                : 'bg-slate-50 text-slate-600 border-slate-200 text-[10px]'
+                                ? 'bg-red-50 text-red-700 border-red-200 text-2xs'
+                                : 'bg-slate-50 text-slate-600 border-slate-200 text-2xs'
                             }
                           >
                             {d.confidence}
@@ -405,7 +405,7 @@ export function FireDetectionCard({
                 )}
                 {sortedDetections.length <= showCount && sortedDetections.length > 0 && (
                   <div className="px-3 py-1.5 bg-slate-50 border-t">
-                    <p className="text-[10px] text-slate-400 text-center">
+                    <p className="text-2xs text-slate-400 text-center">
                       Showing all {sortedDetections.length} detection{sortedDetections.length !== 1 ? 's' : ''}
                       {dateFilter !== 'all' ? ` for ${formatDatePill(dateFilter)}` : ''}
                     </p>
@@ -434,7 +434,7 @@ function SummaryTile({ label, value, icon }: { label: string; value: string | nu
     <div className="bg-slate-50 rounded-lg px-3 py-2 text-center">
       <div className="flex items-center justify-center gap-1 mb-1">{icon}</div>
       <p className="text-lg font-bold text-slate-800">{value}</p>
-      <p className="text-[10px] text-slate-500 leading-tight">{label}</p>
+      <p className="text-2xs text-slate-500 leading-tight">{label}</p>
     </div>
   );
 }

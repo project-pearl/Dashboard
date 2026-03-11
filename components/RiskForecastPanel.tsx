@@ -49,12 +49,12 @@ export default function RiskForecastPanel({ forecast }: RiskForecastPanelProps) 
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
-          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${overallColors.bg} ${overallColors.text}`}>
+          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-wide ${overallColors.bg} ${overallColors.text}`}>
             <span className={`w-2 h-2 rounded-full mr-1.5 ${overallColors.dot}`} />
             {forecast.overallRiskLevel === 'red' ? 'High Risk' : forecast.overallRiskLevel === 'amber' ? 'Moderate Risk' : 'Low Risk'}
           </span>
         </div>
-        <span className="text-[10px] text-slate-400">
+        <span className="text-2xs text-slate-400">
           {forecast.dataCompleteness}% data completeness
         </span>
       </div>
@@ -98,22 +98,22 @@ function PredictionCard({ prediction }: { prediction: RiskPrediction }) {
         {/* Probability + badges */}
         <div className="flex items-center gap-1.5 flex-wrap">
           <span className={`text-sm font-bold ${colors.text}`}>{prediction.probability}%</span>
-          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">
+          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-semibold bg-slate-100 text-slate-500 border border-slate-200">
             {prediction.timeframe}
           </span>
-          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold ${confBadge.bg} ${confBadge.text}`}>
+          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-semibold ${confBadge.bg} ${confBadge.text}`}>
             {prediction.confidence}
           </span>
         </div>
 
         {/* Summary */}
-        <p className="text-[11px] text-slate-600 leading-relaxed">{prediction.summary}</p>
+        <p className="text-xs text-slate-600 leading-relaxed">{prediction.summary}</p>
 
         {/* Expand toggle */}
         {prediction.factors.length > 0 && (
           <button
             onClick={() => setExpanded(!expanded)}
-            className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-slate-600 transition-colors"
+            className="flex items-center gap-1 text-2xs text-slate-400 hover:text-slate-600 transition-colors"
           >
             {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
             {expanded ? 'Hide' : 'Show'} factors ({prediction.factors.length})
@@ -124,7 +124,7 @@ function PredictionCard({ prediction }: { prediction: RiskPrediction }) {
         {expanded && (
           <div className="space-y-1 pt-1 border-t border-slate-100">
             {prediction.factors.map((f, i) => (
-              <div key={i} className="flex items-center gap-2 text-[10px]">
+              <div key={i} className="flex items-center gap-2 text-2xs">
                 <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
                   f.direction === 'negative' ? 'bg-red-400' : f.direction === 'positive' ? 'bg-green-400' : 'bg-slate-300'
                 }`} />

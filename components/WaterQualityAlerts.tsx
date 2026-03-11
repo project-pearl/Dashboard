@@ -3,6 +3,7 @@
 import { WaterQualityAlert } from '@/lib/alertDetection';
 import { AlertTriangle, AlertCircle, Info, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { useState } from 'react';
+import { CappedList } from '@/components/CappedList';
 
 interface WaterQualityAlertsProps {
   alerts: WaterQualityAlert[];
@@ -85,10 +86,17 @@ export function WaterQualityAlerts({ alerts, dismissedAlerts, onDismiss, compact
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      {visible.map(alert => (
-        <AlertItem key={alert.id} alert={alert} onDismiss={() => onDismiss(alert.id)} />
-      ))}
-    </div>
+    <CappedList
+      items={visible}
+      maxVisible={5}
+      searchable={false}
+      searchPlaceholder=""
+      getSearchText={(alert) => alert.title}
+      getKey={(alert) => alert.id}
+      className="flex flex-col gap-2"
+      renderItem={(alert) => (
+        <AlertItem alert={alert} onDismiss={() => onDismiss(alert.id)} />
+      )}
+    />
   );
 }

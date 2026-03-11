@@ -157,15 +157,15 @@ export function WatershedPartnershipsPanel({ stateAbbr }: WatershedPartnershipsP
             <div className="flex gap-6">
               <div className="text-center">
                 <p className="text-lg font-bold text-slate-800">{projects.length}</p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wide">Joint Projects</p>
+                <p className="text-2xs text-slate-500 uppercase tracking-wide">Joint Projects</p>
               </div>
               <div className="text-center">
                 <p className="text-lg font-bold text-blue-700">${totalFundingK}K</p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wide">Total Funding</p>
+                <p className="text-2xs text-slate-500 uppercase tracking-wide">Total Funding</p>
               </div>
               <div className="text-center">
                 <p className="text-lg font-bold text-slate-800">{stations.length}</p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wide">Shared Stations</p>
+                <p className="text-2xs text-slate-500 uppercase tracking-wide">Shared Stations</p>
               </div>
             </div>
           </div>
@@ -178,7 +178,7 @@ export function WatershedPartnershipsPanel({ stateAbbr }: WatershedPartnershipsP
           <CardTitle className="flex items-center gap-2 text-base">
             <Users size={16} className="text-teal-600" />
             Partner Organizations
-            <Badge variant="secondary" className="ml-1 text-[10px]">{partners.length} partners</Badge>
+            <Badge variant="secondary" className="ml-1 text-2xs">{partners.length} partners</Badge>
           </CardTitle>
           <CardDescription>Organizations collaborating on watershed research and monitoring</CardDescription>
         </CardHeader>
@@ -198,7 +198,7 @@ export function WatershedPartnershipsPanel({ stateAbbr }: WatershedPartnershipsP
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge className={`text-[10px] ${partnerStatusColor(p.status)}`}>{p.status}</Badge>
+                  <Badge className={`text-2xs ${partnerStatusColor(p.status)}`}>{p.status}</Badge>
                 </div>
               </div>
             ))}
@@ -226,11 +226,11 @@ export function WatershedPartnershipsPanel({ stateAbbr }: WatershedPartnershipsP
                       {proj.startDate} to {proj.endDate} — ${proj.fundingK}K funding
                     </p>
                   </div>
-                  <Badge className={`text-[10px] ml-2 shrink-0 ${projectStatusColor(proj.status)}`}>{proj.status}</Badge>
+                  <Badge className={`text-2xs ml-2 shrink-0 ${projectStatusColor(proj.status)}`}>{proj.status}</Badge>
                 </div>
                 <div className="flex items-center gap-1 flex-wrap">
                   {proj.partners.map((partner) => (
-                    <Badge key={partner} variant="outline" className="text-[10px] text-slate-600">
+                    <Badge key={partner} variant="outline" className="text-2xs text-slate-600">
                       {partner}
                     </Badge>
                   ))}
@@ -247,7 +247,7 @@ export function WatershedPartnershipsPanel({ stateAbbr }: WatershedPartnershipsP
           <CardTitle className="flex items-center gap-2 text-base">
             <Share2 size={16} className="text-indigo-600" />
             Data Sharing Agreements
-            <Badge variant="secondary" className="ml-1 text-[10px]">{signedAgreements} of {agreements.length} active</Badge>
+            <Badge variant="secondary" className="ml-1 text-2xs">{signedAgreements} of {agreements.length} active</Badge>
           </CardTitle>
           <CardDescription>Status of data exchange agreements with partner organizations</CardDescription>
         </CardHeader>
@@ -271,13 +271,13 @@ export function WatershedPartnershipsPanel({ stateAbbr }: WatershedPartnershipsP
                     <td className="py-2 text-slate-600">
                       <div className="flex gap-1 flex-wrap">
                         {a.parameters.map((param) => (
-                          <Badge key={param} variant="outline" className="text-[9px] text-slate-500">{param}</Badge>
+                          <Badge key={param} variant="outline" className="text-2xs text-slate-500">{param}</Badge>
                         ))}
                       </div>
                     </td>
                     <td className="py-2 text-right text-slate-500">{a.lastUpdated}</td>
                     <td className="py-2 text-right">
-                      <Badge className={`text-[10px] ${agreementStatusColor(a.status)}`}>{a.status}</Badge>
+                      <Badge className={`text-2xs ${agreementStatusColor(a.status)}`}>{a.status}</Badge>
                     </td>
                   </tr>
                 ))}
@@ -315,7 +315,7 @@ export function WatershedPartnershipsPanel({ stateAbbr }: WatershedPartnershipsP
               <p className="text-xs text-amber-600 mt-1">Student Volunteers</p>
             </div>
           </div>
-          <p className="text-[10px] text-slate-400 mt-3">
+          <p className="text-2xs text-slate-400 mt-3">
             Academic year 2025-2026. Includes watershed cleanup days, water quality sampling training, and public lecture series.
           </p>
         </CardContent>
@@ -327,7 +327,7 @@ export function WatershedPartnershipsPanel({ stateAbbr }: WatershedPartnershipsP
           <CardTitle className="flex items-center gap-2 text-base">
             <MapPin size={16} className="text-rose-600" />
             Shared Monitoring Stations
-            <Badge variant="secondary" className="ml-1 text-[10px]">{stations.length} stations</Badge>
+            <Badge variant="secondary" className="ml-1 text-2xs">{stations.length} stations</Badge>
           </CardTitle>
           <CardDescription>Monitoring stations jointly operated with partner organizations</CardDescription>
         </CardHeader>
@@ -345,9 +345,9 @@ export function WatershedPartnershipsPanel({ stateAbbr }: WatershedPartnershipsP
                   </div>
                 </div>
                 <div className="flex items-center gap-1 flex-wrap">
-                  <span className="text-[10px] text-slate-400 mr-1">Shared with:</span>
+                  <span className="text-2xs text-slate-400 mr-1">Shared with:</span>
                   {s.sharedWith.map((partner) => (
-                    <Badge key={partner} variant="outline" className="text-[10px] text-slate-600">{partner}</Badge>
+                    <Badge key={partner} variant="outline" className="text-2xs text-slate-600">{partner}</Badge>
                   ))}
                 </div>
               </div>

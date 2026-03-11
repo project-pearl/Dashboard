@@ -1203,7 +1203,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                   setDevJurisdiction(val);
                   setActiveDetailId(null); // reset waterbody selection on jurisdiction change
                 }}
-                className="h-8 px-2 pr-6 text-[11px] font-mono rounded-md border border-amber-300 bg-amber-50 text-amber-800 cursor-pointer appearance-none"
+                className="h-8 px-2 pr-6 text-xs font-mono rounded-md border border-amber-300 bg-amber-50 text-amber-800 cursor-pointer appearance-none"
                 style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23b45309\' d=\'M6 8L1 3h10z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 6px center' }}
               >
                 <option value="">🔧 All {stateName} (dev)</option>
@@ -1242,7 +1242,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         </div>
                         <div>
                           <div className="text-sm font-semibold text-slate-800">{user.name}</div>
-                          <div className="text-[11px] text-slate-500">{user.email || 'state@project-pearl.org'}</div>
+                          <div className="text-xs text-slate-500">{user.email || 'state@project-pearl.org'}</div>
                         </div>
                       </div>
                       <button onClick={() => setShowAccountPanel(false)} className="text-slate-400 hover:text-slate-600">
@@ -1263,7 +1263,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-500">Access Level</span>
-                      <Badge variant="outline" className="text-[10px] h-5 bg-green-50 border-green-200 text-green-700">Full Access</Badge>
+                      <Badge variant="outline" className="text-2xs h-5 bg-green-50 border-green-200 text-green-700">Full Access</Badge>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-500">Monitoring</span>
@@ -1295,7 +1295,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
 
                   {/* Footer */}
                   <div className="px-4 py-2 border-t border-slate-100 bg-slate-50">
-                    <span className="text-[10px] text-slate-400">PEARL SCC v1.0 · Session {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span className="text-2xs text-slate-400">PEARL SCC v1.0 · Session {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                 </div>
                 </>
@@ -1353,7 +1353,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                     <div className="text-xs text-slate-500">
                       NPDES Permit: <span className="font-mono font-semibold text-blue-700">{jurisdictionMeta.permit}</span>
                       {' · '}
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${jurisdictionMeta.phase === 'Phase I' ? 'bg-indigo-100 text-indigo-700' : 'bg-violet-100 text-violet-700'}`}>{jurisdictionMeta.phase}</span>
+                      <span className={`px-1.5 py-0.5 rounded text-2xs font-semibold ${jurisdictionMeta.phase === 'Phase I' ? 'bg-indigo-100 text-indigo-700' : 'bg-violet-100 text-violet-700'}`}>{jurisdictionMeta.phase}</span>
                       {' · '}{jurisdictionMeta.waterbodies.length} receiving waterbodies
                     </div>
                   </div>
@@ -1376,7 +1376,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       <div className="h-full bg-slate-200 flex-1" />
                     </div>
                   )}
-                  <div className="flex items-center gap-4 mt-1.5 text-[10px]">
+                  <div className="flex items-center gap-4 mt-1.5 text-2xs">
                     <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-amber-400" /> {impairedCount} Impaired</span>
                     <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-blue-400" /> {assessedCount} Assessed ({scopedRegionData.length > 0 ? Math.round(assessedCount / scopedRegionData.length * 100) : 0}%)</span>
                   </div>
@@ -1387,23 +1387,23 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                     <span className={`block h-2.5 w-2.5 rounded-full ${activeAlerts.length > 0 ? 'bg-red-400' : 'bg-green-400'}`} />
                     <div>
                       <div className="text-lg font-bold text-red-600 inline-flex items-center gap-0.5">{activeAlerts.length}<ProvenanceIcon metricName="Active Alerts" displayValue={String(activeAlerts.length)} /></div>
-                      <div className="text-[10px] text-slate-500">Active Alerts</div>
+                      <div className="text-2xs text-slate-500">Active Alerts</div>
                     </div>
                   </div>
                   <div className="bg-white rounded-lg border border-slate-200 px-3 py-2.5">
                     <div className={`inline-block px-2 py-0.5 rounded-full text-xs font-bold border ${freshnessBg}`}>{freshnessLabel}</div>
-                    <div className="text-[10px] text-slate-400 mt-1">{withData}/{scopedRegionData.length} with sensors</div>
+                    <div className="text-2xs text-slate-400 mt-1">{withData}/{scopedRegionData.length} with sensors</div>
                   </div>
                   <div className="bg-white rounded-lg border border-slate-200 px-3 py-2.5">
                     <div className="text-lg font-bold inline-flex items-center gap-0.5" style={{ color: ejScoreStyle(ejScore).color }}>{ejScore}/100<ProvenanceIcon metricName="EJ Burden" displayValue={String(ejScore)} unit="/100" /></div>
-                    <div className="text-[10px] text-slate-500">EJ Burden</div>
+                    <div className="text-2xs text-slate-500">EJ Burden</div>
                     <div className="mt-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
                       <div className="h-full rounded-full" style={{ width: `${ejScore}%`, backgroundColor: ejScoreStyle(ejScore).color }} />
                     </div>
                   </div>
                   <div className="bg-white rounded-lg border border-amber-200 px-3 py-2.5">
                     <div className="text-lg font-bold text-amber-600 inline-flex items-center gap-0.5">{impairedCount}<ProvenanceIcon metricName="Impaired Waterbodies" displayValue={String(impairedCount)} /></div>
-                    <div className="text-[10px] text-slate-500">Impaired Waterbodies</div>
+                    <div className="text-2xs text-slate-500">Impaired Waterbodies</div>
                   </div>
                 </div>
               </div>
@@ -1420,7 +1420,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
               <div className="flex items-center gap-2 mb-2">
                 <FileCheck className="h-4 w-4 text-slate-500" />
                 <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Quick Actions</span>
-                {!activeDetailId && <span className="text-[10px] text-slate-400 italic ml-1">Select a waterbody to enable report tools</span>}
+                {!activeDetailId && <span className="text-2xs text-slate-400 italic ml-1">Select a waterbody to enable report tools</span>}
               </div>
               <div className="flex flex-wrap gap-2">
                 <button
@@ -1903,8 +1903,8 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 bg-slate-100 border-slate-300">
                       <div className="text-2xl font-black text-slate-400">N/A</div>
                       <div className="text-right">
-                        <div className="text-[10px] text-slate-500">Ungraded</div>
-                        <div className="text-[10px] text-slate-400">{attainsBulkLoaded ? 'No data' : 'Loading...'}</div>
+                        <div className="text-2xs text-slate-500">Ungraded</div>
+                        <div className="text-2xs text-slate-400">{attainsBulkLoaded ? 'No data' : 'Loading...'}</div>
                       </div>
                     </div>
                   );
@@ -1915,7 +1915,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       <div className={`text-2xl font-black ${grade.color}`}>{grade.letter}</div>
                       <div className="text-right">
                         <div className={`text-sm font-bold ${grade.color}`}>{avgScore}%</div>
-                        <div className="text-[10px] text-slate-500">{assessed.length} assessed</div>
+                        <div className="text-2xs text-slate-500">{assessed.length} assessed</div>
                       </div>
                     </div>
                   );
@@ -1943,11 +1943,11 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                     </div>
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-slate-500">Phase</span>
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${jurisdictionMeta.phase === 'Phase I' ? 'bg-indigo-100 text-indigo-700' : 'bg-violet-100 text-violet-700'}`}>{jurisdictionMeta.phase}</span>
+                      <span className={`px-1.5 py-0.5 rounded text-2xs font-semibold ${jurisdictionMeta.phase === 'Phase I' ? 'bg-indigo-100 text-indigo-700' : 'bg-violet-100 text-violet-700'}`}>{jurisdictionMeta.phase}</span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-slate-500">Compliance</span>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${complianceBg}`}>{complianceStatus}</span>
+                      <span className={`px-2 py-0.5 rounded-full text-2xs font-bold border ${complianceBg}`}>{complianceStatus}</span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-slate-500">Receiving Waters</span>
@@ -1959,7 +1959,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                     </div>
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-slate-500">Data Freshness</span>
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border ${freshnessBg}`}>{freshnessLabel}</span>
+                      <span className={`px-1.5 py-0.5 rounded text-2xs font-semibold border ${freshnessBg}`}>{freshnessLabel}</span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-slate-500">EJ Burden</span>
@@ -1973,19 +1973,19 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
               <div className="grid grid-cols-4 gap-1.5 text-center mt-3">
                 <div className="rounded-lg bg-slate-50 p-2">
                   <div className="text-lg font-bold text-slate-800">{scopedRegionData.length}</div>
-                  <div className="text-[10px] text-slate-500">Total</div>
+                  <div className="text-2xs text-slate-500">Total</div>
                 </div>
                 <div className="rounded-lg bg-green-50 p-2">
                   <div className="text-lg font-bold text-green-700">{scopedRegionData.filter(r => r.status === 'assessed').length}</div>
-                  <div className="text-[10px] text-slate-500">Assessed</div>
+                  <div className="text-2xs text-slate-500">Assessed</div>
                 </div>
                 <div className="rounded-lg bg-blue-50 p-2">
                   <div className="text-lg font-bold text-blue-600">{scopedRegionData.filter(r => r.status === 'monitored').length}</div>
-                  <div className="text-[10px] text-slate-500">Monitored</div>
+                  <div className="text-2xs text-slate-500">Monitored</div>
                 </div>
                 <div className="rounded-lg bg-slate-50 p-2">
                   <div className="text-lg font-bold text-slate-400">{scopedRegionData.filter(r => r.status === 'unmonitored').length}</div>
-                  <div className="text-[10px] text-slate-500">No Data</div>
+                  <div className="text-2xs text-slate-500">No Data</div>
                 </div>
               </div>
 
@@ -2001,7 +2001,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                   <button
                     key={f.key}
                     onClick={() => { setFilterLevel(f.key as any); setShowAll(false); }}
-                    className={`px-2.5 py-1 text-[11px] font-medium rounded-full border transition-all ${
+                    className={`px-2.5 py-1 text-xs font-medium rounded-full border transition-all ${
                       filterLevel === f.key
                         ? f.color + ' ring-1 ring-offset-1 shadow-sm'
                         : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'
@@ -2030,7 +2030,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                   className="w-full px-2 py-1.5 text-sm border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-300"
                 />
                 {searchQuery && (
-                  <div className="text-[10px] text-slate-400 mt-1">{sortedRegions.length} of {scopedRegionData.length} waterbodies</div>
+                  <div className="text-2xs text-slate-400 mt-1">{sortedRegions.length} of {scopedRegionData.length} waterbodies</div>
                 )}
               </div>
             </CardHeader>
@@ -2056,11 +2056,11 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5">
                               <span className={`truncate text-sm font-medium ${isActive ? 'text-blue-900' : ''}`}>{r.name}</span>
-                              {isPrimary && <span className="flex-shrink-0 px-1 py-0.5 rounded text-[9px] font-bold bg-cyan-100 text-cyan-700 border border-cyan-200">PERMIT SITE</span>}
+                              {isPrimary && <span className="flex-shrink-0 px-1 py-0.5 rounded text-2xs font-bold bg-cyan-100 text-cyan-700 border border-cyan-200">PERMIT SITE</span>}
                             </div>
                             <div className="flex items-center gap-2 text-xs text-slate-500">
                               {r.status === 'assessed' ? (
-                                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
+                                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-2xs font-medium ${
                                   r.alertLevel === 'high' ? 'bg-red-100 text-red-700' :
                                   r.alertLevel === 'medium' ? 'bg-orange-100 text-orange-700' :
                                   r.alertLevel === 'low' ? 'bg-yellow-100 text-yellow-700' :
@@ -2069,14 +2069,14 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                                   {levelToLabel(r.alertLevel)}
                                 </span>
                               ) : r.status === 'monitored' ? (
-                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-600">
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-2xs font-medium bg-blue-50 text-blue-600">
                                   ◐ {r.dataSourceCount} source{r.dataSourceCount !== 1 ? 's' : ''}
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-500">— Unmonitored</span>
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-2xs font-medium bg-slate-100 text-slate-500">— Unmonitored</span>
                               )}
                               {r.activeAlerts > 0 && <span>{r.activeAlerts} alert{r.activeAlerts !== 1 ? 's' : ''}</span>}
-                              {r.status === 'assessed' && <span className="text-[9px] text-slate-400">EPA ATTAINS</span>}
+                              {r.status === 'assessed' && <span className="text-2xs text-slate-400">EPA ATTAINS</span>}
                             </div>
                           </div>
                           {isActive && <div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0 mr-1" />}
@@ -2230,15 +2230,15 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       <div className="text-left">
                         <div className="text-sm font-semibold text-cyan-800 flex items-center gap-2">
                           Restoration Plan — {regionName}
-                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${siteSeverityColor}`}>
+                          <span className={`text-2xs font-bold px-1.5 py-0.5 rounded-full ${siteSeverityColor}`}>
                             {siteSeverityLabel} ({siteSeverityScore})
                           </span>
                         </div>
-                        <div className="text-[11px] text-slate-500">
+                        <div className="text-xs text-slate-500">
                           {pearlModel} × {totalUnits} unit{totalUnits > 1 ? 's' : ''} ({totalQuads} quad{totalQuads > 1 ? 's' : ''}, {fullGPM} GPM) + {totalBMPs} BMPs · {waterType === 'brackish' ? '🦪 Oyster' : '🐚 Mussel'} Biofilt · {fmt(fullAnnualCost)}/yr
                         </div>
                         {(attainsCategory || isCat5) && (
-                          <div className="text-[10px] mt-0.5 flex items-center gap-1.5 flex-wrap">
+                          <div className="text-2xs mt-0.5 flex items-center gap-1.5 flex-wrap">
                             <span className={`font-bold px-1.5 py-0.5 rounded ${
                               isCat5 ? 'bg-red-100 text-red-700' :
                               attainsCategory.includes('4') ? 'bg-orange-100 text-orange-700' :
@@ -2256,7 +2256,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1.5 text-[9px]">
+                      <div className="flex items-center gap-1.5 text-2xs">
                         {categories.reduce((n, c) => n + c.modules.filter(m => m.status === 'warranted').length, 0) > 0 && (
                           <span className="bg-red-200 text-red-800 font-bold px-1.5 py-0.5 rounded-full">
                             {categories.reduce((n, c) => n + c.modules.filter(m => m.status === 'warranted').length, 0)} warranted
@@ -2285,20 +2285,20 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       <div className="rounded-lg border-2 border-slate-300 bg-white p-4 space-y-3">
                         <div className="flex items-center justify-between">
                           <div className="text-sm font-bold text-slate-900 uppercase tracking-wide">Executive Summary</div>
-                          <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${siteSeverityColor}`}>
+                          <span className={`text-2xs font-bold px-2 py-1 rounded-full ${siteSeverityColor}`}>
                             Site Severity: {siteSeverityLabel} ({siteSeverityScore}/100)
                           </span>
                         </div>
                         {/* Parameter assessment grid */}
                         <div className="rounded-md bg-slate-50 border border-slate-200 p-3 space-y-2">
-                          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{isMD ? 'MD DNR Threshold' : 'EPA Criteria'} Assessment</div>
-                          <div className="grid grid-cols-5 gap-1.5 text-[10px]">
+                          <div className="text-2xs font-bold text-slate-500 uppercase tracking-wider">{isMD ? 'MD DNR Threshold' : 'EPA Criteria'} Assessment</div>
+                          <div className="grid grid-cols-5 gap-1.5 text-2xs">
                             <div className="text-center">
                               <div className={`font-bold ${doSeverity === 'critical' ? 'text-red-700' : doSeverity === 'stressed' ? 'text-amber-600' : doSeverity === 'adequate' ? 'text-green-600' : 'text-slate-400'}`}>
                                 {doSeverity === 'unknown' ? '?' : doVal?.toFixed(1)} mg/L
                               </div>
                               <div className="text-slate-500">DO</div>
-                              <div className={`text-[9px] font-medium ${doSeverity === 'critical' ? 'text-red-600' : doSeverity === 'stressed' ? 'text-amber-600' : 'text-green-600'}`}>
+                              <div className={`text-2xs font-medium ${doSeverity === 'critical' ? 'text-red-600' : doSeverity === 'stressed' ? 'text-amber-600' : 'text-green-600'}`}>
                                 {doSeverity !== 'unknown' ? doSeverity : 'no data'}
                               </div>
                             </div>
@@ -2307,7 +2307,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                                 {bloomSeverity === 'unknown' ? '?' : chlVal} ug/L
                               </div>
                               <div className="text-slate-500">Chl-a</div>
-                              <div className={`text-[9px] font-medium ${bloomSeverity === 'severe' ? 'text-red-600' : bloomSeverity === 'significant' ? 'text-orange-600' : bloomSeverity === 'bloom' ? 'text-amber-600' : 'text-green-600'}`}>
+                              <div className={`text-2xs font-medium ${bloomSeverity === 'severe' ? 'text-red-600' : bloomSeverity === 'significant' ? 'text-orange-600' : bloomSeverity === 'bloom' ? 'text-amber-600' : 'text-green-600'}`}>
                                 {bloomSeverity !== 'unknown' ? bloomSeverity : 'no data'}
                               </div>
                             </div>
@@ -2316,7 +2316,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                                 {turbiditySeverity === 'unknown' ? '?' : turbVal?.toFixed(1)} FNU
                               </div>
                               <div className="text-slate-500">Turbidity</div>
-                              <div className={`text-[9px] font-medium ${turbiditySeverity === 'impaired' ? 'text-red-600' : turbiditySeverity === 'elevated' ? 'text-amber-600' : 'text-green-600'}`}>
+                              <div className={`text-2xs font-medium ${turbiditySeverity === 'impaired' ? 'text-red-600' : turbiditySeverity === 'elevated' ? 'text-amber-600' : 'text-green-600'}`}>
                                 {turbiditySeverity !== 'unknown' ? (turbiditySeverity === 'clear' ? 'ok' : turbiditySeverity) : 'no data'}
                               </div>
                             </div>
@@ -2325,14 +2325,14 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                                 {nutrientSeverity === 'unknown' ? '?' : `TN ${tnVal?.toFixed(1) ?? '?'}`}
                               </div>
                               <div className="text-slate-500">Nutrients</div>
-                              <div className={`text-[9px] font-medium ${nutrientSeverity === 'excessive' ? 'text-red-600' : nutrientSeverity === 'elevated' ? 'text-amber-600' : 'text-green-600'}`}>
+                              <div className={`text-2xs font-medium ${nutrientSeverity === 'excessive' ? 'text-red-600' : nutrientSeverity === 'elevated' ? 'text-amber-600' : 'text-green-600'}`}>
                                 {nutrientSeverity !== 'unknown' ? nutrientSeverity : 'no data'}
                               </div>
                             </div>
                             <div className="text-center">
                               <div className="font-bold text-slate-700">{attainsCategory || '?'}</div>
                               <div className="text-slate-500">ATTAINS</div>
-                              <div className={`text-[9px] font-medium ${isCat5 ? 'text-red-600' : isImpaired ? 'text-amber-600' : 'text-green-600'}`}>
+                              <div className={`text-2xs font-medium ${isCat5 ? 'text-red-600' : isImpaired ? 'text-amber-600' : 'text-green-600'}`}>
                                 {tmdlStatus === 'needed' ? 'no TMDL' : tmdlStatus === 'completed' ? 'has TMDL' : tmdlStatus}
                               </div>
                             </div>
@@ -2340,12 +2340,12 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                           <div className="w-full bg-slate-200 rounded-full h-2 mt-1">
                             <div className={`h-2 rounded-full transition-all ${siteSeverityScore >= 75 ? 'bg-red-500' : siteSeverityScore >= 50 ? 'bg-amber-500' : siteSeverityScore >= 25 ? 'bg-yellow-500' : 'bg-green-500'}`} style={{ width: `${Math.min(100, siteSeverityScore)}%` }} />
                           </div>
-                          <div className="text-[9px] text-slate-400">Composite: DO (25%) + Bloom/Nutrients (25%) + Turbidity (15%) + Impairment (20%) + Monitoring Gap (15%) | Thresholds: {thresholdSource}</div>
+                          <div className="text-2xs text-slate-400">Composite: DO (25%) + Bloom/Nutrients (25%) + Turbidity (15%) + Impairment (20%) + Monitoring Gap (15%) | Thresholds: {thresholdSource}</div>
                         </div>
                         {/* Situation + Treatment Priorities */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div className="rounded-md bg-slate-50 border border-slate-200 p-3">
-                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Situation</div>
+                            <div className="text-2xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Situation</div>
                             <div className="space-y-1 text-xs text-slate-700 leading-relaxed">
                               <div><span className="font-semibold">{regionName}</span> is {isCat5 ? 'Category 5 impaired' : attainsCategory.includes('4') ? 'Category 4 impaired' : isImpaired ? 'impaired' : 'under monitoring'}{attainsCauses.length > 0 ? ` for ${attainsCauses.join(', ').toLowerCase()}` : ''}.</div>
                               {dataAgeDays !== null && <div>Most recent data is <span className="font-semibold">{dataAgeDays} days old</span>. Confidence is <span className={`font-semibold ${dataConfidence === 'low' ? 'text-red-600' : dataConfidence === 'moderate' ? 'text-amber-600' : 'text-green-600'}`}>{dataConfidence}</span>.</div>}
@@ -2353,7 +2353,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                             </div>
                           </div>
                           <div className="rounded-md bg-red-50 border border-red-200 p-3">
-                            <div className="text-[10px] font-bold text-red-700 uppercase tracking-wider mb-1.5">Treatment Priorities</div>
+                            <div className="text-2xs font-bold text-red-700 uppercase tracking-wider mb-1.5">Treatment Priorities</div>
                             <div className="space-y-1 text-xs text-red-800 leading-relaxed">
                               {treatmentPriorities.length > 0 ? treatmentPriorities.slice(0, 3).map((tp: any, i: number) => (
                                 <div key={i} className="flex items-start gap-1">
@@ -2402,11 +2402,11 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                                 <div className="flex-1">
                                   <span className="font-medium text-slate-800">{imp.cause}</span>
                                   <span className="mx-1.5 text-slate-300">|</span>
-                                  <span className={`text-[10px] font-semibold ${imp.tier === 1 ? 'text-green-700' : imp.tier === 2 ? 'text-amber-700' : 'text-slate-500'}`}>
+                                  <span className={`text-2xs font-semibold ${imp.tier === 1 ? 'text-green-700' : imp.tier === 2 ? 'text-amber-700' : 'text-slate-500'}`}>
                                     {imp.tierLabel}
                                   </span>
                                 </div>
-                                <span className="text-[11px] text-slate-500 max-w-[40%] text-right">{imp.pearlAction}</span>
+                                <span className="text-xs text-slate-500 max-w-[40%] text-right">{imp.pearlAction}</span>
                               </div>
                             ))}
                           </div>
@@ -2419,9 +2419,9 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                           <div key={cat.id} className={`rounded-lg border p-2.5 ${cat.color}`}>
                             <div className="text-xs font-semibold flex items-center gap-1.5">
                               <span>{cat.icon}</span> {cat.title}
-                              <span className="text-[10px] font-normal text-slate-500 ml-auto">{cat.modules.length} modules</span>
+                              <span className="text-2xs font-normal text-slate-500 ml-auto">{cat.modules.length} modules</span>
                             </div>
-                            <div className="text-[11px] text-slate-500 mt-0.5">{cat.subtitle}</div>
+                            <div className="text-xs text-slate-500 mt-0.5">{cat.subtitle}</div>
                           </div>
                         ))}
                       </div>
@@ -2873,7 +2873,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold">1</div>
                       <div className="min-w-0 flex-1">
                         <div className="text-sm font-bold text-red-900">Potomac River — Interceptor Collapse</div>
-                        <div className="text-[10px] font-semibold text-red-700 uppercase tracking-wide">Active Sewage Spill · Cabin John, Montgomery County · Since Jan 19, 2026</div>
+                        <div className="text-2xs font-semibold text-red-700 uppercase tracking-wide">Active Sewage Spill · Cabin John, Montgomery County · Since Jan 19, 2026</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5">
@@ -2918,16 +2918,16 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       <span className="font-bold">🔬 PIN Relevance:</span> This event demonstrates catastrophic infrastructure failure impact on receiving waters. PIN's real-time monitoring capability would provide continuous E. coli, nutrient, and pathogen tracking during and after spill events — filling the gap that required UMD researchers and volunteer riverkeepers to manually sample. Continuous deployment at 6 DC Water monitoring sites would provide the 24/7 data regulators and the public need.
                     </div>
                     <div className="flex flex-wrap gap-1.5 pt-1">
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">DC Water</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">NPR</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">The Hill</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">NBC News</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">UMD School of Public Health</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">Potomac Conservancy</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">DOEE</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">VDH</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">MD Matters</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">Izaak Walton League</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">DC Water</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">NPR</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">The Hill</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">NBC News</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">UMD School of Public Health</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">Potomac Conservancy</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">DOEE</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">VDH</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">MD Matters</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">Izaak Walton League</span>
                     </div>
                   </div>
                   )}
@@ -3060,9 +3060,9 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                 { label: 'Nutrient Credit Value', value: '$18.40', sub: 'per lb nitrogen removed', color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200' },
               ].map(t => (
                 <div key={t.label} className={`rounded-xl border p-4 ${t.bg}`}>
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{t.label}</div>
+                  <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{t.label}</div>
                   <div className={`text-2xl font-bold ${t.color} mt-1`}>{t.value}</div>
-                  <div className="text-[10px] text-slate-500 mt-1">{t.sub}</div>
+                  <div className="text-2xs text-slate-500 mt-1">{t.sub}</div>
                 </div>
               ))}
             </div>
@@ -3082,7 +3082,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                   <div key={c.category} className={`border rounded-lg p-4 ${c.bg}`}>
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="text-sm font-semibold text-slate-800">{c.category}</h4>
-                      <Badge variant="outline" className={`text-[10px] ${c.color}`}>{c.trend}</Badge>
+                      <Badge variant="outline" className={`text-2xs ${c.color}`}>{c.trend}</Badge>
                     </div>
                     <p className="text-xs text-slate-500 leading-relaxed">{c.detail}</p>
                   </div>
@@ -3113,7 +3113,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
               </div>
             </div>
 
-            <div className="text-[10px] text-slate-400 italic">
+            <div className="text-2xs text-slate-400 italic">
               Projections based on MS4 permit compliance records, BMP monitoring data, and stormwater management plans. Actual values will populate as historical snapshots accumulate.
             </div>
           </CardContent>
@@ -3131,7 +3131,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                 <CardTitle className="text-base flex items-center gap-2">
                   <Shield className="h-4 w-4 text-slate-700" />
                   Data Provenance & Chain of Custody
-                  <Badge variant="outline" className="text-[10px] font-medium border-slate-300 text-slate-600 ml-1">Audit-Ready</Badge>
+                  <Badge variant="outline" className="text-2xs font-medium border-slate-300 text-slate-600 ml-1">Audit-Ready</Badge>
                 </CardTitle>
                 {expandedSections.provenance ? <Minus className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
               </div>
@@ -3174,8 +3174,8 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         ))}
                       </div>
                       <div className="border-t border-slate-100 pt-2 mt-2">
-                        <div className="text-[10px] text-slate-500 font-semibold mb-1">Monitored Parameters & Methods:</div>
-                        <div className="text-[10px] text-slate-500 leading-relaxed">
+                        <div className="text-2xs text-slate-500 font-semibold mb-1">Monitored Parameters & Methods:</div>
+                        <div className="text-2xs text-slate-500 leading-relaxed">
                           Dissolved Oxygen (ASTM D888) · Total Nitrogen (EPA 353.2) · Total Phosphorus (EPA 365.1) · TSS (EPA 160.2) · pH (ASTM D1293/EPA 9040) · Turbidity (EPA 180.1) · Conductivity (ASTM D1125) · Chlorophyll-a (EPA 445.0) · Temperature (ASTM D5386)
                         </div>
                       </div>
@@ -3197,8 +3197,8 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         ))}
                       </div>
                       <div className="bg-green-50 border border-green-200 rounded-md p-2 mt-2">
-                        <div className="text-[10px] text-green-800 font-semibold">vs. Traditional Grab Sampling</div>
-                        <div className="text-[10px] text-green-700">
+                        <div className="text-2xs text-green-800 font-semibold">vs. Traditional Grab Sampling</div>
+                        <div className="text-2xs text-green-700">
                           MS4 permits typically require 2-4 grab samples → ~16 data points/year.
                           PIN generates <strong>32,850× more data points</strong> with no field crew deployment.
                         </div>
@@ -3207,7 +3207,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                   </div>
 
                   <div className="bg-white border border-amber-300 rounded-md p-2.5">
-                    <div className="text-[10px] text-amber-900">
+                    <div className="text-2xs text-amber-900">
                       <strong>Regulatory Compliance:</strong> All sensors meet EPA QA/R-5 quality assurance requirements.
                       PIN sites align with QA GLP classification. Lab &amp; NIST/IEEE 17025 accredited.{' '}
                       <strong>QAPP Status: Submitted for {stateAbbr === 'MD' ? 'MDE Water & Science Administration' : (agency as any)?.division || 'state agency'} review.</strong>
@@ -3233,7 +3233,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                           <col.icon className={`h-3 w-3 ${col.color}`} />
                           <div className="text-xs font-semibold text-blue-800">{col.title}</div>
                         </div>
-                        <div className="text-[10px] text-slate-600 space-y-0.5">
+                        <div className="text-2xs text-slate-600 space-y-0.5">
                           {col.items.map((item, ii) => <div key={ii}>• {item}</div>)}
                         </div>
                       </div>
@@ -3241,7 +3241,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                   </div>
 
                   <div className="bg-blue-50 border border-blue-200 rounded-md p-2.5">
-                    <div className="text-[10px] text-blue-900">
+                    <div className="text-2xs text-blue-900">
                       <strong>EPA QAPP Compliance:</strong> All QA/QC procedures documented in Quality Assurance Project Plan submitted to {(agency as any)?.division || 'state agency'}. Precision targets: ±5% for nutrients, ±10% for turbidity, ±3% for DO/pH.
                     </div>
                   </div>
@@ -3255,8 +3255,8 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                   </div>
 
                   <div className="bg-gradient-to-r from-slate-50 to-violet-50 rounded-lg border border-violet-200 p-3">
-                    <div className="text-[10px] font-bold text-slate-600 uppercase mb-2">Data Path (Sensor → {(agency as any)?.name?.split(' ').slice(0, 2).join(' ') || 'State Agency'} Report)</div>
-                    <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+                    <div className="text-2xs font-bold text-slate-600 uppercase mb-2">Data Path (Sensor → {(agency as any)?.name?.split(' ').slice(0, 2).join(' ') || 'State Agency'} Report)</div>
+                    <div className="flex flex-wrap items-center gap-1.5 text-2xs">
                       {[
                         { icon: Cpu, label: 'PIN Sensor', sub: 'YSI EXO2 probe' },
                         { icon: Database, label: 'Data Logger', sub: 'Timestamped + GPS tagged' },
@@ -3269,7 +3269,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                           <div className="flex flex-col items-center bg-white rounded-md border border-violet-200 px-2.5 py-1.5 min-w-[85px]">
                             <step.icon className="h-3.5 w-3.5 text-violet-600 mb-0.5" />
                             <div className="font-semibold text-slate-700 text-center leading-tight">{step.label}</div>
-                            <div className="text-[8px] text-slate-400 text-center">{step.sub}</div>
+                            <div className="text-2xs text-slate-400 text-center">{step.sub}</div>
                           </div>
                           {idx < arr.length - 1 && <ArrowRight className="h-3 w-3 text-violet-400 flex-shrink-0" />}
                         </div>
@@ -3283,7 +3283,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <Fingerprint className="h-3.5 w-3.5 text-slate-600" />
                         <div className="text-xs font-semibold text-slate-800">Immutable Records</div>
                       </div>
-                      <div className="text-[10px] text-slate-600 space-y-0.5">
+                      <div className="text-2xs text-slate-600 space-y-0.5">
                         <div>• Every data point timestamped to millisecond</div>
                         <div>• Cryptographic hashing for tamper detection</div>
                         <div>• Append-only log: no retroactive edits</div>
@@ -3295,7 +3295,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <Eye className="h-3.5 w-3.5 text-slate-600" />
                         <div className="text-xs font-semibold text-slate-800">Access Logging</div>
                       </div>
-                      <div className="text-[10px] text-slate-600 space-y-0.5">
+                      <div className="text-2xs text-slate-600 space-y-0.5">
                         <div>• Every data access logged (who, when, what)</div>
                         <div>• Role-based permissions (MS4, State, Public)</div>
                         <div>• Viewer fingerprints: IP, session, duration</div>
@@ -3312,7 +3312,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                     <div className="text-sm font-bold text-slate-800">Data Defensibility: PIN vs Traditional Grab Sampling</div>
                   </div>
                   <div className="rounded-lg border border-slate-200 overflow-hidden">
-                    <table className="w-full text-[11px]">
+                    <table className="w-full text-xs">
                       <thead>
                         <tr className="bg-slate-50 border-b border-slate-200">
                           <th className="text-left px-3 py-2 font-semibold text-slate-700">Criteria</th>
@@ -3359,15 +3359,15 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <div className="flex items-center gap-2">
                           <div className={`h-2.5 w-2.5 rounded-full ${p.dotColor} flex-shrink-0`} />
                           <div className={`text-xs font-bold ${p.textColor}`}>{p.phase}</div>
-                          <Badge variant="outline" className={`text-[9px] ml-auto ${p.textColor} border-current`}>{p.goal}</Badge>
+                          <Badge variant="outline" className={`text-2xs ml-auto ${p.textColor} border-current`}>{p.goal}</Badge>
                         </div>
-                        <p className="text-[10px] text-slate-600 pl-[18px]">{p.desc}</p>
-                        <p className="text-[9px] text-slate-500 pl-[18px] italic">Timeline: {p.timeline}</p>
+                        <p className="text-2xs text-slate-600 pl-[18px]">{p.desc}</p>
+                        <p className="text-2xs text-slate-500 pl-[18px] italic">Timeline: {p.timeline}</p>
                       </div>
                     ))}
                   </div>
                   <div className="bg-slate-50 border border-slate-200 rounded-md p-2.5">
-                    <div className="text-[10px] text-slate-700">
+                    <div className="text-2xs text-slate-700">
                       <strong>Key Principle:</strong> Each phase maintains {stateAbbr === 'MD' ? 'MDE' : 'state'} compliance through data, not promises. {(agency as any)?.name || 'State regulators'} maintain oversight authority throughout all phases.
                     </div>
                   </div>
@@ -3390,13 +3390,13 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                     ].map((tile, i) => (
                       <div key={i} className="rounded-lg border border-purple-100 bg-purple-50/50 p-3 text-center space-y-1">
                         <div className="text-lg font-bold text-purple-700">{tile.value}</div>
-                        <div className="text-[10px] text-slate-600 font-medium">{tile.label}</div>
-                        <div className="text-[10px] text-slate-500">{tile.sub}</div>
+                        <div className="text-2xs text-slate-600 font-medium">{tile.label}</div>
+                        <div className="text-2xs text-slate-500">{tile.sub}</div>
                       </div>
                     ))}
                   </div>
                   <div className="bg-purple-50 border border-purple-200 rounded-md p-2.5">
-                    <div className="text-[10px] text-purple-900">
+                    <div className="text-2xs text-purple-900">
                       <strong>Audit Trail:</strong> Every split sample generates a paired record — sensor reading + certified lab result — stored with identical timestamps.
                       {stateAbbr === 'MD' ? ' MDE' : ' State'} auditors can query any date range to verify sensor-lab correlation across all sites in {stateName}.
                     </div>
@@ -3421,12 +3421,12 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                     ].map((tile, i) => (
                       <div key={i} className={`rounded-lg border ${tile.bg} p-3 text-center`}>
                         <div className={`text-xl font-bold ${tile.color}`}>{tile.value}</div>
-                        <div className="text-[10px] font-medium text-slate-700">{tile.label}</div>
-                        <div className="text-[9px] text-slate-500">{tile.sub}</div>
+                        <div className="text-2xs font-medium text-slate-700">{tile.label}</div>
+                        <div className="text-2xs text-slate-500">{tile.sub}</div>
                       </div>
                     ))}
                   </div>
-                  <div className="text-[10px] text-slate-500 italic">
+                  <div className="text-2xs text-slate-500 italic">
                     Fleet data updates as PIN deployments complete validation phases. Correlation scores calculated after 90 days of parallel sensor + grab sample data.
                   </div>
                 </div>
@@ -3437,7 +3437,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                   <div className="flex items-center gap-2">
                     <Droplets className="h-4 w-4 text-teal-600" />
                     <div className="text-sm font-bold text-slate-800">Nutrient Credit Certification Pathway — {stateName}</div>
-                    <Badge variant="outline" className="text-[9px] border-amber-300 text-amber-700 ml-auto">Not Yet Certified</Badge>
+                    <Badge variant="outline" className="text-2xs border-amber-300 text-amber-700 ml-auto">Not Yet Certified</Badge>
                   </div>
                   <p className="text-xs text-slate-600">
                     Chesapeake Bay TMDL nutrient credit trading requires state-level certification before credits can be banked, traded, or applied to Waste Load Allocations.
@@ -3451,12 +3451,12 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       { step: '4. Third-Party Credit Verification', status: 'Pending', detail: 'Independent verifier confirms removal quantities and credit calculations', statusColor: 'bg-slate-100 text-slate-600 border-slate-200', icon: '⏳' },
                       { step: '5. State Certification', status: 'Pending', detail: `${stateAbbr === 'MD' ? 'MDE' : stateAbbr === 'VA' ? 'VA DEQ' : 'State agency'} issues certificate authorizing credit banking/trading`, statusColor: 'bg-slate-100 text-slate-600 border-slate-200', icon: '⏳' },
                     ].map((row, i) => (
-                      <div key={i} className="flex items-start gap-3 text-[11px]">
+                      <div key={i} className="flex items-start gap-3 text-xs">
                         <span className="text-sm flex-shrink-0 mt-0.5">{row.icon}</span>
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <span className="font-semibold text-slate-800">{row.step}</span>
-                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold border ${row.statusColor}`}>{row.status}</span>
+                            <span className={`px-1.5 py-0.5 rounded text-2xs font-bold border ${row.statusColor}`}>{row.status}</span>
                           </div>
                           <div className="text-slate-500 mt-0.5">{row.detail}</div>
                         </div>
@@ -3464,7 +3464,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                     ))}
                   </div>
                   <div className="bg-teal-50 border border-teal-300 rounded-md p-2.5">
-                    <div className="text-[10px] text-teal-900">
+                    <div className="text-2xs text-teal-900">
                       <strong>Important:</strong> No PIN nutrient credits are currently certified, banked, or tradeable.
                       Credit values shown elsewhere in this dashboard are <em>projected estimates</em> for planning purposes only.
                       Actual credit generation requires completing all 5 steps above.
@@ -3473,7 +3473,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                 </div>
                 )}
 
-                <div className="text-[10px] text-slate-400 italic">
+                <div className="text-2xs text-slate-400 italic">
                   Source: PIN monitoring infrastructure specifications, EPA QA/R-5 framework, {(agency as any)?.name || 'state agency'} data quality requirements.
                   QAPP documentation available upon request.
                 </div>
@@ -3503,7 +3503,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       { label: 'Enforcement Pipeline', status: '2 Open', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-3 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className={`text-sm font-bold ${k.color} mt-1`}>{k.status}</div>
                       </div>
                     ))}
@@ -3567,14 +3567,14 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                           className={`flex items-center gap-2 text-xs rounded-lg border px-3 py-2 cursor-pointer hover:ring-1 hover:ring-blue-300 transition-all ${a.color}`}
                           onClick={() => setComingSoonId(comingSoonId === a.id ? null : a.id)}
                         >
-                          <Badge variant="outline" className="text-[9px] shrink-0">{a.priority}</Badge>
+                          <Badge variant="outline" className="text-2xs shrink-0">{a.priority}</Badge>
                           <span className="flex-1">{a.item}</span>
                           <ChevronDown size={14} className={`flex-shrink-0 text-slate-400 transition-transform ${comingSoonId === a.id ? 'rotate-180' : ''}`} />
                         </div>
                         {comingSoonId === a.id && (
                           <div className="ml-4 mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-3">
                             <p className="text-xs text-slate-700">{a.detail}</p>
-                            <p className="text-[10px] text-blue-600 mt-2 font-medium">Full detail view — Coming Soon</p>
+                            <p className="text-2xs text-blue-600 mt-2 font-medium">Full detail view — Coming Soon</p>
                           </div>
                         )}
                       </div>
@@ -3610,8 +3610,8 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                     ].map((a, i) => (
                       <div key={i} className="border border-slate-200 rounded-lg p-3">
                         <div className="flex items-center gap-2 mb-1">
-                          <Badge variant="outline" className={`text-[9px] ${a.impact === 'High' ? 'border-red-300 text-red-700' : 'border-amber-300 text-amber-700'}`}>{a.impact} Impact</Badge>
-                          <Badge variant="outline" className="text-[9px]">{a.status}</Badge>
+                          <Badge variant="outline" className={`text-2xs ${a.impact === 'High' ? 'border-red-300 text-red-700' : 'border-amber-300 text-amber-700'}`}>{a.impact} Impact</Badge>
+                          <Badge variant="outline" className="text-2xs">{a.status}</Badge>
                         </div>
                         <p className="text-xs text-slate-700">{a.action}</p>
                       </div>
@@ -3639,7 +3639,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       { action: 'Legislature considering stormwater utility fee authorization bill', status: 'In Committee' },
                     ].map((a, i) => (
                       <div key={i} className="flex items-start gap-2 text-xs border border-slate-200 rounded-lg px-3 py-2">
-                        <Badge variant="outline" className="text-[9px] shrink-0 mt-0.5">{a.status}</Badge>
+                        <Badge variant="outline" className="text-2xs shrink-0 mt-0.5">{a.status}</Badge>
                         <span className="text-slate-700">{a.action}</span>
                       </div>
                     ))}
@@ -3670,7 +3670,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <span className="text-slate-700">{e.item}</span>
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-slate-800">{e.value}</span>
-                          <Badge variant="outline" className="text-[9px]">{e.status}</Badge>
+                          <Badge variant="outline" className="text-2xs">{e.status}</Badge>
                         </div>
                       </div>
                     ))}
@@ -3698,7 +3698,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       { label: 'Non-Compliant', value: '1', bg: 'bg-red-50 border-red-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-3 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -3725,7 +3725,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       { label: 'Attaining', value: String(scopedRegionData.filter(r => r.alertLevel === 'none').length), bg: 'bg-green-50 border-green-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-3 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -3757,7 +3757,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <span className="text-slate-700 flex-1">{c.condition}</span>
                         <div className="flex items-center gap-2 shrink-0">
                           <span className="text-slate-500">{c.due}</span>
-                          <Badge variant="outline" className="text-[9px]">{c.status}</Badge>
+                          <Badge variant="outline" className="text-2xs">{c.status}</Badge>
                         </div>
                       </div>
                     ))}
@@ -3785,9 +3785,9 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       { label: 'Risk Score', value: 'Low', trend: '— Stable', bg: 'bg-blue-50 border-blue-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-3 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-lg font-bold text-slate-800 mt-1">{k.value}</div>
-                        <div className="text-[10px] text-slate-500">{k.trend}</div>
+                        <div className="text-2xs text-slate-500">{k.trend}</div>
                       </div>
                     ))}
                   </div>
@@ -3819,7 +3819,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <span className="text-slate-700">{s.standard}</span>
                         <div className="flex items-center gap-2">
                           <span className="text-slate-500">{s.limit}</span>
-                          <Badge variant="outline" className={`text-[9px] ${s.status === 'Meeting' ? 'border-green-300 text-green-700' : s.status === 'Exceedance' ? 'border-red-300 text-red-700' : 'border-amber-300 text-amber-700'}`}>{s.status}</Badge>
+                          <Badge variant="outline" className={`text-2xs ${s.status === 'Meeting' ? 'border-green-300 text-green-700' : s.status === 'Exceedance' ? 'border-red-300 text-red-700' : 'border-amber-300 text-amber-700'}`}>{s.status}</Badge>
                         </div>
                       </div>
                     ))}
@@ -3867,7 +3867,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       { label: 'Exceedances (YTD)', value: '14', bg: 'bg-amber-50 border-amber-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-3 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -3894,7 +3894,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       { label: 'Avg TN (mg/L)', value: '2.1', bg: 'bg-cyan-50 border-cyan-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-3 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -3927,7 +3927,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <div className="flex items-center gap-3">
                           <span className="text-slate-500">Level: {c.level}</span>
                           <span className="text-slate-500">Limit: {c.limit}</span>
-                          <Badge variant="outline" className={`text-[9px] ${c.status === 'Meeting' ? 'border-green-300 text-green-700' : c.status === 'Exceedance' ? 'border-red-300 text-red-700' : 'border-blue-300 text-blue-700'}`}>{c.status}</Badge>
+                          <Badge variant="outline" className={`text-2xs ${c.status === 'Meeting' ? 'border-green-300 text-green-700' : c.status === 'Exceedance' ? 'border-red-300 text-red-700' : 'border-blue-300 text-blue-700'}`}>{c.status}</Badge>
                         </div>
                       </div>
                     ))}
@@ -3956,7 +3956,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                     ].map((c, i) => (
                       <div key={i} className="flex items-center justify-between text-xs border border-slate-200 rounded-lg px-3 py-2">
                         <span className="text-slate-700">{c.item}</span>
-                        <Badge variant="outline" className="text-[9px]">{c.status}</Badge>
+                        <Badge variant="outline" className="text-2xs">{c.status}</Badge>
                       </div>
                     ))}
                   </div>
@@ -3983,7 +3983,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       <div key={i} className={`text-xs border rounded-lg px-3 py-2 ${a.active ? 'border-amber-200 bg-amber-50' : 'border-slate-200'}`}>
                         <div className="flex items-center justify-between">
                           <span className={a.active ? 'text-amber-800 font-medium' : 'text-slate-500'}>{a.advisory}</span>
-                          <span className="text-[10px] text-slate-400 shrink-0 ml-2">{a.issued}</span>
+                          <span className="text-2xs text-slate-400 shrink-0 ml-2">{a.issued}</span>
                         </div>
                       </div>
                     ))}
@@ -4011,7 +4011,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       { label: 'TMDL Applied', value: String(Math.max(1, Math.floor(scopedRegionData.length * 0.6))), bg: 'bg-cyan-50 border-cyan-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-3 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -4063,7 +4063,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <div className="flex items-center gap-3 shrink-0">
                           <span className="text-slate-500">{s.contribution}</span>
                           <span className="text-slate-500">{s.pollutant}</span>
-                          <Badge variant="outline" className="text-[9px]">{s.trend}</Badge>
+                          <Badge variant="outline" className="text-2xs">{s.trend}</Badge>
                         </div>
                       </div>
                     ))}
@@ -4090,7 +4090,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       { label: 'Recent Samples', value: '48', bg: 'bg-blue-50 border-blue-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-3 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -4123,7 +4123,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <div className="flex items-center gap-3 shrink-0">
                           <span className="text-slate-500">{c.sources}</span>
                           <span className="text-slate-500">{c.waters} waters</span>
-                          <Badge variant="outline" className={`text-[9px] ${c.tmdl === 'Yes' ? 'border-green-300 text-green-700' : c.tmdl === 'No' ? 'border-slate-300 text-slate-600' : 'border-amber-300 text-amber-700'}`}>TMDL: {c.tmdl}</Badge>
+                          <Badge variant="outline" className={`text-2xs ${c.tmdl === 'Yes' ? 'border-green-300 text-green-700' : c.tmdl === 'No' ? 'border-slate-300 text-slate-600' : 'border-amber-300 text-amber-700'}`}>TMDL: {c.tmdl}</Badge>
                         </div>
                       </div>
                     ))}
@@ -4155,7 +4155,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       { label: 'Other', value: '22', bg: 'bg-slate-50 border-slate-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-3 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -4204,7 +4204,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       { label: 'Passing Inspection', value: '91%', bg: 'bg-green-50 border-green-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-3 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -4235,11 +4235,11 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       <div key={i} className="border border-slate-200 rounded-lg p-3">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-semibold text-slate-800">{m.bmp}</span>
-                          <Badge variant="outline" className={`text-[9px] ${m.priority === 'High' ? 'border-red-300 text-red-700' : m.priority === 'Medium' ? 'border-amber-300 text-amber-700' : 'border-slate-300 text-slate-600'}`}>{m.priority}</Badge>
+                          <Badge variant="outline" className={`text-2xs ${m.priority === 'High' ? 'border-red-300 text-red-700' : m.priority === 'Medium' ? 'border-amber-300 text-amber-700' : 'border-slate-300 text-slate-600'}`}>{m.priority}</Badge>
                         </div>
                         <div className="flex items-center justify-between mt-1">
                           <span className="text-xs text-slate-500">{m.task}</span>
-                          <span className="text-[10px] text-slate-400">Due: {m.due}</span>
+                          <span className="text-2xs text-slate-400">Due: {m.due}</span>
                         </div>
                       </div>
                     ))}
@@ -4266,7 +4266,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       { label: 'Est. Investment', value: '$2.8M', bg: 'bg-amber-50 border-amber-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-3 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -4296,7 +4296,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       { label: 'Loan Repayments', value: '$31M/yr', bg: 'bg-slate-50 border-slate-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -4310,7 +4310,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       { label: 'Repayment Status', value: 'Current', bg: 'bg-emerald-50 border-emerald-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -4338,7 +4338,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       { label: 'Spent to Date', value: '$6.8M', bg: 'bg-amber-50 border-amber-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-3 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -4367,12 +4367,12 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       <div key={i} className="border border-slate-200 rounded-lg p-3">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-semibold text-slate-800">{p.project}</span>
-                          <Badge variant="outline" className="text-[9px]">{p.status}</Badge>
+                          <Badge variant="outline" className="text-2xs">{p.status}</Badge>
                         </div>
                         <div className="mt-2 bg-slate-100 rounded-full h-2">
                           <div className="bg-blue-500 h-2 rounded-full" style={{ width: p.completion }} />
                         </div>
-                        <div className="text-[10px] text-slate-400 mt-1 text-right">{p.completion}</div>
+                        <div className="text-2xs text-slate-400 mt-1 text-right">{p.completion}</div>
                       </div>
                     ))}
                   </div>
@@ -4398,7 +4398,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       { label: 'Permeable Pavement', value: '8', bg: 'bg-blue-50 border-blue-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-3 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -4440,7 +4440,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       { label: 'Grab Sample', value: '16', bg: 'bg-slate-50 border-slate-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-3 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -4468,7 +4468,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       { label: 'WQX Submissions', value: '12', bg: 'bg-cyan-50 border-cyan-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-3 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -4496,7 +4496,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       { recommendation: 'Install automated sampler at stream gauge site for storm events', priority: 'Low' },
                     ].map((r, i) => (
                       <div key={i} className="flex items-start gap-2 text-xs border border-slate-200 rounded-lg px-3 py-2">
-                        <Badge variant="outline" className={`text-[9px] shrink-0 mt-0.5 ${r.priority === 'High' ? 'border-red-300 text-red-700' : r.priority === 'Medium' ? 'border-amber-300 text-amber-700' : 'border-slate-300 text-slate-600'}`}>{r.priority}</Badge>
+                        <Badge variant="outline" className={`text-2xs shrink-0 mt-0.5 ${r.priority === 'High' ? 'border-red-300 text-red-700' : r.priority === 'Medium' ? 'border-amber-300 text-amber-700' : 'border-slate-300 text-slate-600'}`}>{r.priority}</Badge>
                         <span className="text-slate-700">{r.recommendation}</span>
                       </div>
                     ))}
@@ -4528,8 +4528,8 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <span className="text-slate-700 font-medium">{s.station}</span>
                         <div className="flex items-center gap-3 shrink-0">
                           <span className="text-slate-600">{s.param}</span>
-                          <Badge variant="outline" className={`text-[9px] ${s.status === 'Normal' ? 'border-green-300 text-green-700' : s.status === 'Alert' ? 'border-red-300 text-red-700' : 'border-amber-300 text-amber-700'}`}>{s.status}</Badge>
-                          <span className="text-[10px] text-slate-400">{s.lastUpdate}</span>
+                          <Badge variant="outline" className={`text-2xs ${s.status === 'Normal' ? 'border-green-300 text-green-700' : s.status === 'Alert' ? 'border-red-300 text-red-700' : 'border-amber-300 text-amber-700'}`}>{s.status}</Badge>
+                          <span className="text-2xs text-slate-400">{s.lastUpdate}</span>
                         </div>
                       </div>
                     ))}
@@ -4556,7 +4556,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <div key={i} className="border border-red-200 bg-red-50 rounded-lg p-3">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-semibold text-red-800">{r.name}</span>
-                            <Badge variant="outline" className="text-[9px] border-red-300 text-red-700">Severe</Badge>
+                            <Badge variant="outline" className="text-2xs border-red-300 text-red-700">Severe</Badge>
                           </div>
                           <p className="text-xs text-red-600 mt-1">{r.activeAlerts} active alerts — monitoring elevated</p>
                         </div>
@@ -4575,7 +4575,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
             case 'disaster-response': return DS(
               <Card className="border-blue-300 bg-gradient-to-br from-blue-50 to-white shadow-sm">
                 <CardHeader>
-                  <div className="inline-flex w-fit items-center rounded-full border border-blue-300 bg-white px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-blue-700">
+                  <div className="inline-flex w-fit items-center rounded-full border border-blue-300 bg-white px-2 py-1 text-2xs font-semibold uppercase tracking-wide text-blue-700">
                     Action Layer
                   </div>
                   <CardTitle className="flex items-center gap-2 mt-2">
@@ -4596,7 +4596,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <span className="text-slate-700">{r.resource}</span>
                         <div className="flex items-center gap-2">
                           <span className="text-slate-500">{r.status}</span>
-                          <Badge variant="outline" className="text-[9px]">{r.availability}</Badge>
+                          <Badge variant="outline" className="text-2xs">{r.availability}</Badge>
                         </div>
                       </div>
                     ))}
@@ -4626,7 +4626,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       { label: 'Closed (YTD)', value: '12', bg: 'bg-green-50 border-green-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-3 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -4656,8 +4656,8 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       <div key={i} className="flex items-center justify-between text-xs border border-slate-200 rounded-lg px-3 py-2">
                         <span className="text-slate-700">{p.item}</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-slate-400">{p.updated}</span>
-                          <Badge variant="outline" className={`text-[9px] ${p.status === 'Current' ? 'border-green-300 text-green-700' : 'border-blue-300 text-blue-700'}`}>{p.status}</Badge>
+                          <span className="text-2xs text-slate-400">{p.updated}</span>
+                          <Badge variant="outline" className={`text-2xs ${p.status === 'Current' ? 'border-green-300 text-green-700' : 'border-blue-300 text-blue-700'}`}>{p.status}</Badge>
                         </div>
                       </div>
                     ))}
@@ -4685,7 +4685,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       { label: 'Behind Schedule', value: '2', bg: 'bg-amber-50 border-amber-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-3 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -4717,7 +4717,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <div className="flex items-center gap-3 shrink-0">
                           <span className="text-slate-500">Current: {p.current}</span>
                           <span className="text-slate-500">Target: {p.target}</span>
-                          <Badge variant="outline" className={`text-[9px] ${p.status === 'Meeting' ? 'border-green-300 text-green-700' : p.status === 'Over' ? 'border-red-300 text-red-700' : 'border-blue-300 text-blue-700'}`}>{p.status}</Badge>
+                          <Badge variant="outline" className={`text-2xs ${p.status === 'Meeting' ? 'border-green-300 text-green-700' : p.status === 'Over' ? 'border-red-300 text-red-700' : 'border-blue-300 text-blue-700'}`}>{p.status}</Badge>
                         </div>
                       </div>
                     ))}
@@ -4746,7 +4746,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       <div key={i} className="border border-slate-200 rounded-lg p-3">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-semibold text-slate-800">{s.strategy}</span>
-                          <Badge variant="outline" className="text-[9px]">{s.status}</Badge>
+                          <Badge variant="outline" className="text-2xs">{s.status}</Badge>
                         </div>
                         <div className="flex items-center gap-4 mt-1">
                           <span className="text-xs text-slate-500">Reduction: {s.reduction}</span>
@@ -4781,7 +4781,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <span className="text-slate-700">{d.doc}</span>
                         <div className="flex items-center gap-2">
                           <span className="text-slate-400">{d.year}</span>
-                          <Badge variant="outline" className={`text-[9px] ${d.status === 'Approved' ? 'border-green-300 text-green-700' : d.status === 'Draft' ? 'border-amber-300 text-amber-700' : 'border-blue-300 text-blue-700'}`}>{d.status}</Badge>
+                          <Badge variant="outline" className={`text-2xs ${d.status === 'Approved' ? 'border-green-300 text-green-700' : d.status === 'Draft' ? 'border-amber-300 text-amber-700' : 'border-blue-300 text-blue-700'}`}>{d.status}</Badge>
                         </div>
                       </div>
                     ))}
@@ -4813,7 +4813,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <div className="flex items-center gap-3">
                           <span className="text-slate-500">WLA: {w.allocation}</span>
                           <span className="text-slate-500">Current: {w.current}</span>
-                          <Badge variant="outline" className={`text-[9px] ${w.meeting ? 'border-green-300 text-green-700' : 'border-red-300 text-red-700'}`}>{w.pct}%</Badge>
+                          <Badge variant="outline" className={`text-2xs ${w.meeting ? 'border-green-300 text-green-700' : 'border-red-300 text-red-700'}`}>{w.pct}%</Badge>
                         </div>
                       </div>
                     ))}
@@ -4846,7 +4846,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       { label: 'Public Education', value: '85%', bg: 'bg-blue-50 border-blue-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-3 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -4879,7 +4879,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <div className="flex items-center gap-3">
                           <span className="text-slate-500">Eff: {b.efficiency}</span>
                           <span className="text-slate-500">Maint: {b.maintenance}</span>
-                          <Badge variant="outline" className="text-[9px]">Grade: {b.condition}</Badge>
+                          <Badge variant="outline" className="text-2xs">Grade: {b.condition}</Badge>
                         </div>
                       </div>
                     ))}
@@ -4912,7 +4912,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <div className="flex items-center gap-3">
                           <span className="text-slate-500">You: {p.yours}</span>
                           <span className="text-slate-500">Median: {p.median}</span>
-                          <Badge variant="outline" className="text-[9px]">{p.percentile}</Badge>
+                          <Badge variant="outline" className="text-2xs">{p.percentile}</Badge>
                         </div>
                       </div>
                     ))}
@@ -4944,7 +4944,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <span className="text-slate-700">{t.indicator}</span>
                         <div className="flex items-center gap-2">
                           <span className={`font-medium ${t.indicator.includes('Impaired') || t.indicator.includes('response') ? (t.direction === 'down' ? 'text-green-600' : 'text-red-600') : (t.direction === 'up' ? 'text-green-600' : 'text-red-600')}`}>{t.change}</span>
-                          <Badge variant="outline" className="text-[9px]">{t.period}</Badge>
+                          <Badge variant="outline" className="text-2xs">{t.period}</Badge>
                         </div>
                       </div>
                     ))}
@@ -4975,7 +4975,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <span className="text-slate-700 font-medium">{r.report}</span>
                         <div className="flex items-center gap-3">
                           <span className="text-slate-400">Due: {r.due}</span>
-                          <Badge variant="outline" className={`text-[9px] ${r.status === 'Accepted' ? 'border-green-300 text-green-700' : r.status === 'Submitted' ? 'border-blue-300 text-blue-700' : 'border-amber-300 text-amber-700'}`}>{r.status} ({r.pct}%)</Badge>
+                          <Badge variant="outline" className={`text-2xs ${r.status === 'Accepted' ? 'border-green-300 text-green-700' : r.status === 'Submitted' ? 'border-blue-300 text-blue-700' : 'border-amber-300 text-amber-700'}`}>{r.status} ({r.pct}%)</Badge>
                         </div>
                       </div>
                     ))}
@@ -5006,7 +5006,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <span className="text-slate-700">{e.format}</span>
                         <div className="flex items-center gap-3">
                           <span className="text-slate-400">Last: {e.lastExport}</span>
-                          <Badge variant="outline" className={`text-[9px] ${e.status === 'Ready' ? 'border-green-300 text-green-700' : e.status === 'Not Started' ? 'border-slate-300 text-slate-600' : 'border-amber-300 text-amber-700'}`}>{e.status}</Badge>
+                          <Badge variant="outline" className={`text-2xs ${e.status === 'Ready' ? 'border-green-300 text-green-700' : e.status === 'Not Started' ? 'border-slate-300 text-slate-600' : 'border-amber-300 text-amber-700'}`}>{e.status}</Badge>
                         </div>
                       </div>
                     ))}
@@ -5037,7 +5037,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <div className="flex items-center gap-3">
                           <span className="text-slate-400">{s.agency}</span>
                           <span className="text-slate-400">Due: {s.due}</span>
-                          <Badge variant="outline" className={`text-[9px] ${s.status === 'Submitted' ? 'border-green-300 text-green-700' : s.status === 'In Progress' ? 'border-amber-300 text-amber-700' : 'border-slate-300 text-slate-600'}`}>{s.status}</Badge>
+                          <Badge variant="outline" className={`text-2xs ${s.status === 'Submitted' ? 'border-green-300 text-green-700' : s.status === 'In Progress' ? 'border-amber-300 text-amber-700' : 'border-slate-300 text-slate-600'}`}>{s.status}</Badge>
                         </div>
                       </div>
                     ))}
@@ -5062,7 +5062,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                     <p className="text-xs mt-1">Select data sources, parameters, date ranges, and output format to build custom reports</p>
                     <div className="flex flex-wrap gap-2 justify-center mt-4">
                       {['Water Quality', 'BMP Performance', 'Compliance', 'Monitoring', 'Financial'].map(t => (
-                        <Badge key={t} variant="outline" className="text-[10px] cursor-pointer hover:bg-slate-50">{t}</Badge>
+                        <Badge key={t} variant="outline" className="text-2xs cursor-pointer hover:bg-slate-50">{t}</Badge>
                       ))}
                     </div>
                   </div>
@@ -5091,7 +5091,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       { label: 'MCM 6: Good Housekeeping', value: '88%', bg: 'bg-green-50 border-green-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-3 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -5123,7 +5123,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <span className="text-slate-700">{a.activity}</span>
                         <div className="flex items-center gap-3">
                           <span className="text-slate-500">{a.reach}</span>
-                          <Badge variant="outline" className={`text-[9px] ${a.status === 'Active' ? 'border-green-300 text-green-700' : a.status === 'Completed' ? 'border-blue-300 text-blue-700' : 'border-amber-300 text-amber-700'}`}>{a.status}</Badge>
+                          <Badge variant="outline" className={`text-2xs ${a.status === 'Active' ? 'border-green-300 text-green-700' : a.status === 'Completed' ? 'border-blue-300 text-blue-700' : 'border-amber-300 text-amber-700'}`}>{a.status}</Badge>
                         </div>
                       </div>
                     ))}
@@ -5154,7 +5154,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <span className="text-slate-700">{e.event}</span>
                         <div className="flex items-center gap-3">
                           <span className="text-slate-500">{e.participation}</span>
-                          <Badge variant="outline" className="text-[9px]">{e.date}</Badge>
+                          <Badge variant="outline" className="text-2xs">{e.date}</Badge>
                         </div>
                       </div>
                     ))}
@@ -5181,7 +5181,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       { label: 'Resolved', value: '6', bg: 'bg-green-50 border-green-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-3 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -5195,7 +5195,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <span className="text-slate-700">{inv.investigation}</span>
                         <div className="flex items-center gap-2">
                           <span className="text-slate-400">{inv.days} days</span>
-                          <Badge variant="outline" className={`text-[9px] ${inv.status === 'Resolved' ? 'border-green-300 text-green-700' : 'border-amber-300 text-amber-700'}`}>{inv.status}</Badge>
+                          <Badge variant="outline" className={`text-2xs ${inv.status === 'Resolved' ? 'border-green-300 text-green-700' : 'border-amber-300 text-amber-700'}`}>{inv.status}</Badge>
                         </div>
                       </div>
                     ))}
@@ -5222,7 +5222,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       { label: 'Resolved', value: '14', bg: 'bg-green-50 border-green-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-3 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -5237,7 +5237,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <span className="text-slate-700">{s.site} ({s.acres} ac)</span>
                         <div className="flex items-center gap-2">
                           <span className="text-slate-400">{s.lastInspection}</span>
-                          <Badge variant="outline" className={`text-[9px] ${s.status === 'Compliant' ? 'border-green-300 text-green-700' : 'border-red-300 text-red-700'}`}>{s.status}</Badge>
+                          <Badge variant="outline" className={`text-2xs ${s.status === 'Compliant' ? 'border-green-300 text-green-700' : 'border-red-300 text-red-700'}`}>{s.status}</Badge>
                         </div>
                       </div>
                     ))}
@@ -5268,7 +5268,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <span className="text-slate-700">{item.item}</span>
                         <div className="flex items-center gap-3">
                           <span className="text-slate-500">{item.detail}</span>
-                          <Badge variant="outline" className="text-[9px] border-green-300 text-green-700">{item.status}</Badge>
+                          <Badge variant="outline" className="text-2xs border-green-300 text-green-700">{item.status}</Badge>
                         </div>
                       </div>
                     ))}
@@ -5300,7 +5300,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <span className="text-slate-700">{p.practice}</span>
                         <div className="flex items-center gap-3">
                           <span className="text-slate-500">{p.metric}</span>
-                          <Badge variant="outline" className="text-[9px]">{p.frequency}</Badge>
+                          <Badge variant="outline" className="text-2xs">{p.frequency}</Badge>
                         </div>
                       </div>
                     ))}
@@ -5329,7 +5329,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       { label: 'Loan Repayments', value: '$31M/yr', bg: 'bg-slate-50 border-slate-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -5343,7 +5343,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       { label: 'Repayment Status', value: 'Current', bg: 'bg-emerald-50 border-emerald-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -5376,7 +5376,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                           <span className="text-slate-500">{g.amount}</span>
                           <span className="text-slate-400">{g.period}</span>
                           <span className="text-slate-500">Rem: {g.remaining}</span>
-                          <Badge variant="outline" className={`text-[9px] ${g.status === 'New' ? 'border-blue-300 text-blue-700' : 'border-green-300 text-green-700'}`}>{g.status}</Badge>
+                          <Badge variant="outline" className={`text-2xs ${g.status === 'New' ? 'border-blue-300 text-blue-700' : 'border-green-300 text-green-700'}`}>{g.status}</Badge>
                         </div>
                       </div>
                     ))}
@@ -5408,7 +5408,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <div className="flex items-center gap-3">
                           <span className="text-slate-500">{o.amount}</span>
                           <span className="text-slate-400">Due: {o.deadline}</span>
-                          <Badge variant="outline" className={`text-[9px] ${o.status === 'Preparing' ? 'border-amber-300 text-amber-700' : o.status === 'Pre-Application' ? 'border-blue-300 text-blue-700' : 'border-slate-300 text-slate-600'}`}>{o.status}</Badge>
+                          <Badge variant="outline" className={`text-2xs ${o.status === 'Preparing' ? 'border-amber-300 text-amber-700' : o.status === 'Pre-Application' ? 'border-blue-300 text-blue-700' : 'border-slate-300 text-slate-600'}`}>{o.status}</Badge>
                         </div>
                       </div>
                     ))}
@@ -5435,7 +5435,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                       { label: 'Rate per ERU', value: '$8.50/mo', bg: 'bg-slate-50 border-slate-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-3 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -5451,7 +5451,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <span className="text-slate-700">{c.category}</span>
                         <div className="flex items-center gap-2">
                           <span className="text-slate-500">{c.amount}</span>
-                          <Badge variant="outline" className="text-[9px]">{c.pct}</Badge>
+                          <Badge variant="outline" className="text-2xs">{c.pct}</Badge>
                         </div>
                       </div>
                     ))}
@@ -5482,7 +5482,7 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                         <span className="text-slate-700">{m.metric}</span>
                         <div className="flex items-center gap-2">
                           <span className="text-slate-500 font-medium">{m.value}</span>
-                          <Badge variant="outline" className={`text-[9px] ${m.trend === 'Improving' || m.trend === 'Decreasing' ? 'border-green-300 text-green-700' : m.trend === 'Increasing' ? 'border-amber-300 text-amber-700' : 'border-slate-300 text-slate-600'}`}>{m.trend}</Badge>
+                          <Badge variant="outline" className={`text-2xs ${m.trend === 'Improving' || m.trend === 'Decreasing' ? 'border-green-300 text-green-700' : m.trend === 'Increasing' ? 'border-amber-300 text-amber-700' : 'border-slate-300 text-slate-600'}`}>{m.trend}</Badge>
                         </div>
                       </div>
                     ))}
@@ -5512,14 +5512,14 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                   <CardContent>
                     <div className={`rounded-xl border p-4 flex items-center justify-between ${scoreBg}`}>
                       <div>
-                        <div className="text-[10px] font-bold uppercase tracking-wider opacity-70">Eco Score</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider opacity-70">Eco Score</div>
                         <div className="text-xs opacity-80 mt-1">
                           {ecoData ? `${ecoData.totalTE} T&E species · ${ecoData.aquaticTE} aquatic · ${ecoData.criticalHabitat} critical habitat` : 'No T&E data available'}
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="text-2xl font-bold">{ecoScore}</div>
-                        <Badge variant="outline" className="text-[10px] mt-1">{label}</Badge>
+                        <Badge variant="outline" className="text-2xs mt-1">{label}</Badge>
                       </div>
                     </div>
                   </CardContent>
@@ -5539,31 +5539,31 @@ export function MS4ManagementCenter({ stateAbbr, ms4Jurisdiction, onSelectRegion
                     <CardTitle className="flex items-center gap-2">
                       <Bug className="h-5 w-5 text-rose-600" />
                       Threatened & Endangered Species — {stateName}
-                      <Badge variant="secondary" className="ml-1 text-[10px]">USFWS ECOS</Badge>
+                      <Badge variant="secondary" className="ml-1 text-2xs">USFWS ECOS</Badge>
                     </CardTitle>
                     <CardDescription>ESA-listed species in receiving waters — relevant for MS4 biological assessment requirements</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       <div className="rounded-xl border p-4 bg-slate-50 border-slate-200">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total T&E</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Total T&E</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{federalTotal}</div>
-                        <div className="text-[10px] text-slate-400">Federal ESA</div>
+                        <div className="text-2xs text-slate-400">Federal ESA</div>
                       </div>
                       <div className="rounded-xl border p-4 bg-blue-50 border-blue-200">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Aquatic T&E</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Aquatic T&E</div>
                         <div className="text-2xl font-bold text-blue-700 mt-1">{federalAquatic}</div>
-                        <div className="text-[10px] text-slate-400">Freshwater / marine</div>
+                        <div className="text-2xs text-slate-400">Freshwater / marine</div>
                       </div>
                       <div className="rounded-xl border p-4 bg-rose-50 border-rose-200">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Critical Habitat</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Critical Habitat</div>
                         <div className="text-2xl font-bold text-rose-700 mt-1">{critHab}</div>
-                        <div className="text-[10px] text-slate-400">Designated areas</div>
+                        <div className="text-2xs text-slate-400">Designated areas</div>
                       </div>
                       <div className="rounded-xl border p-4 bg-amber-50 border-amber-200">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Eco Score</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Eco Score</div>
                         <div className="text-2xl font-bold text-amber-700 mt-1">{getEcoScore(stateAbbr)}</div>
-                        <div className="text-[10px] text-slate-400">{ecoScoreLabel(getEcoScore(stateAbbr))}</div>
+                        <div className="text-2xs text-slate-400">{ecoScoreLabel(getEcoScore(stateAbbr))}</div>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

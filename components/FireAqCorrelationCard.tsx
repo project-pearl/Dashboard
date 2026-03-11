@@ -210,7 +210,7 @@ export function FireAqCorrelationCard() {
             <div className="flex items-center gap-2 mb-1">
               {TYPE_ICONS[insight.type]}
               <span className="text-sm font-semibold text-slate-700">{insight.title}</span>
-              <Badge variant="outline" className="ml-auto text-[10px]">{insight.severity}</Badge>
+              <Badge variant="outline" className="ml-auto text-2xs">{insight.severity}</Badge>
             </div>
             <p className="text-xs text-slate-600">{insight.detail}</p>
           </div>

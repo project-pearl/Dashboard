@@ -112,15 +112,15 @@ export function WatershedHealthPanel({ stateAbbr }: WatershedHealthPanelProps) {
             <div className="flex gap-6">
               <div className="text-center">
                 <p className="text-lg font-bold text-slate-800">{totalImpairments.toLocaleString()}</p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wide">Impairments</p>
+                <p className="text-2xs text-slate-500 uppercase tracking-wide">Impairments</p>
               </div>
               <div className="text-center">
                 <p className="text-lg font-bold text-emerald-700">500</p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wide">Waterbodies</p>
+                <p className="text-2xs text-slate-500 uppercase tracking-wide">Waterbodies</p>
               </div>
               <div className="text-center">
                 <p className="text-lg font-bold text-blue-700">72.4%</p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wide">Meeting Standards</p>
+                <p className="text-2xs text-slate-500 uppercase tracking-wide">Meeting Standards</p>
               </div>
             </div>
           </div>
@@ -133,7 +133,7 @@ export function WatershedHealthPanel({ stateAbbr }: WatershedHealthPanelProps) {
           <CardTitle className="flex items-center gap-2 text-base">
             <AlertTriangle size={16} className="text-amber-600" />
             Impairment Breakdown by Cause
-            <Badge variant="secondary" className="ml-1 text-[10px]">
+            <Badge variant="secondary" className="ml-1 text-2xs">
               {totalImpairments.toLocaleString()} total
             </Badge>
           </CardTitle>
@@ -160,7 +160,7 @@ export function WatershedHealthPanel({ stateAbbr }: WatershedHealthPanelProps) {
                       style={{ width: `${Math.max(widthPct, count > 0 ? 2 : 0)}%` }}
                     />
                     {widthPct >= 12 && (
-                      <span className="absolute inset-y-0 left-2 flex items-center text-[10px] font-semibold text-white">
+                      <span className="absolute inset-y-0 left-2 flex items-center text-2xs font-semibold text-white">
                         {pct(count, totalImpairments)}%
                       </span>
                     )}
@@ -199,7 +199,7 @@ export function WatershedHealthPanel({ stateAbbr }: WatershedHealthPanelProps) {
                   style={{ width: `${ecoSensitivity}%` }}
                 />
               </div>
-              <p className="text-[10px] text-green-600 mt-1">
+              <p className="text-2xs text-green-600 mt-1">
                 T&amp;E species density, habitat connectivity, riparian buffer
               </p>
             </div>
@@ -217,7 +217,7 @@ export function WatershedHealthPanel({ stateAbbr }: WatershedHealthPanelProps) {
                   style={{ width: `${ejScore}%` }}
                 />
               </div>
-              <p className="text-[10px] text-purple-600 mt-1">
+              <p className="text-2xs text-purple-600 mt-1">
                 EJScreen percentile: demographics, proximity, health indicators
               </p>
             </div>
@@ -231,7 +231,7 @@ export function WatershedHealthPanel({ stateAbbr }: WatershedHealthPanelProps) {
           <CardTitle className="flex items-center gap-2 text-base">
             <TrendingUp size={16} className="text-blue-600" />
             Waterbody Trend Indicators
-            <Badge variant="secondary" className="ml-1 text-[10px]">
+            <Badge variant="secondary" className="ml-1 text-2xs">
               {totalTrend} tracked
             </Badge>
           </CardTitle>
@@ -245,14 +245,14 @@ export function WatershedHealthPanel({ stateAbbr }: WatershedHealthPanelProps) {
               <div key={t.label} className={`rounded-lg border p-4 text-center ${t.bg}`}>
                 <BarChart3 size={18} className={`mx-auto mb-1 ${t.color}`} />
                 <p className={`text-2xl font-bold ${t.color}`}>{t.count}</p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wide">{t.label}</p>
+                <p className="text-2xs text-slate-500 uppercase tracking-wide">{t.label}</p>
                 <p className="text-xs font-semibold text-slate-600 mt-1">
                   {pct(t.count, totalTrend)}%
                 </p>
               </div>
             ))}
           </div>
-          <p className="text-[10px] text-slate-400 mt-3 flex items-center gap-1">
+          <p className="text-2xs text-slate-400 mt-3 flex items-center gap-1">
             <Waves size={10} />
             Trends based on comparison of current vs. prior ATTAINS assessment cycles.
           </p>

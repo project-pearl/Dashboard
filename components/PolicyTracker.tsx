@@ -346,10 +346,10 @@ function StatCard({
       <div className="text-2xl font-bold" style={{ color: accent }}>
         {value}
       </div>
-      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-0.5">
+      <div className="text-2xs font-bold uppercase tracking-wider text-slate-500 mt-0.5">
         {label}
       </div>
-      <div className="text-[10px] text-slate-400 mt-0.5">{sub}</div>
+      <div className="text-2xs text-slate-400 mt-0.5">{sub}</div>
     </div>
   );
 }
@@ -374,14 +374,14 @@ function RuleCard({
       <button onClick={onToggle} className="w-full text-left p-4 focus:outline-none flex-1">
         <div className="flex items-center gap-2 flex-wrap mb-2">
           <span
-            className="inline-block px-2 py-0.5 rounded text-[10px] font-bold text-white"
+            className="inline-block px-2 py-0.5 rounded text-2xs font-bold text-white"
             style={{ backgroundColor: rule.statusColor }}
           >
             {rule.status}
           </span>
-          <span className="text-[10px] text-slate-400 font-medium">{rule.agency} &middot; {rule.date}</span>
+          <span className="text-2xs text-slate-400 font-medium">{rule.agency} &middot; {rule.date}</span>
           {rule.commentPeriod && (
-            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 animate-pulse">
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-2xs font-bold bg-amber-100 text-amber-800 animate-pulse">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
               Open
             </span>
@@ -400,7 +400,7 @@ function RuleCard({
             {rule.keyNumbers.slice(0, 2).map((kn, i) => (
               <div key={i}>
                 <div className="text-xs font-bold text-slate-900">{kn.value}</div>
-                <div className="text-[10px] text-slate-400">{kn.label}</div>
+                <div className="text-2xs text-slate-400">{kn.label}</div>
               </div>
             ))}
           </div>
@@ -418,14 +418,14 @@ function RuleCard({
             {rule.keyNumbers.map((kn, i) => (
               <div key={i} className="bg-slate-50 rounded-lg p-2.5 text-center">
                 <div className="text-base font-bold text-slate-900">{kn.value}</div>
-                <div className="text-[10px] text-slate-500">{kn.label}</div>
+                <div className="text-2xs text-slate-500">{kn.label}</div>
               </div>
             ))}
           </div>
 
           <div className="space-y-2.5">
             <div className="rounded-lg bg-slate-50 p-3">
-              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">
+              <div className="text-2xs font-bold text-slate-500 uppercase tracking-wide mb-1">
                 Operational Impact
               </div>
               <p className="text-xs text-slate-700 leading-relaxed">{rule.impact}</p>
@@ -435,7 +435,7 @@ function RuleCard({
               className="rounded-lg p-3"
               style={{ backgroundColor: '#EBF5FB', borderLeft: '3px solid #2E5984' }}
             >
-              <div className="text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: '#1B3A5C' }}>
+              <div className="text-2xs font-bold uppercase tracking-wide mb-1" style={{ color: '#1B3A5C' }}>
                 How PIN Tracks This
               </div>
               <p className="text-xs leading-relaxed" style={{ color: '#2E5984' }}>
@@ -446,17 +446,17 @@ function RuleCard({
             <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2.5">
               <div className="flex items-center gap-3">
                 <div>
-                  <div className="text-[10px] text-slate-400">Assessment Units</div>
+                  <div className="text-2xs text-slate-400">Assessment Units</div>
                   <div className="text-xs font-bold text-slate-900">{rule.assessmentUnits.toLocaleString()}</div>
                 </div>
                 <div className="w-px h-6 bg-slate-200" />
                 <div>
-                  <div className="text-[10px] text-slate-400">States Affected</div>
+                  <div className="text-2xs text-slate-400">States Affected</div>
                   <div className="text-xs font-bold text-slate-900">{rule.statesAffected}</div>
                 </div>
               </div>
               <button
-                className="px-2.5 py-1 rounded text-[10px] font-semibold text-white transition-colors"
+                className="px-2.5 py-1 rounded text-2xs font-semibold text-white transition-colors"
                 style={{ backgroundColor: '#1B3A5C' }}
               >
                 View in PIN Map
@@ -519,7 +519,7 @@ export function PolicyTracker() {
             {commentOpen > 0 && (
               <Badge
                 variant="outline"
-                className="border-amber-300 bg-amber-50 text-amber-800 text-[10px] font-bold animate-pulse"
+                className="border-amber-300 bg-amber-50 text-amber-800 text-2xs font-bold animate-pulse"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1" />
                 {commentOpen} Comment Period{commentOpen > 1 ? 's' : ''} Open
@@ -558,7 +558,7 @@ export function PolicyTracker() {
         <CardDescription className="text-xs text-slate-500 mt-1">
           Active and proposed federal rules affecting water quality programs across all five pillars
         </CardDescription>
-        <div className="mt-2 text-[11px] text-slate-600">{dataAsOf}</div>
+        <div className="mt-2 text-xs text-slate-600">{dataAsOf}</div>
       </CardHeader>
 
       <CardContent className="space-y-4">
@@ -655,7 +655,7 @@ export function PolicyTracker() {
         </div>
 
         {/* ── Rules Grid ──────────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="max-h-[600px] overflow-y-auto grid grid-cols-2 gap-3">
           {filtered.length === 0 && (
             <div className="col-span-2 text-center py-12 text-slate-400 text-sm">
               No rules match the current filters.
@@ -682,7 +682,7 @@ export function PolicyTracker() {
               <div className="flex-1">
                 <div className="text-sm font-bold text-white flex items-center gap-2">
                   Coming Soon — Sentinel Alerts
-                  <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30">PLANNED</span>
+                  <span className="text-2xs font-medium px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30">PLANNED</span>
                 </div>
                 <p className="text-xs text-blue-200 mt-0.5">
                   Regulatory change alerts: rule status changes, comment period openings, new regulations affecting permits,
@@ -694,7 +694,7 @@ export function PolicyTracker() {
 
           {/* ── Source Footer ─────────────────────────────────────────── */}
           <div className="col-span-2">
-            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] text-slate-600 mb-2">
+            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 mb-2">
               Tracker aggregates public EPA/Federal Register data - predictive intelligence, not official. Confidence: {TRACKER_CONFIDENCE} (pipeline active {TRACKER_PIPELINE_STATUS}).
             </div>
           </div>

@@ -591,14 +591,14 @@ function ConditionsBanner({ scopeContext }: { scopeContext: ScopeContext }) {
     <div className="action-card bg-slate-50 border border-slate-200 rounded-lg p-4">
       <h3 className="text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">
         Current Conditions
-        <span className="ml-2 text-[10px] font-normal text-slate-400 normal-case">from authoritative federal sources</span>
+        <span className="ml-2 text-2xs font-normal text-slate-400 normal-case">from authoritative federal sources</span>
       </h3>
       <div className="space-y-1.5">
         {shown.map((s, i) => {
           const isRecent = s.publishedAt >= sevenDaysAgo;
           return (
             <div key={i} className="flex items-start gap-2 text-xs">
-              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold shrink-0 ${SOURCE_COLORS[s.source] || 'bg-gray-100 text-gray-600'}`}>
+              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs font-semibold shrink-0 ${SOURCE_COLORS[s.source] || 'bg-gray-100 text-gray-600'}`}>
                 {isRecent && <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />}
                 {s.sourceLabel}
               </span>
@@ -610,7 +610,7 @@ function ConditionsBanner({ scopeContext }: { scopeContext: ScopeContext }) {
         })}
       </div>
       {signals.length > 3 && (
-        <button onClick={() => setExpanded(e => !e)} className="mt-2 text-[11px] text-blue-600 hover:underline">
+        <button onClick={() => setExpanded(e => !e)} className="mt-2 text-xs text-blue-600 hover:underline">
           {expanded ? 'Show fewer' : `Show ${signals.length - 3} more`}
         </button>
       )}
@@ -813,7 +813,7 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
                   placeholder='e.g. "Focus on environmental justice" or "Prioritize PFAS contamination" or "Emergency drought response"'
                   className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 bg-white"
                 />
-                <p className="text-[11px] text-gray-400 mt-1.5">Add specific focus areas or priorities. You can also refine the plan after it generates.</p>
+                <p className="text-xs text-gray-400 mt-1.5">Add specific focus areas or priorities. You can also refine the plan after it generates.</p>
               </div>
 
               {/* Generate */}
@@ -825,7 +825,7 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
                 Generate {scopeContext.scope === 'national' ? 'National' : scopeContext.scope === 'region' ? 'Regional' : 'State'} Response Plan
               </button>
 
-              <p className="text-[11px] text-gray-400 text-center">Plan generation uses AI tokens and takes 30-60 seconds.</p>
+              <p className="text-xs text-gray-400 text-center">Plan generation uses AI tokens and takes 30-60 seconds.</p>
             </>
           )}
         </div>
@@ -1061,7 +1061,7 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
                       </>
                   }
                 </p>
-                <p className="text-[10px] text-gray-500 mt-2 italic">
+                <p className="text-2xs text-gray-500 mt-2 italic">
                   This response plan is based on currently available data. Data accuracy can be improved by updating source parameters and refreshing data pipelines.
                 </p>
               </div>
@@ -1144,20 +1144,20 @@ export default function ResolutionPlanner({ scopeContext, userRole, onClose, sce
                 return (
                   <div key={i} className={`${c.bg} ${c.border} border rounded-lg p-3`}>
                     <div className={`text-xs font-bold ${c.title} uppercase tracking-wide mb-2 flex items-center gap-1.5`}>
-                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white border border-current text-[9px] font-bold">{c.icon}</span>
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white border border-current text-2xs font-bold">{c.icon}</span>
                       {p.pillar}
                     </div>
                     <div className="space-y-2">
                       <div>
-                        <p className={`text-[10px] font-semibold ${c.title} uppercase`}>Role</p>
+                        <p className={`text-2xs font-semibold ${c.title} uppercase`}>Role</p>
                         <p className={`text-xs ${c.text} leading-relaxed`}>{p.role}</p>
                       </div>
                       <div>
-                        <p className={`text-[10px] font-semibold ${c.title} uppercase`}>Must Be Aware Of</p>
+                        <p className={`text-2xs font-semibold ${c.title} uppercase`}>Must Be Aware Of</p>
                         <p className={`text-xs ${c.text} leading-relaxed`}>{p.awareness}</p>
                       </div>
                       <div>
-                        <p className={`text-[10px] font-semibold ${c.title} uppercase`}>Contribution</p>
+                        <p className={`text-2xs font-semibold ${c.title} uppercase`}>Contribution</p>
                         <p className={`text-xs ${c.text} leading-relaxed`}>{p.contribution}</p>
                       </div>
                     </div>

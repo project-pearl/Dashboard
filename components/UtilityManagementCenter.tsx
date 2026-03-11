@@ -205,7 +205,7 @@ function PlaceholderSection({ icon: Icon, iconColor, title, description, kpis, s
       <CardContent className="space-y-3">
         {/* ── Hero KPI ─────────────────────────────────────────── */}
         <div className={`rounded-xl border-2 p-4 ${hero.bg}`}>
-          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{hero.label}</div>
+          <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{hero.label}</div>
           <div className="text-3xl font-extrabold text-slate-800 mt-1">{hero.value}</div>
           {heroPct !== null && (
             <div className="mt-2 h-2 rounded-full bg-white/60 overflow-hidden">
@@ -228,7 +228,7 @@ function PlaceholderSection({ icon: Icon, iconColor, title, description, kpis, s
               <div key={k.label} className={`rounded-lg border p-3 flex items-start gap-2.5 ${k.bg}`}>
                 <span className={`mt-1.5 block h-2.5 w-2.5 rounded-full shrink-0 ${dotColor(k.bg)}`} />
                 <div className="flex-1 min-w-0">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                  <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                   <div className="text-lg font-bold text-slate-800 leading-tight">{k.value}</div>
                   {pct !== null && (
                     <div className="mt-1.5 h-1.5 rounded-full bg-white/60 overflow-hidden">
@@ -248,8 +248,8 @@ function PlaceholderSection({ icon: Icon, iconColor, title, description, kpis, s
 
         {/* ── Source data click-through ────────────────────────── */}
         <button onClick={() => setShowRaw(!showRaw)}
-          className="text-[11px] text-slate-400 hover:text-slate-600 transition-colors flex items-center gap-1 pt-1">
-          <span className="text-[9px]">{showRaw ? '▾' : '▸'}</span> {showRaw ? 'Hide' : 'View'} source data
+          className="text-xs text-slate-400 hover:text-slate-600 transition-colors flex items-center gap-1 pt-1">
+          <span className="text-2xs">{showRaw ? '▾' : '▸'}</span> {showRaw ? 'Hide' : 'View'} source data
         </button>
         {showRaw && (
           <div className="rounded-lg bg-slate-50/80 border border-slate-200 p-3 animate-in fade-in slide-in-from-top-1 duration-200">
@@ -263,10 +263,10 @@ function PlaceholderSection({ icon: Icon, iconColor, title, description, kpis, s
                 ))}
               </tbody>
             </table>
-            <p className="text-[10px] text-slate-400 mt-2 italic">Source: {source}</p>
+            <p className="text-2xs text-slate-400 mt-2 italic">Source: {source}</p>
           </div>
         )}
-        {!showRaw && <p className="text-[10px] text-slate-400 italic">Data source: {source}</p>}
+        {!showRaw && <p className="text-2xs text-slate-400 italic">Data source: {source}</p>}
       </CardContent>
     </Card>
   );
@@ -1204,7 +1204,7 @@ export default function UtilityManagementCenter({ systemId }: Props) {
 
             case 'disaster-response': return DS(
               <div className="space-y-2">
-                <div className="inline-flex w-fit items-center rounded-full border border-blue-300 bg-blue-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-blue-700">
+                <div className="inline-flex w-fit items-center rounded-full border border-blue-300 bg-blue-50 px-2 py-1 text-2xs font-semibold uppercase tracking-wide text-blue-700">
                   Action Layer
                 </div>
                 <PlaceholderSection icon={Shield} iconColor="text-blue-700" title="Emergency Response Operations"
@@ -1715,14 +1715,14 @@ export default function UtilityManagementCenter({ systemId }: Props) {
                   <CardContent>
                     <div className={`rounded-xl border p-4 flex items-center justify-between ${scoreBg}`}>
                       <div>
-                        <div className="text-[10px] font-bold uppercase tracking-wider opacity-70">Eco Score</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider opacity-70">Eco Score</div>
                         <div className="text-xs opacity-80 mt-1">
                           {ecoData ? `${ecoData.totalTE} T&E species · ${ecoData.aquaticTE} aquatic · ${ecoData.criticalHabitat} critical habitat` : 'No T&E data available'}
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="text-2xl font-bold">{ecoScore}</div>
-                        <Badge variant="outline" className="text-[10px] mt-1">{label}</Badge>
+                        <Badge variant="outline" className="text-2xs mt-1">{label}</Badge>
                       </div>
                     </div>
                   </CardContent>
@@ -1742,31 +1742,31 @@ export default function UtilityManagementCenter({ systemId }: Props) {
                     <CardTitle className="flex items-center gap-2">
                       <Bug className="h-5 w-5 text-rose-600" />
                       Threatened & Endangered Species — {systemId}
-                      <Badge variant="secondary" className="ml-1 text-[10px]">USFWS ECOS</Badge>
+                      <Badge variant="secondary" className="ml-1 text-2xs">USFWS ECOS</Badge>
                     </CardTitle>
                     <CardDescription>ESA-listed species near intake and discharge points — informs source water protection</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       <div className="rounded-xl border p-4 bg-slate-50 border-slate-200">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total T&E</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Total T&E</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{federalTotal}</div>
-                        <div className="text-[10px] text-slate-400">Federal ESA</div>
+                        <div className="text-2xs text-slate-400">Federal ESA</div>
                       </div>
                       <div className="rounded-xl border p-4 bg-blue-50 border-blue-200">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Aquatic T&E</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Aquatic T&E</div>
                         <div className="text-2xl font-bold text-blue-700 mt-1">{federalAquatic}</div>
-                        <div className="text-[10px] text-slate-400">Freshwater / marine</div>
+                        <div className="text-2xs text-slate-400">Freshwater / marine</div>
                       </div>
                       <div className="rounded-xl border p-4 bg-rose-50 border-rose-200">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Critical Habitat</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Critical Habitat</div>
                         <div className="text-2xl font-bold text-rose-700 mt-1">{critHab}</div>
-                        <div className="text-[10px] text-slate-400">Designated areas</div>
+                        <div className="text-2xs text-slate-400">Designated areas</div>
                       </div>
                       <div className="rounded-xl border p-4 bg-amber-50 border-amber-200">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Eco Score</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Eco Score</div>
                         <div className="text-2xl font-bold text-amber-700 mt-1">{getEcoScore(systemId)}</div>
-                        <div className="text-[10px] text-slate-400">{ecoScoreLabel(getEcoScore(systemId))}</div>
+                        <div className="text-2xs text-slate-400">{ecoScoreLabel(getEcoScore(systemId))}</div>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

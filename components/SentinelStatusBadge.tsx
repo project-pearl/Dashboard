@@ -67,12 +67,12 @@ export function SentinelStatusBadge({
         <span className="hidden sm:inline">— {subtextParts[0]}</span>
 
         {criticalCount > 0 && (
-          <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold rounded bg-red-600 text-white">
+          <span className="ml-1 px-1.5 py-0.5 text-2xs font-bold rounded bg-red-600 text-white">
             {criticalCount} CRITICAL
           </span>
         )}
         {watchCount > 0 && (
-          <span className="ml-0.5 px-1.5 py-0.5 text-[10px] font-bold rounded bg-amber-500 text-black">
+          <span className="ml-0.5 px-1.5 py-0.5 text-2xs font-bold rounded bg-amber-500 text-black">
             {watchCount} WATCH
           </span>
         )}

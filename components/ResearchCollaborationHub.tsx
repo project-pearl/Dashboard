@@ -160,8 +160,8 @@ export function ResearchCollaborationHub({ userRole, stateAbbr }: Props) {
           </div>
 
           {isCollege && (
-            <div className="bg-purple-50 border border-purple-200 rounded-lg p-2.5 text-[10px] text-purple-700">
-              💡 <strong>Tip:</strong> Look for researchers marked <Badge variant="outline" className="text-[8px] h-3.5 bg-green-50 text-green-600 border-green-200 mx-0.5">Accepting Students</Badge> — they may have openings for research assistants or thesis advisors.
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-2.5 text-2xs text-purple-700">
+              💡 <strong>Tip:</strong> Look for researchers marked <Badge variant="outline" className="text-2xs h-3.5 bg-green-50 text-green-600 border-green-200 mx-0.5">Accepting Students</Badge> — they may have openings for research assistants or thesis advisors.
             </div>
           )}
 
@@ -171,10 +171,10 @@ export function ResearchCollaborationHub({ userRole, stateAbbr }: Props) {
                 <div>
                   <div className="text-xs font-semibold text-slate-800 flex items-center gap-1.5">
                     {r.name}
-                    {r.pearlPartner && <Badge variant="outline" className="text-[8px] h-3.5 bg-emerald-50 text-emerald-600 border-emerald-200">🦪 PEARL</Badge>}
-                    {r.acceptingStudents && isCollege && <Badge variant="outline" className="text-[8px] h-3.5 bg-green-50 text-green-600 border-green-200">Accepting Students</Badge>}
+                    {r.pearlPartner && <Badge variant="outline" className="text-2xs h-3.5 bg-emerald-50 text-emerald-600 border-emerald-200">🦪 PEARL</Badge>}
+                    {r.acceptingStudents && isCollege && <Badge variant="outline" className="text-2xs h-3.5 bg-green-50 text-green-600 border-green-200">Accepting Students</Badge>}
                   </div>
-                  <div className="text-[10px] text-slate-500">{r.institution} — {r.department}</div>
+                  <div className="text-2xs text-slate-500">{r.institution} — {r.department}</div>
                 </div>
                 <div className="flex gap-1">
                   {r.orcid && (
@@ -190,11 +190,11 @@ export function ResearchCollaborationHub({ userRole, stateAbbr }: Props) {
 
               <div className="flex flex-wrap gap-1 mt-1.5">
                 {r.focus.map(f => (
-                  <span key={f} className="px-1.5 py-0.5 rounded text-[9px] bg-purple-50 text-purple-600 border border-purple-100">{f}</span>
+                  <span key={f} className="px-1.5 py-0.5 rounded text-2xs bg-purple-50 text-purple-600 border border-purple-100">{f}</span>
                 ))}
               </div>
 
-              <div className="flex items-center gap-4 mt-2 text-[10px] text-slate-500">
+              <div className="flex items-center gap-4 mt-2 text-2xs text-slate-500">
                 <span>{r.activeStudies} active {r.activeStudies === 1 ? 'study' : 'studies'}</span>
                 <span>{r.sharedDatasets} shared datasets</span>
               </div>
@@ -210,21 +210,21 @@ export function ResearchCollaborationHub({ userRole, stateAbbr }: Props) {
             <div key={study.id} className="bg-white rounded-lg border border-slate-200 p-3">
               <div className="flex items-start justify-between mb-1">
                 <div className="text-xs font-semibold text-slate-800 flex-1">{study.title}</div>
-                <Badge variant="outline" className={`text-[9px] h-4 flex-shrink-0 ml-2 ${studyStatusStyle(study.status)}`}>
+                <Badge variant="outline" className={`text-2xs h-4 flex-shrink-0 ml-2 ${studyStatusStyle(study.status)}`}>
                   {study.status}
                 </Badge>
               </div>
-              <div className="text-[10px] text-slate-500">{study.pi} · {study.institution}</div>
+              <div className="text-2xs text-slate-500">{study.pi} · {study.institution}</div>
               <div className="flex flex-wrap gap-1 mt-1.5">
                 {study.waterbodies.map(wb => (
-                  <span key={wb} className="px-1.5 py-0.5 rounded text-[9px] bg-blue-50 text-blue-600 border border-blue-100">{wb}</span>
+                  <span key={wb} className="px-1.5 py-0.5 rounded text-2xs bg-blue-50 text-blue-600 border border-blue-100">{wb}</span>
                 ))}
-                {study.pearlData && <span className="px-1.5 py-0.5 rounded text-[9px] bg-emerald-50 text-emerald-600 border border-emerald-100">🦪 Uses PEARL data</span>}
+                {study.pearlData && <span className="px-1.5 py-0.5 rounded text-2xs bg-emerald-50 text-emerald-600 border border-emerald-100">🦪 Uses PEARL data</span>}
               </div>
               <div className="flex items-center gap-2 mt-2">
-                <span className="text-[9px] text-slate-400">Data sharing: <strong>{study.dataSharing}</strong></span>
+                <span className="text-2xs text-slate-400">Data sharing: <strong>{study.dataSharing}</strong></span>
                 {study.status === 'recruiting' && isCollege && (
-                  <Button variant="outline" size="sm" className="text-[10px] h-5 px-2 ml-auto border-green-200 text-green-600 hover:bg-green-50">
+                  <Button variant="outline" size="sm" className="text-2xs h-5 px-2 ml-auto border-green-200 text-green-600 hover:bg-green-50">
                     Apply to Join
                   </Button>
                 )}
@@ -237,14 +237,14 @@ export function ResearchCollaborationHub({ userRole, stateAbbr }: Props) {
       {/* ── Shared Datasets Tab ── */}
       {tab === 'datasets' && (
         <div className="space-y-2">
-          <div className="text-[10px] text-slate-500 italic">
+          <div className="text-2xs text-slate-500 italic">
             Shared datasets from PEARL-affiliated researchers and partner institutions.
             {isCollege && ' Filter by your coursework topics to find relevant data.'}
           </div>
           <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-center">
             <Database className="h-6 w-6 text-slate-300 mx-auto mb-2" />
             <div className="text-xs text-slate-500">Dataset catalog coming soon</div>
-            <div className="text-[10px] text-slate-400">Integration with DataONE, Hydroshare, and PEARL data platform</div>
+            <div className="text-2xs text-slate-400">Integration with DataONE, Hydroshare, and PEARL data platform</div>
           </div>
         </div>
       )}

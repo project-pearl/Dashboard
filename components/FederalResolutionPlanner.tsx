@@ -293,9 +293,9 @@ function CoBenefitsMatrix({ benefits }: { benefits: CoBenefit[] }) {
       <table className="w-full text-xs">
         <thead>
           <tr className="border-b border-gray-200">
-            <th className="text-left py-1.5 pr-2 font-bold text-gray-500 uppercase tracking-wide text-[10px]">Solution</th>
+            <th className="text-left py-1.5 pr-2 font-bold text-gray-500 uppercase tracking-wide text-2xs">Solution</th>
             {cols.map(c => (
-              <th key={c.key} className="text-center py-1.5 px-1.5 font-bold text-gray-500 uppercase tracking-wide text-[10px]">
+              <th key={c.key} className="text-center py-1.5 px-1.5 font-bold text-gray-500 uppercase tracking-wide text-2xs">
                 <span className="block text-sm font-mono">{c.icon}</span>{c.label}
               </th>
             ))}
@@ -340,14 +340,14 @@ function FederalConditionsBanner({ scope }: { scope: ScopeSelection }) {
     <div className="action-card bg-slate-50 border border-slate-200 rounded-lg p-4">
       <h3 className="text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">
         Current Conditions
-        <span className="ml-2 text-[10px] font-normal text-slate-400 normal-case">from authoritative federal sources</span>
+        <span className="ml-2 text-2xs font-normal text-slate-400 normal-case">from authoritative federal sources</span>
       </h3>
       <div className="space-y-1.5">
         {shown.map((s, i) => {
           const isRecent = s.publishedAt >= sevenDaysAgo;
           return (
             <div key={i} className="flex items-start gap-2 text-xs">
-              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold shrink-0 ${SOURCE_COLORS[s.source] || 'bg-gray-100 text-gray-600'}`}>
+              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs font-semibold shrink-0 ${SOURCE_COLORS[s.source] || 'bg-gray-100 text-gray-600'}`}>
                 {isRecent && <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />}
                 {s.sourceLabel}
               </span>
@@ -359,7 +359,7 @@ function FederalConditionsBanner({ scope }: { scope: ScopeSelection }) {
         })}
       </div>
       {signals.length > 3 && (
-        <button onClick={() => setExpanded(e => !e)} className="mt-2 text-[11px] text-blue-600 hover:underline">
+        <button onClick={() => setExpanded(e => !e)} className="mt-2 text-xs text-blue-600 hover:underline">
           {expanded ? 'Show fewer' : `Show ${signals.length - 3} more`}
         </button>
       )}
@@ -603,7 +603,7 @@ export default function FederalResolutionPlanner({ userTier, userId }: FederalRe
                       <button key={r.id} onClick={() => { setSelectedRegion(r.id); setSelectedStates(r.states); }}
                         className={`text-left px-3 py-2 rounded-lg text-xs transition-all ${selectedRegion === r.id ? "bg-blue-50 border-blue-400 border text-blue-800" : "bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100"}`}>
                         <span className="font-bold">{r.name}</span>
-                        <span className="block text-[10px] text-gray-400 mt-0.5">{r.states.join(", ")}</span>
+                        <span className="block text-2xs text-gray-400 mt-0.5">{r.states.join(", ")}</span>
                       </button>
                     ))}
                   </div>
@@ -653,7 +653,7 @@ export default function FederalResolutionPlanner({ userTier, userId }: FederalRe
                   <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Watershed HUC Code</h3>
                   <input value={hucCode} onChange={e => setHucCode(e.target.value.replace(/\D/g, "").slice(0, 12))}
                     placeholder="Enter HUC code (2-12 digits)" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
-                  <p className="text-[10px] text-gray-400 mt-1">HUC-2 (region) through HUC-12 (subwatershed). Longer = narrower scope.</p>
+                  <p className="text-2xs text-gray-400 mt-1">HUC-2 (region) through HUC-12 (subwatershed). Longer = narrower scope.</p>
                 </div>
               )}
             </div>
@@ -687,7 +687,7 @@ export default function FederalResolutionPlanner({ userTier, userId }: FederalRe
                   <div className="flex flex-wrap gap-1.5">
                     {POLLUTANT_GROUPS.map(p => (
                       <button key={p} onClick={() => setSelectedPollutants(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p])}
-                        className={`px-2 py-1 rounded text-[11px] transition-all ${selectedPollutants.includes(p) ? "bg-teal-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>{p}</button>
+                        className={`px-2 py-1 rounded text-xs transition-all ${selectedPollutants.includes(p) ? "bg-teal-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>{p}</button>
                     ))}
                   </div>
                 </div>
@@ -697,7 +697,7 @@ export default function FederalResolutionPlanner({ userTier, userId }: FederalRe
                   <p className="text-xs font-medium text-gray-600 mb-1">Environmental Justice Minimum</p>
                   <input type="range" min={0} max={100} value={minEj} onChange={e => setMinEj(parseInt(e.target.value))}
                     className="w-full accent-purple-600" />
-                  <div className="flex justify-between text-[10px] text-gray-400"><span>No filter</span><span>EJ 50+</span><span>EJ 100</span></div>
+                  <div className="flex justify-between text-2xs text-gray-400"><span>No filter</span><span>EJ 50+</span><span>EJ 100</span></div>
                 </div>
               </div>
             </div>
@@ -712,7 +712,7 @@ export default function FederalResolutionPlanner({ userTier, userId }: FederalRe
                 placeholder='e.g. "Focus on EJ communities" or "Prioritize PFAS enforcement" or "Emergency drought posture"'
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
               />
-              <p className="text-[11px] text-gray-400 mt-1.5">Add specific focus areas or priorities. You can also refine the plan after it generates.</p>
+              <p className="text-xs text-gray-400 mt-1.5">Add specific focus areas or priorities. You can also refine the plan after it generates.</p>
             </div>
 
             {/* Generate Button */}
@@ -729,7 +729,7 @@ export default function FederalResolutionPlanner({ userTier, userId }: FederalRe
             <div className="bg-white border border-gray-200 rounded-lg p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide">Recent Plans</h3>
-                <span className="text-[10px] text-gray-400">{limits.retentionDays}d retention</span>
+                <span className="text-2xs text-gray-400">{limits.retentionDays}d retention</span>
               </div>
               {savedPlans.length === 0 ? (
                 <p className="text-xs text-gray-400 italic">No saved plans yet</p>
@@ -743,10 +743,10 @@ export default function FederalResolutionPlanner({ userTier, userId }: FederalRe
                         <button onClick={e => { e.stopPropagation(); deleteSavedPlan(sp.id); setSavedPlans(getSavedPlans()); }}
                           className="text-gray-300 hover:text-red-400 text-xs">x</button>
                       </div>
-                      <div className="text-[10px] text-gray-400 mt-1">
+                      <div className="text-2xs text-gray-400 mt-1">
                         Rev {sp.revision} · {sp.refineHistory.length} refines · {new Date(sp.updatedAt).toLocaleDateString()}
                       </div>
-                      <div className="text-[10px] text-gray-400">
+                      <div className="text-2xs text-gray-400">
                         Expires {new Date(sp.expiresAt).toLocaleDateString()}
                       </div>
                     </button>
@@ -834,19 +834,19 @@ export default function FederalResolutionPlanner({ userTier, userId }: FederalRe
             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Recommended Actions</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <h4 className="text-[10px] font-bold text-red-700 uppercase mb-2">Immediate (0-30d)</h4>
+                <h4 className="text-2xs font-bold text-red-700 uppercase mb-2">Immediate (0-30d)</h4>
                 <ul className="space-y-1">{plan.actionsImmediate.map((a, i) => (
                   <li key={i} className="text-xs text-red-800"><span className="font-bold mr-1">{i+1}.</span>{a}</li>
                 ))}</ul>
               </div>
               <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                <h4 className="text-[10px] font-bold text-orange-700 uppercase mb-2">Short-Term (1-6mo)</h4>
+                <h4 className="text-2xs font-bold text-orange-700 uppercase mb-2">Short-Term (1-6mo)</h4>
                 <ul className="space-y-1">{plan.actionsShortTerm.map((a, i) => (
                   <li key={i} className="text-xs text-orange-800"><span className="font-bold mr-1">{i+1}.</span>{a}</li>
                 ))}</ul>
               </div>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <h4 className="text-[10px] font-bold text-blue-700 uppercase mb-2">Long-Term (1-5yr)</h4>
+                <h4 className="text-2xs font-bold text-blue-700 uppercase mb-2">Long-Term (1-5yr)</h4>
                 <ul className="space-y-1">{plan.actionsLongTerm.map((a, i) => (
                   <li key={i} className="text-xs text-blue-800"><span className="font-bold mr-1">{i+1}.</span>{a}</li>
                 ))}</ul>
@@ -885,7 +885,7 @@ export default function FederalResolutionPlanner({ userTier, userId }: FederalRe
             <div ref={historyRef} className="max-h-48 overflow-y-auto px-6 pt-3 space-y-1.5">
               {refineHistory.map((r, i) => (
                 <div key={i} className={`text-xs px-3 py-1 rounded-lg ${r.prompt.startsWith("[!]") ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-800"} max-w-[85%] ml-auto`}>
-                  {r.prompt} <span className="text-[10px] opacity-50">rev {r.revision}</span>
+                  {r.prompt} <span className="text-2xs opacity-50">rev {r.revision}</span>
                 </div>
               ))}
             </div>
@@ -901,7 +901,7 @@ export default function FederalResolutionPlanner({ userTier, userId }: FederalRe
               {refining ? "Refining..." : "Refine"}
             </button>
           </div>
-          <div className="px-6 pb-3 flex justify-between text-[10px] text-gray-400">
+          <div className="px-6 pb-3 flex justify-between text-2xs text-gray-400">
             <span>Refinements are unlimited and don&apos;t count toward your daily plan limit</span>
             <span>Plan auto-saved · Expires {activePlanId ? new Date(getSavedPlans().find(p => p.id === activePlanId)?.expiresAt || "").toLocaleDateString() : "—"}</span>
           </div>

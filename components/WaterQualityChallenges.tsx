@@ -294,7 +294,7 @@ function TeacherCard({ c, p }: { c: ChallengeBase; p: typeof PALETTES['k12-teach
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <span className={cn('text-[11px] font-semibold px-2 py-0.5 rounded-full', p.badge)}>
+            <span className={cn('text-xs font-semibold px-2 py-0.5 rounded-full', p.badge)}>
               NGSS {c.teacherNGSS}
             </span>
           </div>

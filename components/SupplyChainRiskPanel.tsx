@@ -193,7 +193,7 @@ export function SupplyChainRiskPanel({ stateAbbr }: SupplyChainRiskPanelProps) {
                 </div>
                 <div>
                   <p className="text-lg font-bold text-slate-800">{stat.value}</p>
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wide">{stat.label}</p>
+                  <p className="text-2xs text-slate-500 uppercase tracking-wide">{stat.label}</p>
                 </div>
               </div>
             </CardContent>
@@ -207,7 +207,7 @@ export function SupplyChainRiskPanel({ stateAbbr }: SupplyChainRiskPanelProps) {
           <CardTitle className="flex items-center gap-2 text-base">
             <MapPin size={16} className="text-red-600" />
             Supplier Water Risk by Region
-            <Badge variant="secondary" className="ml-1 text-[10px]">{data.regionRiskMap.length} regions</Badge>
+            <Badge variant="secondary" className="ml-1 text-2xs">{data.regionRiskMap.length} regions</Badge>
           </CardTitle>
           <CardDescription>
             Geographic distribution of supplier base with aggregated water risk scores (WRI Aqueduct methodology)
@@ -224,10 +224,10 @@ export function SupplyChainRiskPanel({ stateAbbr }: SupplyChainRiskPanelProps) {
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-medium text-slate-700">{region.region}</span>
-                        <Badge className={`text-[9px] ${riskLevelColor(region.riskLevel)}`}>{region.riskLevel}</Badge>
+                        <Badge className={`text-2xs ${riskLevelColor(region.riskLevel)}`}>{region.riskLevel}</Badge>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="text-[10px] text-slate-400">{region.supplierCount} suppliers</span>
+                        <span className="text-2xs text-slate-400">{region.supplierCount} suppliers</span>
                         <span className="text-xs font-semibold text-slate-800 tabular-nums w-8 text-right">{region.avgRiskScore}</span>
                       </div>
                     </div>
@@ -244,7 +244,7 @@ export function SupplyChainRiskPanel({ stateAbbr }: SupplyChainRiskPanelProps) {
                   </div>
                 );
               })}
-            <p className="text-[10px] text-slate-400 mt-2">
+            <p className="text-2xs text-slate-400 mt-2">
               Risk scores range 0-100 (higher = greater water risk). Based on WRI Aqueduct baseline water stress indicators.
             </p>
           </div>
@@ -281,12 +281,12 @@ export function SupplyChainRiskPanel({ stateAbbr }: SupplyChainRiskPanelProps) {
                     <td className="py-2 font-medium text-slate-700 max-w-[180px] truncate" title={s.name}>{s.name}</td>
                     <td className="py-2 text-slate-600">{s.region}</td>
                     <td className="py-2 text-center">
-                      <Badge className={`text-[9px] ${riskLevelColor(s.riskLevel)}`}>{s.riskScore}</Badge>
+                      <Badge className={`text-2xs ${riskLevelColor(s.riskLevel)}`}>{s.riskScore}</Badge>
                     </td>
                     <td className="py-2 text-center text-slate-600">{s.waterStress}</td>
                     <td className="py-2 text-right tabular-nums text-slate-600">{s.facilityCount}</td>
                     <td className="py-2 text-center">
-                      <Badge className={`text-[9px] ${mitigationStatusColor(s.mitigationStatus)}`}>{s.mitigationStatus}</Badge>
+                      <Badge className={`text-2xs ${mitigationStatusColor(s.mitigationStatus)}`}>{s.mitigationStatus}</Badge>
                     </td>
                   </tr>
                 ))}
@@ -318,11 +318,11 @@ export function SupplyChainRiskPanel({ stateAbbr }: SupplyChainRiskPanelProps) {
                 <div className="flex items-start justify-between mb-1.5">
                   <span className="text-xs font-semibold text-slate-800 flex-1 mr-2">{d.scenario}</span>
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <Badge className={`text-[9px] ${probabilityColor(d.probability)}`}>P: {d.probability}</Badge>
-                    <Badge className={`text-[9px] ${severityColor(d.impactSeverity)}`}>{d.impactSeverity}</Badge>
+                    <Badge className={`text-2xs ${probabilityColor(d.probability)}`}>P: {d.probability}</Badge>
+                    <Badge className={`text-2xs ${severityColor(d.impactSeverity)}`}>{d.impactSeverity}</Badge>
                   </div>
                 </div>
-                <div className="flex items-center gap-4 text-[10px] text-slate-500">
+                <div className="flex items-center gap-4 text-2xs text-slate-500">
                   <span>Affected suppliers: <span className="font-semibold text-slate-700">{d.affectedSuppliers}</span></span>
                   <span>Estimated cost: <span className="font-semibold text-slate-700">{d.estimatedCost}</span></span>
                 </div>
@@ -339,7 +339,7 @@ export function SupplyChainRiskPanel({ stateAbbr }: SupplyChainRiskPanelProps) {
             <TrendingUp size={16} className="text-emerald-600" />
             Mitigation Action Tracker
             {overdueActions > 0 && (
-              <Badge className="ml-1 text-[10px] bg-red-100 text-red-700">{overdueActions} overdue</Badge>
+              <Badge className="ml-1 text-2xs bg-red-100 text-red-700">{overdueActions} overdue</Badge>
             )}
           </CardTitle>
           <CardDescription>
@@ -366,7 +366,7 @@ export function SupplyChainRiskPanel({ stateAbbr }: SupplyChainRiskPanelProps) {
                     <td className="py-2 font-medium text-slate-700 max-w-[220px]">{m.action}</td>
                     <td className="py-2 text-slate-600">{m.owner}</td>
                     <td className="py-2 text-center">
-                      <Badge className={`text-[9px] ${mitigationStatusColor(m.status)}`}>{m.status}</Badge>
+                      <Badge className={`text-2xs ${mitigationStatusColor(m.status)}`}>{m.status}</Badge>
                     </td>
                     <td className="py-2 text-slate-600">{m.dueDate}</td>
                     <td className="py-2 text-right font-semibold text-slate-700">{m.riskReduction}</td>
@@ -396,7 +396,7 @@ export function SupplyChainRiskPanel({ stateAbbr }: SupplyChainRiskPanelProps) {
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-medium text-slate-700">{c.commodity}</span>
-                    <span className={`text-[10px] font-semibold ${trendColor(c.trend)}`}>{c.trend}</span>
+                    <span className={`text-2xs font-semibold ${trendColor(c.trend)}`}>{c.trend}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-slate-500">{c.waterFootprint.toLocaleString()} {c.unit}</span>
@@ -409,14 +409,14 @@ export function SupplyChainRiskPanel({ stateAbbr }: SupplyChainRiskPanelProps) {
                     style={{ width: `${c.pctOfTotal}%` }}
                   />
                   {c.pctOfTotal >= 15 && (
-                    <span className="absolute inset-y-0 left-2 flex items-center text-[10px] font-semibold text-white">
+                    <span className="absolute inset-y-0 left-2 flex items-center text-2xs font-semibold text-white">
                       {c.pctOfTotal}%
                     </span>
                   )}
                 </div>
               </div>
             ))}
-            <p className="text-[10px] text-slate-400 mt-2">
+            <p className="text-2xs text-slate-400 mt-2">
               Water footprint calculated using Water Footprint Network methodology. Trends reflect year-over-year change in embedded water intensity.
             </p>
           </div>

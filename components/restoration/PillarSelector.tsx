@@ -29,7 +29,7 @@ interface PillarSelectorProps {
 export default function PillarSelector({ activePillars, onToggle }: PillarSelectorProps) {
   return (
     <div className="flex items-center gap-1.5 flex-wrap">
-      <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mr-1">
+      <span className="text-2xs font-semibold text-slate-400 uppercase tracking-wider mr-1">
         Pillars
       </span>
       {PILLAR_CONFIG.map(p => {
@@ -39,7 +39,7 @@ export default function PillarSelector({ activePillars, onToggle }: PillarSelect
           <button
             key={p.id}
             onClick={() => onToggle(p.id)}
-            className={`flex items-center gap-1 px-2 py-1 rounded-md border text-[10px] font-medium transition-all ${
+            className={`flex items-center gap-1 px-2 py-1 rounded-md border text-2xs font-medium transition-all ${
               active
                 ? `${p.bgActive} ${p.borderActive} ${p.color}`
                 : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300'

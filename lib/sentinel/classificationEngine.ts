@@ -10,12 +10,14 @@ import type {
   AttackClassificationType,
   ConfounderCheck,
   ClassificationReasoning,
+  CbrnIndicator,
 } from './types';
 import {
   CLASSIFICATION_THRESHOLDS,
   CONFOUNDER_RULES,
   ATTACK_SIGNALS,
   BIO_MARKER_PARAMS,
+  CBRN_SIGNAL_MAP,
 } from './classificationConfig';
 import { getEventsForHuc } from './eventQueue';
 import { getWatershedContext } from './indexLookup';
@@ -141,11 +143,28 @@ export function classifyEvent(
 
   const classification = classifyScore(threatScore, matchedConfounders.length);
 
+  // Build CBRN indicators from matched attack signals
+  const cbrnIndicators: CbrnIndicator[] = [];
+  for (const signal of ATTACK_SIGNALS) {
+    const cbrnMapping = CBRN_SIGNAL_MAP[signal.id];
+    if (!cbrnMapping) continue;
+
+    const matchingParams = signal.paramCds.filter(p => eventParamCds.has(p));
+    if (matchingParams.length >= signal.minDeviations) {
+      cbrnIndicators.push({
+        category: cbrnMapping.category,
+        confidence: Math.min(1, signal.boostMagnitude / 0.35), // normalize against max boost
+        basis: cbrnMapping.basis,
+      });
+    }
+  }
+
   return {
     classification,
     threatScore: Math.round(threatScore * 1000) / 1000,
     confounders,
     reasoning,
+    cbrnIndicators,
   };
 }
 

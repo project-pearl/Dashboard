@@ -71,7 +71,7 @@ export function RoleBriefingActionsCard({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {summary.map((kpi) => (
             <div key={kpi.label} className={`rounded-xl border px-4 py-3 ${kpi.style}`}>
-              <p className="text-[10px] uppercase tracking-wide font-semibold">{kpi.label}</p>
+              <p className="text-2xs uppercase tracking-wide font-semibold">{kpi.label}</p>
               <p className="text-sm font-semibold mt-1">{kpi.value}</p>
             </div>
           ))}
@@ -95,7 +95,7 @@ export function RoleBriefingActionsCard({
                   onClick={() => setOpenId(openId === a.id ? null : a.id)}
                 >
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-[10px]">{a.priority}</Badge>
+                    <Badge variant="outline" className="text-2xs">{a.priority}</Badge>
                     <span className="text-xs flex-1">{a.item}</span>
                     <ChevronDown size={14} className={`flex-shrink-0 text-slate-400 transition-transform ${openId === a.id ? 'rotate-180' : ''}`} />
                   </div>
@@ -150,20 +150,20 @@ export function RoleBriefingPulseCard({
                 className={`rounded-xl border p-4 cursor-pointer hover:ring-1 hover:ring-blue-300 transition-all ${m.bg}`}
                 onClick={() => setOpenMetricId(openMetricId === m.id ? null : m.id)}
               >
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{m.label}</div>
+                <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{m.label}</div>
                 <div className={`text-2xl font-bold ${m.color} mt-1`}>{m.value}</div>
-                <div className="text-[10px] text-slate-500 mt-1">{m.trend}</div>
+                <div className="text-2xs text-slate-500 mt-1">{m.trend}</div>
               </div>
               {openMetricId === m.id && (
                 <div className="mt-1 rounded-lg border border-blue-200 bg-blue-50/60 p-2">
-                  <p className="text-[10px] text-blue-600 font-medium">{m.dest}</p>
+                  <p className="text-2xs text-blue-600 font-medium">{m.dest}</p>
                 </div>
               )}
             </div>
           ))}
         </div>
         {sourceNote && <p className="text-xs text-slate-400 mt-4 italic">{sourceNote}</p>}
-        {refreshNote && <p className="text-[10px] text-slate-400 mt-2 italic">{refreshNote}</p>}
+        {refreshNote && <p className="text-2xs text-slate-400 mt-2 italic">{refreshNote}</p>}
       </CardContent>
     </Card>
   );

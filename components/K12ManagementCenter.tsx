@@ -691,7 +691,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
               📚 Teacher
             </button>
             {/* Role badge */}
-            <div className={`hidden md:inline-flex items-center h-7 px-2.5 text-[10px] font-bold rounded-full border ${
+            <div className={`hidden md:inline-flex items-center h-7 px-2.5 text-2xs font-bold rounded-full border ${
               isTeacher
                 ? 'border-purple-300 bg-purple-50 text-purple-700'
                 : 'border-emerald-300 bg-emerald-50 text-emerald-700'
@@ -703,7 +703,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
             <div className="relative">
               <button
                 onClick={() => setShowAccountPanel(!showAccountPanel)}
-                className="inline-flex items-center h-7 px-2.5 text-[10px] font-semibold rounded-md border bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 transition-colors cursor-pointer"
+                className="inline-flex items-center h-7 px-2.5 text-2xs font-semibold rounded-md border bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 transition-colors cursor-pointer"
               >
                 <Shield className="h-3 w-3 mr-1" />
                 {user.name || (isTeacher ? 'Teacher' : 'Student')}
@@ -721,7 +721,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                         </div>
                         <div>
                           <div className="text-sm font-semibold text-slate-800">{user.name}</div>
-                          <div className="text-[11px] text-slate-500">{user.email || 'student@project-pearl.org'}</div>
+                          <div className="text-xs text-slate-500">{user.email || 'student@project-pearl.org'}</div>
                         </div>
                       </div>
                       <button onClick={() => setShowAccountPanel(false)} className="text-slate-400 hover:text-slate-600"><X size={14} /></button>
@@ -810,7 +810,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                         <div className="h-full bg-green-400 flex-1 rounded-r-full" />
                       </div>
                     )}
-                    <div className="flex items-center gap-4 mt-2 text-[10px]">
+                    <div className="flex items-center gap-4 mt-2 text-2xs">
                       <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-red-400" /> {impairedCount} Need Help</span>
                       <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-green-400" /> {wbCount - impairedCount} Healthy</span>
                     </div>
@@ -821,25 +821,25 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                       <span className="block h-2.5 w-2.5 rounded-full bg-cyan-400" />
                       <div>
                         <div className="text-sm font-bold text-cyan-700">Real Data</div>
-                        <div className="text-[10px] text-cyan-400">From EPA Sensors</div>
+                        <div className="text-2xs text-cyan-400">From EPA Sensors</div>
                       </div>
                     </div>
                     {isTeacher && (
                     <div className="rounded-lg bg-purple-50 border border-purple-100 p-3 flex items-center gap-3">
                       <div className="text-xl font-bold text-purple-700">{ejScore}<span className="text-xs font-normal text-purple-400">/100</span></div>
                       <div>
-                        <div className="text-[10px] text-purple-500">EJ Score</div>
+                        <div className="text-2xs text-purple-500">EJ Score</div>
                         <div className="mt-1 h-1.5 w-14 rounded-full bg-purple-100 overflow-hidden"><div className="h-full rounded-full bg-purple-500" style={{ width: `${ejScore}%` }} /></div>
                       </div>
                     </div>
                     )}
                     <div className="rounded-lg bg-amber-50 border border-amber-100 p-3 flex items-center gap-2">
                       <div className="text-xl font-bold text-amber-700">6</div>
-                      <div className="text-[10px] text-amber-400">Data Sources</div>
+                      <div className="text-2xs text-amber-400">Data Sources</div>
                     </div>
                     <div className={`rounded-lg border p-3 flex items-center gap-2 ${trendBg}`}>
                       <div className={`text-sm font-bold ${trendColor}`}>{trendLabel}</div>
-                      <div className="text-[10px] text-slate-400">WQ Trend</div>
+                      <div className="text-2xs text-slate-400">WQ Trend</div>
                     </div>
                   </div>
                 </div>
@@ -1035,8 +1035,8 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 bg-slate-100 border-slate-300">
                       <div className="text-2xl font-black text-slate-400">N/A</div>
                       <div className="text-right">
-                        <div className="text-[10px] text-slate-500">Ungraded</div>
-                        <div className="text-[10px] text-slate-400">{attainsBulkLoaded ? 'No data' : 'Loading...'}</div>
+                        <div className="text-2xs text-slate-500">Ungraded</div>
+                        <div className="text-2xs text-slate-400">{attainsBulkLoaded ? 'No data' : 'Loading...'}</div>
                       </div>
                     </div>
                   );
@@ -1047,7 +1047,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                       <div className={`text-2xl font-black ${grade.color}`}>{grade.letter}</div>
                       <div className="text-right">
                         <div className={`text-sm font-bold ${grade.color}`}>{avgScore}%</div>
-                        <div className="text-[10px] text-slate-500">{assessed.length} assessed</div>
+                        <div className="text-2xs text-slate-500">{assessed.length} assessed</div>
                       </div>
                     </div>
                   );
@@ -1058,19 +1058,19 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
               <div className="grid grid-cols-4 gap-1.5 text-center mt-3">
                 <div className="rounded-lg bg-slate-50 p-2">
                   <div className="text-lg font-bold text-slate-800">{regionData.length}</div>
-                  <div className="text-[10px] text-slate-500">Total</div>
+                  <div className="text-2xs text-slate-500">Total</div>
                 </div>
                 <div className="rounded-lg bg-green-50 p-2">
                   <div className="text-lg font-bold text-green-700">{regionData.filter(r => r.status === 'assessed').length}</div>
-                  <div className="text-[10px] text-slate-500">Assessed</div>
+                  <div className="text-2xs text-slate-500">Assessed</div>
                 </div>
                 <div className="rounded-lg bg-blue-50 p-2">
                   <div className="text-lg font-bold text-blue-600">{regionData.filter(r => r.status === 'monitored').length}</div>
-                  <div className="text-[10px] text-slate-500">Monitored</div>
+                  <div className="text-2xs text-slate-500">Monitored</div>
                 </div>
                 <div className="rounded-lg bg-slate-50 p-2">
                   <div className="text-lg font-bold text-slate-400">{regionData.filter(r => r.status === 'unmonitored').length}</div>
-                  <div className="text-[10px] text-slate-500">No Data</div>
+                  <div className="text-2xs text-slate-500">No Data</div>
                 </div>
               </div>
 
@@ -1085,7 +1085,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                   <button
                     key={f.key}
                     onClick={() => { setFilterLevel(f.key); setShowAll(false); }}
-                    className={`px-2.5 py-1 text-[11px] font-medium rounded-full border transition-all ${
+                    className={`px-2.5 py-1 text-xs font-medium rounded-full border transition-all ${
                       filterLevel === f.key
                         ? f.color + ' ring-1 ring-offset-1 shadow-sm'
                         : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'
@@ -1114,7 +1114,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                   className="w-full px-2 py-1.5 text-sm border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-300"
                 />
                 {searchQuery && (
-                  <div className="text-[10px] text-slate-400 mt-1">{sortedRegions.length} of {regionData.length} waterbodies</div>
+                  <div className="text-2xs text-slate-400 mt-1">{sortedRegions.length} of {regionData.length} waterbodies</div>
                 )}
               </div>
             </CardHeader>
@@ -1140,7 +1140,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                             <div className={`truncate text-sm font-medium ${isActive ? 'text-blue-900' : ''}`}>{r.name}</div>
                             <div className="flex items-center gap-2 text-xs text-slate-500">
                               {r.status === 'assessed' ? (
-                                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
+                                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-2xs font-medium ${
                                   r.alertLevel === 'high' ? 'bg-red-100 text-red-700' :
                                   r.alertLevel === 'medium' ? 'bg-orange-100 text-orange-700' :
                                   r.alertLevel === 'low' ? 'bg-yellow-100 text-yellow-700' :
@@ -1149,14 +1149,14 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                                   {levelToLabel(r.alertLevel)}
                                 </span>
                               ) : r.status === 'monitored' ? (
-                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-600">
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-2xs font-medium bg-blue-50 text-blue-600">
                                   ◐ {r.dataSourceCount} source{r.dataSourceCount !== 1 ? 's' : ''}
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-500">— Unmonitored</span>
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-2xs font-medium bg-slate-100 text-slate-500">— Unmonitored</span>
                               )}
                               {r.activeAlerts > 0 && <span>{r.activeAlerts} alert{r.activeAlerts !== 1 ? 's' : ''}</span>}
-                              {r.status === 'assessed' && <span className="text-[9px] text-slate-400">EPA ATTAINS</span>}
+                              {r.status === 'assessed' && <span className="text-2xs text-slate-400">EPA ATTAINS</span>}
                             </div>
                           </div>
                           {isActive && <div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0 mr-1" />}
@@ -1311,7 +1311,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                         <span className="text-2xl">{gradeEmoji}</span>
                         <div>
                           <div className={`text-3xl font-black ${grade.color}`}>{grade.letter}</div>
-                          <div className="text-[10px] text-slate-500">Health Grade</div>
+                          <div className="text-2xs text-slate-500">Health Grade</div>
                         </div>
                       </div>
                     </div>
@@ -1345,7 +1345,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                                 <span className="text-xl flex-shrink-0">{kidInfo.icon}</span>
                                 <div>
                                   <div className="text-sm font-medium text-slate-800">{kidInfo.kid}</div>
-                                  {isTeacher && <div className="text-[10px] text-slate-400 mt-0.5">EPA: {cause}</div>}
+                                  {isTeacher && <div className="text-2xs text-slate-400 mt-0.5">EPA: {cause}</div>}
                                 </div>
                               </div>
                             );
@@ -1380,7 +1380,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                     <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 flex items-start gap-3">
                       <span className="text-xl flex-shrink-0">💡</span>
                       <div>
-                        <div className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-1">Fun Fact</div>
+                        <div className="text-2xs font-bold text-amber-700 uppercase tracking-wider mb-1">Fun Fact</div>
                         <div className="text-xs text-amber-900 leading-relaxed">{wbFunFacts[wbFactIdx]}</div>
                       </div>
                     </div>
@@ -1400,8 +1400,8 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                                   <div className="text-sm font-bold text-slate-800">
                                     {(p as any).value < 0.01 && (p as any).value > 0 ? (p as any).value.toFixed(3) : (p as any).value < 1 ? (p as any).value.toFixed(2) : (p as any).value.toFixed(1)}
                                   </div>
-                                  <div className="text-[10px] text-slate-500">{key} ({(p as any).unit || ''})</div>
-                                  {(p as any).source && <div className="text-[9px] text-slate-400">{(p as any).source}</div>}
+                                  <div className="text-2xs text-slate-500">{key} ({(p as any).unit || ''})</div>
+                                  {(p as any).source && <div className="text-2xs text-slate-400">{(p as any).source}</div>}
                                 </div>
                               ))}
                             </div>
@@ -1414,7 +1414,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                             <div className="text-xs font-bold text-slate-700 mb-2">EPA Impairment Causes</div>
                             <div className="flex flex-wrap gap-1.5">
                               {causes.map((c, i) => (
-                                <span key={i} className="px-2 py-1 rounded-full text-[10px] font-medium bg-orange-100 text-orange-800 border border-orange-200">{c}</span>
+                                <span key={i} className="px-2 py-1 rounded-full text-2xs font-medium bg-orange-100 text-orange-800 border border-orange-200">{c}</span>
                               ))}
                             </div>
                           </div>
@@ -1451,7 +1451,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                           <div className="text-xs font-bold text-slate-700 mb-1">Data Sources</div>
                           <div className="flex flex-wrap gap-1.5">
                             {['EPA ATTAINS', 'USGS WDFN', 'Water Quality Portal', hasRealData ? 'Live Sensors' : null].filter(Boolean).map((src, i) => (
-                              <span key={i} className="px-2 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200">{src}</span>
+                              <span key={i} className="px-2 py-0.5 rounded text-2xs font-medium bg-blue-50 text-blue-700 border border-blue-200">{src}</span>
                             ))}
                           </div>
                         </div>
@@ -1550,15 +1550,15 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                       <div className="text-left">
                         <div className="text-sm font-semibold text-cyan-800 flex items-center gap-2">
                           Restoration Plan — {regionName}
-                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${siteSeverityColor}`}>
+                          <span className={`text-2xs font-bold px-1.5 py-0.5 rounded-full ${siteSeverityColor}`}>
                             {siteSeverityLabel} ({siteSeverityScore})
                           </span>
                         </div>
-                        <div className="text-[11px] text-slate-500">
+                        <div className="text-xs text-slate-500">
                           {pearlModel} × {totalUnits} unit{totalUnits > 1 ? 's' : ''} ({totalQuads} quad{totalQuads > 1 ? 's' : ''}, {fullGPM} GPM) + {totalBMPs} BMPs · {waterType === 'brackish' ? '🦪 Oyster' : '🐚 Mussel'} Biofilt · {fmt(fullAnnualCost)}/yr
                         </div>
                         {(attainsCategory || isCat5) && (
-                          <div className="text-[10px] mt-0.5 flex items-center gap-1.5 flex-wrap">
+                          <div className="text-2xs mt-0.5 flex items-center gap-1.5 flex-wrap">
                             <span className={`font-bold px-1.5 py-0.5 rounded ${
                               isCat5 ? 'bg-red-100 text-red-700' :
                               attainsCategory.includes('4') ? 'bg-orange-100 text-orange-700' :
@@ -1576,7 +1576,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1.5 text-[9px]">
+                      <div className="flex items-center gap-1.5 text-2xs">
                         {categories.reduce((n, c) => n + c.modules.filter(m => m.status === 'warranted').length, 0) > 0 && (
                           <span className="bg-red-200 text-red-800 font-bold px-1.5 py-0.5 rounded-full">
                             {categories.reduce((n, c) => n + c.modules.filter(m => m.status === 'warranted').length, 0)} warranted
@@ -1605,20 +1605,20 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                       <div className="rounded-lg border-2 border-slate-300 bg-white p-4 space-y-3">
                         <div className="flex items-center justify-between">
                           <div className="text-sm font-bold text-slate-900 uppercase tracking-wide">Executive Summary</div>
-                          <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${siteSeverityColor}`}>
+                          <span className={`text-2xs font-bold px-2 py-1 rounded-full ${siteSeverityColor}`}>
                             Site Severity: {siteSeverityLabel} ({siteSeverityScore}/100)
                           </span>
                         </div>
                         {/* Parameter assessment grid */}
                         <div className="rounded-md bg-slate-50 border border-slate-200 p-3 space-y-2">
-                          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{isMD ? 'MD DNR Threshold' : 'EPA Criteria'} Assessment</div>
-                          <div className="grid grid-cols-5 gap-1.5 text-[10px]">
+                          <div className="text-2xs font-bold text-slate-500 uppercase tracking-wider">{isMD ? 'MD DNR Threshold' : 'EPA Criteria'} Assessment</div>
+                          <div className="grid grid-cols-5 gap-1.5 text-2xs">
                             <div className="text-center">
                               <div className={`font-bold ${doSeverity === 'critical' ? 'text-red-700' : doSeverity === 'stressed' ? 'text-amber-600' : doSeverity === 'adequate' ? 'text-green-600' : 'text-slate-400'}`}>
                                 {doSeverity === 'unknown' ? '?' : doVal?.toFixed(1)} mg/L
                               </div>
                               <div className="text-slate-500">DO</div>
-                              <div className={`text-[9px] font-medium ${doSeverity === 'critical' ? 'text-red-600' : doSeverity === 'stressed' ? 'text-amber-600' : 'text-green-600'}`}>
+                              <div className={`text-2xs font-medium ${doSeverity === 'critical' ? 'text-red-600' : doSeverity === 'stressed' ? 'text-amber-600' : 'text-green-600'}`}>
                                 {doSeverity !== 'unknown' ? doSeverity : 'no data'}
                               </div>
                             </div>
@@ -1627,7 +1627,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                                 {bloomSeverity === 'unknown' ? '?' : chlVal} ug/L
                               </div>
                               <div className="text-slate-500">Chl-a</div>
-                              <div className={`text-[9px] font-medium ${bloomSeverity === 'severe' ? 'text-red-600' : bloomSeverity === 'significant' ? 'text-orange-600' : bloomSeverity === 'bloom' ? 'text-amber-600' : 'text-green-600'}`}>
+                              <div className={`text-2xs font-medium ${bloomSeverity === 'severe' ? 'text-red-600' : bloomSeverity === 'significant' ? 'text-orange-600' : bloomSeverity === 'bloom' ? 'text-amber-600' : 'text-green-600'}`}>
                                 {bloomSeverity !== 'unknown' ? bloomSeverity : 'no data'}
                               </div>
                             </div>
@@ -1636,7 +1636,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                                 {turbiditySeverity === 'unknown' ? '?' : turbVal?.toFixed(1)} FNU
                               </div>
                               <div className="text-slate-500">Turbidity</div>
-                              <div className={`text-[9px] font-medium ${turbiditySeverity === 'impaired' ? 'text-red-600' : turbiditySeverity === 'elevated' ? 'text-amber-600' : 'text-green-600'}`}>
+                              <div className={`text-2xs font-medium ${turbiditySeverity === 'impaired' ? 'text-red-600' : turbiditySeverity === 'elevated' ? 'text-amber-600' : 'text-green-600'}`}>
                                 {turbiditySeverity !== 'unknown' ? (turbiditySeverity === 'clear' ? 'ok' : turbiditySeverity) : 'no data'}
                               </div>
                             </div>
@@ -1645,14 +1645,14 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                                 {nutrientSeverity === 'unknown' ? '?' : `TN ${tnVal?.toFixed(1) ?? '?'}`}
                               </div>
                               <div className="text-slate-500">Nutrients</div>
-                              <div className={`text-[9px] font-medium ${nutrientSeverity === 'excessive' ? 'text-red-600' : nutrientSeverity === 'elevated' ? 'text-amber-600' : 'text-green-600'}`}>
+                              <div className={`text-2xs font-medium ${nutrientSeverity === 'excessive' ? 'text-red-600' : nutrientSeverity === 'elevated' ? 'text-amber-600' : 'text-green-600'}`}>
                                 {nutrientSeverity !== 'unknown' ? nutrientSeverity : 'no data'}
                               </div>
                             </div>
                             <div className="text-center">
                               <div className="font-bold text-slate-700">{attainsCategory || '?'}</div>
                               <div className="text-slate-500">ATTAINS</div>
-                              <div className={`text-[9px] font-medium ${isCat5 ? 'text-red-600' : isImpaired ? 'text-amber-600' : 'text-green-600'}`}>
+                              <div className={`text-2xs font-medium ${isCat5 ? 'text-red-600' : isImpaired ? 'text-amber-600' : 'text-green-600'}`}>
                                 {tmdlStatus === 'needed' ? 'no TMDL' : tmdlStatus === 'completed' ? 'has TMDL' : tmdlStatus}
                               </div>
                             </div>
@@ -1660,12 +1660,12 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                           <div className="w-full bg-slate-200 rounded-full h-2 mt-1">
                             <div className={`h-2 rounded-full transition-all ${siteSeverityScore >= 75 ? 'bg-red-500' : siteSeverityScore >= 50 ? 'bg-amber-500' : siteSeverityScore >= 25 ? 'bg-yellow-500' : 'bg-green-500'}`} style={{ width: `${Math.min(100, siteSeverityScore)}%` }} />
                           </div>
-                          <div className="text-[9px] text-slate-400">Composite: DO (25%) + Bloom/Nutrients (25%) + Turbidity (15%) + Impairment (20%) + Monitoring Gap (15%) | Thresholds: {thresholdSource}</div>
+                          <div className="text-2xs text-slate-400">Composite: DO (25%) + Bloom/Nutrients (25%) + Turbidity (15%) + Impairment (20%) + Monitoring Gap (15%) | Thresholds: {thresholdSource}</div>
                         </div>
                         {/* Situation + Treatment Priorities */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div className="rounded-md bg-slate-50 border border-slate-200 p-3">
-                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Situation</div>
+                            <div className="text-2xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Situation</div>
                             <div className="space-y-1 text-xs text-slate-700 leading-relaxed">
                               <div><span className="font-semibold">{regionName}</span> is {isCat5 ? 'Category 5 impaired' : attainsCategory.includes('4') ? 'Category 4 impaired' : isImpaired ? 'impaired' : 'under monitoring'}{attainsCauses.length > 0 ? ` for ${attainsCauses.join(', ').toLowerCase()}` : ''}.</div>
                               {dataAgeDays !== null && <div>Most recent data is <span className="font-semibold">{dataAgeDays} days old</span>. Confidence is <span className={`font-semibold ${dataConfidence === 'low' ? 'text-red-600' : dataConfidence === 'moderate' ? 'text-amber-600' : 'text-green-600'}`}>{dataConfidence}</span>.</div>}
@@ -1673,7 +1673,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                             </div>
                           </div>
                           <div className="rounded-md bg-red-50 border border-red-200 p-3">
-                            <div className="text-[10px] font-bold text-red-700 uppercase tracking-wider mb-1.5">Treatment Priorities</div>
+                            <div className="text-2xs font-bold text-red-700 uppercase tracking-wider mb-1.5">Treatment Priorities</div>
                             <div className="space-y-1 text-xs text-red-800 leading-relaxed">
                               {treatmentPriorities.length > 0 ? treatmentPriorities.slice(0, 3).map((tp: any, i: number) => (
                                 <div key={i} className="flex items-start gap-1">
@@ -1722,11 +1722,11 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                                 <div className="flex-1">
                                   <span className="font-medium text-slate-800">{imp.cause}</span>
                                   <span className="mx-1.5 text-slate-300">|</span>
-                                  <span className={`text-[10px] font-semibold ${imp.tier === 1 ? 'text-green-700' : imp.tier === 2 ? 'text-amber-700' : 'text-slate-500'}`}>
+                                  <span className={`text-2xs font-semibold ${imp.tier === 1 ? 'text-green-700' : imp.tier === 2 ? 'text-amber-700' : 'text-slate-500'}`}>
                                     {imp.tierLabel}
                                   </span>
                                 </div>
-                                <span className="text-[11px] text-slate-500 max-w-[40%] text-right">{imp.pearlAction}</span>
+                                <span className="text-xs text-slate-500 max-w-[40%] text-right">{imp.pearlAction}</span>
                               </div>
                             ))}
                           </div>
@@ -1739,9 +1739,9 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                           <div key={cat.id} className={`rounded-lg border p-2.5 ${cat.color}`}>
                             <div className="text-xs font-semibold flex items-center gap-1.5">
                               <span>{cat.icon}</span> {cat.title}
-                              <span className="text-[10px] font-normal text-slate-500 ml-auto">{cat.modules.length} modules</span>
+                              <span className="text-2xs font-normal text-slate-500 ml-auto">{cat.modules.length} modules</span>
                             </div>
-                            <div className="text-[11px] text-slate-500 mt-0.5">{cat.subtitle}</div>
+                            <div className="text-xs text-slate-500 mt-0.5">{cat.subtitle}</div>
                           </div>
                         ))}
                       </div>
@@ -1767,12 +1767,12 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
               <div className="rounded-xl bg-green-50 border border-green-200 p-4 text-center">
                 <div className="text-3xl font-bold text-green-700 font-mono">95%</div>
                 <div className="text-xs font-semibold text-green-600 mt-1">Sediment Removed (TSS)</div>
-                <div className="text-[10px] text-green-500 mt-0.5">Dirty water in → clean water out!</div>
+                <div className="text-2xs text-green-500 mt-0.5">Dirty water in → clean water out!</div>
               </div>
               <div className="rounded-xl bg-blue-50 border border-blue-200 p-4 text-center">
                 <div className="text-3xl font-bold text-blue-700 font-mono">93.8%</div>
                 <div className="text-xs font-semibold text-blue-600 mt-1">E. coli Bacteria Removed</div>
-                <div className="text-[10px] text-blue-500 mt-0.5">Oysters + filters = super clean!</div>
+                <div className="text-2xs text-blue-500 mt-0.5">Oysters + filters = super clean!</div>
               </div>
             </div>
           </div>
@@ -1854,7 +1854,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                               : 'Low EJ vulnerability relative to national benchmarks.'
                             }
                           </div>
-                          <div className="text-[9px] text-slate-400 mt-1">Source: EPA EJScreen API (live geospatial lookup)</div>
+                          <div className="text-2xs text-slate-400 mt-1">Source: EPA EJScreen API (live geospatial lookup)</div>
                         </div>
                       )}
                       {wbEJLoading && (
@@ -1867,33 +1867,33 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                       <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
                         <div className="rounded-lg bg-purple-50 border border-purple-100 p-2 text-center">
                           <div className="text-lg font-bold text-purple-700">{ejDetail.povertyPct}%</div>
-                          <div className="text-[10px] text-purple-500 font-medium">Below Poverty</div>
-                          <div className="text-[9px] text-slate-400">Census ACS</div>
+                          <div className="text-2xs text-purple-500 font-medium">Below Poverty</div>
+                          <div className="text-2xs text-slate-400">Census ACS</div>
                         </div>
                         <div className="rounded-lg bg-purple-50 border border-purple-100 p-2 text-center">
                           <div className="text-lg font-bold text-purple-700">{ejDetail.minorityPct}%</div>
-                          <div className="text-[10px] text-purple-500 font-medium">Minority</div>
-                          <div className="text-[9px] text-slate-400">Census ACS</div>
+                          <div className="text-2xs text-purple-500 font-medium">Minority</div>
+                          <div className="text-2xs text-slate-400">Census ACS</div>
                         </div>
                         <div className="rounded-lg bg-purple-50 border border-purple-100 p-2 text-center">
                           <div className="text-lg font-bold text-purple-700">{ejDetail.uninsuredPct}%</div>
-                          <div className="text-[10px] text-purple-500 font-medium">Uninsured</div>
-                          <div className="text-[9px] text-slate-400">Census ACS</div>
+                          <div className="text-2xs text-purple-500 font-medium">Uninsured</div>
+                          <div className="text-2xs text-slate-400">Census ACS</div>
                         </div>
                         <div className="rounded-lg bg-purple-50 border border-purple-100 p-2 text-center">
                           <div className="text-lg font-bold text-purple-700">{ejDetail.lingIsolatedPct}%</div>
-                          <div className="text-[10px] text-purple-500 font-medium">Ling. Isolated</div>
-                          <div className="text-[9px] text-slate-400">Census ACS</div>
+                          <div className="text-2xs text-purple-500 font-medium">Ling. Isolated</div>
+                          <div className="text-2xs text-slate-400">Census ACS</div>
                         </div>
                         <div className="rounded-lg bg-purple-50 border border-purple-100 p-2 text-center">
                           <div className="text-lg font-bold text-purple-700">{ejDetail.noHSDiplomaPct}%</div>
-                          <div className="text-[10px] text-purple-500 font-medium">No HS Diploma</div>
-                          <div className="text-[9px] text-slate-400">Census ACS</div>
+                          <div className="text-2xs text-purple-500 font-medium">No HS Diploma</div>
+                          <div className="text-2xs text-slate-400">Census ACS</div>
                         </div>
                         <div className="rounded-lg bg-red-50 border border-red-100 p-2 text-center">
                           <div className="text-lg font-bold text-red-700">{ejDetail.drinkingWaterViol}</div>
-                          <div className="text-[10px] text-red-500 font-medium">SDWA Violations</div>
-                          <div className="text-[9px] text-slate-400">per 100k (SDWIS)</div>
+                          <div className="text-2xs text-red-500 font-medium">SDWA Violations</div>
+                          <div className="text-2xs text-slate-400">per 100k (SDWIS)</div>
                         </div>
                       </div>
                       {/* Per-waterbody EJ breakdown */}
@@ -1912,7 +1912,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                           : `${wbEJScore !== null ? wbName : stateName} shows moderate EJ burden. Communities near impaired waterbodies may qualify for Justice40 and EPA EJ program support where local indicators exceed thresholds.`
                         }
                       </div>
-                      <div className="text-[10px] text-slate-400 italic">
+                      <div className="text-2xs text-slate-400 italic">
                         Sources: Census ACS 5-Year (2018–2022) S1701, DP05, S2701, S1601, S1501 · EPA SDWIS · EPA EJScreen API (per-waterbody)
                       </div>
                     </div>
@@ -1962,7 +1962,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                       <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold">1</div>
                       <div className="min-w-0 flex-1">
                         <div className="text-sm font-bold text-red-900">Potomac River — Interceptor Collapse</div>
-                        <div className="text-[10px] font-semibold text-red-700 uppercase tracking-wide">Active Sewage Spill · Cabin John, Montgomery County · Since Jan 19, 2026</div>
+                        <div className="text-2xs font-semibold text-red-700 uppercase tracking-wide">Active Sewage Spill · Cabin John, Montgomery County · Since Jan 19, 2026</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5">
@@ -2008,16 +2008,16 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                       <span className="font-bold">🔬 PEARL Relevance:</span> This event demonstrates catastrophic infrastructure failure impact on receiving waters. PEARL's real-time monitoring capability would provide continuous E. coli, nutrient, and pathogen tracking during and after spill events — filling the gap that required UMD researchers and volunteer riverkeepers to manually sample. Continuous deployment at 6 DC Water monitoring sites would provide the 24/7 data regulators and the public need.
                     </div>
                     <div className="flex flex-wrap gap-1.5 pt-1">
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">DC Water</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">NPR</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">The Hill</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">NBC News</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">UMD School of Public Health</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">Potomac Conservancy</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">DOEE</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">VDH</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">MD Matters</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">Izaak Walton League</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">DC Water</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">NPR</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">The Hill</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">NBC News</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">UMD School of Public Health</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">Potomac Conservancy</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">DOEE</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">VDH</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">MD Matters</span>
+                      <span className="px-1.5 py-0.5 rounded text-2xs font-medium bg-slate-200 text-slate-700">Izaak Walton League</span>
                     </div>
                   </div>
                   )}
@@ -2174,7 +2174,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                 ].map(p => (
                   <div key={p.title} className="bg-white p-3 rounded-lg border border-cyan-200">
                     <h4 className="font-medium text-xs text-cyan-900 mb-1">{p.title}</h4>
-                    <p className="text-[10px] text-slate-600">{p.desc}</p>
+                    <p className="text-2xs text-slate-600">{p.desc}</p>
                   </div>
                 ))}
               </div>
@@ -2248,8 +2248,8 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                       <span>{p.icon}</span>
                       <span className="text-xs font-bold text-cyan-900">{p.param}</span>
                     </div>
-                    <div className="text-[10px] text-cyan-700">Good: {p.good} {p.unit}</div>
-                    <div className="text-[10px] text-slate-500 italic">{p.why}</div>
+                    <div className="text-2xs text-cyan-700">Good: {p.good} {p.unit}</div>
+                    <div className="text-2xs text-slate-500 italic">{p.why}</div>
                   </div>
                 ))}
               </div>
@@ -2272,15 +2272,15 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div className="bg-white rounded-lg border border-purple-200 p-3">
                     <div className="text-xs font-semibold text-purple-800">📚 Lesson Plan Builder</div>
-                    <p className="text-[10px] text-purple-600 mt-1">Auto-generate lesson plans from current waterbody data. Aligned to NGSS, Common Core Math, and state standards.</p>
+                    <p className="text-2xs text-purple-600 mt-1">Auto-generate lesson plans from current waterbody data. Aligned to NGSS, Common Core Math, and state standards.</p>
                   </div>
                   <div className="bg-white rounded-lg border border-purple-200 p-3">
                     <div className="text-xs font-semibold text-purple-800">📊 Student Data Portal</div>
-                    <p className="text-[10px] text-purple-600 mt-1">Create class-specific data views with simplified parameters. Control which waterbodies and time ranges students see.</p>
+                    <p className="text-2xs text-purple-600 mt-1">Create class-specific data views with simplified parameters. Control which waterbodies and time ranges students see.</p>
                   </div>
                   <div className="bg-white rounded-lg border border-purple-200 p-3">
                     <div className="text-xs font-semibold text-purple-800">✅ Assessment Generator</div>
-                    <p className="text-[10px] text-purple-600 mt-1">Build quizzes and lab practicals using live data. Auto-grade with answer keys. Track student progress across assignments.</p>
+                    <p className="text-2xs text-purple-600 mt-1">Build quizzes and lab practicals using live data. Auto-grade with answer keys. Track student progress across assignments.</p>
                   </div>
                 </div>
 
@@ -2288,7 +2288,7 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                   <div className="text-xs font-semibold text-purple-700 mb-1">🎯 NGSS Standards Coverage</div>
                   <div className="flex flex-wrap gap-1">
                     {['MS-ESS3-3 (Human Impact)', 'MS-ESS3-4 (Solutions)', 'MS-LS2-3 (Ecosystems)', 'MS-ETS1-1 (Engineering)', 'HS-ESS3-4 (Sustainability)', 'HS-LS2-7 (Biodiversity)'].map(s => (
-                      <span key={s} className="px-2 py-0.5 bg-purple-100 text-purple-700 text-[10px] rounded-full font-medium">{s}</span>
+                      <span key={s} className="px-2 py-0.5 bg-purple-100 text-purple-700 text-2xs rounded-full font-medium">{s}</span>
                     ))}
                   </div>
                 </div>
@@ -2338,14 +2338,14 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                   { label: 'Species Count', value: '↑ 12', sub: 'new species documented', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
                   { label: 'Student Reports', value: '47', sub: 'field reports submitted', color: 'text-violet-600', bg: 'bg-violet-50 border-violet-200' },
                   { label: 'Clean Streams', value: '68%', sub: 'meeting water quality goals', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' }
-                ].map(t => <div key={t.label} className={`rounded-xl border p-4 ${t.bg}`}><div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{t.label}</div><div className={`text-2xl font-bold ${t.color} mt-1`}>{t.value}</div><div className="text-[10px] text-slate-500 mt-1">{t.sub}</div></div>)}
+                ].map(t => <div key={t.label} className={`rounded-xl border p-4 ${t.bg}`}><div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{t.label}</div><div className={`text-2xl font-bold ${t.color} mt-1`}>{t.value}</div><div className="text-2xs text-slate-500 mt-1">{t.sub}</div></div>)}
               </div></CardContent></Card>
             );
             case 'reports-hub': return DS(
               <Card><CardHeader><CardTitle>Student Reports</CardTitle><CardDescription>Download and share your water quality reports</CardDescription></CardHeader>
               <CardContent><div className="space-y-2">
                 {['My Field Investigation Report', 'Class Water Quality Summary', 'Science Fair Data Report', 'Watershed Health Report Card'].map(r =>
-                  <div key={r} className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50"><span className="text-sm text-slate-700">{r}</span><Badge variant="outline" className="text-[10px]">Generate</Badge></div>
+                  <div key={r} className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50"><span className="text-sm text-slate-700">{r}</span><Badge variant="outline" className="text-2xs">Generate</Badge></div>
                 )}
               </div></CardContent></Card>
             );
@@ -2389,14 +2389,14 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                   <CardContent>
                     <div className={`rounded-xl border p-4 flex items-center justify-between ${scoreBg}`}>
                       <div>
-                        <div className="text-[10px] font-bold uppercase tracking-wider opacity-70">Eco Score</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider opacity-70">Eco Score</div>
                         <div className="text-xs opacity-80 mt-1">
                           {ecoData ? `${ecoData.totalTE} T&E species · ${ecoData.aquaticTE} aquatic · ${ecoData.criticalHabitat} critical habitat` : 'No T&E data available'}
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="text-2xl font-bold">{ecoScore}</div>
-                        <Badge variant="outline" className="text-[10px] mt-1">{label}</Badge>
+                        <Badge variant="outline" className="text-2xs mt-1">{label}</Badge>
                       </div>
                     </div>
                   </CardContent>
@@ -2416,31 +2416,31 @@ export function K12ManagementCenter({ stateAbbr, isTeacher: isTeacherProp = fals
                     <CardTitle className="flex items-center gap-2">
                       <Bug className="h-5 w-5 text-rose-600" />
                       Threatened & Endangered Species — {stateName}
-                      <Badge variant="secondary" className="ml-1 text-[10px]">USFWS ECOS</Badge>
+                      <Badge variant="secondary" className="ml-1 text-2xs">USFWS ECOS</Badge>
                     </CardTitle>
                     <CardDescription>Animals &amp; plants that need our help near your school&apos;s watershed</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       <div className="rounded-xl border p-4 bg-slate-50 border-slate-200">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total T&E</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Total T&E</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{federalTotal}</div>
-                        <div className="text-[10px] text-slate-400">Federal ESA</div>
+                        <div className="text-2xs text-slate-400">Federal ESA</div>
                       </div>
                       <div className="rounded-xl border p-4 bg-blue-50 border-blue-200">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Aquatic T&E</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Aquatic T&E</div>
                         <div className="text-2xl font-bold text-blue-700 mt-1">{federalAquatic}</div>
-                        <div className="text-[10px] text-slate-400">Freshwater / marine</div>
+                        <div className="text-2xs text-slate-400">Freshwater / marine</div>
                       </div>
                       <div className="rounded-xl border p-4 bg-rose-50 border-rose-200">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Critical Habitat</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Critical Habitat</div>
                         <div className="text-2xl font-bold text-rose-700 mt-1">{critHab}</div>
-                        <div className="text-[10px] text-slate-400">Designated areas</div>
+                        <div className="text-2xs text-slate-400">Designated areas</div>
                       </div>
                       <div className="rounded-xl border p-4 bg-amber-50 border-amber-200">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Eco Score</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Eco Score</div>
                         <div className="text-2xl font-bold text-amber-700 mt-1">{getEcoScore(stateAbbr)}</div>
-                        <div className="text-[10px] text-slate-400">{ecoScoreLabel(getEcoScore(stateAbbr))}</div>
+                        <div className="text-2xs text-slate-400">{ecoScoreLabel(getEcoScore(stateAbbr))}</div>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

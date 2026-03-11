@@ -105,7 +105,7 @@ export function DataLatencyTracker() {
                 </td>
                 <td className="px-3 py-2.5 text-center">
                   <span
-                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${ageBadgeClass(e.ageHours)}`}
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-semibold border ${ageBadgeClass(e.ageHours)}`}
                   >
                     <span className="w-1.5 h-1.5 rounded-full" style={{ background: ageColor(e.ageHours) }} />
                     {formatAge(e.ageHours)}
@@ -117,7 +117,7 @@ export function DataLatencyTracker() {
         </table>
       </div>
 
-      <div className="px-4 py-2 text-[10px]" style={{ color: 'var(--text-dim)', borderTop: '1px solid var(--border-subtle)' }}>
+      <div className="px-4 py-2 text-2xs" style={{ color: 'var(--text-dim)', borderTop: '1px solid var(--border-subtle)' }}>
         Color key: <span className="text-green-600">green</span> &lt;7d · <span className="text-amber-600">yellow</span> 7–30d · <span className="text-orange-600">orange</span> 30–90d · <span className="text-red-600">red</span> &gt;90d
       </div>
     </div>

@@ -11,7 +11,7 @@ export function AccessGate() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {/* Explorer Access */}
           <div className="bg-slate-900/80 border border-slate-700/40 rounded-2xl p-8 flex flex-col">
-            <div className="inline-block self-start px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-emerald-900/40 text-emerald-400 border border-emerald-700/30 mb-4">
+            <div className="inline-block self-start px-2 py-0.5 rounded text-2xs font-bold tracking-wider uppercase bg-emerald-900/40 text-emerald-400 border border-emerald-700/30 mb-4">
               Instant Access
             </div>
             <h3 className="text-xl font-bold text-white mb-2">Explorer Access</h3>
@@ -28,7 +28,7 @@ export function AccessGate() {
 
           {/* Operator Access */}
           <div className="bg-slate-900/80 border border-slate-700/40 rounded-2xl p-8 flex flex-col">
-            <div className="inline-block self-start px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-cyan-900/40 text-cyan-400 border border-cyan-700/30 mb-4">
+            <div className="inline-block self-start px-2 py-0.5 rounded text-2xs font-bold tracking-wider uppercase bg-cyan-900/40 text-cyan-400 border border-cyan-700/30 mb-4">
               Jurisdiction-Bound
             </div>
             <h3 className="text-xl font-bold text-white mb-2">Operator Access</h3>

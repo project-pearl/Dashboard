@@ -318,7 +318,7 @@ export function DataProvenancePanel({ open, onOpenChange, record }: DataProvenan
               </div>
               <div className="text-right space-y-1">
                 {statusBadge(record.lineage.every(s => s.status === 'pass') ? 'pass' : record.lineage.some(s => s.status === 'fail') ? 'fail' : 'flag')}
-                <div className="text-[10px] text-blue-500 mt-1">All {record.lineage.length} steps verified</div>
+                <div className="text-2xs text-blue-500 mt-1">All {record.lineage.length} steps verified</div>
               </div>
             </div>
           </div>
@@ -332,7 +332,7 @@ export function DataProvenancePanel({ open, onOpenChange, record }: DataProvenan
               </div>
               <div className="text-xs text-slate-600 space-y-1">
                 <div>{record.sensorSource}</div>
-                <div className="text-[10px] text-slate-400">{record.sensorModel}</div>
+                <div className="text-2xs text-slate-400">{record.sensorModel}</div>
               </div>
             </div>
             <div className="rounded-lg border border-slate-200 bg-white p-3">
@@ -365,7 +365,7 @@ export function DataProvenancePanel({ open, onOpenChange, record }: DataProvenan
                 <FileText className="h-4 w-4 text-purple-600" />
                 <div>
                   <div className="text-xs font-semibold text-purple-700">QAPP Reference</div>
-                  <div className="text-[10px] text-purple-500">{record.qappSection}</div>
+                  <div className="text-2xs text-purple-500">{record.qappSection}</div>
                 </div>
               </div>
               <Button
@@ -411,7 +411,7 @@ export function DataProvenancePanel({ open, onOpenChange, record }: DataProvenan
 
                       {/* Arrow connector between nodes */}
                       {!isLast && (
-                        <div className="absolute left-[7px] top-[28px] text-slate-300 text-[10px] leading-none">▼</div>
+                        <div className="absolute left-[7px] top-[28px] text-slate-300 text-2xs leading-none">▼</div>
                       )}
 
                       {/* Step card */}
@@ -435,10 +435,10 @@ export function DataProvenancePanel({ open, onOpenChange, record }: DataProvenan
                           }
                         </div>
 
-                        <div className="text-[10px] text-slate-500 mt-1">{step.description}</div>
+                        <div className="text-2xs text-slate-500 mt-1">{step.description}</div>
 
                         {isExpanded && (
-                          <div className="mt-3 space-y-1.5 text-[11px] bg-white rounded border border-slate-100 p-2.5">
+                          <div className="mt-3 space-y-1.5 text-xs bg-white rounded border border-slate-100 p-2.5">
                             <div className="flex justify-between">
                               <span className="text-slate-500">Timestamp:</span>
                               <span className="font-mono text-slate-700">{step.timestamp}</span>
@@ -454,7 +454,7 @@ export function DataProvenancePanel({ open, onOpenChange, record }: DataProvenan
                             {step.detail && (
                               <div className="mt-1.5 pt-1.5 border-t border-slate-100">
                                 <span className="text-slate-500">Detail:</span>
-                                <span className="block text-slate-700 font-mono text-[10px] mt-0.5">{step.detail}</span>
+                                <span className="block text-slate-700 font-mono text-2xs mt-0.5">{step.detail}</span>
                               </div>
                             )}
                           </div>
@@ -477,7 +477,7 @@ export function DataProvenancePanel({ open, onOpenChange, record }: DataProvenan
               <Download className="h-4 w-4 mr-2" />
               {exporting ? 'Generating PDF…' : 'Export Provenance Chain (PDF)'}
             </Button>
-            <p className="text-[10px] text-slate-400 text-center mt-2">
+            <p className="text-2xs text-slate-400 text-center mt-2">
               One-click audit-ready PDF for regulatory review
             </p>
           </div>
@@ -488,7 +488,7 @@ export function DataProvenancePanel({ open, onOpenChange, record }: DataProvenan
               <Shield className="h-5 w-5 flex-shrink-0 mt-0.5" />
               <div>
                 <h4 className="text-xs font-bold mb-1">EPA QAPP Compliant</h4>
-                <p className="text-[10px] opacity-90">
+                <p className="text-2xs opacity-90">
                   All data follows EPA QA/R-5 quality assurance requirements. Chain of custody is
                   digitally signed, immutable, and available 24/7 for MDE audit access.
                 </p>

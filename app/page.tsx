@@ -261,7 +261,7 @@ class CommandCenterErrorBoundary extends React.Component<
           {this.state.errorInfo && (
             <details className="text-left mb-4">
               <summary className="text-xs text-slate-500 cursor-pointer">Component Stack</summary>
-              <pre className="text-[10px] text-slate-400 mt-1 bg-slate-50 p-2 rounded overflow-auto max-h-40">{this.state.errorInfo}</pre>
+              <pre className="text-2xs text-slate-400 mt-1 bg-slate-50 p-2 rounded overflow-auto max-h-40">{this.state.errorInfo}</pre>
             </details>
           )}
           <button onClick={() => this.setState({ hasError: false, error: '', errorInfo: '' })}
@@ -1145,7 +1145,7 @@ export default function Home() {
               </div>
             )}
 
-            <div className="text-[10px] text-amber-500 italic">double-click any PEARL logo to toggle</div>
+            <div className="text-2xs text-amber-500 italic">double-click any PEARL logo to toggle</div>
           </div>
         </div>
       )}
@@ -1828,7 +1828,7 @@ export default function Home() {
                       overallScore >= 40 ? 'border-amber-200 bg-amber-50' :
                       'border-red-200 bg-red-50'
                     }`}>
-                      <div className="text-[10px] uppercase tracking-wider text-slate-500">Overall</div>
+                      <div className="text-2xs uppercase tracking-wider text-slate-500">Overall</div>
                       <div className={`text-3xl font-bold ${overallScore >= 70 ? 'text-green-600' : overallScore >= 40 ? 'text-amber-600' : 'text-red-600'}`}>
                         {overallScore}
                       </div>
@@ -1911,18 +1911,18 @@ export default function Home() {
                       <div key={key} className={`rounded-xl border-2 p-3 text-center transition-all hover:shadow-md ${statusColors[status]}`}>
                         <div className="flex items-center justify-center gap-1.5 mb-1">
                           <span className={`w-2 h-2 rounded-full ${dotColors[status]}`} />
-                          <span className="text-[11px] uppercase tracking-wider font-semibold text-slate-600">{param.name}</span>
+                          <span className="text-xs uppercase tracking-wider font-semibold text-slate-600">{param.name}</span>
                         </div>
                         <div className={`text-2xl font-bold ${valueColors[status]}`}>
                           {v < 0.01 && v > 0 ? v.toFixed(3) : v < 1 ? v.toFixed(2) : v < 100 ? v.toFixed(1) : Math.round(v).toLocaleString()}
                         </div>
                         <div className="text-xs text-slate-500 mb-1">{param.unit}</div>
                         {targetStr && (
-                          <div className="text-[10px] text-slate-400">Target: {targetStr} {param.unit}</div>
+                          <div className="text-2xs text-slate-400">Target: {targetStr} {param.unit}</div>
                         )}
                         {sourceName && sourceId && (
                           <div className="mt-1.5">
-                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${sourceColors[sourceId] || 'bg-slate-100 text-slate-500'}`}>
+                            <span className={`text-2xs px-1.5 py-0.5 rounded-full font-medium ${sourceColors[sourceId] || 'bg-slate-100 text-slate-500'}`}>
                               {sourceName}
                             </span>
                           </div>
@@ -1947,7 +1947,7 @@ export default function Home() {
 
                   return (
                     <div className="mt-3 pt-3 border-t border-slate-200">
-                      <div className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold mb-2">Additional Live Parameters</div>
+                      <div className="text-2xs uppercase tracking-wider text-slate-400 font-semibold mb-2">Additional Live Parameters</div>
                       <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
                         {extraKeys.map(key => {
                           const p = wd.parameters[key];
@@ -1959,12 +1959,12 @@ export default function Home() {
                           };
                           return (
                             <div key={key} className="rounded-lg border border-slate-200 bg-white p-2 text-center">
-                              <div className="text-[10px] uppercase tracking-wider text-slate-500 mb-0.5">{extraLabels[key] || p.parameterName || key}</div>
+                              <div className="text-2xs uppercase tracking-wider text-slate-500 mb-0.5">{extraLabels[key] || p.parameterName || key}</div>
                               <div className="text-lg font-bold text-slate-800">
                                 {p.value < 0.01 && p.value > 0 ? p.value.toFixed(3) : p.value < 1 ? p.value.toFixed(2) : p.value < 100 ? p.value.toFixed(1) : Math.round(p.value).toLocaleString()}
                               </div>
-                              <div className="text-[10px] text-slate-400">{p.unit}</div>
-                              <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${sourceColors[p.source] || 'bg-slate-100 text-slate-500'}`}>
+                              <div className="text-2xs text-slate-400">{p.unit}</div>
+                              <span className={`text-2xs px-1.5 py-0.5 rounded-full font-medium ${sourceColors[p.source] || 'bg-slate-100 text-slate-500'}`}>
                                 {DATA_SOURCES[p.source]?.name || p.source}
                               </span>
                             </div>
@@ -1977,7 +1977,7 @@ export default function Home() {
 
                 {/* Source Attribution */}
                 {waterData && (waterData as any).sourceDetails?.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-1.5 mt-3 pt-3 border-t border-slate-200 text-[10px] text-slate-500">
+                  <div className="flex flex-wrap items-center gap-1.5 mt-3 pt-3 border-t border-slate-200 text-2xs text-slate-500">
                     <span className="font-medium">Data sources:</span>
                     {(waterData as any).sourceDetails.map((sd: any, i: number) => {
                       const c: Record<string, string> = {

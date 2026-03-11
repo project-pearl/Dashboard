@@ -488,9 +488,9 @@ export function DebateTopicsPanel({ stateAbbr, stateName, isTeacher = false }: D
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <Badge className={`text-[10px] border ${CATEGORY_COLORS[topic.category]}`}>{topic.category}</Badge>
-                        <Badge className={`text-[10px] border ${DIFFICULTY_COLORS[topic.difficulty]}`}>{topic.difficulty}</Badge>
-                        <span className="text-[10px] text-gray-400">Grades {topic.gradeRange}</span>
+                        <Badge className={`text-2xs border ${CATEGORY_COLORS[topic.category]}`}>{topic.category}</Badge>
+                        <Badge className={`text-2xs border ${DIFFICULTY_COLORS[topic.difficulty]}`}>{topic.difficulty}</Badge>
+                        <span className="text-2xs text-gray-400">Grades {topic.gradeRange}</span>
                       </div>
                       <p className="text-sm font-medium text-gray-900 truncate">
                         {topic.question(stateName)}
@@ -505,20 +505,20 @@ export function DebateTopicsPanel({ stateAbbr, stateName, isTeacher = false }: D
                       </p>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <div className="rounded border border-green-200 bg-green-50/50 p-2.5">
-                          <h5 className="text-[10px] font-bold text-green-800 uppercase tracking-wide mb-1.5">Pro</h5>
+                          <h5 className="text-2xs font-bold text-green-800 uppercase tracking-wide mb-1.5">Pro</h5>
                           <ul className="space-y-1">
                             {topic.pros.map((p, i) => (
-                              <li key={i} className="text-[11px] text-green-900 flex gap-1">
+                              <li key={i} className="text-xs text-green-900 flex gap-1">
                                 <span className="text-green-500 shrink-0">+</span>{p}
                               </li>
                             ))}
                           </ul>
                         </div>
                         <div className="rounded border border-red-200 bg-red-50/50 p-2.5">
-                          <h5 className="text-[10px] font-bold text-red-800 uppercase tracking-wide mb-1.5">Con</h5>
+                          <h5 className="text-2xs font-bold text-red-800 uppercase tracking-wide mb-1.5">Con</h5>
                           <ul className="space-y-1">
                             {topic.cons.map((c, i) => (
-                              <li key={i} className="text-[11px] text-red-900 flex gap-1">
+                              <li key={i} className="text-xs text-red-900 flex gap-1">
                                 <span className="text-red-500 shrink-0">&minus;</span>{c}
                               </li>
                             ))}
@@ -526,7 +526,7 @@ export function DebateTopicsPanel({ stateAbbr, stateName, isTeacher = false }: D
                         </div>
                       </div>
                       {isTeacher && (
-                        <div className="space-y-1 text-[11px] text-gray-500">
+                        <div className="space-y-1 text-xs text-gray-500">
                           <div className="flex items-start gap-1">
                             <BookOpen className="h-3 w-3 mt-0.5 shrink-0" />
                             <span><strong>Vocabulary:</strong> {topic.vocabulary.join(', ')}</span>
@@ -613,12 +613,12 @@ export function DebateTopicsPanel({ stateAbbr, stateName, isTeacher = false }: D
           {/* Teams */}
           <div className="flex flex-col sm:flex-row items-center gap-3">
             <div className="flex-1 w-full text-center rounded-lg border-2 border-green-300 bg-green-50 p-3">
-              <span className="text-[10px] uppercase tracking-wider text-green-600 font-bold">Pro</span>
+              <span className="text-2xs uppercase tracking-wider text-green-600 font-bold">Pro</span>
               <p className="text-sm font-semibold text-green-800 mt-1">{teamA}</p>
             </div>
             <span className="text-xs font-bold text-gray-400">VS</span>
             <div className="flex-1 w-full text-center rounded-lg border-2 border-red-300 bg-red-50 p-3">
-              <span className="text-[10px] uppercase tracking-wider text-red-600 font-bold">Con</span>
+              <span className="text-2xs uppercase tracking-wider text-red-600 font-bold">Con</span>
               <p className="text-sm font-semibold text-red-800 mt-1">{teamB}</p>
             </div>
           </div>

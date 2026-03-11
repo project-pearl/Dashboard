@@ -300,12 +300,12 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
                 </div>
                 <div className="hidden sm:block">
                   <p className="text-xs font-semibold text-slate-700 leading-tight">{agency.full}</p>
-                  <p className="text-[10px] text-slate-400">{agency.datasets}</p>
+                  <p className="text-2xs text-slate-400">{agency.datasets}</p>
                 </div>
               </div>
             ))}
           </div>
-          <p className="text-center text-[11px] text-slate-400 mt-5">
+          <p className="text-center text-xs text-slate-400 mt-5">
             430M+ federal datapoints aggregated &middot; 565,000+ assessment units &middot; 19 states real-time monitoring &middot; Field validated in Milton, FL (Jan 2025)
           </p>
         </div>
@@ -403,7 +403,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
             <div className="relative">
               <Image src="/pearl-barge.jpg" alt="ALIA modular treatment barge" width={700} height={400} className="rounded-2xl shadow-2xl" />
               <div className="absolute -bottom-4 -right-4 bg-white rounded-xl shadow-lg border border-slate-200 px-4 py-3 hidden sm:block">
-                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Field Validated</div>
+                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Field Validated</div>
                 <div className="text-sm font-bold text-slate-900">Milton, FL &mdash; Jan 2026</div>
               </div>
             </div>
@@ -420,7 +420,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-slate-900 mb-2">{d.title}</h3>
-                      <p className="text-slate-500 leading-relaxed text-[15px]">{d.desc}</p>
+                      <p className="text-slate-500 leading-relaxed text-base">{d.desc}</p>
                     </div>
                   </div>
                 </div>
@@ -525,7 +525,7 @@ export function PublicLanding({ onSignIn }: PublicLandingProps) {
           <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
             Partnership &amp; Discovery
           </h2>
-          <p className="text-slate-300 leading-relaxed max-w-xl mx-auto text-[15px]">
+          <p className="text-slate-300 leading-relaxed max-w-xl mx-auto text-base">
             Project PIN is more than a technology &mdash; it is a platform for collaboration. We are seeking scientific partners, research institutions, and foundational investors to help scale our impact and unlock the next wave of discoveries in marine restoration.
           </p>
         </div>

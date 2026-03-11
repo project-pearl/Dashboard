@@ -178,7 +178,7 @@ export function GrantOutcomesCard() {
           <CardTitle className="text-lg flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-emerald-600" />
             Historical Grant Outcomes
-            <span className="text-[10px] font-normal text-slate-400 ml-1">
+            <span className="text-2xs font-normal text-slate-400 ml-1">
               {GRANT_DATA.length} programs · $187B+ tracked
             </span>
           </CardTitle>
@@ -196,9 +196,9 @@ export function GrantOutcomesCard() {
             { label: 'Rivers Improved', value: '12,300', sub: 'Miles documented', color: 'text-violet-600' },
           ].map(k => (
             <div key={k.label} className="rounded-xl border border-slate-200 bg-white p-3 text-center">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+              <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
               <div className={`text-xl font-bold ${k.color} mt-1`}>{k.value}</div>
-              <div className="text-[10px] text-slate-400 mt-0.5">{k.sub}</div>
+              <div className="text-2xs text-slate-400 mt-0.5">{k.sub}</div>
             </div>
           ))}
         </div>
@@ -237,14 +237,14 @@ export function GrantOutcomesCard() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-1">
                         <h4 className="text-sm font-bold text-slate-800 truncate">{grant.program}</h4>
-                        <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold text-white ${STATUS_STYLES[grant.status] ?? 'bg-slate-500'}`}>
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-2xs font-bold text-white ${STATUS_STYLES[grant.status] ?? 'bg-slate-500'}`}>
                           {grant.status}
                         </span>
                       </div>
-                      <p className="text-[10px] text-slate-500 mb-2">{grant.source} · {grant.region}</p>
+                      <p className="text-2xs text-slate-500 mb-2">{grant.source} · {grant.region}</p>
                       <div className="flex gap-1.5 flex-wrap">
                         {grant.pollutants.map(p => (
-                          <Badge key={p} variant="outline" className={`text-[10px] py-0 px-1.5 h-5 ${POLLUTANT_COLORS[p] ?? 'bg-slate-100 text-slate-600 border-slate-200'}`}>
+                          <Badge key={p} variant="outline" className={`text-2xs py-0 px-1.5 h-5 ${POLLUTANT_COLORS[p] ?? 'bg-slate-100 text-slate-600 border-slate-200'}`}>
                             {p}
                           </Badge>
                         ))}
@@ -252,7 +252,7 @@ export function GrantOutcomesCard() {
                     </div>
                     <div className="text-right shrink-0">
                       <div className="text-lg font-bold text-green-700">{grant.investedLabel}</div>
-                      <div className="text-[10px] text-slate-400">{grant.duration}</div>
+                      <div className="text-2xs text-slate-400">{grant.duration}</div>
                       <ChevronDown className={`h-4 w-4 mx-auto mt-1 text-slate-400 transition-transform ${expanded ? 'rotate-180' : ''}`} />
                     </div>
                   </div>
@@ -263,7 +263,7 @@ export function GrantOutcomesCard() {
                     <div className="pt-3 space-y-3">
                       {/* Measured Outcomes */}
                       <div>
-                        <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-2">Measured Outcomes</div>
+                        <div className="text-2xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Measured Outcomes</div>
                         <div className="space-y-2.5">
                           {grant.results.map((r, i) => (
                             <div key={i}>
@@ -282,10 +282,10 @@ export function GrantOutcomesCard() {
                                       }}
                                     />
                                   </div>
-                                  <span className="text-[10px] text-slate-400 shrink-0 w-8 text-right">{r.progress}%</span>
+                                  <span className="text-2xs text-slate-400 shrink-0 w-8 text-right">{r.progress}%</span>
                                 </div>
                               )}
-                              {r.target && <div className="text-[10px] text-slate-400 mt-0.5">Target: {r.target}</div>}
+                              {r.target && <div className="text-2xs text-slate-400 mt-0.5">Target: {r.target}</div>}
                             </div>
                           ))}
                         </div>
@@ -293,13 +293,13 @@ export function GrantOutcomesCard() {
 
                       {/* Waterbodies */}
                       <div className="bg-slate-50 rounded-lg p-2.5">
-                        <div className="text-[10px] text-slate-500 mb-0.5">Waterbodies Affected</div>
+                        <div className="text-2xs text-slate-500 mb-0.5">Waterbodies Affected</div>
                         <div className="text-xs font-medium text-slate-800">{grant.waterbodies}</div>
                       </div>
 
                       {/* Key takeaway */}
                       <div className="bg-blue-50 border-l-2 border-blue-400 rounded-lg p-2.5">
-                        <div className="text-[10px] font-semibold text-blue-900 mb-0.5">Key Takeaway</div>
+                        <div className="text-2xs font-semibold text-blue-900 mb-0.5">Key Takeaway</div>
                         <div className="text-xs text-blue-800 leading-relaxed">{grant.insight}</div>
                       </div>
 
@@ -312,7 +312,7 @@ export function GrantOutcomesCard() {
         </div>
 
         {/* Sources */}
-        <div className="text-[10px] text-slate-400 leading-relaxed">
+        <div className="text-2xs text-slate-400 leading-relaxed">
           <p>Sources: EPA ATTAINS · EPA NPS Success Stories · Chesapeake Bay Program · CWSRF NIMS · EPA GRTS</p>
           <p className="mt-0.5">Outcome data reflects published EPA monitoring results and state 303(d) assessments.</p>
         </div>

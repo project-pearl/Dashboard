@@ -149,20 +149,20 @@ export function AcademicTools({ userRole, regionId, stateAbbr }: Props) {
             >
               <div className="flex items-start justify-between mb-1.5">
                 <span className="text-xs font-semibold text-slate-800">{mod.title}</span>
-                <Badge variant="outline" className={`text-[9px] h-4 ${levelColor(mod.level)}`}>{mod.level}</Badge>
+                <Badge variant="outline" className={`text-2xs h-4 ${levelColor(mod.level)}`}>{mod.level}</Badge>
               </div>
-              <div className="text-[10px] text-slate-500 mb-1">⏱ {mod.duration}</div>
+              <div className="text-2xs text-slate-500 mb-1">⏱ {mod.duration}</div>
 
               {activePath === mod.id && (
                 <div className="mt-2 pt-2 border-t border-slate-100 space-y-1.5">
-                  <div className="text-[10px] text-slate-600 font-medium">Topics covered:</div>
+                  <div className="text-2xs text-slate-600 font-medium">Topics covered:</div>
                   <div className="flex flex-wrap gap-1">
                     {mod.topics.map(t => (
-                      <span key={t} className="px-1.5 py-0.5 rounded text-[9px] bg-slate-100 text-slate-600">{t}</span>
+                      <span key={t} className="px-1.5 py-0.5 rounded text-2xs bg-slate-100 text-slate-600">{t}</span>
                     ))}
                   </div>
                   {mod.pearlIntegration && (
-                    <div className="text-[10px] text-emerald-700 bg-emerald-50 rounded p-1.5 mt-1">
+                    <div className="text-2xs text-emerald-700 bg-emerald-50 rounded p-1.5 mt-1">
                       🦪 <strong>PIN Integration:</strong> {mod.pearlIntegration}
                     </div>
                   )}
@@ -182,10 +182,10 @@ export function AcademicTools({ userRole, regionId, stateAbbr }: Props) {
               <div key={t.id} className="flex items-center justify-between bg-white rounded-lg border border-slate-200 p-2.5 hover:border-blue-300 transition-colors">
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-medium text-slate-800">{t.title}</div>
-                  <div className="text-[10px] text-slate-500">{t.desc}</div>
+                  <div className="text-2xs text-slate-500">{t.desc}</div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0 ml-3">
-                  <span className="text-[9px] text-slate-400">{t.format}</span>
+                  <span className="text-2xs text-slate-400">{t.format}</span>
                   <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
                     <FileText className="h-3 w-3 text-blue-600" />
                   </Button>
@@ -200,7 +200,7 @@ export function AcademicTools({ userRole, regionId, stateAbbr }: Props) {
       {!isCollege && (
         <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
           <div className="text-xs font-semibold text-indigo-800 mb-1">🏫 Teaching Integration</div>
-          <p className="text-[10px] text-indigo-700 leading-relaxed">
+          <p className="text-2xs text-indigo-700 leading-relaxed">
             Assign PIN datasets to student groups, create custom assessment rubrics tied to waterbody data,
             and track student progress through learning modules. Export classroom-ready CSV subsets with metadata.
           </p>
@@ -222,8 +222,8 @@ export function AcademicTools({ userRole, regionId, stateAbbr }: Props) {
             { param: 'Conductivity', method: 'SM 2510B' },
           ].map(m => (
             <div key={m.param} className="bg-white rounded border border-amber-100 px-2 py-1.5 text-center">
-              <div className="text-[10px] font-bold text-amber-900">{m.param}</div>
-              <div className="text-[9px] text-amber-600">{m.method}</div>
+              <div className="text-2xs font-bold text-amber-900">{m.param}</div>
+              <div className="text-2xs text-amber-600">{m.method}</div>
             </div>
           ))}
         </div>

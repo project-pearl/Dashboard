@@ -41,7 +41,7 @@ export default function PublicHeader() {
           </Link>
 
           {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-8 text-[13px] font-semibold tracking-wide uppercase text-slate-500">
+          <div className="hidden md:flex items-center gap-8 text-sm font-semibold tracking-wide uppercase text-slate-500">
             {NAV_LINKS.map((link) => {
               const isActive = !link.anchor && pathname === link.href;
               if (link.anchor) {

@@ -123,7 +123,7 @@ export default function WaterfrontExposurePanel({ selectedState = 'MD', compactM
           <DollarSign className="w-5 h-5 text-amber-600" />
           <div>
             <h3 className="text-sm font-semibold text-slate-900">Waterfront Value Exposure</h3>
-            <p className="text-[10px] text-slate-500">{data.stateAbbr} - Hedonic property risk model</p>
+            <p className="text-2xs text-slate-500">{data.stateAbbr} - Hedonic property risk model</p>
           </div>
         </div>
         <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${riskColor(data.riskLabel)}`}>
@@ -145,7 +145,7 @@ export default function WaterfrontExposurePanel({ selectedState = 'MD', compactM
         <div className="bg-slate-50 rounded-lg border border-slate-200 p-3 space-y-2">
           <div className="flex items-center gap-1.5 mb-2">
             <Building2 className="w-3.5 h-3.5 text-blue-600" />
-            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Property</span>
+            <span className="text-2xs font-semibold text-slate-500 uppercase tracking-wider">Property</span>
           </div>
           <Metric label="Median Home Value" value={formatDollars(data.medianHomeValue)} />
           <Metric label="Waterfront Premium" value={`+${data.waterfrontPremiumPct}%`} />
@@ -157,7 +157,7 @@ export default function WaterfrontExposurePanel({ selectedState = 'MD', compactM
         <div className="bg-slate-50 rounded-lg border border-slate-200 p-3 space-y-2">
           <div className="flex items-center gap-1.5 mb-2">
             <Droplets className="w-3.5 h-3.5 text-cyan-600" />
-            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">WQ Degradation</span>
+            <span className="text-2xs font-semibold text-slate-500 uppercase tracking-wider">WQ Degradation</span>
           </div>
           <Metric label="Degradation Index" value={data.wqDegradationIndex.toFixed(2)} highlight={data.wqDegradationIndex >= 1.0} />
           <Metric label="Worst Parameter" value={data.worstParameter ? PARAM_LABELS[data.worstParameter] ?? data.worstParameter : 'N/A (ATTAINS)'} />
@@ -168,7 +168,7 @@ export default function WaterfrontExposurePanel({ selectedState = 'MD', compactM
         <div className="bg-slate-50 rounded-lg border border-slate-200 p-3 space-y-2">
           <div className="flex items-center gap-1.5 mb-2">
             <BarChart3 className="w-3.5 h-3.5 text-violet-600" />
-            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Economic Dependency</span>
+            <span className="text-2xs font-semibold text-slate-500 uppercase tracking-wider">Economic Dependency</span>
           </div>
           <Metric label="Water-Dep GDP" value={`${data.waterDepGdpPct}%`} highlight={data.waterDepGdpPct >= 6} />
           <Metric label="Dependency Score" value={`${data.economicDependencyScore}/100`} />
@@ -179,26 +179,26 @@ export default function WaterfrontExposurePanel({ selectedState = 'MD', compactM
       <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
         <div className="flex items-center gap-1.5 mb-2">
           <TrendingUp className="w-3.5 h-3.5 text-slate-500" />
-          <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Component Drivers</span>
+          <span className="text-2xs font-semibold text-slate-500 uppercase tracking-wider">Component Drivers</span>
         </div>
         <div className="space-y-2">
           {componentDrivers.map((driver) => (
             <div key={driver.label} className="space-y-1">
-              <div className="flex items-center justify-between text-[11px]">
+              <div className="flex items-center justify-between text-xs">
                 <span className="text-slate-600">{driver.label}</span>
                 <span className="font-semibold text-slate-800">{driver.score}</span>
               </div>
               <div className="h-2 w-full rounded-full bg-slate-200 overflow-hidden">
                 <div className={`h-full ${driver.color}`} style={{ width: `${driver.score}%` }} />
               </div>
-              <p className="text-[10px] text-slate-500">{driver.note}</p>
+              <p className="text-2xs text-slate-500">{driver.note}</p>
             </div>
           ))}
         </div>
-        <p className="mt-3 text-[11px] font-semibold text-slate-700">Exposure Score = {data.exposureScore}/100 - {data.riskLabel}</p>
+        <p className="mt-3 text-xs font-semibold text-slate-700">Exposure Score = {data.exposureScore}/100 - {data.riskLabel}</p>
       </div>
 
-      <p className="text-[9px] text-slate-500 text-right">Census ACS 2018-2022 | BEA Regional GDP | EPA WQP | ATTAINS</p>
+      <p className="text-2xs text-slate-500 text-right">Census ACS 2018-2022 | BEA Regional GDP | EPA WQP | ATTAINS</p>
     </div>
   );
 }
@@ -211,8 +211,8 @@ function Metric({ label, value, highlight, warn, muted }: { label: string; value
 
   return (
     <div className="flex items-center justify-between">
-      <span className="text-[11px] text-slate-500">{label}</span>
-      <span className={`text-[11px] ${valueClass}`}>{value}</span>
+      <span className="text-xs text-slate-500">{label}</span>
+      <span className={`text-xs ${valueClass}`}>{value}</span>
     </div>
   );
 }

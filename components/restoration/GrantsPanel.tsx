@@ -142,7 +142,7 @@ export default function GrantsPanel({
   return (
     <div>
       {/* Header Banner */}
-      <div className="px-3 py-2 bg-green-50 border-b text-[10px] text-green-700 font-medium flex items-center justify-between">
+      <div className="px-3 py-2 bg-green-50 border-b text-2xs text-green-700 font-medium flex items-center justify-between">
         <span className="flex items-center gap-1.5">
           <TrendingUp className="h-3 w-3" />
           Grant Potential: {fmt(totalPotential)}
@@ -153,14 +153,14 @@ export default function GrantsPanel({
       {/* Federal Grants (from calc) */}
       {federalGrants.length > 0 && (
         <div className="px-3 pt-2 pb-1">
-          <h4 className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+          <h4 className="text-2xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
             Federal Grant Matches
           </h4>
           <div className="space-y-1">
             {federalGrants.map(g => (
-              <div key={g.id} className="flex items-center justify-between text-[10px] bg-green-50 px-2.5 py-1.5 rounded">
+              <div key={g.id} className="flex items-center justify-between text-2xs bg-green-50 px-2.5 py-1.5 rounded">
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="px-1 py-0.5 rounded text-[8px] font-bold bg-green-100 text-green-700 shrink-0">
+                  <span className="px-1 py-0.5 rounded text-2xs font-bold bg-green-100 text-green-700 shrink-0">
                     HIGH
                   </span>
                   <span className="font-medium text-slate-700 truncate">{g.name}</span>
@@ -176,13 +176,13 @@ export default function GrantsPanel({
       {/* State Grants */}
       {scoredStateGrants.length > 0 && (
         <div className="px-3 pt-2 pb-1">
-          <h4 className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+          <h4 className="text-2xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
             {stateAbbr} Grant Programs
           </h4>
           <div className="space-y-1">
             {scoredStateGrants.map((g, i) => (
-              <div key={i} className="flex items-start gap-1.5 text-[10px] px-2.5 py-1.5 rounded bg-slate-50">
-                <span className={`px-1 py-0.5 rounded text-[8px] font-bold shrink-0 ${
+              <div key={i} className="flex items-start gap-1.5 text-2xs px-2.5 py-1.5 rounded bg-slate-50">
+                <span className={`px-1 py-0.5 rounded text-2xs font-bold shrink-0 ${
                   g.fit === 'high' ? 'bg-green-100 text-green-700'
                   : g.fit === 'medium' ? 'bg-yellow-100 text-yellow-700'
                   : 'bg-slate-100 text-slate-500'
@@ -191,8 +191,8 @@ export default function GrantsPanel({
                 </span>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-slate-700 truncate">{g.name}</p>
-                  <p className="text-slate-400 text-[9px]">{g.amount} &mdash; {g.source}</p>
-                  {g.reason && <p className="text-slate-400 text-[8px] italic mt-0.5">{g.reason}</p>}
+                  <p className="text-slate-400 text-2xs">{g.amount} &mdash; {g.source}</p>
+                  {g.reason && <p className="text-slate-400 text-2xs italic mt-0.5">{g.reason}</p>}
                 </div>
               </div>
             ))}

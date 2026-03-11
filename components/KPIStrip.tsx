@@ -56,7 +56,7 @@ export function KPIStrip({ cards, className = '' }: KPIStripProps) {
               {card.value}
               {card.unit && <span className="text-xs font-normal text-slate-400 ml-1">{card.unit}</span>}
             </div>
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+            <div className="text-2xs font-semibold uppercase tracking-wider text-slate-400">
               {card.label}
             </div>
           </div>

@@ -570,7 +570,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                 </Badge>
                 <span className="text-slate-500">Pop: {selected.population.toLocaleString()}</span>
                 {selected.keyIssues?.map(k => (
-                  <Badge key={k} variant="outline" className="text-[9px]">{k}</Badge>
+                  <Badge key={k} variant="outline" className="text-2xs">{k}</Badge>
                 ))}
               </div>
             );
@@ -621,7 +621,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                   <div className="text-4xl font-extrabold text-emerald-700">{localKpi.grade}</div>
                   <div>
                     <div className="text-sm font-semibold text-emerald-700">Water Quality Grade</div>
-                    <div className="text-[10px] text-emerald-500">
+                    <div className="text-2xs text-emerald-500">
                       Composite score {localKpi.score}/100 across {localKpi.total} monitored waterbodies in {jurisdictionLabel}
                     </div>
                   </div>
@@ -1399,7 +1399,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                         <button
                           key={tag.id}
                           onClick={() => setSeverityFilter(tag.id)}
-                          className={`px-2 py-0.5 rounded text-[10px] border transition-colors ${
+                          className={`px-2 py-0.5 rounded text-2xs border transition-colors ${
                             severityFilter === tag.id
                               ? 'bg-purple-100 border-purple-300 text-purple-800'
                               : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
@@ -1602,7 +1602,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                       { label: 'Awaiting Funding', value: String(awaitingFunding), bg: 'bg-amber-50 border-amber-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -1639,7 +1639,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                       { label: 'Completed (YTD)', value: String(completedYtd), bg: 'bg-slate-50 border-slate-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -1675,7 +1675,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                       { label: 'Co-Benefits', value: coBenefit, bg: 'bg-emerald-50 border-emerald-200' },
                     ].map(k => (
                       <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                        <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                         <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                       </div>
                     ))}
@@ -1824,7 +1824,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                         <span className="text-slate-500">{g.amount}</span>
                         <span className="text-slate-400">{g.period}</span>
                         <span className="text-slate-500">Rem: {g.remaining}</span>
-                        <Badge variant="outline" className={`text-[9px] ${g.status === 'New' ? 'border-blue-300 text-blue-700' : 'border-green-300 text-green-700'}`}>{g.status}</Badge>
+                        <Badge variant="outline" className={`text-2xs ${g.status === 'New' ? 'border-blue-300 text-blue-700' : 'border-green-300 text-green-700'}`}>{g.status}</Badge>
                       </div>
                     </div>
                   ))}
@@ -1853,7 +1853,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                     { label: 'Loan Repayments', value: '$31M/yr', bg: 'bg-slate-50 border-slate-200' },
                   ].map(k => (
                     <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                      <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                       <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                     </div>
                   ))}
@@ -1867,7 +1867,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                     { label: 'Repayment Status', value: 'Current', bg: 'bg-emerald-50 border-emerald-200' },
                   ].map(k => (
                     <div key={k.label} className={`rounded-xl border p-4 ${k.bg}`}>
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
+                      <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">{k.label}</div>
                       <div className="text-2xl font-bold text-slate-800 mt-1">{k.value}</div>
                     </div>
                   ))}
@@ -1916,14 +1916,14 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                 <CardContent>
                   <div className={`rounded-xl border p-4 flex items-center justify-between ${scoreBg}`}>
                     <div>
-                      <div className="text-[10px] font-bold uppercase tracking-wider opacity-70">Eco Score</div>
+                      <div className="text-2xs font-bold uppercase tracking-wider opacity-70">Eco Score</div>
                       <div className="text-xs opacity-80 mt-1">
                         {ecoData ? `${ecoData.totalTE} T&E species · ${ecoData.aquaticTE} aquatic · ${ecoData.criticalHabitat} critical habitat` : 'No T&E data available'}
                       </div>
                     </div>
                     <div className="text-right">
                       <div className="text-2xl font-bold">{ecoScore}</div>
-                      <Badge variant="outline" className="text-[10px] mt-1">{label}</Badge>
+                      <Badge variant="outline" className="text-2xs mt-1">{label}</Badge>
                     </div>
                   </div>
                 </CardContent>
@@ -1943,31 +1943,31 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                   <CardTitle className="flex items-center gap-2">
                     <Bug className="h-5 w-5 text-rose-600" />
                     Threatened & Endangered Species - {effectiveState}
-                    <Badge variant="secondary" className="ml-1 text-[10px]">USFWS ECOS</Badge>
+                    <Badge variant="secondary" className="ml-1 text-2xs">USFWS ECOS</Badge>
                   </CardTitle>
                   <CardDescription>Protected species near local development areas - informs planning and zoning decisions</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="rounded-xl border p-4 bg-slate-50 border-slate-200">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total T&E</div>
+                      <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Total T&E</div>
                       <div className="text-2xl font-bold text-slate-800 mt-1">{federalTotal}</div>
-                      <div className="text-[10px] text-slate-400">Federal ESA</div>
+                      <div className="text-2xs text-slate-400">Federal ESA</div>
                     </div>
                     <div className="rounded-xl border p-4 bg-blue-50 border-blue-200">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Aquatic T&E</div>
+                      <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Aquatic T&E</div>
                       <div className="text-2xl font-bold text-blue-700 mt-1">{federalAquatic}</div>
-                      <div className="text-[10px] text-slate-400">Freshwater / marine</div>
+                      <div className="text-2xs text-slate-400">Freshwater / marine</div>
                     </div>
                     <div className="rounded-xl border p-4 bg-rose-50 border-rose-200">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Critical Habitat</div>
+                      <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Critical Habitat</div>
                       <div className="text-2xl font-bold text-rose-700 mt-1">{critHab}</div>
-                      <div className="text-[10px] text-slate-400">Designated areas</div>
+                      <div className="text-2xs text-slate-400">Designated areas</div>
                     </div>
                     <div className="rounded-xl border p-4 bg-amber-50 border-amber-200">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Eco Score</div>
+                      <div className="text-2xs font-bold uppercase tracking-wider text-slate-500">Eco Score</div>
                       <div className="text-2xl font-bold text-amber-700 mt-1">{getEcoScore(effectiveState)}</div>
-                      <div className="text-[10px] text-slate-400">{ecoScoreLabel(getEcoScore(effectiveState))}</div>
+                      <div className="text-2xs text-slate-400">{ecoScoreLabel(getEcoScore(effectiveState))}</div>
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -2074,12 +2074,12 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                       },
                     ].map(t => (
                       <div key={t.label} className={`rounded-xl border p-4 ${t.bg}`} title={t.tooltip}>
-                        <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                        <div className="flex items-center gap-1 text-2xs font-bold uppercase tracking-wider text-slate-500">
                           <span>{t.label}</span>
                           <Info className="w-3 h-3 text-slate-400" />
                         </div>
                         <div className={`text-2xl font-bold ${t.color} mt-1`}>{t.value}</div>
-                        <div className="text-[10px] text-slate-500 mt-1">{t.sub}</div>
+                        <div className="text-2xs text-slate-500 mt-1">{t.sub}</div>
                       </div>
                     ))}
                   </div>
@@ -2115,7 +2115,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                         <div key={c.category} className={`border rounded-lg p-4 ${c.bg}`}>
                           <div className="flex items-center justify-between mb-2">
                             <h4 className="text-sm font-semibold text-slate-800">{c.category}</h4>
-                            <Badge variant="outline" className={`text-[10px] ${c.color}`}>{c.trend}</Badge>
+                            <Badge variant="outline" className={`text-2xs ${c.color}`}>{c.trend}</Badge>
                           </div>
                           <p className="text-xs text-slate-500 leading-relaxed">{c.detail}</p>
                         </div>
@@ -2159,7 +2159,7 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                     </div>
                   </div>
 
-                  <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[10px] text-slate-600 space-y-1">
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-2xs text-slate-600 space-y-1">
                     <div className="italic">
                       Local projections use the same trend/projection model framework as state and federal views, filtered to the selected jurisdiction.
                     </div>
@@ -2243,10 +2243,10 @@ export function LocalManagementCenter({ jurisdictionId, stateAbbr, onSelectRegio
                       >
                         <div className="flex items-center justify-between gap-2 mb-1">
                           <span className="text-xs font-semibold text-slate-800">{r.action}</span>
-                          <Badge variant="outline" className="text-[10px]">{r.status}</Badge>
+                          <Badge variant="outline" className="text-2xs">{r.status}</Badge>
                         </div>
                         <p className="text-xs text-slate-600">{r.impact}</p>
-                        <p className="text-[10px] text-slate-400 mt-1">{r.date}</p>
+                        <p className="text-2xs text-slate-400 mt-1">{r.date}</p>
                       </button>
                       {policyExpanded[r.id] && (
                         <div className="px-3 pb-3">

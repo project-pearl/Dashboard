@@ -503,9 +503,9 @@ export default function RestorationPlanner({
           <div className="flex-1 min-w-0">
             <div className="text-sm font-semibold text-slate-800 truncate">{effectiveName}</div>
             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-              <span className="text-[10px] font-mono text-slate-400">{stateAbbr}</span>
+              <span className="text-2xs font-mono text-slate-400">{stateAbbr}</span>
               {effectiveCategory && (
-                <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
+                <span className={`text-2xs px-1.5 py-0.5 rounded font-bold ${
                   effectiveCategory.includes('5') ? 'bg-red-100 text-red-700'
                   : effectiveCategory.includes('4') ? 'bg-amber-100 text-amber-700'
                   : 'bg-slate-100 text-slate-600'
@@ -514,10 +514,10 @@ export default function RestorationPlanner({
                 </span>
               )}
               {effectiveCauses.slice(0, 3).map(c => (
-                <span key={c} className="text-[9px] px-1 py-0.5 rounded bg-red-50 text-red-600">{c}</span>
+                <span key={c} className="text-2xs px-1 py-0.5 rounded bg-red-50 text-red-600">{c}</span>
               ))}
               {waterbodyOverride && (
-                <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-medium">
+                <span className="text-2xs px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-medium">
                   {sizeTier} — {sizeLabel}
                 </span>
               )}
@@ -528,15 +528,15 @@ export default function RestorationPlanner({
               <div className={`text-lg font-bold font-mono ${
                 (grade.score ?? 0) >= 70 ? 'text-green-600' : (grade.score ?? 0) >= 50 ? 'text-amber-600' : 'text-red-600'
               }`}>{grade.letter}</div>
-              <div className="text-[9px] text-slate-400">Grade</div>
+              <div className="text-2xs text-slate-400">Grade</div>
             </div>
             <div className="text-center">
               <div className="text-lg font-bold font-mono text-slate-700">{grade.score ?? '—'}</div>
-              <div className="text-[9px] text-slate-400">Score</div>
+              <div className="text-2xs text-slate-400">Score</div>
             </div>
             <div className="text-center">
               <div className="text-sm font-bold font-mono text-cyan-700">{doMgL.toFixed(1)}</div>
-              <div className="text-[9px] text-slate-400">DO mg/L</div>
+              <div className="text-2xs text-slate-400">DO mg/L</div>
             </div>
           </div>
         </div>
@@ -556,7 +556,7 @@ export default function RestorationPlanner({
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 px-2 py-2 text-[11px] font-medium transition-colors flex items-center justify-center gap-1 ${
+                  className={`flex-1 px-2 py-2 text-xs font-medium transition-colors flex items-center justify-center gap-1 ${
                     activeTab === tab.id
                       ? 'text-cyan-700 border-b-2 border-cyan-600 bg-white'
                       : 'text-slate-400 hover:text-slate-600'
@@ -564,12 +564,12 @@ export default function RestorationPlanner({
                 >
                   {tab.label}
                   {tab.count > 0 && (
-                    <span className="text-[9px] bg-cyan-100 text-cyan-700 px-1 rounded-full">{tab.count}</span>
+                    <span className="text-2xs bg-cyan-100 text-cyan-700 px-1 rounded-full">{tab.count}</span>
                   )}
                   {isAdmin && tab.adminType && (
                     <span
                       onClick={e => { e.stopPropagation(); setAdminFormType(tab.adminType); }}
-                      className="ml-0.5 w-4 h-4 flex items-center justify-center rounded bg-slate-200 hover:bg-cyan-200 text-slate-500 hover:text-cyan-700 text-[10px] font-bold"
+                      className="ml-0.5 w-4 h-4 flex items-center justify-center rounded bg-slate-200 hover:bg-cyan-200 text-slate-500 hover:text-cyan-700 text-2xs font-bold"
                     >+</span>
                   )}
                 </button>
@@ -591,9 +591,9 @@ export default function RestorationPlanner({
                     >
                       <div className="flex items-center gap-2">
                         <span className="w-2.5 h-2.5 rounded-sm" style={{ background: CAT_COLORS[cat] }} />
-                        <span className="text-[11px] font-semibold text-slate-700">{cat}</span>
+                        <span className="text-xs font-semibold text-slate-700">{cat}</span>
                         {count > 0 && (
-                          <span className="text-[9px] px-1.5 rounded-full font-bold text-white" style={{ background: CAT_COLORS[cat] }}>
+                          <span className="text-2xs px-1.5 rounded-full font-bold text-white" style={{ background: CAT_COLORS[cat] }}>
                             {count}
                           </span>
                         )}
@@ -616,7 +616,7 @@ export default function RestorationPlanner({
 
               {activeTab === 'partners' && (
                 <div>
-                  <div className="px-3 py-2 bg-green-50 border-b text-[10px] text-green-700 font-medium">
+                  <div className="px-3 py-2 bg-green-50 border-b text-2xs text-green-700 font-medium">
                     Partnership In-Kind Value: {fmt$(ngoValue)}
                     {staffing.partnerFteOffset > 0 && (
                       <span className="ml-2 text-emerald-600">
@@ -632,7 +632,7 @@ export default function RestorationPlanner({
 
               {activeTab === 'events' && (
                 <div>
-                  <div className="px-3 py-2 bg-amber-50 border-b text-[10px] text-amber-700 font-medium">
+                  <div className="px-3 py-2 bg-amber-50 border-b text-2xs text-amber-700 font-medium">
                     Community Programs: {fmt$(eventCostYr)}/yr
                     {staffing.volunteerCostOffset > 0 && (
                       <span className="ml-2 text-green-600">
@@ -664,7 +664,7 @@ export default function RestorationPlanner({
           <div className="w-full lg:w-[280px] shrink-0 space-y-3">
             {/* Contaminant Bars */}
             <div className="border rounded-lg p-3">
-              <h4 className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              <h4 className="text-2xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
                 Contaminant Reduction
               </h4>
               {CK.map(k => (
@@ -679,7 +679,7 @@ export default function RestorationPlanner({
 
             {/* Performance Metrics */}
             <div className="border rounded-lg p-3">
-              <h4 className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              <h4 className="text-2xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
                 Performance
               </h4>
               <div className="grid grid-cols-2 gap-2">
@@ -698,7 +698,7 @@ export default function RestorationPlanner({
 
             {/* Cost Summary */}
             <div className="border rounded-lg p-3 bg-slate-50">
-              <h4 className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              <h4 className="text-2xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
                 Cost Summary
               </h4>
               <div className="space-y-1">
@@ -739,7 +739,7 @@ export default function RestorationPlanner({
                   <button
                     key={key}
                     onClick={() => { setTarget(key); setGenerated(false); }}
-                    className={`px-2.5 py-1.5 text-[11px] rounded-md border transition-colors ${
+                    className={`px-2.5 py-1.5 text-xs rounded-md border transition-colors ${
                       target === key
                         ? 'bg-cyan-600 text-white border-cyan-600'
                         : 'bg-white text-slate-600 border-slate-200 hover:border-cyan-300'
@@ -759,7 +759,7 @@ export default function RestorationPlanner({
                   <button
                     key={yr}
                     onClick={() => { setTimelineYrs(yr); setGenerated(false); }}
-                    className={`px-2.5 py-1.5 text-[11px] rounded-md border transition-colors ${
+                    className={`px-2.5 py-1.5 text-xs rounded-md border transition-colors ${
                       timelineYrs === yr
                         ? 'bg-cyan-600 text-white border-cyan-600'
                         : 'bg-white text-slate-600 border-slate-200 hover:border-cyan-300'
@@ -889,18 +889,18 @@ export default function RestorationPlanner({
                 )}
                 {stateGrantsList.length > 0 && (
                   <div>
-                    <p className="text-[10px] text-slate-400 mb-1.5">Additional {stateAbbr} grant programs:</p>
+                    <p className="text-2xs text-slate-400 mb-1.5">Additional {stateAbbr} grant programs:</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                       {stateGrantsList.slice(0, 6).map((g, i) => (
                         <div key={i} className="flex items-start gap-1.5 text-xs p-2 rounded bg-slate-50">
-                          <span className={`px-1 py-0.5 rounded text-[9px] font-medium ${
+                          <span className={`px-1 py-0.5 rounded text-2xs font-medium ${
                             g.fit === 'high' ? 'bg-green-100 text-green-700'
                             : g.fit === 'medium' ? 'bg-yellow-100 text-yellow-700'
                             : 'bg-slate-100 text-slate-500'
                           }`}>{g.fit === 'high' ? 'High' : g.fit === 'medium' ? 'Good' : 'Low'}</span>
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-slate-600 truncate">{g.name}</p>
-                            <p className="text-slate-400 text-[10px]">{g.amount}</p>
+                            <p className="text-slate-400 text-2xs">{g.amount}</p>
                           </div>
                         </div>
                       ))}
@@ -960,7 +960,7 @@ function ContaminantBar({ base, result, colorKey }: { base: number; result?: num
   const color = CONTAMINANT_COLORS[colorKey];
   return (
     <div className="flex items-center gap-1.5 mb-1">
-      <div className="w-[58px] text-[9px] text-slate-400 font-mono truncate">
+      <div className="w-[58px] text-2xs text-slate-400 font-mono truncate">
         {CONTAMINANT_LABELS[colorKey]?.split(' / ')[0]}
       </div>
       <div className="flex-1 h-[5px] bg-slate-100 rounded-sm overflow-hidden relative">
@@ -975,7 +975,7 @@ function ContaminantBar({ base, result, colorKey }: { base: number; result?: num
           />
         )}
       </div>
-      <div className="w-[55px] text-[9px] font-mono text-right text-slate-600">
+      <div className="w-[55px] text-2xs font-mono text-right text-slate-600">
         {base}%{result != null ? ` \u2192 ${remaining.toFixed(0)}%` : ''}
       </div>
     </div>
@@ -993,7 +993,7 @@ function MetricBox({ label, value, color, icon: Icon }: {
         {Icon && <Icon className="h-3 w-3" />}
         {value}
       </div>
-      <div className="text-[9px] text-slate-400">{label}</div>
+      <div className="text-2xs text-slate-400">{label}</div>
     </div>
   );
 }
@@ -1006,10 +1006,10 @@ function LedgerLine({ label, value, sub, color, bold }: {
   return (
     <div className="flex justify-between items-baseline py-0.5">
       <div>
-        <span className="text-[10px] text-slate-500">{label}</span>
-        {sub && <span className="text-[8px] text-slate-300 ml-1">{sub}</span>}
+        <span className="text-2xs text-slate-500">{label}</span>
+        {sub && <span className="text-2xs text-slate-300 ml-1">{sub}</span>}
       </div>
-      <span className={`font-mono text-[11px] ${bold ? 'font-bold' : 'font-medium'}`} style={{ color: color || '#334155' }}>
+      <span className={`font-mono text-xs ${bold ? 'font-bold' : 'font-medium'}`} style={{ color: color || '#334155' }}>
         {value}
       </span>
     </div>
@@ -1044,22 +1044,22 @@ function ModRow({ m, checked, onToggle, units, onUnits }: {
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1 flex-wrap">
-          <span className="text-[11px]">{m.icon}</span>
-          <span className={`text-[10px] font-semibold ${checked ? 'text-slate-800' : 'text-slate-500'}`}>
+          <span className="text-xs">{m.icon}</span>
+          <span className={`text-2xs font-semibold ${checked ? 'text-slate-800' : 'text-slate-500'}`}>
             {m.name.trim()}
           </span>
-          {!m.isBMP && <span className="text-[7px] bg-red-50 text-red-700 px-1 rounded font-bold">PILOT</span>}
-          {m.experimental && <span className="text-[7px] bg-yellow-50 text-yellow-700 px-1 rounded font-bold">EXPERIMENTAL</span>}
-          {m.trl != null && <span className="text-[7px] bg-purple-50 text-purple-700 px-1 rounded">TRL {m.trl}</span>}
-          {m.hasOpex && <span className="text-[7px] bg-orange-50 text-orange-700 px-1 rounded font-bold">OPEX</span>}
-          {m.isAddon && <span className="text-[7px] bg-green-50 text-green-800 px-1 rounded">ADD-ON</span>}
+          {!m.isBMP && <span className="text-2xs bg-red-50 text-red-700 px-1 rounded font-bold">PILOT</span>}
+          {m.experimental && <span className="text-2xs bg-yellow-50 text-yellow-700 px-1 rounded font-bold">EXPERIMENTAL</span>}
+          {m.trl != null && <span className="text-2xs bg-purple-50 text-purple-700 px-1 rounded">TRL {m.trl}</span>}
+          {m.hasOpex && <span className="text-2xs bg-orange-50 text-orange-700 px-1 rounded font-bold">OPEX</span>}
+          {m.isAddon && <span className="text-2xs bg-green-50 text-green-800 px-1 rounded">ADD-ON</span>}
         </div>
         {(m.desc || m.pilotNote) && (
-          <div className="text-[8px] text-slate-400 mt-0.5 leading-snug">{m.desc || m.pilotNote}</div>
+          <div className="text-2xs text-slate-400 mt-0.5 leading-snug">{m.desc || m.pilotNote}</div>
         )}
         <div className="flex gap-0.5 mt-0.5 flex-wrap">
           {CK.map(k => m[k] > 0 && (
-            <span key={k} className="text-[7px] px-1 rounded font-mono"
+            <span key={k} className="text-2xs px-1 rounded font-mono"
               style={{
                 background: m[k] > 60 ? CONTAMINANT_COLORS[k] + '22' : '#f0f3f7',
                 color: m[k] > 60 ? CONTAMINANT_COLORS[k] : '#8a9bb0',
@@ -1069,23 +1069,23 @@ function ModRow({ m, checked, onToggle, units, onUnits }: {
             </span>
           ))}
           {m.gpm > 0 && (
-            <span className="text-[7px] px-1 rounded font-mono bg-blue-50 text-blue-700">
+            <span className="text-2xs px-1 rounded font-mono bg-blue-50 text-blue-700">
               {(m.gpm * units).toLocaleString()} GPM
             </span>
           )}
         </div>
       </div>
       <div className="flex flex-col items-end gap-1 shrink-0" onClick={e => e.stopPropagation()}>
-        <span className={`font-mono text-[10px] font-medium ${checked ? 'text-slate-800' : 'text-slate-300'}`}>
+        <span className={`font-mono text-2xs font-medium ${checked ? 'text-slate-800' : 'text-slate-300'}`}>
           {checked ? fmt(cost) : '\u2014'}
         </span>
         {checked && (
           <div className="flex items-center gap-0.5">
             <button onClick={() => onUnits(m.id, units - 1)}
-              className="w-[16px] h-[16px] rounded border border-slate-200 bg-slate-50 text-[10px] flex items-center justify-center text-slate-500 hover:bg-slate-100">&minus;</button>
-            <span className="text-[10px] font-mono text-slate-800 min-w-[14px] text-center">{units}</span>
+              className="w-[16px] h-[16px] rounded border border-slate-200 bg-slate-50 text-2xs flex items-center justify-center text-slate-500 hover:bg-slate-100">&minus;</button>
+            <span className="text-2xs font-mono text-slate-800 min-w-[14px] text-center">{units}</span>
             <button onClick={() => onUnits(m.id, units + 1)}
-              className="w-[16px] h-[16px] rounded border border-slate-200 bg-slate-50 text-[10px] flex items-center justify-center text-slate-500 hover:bg-slate-100">+</button>
+              className="w-[16px] h-[16px] rounded border border-slate-200 bg-slate-50 text-2xs flex items-center justify-center text-slate-500 hover:bg-slate-100">+</button>
           </div>
         )}
       </div>
@@ -1114,34 +1114,34 @@ function NgoRow({ n, checked, onToggle, value, onValue }: {
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1 flex-wrap">
-          <span className="text-[11px]">{n.icon}</span>
-          <span className={`text-[10px] font-semibold ${checked ? 'text-slate-800' : 'text-slate-500'}`}>{n.name}</span>
-          {n.grant && <span className="text-[7px] bg-green-50 text-green-800 px-1 rounded font-bold">GRANT</span>}
+          <span className="text-xs">{n.icon}</span>
+          <span className={`text-2xs font-semibold ${checked ? 'text-slate-800' : 'text-slate-500'}`}>{n.name}</span>
+          {n.grant && <span className="text-2xs bg-green-50 text-green-800 px-1 rounded font-bold">GRANT</span>}
           {n.aligned
-            ? <span className="text-[7px] bg-green-100 text-green-700 px-1 rounded font-bold">ALIGNED</span>
-            : <span className="text-[7px] bg-slate-100 text-slate-400 px-1 rounded">REVIEW</span>
+            ? <span className="text-2xs bg-green-100 text-green-700 px-1 rounded font-bold">ALIGNED</span>
+            : <span className="text-2xs bg-slate-100 text-slate-400 px-1 rounded">REVIEW</span>
           }
         </div>
-        <div className="text-[8px] text-slate-400 mt-0.5">{n.type} &mdash; {n.desc}</div>
+        <div className="text-2xs text-slate-400 mt-0.5">{n.type} &mdash; {n.desc}</div>
         {n.strengths && n.strengths.length > 0 && (
           <div className="flex gap-0.5 mt-0.5 flex-wrap">
             {n.strengths.map(s => (
-              <span key={s} className="text-[7px] px-1 rounded bg-blue-50 text-blue-600 font-medium">{s}</span>
+              <span key={s} className="text-2xs px-1 rounded bg-blue-50 text-blue-600 font-medium">{s}</span>
             ))}
           </div>
         )}
       </div>
       <div className="flex flex-col items-end gap-1 shrink-0" onClick={e => e.stopPropagation()}>
-        <span className={`font-mono text-[9px] font-medium ${checked ? 'text-green-700' : 'text-slate-300'}`}>
+        <span className={`font-mono text-2xs font-medium ${checked ? 'text-green-700' : 'text-slate-300'}`}>
           {checked ? '+' + fmt(value) : '\u2014'}
         </span>
         {checked && (
           <div className="flex items-center gap-0.5">
             <button onClick={() => onValue(n.id, value - step)}
-              className="w-[16px] h-[16px] rounded border border-slate-200 bg-slate-50 text-[10px] flex items-center justify-center text-slate-500 hover:bg-slate-100">&minus;</button>
-            <span className="text-[9px] font-mono text-slate-700 min-w-[28px] text-center">{fmt(value)}</span>
+              className="w-[16px] h-[16px] rounded border border-slate-200 bg-slate-50 text-2xs flex items-center justify-center text-slate-500 hover:bg-slate-100">&minus;</button>
+            <span className="text-2xs font-mono text-slate-700 min-w-[28px] text-center">{fmt(value)}</span>
             <button onClick={() => onValue(n.id, value + step)}
-              className="w-[16px] h-[16px] rounded border border-slate-200 bg-slate-50 text-[10px] flex items-center justify-center text-slate-500 hover:bg-slate-100">+</button>
+              className="w-[16px] h-[16px] rounded border border-slate-200 bg-slate-50 text-2xs flex items-center justify-center text-slate-500 hover:bg-slate-100">+</button>
           </div>
         )}
       </div>
@@ -1166,14 +1166,14 @@ function EventRow({ ev, checked, onToggle }: { ev: CommunityEvent; checked: bool
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1 flex-wrap">
-          <span className="text-[11px]">{ev.icon}</span>
-          <span className={`text-[10px] font-semibold ${checked ? 'text-slate-800' : 'text-slate-500'}`}>{ev.name}</span>
-          <span className="text-[7px] bg-orange-50 text-orange-700 px-1 rounded">{ev.freq}</span>
-          <span className="text-[7px] bg-slate-100 text-slate-500 px-1 rounded">{ev.cat}</span>
+          <span className="text-xs">{ev.icon}</span>
+          <span className={`text-2xs font-semibold ${checked ? 'text-slate-800' : 'text-slate-500'}`}>{ev.name}</span>
+          <span className="text-2xs bg-orange-50 text-orange-700 px-1 rounded">{ev.freq}</span>
+          <span className="text-2xs bg-slate-100 text-slate-500 px-1 rounded">{ev.cat}</span>
         </div>
-        <div className="text-[8px] text-slate-400 mt-0.5">{ev.desc}</div>
+        <div className="text-2xs text-slate-400 mt-0.5">{ev.desc}</div>
       </div>
-      <span className={`font-mono text-[9px] font-medium shrink-0 ${checked ? 'text-orange-700' : 'text-slate-300'}`}>
+      <span className={`font-mono text-2xs font-medium shrink-0 ${checked ? 'text-orange-700' : 'text-slate-300'}`}>
         {checked ? fmt(ev.cost) + '/yr' : '\u2014'}
       </span>
     </div>

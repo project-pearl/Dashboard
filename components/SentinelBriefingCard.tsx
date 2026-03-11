@@ -107,23 +107,23 @@ function EventRow({
           <div className="text-right">
             <div className="flex items-center gap-1">
               <span
-                className="sentinel-score-badge text-[10px] w-6 h-6"
+                className="sentinel-score-badge text-2xs w-6 h-6"
                 data-level={huc.level}
                 style={{ width: '24px', height: '24px', fontSize: '10px' }}
               >
                 {Math.round(huc.score)}
               </span>
-              <span className="text-[9px]" style={{ color: 'var(--text-dim)' }}>/500</span>
+              <span className="text-2xs" style={{ color: 'var(--text-dim)' }}>/500</span>
             </div>
-            <div className="text-[9px] font-medium mt-0.5" style={{ color: severity.color }}>
+            <div className="text-2xs font-medium mt-0.5" style={{ color: severity.color }}>
               {severity.label}
             </div>
           </div>
           <div className="text-right">
-            <div className="text-[10px]" style={{ color: 'var(--text-dim)' }}>
+            <div className="text-2xs" style={{ color: 'var(--text-dim)' }}>
               {huc.eventCount} signal{huc.eventCount !== 1 ? 's' : ''}
             </div>
-            <div className="text-[10px]" style={{ color: 'var(--text-dim)' }}>
+            <div className="text-2xs" style={{ color: 'var(--text-dim)' }}>
               {formatTimeSince(huc.lastScored)}
             </div>
           </div>
@@ -163,7 +163,7 @@ function ResolutionRow({ r, hucNames }: { r: ResolvedHuc; hucNames: Record<strin
             {displayName}
           </span>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0 text-[10px]" style={{ color: 'var(--text-dim)' }}>
+        <div className="flex items-center gap-2 flex-shrink-0 text-2xs" style={{ color: 'var(--text-dim)' }}>
           <span>Peak: {Math.round(r.peakScore)}</span>
           <span>{formatTimeSince(r.resolvedAt)}</span>
         </div>
@@ -212,7 +212,7 @@ export function SentinelBriefingCard({
   return (
     <div className="space-y-4">
       {/* ── Score Legend ── */}
-      <div className="flex items-center gap-3 flex-wrap text-[9px]" style={{ color: 'var(--text-dim)' }}>
+      <div className="flex items-center gap-3 flex-wrap text-2xs" style={{ color: 'var(--text-dim)' }}>
         <span className="font-medium">Severity:</span>
         {[
           { label: 'Critical', range: '400+', color: '#D32F2F' },
@@ -234,7 +234,7 @@ export function SentinelBriefingCard({
           <Shield className="w-4 h-4" style={{ color: 'var(--accent-teal)' }} />
           <span className="pin-section-label">Active Sentinel Events</span>
           {activeEvents.length > 0 && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{
+            <span className="text-2xs px-1.5 py-0.5 rounded-full" style={{
               background: 'var(--bg-card)',
               color: 'var(--text-dim)',
               border: '1px solid var(--border-subtle)',
@@ -245,7 +245,7 @@ export function SentinelBriefingCard({
           {reviewedEvents.length > 0 && (
             <button
               onClick={() => setShowReviewed(!showReviewed)}
-              className="text-[10px] px-1.5 py-0.5 rounded-full transition-colors"
+              className="text-2xs px-1.5 py-0.5 rounded-full transition-colors"
               style={{
                 background: showReviewed ? 'var(--accent-teal)' : 'var(--bg-card)',
                 color: showReviewed ? 'white' : 'var(--text-dim)',
@@ -279,7 +279,7 @@ export function SentinelBriefingCard({
               </button>
             )}
             {!showAllEvents && activeEvents.length > 5 && (
-              <div className="text-[10px] text-center" style={{ color: 'var(--text-dim)' }}>
+              <div className="text-2xs text-center" style={{ color: 'var(--text-dim)' }}>
                 Showing 5 of {activeEvents.length} active events
               </div>
             )}
@@ -318,7 +318,7 @@ export function SentinelBriefingCard({
                 <EventRow huc={h} hucNames={hucNames} />
                 <button
                   onClick={() => handleUnmarkReviewed(h.huc8)}
-                  className="absolute top-2 right-2 text-[9px] px-1.5 py-0.5 rounded transition-colors"
+                  className="absolute top-2 right-2 text-2xs px-1.5 py-0.5 rounded transition-colors"
                   style={{
                     color: 'var(--text-dim)',
                     background: 'var(--bg-card)',
@@ -339,7 +339,7 @@ export function SentinelBriefingCard({
           <div className="flex items-center gap-2 mb-2">
             <TrendingDown className="w-4 h-4" style={{ color: 'var(--text-dim)' }} />
             <span className="pin-section-label">Recent Resolutions</span>
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{
+            <span className="text-2xs px-1.5 py-0.5 rounded-full" style={{
               background: 'var(--bg-card)',
               color: 'var(--text-dim)',
               border: '1px solid var(--border-subtle)',

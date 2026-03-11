@@ -180,7 +180,7 @@ export function WaterScoreBreakdown() {
 
         {/* Group A */}
         <div className="mb-10">
-          <h3 className="text-[10px] font-bold tracking-[0.2em] uppercase text-slate-500 mb-4">
+          <h3 className="text-2xs font-bold tracking-[0.2em] uppercase text-slate-500 mb-4">
             Group A — HUC-8 Watershed Models
           </h3>
           <div className="space-y-0.5">
@@ -195,7 +195,7 @@ export function WaterScoreBreakdown() {
 
         {/* Group B */}
         <div className="mb-10">
-          <h3 className="text-[10px] font-bold tracking-[0.2em] uppercase text-slate-500 mb-4">
+          <h3 className="text-2xs font-bold tracking-[0.2em] uppercase text-slate-500 mb-4">
             Group B — Waterbody Models
           </h3>
           <div className="space-y-0.5">

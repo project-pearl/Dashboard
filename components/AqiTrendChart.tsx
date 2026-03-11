@@ -210,7 +210,7 @@ export function AqiTrendChart({ selectedState }: { selectedState?: string }) {
             )}
 
             {/* Legend */}
-            <div className="flex items-center gap-4 mt-2 text-[10px] text-slate-500">
+            <div className="flex items-center gap-4 mt-2 text-2xs text-slate-500">
               <span className="flex items-center gap-1">
                 <span className="w-3 h-0.5 bg-blue-500 inline-block" /> AQI
               </span>

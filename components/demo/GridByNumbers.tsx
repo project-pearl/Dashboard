@@ -96,7 +96,7 @@ export function GridByNumbers() {
   return (
     <section ref={ref} className="bg-slate-900 py-20 px-6">
       <div className="max-w-5xl mx-auto">
-        <h2 className="text-[10px] font-bold tracking-[0.2em] uppercase text-slate-500 text-center mb-12">
+        <h2 className="text-2xs font-bold tracking-[0.2em] uppercase text-slate-500 text-center mb-12">
           The Grid by Numbers
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

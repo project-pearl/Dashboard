@@ -124,7 +124,7 @@ export function StudentUploadPanel({ stateAbbr, isTeacher = false }: StudentUplo
             <CardTitle className="flex items-center gap-2 text-base">
               <CheckCircle size={16} className="text-emerald-600" />
               Recent Approved Results
-              <Badge variant="secondary" className="ml-1 text-[10px]">{recentSamples.length}</Badge>
+              <Badge variant="secondary" className="ml-1 text-2xs">{recentSamples.length}</Badge>
             </CardTitle>
             <button onClick={fetchSamples} className="p-1 hover:bg-slate-100 rounded" title="Refresh">
               <RefreshCw size={14} className={`text-slate-400 ${loading ? 'animate-spin' : ''}`} />
@@ -173,7 +173,7 @@ export function StudentUploadPanel({ stateAbbr, isTeacher = false }: StudentUplo
             <CardTitle className="flex items-center gap-2 text-base">
               <Clock size={16} className="text-amber-600" />
               Student Submissions Awaiting Approval
-              <Badge variant="secondary" className="ml-1 text-[10px]">{pendingSamples.length} pending</Badge>
+              <Badge variant="secondary" className="ml-1 text-2xs">{pendingSamples.length} pending</Badge>
             </CardTitle>
             <CardDescription>Review and approve student-submitted lab results</CardDescription>
           </CardHeader>
@@ -187,18 +187,18 @@ export function StudentUploadPanel({ stateAbbr, isTeacher = false }: StudentUplo
                   return (
                     <div key={s.id} className="flex items-center justify-between rounded-lg border border-slate-200 p-3 hover:bg-slate-50">
                       <div className="flex items-center gap-3 min-w-0">
-                        <Badge className={`text-[9px] ${cfg.cls}`}>{cfg.label}</Badge>
+                        <Badge className={`text-2xs ${cfg.cls}`}>{cfg.label}</Badge>
                         <span className="text-xs font-semibold text-slate-700">{s.parameter}</span>
                         <span className="text-xs text-slate-800 font-bold">{s.value} {s.unit}</span>
-                        <span className="text-[10px] text-slate-500">{s.student_name || '—'}</span>
-                        <span className="text-[10px] text-slate-500 truncate">{s.team_name || '—'}</span>
-                        <span className="text-[10px] text-slate-400">{fmtDate(s.created_at)}</span>
+                        <span className="text-2xs text-slate-500">{s.student_name || '—'}</span>
+                        <span className="text-2xs text-slate-500 truncate">{s.team_name || '—'}</span>
+                        <span className="text-2xs text-slate-400">{fmtDate(s.created_at)}</span>
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-6 text-[10px] text-emerald-700 border-emerald-300 hover:bg-emerald-50"
+                          className="h-6 text-2xs text-emerald-700 border-emerald-300 hover:bg-emerald-50"
                           onClick={() => handleApprove([s.id])}
                         >
                           Approve
@@ -206,7 +206,7 @@ export function StudentUploadPanel({ stateAbbr, isTeacher = false }: StudentUplo
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-6 text-[10px] text-red-700 border-red-300 hover:bg-red-50"
+                          className="h-6 text-2xs text-red-700 border-red-300 hover:bg-red-50"
                           onClick={() => handleReject([s.id])}
                         >
                           Reject

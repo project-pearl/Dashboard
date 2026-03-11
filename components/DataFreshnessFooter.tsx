@@ -41,7 +41,7 @@ export function DataFreshnessFooter() {
   if (isLoading || !data) return null;
 
   return (
-    <div className="flex items-center justify-center gap-2 py-3 text-[11px] text-slate-400">
+    <div className="flex items-center justify-center gap-2 py-3 text-xs text-slate-400">
       <Clock className="w-3 h-3" />
       <span>
         Data as of {responseDate} {responseTime} EST

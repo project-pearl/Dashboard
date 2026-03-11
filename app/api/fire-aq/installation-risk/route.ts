@@ -8,6 +8,9 @@ import { isAuthorized } from '@/lib/apiAuth';
 import { ensureWarmed as ensureFirmsWarmed, getFirmsAllRegions } from '@/lib/firmsCache';
 import { ensureWarmed as ensureAqWarmed, getAirQualityAllStates } from '@/lib/airQualityCache';
 import { getNdbcCache } from '@/lib/ndbcCache';
+import { ensureWarmed as ensureUsdmWarmed, getUsdmByState } from '@/lib/usdmCache';
+import { ensureWarmed as ensureSeismicWarmed, getSeismicAll } from '@/lib/seismicCache';
+import { ensureWarmed as ensureDamWarmed, getDamAll } from '@/lib/damCache';
 import installationsJson from '@/data/military-installations.json';
 
 interface Installation {
@@ -19,6 +22,7 @@ interface Installation {
   branch: string;
   burnPitHistory: boolean;
   type?: 'installation' | 'embassy';
+  state?: string | null;
 }
 
 const INSTALLATIONS: Installation[] = installationsJson as Installation[];
@@ -42,7 +46,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  await Promise.all([ensureFirmsWarmed(), ensureAqWarmed()]);
+  await Promise.all([ensureFirmsWarmed(), ensureAqWarmed(), ensureUsdmWarmed(), ensureSeismicWarmed(), ensureDamWarmed()]);
 
   const regions = getFirmsAllRegions();
   const allDetections = regions.flatMap(r => r.detections);
@@ -138,7 +142,60 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const composite = fireScore + aqiScore + burnPitScore + windScore;
+    // Drought score (0-10) — CONUS only, area-weighted from USDM
+    let droughtScore = 0;
+    let droughtLevel: string | null = null;
+    if (inst.state) {
+      const drought = getUsdmByState(inst.state);
+      if (drought) {
+        if (drought.d4 > 5) { droughtScore = 10; droughtLevel = 'D4 Exceptional'; }
+        else if (drought.d3 > 15) { droughtScore = 8; droughtLevel = 'D3 Extreme'; }
+        else if (drought.d2 > 25) { droughtScore = 6; droughtLevel = 'D2 Severe'; }
+        else if (drought.d1 > 30) { droughtScore = 3; droughtLevel = 'D1 Moderate'; }
+        else if (drought.d0 > 30) { droughtScore = 1; droughtLevel = 'D0 Abnormally Dry'; }
+      }
+    }
+
+    // Seismic score (0-15) — proximity to recent earthquakes
+    let seismicScore = 0;
+    let nearestQuakeDist: number | null = null;
+    let nearestQuakeMag: number | null = null;
+    const earthquakes = getSeismicAll();
+    for (const eq of earthquakes) {
+      const dist = haversineMi(inst.lat, inst.lng, eq.lat, eq.lng);
+      if (nearestQuakeDist === null || dist < nearestQuakeDist) {
+        nearestQuakeDist = Math.round(dist * 10) / 10;
+        nearestQuakeMag = eq.mag;
+      }
+      if (eq.mag >= 6 && dist <= 50) { seismicScore = Math.max(seismicScore, 15); }
+      else if (eq.mag >= 5 && dist <= 100) { seismicScore = Math.max(seismicScore, 12); }
+      else if (eq.mag >= 4 && dist <= 100) { seismicScore = Math.max(seismicScore, 8); }
+      else if (eq.mag >= 3 && dist <= 150) { seismicScore = Math.max(seismicScore, 4); }
+      else if (eq.mag >= 2.5 && dist <= 200) { seismicScore = Math.max(seismicScore, 2); }
+    }
+
+    // Dam proximity score (0-10) — high-hazard dams nearby (CONUS only)
+    let damScore = 0;
+    let nearestDamDist: number | null = null;
+    let nearestDamName: string | null = null;
+    const dams = getDamAll();
+    for (const dam of dams) {
+      const dist = haversineMi(inst.lat, inst.lng, dam.lat, dam.lng);
+      if (nearestDamDist === null || dist < nearestDamDist) {
+        nearestDamDist = Math.round(dist * 10) / 10;
+        nearestDamName = dam.name;
+      }
+      let score = 0;
+      if (dist <= 5) score = 10;
+      else if (dist <= 10) score = 7;
+      else if (dist <= 25) score = 4;
+      if (score > 0 && (dam.conditionAssessment === 'Poor' || dam.conditionAssessment === 'Unsatisfactory')) {
+        score = Math.min(10, score + 2);
+      }
+      damScore = Math.max(damScore, score);
+    }
+
+    const composite = fireScore + aqiScore + burnPitScore + windScore + droughtScore + seismicScore + damScore;
 
     return {
       id: inst.id,
@@ -151,18 +208,26 @@ export async function GET(request: NextRequest) {
       aqiScore,
       burnPitScore,
       windScore,
+      droughtScore,
+      seismicScore,
+      damScore,
       composite,
       nearestFireDist: nearestFireDist === Infinity ? null : Math.round(nearestFireDist * 10) / 10,
       nearestFireFrp: nearestFireDist === Infinity ? null : Math.round(nearestFireFrp * 10) / 10,
       aqiValue,
       windContext: windContext || null,
+      droughtLevel,
+      nearestQuakeDist: earthquakes.length > 0 ? nearestQuakeDist : null,
+      nearestQuakeMag: earthquakes.length > 0 ? nearestQuakeMag : null,
+      nearestDamDist: dams.length > 0 ? nearestDamDist : null,
+      nearestDamName: dams.length > 0 ? nearestDamName : null,
     };
   });
 
   scores.sort((a, b) => b.composite - a.composite);
 
   const total = scores.length;
-  const filtered = elevated ? scores.filter(s => s.composite >= 20) : scores;
+  const filtered = elevated ? scores.filter(s => s.composite >= 25) : scores;
 
   return NextResponse.json({ installations: filtered, total });
 }

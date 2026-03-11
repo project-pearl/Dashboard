@@ -145,15 +145,15 @@ function GaugeRow({ gauge }: { gauge: FloodForecastGauge }) {
             <span className="font-medium text-sm truncate" style={{ color: 'var(--text-bright)' }}>
               {gauge.name || gauge.lid}
             </span>
-            <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${style.text} ${style.border}`}>
+            <Badge variant="outline" className={`text-2xs px-1.5 py-0 ${style.text} ${style.border}`}>
               {style.label}
             </Badge>
             {gauge.state && (
-              <span className="text-[10px] text-slate-500">{gauge.state}</span>
+              <span className="text-2xs text-slate-500">{gauge.state}</span>
             )}
           </div>
 
-          <div className="flex items-center gap-3 mt-1.5 text-[11px] text-slate-500">
+          <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-500">
             {gauge.currentStage != null && (
               <span className="flex items-center gap-1">
                 <Gauge className="h-3 w-3" />
@@ -190,7 +190,7 @@ function GaugeRow({ gauge }: { gauge: FloodForecastGauge }) {
       </div>
 
       {expanded && (
-        <div className="mt-3 pt-3 border-t border-slate-200/50 text-[11px] text-slate-600 space-y-1.5">
+        <div className="mt-3 pt-3 border-t border-slate-200/50 text-xs text-slate-600 space-y-1.5">
           <div className="grid grid-cols-2 gap-x-4 gap-y-1">
             <span>LID: <span className="font-mono">{gauge.lid}</span></span>
             <span>County: {gauge.county || '—'}</span>
@@ -211,7 +211,7 @@ function GaugeRow({ gauge }: { gauge: FloodForecastGauge }) {
               </span>
             )}
           </div>
-          <div className="flex items-center gap-1 text-[10px] text-slate-400 pt-1">
+          <div className="flex items-center gap-1 text-2xs text-slate-400 pt-1">
             <MapPin className="h-3 w-3" />
             {gauge.lat.toFixed(4)}, {gauge.lng.toFixed(4)}
           </div>
@@ -252,13 +252,13 @@ export function FloodStatusSummary({
             River Flood Status
           </CardTitle>
           {updatedAt && (
-            <span className="text-[10px] text-slate-400">{formatTimeSince(updatedAt)}</span>
+            <span className="text-2xs text-slate-400">{formatTimeSince(updatedAt)}</span>
           )}
         </div>
       </CardHeader>
       <CardContent className="pt-0">
         {isLoading && forecasts.length === 0 ? (
-          <div className="text-[11px] text-slate-400 py-2">Loading...</div>
+          <div className="text-xs text-slate-400 py-2">Loading...</div>
         ) : (
           <>
             {/* Stat tiles */}
@@ -271,7 +271,7 @@ export function FloodStatusSummary({
               ].map(t => (
                 <div key={t.label} className={`rounded-lg border p-2 text-center ${t.bg}`}>
                   <div className={`text-lg font-bold ${t.color}`}>{t.value}</div>
-                  <div className="text-[9px] uppercase tracking-wider text-slate-500 font-medium">{t.label}</div>
+                  <div className="text-2xs uppercase tracking-wider text-slate-500 font-medium">{t.label}</div>
                 </div>
               ))}
             </div>
@@ -282,9 +282,9 @@ export function FloodStatusSummary({
                 {topGauges.map(g => {
                   const style = CATEGORY_STYLES[g.predictedCategory] || CATEGORY_STYLES.none;
                   return (
-                    <div key={g.lid} className="flex items-center justify-between text-[11px] px-2 py-1.5 rounded bg-slate-50/50">
+                    <div key={g.lid} className="flex items-center justify-between text-xs px-2 py-1.5 rounded bg-slate-50/50">
                       <div className="flex items-center gap-2 min-w-0">
-                        <Badge variant="outline" className={`text-[9px] px-1 py-0 shrink-0 ${style.text} ${style.border}`}>
+                        <Badge variant="outline" className={`text-2xs px-1 py-0 shrink-0 ${style.text} ${style.border}`}>
                           {g.predictedCategory}
                         </Badge>
                         <span className="truncate text-slate-700">{g.name || g.lid}</span>
@@ -301,7 +301,7 @@ export function FloodStatusSummary({
             )}
 
             {!hasAlerts && (
-              <div className="text-center text-[11px] text-slate-400 py-1">
+              <div className="text-center text-xs text-slate-400 py-1">
                 No flood exceedances predicted
               </div>
             )}
@@ -309,7 +309,7 @@ export function FloodStatusSummary({
             {onViewDetails && hasAlerts && (
               <button
                 onClick={onViewDetails}
-                className="w-full text-center text-[10px] text-blue-600 hover:text-blue-800 mt-2 py-1 transition-colors"
+                className="w-full text-center text-2xs text-blue-600 hover:text-blue-800 mt-2 py-1 transition-colors"
               >
                 View full forecast &rarr;
               </button>
@@ -350,7 +350,7 @@ export function FloodForecastCard({
           </div>
           <div className="flex items-center gap-2">
             {updatedAt && (
-              <span className="text-[10px] text-slate-400">
+              <span className="text-2xs text-slate-400">
                 {formatTimeSince(updatedAt)}
               </span>
             )}
@@ -369,39 +369,39 @@ export function FloodForecastCard({
         {/* Summary badges */}
         <div className="flex flex-wrap gap-1.5 mt-2">
           {summary.major > 0 && (
-            <Badge variant="destructive" className="text-[10px]">
+            <Badge variant="destructive" className="text-2xs">
               {summary.major} Major
             </Badge>
           )}
           {summary.moderate > 0 && (
-            <Badge className="text-[10px] bg-orange-100 text-orange-800 border-orange-200">
+            <Badge className="text-2xs bg-orange-100 text-orange-800 border-orange-200">
               {summary.moderate} Moderate
             </Badge>
           )}
           {summary.minor > 0 && (
-            <Badge className="text-[10px] bg-amber-100 text-amber-800 border-amber-200">
+            <Badge className="text-2xs bg-amber-100 text-amber-800 border-amber-200">
               {summary.minor} Minor
             </Badge>
           )}
           {summary.action > 0 && (
-            <Badge className="text-[10px] bg-yellow-100 text-yellow-800 border-yellow-200">
+            <Badge className="text-2xs bg-yellow-100 text-yellow-800 border-yellow-200">
               {summary.action} Action
             </Badge>
           )}
           {summary.currentlyFlooding > 0 && (
-            <Badge className="text-[10px] bg-blue-100 text-blue-800 border-blue-200">
+            <Badge className="text-2xs bg-blue-100 text-blue-800 border-blue-200">
               {summary.currentlyFlooding} Active
             </Badge>
           )}
           {summary.total === 0 && !isLoading && (
-            <span className="text-[11px] text-slate-400">No flood exceedances predicted</span>
+            <span className="text-xs text-slate-400">No flood exceedances predicted</span>
           )}
         </div>
       </CardHeader>
 
       <CardContent>
         {error && (
-          <div className="flex items-center gap-2 text-[11px] text-red-600 mb-3">
+          <div className="flex items-center gap-2 text-xs text-red-600 mb-3">
             <AlertTriangle className="h-3.5 w-3.5" />
             {error}
           </div>
@@ -413,7 +413,7 @@ export function FloodForecastCard({
           <div className="text-center py-6">
             <Waves className="h-8 w-8 text-slate-300 mx-auto mb-2" />
             <p className="text-sm text-slate-400">No flood exceedances predicted</p>
-            <p className="text-[10px] text-slate-300 mt-1">All monitored gauges are within normal parameters</p>
+            <p className="text-2xs text-slate-300 mt-1">All monitored gauges are within normal parameters</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -424,7 +424,7 @@ export function FloodForecastCard({
             {forecasts.length > 8 && (
               <button
                 onClick={() => setShowAll(!showAll)}
-                className="w-full text-center text-[11px] text-blue-600 hover:text-blue-800 py-1.5 transition-colors"
+                className="w-full text-center text-xs text-blue-600 hover:text-blue-800 py-1.5 transition-colors"
               >
                 {showAll ? 'Show less' : `Show all ${forecasts.length} gauges`}
               </button>

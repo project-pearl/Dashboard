@@ -277,7 +277,7 @@ export function DataExportHub({ context = 'ms4' }: Props) {
                   <Icon className={`h-5 w-5 ${isActive ? accent.text : 'text-slate-500'}`} />
                 )}
                 <span className={`text-xs font-bold ${isActive ? accent.text : 'text-slate-700'}`}>{fmt.label}</span>
-                <span className="text-[9px] text-slate-400 leading-tight">{fmt.desc}</span>
+                <span className="text-2xs text-slate-400 leading-tight">{fmt.desc}</span>
               </button>
             );
           })}
@@ -299,8 +299,8 @@ export function DataExportHub({ context = 'ms4' }: Props) {
         {showApiDocs && (
           <div className="p-3 space-y-2 bg-white">
             <div className="flex items-center justify-between mb-1">
-              <div className="text-[10px] text-slate-500">Base URL: <code className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-700 font-mono">https://api.pinwater.org/api/v1</code></div>
-              <Badge variant="outline" className="text-[9px] border-amber-300 bg-amber-50 text-amber-700">v1.0 Beta</Badge>
+              <div className="text-2xs text-slate-500">Base URL: <code className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-700 font-mono">https://api.pinwater.org/api/v1</code></div>
+              <Badge variant="outline" className="text-2xs border-amber-300 bg-amber-50 text-amber-700">v1.0 Beta</Badge>
             </div>
             {API_ENDPOINTS.map(ep => (
               <div key={ep.path} className="rounded-lg border border-slate-200 overflow-hidden">
@@ -309,11 +309,11 @@ export function DataExportHub({ context = 'ms4' }: Props) {
                   className="w-full flex items-center justify-between px-3 py-2 hover:bg-slate-50 transition-colors"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-green-100 text-green-700 font-mono">{ep.method}</span>
+                    <span className="px-1.5 py-0.5 rounded text-2xs font-bold bg-green-100 text-green-700 font-mono">{ep.method}</span>
                     <code className="text-xs text-slate-700 font-mono">{ep.path}</code>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-slate-400">{ep.label}</span>
+                    <span className="text-2xs text-slate-400">{ep.label}</span>
                     <button
                       onClick={(e) => { e.stopPropagation(); handleCopyEndpoint(ep.path); }}
                       className="p-1 rounded hover:bg-slate-200 transition-colors"
@@ -325,20 +325,20 @@ export function DataExportHub({ context = 'ms4' }: Props) {
                 </button>
                 {expandedApi === ep.path && (
                   <div className="border-t border-slate-200 px-3 py-2 space-y-2 bg-slate-50/50">
-                    <p className="text-[10px] text-slate-600">{ep.description}</p>
+                    <p className="text-2xs text-slate-600">{ep.description}</p>
                     <div>
-                      <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Request</div>
-                      <pre className="bg-slate-900 text-green-400 text-[10px] p-2.5 rounded-md overflow-x-auto font-mono leading-relaxed">{ep.request}</pre>
+                      <div className="text-2xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Request</div>
+                      <pre className="bg-slate-900 text-green-400 text-2xs p-2.5 rounded-md overflow-x-auto font-mono leading-relaxed">{ep.request}</pre>
                     </div>
                     <div>
-                      <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Response</div>
-                      <pre className="bg-slate-900 text-amber-300 text-[10px] p-2.5 rounded-md overflow-x-auto font-mono leading-relaxed">{ep.response}</pre>
+                      <div className="text-2xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Response</div>
+                      <pre className="bg-slate-900 text-amber-300 text-2xs p-2.5 rounded-md overflow-x-auto font-mono leading-relaxed">{ep.response}</pre>
                     </div>
                   </div>
                 )}
               </div>
             ))}
-            <div className="text-[9px] text-slate-400 flex items-center gap-1 pt-1">
+            <div className="text-2xs text-slate-400 flex items-center gap-1 pt-1">
               <ExternalLink className="h-2.5 w-2.5" />
               Full API reference at docs.pinwater.org/api
             </div>
@@ -358,7 +358,7 @@ export function DataExportHub({ context = 'ms4' }: Props) {
               <Check className="h-3.5 w-3.5" />
               <div>
                 <div className="text-xs font-bold">{std.label}</div>
-                <div className="text-[9px] opacity-75">v{std.version} · {std.status}</div>
+                <div className="text-2xs opacity-75">v{std.version} · {std.status}</div>
               </div>
             </div>
           ))}
@@ -381,8 +381,8 @@ export function DataExportHub({ context = 'ms4' }: Props) {
               <span className="text-lg">{tpl.icon}</span>
               <div className="flex-1 min-w-0">
                 <div className="text-xs font-semibold text-slate-800 group-hover:text-blue-700 transition-colors">{tpl.name}</div>
-                <div className="text-[9px] text-slate-500 leading-tight mt-0.5">{tpl.desc}</div>
-                <div className="flex items-center gap-1 mt-1.5 text-[9px] text-blue-600 font-medium">
+                <div className="text-2xs text-slate-500 leading-tight mt-0.5">{tpl.desc}</div>
+                <div className="flex items-center gap-1 mt-1.5 text-2xs text-blue-600 font-medium">
                   <Download className="h-2.5 w-2.5" />
                   {tpl.filename}
                 </div>
@@ -408,7 +408,7 @@ export function DataExportHub({ context = 'ms4' }: Props) {
           <div className="p-4 space-y-3 bg-white">
             {/* Date range */}
             <div>
-              <div className="text-[10px] font-semibold text-slate-600 mb-1.5 flex items-center gap-1">
+              <div className="text-2xs font-semibold text-slate-600 mb-1.5 flex items-center gap-1">
                 <Calendar className="h-3 w-3" />
                 Date Range
               </div>
@@ -431,7 +431,7 @@ export function DataExportHub({ context = 'ms4' }: Props) {
 
             {/* Parameter selector */}
             <div>
-              <div className="text-[10px] font-semibold text-slate-600 mb-1.5 flex items-center gap-1">
+              <div className="text-2xs font-semibold text-slate-600 mb-1.5 flex items-center gap-1">
                 <Filter className="h-3 w-3" />
                 Parameters ({selectedParams.length} selected)
               </div>
@@ -442,7 +442,7 @@ export function DataExportHub({ context = 'ms4' }: Props) {
                     <button
                       key={p.id}
                       onClick={() => toggleParam(p.id)}
-                      className={`px-2 py-1 rounded-full text-[10px] font-medium border transition-all ${
+                      className={`px-2 py-1 rounded-full text-2xs font-medium border transition-all ${
                         isSelected
                           ? `${accent.badge}`
                           : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
@@ -458,13 +458,13 @@ export function DataExportHub({ context = 'ms4' }: Props) {
             {/* Format selector + export button */}
             <div className="flex items-end gap-3">
               <div className="flex-1">
-                <div className="text-[10px] font-semibold text-slate-600 mb-1.5">Output Format</div>
+                <div className="text-2xs font-semibold text-slate-600 mb-1.5">Output Format</div>
                 <div className="flex gap-1.5">
                   {EXPORT_FORMATS.map(fmt => (
                     <button
                       key={fmt.id}
                       onClick={() => setBulkFormat(fmt.id)}
-                      className={`px-2.5 py-1.5 rounded-md text-[10px] font-semibold border transition-all ${
+                      className={`px-2.5 py-1.5 rounded-md text-2xs font-semibold border transition-all ${
                         bulkFormat === fmt.id
                           ? `${accent.badge}`
                           : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
@@ -500,7 +500,7 @@ export function DataExportHub({ context = 'ms4' }: Props) {
             </div>
 
             {/* Estimated size */}
-            <div className="text-[9px] text-slate-400 flex items-center gap-1">
+            <div className="text-2xs text-slate-400 flex items-center gap-1">
               <Database className="h-2.5 w-2.5" />
               Estimated export: ~{selectedParams.length * 12}K records ({Math.round(((new Date(bulkDateEnd).getTime() - new Date(bulkDateStart).getTime()) / (1000 * 60 * 60 * 24)))} days x {selectedParams.length} params x 96 readings/day)
             </div>

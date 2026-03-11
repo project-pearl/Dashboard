@@ -25,9 +25,9 @@ export function StormEventTable({ events, selectedEventId, onSelectEvent, event 
         <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">{events.length} event{events.length !== 1 ? 's' : ''} recorded</span>
       </div>
       <div className="text-xs text-slate-500 px-1">Select an event to view detailed influent/effluent data and PIN treatment performance.</div>
-      <div className="overflow-x-auto rounded-xl border-2 border-blue-200 shadow-sm">
+      <div className="max-h-[320px] overflow-y-auto overflow-x-auto rounded-xl border-2 border-blue-200 shadow-sm">
         <table className="w-full text-sm">
-          <thead>
+          <thead className="sticky top-0 z-10">
             <tr className="bg-blue-50 border-b border-blue-200">
             <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-600 uppercase tracking-wide">Event</th>
             <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-600 uppercase tracking-wide">Date</th>

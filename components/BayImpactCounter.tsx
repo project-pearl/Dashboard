@@ -199,7 +199,7 @@ export function BayImpactCounter({ removalEfficiencies, regionId, userRole }: Ba
             </CardTitle>
             <CardDescription className="text-blue-300 mt-1">
               Cumulative pollutant removal since Milton pilot launch · {daysRunning} days running
-              <span className="block text-blue-400/70 text-[10px] mt-0.5">Applies to Chesapeake Bay Watershed states (MD, VA, PA, WV, DE, NY, DC)</span>
+              <span className="block text-blue-400/70 text-2xs mt-0.5">Applies to Chesapeake Bay Watershed states (MD, VA, PA, WV, DE, NY, DC)</span>
             </CardDescription>
           </div>
           <div className="flex items-center gap-2 bg-green-500/20 border border-green-400/40 rounded-full px-4 py-1.5">

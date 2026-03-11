@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { MapPin, ChevronRight, ChevronLeft, AlertTriangle, Waves, Search } from 'lucide-react';
+import { CappedList } from '@/components/CappedList';
 import {
   RegionRow, AttainsBulkEntry, WatershedGroup,
   groupByWatershed, isPriorityWaterbody, isCoastalWaterbody,
@@ -54,7 +55,6 @@ export function WatershedWaterbodyPanel({
   const [filterLevel, setFilterLevel] = useState<FilterLevel>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showAll, setShowAll] = useState(false);
-  const [showAllPriority, setShowAllPriority] = useState(false);
   const [huc8Names, setHuc8Names] = useState<Record<string, string>>({});
   const [registryMeta, setRegistryMeta] = useState<Record<string, RegionMeta>>({});
 
@@ -232,7 +232,7 @@ export function WatershedWaterbodyPanel({
           <div className={`truncate text-sm font-medium ${isActive ? 'text-blue-900' : ''}`}>{r.name}</div>
           <div className="flex items-center gap-2 text-xs text-slate-500">
             {r.status === 'assessed' ? (
-              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
+              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-2xs font-medium ${
                 r.alertLevel === 'high' ? 'bg-red-100 text-red-700' :
                 r.alertLevel === 'medium' ? 'bg-orange-100 text-orange-700' :
                 r.alertLevel === 'low' ? 'bg-yellow-100 text-yellow-700' :
@@ -241,14 +241,14 @@ export function WatershedWaterbodyPanel({
                 {levelToLabel(r.alertLevel)}
               </span>
             ) : r.status === 'monitored' ? (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-600">
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-2xs font-medium bg-blue-50 text-blue-600">
                 ◐ {r.dataSourceCount} source{r.dataSourceCount !== 1 ? 's' : ''}
               </span>
             ) : (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-500">— Unmonitored</span>
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-2xs font-medium bg-slate-100 text-slate-500">— Unmonitored</span>
             )}
             {r.activeAlerts > 0 && <span>{r.activeAlerts} alert{r.activeAlerts !== 1 ? 's' : ''}</span>}
-            {r.status === 'assessed' && <span className="text-[9px] text-slate-400">EPA ATTAINS</span>}
+            {r.status === 'assessed' && <span className="text-2xs text-slate-400">EPA ATTAINS</span>}
           </div>
         </div>
         {isActive && <div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0 mr-1" />}
@@ -268,16 +268,16 @@ export function WatershedWaterbodyPanel({
         <div className="flex items-center justify-between mb-1.5">
           <div className="min-w-0 flex-1">
             <div className="text-sm font-semibold text-slate-800 truncate">{ws.name}</div>
-            <div className="text-[10px] text-slate-400 font-mono">{ws.huc8 !== 'OTHER' ? `HUC-8 ${ws.huc8}` : ''}</div>
+            <div className="text-2xs text-slate-400 font-mono">{ws.huc8 !== 'OTHER' ? `HUC-8 ${ws.huc8}` : ''}</div>
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
             {matchCount > 0 && (
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-100 text-blue-700">
+              <span className="px-1.5 py-0.5 rounded-full text-2xs font-medium bg-blue-100 text-blue-700">
                 {matchCount} match{matchCount !== 1 ? 'es' : ''}
               </span>
             )}
             {ws.activeAlerts > 0 && (
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-700">
+              <span className="px-1.5 py-0.5 rounded-full text-2xs font-medium bg-amber-100 text-amber-700">
                 {ws.activeAlerts} alert{ws.activeAlerts !== 1 ? 's' : ''}
               </span>
             )}
@@ -285,7 +285,7 @@ export function WatershedWaterbodyPanel({
           </div>
         </div>
         {/* Stats row */}
-        <div className="flex items-center gap-3 text-[11px]">
+        <div className="flex items-center gap-3 text-xs">
           <span className="text-slate-500">{ws.total} waterbod{ws.total !== 1 ? 'ies' : 'y'}</span>
           {ws.severe > 0 && <span className="text-red-600 font-medium">{ws.severe} severe</span>}
           {ws.impaired > 0 && <span className="text-orange-600 font-medium">{ws.impaired} impaired</span>}
@@ -301,7 +301,7 @@ export function WatershedWaterbodyPanel({
             style={{ width: `${ws.healthPct}%` }}
           />
         </div>
-        <div className="text-[10px] text-slate-400 mt-0.5">{ws.healthPct}% healthy</div>
+        <div className="text-2xs text-slate-400 mt-0.5">{ws.healthPct}% healthy</div>
       </div>
     );
   }
@@ -313,8 +313,8 @@ export function WatershedWaterbodyPanel({
       <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 bg-slate-100 border-slate-300">
         <div className="text-2xl font-black text-slate-400">N/A</div>
         <div className="text-right">
-          <div className="text-[10px] text-slate-500">Ungraded</div>
-          <div className="text-[10px] text-slate-400">{attainsBulkLoaded ? 'No data' : 'Loading...'}</div>
+          <div className="text-2xs text-slate-500">Ungraded</div>
+          <div className="text-2xs text-slate-400">{attainsBulkLoaded ? 'No data' : 'Loading...'}</div>
         </div>
       </div>
     );
@@ -325,7 +325,7 @@ export function WatershedWaterbodyPanel({
         <div className={`text-2xl font-black ${grade.color}`}>{grade.letter}</div>
         <div className="text-right">
           <div className={`text-sm font-bold ${grade.color}`}>{avgScore}%</div>
-          <div className="text-[10px] text-slate-500">{assessed.length} assessed</div>
+          <div className="text-2xs text-slate-500">{assessed.length} assessed</div>
         </div>
       </div>
     );
@@ -353,19 +353,19 @@ export function WatershedWaterbodyPanel({
         <div className="grid grid-cols-4 gap-1.5 text-center mt-3">
           <div className="rounded-lg bg-slate-50 p-2">
             <div className="text-lg font-bold text-slate-800">{regionData.length}</div>
-            <div className="text-[10px] text-slate-500">Total</div>
+            <div className="text-2xs text-slate-500">Total</div>
           </div>
           <div className="rounded-lg bg-green-50 p-2">
             <div className="text-lg font-bold text-green-700">{stats.assessed}</div>
-            <div className="text-[10px] text-slate-500">Assessed</div>
+            <div className="text-2xs text-slate-500">Assessed</div>
           </div>
           <div className="rounded-lg bg-blue-50 p-2">
             <div className="text-lg font-bold text-blue-600">{regionData.filter(r => r.status === 'monitored').length}</div>
-            <div className="text-[10px] text-slate-500">Monitored</div>
+            <div className="text-2xs text-slate-500">Monitored</div>
           </div>
           <div className="rounded-lg bg-slate-50 p-2">
             <div className="text-lg font-bold text-slate-400">{regionData.filter(r => r.status === 'unmonitored').length}</div>
-            <div className="text-[10px] text-slate-500">No Data</div>
+            <div className="text-2xs text-slate-500">No Data</div>
           </div>
         </div>
 
@@ -380,7 +380,7 @@ export function WatershedWaterbodyPanel({
             <button
               key={f.key}
               onClick={() => { setFilterLevel(f.key); setShowAll(false); }}
-              className={`px-2.5 py-1 text-[11px] font-medium rounded-full border transition-all ${
+              className={`px-2.5 py-1 text-xs font-medium rounded-full border transition-all ${
                 filterLevel === f.key
                   ? f.color + ' ring-1 ring-offset-1 shadow-sm'
                   : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'
@@ -407,7 +407,7 @@ export function WatershedWaterbodyPanel({
             className="w-full px-2 py-1.5 text-sm border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-300"
           />
           {searchQuery && (
-            <div className="text-[10px] text-slate-400 mt-1">
+            <div className="text-2xs text-slate-400 mt-1">
               {activeWatershed
                 ? `${drillDownList.length} of ${activeWs?.total || 0} waterbodies`
                 : `${filteredWatersheds.length} of ${watersheds.length} watersheds`}
@@ -435,7 +435,7 @@ export function WatershedWaterbodyPanel({
               {activeWs && (
                 <div className="rounded-lg bg-slate-50 border border-slate-200 p-2.5 mb-2">
                   <div className="text-sm font-semibold text-slate-800">{activeWs.name}</div>
-                  <div className="flex items-center gap-3 text-[11px] text-slate-500 mt-1">
+                  <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
                     {activeWs.huc8 !== 'OTHER' && <span className="font-mono">HUC-8 {activeWs.huc8}</span>}
                     <span>{activeWs.total} waterbod{activeWs.total !== 1 ? 'ies' : 'y'}</span>
                     {activeWs.severe > 0 && <span className="text-red-600 font-medium">{activeWs.severe} severe</span>}
@@ -481,18 +481,19 @@ export function WatershedWaterbodyPanel({
                 <div className="mb-3">
                   <div className="flex items-center gap-1.5 mb-1.5">
                     <AlertTriangle size={13} className="text-amber-600" />
-                    <span className="text-[11px] font-semibold text-amber-700 uppercase tracking-wide">Priority Waterbodies</span>
+                    <span className="text-xs font-semibold text-amber-700 uppercase tracking-wide">Priority Waterbodies</span>
                   </div>
-                  <div className="space-y-1 border-l-2 border-amber-400 pl-2">
-                    {(showAllPriority ? priorityWaterbodies : priorityWaterbodies.slice(0, 5)).map(renderWaterbodyRow)}
-                    {priorityWaterbodies.length > 5 && !showAllPriority && (
-                      <button
-                        onClick={() => setShowAllPriority(true)}
-                        className="w-full py-1 text-[11px] text-amber-600 hover:text-amber-800 font-medium"
-                      >
-                        Show all {priorityWaterbodies.length} priority waterbodies
-                      </button>
-                    )}
+                  <div className="border-l-2 border-amber-400 pl-2">
+                    <CappedList
+                      items={priorityWaterbodies}
+                      maxVisible={5}
+                      searchable={priorityWaterbodies.length > 5}
+                      searchPlaceholder="Search priority waterbodies..."
+                      getSearchText={(r) => `${r.name} ${r.id}`}
+                      getKey={(r) => r.id}
+                      className="space-y-1"
+                      renderItem={renderWaterbodyRow}
+                    />
                   </div>
                 </div>
               )}
@@ -502,13 +503,19 @@ export function WatershedWaterbodyPanel({
                 <div className="mb-3">
                   <div className="flex items-center gap-1.5 mb-1.5">
                     <Waves size={13} className="text-teal-600" />
-                    <span className="text-[11px] font-semibold text-teal-700 uppercase tracking-wide">Coastal Zones</span>
+                    <span className="text-xs font-semibold text-teal-700 uppercase tracking-wide">Coastal Zones</span>
                   </div>
-                  <div className="space-y-1 border-l-2 border-teal-400 pl-2">
-                    {coastalWaterbodies.slice(0, 5).map(renderWaterbodyRow)}
-                    {coastalWaterbodies.length > 5 && (
-                      <div className="text-[10px] text-teal-500 pl-1">+{coastalWaterbodies.length - 5} more coastal waterbodies</div>
-                    )}
+                  <div className="border-l-2 border-teal-400 pl-2">
+                    <CappedList
+                      items={coastalWaterbodies}
+                      maxVisible={5}
+                      searchable={coastalWaterbodies.length > 5}
+                      searchPlaceholder="Search coastal waterbodies..."
+                      getSearchText={(r) => `${r.name} ${r.id}`}
+                      getKey={(r) => r.id}
+                      className="space-y-1"
+                      renderItem={renderWaterbodyRow}
+                    />
                   </div>
                 </div>
               )}

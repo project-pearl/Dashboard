@@ -227,6 +227,14 @@ export type AttackClassificationType =
   | 'likely_benign'
   | 'insufficient_data';
 
+export type CbrnCategory = 'chemical' | 'biological' | 'radiological' | 'nuclear';
+
+export interface CbrnIndicator {
+  category: CbrnCategory;
+  confidence: number;   // 0-1
+  basis: string;        // human-readable reason
+}
+
 export interface ConfounderCheck {
   rule: string;
   matched: boolean;
@@ -245,6 +253,7 @@ export interface AttackClassification {
   threatScore: number;
   confounders: ConfounderCheck[];
   reasoning: ClassificationReasoning[];
+  cbrnIndicators: CbrnIndicator[];
 }
 
 /* ------------------------------------------------------------------ */

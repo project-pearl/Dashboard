@@ -132,7 +132,7 @@ export function FacilityOperationsPanel({ stateAbbr }: FacilityOperationsPanelPr
                 </div>
                 <div>
                   <p className="text-lg font-bold text-slate-800">{stat.value}</p>
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wide">{stat.label}</p>
+                  <p className="text-2xs text-slate-500 uppercase tracking-wide">{stat.label}</p>
                 </div>
               </div>
             </CardContent>
@@ -146,7 +146,7 @@ export function FacilityOperationsPanel({ stateAbbr }: FacilityOperationsPanelPr
           <CardTitle className="flex items-center gap-2 text-base">
             <Factory size={16} className="text-slate-600" />
             Facility Water Balance
-            <Badge variant="secondary" className="ml-1 text-[10px]">{data.facilities.length} facilities</Badge>
+            <Badge variant="secondary" className="ml-1 text-2xs">{data.facilities.length} facilities</Badge>
           </CardTitle>
           <CardDescription>
             Water intake, process use, discharge, and recycling volumes per facility (million gallons/day)
@@ -183,7 +183,7 @@ export function FacilityOperationsPanel({ stateAbbr }: FacilityOperationsPanelPr
                       </div>
                     </td>
                     <td className="py-2 text-center">
-                      <Badge className={`text-[9px] ${permitBadgeClass(f.permitStatus)}`}>{f.permitStatus}</Badge>
+                      <Badge className={`text-2xs ${permitBadgeClass(f.permitStatus)}`}>{f.permitStatus}</Badge>
                     </td>
                   </tr>
                 ))}
@@ -200,7 +200,7 @@ export function FacilityOperationsPanel({ stateAbbr }: FacilityOperationsPanelPr
             <FileCheck size={16} className="text-blue-600" />
             DMR Submission Timeline
             {data.dmrTimeline.filter((d) => d.status === 'Overdue').length > 0 && (
-              <Badge className="ml-1 text-[10px] bg-red-100 text-red-700">
+              <Badge className="ml-1 text-2xs bg-red-100 text-red-700">
                 {data.dmrTimeline.filter((d) => d.status === 'Overdue').length} overdue
               </Badge>
             )}
@@ -227,7 +227,7 @@ export function FacilityOperationsPanel({ stateAbbr }: FacilityOperationsPanelPr
                     <td className="py-2 font-mono text-slate-600">{d.permitId}</td>
                     <td className="py-2 text-slate-700">{d.period}</td>
                     <td className="py-2 text-center">
-                      <Badge className={`text-[9px] ${dmrStatusBadge(d.status)}`}>{d.status}</Badge>
+                      <Badge className={`text-2xs ${dmrStatusBadge(d.status)}`}>{d.status}</Badge>
                     </td>
                     <td className="py-2 text-slate-600">{d.dueDate}</td>
                     <td className="py-2 text-slate-600">{d.submittedDate ?? '--'}</td>
@@ -261,11 +261,11 @@ export function FacilityOperationsPanel({ stateAbbr }: FacilityOperationsPanelPr
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-semibold text-slate-700">{trend.parameter}</span>
-                      <span className="text-[10px] text-slate-400">({trend.unit})</span>
+                      <span className="text-2xs text-slate-400">({trend.unit})</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-slate-500">Limit: {trend.limit}</span>
-                      <Badge className={`text-[9px] ${
+                      <Badge className={`text-2xs ${
                         Number(pctOfLimit) >= 90 ? 'bg-red-100 text-red-700' :
                         Number(pctOfLimit) >= 75 ? 'bg-amber-100 text-amber-700' :
                         'bg-green-100 text-green-700'
@@ -294,7 +294,7 @@ export function FacilityOperationsPanel({ stateAbbr }: FacilityOperationsPanelPr
                               style={{ bottom: `${limitPct}%` }}
                             />
                           </div>
-                          <span className="text-[8px] text-slate-400">{v.month}</span>
+                          <span className="text-2xs text-slate-400">{v.month}</span>
                         </div>
                       );
                     })}
@@ -302,7 +302,7 @@ export function FacilityOperationsPanel({ stateAbbr }: FacilityOperationsPanelPr
                 </div>
               );
             })}
-            <p className="text-[10px] text-slate-400 mt-2">
+            <p className="text-2xs text-slate-400 mt-2">
               Dashed red line indicates permit limit. Bars exceeding 90% of limit are flagged for attention.
             </p>
           </div>

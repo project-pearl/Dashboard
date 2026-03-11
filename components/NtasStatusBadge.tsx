@@ -96,7 +96,7 @@ export function NtasStatusBadge() {
                 {adv.summary && (
                   <p className="text-xs line-clamp-3" style={{ color: 'var(--text-secondary)' }}>{adv.summary}</p>
                 )}
-                <div className="flex items-center gap-3 text-[10px]" style={{ color: 'var(--text-dim)' }}>
+                <div className="flex items-center gap-3 text-2xs" style={{ color: 'var(--text-dim)' }}>
                   {adv.issued && <span>Issued: {new Date(adv.issued).toLocaleDateString()}</span>}
                   {adv.expires && <span>Expires: {new Date(adv.expires).toLocaleDateString()}</span>}
                   {adv.link && (
@@ -110,7 +110,7 @@ export function NtasStatusBadge() {
           </div>
         )}
 
-        <div className="text-[10px] text-right" style={{ color: 'var(--text-dim)' }}>
+        <div className="text-2xs text-right" style={{ color: 'var(--text-dim)' }}>
           Updated: {new Date(data.fetchedAt).toLocaleString()}
         </div>
       </CardContent>
